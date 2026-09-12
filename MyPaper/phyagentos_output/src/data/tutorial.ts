@@ -693,6 +693,13 @@ export const tutorial: TutorialData = {
           desc: '七条常见结论，逐条判 Supported / Overclaimed / Wrong——判完看论文依据。这是读这篇论文最该带走的技能。',
           componentId: 'claim-checker',
         },
+        {
+          kind: 'module',
+          id: '10.3',
+          title: 'Grand Trail：一条 Session 环路 × 三层渐进验证（全机制总览）',
+          desc: '按论文真实结构组织：整张图是一条 Session 生命周期环路——预检门（绿色拦杆连着立柱）→ 执行段双车道（Policy 实线 / Agent 工具虚线，共用监督与证据）→ 路桩 τ（S₀ 与 S_T 之间的每个中间态都进证据）→ 验收台 V(G, S₀, S_T, τ, H) → KNOWLEDGE/LESSONS 归档 → 检索回到出发线。同一条环路走三圈 = 渐进验证：Game 只测认知，第二圈把碎石叠回原路面（动力学与碰撞），第三圈再叠冰面（噪声、延迟、硬件）；第二圈的滑倒与子会话恢复就是 First→Final 的来源。中央底座是贯穿全程的 OS 运行时与状态文件——不是路上的某一站。',
+          componentId: 'grand-trail',
+        },
       ],
       insight: 'Final − First 度量的是「验证与恢复能挽救多少原本失败的执行」，不是模型本身变强了多少。',
       takeaways: [

@@ -2946,6 +2946,66 @@ section.chap.slide-chap {
   border-color: var(--orange);
 }
 
+/* ---------- Lab 10.3 Grand Trail（全机制总览：一条 Session 环路 × 三圈渐进验证） ---------- */
+/* 预检拦杆：两端连在立柱顶端；通过后抬起并变绿 */
+.gt-bar {
+  transition: transform 620ms var(--ease-out), stroke 300ms ease;
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+.gt-bar.on {
+  transform: rotate(-72deg);
+  stroke: #228d5c;
+}
+/* 验收台裁决灯：默认弱化，触发对应裁决时点亮 */
+.gt-lamp {
+  opacity: 0.35;
+  transition: opacity 320ms ease;
+}
+.gt-lamp.on {
+  opacity: 1;
+}
+.gt-lamp.on rect {
+  stroke-width: 2.2;
+}
+/* 地形叠加（碎石/冰面）：整组淡入淡出，不用缩放弹出 */
+.analogy-svg .fx-fade {
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+.analogy-svg .fx-fade.on {
+  opacity: 1;
+}
+.gt-lab .gt-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px 14px;
+  flex-wrap: wrap;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-bg-muted);
+  padding: 9px 13px;
+}
+.gt-legend-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.gt-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--ink);
+}
+.gt-legend-item i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 /* ---------- Lab 3.2 Architecture Graph ---------- */
 .ag-lab .ag-count {
   font-family: var(--ui-font-mono);

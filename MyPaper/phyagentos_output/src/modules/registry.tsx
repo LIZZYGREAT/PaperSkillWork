@@ -15,6 +15,7 @@ import { TierLadder } from './TierLadder';
 import { FiveLayers } from './FiveLayers';
 import { BenchmarkLab } from './BenchmarkLab';
 import { ClaimChecker } from './ClaimChecker';
+import { GrandTrail } from './GrandTrail';
 
 export interface WidgetProps {
   chapterId: string;
@@ -38,3 +39,4 @@ widgetRegistry['tier-ladder'] = TierLadder;
 widgetRegistry['five-layers'] = FiveLayers;
 widgetRegistry['benchmark-lab'] = BenchmarkLab;
 widgetRegistry['claim-checker'] = ClaimChecker;
+widgetRegistry['grand-trail'] = GrandTrail;
