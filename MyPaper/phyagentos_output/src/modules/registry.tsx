@@ -1,8 +1,18 @@
 import React from 'react';
-import { ExampleSlider } from './exampleSlider';
 import { HeroCompare } from './hero-compare';
 import { HikeAnalogy } from './hike-analogy';
-import { PhyModule } from './phy-module';
+import { RoleMap } from './RoleMap';
+import { ReturnCodeLab } from './ReturnCodeLab';
+import { OSLayerBuilder } from './OSLayerBuilder';
+import { ProtocolViews } from './ProtocolViews';
+import { SessionLifecycle } from './SessionLifecycle';
+import { DualFlow } from './DualFlow';
+import { VerifierLab } from './VerifierLab';
+import { ArchMap } from './ArchMap';
+import { TierLadder } from './TierLadder';
+import { FiveLayers } from './FiveLayers';
+import { BenchmarkLab } from './BenchmarkLab';
+import { ClaimChecker } from './ClaimChecker';
 
 export interface WidgetProps {
   chapterId: string;
@@ -10,7 +20,17 @@ export interface WidgetProps {
 }
 
 export const widgetRegistry: Record<string, React.FC<WidgetProps>> = {};
-widgetRegistry['example-slider'] = ExampleSlider;
 widgetRegistry['hero-compare'] = HeroCompare;
 widgetRegistry['hike-analogy'] = HikeAnalogy;
-widgetRegistry['phy-module'] = PhyModule;
+widgetRegistry['role-map'] = RoleMap;
+widgetRegistry['return-code-lab'] = ReturnCodeLab;
+widgetRegistry['os-layer-builder'] = OSLayerBuilder;
+widgetRegistry['protocol-views'] = ProtocolViews;
+widgetRegistry['session-lifecycle'] = SessionLifecycle;
+widgetRegistry['dual-flow'] = DualFlow;
+widgetRegistry['verifier-lab'] = VerifierLab;
+widgetRegistry['arch-map'] = ArchMap;
+widgetRegistry['tier-ladder'] = TierLadder;
+widgetRegistry['five-layers'] = FiveLayers;
+widgetRegistry['benchmark-lab'] = BenchmarkLab;
+widgetRegistry['claim-checker'] = ClaimChecker;
