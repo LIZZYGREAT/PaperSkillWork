@@ -574,6 +574,13 @@ export const tutorial: TutorialData = {
           desc: '点击「执行会话」，沿着真实路径逐步推进：第一次 failure、诊断、child session、再验证，直到经验被固化。然后进入第二步「这能被学吗」，把候选经验分进正确的桶。',
           componentId: 'arch-map',
         },
+        {
+          kind: 'module',
+          id: '8.2',
+          title: 'Grand Loop：全机制综合大动画',
+          desc: '把 §3–§9 的所有机制串成一部自动播放的连续动画：会话包从目标出发，经过协议、预检、执行、验收、失败、诊断、再验证、固化，最终作为经验回到起点——可暂停、可重播、可按阶段跳转。这是论文 Figure 3 + Figure 8 + Figure 9 的动态合成。',
+          componentId: 'grand-loop',
+        },
       ],
       insight: '验证是系统级学习的前提：未经 Re-verify 的修复只是 hypothesis；进入记忆的经验必须携带 provenance 与 scope。',
       formula: {

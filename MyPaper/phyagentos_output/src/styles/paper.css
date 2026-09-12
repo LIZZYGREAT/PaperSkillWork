@@ -350,11 +350,14 @@ section.chap.slide-chap {
 .analogy-text b {
   color: var(--ink);
 }
-/* 类比场景 FX：由 AnalogyScene 的 rAF 时间线按 data-fx 触发 .on */
-.analogy-svg .fx {
+/* 类比场景 FX：由 AnalogyScene 的 rAF 时间线按 data-fx 触发 .on
+   （GrandLoop 大动画复用同一套 .fx / .fx-glow 弹出语义） */
+.analogy-svg .fx,
+.gl-stage .fx {
   opacity: 0;
 }
-.analogy-svg .fx.on {
+.analogy-svg .fx.on,
+.gl-stage .fx.on {
   animation: fx-pop 620ms var(--ease-spring) forwards;
   transform-box: fill-box;
   transform-origin: center;
@@ -363,7 +366,8 @@ section.chap.slide-chap {
   0% { opacity: 0; transform: scale(0.4) translateY(8px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
-.analogy-svg .fx-glow.on {
+.analogy-svg .fx-glow.on,
+.gl-stage .fx-glow.on {
   animation: fx-glow 900ms ease-in-out 2;
 }
 @keyframes fx-glow {
@@ -385,6 +389,20 @@ section.chap.slide-chap {
 @keyframes fx-blink {
   0%, 100% { opacity: 0; }
   50% { opacity: 0.9; }
+}
+/* 大本营补给包裹：沿补给路线移动一次 */
+.analogy-svg .fx-move {
+  offset-path: path('M 352 84 C 410 74 470 64 520 60');
+  offset-rotate: 0deg;
+  opacity: 0;
+}
+.analogy-svg .fx-move.on {
+  animation: fx-move 1900ms ease-in-out forwards;
+}
+@keyframes fx-move {
+  0% { offset-distance: 0%; opacity: 1; }
+  85% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
 }
 .analogy-svg .fx-line {
   opacity: 1;
@@ -2803,6 +2821,129 @@ section.chap.slide-chap {
 .cc-next {
   display: flex;
   justify-content: center;
+}
+
+/* ---------- Lab 8.2 Grand Loop（全机制综合大动画） ---------- */
+.gl-caption {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--orange);
+  border-radius: var(--ui-radius-sm);
+  background: var(--orange-soft);
+  padding: 9px 14px;
+}
+.gl-caption-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gl-phase-num {
+  font-family: var(--ui-font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #b85c1e;
+  background: var(--paper);
+  border: 1px solid rgba(240, 126, 71, 0.45);
+  border-radius: var(--ui-radius-pill);
+  padding: 1px 9px;
+}
+.gl-caption-head b {
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.gl-packet-chip {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--ink-2);
+}
+.gl-packet-chip code {
+  font-family: var(--ui-font-mono);
+  font-weight: 800;
+}
+.gl-caption-desc {
+  margin: 5px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.gl-stage > svg {
+  min-width: 900px;
+}
+.gl-node rect {
+  transition: all var(--t-fast);
+}
+.gl-node.is-lit .gl-node-bg {
+  opacity: 0.13;
+}
+.gl-node.is-lit rect:first-child {
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 4px rgba(240, 126, 71, 0.45));
+}
+.gl-node.is-bad rect:first-child {
+  stroke: var(--red);
+}
+.gl-node.is-bad text {
+  fill: var(--red) !important;
+}
+.gl-node.is-good rect:first-child {
+  stroke: var(--green);
+}
+.gl-node.is-good text {
+  fill: var(--green) !important;
+}
+.gl-route {
+  stroke-width: 0;
+  opacity: 0;
+}
+.gl-route.is-active {
+  stroke-width: 2.6;
+  opacity: 0.95;
+  stroke-dasharray: 8 5;
+  animation: gl-dash 700ms linear infinite;
+}
+.gl-route.is-done {
+  stroke-width: 2;
+  opacity: 0.28;
+}
+@keyframes gl-dash {
+  to { stroke-dashoffset: -26; }
+}
+.gl-packet {
+  filter: drop-shadow(0 2px 4px rgba(20, 35, 60, 0.35));
+}
+.gl-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.gl-dots {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.gl-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid var(--line-2);
+  background: var(--paper);
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--t-fast);
+}
+.gl-dot:hover {
+  border-color: var(--blue);
+}
+.gl-dot.is-active {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-soft);
+}
+.gl-dot.is-done {
+  background: var(--orange);
+  border-color: var(--orange);
 }
 
 /* ---------- Lab 3.2 Architecture Graph ---------- */

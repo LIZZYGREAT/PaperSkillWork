@@ -11,7 +11,8 @@ import type { WidgetProps } from './registry';
 const TRAIL = 'M 28 105 L 150 105 C 215 105 245 88 305 88 L 385 88 C 450 88 500 70 524 58';
 const TRAIL_SOLID = 'M 28 105 L 150 105 C 215 105 245 88 305 88 L 385 88';
 const TRAIL_DASH = 'M 385 88 C 450 88 500 70 524 58';
-const FORK = 'M 345 88 C 395 106 452 116 506 112';
+const FORK = 'M 345 88 C 398 110 448 112 478 94 C 492 85 502 76 510 68';
+const SUPPLY = 'M 352 84 C 410 74 470 64 520 60';
 
 const TONE: Record<string, { fill: string; stroke: string; text: string }> = {
   blue: { fill: '#eef3fb', stroke: '#27446e', text: '#27446e' },
@@ -85,16 +86,17 @@ const SCRIPTS: Record<string, (k: FxKit) => Seg[]> = {
     { type: 'walk', from: 0, to: k.fracAtX(X.brk), ms: 2600 },
     { type: 'hold', ms: 2100, fx: () => { k.pop('q-break', 200); k.pop('flag-dim', 600); } },
   ],
-  // §3 大本营：到达 → 整备（记录/检查/补给逐个亮起 + 补给路线闪烁）→ 出发登顶
+  // §3 大本营：到达 → 整备（记录/检查/补给逐个亮起）→ 补给包裹沿路线送到终点 → 出发登顶
   'chap-3': (k) => [
     { type: 'walk', from: 0, to: k.fracAtX(X.camp), ms: 2100 },
     {
-      type: 'hold', ms: 2800, fx: () => {
+      type: 'hold', ms: 2900, fx: () => {
         k.pop('camp-rest', 100);
         k.pop('camp-fx0', 450);
         k.pop('camp-fx1', 1000);
         k.pop('camp-fx2', 1550);
-        k.pop('camp-route', 2100);
+        k.pop('camp-pack', 2100);
+        k.pop('camp-route-label', 2300);
       },
     },
     { type: 'walk', from: k.fracAtX(X.camp), to: 1, ms: 1900 },
@@ -125,10 +127,10 @@ const SCRIPTS: Record<string, (k: FxKit) => Seg[]> = {
     { type: 'hold', ms: 1600, fx: () => { k.pop('fork-main', 150); k.pop('fork-branch', 550); } },
     { type: 'walk', from: k.fracAtX(X.fork), to: 1, ms: 2100 },
   ],
-  // §7 语义验收：从 S₀ 走到 S_T，停下后一条虚线把起点和终点连起来对账
+  // §7 语义验收：从 S₀ 走到 S_T，停下后一条橙色虚线把终点「对回」起点比对
   'chap-7': (k) => [
     { type: 'walk', from: k.fracAtX(X.s0), to: k.fracAtX(X.st), ms: 2000 },
-    { type: 'hold', ms: 1900, fx: () => { k.pop('s0-flash', 150); k.pop('st-ok', 700); } },
+    { type: 'hold', ms: 1900, fx: () => { k.pop('s0-flash', 150); k.pop('cmp-label', 450); k.pop('st-ok', 850); } },
     { type: 'walk', from: k.fracAtX(X.st), to: 1, ms: 700 },
   ],
   // §8 会话记录：第一次失败（红✗）→ 折返重试（绿✓）→ 两条都被写进记录
@@ -140,13 +142,14 @@ const SCRIPTS: Record<string, (k: FxKit) => Seg[]> = {
     { type: 'hold', ms: 700, fx: () => { k.pop('ok-check', 100); k.pop('note-l1', 250); } },
     { type: 'hold', ms: 1300, fx: () => { k.pop('note-l2', 200); k.pop('note-note', 500); } },
   ],
-  // §9 逐层加险：平地 → 进入碎石层（动力学与碰撞）→ 进入冰面层（噪声·延迟·安全，脚下滑一下）
+  // §9 逐层加险：三种路面常驻可见（平缓段=普通棕 / 碎石层=深棕+石块 / 冰面层=蓝），
+  // 人物进入碎石层、冰面层时弹出对应标签，进入冰面时脚下滑一下
   'chap-9': (k) => [
     {
       type: 'walk', from: 0, to: 1, ms: 4800,
       marks: [
-        { frac: k.fracAtX(X.rock), fx: () => { k.pop('terr-rock'); k.pop('terr-rock-label', 150); } },
-        { frac: k.fracAtX(X.ice), fx: () => { k.pop('terr-ice'); k.pop('terr-ice-label', 150); k.slip(); } },
+        { frac: k.fracAtX(X.rock), fx: () => { k.pop('terr-rock-label'); } },
+        { frac: k.fracAtX(X.ice), fx: () => { k.pop('terr-ice-label'); k.slip(); } },
       ],
     },
     { type: 'hold', ms: 1300, fx: () => { k.pop('terr-done', 200); } },
@@ -309,9 +312,13 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
       {/* 测量基准路径（不可见） */}
       <path ref={baseRef} d={TRAIL} fill="none" stroke="none" />
 
-      {/* 路径：起点与中段平整 */}
+      {/* 路径：起点与中段平整（§9 平缓段只画到碎石层起点，其后由地形层接管） */}
       <path d={TRAIL} fill="none" stroke="#dce7d5" strokeWidth={9} strokeLinecap="round" />
-      {v.rocky ? null : <path d={TRAIL} fill="none" stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" opacity={0.8} />}
+      {v.rocky ? (
+        <path d="M 28 105 L 150 105 C 205 105 240 94 257 92" fill="none" stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" opacity={0.8} />
+      ) : (
+        <path d={TRAIL} fill="none" stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" opacity={0.8} />
+      )}
 
       {/* §2 路径中断：实线止于断点，其后为虚线 */}
       {chapterId === 'chap-2' ? (
@@ -330,29 +337,33 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
       {/* §6 支线 */}
       {chapterId === 'chap-6' ? <path d={FORK} fill="none" stroke="#92400e" strokeWidth={3} strokeLinecap="round" strokeDasharray="6 6" opacity={0.7} /> : null}
 
-      {/* §9 地形层（进入时才显现） */}
+      {/* §9 地形：三段路面常驻可见，进入时弹标签 */}
       {chapterId === 'chap-9' ? (
         <g>
-          <path d="M 28 105 L 150 105 C 215 105 245 88 305 88 L 260 88" fill="none" stroke="none" />
-          <path d="M 150 105 C 215 105 245 88 305 88" fill="none" stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" opacity={0.8} />
-          <g data-fx="terr-rock" className="fx">
-            <path d="M 258 88 L 388 88" fill="none" stroke="#8a6b4a" strokeWidth={3.6} strokeLinecap="round" />
-            {[[268, 88], [296, 90], [324, 88], [352, 90], [378, 88]].map(([x, y], i) => (
-              <path key={i} d={`M ${x - 4} ${y} l 4 -5 l 4 5 z`} fill="#6b5236" />
-            ))}
+          {/* 碎石层（深棕 + 石块，贴曲线） */}
+          <path d="M 257 92 C 278 89.5 292 88.5 305 88 L 385 88" fill="none" stroke="#8a6b4a" strokeWidth={3.6} strokeLinecap="round" />
+          {[[266, 91.5], [292, 89.5], [320, 88], [348, 88], [374, 88]].map(([x, y], i) => (
+            <path key={i} d={`M ${x - 4} ${y} l 4 -5 l 4 5 z`} fill="#6b5236" />
+          ))}
+          <g data-fx="terr-rock-label" className="fx">
             <text x={322} y={112} textAnchor="middle" fontSize={10.5} fill="#6b5236" fontWeight={700}>
               碎石层 · 动力学与碰撞
             </text>
           </g>
-          <g data-fx="terr-ice" className="fx">
-            <path d="M 385 88 C 450 88 500 70 524 58" fill="none" stroke="#6aa7cc" strokeWidth={3.8} strokeLinecap="round" />
-            {[[414, 84], [442, 82], [470, 74]].map(([x, y], i) => (
-              <line key={i} x1={x} y1={y} x2={x + 9} y2={y - 3} stroke="#cfe8f5" strokeWidth={2} strokeLinecap="round" />
-            ))}
-            <text x={468} y={40} textAnchor="middle" fontSize={10.5} fill="#3d7ba6" fontWeight={700}>
+          {/* 冰面层（蓝 + 反光） */}
+          <path d="M 385 88 C 450 88 500 70 524 58" fill="none" stroke="#6aa7cc" strokeWidth={3.8} strokeLinecap="round" />
+          {[[414, 84], [442, 82], [470, 74]].map(([x, y], i) => (
+            <line key={i} x1={x} y1={y} x2={x + 9} y2={y - 3} stroke="#cfe8f5" strokeWidth={2} strokeLinecap="round" />
+          ))}
+          <g data-fx="terr-ice-label" className="fx">
+            <text x={462} y={44} textAnchor="middle" fontSize={10.5} fill="#3d7ba6" fontWeight={700}>
               冰面层 · 噪声·延迟·安全
             </text>
           </g>
+          {/* 平缓段（普通棕色路面）：常驻说明 */}
+          <text x={140} y={90} textAnchor="middle" fontSize={10} fill="#8a9b7a" fontWeight={700}>
+            平缓段 · 只考察认知
+          </text>
         </g>
       ) : null}
 
@@ -386,9 +397,9 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
 
       {v.prop === 'gate' ? (
         <g>
-          <line x1={92} y1={105} x2={92} y2={62} stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" />
-          <line x1={136} y1={105} x2={136} y2={62} stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" />
-          <path data-fx="gate-open" className="gate-arc" d="M 92 70 Q 114 84 136 64" fill="none" stroke="#f07e47" strokeWidth={3.2} strokeLinecap="round" />
+          <line x1={92} y1={105} x2={92} y2={76} stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" />
+          <line x1={136} y1={105} x2={136} y2={76} stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" />
+          <path data-fx="gate-open" className="gate-arc" d="M 92 79 Q 114 92 136 79" fill="none" stroke="#f07e47" strokeWidth={3.2} strokeLinecap="round" />
           <text x={114} y={118} textAnchor="middle" fontSize={10.5} fill="#f07e47" fontWeight={600}>出发前检查</text>
           <g fontSize={9.5} fontWeight={700}>
             <Pill id="gate-c0" x={200} y={44} text="✓ 观测模态" tone="green" />
@@ -410,7 +421,11 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
             <text data-fx="camp-fx1" className="fx" x={330} y={38} textAnchor="middle" fill="#27446e">🎒 检查</text>
             <text data-fx="camp-fx2" className="fx" x={364} y={50} textAnchor="middle" fill="#27446e">📦 补给</text>
           </g>
-          <path data-fx="camp-route" className="fx-blink" d="M 352 84 C 400 72 440 64 470 62" fill="none" stroke="#228d5c" strokeWidth={2} strokeDasharray="5 5" />
+          <path data-fx="camp-route" className="camp-route" d={SUPPLY} fill="none" stroke="#228d5c" strokeWidth={2} strokeDasharray="5 5" opacity={0.55} />
+          <g data-fx="camp-pack" className="fx-move">
+            <text x={0} y={-4} textAnchor="middle" fontSize={11}>📦</text>
+          </g>
+          <text data-fx="camp-route-label" className="fx" x={452} y={84} textAnchor="middle" fontSize={9.5} fill="#1c7a4e" fontWeight={700}>补给路线 → 终点</text>
         </g>
       ) : null}
 
@@ -431,10 +446,12 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
           <line x1={310} y1={88} x2={310} y2={54} stroke="#92400e" strokeWidth={2.4} />
           <rect x={293} y={40} width={34} height={16} rx={4} fill="#fff" stroke="#d7deea" />
           <text x={310} y={52} textAnchor="middle" fontSize={10} fill="#27446e" fontWeight={700}>S₀</text>
-          <line x1={470} y1={64} x2={470} y2={34} stroke="#92400e" strokeWidth={2.4} />
-          <rect x={453} y={20} width={34} height={16} rx={4} fill="#fff" stroke="#d7deea" />
-          <text x={470} y={32} textAnchor="middle" fontSize={10} fill="#27446e" fontWeight={700}>S_T</text>
-          <path data-fx="s0-flash" className="fx-blink" d="M 468 60 C 420 24 360 24 314 80" fill="none" stroke="#f07e47" strokeWidth={2} strokeDasharray="5 5" />
+          {/* S_T 落在上升段的曲线上（x=468 处路径 y≈77） */}
+          <line x1={468} y1={77} x2={468} y2={45} stroke="#92400e" strokeWidth={2.4} />
+          <rect x={451} y={29} width={34} height={16} rx={4} fill="#fff" stroke="#d7deea" />
+          <text x={468} y={41} textAnchor="middle" fontSize={10} fill="#27446e" fontWeight={700}>S_T</text>
+          {/* 终点「对回」起点：带箭头的比对弧线 */}
+          <path data-fx="s0-flash" className="fx-blink" d="M 462 70 C 420 28 360 28 316 78" fill="none" stroke="#f07e47" strokeWidth={2} strokeDasharray="5 5" markerEnd="url(#as-arrow)" />
         </g>
       ) : null}
 
@@ -447,6 +464,12 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
 
       <Flag color={v.flagColor} />
 
+      <defs>
+        <marker id="as-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#f07e47" />
+        </marker>
+      </defs>
+
       {/* 本章 FX（随时间线弹出） */}
       {chapterId === 'chap-1' ? (
         <g>
@@ -457,7 +480,8 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
       {chapterId === 'chap-2' ? (
         <g>
           <Pill id="q-break" x={372} y={52} text="为什么够不到旗子？" tone="red" fs={10} />
-          <circle data-fx="flag-dim" className="fx fx-glow" cx={532} cy={32} r={20} fill="none" stroke="#c43f52" strokeWidth={2} />
+          {/* 红圈包住「旗面 + 旗杆」整体（外接框 524–548 × 22–58，中心 ≈ 536,40） */}
+          <circle data-fx="flag-dim" className="fx fx-glow" cx={536} cy={40} r={22} fill="none" stroke="#c43f52" strokeWidth={2} />
         </g>
       ) : null}
       {chapterId === 'chap-3' ? <Pill id="camp-rest" x={264} y={66} text="整备中…" tone="green" fs={10} /> : null}
@@ -465,11 +489,16 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
       {chapterId === 'chap-5' ? <Pill id="gate-pass" x={205} y={100} text="预检通过 · 放行" tone="green" fs={10} /> : null}
       {chapterId === 'chap-6' ? (
         <g>
-          <Pill id="fork-main" x={446} y={72} text="实线主路 → 旗子" tone="green" fs={10} />
-          <Pill id="fork-branch" x={446} y={130} text="虚线支路 → 同一目标" tone="blue" fs={10} />
+          <Pill id="fork-main" x={442} y={70} text="实线 · Policy 流 → 旗子" tone="green" fs={10} />
+          <Pill id="fork-branch" x={442} y={132} text="虚线 · Agent 工具流 → 汇入同一终点" tone="blue" fs={9.5} />
         </g>
       ) : null}
-      {chapterId === 'chap-7' ? <Pill id="st-ok" x={448} y={104} text="S₀ → S_T 变化成立 ✓" tone="green" fs={10} /> : null}
+      {chapterId === 'chap-7' ? (
+        <g>
+          <Pill id="cmp-label" x={392} y={54} text="把终点对回起点比对" tone="orange" fs={9.5} />
+          <Pill id="st-ok" x={430} y={108} text="变化由本次执行造成 ✓" tone="green" fs={10} />
+        </g>
+      ) : null}
       {chapterId === 'chap-8' ? (
         <g>
           <Pill id="fail-x" x={290} y={56} text="✗ 第一次失败" tone="red" fs={10} />
@@ -477,7 +506,7 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
           <Pill id="note-note" x={166} y={62} text="失败与成功都追加进记录" tone="blue" fs={9.5} />
         </g>
       ) : null}
-      {chapterId === 'chap-9' ? <Pill id="terr-done" x={300} y={34} text="同一套认知，逐层加回物理" tone="blue" fs={10} /> : null}
+      {chapterId === 'chap-9' ? <Pill id="terr-done" x={266} y={46} text="同一套认知，逐层加回物理" tone="blue" fs={10} /> : null}
       {chapterId === 'chap-10' ? (
         <g fontSize={9.5} fontWeight={700}>
           <Pill id="end-r0" x={436} y={92} text="协议 ✓" tone="green" fs={9.5} />
