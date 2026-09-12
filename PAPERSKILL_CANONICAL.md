@@ -83,6 +83,26 @@ takeaways 恒为 3 条。
 双模块章节 2 个（第 9、10 章）≥ `dualModuleChaptersMin = 1`；
 主动模块 12 个 ≥ `activeModulesMin = 4`。
 
+## 证据审计（Phase 5，全部通过）
+
+对照论文 PDF（arXiv:2607.16636v1，46 页）逐项核对，零修正：
+
+| 项 | 论文出处 | 结果 |
+|---|---|---|
+| V(G, S₀, S_T, τ, H) → {success, failure, replan} | §Verifier 判定式 | ✓ |
+| Aₜ = Policy(I, Oₜ, Sₜ, Hₜ) / Tₜ = Agent(I, Oₜ, Sₜ, Hₜ) | §双执行流 | ✓ |
+| 状态机 pending→claimed→running→finalizing→awaiting_verification→verifying→terminal | §Session State Machine | ✓ |
+| 五份协议文件（SESSIONS/SKILLRUNTIME/TARGETS/ENVIRONMENT/LESSONS） | §文件协议 | ✓ |
+| 五层安全命名（Preflight/ActionBridge/SafetyGuard/Heartbeat/target-local） | §Layered Safety | ✓ |
+| Optimus-67 RedStone 0.30±0.16 > Optimus-3 0.29 > Optimus-2 0.28；Diamond 19 vs 15；Gold 0.06；Armor 0.15 | Optimus-67 表 | ✓ |
+| StarDojo 22.0 vs SPIKE 18.0；Crafting 50 vs 23.8；Easy 37.5 / Medium 3.7 / Hard 0.0；Social 8.0 | §5.1.3 | ✓ |
+| DST 1.02±0.08 → 2.10±0.88（+106%）；Day3 0→30%；Charlie 黑暗 80% | Table 3 | ✓ |
+| LIBERO 74.5→75.5 / 92.8→93.2 / 97.0→97.8 / 97.3→98.6 | Table 4 | ✓ |
+| CALVIN 74.3→75.7 / 38.9→45.6 / 85.3→89.4 | Table 5 | ✓ |
+| RoboCasa365 17.6→26.8（救回 23）/ 35.6→42.8（18）/ 34.0→42.4（21），增益 +9.2/+7.2/+8.4 | Table 6 | ✓ |
+| First = 策略首试；Final = 验证器触发恢复后（不改权重/不重置/不放宽） | §5.2 | ✓ |
+| 「more than 19 robot embodiments」；真机评测偏 safety-critical validation（预检拒绝/拦截/急停延迟） | 摘要 / §5.3 | ✓ |
+
 ## 迁移说明
 
 模块代码来自 main（enhanced）分支的 `src/modules/*`——该目录同属 PaperSkill 允许区域，
