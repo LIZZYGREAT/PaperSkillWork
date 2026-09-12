@@ -42,6 +42,8 @@ const LANE = 'M 252 142 L 928 142 C 950 142 956 136 962 131';
 // 指示完成后（角色落回子会话入口）整条回边淡出，避免长期压在图上。
 const REPLAN = 'M 1000 246 C 942 236 820 200 700 160 L 670 149';
 
+type Verdict = 'success' | 'failure' | 'replan';
+
 const TONE: Record<string, { fill: string; stroke: string; text: string }> = {
   blue: { fill: '#eef3fb', stroke: '#27446e', text: '#27446e' },
   green: { fill: '#e9f5ef', stroke: '#228d5c', text: '#1c7a4e' },
@@ -49,6 +51,16 @@ const TONE: Record<string, { fill: string; stroke: string; text: string }> = {
   orange: { fill: '#fdf0e7', stroke: '#f07e47', text: '#b85c1e' },
   purple: { fill: '#f5f3ff', stroke: '#7c3aed', text: '#7c3aed' },
 };
+
+const VERDICT_FX: Record<Verdict, string> = {
+  success: 'gt-v-succ',
+  failure: 'gt-v-fail',
+  replan: 'gt-v-replan',
+};
+
+const TANGENT_SAMPLE_PX = 1;
+const HORIZONTAL_THRESHOLD = 0.15;
+const SIDE_THRESHOLD = 0.5;
 
 // 更接近真实渲染宽度的估算：CJK ≈ 1em，拉丁 ≈ 0.56em
 const estW = (s: string, fs: number) => {
@@ -85,6 +97,29 @@ function Hiker() {
   );
 }
 
+type Mirror = 1 | -1;
+
+/**
+ * 把路径切线转换成人物姿态。返回新的水平镜像状态，让镜像只在人物接近直立时切换；
+ * 转弯途中保持手脚的同一侧，避免跨过阈值时产生一次多余翻面。
+ */
+function facingForTangent(dx: number, dy: number, previousMirror: Mirror): { mirror: Mirror; transform: string } {
+  const angle = Math.atan2(dy, dx);
+  const verticalness = Math.abs(Math.sin(angle));
+  const side = Math.sin(angle) >= 0 ? 1 : -1;
+  const mirror: Mirror = verticalness < HORIZONTAL_THRESHOLD ? (dx >= 0 ? 1 : -1) : previousMirror;
+
+  if (verticalness >= SIDE_THRESHOLD) {
+    // 侧边姿态本身使用 -1 镜像；同步保存该状态，转入底部弯道时就不会先恢复
+    // previousMirror、随后又因水平反向再次翻面。
+    return { mirror: -1, transform: `scale(-1 1) rotate(${90 * side} 0 -2)` };
+  }
+
+  const tilt = (-side * 90 * verticalness * Math.PI) / 180;
+  const rotation = (Math.atan2(mirror * Math.sin(tilt), Math.cos(tilt)) * 180) / Math.PI;
+  return { mirror, transform: `scale(${mirror} 1) rotate(${rotation} 0 -2)` };
+}
+
 // ---------------------------------------------------------------- 时间线脚本
 
 type Seg =
@@ -95,6 +130,7 @@ type Seg =
 interface FxKit {
   pop: (id: string, delay?: number) => void;
   fade: (id: string, delay?: number) => void;
+  verdict: (value: Verdict, delay?: number) => void;
   slip: () => void;
   say: (i: number) => void;
   msg: (text: string) => void;
@@ -159,7 +195,7 @@ const SCRIPT = (k: FxKit): Seg[] => {
     { type: 'walk', from: f760, to: sT, ms: 650, marks: [{ frac: sT, fx: () => k.say(3) }] },
     { type: 'hold', ms: 1500, fx: () => k.pop('gt-ev', 150) },
     { type: 'walk', from: sT, to: ver, ms: 1300, marks: [{ frac: ver, fx: () => k.say(4) }] },
-    { type: 'hold', ms: 1900, fx: () => k.pop('gt-v-succ', 150) },
+    { type: 'hold', ms: 1900, fx: () => k.verdict('success', 150) },
     { type: 'walk', from: ver, to: arch, ms: 1000, marks: [{ frac: arch, fx: () => k.say(5) }] },
     { type: 'hold', ms: 1700, fx: () => k.pop('gt-k', 150) },
     { type: 'walk', from: arch, to: 0.9999, ms: 1500, marks: [{ frac: arch + 0.004, fx: () => k.say(6) }] },
@@ -178,16 +214,17 @@ const SCRIPT = (k: FxKit): Seg[] => {
     },
     {
       type: 'hold', ms: 2300, fx: () => {
-        k.pop('gt-v-fail', 120);
+        k.verdict('failure', 120);
         k.pop('gt-l', 800);
         k.msg('replan：子会话 · 从当前状态重启');
         k.pop('gt-replan', 1000);
+        k.verdict('replan', 1000);
         k.pop('gt-hub', 1100);
       },
     },
     { type: 'jump', to: reenter, fx: () => { k.pop('gt-cs', 60); k.fade('gt-replan', 500); } },
     { type: 'walk', from: reenter, to: ver, ms: 1300 },
-    { type: 'hold', ms: 1900, fx: () => { k.pop('gt-v-succ', 120); k.pop('gt-ff', 650); k.fade('gt-cs', 400); } },
+    { type: 'hold', ms: 1900, fx: () => { k.verdict('success', 120); k.pop('gt-ff', 650); k.fade('gt-cs', 400); } },
     // ---- 第③圈 Real：加冰面 → 复用教训减速通过 → 系统级提升
     {
       type: 'hold', ms: 1600, fx: () => {
@@ -207,7 +244,7 @@ const SCRIPT = (k: FxKit): Seg[] => {
     { type: 'walk', from: sT, to: ver, ms: 1100 },
     {
       type: 'hold', ms: 2400, fx: () => {
-        k.pop('gt-v-succ', 120);
+        k.verdict('success', 120);
         k.pop('gt-badge', 750);
       },
     },
@@ -216,7 +253,7 @@ const SCRIPT = (k: FxKit): Seg[] => {
 };
 
 export const GrandTrail: React.FC<WidgetProps> = () => {
-  const [reduced, setReduced] = useState(false);
+  const [reduced, setReduced] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
   const [caption, setCaption] = useState(0);
   const [hubMsg, setHubMsg] = useState('');
   const [dyn2Msg, setDyn2Msg] = useState('');
@@ -265,42 +302,33 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       }
       return 0.999;
     };
-    // 人物朝向：绕脚底接触点 (0,-2) 旋转，双脚始终踩在路径上（与路线对齐）。
-    // 水平段（顶/底边）：直立行走，镜像 faceSx 随水平位移带迟滞翻转；
+    // 人物朝向只取决于当前位置的路径切线，不能使用「上一帧 → 当前帧」的位移。
+    // replan 会把人物从验收台瞬移回执行段；若把这次跳跃当作行走方向，镜像会先
+    // 错翻一次、下一帧再翻回来，正是 First → Final 后闪烁的根因。
+    // 水平段（顶/底边）：直立行走，镜像 faceSx 随路径切线方向翻转；
     // 侧边段（左/右边）：横躺，头朝环路内侧、腹部朝行进方向（正面朝前）；
     // 弯道（0.05<v<0.5）：直立并朝内侧连续倾斜，rot 经 atan2 补偿镜像使世界朝向连续。
     // 镜像只在接近直立（v<0.15）时翻转——弯道中途翻镜像会让四肢瞬间跳到路的另一侧。
-    let prevPt: { x: number; y: number } | null = null;
-    let faceSx = 1;
+    let faceSx: Mirror = 1;
+    const pointAtWrappedDistance = (distance: number) => {
+      const wrapped = ((distance % total) + total) % total;
+      return base.getPointAtLength(wrapped);
+    };
     const placeWalker = (frac: number) => {
-      const p = base.getPointAtLength(Math.max(0, Math.min(0.9999, frac)) * total);
+      const clamped = Math.max(0, Math.min(0.9999, frac));
+      const distance = clamped * total;
+      const p = base.getPointAtLength(distance);
       walker.setAttribute('transform', `translate(${p.x} ${p.y})`);
-      if (prevPt) {
-        const dx = p.x - prevPt.x;
-        const dy = p.y - prevPt.y;
-        if (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05) {
-          const ang = Math.atan2(dy, dx);
-          const v = Math.abs(Math.sin(ang));      // 路径竖直程度：水平段 0，侧边 1
-          const s = Math.sin(ang) >= 0 ? 1 : -1;  // 右缘 +1 / 左缘 -1
-          if (v < 0.15) {
-            // 仅在接近直立（水平路段）时翻转行走镜像——弯道中途翻镜像会让四肢瞬间跳到路的另一侧
-            if (dx > 0.08) faceSx = 1;
-            else if (dx < -0.08) faceSx = -1;
-          }
-          if (v >= 0.5) {
-            // 侧边横躺：双脚踩路、头朝环路内侧、腹部朝行进方向（正面朝前）
-            facing.setAttribute('transform', `scale(-1 1) rotate(${90 * s} 0 -2)`);
-          } else {
-            // 直立段与弯道过渡：头向上并向内侧连续倾斜。
-            // v≈0 的水平直段也必须持续归位直立——跳跃落点 / 整圈重置把人物带着
-            // 侧边横躺姿态放到水平路上时，若不归位，整个直段都会保持 ±90° 错误朝向。
-            const th = (-s * 90 * v * Math.PI) / 180;
-            const rot = (Math.atan2(faceSx * Math.sin(th), Math.cos(th)) * 180) / Math.PI;
-            facing.setAttribute('transform', `scale(${faceSx} 1) rotate(${rot} 0 -2)`);
-          }
-        }
-      }
-      prevPt = p;
+
+      // 用路径前后各 1px 的点求局部切线。闭合路径在首尾处用环绕采样，避免重播
+      // 跨过 0/1 接缝时出现一个错误方向帧。
+      const before = pointAtWrappedDistance(distance - TANGENT_SAMPLE_PX);
+      const after = pointAtWrappedDistance(distance + TANGENT_SAMPLE_PX);
+      const dx = after.x - before.x;
+      const dy = after.y - before.y;
+      const pose = facingForTangent(dx, dy, faceSx);
+      faceSx = pose.mirror;
+      facing.setAttribute('transform', pose.transform);
     };
 
     const timeouts: number[] = [];
@@ -330,10 +358,21 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
         }, delay)
       );
     };
+    const verdict = (value: Verdict, delay = 0) => {
+      timeouts.push(
+        window.setTimeout(() => {
+          stage.querySelectorAll('.gt-lamp.on').forEach((el) => el.classList.remove('on'));
+          const el = stage.querySelector(`[data-fx="${VERDICT_FX[value]}"]`);
+          if (!el) return;
+          void el.getBoundingClientRect();
+          el.classList.add('on');
+        }, delay)
+      );
+    };
     const say = (i: number) => setCaption(i);
     const msg = (t: string) => setHubMsg(t);
     const msg2 = (t: string) => setDyn2Msg(t);
-    const kit: FxKit = { pop, fade, slip, say, msg, msg2, fracTop, fracRight, fracBot };
+    const kit: FxKit = { pop, fade, verdict, slip, say, msg, msg2, fracTop, fracRight, fracBot };
     const script = SCRIPT(kit);
     const resetFx = () => stage.querySelectorAll('[data-fx].on').forEach((e) => e.classList.remove('on'));
 
@@ -341,7 +380,12 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       placeWalker(fracRight(246));
       setCaption(CAPTIONS.length - 1);
       stage.querySelectorAll('[data-fx]').forEach((e) => e.classList.add('on'));
-      return () => timeouts.forEach((t) => window.clearTimeout(t));
+      stage.querySelector(`[data-fx="${VERDICT_FX.failure}"]`)?.classList.remove('on');
+      stage.querySelector(`[data-fx="${VERDICT_FX.replan}"]`)?.classList.remove('on');
+      return () => {
+        timeouts.forEach((t) => window.clearTimeout(t));
+        resetFx();
+      };
     }
 
     let stopped = false;
@@ -408,6 +452,7 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       stopped = true;
       cancelAnimationFrame(raf);
       timeouts.forEach((t) => window.clearTimeout(t));
+      resetFx();
     };
   }, [reduced]);
 
