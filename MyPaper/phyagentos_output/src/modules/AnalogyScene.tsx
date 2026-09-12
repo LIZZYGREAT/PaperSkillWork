@@ -12,19 +12,19 @@ interface Variant {
   walkTo: string;
   trailBroken?: boolean;
   flagColor: string;
-  prop?: 'map' | 'notebook' | 'gate' | 'signposts' | 'check' | 'fork';
+  prop?: 'map' | 'notebook' | 'gate' | 'signposts' | 'check' | 'fork' | 'camp' | 'radio';
   rocky?: boolean;
 }
 
 const VARIANTS: Record<string, Variant> = {
-  'chap-1': { walkTo: '48%', trailBroken: true, flagColor: '#c43f52' },
-  'chap-2': { walkTo: '82%', flagColor: '#228d5c', prop: 'map' },
-  'chap-3': { walkTo: '82%', flagColor: '#228d5c', prop: 'notebook' },
-  'chap-4': { walkTo: '40%', flagColor: '#228d5c', prop: 'gate' },
-  'chap-5': { walkTo: '72%', flagColor: '#228d5c', prop: 'signposts' },
+  'chap-1': { walkTo: '56%', flagColor: '#c43f52', prop: 'map' },
+  'chap-2': { walkTo: '48%', trailBroken: true, flagColor: '#c43f52' },
+  'chap-3': { walkTo: '40%', flagColor: '#228d5c', prop: 'camp' },
+  'chap-4': { walkTo: '58%', flagColor: '#228d5c', prop: 'radio' },
+  'chap-5': { walkTo: '44%', flagColor: '#228d5c', prop: 'gate' },
   'chap-6': { walkTo: '56%', flagColor: '#228d5c', prop: 'fork' },
-  'chap-7': { walkTo: '60%', flagColor: '#228d5c', prop: 'notebook' },
-  'chap-8': { walkTo: '82%', flagColor: '#228d5c', prop: 'signposts' },
+  'chap-7': { walkTo: '72%', flagColor: '#228d5c', prop: 'signposts' },
+  'chap-8': { walkTo: '60%', flagColor: '#228d5c', prop: 'notebook' },
   'chap-9': { walkTo: '82%', flagColor: '#228d5c', rocky: true },
   'chap-10': { walkTo: '96%', flagColor: '#228d5c', prop: 'check' },
 };
@@ -129,13 +129,38 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
       ) : null}
 
       {/* 道具 */}
+      {v.prop === 'camp' ? (
+        <g>
+          {/* 大本营：帐篷 + 旗帜 = 运行时层 */}
+          <path d="M 296 112 L 322 78 L 348 112 Z" fill="#e7ddc8" stroke="#92400e" strokeWidth={2.4} strokeLinejoin="round" />
+          <path d="M 322 78 L 322 112" stroke="#92400e" strokeWidth={1.6} opacity={0.7} />
+          <line x1={352} y1={112} x2={352} y2={70} stroke="#92400e" strokeWidth={2.2} />
+          <path d="M 352 70 L 374 77 L 352 84 Z" fill="#228d5c" />
+          <text x={322} y={132} textAnchor="middle" fontSize={11} fill="#228d5c" fontWeight={600}>
+            大本营 · 系统层
+          </text>
+        </g>
+      ) : null}
+      {v.prop === 'radio' ? (
+        <g>
+          {/* 无线电：天线 + 电波 = 文件协议 */}
+          <line x1={318} y1={112} x2={318} y2={64} stroke="#27446e" strokeWidth={2.6} strokeLinecap="round" />
+          <circle cx={318} cy={60} r={3.4} fill="#27446e" />
+          <path d="M 306 66 q -8 -8 0 -16" fill="none" stroke="#27446e" strokeWidth={2} strokeLinecap="round" opacity={0.75} />
+          <path d="M 330 66 q 8 -8 0 -16" fill="none" stroke="#27446e" strokeWidth={2} strokeLinecap="round" opacity={0.75} />
+          <rect x={288} y={112} width={60} height={8} rx={4} fill="#27446e" opacity={0.5} />
+          <text x={318} y={136} textAnchor="middle" fontSize={11} fill="#27446e" fontWeight={600}>
+            同一频道 · 共享状态
+          </text>
+        </g>
+      ) : null}
       {v.prop === 'map' ? (
         <g>
           <rect x={438} y={24} width={92} height={62} rx={7} fill="#fff" stroke="#d7deea" strokeWidth={1.6} />
           <path d="M 452 74 Q 486 36 516 44" fill="none" stroke="#27446e" strokeWidth={2.2} strokeLinecap="round" />
           <circle cx={516} cy={44} r={4} fill="#228d5c" />
           <text x={484} y={20} textAnchor="middle" fontSize={11} fill="#68778f">
-            共享的地图
+            角色地图
           </text>
         </g>
       ) : null}

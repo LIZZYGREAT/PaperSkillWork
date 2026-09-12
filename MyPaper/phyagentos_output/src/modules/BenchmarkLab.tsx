@@ -2,218 +2,288 @@ import React, { useState } from 'react';
 import type { WidgetProps } from './registry';
 import { Feedback } from './kit';
 
-// Lab 10.1 — 按协议比较 First/Final 或 本文方法/最强基线。
-// 每个基准的数值只在自己的协议内对齐；单位与指标方向必须一起看。
+// Lab 10.1 — Benchmark Explorer。
+// 六个基准，各显示：协议、指标、First/Final 定义、主要结果与局限。
+// 数字只在同一协议内对齐——读表先读协议。
 
-type DS = 'optimus' | 'stardojo' | 'dst' | 'libero' | 'calvin' | 'robocasa';
+interface BarDef {
+  label: string;
+  value: number;
+  ours?: boolean;
+}
 
-interface Group {
+interface GroupDef {
   name: string;
-  a: number; // 基线 / First
-  b: number; // 本文 / Final
-  note?: string;
+  unit?: string;
+  bars: BarDef[];
 }
 
-interface DatasetDef {
-  chip: string;
-  aLabel: string;
-  bLabel: string;
-  aColor: string;
-  bColor: string;
-  metric: string;
-  higherBetter: boolean;
+interface BenchDef {
+  id: string;
+  name: string;
+  tier: 'Game' | 'Simulation';
   protocol: string;
+  metric: string;
+  firstFinal: string | null;
+  groups: GroupDef[];
   limit: string;
-  highlight?: number; // 重点关注组
-  groups: Group[];
 }
 
-const DATA: Record<DS, DatasetDef> = {
-  optimus: {
-    chip: 'Optimus-67 · Minecraft',
-    aLabel: '最强基线 Optimus-3',
-    bLabel: 'PhyAgentOS',
-    aColor: '#8b97ab',
-    bColor: '#228d5c',
-    metric: '成功率 SR（更高更好）',
-    higherBetter: true,
-    protocol: '67 个长程任务 · 7 组难度（表 1）',
-    limit: 'Armor 15% 落后于 Optimus-3 的 23%：终局装备生产仍是前沿任务。',
-    highlight: 5,
+const BENCHES: BenchDef[] = [
+  {
+    id: 'optimus',
+    name: 'Optimus-67',
+    tier: 'Game',
+    protocol: '67 个 Minecraft 长程任务 · 7 个难度组 · 基线在同设置下复现',
+    metric: 'Success Rate（± std）',
+    firstFinal: null,
     groups: [
-      { name: 'Wood', a: 99, b: 99 },
-      { name: 'Stone', a: 95, b: 96 },
-      { name: 'Iron', a: 55, b: 52 },
-      { name: 'Gold', a: 10, b: 6 },
-      { name: 'Diamond', a: 15, b: 19, note: '+4 pt' },
-      { name: 'RedStone', a: 29, b: 30, note: '超过全部已报告基线' },
-      { name: 'Armor', a: 23, b: 15 },
+      {
+        name: 'RedStone 组',
+        bars: [
+          { label: 'PhyAgentOS', value: 30, ours: true },
+          { label: 'Optimus-3', value: 29 },
+          { label: 'Optimus-2', value: 28 },
+        ],
+      },
+      {
+        name: 'Diamond 组',
+        bars: [
+          { label: 'PhyAgentOS', value: 19, ours: true },
+          { label: '最强基线', value: 15 },
+        ],
+      },
     ],
+    limit: 'Gold 0.06 / Armor 0.15：终局装备生产仍是前沿；RedStone 的优势归因（Verifier / Memory / 配方复用）需要更细粒度消融支撑。',
   },
-  stardojo: {
-    chip: 'StarDojo Lite-100',
-    aLabel: '最强基线 SPIKE (Qwen3.5-397B)',
-    bLabel: 'PhyAgentOS（纯文本 deepseek-v4-flash）',
-    aColor: '#8b97ab',
-    bColor: '#228d5c',
-    metric: '成功率（更高更好）',
-    higherBetter: true,
-    protocol: '100 个程序化生成任务 · 五类能力（表 2）',
-    limit: 'hard 任务 0.0%、medium 3.7%：成功集中在 easy（37.5%）。',
-    highlight: 1,
+  {
+    id: 'stardojo',
+    name: 'StarDojo',
+    tier: 'Game',
+    protocol: 'Lite-100 · deepseek-v4-flash（text-only）',
+    metric: 'Success Rate',
+    firstFinal: null,
     groups: [
-      { name: 'Farming', a: 34.9, b: 28.6 },
-      { name: 'Crafting', a: 23.8, b: 50.0, note: '+26.2 pt，验证过的配方累积在 KNOWLEDGE.md' },
-      { name: 'Exploration', a: 13.1, b: 17.9 },
-      { name: 'Combat', a: 8.3, b: 16.7 },
-      { name: 'Social', a: 10.7, b: 8.0 },
-      { name: 'Total', a: 18.0, b: 22.0, note: 'GPT-4.1 多模态为 12.7%' },
+      {
+        name: '总体',
+        bars: [
+          { label: 'PhyAgentOS', value: 22.0, ours: true },
+          { label: 'SPIKE（最强基线）', value: 18.0 },
+        ],
+      },
+      {
+        name: 'Crafting 能力',
+        bars: [
+          { label: 'PhyAgentOS', value: 50.0, ours: true },
+          { label: '最强基线', value: 23.8 },
+        ],
+      },
     ],
+    limit: 'Easy 37.5% / Medium 3.7% / Hard 0.0%——总分领先不等于困难任务被解决；Social 仅 8.0%。',
   },
-  dst: {
-    chip: 'DST-Dojo · 饥荒',
-    aLabel: 'Raw LLM',
-    bLabel: '+ PhyAgentOS',
-    aColor: '#8b97ab',
-    bColor: '#228d5c',
-    metric: '生存指标（见各组方向）',
-    higherBetter: true,
-    protocol: 'DeepSeek v4 Flash · 秋 0 日 · 白天开局 · 10 episodes（表 3）',
-    limit: '黑暗（Charlie）仍是主要死因（80%）；饿死上升到 10%——活得更久、吃得多。',
+  {
+    id: 'dst',
+    name: 'DST-Dojo',
+    tier: 'Game',
+    protocol: 'Don’t Starve · 秋季 Day 0 · 白天 · 10 episodes · Raw LLM vs +PhyAgentOS',
+    metric: '生存',
+    firstFinal: null,
     groups: [
-      { name: '生存天数', a: 1.02, b: 2.1, note: '×2.06' },
-      { name: '第 3 天存活率 %', a: 0, b: 30, note: '0% → 30%' },
-      { name: '黑暗致死 %（更低好）', a: 90, b: 80 },
-      { name: '怪物致死 %', a: 10, b: 10 },
+      {
+        name: '平均生存天数',
+        unit: ' 天',
+        bars: [
+          { label: 'Raw LLM', value: 1.02 },
+          { label: '+ PhyAgentOS', value: 2.1, ours: true },
+        ],
+      },
+      {
+        name: '第 3 天存活率',
+        bars: [
+          { label: 'Raw LLM', value: 0 },
+          { label: '+ PhyAgentOS', value: 30, ours: true },
+        ],
+      },
     ],
+    limit: '平均生存约 +106%，但死因仍是黑暗（Charlie 80%）；Health/Hunger/Sanity 均值更低是「活得更久」的副作用——不能机械地读成能力退化。',
   },
-  libero: {
-    chip: 'LIBERO · 操作',
-    aLabel: 'First（策略首试）',
-    bLabel: 'Final（验证器触发恢复后）',
-    aColor: '#8b97ab',
-    bColor: '#228d5c',
-    metric: '总体成功率（更高更好）',
-    higherBetter: true,
-    protocol: '四个策略后端 · 只在失败后介入 · 不改权重（表 4）',
-    limit: '首试成功率已很高的后端留给恢复的空间很小——增益 +0.4~+1.3 pt。',
+  {
+    id: 'libero',
+    name: 'LIBERO',
+    tier: 'Simulation',
+    protocol: '4 个 policy backend · Agent-assisted validation',
+    metric: 'Success Rate（%）',
+    firstFinal: 'First = 策略第一次原始尝试；Final = 失败后允许 verifier 触发受控恢复的结果。不改权重、不重置任务目标、不放宽成功标准。',
     groups: [
-      { name: 'OpenVLA', a: 74.5, b: 75.5, note: '+1.0' },
-      { name: 'π0', a: 92.8, b: 93.2, note: '+0.4' },
-      { name: 'π0.5', a: 97.0, b: 97.8, note: '+0.8' },
-      { name: 'X-VLA', a: 97.3, b: 98.6, note: '+1.3' },
+      {
+        name: 'OpenVLA',
+        bars: [
+          { label: 'First', value: 74.5 },
+          { label: 'Final', value: 75.5, ours: true },
+        ],
+      },
+      {
+        name: 'π₀',
+        bars: [
+          { label: 'First', value: 92.8 },
+          { label: 'Final', value: 93.2, ours: true },
+        ],
+      },
+      {
+        name: 'π₀.₅',
+        bars: [
+          { label: 'First', value: 97.0 },
+          { label: 'Final', value: 97.8, ours: true },
+        ],
+      },
+      {
+        name: 'X-VLA',
+        bars: [
+          { label: 'First', value: 97.3 },
+          { label: 'Final', value: 98.6, ours: true },
+        ],
+      },
     ],
+    limit: '四个后端全部提升但幅度有限（+0.4 ~ +1.3pt）：原始成功率已很高，可恢复失败样本少——天花板效应明显。',
   },
-  calvin: {
-    chip: 'CALVIN ABC→D · 长程链',
-    aLabel: 'First',
-    bLabel: 'Final',
-    aColor: '#8b97ab',
-    bColor: '#228d5c',
-    metric: '5/5 全链完成率（更高更好）',
-    higherBetter: true,
-    protocol: '五子任务链 · 中途不重置环境（表 5）',
-    limit: 'π0 平均完成子任务数 3.125 → 3.249：链中段恢复是主要收益来源。',
-    highlight: 1,
+  {
+    id: 'calvin',
+    name: 'CALVIN ABC→D',
+    tier: 'Simulation',
+    protocol: '每个 episode 5 个连续子任务 · 子任务之间不 reset · 误差向后传播',
+    metric: '5/5 全链完成率（%）',
+    firstFinal: '同 LIBERO 的 First / Final 定义。',
     groups: [
-      { name: 'X-VLA', a: 74.3, b: 75.7, note: '+1.4' },
-      { name: 'π0', a: 38.9, b: 45.6, note: '+6.7 pt' },
-      { name: 'π0.5', a: 85.3, b: 89.4, note: '+4.1 pt' },
+      {
+        name: 'X-VLA',
+        bars: [
+          { label: 'First', value: 74.3 },
+          { label: 'Final', value: 75.7, ours: true },
+        ],
+      },
+      {
+        name: 'π₀',
+        bars: [
+          { label: 'First', value: 38.9 },
+          { label: 'Final', value: 45.6, ours: true },
+        ],
+      },
+      {
+        name: 'π₀.₅',
+        bars: [
+          { label: 'First', value: 85.3 },
+          { label: 'Final', value: 89.4, ours: true },
+        ],
+      },
     ],
+    limit: 'π₀ +6.7pt 增益最大：长程链里「中途偏差 + 缺少及时恢复」的可挽回空间也最大。恢复付出的推理与时间成本未被讨论。',
   },
-  robocasa: {
-    chip: 'RoboCasa365 · 家务',
-    aLabel: 'First',
-    bLabel: 'Final',
-    aColor: '#8b97ab',
-    bColor: '#228d5c',
-    metric: '总体成功率（更高更好）',
-    higherBetter: true,
-    protocol: 'target50 · 18 原子技能 + 32 复合活动 · 250 episodes（表 6）',
-    limit: 'π0.5 的复合活动仅 4.4% → 10.0%：长程家务失败大部分仍不可恢复。',
-    highlight: 0,
+  {
+    id: 'robocasa',
+    name: 'RoboCasa365',
+    tier: 'Simulation',
+    protocol: '厨房家庭环境 · 250 episodes · 18 atomic skills + 32 composite activities · 铰链物体 / 杂乱 / 多视角',
+    metric: 'Episode Success Rate（%）',
+    firstFinal: '同 LIBERO 的 First / Final 定义。',
     groups: [
-      { name: 'π0.5', a: 17.6, b: 26.8, note: '+9.2 pt · 救回 23 个 episode' },
-      { name: 'RLDX-1', a: 35.6, b: 42.8, note: '+7.2 pt · 救回 18 个' },
-      { name: 'WorldDreamer', a: 34.0, b: 42.4, note: '+8.4 pt · 救回 21 个' },
+      {
+        name: 'π₀.₅（救回 23 个）',
+        bars: [
+          { label: 'First', value: 17.6 },
+          { label: 'Final', value: 26.8, ours: true },
+        ],
+      },
+      {
+        name: 'RLDX-1（救回 18 个）',
+        bars: [
+          { label: 'First', value: 35.6 },
+          { label: 'Final', value: 42.8, ours: true },
+        ],
+      },
+      {
+        name: 'WorldDreamer（救回 21 个）',
+        bars: [
+          { label: 'First', value: 34.0 },
+          { label: 'Final', value: 42.4, ours: true },
+        ],
+      },
     ],
+    limit: '增益（+7.2 ~ +9.2pt）远大于 LIBERO：环境越复杂 → 原始失败越多 → 其中可恢复的部分越多。增益大小取决于失败结构，不能外推到简单环境。',
   },
-};
+];
 
 export const BenchmarkLab: React.FC<WidgetProps> = () => {
-  const [ds, setDs] = useState<DS>('robocasa');
-  const d = DATA[ds];
-  const max = Math.max(...d.groups.flatMap((g) => [g.a, g.b]));
-  return (
-    <div className="lab">
-      <div className="lab-controls lab-controls-top lab-choice-wrap">
-        {(Object.keys(DATA) as DS[]).map((k) => (
-          <button
-            type="button"
-            key={k}
-            className={`lab-chip ${ds === k ? 'is-active' : ''}`}
-            onClick={() => setDs(k)}
-          >
-            {DATA[k].chip}
-          </button>
-        ))}
-      </div>
+  const [idx, setIdx] = useState(0);
+  const b = BENCHES[idx];
 
-      <div className="lab-stage" key={ds}>
-        <div className="lab-chart-head">
-          <span className="lab-chart-metric">{d.metric}</span>
-          <span className="lab-chart-protocol">{d.protocol}</span>
-        </div>
-        <div className="lab-legend">
-          <span className="lab-legend-item">
-            <i style={{ background: d.aColor }} /> {d.aLabel}
-          </span>
-          <span className="lab-legend-item">
-            <i style={{ background: d.bColor }} /> {d.bLabel}
-          </span>
-        </div>
-        <div className="lab-chart">
-          {d.groups.map((g, gi) => (
-            <div className={`lab-chart-group ${d.highlight === gi ? 'is-hot' : ''}`} key={g.name}>
-              <div className="lab-chart-name">{g.name}</div>
-              <div className="lab-chart-bars">
-                <div className="lab-chart-bar-row">
-                  <div className="lab-chart-bar">
-                    <i
-                      style={{
-                        width: `${(g.a / max) * 100}%`,
-                        background: d.aColor,
-                        animationDelay: `${gi * 60}ms`,
-                      }}
-                    />
-                    <span className="lab-chart-val">{g.a}</span>
-                  </div>
-                  <div className="lab-chart-bar">
-                    <i
-                      className="is-ours"
-                      style={{
-                        width: `${(g.b / max) * 100}%`,
-                        background: d.bColor,
-                        animationDelay: `${gi * 60 + 90}ms`,
-                      }}
-                    />
-                    <span className="lab-chart-val is-ours">{g.b}</span>
-                  </div>
-                </div>
-                {g.note ? <div className="lab-chart-note">{g.note}</div> : null}
-              </div>
-            </div>
+  let tone: '' | 'good' | 'bad' | 'info' = 'info';
+  let msg =
+    b.tier === 'Game'
+      ? 'Game 基准里没有 First/Final 之分——比的是完整系统与基线。注意每个基准的指标方向与单位。'
+      : '仿真基准看 First / Final 两根柱子：Final − First 度量的是「验证 + 恢复挽救了多少原本失败的执行」，不是模型本身变强。';
+
+  return (
+    <div className="lab bl-lab">
+      <div className="lab-controls lab-controls-top">
+        <div className="lab-choice-group lab-choice-wrap">
+          <span className="lab-choice-label">基准</span>
+          {BENCHES.map((x, i) => (
+            <button type="button" key={x.id} className={`lab-chip ${idx === i ? 'is-active' : ''}`} onClick={() => setIdx(i)}>
+              {x.name}
+            </button>
           ))}
         </div>
+      </div>
+
+      <div className="lab-stage" key={b.id}>
+        <div className="lab-chart-head">
+          <span className={`lab-chart-protocol ${b.tier === 'Game' ? 'is-game' : 'is-sim'}`}>{b.tier} Tier</span>
+          <span className="lab-chart-metric">指标：{b.metric}</span>
+        </div>
+        <div className="lab-chart-protocol-line">协议：{b.protocol}</div>
+
+        {b.firstFinal ? (
+          <div className="bl-firstfinal">
+            <b>First / Final 定义</b>
+            {b.firstFinal}
+          </div>
+        ) : null}
+
+        <div className="lab-chart">
+          {b.groups.map((g) => {
+            const max = Math.max(...g.bars.map((x) => x.value), 1);
+            return (
+              <div className="lab-chart-group" key={g.name}>
+                <div className="lab-chart-name">{g.name}</div>
+                <div className="lab-chart-bars">
+                  {g.bars.map((bar) => (
+                    <div className="lab-chart-bar-row" key={bar.label}>
+                      <span className="bl-bar-label">{bar.label}</span>
+                      <div className="lab-chart-bar">
+                        <i
+                          className={bar.ours ? 'is-ours' : ''}
+                          style={{ width: `${Math.max(2, (bar.value / max) * 100)}%` }}
+                        />
+                      </div>
+                      <span className={`lab-chart-val ${bar.ours ? 'is-ours' : ''}`}>
+                        {bar.value.toFixed(bar.value % 1 === 0 ? 0 : 1)}
+                        {g.unit ?? '%'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         <div className="lab-chart-limit">
-          <span className="lab-chart-limit-label">诚实的边界</span>
-          {d.limit}
+          <span className="lab-chart-limit-label">局限</span>
+          {b.limit}
         </div>
       </div>
 
-      <Feedback tone="info">
-        数值只在同一协议内对齐：First / Final 的含义、数据集、单位与指标方向必须一起看——PhyAgentOS 不把不同 benchmark 的数字拼成一个总分。
-      </Feedback>
+      <Feedback tone={tone}>{msg}</Feedback>
     </div>
   );
 };

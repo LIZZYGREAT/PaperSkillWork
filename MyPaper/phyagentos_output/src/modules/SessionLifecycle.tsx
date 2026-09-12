@@ -1,148 +1,206 @@
 import React, { useState } from 'react';
 import type { WidgetProps } from './registry';
-import { Feedback, Btn } from './kit';
+import { Feedback } from './kit';
 
-// Lab 3.1 — 会话状态机步进：pending → claimed → running → finalizing → verifying → terminal。
-// 每一步展示：谁在负责、协议文件里写下了什么。
+// Lab 5.1 — Session Lifecycle：一台可以被「玩坏」的状态机。
+// 所有节点都可以点：合法转移推进会话并在协议文件里留下记录；
+// 非法转移被治理层直接拒绝——会话不是一串可以任意调用的函数。
 
-interface StepDef {
-  state: string;
-  actor: string;
-  plane: 'agent' | 'watchdog' | 'runner' | 'verifier';
-  desc: string;
-  write: string;
-  file: string;
-}
+type StateId =
+  | 'pending'
+  | 'claimed'
+  | 'running'
+  | 'finalizing'
+  | 'awaiting_verification'
+  | 'verifying'
+  | 'succeeded'
+  | 'failed'
+  | 'replanned';
 
-const STEPS: StepDef[] = [
+const ORDER: StateId[] = ['pending', 'claimed', 'running', 'finalizing', 'awaiting_verification', 'verifying'];
+
+const NODES: { id: StateId; label: string; owner: string; write: string }[] = [
   {
-    state: 'pending',
-    actor: 'Goal Planner / Session Compiler',
-    plane: 'agent',
-    desc: 'Agent 把自然语言请求编译成结构化会话：任务目标、所选 SkillRuntime 与目标端、前置条件、执行限制与接受标准。',
-    write: 'lifecycle = pending · objective / acceptance_criteria 已就位',
-    file: 'SESSIONS.md',
+    id: 'pending',
+    label: 'pending',
+    owner: 'Agent / Session Compiler',
+    write: 'SESSIONS.md ← 目标 · Runtime · Target · 接受标准（等待认领）',
   },
   {
-    state: 'claimed',
-    actor: 'WatchdogSupervisor',
-    plane: 'watchdog',
-    desc: '监督者原子认领会话并执行兼容性预检：核对观测模态、动作表示与安全配置，产出 AdapterPlan 与 TargetToolManifest。',
-    write: 'lifecycle = claimed · adapter_plan + tool_manifest 已生成',
-    file: 'SESSIONS.md',
+    id: 'claimed',
+    label: 'claimed',
+    owner: 'WatchdogSupervisor',
+    write: 'SESSIONS.md ← state=claimed · 原子认领，开始兼容性预检',
   },
   {
-    state: 'running',
-    actor: 'SessionRunner + SkillRuntime',
-    plane: 'runner',
-    desc: 'Runner 通过受控接口执行观测-动作循环；Runner、策略服务与目标端持续上报心跳，超时或取消会被传播与遏制。',
-    write: 'heartbeat ✓ · 轨迹与中间事件追加进执行记录',
-    file: 'LOG.md',
+    id: 'running',
+    label: 'running',
+    owner: 'SessionRunner',
+    write: 'heartbeat: runner ✓ policy ✓ target ✓（受控执行中）',
   },
   {
-    state: 'finalizing',
-    actor: 'ResultWriter',
-    plane: 'runner',
-    desc: '到达终止条件后收集证据包：初始与终止观测、ENVIRONMENT.md 快照、动作-观测历史与目标端事件。',
-    write: 'evidence_bundle = {S₀, S_T, τ, env_snapshot, events}',
-    file: 'SESSIONS.md',
+    id: 'finalizing',
+    label: 'finalizing',
+    owner: 'SessionRunner',
+    write: 'evidence ← S₀ / S_T 观测 · 动作-观测历史 · 目标端事件',
   },
   {
-    state: 'verifying',
-    actor: 'SessionVerifier',
-    plane: 'verifier',
-    desc: '依据会话契约评估证据包；自动验收与工具辅助复核共享同一接口，判定与所用证据引用一起追加记录。',
-    write: 'attempts += {verdict, evidence_refs, verifier_cfg}',
-    file: 'attempts 记录',
+    id: 'awaiting_verification',
+    label: 'awaiting_verification',
+    owner: 'Runtime',
+    write: 'SESSIONS.md ← state=awaiting_verification · 证据包就绪',
   },
   {
-    state: 'terminal',
-    actor: '状态写回',
-    plane: 'watchdog',
-    desc: 'success → succeeded；failure → failed（证据保留用于诊断）；replan → replanned，并编译不可变父子关系的 child session。',
-    write: 'lifecycle = terminal · verdict 已持久化',
-    file: 'SESSIONS.md',
+    id: 'verifying',
+    label: 'verifying',
+    owner: 'SessionVerifier',
+    write: 'verifier: 对比 G / S₀ / S_T / τ / H 与接受标准',
   },
 ];
 
-const PLANE_LABEL: Record<StepDef['plane'], string> = {
-  agent: 'Agent 平面',
-  watchdog: 'WatchdogSupervisor',
-  runner: 'Runtime 平面',
-  verifier: 'SessionVerifier',
-};
-
-const PLANE_COLOR: Record<StepDef['plane'], string> = {
-  agent: '#7c3aed',
-  watchdog: '#f07e47',
-  runner: '#27446e',
-  verifier: '#228d5c',
-};
+const TERMINALS: { id: StateId; label: string; write: string }[] = [
+  { id: 'succeeded', label: 'succeeded', write: 'SESSIONS.md ← verdict=succeeded（经验候选 → KNOWLEDGE）' },
+  { id: 'failed', label: 'failed', write: 'SESSIONS.md ← verdict=failed（证据保留 → 诊断 / LESSONS）' },
+  { id: 'replanned', label: 'replanned', write: 'child session 已编译；原会话不被改写（append-only）' },
+];
 
 export const SessionLifecycle: React.FC<WidgetProps> = () => {
-  const [step, setStep] = useState(0);
-  const s = STEPS[step];
+  const [current, setCurrent] = useState<StateId>('pending');
+  const [violations, setViolations] = useState(0);
+  const [flash, setFlash] = useState<string | null>(null);
+  const [log, setLog] = useState<string[]>(['SESSIONS.md ← session sess-0142 created (pending)']);
+
+  const idx = ORDER.indexOf(current);
+  const terminal = TERMINALS.find((t) => t.id === current);
+  const atVerifying = current === 'verifying';
+
+  const advance = (next: StateId) => {
+    if (next === current) return;
+    const nextIdx = ORDER.indexOf(next);
+    const curIdx = ORDER.indexOf(current);
+
+    // terminal 只能从 verifying 进入
+    if (terminal || current === 'succeeded' || current === 'failed' || current === 'replanned') {
+      reject('terminal 是终态：会话生命周期不可回退。重试会编译新的 child session，而不是改写历史。');
+      return;
+    }
+    if (TERMINALS.some((t) => t.id === next)) {
+      if (atVerifying) {
+        setCurrent(next);
+        const t = TERMINALS.find((x) => x.id === next)!;
+        setLog((l) => [...l, t.write]);
+        return;
+      }
+      reject(`Illegal transition：${current} 状态下不能直接给出 verdict——必须先走完 finalizing → awaiting_verification → verifying。`);
+      return;
+    }
+    if (nextIdx === curIdx + 1) {
+      setCurrent(next);
+      const n = NODES[nextIdx];
+      setLog((l) => [...l, n.write]);
+      setFlash(null);
+      return;
+    }
+    if (nextIdx <= curIdx) {
+      reject(`Illegal transition：会话状态不可回退（append-only）。${current} → ${next} 会破坏审计历史。`);
+      return;
+    }
+    const skipped = ORDER.slice(curIdx + 1, nextIdx).map((s) => NODES[ORDER.indexOf(s)].label);
+    reject(`Illegal transition：跳过了 ${skipped.join(' → ')}。治理要求每一步都显式发生——比如在 ${current} 时点 Verify，Verifier 还没有任何证据可读。`);
+  };
+
+  const reject = (why: string) => {
+    setViolations((v) => v + 1);
+    setFlash(why);
+  };
+
+  const reset = () => {
+    setCurrent('pending');
+    setViolations(0);
+    setFlash(null);
+    setLog(['SESSIONS.md ← session sess-0142 created (pending)']);
+  };
+
+  let tone: '' | 'good' | 'bad' | 'info' = 'info';
+  let msg = '按顺序点击节点推进会话；也可以故意点非法转移（比如 running 时直接点 verifying），看看治理层如何拒绝。';
+  if (flash) {
+    tone = 'bad';
+    msg = flash;
+  } else if (terminal) {
+    tone = 'good';
+    if (current === 'replanned') {
+      msg = 'replanned：原会话保持不可变，系统编译了更新前置条件的 child session（sess-0143）——重规划是新的可审计决策。';
+    } else if (current === 'succeeded') {
+      msg = 'succeeded：判定已追加进 attempts 记录。整条生命周期每一步都在协议文件里留下了痕迹。';
+    } else {
+      msg = 'failed：证据保留用于诊断与教训提取——失败不丢人，丢证据才丢人。';
+    }
+  } else if (atVerifying) {
+    tone = '';
+    msg = 'verifying：SessionVerifier 正在评估证据包。现在选择一个 verdict —— 注意这一步只能发生在证据就绪之后。';
+  }
+
   return (
-    <div className="lab">
-      <div className="lab-stage">
-        <div className="lab-rail">
-          {STEPS.map((st, i) => (
-            <React.Fragment key={st.state}>
-              {i > 0 ? (
-                <span
-                  className={`lab-rail-link ${i <= step ? 'is-done' : ''}`}
-                  aria-hidden
-                />
-              ) : null}
+    <div className="lab sl-lab">
+      <div className="lab-stage lab-rail-stage">
+        <div className="lab-rail" role="group" aria-label="会话状态机">
+          {NODES.map((n, i) => {
+            const stateIdx = ORDER.indexOf(current);
+            const isDone = terminal || stateIdx > i;
+            const isActive = current === n.id;
+            return (
               <button
                 type="button"
-                className={`lab-rail-node ${i === step ? 'is-active' : ''} ${i < step ? 'is-done' : ''}`}
-                style={{ '--node-color': PLANE_COLOR[st.plane] } as React.CSSProperties}
-                onClick={() => setStep(i)}
-                aria-label={`状态 ${st.state}`}
+                key={n.id}
+                className={`lab-rail-node ${isActive ? 'is-active' : ''} ${isDone ? 'is-done' : ''}`}
+                onClick={() => advance(n.id)}
               >
-                <span className="lab-rail-dot">{i < step ? '✓' : i + 1}</span>
-                <span className="lab-rail-label">{st.state}</span>
+                <span className="lab-rail-dot" aria-hidden />
+                <span className="lab-rail-label">{n.label}</span>
+                <span className="lab-rail-owner">{n.owner}</span>
               </button>
-            </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* verdict 选择 */}
+        <div className={`sl-verdicts ${atVerifying ? 'is-open' : ''}`}>
+          <span className="sl-verdicts-label">terminal →</span>
+          {TERMINALS.map((t) => (
+            <button
+              type="button"
+              key={t.id}
+              className={`sl-verdict-btn tone-${t.id === 'succeeded' ? 'good' : t.id === 'failed' ? 'bad' : 'warn'}`}
+              onClick={() => advance(t.id)}
+              disabled={!atVerifying}
+            >
+              {t.label}
+            </button>
           ))}
         </div>
-        <div className="lab-detail" key={s.state}>
-          <div className="lab-detail-head">
-            <span className="lab-detail-state">{s.state}</span>
-            <span
-              className="lab-detail-plane"
-              style={{ color: PLANE_COLOR[s.plane], borderColor: PLANE_COLOR[s.plane] }}
-            >
-              {PLANE_LABEL[s.plane]}
-            </span>
-          </div>
-          <p className="lab-detail-desc">{s.desc}</p>
-          <div className="lab-detail-write">
-            <span className="lab-file-chip">{s.file}</span>
-            <code>{s.write}</code>
-          </div>
+
+        {/* 协议控制台 */}
+        <div className="runtime-console sl-console" aria-live="polite">
+          <div className="sl-console-head">protocol console · 只追加（append-only）</div>
+          {log.map((l, i) => (
+            <div className="sl-console-line" key={i}>
+              {l}
+            </div>
+          ))}
+          {terminal ? <div className="sl-console-line is-final">attempts += 1 · 历史未被改写</div> : null}
         </div>
       </div>
-      <div className="lab-controls lab-controls-center">
-        <Btn variant="ghost" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>
-          ← 上一步
-        </Btn>
-        <Btn onClick={() => setStep(Math.min(STEPS.length - 1, step + 1))} disabled={step === STEPS.length - 1}>
-          下一步 →
-        </Btn>
-        <Btn variant="ghost" onClick={() => setStep(0)}>
+
+      <div className="lab-controls">
+        <button type="button" className="lab-btn lab-btn-ghost" onClick={reset}>
           重置
-        </Btn>
+        </button>
+        <span className="sl-violations">
+          非法转移尝试：<b>{violations}</b> 次
+          {violations > 0 ? '（被拒绝的操作也是可审计的事件）' : ''}
+        </span>
       </div>
-      <Feedback tone={step === STEPS.length - 1 ? 'good' : 'info'}>
-        {step === 0 && '会话是调度、预检、取证与验收的最小单位——一切从写入这份契约开始。'}
-        {step === 1 && '预检不通过就不会进入 running：结构上跑不通的会话在触碰目标端之前被拒绝。'}
-        {step === 2 && '监督者只看心跳与生命周期，不参与观测-动作循环——执行策略独立演化。'}
-        {step === 3 && '证据包在这里成形：没有 S₀ 就无法判断「变化」，没有 τ 就无法归因。'}
-        {step === 4 && 'verdict 与证据引用一起追加进 attempts——自动验收与人工复核同一条记录接口。'}
-        {step === 5 && '三种终止各自触发不同转移；replan 保留原尝试并新建 child session，不改写历史。'}
-      </Feedback>
+      <Feedback tone={tone}>{msg}</Feedback>
     </div>
   );
 };

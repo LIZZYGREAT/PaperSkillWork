@@ -2,136 +2,245 @@ import React, { useState } from 'react';
 import type { WidgetProps } from './registry';
 import { Feedback } from './kit';
 
-// Lab 2.1 — 点击五份协议文件，看各自为共享认知状态贡献哪一类字段。
-// 左侧文件列表 + 右侧文件窗口（YAML 风格字段），并标注对应的记忆层次。
+// Lab 4.1 — Protocol Views。
+// Step A：点击场景中的物体，看原始观测如何被结构化为 entity/attribute/relation；
+// Step B：打开五份协议文档，看同一份状态如何被不同视图引用——
+// 五份文件不是五个孤立文档，而是统一认知状态空间的五个视图。
 
-interface FileDef {
-  name: string;
-  role: string;
-  memory: string;
-  memoryTone: 'info' | 'good' | 'warn' | 'neutral' | 'bad';
-  fields: [string, string][];
-  contributes: string;
-}
+type FileId = 'sessions' | 'skillruntime' | 'targets' | 'environment' | 'lessons';
 
-const FILES: FileDef[] = [
-  {
-    name: 'SESSIONS.md',
-    role: '事务中心',
-    memory: 'episodic · 情景记忆',
-    memoryTone: 'info',
-    fields: [
-      ['id', 'sess-0142'],
-      ['objective', '把红色积木放进抽屉'],
-      ['runtime / target', 'PolicySkillRuntime · franka-fr3'],
-      ['preconditions', '[夹爪为空, 抽屉未锁]'],
-      ['acceptance_criteria', '积木位于抽屉内 且 夹爪为空'],
-      ['lifecycle', 'running'],
-      ['attempts', '[{verdict, evidence_refs}] 追加式'],
-    ],
-    contributes: '执行契约 + 可审计的解决历史',
-  },
-  {
-    name: 'SKILLRUNTIME.md',
-    role: '执行方法库',
-    memory: 'procedural · 程序记忆',
-    memoryTone: 'warn',
-    fields: [
-      ['policy_flow', 'required_obs=[rgb, proprio]'],
-      ['action_forms', '[atomic, chunk(20)]'],
-      ['orchestration', 'runtime-managed loop @10Hz'],
-      ['adapters', '[PolicyAdapter, ActionBridge]'],
-      ['params', '{ctrl_freq: 10Hz, timeout: 45s}'],
-    ],
-    contributes: '执行方法需要什么、产出什么',
-  },
-  {
-    name: 'TARGETS.md',
-    role: '目标端库',
-    memory: '能力约束',
-    memoryTone: 'neutral',
-    fields: [
-      ['type', 'robot-arm (franka-fr3)'],
-      ['capabilities', '[grasp, place, open_drawer]'],
-      ['obs_modalities', '[rgb, depth, proprio]'],
-      ['action_semantics', 'ee-pose @ 10Hz'],
-      ['constraints', '{ws_bounds, speed, e_stop: local}'],
-    ],
-    contributes: '目标端能力、模态与安全约束',
-  },
-  {
-    name: 'ENVIRONMENT.md',
-    role: '环境快照',
-    memory: 'working · 工作记忆',
-    memoryTone: 'good',
-    fields: [
-      ['entities', '[cup#7, drawer#2, table]'],
-      ['relations', '{cup#7: on(table)}'],
-      ['state_changes', '[cup#7.moved → 未发生]'],
-      ['evidence_ptrs', '[obs/0042.png, obs/0087.png]'],
-    ],
-    contributes: '实体、关系与任务相关状态（非原始传感流）',
-  },
-  {
-    name: 'LESSONS.md',
-    role: '经验记录',
-    memory: 'semantic · 语义记忆',
-    memoryTone: 'bad',
-    fields: [
-      ['lesson#31.objective', 'grasp(cup#7)'],
-      ['cause', '感知位置偏移 1.8cm，闭空'],
-      ['correction', '抓取前先对齐真实位置'],
-      ['verified', 'true（由 sess-0141 复验）'],
-      ['provenance', 'franka-fr3 · tabletop 场景'],
-    ],
-    contributes: '失败原因 + 已验证的纠正及其适用范围',
-  },
+const FILES: { id: FileId; name: string; icon: string; node: string; role: string }[] = [
+  { id: 'sessions', name: 'SESSIONS.md', icon: '📋', node: 'Goal', role: '事务中心：目标、契约、生命周期' },
+  { id: 'skillruntime', name: 'SKILLRUNTIME.md', icon: '🛠️', node: 'Runtime', role: '这类技能需要什么、产出什么' },
+  { id: 'targets', name: 'TARGETS.md', icon: '🤖', node: 'Target', role: '目标端能力与约束' },
+  { id: 'environment', name: 'ENVIRONMENT.md', icon: '🌍', node: 'Environment', role: '结构化环境快照' },
+  { id: 'lessons', name: 'LESSONS.md', icon: '📒', node: 'Memory', role: '失败原因与已验证的纠正' },
 ];
 
 export const ProtocolViews: React.FC<WidgetProps> = () => {
-  const [sel, setSel] = useState(0);
-  const f = FILES[sel];
+  const [step, setStep] = useState<'A' | 'B'>('A');
+  const [cupClicked, setCupClicked] = useState(false);
+  const [cabinetClicked, setCabinetClicked] = useState(false);
+  const [file, setFile] = useState<FileId>('environment');
+
+  const anyClicked = cupClicked || cabinetClicked;
+  const activeFile = FILES.find((f) => f.id === file)!;
+
+  // Step A 结构化输出的行（随点击累积）
+  const envLines: [string, string][] = [];
+  if (cupClicked) {
+    envLines.push(['cup.position', 'table']);
+    envLines.push(['cup.held', 'false']);
+    envLines.push(['cup.relations', '[on(table)]']);
+  }
+  if (cabinetClicked) {
+    envLines.push(['cabinet.door', 'open']);
+    envLines.push(['cabinet.relations', '[near(table)]']);
+  }
+  if (anyClicked) envLines.push(['evidence_ptr', 'frame_0042.png · depth_0042.png']);
+
+  const fileLines: Record<FileId, [string, string][]> = {
+    sessions: [
+      ['session_id', 'sess-0142'],
+      ['goal', 'put(cup, inside(cabinet))'],
+      ['skillruntime', 'policy-skill-runtime'],
+      ['target', 'franka-tabletop'],
+      ['preconditions', '[cabinet.door == open]'],
+      ['acceptance', 'cup.position == inside(cabinet)'],
+      ['lifecycle.state', 'running'],
+    ],
+    skillruntime: [
+      ['type', 'PolicySkillRuntime'],
+      ['requires_obs', '[rgb, depth, proprio]'],
+      ['produces_action', 'ee_pose_delta @ 10Hz'],
+      ['orchestration', 'policy-driven loop'],
+      ['adapter_req', 'PolicyAdapter + ActionBridge'],
+    ],
+    targets: [
+      ['type', 'robot-arm (franka)'],
+      ['capabilities', '[rgb, depth, joint_pos, ee_pose]'],
+      ['constraints', 'workspace_box · e-stop ready'],
+      ['control', 'joint_pos / ee_pose @ 10Hz'],
+    ],
+    environment: envLines.length > 0 ? envLines : [['(尚未点击场景物体)', '']],
+    lessons: [
+      ['lesson-003.failure', 'grasp closed empty'],
+      ['lesson-003.cause', 'perception offset'],
+      ['lesson-003.correction', 're-align before close'],
+      ['lesson-003.verified_by_replan', 'true'],
+    ],
+  };
+
+  let tone: '' | 'good' | 'bad' | 'info' = 'info';
+  let msg =
+    'Step A：点击场景里的杯子和柜门。协议里不会出现像素——只有结构化的实体、属性、关系和指向原始观测的证据指针。';
+  if (step === 'A' && anyClicked) {
+    tone = 'good';
+    msg =
+      '结构化完成：Agent 可以直接推理「cup 在桌上、柜门开着」，而原始像素仍留在感知层——协议只保存任务相关语义。切到 Step B 看这些字段如何进入五份文档。';
+  }
+  if (step === 'B') {
+    tone = 'info';
+    msg = `当前视图：${activeFile.name} —— ${activeFile.role}。切换文件时注意：goal 引用 cup 与 cabinet，ENVIRONMENT 提供它们的状态，LESSONS 保存上次的教训——五份文件读的是同一个世界。`;
+  }
+
   return (
-    <div className="lab">
-      <div className="lab-stage lab-protocol">
-        <div className="lab-protocol-tabs" role="tablist" aria-label="协议文件">
-          {FILES.map((file, i) => (
-            <button
-              key={file.name}
-              role="tab"
-              aria-selected={sel === i}
-              className={`lab-file-tab ${sel === i ? 'is-active' : ''}`}
-              onClick={() => setSel(i)}
-            >
-              <span className="lab-file-icon" aria-hidden>📄</span>
-              <span className="lab-file-name">{file.name}</span>
-              <span className="lab-file-role">{file.role}</span>
-            </button>
-          ))}
-        </div>
-        <div className="lab-protocol-window" key={f.name}>
-          <div className="lab-protocol-head">
-            <span className="lab-protocol-dot" aria-hidden />
-            <span className="lab-protocol-title">{f.name}</span>
-            <span className={`lab-pill tone-${f.memoryTone}`}>{f.memory}</span>
-          </div>
-          <div className="lab-protocol-body">
-            {f.fields.map(([k, v]) => (
-              <div className="lab-protocol-line" key={k}>
-                <span className="lab-protocol-key">{k}</span>
-                <span className="lab-protocol-val">{v}</span>
-              </div>
-            ))}
-          </div>
-          <div className="lab-protocol-foot">
-            <span className="lab-protocol-foot-label">贡献给共享状态</span>
-            {f.contributes}
-          </div>
+    <div className="lab pv-lab">
+      <div className="lab-controls lab-controls-top">
+        <div className="lab-choice-group">
+          <button
+            type="button"
+            className={`lab-chip ${step === 'A' ? 'is-active' : ''}`}
+            onClick={() => setStep('A')}
+          >
+            Step A · 原始观测 → 结构化状态
+          </button>
+          <button
+            type="button"
+            className={`lab-chip ${step === 'B' ? 'is-active' : ''}`}
+            onClick={() => setStep('B')}
+          >
+            Step B · 同一状态 → 五份协议
+          </button>
         </div>
       </div>
-      <Feedback tone="info">
-        五份文档合起来构成统一认知状态空间：意图、能力、环境、执行状态与历史经验对齐到同一参照系——两层读同一份文件，而不是互访私有对象。
-      </Feedback>
+
+      {step === 'A' ? (
+        <div className="pv-stepA">
+          <div className="lab-stage">
+            <svg viewBox="0 0 720 240" role="img" aria-label="点击场景中的杯子和柜门生成结构化状态">
+              {/* 感知输入提示 */}
+              <g>
+                {['RGB', 'Depth', 'Proprio'].map((m, i) => (
+                  <g key={m}>
+                    <rect x={26 + i * 92} y={18} width={80} height={26} rx={13} fill="#eef3fb" stroke="#d7deea" />
+                    <text x={66 + i * 92} y={35} textAnchor="middle" fontSize={11.5} fill="#27446e" fontWeight={600}>
+                      {m}
+                    </text>
+                  </g>
+                ))}
+                <text x={340} y={35} fontSize={11.5} fill="#68778f">
+                  → Perception Pipeline → 结构化语义
+                </text>
+              </g>
+
+              {/* 桌面 */}
+              <rect x={30} y={180} width={300} height={12} rx={6} fill="#b8c9a7" />
+              <rect x={390} y={92} width={290} height={100} rx={6} fill="none" stroke="#9fb0c8" strokeWidth={2.4} />
+              {/* 柜门（开） */}
+              <g
+                className="pv-clickable"
+                onClick={() => setCabinetClicked(true)}
+                tabIndex={0}
+                role="button"
+                aria-label="点击柜门"
+                onKeyDown={(e) => e.key === 'Enter' && setCabinetClicked(true)}
+              >
+                <rect x={396} y={98} width={110} height={88} rx={4} fill="#e7ddc8" stroke="#92400e" strokeWidth={2} className={cabinetClicked ? 'is-hit' : ''} />
+                <text x={451} y={148} textAnchor="middle" fontSize={13} fill="#92400e" fontWeight={600}>
+                  柜门 open
+                </text>
+                <text x={451} y={166} textAnchor="middle" fontSize={10.5} fill="#92400e" opacity={0.75}>
+                  {cabinetClicked ? '✓ 已写入' : '点击我'}
+                </text>
+              </g>
+              {/* 杯子（桌上） */}
+              <g
+                className="pv-clickable"
+                onClick={() => setCupClicked(true)}
+                tabIndex={0}
+                role="button"
+                aria-label="点击杯子"
+                onKeyDown={(e) => e.key === 'Enter' && setCupClicked(true)}
+              >
+                <rect x={150} y={138} width={34} height={42} rx={5} fill="#fdf6ea" stroke="#92400e" strokeWidth={2.4} className={cupClicked ? 'is-hit' : ''} />
+                <path d="M 184 148 q 14 2 0 20" fill="none" stroke="#92400e" strokeWidth={2.4} />
+                <text x={167} y={132} textAnchor="middle" fontSize={11} fill="#68778f">
+                  {cupClicked ? '✓ 已写入' : '点击杯子'}
+                </text>
+              </g>
+              <text x={30} y={224} fontSize={11.5} fill="#68778f">
+                原始像素留在感知层——协议只接收 entity / attribute / relation / state_change。
+              </text>
+            </svg>
+          </div>
+
+          <div className="pv-env-output">
+            <div className="lab-protocol-window">
+              <div className="lab-protocol-head">
+                <span className="lab-protocol-dot" aria-hidden />
+                <span className="lab-protocol-title">ENVIRONMENT.md · 实时生成</span>
+              </div>
+              <div className="lab-protocol-body">
+                {envLines.length === 0 ? (
+                  <div className="lab-protocol-line">
+                    <span className="lab-protocol-key"># 等待点击场景中的物体…</span>
+                  </div>
+                ) : (
+                  envLines.map(([k, v]) => (
+                    <div className="lab-protocol-line" key={k}>
+                      <span className="lab-protocol-key">{k}:</span>
+                      <span className="lab-protocol-val">{v}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="pv-stepB">
+          {/* 统一状态空间高亮条 */}
+          <div className="pv-state-space" role="group" aria-label="统一认知状态空间">
+            <span className="pv-ss-label">统一认知状态空间：</span>
+            {['Goal', 'Runtime', 'Target', 'Environment', 'Memory'].map((n) => (
+              <span key={n} className={`pv-ss-node ${activeFile.node === n ? 'is-hot' : ''}`}>
+                {n}
+              </span>
+            ))}
+          </div>
+
+          <div className="lab-protocol-tabs" role="tablist" aria-label="协议文档">
+            {FILES.map((f) => (
+              <button
+                type="button"
+                key={f.id}
+                role="tab"
+                aria-selected={file === f.id}
+                className={`lab-file-tab ${file === f.id ? 'is-active' : ''}`}
+                onClick={() => setFile(f.id)}
+              >
+                <span className="lab-file-icon" aria-hidden>
+                  {f.icon}
+                </span>
+                <span className="lab-file-name">{f.name}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="lab-protocol-window" key={file}>
+            <div className="lab-protocol-head">
+              <span className="lab-protocol-dot" aria-hidden />
+              <span className="lab-protocol-title">{activeFile.name}</span>
+              <span className="pv-file-role">{activeFile.role}</span>
+            </div>
+            <div className="lab-protocol-body">
+              {fileLines[file].map(([k, v], i) => (
+                <div className="lab-protocol-line" key={`${k}-${i}`}>
+                  <span className="lab-protocol-key">{k ? `${k}:` : ''}</span>
+                  <span className="lab-protocol-val">{v}</span>
+                </div>
+              ))}
+            </div>
+            <div className="lab-protocol-foot">
+              <span className="lab-protocol-foot-label">shared state</span>
+              同一份场景状态（cup · cabinet · franka）被五个视图分别引用——不是五份孤立文档。
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Feedback tone={tone}>{msg}</Feedback>
     </div>
   );
 };

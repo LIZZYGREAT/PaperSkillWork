@@ -84,7 +84,7 @@ export function Hero({ meta, hero, onStart }: { meta: Meta; hero: HeroConfig; on
         </div>
 
         <button className="hero-cta" onClick={onStart}>
-          开始阅读 · §1 动作结束，不等于任务完成
+          开始阅读 · §1 具身智能系统里到底有哪些角色？
           <span aria-hidden>→</span>
         </button>
         <div className="hero-kbd-hint">键盘 ← / → 也可以翻页</div>
