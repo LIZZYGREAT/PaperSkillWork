@@ -300,6 +300,13 @@ export const tutorial: TutorialData = {
           desc: '从裸堆叠开始，逐项开启运行时能力，观察系统形态如何变化；再用「ROS 对照」检查哪些能力属于谁。',
           componentId: 'os-layer-builder',
         },
+        {
+          kind: 'module',
+          id: '3.2',
+          title: 'Architecture Graph：可展开的系统架构网络',
+          desc: '从主链骨干开始，点击任意「球」展开它的关联节点与边，沿信息面板的「关联」继续跳转——对应论文 Figure 3 的可探索版本。',
+          componentId: 'arch-graph',
+        },
       ],
       insight: 'PhyAgentOS = 具身智能的运行时平台：调度、状态、验证、记忆、评测、安全六类公共服务，位于认知与物理执行之间。',
       formula: {

@@ -65,6 +65,7 @@ export const ReturnCodeLab: React.FC<WidgetProps> = () => {
   const [progress, setProgress] = useState(0);
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef(false);
+  const grabOffsetRef = useRef(0);
   const rafRef = useRef(0);
   const timerRef = useRef<number>(0);
 
@@ -145,7 +146,10 @@ export const ReturnCodeLab: React.FC<WidgetProps> = () => {
             role="img"
             aria-label="拖动感知位置，观察感知误差如何导致闭空"
             onPointerMove={(e) => {
-              if (dragRef.current && ph === 'plan') setPercX(clamp(clientToSvgX(e.clientX), MIN_X, MAX_X));
+              // 保持抓取时的偏移量：手柄跟随相对移动，不会瞬移到指针位置
+              if (dragRef.current && ph === 'plan') {
+                setPercX(clamp(clientToSvgX(e.clientX) + grabOffsetRef.current, MIN_X, MAX_X));
+              }
             }}
             onPointerUp={() => {
               dragRef.current = false;
@@ -173,7 +177,10 @@ export const ReturnCodeLab: React.FC<WidgetProps> = () => {
               style={{ touchAction: 'none', cursor: ph === 'plan' ? 'grab' : 'not-allowed' }}
               onPointerDown={(e) => {
                 if (ph !== 'plan') return;
+                e.preventDefault();
                 dragRef.current = true;
+                // 记录指针与手柄中心的偏移，拖拽期间保持相对位置（防瞬移）
+                grabOffsetRef.current = percX - clientToSvgX(e.clientX);
                 (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
               }}
               tabIndex={0}

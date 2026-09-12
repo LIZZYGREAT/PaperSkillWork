@@ -186,9 +186,22 @@ body {
   padding: 34px 34px 24px;
 }
 
-/* 章节进入动画：内容自上而下错落浮现 */
+/* 章节进入动画：内容自上而下错落浮现。
+   注意用 backwards 而不是 both：结束后不保留 transform，
+   否则每个内容块常驻形成 stacking context，术语弹层（z-index 90）
+   会被侧栏（z-index 40）盖住。 */
 .slide-chap > * {
-  animation: rise-in 460ms var(--ease-out) both;
+  animation: rise-in 460ms var(--ease-out) backwards;
+}
+
+/* 修复：scaffold（components.css）对 .slide-content 与章节 section 的入场动画
+   使用 fill: both，动画结束后仍残留 identity transform，使整个章节成为
+   层叠上下文 —— 术语弹层的 z-index 会被困在里面、被侧栏盖住。
+   这里以同等/更高优先级覆盖为 backwards：动画结束后不再保留 transform。
+   （只覆盖 fill-mode，不改变 scaffold 的动画本身。） */
+.slide-content,
+section.chap.slide-chap {
+  animation-fill-mode: backwards;
 }
 .slide-chap > *:nth-child(1) { animation-delay: 40ms; }
 .slide-chap > *:nth-child(2) { animation-delay: 100ms; }
@@ -420,9 +433,10 @@ body {
   font-weight: 400;
   line-height: 1.6;
   color: var(--ink-2);
-  /* 关闭时 display:none：不参与布局，避免绝对定位伸出视口造成横向滚动 */
+  /* 关闭时 display:none：不参与布局，避免绝对定位伸出视口造成横向滚动。
+     z-index 高于侧栏（40）与顶栏，保证不被遮挡。 */
   display: none;
-  z-index: 70;
+  z-index: 90;
   text-align: left;
   white-space: normal;
 }
@@ -2729,6 +2743,102 @@ body {
 .cc-next {
   display: flex;
   justify-content: center;
+}
+
+/* ---------- Lab 3.2 Architecture Graph ---------- */
+.ag-lab .ag-count {
+  font-family: var(--ui-font-mono);
+  font-size: 0.76rem;
+  color: var(--ink-2);
+}
+.ag-stage > svg {
+  min-width: 780px;
+}
+.ag-node {
+  cursor: pointer;
+  outline: none;
+}
+.ag-node:hover .ag-node-body,
+.ag-node:focus-visible .ag-node-body {
+  stroke-width: 3.4;
+}
+.ag-node:focus-visible {
+  filter: drop-shadow(0 0 4px rgba(39, 68, 110, 0.5));
+}
+.ag-node text {
+  pointer-events: none;
+  user-select: none;
+}
+.ag-info {
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-bg-muted);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ag-info-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ag-info-head b {
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.ag-info-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ag-info-zone {
+  font-family: var(--ui-font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink-2);
+  border: 1px solid var(--line-2);
+  background: var(--paper);
+  border-radius: var(--ui-radius-pill);
+  padding: 1px 9px;
+}
+.ag-info-desc {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.ag-info-links {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.ag-info-links-label {
+  font-size: 0.76rem;
+  color: var(--slate-2);
+  font-weight: 600;
+}
+.ag-link-chip {
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--ui-radius-pill);
+  border: 1px solid var(--line-2);
+  background: var(--paper);
+  color: var(--blue);
+  cursor: pointer;
+  transition: all var(--t-fast);
+  min-height: 30px;
+}
+.ag-link-chip:hover {
+  border-color: var(--blue);
+}
+.ag-link-chip.is-hidden-node {
+  border-style: dashed;
+  color: var(--slate-2);
 }
 
 /* ---------- 公式 ---------- */
