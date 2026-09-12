@@ -15,6 +15,7 @@ export interface Meta {
   coreProblem: string;
   coreInsight: string;
   keywords: string[];
+  links?: { label: string; url: string }[];
 }
 
 export interface FigureRef {
@@ -26,8 +27,9 @@ export interface FigureRef {
 
 export interface HeroSide {
   desc: string;
-  figure?: string; // optional path/URL to the paper's original figure
-  componentId?: string; // optional canvas widget id registered in src/modules/registry.tsx
+  points?: string[];
+  figure?: string;
+  componentId?: string;
 }
 
 export interface HeroConfig {
@@ -41,41 +43,48 @@ export interface SymbolDef {
 }
 
 export interface FormulaDef {
-  lead: string; // plain-language lead-in (Simplified Chinese)
-  unicode: string; // Unicode/HTML formula, no KaTeX
+  lead: string;
+  unicode: string;
   symbols: SymbolDef[];
 }
 
 export interface AnalogyCard {
   title: string;
   text: string;
-  figure?: string; // optional path/URL to a paper figure
-  componentId?: string; // optional canvas widget id for the life-metaphor animation
+  figure?: string;
+  componentId?: string;
 }
 
 export interface ModuleDef {
   kind: 'module';
-  id: string; // e.g. "1.1"
+  id: string;
   title: string;
   desc: string;
-  componentId: string; // MUST match a key in src/modules/registry.tsx
-  figure?: string; // optional path/URL to a paper figure
+  componentId: string;
+  figure?: string;
 }
 
 export interface Takeaway {
-  icon: string; // emoji
+  icon: string;
   title: string;
   desc: string;
+}
+
+/** One readable teaching paragraph block inside a chapter. */
+export interface ProseBlock {
+  heading: string;
+  body: string; // may contain <b>/<code> inline HTML (skill-generated, trusted)
 }
 
 export interface ChapterDef {
   kind: 'chapter';
-  id: string; // e.g. "chap-1"
+  id: string;
   title: string;
   badge: Badge;
   badgeLabel: string;
-  bridge: string; // "本节作用" copy
+  bridge: string;
   analogy: AnalogyCard;
+  prose?: ProseBlock[];
   modules: ModuleDef[];
   insight?: string;
   formula?: FormulaDef;
@@ -83,14 +92,10 @@ export interface ChapterDef {
 }
 
 export interface BiliDef {
-  bvid: string; // "BV..." or "" if unused
+  bvid: string;
   title: string;
   reason: string;
-  /** Optional static cover URL (https). Baked in at generation time so the cover
-   *  shows without depending on the runtime Bilibili metadata fetch. */
   cover?: string;
-  /** Optional static view count string (e.g. "41.5万播放"), baked in at generation
-   *  time so 播放量 shows without depending on the runtime metadata fetch. */
   views?: string;
 }
 

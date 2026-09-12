@@ -1,24 +1,36 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { tutorial } from './data/tutorial';
 import { Hero } from './components/Hero';
 import { ChapterBridge } from './components/ChapterBridge';
 import { AnalogyCard } from './components/AnalogyCard';
+import { Prose } from './components/Prose';
 import { Module } from './components/Module';
 import { Formula } from './components/Formula';
 import { InsightBar } from './components/InsightBar';
 import { Takeaway } from './components/Takeaway';
 import { BiliVideos } from './components/BiliVideos';
 
+const POS_KEY = 'phyagentos-position';
+
 export default function App() {
   const chapters = tutorial.chapters;
   const total = chapters.length;
   const bili = tutorial.bilibili || [];
   const hasBili = bili.length > 0;
-  const lastSlide = total + (hasBili ? 1 : 0); // 0=hero, 1..total=chapters, total+1=bili
+  const lastSlide = total + (hasBili ? 1 : 0);
 
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem(POS_KEY));
+      if (Number.isFinite(saved) && saved >= 0 && saved <= total) return saved;
+    } catch {
+      /* ignore */
+    }
+    return 0;
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
   const goTo = useCallback(
     (i: number) => {
@@ -31,27 +43,44 @@ export default function App() {
   const next = useCallback(() => goTo(active + 1), [active, goTo]);
   const prev = useCallback(() => goTo(active - 1), [active, goTo]);
 
-  // Reset scroll on every slide change so a long chapter always opens from the top.
+  // Reset scroll on slide change; remember position across reloads.
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    try {
+      localStorage.setItem(POS_KEY, String(active));
+    } catch {
+      /* ignore */
+    }
   }, [active]);
 
+  // 焦点在表单控件上时不劫持方向键（滑块需要 ← → 微调）。
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t?.isContentEditable) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
         e.preventDefault();
         next();
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
         e.preventDefault();
         prev();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        goTo(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        goTo(lastSlide);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [next, prev]);
+  }, [next, prev, goTo, lastSlide]);
+
+  const progress = lastSlide > 0 ? ((active + 1) / (lastSlide + 1)) * 100 : 0;
 
   const sidebarItems = [
-    { idx: 0, num: '封面', title: tutorial.meta.titleZh || tutorial.meta.titleEn },
+    { idx: 0, num: '封面', title: 'PhyAgentOS 导读' },
     ...chapters.map((ch, i) => ({ idx: i + 1, num: `§${i + 1}`, title: ch.title })),
     ...(hasBili ? [{ idx: total + 1, num: '📺', title: '延伸视频' }] : []),
   ];
@@ -59,7 +88,14 @@ export default function App() {
   const currentChapter = active >= 1 && active <= total ? chapters[active - 1] : null;
 
   return (
-    <div className={`slide-layout ${sidebarOpen ? 'sidebar-open' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+    <div
+      className={`slide-layout ${sidebarOpen ? 'sidebar-open' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
+    >
+      {/* 顶部阅读进度条 */}
+      <div className="reading-progress" aria-hidden>
+        <i style={{ width: `${progress}%` }} />
+      </div>
+
       <button className="slide-sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
         <span className="slide-sidebar-toggle-icon">{sidebarOpen ? '✕' : '☰'}</span>
         目录
@@ -72,8 +108,9 @@ export default function App() {
       <aside className="slide-sidebar">
         <div className="slide-sidebar-header">
           <div className="slide-sidebar-venue">{tutorial.meta.venue}</div>
-          <div className="slide-sidebar-title">
-            {tutorial.meta.titleZh || tutorial.meta.titleEn}
+          <div className="slide-sidebar-title">{tutorial.meta.titleZh}</div>
+          <div className="slide-sidebar-progress">
+            <span>已读 {Math.round(progress)}%</span>
           </div>
         </div>
         <nav className="slide-sidebar-nav">
@@ -88,31 +125,38 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <div className="slide-sidebar-foot">
+          <div className="slide-sidebar-kbd">
+            <kbd>←</kbd>
+            <kbd>→</kbd>
+            翻页
+          </div>
+        </div>
       </aside>
 
       <button
         className="slide-sidebar-collapse"
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         title={sidebarCollapsed ? '展开目录' : '折叠目录'}
+        aria-label={sidebarCollapsed ? '展开目录' : '折叠目录'}
       >
         {sidebarCollapsed ? '☰' : '◀'}
       </button>
 
-      <main className="slide-main">
+      <main className="slide-main" ref={mainRef}>
         <div className="slide-content" key={active}>
           {active === 0 ? (
-            <Hero meta={tutorial.meta} hero={tutorial.hero} />
+            <Hero meta={tutorial.meta} hero={tutorial.hero} onStart={() => goTo(1)} />
           ) : currentChapter ? (
             <section className="chap slide-chap">
               <h2 className="chap-title">
-                <span className="num">§{active}.</span>
-                {currentChapter.title}
-                <span className={`badge-tag ${currentChapter.badge}`}>
-                  {currentChapter.badgeLabel}
-                </span>
+                <span className="num">§{active}</span>
+                <span className="chap-title-text">{currentChapter.title}</span>
+                <span className={`badge-tag ${currentChapter.badge}`}>{currentChapter.badgeLabel}</span>
               </h2>
               <ChapterBridge text={currentChapter.bridge} />
               <AnalogyCard analogy={currentChapter.analogy} chapterId={currentChapter.id} />
+              <Prose blocks={currentChapter.prose ?? []} />
               {currentChapter.modules.map((m) => (
                 <Module key={m.id} module={m} chapterId={currentChapter.id} />
               ))}
@@ -136,6 +180,7 @@ export default function App() {
             className="slide-nav-btn slide-nav-btn-primary"
             onClick={next}
             disabled={active === lastSlide}
+            title={active < lastSlide ? sidebarItems[active + 1]?.title : undefined}
           >
             下一章 →
           </button>

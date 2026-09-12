@@ -3,16 +3,21 @@ import type { ModuleDef } from '../types';
 import { widgetRegistry } from '../modules/registry';
 import { Figure } from './Figure';
 
-// One framed interactive module. The Canvas/controls/feedback are owned by the widget
-// referenced via `componentId` (registered in src/modules/registry.tsx). A missing id
-// degrades to a visible notice instead of crashing.
+// One framed interactive module. The widget referenced via `componentId`
+// owns its stage / controls / feedback. A missing id degrades to a visible
+// notice instead of crashing.
 export function Module({ module, chapterId }: { module: ModuleDef; chapterId: string }) {
-  const Widget = widgetRegistry[module.componentId];
+  const Widget = module.componentId ? widgetRegistry[module.componentId] : undefined;
   return (
     <div className="module">
       <div className="module-head">
         <span className="num">{module.id}</span>
         <h4>{module.title}</h4>
+        {Widget ? (
+          <span className="module-interactive-badge" title="这是一个可操作的交互模块">
+            <span aria-hidden>🖐</span> 动手试
+          </span>
+        ) : null}
       </div>
       <div className="module-body">
         <p className="module-desc" dangerouslySetInnerHTML={{ __html: module.desc }} />
