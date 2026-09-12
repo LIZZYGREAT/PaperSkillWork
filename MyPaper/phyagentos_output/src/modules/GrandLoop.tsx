@@ -68,8 +68,8 @@ const ROUTES: Record<number, string> = {
   4: 'M 1040 210 L 890 210',
   5: 'M 890 210 L 580 210',
   6: 'M 580 210 L 580 146 L 800 146 L 800 80 L 1040 80',
-  7: 'M 1040 102 L 1040 188 L 890 210',
-  8: 'M 890 210 C 740 274 540 274 424 216 L 270 210',
+  7: 'M 1040 102 L 1040 210 L 890 210',
+  8: 'M 890 210 C 740 280 560 210 468 210 L 270 210',
   9: 'M 270 210 L 110 210 L 110 92 L 128 80',
 };
 
@@ -161,7 +161,7 @@ const EDGES: string[] = [
   'M 838 210 L 782 210',
   'M 678 210 L 632 210',
   'M 580 188 L 580 146 L 800 146 L 800 102',
-  'M 890 232 C 740 274 540 274 424 216',
+  'M 890 210 C 740 280 560 210 468 210',
   'M 368 210 L 330 210',
   'M 210 210 L 162 210',
   'M 110 188 L 110 92 L 126 84',
@@ -222,8 +222,9 @@ export const GrandLoop: React.FC<WidgetProps> = () => {
         else if (idx >= 4) tgt.classList.add('is-bad');
       }
       // 阶段特效与判定章：与阶段精确同步（前进/跳转/回退都一致）
-      q('gl-stamp-failure')?.classList.toggle('on', idx >= 5);
-      q('gl-stamp-success')?.classList.toggle('on', idx >= 8);
+      // failure 章只挂在 ⑤⑥⑦；success 确认后将其撤下（判定以最终 verdict 为准）
+      q('gl-stamp-failure')?.classList.toggle('on', idx >= 4 && idx <= 6);
+      q('gl-stamp-success')?.classList.toggle('on', idx >= 7);
       q('gl-diag')?.classList.toggle('on', idx === 5);
       q('gl-mem')?.classList.toggle('on', idx === 8);
       q('gl-loop')?.classList.toggle('on', idx === 9);
@@ -359,17 +360,17 @@ export const GrandLoop: React.FC<WidgetProps> = () => {
             );
           })}
 
-          {/* 特效：判定章、诊断、记忆闪光、闭环箭头 */}
+          {/* 特效：判定章（分居 Verifier 左上/右上，交替出现）、诊断、记忆闪光、闭环箭头 */}
           <g data-fx="gl-stamp-failure" className="fx">
-            <rect x={848} y={166} width={84} height={24} rx={12} fill="#fbedef" stroke="#c43f52" strokeWidth={1.6} />
-            <text x={890} y={182} textAnchor="middle" fontSize={11} fontWeight={800} fill="#c43f52">failure</text>
+            <rect x={768} y={152} width={84} height={24} rx={12} fill="#fbedef" stroke="#c43f52" strokeWidth={1.6} />
+            <text x={810} y={168} textAnchor="middle" fontSize={11} fontWeight={800} fill="#c43f52">failure</text>
           </g>
           <g data-fx="gl-stamp-success" className="fx">
-            <rect x={852} y={166} width={84} height={24} rx={12} fill="#e9f5ef" stroke="#228d5c" strokeWidth={1.6} />
-            <text x={894} y={182} textAnchor="middle" fontSize={11} fontWeight={800} fill="#1c7a4e">success</text>
+            <rect x={934} y={152} width={84} height={24} rx={12} fill="#e9f5ef" stroke="#228d5c" strokeWidth={1.6} />
+            <text x={976} y={168} textAnchor="middle" fontSize={11} fontWeight={800} fill="#1c7a4e">success</text>
           </g>
           <g data-fx="gl-diag" className="fx fx-glow">
-            <circle cx={730} cy={188} r={22} fill="none" stroke="#f07e47" strokeWidth={2} />
+            <rect x={674} y={180} width={112} height={60} rx={13} fill="none" stroke="#f07e47" strokeWidth={2.2} />
           </g>
           <g data-fx="gl-mem" className="fx fx-glow">
             <rect x={206} y={182} width={128} height={56} rx={10} fill="none" stroke="#7c3aed" strokeWidth={2.2} />
