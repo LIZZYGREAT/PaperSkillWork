@@ -1,0 +1,92 @@
+# PAPERSKILL_CANONICAL
+
+本分支 `paper-skill-canonical` 的目标：**在 PaperSkill 官方输出契约内**重新实现高质量
+PhyAgentOS 交互教程，不通过修改框架代码绕开其约束。它不是 main（enhanced）的低配版，
+而是严格受约束的基准版本。
+
+## 基线冻结（Phase 0，已完成）
+
+```text
+BASELINE = 243f6f12e2153fbc8524bd6e71636dd005f32e38（feat: 初始版本有待优化）
+```
+
+已核对 `MyPaper/phyagentos_output` 的 framework 文件与
+`PaperSkill/paper-skill/assets/react-template/` 完全一致，仅存在两处 scaffold.js 的
+预期产物：
+
+1. `index.html` 标题注入（`__PAPER_TITLE_ZH__` → 论文标题）；
+2. `src/styles/paper.css` 的 `__METAPHOR_CSS__` 占位符被 paper-specific `:root{}` 覆盖替换。
+
+framework 自此冻结。发现任何模板级漂移，应先以官方模板校正并单独提交
+`chore: align canonical scaffold with PaperSkill template`。
+
+## 修改边界（硬约束）
+
+只允许修改：
+
+```text
+MyPaper/phyagentos_output/src/data/tutorial.ts
+MyPaper/phyagentos_output/src/styles/paper.css
+MyPaper/phyagentos_output/src/modules/*
+MyPaper/phyagentos_output/public/images/*
+```
+
+禁止修改（framework）：`src/App.tsx`、`src/main.tsx`、`src/components/*`、`src/lib/*`、
+`src/styles/tokens.css`、`src/styles/components.css`、`src/types.ts`、`vite.config.ts`、
+`tsconfig*.json`、`package.json`、`index.html`。
+
+Bilibili：原始生成未包含相关视频，`bilibili` 数组保持省略（契约 §7：无相关视频时省略；
+不得伪造 BVID）。
+
+## 每阶段验收门
+
+1. `npm run build`（TypeScript + Vite，0 errors）
+2. `node <PaperSkill仓库>/paper-skill/scripts/validate-output.js MyPaper/phyagentos_output`
+3. Framework guard（输出只允许出现上面四个允许区域）：
+
+```bash
+git diff --name-only 243f6f12e2153fbc8524bd6e71636dd005f32e38 HEAD -- MyPaper/phyagentos_output
+```
+
+## 教学结构（10 章，问题驱动）
+
+| 章 | 问题 | 主模块 |
+|---|---|---|
+| 1 | 具身智能系统里到底有哪些角色？ | role-map |
+| 2 | 为什么「执行完成」不等于「任务完成」？ | return-code-lab |
+| 3 | PhyAgentOS 为什么叫「OS」？ | os-layer-builder |
+| 4 | 不同层如何看到「同一个世界」？ | protocol-views |
+| 5 | 为什么是 Session，而不是 Action？ | session-lifecycle |
+| 6 | 两种执行流为何能共用一套 Runtime？ | dual-flow |
+| 7 | 系统如何知道「任务真的成功」？ | verifier-lab |
+| 8 | 失败如何真正变成可复用经验？ | arch-map |
+| 9 | 系统怎样在真实世界里保持安全？ | tier-ladder + five-layers |
+| 10 | 实验到底证明了什么？ | benchmark-lab + claim-checker |
+
+信息压缩规则：bridge 只承接上章问题；analogy 建立第一次直觉（徒步主题，一主体一动作
+一目标）；解释主体放进模块交互与即时反馈；insight 只留一句核心结论；公式在直觉之后；
+takeaways 恒为 3 条。
+
+## 交互模式盘点（Phase 3）
+
+| 模块 | 模式 |
+|---|---|
+| return-code-lab | P6 拖拽操控（+ P1 滑杆微调） |
+| session-lifecycle | P2 步进状态机（含非法转移拒绝） |
+| os-layer-builder / arch-map | P2 步进装配 / 路径追踪 |
+| dual-flow / protocol-views / tier-ladder | P4 模式切换 |
+| role-map / five-layers / verifier-lab / claim-checker | P5 可点击热点 / 判定 |
+| benchmark-lab | P8 结果对比（First vs Final，同协议内对齐） |
+| return-code-lab 微调滑杆 | P1 滑杆 |
+
+覆盖 P1 / P2 / P4 / P5 / P6 / P8 共 6 类，满足 `distinctPatternsMin = 6`；
+双模块章节 2 个（第 9、10 章）≥ `dualModuleChaptersMin = 1`；
+主动模块 12 个 ≥ `activeModulesMin = 4`。
+
+## 迁移说明
+
+模块代码来自 main（enhanced）分支的 `src/modules/*`——该目录同属 PaperSkill 允许区域，
+且这些模块仅依赖 React、`./registry`、`./kit`，不依赖 enhanced-only 的
+Prose / 扩展 types / 修改后 components。迁移的是教学设计与交互实现本身；所有章节文案
+已按 canonical schema（无 prose / links / points 字段）重新压缩进
+bridge / analogy / module desc / insight / formula / takeaways。
