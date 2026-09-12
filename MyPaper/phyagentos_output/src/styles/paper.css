@@ -350,14 +350,74 @@ section.chap.slide-chap {
 .analogy-text b {
   color: var(--ink);
 }
-.analogy-walker {
-  animation-fill-mode: forwards;
+/* 类比场景 FX：由 AnalogyScene 的 rAF 时间线按 data-fx 触发 .on */
+.analogy-svg .fx {
+  opacity: 0;
 }
-@keyframes analogy-walk {
-  0% { offset-distance: 0%; }
-  70% { offset-distance: var(--walk-to, 80%); }
-  85% { offset-distance: var(--walk-to, 80%); }
-  100% { offset-distance: 3%; }
+.analogy-svg .fx.on {
+  animation: fx-pop 620ms var(--ease-spring) forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes fx-pop {
+  0% { opacity: 0; transform: scale(0.4) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.analogy-svg .fx-glow.on {
+  animation: fx-glow 900ms ease-in-out 2;
+}
+@keyframes fx-glow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.9; }
+}
+.analogy-svg .fx-ripple.on {
+  animation: fx-ripple 1.3s ease-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes fx-ripple {
+  0% { opacity: 0.85; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(2.3); }
+}
+.analogy-svg .fx-blink.on {
+  animation: fx-blink 800ms ease-in-out 3;
+}
+@keyframes fx-blink {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.9; }
+}
+.analogy-svg .fx-line {
+  opacity: 1;
+  transform: scaleX(0);
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+.analogy-svg .fx-line.on {
+  animation: fx-write 480ms var(--ease-out) forwards;
+}
+@keyframes fx-write {
+  to { transform: scaleX(1); }
+}
+.analogy-svg .gate-arc {
+  transition: transform 520ms var(--ease-out), stroke 300ms;
+  transform-box: fill-box;
+}
+.analogy-svg .gate-arc.on {
+  transform: translateY(-9px);
+  stroke: #228d5c;
+}
+.analogy-svg .hiker-bounce {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.analogy-svg .hiker-bounce.on {
+  animation: hiker-slip 560ms ease-in-out;
+}
+@keyframes hiker-slip {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-9deg) translateY(-1px); }
+  55% { transform: rotate(7deg); }
+  80% { transform: rotate(-4deg); }
 }
 
 /* ---------- 正文段落 ---------- */
@@ -3471,9 +3531,6 @@ section.chap.slide-chap {
   .lab-layer,
   .lab-chart-bar i,
   .cc-evidence {
-    animation: none !important;
-  }
-  .analogy-walker {
     animation: none !important;
   }
   * {
