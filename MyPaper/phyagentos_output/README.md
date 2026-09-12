@@ -1,51 +1,80 @@
-# PhyAgentOS：面向具身智能体的认知规划与物理执行解耦的自演化操作系统 交互式教程
+# PhyAgentOS 交互式论文教程
 
-基于论文 *PhyAgentOS: A Self-Evolving Operating System for Embodied Agents with Decoupled Cognitive Planning and Physical Execution*（arXiv:2607.16636）的 React + TypeScript + Vite 交互式教学网页。
+基于论文 *PhyAgentOS: A Self-Evolving Operating System for Embodied Agents with Decoupled Cognitive Planning and Physical Execution*（arXiv:2607.16636）的简体中文交互式教程。
 
-全部章节文案、公式与实验数字均对照论文原文核验（V(G, S₀, S_T, τ, H)、五份协议文件、六步自演化闭环、五层纵深安全、Optimus-67 / StarDojo / DST-Dojo / LIBERO / CALVIN / RoboCasa365 的 First/Final 协议数字）。
+## 项目定位
+
+本项目是 **PaperSkill-generated + Agent-enhanced** 产物：PaperSkill 提供基础教程结构与生成规范；当前版本在此基础上进行了二次教学设计、交互、无障碍和视觉增强。因此源码允许修改框架组件，并混合使用 React DOM、SVG 与少量 Canvas，不代表未经修改的 PaperSkill canonical output。
+
+教学主线保持问题驱动：领域角色 → Verification Gap → Runtime 系统层 → State-as-a-File → Session → 双执行流 → SessionVerifier → 系统级自演化 → 渐进验证与安全 → 实验证据边界。
+
+## 核心交互模块
+
+项目包含 16 个教学实验室，以及 1 个各章复用的徒步类比场景。模块注册表位于 `src/modules/registry.tsx`。
+
+| 组件 | 章节 | 教学作用 |
+| --- | --- | --- |
+| `AnalogyScene` | 各章 | 随章节变化的徒步类比场景 |
+| `RoleMap` | 1.1 | 找出语义验证与经验复用的责任空缺 |
+| `ReturnCodeLab` | 2.1 | 体验 Execution Success 与 Semantic Failure 的冲突 |
+| `OSLayerBuilder` | 3.1 | 逐项搭建 Runtime 能力并与 ROS 对照 |
+| `ArchGraph` | 3.2 | 从主链渐进展开完整系统架构 |
+| `ProtocolViews` | 4.1 | 观察同一现实状态在五份协议中的不同视图 |
+| `SessionLifecycle` | 5.1 | 推进状态机并尝试非法状态转移 |
+| `PreflightLab` | 5.2 | 在接触机器人前完成兼容性预检 |
+| `DualFlow` | 6.1 | 对比 Policy-driven 与 Agent-directed 执行流 |
+| `VerifierLab` | 7.1 | 根据 G / S₀ / S_T / τ / H 自行给出 verdict |
+| `ArchMap` | 8.1 | 追踪失败、子会话、复验到经验固化的完整旅程 |
+| `GrandLoop` | 8.2 | 可暂停、跳转的系统级自演化闭环 |
+| `TierLadder` | 9.1 | 对比 Game / Simulation / Real Robot 渐进验证 |
+| `FiveLayers` | 9.2 | 注入故障并观察五层防御的责任边界 |
+| `BenchmarkLab` | 10.1 | 按协议和指标阅读六个实验基准 |
+| `ClaimChecker` | 10.2 | 区分论文支持、过度解读与错误主张 |
+| `GrandTrail` | 10.3 | 汇总 Session 环路、First→Final 与三层验证 |
+
+## 技术实现
+
+- React 18 + TypeScript + Vite。
+- 教学数据集中在 `src/data/tutorial.ts`。
+- 交互组件位于 `src/modules/`，共享控件位于 `src/modules/kit.tsx`。
+- `src/styles/tokens.css` 定义设计令牌，`components.css` 保留基础框架样式，`paper.css` 包含增强页面与实验室样式。
+- 页面支持侧栏章节导航、键盘翻页、术语 Hover/Focus 解释、响应式布局和 `prefers-reduced-motion`。
 
 ## 本地运行
 
 ```bash
 npm install
-npm run dev       # 开发预览 http://localhost:5173
-npm run build     # 产出 dist/ 静态站点
-npm run preview   # 预览构建结果
+npm run dev
+npm run build
+npm run preview
 ```
 
-## 网页结构
+开发预览默认位于 `http://localhost:5173`，生产构建输出到 `dist/`。
 
-- **封面**：论文信息 + 「三个范式之下的操作系统层」故事 + 新旧对比 + 开始阅读入口。
-- **§1–§10**：每章 = 本节作用 → 生活类比（SVG 徒步场景）→ 正文三段 → 1–2 个交互实验室 → 洞察/公式 → 三张要点卡。
-- **12 个交互实验室**（均注册于 `src/modules/registry.tsx`）：
+## 构建与验收
 
-| 模块 | 章节 | 交互 |
-| ---- | ---- | ---- |
-| ReturnCodeLab | 1.1 | 执行进度滑块 + 核对目标证据（返回码 vs 语义判定） |
-| ProtocolViews | 2.1 | 点击五份协议文件查看字段与记忆层次 |
-| SessionLifecycle | 3.1 | 会话状态机六步步进 |
-| PreflightLab | 4.1 | 执行流 × 目标端组合，观察 AdapterPlan 成立/被拒 |
-| SafetyBoundary | 4.2 | 动作越界滑块：放行 / 有界投影 / 拦截 |
-| VerdictCompare | 5.1 | 同一条轨迹在两种视角下的判定动画 |
-| DualFlow | 6.1 | 策略流 / 工具流切换（SVG 循环动画） |
-| EvolveLoop | 7.1 | 六步闭环步进 + 假设验证/固化状态 + 记忆卡 |
-| ArchMap | 8.1 | 点击架构组件高亮责任链 |
-| TierLadder | 9.1 | 游戏/模拟/真机三层验证阶梯 |
-| FiveLayers | 9.2 | 注入五类故障看被哪一层拦下 |
-| BenchmarkLab | 10.1 | 六个基准的 First/Final 分组条形对比 |
+执行完整验收：
 
-## 主要目录
+```bash
+npm run check
+```
 
-| 路径 | 说明 |
-| ---- | ---- |
-| `src/data/tutorial.ts` | 全部章节文案与结构数据 |
-| `src/modules/*` | 交互实验室组件（DOM/SVG 实现，无 canvas） |
-| `src/styles/paper.css` | 设计系统与全部自定义样式 |
-| `src/components/*` | Hero / Module / Formula / Takeaway / Prose 等 |
-| `src/App.tsx` | 滑页布局、侧栏、进度条、键盘导航 |
+该命令依次完成：
 
-## 交互与无障碍
+1. TypeScript 编译与 Vite 生产构建；
+2. PaperSkill 官方结构 validator；
+3. enhanced audit，包括模块注册、README、资源、术语、章节结构和临时文件检查。
 
-- 键盘 `←` / `→` 翻页，`Home` / `End` 跳转；焦点在滑块等表单控件上时不劫持方向键。
-- 动画尊重 `prefers-reduced-motion`；章节内容错落入场；顶部阅读进度条 + 侧栏百分比。
-- 阅读位置自动记忆（localStorage），刷新后回到上次章节。
+也可以分别运行：
+
+```bash
+npm run validate:paper-skill
+npm run audit:enhanced
+```
+
+## 当前限制
+
+- 系统成功率提升来自验证、恢复、记忆与运行时治理，不表示底层 VLA 权重或模型能力本身提升。
+- 真机实验主要验证跨硬件集成与安全机制，不等同于大规模真机任务成功率评测。
+- Verifier 的误判率、不同恢复机制的独立贡献，以及恢复带来的时间与推理成本仍缺少充分量化。
+- 当前版本是增强成果；若要测试 PaperSkill 自身的严格生成边界，应另行保留 canonical 输出。

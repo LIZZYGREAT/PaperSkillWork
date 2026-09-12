@@ -191,8 +191,11 @@ export const ReturnCodeLab: React.FC<WidgetProps> = () => {
               aria-valuenow={Math.round(((percX - MIN_X) / (MAX_X - MIN_X)) * 100)}
               onKeyDown={(e) => {
                 if (ph !== 'plan') return;
-                if (e.key === 'ArrowLeft') setPercX((v) => clamp(v - 12, MIN_X, MAX_X));
-                if (e.key === 'ArrowRight') setPercX((v) => clamp(v + 12, MIN_X, MAX_X));
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setPercX((v) => clamp(v + (e.key === 'ArrowLeft' ? -12 : 12), MIN_X, MAX_X));
+                }
               }}
             >
               <line x1={percX} y1={40} x2={percX} y2={256} stroke={ORANGE} strokeWidth={1.6} strokeDasharray="5 5" opacity={0.8} />

@@ -134,7 +134,12 @@ export const ProtocolViews: React.FC<WidgetProps> = () => {
                 tabIndex={0}
                 role="button"
                 aria-label="点击柜门"
-                onKeyDown={(e) => e.key === 'Enter' && setCabinetClicked(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setCabinetClicked(true);
+                  }
+                }}
               >
                 <rect x={396} y={98} width={110} height={88} rx={4} fill="#e7ddc8" stroke="#92400e" strokeWidth={2} className={cabinetClicked ? 'is-hit' : ''} />
                 <text x={451} y={148} textAnchor="middle" fontSize={13} fill="#92400e" fontWeight={600}>
@@ -151,7 +156,12 @@ export const ProtocolViews: React.FC<WidgetProps> = () => {
                 tabIndex={0}
                 role="button"
                 aria-label="点击杯子"
-                onKeyDown={(e) => e.key === 'Enter' && setCupClicked(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setCupClicked(true);
+                  }
+                }}
               >
                 <rect x={150} y={138} width={34} height={42} rx={5} fill="#fdf6ea" stroke="#92400e" strokeWidth={2.4} className={cupClicked ? 'is-hit' : ''} />
                 <path d="M 184 148 q 14 2 0 20" fill="none" stroke="#92400e" strokeWidth={2.4} />

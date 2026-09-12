@@ -57,8 +57,9 @@ export default function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      const tag = t?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t?.isContentEditable) return;
+      // 原生表单控件和 SVG/ARIA slider 都要独占方向键；否则 ReturnCodeLab 的
+      // 可键盘拖动手柄会一边微调位置、一边触发整页翻章。
+      if (t?.closest('input, textarea, select, [contenteditable="true"], [role="slider"]')) return;
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
         e.preventDefault();
         next();
@@ -96,7 +97,13 @@ export default function App() {
         <i style={{ width: `${progress}%` }} />
       </div>
 
-      <button className="slide-sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+      <button
+        type="button"
+        className="slide-sidebar-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-expanded={sidebarOpen}
+        aria-controls="tutorial-sidebar"
+      >
         <span className="slide-sidebar-toggle-icon">{sidebarOpen ? '✕' : '☰'}</span>
         目录
       </button>
@@ -105,7 +112,7 @@ export default function App() {
         <div className="slide-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       ) : null}
 
-      <aside className="slide-sidebar">
+      <aside className="slide-sidebar" id="tutorial-sidebar">
         <div className="slide-sidebar-header">
           <div className="slide-sidebar-venue">{tutorial.meta.venue}</div>
           <div className="slide-sidebar-title">{tutorial.meta.titleZh}</div>
@@ -135,6 +142,7 @@ export default function App() {
       </aside>
 
       <button
+        type="button"
         className="slide-sidebar-collapse"
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         title={sidebarCollapsed ? '展开目录' : '折叠目录'}

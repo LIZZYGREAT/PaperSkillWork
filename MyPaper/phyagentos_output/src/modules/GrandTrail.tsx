@@ -254,6 +254,7 @@ const SCRIPT = (k: FxKit): Seg[] => {
 
 export const GrandTrail: React.FC<WidgetProps> = () => {
   const [reduced, setReduced] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+  const [inView, setInView] = useState(false);
   const [caption, setCaption] = useState(0);
   const [hubMsg, setHubMsg] = useState('');
   const [dyn2Msg, setDyn2Msg] = useState('');
@@ -271,12 +272,29 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
     return () => mq?.removeEventListener?.('change', fn);
   }, []);
 
+  // 第十章在用户到达 Grand Trail 之前还要经过两个实验室。只有画布真正进入视口
+  // 才从第一阶段播放，避免用户滚到这里时动画已经跑到 Final 或下一圈。
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    if (!('IntersectionObserver' in window)) {
+      setInView(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.35 }
+    );
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const base = baseRef.current;
     const walker = walkerRef.current;
     const facing = facingRef.current;
     const stage = stageRef.current;
-    if (!base || !walker || !facing || !stage) return;
+    if (!base || !walker || !facing || !stage || (!inView && !reduced)) return;
     const total = base.getTotalLength();
 
     // 采样整条环路：三个分段查找器（顶边 x 递增 / 右边 y 递增 / 底边 x 递减）
@@ -445,6 +463,10 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       };
       raf = requestAnimationFrame(step);
     };
+    resetFx();
+    setCaption(0);
+    setHubMsg('');
+    setDyn2Msg('');
     placeWalker(0);
     startT = performance.now();
     runSeg();
@@ -454,7 +476,7 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       timeouts.forEach((t) => window.clearTimeout(t));
       resetFx();
     };
-  }, [reduced]);
+  }, [inView, reduced]);
 
   const cap = CAPTIONS[caption];
   const lap = caption < 7 ? 0 : caption < 9 ? 1 : 2;
