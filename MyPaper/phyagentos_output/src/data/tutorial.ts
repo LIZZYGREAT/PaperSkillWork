@@ -20,12 +20,12 @@ export const tutorial: TutorialData = {
   },
   hero: {
     oldMethod: {
-      desc: '把三种范式直接拼在一起：每层都报告「成功」，却没有一层核对物理世界是否真的变成了任务要求的状态——返回码被当成任务完成，失败经验随会话丢弃。',
-      componentId: 'hero-compare',
+      desc: '把三种范式直接拼在一起：每一层都报告「成功」，却没有一层核对物理世界是否真的变成了任务要求的状态。',
+      componentId: 'hero-points',
     },
     newMethod: {
-      desc: '在认知与物理执行之间加一层运行时：Session 治理、文件协议、证据验证、持久记忆与五层安全把一次执行闭成可审计、可复用的循环——模型权重零改动。',
-      componentId: 'hero-compare',
+      desc: '在认知与物理执行之间加一层系统运行时，把一次执行闭成可审计、可复用的循环——模型权重零改动。',
+      componentId: 'hero-points',
     },
   },
   chapters: [
@@ -40,7 +40,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '出发前，先认全登山队里的角色',
         text: '向导认路、地图指方向、补给队管物资——先分清<b>谁负责什么</b>，才知道哪一段路其实根本没人管。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -69,7 +69,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '走到了，不等于走到了要去的地方',
         text: '脚步停下，只能说明<b>动作结束</b>；把终点对回地图上的目标，才能说明<b>任务完成</b>。地图错了，走得再稳也是白走。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -98,7 +98,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '大本营：不替你爬山，但让登山成为系统',
         text: '大本营不替你迈步，它负责<b>调度路线、记录进度、检查装备、组织补给</b>——把一次冒险变成可重复的系统工程。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -140,7 +140,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '无线电：各队各说各话，频道里只有一份事实',
         text: '侦察队、大本营、补给队不必共享一本日记，但必须守<b>同一个频道</b>——频道里的状态就是全队承认的事实。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -170,7 +170,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '一次登山 = 一份完整的行程记录',
         text: '治理的对象不是「某一步踩在哪」，而是<b>整段行程</b>：出发检查、途中报平安、终点确认——对应会话的完整生命周期。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -212,7 +212,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '同一条路，两种走法',
         text: '连续策略像按既定步频走路，Agent 工具流像边走边查路牌——不管哪种走法，<b>都不能绕过检查站</b>。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -251,7 +251,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '把起点和终点一起对回地图',
         text: '只看终点照片，说不清旗子是谁插的；把<b>起点、终点和路径</b>一起对回地图，才能判定「这次登山真的完成了目标」。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -292,7 +292,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '猜一个修法 ≠ 学到一条经验',
         text: '「下次先看脚下」只是<b>猜测</b>；换条路重新走通之后，它才配写进路线手册——<b>手册只收验证过的路</b>。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -333,7 +333,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '先平地、再碎石、最后冰面',
         text: '不同路面加回不同风险——<b>逐层</b>试探才能把「摔跤」归因到具体变量；而护绳、头盔和结组一样都不能省。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {
@@ -369,7 +369,7 @@ export const tutorial: TutorialData = {
       analogy: {
         title: '到达终点，还要查完整记录',
         text: '终点的绿色不是「所有山都被征服」，而是<b>每个协议下</b>都能看到证据、提升和剩余难点。',
-        componentId: 'hike-analogy',
+        componentId: 'analogy-note',
       },
       modules: [
         {

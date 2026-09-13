@@ -83,6 +83,30 @@ takeaways 恒为 3 条。
 双模块章节 2 个（第 9、10 章）≥ `dualModuleChaptersMin = 1`；
 主动模块 12 个 ≥ `activeModulesMin = 4`。
 
+## 类比呈现方式的显式偏离（2026-09-13，用户指示）
+
+应用户要求，**移除了每章类比卡与 Hero 对比的原徒步 Canvas 动画**
+（`hike-analogy.tsx` / `hero-compare.tsx` 已删除），改用文字组件：
+
+- `analogy-note`（`src/modules/analogy-note.tsx`）：以
+  「主体 → 动作 → 目标」chips + 一句类比文案承载
+  animation-library.md 句子测试（one subject + one verb + one goal）的文本形式；
+  徒步锚定主题与每章动作不变。
+- `hero-points`（`src/modules/hero-points.tsx`）：Hero 新旧两栏改为
+  红/绿语义色要点清单（contract.md §5：红 = 失败/旧方法，绿 = 成功/本文方法）。
+
+合规性说明：
+
+- framework 未动——`AnalogyCard`/`Hero` 的 `componentId` 组件槽是官方设计
+  （types.ts 注释：optional canvas widget id），`AnalogyCard` 在无动画时
+  本就渲染空白 560×140 canvas 占位符，填入文字组件是避免空白占位的必要手段。
+- 主动交互密度（contract.md §3）不受影响：analogy card 从不计入
+  active modules（autoplay-only 不计数），12 个主模块全保留。
+- **显式偏离**：chapter-template.md「Analogy Card = 560×140 canvas animation」
+  与 animation-library.md 的 Shared Animation Contract（rAF/循环/reduced-motion
+  等）不再适用——没有 Canvas 就没有动画契约可违反；句子测试与禁止模式以
+  文字形式继续满足。此偏离为用户明确指示，validator 对此无检查项，机器门全绿。
+
 ## 证据审计（Phase 5，全部通过）
 
 对照论文 PDF（arXiv:2607.16636v1，46 页）逐项核对，零修正：

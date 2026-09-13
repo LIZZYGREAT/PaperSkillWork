@@ -1,6 +1,6 @@
 import React from 'react';
-import { HeroCompare } from './hero-compare';
-import { HikeAnalogy } from './hike-analogy';
+import { HeroPoints } from './hero-points';
+import { AnalogyNote } from './analogy-note';
 import { RoleMap } from './RoleMap';
 import { ReturnCodeLab } from './ReturnCodeLab';
 import { OSLayerBuilder } from './OSLayerBuilder';
@@ -20,8 +20,8 @@ export interface WidgetProps {
 }
 
 export const widgetRegistry: Record<string, React.FC<WidgetProps>> = {};
-widgetRegistry['hero-compare'] = HeroCompare;
-widgetRegistry['hike-analogy'] = HikeAnalogy;
+widgetRegistry['hero-points'] = HeroPoints;
+widgetRegistry['analogy-note'] = AnalogyNote;
 widgetRegistry['role-map'] = RoleMap;
 widgetRegistry['return-code-lab'] = ReturnCodeLab;
 widgetRegistry['os-layer-builder'] = OSLayerBuilder;

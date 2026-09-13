@@ -2164,3 +2164,104 @@
     animation: none !important;
   }
 }
+
+/* ---------- 文字版类比卡（AnalogyNote，替换原徒步动画） ---------- */
+.an-note {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius-sm);
+}
+.an-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.an-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 11px;
+  background: var(--paper);
+  border: 1px solid var(--line-2);
+  border-radius: var(--ui-radius-pill);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.an-chip i {
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--slate-2);
+}
+.an-arrow {
+  color: var(--slate-2);
+  font-size: 0.8rem;
+}
+.an-line {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.an-line b {
+  color: var(--ink);
+}
+.an-icon {
+  margin-right: 6px;
+}
+
+/* ---------- 文字版 Hero 对比面板（HeroPoints，替换原徒步动画） ---------- */
+.hp-list {
+  margin: 0;
+  padding: 10px 16px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.hp-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.hp-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.hp-list.is-old .hp-dot {
+  background: var(--red);
+}
+.hp-list.is-new .hp-dot {
+  background: var(--green);
+}
+@media (max-width: 390px) {
+  .an-note {
+    padding: 10px 12px;
+  }
+  .hp-list {
+    padding: 8px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .an-note,
+  .hp-list {
+    animation: none !important;
+  }
+}
