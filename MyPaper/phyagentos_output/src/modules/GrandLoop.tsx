@@ -360,14 +360,18 @@ export const GrandLoop: React.FC<WidgetProps> = () => {
             );
           })}
 
-          {/* 特效：判定章（分居 Verifier 左上/右上，交替出现）、诊断、记忆闪光、闭环箭头 */}
+          {/* 裁决只从 SessionVerifier 节点冒出；failure / success 共用一个出口并交替显示。 */}
           <g data-fx="gl-stamp-failure" className="fx">
-            <rect x={768} y={152} width={84} height={24} rx={12} fill="#fbedef" stroke="#c43f52" strokeWidth={1.6} />
-            <text x={810} y={168} textAnchor="middle" fontSize={11} fontWeight={800} fill="#c43f52">failure</text>
+            <path d="M 890 188 L 890 174" stroke="#c43f52" strokeWidth={1.8} strokeLinecap="round" />
+            <path d="M 886 178 L 890 174 L 894 178" fill="none" stroke="#c43f52" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+            <rect x={848} y={148} width={84} height={26} rx={13} fill="#fbedef" stroke="#c43f52" strokeWidth={1.6} />
+            <text x={890} y={165} textAnchor="middle" fontSize={11} fontWeight={800} fill="#c43f52">failure</text>
           </g>
           <g data-fx="gl-stamp-success" className="fx">
-            <rect x={934} y={152} width={84} height={24} rx={12} fill="#e9f5ef" stroke="#228d5c" strokeWidth={1.6} />
-            <text x={976} y={168} textAnchor="middle" fontSize={11} fontWeight={800} fill="#1c7a4e">success</text>
+            <path d="M 890 188 L 890 174" stroke="#228d5c" strokeWidth={1.8} strokeLinecap="round" />
+            <path d="M 886 178 L 890 174 L 894 178" fill="none" stroke="#228d5c" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+            <rect x={848} y={148} width={84} height={26} rx={13} fill="#e9f5ef" stroke="#228d5c" strokeWidth={1.6} />
+            <text x={890} y={165} textAnchor="middle" fontSize={11} fontWeight={800} fill="#1c7a4e">success</text>
           </g>
           <g data-fx="gl-diag" className="fx fx-glow">
             <rect x={674} y={180} width={112} height={60} rx={13} fill="none" stroke="#f07e47" strokeWidth={2.2} />

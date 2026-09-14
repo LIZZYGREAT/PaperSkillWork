@@ -5,6 +5,7 @@ import { Feedback } from './kit';
 // Lab 3.2 — Architecture Graph：可交互的系统架构网络。
 // 从主链骨干开始，点击任意「球」展开它的关联节点与边；
 // 选中节点在下方信息面板显示职责与输入输出，可沿关联继续探索。
+// 「展开全部」进入全景模式：此时点击只在聚焦 / 取消聚焦间切换，保持全图完整。
 // 对应论文 Figure 3（总体架构），但把静态图变成了可以逐层展开的网络。
 
 type Zone = 'agent' | 'protocol' | 'runtime' | 'target';
@@ -86,6 +87,9 @@ const ALL_EDGES: [string, string][] = (() => {
 export const ArchGraph: React.FC<WidgetProps> = () => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [active, setActive] = useState<string | null>('goal');
+  // 全景（展开全部）模式下，点击节点只在「聚焦 / 取消聚焦」间切换，
+  // 不再增删 expanded，否则第二次点击无法回到全景原状。
+  const [fullView, setFullView] = useState(false);
 
   const visible = useMemo(() => {
     const vis = new Set(ROOTS);
@@ -103,6 +107,10 @@ export const ArchGraph: React.FC<WidgetProps> = () => {
   );
 
   const toggle = (id: string) => {
+    if (fullView) {
+      setActive((prev) => (prev === id ? null : id));
+      return;
+    }
     setActive(id);
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -115,17 +123,21 @@ export const ArchGraph: React.FC<WidgetProps> = () => {
   const expandAll = () => {
     setExpanded(new Set(NODES.map((n) => n.id)));
     setActive(null);
+    setFullView(true);
   };
   const reset = () => {
     setExpanded(new Set());
     setActive('goal');
+    setFullView(false);
   };
 
   const act = active ? NODE_MAP[active] : null;
   const hiddenCount = NODES.length - visible.size;
 
   let tone: '' | 'good' | 'bad' | 'info' = 'info';
-  let msg = '从主链骨干开始：点击任意「球」展开它的关联节点；再点一次收起。信息面板可以沿「关联」继续跳转。';
+  let msg = fullView
+    ? '全景模式：点击任意「球」高亮它的关联节点与边；再点一次取消高亮。'
+    : '从主链骨干开始：点击任意「球」展开它的关联节点；再点一次收起。信息面板可以沿「关联」继续跳转。';
   if (act) {
     tone = 'info';
     msg = `${act.label} · ${ZONE_META[act.zone].name} —— ${act.desc}`;

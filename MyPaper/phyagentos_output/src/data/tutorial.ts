@@ -134,6 +134,90 @@ const TERMS: Record<string, TermInfo> = {
     role: 'Progressive Validation 用层级把这类变量隔离开、再逐层加回。',
     warn: '仿真里免费的成功不能自动兑换成真实世界的安全。',
   },
+  verificationgap: {
+    full: 'Verification Gap · 验证缺口',
+    def: '执行器确认命令完成，但系统没有证据确认任务语义已经成立的结构性断层。',
+    role: 'PhyAgentOS 用 S₀、S_T、轨迹 τ 与接受标准把执行结果升级为可验收结果。',
+    warn: 'Verification Gap ≠ 普通返回码 bug：即使所有函数正常返回，它仍可能存在。',
+  },
+  sessioncontract: {
+    full: 'Session Contract · 会话契约',
+    def: '把任务目标、Runtime、Target、前置条件、执行限制与接受标准绑定在一起的可执行约定。',
+    role: 'Agent Plane 的输出，也是 Runtime 决定是否认领、执行与验收的依据。',
+    warn: '契约描述“允许怎样执行”，不是一串 raw hardware command。',
+  },
+  watchdog: {
+    full: 'WatchdogSupervisor · 看门狗监督器',
+    def: '认领 Session、触发预检、创建 Runner、监控心跳并传播取消/超时的监督入口。',
+    role: '管理会话级生命周期与故障遏制，不进入高频控制回路。',
+    warn: 'WatchdogSupervisor ≠ SessionRunner：前者监督，后者执行本次会话。',
+  },
+  sessionrunner: {
+    full: 'SessionRunner · 会话执行器',
+    def: '在预检通过后负责 configure、start、observe、step、termination 与证据收集的执行对象。',
+    role: '把 SkillRuntime、Adapter 与 Target 组织成一次受控的具体执行。',
+    warn: 'Runner 管单次执行，不负责高层目标分解。',
+  },
+  policyadapter: {
+    full: 'PolicyAdapter · 策略适配器',
+    def: '在统一 Observation/Action Contract 与具体模型张量、消息格式之间做双向转换。',
+    role: '让 OpenVLA、π₀、diffusion policy 等后端接入同一 Runtime。',
+    warn: 'PolicyAdapter ≠ ActionBridge：前者贴近模型格式，后者处理通用动作表示转换。',
+  },
+  actionbridge: {
+    full: 'ActionBridge · 动作桥',
+    def: '执行坐标系、单位、维度投影、夹爪映射与动作块重采样等确定性转换。',
+    role: '把标准动作变成目标端可理解的表示，再交给 SafetyGuard 判断能否放行。',
+    warn: 'ActionBridge 只保证转换正确，不负责判断动作是否安全。',
+  },
+  safetyguard: {
+    full: 'SafetyGuard · 安全守卫',
+    def: '检查 dtype、维度、NaN/Inf、关节/工作空间限位、速度、加速度、时长与急停状态。',
+    role: '对转换后的命令执行 Reject、Safe Halt 或 Authorized Clamp，并记录违规码。',
+    warn: 'SafetyGuard 不替代机器人本地碰撞检测、扭矩限制与硬件急停。',
+  },
+  toolmanifest: {
+    full: 'TargetToolManifest · 目标工具清单',
+    def: '按 Session 权限过滤后，允许 Agent 通过 TargetSessionHandle 调用的工具集合。',
+    role: '把 observe、step、query_state 等合法能力显式暴露，把危险实现细节留在边界内。',
+    warn: 'Agent 在线决策 ≠ Agent 自动获得 raw motor command 权限。',
+  },
+  appendonly: {
+    full: 'Append-only · 只追加历史',
+    def: '新尝试以追加记录保存，旧的失败、判定与父子关系不被后来的成功覆盖。',
+    role: '支撑可审计的 attempts 历史、故障归因与 child session 因果追踪。',
+    warn: 'Append-only 不等于永不整理；可以固化总结，但不能篡改原始尝试。',
+  },
+  atomicupdate: {
+    full: 'Atomic Update · 原子更新',
+    def: '读者要么看到完整旧版本，要么看到完整新版本，不能看到写到一半的协议文件。',
+    role: '与 single-writer 共同保证 State-as-a-File 的一致性。',
+    warn: '原子更新解决写入一致性，不消除文件轮询带来的调度延迟。',
+  },
+  provenance: {
+    full: 'Provenance · 来源链',
+    def: '记录一条知识由哪个 Session、目标端、证据与验证结论产生。',
+    role: '让经验可追溯，也让后续检索知道它是否值得信任。',
+    warn: '没有 provenance 的经验不能区分真实验证与未经复验的猜测。',
+  },
+  scope: {
+    full: 'Scope · 适用范围',
+    def: '限定经验成立的环境、目标类型、具身形态、控制频率与风险条件。',
+    role: '阻止系统把局部成功错误外推到所有机器人或所有任务。',
+    warn: 'Franka 上验证过的抓法，不自动适用于不同夹爪与控制频率。',
+  },
+  defenseindepth: {
+    full: 'Defense-in-Depth · 纵深防御',
+    def: '让多个独立安全边界分别处理兼容性、表示、命令、健康与设备本地约束。',
+    role: '上层失效时，下层仍保留自己的检查与最终物理权威。',
+    warn: '纵深防御不是把所有错误都塞进一个万能 Safety 模块。',
+  },
+  firstfinal: {
+    full: 'First / Final Protocol · 首次/最终协议',
+    def: 'First 记录策略原始首次尝试，Final 记录同一成功标准下允许验证与恢复后的最终结果。',
+    role: 'Final − First 衡量系统恢复挽救了多少原本失败的执行。',
+    warn: '这个差值不是模型权重更新后的能力增益，任务目标与成功标准也没有放宽。',
+  },
 };
 
 /** 生成带 popover 的术语 HTML（在 prose body 内使用）。 */
@@ -238,7 +322,7 @@ export const tutorial: TutorialData = {
       prose: [
         {
           heading: '抓空的杯子：每一层都报告成功',
-          body: '论文开篇的场景：机器人被要求「抓起桌上的杯子」。夹爪在<b>感知到的</b>杯子位置准确闭合，控制器记录「轨迹偏差 0.6cm，在 1cm 容差内」，函数全部正常返回——于是传统软件认为 Task Success。但真实情况是：夹爪闭合在空气中，杯子还留在桌上。这就是<b>执行层状态</b>与<b>任务语义状态</b>的分裂：前者问「动作是否被忠实执行」，后者问「世界是否变成要求的样子」。论文把这个结构性缺口称为 <b>Verification Gap（验证缺口）</b>。',
+          body: `论文开篇的场景：机器人被要求「抓起桌上的杯子」。夹爪在<b>感知到的</b>杯子位置准确闭合，控制器记录「轨迹偏差 0.6cm，在 1cm 容差内」，函数全部正常返回——于是传统软件认为 Task Success。但真实情况是：夹爪闭合在空气中，杯子还留在桌上。这就是<b>执行层状态</b>与<b>任务语义状态</b>的分裂：前者问「动作是否被忠实执行」，后者问「世界是否变成要求的样子」。论文把这个结构性缺口称为 ${term('verificationgap', 'Verification Gap（验证缺口）')}。`,
         },
         {
           heading: '为什么不是偶然 bug，而是结构性缺口',
@@ -281,7 +365,7 @@ export const tutorial: TutorialData = {
       prose: [
         {
           heading: '它不是「机器人脑模型」，而是脑与手之间的系统层',
-          body: `PhyAgentOS 不提出新的 VLA 结构、不提出新的世界模型。它的位置在<b>高层认知与低层物理执行之间</b>：Agent 平面回答「做什么」（What should be done?），Runtime 平面回答「如何安全、受控地执行」（How should it be executed safely?）。Agent 被明确限制：不允许直接发 raw hardware command，只能产出结构化 Session 契约；Runtime 只接受满足约束的契约。两边因此可以各自更换、独立演化。`,
+          body: `PhyAgentOS 不提出新的 VLA 结构、不提出新的世界模型。它的位置在<b>高层认知与低层物理执行之间</b>：Agent 平面回答「做什么」（What should be done?），Runtime 平面回答「如何安全、受控地执行」（How should it be executed safely?）。Agent 被明确限制：不允许直接发 raw hardware command，只能产出结构化${term('sessioncontract', 'Session 契约')}；Runtime 只接受满足约束的契约。两边因此可以各自更换、独立演化。`,
         },
         {
           heading: '「OS」是运行时抽象，不是传统内核',
@@ -343,7 +427,7 @@ export const tutorial: TutorialData = {
       prose: [
         {
           heading: 'State-as-a-File：边界不是函数调用，而是文件协议',
-          body: `${term('statefile', 'State-as-a-File')} 的核心选择：Agent 与 Runtime 之间不设直接 import 或 RPC，而是共享一组<b>可读、可解析、可版本化</b>的 Markdown + 内嵌 YAML 文件。收益是结构性的：人可以直接检查「为什么执行这个任务、选了哪个机器人、结果如何」；Git 可以追踪状态变化；两个进程松耦合、语言无关；append-only 的 attempts 记录让「第一次失败、第二次重规划、第三次成功」的历史不被成功覆盖——审计是架构自带的性质。代价也要诚实：当前协议靠轮询工作，调度延迟受 polling interval 影响，且必须保证 single-writer + atomic update，否则会读到写了一半的状态。`,
+          body: `${term('statefile', 'State-as-a-File')} 的核心选择：Agent 与 Runtime 之间不设直接 import 或 RPC，而是共享一组<b>可读、可解析、可版本化</b>的 Markdown + 内嵌 YAML 文件。收益是结构性的：人可以直接检查「为什么执行这个任务、选了哪个机器人、结果如何」；Git 可以追踪状态变化；两个进程松耦合、语言无关；${term('appendonly', 'append-only')} 的 attempts 记录让「第一次失败、第二次重规划、第三次成功」的历史不被成功覆盖——审计是架构自带的性质。代价也要诚实：当前协议靠轮询工作，调度延迟受 polling interval 影响，且必须保证 single-writer + ${term('atomicupdate', 'atomic update')}，否则会读到写了一半的状态。`,
         },
         {
           heading: '从原始观测到结构化状态',
@@ -390,7 +474,7 @@ export const tutorial: TutorialData = {
         },
         {
           heading: 'WatchdogSupervisor：监督，而不是控制',
-          body: `WatchdogSupervisor 是 Runtime 的监督入口：从 <code>SESSIONS.md</code> 认领 pending 会话、验证运行时契约、执行兼容性${term('preflight', '预检')}、创建 SessionRunner、监控三路${term('heartbeat', '心跳')}（Runner / 策略服务 / 目标端）、传播 timeout 与 cancel、把终止结果写回协议文件。关键约束：<b>它不做 observe → inference → action 的高频循环</b>——监督与故障遏制留在薄层，否则 Supervisor 又会膨胀成一个巨大的耦合模块。<details class="figure-reveal"><summary>📄 查看论文原图 · Figure 5：WatchdogSupervisor 的会话级监督</summary><img src="/images/fig5-watchdog.png" alt="论文 Figure 5：WatchdogSupervisor 在执行前检查协议与配置、执行中监控健康、执行后写回证据" loading="lazy" /></details>`,
+          body: `${term('watchdog', 'WatchdogSupervisor')} 是 Runtime 的监督入口：从 <code>SESSIONS.md</code> 认领 pending 会话、验证运行时契约、执行兼容性${term('preflight', '预检')}、创建 ${term('sessionrunner', 'SessionRunner')}、监控三路${term('heartbeat', '心跳')}（Runner / 策略服务 / 目标端）、传播 timeout 与 cancel、把终止结果写回协议文件。关键约束：<b>它不做 observe → inference → action 的高频循环</b>——监督与故障遏制留在薄层，否则 Supervisor 又会膨胀成一个巨大的耦合模块。<details class="figure-reveal"><summary>📄 查看论文原图 · Figure 5：WatchdogSupervisor 的会话级监督</summary><img src="/images/fig5-watchdog.png" alt="论文 Figure 5：WatchdogSupervisor 在执行前检查协议与配置、执行中监控健康、执行后写回证据" loading="lazy" /></details>`,
         },
         {
           heading: '显式状态机：会话是一串可审计的转移',
@@ -448,7 +532,7 @@ export const tutorial: TutorialData = {
       prose: [
         {
           heading: 'Policy-driven：循环在运行层',
-          body: `${term('skillruntime', 'SkillRuntime')} 有两种。<b>PolicySkillRuntime</b> 服务连续控制策略：运行层反复执行「获取观测 → PolicyAdapter 归一化为模型输入 → 推理 → 映射回标准动作 → 经 ActionBridge 与 SafetyGuard → TargetAdapter 执行」，Agent 编译完会话即退出低层循环。论文记作 Aₜ = Policy(I, Oₜ, Sₜ, Hₜ)。${term('adapter', 'PolicyAdapter')} 负责模型特有的输入输出转换；ActionBridge 负责跨表示的确定性转换——坐标系、单位、维度投影、夹爪重映射。`,
+          body: `${term('skillruntime', 'SkillRuntime')} 有两种。<b>PolicySkillRuntime</b> 服务连续控制策略：运行层反复执行「获取观测 → ${term('policyadapter', 'PolicyAdapter')} 归一化为模型输入 → 推理 → 映射回标准动作 → 经 ${term('actionbridge', 'ActionBridge')} 与 ${term('safetyguard', 'SafetyGuard')} → TargetAdapter 执行」，Agent 编译完会话即退出低层循环。论文记作 Aₜ = Policy(I, Oₜ, Sₜ, Hₜ)。${term('adapter', '适配链')}把模型格式、通用动作表示与目标端 SDK 分层隔离；其中 ActionBridge 只做坐标系、单位、维度投影、夹爪重映射等确定性转换。`,
         },
         {
           heading: 'Action Chunk：模型时间与目标时间的矛盾',
@@ -456,7 +540,7 @@ export const tutorial: TutorialData = {
         },
         {
           heading: 'Agent-directed：决策点在 Agent，权限在 Manifest',
-          body: '<b>BuiltinSkillRuntime</b> 没有独立策略服务器：Agent 在线地「观察 → 决策 → 调用工具 → 再观察」，论文记作 Tₜ = Agent(I, Oₜ, Sₜ, Hₜ)。但它并非无限权限：工具经 TargetSessionHandle 暴露，先被会话的<b>工具清单（TargetToolManifest）</b>过滤——observe、reset、invoke_tool、step、query_state 之外的实现细节与危险操作默认不可用，点击 raw_motor_command 只会得到拒绝。两条流最终统一汇入 Session → Watchdog 监督 → Target → Evidence → Verifier：后续的验证、评测、记忆与诊断因此<b>不需要知道</b>行为来自 VLA 还是 Agent。',
+          body: `<b>BuiltinSkillRuntime</b> 没有独立策略服务器：Agent 在线地「观察 → 决策 → 调用工具 → 再观察」，论文记作 Tₜ = Agent(I, Oₜ, Sₜ, Hₜ)。但它并非无限权限：工具经 TargetSessionHandle 暴露，先被会话的${term('toolmanifest', '工具清单（TargetToolManifest）')}过滤——observe、reset、invoke_tool、step、query_state 之外的实现细节与危险操作默认不可用，点击 raw_motor_command 只会得到拒绝。两条流最终统一汇入 Session → Watchdog 监督 → Target → Evidence → Verifier：后续的验证、评测、记忆与诊断因此<b>不需要知道</b>行为来自 VLA 还是 Agent。`,
         },
       ],
       modules: [
@@ -563,7 +647,7 @@ export const tutorial: TutorialData = {
         },
         {
           heading: '记忆分层：什么配进入长期记忆？',
-          body: `${term('memory', 'Epistemic Memory')} 分四层：<b>Episodic</b>（SESSIONS.md：任务、轨迹、证据、判定、父子关系）、<b>Working</b>（ENVIRONMENT.md：当前世界状态）、<b>Semantic</b>（KNOWLEDGE.md + LESSONS.md：跨 episode 的规律）、<b>Procedural</b>（SKILL.md / SKILLRUNTIME.md：怎么做这类任务）。KNOWLEDGE 收已验证的成功模式（带适用条件与 provenance）；LESSONS 收失败修正（失败目标、证据、诊断原因、纠正、以及纠正是否被后续验证）。检索时按 goal、environment、target type、risk factor 匹配，经验必须携带 provenance 与 scope：在 Franka 上成功的抓法，不能自动推广到所有 ${term('embodiment', 'embodiment')}——接触密集的策略依赖夹爪几何与控制频率。`,
+          body: `${term('memory', 'Epistemic Memory')} 分四层：<b>Episodic</b>（SESSIONS.md：任务、轨迹、证据、判定、父子关系）、<b>Working</b>（ENVIRONMENT.md：当前世界状态）、<b>Semantic</b>（KNOWLEDGE.md + LESSONS.md：跨 episode 的规律）、<b>Procedural</b>（SKILL.md / SKILLRUNTIME.md：怎么做这类任务）。KNOWLEDGE 收已验证的成功模式；LESSONS 收失败修正（失败目标、证据、诊断原因、纠正、以及纠正是否被后续验证）。检索时按 goal、environment、target type、risk factor 匹配，经验必须携带 ${term('provenance', 'provenance')} 与 ${term('scope', 'scope')}：在 Franka 上成功的抓法，不能自动推广到所有 ${term('embodiment', 'embodiment')}——接触密集的策略依赖夹爪几何与控制频率。`,
         },
       ],
       modules: [
@@ -610,8 +694,8 @@ export const tutorial: TutorialData = {
       badgeLabel: '验证+安全',
       bridge: '闭环已经完整，但「在游戏里跑通」离「在真实机器人上安全运行」还有距离。本章看两件事：如何逐层加回物理约束，以及五层防御各拦什么故障。',
       analogy: {
-        title: '先平地、再碎石、最后冰面',
-        text: '不同路面加回不同风险——<b>逐层</b>试探才能把「摔跤」归因到具体变量；而护绳、头盔和结组一样都不能省。',
+        title: '三种独立模式，经验逐层迁移',
+        text: '<b>Game、Simulation、Real Robot</b> 不是一条路上的三段地形，而是三套独立运行模式：前两层隔离问题、积累经验，再为真机验证提供更可靠的起点。',
         componentId: 'hike-analogy',
       },
       prose: [
@@ -621,7 +705,7 @@ export const tutorial: TutorialData = {
         },
         {
           heading: '五层纵深防御，各拦一类故障',
-          body: `PhyAgentOS 不依赖单一「安全模块」，而是 <b>defense-in-depth</b>：①兼容性${term('preflight', '预检')}回答「组合是否合法」；②ActionBridge 回答「转换是否正确」（坐标、单位、维度、重采样——只做表示转换，不判安全）；③<b>SafetyGuard</b> 回答「命令是否允许执行」：dtype、维度、NaN 与无穷、关节限位、工作空间、速度/加速度、命令时长、频率、急停状态，处理方式为 Reject / Safe Halt / Authorized Clamp 并记录违规码；④${term('heartbeat', '心跳监测')}回答「系统是否仍然健康」——策略服务卡死、网络断开、Runner 失联都会触发受控终止，而不是让过期的动作块继续驱动机器人；⑤<b>目标端本地约束</b>（限位、碰撞检测、扭矩、硬件急停）是最内层、始终生效的最终权威。`,
+          body: `PhyAgentOS 不依赖单一「安全模块」，而是${term('defenseindepth', '纵深防御（defense-in-depth）')}：①兼容性${term('preflight', '预检')}回答「组合是否合法」；②ActionBridge 回答「转换是否正确」（坐标、单位、维度、重采样——只做表示转换，不判安全）；③SafetyGuard 回答「命令是否允许执行」：dtype、维度、NaN 与无穷、关节限位、工作空间、速度/加速度、命令时长、频率、急停状态，处理方式为 Reject / Safe Halt / Authorized Clamp 并记录违规码；④${term('heartbeat', '心跳监测')}回答「系统是否仍然健康」——策略服务卡死、网络断开、Runner 失联都会触发受控终止，而不是让过期的动作块继续驱动机器人；⑤<b>目标端本地约束</b>（限位、碰撞检测、扭矩、硬件急停）是最内层、始终生效的最终权威。`,
         },
         {
           heading: '安全事件也是证据，而且不可协商',
@@ -667,7 +751,7 @@ export const tutorial: TutorialData = {
       prose: [
         {
           heading: '评测即编排：Benchmark 走部署同一条路',
-          body: '传统研究里「部署运行时」和「评测脚本」常是两套代码，导致 benchmark 测的系统不是部署的系统。PhyAgentOS 要求 <b>Benchmark 也编译成 Session</b>：Availability Gate 先显式验证可用性——不满足就明确失败，而不是悄悄跳过部分 episode 再算一个好看的均值；Session Compiler 把任务 × 初始状态展开为记录了 seed、Runtime、Target 与评估配置的会话集；然后走与部署完全相同的 Watchdog → Runner → SkillRuntime → Verifier 路径。仿真层采用双协议：<b>First</b> 是策略第一次原始尝试，<b>Final</b> 是失败后允许 verifier 触发恢复的最终结果——不 fine-tune 策略、不改任务目标、不放宽成功标准。',
+          body: `传统研究里「部署运行时」和「评测脚本」常是两套代码，导致 benchmark 测的系统不是部署的系统。PhyAgentOS 要求 <b>Benchmark 也编译成 Session</b>：Availability Gate 先显式验证可用性——不满足就明确失败，而不是悄悄跳过部分 episode 再算一个好看的均值；Session Compiler 把任务 × 初始状态展开为记录了 seed、Runtime、Target 与评估配置的会话集；然后走与部署完全相同的 Watchdog → Runner → SkillRuntime → Verifier 路径。仿真层采用${term('firstfinal', 'First / Final 双协议')}：First 是策略第一次原始尝试，Final 是失败后允许 verifier 触发恢复的最终结果——不 fine-tune 策略、不改任务目标、不放宽成功标准。`,
         },
         {
           heading: '数字与它们的协议',
@@ -697,7 +781,7 @@ export const tutorial: TutorialData = {
           kind: 'module',
           id: '10.3',
           title: 'Grand Trail：一条 Session 环路 × 三层渐进验证（全机制总览）',
-          desc: '按论文真实结构组织：整张图是一条 Session 生命周期环路——预检门（绿色拦杆连着立柱）→ 执行段双车道（Policy 实线 / Agent 工具虚线，共用监督与证据）→ 路桩 τ（S₀ 与 S_T 之间的每个中间态都进证据）→ 验收台 V(G, S₀, S_T, τ, H) → KNOWLEDGE/LESSONS 归档 → 检索回到出发线。同一条环路走三圈 = 渐进验证：Game 只测认知，第二圈把碎石叠回原路面（动力学与碰撞），第三圈再叠冰面（噪声、延迟、硬件）；第二圈的滑倒与子会话恢复就是 First→Final 的来源。中央底座是贯穿全程的 OS 运行时与状态文件——不是路上的某一站。',
+          desc: '按论文真实结构组织：整张图是一条 Session 生命周期环路——预检门 → 执行段双车道（Policy 实线 / Agent 工具虚线）→ 轨迹 τ → 验收台 V(G, S₀, S_T, τ, H) → 三轮记忆归档 → 检索回到出发线。同一条环路分别在 Game、Simulation、Real Robot 三种独立模式下运行：Simulation 首次保持 Game 的快速速度并失败，replan 后实质降速；人物回到起点后才切换冰面并再次预检，Real 全程减速，归档第三条经验并回到起点才结束。中央底座是贯穿全程的 OS 运行时与状态文件。',
           componentId: 'grand-trail',
         },
       ],

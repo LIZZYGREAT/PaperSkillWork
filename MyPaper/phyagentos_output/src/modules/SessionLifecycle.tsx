@@ -64,11 +64,23 @@ const TERMINALS: { id: StateId; label: string; write: string }[] = [
   { id: 'replanned', label: 'replanned', write: 'child session 已编译；原会话不被改写（append-only）' },
 ];
 
+// 跳过某个状态究竟错过了什么——非法转移提示按被跳过的状态逐个阐述
+const SKIP_WHY: Record<string, string> = {
+  claimed: '没有 claimed，Watchdog 就没认领过这次执行，兼容性预检也没有发生',
+  running: '没有 running，执行不受 SessionRunner 监督，三路心跳无人上报',
+  finalizing: '没有 finalizing，S₀ / S_T 与执行轨迹都不会被收集成证据',
+  awaiting_verification: '没有 awaiting_verification，证据包未写回协议，Verifier 无证据可读',
+};
+
 export const SessionLifecycle: React.FC<WidgetProps> = () => {
   const [current, setCurrent] = useState<StateId>('pending');
   const [violations, setViolations] = useState(0);
   const [flash, setFlash] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>(['SESSIONS.md ← session sess-0142 created (pending)']);
+  // 已完成的连接与正在生长的连接分开保存：只有一次合法点击真正跨过
+  // 相邻状态时，才从前一个圆点的边缘向下一个圆点的边缘画出一段线。
+  const [completedEdges, setCompletedEdges] = useState<number[]>([]);
+  const [drawingEdge, setDrawingEdge] = useState<number | null>(null);
 
   const idx = ORDER.indexOf(current);
   const terminal = TERMINALS.find((t) => t.id === current);
@@ -99,6 +111,10 @@ export const SessionLifecycle: React.FC<WidgetProps> = () => {
       const n = NODES[nextIdx];
       setLog((l) => [...l, n.write]);
       setFlash(null);
+      // 先把已通过的段落记为完整：即使用户在 520ms 动画尚未结束时继续点击，
+      // 前一段也不会被下一段动画撤销。
+      setCompletedEdges((edges) => (edges.includes(curIdx) ? edges : [...edges, curIdx]));
+      setDrawingEdge(curIdx);
       return;
     }
     if (nextIdx <= curIdx) {
@@ -106,7 +122,8 @@ export const SessionLifecycle: React.FC<WidgetProps> = () => {
       return;
     }
     const skipped = ORDER.slice(curIdx + 1, nextIdx).map((s) => NODES[ORDER.indexOf(s)].label);
-    reject(`Illegal transition：跳过了 ${skipped.join(' → ')}。治理要求每一步都显式发生——比如在 ${current} 时点 Verify，Verifier 还没有任何证据可读。`);
+    const why = skipped.map((s) => SKIP_WHY[s]).filter(Boolean).join('；');
+    reject(`Illegal transition：跳过了 ${skipped.join(' → ')}。治理要求每一步都显式发生——${why}。`);
   };
 
   const reject = (why: string) => {
@@ -119,6 +136,13 @@ export const SessionLifecycle: React.FC<WidgetProps> = () => {
     setViolations(0);
     setFlash(null);
     setLog(['SESSIONS.md ← session sess-0142 created (pending)']);
+    setCompletedEdges([]);
+    setDrawingEdge(null);
+  };
+
+  const finishEdge = (edge: number) => {
+    if (drawingEdge !== edge) return;
+    setDrawingEdge(null);
   };
 
   let tone: '' | 'good' | 'bad' | 'info' = 'info';
@@ -148,12 +172,19 @@ export const SessionLifecycle: React.FC<WidgetProps> = () => {
             const stateIdx = ORDER.indexOf(current);
             const isDone = terminal || stateIdx > i;
             const isActive = current === n.id;
+            const isConnecting = drawingEdge === i;
+            const hasConnector = completedEdges.includes(i);
             return (
               <button
                 type="button"
                 key={n.id}
-                className={`lab-rail-node ${isActive ? 'is-active' : ''} ${isDone ? 'is-done' : ''}`}
+                className={`lab-rail-node ${isActive ? 'is-active' : ''} ${isDone ? 'is-done' : ''} ${
+                  hasConnector ? 'has-connector' : ''
+                } ${isConnecting ? 'is-connecting' : ''}`}
                 onClick={() => advance(n.id)}
+                onAnimationEnd={(event) => {
+                  if (event.animationName === 'rail-link-grow') finishEdge(i);
+                }}
               >
                 <span className="lab-rail-dot" aria-hidden />
                 <span className="lab-rail-label">{n.label}</span>

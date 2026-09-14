@@ -84,7 +84,7 @@ if (chapterCount > 0 && moduleLists === chapterCount && takeawayLists === chapte
 if (moduleCount >= chapterCount) pass(`活动模块数量 ${moduleCount}，覆盖全部章节`);
 else fail(`活动模块不足：${moduleCount} 个模块 / ${chapterCount} 章`);
 
-const termsBlock = tutorial.match(/const TERMS[\s\S]*?=\s*\{([\s\S]*?)\n\};\n\n\/\*\*/)?.[1] ?? '';
+const termsBlock = tutorial.match(/const TERMS[\s\S]*?=\s*\{([\s\S]*?)\r?\n\};\r?\n\r?\n\/\*\*/)?.[1] ?? '';
 const declaredTerms = unique(
   [...termsBlock.matchAll(/^\s{2}([a-z][a-z0-9]*):\s*\{/gm)].map((match) => match[1])
 );

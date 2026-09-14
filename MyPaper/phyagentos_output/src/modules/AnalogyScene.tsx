@@ -6,7 +6,7 @@ import type { WidgetProps } from './registry';
 // 每章不再是无意义的循环走路，而是一段明确的「故事」：
 //   人物到达关键节点 → 道具展示它在论文机制中的作用 → 继续前进 / 折返 / 循环。
 // 实现：rAF 时间线驱动（getPointAtLength 精确定位 + 分段缓动 + 站点暂停 + FX 触发）。
-// 路径起点与中段都是平整路面：出发前检查门立在起点，大本营 / 无线电立在中段。
+// 路径起点与中段都是平整路面：出发前检查门立在起点，大本营 / 无线电 / 中转站立在中段。
 
 const TRAIL = 'M 28 105 L 150 105 C 215 105 245 88 305 88 L 385 88 C 450 88 500 70 524 58';
 const TRAIL_SOLID = 'M 28 105 L 150 105 C 215 105 245 88 305 88 L 385 88';
@@ -58,6 +58,56 @@ function Flag({ color }: { color: string }) {
   );
 }
 
+/**
+ * §9 的三个层级是三个独立运行模式，不是一名登山者依次踩过三段地形。
+ * 三个等宽小画面共享起点与终点语义，但分别呈现 Game / Simulation / Real。
+ */
+function TerrainModeTrio() {
+  const panels = [
+    { id: 'game', x: 12, label: '① Game', sub: '认知闭环', color: '#7c3aed' },
+    { id: 'sim', x: 196, label: '② Simulation', sub: '动力学·碰撞', color: '#92400e' },
+    { id: 'real', x: 380, label: '③ Real Robot', sub: '噪声·延迟·安全', color: '#228d5c' },
+  ];
+
+  return (
+    <svg className="analogy-svg terrain-trio" viewBox="0 0 560 150" role="img" aria-label="Game、Simulation 与 Real Robot 三种独立验证模式">
+      {panels.map((p) => (
+        <g key={p.id}>
+          <rect x={p.x} y={34} width={168} height={104} rx={10} fill="#f8faf6" stroke="#d7deea" strokeWidth={1.2} />
+          <rect x={p.x + 36} y={12} width={96} height={22} rx={11} fill="#fff" stroke={p.color} strokeWidth={1.3} />
+          <text x={p.x + 84} y={27} textAnchor="middle" fontSize={10} fontWeight={800} fill={p.color}>{p.label}</text>
+          <text x={p.x + 84} y={54} textAnchor="middle" fontSize={9} fontWeight={700} fill="#68778f">{p.sub}</text>
+
+          <path d={`M ${p.x + 18} 112 Q ${p.x + 84} 104 ${p.x + 150} 86`} fill="none" stroke="#dce7d5" strokeWidth={8} strokeLinecap="round" />
+          <path
+            d={`M ${p.x + 18} 112 Q ${p.x + 84} 104 ${p.x + 150} 86`}
+            fill="none"
+            stroke={p.id === 'real' ? '#6aa7cc' : p.id === 'sim' ? '#8a6b4a' : '#92400e'}
+            strokeWidth={3.2}
+            strokeLinecap="round"
+          />
+
+          {p.id === 'sim' ? [58, 82, 108, 132].map((dx) => (
+            <path key={dx} d={`M ${p.x + dx - 4} ${108 - dx * 0.12} l 4 -5 l 4 5 z`} fill="#6b5236" />
+          )) : null}
+          {p.id === 'real' ? [48, 82, 116].map((dx) => (
+            <line key={dx} x1={p.x + dx} y1={108 - dx * 0.14} x2={p.x + dx + 10} y2={105 - dx * 0.14} stroke="#eaf6fd" strokeWidth={2} strokeLinecap="round" />
+          )) : null}
+
+          <g className={`terrain-walker terrain-walker-${p.id}`}>
+            <Hiker />
+          </g>
+          <line x1={p.x + 150} y1={86} x2={p.x + 150} y2={64} stroke="#92400e" strokeWidth={2} />
+          <path d={`M ${p.x + 150} 64 l 14 5 l -14 5 z`} fill="#228d5c" />
+        </g>
+      ))}
+      <text x={280} y={147} textAnchor="middle" fontSize={9.5} fontWeight={700} fill="#27446e">
+        三种模式独立运行；Game 与 Simulation 的经验为 Real Robot 提供验证依据
+      </text>
+    </svg>
+  );
+}
+
 // ---------------------------------------------------------------- 脚本时间线
 
 type Seg =
@@ -70,7 +120,7 @@ interface FxKit {
   fracAtX: (x: number) => number;
 }
 
-const X = { gate: 114, camp: 320, radio: 330, fork: 345, s0: 310, st: 470, brk: 385, rock: 260, ice: 400 };
+const X = { gate: 114, camp: 320, radio: 330, fork: 345, s0: 154, st: 496, brk: 385, waypoint: 290 };
 
 const SCRIPTS: Record<string, (k: FxKit) => Seg[]> = {
   // §1 角色地图：走两段、各停一次看地图——地图高亮两处缺口
@@ -107,7 +157,8 @@ const SCRIPTS: Record<string, (k: FxKit) => Seg[]> = {
     { type: 'hold', ms: 1700, fx: () => { k.pop('radio-w0', 100); k.pop('radio-w1', 380); k.pop('radio-w2', 660); k.pop('radio-msg', 500); } },
     { type: 'walk', from: k.fracAtX(X.radio), to: 1, ms: 1700 },
   ],
-  // §5 出发前检查：起点就被检查门拦下 → 三项检查逐项打勾 → 闸门抬起放行
+  // §5 行程治理：出发检查（三项打勾放行）→ 途中签到（路簿盖章）→ 终点确认。
+  // 中途节点不再使用蓝色电波，避免与 §4 的无线电 / 心跳语义混淆。
   'chap-5': (k) => [
     { type: 'walk', from: 0, to: k.fracAtX(X.gate), ms: 1100 },
     {
@@ -119,7 +170,10 @@ const SCRIPTS: Record<string, (k: FxKit) => Seg[]> = {
         k.pop('gate-pass', 2100);
       },
     },
-    { type: 'walk', from: k.fracAtX(X.gate), to: 1, ms: 2100 },
+    { type: 'walk', from: k.fracAtX(X.gate), to: k.fracAtX(X.waypoint), ms: 1500 },
+    { type: 'hold', ms: 1800, fx: () => { k.pop('wp-stamp', 180); k.pop('wp-msg', 520); } },
+    { type: 'walk', from: k.fracAtX(X.waypoint), to: 1, ms: 1700 },
+    { type: 'hold', ms: 1900, fx: () => { k.pop('arrive-check', 150); k.pop('arrive-pill', 550); } },
   ],
   // §6 两条走法：明确走到分叉点 → 两条路线各自标注 → 沿主路走到旗子
   'chap-6': (k) => [
@@ -127,11 +181,16 @@ const SCRIPTS: Record<string, (k: FxKit) => Seg[]> = {
     { type: 'hold', ms: 1600, fx: () => { k.pop('fork-main', 150); k.pop('fork-branch', 550); } },
     { type: 'walk', from: k.fracAtX(X.fork), to: 1, ms: 2100 },
   ],
-  // §7 语义验收：从 S₀ 走到 S_T，停下后一条橙色虚线把终点「对回」起点比对
+  // §7 语义验收：先在起点完成预检、开闸并经过 S₀，再抵达旗子左侧的 S_T；
+  // 停下后用带箭头的橙色虚线明确画出 S_T → S₀ 的回溯比对方向。
   'chap-7': (k) => [
-    { type: 'walk', from: k.fracAtX(X.s0), to: k.fracAtX(X.st), ms: 2000 },
-    { type: 'hold', ms: 1900, fx: () => { k.pop('s0-flash', 150); k.pop('cmp-label', 450); k.pop('st-ok', 850); } },
-    { type: 'walk', from: k.fracAtX(X.st), to: 1, ms: 700 },
+    { type: 'walk', from: 0, to: k.fracAtX(X.gate), ms: 900 },
+    { type: 'hold', ms: 1900, fx: () => { k.pop('v-gate-check', 150); k.pop('v-gate-open', 760); k.pop('v-gate-pass', 980); } },
+    { type: 'walk', from: k.fracAtX(X.gate), to: k.fracAtX(X.s0), ms: 520 },
+    { type: 'hold', ms: 700, fx: () => { k.pop('s0-start', 100); } },
+    { type: 'walk', from: k.fracAtX(X.s0), to: k.fracAtX(X.st), ms: 2600 },
+    { type: 'hold', ms: 2100, fx: () => { k.pop('s0-flash', 150); k.pop('cmp-label', 450); k.pop('st-ok', 950); } },
+    { type: 'walk', from: k.fracAtX(X.st), to: 1, ms: 380 },
   ],
   // §8 会话记录：第一次失败（红✗）→ 折返重试（绿✓）→ 两条都被写进记录
   'chap-8': (k) => [
@@ -142,18 +201,8 @@ const SCRIPTS: Record<string, (k: FxKit) => Seg[]> = {
     { type: 'hold', ms: 700, fx: () => { k.pop('ok-check', 100); k.pop('note-l1', 250); } },
     { type: 'hold', ms: 1300, fx: () => { k.pop('note-l2', 200); k.pop('note-note', 500); } },
   ],
-  // §9 逐层加险：三种路面常驻可见（平缓段=普通棕 / 碎石层=深棕+石块 / 冰面层=蓝），
-  // 人物进入碎石层、冰面层时弹出对应标签，进入冰面时脚下滑一下
-  'chap-9': (k) => [
-    {
-      type: 'walk', from: 0, to: 1, ms: 4800,
-      marks: [
-        { frac: k.fracAtX(X.rock), fx: () => { k.pop('terr-rock-label'); } },
-        { frac: k.fracAtX(X.ice), fx: () => { k.pop('terr-ice-label'); k.slip(); } },
-      ],
-    },
-    { type: 'hold', ms: 1300, fx: () => { k.pop('terr-done', 200); } },
-  ],
+  // §9 使用独立的三画面比较，由 TerrainModeTrio 自己负责动画。
+  'chap-9': () => [],
   // §10 查完整记录：登顶后逐条弹出记录（协议 / 提升 / 边界）
   'chap-10': (k) => [
     { type: 'walk', from: 0, to: 1, ms: 3000 },
@@ -300,6 +349,8 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
     };
   }, [chapterId, reduced]);
 
+  if (chapterId === 'chap-9') return <TerrainModeTrio />;
+
   const chipText = v.mapsTo;
   const chipW = Math.min(330, chipText.length * 11.5 + 26);
 
@@ -401,6 +452,20 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
           <line x1={136} y1={105} x2={136} y2={76} stroke="#92400e" strokeWidth={3.4} strokeLinecap="round" />
           <path data-fx="gate-open" className="gate-arc" d="M 92 79 Q 114 92 136 79" fill="none" stroke="#f07e47" strokeWidth={3.2} strokeLinecap="round" />
           <text x={114} y={118} textAnchor="middle" fontSize={10.5} fill="#f07e47" fontWeight={600}>出发前检查</text>
+          {/* 途中签到：路簿与印章，不再使用蓝色电波，避免和 §4 无线电混淆 */}
+          <line x1={316} y1={88} x2={316} y2={53} stroke="#92400e" strokeWidth={2.4} strokeLinecap="round" />
+          <rect x={294} y={39} width={44} height={17} rx={4} fill="#fffaf5" stroke="#f07e47" strokeWidth={1.4} />
+          <text x={316} y={51} textAnchor="middle" fontSize={8.5} fill="#b85c1e" fontWeight={800}>途中签到</text>
+          <rect x={302} y={62} width={28} height={20} rx={3} fill="#fff" stroke="#d7deea" strokeWidth={1.2} />
+          <line x1={307} y1={68} x2={325} y2={68} stroke="#d7deea" strokeWidth={1.4} />
+          <line x1={307} y1={74} x2={322} y2={74} stroke="#d7deea" strokeWidth={1.4} />
+          <g data-fx="wp-stamp" className="fx">
+            <circle cx={323} cy={74} r={6.5} fill="#e9f5ef" stroke="#228d5c" strokeWidth={1.5} />
+            <path d="M 319 74 l 3 3 l 5 -7" fill="none" stroke="#228d5c" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <text x={316} y={104} textAnchor="middle" fontSize={10} fill="#92400e" fontWeight={700}>路簿 · 会话状态</text>
+          {/* 终点：到达后验收确认 */}
+          <text x={512} y={84} textAnchor="middle" fontSize={10} fill="#228d5c" fontWeight={600}>终点确认</text>
           <g fontSize={9.5} fontWeight={700}>
             <Pill id="gate-c0" x={200} y={44} text="✓ 观测模态" tone="green" />
             <Pill id="gate-c1" x={200} y={66} text="✓ 动作语义" tone="green" />
@@ -443,15 +508,21 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
 
       {v.prop === 'signposts' ? (
         <g>
-          <line x1={310} y1={88} x2={310} y2={54} stroke="#92400e" strokeWidth={2.4} />
-          <rect x={293} y={40} width={34} height={16} rx={4} fill="#fff" stroke="#d7deea" />
-          <text x={310} y={52} textAnchor="middle" fontSize={10} fill="#27446e" fontWeight={700}>S₀</text>
-          {/* S_T 落在上升段的曲线上（x=468 处路径 y≈77） */}
-          <line x1={468} y1={77} x2={468} y2={45} stroke="#92400e" strokeWidth={2.4} />
-          <rect x={451} y={29} width={34} height={16} rx={4} fill="#fff" stroke="#d7deea" />
-          <text x={468} y={41} textAnchor="middle" fontSize={10} fill="#27446e" fontWeight={700}>S_T</text>
-          {/* 终点「对回」起点：带箭头的比对弧线 */}
-          <path data-fx="s0-flash" className="fx-blink" d="M 462 70 C 420 28 360 28 316 78" fill="none" stroke="#f07e47" strokeWidth={2} strokeDasharray="5 5" markerEnd="url(#as-arrow)" />
+          {/* 起点预检门：通过后才进入 S₀ */}
+          <line x1={92} y1={105} x2={92} y2={76} stroke="#92400e" strokeWidth={3.2} strokeLinecap="round" />
+          <line x1={136} y1={105} x2={136} y2={76} stroke="#92400e" strokeWidth={3.2} strokeLinecap="round" />
+          <path data-fx="v-gate-open" className="gate-arc" d="M 92 79 Q 114 92 136 79" fill="none" stroke="#f07e47" strokeWidth={3.2} strokeLinecap="round" />
+          <text x={114} y={118} textAnchor="middle" fontSize={9.5} fill="#b85c1e" fontWeight={700}>出发前检测</text>
+
+          <line x1={154} y1={105} x2={154} y2={66} stroke="#92400e" strokeWidth={2.4} />
+          <rect x={137} y={52} width={34} height={16} rx={4} fill="#fff" stroke="#d7deea" />
+          <text x={154} y={64} textAnchor="middle" fontSize={10} fill="#27446e" fontWeight={700}>S₀</text>
+          {/* S_T 靠近旗子左侧，但与旗杆/旗面保持清晰间距 */}
+          <line x1={496} y1={70} x2={496} y2={42} stroke="#92400e" strokeWidth={2.4} />
+          <rect x={479} y={28} width={34} height={16} rx={4} fill="#fff" stroke="#d7deea" />
+          <text x={496} y={40} textAnchor="middle" fontSize={10} fill="#27446e" fontWeight={700}>S_T</text>
+          {/* 箭头从终态回指初态：S_T → S₀ */}
+          <path data-fx="s0-flash" className="fx-blink" d="M 488 64 C 410 20 250 22 162 92" fill="none" stroke="#f07e47" strokeWidth={2} strokeDasharray="5 5" markerEnd="url(#as-arrow)" />
         </g>
       ) : null}
 
@@ -486,7 +557,18 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
       ) : null}
       {chapterId === 'chap-3' ? <Pill id="camp-rest" x={264} y={66} text="整备中…" tone="green" fs={10} /> : null}
       {chapterId === 'chap-4' ? <Pill id="radio-msg" x={244} y={62} text="上报: state=running ✓" tone="blue" fs={10} /> : null}
-      {chapterId === 'chap-5' ? <Pill id="gate-pass" x={205} y={100} text="预检通过 · 放行" tone="green" fs={10} /> : null}
+      {chapterId === 'chap-5' ? (
+        <g>
+          <Pill id="gate-pass" x={205} y={100} text="预检通过 · 放行" tone="green" fs={10} />
+          <Pill id="wp-msg" x={400} y={42} text="路簿已签到 · 心跳正常 ✓" tone="green" fs={9.5} />
+          {/* 终点确认：到达旗子后验收打勾 */}
+          <g data-fx="arrive-check" className="fx">
+            <circle cx={496} cy={30} r={13} fill="#228d5c" opacity={0.14} />
+            <path d="M 490 30 L 495 35 L 504 24" fill="none" stroke="#228d5c" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <Pill id="arrive-pill" x={434} y={104} text="到达 · 终点确认 ✓" tone="green" fs={10} />
+        </g>
+      ) : null}
       {chapterId === 'chap-6' ? (
         <g>
           <Pill id="fork-main" x={442} y={70} text="实线 · Policy 流 → 旗子" tone="green" fs={10} />
@@ -495,8 +577,11 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
       ) : null}
       {chapterId === 'chap-7' ? (
         <g>
-          <Pill id="cmp-label" x={392} y={54} text="把终点对回起点比对" tone="orange" fs={9.5} />
-          <Pill id="st-ok" x={430} y={108} text="变化由本次执行造成 ✓" tone="green" fs={10} />
+          <Pill id="v-gate-check" x={220} y={86} text="契约与安全检查" tone="orange" fs={9.5} />
+          <Pill id="v-gate-pass" x={214} y={110} text="预检通过 · 放行" tone="green" fs={9.5} />
+          <Pill id="s0-start" x={184} y={42} text="记录初态 S₀" tone="blue" fs={9.5} />
+          <Pill id="cmp-label" x={344} y={48} text="S_T → S₀ 回溯比对" tone="orange" fs={9.5} />
+          <Pill id="st-ok" x={420} y={112} text="变化由本次执行造成 ✓" tone="green" fs={10} />
         </g>
       ) : null}
       {chapterId === 'chap-8' ? (
@@ -508,10 +593,10 @@ export const AnalogyScene: React.FC<WidgetProps> = ({ chapterId }) => {
       ) : null}
       {chapterId === 'chap-9' ? <Pill id="terr-done" x={266} y={46} text="同一套认知，逐层加回物理" tone="blue" fs={10} /> : null}
       {chapterId === 'chap-10' ? (
-        <g fontSize={9.5} fontWeight={700}>
-          <Pill id="end-r0" x={436} y={92} text="协议 ✓" tone="green" fs={9.5} />
-          <Pill id="end-r1" x={428} y={106} text="提升 ✓" tone="green" fs={9.5} />
-          <Pill id="end-r2" x={438} y={120} text="边界 ⚠" tone="orange" fs={9.5} />
+        <g fontSize={10.5} fontWeight={700}>
+          <Pill id="end-r0" x={360} y={118} text="协议 ✓" tone="green" fs={10.5} />
+          <Pill id="end-r1" x={430} y={118} text="提升 ✓" tone="green" fs={10.5} />
+          <Pill id="end-r2" x={500} y={118} text="边界 ⚠" tone="orange" fs={10.5} />
         </g>
       ) : null}
 

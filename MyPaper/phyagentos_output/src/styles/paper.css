@@ -438,6 +438,44 @@ section.chap.slide-chap {
   80% { transform: rotate(-4deg); }
 }
 
+/* §9：Game / Simulation / Real 是三个独立验证模式，不是连续三段地形。 */
+.terrain-trio .terrain-walker {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+.terrain-trio .terrain-walker-game {
+  animation: terrain-game-run 3.2s ease-in-out infinite;
+}
+.terrain-trio .terrain-walker-sim {
+  animation: terrain-sim-run 3.2s ease-in-out infinite;
+}
+.terrain-trio .terrain-walker-real {
+  animation: terrain-real-run 4.8s ease-in-out infinite;
+}
+@keyframes terrain-game-run {
+  0%, 10% { transform: translate(34px, 112px); }
+  82%, 100% { transform: translate(154px, 87px); }
+}
+@keyframes terrain-sim-run {
+  0%, 10% { transform: translate(218px, 112px) rotate(0deg); }
+  50% { transform: translate(278px, 101px) rotate(0deg); }
+  58% { transform: translate(288px, 100px) rotate(-13deg); }
+  66% { transform: translate(300px, 97px) rotate(5deg); }
+  84%, 100% { transform: translate(338px, 87px) rotate(0deg); }
+}
+@keyframes terrain-real-run {
+  0%, 10% { transform: translate(402px, 112px); }
+  82%, 100% { transform: translate(522px, 87px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .terrain-trio .terrain-walker {
+    animation: none;
+  }
+  .terrain-trio .terrain-walker-game { transform: translate(154px, 87px); }
+  .terrain-trio .terrain-walker-sim { transform: translate(338px, 87px); }
+  .terrain-trio .terrain-walker-real { transform: translate(522px, 87px); }
+}
+
 /* ---------- 正文段落 ---------- */
 .chap-prose {
   display: flex;
@@ -499,9 +537,12 @@ section.chap.slide-chap {
 .term-popover {
   position: absolute;
   bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  width: min(340px, 78vw);
+  /* 默认将气泡的右缘贴在术语右缘，说明内容优先向左展开。
+     仅在靠近视口边界时由 --term-popover-offset 做最小位移校正。 */
+  right: 0;
+  left: auto;
+  transform: translateX(var(--term-popover-offset, 0px)) translateY(4px);
+  width: min(340px, calc(100vw - 32px));
   background: var(--paper);
   border: 1px solid var(--line-2);
   border-radius: var(--ui-radius-sm);
@@ -522,7 +563,7 @@ section.chap.slide-chap {
   content: '';
   position: absolute;
   top: 100%;
-  left: 50%;
+  left: var(--term-popover-arrow-x, calc(100% - 12px));
   transform: translateX(-50%);
   border: 7px solid transparent;
   border-top-color: var(--line-2);
@@ -554,18 +595,19 @@ section.chap.slide-chap {
 }
 .term:hover .term-popover,
 .term:focus .term-popover,
-.term:focus-within .term-popover {
+.term:focus-within .term-popover,
+.term.is-popover-open .term-popover {
   display: block;
   animation: term-pop-in 160ms var(--ease-out);
 }
 @keyframes term-pop-in {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateX(var(--term-popover-offset, 0px)) translateY(4px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(var(--term-popover-offset, 0px)) translateY(0);
   }
 }
 
@@ -927,23 +969,38 @@ section.chap.slide-chap {
   background: transparent;
   border: none;
   cursor: pointer;
-  min-width: 96px;
+  /* 固定节点中心距后，连接线可以精确从前一圆点半径外生长至下一圆点半径外。 */
+  flex: 0 0 150px;
+  width: 150px;
   padding: 4px 6px 8px;
   position: relative;
+  box-sizing: border-box;
   font-family: var(--ui-font-sans);
 }
+/* 每段连接都只属于前一个节点。150px 的中心距减去两个圆点半径（各 10px）
+   得到 130px：恰好是“前一中心 + 半径”到“后一中心 - 半径”。 */
 .lab-rail-node:not(:last-child)::after {
   content: '';
   position: absolute;
-  top: 13px;
-  left: calc(50% + 12px);
-  width: calc(100% - 24px);
+  top: 11px;
+  left: calc(50% + 10px);
+  width: calc(100% - 20px);
   height: 2px;
-  background: var(--line);
-}
-.lab-rail-node.is-done:not(:last-child)::after,
-.lab-rail-node.is-active:not(:last-child)::after {
   background: var(--blue);
+  border-radius: 999px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  z-index: 0;
+}
+.lab-rail-node.has-connector:not(:last-child)::after {
+  transform: scaleX(1);
+}
+.lab-rail-node.is-connecting:not(:last-child)::after {
+  animation: rail-link-grow 520ms var(--ease-out) forwards;
+}
+@keyframes rail-link-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 .lab-rail-dot {
   width: 16px;
@@ -952,6 +1009,8 @@ section.chap.slide-chap {
   border: 2.5px solid var(--line-2);
   background: var(--paper);
   transition: all var(--t-fast);
+  position: relative;
+  z-index: 1;
 }
 .lab-rail-node:hover .lab-rail-dot {
   border-color: var(--blue);
@@ -967,7 +1026,7 @@ section.chap.slide-chap {
 }
 .lab-rail-label {
   font-family: var(--ui-font-mono);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: var(--ink-2);
   white-space: nowrap;
@@ -2332,9 +2391,10 @@ section.chap.slide-chap {
 }
 .tl-ladder {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 6px;
   padding-bottom: 4px;
+  min-width: 150px;
 }
 .tl-ladder-step {
   font-family: var(--ui-font-mono);
@@ -2347,11 +2407,13 @@ section.chap.slide-chap {
   cursor: pointer;
   padding: 7px 16px;
   text-align: left;
+  white-space: nowrap;
+  min-width: max-content;
   transition: all var(--t-fast);
 }
-.tl-ladder-step-0 { width: 100%; }
-.tl-ladder-step-1 { width: 82%; }
-.tl-ladder-step-2 { width: 64%; }
+.tl-ladder-step-0 { width: 72%; }
+.tl-ladder-step-1 { width: 86%; }
+.tl-ladder-step-2 { width: 100%; }
 .tl-ladder-step.is-active {
   border-color: var(--tier-color, var(--blue));
   color: var(--tier-color, var(--blue));
@@ -2469,7 +2531,7 @@ section.chap.slide-chap {
   border-left: 4px solid var(--layer-color, var(--line-2));
   border-radius: var(--ui-radius-sm);
   background: var(--paper);
-  opacity: 0.55;
+  opacity: 1;
   animation: layer-in 300ms var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 60ms);
 }
@@ -2479,11 +2541,11 @@ section.chap.slide-chap {
     transform: translateY(6px);
   }
   to {
-    opacity: 0.55;
+    opacity: 1;
     transform: translateY(0);
   }
 }
-.lab-layer.is-passed { opacity: 0.75; }
+.lab-layer.is-passed { opacity: 0.9; }
 .lab-layer.is-hit {
   opacity: 1;
   border-color: var(--layer-color, var(--red));
@@ -2956,6 +3018,13 @@ section.chap.slide-chap {
 .gt-bar.on {
   transform: rotate(-72deg);
   stroke: #228d5c;
+}
+.gt-controls {
+  margin: 10px 0;
+}
+.gt-control-note {
+  font-size: 0.78rem;
+  color: var(--slate-2);
 }
 /* 验收台裁决灯：默认弱化，触发对应裁决时点亮 */
 .gt-lamp {
@@ -3686,9 +3755,11 @@ section.chap.slide-chap {
   .term-popover {
     position: fixed;
     left: 50%;
+    right: auto;
     top: 50%;
     bottom: auto;
     width: min(320px, 86vw);
+    transform: translate(-50%, -50%);
     box-shadow: 0 18px 50px rgba(10, 20, 40, 0.35);
   }
   .term-popover::after {

@@ -149,9 +149,9 @@ const CAPTIONS: { name: string; desc: string }[] = [
   { name: '验收台 · 语义裁决', desc: 'V(G, S₀, S_T, τ, H) → success / failure / replan。return code = 0 只说明控制器没报错；任务是否真的完成，由证据决定。' },
   { name: '归档 · 只写复验过的经验', desc: '成功模式进 KNOWLEDGE，失败教训进 LESSONS。没被下一次成功复验的「修复假设」不会变成事实——这是记忆不被污染的关键。' },
   { name: '回到出发线 · 检索先于编译', desc: '下一次会话编译前，先按目标/环境/风险检索记忆、注入上下文。PhyAgentOS 的自我进化不走神经训练——是这一步让经验跨会话生效。' },
-  { name: '第②圈 Simulation · 同一环路，逐层加险', desc: '渐进验证不是把路分成三段，而是同一条环路在三层重复测试。第②圈加回动力学与碰撞：碎石叠加在原路面上——Game 过而这里不过，问题定位在物理执行。' },
-  { name: '失败 ≠ 白跑 · First → Final', desc: '在碎石上滑倒：First 记 ✗。replan 生成子会话、从当前物理状态重新进入（橙色回边），复验通过记 Final ✓。Final−First 度量的就是恢复机制救回了多少。' },
-  { name: '第③圈 Real · 系统级提升', desc: '冰面再加噪声、延迟与硬件安全约束；上一圈教训让这次减速通过。策略权重始终没动——提升来自验证+恢复+记忆的系统闭环，这就是 Final 与 First 的差距来源。' },
+  { name: '第②圈 Simulation · 切换到碎石模式', desc: '三层不是一条路的三段，而是同一环路在三种独立模式下重复测试。Simulation 首次保持 Game 的快速速度，因动力学与碰撞失败，问题因此定位在物理执行。' },
+  { name: '失败 ≠ 白跑 · First → Final', desc: 'First 在碎石上滑倒；replan 生成子会话后显著减速，复验通过记 Final ✓。角色抵达归档位后才写入第二条记忆，再回到出发点。' },
+  { name: '第③圈 Real · 减速通过冰面', desc: '人物回到出发点后，路面才切换为冰面并重新预检。真实位移速度明显变慢；验收、归档第三条记忆后，人物跑回初始点才结束本轮。' },
 ];
 
 const SCRIPT = (k: FxKit): Seg[] => {
@@ -197,10 +197,18 @@ const SCRIPT = (k: FxKit): Seg[] => {
     { type: 'walk', from: sT, to: ver, ms: 1300, marks: [{ frac: ver, fx: () => k.say(4) }] },
     { type: 'hold', ms: 1900, fx: () => k.verdict('success', 150) },
     { type: 'walk', from: ver, to: arch, ms: 1000, marks: [{ frac: arch, fx: () => k.say(5) }] },
-    { type: 'hold', ms: 1700, fx: () => k.pop('gt-k', 150) },
+    { type: 'hold', ms: 1700, fx: () => k.pop('gt-m-game', 150) },
     { type: 'walk', from: arch, to: 0.9999, ms: 1500, marks: [{ frac: arch + 0.004, fx: () => k.say(6) }] },
-    { type: 'hold', ms: 1400, fx: () => { k.msg('检索：经验注入新会话'); k.pop('gt-hub', 150); } },
-    // ---- 第②圈 Simulation：加碎石 → 滑倒(First ✗) → replan 子会话 → 复验(Final ✓)
+    {
+      type: 'hold', ms: 1500, fx: () => {
+        k.fade('gt-bar');
+        k.fade('gt-pass');
+        k.msg('检索：Game 经验已在出发点注入 ✓');
+        k.pop('gt-hub', 150);
+      },
+    },
+    // ---- 第②圈 Simulation：切换到碎石模式 → 首次保持 Game 的快速速度并失败
+    // → replan 后显著减速复验 → 到达归档位才写入第二条记忆。
     {
       type: 'hold', ms: 1600, fx: () => {
         k.say(7);
@@ -208,47 +216,56 @@ const SCRIPT = (k: FxKit): Seg[] => {
       },
     },
     { type: 'walk', from: 0.0001, to: g, ms: 700 },
-    { type: 'walk', from: g, to: f700, ms: 1500, marks: [{ frac: f700, fx: () => { k.say(8); k.slip(); k.msg2('✗ 碎石滑倒 · 动力学与碰撞'); k.pop('gt-dyn2', 60); } }] },
+    { type: 'hold', ms: 1300, fx: () => { k.pop('gt-bar', 120); k.pop('gt-pass', 430); k.msg('Simulation 预检 ✓ 放行'); } },
+    { type: 'walk', from: g, to: f700, ms: 3000, marks: [{ frac: f700, fx: () => { k.say(8); k.slip(); k.msg2('✗ 首次保持 Game 速度 · 碎石滑倒'); k.pop('gt-dyn2', 60); } }] },
     {
       type: 'walk', from: f700, to: ver, ms: 1600,
     },
     {
       type: 'hold', ms: 2300, fx: () => {
         k.verdict('failure', 120);
-        k.pop('gt-l', 800);
-        k.msg('replan：子会话 · 从当前状态重启');
+        k.msg('replan：子会话 · 降速后从当前状态重启');
         k.pop('gt-replan', 1000);
         k.verdict('replan', 1000);
         k.pop('gt-hub', 1100);
       },
     },
     { type: 'jump', to: reenter, fx: () => { k.pop('gt-cs', 60); k.fade('gt-replan', 500); } },
-    { type: 'walk', from: reenter, to: ver, ms: 1300 },
+    { type: 'walk', from: reenter, to: ver, ms: 3600, marks: [{ frac: f740, fx: () => { k.msg2('✓ replan 后实质降速'); k.pop('gt-dyn2', 60); } }] },
     { type: 'hold', ms: 1900, fx: () => { k.verdict('success', 120); k.pop('gt-ff', 650); k.fade('gt-cs', 400); } },
-    // ---- 第③圈 Real：加冰面 → 复用教训减速通过 → 系统级提升
+    { type: 'walk', from: ver, to: arch, ms: 1000 },
+    { type: 'hold', ms: 1500, fx: () => { k.pop('gt-m-sim', 120); k.msg('归档：Simulation 恢复经验 ✓'); k.pop('gt-hub', 280); } },
+    { type: 'walk', from: arch, to: 0.9999, ms: 1500 },
+    // ---- 第③圈 Real：人物已回到初始点，先落闸并把路面切换为冰面；
+    // 再次预检放行后，用更长时长把“减速策略”真实体现在位移速度上。
     {
-      type: 'hold', ms: 1600, fx: () => {
+      type: 'hold', ms: 1900, fx: () => {
+        k.fade('gt-bar');
+        k.fade('gt-pass');
         k.say(9);
-        k.pop('gt-ice', 250);
+        k.fade('gt-rubble');
+        k.pop('gt-ice', 500);
+        k.msg('检索：碎石恢复经验已在出发点注入 ✓');
+        k.pop('gt-hub', 180);
         k.msg2('');
       },
     },
-    { type: 'walk', from: ver, to: arch, ms: 900, marks: [{ frac: arch, fx: () => { k.msg('复用：冰面 → 减速策略'); k.pop('gt-hub'); } }] },
-    { type: 'hold', ms: 1100 },
-    { type: 'walk', from: arch, to: 0.9999, ms: 1400 },
-    { type: 'walk', from: 0.0001, to: g, ms: 650, marks: [{ frac: g, fx: () => { k.msg('检索：冰面教训已注入 ✓'); k.pop('gt-hub'); } }] },
+    { type: 'walk', from: 0.0001, to: g, ms: 700 },
+    { type: 'hold', ms: 1300, fx: () => { k.pop('gt-bar', 120); k.pop('gt-pass', 430); k.msg('Real Robot 预检 ✓ 放行'); } },
     {
-      type: 'walk', from: g, to: sT, ms: 2200,
-      marks: [{ frac: f700, fx: () => { k.msg2('✓ 减速通过 · 复用上一圈教训'); k.pop('gt-dyn2', 60); } }],
+      type: 'walk', from: g, to: sT, ms: 5600,
+      marks: [{ frac: f700, fx: () => { k.msg2('✓ 冰面明显减速 · 复用上一圈教训'); k.pop('gt-dyn2', 60); } }],
     },
-    { type: 'walk', from: sT, to: ver, ms: 1100 },
+    { type: 'walk', from: sT, to: ver, ms: 1500 },
     {
-      type: 'hold', ms: 2400, fx: () => {
+      type: 'hold', ms: 1900, fx: () => {
         k.verdict('success', 120);
-        k.pop('gt-badge', 750);
       },
     },
-    { type: 'hold', ms: 1500 },
+    { type: 'walk', from: ver, to: arch, ms: 1000 },
+    { type: 'hold', ms: 1500, fx: () => { k.pop('gt-m-real', 120); k.msg('归档：Real Robot 通过经验 ✓'); k.pop('gt-hub', 280); } },
+    { type: 'walk', from: arch, to: 0.9999, ms: 1700 },
+    { type: 'hold', ms: 2100, fx: () => { k.fade('gt-bar'); k.fade('gt-pass'); k.msg('三轮完成 · 人物已回到初始点'); k.pop('gt-hub', 150); k.pop('gt-badge', 700); } },
   ];
 };
 
@@ -258,11 +275,18 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
   const [caption, setCaption] = useState(0);
   const [hubMsg, setHubMsg] = useState('');
   const [dyn2Msg, setDyn2Msg] = useState('');
+  const [playing, setPlaying] = useState(true);
+  const [runKey, setRunKey] = useState(0);
   const baseRef = useRef<SVGPathElement>(null);
   const walkerRef = useRef<SVGGElement>(null);
   const facingRef = useRef<SVGGElement>(null);
   const hikerRef = useRef<SVGGElement>(null);
   const stageRef = useRef<SVGSVGElement>(null);
+  const playingRef = useRef(true);
+
+  useEffect(() => {
+    playingRef.current = playing;
+  }, [playing]);
 
   useEffect(() => {
     const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -349,17 +373,29 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       facing.setAttribute('transform', pose.transform);
     };
 
-    const timeouts: number[] = [];
+    // 所有延迟特效都使用“有效播放时间”，因此暂停会同时冻结人物、闸门、裁决灯和记忆写入。
+    const scheduled: { remaining: number; run: () => void }[] = [];
+    const schedule = (delay: number, run: () => void) => {
+      if (delay <= 0) run();
+      else scheduled.push({ remaining: delay, run });
+    };
+    const advanceScheduled = (dt: number) => {
+      for (let i = scheduled.length - 1; i >= 0; i--) {
+        scheduled[i].remaining -= dt;
+        if (scheduled[i].remaining <= 0) {
+          const [job] = scheduled.splice(i, 1);
+          job.run();
+        }
+      }
+    };
     const pop = (id: string, delay = 0) => {
-      timeouts.push(
-        window.setTimeout(() => {
-          const el = stage.querySelector(`[data-fx="${id}"]`);
-          if (!el) return;
-          el.classList.remove('on');
-          void el.getBoundingClientRect();
-          el.classList.add('on');
-        }, delay)
-      );
+      schedule(delay, () => {
+        const el = stage.querySelector(`[data-fx="${id}"]`);
+        if (!el) return;
+        el.classList.remove('on');
+        void el.getBoundingClientRect();
+        el.classList.add('on');
+      });
     };
     const slip = () => {
       const inner = hikerRef.current;
@@ -367,25 +403,19 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       inner.classList.remove('on');
       void inner.getBoundingClientRect();
       inner.classList.add('on');
-      timeouts.push(window.setTimeout(() => inner.classList.remove('on'), 700));
+      schedule(700, () => inner.classList.remove('on'));
     };
     const fade = (id: string, delay = 0) => {
-      timeouts.push(
-        window.setTimeout(() => {
-          stage.querySelector(`[data-fx="${id}"]`)?.classList.remove('on');
-        }, delay)
-      );
+      schedule(delay, () => stage.querySelector(`[data-fx="${id}"]`)?.classList.remove('on'));
     };
     const verdict = (value: Verdict, delay = 0) => {
-      timeouts.push(
-        window.setTimeout(() => {
-          stage.querySelectorAll('.gt-lamp.on').forEach((el) => el.classList.remove('on'));
-          const el = stage.querySelector(`[data-fx="${VERDICT_FX[value]}"]`);
-          if (!el) return;
-          void el.getBoundingClientRect();
-          el.classList.add('on');
-        }, delay)
-      );
+      schedule(delay, () => {
+        stage.querySelectorAll('.gt-lamp.on').forEach((el) => el.classList.remove('on'));
+        const el = stage.querySelector(`[data-fx="${VERDICT_FX[value]}"]`);
+        if (!el) return;
+        void el.getBoundingClientRect();
+        el.classList.add('on');
+      });
     };
     const say = (i: number) => setCaption(i);
     const msg = (t: string) => setHubMsg(t);
@@ -401,7 +431,7 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       stage.querySelector(`[data-fx="${VERDICT_FX.failure}"]`)?.classList.remove('on');
       stage.querySelector(`[data-fx="${VERDICT_FX.replan}"]`)?.classList.remove('on');
       return () => {
-        timeouts.forEach((t) => window.clearTimeout(t));
+        scheduled.length = 0;
         resetFx();
       };
     }
@@ -409,74 +439,89 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
     let stopped = false;
     let raf = 0;
     let segIdx = 0;
-    let startT = 0;
+    let segElapsed = 0;
+    let lastNow = 0;
+    let segmentStarted = false;
+    let activeMarks: { frac: number; fx: () => void }[] = [];
+    let loopDelay = 0;
     const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-    const runSeg = () => {
-      if (stopped) return;
-      if (segIdx >= script.length) {
-        timeouts.push(
-          window.setTimeout(() => {
-            if (stopped) return;
-            resetFx();
-            segIdx = 0;
-            startT = performance.now();
-            runSeg();
-          }, 1400)
-        );
-        return;
-      }
-      const seg = script[segIdx];
-      if (seg.type === 'hold') {
-        seg.fx?.();
-        timeouts.push(
-          window.setTimeout(() => {
-            if (stopped) return;
-            segIdx++;
-            startT = performance.now();
-            runSeg();
-          }, seg.ms)
-        );
-        return;
-      }
-      if (seg.type === 'jump') {
-        placeWalker(seg.to);
-        seg.fx?.();
-        segIdx++;
-        startT = performance.now();
-        runSeg();
-        return;
-      }
-      const marks = seg.marks ? [...seg.marks] : [];
-      const step = (now: number) => {
-        if (stopped) return;
-        const t = Math.min(1, (now - startT) / seg.ms);
-        const f = seg.from + (seg.to - seg.from) * ease(t);
-        placeWalker(f);
-        while (marks.length && f >= marks[0].frac) marks.shift()!.fx();
-        if (t < 1) {
-          raf = requestAnimationFrame(step);
-        } else {
-          segIdx++;
-          startT = now;
-          runSeg();
-        }
-      };
-      raf = requestAnimationFrame(step);
+    const restart = () => {
+      resetFx();
+      scheduled.length = 0;
+      segIdx = 0;
+      segElapsed = 0;
+      segmentStarted = false;
+      activeMarks = [];
+      loopDelay = 0;
+      setCaption(0);
+      setHubMsg('');
+      setDyn2Msg('');
+      placeWalker(0);
     };
-    resetFx();
-    setCaption(0);
-    setHubMsg('');
-    setDyn2Msg('');
-    placeWalker(0);
-    startT = performance.now();
-    runSeg();
+    const beginSegment = () => {
+      // jump 不消耗时间；连续处理，直到抵达 walk / hold 或脚本末尾。
+      while (segIdx < script.length && !segmentStarted) {
+        const seg = script[segIdx];
+        segElapsed = 0;
+        if (seg.type === 'jump') {
+          placeWalker(seg.to);
+          seg.fx?.();
+          segIdx++;
+          continue;
+        }
+        segmentStarted = true;
+        activeMarks = seg.type === 'walk' && seg.marks ? [...seg.marks] : [];
+        if (seg.type === 'hold') seg.fx?.();
+      }
+    };
+    const tick = (now: number) => {
+      if (stopped) return;
+      const dt = Math.min(50, lastNow ? now - lastNow : 0);
+      lastNow = now;
+
+      if (playingRef.current) {
+        advanceScheduled(dt);
+        beginSegment();
+        if (segIdx >= script.length) {
+          loopDelay += dt;
+          if (loopDelay >= 1400) restart();
+        } else {
+          const seg = script[segIdx];
+          if (seg.type === 'jump') {
+            // beginSegment 会在同一帧消费 jump；此分支只用于让类型收窄保持显式。
+            placeWalker(seg.to);
+            seg.fx?.();
+            segIdx++;
+            segmentStarted = false;
+            raf = requestAnimationFrame(tick);
+            return;
+          }
+          segElapsed += dt;
+          if (seg.type === 'walk') {
+            const t = Math.min(1, segElapsed / seg.ms);
+            const f = seg.from + (seg.to - seg.from) * ease(t);
+            placeWalker(f);
+            while (activeMarks.length && f >= activeMarks[0].frac) activeMarks.shift()!.fx();
+          }
+          if (segElapsed >= seg.ms) {
+            if (seg.type === 'walk') placeWalker(seg.to);
+            segIdx++;
+            segElapsed = 0;
+            segmentStarted = false;
+          }
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    restart();
+    raf = requestAnimationFrame(tick);
     return () => {
       stopped = true;
       cancelAnimationFrame(raf);
-      timeouts.forEach((t) => window.clearTimeout(t));
+      scheduled.length = 0;
       resetFx();
     };
-  }, [inView, reduced]);
+  }, [inView, reduced, runKey]);
 
   const cap = CAPTIONS[caption];
   const lap = caption < 7 ? 0 : caption < 9 ? 1 : 2;
@@ -485,6 +530,12 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
     { label: '② Simulation · 物理', hint: '加回动力学' },
     { label: '③ Real · 真机', hint: '噪声·延迟·硬件' },
   ];
+  const togglePlaying = () => setPlaying((value) => !value);
+  const resetRun = () => {
+    playingRef.current = true;
+    setPlaying(true);
+    setRunKey((value) => value + 1);
+  };
 
   return (
     <div className="lab gt-lab">
@@ -497,7 +548,7 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
       </div>
 
       <div className="lab-stage">
-        <svg ref={stageRef} className="analogy-svg" viewBox="0 0 1120 384" role="img" aria-label="全机制总览：一条 Session 生命周期环路走三圈，对应 Game→Simulation→Real 渐进验证">
+        <svg ref={stageRef} className="analogy-svg" viewBox="0 0 1120 384" role="img" aria-label="全机制总览：一条 Session 生命周期环路在 Game、Simulation、Real Robot 三种独立模式下各走一圈">
           {/* 顶部带：标题 / 圈数 / 终点徽章（互不重叠的固定槽位） */}
           <g>
             <rect x={410} y={10} width={300} height={22} rx={11} fill="#fff" stroke="#d7deea" strokeWidth={1.4} />
@@ -594,15 +645,16 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
           {/* 事件气泡槽位（执行段上方，x 与地形标注错开） */}
           <Pill id="gt-dyn2" x={700} y={84} text={dyn2Msg} tone="orange" fs={9} />
 
-          {/* 记忆归档（底边内侧）：KNOWLEDGE / LESSONS 两条写入线 */}
+          {/* 记忆归档（底边内侧）：每圈抵达归档位后才追加一条，最终正好三条。 */}
           <g>
-            <rect x={756} y={286} width={96} height={34} rx={6} fill="#fff" stroke="#c6d3e2" strokeWidth={1.4} />
-            <text x={804} y={297} textAnchor="middle" fontSize={7.5} fontWeight={700} fill="#68778f">记忆归档</text>
-            <line x1={766} y1={304} x2={842} y2={304} stroke="#e2e8f1" strokeWidth={2.4} strokeLinecap="round" />
-            <line data-fx="gt-k" className="fx-line" x1={766} y1={304} x2={842} y2={304} stroke="#228d5c" strokeWidth={2.4} strokeLinecap="round" />
-            <line x1={766} y1={313} x2={842} y2={313} stroke="#e2e8f1" strokeWidth={2.4} strokeLinecap="round" />
-            <line data-fx="gt-l" className="fx-line" x1={766} y1={313} x2={842} y2={313} stroke="#7c3aed" strokeWidth={2.4} strokeLinecap="round" />
-            <text x={804} y={280} textAnchor="middle" fontSize={7.5} fill="#68778f" fontWeight={700}>KNOWLEDGE ✓ / LESSONS ⚠</text>
+            <rect x={750} y={274} width={108} height={49} rx={7} fill="#fff" stroke="#c6d3e2" strokeWidth={1.4} />
+            <text x={804} y={286} textAnchor="middle" fontSize={7.5} fontWeight={700} fill="#68778f">验证后记忆 · 3 圈</text>
+            {[297, 307, 317].map((y) => (
+              <line key={y} x1={764} y1={y} x2={844} y2={y} stroke="#e2e8f1" strokeWidth={2.8} strokeLinecap="round" />
+            ))}
+            <line data-fx="gt-m-game" className="fx-line" x1={764} y1={297} x2={844} y2={297} stroke="#228d5c" strokeWidth={2.8} strokeLinecap="round" />
+            <line data-fx="gt-m-sim" className="fx-line" x1={764} y1={307} x2={844} y2={307} stroke="#7c3aed" strokeWidth={2.8} strokeLinecap="round" />
+            <line data-fx="gt-m-real" className="fx-line" x1={764} y1={317} x2={844} y2={317} stroke="#7c3aed" strokeWidth={2.8} strokeLinecap="round" />
           </g>
 
           {/* 检索回环标注：底边外侧固定槽位 */}
@@ -693,6 +745,16 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
         </svg>
       </div>
 
+      <div className="gl-controls gt-controls">
+        <button type="button" className="lab-btn lab-btn-primary" onClick={togglePlaying} aria-pressed={!playing}>
+          {playing ? '⏸ 暂停' : '▶ 继续'}
+        </button>
+        <button type="button" className="lab-btn lab-btn-ghost" onClick={resetRun}>
+          ↺ 重置
+        </button>
+        <span className="gt-control-note">暂停会冻结人物、裁决、闸门与记忆写入</span>
+      </div>
+
       {/* 道具 ↔ 论文机制 图例 */}
       <div className="gt-legend">
         <span className="gt-legend-label">图例（道具 ↔ 论文机制）：</span>
@@ -700,7 +762,7 @@ export const GrandTrail: React.FC<WidgetProps> = () => {
         <span className="gt-legend-item"><i style={{ background: '#92400e' }} />实线主路 / <i style={{ background: '#27446e', marginLeft: 0 }} />虚线侧道 → Policy 闭环 / Agent 工具环（同一验收）</span>
         <span className="gt-legend-item"><i style={{ background: '#9db1c9' }} />S₁…S_T 路桩 → 执行轨迹 τ（中间态全部留痕）</span>
         <span className="gt-legend-item"><i style={{ background: '#7c3aed' }} />验收台 → V(G, S₀, S_T, τ, H) 语义裁决</span>
-        <span className="gt-legend-item"><i style={{ background: '#6b5236' }} />碎石 / <i style={{ background: '#6aa7cc', marginLeft: 0 }} />冰面叠加 → 同一环路三圈逐层加险（Game→Sim→Real）</span>
+        <span className="gt-legend-item"><i style={{ background: '#6b5236' }} />碎石 / <i style={{ background: '#6aa7cc', marginLeft: 0 }} />冰面切换 → 同一环路在三种独立模式重复验证</span>
         <span className="gt-legend-item"><i style={{ background: '#b9c6d8' }} />中央底座 → OS 运行时 · State-as-a-File（贯穿全程）</span>
         <span className="gt-legend-item"><i style={{ background: '#68778f' }} />底边回环 → 记忆归档与检索（First→Final）</span>
       </div>

@@ -78,6 +78,72 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [next, prev, goTo, lastSlide]);
 
+  // 术语说明默认向左展开；若窗口缩窄或术语位于边缘，再以最小位移收回到可视区域。
+  // 术语来自 prose 的 HTML 字符串，事件委托可覆盖所有章节与后续切换出的内容。
+  useEffect(() => {
+    let frame = 0;
+    const viewportPadding = 16;
+
+    const place = (term: HTMLElement) => {
+      const popover = term.querySelector<HTMLElement>('.term-popover');
+      if (!popover) return;
+      term.classList.add('is-popover-open');
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        popover.style.setProperty('--term-popover-offset', '0px');
+        const rect = popover.getBoundingClientRect();
+        const offset = Math.max(viewportPadding - rect.left, 0) - Math.max(rect.right - (window.innerWidth - viewportPadding), 0);
+        popover.style.setProperty('--term-popover-offset', `${offset}px`);
+
+        const shifted = popover.getBoundingClientRect();
+        const trigger = term.getBoundingClientRect();
+        const arrowX = Math.min(Math.max(trigger.right - shifted.left, 12), shifted.width - 12);
+        popover.style.setProperty('--term-popover-arrow-x', `${arrowX}px`);
+      });
+    };
+
+    const close = (term: HTMLElement) => {
+      requestAnimationFrame(() => {
+        const focused = document.activeElement;
+        if (!term.matches(':hover') && !term.contains(focused)) term.classList.remove('is-popover-open');
+      });
+    };
+
+    const resolveTerm = (target: EventTarget | null) =>
+      target instanceof Element ? target.closest<HTMLElement>('.term') : null;
+    const onPointerOver = (event: PointerEvent) => {
+      const term = resolveTerm(event.target);
+      if (term && !term.contains(event.relatedTarget as Node | null)) place(term);
+    };
+    const onPointerOut = (event: PointerEvent) => {
+      const term = resolveTerm(event.target);
+      if (term && !term.contains(event.relatedTarget as Node | null)) close(term);
+    };
+    const onFocusIn = (event: FocusEvent) => {
+      const term = resolveTerm(event.target);
+      if (term) place(term);
+    };
+    const onFocusOut = (event: FocusEvent) => {
+      const term = resolveTerm(event.target);
+      if (term && !term.contains(event.relatedTarget as Node | null)) close(term);
+    };
+    const onResize = () => document.querySelectorAll<HTMLElement>('.term.is-popover-open').forEach(place);
+
+    document.addEventListener('pointerover', onPointerOver);
+    document.addEventListener('pointerout', onPointerOut);
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    window.addEventListener('resize', onResize);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('pointerover', onPointerOver);
+      document.removeEventListener('pointerout', onPointerOut);
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
   const progress = lastSlide > 0 ? ((active + 1) / (lastSlide + 1)) * 100 : 0;
 
   const sidebarItems = [
