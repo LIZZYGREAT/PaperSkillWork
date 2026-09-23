@@ -426,25 +426,42 @@ def gate_order_problems(config: Dict[str, Any], gate_id: str) -> List[str]:
     return problems
 
 
-def git_tracked(root_relative: str) -> bool:
+def tracked_workspace_paths(paper_id: str) -> List[str]:
     try:
         result = subprocess.run(
-            ["git", "-C", str(ROOT), "ls-files", "--error-unmatch", "--", root_relative],
-            stdout=subprocess.DEVNULL,
+            ["git", "-C", str(ROOT), "ls-files", "-z", "--", "papers/{}".format(paper_id)],
+            stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             check=False,
         )
-        return result.returncode == 0
+        if result.returncode != 0:
+            return []
+        return [item.decode("utf-8", errors="replace") for item in result.stdout.split(b"\0") if item]
     except OSError:
-        return False
+        return []
 
 
-def hygiene_warnings(folder: Path, paper_id: str) -> List[str]:
+def hygiene_failures(paper_id: str) -> List[str]:
+    failures: List[str] = []
+    generated_names = {"node_modules", "dist", "dist-ssr"}
+    for root_relative in tracked_workspace_paths(paper_id):
+        workspace_relative = root_relative.split("/", 2)[-1]
+        parts = workspace_relative.split("/")
+        if any(part in generated_names for part in parts):
+            failures.append("tracked generated path: {}".format(root_relative))
+            continue
+        env_path = next(
+            (part for part in parts if part == ".env" or (part.startswith(".env.") and part != ".env.example")),
+            None,
+        )
+        if env_path:
+            failures.append("tracked environment path: {}".format(root_relative))
+    return failures
+
+
+def hygiene_warnings(folder: Path) -> List[str]:
+    """Check local text for machine-specific paths; local ignored caches are allowed."""
     warnings: List[str] = []
-    for relative in ("node_modules", "dist", "dist-ssr", ".env"):
-        target = folder / relative
-        if target.exists() and git_tracked("papers/{}/{}".format(paper_id, relative)):
-            warnings.append("tracked generated or environment path: {}".format(relative))
     text_suffixes = {".md", ".yaml", ".yml", ".url", ".json", ".ts", ".tsx", ".js", ".html", ".css", ".txt", ".py", ".toml"}
     ignored_parts = {"node_modules", "dist", "dist-ssr", ".git"}
     if folder.exists():
@@ -517,7 +534,8 @@ def cmd_check(args: argparse.Namespace) -> int:
         except (OSError, UnicodeError, json.JSONDecodeError):
             warnings.append("web/enhanced/package.json is not valid JSON")
 
-    warnings.extend(hygiene_warnings(folder, args.paper_id))
+    warnings.extend(hygiene_warnings(folder))
+    failures.extend(hygiene_failures(args.paper_id))
     for warning in warnings:
         print("[WARN] {}".format(warning))
     for failure in failures:

@@ -16,6 +16,7 @@ TEMPLATES = REPO_ROOT / "templates"
 def make_project(tmp_path):
     shutil.copytree(REPO_ROOT / "tools", tmp_path / "tools")
     shutil.copytree(TEMPLATES, tmp_path / "templates")
+    shutil.copy2(REPO_ROOT / ".gitignore", tmp_path / ".gitignore")
     (tmp_path / "papers").mkdir()
     return tmp_path
 
@@ -32,6 +33,10 @@ def invoke(root, *args):
 
 def create_paper(root, paper_id="demo-paper"):
     return invoke(root, "new", paper_id, "--title", "A Sample Paper", "--url", "https://example.org/paper", "--arxiv-id", "1234.56789")
+
+
+def init_git_repo(root):
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
 
 
 def load_paper(root, paper_id="demo-paper"):
@@ -230,4 +235,38 @@ def test_phyagentos_legacy_check():
     assert result.returncode == 0, result.stdout + result.stderr
     assert "[WARN]" in result.stdout
     assert "[FAIL]" not in result.stdout
+    assert "CHECK PASS" in result.stdout
+
+
+def test_check_detects_tracked_nested_build_artifact(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    init_git_repo(root)
+    paper = root / "papers/demo-paper"
+    dist_file = paper / "web/enhanced/dist/assets/app.js"
+    env_file = paper / "web/enhanced/.env.production"
+    dist_file.parent.mkdir(parents=True)
+    env_file.parent.mkdir(parents=True, exist_ok=True)
+    dist_file.write_text("built", encoding="utf-8")
+    env_file.write_text("SECRET=value", encoding="utf-8")
+    subprocess.run(
+        ["git", "-C", str(root), "add", "-f", "papers/demo-paper/web/enhanced/dist/assets/app.js", "papers/demo-paper/web/enhanced/.env.production"],
+        check=True,
+    )
+    result = invoke(root, "check", "demo-paper")
+    assert result.returncode != 0
+    assert "[FAIL] tracked generated path: papers/demo-paper/web/enhanced/dist/assets/app.js" in result.stdout
+    assert "[FAIL] tracked environment path: papers/demo-paper/web/enhanced/.env.production" in result.stdout
+
+
+def test_check_ignores_untracked_nested_node_modules(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    init_git_repo(root)
+    modules = root / "papers/demo-paper/web/enhanced/node_modules/react/index.js"
+    modules.parent.mkdir(parents=True)
+    modules.write_text("local dependency", encoding="utf-8")
+    result = invoke(root, "check", "demo-paper")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "node_modules" not in result.stdout
     assert "CHECK PASS" in result.stdout
