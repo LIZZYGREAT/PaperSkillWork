@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "validate:paper-skill": "node ../../../PaperSkill/paper-skill/scripts/validate-output.js .",
+    "validate:paper-skill": "node ../../../../../PaperSkill/paper-skill/scripts/validate-output.js .",
     "audit:enhanced": "node scripts/audit-enhanced.js",
     "check": "npm run build && npm run validate:paper-skill && npm run audit:enhanced"
   },

@@ -1,0 +1,184 @@
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+import yaml
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+PAPER_SCRIPT = REPO_ROOT / "tools" / "paper.py"
+TEMPLATES = REPO_ROOT / "templates"
+
+
+def make_project(tmp_path):
+    shutil.copytree(REPO_ROOT / "tools", tmp_path / "tools")
+    shutil.copytree(TEMPLATES, tmp_path / "templates")
+    (tmp_path / "papers").mkdir()
+    return tmp_path
+
+
+def invoke(root, *args):
+    return subprocess.run(
+        [sys.executable, str(root / "tools" / "paper.py"), *args],
+        cwd=Path(__file__).resolve().parent,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+
+def create_paper(root, paper_id="demo-paper"):
+    return invoke(root, "new", paper_id, "--title", "A Sample Paper", "--url", "https://example.org/paper", "--arxiv-id", "1234.56789")
+
+
+def load_paper(root, paper_id="demo-paper"):
+    path = root / "papers" / paper_id / "paper.yaml"
+    return path, yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def save_paper(path, config):
+    path.write_text(yaml.safe_dump(config, sort_keys=False, allow_unicode=True), encoding="utf-8")
+
+
+def test_new_creates_workspace(tmp_path):
+    root = make_project(tmp_path)
+    result = create_paper(root)
+    assert result.returncode == 0, result.stderr
+    paper = root / "papers/demo-paper"
+    for relative in (
+        "paper.yaml",
+        "source/paper.url",
+        "research/01_review.md",
+        "research/02_evidence_audit.md",
+        "design/storyboard.md",
+        "design/interaction-plan.md",
+        "audit/content-check.md",
+        "audit/release-check.md",
+    ):
+        assert (paper / relative).is_file(), relative
+    assert not (paper / "web").exists()
+    assert "{{" not in (paper / "research/01_review.md").read_text(encoding="utf-8")
+
+
+def test_new_rejects_duplicate_without_overwriting(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    path = root / "papers/demo-paper/research/01_review.md"
+    path.write_text("user notes", encoding="utf-8")
+    result = create_paper(root)
+    assert result.returncode != 0
+    assert "already exists" in result.stderr
+    assert path.read_text(encoding="utf-8") == "user notes"
+
+
+@pytest.mark.parametrize("paper_id", ["../abc", "ABC", "paper test"])
+def test_invalid_paper_id(tmp_path, paper_id):
+    root = make_project(tmp_path)
+    result = create_paper(root, paper_id)
+    assert result.returncode != 0
+    assert "Invalid paper id" in result.stderr
+
+
+def test_status_is_read_only(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    path = root / "papers/demo-paper/paper.yaml"
+    before = path.read_bytes()
+    result = invoke(root, "status", "demo-paper")
+    assert result.returncode == 0
+    assert "Current Gate: G0" in result.stdout
+    assert "Next Recommended Gate: G0 Workspace" in result.stdout
+    assert path.read_bytes() == before
+
+
+def test_new_paper_cannot_claim_legacy(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    path, config = load_paper(root)
+    config["workflow"]["gates"]["G2_evidence_audit"]["status"] = "legacy"
+    save_paper(path, config)
+    result = invoke(root, "status", "demo-paper")
+    assert result.returncode != 0
+    assert "reserved for the PhyAgentOS" in result.stderr
+
+
+def test_gate_complete_requires_artifact(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    (root / "papers/demo-paper/research/01_review.md").unlink()
+    result = invoke(root, "gate", "demo-paper", "G1", "complete")
+    assert result.returncode != 0
+    assert "01_review.md" in result.stderr
+
+
+def test_gate_complete_with_artifact(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    (root / "papers/demo-paper/research/01_review.md").write_text("reviewed", encoding="utf-8")
+    result = invoke(root, "gate", "demo-paper", "G1", "complete")
+    assert result.returncode == 0, result.stderr
+    _path, config = load_paper(root)
+    assert config["workflow"]["gates"]["G1_research"]["status"] == "complete"
+    assert config["workflow"]["current_gate"] == "G2"
+
+
+@pytest.mark.parametrize("bad_path", [r"C:\Users\foo\a.md", "../../foo.md"])
+def test_schema_rejects_unsafe_artifact_path(tmp_path, bad_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    path, config = load_paper(root)
+    config["artifacts"]["review"] = bad_path
+    save_paper(path, config)
+    result = invoke(root, "check", "demo-paper")
+    assert result.returncode != 0
+    assert "artifacts.review" in result.stdout
+
+
+def test_release_check_reports_blockers(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    result = invoke(root, "release-check", "demo-paper")
+    assert result.returncode != 0
+    assert "NOT READY" in result.stdout
+    assert "G2 Evidence Audit not complete" in result.stdout
+    assert "content-check.md is not PASS" in result.stdout
+
+
+def test_release_ready(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    paper = root / "papers/demo-paper"
+    for relative in (
+        "research/01_review.md",
+        "research/02_evidence_audit.md",
+        "design/storyboard.md",
+        "design/interaction-plan.md",
+    ):
+        (paper / relative).write_text("verified artifact", encoding="utf-8")
+    (paper / "web/canonical").mkdir(parents=True)
+    (paper / "web/canonical/index.html").write_text("canonical", encoding="utf-8")
+    (paper / "web/enhanced").mkdir(parents=True)
+    (paper / "web/enhanced/package.json").write_text(json.dumps({"scripts": {"build": "vite build"}}), encoding="utf-8")
+    (paper / "audit/content-check.md").write_text("Content Check Status: PASS", encoding="utf-8")
+    (paper / "audit/release-check.md").write_text("Release Check Status: READY", encoding="utf-8")
+    path, config = load_paper(root)
+    for key in (
+        "G0_workspace", "G1_research", "G2_evidence_audit", "G3_canonical",
+        "G4_narrative_design", "G5_interaction_design", "G6_enhanced",
+    ):
+        config["workflow"]["gates"][key]["status"] = "complete"
+    save_paper(path, config)
+    result = invoke(root, "release-check", "demo-paper")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "RELEASE READY" in result.stdout
+
+
+def test_phyagentos_legacy_check():
+    result = invoke(REPO_ROOT, "check", "phyagentos")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "[WARN]" in result.stdout
+    assert "[FAIL]" not in result.stdout
+    assert "CHECK PASS" in result.stdout

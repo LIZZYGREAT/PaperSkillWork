@@ -1,0 +1,64 @@
+schema_version: 1
+
+id: phyagentos
+
+title: >
+  PhyAgentOS: A Self-Evolving Operating System for Embodied Agents
+  with Decoupled Cognitive Planning and Physical Execution
+
+paper:
+  arxiv_id: "2607.16636"
+  url: "https://arxiv.org/abs/2607.16636"
+  local_pdf: "source/paper.pdf"
+
+workflow:
+  current_gate: G7
+
+  gates:
+    G0_workspace:
+      status: complete
+
+    G1_research:
+      status: complete
+
+    G2_evidence_audit:
+      status: legacy
+
+    G3_canonical:
+      status: complete
+
+    G4_narrative_design:
+      status: legacy
+
+    G5_interaction_design:
+      status: legacy
+
+    G6_enhanced:
+      status: complete
+
+    G7_release:
+      status: in_progress
+
+artifacts:
+  review: "research/01_review.md"
+  evidence_audit: "research/02_evidence_audit.md"
+  terms: "research/03_terms.md"
+
+  storyboard: "design/storyboard.md"
+  interaction_plan: "design/interaction-plan.md"
+
+web:
+  canonical: "web/canonical"
+  enhanced: "web/enhanced"
+
+paperskill:
+  canonical_version: "ganwenjie0914"
+  enhanced_version: "ganwenjie0914_2"
+
+  canonical_pr:
+    number: 177
+    status: merged
+
+  enhanced_pr:
+    number: null
+    status: pending
