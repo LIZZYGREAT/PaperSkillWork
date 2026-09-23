@@ -34,6 +34,8 @@ Only `pending`, `in_progress`, `complete`, `skipped`, and `legacy` are valid. `l
 
 `paper.py gate <paper-id>` reads state. To change state, explicitly name both gate and new status. The command checks prerequisites before accepting `complete`; it does not perform AI work or infer completion. `--reason` is required for `skipped`.
 
+Gates can only be completed in sequence: every earlier gate must be `complete` or `skipped`. For the PhyAgentOS migration only, an earlier `legacy` gate also counts as historically passed.
+
 ## Standard workspace
 
 ```text

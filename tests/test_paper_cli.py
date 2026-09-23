@@ -108,21 +108,70 @@ def test_new_paper_cannot_claim_legacy(tmp_path):
 def test_gate_complete_requires_artifact(tmp_path):
     root = make_project(tmp_path)
     assert create_paper(root).returncode == 0
+    assert invoke(root, "gate", "demo-paper", "G0", "complete").returncode == 0
     (root / "papers/demo-paper/research/01_review.md").unlink()
     result = invoke(root, "gate", "demo-paper", "G1", "complete")
     assert result.returncode != 0
     assert "01_review.md" in result.stderr
 
 
-def test_gate_complete_with_artifact(tmp_path):
+def test_can_complete_after_previous_gate_complete(tmp_path):
     root = make_project(tmp_path)
     assert create_paper(root).returncode == 0
+    assert invoke(root, "gate", "demo-paper", "G0", "complete").returncode == 0
     (root / "papers/demo-paper/research/01_review.md").write_text("reviewed", encoding="utf-8")
     result = invoke(root, "gate", "demo-paper", "G1", "complete")
     assert result.returncode == 0, result.stderr
     _path, config = load_paper(root)
     assert config["workflow"]["gates"]["G1_research"]["status"] == "complete"
     assert config["workflow"]["current_gate"] == "G2"
+
+
+def test_cannot_complete_gate_out_of_order(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    result = invoke(root, "gate", "demo-paper", "G5", "complete")
+    assert result.returncode != 0
+    assert "G0 Workspace is pending" in result.stderr
+    _path, config = load_paper(root)
+    assert config["workflow"]["gates"]["G5_interaction_design"]["status"] == "pending"
+
+
+def test_gate_rejects_legacy_for_new_paper(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    path = root / "papers/demo-paper/paper.yaml"
+    before = path.read_bytes()
+    result = invoke(root, "gate", "demo-paper", "G2", "legacy")
+    assert result.returncode != 0
+    assert "reserved for the PhyAgentOS" in result.stderr
+    assert path.read_bytes() == before
+
+
+def test_legacy_predecessor_is_allowed_for_migration(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root, "phyagentos").returncode == 0
+    paper = root / "papers/phyagentos"
+    (paper / "web/canonical").mkdir(parents=True)
+    (paper / "web/canonical/index.html").write_text("canonical", encoding="utf-8")
+    path, config = load_paper(root, "phyagentos")
+    config["workflow"]["gates"]["G0_workspace"]["status"] = "complete"
+    config["workflow"]["gates"]["G1_research"]["status"] = "complete"
+    config["workflow"]["gates"]["G2_evidence_audit"]["status"] = "legacy"
+    save_paper(path, config)
+    result = invoke(root, "gate", "phyagentos", "G3", "complete")
+    assert result.returncode == 0, result.stderr
+
+
+def test_g7_cannot_complete_before_gates(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    paper = root / "papers/demo-paper"
+    (paper / "audit/content-check.md").write_text("Content Check Status: PASS", encoding="utf-8")
+    (paper / "audit/release-check.md").write_text("Release Check Status: READY", encoding="utf-8")
+    result = invoke(root, "gate", "demo-paper", "G7", "complete")
+    assert result.returncode != 0
+    assert "G0 Workspace is pending" in result.stderr
 
 
 @pytest.mark.parametrize("bad_path", [r"C:\Users\foo\a.md", "../../foo.md"])

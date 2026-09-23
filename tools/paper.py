@@ -383,7 +383,10 @@ def cmd_gate(args: argparse.Namespace) -> int:
     if args.status != "skipped" and args.reason:
         raise PaperError("--reason can only be used with skipped")
 
-    problems = gate_completion_problems(folder, args.gate) if args.status == "complete" else []
+    problems: List[str] = []
+    if args.status == "complete":
+        problems.extend(gate_order_problems(config, args.gate))
+        problems.extend(gate_completion_problems(folder, args.gate))
     if problems:
         raise PaperError("Cannot mark {} complete:\n- {}".format(args.gate, "\n- ".join(problems)))
 
@@ -399,11 +402,28 @@ def cmd_gate(args: argparse.Namespace) -> int:
     elif args.status == "complete":
         index = GATE_IDS.index(args.gate)
         config["workflow"]["current_gate"] = GATE_IDS[min(index + 1, len(GATE_IDS) - 1)]
+    validate_or_raise(config, args.paper_id)
     require_yaml()
     output = yaml.safe_dump(config, allow_unicode=True, sort_keys=False, default_flow_style=False)
     (folder / "paper.yaml").write_text(output, encoding="utf-8")
     print("Updated {} to {} for {}.".format(args.gate, args.status, args.paper_id))
     return 0
+
+
+def gate_order_problems(config: Dict[str, Any], gate_id: str) -> List[str]:
+    """Require every earlier gate to be accepted before completing this gate."""
+    index = GATE_IDS.index(gate_id)
+    gates = config["workflow"]["gates"]
+    paper_id = config.get("id")
+    problems = []
+    for prior_id, prior_key, prior_label in GATES[:index]:
+        status = gates[prior_key]["status"]
+        if status in ("complete", "skipped"):
+            continue
+        if paper_id == "phyagentos" and status == "legacy":
+            continue
+        problems.append("{} {} is {}; must be complete or skipped".format(prior_id, prior_label, status))
+    return problems
 
 
 def git_tracked(root_relative: str) -> bool:
