@@ -50,7 +50,8 @@ papers/<paper-id>/
 ├─ web/enhanced/           # added when the Enhanced project exists
 ├─ audit/content-check.md
 ├─ audit/release-check.md
-└─ assets/figures/
+└─ assets/
+   ├─ figures/
    └─ screenshots/
 ```
 
