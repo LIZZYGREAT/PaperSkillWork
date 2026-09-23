@@ -327,11 +327,11 @@ def cmd_status(args: argparse.Namespace) -> int:
         target = folder / relative
         exists = target.is_dir() and any(target.iterdir()) if kind == "dir" and target.is_dir() else target.is_file()
         if exists:
-            mark = "PASS"
+            mark = "PRESENT"
         elif states[gate_id] == "legacy" or (gate_id == "G3" and states[gate_id] == "complete" and has_legacy):
-            mark = "WARN"
+            mark = "LEGACY"
         else:
-            mark = "WARN"
+            mark = "MISSING"
         print("[{}] {}".format(mark, relative))
     print("Next Recommended Gate: {}".format(recommended_gate(states)))
     return 0
@@ -504,20 +504,33 @@ def cmd_check(args: argparse.Namespace) -> int:
     for gate_id, _gate_key, label in GATES:
         state = states[gate_id]
         satisfied, relative = artifact_satisfied(folder, gate_id)
+        artifact_target = folder / relative
         if gate_id == "G0":
             satisfied = (folder / "paper.yaml").is_file() and url_file.is_file() and bool(url_file.read_text(encoding="utf-8").strip())
+            artifact_present = (folder / "paper.yaml").is_file() and url_file.is_file() and bool(url_file.read_text(encoding="utf-8").strip())
         if gate_id == "G7":
-            satisfied = (folder / "audit/content-check.md").is_file() and (folder / "audit/release-check.md").is_file()
+            content_check = folder / "audit/content-check.md"
+            release_check = folder / "audit/release-check.md"
+            artifact_present = content_check.is_file() and release_check.is_file()
+            relative = "audit/content-check.md + audit/release-check.md"
+            satisfied = artifact_present
             if satisfied and state == "complete":
-                satisfied = marker_present(folder / "audit/content-check.md", "PASS") and marker_present(folder / "audit/release-check.md", "READY")
+                satisfied = marker_present(content_check, "PASS") and marker_present(release_check, "READY")
+        elif gate_id != "G0":
+            artifact_present = artifact_target.is_dir() if GATE_ARTIFACTS[gate_id][0] == "dir" else artifact_target.is_file()
+
+        print("[GATE] {} {}: {}".format(gate_id, label, state.upper()))
+        legacy_missing = state == "legacy" or (gate_id == "G3" and state == "complete" and has_legacy)
+        artifact_mark = "PRESENT" if artifact_present else ("LEGACY" if legacy_missing else "MISSING")
+        print("[{}] {} artifact: {}".format(artifact_mark, gate_id, relative))
         if satisfied:
-            print("[PASS] {} artifact: {}".format(gate_id, relative))
-        elif state == "legacy" or (gate_id == "G3" and state == "complete" and has_legacy):
+            pass
+        elif legacy_missing:
             warnings.append("{} marked {} but standard artifact is not archived locally: {}".format(gate_id, state, relative))
         elif state == "complete":
             failures.append("{} marked complete but required artifact is missing or incomplete: {}".format(gate_id, relative))
         else:
-            warnings.append("{} {} artifact not yet present: {}".format(gate_id, label, relative))
+            warnings.append("{} {} artifact is empty or not yet present: {}".format(gate_id, label, relative))
 
     enhanced_package = folder / "web/enhanced/package.json"
     if states["G6"] == "complete" and not enhanced_package.is_file():

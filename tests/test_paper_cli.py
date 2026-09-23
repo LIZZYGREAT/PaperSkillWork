@@ -96,7 +96,24 @@ def test_status_is_read_only(tmp_path):
     assert result.returncode == 0
     assert "Current Gate: G0" in result.stdout
     assert "Next Recommended Gate: G0 Workspace" in result.stdout
+    assert "[PRESENT] research/01_review.md" in result.stdout
     assert path.read_bytes() == before
+
+
+def test_check_separates_artifact_presence_from_gate_state(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    result = invoke(root, "check", "demo-paper")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "[GATE] G1 Research: PENDING" in result.stdout
+    assert "[PRESENT] G1 artifact: research/01_review.md" in result.stdout
+
+
+def test_status_marks_missing_legacy_artifacts():
+    result = invoke(REPO_ROOT, "status", "phyagentos")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "[LEGACY] research/02_evidence_audit.md" in result.stdout
+    assert "[LEGACY] design/storyboard.md" in result.stdout
 
 
 def test_new_paper_cannot_claim_legacy(tmp_path):
