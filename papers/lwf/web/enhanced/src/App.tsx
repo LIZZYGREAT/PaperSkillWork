@@ -4,11 +4,13 @@ import { ObjectInspector } from './components/ObjectInspector';
 import { PersistentWorkspace } from './components/PersistentWorkspace';
 import { SceneA } from './scenes/SceneA';
 import { SceneB } from './scenes/SceneB';
+import { SceneC } from './scenes/SceneC';
 import {
   initialLearningSession,
   learningReducer,
   type SceneId,
 } from './data/session';
+import { initialToyState, teachingToyReducer } from './simulation/lwfTeachingToy';
 
 const scenes: { id: SceneId; number: string; title: string; question: string }[] = [
   { id: 'A', number: '01', title: '问题空间与方法约束', question: '旧数据不可用时，哪些路线仍符合问题设定？' },
@@ -18,10 +20,12 @@ const scenes: { id: SceneId; number: string; title: string; question: string }[]
 
 function AppContent() {
   const [session, dispatch] = useReducer(learningReducer, initialLearningSession);
+  const [toyState, dispatchToy] = useReducer(teachingToyReducer, initialToyState);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const hasNavigated = useRef(false);
+  const previousStudentState = useRef({ created: session.studentCreated, boundary: session.boundary });
   const { openHub } = useReferenceHub();
   const currentIndex = scenes.findIndex((scene) => scene.id === session.activeScene);
   const activeScene = scenes[currentIndex];
@@ -36,6 +40,14 @@ function AppContent() {
     if (hasNavigated.current) requestAnimationFrame(() => headingRef.current?.focus());
     hasNavigated.current = true;
   }, [session.activeScene]);
+
+  useEffect(() => {
+    const previous = previousStudentState.current;
+    if (session.studentCreated && (!previous.created || previous.boundary !== session.boundary)) {
+      dispatchToy({ type: 'RESET_TOY' });
+    }
+    previousStudentState.current = { created: session.studentCreated, boundary: session.boundary };
+  }, [session.studentCreated, session.boundary]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -142,7 +154,7 @@ function AppContent() {
             <section className="v2-scene-primary" aria-label={`Scene ${session.activeScene} 交互内容`}>
               {session.activeScene === 'A' ? <SceneA session={session} dispatch={dispatch} onNext={() => navigate('B')} /> : null}
               {session.activeScene === 'B' ? <SceneB session={session} dispatch={dispatch} onNext={() => navigate('C')} onPrevious={() => navigate('A')} /> : null}
-              {session.activeScene === 'C' ? <ScenePlaceholder scene="C" onPrevious={() => navigate('B')} /> : null}
+              {session.activeScene === 'C' ? <SceneC session={session} dispatch={dispatch} toyState={toyState} dispatchToy={dispatchToy} onPrevious={() => navigate('B')} onReset={() => { dispatchToy({ type: 'RESET_TOY' }); dispatch({ type: 'SET_TRAINING_STAGE', stage: 'idle' }); }} /> : null}
             </section>
             <aside className="v2-scene-support" aria-label="持续工作区与对象检查器">
               <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />

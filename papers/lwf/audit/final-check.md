@@ -67,7 +67,8 @@ This v2 audit records verified structural and engineering outcomes. The A–C sl
 - [x] Build and declared project checks run successfully; outcomes are recorded.
 - [ ] Keyboard navigation and visible focus work for every action.
 - [x] Core explanation does not depend on hover; term popovers also support focus and tap.
-- [ ] Reduced-motion and narrow-screen layouts are usable.
+- [ ] Reduced-motion behavior is usable and verified.
+- [x] Narrow-screen layouts are usable at the reviewed widths.
 - [x] Repository hygiene and Canonical/Enhanced separation are preserved.
 
 ## Known Limitations
@@ -78,9 +79,11 @@ This v2 audit records verified structural and engineering outcomes. The A–C sl
 ## Engineering Run Record
 
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build).
+- 2026-09-24: paged 01–03 desktop layout and 390px / 647px narrow layouts visually reviewed; A/B/C stack into one column, C training controls stack on phone widths, and page navigation text remains high contrast.
+- 2026-09-24: final `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after 01–03 layout updates).
 - 2026-09-24: local preview — A–C scene switching, route comparisons, radio self-checks, registry links and term popovers loaded; arrow-key scene, route and self-check navigation worked. The registry contained 16 terms and 40 evidence records.
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
-- Narrow-screen visual review and full keyboard review remain open; all learning and evidence acceptance questions remain for human review.
+- Full keyboard review remains open; all learning and evidence acceptance questions remain for human review.
 
 Overall: PENDING
 
