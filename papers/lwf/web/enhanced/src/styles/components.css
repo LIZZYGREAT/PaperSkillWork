@@ -1038,6 +1038,7 @@ a.dl-video-card:hover .dl-video-link-cover {
 .slide-layout {
   display: flex;
   align-items: flex-start;
+  min-height: 100vh;
 }
 
 /* Sidebar */
@@ -1134,8 +1135,9 @@ a.dl-video-card:hover .dl-video-link-cover {
   min-width: 0;
   max-width: none;
   margin: 0;
-  padding: 0 0 56px;
+  padding: 0;
   clear: none;
+  overflow-x: clip;
 }
 .slide-content {
   max-width: 1400px;
@@ -1171,26 +1173,27 @@ a.dl-video-card:hover .dl-video-link-cover {
   to { opacity: 1; transform: translateX(0); }
 }
 
-/* Bottom navigation bar: full-width bar pinned to the viewport bottom.
-   padding-left = sidebar 288px + collapse toggle 24px, so the centered button
-   group aligns with the content card for both sidebar states. */
+/* Compact chapter controls float over the page without a full-width footer panel.
+   The content-centered offset accounts for the sidebar and its collapse handle. */
 .slide-nav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 14px;
+  left: calc(50% + 156px);
+  right: auto;
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 10px 16px 10px 312px;
-  border-top: 1px solid var(--ui-border);
-  background: var(--ui-bg-card);
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 0;
+  border: 0;
+  background: transparent;
   flex-shrink: 0;
-  transition: padding-left var(--t-med) var(--ease-out);
+  transform: translateX(-50%);
 }
-.slide-layout.sidebar-collapsed .slide-nav { padding-left: 24px; }
+.slide-layout.sidebar-collapsed .slide-nav { left: calc(50% + 12px); }
 .slide-nav-btn {
   padding: 9px 22px;
   border: 1px solid var(--ui-border);
@@ -1307,7 +1310,7 @@ a.dl-video-card:hover .dl-video-link-cover {
   .slide-layout.sidebar-open .slide-sidebar { transform: translateX(0); }
   .slide-layout.sidebar-open .slide-sidebar-overlay { display: block; }
   .slide-content { padding: 48px 16px 16px; }
-  .slide-nav { padding: 8px 12px; gap: 8px; }
+  .slide-nav { left: 50%; bottom: 12px; padding: 0; gap: 8px; }
   .slide-nav-btn { padding: 8px 14px; }
   .slide-nav-counter { min-width: 48px; }
 }
