@@ -1,6 +1,6 @@
 # Learning without Forgetting Final Check
 
-This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–G are implemented as interactive scenes. Implementation and engineering checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
+This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–H are implemented as interactive scenes. Implementation and engineering checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
 
 ## Learning Acceptance
 
@@ -73,7 +73,7 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 
 ## Known Limitations
 
-- Scenes H–J and the expanded Reference Hub remain to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
+- Scenes I–J and the expanded Reference Hub remain to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
 - This review does not automatically establish that a learner can reconstruct the mechanism.
 
 ## Engineering Run Record
@@ -96,6 +96,8 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 - 2026-09-24: local preview — Scene F tested at the 647px viewport; direction ellipse, probe table and Teacher/Student response plot remained within the page layout.
 - 2026-09-24: added Scene G with qualitative pₙ / pₒ coverage states, a computed pair of students that match response constraints but differ on old-support toy points, sample-count controls, adaptation/evaluation access checks, a data-leakage warning, seven paper task-pair cards, and response-diagnostic limits.
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Scene G).
+- 2026-09-24: added Scene H with manual stage lineage, current-versus-original Teacher references, a computed Teaching Toy response drift comparison, clickable task-by-stage matrix, head/shared-backbone boundary, stage cache lifecycle, an eight-step Add Task D flow, and qualitative Figure 4 sequence context.
+- 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Scene H).
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
 - Full keyboard review remains open; all learning and evidence acceptance questions remain for human review.
 
