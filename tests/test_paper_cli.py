@@ -237,6 +237,22 @@ def test_duplicate_yaml_keys_are_rejected_by_check(tmp_path):
     assert "duplicate key" in result.stdout
 
 
+def test_check_resolves_term_prerequisites_and_evidence_sources(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    paper = root / "papers/demo-paper"
+    (paper / "research/02_evidence_registry.yaml").write_text(
+        "claims:\n  C01: {text: claim, type: PAPER_FACT}\n", encoding="utf-8"
+    )
+    (paper / "knowledge/terms.yaml").write_text(
+        "term_a:\n  prerequisites: [missing_term]\n  source_ref: C99\n", encoding="utf-8"
+    )
+    result = invoke(root, "check", "demo-paper")
+    assert result.returncode != 0
+    assert "unknown prerequisite 'missing_term'" in result.stdout
+    assert "unknown evidence id 'C99'" in result.stdout
+
+
 def test_status_marks_legacy_artifacts():
     result = invoke(REPO_ROOT, "status", "phyagentos")
     assert result.returncode == 0, result.stdout + result.stderr
@@ -365,6 +381,8 @@ def test_v2_migration_is_non_destructive_and_resets_gate_state(tmp_path):
         "storyboard": "design/storyboard.md", "interaction_plan": "design/interaction-plan.md",
     }
     save_paper(path, config)
+    v1_paper_yaml = path.read_bytes()
+    v1_release_check = (paper / "audit/release-check.md").read_bytes()
     result = invoke(root, "migrate-v2", "demo-paper")
     assert result.returncode == 0, result.stdout + result.stderr
     migrated_path, migrated = load_paper(root)
@@ -372,7 +390,11 @@ def test_v2_migration_is_non_destructive_and_resets_gate_state(tmp_path):
     assert migrated["migration_v2"]["legacy_gate_states"]["G0"] == "complete"
     assert all(entry["status"] == "pending" for entry in migrated["workflow"]["gates"].values())
     assert migrated["legacy_artifacts"]["research/01_review.md"] == "research/01_review.md"
+    assert migrated["legacy_artifacts"]["paper.yaml"] == "migration/legacy-paper-v1.yaml"
+    assert migrated["legacy_artifacts"]["audit/release-check.md"] == "audit/legacy/release-check-v1.md"
     assert (paper / "audit/migration-v2.md").is_file()
+    assert (paper / "migration/legacy-paper-v1.yaml").read_bytes() == v1_paper_yaml
+    assert (paper / "audit/legacy/release-check-v1.md").read_bytes() == v1_release_check
     for relative, original in old_paths.items():
         assert (paper / relative).read_bytes() == original
     assert "LEGACY" in (paper / "research/01_review.md").read_text(encoding="utf-8") or "legacy model" in (paper / "research/01_review.md").read_text(encoding="utf-8")

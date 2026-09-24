@@ -382,13 +382,19 @@ def cmd_migrate_v2(args: argparse.Namespace) -> int:
     if config.get("schema_version") != 1:
         raise PaperError("Only schema_version 1 workspaces can be migrated to v2")
 
+    paper_config_path = folder / "paper.yaml"
+    legacy_paper_config = paper_config_path.read_bytes()
     legacy_states = gate_states(config)
     legacy_config = dict(config.get("artifacts", {}))
     detected: Dict[str, str] = {}
     for _gate_id, (_kind, relative) in LEGACY_GATE_ARTIFACTS.items():
         if (folder / relative).exists():
-            detected[relative] = relative
+            detected[relative] = "migration/legacy-paper-v1.yaml" if relative == "paper.yaml" else relative
+    for relative in ("research/03_terms.md", "audit/release-check.md"):
+        if (folder / relative).exists():
+            detected[relative] = "audit/legacy/release-check-v1.md" if relative == "audit/release-check.md" else relative
 
+    config["title"] = " ".join(config["title"].split())
     config["schema_version"] = 2
     workflow = config["workflow"]
     workflow["version"] = 2
@@ -400,6 +406,7 @@ def cmd_migrate_v2(args: argparse.Namespace) -> int:
         "from_schema_version": 1,
         "legacy_gate_states": legacy_states,
         "legacy_artifact_config": legacy_config,
+        "legacy_paper_config_backup": "migration/legacy-paper-v1.yaml",
     }
 
     replacements = {
@@ -410,14 +417,32 @@ def cmd_migrate_v2(args: argparse.Namespace) -> int:
     }
     created: List[str] = []
     preserved: List[str] = []
-    directories = ("source", "research", "design/scenes", "knowledge", "audit")
+    directories = ("source", "research", "design/scenes", "knowledge", "audit", "audit/legacy", "migration")
     for relative in directories:
         (folder / relative).mkdir(parents=True, exist_ok=True)
+
+    paper_backup = folder / "migration/legacy-paper-v1.yaml"
+    if not paper_backup.exists():
+        paper_backup.write_bytes(legacy_paper_config)
+        created.append("migration/legacy-paper-v1.yaml")
+    else:
+        preserved.append("migration/legacy-paper-v1.yaml")
+
     for template_name, relative in TEMPLATE_OUTPUTS.items():
         if template_name == "paper.yaml":
             continue
         target = folder / relative
         if target.exists():
+            if template_name == "release-check.md":
+                legacy_release_copy = folder / "audit/legacy/release-check-v1.md"
+                if not legacy_release_copy.exists():
+                    legacy_release_copy.write_bytes(target.read_bytes())
+                    created.append("audit/legacy/release-check-v1.md")
+                else:
+                    preserved.append("audit/legacy/release-check-v1.md")
+                target.write_text(render_template(template_name, replacements), encoding="utf-8")
+                created.append(relative)
+                continue
             preserved.append(relative)
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -436,15 +461,15 @@ def cmd_migrate_v2(args: argparse.Namespace) -> int:
         lines = [
             "# Workflow v2 Migration Report",
             "",
-            "Migration created v2 workspace artifacts without deleting or replacing existing paper files.",
-            "Canonical and Enhanced paths were left untouched. All v2 gates start as pending.",
+            "Migration created v2 artifacts without deleting legacy research, design, Canonical, or Enhanced files.",
+            "The v1 paper.yaml and release checklist are archived before their active paths move to v2. All v2 gates start pending.",
             "",
             "## Legacy gate states",
             "",
         ]
         lines.extend("- {}: {}".format(gate_id, state) for gate_id, state in legacy_states.items())
         lines.extend(["", "## Detected legacy artifacts", ""])
-        lines.extend("- `{}`".format(path) for path in detected)
+        lines.extend("- `{}` → `{}`".format(source, archived) for source, archived in detected.items())
         lines.extend(["", "## Created v2 artifacts", ""])
         lines.extend("- `{}`".format(path) for path in created)
         lines.extend(["", "## Preserved existing paths", ""])
@@ -714,6 +739,25 @@ def scene_reference_problems(folder: Path) -> Tuple[List[Path], List[str]]:
     problems = evidence_errors + term_errors
     duplicate_ids = evidence_ids & term_ids
     problems.extend("duplicate canonical knowledge id '{}' across registries".format(item) for item in sorted(duplicate_ids))
+    terms_path = folder / "knowledge/terms.yaml"
+    if terms_path.is_file():
+        try:
+            terms = load_yaml(terms_path)
+            for term_id, term in terms.items():
+                if not isinstance(term, dict):
+                    continue
+                prerequisites = term.get("prerequisites", [])
+                if not isinstance(prerequisites, list):
+                    problems.append("term '{}' prerequisites must be a list".format(term_id))
+                else:
+                    for prerequisite in prerequisites:
+                        if prerequisite not in term_ids:
+                            problems.append("term '{}' references unknown prerequisite '{}'".format(term_id, prerequisite))
+                source_ref = term.get("source_ref")
+                if source_ref is not None and source_ref not in evidence_ids:
+                    problems.append("term '{}' references unknown evidence id '{}'".format(term_id, source_ref))
+        except PaperError:
+            pass
     for scene_path in scenes:
         try:
             markdown = scene_path.read_text(encoding="utf-8")

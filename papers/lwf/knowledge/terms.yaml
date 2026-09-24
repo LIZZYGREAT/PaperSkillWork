@@ -1,0 +1,159 @@
+continual_learning:
+  label: Continual learning
+  full_name: Continual learning
+  definition: Learning tasks as they arrive over time while trying to retain earlier abilities.
+  paper_role: Background framing for adding tasks without old training data.
+  confusion: The paper's experiments cover a specific visual classification setting, not every continual-learning regime.
+  prerequisites: []
+  source_category: GENERAL_BACKGROUND
+  source_ref: B03
+
+catastrophic_forgetting:
+  label: Catastrophic forgetting
+  full_name: Catastrophic forgetting
+  definition: Performance on an earlier task falls after a model is adapted to a later task.
+  paper_role: The risk that motivates LwF.
+  confusion: It describes a change in model behavior, not deletion of a dataset.
+  prerequisites: [continual_learning]
+  source_category: GENERAL_BACKGROUND
+  source_ref: B03
+
+shared_parameters:
+  label: Shared parameters
+  full_name: Shared network parameters (θ_s)
+  definition: Parameters used by multiple task outputs to compute a common representation.
+  paper_role: Shared CNN body that LwF can adapt during joint-optimize.
+  confusion: They are separate from the task-specific output parameters θ_o and θ_n.
+  prerequisites: [classification_network]
+  source_category: PAPER_FACT
+  source_ref: A01
+
+classification_network:
+  label: Classification network
+  full_name: Convolutional neural network classifier
+  definition: A neural network that maps an image through learned transformations to class scores and probabilities.
+  paper_role: The model family studied in the paper.
+  confusion: The experiments use CNNs such as AlexNet and VGG-16; do not silently replace them with a modern architecture.
+  prerequisites: [softmax_probability]
+  source_category: PAPER_FACT
+  source_ref: C09
+
+task_head:
+  label: Task-specific head
+  full_name: Task-specific output parameters
+  definition: Parameters that map the shared representation to a particular task's output labels.
+  paper_role: θ_o is an old-task head; θ_n is newly added for a new task.
+  confusion: θ_o is frozen only in warm-up and can update in joint-optimize.
+  prerequisites: [shared_parameters]
+  source_category: PAPER_FACT
+  source_ref: A02
+
+softmax_probability:
+  label: Softmax probability
+  full_name: Softmax probability
+  definition: A normalized class probability computed from classification logits.
+  paper_role: The old model's classification responses and the current model's outputs.
+  confusion: A probability response is not a one-hot ground-truth label.
+  prerequisites: []
+  source_category: GENERAL_BACKGROUND
+  source_ref: B01
+
+knowledge_distillation:
+  label: Knowledge distillation
+  full_name: Knowledge distillation
+  definition: Training a current model to match a target model's output distribution.
+  paper_role: LwF uses the old model's responses on new-task images as old-task targets.
+  confusion: Those responses are not old examples or replay memory.
+  prerequisites: [softmax_probability]
+  source_category: PAPER_FACT
+  source_ref: C02
+
+temperature:
+  label: Temperature
+  full_name: Temperature parameter (T)
+  definition: A parameter that rescales and renormalizes class probabilities to adjust distribution sharpness.
+  paper_role: LwF uses temperature 2 for its distillation target in the reported experiments.
+  confusion: It is not the optimizer learning rate; smoothing does not itself guarantee better accuracy.
+  prerequisites: [softmax_probability]
+  source_category: PAPER_FACT
+  source_ref: F02
+
+lambda_old:
+  label: λ_o
+  full_name: Old-response loss weight
+  definition: A coefficient on the old-task response loss in the combined objective.
+  paper_role: It sets the relative contribution of old-response preservation; most experiments use 1.
+  confusion: It is not an accuracy percentage or a promise that old performance will be retained.
+  prerequisites: [knowledge_distillation]
+  source_category: PAPER_FACT
+  source_ref: F05
+
+warm_up:
+  label: Warm-up
+  full_name: New-head warm-up stage
+  definition: An initial training phase that freezes shared and old-task parameters while training the new parameters.
+  paper_role: The paper uses this stage before joint-optimize.
+  confusion: The paper says warm-up is not crucial to LwF, and the old head is not frozen for the whole procedure.
+  prerequisites: [task_head]
+  source_category: PAPER_FACT
+  source_ref: C05
+
+joint_optimize:
+  label: Joint-optimize
+  full_name: Joint optimization of expanded model parameters
+  definition: Training shared, old-task, and new-task parameters together under the combined objective.
+  paper_role: The second stage of LwF training.
+  confusion: It is not the joint-training baseline, which requires old-task data.
+  prerequisites: [warm_up, knowledge_distillation]
+  source_category: PAPER_FACT
+  source_ref: C05
+
+joint_training:
+  label: Joint training
+  full_name: Joint training baseline
+  definition: Training with old-task and new-task images and labels together.
+  paper_role: A comparison method in the experiments.
+  confusion: It violates the old-data-unavailable condition that LwF targets.
+  prerequisites: [continual_learning]
+  source_category: PAPER_FACT
+  source_ref: C01
+
+replay:
+  label: Replay
+  full_name: Example replay / exemplar memory
+  definition: Retaining old examples and using them again during training on later tasks.
+  paper_role: A contrast for understanding the source of LwF's old-task signal.
+  confusion: Y_o is generated from the current new-task input, not an old stored example.
+  prerequisites: []
+  source_category: GENERAL_BACKGROUND
+  source_ref: A07
+
+backpropagation:
+  label: Backpropagation
+  full_name: Backpropagation
+  definition: Computing derivatives of the objective with respect to model parameters.
+  paper_role: Explains how old and new losses send gradients through the expanded model.
+  confusion: Computing gradients does not itself apply the parameter update.
+  prerequisites: [cross_entropy]
+  source_category: GENERAL_BACKGROUND
+  source_ref: B02
+
+cross_entropy:
+  label: Cross-entropy
+  full_name: Cross-entropy loss
+  definition: A loss comparing a predicted probability distribution with a target distribution.
+  paper_role: Used for both new-task supervision and old-response distillation.
+  confusion: The two losses use different targets and output paths.
+  prerequisites: [softmax_probability]
+  source_category: GENERAL_BACKGROUND
+  source_ref: B01
+
+accuracy_and_map:
+  label: Accuracy and mAP
+  full_name: Classification accuracy and mean average precision
+  definition: Evaluation metrics reported for different datasets in the paper.
+  paper_role: VOC reports mAP; the other main classification tasks report accuracy.
+  confusion: Values from different metrics or dataset splits cannot be compared as one scale.
+  prerequisites: []
+  source_category: PAPER_FACT
+  source_ref: E01
