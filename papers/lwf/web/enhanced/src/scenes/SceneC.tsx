@@ -1,6 +1,7 @@
 import React from 'react';
 import type { GradientSource, LearningAction, LearningSession, ParamGroupId, TrainingPhase, TrainingStage } from '../data/session';
 import { useReferenceHub } from '../components/ReferencePrimitives';
+import { openWorkspaceFor } from '../components/workspaceActions';
 import {
   computeToyGradients,
   getTeacherResponse,
@@ -215,7 +216,7 @@ function GradientInspector({ session, dispatch, result, phase, toyState }: { ses
     <div className={`v2-c-gradient-graph source-${source}`}>
       <div className="v2-c-loss-source">{sourceLabel}<small>{rank >= 4 ? 'backward 已执行' : 'backward 前：尚无 .grad'}</small></div>
       <div className="v2-c-gradient-branches"><GradientBranch group="theta_o" source={source} trainable={phase === 'joint'} active={source === 'old' || source === 'total' || source === 'regularization'} />
-        <div className="v2-c-grad-shared"><span>h</span><i>shared trunk gradient</i><button type="button" onClick={() => dispatch({ type: 'INSPECT_OBJECT', id: 'theta_s' })} className={phase === 'joint' ? 'is-trainable' : 'is-frozen'}>θ_s <small>{phase === 'warmup' ? 'frozen' : 'trainable'}</small></button></div>
+        <div className="v2-c-grad-shared"><span>h</span><i>shared trunk gradient</i><button type="button" onClick={() => openWorkspaceFor('theta_s')} className={phase === 'joint' ? 'is-trainable' : 'is-frozen'}>θ_s <small>{phase === 'warmup' ? 'frozen' : 'trainable'}</small></button></div>
         <GradientBranch group="theta_n" source={source} trainable={true} active={source === 'new' || source === 'total' || source === 'regularization'} />
       </div>
     </div>

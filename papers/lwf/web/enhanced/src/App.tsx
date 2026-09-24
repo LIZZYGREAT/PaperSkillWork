@@ -2,6 +2,7 @@ import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { ReferenceProvider, useReferenceHub } from './components/ReferencePrimitives';
 import { ObjectInspector } from './components/ObjectInspector';
 import { PersistentWorkspace } from './components/PersistentWorkspace';
+import { openWorkspaceFor } from './components/workspaceActions';
 import { SceneA } from './scenes/SceneA';
 import { SceneB } from './scenes/SceneB';
 import { SceneC } from './scenes/SceneC';
@@ -39,13 +40,17 @@ function AppContent() {
   const [toyState, dispatchToy] = useReducer(teachingToyReducer, initialToyState);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const workspaceDialogRef = useRef<HTMLDivElement>(null);
+  const workspaceCloseRef = useRef<HTMLButtonElement>(null);
   const hasNavigated = useRef(false);
   const previousStudentState = useRef({ created: session.studentCreated, boundary: session.boundary });
   const { openHub } = useReferenceHub();
   const currentIndex = scenes.findIndex((scene) => scene.id === session.activeScene);
   const activeScene = scenes[currentIndex];
   const pageTotal = String(scenes.length).padStart(2, '0');
+  const workspacePrompt = workspacePrompts[session.activeScene];
 
   const navigate = (scene: SceneId) => {
     dispatch({ type: 'NAVIGATE', scene });
@@ -57,6 +62,39 @@ function AppContent() {
     if (hasNavigated.current) requestAnimationFrame(() => headingRef.current?.focus());
     hasNavigated.current = true;
   }, [session.activeScene]);
+
+  useEffect(() => {
+    if (!workspaceOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setWorkspaceOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !workspaceDialogRef.current) return;
+      const focusable = [...workspaceDialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]')];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    requestAnimationFrame(() => workspaceCloseRef.current?.focus());
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
+  }, [workspaceOpen]);
 
   useEffect(() => {
     const previous = previousStudentState.current;
@@ -88,6 +126,16 @@ function AppContent() {
     };
     window.addEventListener('lwf:open-scene', onHubScene);
     return () => window.removeEventListener('lwf:open-scene', onHubScene);
+  }, []);
+
+  useEffect(() => {
+    const onOpenWorkspace = (event: Event) => {
+      const detail = (event as CustomEvent<{ objectId?: string }>).detail;
+      if (detail?.objectId) dispatch({ type: 'INSPECT_OBJECT', id: detail.objectId });
+      setWorkspaceOpen(true);
+    };
+    window.addEventListener('lwf:open-workspace', onOpenWorkspace);
+    return () => window.removeEventListener('lwf:open-workspace', onOpenWorkspace);
   }, []);
 
   const go = (offset: number) => {
@@ -176,6 +224,13 @@ function AppContent() {
             </div>
           </header>
 
+          {workspacePrompt ? (
+            <div className="v2-workspace-prompt">
+              <span><strong>共享工作区</strong>{workspacePrompt}</span>
+              <button type="button" onClick={() => openWorkspaceFor()}>打开工作区 <span aria-hidden="true">↗</span></button>
+            </div>
+          ) : null}
+
           <div className="v2-scene-layout">
             <section className="v2-scene-primary" aria-label={`Scene ${session.activeScene} 交互内容`}>
               {session.activeScene === '00' ? <Scene00 onNext={() => navigate('A')} /> : null}
@@ -190,10 +245,6 @@ function AppContent() {
               {session.activeScene === 'I' ? <SceneI onNavigate={navigate} /> : null}
               {session.activeScene === 'J' ? <SceneJ onNavigate={navigate} /> : null}
             </section>
-            <aside className="v2-scene-support" aria-label="持续工作区与对象检查器">
-              <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />
-              <ObjectInspector scene={session.activeScene} session={session} selectedObject={session.selectedObject} onInspect={(id) => dispatch({ type: 'INSPECT_OBJECT', id })} />
-            </aside>
           </div>
         </div>
 
@@ -203,9 +254,37 @@ function AppContent() {
           <button className="slide-nav-btn slide-nav-btn-primary" type="button" onClick={() => go(1)} disabled={currentIndex === scenes.length - 1}>下一页 →</button>
         </nav>
       </main>
+
+      <button className="v2-workspace-launcher" type="button" aria-label="打开共享工作区与对象检查器" aria-haspopup="dialog" aria-expanded={workspaceOpen} onClick={() => openWorkspaceFor()}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5-8 4.5-8-4.5Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5 12 21l8-4.5"/></svg>
+        <span>共享工作区</span>
+      </button>
+
+      {workspaceOpen ? (
+        <div className="v2-workspace-curtain" onPointerDown={(event) => { if (event.target === event.currentTarget) setWorkspaceOpen(false); }}>
+          <section ref={workspaceDialogRef} className="v2-workspace-sheet" role="dialog" aria-modal="true" aria-labelledby="workspace-curtain-title" tabIndex={-1}>
+            <header className="v2-workspace-sheet-header">
+              <div><p className="v2-eyebrow">PERSISTENT WORKSPACE · SCENE {activeScene.number}</p><h2 id="workspace-curtain-title">共享工作区与对象检查器</h2><p>场景正文保持原宽度；这里汇总当前数据状态、Teacher / Student 结构和选中对象信息。</p></div>
+              <button ref={workspaceCloseRef} className="v2-workspace-close" type="button" aria-label="关闭共享工作区" onClick={() => setWorkspaceOpen(false)}>×</button>
+            </header>
+            <div className="v2-workspace-sheet-body">
+              <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />
+              <ObjectInspector scene={session.activeScene} session={session} selectedObject={session.selectedObject} onInspect={(id) => dispatch({ type: 'INSPECT_OBJECT', id })} />
+            </div>
+            <footer className="v2-workspace-sheet-footer"><span>对象状态随场景和训练阶段更新</span><span>Paper meaning · Runtime mapping</span></footer>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
+
+const workspacePrompts: Partial<Record<SceneId, string>> = {
+  A: '比较训练路线时，可同步查看数据是否可用及当前模型状态。',
+  B: '构造 Teacher / Student 时，可在此检查数据、参数和对象身份。',
+  C: '执行训练步骤时，可随时核对模型对象与参数状态。',
+  J: '按实现流程逐步核对 Teacher、Student、响应与参数组。',
+};
 
 function sceneCategory(scene: SceneId) {
   return ({ '00': 'PAPER BACKGROUND', A: 'PROBLEM SPACE', B: 'SYSTEM CONSTRUCTION', C: 'TRAINING TRACE', D: 'DISTILLATION', E: 'GRADIENT TRADE-OFF', F: 'FUNCTION VS PARAMETER', G: 'DOMAIN COVERAGE', H: 'TEACHER LINEAGE', I: 'EVIDENCE AUDIT', J: 'IMPLEMENTATION WORKFLOW' })[scene];

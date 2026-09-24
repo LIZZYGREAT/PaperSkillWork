@@ -1,5 +1,6 @@
 import React from 'react';
 import { TermRef } from '../components/ReferencePrimitives';
+import { openWorkspaceFor } from '../components/workspaceActions';
 import { methodOrder, type LearningAction, type LearningSession, type MethodId } from '../data/session';
 
 const methods: Record<MethodId, { title: string; short: string; shared: string; oldData: string; supervision: string; fit: string; explanation: string }> = {
@@ -45,7 +46,7 @@ export function SceneA({ session, dispatch, onNext }: {
           <div className="v2-old-model-summary">
             <div className="v2-model-summary-icon" aria-hidden="true">M</div>
             <div><strong>Existing CNN · Old Task</strong><span>共享表示 θ_s → 旧任务输出头 θ_o</span></div>
-            <button type="button" className="v2-inline-inspect" onClick={() => dispatch({ type: 'INSPECT_OBJECT', id: 'teacher' })}>检查模型对象 ↗</button>
+            <button type="button" className="v2-inline-inspect" onClick={() => openWorkspaceFor('teacher')}>检查模型对象 ↗</button>
           </div>
           <div className="v2-transition-row">
             <div><span className="v2-transition-kicker">下一状态</span><strong>New Task Arrives</strong><small>数据条件将发生变化，旧模型仍会保留。</small></div>

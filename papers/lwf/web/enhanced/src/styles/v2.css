@@ -361,7 +361,7 @@
 .v2-progress-track i { height: 3px; border-radius: 9px; background: #dfe5ed; }
 .v2-progress-track i.is-complete { background: var(--ui-accent); }
 .v2-progress-summary small { color: var(--ui-text-light); font-size: 9px; }
-.v2-scene-layout { display: grid; grid-template-columns: minmax(0, 1.14fr) minmax(330px, .86fr); align-items: start; gap: 16px; }
+.v2-scene-layout { display: grid; grid-template-columns: minmax(0,1fr); align-items: start; gap: 16px; }
 .v2-scene-primary, .v2-scene-support { display: grid; align-content: start; gap: 14px; min-width: 0; }
 .v2-scene-content { display: grid; gap: 13px; min-width: 0; }
 .v2-state-card, .v2-strategy-section, .v2-reasoning-step, .v2-placeholder-scene { padding: 18px; border: 1px solid #dce4ed; border-radius: 14px; background: #fff; box-shadow: 0 7px 20px rgba(35,59,90,.035); }
@@ -862,7 +862,7 @@
   backdrop-filter: blur(10px);
 }
 .lwf-v2.slide-layout .v2-scene-layout {
-  grid-template-columns: minmax(0, 1.5fr) minmax(360px, .9fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
 }
 .lwf-v2.slide-layout .v2-scene-primary,

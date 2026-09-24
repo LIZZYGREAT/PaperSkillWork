@@ -1,5 +1,6 @@
 import React from 'react';
 import { useReferenceHub } from '../components/ReferencePrimitives';
+import { openWorkspaceFor } from '../components/workspaceActions';
 import type { BoundaryId, LearningAction, LearningSession, ParamGroupId, TrainingPhase } from '../data/session';
 
 const sampleIds = [427, 428, 901];
@@ -82,7 +83,7 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
           <div className="v2-parameter-registry-heading"><div><span className="v2-source-badge is-implementation">IMPLEMENTATION MAPPING</span><h3>参数注册表</h3></div><span>示意模型 · 形状用符号表达</span></div>
           <div className="v2-parameter-groups">
             {groups.map((group) => (
-              <button type="button" key={group.id} className={`v2-parameter-group is-${group.id} ${session.selectedObject === group.id ? 'is-selected' : ''}`} onClick={() => dispatch({ type: 'INSPECT_OBJECT', id: group.id })}>
+              <button type="button" key={group.id} className={`v2-parameter-group is-${group.id} ${session.selectedObject === group.id ? 'is-selected' : ''}`} onClick={() => openWorkspaceFor(group.id)}>
                 <header><code>{group.symbol}</code><strong>{group.title}</strong><span>{group.id === 'theta_n' && session.studentCreated ? 'created' : group.id === 'theta_n' ? '待创建' : 'parameter set'}</span></header>
                 <div className="v2-parameter-name-list">{group.names[session.boundary].map((name) => <code key={name}>{name}</code>)}</div>
                 <small>{group.shape}</small>
@@ -101,7 +102,7 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
             <span className="v2-source-badge is-paper">PAPER OBJECT</span><h3>Teacher · 旧模型快照</h3>
             <p><code>(θ_s^T, θ_o^T)</code> 来自已训练检查点；供生成旧任务响应。</p>
             <dl><div><dt>模式</dt><dd>eval</dd></div><div><dt>梯度跟踪</dt><dd>关闭</dd></div><div><dt>Optimizer</dt><dd>不加入</dd></div></dl>
-            <button type="button" className="v2-inline-inspect" onClick={() => dispatch({ type: 'INSPECT_OBJECT', id: 'teacher' })}>检查 Teacher ↗</button>
+            <button type="button" className="v2-inline-inspect" onClick={() => openWorkspaceFor('teacher')}>检查 Teacher ↗</button>
           </div>
           <div className="v2-student-create-action">
             <span className="v2-create-arrow" aria-hidden="true">→</span>
@@ -112,7 +113,7 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
             <span className="v2-source-badge is-implementation">RUNTIME OBJECTS</span><h3>Student · 可训练的扩展模型</h3>
             <p><code>θ_s^S</code>、<code>θ_o^S</code> 初始值复制自 Teacher；新建 <code>θ_n^S</code>。</p>
             <dl><div><dt>初值相等</dt><dd>{session.studentCreated ? '是' : '创建后成立'}</dd></div><div><dt>同一 Parameter 对象</dt><dd>{session.teacherStudentShared ? '是 · 错误示例' : '否 · 独立对象'}</dd></div><div><dt>后续可分化</dt><dd>{session.studentCreated && !session.teacherStudentShared ? '是' : 'Student 创建后可验证'}</dd></div></dl>
-            <button type="button" className="v2-inline-inspect" onClick={() => dispatch({ type: 'INSPECT_OBJECT', id: 'student' })}>检查 Student ↗</button>
+            <button type="button" className="v2-inline-inspect" onClick={() => openWorkspaceFor('student')}>检查 Student ↗</button>
           </div>
         </div>
         <div className={`v2-identity-demo ${session.teacherStudentShared ? 'is-error' : ''}`}>
@@ -210,7 +211,7 @@ function AssetCard({ symbol, label, state, tone }: { symbol: string; label: stri
 
 function ModuleRow({ name, group, tone, dispatch }: { name: string; group: string; tone: 'shared' | 'branch' | 'old'; dispatch: React.Dispatch<LearningAction> }) {
   const objectId = tone === 'old' ? 'theta_o' : 'theta_s';
-  return <button type="button" className={`v2-module-row is-${tone}`} onClick={() => dispatch({ type: 'INSPECT_OBJECT', id: objectId })}><span className="v2-tree-marker" aria-hidden="true">├─</span><code>{name}</code><small>{group}</small></button>;
+  return <button type="button" className={`v2-module-row is-${tone}`} onClick={() => openWorkspaceFor(objectId)}><span className="v2-tree-marker" aria-hidden="true">├─</span><code>{name}</code><small>{group}</small></button>;
 }
 
 function BoundaryLine({ label }: { label: string }) {
