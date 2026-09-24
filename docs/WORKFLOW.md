@@ -80,6 +80,7 @@ papers/<paper-id>/
 ├─ source/paper.url
 ├─ research/01_paper_model.md
 ├─ research/02_evidence_registry.yaml
+├─ knowledge/terms.yaml
 ├─ design/learning-contract.md
 ├─ design/learning-architecture.md
 ├─ design/scenes/                 # only specified scenes

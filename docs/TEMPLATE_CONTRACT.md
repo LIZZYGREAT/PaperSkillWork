@@ -21,9 +21,11 @@ All templates may use only these placeholders. An omitted arXiv id renders as an
 | `learning-contract.md` | `design/learning-contract.md` |
 | `paper-model.md` | `research/01_paper_model.md` |
 | `evidence-registry.yaml` | `research/02_evidence_registry.yaml` |
+| `terms.yaml` | `knowledge/terms.yaml` |
 | `learning-architecture.md` | `design/learning-architecture.md` |
-| `scene-spec.md` | `design/scenes/00_scene.md` |
 | `final-check.md` | `audit/final-check.md` |
 | `release-check.md` | `audit/release-check.md` |
+
+`scene-spec.md` is copied manually for each scene selected by the Learning Architecture. `paper.py new` creates `design/scenes/` empty; it does not invent a default scene.
 
 The v1 templates remain under `templates/legacy/` for reading and migration reference; new workspaces never use them. Template generation does not advance gates or claim review acceptance.
