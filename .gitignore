@@ -5,6 +5,7 @@ papers/*/source/*.pdf
 **/node_modules/
 **/dist/
 **/dist-ssr/
+**/.vite/
 
 # Environment
 .env
