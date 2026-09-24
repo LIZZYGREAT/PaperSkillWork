@@ -7,6 +7,7 @@ import { SceneB } from './scenes/SceneB';
 import { SceneC } from './scenes/SceneC';
 import { Scene00 } from './scenes/Scene00';
 import { SceneD } from './scenes/SceneD';
+import { SceneE } from './scenes/SceneE';
 import {
   initialLearningSession,
   learningReducer,
@@ -20,6 +21,7 @@ const scenes: { id: SceneId; number: string; title: string; question: string }[]
   { id: 'B', number: '02', title: '构造 LwF 系统', question: 'Teacher、Student、参数与旧响应如何形成？' },
   { id: 'C', number: '03', title: '执行一个训练步', question: '梯度何时产生，参数又在何时改变？' },
   { id: 'D', number: '04', title: '拆解旧响应蒸馏', question: 'Teacher 的旧响应如何经过温度、损失并形成梯度？' },
+  { id: 'E', number: '05', title: '稳定性与可塑性的梯度折衷', question: '旧、新目标同时作用于共享参数时，优化器往哪里走？' },
 ];
 
 function AppContent() {
@@ -93,7 +95,7 @@ function AppContent() {
         <div className="slide-sidebar-header">
           <div className="slide-sidebar-venue">ECCV 2016 · WORKSPACE</div>
           <div className="slide-sidebar-title">Learning without Forgetting</div>
-          <p className="v2-sidebar-subtitle">机制学习工作台 · 00–03</p>
+          <p className="v2-sidebar-subtitle">机制学习工作台 · 00–05</p>
         </div>
         <nav className="slide-sidebar-nav" aria-label="章节">
           {scenes.map((scene) => (
@@ -143,7 +145,7 @@ function AppContent() {
             <div className="v2-breadcrumb"><span>LwF</span><span aria-hidden="true">/</span><span>机制工作台</span><span aria-hidden="true">/</span><strong>Scene {activeScene.id}</strong></div>
             <div className="v2-scene-title-row">
               <div>
-                <p className="v2-eyebrow">SCENE {activeScene.number} · {session.activeScene === '00' ? 'PAPER BACKGROUND' : session.activeScene === 'A' ? 'PROBLEM SPACE' : session.activeScene === 'B' ? 'SYSTEM CONSTRUCTION' : 'TRAINING TRACE'}</p>
+                <p className="v2-eyebrow">SCENE {activeScene.number} · {sceneCategory(session.activeScene)}</p>
                 <h1 id="scene-title" ref={headingRef} tabIndex={-1}>{activeScene.title}</h1>
                 <p className="v2-page-question">{activeScene.question}</p>
               </div>
@@ -162,6 +164,7 @@ function AppContent() {
               {session.activeScene === 'B' ? <SceneB session={session} dispatch={dispatch} onNext={() => navigate('C')} onPrevious={() => navigate('A')} /> : null}
               {session.activeScene === 'C' ? <SceneC session={session} dispatch={dispatch} toyState={toyState} dispatchToy={dispatchToy} onPrevious={() => navigate('B')} onReset={() => { dispatchToy({ type: 'RESET_TOY' }); dispatch({ type: 'SET_TRAINING_STAGE', stage: 'idle' }); }} /> : null}
               {session.activeScene === 'D' ? <SceneD /> : null}
+              {session.activeScene === 'E' ? <SceneE session={session} dispatch={dispatch} /> : null}
             </section>
             <aside className="v2-scene-support" aria-label="持续工作区与对象检查器">
               <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />
@@ -178,6 +181,10 @@ function AppContent() {
       </main>
     </div>
   );
+}
+
+function sceneCategory(scene: SceneId) {
+  return ({ '00': 'PAPER BACKGROUND', A: 'PROBLEM SPACE', B: 'SYSTEM CONSTRUCTION', C: 'TRAINING TRACE', D: 'DISTILLATION', E: 'GRADIENT TRADE-OFF' })[scene];
 }
 
 function ScenePlaceholder({ scene, onNext, onPrevious }: { scene: 'B' | 'C'; onNext?: () => void; onPrevious: () => void }) {

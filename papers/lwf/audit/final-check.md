@@ -1,6 +1,6 @@
 # Learning without Forgetting Final Check
 
-This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–D are implemented as interactive scenes. Implementation and automated checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
+This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–E are implemented as interactive scenes. Implementation and automated checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
 
 ## Learning Acceptance
 
@@ -73,7 +73,7 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 
 ## Known Limitations
 
-- Scenes E–J remain to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
+- Scenes F–J remain to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
 - This review does not automatically establish that a learner can reconstruct the mechanism.
 
 ## Engineering Run Record
@@ -88,6 +88,9 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 - 2026-09-24: added Scene D with computed temperature transforms, per-class response losses, reduction controls, cache-format comparison, analytic logit gradients, and an explicitly labeled T² implementation variant.
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS; `npm test` — PASS (6 numerical checks for temperature, equivalence, per-class loss, cross-entropy gradients, KD gradient identity, and finite-difference checks of L1/L2 gradients).
 - 2026-09-24: local preview — Scene D narrow viewport and the interactive gradient step reviewed; the gradient signs and corresponding descent directions agreed.
+- 2026-09-24: added Scene E with old-response gradients chained through an explicit synthetic linear Jacobian, selectable gradient geometry and parameter groups, shared-boundary synchronization, loss-scale controls, regularization, calculated SGD trajectories, a four-panel Figure 7 reading index, and an original-paper link.
+- 2026-09-24: `npm run build` in `web/enhanced` — PASS; `npm test` — PASS (10 numerical checks, including finite-difference validation of the mapped old-response gradient and λ / direction properties).
+- 2026-09-24: local preview — Scene E layout reviewed at the 647px narrow viewport; one-step and ten-step controls changed θ, losses, gradient alignment and trajectory as computed.
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
 - Full keyboard review remains open; all learning and evidence acceptance questions remain for human review.
 
