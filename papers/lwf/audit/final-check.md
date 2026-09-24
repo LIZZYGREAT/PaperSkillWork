@@ -1,6 +1,6 @@
 # Learning without Forgetting Final Check
 
-This v2 audit is a review record. The checks remain open until the First Vertical Slice has been browsed and accepted by a person. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
+This v2 audit records verified structural and engineering outcomes. The A–C slice is at the human acceptance pause; implementation and automated checks do not establish learning acceptance. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
 
 ## Learning Acceptance
 
@@ -64,16 +64,23 @@ This v2 audit is a review record. The checks remain open until the First Vertica
 
 ## Engineering, Accessibility, and Mobile
 
-- [ ] Build and declared project checks run successfully; outcomes are recorded.
+- [x] Build and declared project checks run successfully; outcomes are recorded.
 - [ ] Keyboard navigation and visible focus work for every action.
-- [ ] Core explanation does not depend on hover; term popovers also support focus and tap.
+- [x] Core explanation does not depend on hover; term popovers also support focus and tap.
 - [ ] Reduced-motion and narrow-screen layouts are usable.
-- [ ] Repository hygiene and Canonical/Enhanced separation are preserved.
+- [x] Repository hygiene and Canonical/Enhanced separation are preserved.
 
 ## Known Limitations
 
 - Scenes D–J are architecture entries only; they are intentionally not specified or implemented before A–C receive human learning acceptance.
 - This review does not automatically establish that a learner can reconstruct the mechanism.
+
+## Engineering Run Record
+
+- 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build).
+- 2026-09-24: local preview — A–C scene switching, route comparisons, radio self-checks, registry links and term popovers loaded; arrow-key scene, route and self-check navigation worked. The registry contained 16 terms and 40 evidence records.
+- 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
+- Narrow-screen visual review and full keyboard review remain open; all learning and evidence acceptance questions remain for human review.
 
 Overall: PENDING
 
