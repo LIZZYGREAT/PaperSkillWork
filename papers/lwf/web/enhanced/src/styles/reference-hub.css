@@ -1,4 +1,8 @@
 .v2-reference-hub { width:min(980px,100%); padding:22px 24px 14px; }
+.v2-reference-backdrop { overscroll-behavior:contain; }
+.v2-reference-backdrop .v2-reference-drawer { min-height:0; overflow:hidden; overscroll-behavior:contain; }
+.v2-reference-hub .v2-hub-columns,.v2-reference-hub .v2-hub-results,.v2-reference-hub .v2-hub-detail { overscroll-behavior:contain; }
+.v2-reference-hub .v2-hub-columns { min-height:0; }
 .v2-reference-hub .v2-drawer-header { align-items:center; }
 .v2-reference-hub .v2-drawer-header p { margin:6px 0 0; color:#7d8795; font-size:11px; }
 .v2-hub-filter-row { display:grid; grid-template-columns:minmax(150px,.8fr) minmax(180px,1fr) auto; align-items:end; gap:10px; padding:0 0 12px; border-bottom:1px solid #e7ebf1; }

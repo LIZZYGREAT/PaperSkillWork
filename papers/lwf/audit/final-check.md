@@ -112,6 +112,9 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 - 2026-09-24: browser preview — Scene J loaded as page 10/11; Paper, Runtime, and Code views switched successfully, On-the-fly response mode updated the recorded-target state, and clicking a loss code line synchronized to joint-optimization Step 5. Layout reviewed at the available 647px viewport.
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
 - Full keyboard review remains open; narrow-screen review is limited to recorded viewport widths. All learning and evidence acceptance questions remain for human review.
+- 2026-09-24: Reference Hub locks background page scrolling while open and contains wheel scrolling within its own list and detail panes.
+- 2026-09-24: `npm run build` after the workspace overlay and Reference Hub scroll containment changes — PASS (TypeScript check and Vite production build).
+- 2026-09-24: browser preview — Scene B “检查 Teacher” opened the workspace overlay with Teacher selected; Reference Hub closes cleanly and returns focus to its opener.
 Overall: PENDING
 
 Build PASS cannot override Learning FAIL.

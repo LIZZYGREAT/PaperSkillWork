@@ -26,12 +26,12 @@ npm run dev
 - **08 · 连续任务与 Teacher 谱系：** 手动检查 Model₀→Model₁→Model₂→Model₃，追踪 stage-specific responses、旧 head 角色、共享 backbone 演化、缓存重算和 Add Task D 步骤；Teaching Toy target 数值与 Figure 4 论文证据分开展示。
 - **09 · 论文证据与结论审计：** 以 claim selector 连接实验设置、Table 1/2、Figure 4/7 与结论边界；程序化重构 ImageNet→CUB 表中的绝对值，逐个检查方法信息条件，并将作者解释、机制说明与论文实测结果分层。
 - **10 · 端到端 LwF 工作流：** 将 A–I 汇为 8 步实现路线，提供可切换的 Paper / Runtime / Code 视图、参数组与 shape 示例、手动运行前核对表、实现排错路径，以及下一任务 Teacher 快照循环。页面伪代码是实现导向的说明，不是论文原始代码；shape 与元素数是明确标注的 AlexNet 示例，不代表当前工作区 checkpoint。
-- PaperSkill 左侧章节栏与上一页 / 下一页控件保持可用；共享工作区与对象检查器随章节状态更新。
+- PaperSkill 左侧章节栏与上一页 / 下一页控件保持可用；正文维持单栏阅读宽度，右下角悬浮工作区入口可展开共享工作区与对象检查器，状态随章节更新。A、B、C、J 的相关正文还提供就近入口，可直接打开并定位对象。
 - 场景切换和构建不代表学习验收通过，学习问题与 `G0–G7` 仍待人工核阅。
 
 ## 证据与术语
 
-全站 Reference Hub 以 `src/data/knowledge.ts` 的符号、公式、数据集、方法、阶段、误区、证据和主张卡为统一目录，并索引 `knowledge/terms.yaml` 与 `research/02_evidence_registry.yaml` 的原始条目。搜索覆盖内容与来源类别，详情提供场景、公式、变量和证据交叉链接；场景入口通过同一 canonical card ID 打开。证据结论以本地论文 PDF、[arXiv 版本](https://arxiv.org/abs/1606.09282)及 `research/` 中的逐项审计为准。推导、实现映射和教学示意会与论文直接事实区分。
+全站 Reference Hub 以 `src/data/knowledge.ts` 的符号、公式、数据集、方法、阶段、误区、证据和主张卡为统一目录，并索引 `knowledge/terms.yaml` 与 `research/02_evidence_registry.yaml` 的原始条目。搜索覆盖内容与来源类别，详情提供场景、公式、变量和证据交叉链接；场景入口通过同一 canonical card ID 打开。面板打开时会锁住底层页面滚动，列表与详情各自在面板内滚动。证据结论以本地论文 PDF、[arXiv 版本](https://arxiv.org/abs/1606.09282)及 `research/` 中的逐项审计为准。推导、实现映射和教学示意会与论文直接事实区分。
 
 ## 代码位置
 
@@ -57,7 +57,9 @@ npm run dev
 | `src/simulation/domainCoverage.ts` | 覆盖状态、约束样本、教学函数与旧支持点响应计算 |
 | `src/components/ReferencePrimitives.tsx` | 术语弹层、术语与证据面板 |
 | `src/components/ReferenceHub.tsx` | 全类型统一搜索、筛选、卡片详情和交叉引用抽屉 |
+| `src/components/workspaceActions.ts` | 场景正文的工作区打开与对象定位入口 |
 | `src/styles/scene-j.css` | Scene J 工作流、运行时映射、参数表、检查清单与窄屏排版 |
+| `src/styles/workspace-curtain.css` | 悬浮入口、展开式共享工作区及响应式布局 |
 | `src/data/registry.ts` | 解析项目内术语和证据登记 |
 | `src/data/knowledge.ts` | 全站 canonical knowledge cards |
 | `src/styles/v2.css` | 分页布局、场景容器、可读字级与窄屏样式 |

@@ -87,9 +87,11 @@ export function ReferenceHub({request,onClose}:{request:HubRequest|null;onClose:
   useEffect(()=>{
     if(!request) return;
     previousFocus.current=document.activeElement as HTMLElement|null;
+    const previousOverflow=document.body.style.overflow;
+    document.body.style.overflow='hidden';
     setSelectedId(resolveRequest(request));setQuery('');setKindFilter('all');setCategoryFilter('all');
     requestAnimationFrame(()=>closeRef.current?.focus());
-    return ()=>previousFocus.current?.focus();
+    return ()=>{document.body.style.overflow=previousOverflow;previousFocus.current?.focus();};
   },[request]);
 
   const filteredEntries=useMemo(()=>allEntries.filter((entry)=>{
@@ -120,7 +122,7 @@ export function ReferenceHub({request,onClose}:{request:HubRequest|null;onClose:
   };
   const selectEntry=(id:string)=>{const resolved=resolveRelatedId(id);if(entriesById.has(resolved)){setSelectedId(resolved);return;}if(/^(00|[A-J])$/.test(id)){window.dispatchEvent(new CustomEvent('lwf:open-scene',{detail:id}));onClose();}};
 
-  return <div className="v2-drawer-backdrop" onPointerDown={(event)=>{if(event.target===event.currentTarget)onClose();}}>
+  return <div className="v2-drawer-backdrop v2-reference-backdrop" onPointerDown={(event)=>{if(event.target===event.currentTarget)onClose();}}>
     <aside ref={panelRef} className="v2-reference-drawer v2-reference-hub" role="dialog" aria-modal="true" aria-labelledby="v2-reference-title" onKeyDown={onDialogKeyDown}>
       <header className="v2-drawer-header"><div><span className="v2-eyebrow">GLOBAL KNOWLEDGE INDEX</span><h2 id="v2-reference-title">Reference Hub</h2><p>符号 · 公式 · 数据集 · 方法 · 阶段 · 误区 · 证据</p></div><button ref={closeRef} className="v2-icon-button" type="button" onClick={onClose} aria-label="关闭 Reference Hub">×</button></header>
       <label className="v2-reference-search"><span className="v2-sr-only">搜索 Reference Hub</span><input value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="搜索 θ_s、Y_o、temperature、λ_o、MNIST、warm-up、Figure 7、Joint Training、backward、domain gap…" /></label>
