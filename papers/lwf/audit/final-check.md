@@ -105,10 +105,13 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Reference Hub expansion).
 - 2026-09-24: added Scene J with an eight-step old-model-to-next-Teacher workflow, synchronized Paper / Runtime / Code views, canonical links, illustrative AlexNet parameter shapes and counts, a manually operated run checklist, and symptom-led implementation debugging.
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Scene J).
+- 2026-09-24: moved the shared workspace and object inspector out of the reading column into an expanding floating workspace; scene entry points open the workspace with the relevant object selected. The main scene content now uses the full single-column reading width.
+- 2026-09-24: enlarged typography across the full-screen workspace and let its shared panel row grow and scroll, keeping lower model objects reachable instead of clipping them on shorter viewports.
+- 2026-09-24: browser preview at 1280×720 — workspace text hierarchy reviewed; scrolling reveals the full Teacher / Student cards while the sheet header and footer stay in place.
+- 2026-09-24: `npm run build` after workspace typography and scroll-layout changes — PASS (TypeScript check and Vite production build).
 - 2026-09-24: browser preview — Scene J loaded as page 10/11; Paper, Runtime, and Code views switched successfully, On-the-fly response mode updated the recorded-target state, and clicking a loss code line synchronized to joint-optimization Step 5. Layout reviewed at the available 647px viewport.
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
 - Full keyboard review remains open; narrow-screen review is limited to recorded viewport widths. All learning and evidence acceptance questions remain for human review.
-
 Overall: PENDING
 
 Build PASS cannot override Learning FAIL.
