@@ -1,4 +1,4 @@
-export type SceneId = '00' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
+export type SceneId = '00' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J';
 export type MethodId = 'feature' | 'finetune' | 'joint';
 export type BoundaryId = 'fc7' | 'features';
 export type TrainingPhase = 'warmup' | 'joint';

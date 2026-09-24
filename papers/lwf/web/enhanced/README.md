@@ -1,6 +1,6 @@
 # LwF 交互式精读 · Workflow v2
 
-当前版本在 *Learning without Forgetting*（LwF）的交互章节中加入了 00 背景导读和 01–06 场景，沿用 PaperSkill 的章节目录和分页框架。各页共用一个持续工作区；Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注。00 用于解释论文背景，不计入人工学习验收；实现和构建不代表学习门禁通过。
+当前版本在 *Learning without Forgetting*（LwF）的交互章节中加入了 00 背景导读和 01–07 场景，沿用 PaperSkill 的章节目录和分页框架。各页共用一个持续工作区；Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注。00 用于解释论文背景，不计入人工学习验收；实现和构建不代表学习门禁通过。
 
 ## 本地预览与构建
 
@@ -13,7 +13,7 @@ npm run dev
 
 生产构建运行 `npm run build`，构建后的静态文件位于 `dist/`；可用 `npm run preview` 查看构建结果。Vite 使用配置运行器加载配置，适配当前受限工作区。
 
-## 场景 00–06
+## 场景 00–07
 
 - **00 · 论文背景与研究目标：** 简介旧任务数据不可用时加入新任务的问题设定、常见路线的取舍、LwF 的旧响应思路及其输入覆盖边界；不增加训练门禁。
 - **01 · 问题空间与方法约束：** 展示新旧数据可用性，比较特征提取、微调和联合训练，并由问题条件引出 LwF 需要的旧任务信号。
@@ -22,6 +22,7 @@ npm run dev
 - **04 · 拆解旧响应蒸馏：** 比较 top-1 与完整响应，动态检查温度变换、逐类损失、缓存和 reduction，并从 Student old logits 查看计算得到的梯度；数值明确标为 Teaching Toy，T² 仅作为显式的实现变体。
 - **05 · 稳定性与可塑性的梯度折衷：** 从旧响应 logits 经合成线性 Jacobian 计算共享梯度，与新任务目标组成 aligned / orthogonal / conflicting 场景；展示 λ、温度、reduction、正则化与 plain SGD 对真实 toy 梯度和轨迹的影响，并查看 Figure 7 面板索引、来源审计与原文 PDF 链接。
 - **06 · 函数保持与参数保持：** 用可计算反例检查参数空间与函数空间的不同，沿等半径方向比较响应漂移；通过 Xₙ probes 对比参数约束和响应约束，区分参数 L2 与普通 weight decay，并显示未观测输入上的响应边界。
+- **07 · 域覆盖与监督缺口：** 用标注为 schematic 的覆盖视图和计算型 Teaching Toy 对比 Xₙ 上相同响应损失与旧支持点上的行为漂移；区分采样稀疏、分布错位、训练与评估权限，浏览论文任务对和数据集背景，不计算没有依据的域距离分数。
 - PaperSkill 左侧章节栏与上一页 / 下一页控件保持可用；共享工作区与对象检查器随章节状态更新。
 - 场景切换和构建不代表学习验收通过，学习问题与 `G0–G7` 仍待人工核阅。
 
@@ -41,10 +42,12 @@ npm run dev
 | `src/scenes/SceneD.tsx` | 旧响应、温度、损失分解和梯度检查 |
 | `src/scenes/SceneE.tsx` | 梯度几何、参数边界、数值 SGD 轨迹及 Figure 7 |
 | `src/scenes/SceneF.tsx` | 参数 / 函数空间反例、Xₙ 探针、基线与观测输入边界 |
+| `src/scenes/SceneG.tsx` | 定性覆盖示意、样本数对照、旧域 Teaching Toy 与数据泄漏边界 |
 | `src/simulation/lwfTeachingToy.ts` | 独立的可计算教学模型与状态 reducer |
 | `src/simulation/distillation.ts` | 蒸馏分布、损失、reduction 与梯度计算 |
 | `src/simulation/gradientTradeoff.ts` | 旧响应到二维共享 toy 梯度的 Jacobian 映射与目标计算 |
 | `src/simulation/functionPreservation.ts` | 参数距离、响应漂移、等价重参数化与探针计算 |
+| `src/simulation/domainCoverage.ts` | 覆盖状态、约束样本、教学函数与旧支持点响应计算 |
 | `src/components/ReferencePrimitives.tsx` | 术语弹层、术语与证据面板 |
 | `src/data/registry.ts` | 解析项目内术语和证据登记 |
 | `src/styles/v2.css` | 分页布局、场景容器、可读字级与窄屏样式 |

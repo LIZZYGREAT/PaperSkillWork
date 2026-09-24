@@ -9,6 +9,7 @@ import { Scene00 } from './scenes/Scene00';
 import { SceneD } from './scenes/SceneD';
 import { SceneE } from './scenes/SceneE';
 import { SceneF } from './scenes/SceneF';
+import { SceneG } from './scenes/SceneG';
 import {
   initialLearningSession,
   learningReducer,
@@ -24,6 +25,10 @@ const scenes: { id: SceneId; number: string; title: string; question: string }[]
   { id: 'D', number: '04', title: '拆解旧响应蒸馏', question: 'Teacher 的旧响应如何经过温度、损失并形成梯度？' },
   { id: 'E', number: '05', title: '稳定性与可塑性的梯度折衷', question: '旧、新目标同时作用于共享参数时，优化器往哪里走？' },
   { id: 'F', number: '06', title: '函数保持与参数保持', question: '为什么约束旧响应，而不是只约束旧参数？' },
+  { id: 'G', number: '07', title: '域覆盖与监督缺口', question: '新任务输入上的响应约束覆盖了多少旧任务相关区域？' },
+  { id: 'H', number: '08', title: '连续任务与 Teacher 谱系', question: '今天的 Student 成为明天的 Teacher 后，响应目标如何变化？' },
+  { id: 'I', number: '09', title: '论文证据与结论审计', question: '哪些实验支持哪些结论，边界在哪里？' },
+  { id: 'J', number: '10', title: '端到端 LwF 工作流', question: '如何从旧模型与新任务数据实现并检查完整流程？' },
 ];
 
 function AppContent() {
@@ -97,7 +102,7 @@ function AppContent() {
         <div className="slide-sidebar-header">
           <div className="slide-sidebar-venue">ECCV 2016 · WORKSPACE</div>
           <div className="slide-sidebar-title">Learning without Forgetting</div>
-          <p className="v2-sidebar-subtitle">机制学习工作台 · 00–06</p>
+          <p className="v2-sidebar-subtitle">机制学习工作台 · 00–10</p>
         </div>
         <nav className="slide-sidebar-nav" aria-label="章节">
           {scenes.map((scene) => (
@@ -168,6 +173,7 @@ function AppContent() {
               {session.activeScene === 'D' ? <SceneD /> : null}
               {session.activeScene === 'E' ? <SceneE session={session} dispatch={dispatch} /> : null}
               {session.activeScene === 'F' ? <SceneF /> : null}
+              {session.activeScene === 'G' ? <SceneG /> : null}
             </section>
             <aside className="v2-scene-support" aria-label="持续工作区与对象检查器">
               <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />
@@ -187,7 +193,7 @@ function AppContent() {
 }
 
 function sceneCategory(scene: SceneId) {
-  return ({ '00': 'PAPER BACKGROUND', A: 'PROBLEM SPACE', B: 'SYSTEM CONSTRUCTION', C: 'TRAINING TRACE', D: 'DISTILLATION', E: 'GRADIENT TRADE-OFF', F: 'FUNCTION VS PARAMETER' })[scene];
+  return ({ '00': 'PAPER BACKGROUND', A: 'PROBLEM SPACE', B: 'SYSTEM CONSTRUCTION', C: 'TRAINING TRACE', D: 'DISTILLATION', E: 'GRADIENT TRADE-OFF', F: 'FUNCTION VS PARAMETER', G: 'DOMAIN COVERAGE', H: 'TEACHER LINEAGE', I: 'EVIDENCE AUDIT', J: 'IMPLEMENTATION WORKFLOW' })[scene];
 }
 
 function ScenePlaceholder({ scene, onNext, onPrevious }: { scene: 'B' | 'C'; onNext?: () => void; onPrevious: () => void }) {
