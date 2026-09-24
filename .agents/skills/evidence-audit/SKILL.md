@@ -1,53 +1,62 @@
 ---
 name: evidence-audit
-description: Audit paper claims, results, explanations, analogies, and future work for Gate G2.
+description: Build a structured evidence registry for paper claims, results, mappings, and teaching material at Gate G2.
 ---
 
 # Evidence Audit
 
 ## Purpose
 
-Set clear evidence boundaries for every important statement that may appear in the tutorial.
+Give every important tutorial claim a clear category, source, and limit.
 
 ## Required Inputs
 
-- The source paper PDF or other explicitly supplied source
-- `papers/<paper-id>/research/01_review.md`
-- `templates/evidence-audit.md`
+- The source paper or explicitly supplied source
+- `research/01_paper_model.md`
+- `templates/evidence-registry.yaml`
 
 ## Preconditions
 
-- The review exists and the paper version is identified.
-- If the source and review conflict, preserve the conflict and report it.
+- Confirm the paper version and source locations.
+- Preserve source/review conflicts; do not silently choose a version.
+
+## Claim Categories
+
+Use only:
+
+- `PAPER_FACT`
+- `PAPER_RESULT`
+- `AUTHOR_INTERPRETATION`
+- `OUR_INTERPRETATION`
+- `IMPLEMENTATION_MAPPING`
+- `TEACHING_TOY`
+- `GENERAL_BACKGROUND`
+- `FUTURE_WORK`
 
 ## Procedure
 
-1. Audit claims, architecture, equations, figures, benchmarks, numbers, conclusions, limitations, and future work.
-2. Assign each statement one category: `PAPER_FACT`, `PAPER_RESULT`, `AUTHOR_INTERPRETATION`, `OUR_INTERPRETATION`, `TEACHING_ANALOGY`, or `FUTURE_WORK`.
-3. Record source locations and distinguish architecture design, current implementation, experimental validation, and planned capability.
-4. Recheck numerical values with their metric, baseline, protocol, and table or figure location.
-5. Record paper-internal contradictions or uncertainty without silently choosing a version.
-6. State what the tutorial may claim directly, what needs qualification, and what cannot be inferred.
-7. Save the completed audit in the paper workspace.
-
-## Output
-
-`papers/<paper-id>/research/02_evidence_audit.md`
+1. Audit architecture, mechanisms, equations, figures, benchmarks, results, conclusions, limitations, and future work.
+2. Give each claim a stable ID, exact wording, category, source kind/location, and qualification as needed.
+3. Keep implementation mappings and general background separate from paper statements; these may have no paper source, but must say so.
+4. Tie every numeric result to dataset, model, split, metric, protocol, value, and source.
+5. Distinguish what the paper states, what authors infer, and what we infer from the evidence.
+6. Record conflicts, ambiguity, and unverified capabilities without resolving them by assumption.
+7. Write `research/02_evidence_registry.yaml`. Add a short `02_evidence_notes.md` only for unresolved issues or review notes.
 
 ## Validation
 
-- Every high-impact claim has a category and source location.
-- Experimental values are tied to the right metric and protocol.
-- Analogies and our interpretation are visibly distinct from paper facts.
-- Contradictions and unverified capabilities remain visible.
+- YAML parses and IDs are unique.
+- Every high-impact claim has a category and source or an explicit non-paper source boundary.
+- Every result has its applicable protocol metadata.
+- A consumer can resolve the cited registry IDs.
 
 ## Forbidden Actions
 
-- Do not conceal conflicts in the paper.
-- Do not "correct" the paper using general knowledge without recording a separate interpretation.
+- Do not conceal contradictions or upgrade evidence strength.
 - Do not treat planned work as implemented or validated.
-- Do not advance G3 or alter gate status.
+- Do not duplicate the Paper Model as a long prose audit.
+- Do not advance G2 automatically.
 
 ## Completion Criteria
 
-The audit is saved, all requested claim classes are checked, and unresolved items are documented for human review.
+Save the registry and have a person review unresolved items before marking G2 complete.
