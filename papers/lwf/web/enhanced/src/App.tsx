@@ -6,6 +6,7 @@ import { SceneA } from './scenes/SceneA';
 import { SceneB } from './scenes/SceneB';
 import { SceneC } from './scenes/SceneC';
 import { Scene00 } from './scenes/Scene00';
+import { SceneD } from './scenes/SceneD';
 import {
   initialLearningSession,
   learningReducer,
@@ -18,6 +19,7 @@ const scenes: { id: SceneId; number: string; title: string; question: string }[]
   { id: 'A', number: '01', title: '问题空间与方法约束', question: '旧数据不可用时，哪些路线仍符合问题设定？' },
   { id: 'B', number: '02', title: '构造 LwF 系统', question: 'Teacher、Student、参数与旧响应如何形成？' },
   { id: 'C', number: '03', title: '执行一个训练步', question: '梯度何时产生，参数又在何时改变？' },
+  { id: 'D', number: '04', title: '拆解旧响应蒸馏', question: 'Teacher 的旧响应如何经过温度、损失并形成梯度？' },
 ];
 
 function AppContent() {
@@ -159,6 +161,7 @@ function AppContent() {
               {session.activeScene === 'A' ? <SceneA session={session} dispatch={dispatch} onNext={() => navigate('B')} /> : null}
               {session.activeScene === 'B' ? <SceneB session={session} dispatch={dispatch} onNext={() => navigate('C')} onPrevious={() => navigate('A')} /> : null}
               {session.activeScene === 'C' ? <SceneC session={session} dispatch={dispatch} toyState={toyState} dispatchToy={dispatchToy} onPrevious={() => navigate('B')} onReset={() => { dispatchToy({ type: 'RESET_TOY' }); dispatch({ type: 'SET_TRAINING_STAGE', stage: 'idle' }); }} /> : null}
+              {session.activeScene === 'D' ? <SceneD /> : null}
             </section>
             <aside className="v2-scene-support" aria-label="持续工作区与对象检查器">
               <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />

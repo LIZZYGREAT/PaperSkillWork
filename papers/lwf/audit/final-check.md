@@ -1,6 +1,6 @@
 # Learning without Forgetting Final Check
 
-This v2 audit records verified structural and engineering outcomes. A 00 background introduction now precedes the A–C slice; it is an orientation page and does not count as learning acceptance. The A–C slice remains at the human acceptance pause; implementation and automated checks do not establish learning acceptance. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
+This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–D are implemented as interactive scenes. Implementation and automated checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
 
 ## Learning Acceptance
 
@@ -73,7 +73,7 @@ This v2 audit records verified structural and engineering outcomes. A 00 backgro
 
 ## Known Limitations
 
-- Scenes D–J are architecture entries only; they are intentionally not specified or implemented before A–C receive human learning acceptance.
+- Scenes E–J remain to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
 - This review does not automatically establish that a learner can reconstruct the mechanism.
 
 ## Engineering Run Record
@@ -85,6 +85,9 @@ This v2 audit records verified structural and engineering outcomes. A 00 backgro
 - 2026-09-24: paged 01–03 desktop layout and 390px / 647px narrow layouts visually reviewed; A/B/C stack into one column, C training controls stack on phone widths, and page navigation text remains high contrast.
 - 2026-09-24: final `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after 01–03 layout updates).
 - 2026-09-24: local preview — A–C scene switching, route comparisons, radio self-checks, registry links and term popovers loaded; arrow-key scene, route and self-check navigation worked. The registry contained 16 terms and 40 evidence records.
+- 2026-09-24: added Scene D with computed temperature transforms, per-class response losses, reduction controls, cache-format comparison, analytic logit gradients, and an explicitly labeled T² implementation variant.
+- 2026-09-24: `npm run build` in `web/enhanced` — PASS; `npm test` — PASS (6 numerical checks for temperature, equivalence, per-class loss, cross-entropy gradients, KD gradient identity, and finite-difference checks of L1/L2 gradients).
+- 2026-09-24: local preview — Scene D narrow viewport and the interactive gradient step reviewed; the gradient signs and corresponding descent directions agreed.
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
 - Full keyboard review remains open; all learning and evidence acceptance questions remain for human review.
 

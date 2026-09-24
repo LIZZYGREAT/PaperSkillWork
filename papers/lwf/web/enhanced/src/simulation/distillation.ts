@@ -86,7 +86,7 @@ export function computeDistillation(input: {
   const perClassCE = perClassCrossEntropy(teacherTarget, student);
   const perClassLoss = responseLossTerms(lossKind, teacherTarget, student);
   const reductionScale = reduction === 'sum' ? 1 : reduction === 'batchmean' ? 1 / batchSize : 1 / (batchSize * teacherTarget.length);
-  const t2Scale = input.includeT2 ? temperature * temperature : 1;
+  const t2Scale = input.includeT2 && (lossKind === 'kd' || lossKind === 'cross-entropy') ? temperature * temperature : 1;
   const loss = reducePerClass(perClassLoss, reduction, batchSize) * t2Scale;
   const unscaledGradient = lossGradientWithRespectToProbabilities(lossKind, teacherTarget, student);
   const gradient = lossKind === 'kd' || lossKind === 'cross-entropy'
@@ -106,13 +106,13 @@ export function compareResponseLosses(teacherLogits: Vector, studentLogits: Vect
 function responseLossTerms(kind: ResponseLossKind, target: Vector, prediction: Vector): Vector {
   if (kind === 'kd') return target.map((value, index) => value * Math.log(Math.max(value, EPSILON) / Math.max(prediction[index], EPSILON)));
   if (kind === 'cross-entropy') return perClassCrossEntropy(target, prediction);
-  if (kind === 'l1') return target.map((value, index) => Math.abs(prediction[index] - value) / target.length);
+  if (kind === 'l1') return target.map((value, index) => Math.abs(prediction[index] - value));
   return target.map((value, index) => 0.5 * (prediction[index] - value) ** 2);
 }
 
 function lossGradientWithRespectToProbabilities(kind: ResponseLossKind, target: Vector, prediction: Vector): Vector {
   if (kind === 'kd' || kind === 'cross-entropy') return prediction.map((value, index) => value - target[index]);
-  if (kind === 'l1') return prediction.map((value, index) => Math.sign(value - target[index]) / target.length);
+  if (kind === 'l1') return prediction.map((value, index) => Math.sign(value - target[index]));
   return prediction.map((value, index) => value - target[index]);
 }
 
