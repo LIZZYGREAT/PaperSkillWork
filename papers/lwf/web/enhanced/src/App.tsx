@@ -3,6 +3,7 @@ import { ReferenceProvider, useReferenceHub } from './components/ReferencePrimit
 import { ObjectInspector } from './components/ObjectInspector';
 import { PersistentWorkspace } from './components/PersistentWorkspace';
 import { SceneA } from './scenes/SceneA';
+import { SceneB } from './scenes/SceneB';
 import {
   initialLearningSession,
   learningReducer,
@@ -140,7 +141,7 @@ function AppContent() {
           <div className="v2-scene-layout">
             <section className="v2-scene-primary" aria-label={`Scene ${session.activeScene} 交互内容`}>
               {session.activeScene === 'A' ? <SceneA session={session} dispatch={dispatch} onNext={() => navigate('B')} /> : null}
-              {session.activeScene === 'B' ? <ScenePlaceholder scene="B" onNext={() => navigate('C')} onPrevious={() => navigate('A')} /> : null}
+              {session.activeScene === 'B' ? <SceneB session={session} dispatch={dispatch} onNext={() => navigate('C')} onPrevious={() => navigate('A')} /> : null}
               {session.activeScene === 'C' ? <ScenePlaceholder scene="C" onPrevious={() => navigate('B')} /> : null}
             </section>
             <aside className="v2-scene-support" aria-label="持续工作区与对象检查器">

@@ -1,7 +1,8 @@
 export type SceneId = 'A' | 'B' | 'C';
 export type MethodId = 'feature' | 'finetune' | 'joint';
-export type BoundaryId = 'classifier' | 'fc7';
+export type BoundaryId = 'fc7' | 'features';
 export type TrainingPhase = 'warmup' | 'joint';
+export type ResponseMode = 'offline' | 'online';
 export type TrainingStage = 'idle' | 'batch' | 'forward' | 'loss' | 'backward' | 'updated';
 export type ParamGroupId = 'theta_s' | 'theta_o' | 'theta_n';
 export type GradientSource = 'new' | 'old' | 'regularization' | 'total';
@@ -15,6 +16,7 @@ export interface LearningSession {
   boundary: BoundaryId;
   studentCreated: boolean;
   responseCacheReady: boolean;
+  responseMode: ResponseMode;
   cacheBySampleId: boolean;
   teacherStudentShared: boolean;
   phase: TrainingPhase;
@@ -33,6 +35,7 @@ export type LearningAction =
   | { type: 'SET_BOUNDARY'; boundary: BoundaryId }
   | { type: 'CREATE_STUDENT' }
   | { type: 'GENERATE_RESPONSE_CACHE' }
+  | { type: 'SET_RESPONSE_MODE'; mode: ResponseMode }
   | { type: 'TOGGLE_CACHE_IDENTITY' }
   | { type: 'TOGGLE_SHARED_TEACHER' }
   | { type: 'SET_PHASE'; phase: TrainingPhase }
@@ -50,9 +53,10 @@ export const initialLearningSession: LearningSession = {
   selectedMethod: 'feature',
   exploredMethods: [],
   oldResponseRevealed: false,
-  boundary: 'classifier',
+  boundary: 'fc7',
   studentCreated: false,
   responseCacheReady: false,
+  responseMode: 'offline',
   cacheBySampleId: true,
   teacherStudentShared: false,
   phase: 'warmup',
@@ -66,7 +70,7 @@ export const initialLearningSession: LearningSession = {
 export function learningReducer(state: LearningSession, action: LearningAction): LearningSession {
   switch (action.type) {
     case 'NAVIGATE':
-      return { ...state, activeScene: action.scene };
+      return { ...state, activeScene: action.scene, newTaskArrived: action.scene === 'A' ? state.newTaskArrived : true };
     case 'NEW_TASK_ARRIVES':
       return { ...state, newTaskArrived: true };
     case 'SELECT_METHOD':
@@ -91,6 +95,8 @@ export function learningReducer(state: LearningSession, action: LearningAction):
       return { ...state, studentCreated: true, responseCacheReady: false, trainingStage: 'idle' };
     case 'GENERATE_RESPONSE_CACHE':
       return { ...state, responseCacheReady: true };
+    case 'SET_RESPONSE_MODE':
+      return { ...state, responseMode: action.mode, responseCacheReady: false };
     case 'TOGGLE_CACHE_IDENTITY':
       return { ...state, cacheBySampleId: !state.cacheBySampleId };
     case 'TOGGLE_SHARED_TEACHER':

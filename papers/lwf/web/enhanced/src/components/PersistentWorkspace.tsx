@@ -63,14 +63,15 @@ export function PersistentWorkspace({ scene, session, dispatch }: {
         <div className="v2-teacher-student-graph" aria-label="Teacher 与 Student 是独立模型对象">
           <div className="v2-runtime-model v2-runtime-teacher">
             <div className="v2-runtime-heading"><span>TEACHER SNAPSHOT</span><strong>Teacher</strong><small>eval · no_grad · 不进 optimizer</small></div>
-            <button type="button" className="v2-runtime-trunk" onClick={() => inspect('theta_s')}><code>θ_s^T</code><span>features · fc7</span></button>
+            <button type="button" className="v2-runtime-trunk" onClick={() => inspect('theta_s')}><code>θ_s^T</code><span>{session.boundary === 'fc7' ? 'features · fc6 · fc7' : 'features'}</span></button>
             <button type="button" className="v2-runtime-head old" onClick={() => inspect('theta_o')}><code>θ_o^T</code><span>old classifier</span></button>
             {session.responseCacheReady ? <button type="button" className="v2-runtime-output" onClick={() => inspect('y_o')}><code>Y_o</code><span>response cache</span></button> : <span className="v2-runtime-output is-pending"><code>Y_o</code><span>待生成</span></span>}
           </div>
           <div className="v2-runtime-separator" aria-hidden="true"><span>copy values</span><b>≠</b><span>share objects</span></div>
           <div className="v2-runtime-model v2-runtime-student">
             <div className="v2-runtime-heading"><span>EXPANDED MODEL</span><strong>Student</strong><small>{session.studentCreated ? '已创建' : '尚未创建'}</small></div>
-            <button type="button" className={`v2-runtime-trunk ${session.teacherStudentShared ? 'is-error' : ''}`} onClick={() => inspect('theta_s')}><code>θ_s^S</code><span>shared parameters</span></button>
+            <button type="button" className={`v2-runtime-trunk ${session.teacherStudentShared ? 'is-error' : ''}`} onClick={() => inspect('theta_s')}><code>θ_s^S</code><span>{session.boundary === 'fc7' ? 'features · fc6 · fc7' : 'features only'}</span></button>
+            {session.boundary === 'features' ? <p className="v2-runtime-branch-detail">old branch: fc6 → fc7 → classifier<br />new branch: fc6 → fc7 → classifier</p> : null}
             <div className="v2-runtime-head-row">
               <button type="button" className="v2-runtime-head old" onClick={() => inspect('theta_o')}><code>θ_o^S</code><span>old branch</span></button>
               <button type="button" className="v2-runtime-head new" onClick={() => inspect('theta_n')}><code>θ_n^S</code><span>new branch</span></button>
