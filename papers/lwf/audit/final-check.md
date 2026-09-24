@@ -1,6 +1,6 @@
 # Learning without Forgetting Final Check
 
-This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–E are implemented as interactive scenes. Implementation and automated checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
+This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–F are implemented as interactive scenes. Implementation and automated checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
 
 ## Learning Acceptance
 
@@ -73,7 +73,7 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 
 ## Known Limitations
 
-- Scenes F–J remain to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
+- Scenes G–J remain to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
 - This review does not automatically establish that a learner can reconstruct the mechanism.
 
 ## Engineering Run Record
@@ -91,6 +91,9 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 - 2026-09-24: added Scene E with old-response gradients chained through an explicit synthetic linear Jacobian, selectable gradient geometry and parameter groups, shared-boundary synchronization, loss-scale controls, regularization, calculated SGD trajectories, a four-panel Figure 7 reading index, and an original-paper link.
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS; `npm test` — PASS (10 numerical checks, including finite-difference validation of the mapped old-response gradient and λ / direction properties).
 - 2026-09-24: local preview — Scene E layout reviewed at the 647px narrow viewport; one-step and ten-step controls changed θ, losses, gradient alignment and trajectory as computed.
+- 2026-09-24: added Scene F with two computed counterexamples, equal-radius Jacobian direction sweep, the a·b·x equivalent-parameter toy, Xₙ response probes, a probe-null direction that changes inter-probe behavior, Parameter-L2 / weight-decay distinction, and Figure 7 evidence boundary.
+- 2026-09-24: `npm run build` in `web/enhanced` — PASS; `npm test` — PASS (15 numerical checks, including equal-parameter-radius response drift, exact probe-null behavior, and penalty-anchor distinction).
+- 2026-09-24: local preview — Scene F tested at the 647px viewport; direction ellipse, probe table and Teacher/Student response plot remained within the page layout.
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
 - Full keyboard review remains open; all learning and evidence acceptance questions remain for human review.
 
