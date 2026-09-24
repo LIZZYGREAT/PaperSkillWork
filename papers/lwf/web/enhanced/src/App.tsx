@@ -5,6 +5,7 @@ import { PersistentWorkspace } from './components/PersistentWorkspace';
 import { SceneA } from './scenes/SceneA';
 import { SceneB } from './scenes/SceneB';
 import { SceneC } from './scenes/SceneC';
+import { Scene00 } from './scenes/Scene00';
 import {
   initialLearningSession,
   learningReducer,
@@ -13,6 +14,7 @@ import {
 import { initialToyState, teachingToyReducer } from './simulation/lwfTeachingToy';
 
 const scenes: { id: SceneId; number: string; title: string; question: string }[] = [
+  { id: '00', number: '00', title: '论文背景与研究目标', question: '为什么需要在学习新任务时保留旧任务能力？' },
   { id: 'A', number: '01', title: '问题空间与方法约束', question: '旧数据不可用时，哪些路线仍符合问题设定？' },
   { id: 'B', number: '02', title: '构造 LwF 系统', question: 'Teacher、Student、参数与旧响应如何形成？' },
   { id: 'C', number: '03', title: '执行一个训练步', question: '梯度何时产生，参数又在何时改变？' },
@@ -29,6 +31,7 @@ function AppContent() {
   const { openHub } = useReferenceHub();
   const currentIndex = scenes.findIndex((scene) => scene.id === session.activeScene);
   const activeScene = scenes[currentIndex];
+  const pageTotal = String(scenes.length).padStart(2, '0');
 
   const navigate = (scene: SceneId) => {
     dispatch({ type: 'NAVIGATE', scene });
@@ -88,7 +91,7 @@ function AppContent() {
         <div className="slide-sidebar-header">
           <div className="slide-sidebar-venue">ECCV 2016 · WORKSPACE</div>
           <div className="slide-sidebar-title">Learning without Forgetting</div>
-          <p className="v2-sidebar-subtitle">机制学习工作台 · 01–03</p>
+          <p className="v2-sidebar-subtitle">机制学习工作台 · 00–03</p>
         </div>
         <nav className="slide-sidebar-nav" aria-label="章节">
           {scenes.map((scene) => (
@@ -124,11 +127,11 @@ function AppContent() {
 
       <main className="slide-main">
         <header className="v2-topbar">
-          <a className="v2-brand" href="#scene-title" onClick={(event) => { event.preventDefault(); navigate('A'); }} aria-label="返回 LwF 场景 01">
+          <a className="v2-brand" href="#scene-title" onClick={(event) => { event.preventDefault(); navigate('00'); }} aria-label="返回 LwF 场景 00">
             <span className="v2-brand-mark">L</span><span>PaperSkillWork <b>/ Enhanced</b></span>
           </a>
           <div className="v2-topbar-actions">
-            <span className="v2-workflow-status"><i aria-hidden="true" /> Scene {activeScene.number} / 03</span>
+            <span className="v2-workflow-status"><i aria-hidden="true" /> Scene {activeScene.number} / {pageTotal}</span>
             <button className="v2-reference-button" type="button" onClick={() => openHub()}><span>Reference Hub</span><span aria-hidden="true">↗</span></button>
           </div>
         </header>
@@ -138,12 +141,12 @@ function AppContent() {
             <div className="v2-breadcrumb"><span>LwF</span><span aria-hidden="true">/</span><span>机制工作台</span><span aria-hidden="true">/</span><strong>Scene {activeScene.id}</strong></div>
             <div className="v2-scene-title-row">
               <div>
-                <p className="v2-eyebrow">SCENE {activeScene.number} · {session.activeScene === 'A' ? 'PROBLEM SPACE' : session.activeScene === 'B' ? 'SYSTEM CONSTRUCTION' : 'TRAINING TRACE'}</p>
+                <p className="v2-eyebrow">SCENE {activeScene.number} · {session.activeScene === '00' ? 'PAPER BACKGROUND' : session.activeScene === 'A' ? 'PROBLEM SPACE' : session.activeScene === 'B' ? 'SYSTEM CONSTRUCTION' : 'TRAINING TRACE'}</p>
                 <h1 id="scene-title" ref={headingRef} tabIndex={-1}>{activeScene.title}</h1>
                 <p className="v2-page-question">{activeScene.question}</p>
               </div>
               <div className="v2-progress-summary" aria-label={`第 ${currentIndex + 1} 页，共 ${scenes.length} 页`}>
-                <strong>{activeScene.number}<span> / 03</span></strong>
+                <strong>{activeScene.number}<span> / {pageTotal}</span></strong>
                 <div className="v2-progress-track" aria-hidden="true">{scenes.map((scene, index) => <i key={scene.id} className={index <= currentIndex ? 'is-complete' : ''} />)}</div>
                 <small>可自由切换场景</small>
               </div>
@@ -152,6 +155,7 @@ function AppContent() {
 
           <div className="v2-scene-layout">
             <section className="v2-scene-primary" aria-label={`Scene ${session.activeScene} 交互内容`}>
+              {session.activeScene === '00' ? <Scene00 onNext={() => navigate('A')} /> : null}
               {session.activeScene === 'A' ? <SceneA session={session} dispatch={dispatch} onNext={() => navigate('B')} /> : null}
               {session.activeScene === 'B' ? <SceneB session={session} dispatch={dispatch} onNext={() => navigate('C')} onPrevious={() => navigate('A')} /> : null}
               {session.activeScene === 'C' ? <SceneC session={session} dispatch={dispatch} toyState={toyState} dispatchToy={dispatchToy} onPrevious={() => navigate('B')} onReset={() => { dispatchToy({ type: 'RESET_TOY' }); dispatch({ type: 'SET_TRAINING_STAGE', stage: 'idle' }); }} /> : null}
@@ -165,7 +169,7 @@ function AppContent() {
 
         <nav className="slide-nav" aria-label="场景翻页">
           <button className="slide-nav-btn" type="button" onClick={() => go(-1)} disabled={currentIndex === 0}>← 上一页</button>
-          <span className="slide-nav-counter">{activeScene.number} / 03</span>
+          <span className="slide-nav-counter">{activeScene.number} / {pageTotal}</span>
           <button className="slide-nav-btn slide-nav-btn-primary" type="button" onClick={() => go(1)} disabled={currentIndex === scenes.length - 1}>下一页 →</button>
         </nav>
       </main>

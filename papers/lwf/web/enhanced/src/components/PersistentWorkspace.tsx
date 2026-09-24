@@ -20,7 +20,10 @@ export function PersistentWorkspace({ scene, session, dispatch }: {
 }) {
   const inspect = (id: string) => dispatch({ type: 'INSPECT_OBJECT', id });
   const activeMethod = methodLabels[session.selectedMethod];
-  const methodState = scene === 'A' && session.newTaskArrived
+  const taskArrived = scene === '00' || session.newTaskArrived;
+  const methodState = scene === '00'
+    ? '新任务到来 · 背景设定'
+    : scene === 'A' && session.newTaskArrived
     ? activeMethod
     : scene === 'B' || scene === 'C' ? 'Teacher → Student construction' : '旧任务已训练完成';
 
@@ -32,26 +35,26 @@ export function PersistentWorkspace({ scene, session, dispatch }: {
       </header>
 
       <div className="v2-data-availability" aria-label="持续显示的数据可用状态">
-        <DataState label="旧图像" symbol="X_o" state={session.newTaskArrived ? '不可用' : '已有旧任务'} tone={session.newTaskArrived ? 'unavailable' : 'available'} />
-        <DataState label="旧真值" symbol="Y_o^GT" state={session.newTaskArrived ? '不可用' : '已有旧任务'} tone={session.newTaskArrived ? 'unavailable' : 'available'} />
+        <DataState label="旧图像" symbol="X_o" state={taskArrived ? '不可用于新阶段' : '已有旧任务'} tone={taskArrived ? 'unavailable' : 'available'} />
+        <DataState label="旧真值" symbol="Y_o^GT" state={taskArrived ? '不可用于新阶段' : '已有旧任务'} tone={taskArrived ? 'unavailable' : 'available'} />
         <DataState label="旧模型" symbol="(θ_s, θ_o)" state="可运行" tone="available" />
-        <DataState label="新数据" symbol="(X_n, Y_n)" state={session.newTaskArrived ? '当前可用' : '等待新任务'} tone={session.newTaskArrived ? 'available' : 'waiting'} />
+        <DataState label="新数据" symbol="(X_n, Y_n)" state={taskArrived ? '当前可用' : '等待新任务'} tone={taskArrived ? 'available' : 'waiting'} />
       </div>
 
-      {scene === 'A' ? (
+      {scene === '00' || scene === 'A' ? (
         <div className="v2-network-canvas" aria-label="共享表示连接旧任务头与新任务头">
           <div className="v2-network-inputs">
-            {session.newTaskArrived ? <span className="v2-input-pill is-new"><code>X_n</code><small>新图像</small></span> : <span className="v2-input-pill"><code>X_o</code><small>旧图像</small></span>}
+            {taskArrived ? <span className="v2-input-pill is-new"><code>X_n</code><small>新图像</small></span> : <span className="v2-input-pill"><code>X_o</code><small>旧图像</small></span>}
           </div>
           <div className="v2-network-body">
             <div className="v2-network-shared">
-              <ObjectNode id="shared" symbol="θ_s" title="Shared representation" state={session.newTaskArrived ? (session.selectedMethod === 'feature' ? 'FROZEN' : 'TRAINABLE') : '已训练'} selected={session.selectedObject === 'theta_s'} onClick={() => inspect('theta_s')} />
+              <ObjectNode id="shared" symbol="θ_s" title="Shared representation" state={scene === '00' ? '更新范围待决定' : session.newTaskArrived ? (session.selectedMethod === 'feature' ? 'FROZEN' : 'TRAINABLE') : '已训练'} selected={session.selectedObject === 'theta_s'} onClick={() => inspect('theta_s')} />
             </div>
             <div className="v2-network-branches">
               <div className="v2-branch-wire v2-wire-old" aria-hidden="true" />
               <div className="v2-branch-wire v2-wire-new" aria-hidden="true" />
               <ObjectNode id="old" symbol="θ_o" title="Old task head" state={session.selectedMethod === 'joint' && session.newTaskArrived ? 'OLD DATA REQUIRED' : 'RETAINED'} selected={session.selectedObject === 'theta_o'} onClick={() => inspect('theta_o')} />
-              <ObjectNode id="new" symbol="θ_n" title="New task head" state={session.newTaskArrived ? 'NEW TASK OUTPUT' : 'NOT CREATED'} selected={session.selectedObject === 'theta_n'} onClick={() => inspect('theta_n')} />
+              <ObjectNode id="new" symbol="θ_n" title="New task head" state={scene === '00' ? '后续添加' : session.newTaskArrived ? 'NEW TASK OUTPUT' : 'NOT CREATED'} selected={session.selectedObject === 'theta_n'} onClick={() => inspect('theta_n')} />
             </div>
           </div>
           <div className="v2-network-outputs">

@@ -1,4 +1,4 @@
-export type SceneId = 'A' | 'B' | 'C';
+export type SceneId = '00' | 'A' | 'B' | 'C';
 export type MethodId = 'feature' | 'finetune' | 'joint';
 export type BoundaryId = 'fc7' | 'features';
 export type TrainingPhase = 'warmup' | 'joint';
@@ -48,7 +48,7 @@ export type LearningAction =
 export const methodOrder: MethodId[] = ['feature', 'finetune', 'joint'];
 
 export const initialLearningSession: LearningSession = {
-  activeScene: 'A',
+  activeScene: '00',
   newTaskArrived: false,
   selectedMethod: 'feature',
   exploredMethods: [],
@@ -70,7 +70,11 @@ export const initialLearningSession: LearningSession = {
 export function learningReducer(state: LearningSession, action: LearningAction): LearningSession {
   switch (action.type) {
     case 'NAVIGATE':
-      return { ...state, activeScene: action.scene, newTaskArrived: action.scene === 'A' ? state.newTaskArrived : true };
+      return {
+        ...state,
+        activeScene: action.scene,
+        newTaskArrived: action.scene === '00' || action.scene === 'A' ? state.newTaskArrived : true,
+      };
     case 'NEW_TASK_ARRIVES':
       return { ...state, newTaskArrived: true };
     case 'SELECT_METHOD':

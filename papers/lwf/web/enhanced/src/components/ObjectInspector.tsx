@@ -28,7 +28,7 @@ export function ObjectInspector({ selectedObject, scene, session, onInspect }: {
 
   const currentState = id === 'theta_s' && scene === 'A'
     ? session.selectedMethod === 'finetune' || session.selectedMethod === 'joint' ? '当前路线允许共享表示更新' : '当前路线冻结共享表示'
-    : id === 'theta_o' && session.phase === 'warmup' && scene !== 'A' ? 'Warm-up 冻结；joint-optimize 阶段允许训练' : '状态随场景和训练阶段变化';
+    : id === 'theta_o' && session.phase === 'warmup' && (scene === 'B' || scene === 'C') ? 'Warm-up 冻结；joint-optimize 阶段允许训练' : '状态随场景和训练阶段变化';
 
   return (
     <section className="v2-inspector-card" aria-labelledby="inspector-title">

@@ -1,6 +1,6 @@
 # Learning without Forgetting Final Check
 
-This v2 audit records verified structural and engineering outcomes. The A–C slice is at the human acceptance pause; implementation and automated checks do not establish learning acceptance. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
+This v2 audit records verified structural and engineering outcomes. A 00 background introduction now precedes the A–C slice; it is an orientation page and does not count as learning acceptance. The A–C slice remains at the human acceptance pause; implementation and automated checks do not establish learning acceptance. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
 
 ## Learning Acceptance
 
@@ -58,7 +58,7 @@ This v2 audit records verified structural and engineering outcomes. The A–C sl
 
 ## Implementation Semantics
 
-- [ ] Scenes A–C reuse the persistent workspace objects.
+- [ ] Scenes A–C reuse the persistent workspace objects; Scene 00 also uses the shared workspace as context.
 - [ ] Any illustrated operation has an explicit input, output, and state consequence.
 - [ ] Teaching toys are separated from paper data.
 
@@ -79,6 +79,9 @@ This v2 audit records verified structural and engineering outcomes. The A–C sl
 ## Engineering Run Record
 
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build).
+- 2026-09-24: added Scene 00 as a background introduction ahead of Scene 01; it explains the data constraint, method trade-offs, old-response path, purpose, and input-coverage boundary without changing Scene 01's checkpoint state.
+- 2026-09-24: local preview — Scene 00 reviewed at a 662px viewport; no horizontal overflow. Page 00 → 01 navigation retains Scene 01's original pre-arrival state.
+- 2026-09-24: final `npm run build` in `web/enhanced` after Scene 00 changes — PASS (TypeScript check and Vite production build).
 - 2026-09-24: paged 01–03 desktop layout and 390px / 647px narrow layouts visually reviewed; A/B/C stack into one column, C training controls stack on phone widths, and page navigation text remains high contrast.
 - 2026-09-24: final `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after 01–03 layout updates).
 - 2026-09-24: local preview — A–C scene switching, route comparisons, radio self-checks, registry links and term popovers loaded; arrow-key scene, route and self-check navigation worked. The registry contained 16 terms and 40 evidence records.
