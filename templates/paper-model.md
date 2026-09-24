@@ -1,6 +1,6 @@
 # Paper Model: {{paper_title}}
 
-Paper ID: `{{paper_id}}`  
+Paper ID: `{{paper_id}}`\
 Source: {{paper_url}}
 
 ## Problem

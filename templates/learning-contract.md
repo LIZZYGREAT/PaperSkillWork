@@ -1,6 +1,6 @@
 # Learning Contract: {{paper_title}}
 
-Paper ID: `{{paper_id}}`  
+Paper ID: `{{paper_id}}`\
 Source: {{paper_url}}
 
 ## Target Reader
@@ -21,9 +21,9 @@ List the likely gaps that block a first-time reader from understanding the paper
 
 After the tutorial, the reader should be able to reconstruct the relevant architecture, objects, information/state flow, mathematics, updates, evidence, and limitations.
 
-1. 
-2. 
-3. 
+1. [Learning outcome]
+2. [Learning outcome]
+3. [Learning outcome]
 
 ## Expected Depth
 

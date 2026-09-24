@@ -50,7 +50,7 @@ If an interaction is removed, what specific understanding is lost?
 
 ## Acceptance Questions
 
-1. 
+1. [Acceptance question]
 
 ## Accessibility
 

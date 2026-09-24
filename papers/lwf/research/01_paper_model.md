@@ -1,6 +1,6 @@
 # Paper Model: Learning without Forgetting
 
-Paper ID: `lwf`  
+Paper ID: `lwf`\
 Source: `source/paper.pdf` (arXiv:1606.09282v3, PDF pp.1–13)
 
 ## Problem
