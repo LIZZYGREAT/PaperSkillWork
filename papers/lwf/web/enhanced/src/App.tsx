@@ -80,6 +80,15 @@ function AppContent() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [currentIndex]);
 
+  useEffect(() => {
+    const onHubScene = (event: Event) => {
+      const scene = (event as CustomEvent<SceneId>).detail;
+      if (scenes.some((item) => item.id === scene)) navigate(scene);
+    };
+    window.addEventListener('lwf:open-scene', onHubScene);
+    return () => window.removeEventListener('lwf:open-scene', onHubScene);
+  }, []);
+
   const go = (offset: number) => {
     const nextScene = scenes[currentIndex + offset];
     if (nextScene) navigate(nextScene.id);

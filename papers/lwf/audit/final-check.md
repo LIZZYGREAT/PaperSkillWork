@@ -73,7 +73,7 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 
 ## Known Limitations
 
-- Scene J and the expanded Reference Hub remain to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
+- Scene J remains to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
 - This review does not automatically establish that a learner can reconstruct the mechanism.
 
 ## Engineering Run Record
@@ -100,6 +100,9 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Scene H).
 - 2026-09-24: added Scene I as a claim-driven evidence workbench with a method-information panel, Table 1 paper-format / reconstructed-absolute toggle, programmatic ImageNet→CUB delta reconstruction, old/new performance plot, Table 2 ablation matrix, Figure 4 / Figure 7 source links, evidence graph/type filters, alternative explanations, and claim-strength/boundary inspector.
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Scene I).
+- 2026-09-24: expanded Reference Hub into one searchable, kind/source-filtered drawer for canonical symbols, formulas, datasets, methods, phases, confusions, evidence, claims, original registry terms and evidence IDs; cards expose runtime / paper fields, provenance, boundaries, related cards and scene deep links.
+- 2026-09-24: browser review — Reference Hub search for `temperature` selected the matching symbol, showed its runtime / temperature paper setting / related formula and evidence; the formula cross-reference opened its canonical card, and a Scene D link closed the drawer and navigated to Scene D.
+- 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Reference Hub expansion).
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
 - Full keyboard review remains open; all learning and evidence acceptance questions remain for human review.
 

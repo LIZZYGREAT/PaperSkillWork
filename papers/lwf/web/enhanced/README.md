@@ -30,7 +30,7 @@ npm run dev
 
 ## 证据与术语
 
-术语说明从 `knowledge/terms.yaml` 读取，证据登记从 `research/02_evidence_registry.yaml` 读取；页面中的术语弹层和“术语与证据”面板共用这些登记源。证据结论以本地论文 PDF、[arXiv 版本](https://arxiv.org/abs/1606.09282)及 `research/` 中的逐项审计为准。推导、实现映射和教学示意会与论文直接事实区分。
+全站 Reference Hub 以 `src/data/knowledge.ts` 的符号、公式、数据集、方法、阶段、误区、证据和主张卡为统一目录，并索引 `knowledge/terms.yaml` 与 `research/02_evidence_registry.yaml` 的原始条目。搜索覆盖内容与来源类别，详情提供场景、公式、变量和证据交叉链接；场景入口通过同一 canonical card ID 打开。证据结论以本地论文 PDF、[arXiv 版本](https://arxiv.org/abs/1606.09282)及 `research/` 中的逐项审计为准。推导、实现映射和教学示意会与论文直接事实区分。
 
 ## 代码位置
 
@@ -54,7 +54,9 @@ npm run dev
 | `src/simulation/functionPreservation.ts` | 参数距离、响应漂移、等价重参数化与探针计算 |
 | `src/simulation/domainCoverage.ts` | 覆盖状态、约束样本、教学函数与旧支持点响应计算 |
 | `src/components/ReferencePrimitives.tsx` | 术语弹层、术语与证据面板 |
+| `src/components/ReferenceHub.tsx` | 全类型统一搜索、筛选、卡片详情和交叉引用抽屉 |
 | `src/data/registry.ts` | 解析项目内术语和证据登记 |
+| `src/data/knowledge.ts` | 全站 canonical knowledge cards |
 | `src/styles/v2.css` | 分页布局、场景容器、可读字级与窄屏样式 |
 | `src/App.v1.tsx` | 上一版入口快照，留作迁移核对 |
 
