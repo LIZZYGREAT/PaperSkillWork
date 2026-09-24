@@ -1,6 +1,6 @@
 # Learning without Forgetting Final Check
 
-This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–I are implemented as interactive scenes. Implementation and engineering checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
+This v2 audit records verified structural and engineering outcomes. Scene 00 provides background orientation, while A–J are implemented as interactive scenes. Implementation and engineering checks do not establish learning acceptance; all learning and evidence gates remain at the human acceptance pause. The earlier audit is preserved at `audit/content-check.md`; the earlier release checklist is preserved at `audit/legacy/release-check-v1.md`.
 
 ## Learning Acceptance
 
@@ -73,7 +73,7 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 
 ## Known Limitations
 
-- Scene J remains to be implemented in the current continuation. Learning and evidence gates still require human review after implementation.
+- Scene J now completes the 00–10 scene sequence. Learning and evidence gates still require human review; Scene J's checklist is a local manual record and does not execute training or pass a gate.
 - This review does not automatically establish that a learner can reconstruct the mechanism.
 
 ## Engineering Run Record
@@ -103,8 +103,11 @@ This v2 audit records verified structural and engineering outcomes. Scene 00 pro
 - 2026-09-24: expanded Reference Hub into one searchable, kind/source-filtered drawer for canonical symbols, formulas, datasets, methods, phases, confusions, evidence, claims, original registry terms and evidence IDs; cards expose runtime / paper fields, provenance, boundaries, related cards and scene deep links.
 - 2026-09-24: browser review — Reference Hub search for `temperature` selected the matching symbol, showed its runtime / temperature paper setting / related formula and evidence; the formula cross-reference opened its canonical card, and a Scene D link closed the drawer and navigated to Scene D.
 - 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Reference Hub expansion).
+- 2026-09-24: added Scene J with an eight-step old-model-to-next-Teacher workflow, synchronized Paper / Runtime / Code views, canonical links, illustrative AlexNet parameter shapes and counts, a manually operated run checklist, and symptom-led implementation debugging.
+- 2026-09-24: `npm run build` in `web/enhanced` — PASS (TypeScript check and Vite production build after Scene J).
+- 2026-09-24: browser preview — Scene J loaded as page 10/11; Paper, Runtime, and Code views switched successfully, On-the-fly response mode updated the recorded-target state, and clicking a loss code line synchronized to joint-optimization Step 5. Layout reviewed at the available 647px viewport.
 - 2026-09-24: Python suite — 36 passed; `paper.py check lwf` and `learning-check lwf` — PASS. Workflow gates remain PENDING.
-- Full keyboard review remains open; all learning and evidence acceptance questions remain for human review.
+- Full keyboard review remains open; narrow-screen review is limited to recorded viewport widths. All learning and evidence acceptance questions remain for human review.
 
 Overall: PENDING
 

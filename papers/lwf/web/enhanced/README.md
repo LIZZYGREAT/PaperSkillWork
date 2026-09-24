@@ -1,6 +1,6 @@
 # LwF 交互式精读 · Workflow v2
 
-当前版本在 *Learning without Forgetting*（LwF）的交互章节中加入了 00 背景导读和 01–09 场景，沿用 PaperSkill 的章节目录和分页框架。各页共用一个持续工作区；Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注。00 用于解释论文背景，不计入人工学习验收；实现和构建不代表学习门禁通过。
+当前版本在 *Learning without Forgetting*（LwF）的交互章节中提供 00 背景导读和 01–10 场景，沿用 PaperSkill 的章节目录和分页框架。各页共用一个持续工作区；Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注。00 用于解释论文背景，不计入人工学习验收；实现和构建不代表学习门禁通过。
 
 ## 本地预览与构建
 
@@ -13,7 +13,7 @@ npm run dev
 
 生产构建运行 `npm run build`，构建后的静态文件位于 `dist/`；可用 `npm run preview` 查看构建结果。Vite 使用配置运行器加载配置，适配当前受限工作区。
 
-## 场景 00–09
+## 场景 00–10
 
 - **00 · 论文背景与研究目标：** 简介旧任务数据不可用时加入新任务的问题设定、常见路线的取舍、LwF 的旧响应思路及其输入覆盖边界；不增加训练门禁。
 - **01 · 问题空间与方法约束：** 展示新旧数据可用性，比较特征提取、微调和联合训练，并由问题条件引出 LwF 需要的旧任务信号。
@@ -25,6 +25,7 @@ npm run dev
 - **07 · 域覆盖与监督缺口：** 用标注为 schematic 的覆盖视图和计算型 Teaching Toy 对比 Xₙ 上相同响应损失与旧支持点上的行为漂移；区分采样稀疏、分布错位、训练与评估权限，浏览论文任务对和数据集背景，不计算没有依据的域距离分数。
 - **08 · 连续任务与 Teacher 谱系：** 手动检查 Model₀→Model₁→Model₂→Model₃，追踪 stage-specific responses、旧 head 角色、共享 backbone 演化、缓存重算和 Add Task D 步骤；Teaching Toy target 数值与 Figure 4 论文证据分开展示。
 - **09 · 论文证据与结论审计：** 以 claim selector 连接实验设置、Table 1/2、Figure 4/7 与结论边界；程序化重构 ImageNet→CUB 表中的绝对值，逐个检查方法信息条件，并将作者解释、机制说明与论文实测结果分层。
+- **10 · 端到端 LwF 工作流：** 将 A–I 汇为 8 步实现路线，提供可切换的 Paper / Runtime / Code 视图、参数组与 shape 示例、手动运行前核对表、实现排错路径，以及下一任务 Teacher 快照循环。页面伪代码是实现导向的说明，不是论文原始代码；shape 与元素数是明确标注的 AlexNet 示例，不代表当前工作区 checkpoint。
 - PaperSkill 左侧章节栏与上一页 / 下一页控件保持可用；共享工作区与对象检查器随章节状态更新。
 - 场景切换和构建不代表学习验收通过，学习问题与 `G0–G7` 仍待人工核阅。
 
@@ -47,6 +48,7 @@ npm run dev
 | `src/scenes/SceneG.tsx` | 定性覆盖示意、样本数对照、旧域 Teaching Toy 与数据泄漏边界 |
 | `src/scenes/SceneH.tsx` | 手动任务谱系、target 来源、stage matrix、cache 生命周期与 Task D 流程 |
 | `src/scenes/SceneI.tsx` | 主张审计、Table 1 读表、Table 2 / Figure 4 / Figure 7 与证据图 |
+| `src/scenes/SceneJ.tsx` | 端到端实现步骤、Paper / Runtime / Code 同步视图、参数生命周期、人工检查清单与排错 |
 | `src/data/tableResults.ts` | Table 1 的 LwF 基线、签名差值与程序化绝对值重构 |
 | `src/simulation/lwfTeachingToy.ts` | 独立的可计算教学模型与状态 reducer |
 | `src/simulation/distillation.ts` | 蒸馏分布、损失、reduction 与梯度计算 |
@@ -55,6 +57,7 @@ npm run dev
 | `src/simulation/domainCoverage.ts` | 覆盖状态、约束样本、教学函数与旧支持点响应计算 |
 | `src/components/ReferencePrimitives.tsx` | 术语弹层、术语与证据面板 |
 | `src/components/ReferenceHub.tsx` | 全类型统一搜索、筛选、卡片详情和交叉引用抽屉 |
+| `src/styles/scene-j.css` | Scene J 工作流、运行时映射、参数表、检查清单与窄屏排版 |
 | `src/data/registry.ts` | 解析项目内术语和证据登记 |
 | `src/data/knowledge.ts` | 全站 canonical knowledge cards |
 | `src/styles/v2.css` | 分页布局、场景容器、可读字级与窄屏样式 |

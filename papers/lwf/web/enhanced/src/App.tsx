@@ -12,6 +12,7 @@ import { SceneF } from './scenes/SceneF';
 import { SceneG } from './scenes/SceneG';
 import { SceneH } from './scenes/SceneH';
 import { SceneI } from './scenes/SceneI';
+import { SceneJ } from './scenes/SceneJ';
 import {
   initialLearningSession,
   learningReducer,
@@ -187,6 +188,7 @@ function AppContent() {
               {session.activeScene === 'G' ? <SceneG /> : null}
               {session.activeScene === 'H' ? <SceneH /> : null}
               {session.activeScene === 'I' ? <SceneI onNavigate={navigate} /> : null}
+              {session.activeScene === 'J' ? <SceneJ onNavigate={navigate} /> : null}
             </section>
             <aside className="v2-scene-support" aria-label="持续工作区与对象检查器">
               <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />

@@ -25,7 +25,14 @@ export function PersistentWorkspace({ scene, session, dispatch }: {
     ? '新任务到来 · 背景设定'
     : scene === 'A' && session.newTaskArrived
     ? activeMethod
-    : scene === 'B' || scene === 'C' ? 'Teacher → Student construction' : scene === 'E' ? 'shared-gradient diagnostic' : scene === 'F' ? 'function-preservation probes' : '旧任务已训练完成';
+    : scene === 'B' || scene === 'C' ? 'Teacher → Student construction'
+    : scene === 'E' ? 'shared-gradient diagnostic'
+    : scene === 'F' ? 'function-preservation probes'
+    : scene === 'G' ? 'domain coverage diagnostic'
+    : scene === 'H' ? 'sequential Teacher lineage'
+    : scene === 'I' ? 'paper evidence audit'
+    : scene === 'J' ? 'end-to-end implementation workflow'
+    : '旧任务已训练完成';
 
   return (
     <section className="v2-workspace-card" aria-labelledby="workspace-title">
