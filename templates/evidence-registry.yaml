@@ -1,0 +1,40 @@
+claims:
+  C01:
+    text: "Replace with a paper claim."
+    type: PAPER_FACT
+    source:
+      kind: text
+      location: "Section / page / figure / table"
+    context: "Optional qualification or conflict."
+
+results:
+  R01:
+    text: "Replace with a reported result."
+    type: PAPER_RESULT
+    dataset: ""
+    model: ""
+    split: ""
+    metric: ""
+    protocol: ""
+    value: ""
+    source:
+      kind: table
+      location: "Table / page"
+
+implementation:
+  I01:
+    text: "Replace with a possible runtime mapping; this is not a paper claim."
+    type: IMPLEMENTATION_MAPPING
+    source: null
+
+background:
+  B01:
+    text: "Replace with prerequisite/background knowledge."
+    type: GENERAL_BACKGROUND
+    source: null
+
+teaching_toys:
+  T01:
+    text: "Replace with a simplified example and state its boundary."
+    type: TEACHING_TOY
+    source: null
