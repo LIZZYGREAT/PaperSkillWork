@@ -5,7 +5,7 @@ import pytest
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
-from paper import GATES, validate_config
+from paper import GATES, V2_ARTIFACTS, validate_config
 
 
 def valid_config(paper_id="demo-paper"):
@@ -26,6 +26,14 @@ def valid_config(paper_id="demo-paper"):
         },
         "web": {"canonical": "web/canonical", "enhanced": "web/enhanced"},
     }
+
+
+def valid_v2_config(paper_id="demo-paper"):
+    config = valid_config(paper_id)
+    config["schema_version"] = 2
+    config["workflow"]["version"] = 2
+    config["artifacts"] = dict(V2_ARTIFACTS)
+    return config
 
 
 def test_valid_schema_has_no_errors():
@@ -72,3 +80,26 @@ def test_legacy_status_is_limited_to_migration_case():
     migration = valid_config("phyagentos")
     migration["workflow"]["gates"]["G2_evidence_audit"]["status"] = "legacy"
     assert validate_config(migration, "phyagentos") == []
+
+
+def test_v2_schema_requires_v2_workflow_and_artifact_contract():
+    config = valid_v2_config()
+    assert validate_config(config, "demo-paper") == []
+    config["workflow"]["version"] = 1
+    assert any("workflow.version must be 2" in error for error in validate_config(config, "demo-paper"))
+    config["workflow"]["version"] = 2
+    del config["artifacts"]["terms"]
+    assert any("artifacts is missing: terms" in error for error in validate_config(config, "demo-paper"))
+
+
+def test_v2_schema_rejects_legacy_gate_state():
+    config = valid_v2_config()
+    config["workflow"]["gates"]["G2_evidence_audit"]["status"] = "legacy"
+    assert any("Workflow v2 gates cannot use legacy status" in error for error in validate_config(config, "demo-paper"))
+
+
+def test_v2_schema_rejects_unsafe_paths():
+    config = valid_v2_config()
+    config["artifacts"]["paper_model"] = "../outside.md"
+    errors = validate_config(config, "demo-paper")
+    assert any("artifacts.paper_model parent traversal" in error for error in errors)

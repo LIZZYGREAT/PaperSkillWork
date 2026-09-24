@@ -25,6 +25,7 @@ artifacts:
   learning_contract: "design/learning-contract.md"
   paper_model: "research/01_paper_model.md"
   evidence_registry: "research/02_evidence_registry.yaml"
+  terms: "knowledge/terms.yaml"
   learning_architecture: "design/learning-architecture.md"
   scenes_dir: "design/scenes"
   final_check: "audit/final-check.md"
