@@ -1,0 +1,310 @@
+import React, { useEffect, useReducer, useRef, useState } from 'react';
+import { ReferenceProvider, useReferenceHub } from './components/ReferencePrimitives';
+import { ObjectInspector } from './components/ObjectInspector';
+import { PersistentWorkspace } from './components/PersistentWorkspace';
+import { openWorkspaceFor } from './components/workspaceActions';
+import { SceneA } from './scenes/SceneA';
+import { SceneB } from './scenes/SceneB';
+import { SceneC } from './scenes/SceneC';
+import { Scene00 } from './scenes/Scene00';
+import { SceneD } from './scenes/SceneD';
+import { SceneE } from './scenes/SceneE';
+import { SceneF } from './scenes/SceneF';
+import { SceneG } from './scenes/SceneG';
+import { SceneH } from './scenes/SceneH';
+import { SceneI } from './scenes/SceneI';
+import { SceneJ } from './scenes/SceneJ';
+import {
+  initialLearningSession,
+  learningReducer,
+  type SceneId,
+} from './data/session';
+import { initialToyState, teachingToyReducer } from './simulation/lwfTeachingToy';
+
+const scenes: { id: SceneId; number: string; title: string; question: string }[] = [
+  { id: '00', number: '00', title: '论文背景与研究目标', question: '为什么需要在学习新任务时保留旧任务能力？' },
+  { id: 'A', number: '01', title: '问题空间与方法约束', question: '旧数据不可用时，哪些路线仍符合问题设定？' },
+  { id: 'B', number: '02', title: '构造 LwF 系统', question: 'Teacher、Student、参数与旧响应如何形成？' },
+  { id: 'C', number: '03', title: '执行一个训练步', question: '梯度何时产生，参数又在何时改变？' },
+  { id: 'D', number: '04', title: '拆解旧响应蒸馏', question: 'Teacher 的旧响应如何经过温度、损失并形成梯度？' },
+  { id: 'E', number: '05', title: '稳定性与可塑性的梯度折衷', question: '旧、新目标同时作用于共享参数时，优化器往哪里走？' },
+  { id: 'F', number: '06', title: '函数保持与参数保持', question: '为什么约束旧响应，而不是只约束旧参数？' },
+  { id: 'G', number: '07', title: '域覆盖与监督缺口', question: '新任务输入上的响应约束覆盖了多少旧任务相关区域？' },
+  { id: 'H', number: '08', title: '连续任务与 Teacher 谱系', question: '今天的 Student 成为明天的 Teacher 后，响应目标如何变化？' },
+  { id: 'I', number: '09', title: '论文证据与结论审计', question: '哪些实验支持哪些结论，边界在哪里？' },
+  { id: 'J', number: '10', title: '端到端 LwF 工作流', question: '如何从旧模型与新任务数据实现并检查完整流程？' },
+];
+
+function AppContent() {
+  const [session, dispatch] = useReducer(learningReducer, initialLearningSession);
+  const [toyState, dispatchToy] = useReducer(teachingToyReducer, initialToyState);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const workspaceDialogRef = useRef<HTMLDivElement>(null);
+  const workspaceCloseRef = useRef<HTMLButtonElement>(null);
+  const hasNavigated = useRef(false);
+  const previousStudentState = useRef({ created: session.studentCreated, boundary: session.boundary });
+  const { openHub } = useReferenceHub();
+  const currentIndex = scenes.findIndex((scene) => scene.id === session.activeScene);
+  const activeScene = scenes[currentIndex];
+  const pageTotal = String(scenes.length).padStart(2, '0');
+  const workspacePrompt = workspacePrompts[session.activeScene];
+
+  const navigate = (scene: SceneId) => {
+    dispatch({ type: 'NAVIGATE', scene });
+    setSidebarOpen(false);
+  };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (hasNavigated.current) requestAnimationFrame(() => headingRef.current?.focus());
+    hasNavigated.current = true;
+  }, [session.activeScene]);
+
+  useEffect(() => {
+    if (!workspaceOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setWorkspaceOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !workspaceDialogRef.current) return;
+      const focusable = [...workspaceDialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]')];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    requestAnimationFrame(() => workspaceCloseRef.current?.focus());
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
+  }, [workspaceOpen]);
+
+  useEffect(() => {
+    const previous = previousStudentState.current;
+    if (session.studentCreated && (!previous.created || previous.boundary !== session.boundary)) {
+      dispatchToy({ type: 'RESET_TOY' });
+    }
+    previousStudentState.current = { created: session.studentCreated, boundary: session.boundary };
+  }, [session.studentCreated, session.boundary]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.key)) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('button, a, input, select, textarea, [contenteditable="true"], [role="dialog"]')) return;
+      const nextIndex = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
+      if (nextIndex < 0 || nextIndex >= scenes.length) return;
+      event.preventDefault();
+      navigate(scenes[nextIndex].id);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [currentIndex]);
+
+  useEffect(() => {
+    const onHubScene = (event: Event) => {
+      const scene = (event as CustomEvent<SceneId>).detail;
+      if (scenes.some((item) => item.id === scene)) navigate(scene);
+    };
+    window.addEventListener('lwf:open-scene', onHubScene);
+    return () => window.removeEventListener('lwf:open-scene', onHubScene);
+  }, []);
+
+  useEffect(() => {
+    const onOpenWorkspace = (event: Event) => {
+      const detail = (event as CustomEvent<{ objectId?: string }>).detail;
+      if (detail?.objectId) dispatch({ type: 'INSPECT_OBJECT', id: detail.objectId });
+      setWorkspaceOpen(true);
+    };
+    window.addEventListener('lwf:open-workspace', onOpenWorkspace);
+    return () => window.removeEventListener('lwf:open-workspace', onOpenWorkspace);
+  }, []);
+
+  const go = (offset: number) => {
+    const nextScene = scenes[currentIndex + offset];
+    if (nextScene) navigate(nextScene.id);
+  };
+
+  return (
+    <div className={`lwf-v2 slide-layout ${sidebarOpen ? 'sidebar-open' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <button
+        className="slide-sidebar-toggle"
+        type="button"
+        aria-expanded={sidebarOpen}
+        aria-controls="scene-sidebar"
+        onClick={() => setSidebarOpen((value) => !value)}
+      >
+        <span className="slide-sidebar-toggle-icon" aria-hidden="true">{sidebarOpen ? '×' : '☰'}</span>
+        {sidebarOpen ? '关闭目录' : '章节目录'}
+      </button>
+
+      {sidebarOpen ? <button className="slide-sidebar-overlay" type="button" aria-label="关闭章节目录" onClick={() => setSidebarOpen(false)} /> : null}
+
+      <aside id="scene-sidebar" className="slide-sidebar" aria-label="LwF 场景目录">
+        <div className="slide-sidebar-header">
+          <div className="slide-sidebar-venue">ECCV 2016 · WORKSPACE</div>
+          <div className="slide-sidebar-title">Learning without Forgetting</div>
+          <p className="v2-sidebar-subtitle">机制学习工作台 · 00–10</p>
+        </div>
+        <nav className="slide-sidebar-nav" aria-label="章节">
+          {scenes.map((scene) => (
+            <button
+              key={scene.id}
+              type="button"
+              className={`slide-sidebar-item ${session.activeScene === scene.id ? 'active' : ''}`}
+              aria-current={session.activeScene === scene.id ? 'page' : undefined}
+              onClick={() => navigate(scene.id)}
+            >
+              <span className="slide-sidebar-num">{scene.number}</span>
+              <span className="slide-sidebar-text">{scene.title}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="v2-sidebar-tools">
+          <button type="button" className="v2-sidebar-reference" onClick={() => openHub()}>
+            <span aria-hidden="true">⌕</span><span>Reference Hub</span><span className="v2-sidebar-tool-hint">术语 · 符号 · 证据</span>
+          </button>
+        </div>
+        <div className="v2-sidebar-footnote">场景进度由当前选择决定，不代表学习门禁已通过。</div>
+      </aside>
+
+      <button
+        className="slide-sidebar-collapse"
+        type="button"
+        aria-label={sidebarCollapsed ? '展开章节目录' : '折叠章节目录'}
+        aria-expanded={!sidebarCollapsed}
+        onClick={() => setSidebarCollapsed((value) => !value)}
+      >
+        {sidebarCollapsed ? '☰' : '◀'}
+      </button>
+
+      <main className="slide-main">
+        <header className="v2-topbar">
+          <a className="v2-brand" href="#scene-title" onClick={(event) => { event.preventDefault(); navigate('00'); }} aria-label="返回 LwF 场景 00">
+            <span className="v2-brand-mark">L</span><span>PaperSkillWork <b>/ Enhanced</b></span>
+          </a>
+          <div className="v2-topbar-actions">
+            <span className="v2-workflow-status"><i aria-hidden="true" /> Scene {activeScene.number} / {pageTotal}</span>
+            <button className="v2-reference-button" type="button" onClick={() => openHub()}><span>Reference Hub</span><span aria-hidden="true">↗</span></button>
+          </div>
+        </header>
+
+        <div className="slide-content" key={session.activeScene}>
+          <header className="v2-page-heading">
+            <div className="v2-breadcrumb"><span>LwF</span><span aria-hidden="true">/</span><span>机制工作台</span><span aria-hidden="true">/</span><strong>Scene {activeScene.id}</strong></div>
+            <div className="v2-scene-title-row">
+              <div>
+                <p className="v2-eyebrow">SCENE {activeScene.number} · {sceneCategory(session.activeScene)}</p>
+                <h1 id="scene-title" ref={headingRef} tabIndex={-1}>{activeScene.title}</h1>
+                <p className="v2-page-question">{activeScene.question}</p>
+              </div>
+              <div className="v2-progress-summary" aria-label={`第 ${currentIndex + 1} 页，共 ${scenes.length} 页`}>
+                <strong>{activeScene.number}<span> / {pageTotal}</span></strong>
+                <div className="v2-progress-track" aria-hidden="true">{scenes.map((scene, index) => <i key={scene.id} className={index <= currentIndex ? 'is-complete' : ''} />)}</div>
+                <small>可自由切换场景</small>
+              </div>
+            </div>
+          </header>
+
+          {workspacePrompt ? (
+            <div className="v2-workspace-prompt">
+              <span><strong>共享工作区</strong>{workspacePrompt}</span>
+              <button type="button" onClick={() => openWorkspaceFor()}>打开工作区 <span aria-hidden="true">↗</span></button>
+            </div>
+          ) : null}
+
+          <div className="v2-scene-layout">
+            <section className="v2-scene-primary" aria-label={`Scene ${session.activeScene} 交互内容`}>
+              {session.activeScene === '00' ? <Scene00 onNext={() => navigate('A')} /> : null}
+              {session.activeScene === 'A' ? <SceneA session={session} dispatch={dispatch} onNext={() => navigate('B')} /> : null}
+              {session.activeScene === 'B' ? <SceneB session={session} dispatch={dispatch} onNext={() => navigate('C')} onPrevious={() => navigate('A')} /> : null}
+              {session.activeScene === 'C' ? <SceneC session={session} dispatch={dispatch} toyState={toyState} dispatchToy={dispatchToy} onPrevious={() => navigate('B')} onReset={() => { dispatchToy({ type: 'RESET_TOY' }); dispatch({ type: 'SET_TRAINING_STAGE', stage: 'idle' }); }} /> : null}
+              {session.activeScene === 'D' ? <SceneD /> : null}
+              {session.activeScene === 'E' ? <SceneE session={session} dispatch={dispatch} /> : null}
+              {session.activeScene === 'F' ? <SceneF /> : null}
+              {session.activeScene === 'G' ? <SceneG /> : null}
+              {session.activeScene === 'H' ? <SceneH /> : null}
+              {session.activeScene === 'I' ? <SceneI onNavigate={navigate} /> : null}
+              {session.activeScene === 'J' ? <SceneJ onNavigate={navigate} /> : null}
+            </section>
+          </div>
+        </div>
+
+        <nav className="slide-nav" aria-label="场景翻页">
+          <button className="slide-nav-btn" type="button" onClick={() => go(-1)} disabled={currentIndex === 0}>← 上一页</button>
+          <span className="slide-nav-counter">{activeScene.number} / {pageTotal}</span>
+          <button className="slide-nav-btn slide-nav-btn-primary" type="button" onClick={() => go(1)} disabled={currentIndex === scenes.length - 1}>下一页 →</button>
+        </nav>
+      </main>
+
+      <button className="v2-workspace-launcher" type="button" aria-label="打开共享工作区与对象检查器" aria-haspopup="dialog" aria-expanded={workspaceOpen} onClick={() => openWorkspaceFor()}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5-8 4.5-8-4.5Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5 12 21l8-4.5"/></svg>
+        <span>共享工作区</span>
+      </button>
+
+      {workspaceOpen ? (
+        <div className="v2-workspace-curtain" onPointerDown={(event) => { if (event.target === event.currentTarget) setWorkspaceOpen(false); }}>
+          <section ref={workspaceDialogRef} className="v2-workspace-sheet" role="dialog" aria-modal="true" aria-labelledby="workspace-curtain-title" tabIndex={-1}>
+            <header className="v2-workspace-sheet-header">
+              <div><p className="v2-eyebrow">PERSISTENT WORKSPACE · SCENE {activeScene.number}</p><h2 id="workspace-curtain-title">共享工作区与对象检查器</h2><p>场景正文保持原宽度；这里汇总当前数据状态、Teacher / Student 结构和选中对象信息。</p></div>
+              <button ref={workspaceCloseRef} className="v2-workspace-close" type="button" aria-label="关闭共享工作区" onClick={() => setWorkspaceOpen(false)}>×</button>
+            </header>
+            <div className="v2-workspace-sheet-body">
+              <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />
+              <ObjectInspector scene={session.activeScene} session={session} selectedObject={session.selectedObject} onInspect={(id) => dispatch({ type: 'INSPECT_OBJECT', id })} />
+            </div>
+            <footer className="v2-workspace-sheet-footer"><span>对象状态随场景和训练阶段更新</span><span>Paper meaning · Runtime mapping</span></footer>
+          </section>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+const workspacePrompts: Partial<Record<SceneId, string>> = {
+  A: '比较训练路线时，可同步查看数据是否可用及当前模型状态。',
+  B: '构造 Teacher / Student 时，可在此检查数据、参数和对象身份。',
+  C: '执行训练步骤时，可随时核对模型对象与参数状态。',
+  J: '按实现流程逐步核对 Teacher、Student、响应与参数组。',
+};
+
+function sceneCategory(scene: SceneId) {
+  return ({ '00': 'PAPER BACKGROUND', A: 'PROBLEM SPACE', B: 'SYSTEM CONSTRUCTION', C: 'TRAINING TRACE', D: 'DISTILLATION', E: 'GRADIENT TRADE-OFF', F: 'FUNCTION VS PARAMETER', G: 'DOMAIN COVERAGE', H: 'TEACHER LINEAGE', I: 'EVIDENCE AUDIT', J: 'IMPLEMENTATION WORKFLOW' })[scene];
+}
+
+function ScenePlaceholder({ scene, onNext, onPrevious }: { scene: 'B' | 'C'; onNext?: () => void; onPrevious: () => void }) {
+  const title = scene === 'B' ? '构造 LwF 系统' : '执行一个训练步';
+  return (
+    <section className="v2-scene-panel v2-placeholder-scene">
+      <span className="v2-scene-label">SCENE {scene}</span>
+      <h2>{title}</h2>
+      <p>本场景正在按交互重构指南实现。场景侧栏与上一页 / 下一页导航已经接通。</p>
+      <div className="v2-placeholder-actions">
+        <button type="button" className="v2-secondary-action" onClick={onPrevious}>返回上一场景</button>
+        {onNext ? <button type="button" className="v2-primary-action" onClick={onNext}>进入 Scene C →</button> : null}
+      </div>
+    </section>
+  );
+}
+
+export default function App() {
+  return <ReferenceProvider><AppContent /></ReferenceProvider>;
+}

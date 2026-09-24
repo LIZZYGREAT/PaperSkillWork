@@ -1,3 +1,5 @@
+> **Legacy template — Workflow v1.** Kept only as a migration reference; new workspaces use the v2 templates.
+
 # {{paper_title}} 精读与机制梳理
 
 > Paper ID：`{{paper_id}}`<br>

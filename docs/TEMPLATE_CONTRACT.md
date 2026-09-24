@@ -1,6 +1,6 @@
 # Template Contract
 
-`templates/` contains the standard inputs used when `paper.py new` creates a paper workspace. It performs only explicit string replacement; there is no template language or conditional rendering.
+`templates/` contains inputs that `paper.py new` renders into a v2 workspace. Rendering is explicit placeholder substitution; there is no template language or conditional behavior.
 
 ## Allowed placeholders
 
@@ -11,18 +11,21 @@
 {{arxiv_id}}
 ```
 
-Every template may use only these four placeholders. An omitted arXiv id is rendered as an empty string.
+All templates may use only these placeholders. An omitted arXiv id renders as an empty string.
 
-## Mapping
+## v2 output mapping
 
 | Template | Target |
 | --- | --- |
 | `paper.yaml` | `paper.yaml` |
-| `research-review.md` | `research/01_review.md` |
-| `evidence-audit.md` | `research/02_evidence_audit.md` |
-| `storyboard.md` | `design/storyboard.md` |
-| `interaction-plan.md` | `design/interaction-plan.md` |
-| `content-check.md` | `audit/content-check.md` |
+| `learning-contract.md` | `design/learning-contract.md` |
+| `paper-model.md` | `research/01_paper_model.md` |
+| `evidence-registry.yaml` | `research/02_evidence_registry.yaml` |
+| `terms.yaml` | `knowledge/terms.yaml` |
+| `learning-architecture.md` | `design/learning-architecture.md` |
+| `final-check.md` | `audit/final-check.md` |
 | `release-check.md` | `audit/release-check.md` |
 
-Template structure changes are workflow changes and should be reviewed with `docs/WORKFLOW.md`. Template generation must not advance a gate or claim that an audit passed.
+`scene-spec.md` is copied manually for each scene selected by the Learning Architecture. `paper.py new` creates `design/scenes/` empty; it does not invent a default scene.
+
+The v1 templates remain under `templates/legacy/` for reading and migration reference; new workspaces never use them. Template generation does not advance gates or claim review acceptance.

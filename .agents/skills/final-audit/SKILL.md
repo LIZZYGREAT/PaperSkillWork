@@ -1,57 +1,40 @@
 ---
 name: final-audit
-description: Review the complete tutorial's content, engineering, interactions, and release scope for Gate G7.
+description: Review learning reconstruction, evidence boundaries, implementation semantics, engineering, accessibility, mobile, and release scope for Gate G7.
 ---
 
 # Final Audit
 
 ## Purpose
 
-Find factual, interaction, engineering, and release-scope problems before a person decides whether the result is ready.
+Decide whether the tutorial teaches a reconstructable mental model and respects evidence and engineering constraints. Build success cannot override a learning failure.
 
 ## Required Inputs
 
-- Research review and evidence audit
-- Storyboard and interaction plan
+- Learning Contract, Paper Model, Evidence Registry, Learning Architecture, and scene specifications
 - Canonical and Enhanced outputs
-- `templates/content-check.md`
-- `templates/release-check.md`
-
-## Preconditions
-
-- Enhanced implementation is available for inspection.
-- Existing build and project audit commands are known.
-- Asset provenance and repository diff can be reviewed.
+- `templates/final-check.md` and `templates/release-check.md`
+- Existing build and project audit commands
 
 ## Procedure
 
-1. Check the core problem, idea, architecture, terms, equations, figures, experimental values, conclusions, limitations, and analogy boundaries against the evidence audit and paper.
-2. Run the project's build and checks; inspect source paths, asset provenance, local absolute paths, tracked dependencies, and build artifacts.
-3. Compare implemented interactions with the interaction plan, including important states, reset, keyboard access, reduced motion, and mobile layout.
-4. Record findings and unresolved items in `audit/content-check.md`; set its status only after review.
-5. Check gate states, canonical/Enhanced separation, repository hygiene, and the official PaperSkill import/validation/build/PR preparation boundary.
-6. Record release blockers and set `audit/release-check.md` to `READY` only after the checklist is actually satisfied.
-7. Present findings for human acceptance. Do not change G7 state.
-
-## Output
-
-- `papers/<paper-id>/audit/content-check.md`
-- `papers/<paper-id>/audit/release-check.md`
-
-## Validation
-
-- Each factual finding points to a source or evidence-audit record.
-- Build and project audit outcomes are recorded accurately.
-- Interaction and accessibility review covers the implemented project.
-- Release scope respects the separate PaperSkill repository.
+1. **Learning acceptance:** review every core scene's acceptance questions. Check architecture, ownership, flow, state/lifecycle, mathematics, implementation mapping, and end-to-end reconstruction. A core learning failure makes Overall FAIL.
+2. **Evidence acceptance:** trace claims and numbers to evidence IDs and sources. Check paper fact/result, author interpretation, our interpretation, mapping, background, teaching toy, and future-work boundaries.
+3. **Implementation semantics:** inspect object lifecycles, data/state flow, formulas, gradient/control sources, actual updates, and separation of paper data from teaching toys.
+4. **Engineering acceptance:** run the project's declared build and checks; inspect repository hygiene and record actual outcomes.
+5. **Accessibility and mobile:** check keyboard, focus, reduced-motion, reset, touch/non-drag alternatives, and mobile behavior as applicable.
+6. **Release check:** verify Gate state, Canonical/Enhanced separation, asset provenance, and the official PaperSkill import boundary.
+7. Save findings in `audit/final-check.md` and release readiness in `audit/release-check.md`. Keep unresolved blockers visible.
+8. Present results for human acceptance. Never change G7 state.
 
 ## Forbidden Actions
 
+- Do not treat all planned interactions being implemented as a pass condition.
 - Do not claim checks passed when they were not run.
-- Do not hide blockers or infer approval from an automated build.
-- Do not push, import into PaperSkill, publish, or create a PR.
+- Do not infer learning from build results or structural completeness.
+- Do not push, import, publish, or create a PR.
 - Do not mark G7 complete automatically.
 
 ## Completion Criteria
 
-Both audit files record their actual findings and status, with unresolved blockers clearly stated for a human release decision.
+Both audit artifacts reflect actual findings. Overall status is FAIL if any core learning outcome or material evidence boundary fails, even when all engineering checks pass.

@@ -1,80 +1,96 @@
-# PaperSkillWork Workflow v1
+# PaperSkillWork Workflow v2
 
-PaperSkillWork is a reusable workspace for paper research, evidence auditing, a canonical working copy, Enhanced tutorial development, human acceptance, and release preparation. PaperSkill is a separate upstream/fork release repository.
+PaperSkillWork produces tutorials that help a first-time reader rebuild a paper's architecture, objects, state, information flow, mathematics, update process, experimental logic, and limits. A tutorial is not a paper abstract with animations.
 
 ## Gate sequence
 
 ```text
-G0 Workspace
-→ G1 Research
-→ G2 Evidence Audit
-→ G3 Canonical
-→ G4 Narrative Design
-→ G5 Interaction Design
-→ G6 Enhanced
-→ G7 Final Audit & Release
+G0 Workspace + Learning Contract
+→ G1 Paper Model
+→ G2 Evidence Registry
+→ G3 Canonical Compatibility Baseline
+→ G4 Learning Architecture
+→ G5 Scene Specifications
+→ G6 Incremental Enhanced Implementation
+→ G7 Learning + Evidence + Engineering Audit
+→ PaperSkill Release
 ```
 
-Each paper has one workspace under `papers/<paper-id>/` and one status file, `paper.yaml`. Gates are deliberately advanced by a person after verification; scripts and Skills must not mark work complete on their own.
+Gate identifiers and the explicit state machine remain stable. G1/G2 establish what the paper says; G4/G5 design the cognitive path; G6 implements reviewed milestones; G7 accepts learning first, then evidence, engineering, accessibility, and release scope. `paper.py` checks structure only and never claims that a learner has understood the paper.
 
 | Gate | Purpose | Required artifact or acceptance |
 | --- | --- | --- |
-| G0 Workspace | Register metadata and standard paths | Valid `paper.yaml`; non-empty `source/paper.url` |
-| G1 Research | Understand problem, idea, mechanism, experiments, limits | `research/01_review.md` |
-| G2 Evidence Audit | Separate facts, results, interpretations, analogies, and future work | `research/02_evidence_audit.md` |
-| G3 Canonical | Preserve and validate the strict PaperSkill baseline | Non-empty `web/canonical/`; build, validator, and human browse accepted |
-| G4 Narrative Design | Turn the research into a learning path | `design/storyboard.md` |
-| G5 Interaction Design | Specify purposeful interactions and expected insight | `design/interaction-plan.md` |
-| G6 Enhanced | Implement the reviewed and designed tutorial | `web/enhanced/package.json`; production build, project audit, human interaction, mobile, and fact checks |
-| G7 Final Audit & Release | Check content, engineering, and release scope | `audit/content-check.md` with `PASS`; `audit/release-check.md` with `READY` |
+| G0 | Register the paper and learning contract | `paper.yaml`, `source/paper.url`, `design/learning-contract.md` |
+| G1 | Build an executable model of the paper | `research/01_paper_model.md` |
+| G2 | Establish claim-level evidence boundaries | `research/02_evidence_registry.yaml` |
+| G3 | Preserve the PaperSkill compatibility/build baseline | non-empty `web/canonical/`, build and human acceptance |
+| G4 | Design dependencies, persistent objects, and learning scenes | `design/learning-architecture.md` |
+| G5 | Specify only needed scenes and purposeful actions | one or more files in `design/scenes/` |
+| G6 | Implement reviewed milestones and a first vertical slice | Enhanced project and milestone acceptance |
+| G7 | Accept learning, evidence, engineering, accessibility, and release | `audit/final-check.md` and `audit/release-check.md` |
 
-### Gate status values
+Valid gate states are `pending`, `in_progress`, `complete`, `skipped`, and `legacy`. Only a person may advance a gate after review. `skipped` requires a reason. Gates complete in sequence. Historical v1 `legacy` states are retained only for the PhyAgentOS migration or in migration metadata; they do not count as v2 acceptance.
 
-Only `pending`, `in_progress`, `complete`, `skipped`, and `legacy` are valid. `legacy` is only for projects created before Workflow v1. A completed gate must meet its artifact requirements. `skipped` must have a recorded reason. New papers must not use `legacy`.
+## G0: Learning contract
 
-`paper.py gate <paper-id>` reads state. To change state, explicitly name both gate and new status. The command checks prerequisites before accepting `complete`; it does not perform AI work or infer completion. `--reason` is required for `skipped`.
+Every v2 workspace records its target reader, prerequisites, unknowns, final learning outcomes, expected and implementation depth, evidence depth, and what the tutorial is not. This contract governs the rest of the work. Do not start from chapter count, a shared metaphor, animation, or interaction quota.
 
-Gates can only be completed in sequence: every earlier gate must be `complete` or `skipped`. For the PhyAgentOS migration only, an earlier `legacy` gate also counts as historically passed.
+## G1: Paper Model
 
-## Standard workspace
+Read the full paper and build a source-grounded model in this order: problem; prerequisites; objects and variables; architecture and ownership; state and time; data/tensor flow; transformations and formulas; optimization/update; end-to-end runtime; experiments; limitations. Include a Reconstruction Matrix for core objects with applicable lifecycle, producer/consumer, shape, state, gradient, update, and evidence details. Mark prerequisites as Required, Helpful, or Optional and state the depth needed. G1 contains no UI or interaction design.
+
+## G2: Evidence Registry
+
+`research/02_evidence_registry.yaml` is the structured source of claim evidence. Supported categories are `PAPER_FACT`, `PAPER_RESULT`, `AUTHOR_INTERPRETATION`, `OUR_INTERPRETATION`, `IMPLEMENTATION_MAPPING`, `TEACHING_TOY`, `GENERAL_BACKGROUND`, and `FUTURE_WORK`. Tie numerical results to dataset, model, split, metric, protocol, and source. A short `02_evidence_notes.md` may record unresolved conflicts or review notes; it must not duplicate the paper model.
+
+## G3: Canonical compatibility baseline
+
+Canonical is retained for PaperSkill compatibility, project shell, build contract, tokens, and reusable primitives. It does not set Enhanced chapter order, layout, interaction count, metaphor, or scene architecture. Enhanced follows the Learning Architecture, not Canonical's teaching structure, unless the architecture explicitly chooses otherwise.
+
+## G4: Learning Architecture
+
+Start with a Concept Dependency Graph: what a reader must understand first, what depends on it, and why. Define a persistent system workspace when it helps the learner reason across scenes. For each scene specify entry knowledge, unresolved question, new mental model, persistent objects, exit capability, and next question. A core scene also carries Entry Knowledge → Unresolved Question → Scene → New Mental Model → Next Question. Analogies are optional and must document their mapping, boundary, and removal condition.
+
+## G5: Scene Specifications
+
+Create `design/scenes/` files only for scenes that need specification. Each core scene states its learning goal, dependencies, persistent objects, system state, user actions, state transitions, architecture/data flow, mathematical model, implementation mapping, evidence, teaching-toy boundary, prerequisite terms, reconstruction test, implementation trace test, global dependency test, deletion test, acceptance questions, accessibility, mobile behavior, and non-goals.
+
+For every core scene, answer:
+
+1. **Reconstruction:** Can the learner draw or explain the mechanism without the page?
+2. **Implementation trace:** What is the object, where and when does it exist, what produces/consumes/changes it, and what does not? For neural models, include shape, gradient source, optimizer membership, and update operation when applicable.
+3. **Global dependency:** What does the scene consume and produce, and where is its output used later?
+4. **Deletion:** What understanding is lost if the interaction is removed?
+
+The deletion test is necessary but does not compensate for a failed reconstruction test. Interaction labels describe function (`RECONSTRUCTION`, `TRACE`, `COUNTERFACTUAL`, `PARAMETER_EXPLORATION`, `EVIDENCE_INSPECTION`, `DIAGNOSTIC`, `REFERENCE`); there is no coverage quota. Hover never carries the only explanation of knowledge required by the main path.
+
+## G6: Incremental implementation
+
+Implement in reviewed milestones, commonly Foundation, First Vertical Slice, Core Mechanism, Boundaries, Evidence + End-to-End, and Integration. The First Vertical Slice must arrive early enough for human learning acceptance. If it fails, stop and revise the learning architecture before expanding. Reuse persistent objects across scenes; keep paper data distinct from teaching toys; use real calculations for simulations; link terms, symbols, datasets, and evidence through registries. Do not invent narrative while coding.
+
+## G7: Final audit
+
+Run the audit in this order: learning acceptance; evidence acceptance; implementation semantics; engineering checks; accessibility/mobile; release scope. Reconstruct architecture, flow, state, mathematics, implementation mapping, and evidence boundaries across the tutorial. Any core learning failure makes the overall result FAIL even if build checks pass. Preserve build/validation, accessibility, reduced-motion, mobile, human acceptance, and release checks.
+
+## Workspace and release boundary
 
 ```text
 papers/<paper-id>/
 ├─ paper.yaml
 ├─ source/paper.url
-├─ research/01_review.md
-├─ research/02_evidence_audit.md
-├─ design/storyboard.md
-├─ design/interaction-plan.md
-├─ web/canonical/          # added when the canonical result exists
-├─ web/enhanced/           # added when the Enhanced project exists
-├─ audit/content-check.md
+├─ research/01_paper_model.md
+├─ research/02_evidence_registry.yaml
+├─ knowledge/terms.yaml
+├─ design/learning-contract.md
+├─ design/learning-architecture.md
+├─ design/scenes/                 # only specified scenes
+├─ web/canonical/                 # compatibility baseline
+├─ web/enhanced/
+├─ audit/final-check.md
 ├─ audit/release-check.md
-└─ assets/
-   ├─ figures/
-   └─ screenshots/
+└─ assets/{figures,screenshots}/
 ```
 
-`source/paper.pdf` is optional local material and is gitignored. No empty web project is created by `paper.py new`. Presentation scripts are optional and are not workflow gates.
+Local v1 artifacts are retained as legacy inputs. `paper.py migrate-v2 <paper-id>` is non-destructive: it creates v2 artifacts, records detected legacy paths and old gate states, does not alter Canonical or Enhanced, and leaves every v2 gate pending. `paper.py check` checks paths, files, YAML structure, and references; `paper.py learning-check` checks machine-verifiable scene structure and references only. Neither command evaluates semantic learning.
 
-## Artifact ownership and evidence
-
-- The paper is the source of paper claims. `research/02_evidence_audit.md` records whether a statement is a paper fact, paper result, author interpretation, our interpretation, teaching analogy, or future work.
-- `design/storyboard.md` defines the learning sequence; it should not mechanically mirror paper section order.
-- `design/interaction-plan.md` defines each interaction through user action, system response, expected insight, paper evidence, accessibility, and edge cases.
-- Enhanced implementations follow those reviewed inputs and keep every interaction traceable to the plan.
-- Canonical is a frozen baseline separate from Enhanced.
-
-## Repository and release boundary
-
-`tools/paper.py` is a local file, state, path, and validation tool. It does not invoke Codex or model APIs, download papers, install dependencies, push Git changes, import into PaperSkill, publish packages, or create PRs.
-
-Never merge PaperSkillWork history into PaperSkill or cherry-pick its commits. Release always follows:
-
-```text
-PaperSkillWork output → PaperSkill official import → validate → PR
-```
-
-## Skills
-
-Repo-local Skills under `.agents/skills/` guide judgment-heavy work: `paper-review`, `evidence-audit`, `narrative-design`, `interaction-design`, `enhanced-implementation`, and `final-audit`. They describe inputs, procedures, validation, prohibited actions, and completion criteria. They must not advance gates automatically.
+PaperSkill remains a separate release repository. Never merge PaperSkillWork history into PaperSkill or cherry-pick its commits. Release uses PaperSkill's official import flow, followed by validation and PR review.

@@ -1,9 +1,7 @@
-schema_version: 1
+schema_version: 2
 
 id: "{{paper_id}}"
-
-title: >
-  {{paper_title}}
+title: "{{paper_title}}"
 
 paper:
   url: "{{paper_url}}"
@@ -11,31 +9,27 @@ paper:
   local_pdf: "source/paper.pdf"
 
 workflow:
+  version: 2
   current_gate: G0
   gates:
-    G0_workspace:
-      status: pending
-    G1_research:
-      status: pending
-    G2_evidence_audit:
-      status: pending
-    G3_canonical:
-      status: pending
-    G4_narrative_design:
-      status: pending
-    G5_interaction_design:
-      status: pending
-    G6_enhanced:
-      status: pending
-    G7_release:
-      status: pending
+    G0_workspace: {status: pending}
+    G1_research: {status: pending}
+    G2_evidence_audit: {status: pending}
+    G3_canonical: {status: pending}
+    G4_narrative_design: {status: pending}
+    G5_interaction_design: {status: pending}
+    G6_enhanced: {status: pending}
+    G7_release: {status: pending}
 
 artifacts:
-  review: "research/01_review.md"
-  evidence_audit: "research/02_evidence_audit.md"
-  terms: "research/03_terms.md"
-  storyboard: "design/storyboard.md"
-  interaction_plan: "design/interaction-plan.md"
+  learning_contract: "design/learning-contract.md"
+  paper_model: "research/01_paper_model.md"
+  evidence_registry: "research/02_evidence_registry.yaml"
+  terms: "knowledge/terms.yaml"
+  learning_architecture: "design/learning-architecture.md"
+  scenes_dir: "design/scenes"
+  final_check: "audit/final-check.md"
+  release_check: "audit/release-check.md"
 
 web:
   canonical: "web/canonical"
@@ -44,9 +38,5 @@ web:
 paperskill:
   canonical_version: null
   enhanced_version: null
-  canonical_pr:
-    number: null
-    status: pending
-  enhanced_pr:
-    number: null
-    status: pending
+  canonical_pr: {number: null, status: pending}
+  enhanced_pr: {number: null, status: pending}
