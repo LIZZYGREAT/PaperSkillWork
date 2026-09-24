@@ -1,0 +1,149 @@
+continual_learning:
+  label: 持续学习
+  full_name: Continual learning
+  definition: 按时间顺序学习多个任务，同时尽量保留较早任务的能力。
+  paper_role: EWC 要处理的问题设定。
+  confusion: 本文展示的是特定 MNIST 与 Atari 设置，不代表所有持续学习情形。
+  prerequisites: []
+  source_category: GENERAL_BACKGROUND
+  source_ref: C01
+
+catastrophic_forgetting:
+  label: 灾难性遗忘
+  full_name: Catastrophic forgetting
+  definition: 学习后续任务后，模型在较早任务上的表现大幅下降。
+  paper_role: 促使作者限制对旧任务重要参数的改变。
+  confusion: 指模型行为或性能受损，不是“数据被删除”的同义词。
+  prerequisites: [continual_learning]
+  source_category: PAPER_FACT
+  source_ref: C01
+
+parameter_vector:
+  label: 参数向量 θ
+  full_name: Network parameters
+  definition: 网络中的权重和偏置，作为可训练数值集合参与前向计算。
+  paper_role: EWC 在学习新任务时约束的对象。
+  confusion: 参数绝对值大，不等于它对旧任务重要。
+  prerequisites: []
+  source_category: PAPER_FACT
+  source_ref: C02
+
+anchor_parameters:
+  label: 旧任务锚点 θ*
+  full_name: Previous-task parameter solution
+  definition: 完成较早任务后保存的参数参考值。
+  paper_role: 二次惩罚衡量当前参数离旧解的偏移。
+  confusion: 它是后续步骤读取的参考快照，不由新任务优化器更新。
+  prerequisites: [parameter_vector]
+  source_category: PAPER_FACT
+  source_ref: C02
+
+fisher_information:
+  label: Fisher 信息
+  full_name: Fisher information matrix
+  definition: 用作局部参数敏感度/曲率信息的统计量；EWC 以其对角线近似 Gaussian precision。
+  paper_role: 为不同参数的旧任务约束赋予不同权重。
+  confusion: 不是真实因果重要性的完美度量；对角近似忽略参数耦合。
+  prerequisites: [parameter_vector]
+  source_category: PAPER_FACT
+  source_ref: C03
+
+diagonal_fisher:
+  label: 对角 Fisher
+  full_name: Diagonal Fisher approximation
+  definition: 仅保留 Fisher 矩阵的对角元素，每个参数对应一个重要性/精度值。
+  paper_role: 使 EWC 的存储和二次项按参数线性扩展。
+  confusion: 丢弃不同参数间的非对角耦合关系。
+  prerequisites: [fisher_information]
+  source_category: PAPER_FACT
+  source_ref: C03
+
+laplace_approximation:
+  label: Laplace 近似
+  full_name: Laplace approximation
+  definition: 在一个参数解附近用 Gaussian 近似复杂 posterior 的局部形状。
+  paper_role: 将不可处理的旧任务 posterior 转成可计算的局部二次约束。
+  confusion: 只描述局部近似区域，不能代表整个非高斯或多峰 posterior。
+  prerequisites: [bayesian_posterior, diagonal_fisher]
+  source_category: PAPER_FACT
+  source_ref: C03
+
+bayesian_posterior:
+  label: 后验分布
+  full_name: Posterior distribution
+  definition: 观察数据后，对参数取值的概率分布。
+  paper_role: 前一任务的 posterior 在顺序 Bayes 推导中成为下一任务的 prior。
+  confusion: EWC 并不精确保留完整分布，而是用局部近似压缩它。
+  prerequisites: []
+  source_category: PAPER_FACT
+  source_ref: F01
+
+ewc_penalty:
+  label: EWC 惩罚项
+  full_name: Elastic weight consolidation penalty
+  definition: 按 Fisher 对角加权、以旧参数为中心的二次偏移惩罚。
+  paper_role: 将旧任务保护信号加入新任务目标函数。
+  confusion: 它是软约束；不会直接冻结权重或改变优化器。
+  prerequisites: [anchor_parameters, diagonal_fisher]
+  source_category: PAPER_FACT
+  source_ref: F02
+
+stability_plasticity:
+  label: 稳定性与可塑性
+  full_name: Stability-plasticity trade-off
+  definition: 保留已学能力与适应新任务之间的权衡。
+  paper_role: λ 与新任务损失共同决定权衡强弱。
+  confusion: 任意 λ 都不会保证两个目标同时最优。
+  prerequisites: [ewc_penalty]
+  source_category: OUR_INTERPRETATION
+  source_ref: C11
+
+permuted_mnist:
+  label: Permuted MNIST
+  full_name: Permuted MNIST benchmark
+  definition: 每个任务对全部 MNIST 图片使用一组固定随机像素置换。
+  paper_role: 测试网络是否能按序学习不同输入映射并保留旧任务表现。
+  confusion: 每个任务内置换固定；这不是每张图片各自随机打乱。
+  prerequisites: [continual_learning]
+  source_category: PAPER_FACT
+  source_ref: C04
+
+fisher_overlap:
+  label: Fisher 重叠
+  full_name: Fisher overlap
+  definition: 基于归一化任务 Fisher 的距离构造的任务参数使用相似度。
+  paper_role: 观察任务间是否共享网络层中的重要权重。
+  confusion: 不等于分类准确率，也不直接表明某种共享是因果优势。
+  prerequisites: [diagonal_fisher]
+  source_category: PAPER_RESULT
+  source_ref: C06
+
+experience_replay:
+  label: 经验回放
+  full_name: Experience replay
+  definition: 从先前交互经验缓冲区取样，再参与当前强化学习更新。
+  paper_role: Atari 系统的短时间尺度机制，与 EWC 长时间尺度约束并存。
+  confusion: Atari 结果不是一个完全没有回放的系统。
+  prerequisites: []
+  source_category: PAPER_FACT
+  source_ref: C07
+
+teaching_toy:
+  label: 教学玩具计算
+  full_name: Teaching toy
+  definition: 为展示公式关系而设定的小规模可复算数值例子。
+  paper_role: 展示惩罚值、梯度方向和一次参数更新。
+  confusion: 数值不是论文中的 Fisher 估计或实验结果。
+  prerequisites: [ewc_penalty]
+  source_category: TEACHING_TOY
+  source_ref: T01
+
+function_regularization:
+  label: 函数空间约束
+  full_name: Function-space regularization
+  definition: 约束模型在输入上的输出行为，而不是直接约束每个参数距离。
+  paper_role: 作为帮助理解 EWC 与 LwF 的跨论文参照。
+  confusion: LwF 不属于 EWC 原论文的实验基线。
+  prerequisites: [ewc_penalty]
+  source_category: GENERAL_BACKGROUND
+  source_ref: B03

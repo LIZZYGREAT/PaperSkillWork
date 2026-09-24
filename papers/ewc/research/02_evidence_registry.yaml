@@ -1,0 +1,173 @@
+claims:
+  C01:
+    text: "Sequentially training one shared network can alter weights important to task A and cause catastrophic forgetting; multitask interleaving requires access to prior task data."
+    type: PAPER_FACT
+    source: {kind: paper_text, location: "arXiv v2 Sections 1 and 2, https://arxiv.org/html/1612.00796#S2"}
+    boundary: "Problem framing; does not imply every sequential task pair forgets at the same rate."
+  C02:
+    text: "EWC adds a parameter-wise quadratic penalty centered at the previous task solution and weighted by diagonal Fisher values."
+    type: PAPER_FACT
+    source: {kind: equation, location: "arXiv v2 Section 2, Equation (3), https://arxiv.org/html/1612.00796#S2"}
+    boundary: "λ controls the relative strength of old-task protection; this is a soft constraint, not a freeze."
+  C03:
+    text: "The paper motivates the penalty by treating the previous-task posterior as the prior for the next task, then approximating that posterior locally by a Gaussian whose diagonal precision is the Fisher diagonal."
+    type: PAPER_FACT
+    source: {kind: equations_and_method, location: "arXiv v2 Section 2, Equations (1)–(3), https://arxiv.org/html/1612.00796#S2"}
+    boundary: "This is an approximation to an intractable posterior, not an exact Bayesian posterior representation."
+  C04:
+    text: "For Permuted MNIST, each task uses one fixed random pixel permutation for all images; after a fixed training amount the previous task data are not used for further training."
+    type: PAPER_FACT
+    source: {kind: method, location: "arXiv v2 Section 2.1, https://arxiv.org/html/1612.00796#S2.SS1"}
+    boundary: "This describes the paper's supervised benchmark protocol, not every EWC application."
+  C05:
+    text: "On the illustrated Permuted MNIST comparisons, EWC retains earlier task performance while learning later tasks more effectively than plain SGD or an equal-strength quadratic constraint; the dropout comparison degrades as task count increases."
+    type: PAPER_RESULT
+    source: {kind: figures_and_text, location: "arXiv v2 Section 2.1, Figure 2A–B, https://arxiv.org/html/1612.00796#S2.SS1"}
+    boundary: "Qualitative description of plotted results. Do not read off or invent exact curve values."
+  C06:
+    text: "Fisher overlap is used to inspect whether tasks rely on similar parameter sets; greater input permutation differences reduce overlap in early layers, while later layers still overlap when outputs share digit classes."
+    type: PAPER_RESULT
+    source: {kind: figure_and_appendix, location: "arXiv v2 Section 2.1, Figure 2C; Appendix 4.3, https://arxiv.org/html/1612.00796#S2.SS1"}
+    boundary: "Overlap is an analysis of parameter use, not a direct measure of task accuracy or a guarantee of transfer."
+  C07:
+    text: "The Atari experiment evaluates EWC inside a larger continual DQN system that also includes task recognition, per-task replay buffers, and task-specific gains and biases."
+    type: PAPER_FACT
+    source: {kind: method, location: "arXiv v2 Section 2.2 and Appendix 4.2, https://arxiv.org/html/1612.00796#S2.SS2"}
+    boundary: "Do not attribute the complete system result to the EWC penalty alone or describe the Atari system as replay-free."
+  C08:
+    text: "In Atari, the paper tests ten randomly selected games from a pool of nineteen and reports total human-normalized score summed across games, clipped at one per game."
+    type: PAPER_FACT
+    source: {kind: protocol, location: "arXiv v2 Section 2.2 and Appendix 4.2, https://arxiv.org/html/1612.00796#S2.SS2"}
+    boundary: "Results are averaged over ten sets and four random seeds per set; the metric has a maximum of ten."
+  C09:
+    text: "The authors report that Atari EWC learns multiple games in this system but does not reach the score of ten separately trained DQNs."
+    type: PAPER_RESULT
+    source: {kind: figure_and_text, location: "arXiv v2 Section 2.2, Figure 3A–B, https://arxiv.org/html/1612.00796#S2.SS2"}
+    boundary: "A system-level result in the tested protocol; not a universal comparison with separate models."
+  C10:
+    text: "The authors identify the factorized Gaussian and diagonal Fisher point estimate as a significant weakness; Atari perturbation results suggest the estimate can understate uncertainty."
+    type: AUTHOR_INTERPRETATION
+    source: {kind: discussion_and_figure, location: "arXiv v2 Section 2.2 Figure 3C and Section 3 Discussion, https://arxiv.org/html/1612.00796#S3"}
+    boundary: "This is the authors' interpretation of their perturbation test, not proof that all Fisher estimates fail in the same way."
+  C11:
+    text: "The paper presents EWC as a way to mitigate interference in fixed-capacity sequential learning, not as a way to create unlimited capacity or guarantee perfect retention."
+    type: OUR_INTERPRETATION
+    source: {kind: synthesis, location: "Evidence from arXiv v2 Sections 2–3 and Figure 3"}
+    boundary: "Teaching synthesis of the reported method and evidence."
+  C12:
+    text: "The authors suggest Bayesian neural networks as a possible direction to improve the local uncertainty estimate."
+    type: FUTURE_WORK
+    source: {kind: discussion, location: "arXiv v2 Section 3 Discussion, https://arxiv.org/html/1612.00796#S3"}
+    boundary: "Suggested future direction, not an evaluated improvement in this paper."
+
+formulas:
+  F01:
+    text: "Sequential posterior factorization: p(θ|D_A,D_B) is proportional to p(D_B|θ)p(θ|D_A)."
+    type: PAPER_FACT
+    source: {kind: equation, location: "arXiv v2 Section 2, Equations (1)–(2)"}
+    boundary: "The normalizing term is constant with respect to θ during MAP optimization."
+  F02:
+    text: "EWC objective L_B(θ) + (λ/2) Σ_i F_A,i(θ_i−θ*_A,i)^2."
+    type: PAPER_FACT
+    source: {kind: equation, location: "arXiv v2 Section 2, Equation (3)"}
+    boundary: "The paper uses diagonal Fisher precision in its local posterior approximation."
+  F03:
+    text: "The penalty derivative for parameter i is λF_A,i(θ_i−θ*_A,i), added to the new-task loss derivative."
+    type: OUR_INTERPRETATION
+    source: {kind: derivation, location: "Derivative of Equation (3)"}
+    boundary: "Direct algebraic derivative; optimizer behavior after this gradient depends on its configured update rule."
+
+results:
+  R01:
+    text: "Permuted MNIST sequential-task comparison: EWC versus plain SGD and a uniform quadratic constraint."
+    type: PAPER_RESULT
+    dataset: "MNIST with fixed random pixel permutations per task"
+    model: "Fully connected ReLU networks; Figure 2A uses 2 hidden layers of width 400"
+    split: "Task-specific fixed permutations; prior task data not used for later training; evaluation on each task's test set"
+    metric: "Test performance/error curves"
+    protocol: "Figure 2A; 20 epochs per dataset; no dropout"
+    value: "Qualitative result from plotted curves; exact point values are not transcribed"
+    source: {kind: figure, location: "arXiv v2 Figure 2A and Appendix 4.1"}
+    boundary: "No numerical curve readings are claimed."
+  R02:
+    text: "Permuted MNIST performance across an increasing number of tasks: EWC versus SGD with dropout."
+    type: PAPER_RESULT
+    dataset: "MNIST with fixed random pixel permutations per task"
+    model: "Fully connected ReLU networks; two hidden layers; hidden width searched over 400–2000"
+    split: "Sequential permutations; early stopping uses validation errors for permutations seen to date"
+    metric: "Average performance across tasks"
+    protocol: "Figure 2B; dropout probability 0.2 on input and 0.5 on other hidden layers; random hyperparameter search"
+    value: "EWC degrades more modestly as tasks increase in the reported plot; exact values not transcribed"
+    source: {kind: figure_and_appendix, location: "arXiv v2 Figure 2B and Appendix 4.1"}
+    boundary: "Specific to this benchmark, configuration, and search protocol."
+  R03:
+    text: "Atari sequential learning with EWC inside the paper's larger task-aware DQN system."
+    type: PAPER_RESULT
+    dataset: "Ten randomly selected Atari 2600 games from a pool of nineteen"
+    model: "Double DQN-like shared network, task recognition, per-task replay buffers, task-specific layer gains/biases, plus EWC"
+    split: "Randomized task order with recurring games; periodic evaluation without training; ten game sets × four random seeds"
+    metric: "Sum of human-normalized scores across games, each clipped at 1 (maximum 10)"
+    protocol: "EWC activated for a game after at least 20 million frames; Figure 3A–B"
+    value: "Plain gradient descent stays below total score 1; EWC system learns multiple games but remains below ten separate DQNs"
+    source: {kind: figure_and_text, location: "arXiv v2 Section 2.2, Figure 3A–B; Appendix 4.2"}
+    boundary: "System-level evidence; it does not isolate the contribution of EWC from task recognition, replay, and task-specific parameters."
+  R04:
+    text: "Atari weight-perturbation analysis suggests diagonal Fisher captures some parameter sensitivity but can underestimate uncertainty in its estimated nullspace."
+    type: AUTHOR_INTERPRETATION
+    dataset: "Breakout single-game DQN perturbation analysis"
+    model: "Single-game DQN trained on Breakout"
+    split: "Ten full game episodes; a new random perturbation per timestep"
+    metric: "Breakout score under Gaussian weight perturbations"
+    protocol: "Uniform, inverse-Fisher-shaped, and Fisher-nullspace perturbations, Figure 3C"
+    value: "Qualitative pattern described by the authors; no exact values transcribed"
+    source: {kind: figure_and_text, location: "arXiv v2 Section 2.2, Figure 3C"}
+    boundary: "Author interpretation of one perturbation protocol, not a universal Fisher calibration guarantee."
+
+implementation:
+  I01:
+    text: "A generic training implementation can represent θ* as detached parameter-aligned tensors and F as non-trainable parameter-aligned importance buffers."
+    type: IMPLEMENTATION_MAPPING
+    source: null
+    boundary: "Conceptual implementation mapping; not a code listing or variable naming claim from the paper."
+  I02:
+    text: "A new-task training step computes the current task loss and penalty from current parameters plus saved anchors/importance, backpropagates their sum, then lets an optimizer update current trainable parameters."
+    type: IMPLEMENTATION_MAPPING
+    source: null
+    boundary: "Generic autograd implementation flow; optimizer details vary."
+  I03:
+    text: "The browser's numeric parameter and gradient calculator is a small deterministic Teaching Toy, not a neural-network training run."
+    type: IMPLEMENTATION_MAPPING
+    source: null
+    boundary: "No paper performance values are generated by the tutorial simulation."
+
+background:
+  B01:
+    text: "In gradient-based optimization, adding a differentiable penalty to the loss adds its derivative to the total gradient."
+    type: GENERAL_BACKGROUND
+    source: null
+  B02:
+    text: "A diagonal approximation stores one curvature/precision-like value per parameter and omits off-diagonal parameter couplings."
+    type: GENERAL_BACKGROUND
+    source: null
+  B03:
+    text: "LwF is commonly described as output/function-space regularization, while EWC constrains parameter-space movement using importance weights."
+    type: GENERAL_BACKGROUND
+    source: null
+    boundary: "Cross-paper contrast for orientation; LwF is not a comparison experiment in this EWC paper."
+
+teaching_toys:
+  T01:
+    text: "A three-parameter example uses illustrative anchor, Fisher, λ, new-task gradient, and learning-rate values to calculate penalty and one plain-SGD step."
+    type: TEACHING_TOY
+    source: null
+    boundary: "All displayed toy values and resulting parameter positions are chosen for explanation and are not measured by the paper."
+  T02:
+    text: "A two-dimensional Gaussian contour comparison demonstrates the information omitted by a diagonal precision approximation."
+    type: TEACHING_TOY
+    source: null
+    boundary: "The covariance/correlation values are illustrative and are not an estimated posterior from either benchmark."
+  T03:
+    text: "A task-sequence viewer distinguishes the paper's stored anchor/importance state from current-task batches and Atari's separate replay memory."
+    type: TEACHING_TOY
+    source: null
+    boundary: "The flow is a conceptual trace, not an execution of the authors' agent."

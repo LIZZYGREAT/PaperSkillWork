@@ -1,0 +1,42 @@
+schema_version: 2
+
+id: "ewc"
+title: "Overcoming catastrophic forgetting in neural networks"
+
+paper:
+  url: "http://arxiv.org/abs/1612.00796"
+  arxiv_id: "1612.00796"
+  local_pdf: "source/paper.pdf"
+
+workflow:
+  version: 2
+  current_gate: G0
+  gates:
+    G0_workspace: {status: pending}
+    G1_research: {status: pending}
+    G2_evidence_audit: {status: pending}
+    G3_canonical: {status: pending}
+    G4_narrative_design: {status: pending}
+    G5_interaction_design: {status: pending}
+    G6_enhanced: {status: pending}
+    G7_release: {status: pending}
+
+artifacts:
+  learning_contract: "design/learning-contract.md"
+  paper_model: "research/01_paper_model.md"
+  evidence_registry: "research/02_evidence_registry.yaml"
+  terms: "knowledge/terms.yaml"
+  learning_architecture: "design/learning-architecture.md"
+  scenes_dir: "design/scenes"
+  final_check: "audit/final-check.md"
+  release_check: "audit/release-check.md"
+
+web:
+  canonical: "web/canonical"
+  enhanced: "web/enhanced"
+
+paperskill:
+  canonical_version: null
+  enhanced_version: null
+  canonical_pr: {number: null, status: pending}
+  enhanced_pr: {number: null, status: pending}
