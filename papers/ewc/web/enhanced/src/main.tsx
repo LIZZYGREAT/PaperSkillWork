@@ -5,6 +5,7 @@ import './styles/tokens.css';
 import './styles/components.css';
 import './styles/paper.css';
 import './styles/reference-hub.css';
+import './styles/tutorial-frame.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
