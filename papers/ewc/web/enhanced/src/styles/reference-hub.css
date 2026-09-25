@@ -1,0 +1,46 @@
+.reference-backdrop { position: fixed; inset: 0; z-index: 500; display: flex; justify-content: flex-end; padding: 14px; background: rgba(20,33,51,.42); backdrop-filter: blur(3px); overscroll-behavior: contain; }
+.reference-hub { display: flex; flex-direction: column; width: min(1030px,100%); min-height: 0; padding: 22px 24px 13px; overflow: hidden; border: 1px solid #dfe5ed; border-radius: 18px; background: #fff; box-shadow: 0 24px 80px rgba(19,35,55,.24); }
+.reference-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 15px; border-bottom: 1px solid #e7ebf1; }
+.reference-eyebrow { color: #7c91a8; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.reference-header h2 { margin: 2px 0 0; color: #29415f; font-size: 22px; }
+.reference-header p { margin: 4px 0 0; color: #7d8998; font-size: 11px; }
+.reference-close { flex: 0 0 auto; width: 36px; height: 36px; border: 1px solid #dfe5eb; border-radius: 9px; color: #64768a; background: #fff; cursor: pointer; font-size: 22px; line-height: 1; }
+.reference-search { display: block; margin-top: 14px; }
+.reference-search input { width: 100%; min-height: 40px; padding: 8px 12px; border: 1px solid #dce3eb; border-radius: 9px; color: #304a64; background: #fbfcfd; font-size: 12px; }
+.reference-filter-row { display: flex; align-items: end; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #e7ebf1; }
+.reference-filter-row label { display: grid; gap: 4px; color: #7c8998; font-size: 9px; font-weight: 750; }
+.reference-filter-row select { min-width: 200px; min-height: 33px; padding: 5px 9px; border: 1px solid #dfe5eb; border-radius: 8px; color: #40566d; background: #fff; font-size: 10px; }
+.reference-filter-row > span { padding-bottom: 8px; color: #8894a2; font-size: 9px; white-space: nowrap; }
+.reference-columns { display: grid; grid-template-columns: minmax(225px,.78fr) minmax(0,1.5fr); gap: 14px; min-height: 0; flex: 1; padding: 12px 0; }
+.reference-results { min-height: 0; overflow: auto; overscroll-behavior: contain; padding-right: 4px; }
+.reference-group { display: grid; align-content: start; gap: 3px; margin-bottom: 11px; }
+.reference-group h3 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 7px 8px 6px; border-bottom: 1px solid #e8edf2; color: #7d8997; background: #fff; font-size: 9px; letter-spacing: .04em; }
+.reference-group button { display: grid; gap: 3px; padding: 8px 9px; text-align: left; border: 1px solid transparent; border-radius: 7px; background: #fff; cursor: pointer; }
+.reference-group button:hover { background: #f6f8fb; }
+.reference-group button.is-selected { border-color: #b7cada; background: #eef4f9; }
+.reference-group button strong { color: #40566e; font-size: 10px; line-height: 1.35; }
+.reference-group button small { color: #8b97a4; font-size: 8px; line-height: 1.4; }
+.reference-detail { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 16px 18px; border: 1px solid #e3e8ed; border-radius: 12px; background: #fcfdfe; }
+.reference-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.reference-badges span { padding: 4px 7px; border: 1px solid #e0e6ec; border-radius: 5px; color: #77869a; background: #fff; font-size: 8px; font-weight: 750; }
+.reference-detail h3 { margin: 10px 0 3px; color: #2f4c6d; font-size: 19px; line-height: 1.3; }
+.reference-id { display: block; margin-bottom: 9px; color: #8994a2; font-size: 9px; overflow-wrap: anywhere; }
+.reference-summary { margin: 0 0 13px; color: #64758a; font-size: 11px; line-height: 1.65; }
+.reference-detail dl { display: grid; gap: 7px; margin: 0; }
+.reference-detail dl > div { display: grid; grid-template-columns: minmax(90px,.55fr) minmax(0,1.45fr); gap: 9px; padding-top: 8px; border-top: 1px solid #e7ebef; }
+.reference-detail dt { color: #8a96a4; font-size: 9px; font-weight: 750; }
+.reference-detail dd { margin: 0; color: #54677c; font-size: 10px; line-height: 1.55; overflow-wrap: anywhere; }
+.reference-source-link { display: inline-flex; margin-top: 12px; color: #3f6c91; font-size: 10px; font-weight: 750; text-decoration: none; }
+.reference-source-link:hover { text-decoration: underline; }
+.reference-related { display: grid; gap: 6px; margin-top: 13px; padding-top: 10px; border-top: 1px solid #e6ebf0; }
+.reference-related > strong { color: #76869a; font-size: 9px; }
+.reference-related > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.reference-related button { padding: 5px 7px; border: 1px solid #dfe5eb; border-radius: 6px; color: #456585; background: #fff; font-size: 9px; text-align: left; cursor: pointer; }
+.reference-related button:hover { border-color: #9aadc3; background: #f4f7fb; }
+.reference-empty { align-self: start; padding: 14px; color: #8290a0; font-size: 10px; }
+.reference-footer { padding-top: 10px; border-top: 1px solid #e7ebf1; color: #8b96a3; font-size: 9px; }
+.reference-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.reference-hub button:focus-visible, .reference-hub input:focus-visible, .reference-hub select:focus-visible { outline: 3px solid rgba(74,125,169,.45); outline-offset: 2px; }
+.reference-inline-button { padding: 0; border: 0; border-bottom: 1px dashed #4f7b9e; color: #315f85; background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
+@media(max-width:720px) { .reference-backdrop { padding: 0; }.reference-hub { width: 100%; height: 100%; padding: 16px; border: 0; border-radius: 0; }.reference-columns { grid-template-columns: 1fr; overflow: auto; }.reference-results { max-height: 31vh; padding: 4px; border: 1px solid #e4e9ee; border-radius: 8px; }.reference-detail { overflow: visible; }.reference-detail dl > div { grid-template-columns: 1fr; gap: 3px; }.reference-filter-row select { min-width: 0; }.reference-filter-row label { flex: 1; } }
+@media(prefers-reduced-motion:reduce) { .reference-hub, .reference-backdrop { animation: none; scroll-behavior: auto; } }
