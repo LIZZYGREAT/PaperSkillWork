@@ -38,6 +38,8 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const target = e.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input,textarea,select,button,a,[role="slider"],[role="spinbutton"]'))) return;
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
         next();
@@ -81,6 +83,7 @@ export default function App() {
             <button
               key={item.idx}
               className={`slide-sidebar-item ${active === item.idx ? 'active' : ''}`}
+              aria-current={active === item.idx ? 'page' : undefined}
               onClick={() => goTo(item.idx)}
             >
               <span className="slide-sidebar-num">{item.num}</span>

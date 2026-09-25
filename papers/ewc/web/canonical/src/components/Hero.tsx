@@ -18,11 +18,16 @@ export function Hero({
     <section className="hero">
       <div className="hero-inner">
         <div className="hero-venue">Interactive Tutorial</div>
-        <h1>{meta.titleEn}</h1>
+        <h1>{meta.titleZh}</h1>
         <div className="hero-sub">
-          {meta.titleZh} · {meta.venue}
+          {meta.titleEn} · {meta.venue}
         </div>
-        <p className="hero-abs" dangerouslySetInnerHTML={{ __html: meta.coreInsight }} />
+        <div className="hero-research-question">
+          <strong>基本矛盾</strong>
+          <p>{meta.coreProblem}</p>
+        </div>
+        <p className="hero-abs"><strong>论文研究：</strong><span dangerouslySetInnerHTML={{ __html: meta.coreInsight }} /></p>
+        <div className="hero-authors">{meta.authors} · {meta.affiliation}</div>
         <div className="hero-meta">
           {(meta.keywords || []).map((k, i) => (
             <span key={i} className="tag">

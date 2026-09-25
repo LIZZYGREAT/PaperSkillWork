@@ -135,3 +135,42 @@ export const ClaimBoundary: React.FC<WidgetProps> = () => {
     <p className="ewc-feedback">作者指出 factorized Gaussian 与 diagonal Fisher 是显著近似；Atari 扰动分析提示重要性估计可能低估某些参数的不确定性。</p>
   </div>;
 };
+
+export const StateLifecycle: React.FC<WidgetProps> = () => {
+  const [active, setActive] = useState(0);
+  const stages = [
+    ['学习 A', 'D_A 批次', 'θ 当前参数', '优化器更新 θ', '当前任务目标继续训练'],
+    ['估计重要性', 'A 的数据 / 目标', 'θ_A*', '估计对角 F_A', 'θ_A* 与 F_A 成对保存'],
+    ['任务边界', '任务 A 完成', 'θ_A*、F_A', '追加参考状态', '为后续任务提供锚点和权重'],
+    ['学习 B', 'D_B 当前批次', 'θ、θ_A*、F_A', '优化器只更新 θ', '参考状态在此步保持固定'],
+  ];
+  const stage = stages[active];
+  return <div className="ewc-widget">
+    <div className="ewc-choice-row ewc-choice-wrap" role="group" aria-label="EWC 状态生命周期">{stages.map((item, index) => <button key={item[0]} type="button" className={index === active ? 'ewc-choice is-selected' : 'ewc-choice'} aria-pressed={index === active} onClick={() => setActive(index)}>{item[0]}</button>)}</div>
+    <article className="ewc-evidence-card" aria-live="polite"><small>阶段 {active + 1} · {stage[0]}</small><h4>{stage[1]}</h4><p><b>读取：</b>{stage[2]}</p><p><b>写入：</b>{stage[3]}</p><p><b>边界后保留：</b>{stage[4]}</p></article>
+    <p className="ewc-feedback">实现映射：优化器每一步读取参考状态，但只更新当前可训练参数。原文给出方法与公式，不规定这些具体变量名或代码 API。</p>
+  </div>;
+};
+
+export const MnistProtocol: React.FC<WidgetProps> = () => {
+  const items = [
+    ['任务输入', '每个任务使用一组固定随机像素排列，同一任务中的图像共享此排列。'],
+    ['连续训练', '任务按顺序到达；完成当前任务后，旧任务样本不再用于后续训练。'],
+    ['Figure 2A', '两层、每层 400 单元的全连接 ReLU 网络；每个数据集训练 20 个 epoch。'],
+    ['基线', 'Figure 2A 比较 SGD、统一二次约束和 EWC；Figure 2B 比较 EWC 与 SGD + dropout。'],
+  ];
+  return <div className="ewc-widget"><div className="ewc-protocol-grid">{items.map(([title, body], index) => <article className="ewc-evidence-card" key={title}><small>协议 {String(index + 1).padStart(2, '0')}</small><h4>{title}</h4><p>{body}</p></article>)}</div><p className="ewc-toy-note">依据论文 §2.1、Figure 2 与 Appendix 4.1。只列明原文明确给出的设置。</p></div>;
+};
+
+export const MnistResults: React.FC<WidgetProps> = () => {
+  const results = [
+    ['Figure 2A · 性能', '论文报告 EWC 在后续任务训练时保留较早任务表现；均匀二次约束妨碍新任务学习。'],
+    ['Figure 2B · 任务数增加', 'SGD + dropout 对照随任务增加出现退化；EWC 在该设置中保留早期任务表现。'],
+    ['Figure 2C · 结构分析', '输入置换差异增大时早期层 Fisher overlap 降低；该指标不是准确率。'],
+  ];
+  return <div className="ewc-widget"><div className="ewc-results-grid">{results.map(([title, body]) => <article className="ewc-evidence-card" key={title}><small>论文 Figure 2</small><h4>{title}</h4><p>{body}</p></article>)}</div><div className="ewc-feedback"><b>结论范围</b><p>支持的是论文指定的置换 MNIST 设置。没有从曲线估算数值点，也不外推为零遗忘或任意任务保证。</p></div></div>;
+};
+
+export const SynthesisReview: React.FC<WidgetProps> = () => {
+  return <div className="ewc-widget"><div className="ewc-synthesis-table"><div><b>Permuted MNIST</b><span>分类任务；EWC、SGD、统一约束和 dropout 对照。</span><strong>支持：指定协议下保留较早任务表现。</strong><small>边界：固定像素置换与指定网络。</small></div><div><b>Atari</b><span>包含任务识别、按任务 replay 和专属 gain/bias 的 DQN 系统。</span><strong>支持：该系统能学习多款游戏。</strong><small>边界：低于十个独立 DQN；不是 EWC 单项效果。</small></div></div><div className="ewc-feedback"><b>综合结论</b><p>EWC 用旧任务局部重要性约束新任务更新，缓解特定实验中的参数干扰。对角 Fisher 与因子化 Gaussian 近似存在局限，论文没有证明零遗忘或无限任务扩展。</p></div></div>;
+};
