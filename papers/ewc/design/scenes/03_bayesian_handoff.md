@@ -1,4 +1,4 @@
-# Scene: 02 — What is transferred when task A ends?
+# Page: 03 — What is transferred when task A ends?
 
 ## Learning Goal
 
@@ -6,7 +6,7 @@ Explain the sequential Bayesian handoff and why EWC compresses the old-task post
 
 ## Knowledge Dependencies
 
-Scene 01; helpful terms `bayesian_posterior` and Bayes rule. Evidence C03 and F01.
+Page 02; helpful terms `bayesian_posterior` and Bayes rule. Evidence C03 and F01.
 
 ## Persistent Objects
 
@@ -60,7 +60,7 @@ Can the learner state why `p(θ|D_A)` appears in the B objective and why the pap
 
 - **Consumes:** C03, F01, Scene 01's need for old-task state.
 - **Produces:** A requirement for a tractable local representation.
-- **Used later by:** Scene 03.
+- **Used later by:** Page 04.
 
 ## Deletion Test
 

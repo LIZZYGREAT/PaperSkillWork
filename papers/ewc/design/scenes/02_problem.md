@@ -1,4 +1,4 @@
-# Scene: 01 — Why does task B overwrite task A?
+# Page: 02 — Why does task B overwrite task A?
 
 ## Learning Goal
 
@@ -60,7 +60,7 @@ Can the learner explain why `L_B` alone may alter parameters useful for A, and w
 
 - **Consumes:** C01, gradient descent prerequisite.
 - **Produces:** Need for compact old-task state and nonuniform protection.
-- **Used later by:** Scenes 02–04.
+- **Used later by:** Pages 03–06.
 
 ## Deletion Test
 

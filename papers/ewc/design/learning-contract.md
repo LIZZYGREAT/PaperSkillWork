@@ -57,3 +57,7 @@ Trace equations (1)–(3), the Figure 1 schematic, supervised Permuted MNIST and
 - Not a reproduction of the paper's MNIST or Atari experiments.
 - Not an animated metaphor or interaction collection; each action must reveal a relationship, calculation, state transition, or evidence boundary.
 - Not a replacement for the source paper.
+
+## Page Structure Contract
+
+The tutorial contains exactly **10 total pages including the opening page**. Page 01 introduces the basic contradiction, research problem, and paper contribution. Pages 02–06 build the method and its state lifecycle; pages 07–09 analyze Permuted MNIST and Atari; page 10 compares evidence, states the bounded conclusion, and reconstructs the full state flow. Canonical and Enhanced share the same page map and left chapter navigation.

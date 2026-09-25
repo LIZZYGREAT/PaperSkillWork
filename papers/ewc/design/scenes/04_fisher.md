@@ -1,4 +1,4 @@
-# Scene: 03 — How does Fisher assign unequal protection?
+# Page: 04 — How does Fisher assign unequal protection?
 
 ## Learning Goal
 
@@ -6,7 +6,7 @@ Connect local posterior precision to the diagonal Fisher weights and identify th
 
 ## Knowledge Dependencies
 
-Scene 02; helpful Gaussian precision and matrix-diagonal concepts. Evidence C03, C10, B02, F02.
+Page 03; helpful Gaussian precision and matrix-diagonal concepts. Evidence C03, C10, F02, T02.
 
 ## Persistent Objects
 
@@ -60,7 +60,7 @@ The selected displacement changes only toy current state. Fisher and anchor are 
 
 - **Consumes:** C03, C10, F02, Scene 02's local-Gaussian requirement.
 - **Produces:** Parameter-wise penalty signal and an approximation boundary.
-- **Used later by:** Scene 04's total-gradient calculation and Scene 06's limits.
+- **Used later by:** Page 05's total-gradient calculation and Page 09's limits.
 
 ## Deletion Test
 

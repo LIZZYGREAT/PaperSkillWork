@@ -1,4 +1,4 @@
-# Scene: 06 — Which part of Atari belongs to EWC?
+# Page: 09 — Which part of Atari belongs to EWC?
 
 ## Learning Goal
 
@@ -6,7 +6,7 @@ Place EWC in the Atari agent architecture, understand the aggregate metric, and 
 
 ## Knowledge Dependencies
 
-Scenes 01–05; optional DQN/replay background. Evidence C07–C12, R03–R04, B03.
+Pages 02–08; optional DQN/replay background. Evidence C07–C12, R03–R04, B03.
 
 ## Persistent Objects
 
@@ -60,7 +60,7 @@ Can the learner draw the Atari system and point to EWC's actual boundary, define
 
 - **Consumes:** C07–C12, R03–R04, Scenes 04–05.
 - **Produces:** Final system-level evidence boundary and limits.
-- **Used later by:** End-to-end reconstruction and audit.
+- **Used later by:** Page 10's cross-experiment reconstruction.
 
 ## Deletion Test
 

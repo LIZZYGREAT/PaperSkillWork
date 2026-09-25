@@ -1,4 +1,4 @@
-# Scene: 04 — What changes in one task-B step?
+# Page: 05 — What changes in one task-B step?
 
 ## Learning Goal
 
@@ -64,7 +64,7 @@ Current `θ` is mutable; `θ*` and `F` are retained and consumed; `L_B` is recal
 
 - **Consumes:** C02–C03, F02–F03, I01–I03, T01, outputs of Scenes 02–03.
 - **Produces:** One inspectable total gradient and next parameter vector.
-- **Used later by:** Scenes 05–06 and the end-to-end recap.
+- **Used later by:** Pages 06–10 and the end-to-end reconstruction.
 
 ## Deletion Test
 

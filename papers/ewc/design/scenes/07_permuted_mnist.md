@@ -1,4 +1,4 @@
-# Scene: 05 — What does Permuted MNIST establish?
+# Page: 07 — How is Permuted MNIST constructed?
 
 ## Learning Goal
 
@@ -6,23 +6,23 @@ Reconstruct the supervised continual-learning protocol and distinguish reported 
 
 ## Knowledge Dependencies
 
-Scenes 01–04; terms `permuted_mnist` and `fisher_overlap`. Evidence C04–C06, R01–R02.
+Pages 02–06; terms `permuted_mnist` and `fisher_overlap`. Evidence C04, R01–R02.
 
 ## Persistent Objects
 
-Task permutation selector `mnistView ∈ {task_protocol, method_comparison, overlap}`; fixed experiment metadata; method labels SGD, uniform quadratic constraint, EWC, SGD+dropout.
+Fixed experiment metadata and method labels SGD, uniform quadratic constraint, EWC, SGD+dropout.
 
 ## System State
 
-Selecting one view updates the protocol card and the specific supported claim. Do not create a chart with fabricated points; if showing curves, use a text-only schematic explicitly marked as a conceptual redraw and do not assign measured coordinates.
+Protocol facts are source records. Do not create a chart with fabricated points; if showing curves, use a text-only schematic explicitly marked as a conceptual redraw and do not assign measured coordinates.
 
 ## Core User Actions
 
-Select one of three evidence cards: task construction, method comparison, or Fisher overlap. The selected card reveals dataset, model, protocol, reported qualitative pattern, and supported/unsupported inference.
+Inspect the task construction, model, protocol, and comparison conditions. The result interpretation and Fisher-overlap analysis are reserved for page 08.
 
 ## State Transitions
 
-`task_protocol` shows the fixed-permutation rule and no further training on prior task data. `method_comparison` shows the paper's baseline conditions and qualitative result. `overlap` shows the 8×8 vs 26×26 central region setting and explains why digit output classes can still share later layers.
+Show the fixed-permutation rule, the Figure 2A network and training schedule, and the baseline conditions. Do not mix qualitative result analysis or Fisher overlap into this protocol page.
 
 ## Architecture / Data Flow
 
@@ -58,9 +58,9 @@ This scene displays source records only. It does not instantiate or update a net
 
 ## Global Dependency Test
 
-- **Consumes:** C04–C06, R01–R02, Scene 04's mechanism.
-- **Produces:** Scoped benchmark evidence and a distinction between performance and parameter-use analysis.
-- **Used later by:** Scene 06's evidence boundary.
+- **Consumes:** C04, R01–R02, Page 05's mechanism.
+- **Produces:** A protocol-level model of the MNIST experiment.
+- **Used later by:** Page 08's result analysis.
 
 ## Deletion Test
 

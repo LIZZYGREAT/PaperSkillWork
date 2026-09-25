@@ -2,116 +2,123 @@
 
 Paper ID: `ewc`
 
+## Ten-page contract
+
+The tutorial has **exactly 10 pages total, including the opening page**. The opening page frames the contradiction, summarizes the problem, and introduces the paper's contribution. Pages 07–10 analyze experiments, compare evidence, and reconstruct the method. There is no additional cover, video page, or appendix page in this count.
+
+| Page | Title | Learning role | Main interaction |
+| --- | --- | --- | --- |
+| 01 | 研究问题与论文导读 | Introduce sequential-task conflict, question, contribution, and route | Reveal the old/new objective conflict and paper question |
+| 02 | 为什么任务 B 会覆盖任务 A？ | Establish interference and stability/plasticity tension | Compare B-only, uniform penalty, and EWC signals |
+| 03 | 任务 A 的信息怎样传给 B？ | Derive the sequential Bayesian handoff | Step through A posterior → B likelihood |
+| 04 | Fisher 怎样决定参数偏移代价？ | Explain local precision, diagonal Fisher, and lost coupling | Adjust a labeled toy parameter and switch matrix view |
+| 05 | 一次 EWC 更新到底改变什么？ | Combine objective, gradient, and optimizer semantics | Recompute penalty and one plain-SGD teaching step |
+| 06 | 任务边界上的状态如何流转？ | Trace data, anchor, Fisher, current parameters, and multi-task memory | Select lifecycle stages and inspect read/write ownership |
+| 07 | Permuted MNIST 如何构造？ | Present model, task protocol, and controlled comparisons | Inspect protocol facts and baseline conditions |
+| 08 | MNIST 结果支持哪些结论？ | Analyze qualitative curves and Fisher overlap separately | Switch performance/overlap evidence and inspect claim limits |
+| 09 | Atari 结果属于整个系统 | Analyze DQN components, score protocol, result, and limits | Select system component and classify claims |
+| 10 | 综合结论与 EWC 全流程 | Compare both experiments and reconstruct the causal chain | Play, pause, step, and reset an annotated state-flow animation |
+
+The left sidebar, previous/next controls, keyboard navigation, progress count, and Reference Hub use this same ten-page map. Page count must be identical in Canonical and Enhanced.
+
 ## Concept Dependency Graph
 
 ```text
-Sequential tasks share mutable θ
-  → changing θ for B can interfere with A
-  → previous-task posterior can act as B's prior
-  → exact posterior is intractable
-  → local Gaussian + diagonal Fisher compresses it
-  → quadratic penalty adds a restoring gradient to L_B
-  → optimizer changes current θ while anchor/Fisher remain references
-  → Permuted MNIST and Atari test the method in bounded protocols
-  → approximation, finite capacity, and system components define the claim boundary
+page 01: sequential-task contradiction + paper question
+  → page 02: shared mutable θ can serve conflicting task objectives
+  → page 03: p(θ|D_A) becomes a prior factor for task B
+  → page 04: local Gaussian/Laplace view + diagonal Fisher precision
+  → page 05: quadratic penalty contributes a restoring gradient
+  → page 06: task-boundary state and per-task reference lifecycle
+  → page 07: Permuted MNIST protocol
+  → page 08: MNIST performance comparison ≠ Fisher-overlap analysis
+  → page 09: Atari evidence belongs to a larger DQN system
+  → page 10: compare evidence, bound conclusion, replay the full state flow
 ```
 
-Readers first need the mutable shared-parameter problem before Bayesian state transfer makes sense. The Fisher scene follows the old posterior because it explains the source of the parameter-wise weights; the objective and update scene then combines the new gradient with that state. Experiments come after the mechanism so the learner can identify what each evaluation does and does not establish.
+## Persistent Workspace and State Ownership
 
-## Persistent Workspace
+Keep the current task, current parameters `θ`, saved old-task anchors `θ*`, per-task diagonal importance estimates `F`, current loss/gradient, `λ`, and next optimizer result visible in the shared workspace. Distinguish three classes: mutable training state, saved reference state, and configuration. Example vectors are Teaching Toy state only. Evidence cards never inherit toy values.
 
-Keep one compact “EWC training state” visible and updated across mechanism scenes: current task; current parameters `θ`; saved anchor `θ*`; diagonal importance `F`; current-task loss/gradient; `λ`; and the next optimizer result. Each field shows whether it is trainable, reference state, or a scalar setting. The example values are Teaching Toy state only. Evidence cards are kept separately and never inherit toy values. The workspace needs a reset action and a read-only mode for paper facts.
+At a task boundary, the conceptual paper state retains each previous task's `θ*_k` and `F_k` term for the EWC objective. During task B, the current `θ` and `L_B` change; old anchors and Fisher estimates are read as references. After task B, its solution and importance estimate are added for later tasks. Do not silently replace the paper's per-task terms with the later online-EWC consolidation variant.
 
-## Scenes
+## Page Specifications
 
-### Scene 01 — Why does task B overwrite task A?
+### Page 01 — Research question and paper overview
 
-- **Entry knowledge:** A neural network minimizes a loss by changing shared parameters.
-- **Unresolved question:** Why does optimizing B alone damage A, and why can one uniform constraint also fail?
-- **New mental model:** B-only updates ignore A; a uniform anchor protects every parameter equally, whereas EWC later weights displacement by old-task importance.
-- **Persistent objects used:** `θ`, `L_B`, `θ*`, `F`, `λ` (initially only `θ`, `L_A/L_B` exist).
-- **Exit capability:** Explain the stability/plasticity tension and distinguish a soft constraint from freezing all parameters.
-- **Next question:** How can information about A be carried into the B objective?
-- **Consumes:** C01, Figure 1 schematic, reader gradient-descent prerequisite.
-- **Produces:** Recognition that a parameter-specific old-task signal is needed.
-- **Used later by:** Scenes 02–04.
+- **Entry point:** A shared parameter vector is optimized as tasks arrive in sequence; retaining old data is not assumed.
+- **Core contradiction:** Updating for B can damage A, while protecting all parameters equally can impede B.
+- **Paper question:** Can old-task information be compressed into parameter-wise constraints so new tasks can still learn?
+- **Contribution preview:** Sequential Bayesian motivation, local Gaussian approximation, diagonal Fisher importance, and a soft quadratic penalty.
+- **Exit capability:** State the problem, the paper's proposed mechanism, and the tutorial route without claiming zero forgetting.
+- **Consumes / produces:** C01–C03; produces the need for pages 02–06's mechanism chain.
 
-### Scene 02 — What is transferred when task A ends?
+### Page 02 — Why does task B overwrite task A?
 
-- **Entry knowledge:** Old examples may not be available during B, but their influence must be represented.
-- **Unresolved question:** What compact object can carry A's constraints into B?
-- **New mental model:** Sequential Bayes makes `p(θ|D_A)` a prior factor when adding `D_B`; EWC approximates rather than stores the exact posterior.
-- **Persistent objects used:** `D_A`, `D_B`, posterior/prior labels, `θ*`.
-- **Exit capability:** Reconstruct the posterior handoff and explain why the old posterior is useful but too complex to retain exactly.
-- **Next question:** What local representation gives the posterior a computable shape?
-- **Consumes:** C03, F01, helpful Bayes/MAP terms.
-- **Produces:** Need for a local mean and precision.
-- **Used later by:** Scene 03.
+- **Entry knowledge:** Training reduces a task loss by changing shared parameters.
+- **New mental model:** B-only updates ignore A; a uniform anchor constrains useful and unimportant parameters alike; EWC weights displacement by old-task importance.
+- **Exit capability:** Explain the distinct risks of unconstrained learning and equal-strength protection.
+- **Evidence:** C01–C02 and the Figure 1 schematic, not a measured accuracy curve.
 
-### Scene 03 — How does Fisher assign unequal protection?
+### Page 03 — What is transferred from A to B?
 
-- **Entry knowledge:** The previous posterior is approximated around `θ*`; precision controls how quickly probability falls away from its center.
-- **Unresolved question:** How are different parameter directions assigned different stiffness, and what information is discarded?
-- **New mental model:** Diagonal Fisher supplies one precision-like importance per parameter; a larger `F_i` makes the same displacement more costly. A full matrix could encode coupling, but the chosen approximation omits off-diagonal terms.
-- **Persistent objects used:** `θ*`, `F`, per-parameter `Δ_i`, diagonal/full precision schematic.
-- **Exit capability:** Distinguish importance from parameter magnitude and describe the diagonal approximation boundary.
-- **Next question:** How does that importance enter the gradient that actually moves `θ`?
-- **Consumes:** C03, C10, B02, F02; Fisher, Gaussian precision, and diagonal Fisher terms.
-- **Produces:** Per-parameter importance values and a visible limitation.
-- **Used later by:** Scene 04 and final limits.
+- **New mental model:** `p(θ|D_A)` becomes a prior factor when task B arrives; the exact posterior is too complex to keep and will be approximated next.
+- **Exit capability:** Reconstruct `p(θ|D_A,D_B) ∝ p(D_B|θ)p(θ|D_A)` and distinguish a posterior from raw replay data.
+- **Evidence:** C03, F01.
 
-### Scene 04 — What changes in one task-B step?
+### Page 04 — How does Fisher weight parameter changes?
 
-- **Entry knowledge:** `L_B`, `θ*`, `F`, and `λ` have separate roles.
-- **Unresolved question:** Does EWC freeze parameters, alter the optimizer, or add a signal to the loss gradient?
-- **New mental model:** The penalty is computed from current parameters and saved reference state; its derivative is added to the B gradient; the optimizer then updates current `θ`. Anchors and Fisher buffers are not themselves updated by that step.
-- **Persistent objects used:** Complete EWC training state; prior toy parameter choices persist with explicit Teaching Toy label.
-- **Exit capability:** Trace the lifecycle from task boundary through one update and explain what state remains after the step.
-- **Next question:** What evidence shows the trade-off helps in tested sequences, and what remains unproven?
-- **Consumes:** F02–F03, C02–C03, I01–I03, T01.
-- **Produces:** A recomputable penalty, gradient decomposition, and next `θ` in a toy update.
-- **Used later by:** Scenes 05–06 and end-to-end reconstruction.
+- **New mental model:** Around an old solution, diagonal Fisher acts as a local precision/importance estimate; larger `F_i` makes equal displacement cost more, while the parameter can still move.
+- **Exit capability:** Explain the Laplace/local-Gaussian motivation and the off-diagonal coupling discarded by the approximation.
+- **Evidence:** C03, C10, F02, T02. Toy vectors/matrices remain labeled as invented examples.
 
-### Scene 05 — What does Permuted MNIST establish?
+### Page 05 — What changes in one EWC update?
 
-- **Entry knowledge:** The learner can identify EWC's mechanism and what evidence would test forgetting.
-- **Unresolved question:** Does parameter-specific protection outperform unprotected and equally protected baselines on a controlled task sequence?
-- **New mental model:** Each task has one fixed pixel permutation; curves compare retention and learning. Fisher overlap is an additional analysis of shared parameter use, not an accuracy score.
-- **Persistent objects used:** Evidence cards, task sequence, method comparison, protocol metadata.
-- **Exit capability:** State the reported qualitative comparison and reconstruct the task/model/protocol without treating schematic plots as measured values.
-- **Next question:** Does the Atari result isolate EWC, or evaluate it in a larger agent system?
-- **Consumes:** C04–C06, R01–R02, source Figure 2/Appendix 4.1.
-- **Produces:** Benchmark-specific evidence claim and its scope.
-- **Used later by:** Scene 06.
+- **New mental model:** `L_B` plus a quadratic term produces a combined gradient; the optimizer changes current `θ`, while `θ*` and `F` remain references for that step.
+- **Exit capability:** Derive `λF_i(θ_i−θ*_i)` and trace loss → backward gradient → optimizer update.
+- **Evidence:** F02–F03, I01–I02, T01.
 
-### Scene 06 — Which part of Atari belongs to EWC?
+### Page 06 — What state moves at a task boundary?
 
-- **Entry knowledge:** EWC's parameter penalty can be one part of a continual-learning system.
-- **Unresolved question:** Which state and mechanisms contribute to the Atari result, and where does the approximation fail?
-- **New mental model:** EWC protects long-timescale shared parameters inside an agent that also recognizes tasks, replays task-specific experiences, and has game-specific gains/biases. The reported score improves over plain training but remains below separate agents; perturbation evidence flags uncertainty misestimation.
-- **Persistent objects used:** Agent component map, results protocol, limits and claim cards; optional EWC/LwF comparison.
-- **Exit capability:** Reconstruct the whole evaluated system, classify the evidence as system-level, and name the Gaussian/diagonal and finite-capacity limits.
-- **Next question:** Can the reader explain the full sequence without the page?
-- **Consumes:** C07–C12, R03–R04, B03, Appendix 4.2–4.3.
-- **Produces:** Final causal chain and claim boundary.
-- **Used later by:** End-to-end recap.
+- **New mental model:** End A by saving its solution and Fisher estimate; train B using B data and all prior EWC reference terms; after B, add B's own reference pair for later tasks. Old examples are not part of the B penalty path.
+- **Exit capability:** Identify which objects are produced, read, mutated, or retained at every boundary; distinguish original per-task EWC from online compression variants.
+- **Evidence:** C02–C03, I01–I02. The interactive lifecycle is a conceptual implementation mapping, not the original code or a running neural network.
 
-## Optional Analogy
+### Page 07 — How is Permuted MNIST constructed?
 
-- Does an analogy reduce conceptual load? Yes, locally.
-- **Mapping:** Draw a small spring between a current parameter and its old anchor; Fisher scales the spring stiffness, and `λ` scales the whole set of springs.
-- **Boundary:** A spring is only a picture for the quadratic gradient. Neural parameters are not literal springs; Fisher is an approximate precision/importance signal, not a measured mechanical constant.
-- **Removal condition:** If learners infer that high-Fisher parameters cannot move or that the analogy explains Fisher itself, remove the spring illustration and keep the equation/gradient view.
+- **New mental model:** Each task uses a fixed random pixel permutation across its examples; Figure 2A's network and training protocol can be named before interpreting results.
+- **Exit capability:** Reconstruct dataset/task/model/training/baseline facts without inventing plotted values.
+- **Evidence:** C04, R01–R02.
+
+### Page 08 — What do MNIST results establish?
+
+- **New mental model:** The reported curves support a qualitative retention/learning comparison for the tested sequence; Fisher overlap separately analyzes parameter-use similarity and is not accuracy.
+- **Exit capability:** Compare SGD, uniform quadratic protection, EWC, and the dropout comparison at the level shown by each panel; name the protocol boundary.
+- **Evidence:** C05–C06, R01–R02.
+
+### Page 09 — What does the Atari result belong to?
+
+- **New mental model:** The EWC penalty is one component in a larger task-aware DQN with task recognition, per-task replay, and task-specific gains/biases. The metric is clipped human-normalized score; EWC's system improves on plain training but remains below ten separate DQNs.
+- **Exit capability:** Explain the system boundary, protocol, result, and uncertainty/capacity limits.
+- **Evidence:** C07–C12, R03–R04, B03.
+
+### Page 10 — Compare, conclude, and replay the whole flow
+
+- **Synthesis:** Contrast supervised Permuted MNIST's controlled parameter-interference evidence with Atari's system-level evidence. Conclude that EWC mitigates interference in the reported settings, not that it guarantees zero forgetting, unlimited capacity, or LLM performance.
+- **Animation path:** task-A data → optimize `θ_A` → estimate `F_A` → save immutable reference pair `(θ*_A,F_A)` → task-B batch arrives → compute `L_B + penalty` and combined gradient → optimizer mutates current `θ` → evaluate old/new tasks → append B's reference state and continue.
+- **Interaction:** Play/pause, previous/next step, jump-to-stage, reset, and a live explanation of current inputs, reads, writes, and retained state. Reduced-motion preference must disable automatic motion while leaving manual step controls available.
+- **Boundary:** This generic parameter-state flow does not animate Atari's independent task-recognition/replay/gain-bias subsystems as if they were EWC.
 
 ## Full Causal Chain
 
-Task A examples update `θ` → the learned solution becomes `θ*` → diagonal Fisher summarizes the local importance estimate `F` → B arrives without using A examples in the supervised B penalty → `L_B` and the EWC quadratic produce a combined gradient → optimizer mutates current `θ` → tests measure prior-task retention and new-task learning → Permuted MNIST and Atari support claims only for their protocols → diagonal uncertainty, task conflict, limited capacity, and Atari's surrounding components bound interpretation.
+Task A examples update current `θ` → the learned solution becomes `θ*_A` → Fisher estimates local old-task importance `F_A` → task B arrives without using A examples in its supervised penalty → `L_B` and EWC's quadratic term form a combined gradient → the optimizer mutates current `θ` → task-boundary state is retained per task → MNIST and Atari tests measure outcomes under distinct protocols → experiment evidence bounds the conclusion.
 
 ## Architecture Acceptance
 
-- [x] Scene order follows conceptual dependencies, not paper section order.
-- [x] A first-time learner can identify the objects and their roles.
-- [x] Every core scene states an entry point and exit capability.
-- [x] The final path reconnects the full mechanism and evidence boundary.
+- [x] The route contains exactly ten pages including the opening page.
+- [x] The opening page states the basic contradiction, problem, and paper contribution.
+- [x] Pages 07–10 analyze experiments, compare claims, and synthesize the method.
+- [x] The final page specifies a stepwise state-flow animation with manual controls and reduced-motion behavior.
+- [x] Canonical and Enhanced must share the ten-page map and sidebar/page controls.
 
-Architecture content is prepared for review; these planning checks are not a human gate acceptance.
+Architecture content is prepared for review; these planning checks are not human gate acceptance.
