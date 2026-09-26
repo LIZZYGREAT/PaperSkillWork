@@ -1,5 +1,5 @@
-export type StateNode = { id: string; label: string; owner?: string; description?: string; effect?: string; terminal?: boolean };
-export type StateTransition = { from: string; to: string; condition?: string; explanation?: string };
+export type StateNode = { id: string; label: string; owner?: string; description?: string; effect?: string; terminal?: boolean; position?: { x: number; y: number } };
+export type StateTransition = { from: string; to: string; condition?: string; explanation?: string; path?: "straight" | "curve" | "orthogonal" };
 export type IllegalTransitionHint = { from: string; to: string; message: string };
 export type StateMachineSpec = { states: StateNode[]; transitions: StateTransition[]; initialState: string; illegalHints?: IllegalTransitionHint[] };
 export type TransitionResult = { valid: true; state: StateNode; transition: StateTransition } | { valid: false; message: string };
@@ -8,6 +8,11 @@ export function validateStateMachine(spec: StateMachineSpec): string[] {
   const ids = new Set(spec.states.map((state) => state.id));
   const errors: string[] = [];
   if (!ids.has(spec.initialState)) errors.push(`Initial state '${spec.initialState}' is not defined.`);
+  for (const state of spec.states) {
+    if (state.position && (!Number.isFinite(state.position.x) || !Number.isFinite(state.position.y) || state.position.x < 0 || state.position.y < 0)) {
+      errors.push(`State '${state.id}' has an invalid position; x and y must be finite, non-negative canvas coordinates.`);
+    }
+  }
   for (const transition of spec.transitions) {
     if (!ids.has(transition.from) || !ids.has(transition.to)) errors.push(`Transition '${transition.from} → ${transition.to}' references an unknown state.`);
   }

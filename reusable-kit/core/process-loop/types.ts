@@ -4,6 +4,7 @@ export type ProcessNode = {
   kind?: "input" | "module" | "parameter" | "output" | "loss" | "memory" | "state";
   group?: string;
   description?: string;
+  position?: { x: number; y: number };
 };
 
 export type ProcessEdge = {
@@ -12,6 +13,8 @@ export type ProcessEdge = {
   to: string;
   label?: string;
   kind?: "data" | "gradient" | "control" | "memory";
+  path?: "straight" | "curve" | "orthogonal";
+  direction?: "forward" | "reverse";
 };
 
 export type ProcessStep = {
@@ -35,6 +38,11 @@ export function validateProcessLoopSpec(spec: ProcessLoopSpec): string[] {
   if (!spec.steps.length) problems.push("ProcessLoopExplorer requires at least one step.");
   for (const edge of spec.edges) {
     if (!nodeIds.has(edge.from) || !nodeIds.has(edge.to)) problems.push(`Edge '${edge.id}' references an unknown node ('${edge.from}' → '${edge.to}').`);
+  }
+  for (const node of spec.nodes) {
+    if (node.position && (!Number.isFinite(node.position.x) || !Number.isFinite(node.position.y) || node.position.x < 0 || node.position.y < 0)) {
+      problems.push(`Node '${node.id}' has an invalid position; x and y must be finite, non-negative canvas coordinates.`);
+    }
   }
   for (const step of spec.steps) {
     if (stepIds.has(step.id)) problems.push(`Duplicate process step id '${step.id}'.`);

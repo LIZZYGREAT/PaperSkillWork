@@ -40,7 +40,7 @@ jobs:
       - name: Run PaperSkillWork tests
         run: python -m pytest -q
 
-      - name: Check PhyAgentOS workspace
+      - name: Check Workflow v3 and PhyAgentOS workspace
         run: python tools/paper.py check phyagentos
 
       - name: Set up Node.js
@@ -48,7 +48,25 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: papers/phyagentos/web/enhanced/package-lock.json
+          cache-dependency-path: |
+            reusable-kit/demo/package-lock.json
+            papers/phyagentos/web/enhanced/package-lock.json
+
+      - name: Install Reusable Kit demo dependencies
+        working-directory: reusable-kit/demo
+        run: npm ci
+
+      - name: Build Reusable Kit demo
+        working-directory: reusable-kit/demo
+        run: npm run build
+
+      - name: Install headless Chromium
+        working-directory: reusable-kit/demo
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Reusable Kit browser smoke tests
+        working-directory: reusable-kit/demo
+        run: npm run test:browser
 
       - name: Install Enhanced dependencies
         working-directory: papers/phyagentos/web/enhanced

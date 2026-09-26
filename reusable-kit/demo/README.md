@@ -6,7 +6,8 @@ Run locally:
 
 ```powershell
 npm ci
+npx playwright install chromium
 npm run dev
 ```
 
-Build the standalone demo with `npm run build`. Run `npm run test:browser` to open the browser smoke checks for rendering, data-driven interactions, keyboard focusability, reduced-motion behavior, and figure zoom. The demo is a local component validation surface, not a separately deployed product.
+Build both demo pages and the browser assertion page with `npm run build`, then run `npm run test:browser`. Headless Chromium checks semantic graph edges and positions, interaction behavior, scroll-step synchronization, reduced motion, viewport-safe popovers, mobile layout, and figure zoom. The demo is a local component validation surface, not a separately deployed product.

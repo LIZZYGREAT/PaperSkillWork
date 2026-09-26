@@ -1,12 +1,15 @@
 import { createRoot } from "react-dom/client";
 import "../../foundation/styles/kit.css";
 import { ArchitectureExplorer } from "../../core/architecture";
+import type { ArchitectureSpec } from "../../core/architecture";
 import { FlowStepper } from "../../core/flow-stepper";
 import { PaperFigure } from "../../core/paper-figure";
 import { ExpandableDetail, ReferenceHub, TermRef } from "../../core/reference";
 import { ProcessLoopExplorer } from "../../core/process-loop";
+import type { ProcessLoopSpec } from "../../core/process-loop";
 import { ResponsibilityMap } from "../../core/responsibility-map";
 import { StateMachineExplorer } from "../../core/state-machine";
+import type { StateMachineSpec } from "../../core/state-machine";
 import { Button } from "../../foundation/controls/Button";
 import { Feedback } from "../../foundation/feedback/Feedback";
 import { InlineCallout } from "../../foundation/feedback/InlineCallout";
@@ -38,6 +41,48 @@ const stateMachine = {
   transitions: [{ from: "ready", to: "trained" }, { from: "trained", to: "done" }],
   illegalHints: [{ from: "ready", to: "done", message: "Complete training before finishing." }],
 };
+const semanticProcess: ProcessLoopSpec = {
+  nodes: [
+    { id: "origin", label: "Origin", position: { x: 150, y: 145 } },
+    { id: "branch", label: "Branch", position: { x: 490, y: 145 } },
+    { id: "result", label: "Result", position: { x: 490, y: 365 } },
+    { id: "auto", label: "Auto layout fallback" },
+  ],
+  edges: [
+    { id: "forward-data", from: "origin", to: "branch", kind: "data", path: "straight" },
+    { id: "reverse-gradient", from: "branch", to: "result", kind: "gradient", direction: "reverse", path: "curve" },
+    { id: "loop-back", from: "result", to: "origin", kind: "control", path: "orthogonal" },
+  ],
+  steps: [{ id: "signals", title: "Signals", summary: "Follow data, gradient, and control paths.", activeNodes: ["origin", "branch", "result"], activeEdges: ["forward-data", "reverse-gradient", "loop-back"] }],
+};
+const branchingArchitecture: ArchitectureSpec = {
+  nodes: [
+    { id: "root", label: "Shared backbone θₛ", group: "Shared backbone", status: "frozen", position: { x: 150, y: 255 } },
+    { id: "old", label: "Old head θₒ", group: "Task-specific heads", status: "trainable", position: { x: 480, y: 155 } },
+    { id: "new", label: "New head θₙ", group: "Task-specific heads", status: "trainable", position: { x: 480, y: 365 } },
+  ],
+  edges: [
+    { id: "old-branch", from: "root", to: "old", branch: "old", path: "curve" },
+    { id: "new-branch", from: "root", to: "new", branch: "new", path: "orthogonal" },
+  ],
+};
+const branchingMachine: StateMachineSpec = {
+  initialState: "idle",
+  states: [
+    { id: "idle", label: "Idle", position: { x: 120, y: 230 } },
+    { id: "fork", label: "Branch A", position: { x: 420, y: 115 } },
+    { id: "retry", label: "Retry", position: { x: 420, y: 350 } },
+    { id: "done", label: "Done", terminal: true, position: { x: 740, y: 115 } },
+    { id: "blocked", label: "Blocked", terminal: true, position: { x: 740, y: 350 } },
+  ],
+  transitions: [
+    { from: "retry", to: "fork", path: "curve", condition: "loop back" },
+    { from: "idle", to: "blocked", path: "curve", condition: "branch B" },
+    { from: "idle", to: "fork", path: "straight", condition: "branch A" },
+    { from: "fork", to: "done", condition: "complete" },
+  ],
+  illegalHints: [{ from: "idle", to: "done", message: "Choose a legal branch first." }],
+};
 const term = { id: "term-a", label: "Term A", definition: "A data-driven definition.", paperRole: "Test label.", confusion: "Another term." };
 
 function Fixtures() {
@@ -46,11 +91,14 @@ function Fixtures() {
     <Chip active>Active chip</Chip><Slider label="Demo slider" value={20} onChange={() => {}} />
     <Popover label="Popover detail" trigger="Open popover"><p>Popover content.</p></Popover>
     <ProcessLoopExplorer spec={process} mode="autoplay" />
+    <ProcessLoopExplorer spec={semanticProcess} />
     <ProcessLoopExplorer spec={{ ...process, steps: [{ ...process.steps[0], activeNodes: ["missing-node"] }] }} />
     <ArchitectureExplorer spec={{ nodes: [{ id: "arch-a", label: "Architecture A", detail: "Inspectable detail." }], edges: [] }} />
+    <ArchitectureExplorer spec={branchingArchitecture} highlightedBranches={["old"]} />
     <FlowStepper steps={[{ id: "f1", title: "Forward" }, { id: "f2", title: "Backward" }]} onStepChange={(step) => { document.body.dataset.flowChanged = step.title; }} />
     <ResponsibilityMap spec={responsibility} />
     <StateMachineExplorer spec={stateMachine} />
+    <StateMachineExplorer spec={branchingMachine} />
     <ReferenceHub items={[{ id: "term-a", title: "Term A", kind: "term", summary: "Searchable reference." }, { id: "method-b", title: "Method B", kind: "method", summary: "Another reference." }]} />
     <TermRef term={term} />
     <ExpandableDetail title="Supporting detail"><p>Expandable content.</p></ExpandableDetail>
@@ -68,9 +116,19 @@ function Fixtures() {
 }
 
 const nativeMatchMedia = window.matchMedia.bind(window);
-window.matchMedia = ((query: string) => query.includes("prefers-reduced-motion")
-  ? { matches: true, media: query, onchange: null, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false }
-  : nativeMatchMedia(query)) as typeof window.matchMedia;
+let prefersReducedMotion = true;
+const motionListeners = new Set<() => void>();
+const reducedMotionQuery = {
+  get matches() { return prefersReducedMotion; },
+  media: "(prefers-reduced-motion: reduce)",
+  onchange: null,
+  addListener: (listener: () => void) => motionListeners.add(listener),
+  removeListener: (listener: () => void) => motionListeners.delete(listener),
+  addEventListener: (_type: string, listener: () => void) => motionListeners.add(listener),
+  removeEventListener: (_type: string, listener: () => void) => motionListeners.delete(listener),
+  dispatchEvent: () => true,
+};
+window.matchMedia = ((query: string) => query.includes("prefers-reduced-motion") ? reducedMotionQuery : nativeMatchMedia(query)) as typeof window.matchMedia;
 
 createRoot(document.getElementById("root")!).render(<><h1>Reusable Kit smoke checks</h1><p id="summary">Running…</p><Fixtures /></>);
 const wait = () => new Promise<void>((resolve) => window.setTimeout(resolve, 25));
@@ -104,10 +162,44 @@ async function run() {
     assert(diagram.querySelector("[aria-valuenow='2']"), "Progress did not advance.");
     assert(diagram.querySelector(".rk-process-node.is-active")?.textContent?.includes("Output"), "Active node did not update.");
   });
+  await check("Process layout, arrows, reverse gradients, and loop-back use semantic data", () => {
+    const diagram = document.querySelectorAll<HTMLElement>(".rk-process-loop")[1];
+    const node = diagram.querySelector<HTMLButtonElement>(".rk-process-node:nth-child(4)");
+    assert(node?.style.left === "875px" && node.style.top === "70px", "Missing node did not use the documented automatic layout fallback.");
+    const edges = Array.from(diagram.querySelectorAll<SVGGElement>(".rk-process-loop__edge"));
+    assert(edges.length === semanticProcess.edges.length, "Rendered edge count did not match the process topology.");
+    assert(edges.every((edge) => edge.querySelector("path[marker-end]")), "An edge is missing its arrowhead.");
+    assert(edges.find((edge) => edge.dataset.edgeId === "reverse-gradient")?.dataset.direction === "reverse", "Gradient direction was not reversed.");
+    assert(edges.find((edge) => edge.dataset.edgeId === "loop-back")?.dataset.path === "orthogonal", "Loop-back route was not preserved.");
+    assert(edges.every((edge) => edge.classList.contains("is-active")), "The active path was not highlighted.");
+  });
+  await check("Signal pulses follow active data paths and stop for reduced motion", async () => {
+    const diagram = document.querySelectorAll<HTMLElement>(".rk-process-loop")[1];
+    const dataEdge = diagram.querySelector<SVGGElement>("[data-edge-id='forward-data']")!;
+    const controlEdge = diagram.querySelector<SVGGElement>("[data-edge-id='loop-back']")!;
+    assert(!dataEdge.classList.contains("is-flowing"), "Pulse animation ignored reduced motion.");
+    prefersReducedMotion = false;
+    motionListeners.forEach((listener) => listener()); await wait();
+    assert(dataEdge.classList.contains("is-flowing"), "Active data edge did not receive its flow cue.");
+    assert(!controlEdge.classList.contains("is-flowing"), "Control edge received a continuous animation.");
+    prefersReducedMotion = true;
+    motionListeners.forEach((listener) => listener()); await wait();
+    assert(!dataEdge.classList.contains("is-flowing"), "Pulse animation remained enabled after reduced motion was requested.");
+  });
   await check("Invalid process references show a useful error", () => assert(document.querySelector(".rk-error")?.textContent?.includes("unknown node 'missing-node'"), "Unknown node was not reported."));
   await check("Architecture node selection opens the inspector", async () => {
     document.querySelector<HTMLButtonElement>(".rk-architecture__node")?.click(); await wait();
     assert(document.querySelector(".rk-architecture__inspector")?.textContent?.includes("Inspectable detail"), "Node detail was not shown.");
+  });
+  await check("Architecture manual positions, branches, groups, and statuses are rendered", () => {
+    const architecture = document.querySelectorAll<HTMLElement>(".rk-architecture")[1];
+    const oldHead = architecture.querySelector<HTMLButtonElement>("#architecture-node-old")!;
+    assert(oldHead.style.left === "480px" && oldHead.style.top === "155px", "Manual architecture coordinates were ignored.");
+    assert(architecture.querySelectorAll(".rk-architecture__group-region").length === 2, "Group regions were not drawn.");
+    assert(oldHead.querySelector(".rk-architecture__status")?.textContent === "trainable", "Trainable status was missing.");
+    assert(architecture.querySelector("#architecture-node-root")?.classList.contains("rk-architecture__node--frozen"), "Frozen status was missing.");
+    assert(architecture.querySelector("[data-branch='new']")?.classList.contains("is-dimmed"), "Unselected branch was not dimmed.");
+    assert(architecture.querySelector("[data-branch='old'] path[marker-end]"), "Branch edge or arrowhead was missing.");
   });
   await check("FlowStepper notifies connected views", async () => {
     document.querySelector<HTMLButtonElement>(".rk-flow-step[aria-current='step']")?.parentElement?.nextElementSibling?.querySelector("button")?.click(); await wait();
@@ -125,6 +217,17 @@ async function run() {
     states[1].click(); await wait();
     assert(machine.querySelector(".rk-state-machine__header")?.textContent?.includes("Trained"), "Legal transition did not advance.");
     assert(machine.textContent?.includes("Rejected attempts: 1"), "Rejected transition was not recorded.");
+  });
+  await check("State machine arrows come from transitions, including branch and loop-back", () => {
+    const machine = document.querySelectorAll<HTMLElement>(".rk-state-machine")[1];
+    const edges = Array.from(machine.querySelectorAll<SVGGElement>(".rk-state-machine__edge"));
+    assert(edges.length === branchingMachine.transitions.length, "State arrows were inferred from state order instead of transitions.");
+    assert(edges[0].dataset.from === "retry" && edges[0].dataset.to === "fork", "The declared transition order/topology was not preserved.");
+    assert(edges[0].dataset.path === "curve" && edges[0].querySelector("path[marker-end]"), "Loop-back arrow was not rendered.");
+    assert(machine.querySelector("#rk-state-done .rk-state-machine__terminal"), "Terminal state is not identified.");
+    assert(machine.querySelector("#rk-state-fork")?.classList.contains("is-next"), "Legal next state was not highlighted.");
+    assert(machine.querySelector("#rk-state-blocked")?.classList.contains("is-next"), "Branch alternative was not highlighted.");
+    assert(edges.filter((edge) => edge.dataset.from === "idle").length === 2, "Branch transitions were lost.");
   });
   await check("Reference Hub search and deep links work", async () => {
     const hub = document.querySelector<HTMLElement>(".rk-reference-hub")!;
@@ -163,6 +266,8 @@ async function run() {
   summary.textContent = `${results.length - failed.length} passed · ${failed.length} failed`;
   summary.setAttribute("role", failed.length ? "alert" : "status");
   summary.dataset.result = failed.length ? "fail" : "pass";
+  summary.dataset.passCount = String(results.length - failed.length);
+  summary.dataset.failureCount = String(failed.length);
   const list = document.createElement("ol");
   results.forEach((item) => { const row = document.createElement("li"); row.textContent = item; list.append(row); });
   summary.after(list);

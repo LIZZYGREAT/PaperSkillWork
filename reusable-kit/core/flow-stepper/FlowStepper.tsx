@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useStickyStepSync } from "../../foundation/layout/StickySystemView";
 import { Button } from "../../foundation/controls/Button";
 
 export type FlowStep = { id: string; title: string; description?: string; statusText?: string; relatedIds?: string[] };
@@ -11,12 +12,15 @@ export function FlowStepper({ steps, initialStep = 0, step: controlledStep, onSt
   label?: string;
 }) {
   const [internalStep, setInternalStep] = useState(initialStep);
+  const stickySync = useStickyStepSync();
   if (!steps.length) return <div className="rk-flow-stepper" role="status">No steps are available.</div>;
-  const activeIndex = Math.max(0, Math.min(controlledStep ?? internalStep, steps.length - 1));
+  const stickyIndex = stickySync?.activeStepId ? steps.findIndex((item) => item.id === stickySync.activeStepId) : -1;
+  const activeIndex = Math.max(0, Math.min(controlledStep ?? (stickyIndex >= 0 ? stickyIndex : internalStep), steps.length - 1));
   const current = steps[activeIndex];
   const choose = (index: number) => {
     const bounded = Math.max(0, Math.min(index, steps.length - 1));
     if (controlledStep === undefined) setInternalStep(bounded);
+    stickySync?.setManualStep(steps[bounded].id);
     onStepChange?.(steps[bounded], bounded);
   };
 

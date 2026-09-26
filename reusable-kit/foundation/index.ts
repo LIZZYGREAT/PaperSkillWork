@@ -7,6 +7,7 @@ export * from "./feedback/Feedback";
 export * from "./feedback/InlineCallout";
 export * from "./feedback/StatusPill";
 export * from "./layout/StickySystemView";
+export * from "./layout/diagram";
 export * from "./overlay/Drawer";
 export * from "./overlay/MobileSheet";
 export * from "./overlay/Popover";

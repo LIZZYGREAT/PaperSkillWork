@@ -49,9 +49,10 @@ The local app at `reusable-kit/demo/` contains LwF and EWC mini demos. It illust
 ```powershell
 cd reusable-kit/demo
 npm ci
+npx playwright install chromium
 npm run dev
-npm run test:browser
 npm run build
+npm run test:browser
 ```
 
-`test:browser` opens a local assertion page for rendering, data-driven interactions, keyboard focusability, reduced-motion behavior, and figure zoom. Workflow and scaffold checks run from the repository root with `python -m pytest -q`. TypeScript consumers should build their paper project after copying components. The kit preserves keyboard focus, touch-sized controls, reduced-motion behavior, and narrow-screen scrolling; the paper-specific implementation still needs its own accessibility and mobile review.
+`test:browser` runs the assertion page and LwF/EWC scroll-sync walkthrough in headless Chromium. Workflow and scaffold checks run from the repository root with `python -m pytest -q`. TypeScript consumers should build their paper project after copying components. The kit preserves keyboard focus, touch-sized controls, reduced-motion behavior, and narrow-screen scrolling; the paper-specific implementation still needs its own accessibility and mobile review.
