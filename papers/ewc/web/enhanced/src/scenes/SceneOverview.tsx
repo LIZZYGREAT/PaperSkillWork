@@ -33,14 +33,14 @@ const implementationSteps = [
   {
     title: '为任务 B 组装目标',
     input: 'D_B 当前批次、当前 θ、历史参考对',
-    operation: '构造 L_B(θ) + Σₖ λₖ/2 · Σᵢ Fₖ,ᵢ(θᵢ − θ*ₖ,ᵢ)²。',
+    operation: '构造 L_B(θ) + (λ/2) · ΣₖΣᵢ Fₖ,ᵢ(θᵢ − θ*ₖ,ᵢ)²。',
     output: '任务 B 损失 + 旧任务加权惩罚',
     reason: '新数据推动学习；旧任务重要性让不同参数承担不同偏移代价。',
   },
   {
     title: '合成梯度',
     input: '总目标与当前参数 θ',
-    operation: '对总目标求导：g_total = g_B + Σₖ λₖFₖ ⊙ (θ − θ*ₖ)。',
+    operation: '对总目标求导：g_total = g_B + λΣₖFₖ ⊙ (θ − θ*ₖ)。',
     output: '新任务梯度与恢复梯度之和',
     reason: '到这一步仍只算出了更新信号；梯度计算本身不会改写参数或旧参考。',
   },
