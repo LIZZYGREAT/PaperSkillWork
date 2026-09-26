@@ -1733,3 +1733,18 @@
   .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-branches { grid-template-columns: minmax(0,1fr); }
   .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-flow-node.is-feature { grid-column: 1 / -1; }
 }
+
+/* Scene D readability: enlarge the implementation note, tensor path, and gradient explanation. */
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-advanced summary { padding: 12px 15px; font-size: 15px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-advanced > div { gap: 10px; padding: 0 15px 15px; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-advanced p,
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-advanced label { font-size: 14px; line-height: 1.7; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-shape-trace { gap: 8px; padding: 13px 15px; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-shape-trace span { gap: 6px; font-size: 14px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-shape-trace b { font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-shape-trace i { font-size: 20px; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-gradient-path { align-items: baseline; column-gap: 14px; row-gap: 9px; padding: 13px 15px; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-gradient-path strong,
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-gradient-path span { font-size: 15px; line-height: 1.55; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-gradient-path p { font-size: 14px; line-height: 1.7; }
+.lwf-v2 .v2-scene-content.v2-scene-d .v2-d-explanation { padding: 12px 15px; font-size: 14px; line-height: 1.75; }
