@@ -14,6 +14,8 @@
 - [ ] Important claims and numbers resolve to the evidence registry and source.
 - [ ] Paper facts, author interpretations, our interpretations, mappings, and teaching toys are distinct.
 - [ ] Conflicts, uncertainty, and limitations remain visible.
+- [ ] The complete source-visual inventory was reviewed, with evidence links and reasons for non-selected high-value figures/tables.
+- [ ] Selected original visuals are preserved separately from derivatives, their provenance and reuse rights are recorded, and the relevant scenes explain what to notice.
 
 ## Implementation Semantics
 
@@ -31,6 +33,7 @@
 - [ ] Keyboard and focus behavior are usable.
 - [ ] Reduced-motion behavior is supported.
 - [ ] Layout and controls work on mobile.
+- [ ] Source figures have equivalent text descriptions and remain readable with responsive sizing or zoom.
 
 ## Known Limitations
 

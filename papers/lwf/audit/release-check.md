@@ -14,6 +14,7 @@
 - [ ] No tracked dependencies, build output, secrets, or unintended local absolute paths.
 - [ ] Local paper PDF stays outside the release output.
 - [ ] Asset provenance and licenses are recorded where applicable.
+- [ ] The full source-visual inventory is reviewed; selected paper figures have approved reuse rights, preserved source files, and in-scene explanations.
 - [ ] The release diff and scope are reviewed.
 
 ## PaperSkill release preparation

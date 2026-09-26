@@ -24,6 +24,16 @@ Use only actions that reveal a mechanism, relation, state transition, or evidenc
 
 Reference registry IDs (for example `C01`, `R01`, `I01`):
 
+## Source Visuals and Explanation
+
+- **Paper figure/table IDs and source pages:**
+- **What the learner should notice:**
+- **On-page explanation and callouts:**
+- **Source content versus tutorial annotation:**
+- **Asset path and provenance:**
+- **Accessible text and zoom/responsive behavior:**
+- **If no source image is used, why:**
+
 ## Teaching Toy Boundary
 
 ## Prerequisite Terms

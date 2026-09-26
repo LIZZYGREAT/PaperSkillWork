@@ -12,6 +12,8 @@
 - [ ] No tracked dependencies, generated build output, secrets, or unintended absolute paths.
 - [ ] Local PDF is excluded from Git.
 - [ ] Asset provenance and licenses are recorded where applicable.
+- [ ] Every published paper figure/table has a recorded source, page/figure ID, attribution, and approved reuse basis; unclear-rights assets are excluded from the release.
+- [ ] Original source assets are preserved separately from web derivatives, and selected figures are explained in their scenes.
 - [ ] The release diff is scoped and reviewable.
 
 ## PaperSkill release preparation

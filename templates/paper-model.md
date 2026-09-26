@@ -59,6 +59,16 @@ Include relevant feedback and failure paths.
 
 For each experiment, state the question, dataset/environment, model, split, metric, baseline, protocol, result, supported claim, and unsupported inference.
 
+## Source Visual Inventory
+
+Inspect the full source paper. Include figures, tables, diagrams, and visual evidence, even when an item will not be shown on the web. Link each item to its claim/evidence IDs and record a reason for every `SOURCE_ONLY` or `OMIT` decision.
+
+| Source/version, ID / PDF page | Paper caption / content | What it communicates and teaching value | Evidence IDs | Decision (`WEB` / `SOURCE_ONLY` / `OMIT`) and rationale | Reuse rights / attribution | Preserved source path | Web asset path / processing | Scene and planned explanation |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |  |
+
+For a selected visual, preserve a faithful high-resolution source under `assets/figures/original/` and a separate web-ready copy under `assets/figures/web/`. Record whether the source is an extracted figure or a faithful crop from the PDF. Never overwrite the preserved source. A valuable paper image should normally be shown and explained in its scene when reuse is permitted; do not omit one solely because a custom diagram already exists. Do not publish an image if its reuse rights are unclear.
+
 ## Limitations
 
 Separate author-stated limits, future work, and our evidence-based interpretation.
