@@ -112,3 +112,52 @@
 @media (prefers-reduced-motion: reduce) {
   .page-progress span { transition: none; }
 }
+
+.overview-prerequisites h3, .implementation-walkthrough h3 { margin: 5px 0 0; color: #2e4d69; font-size: 15px; line-height: 1.5; }
+.prerequisite-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin-top: 13px; }
+.prerequisite-grid article { min-width: 0; padding: 12px; background: #fff; border: 1px solid #e4e9ed; border-radius: 9px; }
+.prerequisite-grid code { display: inline-block; margin-right: 6px; color: #315b8a; font-family: var(--ui-font-mono); font-size: 12px; font-weight: 800; }
+.prerequisite-grid strong { color: #536c82; font-size: 10px; }
+.prerequisite-grid p { margin: 7px 0 0; color: #6b7d8e; font-size: 10px; line-height: 1.7; }
+.walkthrough-intro { margin: 5px 0 13px; color: #6b7d8e; font-size: 10px; line-height: 1.7; }
+.implementation-step-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 7px; }
+.implementation-step { min-width: 0; min-height: 56px; padding: 9px; color: #536b80; background: #fff; border: 1px solid #e0e6eb; border-radius: 9px; cursor: pointer; font-size: 10px; font-weight: 700; line-height: 1.45; text-align: left; transition: border-color .16s ease, background-color .16s ease, transform .16s ease; }
+.implementation-step > span { display: block; margin-bottom: 4px; color: #9aa7b2; font-family: var(--ui-font-mono); font-size: 9px; }
+.implementation-step:hover { border-color: #a9bdce; transform: translateY(-1px); }
+.implementation-step.is-active { color: #244d72; background: #edf4f8; border-color: #88a6bf; box-shadow: inset 0 0 0 1px rgba(77,119,153,.12); }
+.implementation-step.is-active > span { color: #47759c; }
+.implementation-step-detail { margin-top: 10px; padding: 14px; background: #f4f7f9; border: 1px solid #e1e8ed; border-radius: 10px; }
+.walkthrough-detail-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+.walkthrough-detail-heading span { color: #8494a2; font-family: var(--ui-font-mono); font-size: 9px; }
+.walkthrough-detail-heading strong { color: #315b80; font-size: 12px; }
+.implementation-step-detail dl { display: grid; grid-template-columns: .9fr 1.5fr .9fr; gap: 7px; margin: 0; }
+.implementation-step-detail dl > div { min-width: 0; padding: 9px; background: #fff; border: 1px solid #e5eaee; border-radius: 7px; }
+.implementation-step-detail dt { margin-bottom: 5px; color: #8292a1; font-size: 9px; font-weight: 750; }
+.implementation-step-detail dd { margin: 0; color: #536a7f; font-size: 10px; line-height: 1.65; overflow-wrap: anywhere; }
+.walkthrough-reason { margin: 9px 0 0; color: #697b8a; font-size: 10px; line-height: 1.7; }
+.walkthrough-reason strong { color: #48657d; }
+.walkthrough-controls { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; }
+.walkthrough-controls > span { color: #8795a2; font-family: var(--ui-font-mono); font-size: 9px; }
+.walkthrough-controls button:disabled { opacity: .45; cursor: not-allowed; }
+.handoff-bridge { display: grid; grid-template-columns: minmax(0,1fr) 24px minmax(0,1.15fr); gap: 8px; align-items: center; margin-top: 12px; }
+.handoff-bridge article { min-height: 96px; padding: 12px; background: #fff; border: 1px solid #e3e9ed; border-radius: 9px; }
+.handoff-bridge p { margin: 6px 0 0; color: #65798a; font-size: 10px; line-height: 1.7; }
+.handoff-bridge-result { background: #eef5f1 !important; border-color: #d8e7dd !important; }
+.handoff-bridge-result strong { display: block; margin-top: 6px; color: #3d6651; font-size: 11px; line-height: 1.6; }
+.handoff-bridge-arrow { color: #8298aa; font-size: 18px; text-align: center; }
+.handoff-bridge-note { margin-top: 8px; padding: 10px 12px; color: #6b644e; background: #faf6ec; border-radius: 8px; font-size: 10px; line-height: 1.7; }
+.handoff-bridge-note strong { color: #8a7041; }
+@media (max-width: 760px) {
+  .prerequisite-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .implementation-step-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .handoff-bridge { grid-template-columns: 1fr; }
+  .handoff-bridge-arrow { transform: rotate(90deg); }
+}
+@media (max-width: 460px) {
+  .prerequisite-grid, .implementation-step-detail dl { grid-template-columns: 1fr; }
+  .implementation-step { min-height: 48px; }
+  .implementation-step-detail { padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .implementation-step { transition: none; }
+}

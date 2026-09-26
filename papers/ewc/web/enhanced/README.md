@@ -1,6 +1,6 @@
 # EWC：克服神经网络的灾难性遗忘 · Enhanced 交互式教程
 
-基于 Kirkpatrick 等人的论文 *Overcoming catastrophic forgetting in neural networks*，使用 PaperSkill React + TypeScript + Vite 模板构建。Enhanced 版将六个学习场景、共享玩具状态、证据索引和术语解释整合为一页交互阅读体验。
+基于 Kirkpatrick 等人的论文 *Overcoming catastrophic forgetting in neural networks*，使用 PaperSkill React + TypeScript + Vite 模板构建。Enhanced 版按十页学习路径，从问题与前置概念逐步讲到 Bayesian 交接、Fisher 重要性、一次参数更新、任务边界状态、实验协议与完整因果流程。
 
 ## 本地运行
 
@@ -35,13 +35,17 @@ npm run preview   # 预览构建结果
 
 切勿把 `--accent` 重新定义成别的语义角色。
 
-## 场景顺序
+## 十页学习路径
 
-1. 任务 B 的梯度为何可能覆盖任务 A
-2. 顺序 Bayes 如何把旧任务后验传递为新任务先验因子
-3. Fisher 与局部对角近似如何设定参数偏移成本
-4. 总梯度如何合成，以及一次更新真正改变哪些对象
-5. Permuted MNIST 的协议、对照与定性发现
-6. Atari 组合系统、指标、限制和可支持的主张
+1. 研究问题、必要概念与 EWC 实现步骤预览
+2. 任务 B 的梯度为何可能覆盖任务 A
+3. 顺序 Bayes 如何把旧任务后验传递为新任务先验因子
+4. Fisher 与局部对角近似如何设定参数偏移成本
+5. 总梯度如何合成，以及一次更新真正改变哪些对象
+6. 参数、旧锚点、Fisher 与数据在任务边界上的生命周期
+7. Permuted MNIST 的任务构造和实验协议
+8. MNIST 结果与 Fisher overlap 的证据边界
+9. Atari 组合系统、指标、限制和可支持的主张
+10. 对照实验结论并逐步回放 EWC 的完整状态流
 
 证据卡可展开查看来源段落、对应原文链接和主张边界；术语卡可展开查看当前场景定义。教学状态在切换场景时保留，可从状态台重置。
