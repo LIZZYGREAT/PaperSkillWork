@@ -2,7 +2,6 @@ import React from 'react';
 import type { GradientSource, LearningAction, LearningSession, ParamGroupId, TrainingPhase, TrainingStage } from '../data/session';
 import { useReferenceHub } from '../components/ReferencePrimitives';
 import { openWorkspaceFor } from '../components/workspaceActions';
-import { MathFormula } from '../components/MathFormula';
 import { InlineNotation } from '../components/InlineNotation';
 import {
   computeToyGradients,
@@ -174,7 +173,7 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
           </details>
 
           <div className="v2-c-ending">
-            <div><span className="v2-source-badge is-paper">论文目标</span><strong><MathFormula id="formula:total_loss" compact /> → backward → optimizer.step()</strong><small>下一专题将单独拆解温度与旧任务蒸馏损失。</small></div>
+            <div><span className="v2-source-badge is-paper">论文目标</span><strong><InlineNotation text="L = λ_o L_old + L_new + R(θ_s, θ_o, θ_n)" /> → backward → optimizer.step()</strong><small>下一专题将单独拆解温度与旧任务蒸馏损失。</small></div>
             <button type="button" onClick={() => openHub({ evidenceId: 'F02' })}>查看温度依据 F02 ↗</button>
           </div>
         </>
@@ -218,7 +217,7 @@ function ForwardInspector({ session, sample, forward, teacherResponse }: { sessi
 function LossInspector({ result, onEvidence }: { result: ReturnType<typeof computeToyGradients>; onEvidence: () => void }) {
   return <section className="v2-c-panel" aria-labelledby="loss-inspector-title">
     <PanelHeading step="C" eyebrow="STEP 3 · COMPUTE LOSS" title="旧响应与新标签走不同分支，再汇合成标量" />
-    <div className="v2-c-loss-formula"><span>论文目标</span><strong><MathFormula id="formula:total_loss" compact /></strong><code>λₒ = {TOY_LAMBDA_OLD} · T = {TOY_TEMPERATURE}</code></div>
+    <div className="v2-c-loss-formula"><span>论文目标</span><strong><InlineNotation text="L = λ_o L_old + L_new + R(θ_s, θ_o, θ_n)" /></strong><code>λₒ = {TOY_LAMBDA_OLD} · T = {TOY_TEMPERATURE}</code></div>
     <div className="v2-c-loss-paths">
       <div className="v2-c-loss-path is-old"><span><InlineNotation text="Teacher target Y_o" /></span><i aria-hidden="true">→</i><span><InlineNotation text="student old soft response Ŷ_o" /></span><i aria-hidden="true">→</i><strong><InlineNotation text="L_old =" /> {fmt(result.oldLoss)}</strong></div>
       <div className="v2-c-loss-path is-new"><span><InlineNotation text="new label Y_n" /></span><i aria-hidden="true">→</i><span><InlineNotation text="student new output Ŷ_n" /></span><i aria-hidden="true">→</i><strong><InlineNotation text="L_new =" /> {fmt(result.newLoss)}</strong></div>
