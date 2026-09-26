@@ -1,59 +1,55 @@
 # PaperSkillWork
 
-PaperSkillWork is a reusable workspace for building source-grounded paper tutorials that help a first-time reader reconstruct a paper's architecture, objects, state, information flow, mathematics, updates, evidence, and limits.
+PaperSkillWork produces source-grounded, interactive paper tutorials that help a first-time reader reconstruct the paper's problem, main idea, architecture, information flow, evidence, and limits.
 
-## Workflow v2
+## Workflow v3
 
 ```text
-G0 Learning Contract → G1 Paper Model → G2 Evidence Registry
-→ G3 Canonical Compatibility Baseline → G4 Learning Architecture
-→ G5 Scene Specifications → G6 Incremental Enhanced Implementation
-→ G7 Learning + Evidence + Engineering Audit
+W0 Source Intake → W1 Source Cache + Asset Inventory → W2 Paper Model
+→ W3 Evidence + Asset Curation → W4 Learning Spine + Priorities
+→ W5 Visual / Interaction Plan → W6 First Vertical Slice
+→ W7 Human Learning Review → W8 Full Implementation
+→ W9 Learning + Evidence Audit → W10 Upstream Packaging & Preflight
 ```
 
-Each paper lives at `papers/<paper-id>/`. Its `paper.yaml` records metadata and gate state. `tools/paper.py` handles workspace mechanics; Skills guide source reading, learning design, and audits. Structural checks never claim that a person learned the material.
+Read [docs/WORKFLOW.md](docs/WORKFLOW.md) before starting. The main production rule is to establish the paper's primary learning spine and content priority before planning interaction or writing tutorial UI. W7 human learning review must pass before full implementation.
 
-During G1, every paper model records its research topic, problem type/setting, and research direction with source evidence. G6 presents the reviewed positioning as explanatory tags below the first-page title.
+New papers have only six design/audit documents: `research/paper-model.md`, `research/evidence-registry.yaml`, `design/learning-spine.md`, `design/asset-plan.md`, `design/implementation-plan.md`, and `audit/final-check.md`. Source extraction lives in `source-cache/`; the export goes to `html_output/<paper-name>/<version>/`.
 
 ## Common commands
 
 ```powershell
-python3 tools/paper.py new <paper-id> --title "..." --url "..." --arxiv-id "..."
-python3 tools/paper.py status <paper-id>
-python3 tools/paper.py check <paper-id>
-python3 tools/paper.py learning-check <paper-id>
-python3 tools/paper.py gate <paper-id>
-python3 tools/paper.py gate <paper-id> G1 complete
-python3 tools/paper.py paths <paper-id>
-python3 tools/paper.py release-check <paper-id>
-python3 tools/paper.py migrate-v2 <paper-id>
-python3 tools/paper.py open <paper-id>
-python3 tools/paper.py open <paper-id> --edition canonical
+python tools/paper.py new <paper-id> --title "..." --url "..." --author "..." --venue "..." --year 2026 --source-type arXiv
+python tools/paper.py status <paper-id>
+python tools/paper.py check <paper-id>
+python tools/paper.py stage <paper-id>
+python tools/paper.py stage <paper-id> W0 in_progress
+python tools/paper.py stage <paper-id> W0 complete --reviewed-by "Name" --note "Source identity confirmed"
+python tools/paper.py release-check <paper-id>
+python tools/paper.py paths <paper-id>
+python tools/paper.py open <paper-id>
 ```
 
-`new` creates a v2 workspace. `migrate-v2` scaffolds v2 artifacts for an existing v1 paper, records old gate states, leaves every v2 gate pending, and preserves old files plus Canonical and Enhanced. `check` validates structure and registry references. `learning-check` validates scene structure and references; human learning acceptance is still required.
+`new` records the paper identity and creates a v3 workspace. `--url` is optional when using `--source-location "user-provided PDF"`; use `--source-type`, repeat `--author` for all authors, and supply `--venue`/`--year` when known. Complete W0 metadata and W1's full-source cache by hand; no paper content is inferred from a URL. `check` validates structure and machine-resolvable references. It cannot evaluate teaching quality. `stage ... complete` always requires a human reviewer and note; no command auto-advances a stage.
 
-`open` runs `npm install`, starts the selected paper's local web tutorial, and opens it in the browser. It defaults to Enhanced; pass `--edition canonical` to open the Canonical baseline. Keep the command running while using the tutorial, and press Ctrl+C to stop the development server.
-
-Run `python3 tools/paper.py --help` for options. Install development tools with `python3 -m pip install -r requirements-dev.txt`.
-
-On Windows PowerShell, use `python` in place of `python3` when the launcher is unavailable.
+Workflow v1/v2 workspaces already in `papers/` remain readable by their existing checks and are not rewritten by this change. `migrate-v2` remains available for explicit v1 migrations.
 
 ## Repo-local Skills
 
-Use `.agents/skills/` at the matching gate:
+Use `.agents/skills/` at the matching stage:
 
 ```text
-$paper-review
-$evidence-audit
-$learning-architecture
-$scene-spec
-$enhanced-implementation
-$final-audit
+$paper-review            # W2
+$evidence-audit          # W3
+$learning-architecture   # W4
+$implementation-plan     # W5–W7
+$scene-spec              # legacy only; new work uses the implementation plan
+$enhanced-implementation # W6–W8
+$final-audit              # W9–W10
 ```
 
-`$narrative-design` and `$interaction-design` remain deprecated aliases to their v2 replacements.
+`$narrative-design` and `$interaction-design` remain deprecated aliases; they do not create a separate storyboard or interaction-plan document.
 
 ## Release boundary
 
-PaperSkillWork keeps research, evidence registries, Canonical compatibility baselines, Enhanced development, and release preparation. PaperSkill remains a separate repository. Release uses its official import, validation, build, and PR flow; never merge or cherry-pick PaperSkillWork Git history into PaperSkill. `paper.py` never calls Codex, invokes models, publishes, or creates PRs.
+`PaperSkillWork` keeps the research and implementation workspace; `PaperSkill` is a separate repository. Export a complete independent React + TypeScript project to `html_output/<paper-name>/<version>/`. Tutorial PRs contain that export only. Workflow/skill improvements use a separate PR. Run the current official upstream preflight before release; passing CI does not guarantee merge. Never merge or cherry-pick PaperSkillWork Git history into PaperSkill.

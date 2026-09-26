@@ -1,122 +1,170 @@
-# PaperSkillWork Workflow v2
+# PaperSkillWork Macro Workflow v3
 
-PaperSkillWork produces tutorials that help a first-time reader rebuild a paper's architecture, objects, state, information flow, mathematics, update process, experimental logic, and limits. A tutorial is not a paper abstract with animations.
+The workflow creates a tutorial that helps a reader understand what a paper does and why. Its governing order is:
 
-## Gate sequence
+> Establish the paper's main line before choosing visuals; establish information priority before interaction; implement only after both are clear.
+
+The W stages describe the production process, not a fixed chapter outline. Only W6 starts tutorial-page coding. A human must review each stage before its status is marked complete. Structural checks never certify learning quality.
+
+## W0–W10 at a glance
 
 ```text
-G0 Workspace + Learning Contract
-→ G1 Paper Model
-→ G2 Evidence Registry
-→ G3 Canonical Compatibility Baseline
-→ G4 Learning Architecture
-→ G5 Scene Specifications
-→ G6 Incremental Enhanced Implementation
-→ G7 Learning + Evidence + Engineering Audit
-→ PaperSkill Release
+W0 Source Intake
+ ↓
+W1 Source Cache + Asset Inventory
+ ↓
+W2 Paper Understanding Model
+ ↓
+W3 Evidence + Asset Curation
+ ↓
+W4 Learning Spine + Information Priority
+ ↓
+W5 Visual / Interaction Planning
+ ↓
+W6 First Vertical Slice
+ ↓
+W7 Human Learning Review
+ ↓
+W8 Full Implementation
+ ↓
+W9 Learning + Evidence Audit
+ ↓
+W10 Upstream Packaging & Preflight
 ```
 
-Gate identifiers and the explicit state machine remain stable. G1/G2 establish what the paper says; G4/G5 design the cognitive path; G6 implements reviewed milestones; G7 accepts learning first, then evidence, engineering, accessibility, and release scope. `paper.py` checks structure only and never claims that a learner has understood the paper.
-
-| Gate | Purpose | Required artifact or acceptance |
+| Stage | Question and work | Exit artifact / human gate |
 | --- | --- | --- |
-| G0 | Register the paper and learning contract | `paper.yaml`, `source/paper.url`, `design/learning-contract.md` |
-| G1 | Build an executable model of the paper, classify its research positioning, and inventory source visuals | `research/01_paper_model.md`, including Research Positioning and Source Visual Inventory sections |
-| G2 | Establish claim-level evidence boundaries and verify source-visual provenance | `research/02_evidence_registry.yaml` plus the visual inventory and recorded asset provenance |
-| G3 | Preserve the PaperSkill compatibility/build baseline | non-empty `web/canonical/`, build and human acceptance |
-| G4 | Design dependencies, persistent objects, and learning scenes | `design/learning-architecture.md` |
-| G5 | Specify only needed scenes and purposeful actions | one or more files in `design/scenes/` |
-| G6 | Implement reviewed milestones and a first vertical slice | Enhanced project and milestone acceptance |
-| G7 | Accept learning, evidence, engineering, accessibility, and release | `audit/final-check.md` and `audit/release-check.md` |
+| W0 | What exact paper and source are we working from? Record title, authors, venue/year, source type and location, URL where available, and source hash when possible. Accept PDF, LaTeX, paper text, arXiv/official links, or another user-approved reliable source. Do not design chapters, metaphors, or animation. | Metadata in `paper.yaml` and `source/paper.url`; source identity is confirmed. |
+| W1 | Can later work use one stable, complete read and a useful asset inventory? Read/extract the complete source once; cache its content, locators, and visual inventory. Classify each figure/table and note candidate teaching role. Correct a failed cache as a whole rather than adding endless partial extracts. | `source-cache/content.md`, `manifest.json`, `evidence.json`, and `figures/`; a person confirms cache coverage. |
+| W2 | What is the paper actually doing? Build a paper model with the one-paragraph core explanation, problem, insight, prerequisites, objects/variables, architecture and ownership, data flow, state/time, training, inference, core equations, results, and limitations. For non-ML/system papers, adapt the flow to their actual runtime. No web design here. | `research/paper-model.md`; a person can state the problem, central mechanism, and why it may work. |
+| W3 | Which explanations are safe to publish, and which source visuals help? Build a claim-level evidence registry with locators, type, conditions, and allowed wording. Evaluate and select assets from W1; stage chosen originals separately from derivatives and document reuse rights. Do not publish assets with unclear rights. | `research/evidence-registry.yaml` and `design/asset-plan.md`; all important claims and chosen assets resolve. |
+| W4 | What single causal/runtime path should the reader follow, and what can be omitted? Compress the paper model into a coherent primary learning spine, usually 5–8 logical stages. Assign every candidate item `CORE`, `SUPPORTING`, `REFERENCE`, or `DELETE`. | `design/learning-spine.md`; a person confirms every CORE item has a mainline stage and lower-priority material stays proportionate. |
+| W5 | Where would text alone hide a relationship? Plan only visuals and interactions that clarify architecture, branching, data flow, state, training, ownership, dependencies, or evidence. Check the reusable pattern library first and record what is copied/adapted. | `design/implementation-plan.md`; planned teaching purpose and evidence are explicit. No page code yet. |
+| W6 | Does the proposed explanation work in a real slice? Implement only the opening/problem, core architecture, and most important end-to-end mechanism (or the paper's most informative 2–3 spine stages). | A running first vertical slice plus findings recorded in `design/implementation-plan.md`. |
+| W7 | After seeing the slice, can a first-time reader explain the paper more accurately? Review main-line clarity, emphasis, architecture, flow, prose load, unnecessary math/toys, and whether the interaction helps. A visual polish review alone does not pass. | Human decision and rationale recorded in `design/implementation-plan.md`. If it fails, revise the information architecture and repeat W6/W7; do not expand the tutorial. |
+| W8 | Can the accepted teaching model be completed consistently? Implement remaining CORE content; put SUPPORTING in compact form; place REFERENCE in the Hub/advanced area; omit DELETE. | Complete tutorial implementation. Preserve the approved learning spine and evidence boundaries. |
+| W9 | Can learners reconstruct the method, and can every important claim be traced? Audit learning outcomes and evidence, including facts, equations, numbers, architecture, protocol, datasets, limitations, and teaching-example boundaries. | `audit/final-check.md`; a person records the learning and evidence verdict and actual engineering outcomes. |
+| W10 | Can the tutorial be imported and validated as an independent upstream project? Export, check the exact upstream-required structure and asset provenance, then run the current official upstream validation/preflight. | `html_output/<paper-name>/<version>/` plus W10 results in `audit/final-check.md`. A green local check is not a merge promise. |
 
-Valid gate states are `pending`, `in_progress`, `complete`, `skipped`, and `legacy`. Only a person may advance a gate after review. `skipped` requires a reason. Gates complete in sequence. Historical v1 `legacy` states are retained only for the PhyAgentOS migration or in migration metadata; they do not count as v2 acceptance.
+## W1 source cache and visual inventory
 
-## G0: Learning contract
+Use this structure:
 
-Every v2 workspace records its target reader, prerequisites, unknowns, final learning outcomes, expected and implementation depth, evidence depth, and what the tutorial is not. This contract governs the rest of the work. Do not start from chapter count, a shared metaphor, animation, or interaction quota.
+```text
+source-cache/
+├── content.md
+├── manifest.json
+├── evidence.json
+└── figures/
+```
 
-## G1: Paper Model
+`content.md` contains the complete extracted or transcribed paper text, organized with section/page/equation locators. `manifest.json` records source metadata, hash when available, extraction details, and every source figure/table. Each figure entry has `id`, `locator`, `caption`, optional `image_path`, `type`, and `candidate_role`. `evidence.json` stores source-located notes needed to build the evidence registry. Cache data is an internal planning source, not automatically public tutorial content.
 
-Read the full paper and build a source-grounded model in this order: problem; research positioning; prerequisites; objects and variables; architecture and ownership; state and time; data/tensor flow; transformations and formulas; optimization/update; end-to-end runtime; experiments; limitations. Include a Reconstruction Matrix for core objects with applicable lifecycle, producer/consumer, shape, state, gradient, update, and evidence details. Mark prerequisites as Required, Helpful, or Optional and state the depth needed. G1 contains no UI or interaction design.
+Classify source visuals as `ARCHITECTURE`, `PIPELINE`, `ALGORITHM`, `MECHANISM`, `RESULT`, `ABLATION`, `DATASET_EXAMPLE`, `QUALITATIVE_RESULT`, or `LOW_VALUE`. The inventory must include all source visuals, including items later excluded.
 
-The **Research Positioning** subsection in `research/01_paper_model.md` is required and records:
+## W2 model and W3 evidence
 
-1. **Topic:** the broad research area and central phenomenon the paper studies.
-2. **Problem type / setting:** the concrete task, constraints, and data or system conditions being addressed.
-3. **Research direction:** the kind of technical approach the paper contributes, stated at the level supported by the paper.
+The Paper Model answers only “what is this paper doing?” It must first explain in a short paragraph what problem existed, what the authors changed, and why that change could help. For non-trivial systems, record components, ownership, connections/branches, inputs, outputs, and shared/task-specific parts before writing an interface plan. Trace one end-to-end data, state, or request flow. For training papers include inputs, outputs, supervision, losses, backward/control signals, and updates when applicable.
 
-Ground each field in the paper model and cite the relevant evidence IDs or source locations. Keep topic, problem setting, and method direction distinct. Prefer plain-language labels; avoid unsupported taxonomy labels and avoid turning a paper's experimental scope into a claim that its method is validated everywhere. This positioning later supplies the first-page topic tags.
+The Evidence Registry answers “what may we safely say?” Each important claim records its evidence ID, claim, source locator, type, conditions, and allowed wording. Types include `PAPER_FACT`, `PAPER_RESULT`, `AUTHOR_INTERPRETATION`, `OUR_INTERPRETATION`, `IMPLEMENTATION_MAPPING`, `GENERAL_BACKGROUND`, and `TEACHING_EXAMPLE`. Tie numerical results to their dataset, model, split, metric, and protocol.
 
-The **Source Visual Inventory** subsection in the same paper model is also required. Inspect the paper from beginning to end and inventory its figures, tables, diagrams, and other visual evidence. For each item record its paper ID/caption, PDF page, what it communicates, evidence links, clarity and teaching value, an explicit `WEB`, `SOURCE_ONLY`, or `OMIT` decision, and a reason when it is not selected for the web. This is an audit of the source, not a requirement to display every item.
+For each asset selected for teaching, record source paper/version, figure/table and page, original caption, processing (`direct`, `crop`, or `redraw`), evidence links, attribution, and reuse-rights status. Preserve originals separately from web-ready derivatives. Explain why a high-value candidate is not used. An accessible paper PDF does not by itself grant image reuse rights.
 
-Use the decisions consistently: `WEB` means preserve the original and prepare an approved web copy with an in-page explanation; `SOURCE_ONLY` means retain it in the internal workspace only when permitted, without loading it into the website or public release; `OMIT` means do not create a separate asset and record why. An accessible PDF or arXiv copy alone does not establish an image reuse license. If reuse rights are unclear, keep the citation and rights status in the inventory and leave the image out of public output pending approval.
+## W4 priority and primary learning spine
 
-## G2: Evidence Registry
+The spine is a causal/runtime learning path, not a paper table of contents or fixed chapter count. A common shape is:
 
-`research/02_evidence_registry.yaml` is the structured source of claim evidence. Supported categories are `PAPER_FACT`, `PAPER_RESULT`, `AUTHOR_INTERPRETATION`, `OUR_INTERPRETATION`, `IMPLEMENTATION_MAPPING`, `TEACHING_TOY`, `GENERAL_BACKGROUND`, and `FUTURE_WORK`. Tie numerical results to dataset, model, split, metric, protocol, and source. A short `02_evidence_notes.md` may record unresolved conflicts or review notes; it must not duplicate the paper model.
+```text
+problem → why prior approaches are insufficient → core idea → architecture
+→ information/state flow → training/inference → evidence → limits
+```
 
-For every visual selected for the web, record its provenance in the visual inventory: source paper and version, figure/table number, PDF page, original caption, evidence IDs, reuse license or permission status, attribution, stored original path, web asset path, and any crop, conversion, or optimization applied. Preserve a faithful high-resolution source copy under `assets/figures/original/`; keep web-ready copies under `assets/figures/web/`. Never overwrite the preserved source with a crop, recolor, annotation, or compressed derivative. If the PDF only provides a vector/page composition, retain a faithful high-resolution page crop and identify it as such. When rights are unclear, keep the provenance record and source reference, but do not package the image for public release until reuse is approved.
+Adapt it to the paper and keep one continuous path. In the priority matrix:
 
-## G3: Canonical compatibility baseline
+- `CORE` must be assigned to a mainline spine stage.
+- `SUPPORTING` gets a compact inline explanation, brief interaction, hover, or expandable detail.
+- `REFERENCE` stays in a Reference Hub, hover, implementation note, or advanced details; it does not occupy a mainline scene.
+- `DELETE` is omitted, even if factually correct.
 
-Canonical is retained for PaperSkill compatibility, project shell, build contract, tokens, and reusable primitives. It does not set Enhanced chapter order, layout, interaction count, metaphor, or scene architecture. Enhanced follows the Learning Architecture, not Canonical's teaching structure, unless the architecture explicitly chooses otherwise.
+Do not duplicate a core explanation just to fill chapters. The checker can catch repeated item IDs; a person must judge semantic repetition.
 
-## G4: Learning Architecture
+## W5 interaction planning
 
-Start with a Concept Dependency Graph: what a reader must understand first, what depends on it, and why. Define a persistent system workspace when it helps the learner reason across scenes. For each scene specify entry knowledge, unresolved question, new mental model, persistent objects, exit capability, and next question. A core scene also carries Entry Knowledge → Unresolved Question → Scene → New Mental Model → Next Question. Analogies are optional and must document their mapping, boundary, and removal condition.
+Ask first whether prose, a table, or a paper figure is enough. Visualize when spatial or temporal relations are genuinely hard to follow in text. Do not make a scalar setting into a large lab merely because it can have a slider. Each concept should have at most one primary explanatory vehicle; use references for depth.
 
-## G5: Scene Specifications
+Use the reusable pattern library where it fits: Architecture Explorer, Flow Stepper, Branch Highlighter, Before/After Comparator, Timeline, Evidence Viewer, Term Hover, Reference Hub, Expandable Detail, or Result Protocol Card. Copy or adapt selected source into `web/enhanced/src/` so each export is self-contained; do not use cross-paper runtime imports.
 
-Create `design/scenes/` files only for scenes that need specification. Each core scene states its learning goal, dependencies, persistent objects, system state, user actions, state transitions, architecture/data flow, mathematical model, implementation mapping, evidence, teaching-toy boundary, prerequisite terms, reconstruction test, implementation trace test, global dependency test, deletion test, acceptance questions, accessibility, mobile behavior, and non-goals.
+Reference Hub and term hover are recommended infrastructure. A hover answers what a term is, what it does in this paper, and what it is easy to confuse with. Mainline-critical reasoning stays visible in the main path.
 
-Each scene specification also identifies the source figures/tables it uses, where they appear, what the learner should notice, and how the page will explain their labels, structure, and evidence. Where an original visual is selected, plan to show it alongside a readable explanation; use callouts or a companion reconstruction when they clarify dense details, while clearly distinguishing paper content from our annotations. Provide an equivalent text description and usable zoom/responsive behavior. Do not make essential interpretation available only through hover.
+## W6–W9 implementation and review
 
-For every core scene, answer:
+W6 is the first tutorial-page code. Start with a thin vertical slice instead of all pages. W7 is a learning review, not a button/animation review. If the reviewer cannot explain the problem, central mechanism, architecture, and one full flow after the slice, fix the teaching design before writing the rest.
 
-1. **Reconstruction:** Can the learner draw or explain the mechanism without the page?
-2. **Implementation trace:** What is the object, where and when does it exist, what produces/consumes/changes it, and what does not? For neural models, include shape, gradient source, optimizer membership, and update operation when applicable.
-3. **Global dependency:** What does the scene consume and produce, and where is its output used later?
-4. **Deletion:** What understanding is lost if the interaction is removed?
+After W7 passes, complete W8. The final audit checks that a reader can state the problem and idea, reconstruct architecture and flow, explain training/inference where applicable, explain design reasons, summarize key results, and identify limitations. Separately trace claims to source evidence and ensure teaching examples are visibly distinct. Record actual build/a11y/mobile outcomes; never infer them.
 
-The deletion test is necessary but does not compensate for a failed reconstruction test. Interaction labels describe function (`RECONSTRUCTION`, `TRACE`, `COUNTERFACTUAL`, `PARAMETER_EXPLORATION`, `EVIDENCE_INSPECTION`, `DIAGNOSTIC`, `REFERENCE`); there is no coverage quota. Hover never carries the only explanation of knowledge required by the main path.
+## W10: pedagogical contract vs upstream compatibility contract
 
-## G6: Incremental implementation
+These contracts are separate:
 
-Implement in reviewed milestones, commonly Foundation, First Vertical Slice, Core Mechanism, Boundaries, Evidence + End-to-End, and Integration. The First Vertical Slice must arrive early enough for human learning acceptance. If it fails, stop and revise the learning architecture before expanding. Reuse persistent objects across scenes; keep paper data distinct from teaching toys; use real calculations for simulations; link terms, symbols, datasets, and evidence through registries. Do not invent narrative while coding.
+- **Pedagogical design contract:** no fixed chapter count, interaction-pattern quota, universal analogy, animation in every chapter, or required Canvas. Add only what helps learning.
+- **Upstream compatibility contract (as described by the supplied requirements for the current public validator):** the export has 6–10 chapters, at least 4 active modules, and at least one chapter with 2 modules, as well as the required project entry files and official validator requirements. These are export constraints, not internal teaching goals. Meet them with meaningful, organically grouped content; never invent toys solely for the numbers.
 
-For selected paper visuals, extract or capture the source at readable resolution and preserve it before making web derivatives. Keep the source and any web-ready derivative as separate files under `assets/figures/`; copy only approved web assets into the app's public/static asset area. Preserve the source's original labels, data, and meaning. Label and document every crop, reformat, overlay, or redraw; never let an explanatory redraw silently replace a valuable original. Link the figure in the relevant scene to an in-page, evidence-grounded explanation and identify which parts are source content versus tutorial annotation. If no source visual is selected for the web, state the paper-specific reason in the inventory.
+Export chapters are a packaging/grouping of the approved learning spine. Their boundaries do not dictate how many conceptual stages the paper needs.
 
-On the first page, render the three G1 Research Positioning fields as compact tags directly below the page title. Each tag shows its category and short label; its detail is available on pointer hover and keyboard focus, and can be opened on touch devices. Make the same detail accessible to assistive technology. Treat the tags as orientation, not as a substitute for the page's explanation; essential learning content must not exist only in a tooltip. Keep the tag content in paper-specific data so it can be reviewed against the source.
+The exported project must include at least:
 
-## G7: Final audit
+```text
+paper.json
+README.md
+package.json
+package-lock.json
+index.html
+vite.config.ts
+tsconfig.json
+src/App.tsx
+src/data/tutorial.ts
+src/modules/registry.tsx
+src/styles/paper.css
+```
 
-Run the audit in this order: learning acceptance; evidence acceptance; implementation semantics; engineering checks; accessibility/mobile; release scope. Reconstruct architecture, flow, state, mathematics, implementation mapping, and evidence boundaries across the tutorial. Any core learning failure makes the overall result FAIL even if build checks pass. Preserve build/validation, accessibility, reduced-motion, mobile, human acceptance, and release checks.
+It must build independently, use relative asset paths, include image provenance in `README.md`, include no paper PDF, require no portal or upstream script change, and need no external shared package. Run the official latest-upstream validation/preflight before submission. Tutorial PR scope is only `html_output/<paper-name>/<version>/`; any future workflow/skill contribution is a separate PR. Public automation behavior may be only partly visible, and maintainers make the final merge/publication decision. CI success does not guarantee a merge.
 
-Before accepting the visual-asset portion, confirm the complete source inventory was reviewed, every selected original is preserved at readable quality, each web use has provenance and reuse rights recorded, the page explains what the learner should see, and the image has accessible text and responsive/zoom behavior. Recheck that every excluded high-value candidate has a reason; visual-source review does not itself advance a workflow gate.
+## Design documents and workspace
 
-## Workspace and release boundary
+Keep one canonical document for each design decision; do not create redundant prose files:
+
+```text
+research/
+├── paper-model.md
+└── evidence-registry.yaml
+design/
+├── learning-spine.md
+├── asset-plan.md
+└── implementation-plan.md
+audit/
+└── final-check.md
+```
 
 ```text
 papers/<paper-id>/
-├─ paper.yaml
-├─ source/paper.url
-├─ research/01_paper_model.md
-├─ research/02_evidence_registry.yaml
-├─ knowledge/terms.yaml
-├─ design/learning-contract.md
-├─ design/learning-architecture.md
-├─ design/scenes/                 # only specified scenes
-├─ web/canonical/                 # compatibility baseline
-├─ web/enhanced/
-├─ audit/final-check.md
-├─ audit/release-check.md
-└─ assets/
-   ├─ figures/
-   │  ├─ original/                 # preserved source figures/crops
-   │  └─ web/                      # approved web-ready derivatives
-   └─ screenshots/
+├── paper.yaml
+├── source/paper.url
+├── source-cache/
+├── research/
+├── design/
+├── audit/
+├── assets/figures/{original,web}/
+└── web/enhanced/
 ```
 
-Local v1 artifacts are retained as legacy inputs. `paper.py migrate-v2 <paper-id>` is non-destructive: it creates v2 artifacts, records detected legacy paths and old gate states, does not alter Canonical or Enhanced, and leaves every v2 gate pending. `paper.py check` checks paths, files, YAML structure, and references; `paper.py learning-check` checks machine-verifiable scene structure and references only. Neither command evaluates semantic learning.
+```text
+html_output/<paper-name>/<version>/
+```
 
-PaperSkill remains a separate release repository. Never merge PaperSkillWork history into PaperSkill or cherry-pick its commits. Release uses PaperSkill's official import flow, followed by validation and PR review.
+Terms and reference content belong in the app's knowledge/reference data when needed; create no separate design documents just to restate the same content.
+
+## Tool behavior and older workspaces
+
+New workspaces use schema/workflow v3. `tools/paper.py` validates metadata, cache files, references, asset paths, priority assignments, and export structure. It never decides whether a lesson is good and never marks a stage complete automatically. A reviewer name and note are required to mark a stage complete.
+
+Existing schema v1/v2 paper workspaces remain readable using their existing checks. Do not bulk migrate or rewrite those tutorials during this macro-workflow update. v1 templates under `templates/legacy/` and v2 scaffold templates exist only for explicit legacy migration, not for new paper work.

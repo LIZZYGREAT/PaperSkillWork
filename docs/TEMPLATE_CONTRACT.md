@@ -1,6 +1,6 @@
 # Template Contract
 
-`templates/` contains inputs that `paper.py new` renders into a v2 workspace. Rendering is explicit placeholder substitution; there is no template language or conditional behavior.
+`tools/paper.py new` creates a Workflow v3 workspace from fixed templates. Placeholder replacement is literal; there is no template language or conditional behavior.
 
 ## Allowed placeholders
 
@@ -11,21 +11,27 @@
 {{arxiv_id}}
 ```
 
-All templates may use only these placeholders. An omitted arXiv id renders as an empty string.
+All new-workflow templates may use only these placeholders. An omitted arXiv ID renders as an empty string.
 
-## v2 output mapping
+## Workflow v3 output mapping
 
 | Template | Target |
 | --- | --- |
 | `paper.yaml` | `paper.yaml` |
-| `learning-contract.md` | `design/learning-contract.md` |
-| `paper-model.md` | `research/01_paper_model.md` |
-| `evidence-registry.yaml` | `research/02_evidence_registry.yaml` |
-| `terms.yaml` | `knowledge/terms.yaml` |
-| `learning-architecture.md` | `design/learning-architecture.md` |
-| `final-check.md` | `audit/final-check.md` |
-| `release-check.md` | `audit/release-check.md` |
+| `source-content.md` | `source-cache/content.md` |
+| `source-manifest.json` | `source-cache/manifest.json` |
+| `source-evidence.json` | `source-cache/evidence.json` |
+| `paper-model-v3.md` | `research/paper-model.md` |
+| `evidence-registry-v3.yaml` | `research/evidence-registry.yaml` |
+| `learning-spine.md` | `design/learning-spine.md` |
+| `asset-plan.md` | `design/asset-plan.md` |
+| `implementation-plan.md` | `design/implementation-plan.md` |
+| `final-check-v3.md` | `audit/final-check.md` |
 
-`scene-spec.md` is copied manually for each scene selected by the Learning Architecture. `paper.py new` creates `design/scenes/` empty; it does not invent a default scene.
+`source/paper.url` is created from `--url` when supplied. The source-cache templates are pending scaffolds; W1 replaces their placeholder content from a complete source read and inventories every figure/table. `source-cache/figures/` holds captured source visuals. `web/enhanced/` is created as the implementation location but the tutorial is not scaffolded before W6. `html_output/<paper-id>/v1/` is the default export target recorded in `paper.yaml`; W10 populates it.
 
-The v1 templates remain under `templates/legacy/` for reading and migration reference; new workspaces never use them. Template generation does not advance gates or claim review acceptance.
+Template generation creates no source analysis, assigns no priority, and advances no workflow stage. A person must review and explicitly accept each stage.
+
+## Legacy templates
+
+`learning-contract.md`, `terms.yaml`, `learning-architecture.md`, `scene-spec.md`, and `release-check.md` remain only for the explicit schema v1→v2 migration path. They are not part of new v3 work and must not be used to generate parallel design documents. Files in `templates/legacy/` are historical v1 references.

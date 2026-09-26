@@ -1,36 +1,50 @@
 # PaperSkillWork Repository Rules
 
-## Primary Product Principle
+## Product principle
 
-The primary deliverable is not an animated paper summary. It is an executable mental model of the paper.
+The deliverable is an executable mental model of a paper, not an animated summary or a collection of concept demos. Establish the paper's causal and runtime logic first; rank what matters; only then choose presentation and interaction.
 
-For every core mechanism, the tutorial should help a first-time learner reconstruct, when applicable:
+Every `CORE` mechanism should let a first-time reader reconstruct, where applicable, its objects, ownership, inputs and outputs, lifecycle, state changes, data flow, learning/update signals, evidence, and limits. Correct details may be omitted when they do not help the reader understand the paper.
 
-1. what the object is;
-2. where it lives;
-3. when it exists;
-4. who creates it;
-5. what it consumes and produces;
-6. how state changes;
-7. how tensors, shapes, or messages change;
-8. where gradients or control signals flow;
-9. what actually updates;
-10. which evidence supports the claim;
-11. where the mechanism fails.
+## Information priority
 
-Do not optimize for interaction count, animation coverage, metaphor consistency, chapter symmetry, or Canvas usage. Optimize for conceptual reconstruction, implementation traceability, causal clarity, and evidence boundaries.
+Before page implementation, assign each candidate item exactly one priority:
 
-## Repository and Release Rules
+- `CORE`: required on the primary learning spine.
+- `SUPPORTING`: compact inline explanation, hover, or expandable detail.
+- `REFERENCE`: on-demand Reference Hub or advanced material, outside the main path.
+- `DELETE`: omit from the tutorial.
 
-1. Every paper lives under `papers/<paper-id>/`.
-2. Paper facts come from the source paper and its evidence registry or legacy evidence audit.
-3. Canonical and Enhanced remain separate artifacts. Canonical is a compatibility and build baseline; it does not dictate Enhanced teaching structure.
-4. Do not modify a frozen `web/canonical/` artifact.
-5. PaperSkill is a separate release repository; use its official import flow.
-6. `tools/paper.py` checks files, schema, and workflow state. Skills guide semantic reasoning.
-7. Never advance a workflow gate without explicit human verification.
-8. Keep accessibility, reduced-motion, mobile, build validation, interaction deletion checks, human acceptance, and release boundaries.
-9. Do not require an animation, a fixed number or pattern of interactions, a single analogy, or a particular rendering technology.
-10. Build success does not override a learning or evidence failure.
-11. Every G1 paper model classifies the paper's topic, problem type/setting, and research direction with source evidence. G6 displays these as compact tags below the first-page title with explanations available on hover, keyboard focus, and touch; essential content must not live only in a tooltip.
-12. G1/G2 inventory the figures, tables, and other source visuals in the paper. Preserve clear, valuable paper-provided visuals in `assets/figures/` and plan to explain selected items in the relevant web scene; record source, page/figure ID, processing, evidence links, and reuse rights. Do not impose a blanket ban on original paper figures or publish assets whose reuse rights are unclear.
+Do not build an interaction, animation, analogy, chapter, or formula display to meet a quota. Choose a visual or interaction only when it explains a relationship or makes a real learning task easier. Prefer a validated reusable pattern, copied into the paper project when useful; do not import a shared runtime across paper projects.
+
+## W0–W10 workflow
+
+Follow `docs/WORKFLOW.md`. Source intake and a one-time source cache precede the paper model. Evidence and asset curation precede the learning spine. The first code is a small vertical slice; a person reviews whether it teaches the intended mental model before full implementation proceeds. Learning quality and evidence validity remain human judgments; tools may check structure and references only.
+
+Never mark a workflow stage complete on behalf of a human reviewer. Never let build success override a failed learning or evidence review.
+
+## Source and evidence
+
+Paper facts must resolve to the cited paper version and a source locator. Distinguish paper facts/results, author interpretations, our interpretations, implementation mappings, background, and teaching examples. Do not silently broaden a result beyond its conditions or present an illustrative toy as paper data.
+
+Cache one complete, systematic paper read under `source-cache/`. Use the cache for later planning and review; repeat a full extraction only to correct a failed or incomplete cache. The cache manifest includes the figure inventory and source metadata. Do not accumulate unrelated partial reads as a substitute for a reliable cache.
+
+## Visual assets
+
+Inventory figures, tables, and other source visuals; classify and evaluate each; then record a use decision. Preserve selected source assets apart from derivatives, record source/page/caption/processing/evidence/reuse-rights metadata, and explain selected paper visuals in the tutorial. Do not publish assets whose reuse rights are unclear. Do not submit a paper PDF. Use relative image paths and include asset provenance in the exported project's `README.md`.
+
+## Project and release boundaries
+
+1. Each paper workspace lives under `papers/<paper-id>/`.
+2. Do not rewrite existing LwF scenes or modify frozen `web/canonical/` artifacts as part of a macro-workflow change.
+3. The tutorial export is an independent React + TypeScript project under `html_output/<paper-name>/<version>/`.
+4. Copy any useful shared source into that project; do not depend on a cross-paper runtime package or local workspace path.
+5. Tutorial PRs contain only `html_output/<paper>/<version>/`. Workflow/skill changes, if ever contributed upstream, use a separate PR.
+6. Retain the upstream-required entry files and run the official current upstream preflight before release. A green CI run does not guarantee merge; maintainers decide.
+7. PaperSkill is a separate repository. Use its official import flow; do not merge or cherry-pick PaperSkillWork history into it.
+
+## Scope and verification
+
+For macro-workflow work, update the workflow, contract, templates, relevant skills, and the smallest necessary helper behavior. Do not redesign a paper's scenes, rebuild a shared component library, or modify the upstream repository unless explicitly requested. Keep existing v1/v2 workspaces readable; new workspaces use schema/workflow v3.
+
+`tools/paper.py` checks files, metadata shape, and resolvable references. It cannot decide whether an explanation teaches well. Preserve accessibility, keyboard/touch support, reduced motion, mobile behavior, build validation, human learning acceptance, and release boundaries in paper-specific work.

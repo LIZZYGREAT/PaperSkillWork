@@ -1,8 +1,8 @@
 ---
 name: narrative-design
-description: Deprecated alias for the Workflow v2 learning-architecture skill.
+description: Deprecated alias; use learning-architecture to create the W4 primary learning spine.
 ---
 
 # Deprecated: Narrative Design
 
-Use `.agents/skills/learning-architecture/SKILL.md` for all new work. This alias remains only so existing references resolve. Workflow v2 replaces chapter-first storyboards with a Concept Dependency Graph, persistent objects, and scenes defined by unresolved questions. Do not create or extend `design/storyboard.md` for v2.
+For new workflow work, use `.agents/skills/learning-architecture/SKILL.md` at W4. Create one causal/runtime Learning Spine and assign CORE, SUPPORTING, REFERENCE, and DELETE priorities. Do not create a separate storyboard or begin from a fixed chapter count. This alias remains only for existing references.

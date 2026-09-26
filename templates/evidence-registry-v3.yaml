@@ -1,0 +1,16 @@
+# Each important tutorial claim gets one stable ID and a source boundary.
+claims: {}
+results: {}
+author_interpretations: {}
+our_interpretations: {}
+implementation_mappings: {}
+background: {}
+teaching_examples: {}
+
+# Entry shape:
+# C01:
+#   claim: ""
+#   type: PAPER_FACT
+#   source_locator: "section/page/figure/equation"
+#   conditions: ""
+#   allowed_wording: ""

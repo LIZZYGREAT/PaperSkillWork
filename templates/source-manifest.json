@@ -1,0 +1,14 @@
+{
+  "paper": {
+    "title": "{{paper_title}}",
+    "authors": [],
+    "venue": "",
+    "year": null,
+    "source_type": "",
+    "source_location": "{{paper_url}}",
+    "source_hash": ""
+  },
+  "cache_status": "pending",
+  "extraction": "",
+  "figures": []
+}

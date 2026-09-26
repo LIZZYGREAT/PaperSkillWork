@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mechanical workspace and gate checks for PaperSkillWork."""
+"""Mechanical workspace and workflow checks for PaperSkillWork."""
 
 import argparse
 import json
@@ -51,6 +51,21 @@ GATES: List[Tuple[str, str, str]] = [
     ("G6", "G6_enhanced", "Incremental Enhanced"),
     ("G7", "G7_release", "Learning + Evidence + Engineering Audit"),
 ]
+STAGES: List[Tuple[str, str, str]] = [
+    ("W0", "W0_source_intake", "Source Intake"),
+    ("W1", "W1_source_cache", "Source Cache + Asset Inventory"),
+    ("W2", "W2_paper_model", "Paper Understanding Model"),
+    ("W3", "W3_evidence_assets", "Evidence + Asset Curation"),
+    ("W4", "W4_learning_spine", "Learning Spine + Information Priority"),
+    ("W5", "W5_interaction_plan", "Visual / Interaction Planning"),
+    ("W6", "W6_vertical_slice", "First Vertical Slice"),
+    ("W7", "W7_human_review", "Human Learning Review"),
+    ("W8", "W8_full_implementation", "Full Implementation"),
+    ("W9", "W9_final_audit", "Learning + Evidence Audit"),
+    ("W10", "W10_upstream_preflight", "Upstream Packaging & Preflight"),
+]
+STAGE_IDS = [stage[0] for stage in STAGES]
+STAGE_BY_ID = {stage[0]: stage for stage in STAGES}
 LEGACY_GATE_LABELS = [
     "Workspace", "Research", "Evidence Audit", "Canonical", "Narrative Design",
     "Interaction Design", "Enhanced", "Final Audit & Release",
@@ -77,6 +92,18 @@ TEMPLATE_OUTPUTS = {
     "final-check.md": "audit/final-check.md",
     "release-check.md": "audit/release-check.md",
 }
+V3_TEMPLATE_OUTPUTS = {
+    "paper.yaml": "paper.yaml",
+    "source-content.md": "source-cache/content.md",
+    "source-manifest.json": "source-cache/manifest.json",
+    "source-evidence.json": "source-cache/evidence.json",
+    "paper-model-v3.md": "research/paper-model.md",
+    "evidence-registry-v3.yaml": "research/evidence-registry.yaml",
+    "learning-spine.md": "design/learning-spine.md",
+    "asset-plan.md": "design/asset-plan.md",
+    "implementation-plan.md": "design/implementation-plan.md",
+    "final-check-v3.md": "audit/final-check.md",
+}
 V2_GATE_ARTIFACTS = {
     "G0": ("file", "design/learning-contract.md"),
     "G1": ("file", "research/01_paper_model.md"),
@@ -96,6 +123,29 @@ V2_ARTIFACTS = {
     "terms": "knowledge/terms.yaml",
     "final_check": "audit/final-check.md",
     "release_check": "audit/release-check.md",
+}
+V3_ARTIFACTS = {
+    "source_cache": "source-cache",
+    "paper_model": "research/paper-model.md",
+    "evidence_registry": "research/evidence-registry.yaml",
+    "learning_spine": "design/learning-spine.md",
+    "asset_plan": "design/asset-plan.md",
+    "implementation_plan": "design/implementation-plan.md",
+    "final_check": "audit/final-check.md",
+    "enhanced": "web/enhanced",
+}
+V3_STAGE_ARTIFACTS = {
+    "W0": ("file", "paper.yaml"),
+    "W1": ("dir", "source-cache"),
+    "W2": ("file", "research/paper-model.md"),
+    "W3": ("file", "research/evidence-registry.yaml"),
+    "W4": ("file", "design/learning-spine.md"),
+    "W5": ("file", "design/implementation-plan.md"),
+    "W6": ("file", "web/enhanced/package.json"),
+    "W7": ("file", "design/implementation-plan.md"),
+    "W8": ("file", "web/enhanced/package.json"),
+    "W9": ("file", "audit/final-check.md"),
+    "W10": ("dir", "html_output"),
 }
 ABSOLUTE_LOCAL_PATH_RE = re.compile(
     r"(?:[A-Za-z]:\\Users\\[^\s\"'<>]+|/Users/[^/\s]+/[^\s\"'<>]+)"
@@ -148,8 +198,8 @@ def load_yaml(path: Path) -> Dict[str, Any]:
 def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
     errors: List[str] = []
     schema_version = config.get("schema_version")
-    if isinstance(schema_version, bool) or schema_version not in (1, 2):
-        errors.append("schema_version must be 1 or 2")
+    if isinstance(schema_version, bool) or schema_version not in (1, 2, 3):
+        errors.append("schema_version must be 1, 2, or 3")
     configured_id = config.get("id")
     if not isinstance(configured_id, str) or not PAPER_ID_RE.fullmatch(configured_id):
         errors.append("id is invalid")
@@ -159,52 +209,87 @@ def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
         errors.append("title must be non-empty")
 
     paper = config.get("paper")
-    if not isinstance(paper, dict) or not isinstance(paper.get("url"), str) or not paper["url"].strip():
+    if not isinstance(paper, dict) or not isinstance(paper.get("url"), str):
+        errors.append("paper.url must be a string")
+    elif schema_version != 3 and not paper["url"].strip():
         errors.append("paper.url must be non-empty")
-    elif "local_pdf" in paper and paper["local_pdf"] is not None:
+    if isinstance(paper, dict) and "local_pdf" in paper and paper["local_pdf"] is not None:
         problem = path_problem(paper["local_pdf"])
         if problem:
             errors.append("paper.local_pdf {}".format(problem))
 
     workflow = config.get("workflow")
-    if not isinstance(workflow, dict) or workflow.get("current_gate") not in GATE_IDS:
-        errors.append("workflow.current_gate must be one of G0 through G7")
+    if schema_version in (1, 2):
+        if not isinstance(workflow, dict) or workflow.get("current_gate") not in GATE_IDS:
+            errors.append("workflow.current_gate must be one of G0 through G7")
+    elif not isinstance(workflow, dict) or workflow.get("current_stage") not in STAGE_IDS:
+        errors.append("workflow.current_stage must be one of W0 through W10")
     if schema_version == 2 and isinstance(workflow, dict) and workflow.get("version") != 2:
         errors.append("workflow.version must be 2 for schema_version 2")
-    gates = workflow.get("gates") if isinstance(workflow, dict) else None
-    expected_keys = {item[1] for item in GATES}
-    if not isinstance(gates, dict):
-        errors.append("workflow.gates must be a mapping")
-    else:
-        missing = sorted(expected_keys - set(gates))
-        extra = sorted(set(gates) - expected_keys)
-        if missing:
-            errors.append("workflow.gates is missing: {}".format(", ".join(missing)))
-        if extra:
-            errors.append("workflow.gates has unknown keys: {}".format(", ".join(extra)))
-        for gate_id, gate_key, _label in GATES:
-            entry = gates.get(gate_key)
-            if not isinstance(entry, dict):
-                if gate_key not in missing:
-                    errors.append("workflow.gates.{} must be a mapping".format(gate_key))
-                continue
-            status = entry.get("status")
-            if not isinstance(status, str) or status not in STATUSES:
-                errors.append("workflow.gates.{}.status must be one of: {}".format(gate_key, ", ".join(sorted(STATUSES))))
-            if status == "skipped" and not (isinstance(entry.get("reason"), str) and entry["reason"].strip()):
-                errors.append("workflow.gates.{} skipped status requires a reason".format(gate_key))
-            if status != "skipped" and "reason" in entry:
-                errors.append("workflow.gates.{}.reason is only valid when status is skipped".format(gate_key))
-        if schema_version == 2 and any(
-            isinstance(gates.get(key), dict) and gates[key].get("status") == "legacy"
-            for _gate_id, key, _label in GATES
-        ):
-            errors.append("Workflow v2 gates cannot use legacy status")
-        elif schema_version == 1 and configured_id != "phyagentos" and any(
-            isinstance(gates.get(key), dict) and gates[key].get("status") == "legacy"
-            for _gate_id, key, _label in GATES
-        ):
-            errors.append("legacy gate status is reserved for the PhyAgentOS Workflow v1 migration")
+    if schema_version == 3 and isinstance(workflow, dict) and workflow.get("version") != 3:
+        errors.append("workflow.version must be 3 for schema_version 3")
+
+    if schema_version in (1, 2):
+        gates = workflow.get("gates") if isinstance(workflow, dict) else None
+        expected_keys = {item[1] for item in GATES}
+        if not isinstance(gates, dict):
+            errors.append("workflow.gates must be a mapping")
+        else:
+            missing = sorted(expected_keys - set(gates))
+            extra = sorted(set(gates) - expected_keys)
+            if missing:
+                errors.append("workflow.gates is missing: {}".format(", ".join(missing)))
+            if extra:
+                errors.append("workflow.gates has unknown keys: {}".format(", ".join(extra)))
+            for gate_id, gate_key, _label in GATES:
+                entry = gates.get(gate_key)
+                if not isinstance(entry, dict):
+                    if gate_key not in missing:
+                        errors.append("workflow.gates.{} must be a mapping".format(gate_key))
+                    continue
+                status = entry.get("status")
+                if not isinstance(status, str) or status not in STATUSES:
+                    errors.append("workflow.gates.{}.status must be one of: {}".format(gate_key, ", ".join(sorted(STATUSES))))
+                if status == "skipped" and not (isinstance(entry.get("reason"), str) and entry["reason"].strip()):
+                    errors.append("workflow.gates.{} skipped status requires a reason".format(gate_key))
+                if status != "skipped" and "reason" in entry:
+                    errors.append("workflow.gates.{}.reason is only valid when status is skipped".format(gate_key))
+            if schema_version == 2 and any(
+                isinstance(gates.get(key), dict) and gates[key].get("status") == "legacy"
+                for _gate_id, key, _label in GATES
+            ):
+                errors.append("Workflow v2 gates cannot use legacy status")
+            elif schema_version == 1 and configured_id != "phyagentos" and any(
+                isinstance(gates.get(key), dict) and gates[key].get("status") == "legacy"
+                for _gate_id, key, _label in GATES
+            ):
+                errors.append("legacy gate status is reserved for the PhyAgentOS Workflow v1 migration")
+    elif schema_version == 3 and isinstance(workflow, dict):
+        stages = workflow.get("stages")
+        expected_keys = {item[1] for item in STAGES}
+        if not isinstance(stages, dict):
+            errors.append("workflow.stages must be a mapping")
+        else:
+            missing = sorted(expected_keys - set(stages))
+            extra = sorted(set(stages) - expected_keys)
+            if missing:
+                errors.append("workflow.stages is missing: {}".format(", ".join(missing)))
+            if extra:
+                errors.append("workflow.stages has unknown keys: {}".format(", ".join(extra)))
+            for stage_id, stage_key, _label in STAGES:
+                entry = stages.get(stage_key)
+                if not isinstance(entry, dict):
+                    if stage_key not in missing:
+                        errors.append("workflow.stages.{} must be a mapping".format(stage_key))
+                    continue
+                status = entry.get("status")
+                if status not in ("pending", "in_progress", "complete"):
+                    errors.append("workflow.stages.{}.status must be pending, in_progress, or complete".format(stage_key))
+                if status == "complete":
+                    if not isinstance(entry.get("reviewed_by"), str) or not entry["reviewed_by"].strip():
+                        errors.append("workflow.stages.{}.reviewed_by is required for a completed stage".format(stage_key))
+                    if not isinstance(entry.get("note"), str) or not entry["note"].strip():
+                        errors.append("workflow.stages.{}.note is required for a completed stage".format(stage_key))
 
     for group_name in ("artifacts", "web"):
         group = config.get(group_name)
@@ -225,6 +310,33 @@ def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
             for key, expected in V2_ARTIFACTS.items():
                 if key in artifacts and artifacts[key] != expected:
                     errors.append("artifacts.{} must be {}".format(key, expected))
+
+    if schema_version == 3:
+        artifacts = config.get("artifacts")
+        if isinstance(artifacts, dict):
+            missing_artifacts = sorted(set(V3_ARTIFACTS) - set(artifacts))
+            if missing_artifacts:
+                errors.append("artifacts is missing: {}".format(", ".join(missing_artifacts)))
+            for key, expected in V3_ARTIFACTS.items():
+                if key in artifacts and artifacts[key] != expected:
+                    errors.append("artifacts.{} must be {}".format(key, expected))
+        release = config.get("release")
+        if not isinstance(release, dict) or "output" not in release:
+            errors.append("release.output must be configured")
+        elif path_problem(release["output"]):
+            errors.append("release.output must be a safe relative path")
+        elif not release["output"].replace("\\", "/").startswith("html_output/"):
+            errors.append("release.output must be under html_output/<paper-name>/<version>/")
+        if isinstance(paper, dict):
+            if not isinstance(paper.get("authors"), list) or any(not isinstance(author, str) for author in paper.get("authors", [])):
+                errors.append("paper.authors must be a list of strings")
+            if paper.get("year") is not None and (isinstance(paper.get("year"), bool) or not isinstance(paper.get("year"), int)):
+                errors.append("paper.year must be an integer or null")
+            for key in ("venue", "source_type", "source_location", "source_hash"):
+                if not isinstance(paper.get(key), str):
+                    errors.append("paper.{} must be a string".format(key))
+        if not isinstance(config.get("web"), dict) or config.get("web", {}).get("enhanced") != "web/enhanced":
+            errors.append("web.enhanced must be web/enhanced")
 
     return errors
 
@@ -328,12 +440,15 @@ def render_template(template_name: str, replacements: Dict[str, str]) -> str:
 def cmd_new(args: argparse.Namespace) -> int:
     validate_paper_id(args.paper_id)
     title = args.title.strip()
-    url = args.url.strip()
+    url = (args.url or "").strip()
     arxiv_id = (args.arxiv_id or "").strip()
+    source_location = (args.source_location or url or "").strip()
     if not title or "\n" in title or "\r" in title:
         raise PaperError("--title must be a non-empty single line")
-    if not url:
-        raise PaperError("--url must be non-empty")
+    if not source_location:
+        raise PaperError("provide --url or --source-location so W0 can identify the source")
+    if args.year is not None and (args.year < 1000 or args.year > 9999):
+        raise PaperError("--year must be a four-digit year")
     folder = PAPERS / args.paper_id
     if folder.exists():
         raise PaperError("Workspace already exists and was left unchanged: papers/{}".format(args.paper_id))
@@ -345,10 +460,13 @@ def cmd_new(args: argparse.Namespace) -> int:
         "arxiv_id": quote_yaml(arxiv_id),
     }
     rendered: Dict[str, str] = {}
-    for template_name, relative_output in TEMPLATE_OUTPUTS.items():
+    for template_name, relative_output in V3_TEMPLATE_OUTPUTS.items():
         template_replacements = dict(replacements)
         if template_name == "paper.yaml":
             template_replacements["paper_title"] = quote_yaml(title)
+        elif template_name == "source-manifest.json":
+            template_replacements["paper_title"] = json.dumps(title, ensure_ascii=False)[1:-1]
+            template_replacements["paper_url"] = json.dumps(url, ensure_ascii=False)[1:-1]
         rendered[relative_output] = render_template(template_name, template_replacements)
 
     require_yaml()
@@ -358,12 +476,27 @@ def cmd_new(args: argparse.Namespace) -> int:
         raise PaperError("Rendered paper.yaml is invalid: {}".format(exc))
     if not isinstance(config, dict):
         raise PaperError("Rendered paper.yaml must be a mapping")
+    config["paper"].update({
+        "authors": [author.strip() for author in (args.author or []) if author.strip()],
+        "venue": (args.venue or "").strip(),
+        "year": args.year,
+        "source_type": (args.source_type or "").strip(),
+        "source_location": source_location,
+        "source_hash": (args.source_hash or "").strip(),
+    })
+    rendered["paper.yaml"] = yaml.safe_dump(config, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    manifest = json.loads(rendered["source-cache/manifest.json"])
+    manifest["paper"].update(config["paper"])
+    rendered["source-cache/manifest.json"] = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
     validate_or_raise(config, args.paper_id)
-    rendered["source/paper.url"] = url + "\n"
+    rendered["source/paper.url"] = (url + "\n") if url else ""
 
     try:
         folder.mkdir(parents=False)
-        for directory in ("source", "research", "design/scenes", "knowledge", "audit", "assets/figures", "assets/screenshots"):
+        for directory in (
+            "source", "source-cache/figures", "research", "design", "audit",
+            "assets/figures/original", "assets/figures/web", "web/enhanced",
+        ):
             (folder / directory).mkdir(parents=True, exist_ok=True)
         for relative, content in rendered.items():
             target = folder / relative
@@ -373,7 +506,7 @@ def cmd_new(args: argparse.Namespace) -> int:
         raise PaperError("Could not create workspace papers/{}: {}".format(args.paper_id, exc))
 
     print("Created papers/{}".format(args.paper_id))
-    print("Next: complete design/learning-contract.md, then build research/01_paper_model.md with $paper-review.")
+    print("Next: complete W0 source metadata and W1's full-paper source cache, then use $paper-review for W2.")
     return 0
 
 
@@ -496,6 +629,18 @@ def gate_states(config: Dict[str, Any]) -> Dict[str, str]:
     return {gate_id: gates[key]["status"] for gate_id, key, _label in GATES}
 
 
+def stage_states(config: Dict[str, Any]) -> Dict[str, str]:
+    stages = config["workflow"]["stages"]
+    return {stage_id: stages[key]["status"] for stage_id, key, _label in STAGES}
+
+
+def recommended_stage(states: Dict[str, str]) -> str:
+    for stage_id, _key, label in STAGES:
+        if states.get(stage_id) != "complete":
+            return "{} {}".format(stage_id, label)
+    return "No remaining stage"
+
+
 def recommended_gate(states: Dict[str, str]) -> str:
     for gate_id, _key, label in GATES:
         if states.get(gate_id) not in ("complete", "skipped"):
@@ -506,6 +651,25 @@ def recommended_gate(states: Dict[str, str]) -> str:
 def cmd_status(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
+    if config.get("schema_version") == 3:
+        states = stage_states(config)
+        print("Paper: {}".format(args.paper_id))
+        print("Title: {}".format(" ".join(config["title"].split())))
+        print("Current Stage: {}".format(config["workflow"]["current_stage"]))
+        print("\nStages")
+        for stage_id, _key, label in STAGES:
+            print("{} {:<36} {}".format(stage_id, label, states[stage_id].upper()))
+        print("\nArtifacts")
+        for stage_id, (_kind, relative) in V3_STAGE_ARTIFACTS.items():
+            if stage_id == "W10":
+                target = ROOT / config["release"]["output"]
+                relative = config["release"]["output"]
+            else:
+                target = folder / relative
+            exists = target.is_dir() and any(target.iterdir()) if target.is_dir() else target.is_file()
+            print("[{}] {}".format("PRESENT" if exists else "MISSING", relative))
+        print("Next Recommended Stage: {}".format(recommended_stage(states)))
+        return 0
     states = gate_states(config)
     current = config["workflow"]["current_gate"]
     print("Paper: {}".format(args.paper_id))
@@ -537,7 +701,22 @@ def cmd_status(args: argparse.Namespace) -> int:
 def cmd_paths(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
-    if config.get("schema_version") == 2:
+    if config.get("schema_version") == 3:
+        values = {
+            "workspace": "papers/{}/".format(args.paper_id),
+            "source": "papers/{}/source/paper.url".format(args.paper_id),
+            "source_cache": "papers/{}/source-cache".format(args.paper_id),
+            "paper_model": "papers/{}/research/paper-model.md".format(args.paper_id),
+            "evidence_registry": "papers/{}/research/evidence-registry.yaml".format(args.paper_id),
+            "learning_spine": "papers/{}/design/learning-spine.md".format(args.paper_id),
+            "asset_plan": "papers/{}/design/asset-plan.md".format(args.paper_id),
+            "implementation_plan": "papers/{}/design/implementation-plan.md".format(args.paper_id),
+            "final_check": "papers/{}/audit/final-check.md".format(args.paper_id),
+            "enhanced": "papers/{}/web/enhanced".format(args.paper_id),
+            "release_output": config["release"]["output"],
+        }
+        labels = [(key, key.replace("_", " ").title()) for key in values]
+    elif config.get("schema_version") == 2:
         values = {
             "workspace": "papers/{}/".format(args.paper_id),
             "paper_pdf": "papers/{}/source/paper.pdf".format(args.paper_id),
@@ -612,6 +791,8 @@ def cmd_open(args: argparse.Namespace) -> int:
 def cmd_gate(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
+    if config.get("schema_version") == 3:
+        raise PaperError("Workflow v3 uses 'stage <paper-id> W0..W10 <status>' instead of gate")
     if args.gate is None and args.status is None:
         print("Paper: {}".format(args.paper_id))
         print("Current Gate: {}".format(config["workflow"]["current_gate"]))
@@ -655,6 +836,69 @@ def cmd_gate(args: argparse.Namespace) -> int:
     (folder / "paper.yaml").write_text(output, encoding="utf-8")
     print("Updated {} to {} for {}.".format(args.gate, args.status, args.paper_id))
     return 0
+
+
+def cmd_stage(args: argparse.Namespace) -> int:
+    folder, config = read_paper(args.paper_id)
+    validate_or_raise(config, args.paper_id)
+    if config.get("schema_version") != 3:
+        raise PaperError("stage applies to Workflow v3 workspaces only")
+    if args.stage is None and args.status is None:
+        print("Paper: {}".format(args.paper_id))
+        print("Current Stage: {}".format(config["workflow"]["current_stage"]))
+        for stage_id, key, label in STAGES:
+            entry = config["workflow"]["stages"][key]
+            print("{} {:<36} {}".format(stage_id, label, entry["status"].upper()))
+        return 0
+    if args.stage is None or args.status is None:
+        raise PaperError("Provide both <stage> and <status>")
+    if args.stage not in STAGE_BY_ID:
+        raise PaperError("Unknown stage '{}'; expected W0 through W10".format(args.stage))
+    if args.status not in ("in_progress", "complete"):
+        raise PaperError("Stage status must be in_progress or complete")
+    stage_key = STAGE_BY_ID[args.stage][1]
+    if config["workflow"]["stages"][stage_key]["status"] == "complete":
+        raise PaperError("{} is already complete; revise its artifacts without resetting accepted history".format(args.stage))
+    if args.status in ("in_progress", "complete"):
+        problems = stage_order_problems(config, args.stage)
+    else:
+        problems = []
+    if args.status == "complete":
+        if not (args.reviewed_by and args.reviewed_by.strip() and args.note and args.note.strip()):
+            raise PaperError("--reviewed-by and --note are required to record human acceptance")
+        problems.extend(stage_completion_problems(folder, args.stage, config))
+        if problems:
+            raise PaperError("Cannot mark {} complete:\n- {}".format(args.stage, "\n- ".join(problems)))
+    elif args.reviewed_by or args.note:
+        raise PaperError("--reviewed-by and --note are only valid when completing a stage")
+    elif problems:
+        raise PaperError("Cannot start {}:\n- {}".format(args.stage, "\n- ".join(problems)))
+
+    entry = config["workflow"]["stages"][stage_key]
+    entry["status"] = args.status
+    if args.status == "complete":
+        entry["reviewed_by"] = args.reviewed_by.strip()
+        entry["note"] = args.note.strip()
+        index = STAGE_IDS.index(args.stage)
+        config["workflow"]["current_stage"] = STAGE_IDS[min(index + 1, len(STAGE_IDS) - 1)]
+    else:
+        config["workflow"]["current_stage"] = args.stage
+    validate_or_raise(config, args.paper_id)
+    require_yaml()
+    output = yaml.safe_dump(config, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    (folder / "paper.yaml").write_text(output, encoding="utf-8")
+    print("Recorded {} as {} for {}.".format(args.stage, args.status, args.paper_id))
+    return 0
+
+
+def stage_order_problems(config: Dict[str, Any], stage_id: str) -> List[str]:
+    index = STAGE_IDS.index(stage_id)
+    stages = config["workflow"]["stages"]
+    return [
+        "{} {} is {}; must be complete first".format(prior_id, label, stages[key]["status"])
+        for prior_id, key, label in STAGES[:index]
+        if stages[key]["status"] != "complete"
+    ]
 
 
 def gate_order_problems(config: Dict[str, Any], gate_id: str) -> List[str]:
@@ -845,6 +1089,441 @@ def scene_acceptance_problems(folder: Path) -> List[str]:
     return problems
 
 
+def read_json_object(path: Path, label: str) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    if not path.is_file():
+        return None, ["{} is missing".format(label)]
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        return None, ["{} is not valid JSON: {}".format(label, exc)]
+    if not isinstance(value, dict):
+        return None, ["{} must contain an object".format(label)]
+    return value, []
+
+
+def fenced_yaml(markdown_path: Path) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    if not markdown_path.is_file():
+        return None, ["{} is missing".format(markdown_path.name)]
+    try:
+        markdown = markdown_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return None, ["cannot read {}: {}".format(markdown_path.name, exc)]
+    match = re.search(r"```ya?ml\s*\n([\s\S]*?)\n```", markdown)
+    if not match:
+        return None, ["{} has no fenced YAML data block".format(markdown_path.name)]
+    try:
+        value = yaml.load(match.group(1), Loader=UniqueKeyLoader)
+    except yaml.YAMLError as exc:
+        return None, ["{} YAML block is invalid: {}".format(markdown_path.name, exc)]
+    if not isinstance(value, dict):
+        return None, ["{} YAML block must contain a mapping".format(markdown_path.name)]
+    return value, []
+
+
+def evidence_registry_ids_v3(folder: Path) -> Tuple[set, Dict[str, Dict[str, Any]], List[str]]:
+    path = folder / "research/evidence-registry.yaml"
+    if not path.is_file():
+        return set(), {}, ["research/evidence-registry.yaml is missing"]
+    try:
+        registry = load_yaml(path)
+    except PaperError as exc:
+        return set(), {}, [str(exc)]
+    ids: set = set()
+    entries: Dict[str, Dict[str, Any]] = {}
+    errors: List[str] = []
+    for category, values in registry.items():
+        if not isinstance(values, dict):
+            errors.append("evidence registry section '{}' must be a mapping".format(category))
+            continue
+        for item_id, entry in values.items():
+            if not isinstance(item_id, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", item_id):
+                errors.append("evidence registry has invalid ID '{}'".format(item_id))
+                continue
+            if item_id in ids:
+                errors.append("evidence registry has duplicate ID '{}'".format(item_id))
+            ids.add(item_id)
+            if not isinstance(entry, dict):
+                errors.append("evidence registry entry '{}' must be a mapping".format(item_id))
+            else:
+                entries[item_id] = entry
+    return ids, entries, errors
+
+
+def v3_cache_data(folder: Path) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    problems: List[str] = []
+    content_path = folder / "source-cache/content.md"
+    try:
+        content = content_path.read_text(encoding="utf-8") if content_path.is_file() else ""
+    except (OSError, UnicodeError) as exc:
+        content = ""
+        problems.append("cannot read source-cache/content.md: {}".format(exc))
+    if not content.strip():
+        problems.append("source-cache/content.md is missing or empty")
+    elif "SOURCE CACHE STATUS: PENDING" in content:
+        problems.append("source-cache/content.md is still the pending scaffold")
+    manifest, manifest_problems = read_json_object(folder / "source-cache/manifest.json", "source-cache/manifest.json")
+    evidence, evidence_problems = read_json_object(folder / "source-cache/evidence.json", "source-cache/evidence.json")
+    problems.extend(manifest_problems + evidence_problems)
+    if manifest is not None:
+        source = manifest.get("paper")
+        if not isinstance(source, dict):
+            problems.append("source-cache/manifest.json needs a paper object")
+        else:
+            for key in ("title", "source_type", "source_location"):
+                if not isinstance(source.get(key), str) or not source[key].strip():
+                    problems.append("source-cache manifest paper metadata is missing {}".format(key))
+            if not isinstance(source.get("authors"), list) or not source.get("authors"):
+                problems.append("source-cache manifest paper metadata needs authors")
+            if not str(source.get("venue", "")).strip() and source.get("year") is None:
+                problems.append("source-cache manifest paper metadata needs venue or year")
+        if not isinstance(manifest.get("extraction"), str) or not manifest["extraction"].strip():
+            problems.append("source-cache manifest must describe its extraction method")
+        if not isinstance(manifest.get("figures"), list):
+            problems.append("source-cache/manifest.json needs a figures list")
+        if manifest.get("cache_status") != "complete":
+            problems.append("source-cache/manifest.json cache_status must be complete")
+        allowed_figure_types = {"ARCHITECTURE", "PIPELINE", "ALGORITHM", "MECHANISM", "RESULT", "ABLATION", "DATASET_EXAMPLE", "QUALITATIVE_RESULT", "LOW_VALUE"}
+        for index, figure in enumerate(manifest.get("figures", []) if isinstance(manifest.get("figures"), list) else []):
+            if not isinstance(figure, dict):
+                problems.append("source-cache figure {} must be an object".format(index + 1))
+                continue
+            for key in ("id", "locator", "caption", "type", "candidate_role"):
+                if not isinstance(figure.get(key), str) or not figure[key].strip():
+                    problems.append("source-cache figure {} is missing {}".format(index + 1, key))
+            if not isinstance(figure.get("type"), str) or figure.get("type") not in allowed_figure_types:
+                problems.append("source-cache figure '{}' has unknown type '{}'".format(figure.get("id", index + 1), figure.get("type")))
+            image_path = figure.get("image_path")
+            if image_path:
+                path_issue = path_problem(image_path)
+                if path_issue:
+                    problems.append("source-cache figure {} image_path {}".format(figure.get("id", index + 1), path_issue))
+                elif not (folder / image_path).is_file():
+                    problems.append("source-cache figure image is missing: {}".format(image_path))
+    if evidence is not None and not isinstance(evidence.get("source_notes", []), list):
+        problems.append("source-cache/evidence.json source_notes must be a list")
+    return manifest, problems
+
+
+def v3_priority_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    data, problems = fenced_yaml(folder / "design/learning-spine.md")
+    if data is None:
+        return None, problems
+    stages = data.get("stages")
+    items = data.get("items")
+    if not isinstance(stages, list) or not stages:
+        problems.append("learning spine must define at least one stage")
+        stages = []
+    stage_ids = set()
+    for stage in stages:
+        if not isinstance(stage, dict) or not isinstance(stage.get("id"), str) or not stage["id"].strip():
+            problems.append("learning spine stages need unique IDs")
+        elif stage["id"] in stage_ids:
+            problems.append("learning spine has duplicate stage ID '{}'".format(stage["id"]))
+        else:
+            stage_ids.add(stage["id"])
+        if not isinstance(stage, dict) or not isinstance(stage.get("question"), str) or not stage["question"].strip():
+            problems.append("each learning spine stage needs a question")
+    if not isinstance(items, list) or not items:
+        problems.append("learning spine must define content priority items")
+        items = []
+    item_ids = set()
+    for item in items:
+        if not isinstance(item, dict):
+            problems.append("learning spine items must be mappings")
+            continue
+        item_id = item.get("id")
+        if not isinstance(item_id, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", item_id):
+            problems.append("learning spine item has invalid ID '{}'".format(item_id))
+            continue
+        if item_id in item_ids:
+            problems.append("duplicate learning item ID '{}' (items must be assigned once)".format(item_id))
+        item_ids.add(item_id)
+        if not isinstance(item.get("title"), str) or not item["title"].strip():
+            problems.append("learning item '{}' needs a short title".format(item_id))
+        priority = item.get("priority")
+        stage = item.get("stage")
+        placement = item.get("placement")
+        if priority == "CORE":
+            if not isinstance(stage, str) or stage not in stage_ids or placement != "mainline":
+                problems.append("CORE item '{}' must map to one mainline stage".format(item_id))
+        elif priority == "SUPPORTING":
+            if not isinstance(stage, str) or stage not in stage_ids or placement not in ("compact-inline", "hover", "expandable"):
+                problems.append("SUPPORTING item '{}' needs a compact placement and valid stage".format(item_id))
+        elif priority == "REFERENCE":
+            if stage is not None or placement not in ("Reference Hub", "Hover", "Advanced details", "Implementation notes", "Evidence details"):
+                problems.append("REFERENCE item '{}' must stay outside the mainline".format(item_id))
+        elif priority == "DELETE":
+            if stage is not None or placement not in ("none", "DELETE", None):
+                problems.append("DELETE item '{}' must not be placed on the mainline".format(item_id))
+        else:
+            problems.append("item '{}' has unknown priority '{}'".format(item_id, priority))
+        refs = item.get("evidence_refs", [])
+        if not isinstance(refs, list):
+            problems.append("item '{}' evidence_refs must be a list".format(item_id))
+        else:
+            for reference in refs:
+                if not isinstance(reference, str) or reference not in evidence_ids:
+                    problems.append("learning item '{}' references unknown evidence ID '{}'".format(item_id, reference))
+    return data, problems
+
+
+def v3_asset_data(folder: Path, manifest: Optional[Dict[str, Any]], evidence_ids: set) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    data, problems = fenced_yaml(folder / "design/asset-plan.md")
+    if data is None:
+        return None, problems
+    assets = data.get("assets")
+    if not isinstance(assets, list):
+        return data, problems + ["asset plan must define an assets list"]
+    inventory = manifest.get("figures", []) if isinstance(manifest, dict) and isinstance(manifest.get("figures"), list) else []
+    paper_figure_ids = {item.get("id") for item in inventory if isinstance(item, dict) and isinstance(item.get("id"), str)}
+    planned_figure_ids = [item.get("paper_figure_id") for item in assets if isinstance(item, dict) and isinstance(item.get("paper_figure_id"), str)]
+    for figure_id in paper_figure_ids:
+        count = planned_figure_ids.count(figure_id)
+        if count != 1:
+            problems.append("source visual '{}' must have exactly one asset-plan decision".format(figure_id))
+    decisions = {"USE_DIRECTLY", "CROP_AND_USE", "REDRAW_FROM_PAPER", "REFERENCE_ONLY", "DO_NOT_USE"}
+    public_decisions = {"USE_DIRECTLY", "CROP_AND_USE", "REDRAW_FROM_PAPER"}
+    allowed_asset_types = {"ARCHITECTURE", "PIPELINE", "ALGORITHM", "MECHANISM", "RESULT", "ABLATION", "DATASET_EXAMPLE", "QUALITATIVE_RESULT", "LOW_VALUE"}
+    seen = set()
+    for item in assets:
+        if not isinstance(item, dict):
+            problems.append("asset-plan entries must be mappings")
+            continue
+        item_id = item.get("id")
+        if not isinstance(item_id, str) or not item_id.strip():
+            problems.append("asset-plan entry needs an ID")
+        elif item_id in seen:
+            problems.append("asset plan has duplicate ID '{}'".format(item_id))
+        else:
+            seen.add(item_id)
+        decision = item.get("decision")
+        if not isinstance(decision, str) or decision not in decisions:
+            problems.append("asset '{}' has invalid decision '{}'".format(item_id, decision))
+            continue
+        if not isinstance(item.get("type"), str) or item.get("type") not in allowed_asset_types:
+            problems.append("asset '{}' has unknown type '{}'".format(item_id, item.get("type")))
+        if decision in public_decisions:
+            required = ("paper_figure_id", "page", "caption", "source_paper_version", "source_location", "attribution", "reuse_rights", "processing", "derivative_path", "web_path", "explanation")
+            for key in required:
+                if not isinstance(item.get(key), str) or not item[key].strip():
+                    problems.append("selected asset '{}' is missing {}".format(item_id, key))
+            source_path = item.get("source_path")
+            path_issue = path_problem(source_path)
+            if path_issue:
+                problems.append("selected asset '{}' source_path {}".format(item_id, path_issue))
+            elif not (folder / source_path).is_file():
+                problems.append("selected source asset is missing: {}".format(source_path))
+            derivative_path = item.get("derivative_path")
+            path_issue = path_problem(derivative_path)
+            if path_issue:
+                problems.append("selected asset '{}' derivative_path {}".format(item_id, path_issue))
+            elif not (folder / derivative_path).is_file():
+                problems.append("selected web derivative is missing: {}".format(derivative_path))
+            web_path = item.get("web_path")
+            path_issue = path_problem(web_path)
+            if path_issue:
+                problems.append("selected asset '{}' web_path {}".format(item_id, path_issue))
+            rights = str(item.get("reuse_rights", "")).lower()
+            if not rights or "unclear" in rights or "pending" in rights:
+                problems.append("selected asset '{}' has no approved reuse-rights basis".format(item_id))
+        elif decision in ("REFERENCE_ONLY", "DO_NOT_USE") and (not isinstance(item.get("reason"), str) or not item["reason"].strip()):
+            problems.append("asset '{}' needs a reason for {}".format(item_id, decision))
+        refs = item.get("evidence_refs", [])
+        if not isinstance(refs, list):
+            problems.append("asset '{}' evidence_refs must be a list".format(item_id))
+        else:
+            for reference in refs:
+                if not isinstance(reference, str) or reference not in evidence_ids:
+                    problems.append("asset '{}' references unknown evidence ID '{}'".format(item_id, reference))
+    if paper_figure_ids != set(planned_figure_ids):
+        unregistered = sorted(str(item) for item in set(planned_figure_ids) - paper_figure_ids)
+        if unregistered:
+            problems.append("asset plan refers to unknown paper figures: {}".format(", ".join(unregistered)))
+    return data, problems
+
+
+def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, Any]) -> List[str]:
+    problems: List[str] = []
+    paper = config.get("paper", {})
+    if stage_id == "W0":
+        if not paper.get("source_type", "").strip():
+            problems.append("paper.source_type must be recorded")
+        if not paper.get("source_location", "").strip():
+            problems.append("paper.source_location must be recorded")
+        if not paper.get("authors"):
+            problems.append("paper.authors must be recorded")
+        if not paper.get("venue", "").strip() and paper.get("year") is None:
+            problems.append("paper.venue or paper.year must be recorded")
+        return problems
+    if stage_id == "W1":
+        manifest, problems = v3_cache_data(folder)
+        source_record = manifest.get("paper") if isinstance(manifest, dict) else None
+        if isinstance(source_record, dict):
+            for key in ("title", "authors", "venue", "year", "source_type", "source_location", "source_hash"):
+                if source_record.get(key) != paper.get(key):
+                    problems.append("source-cache manifest paper.{} does not match paper.yaml".format(key))
+        return problems
+    if stage_id == "W2":
+        path = folder / "research/paper-model.md"
+        required = ("Core Explanation", "Problem", "Core Insight", "Prerequisites", "Objects and Variables", "Architecture and Ownership", "Data Flow", "State and Time", "Training", "Inference / Runtime", "Core Equations", "Results", "Limitations")
+        if not path.is_file():
+            return ["research/paper-model.md is missing"]
+        text = path.read_text(encoding="utf-8")
+        for section in required:
+            if not re.search(r"^##\s+{}\s*$".format(re.escape(section)), text, re.MULTILINE):
+                problems.append("paper-model is missing section '{}'".format(section))
+                continue
+            body = markdown_section(text, section)
+            normalized = re.sub(r"[`*_>#-]", "", body).strip()
+            lower_body = normalized.lower()
+            prompt_only = any(lower_body.startswith(prompt) for prompt in (
+                "in one short paragraph:", "describe components", "input → ...",
+                "for papers with training", "separate author-stated limits",
+            ))
+            if not normalized or prompt_only or re.fullmatch(r"\|?\s*(concept|object / variable).*", normalized, re.IGNORECASE):
+                problems.append("paper-model section '{}' is empty or still a template prompt".format(section))
+        return problems
+    if stage_id == "W3":
+        manifest, cache_problems = v3_cache_data(folder)
+        problems.extend(cache_problems)
+        evidence_ids, entries, registry_problems = evidence_registry_ids_v3(folder)
+        problems.extend(registry_problems)
+        if not entries:
+            problems.append("evidence registry must contain claim-level evidence")
+        allowed_evidence_types = {"PAPER_FACT", "PAPER_RESULT", "AUTHOR_INTERPRETATION", "OUR_INTERPRETATION", "IMPLEMENTATION_MAPPING", "GENERAL_BACKGROUND", "TEACHING_EXAMPLE"}
+        for entry_id, entry in entries.items():
+            if not isinstance(entry.get("claim"), str) or not entry["claim"].strip():
+                problems.append("evidence entry '{}' is missing claim".format(entry_id))
+            for key in ("type", "source_locator", "conditions", "allowed_wording"):
+                if not isinstance(entry.get(key), str) or not entry[key].strip():
+                    problems.append("evidence entry '{}' is missing {}".format(entry_id, key))
+            if not isinstance(entry.get("type"), str) or entry.get("type") not in allowed_evidence_types:
+                problems.append("evidence entry '{}' has unknown type '{}'".format(entry_id, entry.get("type")))
+        _assets, asset_problems = v3_asset_data(folder, manifest, evidence_ids)
+        problems.extend(asset_problems)
+        return problems
+    if stage_id == "W4":
+        evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
+        _data, spine_problems = v3_priority_data(folder, evidence_ids)
+        return evidence_problems + spine_problems
+    if stage_id == "W5":
+        path = folder / "design/implementation-plan.md"
+        if not path.is_file():
+            return ["design/implementation-plan.md is missing"]
+        text = path.read_text(encoding="utf-8")
+        for heading in ("Primary Spine Mapping", "Reusable Pattern Library", "Vertical Slice (W6)", "Vertical Slice Review (W7)"):
+            if not re.search(r"^##\s+{}\s*$".format(re.escape(heading)), text, re.MULTILINE):
+                problems.append("implementation-plan is missing section '{}'".format(heading))
+        return problems
+    if stage_id in ("W6", "W8"):
+        web = folder / "web/enhanced"
+        package = web / "package.json"
+        if not package.is_file():
+            problems.append("web/enhanced/package.json is missing")
+        elif stage_id == "W8" and not (web / "package-lock.json").is_file():
+            problems.append("web/enhanced/package-lock.json is missing")
+        if not any((web / path).is_file() for path in ("src/App.tsx", "src/main.tsx")):
+            problems.append("web/enhanced needs src/App.tsx or src/main.tsx")
+        return problems
+    if stage_id == "W7":
+        plan = folder / "design/implementation-plan.md"
+        if not marker_present(plan, "Vertical Slice Review: PASS"):
+            problems.append("implementation-plan must record Vertical Slice Review: PASS")
+        return problems
+    if stage_id == "W9":
+        final_check = folder / "audit/final-check.md"
+        if not marker_present(final_check, "Overall: PASS"):
+            problems.append("audit/final-check.md must contain Overall: PASS")
+        return problems
+    if stage_id == "W10":
+        output = ROOT / config["release"]["output"]
+        required = ("paper.json", "README.md", "package.json", "package-lock.json", "index.html", "vite.config.ts", "tsconfig.json", "src/App.tsx", "src/data/tutorial.ts", "src/modules/registry.tsx", "src/styles/paper.css")
+        problems.extend("upstream export is missing {}".format(path) for path in required if not (output / path).is_file())
+        for name in ("paper.json", "package.json"):
+            value, json_problems = read_json_object(output / name, name)
+            problems.extend(json_problems)
+        readme = output / "README.md"
+        if readme.is_file():
+            readme_text = readme.read_text(encoding="utf-8")
+            if not re.search(r"asset\s+(provenance|sources)|image\s+(provenance|sources)", readme_text, re.IGNORECASE):
+                problems.append("export README.md must document asset provenance")
+            for image_path in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", readme_text):
+                path_issue = path_problem(image_path.strip())
+                if path_issue:
+                    problems.append("export README image path '{}' {}".format(image_path, path_issue))
+        if output.is_dir():
+            absolute_image_ref = re.compile(r"(?:src|poster)\s*=\s*['\"]/(?!/)|url\(\s*['\"]?/(?!/)", re.IGNORECASE)
+            for source_file in output.rglob("*"):
+                if source_file.is_file() and source_file.suffix.lower() in {".tsx", ".ts", ".jsx", ".js", ".html", ".css"}:
+                    try:
+                        source_text = source_file.read_text(encoding="utf-8")
+                    except (OSError, UnicodeError):
+                        continue
+                    if absolute_image_ref.search(source_text):
+                        problems.append("export has a root-relative image/media path in {}".format(source_file.relative_to(output).as_posix()))
+        if output.is_dir() and any(path.suffix.lower() == ".pdf" for path in output.rglob("*")):
+            problems.append("upstream export must not include a PDF")
+        asset_plan, asset_plan_problems = fenced_yaml(folder / "design/asset-plan.md")
+        problems.extend(asset_plan_problems)
+        if isinstance(asset_plan, dict) and isinstance(asset_plan.get("assets"), list):
+            for asset in asset_plan["assets"]:
+                if not isinstance(asset, dict) or asset.get("decision") not in ("USE_DIRECTLY", "CROP_AND_USE", "REDRAW_FROM_PAPER"):
+                    continue
+                web_path = asset.get("web_path")
+                if not isinstance(web_path, str) or path_problem(web_path):
+                    problems.append("selected asset '{}' has an invalid export path".format(asset.get("id", "?")))
+                elif not (output / web_path).is_file():
+                    problems.append("export is missing selected asset: {}".format(web_path))
+        final_check = folder / "audit/final-check.md"
+        if not marker_present(final_check, "Upstream Preflight: PASS"):
+            problems.append("audit/final-check.md must contain Upstream Preflight: PASS")
+        return problems
+    return problems
+
+
+def v3_cross_reference_problems(folder: Path, stage_index: int) -> List[str]:
+    problems: List[str] = []
+    manifest: Optional[Dict[str, Any]] = None
+    evidence_ids: set = set()
+    if stage_index >= STAGE_IDS.index("W1"):
+        manifest, cache_problems = v3_cache_data(folder)
+        problems.extend(cache_problems)
+    if stage_index >= STAGE_IDS.index("W3"):
+        evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
+        problems.extend(evidence_problems)
+        _assets, asset_problems = v3_asset_data(folder, manifest, evidence_ids)
+        problems.extend(asset_problems)
+    if stage_index >= STAGE_IDS.index("W4"):
+        _spine, spine_problems = v3_priority_data(folder, evidence_ids)
+        problems.extend(spine_problems)
+    return problems
+
+
+def cmd_check_v3(folder: Path, config: Dict[str, Any], paper_id: str) -> int:
+    states = stage_states(config)
+    failures: List[str] = []
+    warnings: List[str] = []
+    for stage_id, _key, label in STAGES:
+        print("[STAGE] {} {}: {}".format(stage_id, label, states[stage_id].upper()))
+        issues = v3_stage_completion_problems(folder, stage_id, config)
+        if states[stage_id] == "complete":
+            failures.extend("{}: {}".format(stage_id, issue) for issue in issues)
+        elif stage_id == config["workflow"]["current_stage"]:
+            warnings.extend("{}: {}".format(stage_id, issue) for issue in issues)
+    current_stage_index = STAGE_IDS.index(config["workflow"]["current_stage"])
+    for issue in v3_cross_reference_problems(folder, current_stage_index):
+        if not any(issue in warning for warning in warnings) and not any(issue in failure for failure in failures):
+            warnings.append(issue)
+    warnings.extend(hygiene_warnings(folder))
+    failures.extend(hygiene_failures(paper_id))
+    for warning in warnings:
+        print("[WARN] {}".format(warning))
+    for failure in failures:
+        print("[FAIL] {}".format(failure))
+    print("CHECK {}".format("FAILED" if failures else "PASS"))
+    return 1 if failures else 0
+
+
 def cmd_learning_check(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
@@ -869,6 +1548,8 @@ def cmd_check(args: argparse.Namespace) -> int:
         for error in errors:
             print("[FAIL] {}".format(error))
         return 1
+    if config.get("schema_version") == 3:
+        return cmd_check_v3(folder, config, args.paper_id)
     states = gate_states(config)
     legacy = config.get("schema_version") == 1
     artifact_definitions = artifact_map(config)
@@ -962,6 +1643,19 @@ def cmd_release_check(args: argparse.Namespace) -> int:
         for error in errors:
             print("- Invalid paper.yaml: {}".format(error))
         return 1
+    if config.get("schema_version") == 3:
+        blockers: List[str] = []
+        for stage_id, key, label in STAGES:
+            if config["workflow"]["stages"][key]["status"] != "complete":
+                blockers.append("{} {} not complete".format(stage_id, label))
+            blockers.extend("{}: {}".format(stage_id, problem) for problem in v3_stage_completion_problems(folder, stage_id, config))
+        if blockers:
+            print("NOT READY\n\nBLOCKERS:")
+            for blocker in dict.fromkeys(blockers):
+                print("- {}".format(blocker))
+            return 1
+        print("RELEASE READY")
+        return 0
     states = gate_states(config)
     blockers: List[str] = []
     legacy = config.get("schema_version") == 1
@@ -989,20 +1683,26 @@ def cmd_release_check(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Manage PaperSkillWork paper workspaces and gate state.")
+    parser = argparse.ArgumentParser(description="Manage PaperSkillWork paper workspaces and Workflow v1–v3 state.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     new = subparsers.add_parser("new", help="create a paper workspace from the standard templates")
     new.add_argument("paper_id")
     new.add_argument("--title", required=True)
-    new.add_argument("--url", required=True)
+    new.add_argument("--url", default="")
     new.add_argument("--arxiv-id", default="")
+    new.add_argument("--author", action="append", default=[], help="paper author; repeat for multiple authors")
+    new.add_argument("--venue", default="")
+    new.add_argument("--year", type=int)
+    new.add_argument("--source-type", default="")
+    new.add_argument("--source-location", default="")
+    new.add_argument("--source-hash", default="")
     new.set_defaults(func=cmd_new)
 
     for name, help_text, handler in (
-        ("status", "show paper metadata, gate states, and artifacts", cmd_status),
+        ("status", "show paper metadata, workflow states, and artifacts", cmd_status),
         ("check", "run mechanical workspace checks", cmd_check),
-        ("learning-check", "check structural learning artifacts and registry references", cmd_learning_check),
+        ("learning-check", "check legacy v2 scene specs and registry references", cmd_learning_check),
         ("release-check", "check whether the paper meets release prerequisites", cmd_release_check),
     ):
         command = subparsers.add_parser(name, help=help_text)
@@ -1013,12 +1713,20 @@ def build_parser() -> argparse.ArgumentParser:
     migrate.add_argument("paper_id")
     migrate.set_defaults(func=cmd_migrate_v2)
 
-    gate = subparsers.add_parser("gate", help="read or explicitly update a workflow gate")
+    gate = subparsers.add_parser("gate", help="read or explicitly update a legacy v1/v2 workflow gate")
     gate.add_argument("paper_id")
     gate.add_argument("gate", nargs="?", choices=GATE_IDS)
     gate.add_argument("status", nargs="?", choices=sorted(STATUSES))
     gate.add_argument("--reason", help="required explanation when marking a gate skipped")
     gate.set_defaults(func=cmd_gate)
+
+    stage = subparsers.add_parser("stage", help="read or explicitly update a Workflow v3 stage")
+    stage.add_argument("paper_id")
+    stage.add_argument("stage", nargs="?", choices=STAGE_IDS)
+    stage.add_argument("status", nargs="?", choices=("in_progress", "complete"))
+    stage.add_argument("--reviewed-by", help="human reviewer name, required for completion")
+    stage.add_argument("--note", help="human review note, required for completion")
+    stage.set_defaults(func=cmd_stage)
 
     paths = subparsers.add_parser("paths", help="show standard workspace paths")
     paths.add_argument("paper_id")

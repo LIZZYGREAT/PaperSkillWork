@@ -1,55 +1,51 @@
 ---
 name: paper-review
-description: Build a source-grounded executable model of a paper for Gate G1.
+description: Build a source-grounded model of what a paper does for Workflow v3 stage W2.
 ---
 
-# Paper Review
+# Paper Review — W2
 
 ## Purpose
 
-Establish what the paper's objects are, where they live, how they interact and change, what its evidence supports, and where the method stops. Do not summarize the paper chapter by chapter.
+Establish what the paper does before planning pages or interactions. Do not summarize it chapter by chapter.
 
 ## Required Inputs
 
-- `papers/<paper-id>/paper.yaml`
-- The source paper at its declared path, or an explicitly supplied source
-- `design/learning-contract.md`
-- `templates/paper-model.md`
+- `paper.yaml` and the declared paper source
+- `source-cache/content.md` and `source-cache/manifest.json`
+- `templates/paper-model-v3.md`
 
 ## Preconditions
 
-- Confirm the paper id, title, and source version.
-- If the source is unavailable, report what is missing; do not fill gaps from memory.
-- Read the target reader and prerequisites in the Learning Contract.
+- Confirm paper identity, source version, and reader context if supplied.
+- Confirm the source cache covers the entire paper. If incomplete or incorrect, repair the extraction as a whole before modeling; do not accumulate unsystematic fragments.
+- If the source is unavailable, report what is missing instead of filling gaps from memory.
 
 ## Procedure
 
-1. Read the full paper and capture page, section, figure, table, and equation locations for important claims.
-2. Explain the problem and why existing approaches are insufficient.
-3. Build a prerequisite map with `Required`, `Helpful`, or `Optional` level and the depth needed.
-4. Register core objects and variables before relying on them in equations or prose.
-5. Trace architecture and ownership, state/lifecycle, data or tensor flow, transformations, gradients/control signals, optimizer membership, and actual updates where applicable.
-6. Complete the Reconstruction Matrix for core objects; use `N/A` with a reason when a column does not apply.
-7. Reconstruct end-to-end runtime, including feedback and failure paths.
-8. Explain experiments by question, dataset/environment, model, split, metric, baseline, protocol, result, supported claim, and unsupported inference.
-9. Separate author-stated limitations and future work from our analysis.
-10. Save `research/01_paper_model.md`. Do not propose UI, animation, interactions, or page layouts.
+1. Write the short Core Explanation: original problem, key author change, and why it may help.
+2. Define the problem and necessary prerequisites.
+3. Identify core objects/variables, their owners, architecture, branches, inputs, outputs, and shared/task-specific parts.
+4. Trace data flow and state/time from input to output.
+5. Explain training and inference/runtime as applicable, including supervision, loss, control/gradient flow, and actual updates.
+6. Select only equations essential to understanding the main mechanism; define every important term and relationship.
+7. Summarize evidence-bearing experiments, conditions, results, and limitations.
+8. Save `research/paper-model.md`. Figure inventory remains in the source-cache manifest; do not duplicate it here.
 
 ## Validation
 
-- A reader can follow Problem → Objects → Mechanism → Update → Experiment → Limit.
-- Variables are defined before use and equations have named inputs, outputs, and roles.
-- Core objects can be placed in an architecture and traced over time.
-- Evidence locations are specific enough for the Evidence Registry.
-- No claim, value, or capability is invented.
+- A reader can state the problem, core insight, architecture, and a complete flow.
+- Objects and variables are defined before use; system ownership/state is traceable.
+- The source cache and paper model agree on version and locators.
+- No UI, animation, interaction, analogy, or chapter design appears in the model.
+- No result is broader than its protocol supports.
 
 ## Forbidden Actions
 
 - Do not design web pages or interactions.
-- Do not conflate implementation details with paper claims.
-- Do not claim semantic or learning acceptance based on structure alone.
-- Do not advance G1 automatically.
+- Do not conflate paper claims with implementation mappings or teaching examples.
+- Do not advance W2 automatically.
 
 ## Completion Criteria
 
-Save the model and check it against the source. Ask a person to verify it before marking G1 complete.
+Save the model and have a person verify that its core explanation matches the complete source before marking W2 complete.

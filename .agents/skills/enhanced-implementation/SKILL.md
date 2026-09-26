@@ -1,73 +1,50 @@
 ---
 name: enhanced-implementation
-description: Implement reviewed Workflow v2 scenes in accepted milestones while preserving learning and evidence boundaries for Gate G6.
+description: Build an accepted first vertical slice, pause for a human learning review, then finish the tutorial under Workflow v3 stages W6–W8.
 ---
 
-# Enhanced Implementation
+# Tutorial Implementation — W6 to W8
 
 ## Purpose
 
-Implement the learning architecture as a connected, inspectable mental model. The goal is learner reconstruction, not interaction coverage.
+Implement the reviewed learning spine as an inspectable mental model. Optimize for understanding and traceable evidence, not interaction count.
 
 ## Required Inputs
 
-- `design/learning-contract.md`
-- `research/01_paper_model.md`
-- `research/02_evidence_registry.yaml`
-- `design/learning-architecture.md`
-- Relevant files in `design/scenes/`
-- `web/canonical/` only for compatibility constraints and reusable infrastructure
-- The existing Enhanced project, when iterating
+- `research/paper-model.md`
+- `research/evidence-registry.yaml`
+- `design/learning-spine.md`
+- `design/asset-plan.md`
+- `design/implementation-plan.md`
+- The existing paper project, when iterating
 
-## Preconditions
+## W6: First Vertical Slice
 
-- G1 and G2 are reviewed or explicitly recorded as historical migration inputs.
-- G4 and relevant G5 scenes are reviewed.
-- Confirm the paper workspace and permitted files before editing.
+1. Confirm that W0–W5 have been reviewed and their stage states are explicit.
+2. Implement only the slice named in the plan: the problem/opening, core architecture, and one primary end-to-end mechanism (normally 2–3 spine stages).
+3. Preserve source/evidence boundaries and clearly label teaching examples.
+4. Stop when the slice is usable. Do not fill out the remaining spine yet.
 
-## Milestones
+## W7: Human Learning Review
 
-Use milestones defined by the Learning Architecture. A common sequence is:
+Present the slice for a person to judge the learning path, architecture, flow, emphasis, prose load, necessary math, and the value of each interaction. Record the decision and required edits in `design/implementation-plan.md`. If the decision is REVISE, return to the spine/plan and repeat W6/W7. Continue only after a human records PASS.
 
-```text
-M0 Foundation
-M1 First Vertical Slice
-M2 Core Mechanism
-M3 Boundaries
-M4 Evidence + End-to-End
-M5 Integration
-```
+## W8: Full Implementation
 
-Deliver a working first vertical slice early. Pause expansion for human learning acceptance. If the slice does not teach the intended mental model, stop and revise the architecture before continuing.
-
-## Procedure
-
-1. Inspect project scripts and existing conventions.
-2. Use Canonical only for compatibility, build contracts, shared primitives, and tokens. It does not define Enhanced pedagogy.
-3. Implement reviewed milestones incrementally, reusing persistent objects across scenes.
-4. Keep actual paper data distinct from teaching toys and label simplifications.
-5. Use real calculations for simulations; do not add controls whose changes do not expose a concept.
-6. Resolve terms, symbols, datasets, and evidence from their registries instead of duplicating definitions throughout the interface.
-7. If a scene specification cannot achieve its learning goal, return the issue to design instead of inventing narrative in code.
-8. Include keyboard access, visible focus, reduced-motion behavior, reset behavior, non-drag controls, and mobile layout as applicable.
-9. After each milestone, run the project's declared build/audit and report its actual outcome. Do not silently install or update dependencies.
-10. Keep generated output, secrets, and unintended files out of Git.
-
-## Validation
-
-- Implemented scenes preserve the stated entry, exit, state, and global dependencies.
-- The First Vertical Slice receives human learning acceptance before later expansion.
-- Build, project audit, accessibility, reduced-motion, and mobile outcomes are accurately recorded.
-- Canonical remains unchanged.
+1. Implement all remaining CORE content on the accepted spine.
+2. Keep SUPPORTING content compact; put REFERENCE material in the Reference Hub/advanced area; omit DELETE.
+3. Copy any reusable source into this paper's project. Do not import a cross-paper runtime package.
+4. Keep paper data separate from teaching toys. Use real calculations for simulations and explain simplifications.
+5. Support keyboard/focus, reduced motion, mobile, touch, and non-drag operation where applicable.
+6. Run declared project build/audit commands when the user requests verification; report their actual outcomes.
 
 ## Forbidden Actions
 
-- Do not use Canonical's UI or chapter layout as the teaching plan unless Learning Architecture explicitly selects it.
-- Do not add interactions to satisfy a count or pattern.
-- Do not present a teaching toy as paper data.
-- Do not continue past a rejected first-slice acceptance.
-- Do not mark G6 complete automatically or publish to PaperSkill.
+- Do not generate the complete site before the human learning review.
+- Do not add controls, animation, or formula labs to satisfy a quota.
+- Do not continue after a failed W7 review.
+- Do not mark a stage complete, publish, or create a PR automatically.
 
 ## Completion Criteria
 
-The reviewed milestone is implemented, its checks and learning acceptance are recorded, and the next milestone remains a human decision.
+The tutorial follows the accepted spine, its learning and evidence boundaries are preserved, and human W7 acceptance is recorded before W8 completion.

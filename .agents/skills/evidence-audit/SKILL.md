@@ -1,62 +1,44 @@
 ---
 name: evidence-audit
-description: Build a structured evidence registry for paper claims, results, mappings, and teaching material at Gate G2.
+description: Curate claim-level evidence and source visuals for Workflow v3 stage W3.
 ---
 
-# Evidence Audit
+# Evidence and Asset Audit — W3
 
 ## Purpose
 
-Give every important tutorial claim a clear category, source, and limit.
+Make sure each important tutorial statement has a defensible source boundary and each visual asset has a clear use, provenance, and rights status.
 
 ## Required Inputs
 
-- The source paper or explicitly supplied source
-- `research/01_paper_model.md`
-- `templates/evidence-registry.yaml`
-
-## Preconditions
-
-- Confirm the paper version and source locations.
-- Preserve source/review conflicts; do not silently choose a version.
-
-## Claim Categories
-
-Use only:
-
-- `PAPER_FACT`
-- `PAPER_RESULT`
-- `AUTHOR_INTERPRETATION`
-- `OUR_INTERPRETATION`
-- `IMPLEMENTATION_MAPPING`
-- `TEACHING_TOY`
-- `GENERAL_BACKGROUND`
-- `FUTURE_WORK`
+- Complete source and `source-cache/manifest.json` / `source-cache/evidence.json`
+- `research/paper-model.md`
+- `templates/evidence-registry-v3.yaml`
+- `templates/asset-plan.md`
 
 ## Procedure
 
-1. Audit architecture, mechanisms, equations, figures, benchmarks, results, conclusions, limitations, and future work.
-2. Give each claim a stable ID, exact wording, category, source kind/location, and qualification as needed.
-3. Keep implementation mappings and general background separate from paper statements; these may have no paper source, but must say so.
-4. Tie every numeric result to dataset, model, split, metric, protocol, value, and source.
-5. Distinguish what the paper states, what authors infer, and what we infer from the evidence.
-6. Record conflicts, ambiguity, and unverified capabilities without resolving them by assumption.
-7. Write `research/02_evidence_registry.yaml`. Add a short `02_evidence_notes.md` only for unresolved issues or review notes.
+1. Audit important paper claims, equations, architecture, results, limitations, and interpretations.
+2. Give each claim a unique ID, exact claim, type, source locator, conditions, and allowed wording.
+3. Keep `PAPER_FACT`, `PAPER_RESULT`, `AUTHOR_INTERPRETATION`, `OUR_INTERPRETATION`, `IMPLEMENTATION_MAPPING`, `GENERAL_BACKGROUND`, and `TEACHING_EXAMPLE` distinct.
+4. Tie each number to the applicable dataset/environment, model, split, metric, protocol, and source.
+5. Review the full W1 figure/table inventory. For each item decide `USE_DIRECTLY`, `CROP_AND_USE`, `REDRAW_FROM_PAPER`, `REFERENCE_ONLY`, or `DO_NOT_USE`, with rationale where it is excluded.
+6. For selected assets, preserve original and derivative separately; record paper/version, figure/page, caption, evidence IDs, processing, attribution, and reuse-rights status. Do not publish when rights are unclear.
+7. Save `research/evidence-registry.yaml` and `design/asset-plan.md`.
 
 ## Validation
 
-- YAML parses and IDs are unique.
-- Every high-impact claim has a category and source or an explicit non-paper source boundary.
-- Every result has its applicable protocol metadata.
-- A consumer can resolve the cited registry IDs.
+- Registry parses, IDs are unique, and referenced evidence resolves.
+- Results include their applicable protocol metadata.
+- Every source figure/table is inventoried; every selected public image exists and has source metadata.
+- Paper claims, our interpretations, implementation mappings, background, and teaching examples are not conflated.
 
 ## Forbidden Actions
 
-- Do not conceal contradictions or upgrade evidence strength.
-- Do not treat planned work as implemented or validated.
-- Do not duplicate the Paper Model as a long prose audit.
-- Do not advance G2 automatically.
+- Do not conceal contradictions, upgrade evidence strength, or infer a reuse license from a public PDF.
+- Do not duplicate the Paper Model as a prose audit.
+- Do not advance W3 automatically.
 
 ## Completion Criteria
 
-Save the registry and have a person review unresolved items before marking G2 complete.
+A person reviews source conflicts and rights status before marking W3 complete.

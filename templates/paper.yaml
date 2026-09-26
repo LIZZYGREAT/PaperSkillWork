@@ -1,4 +1,4 @@
-schema_version: 2
+schema_version: 3
 
 id: "{{paper_id}}"
 title: "{{paper_title}}"
@@ -6,37 +6,44 @@ title: "{{paper_title}}"
 paper:
   url: "{{paper_url}}"
   arxiv_id: "{{arxiv_id}}"
-  local_pdf: "source/paper.pdf"
+  authors: []
+  venue: ""
+  year: null
+  source_type: ""
+  source_location: "{{paper_url}}"
+  source_hash: ""
 
 workflow:
-  version: 2
-  current_gate: G0
-  gates:
-    G0_workspace: {status: pending}
-    G1_research: {status: pending}
-    G2_evidence_audit: {status: pending}
-    G3_canonical: {status: pending}
-    G4_narrative_design: {status: pending}
-    G5_interaction_design: {status: pending}
-    G6_enhanced: {status: pending}
-    G7_release: {status: pending}
+  version: 3
+  current_stage: W0
+  stages:
+    W0_source_intake: {status: pending}
+    W1_source_cache: {status: pending}
+    W2_paper_model: {status: pending}
+    W3_evidence_assets: {status: pending}
+    W4_learning_spine: {status: pending}
+    W5_interaction_plan: {status: pending}
+    W6_vertical_slice: {status: pending}
+    W7_human_review: {status: pending}
+    W8_full_implementation: {status: pending}
+    W9_final_audit: {status: pending}
+    W10_upstream_preflight: {status: pending}
 
 artifacts:
-  learning_contract: "design/learning-contract.md"
-  paper_model: "research/01_paper_model.md"
-  evidence_registry: "research/02_evidence_registry.yaml"
-  terms: "knowledge/terms.yaml"
-  learning_architecture: "design/learning-architecture.md"
-  scenes_dir: "design/scenes"
+  source_cache: "source-cache"
+  paper_model: "research/paper-model.md"
+  evidence_registry: "research/evidence-registry.yaml"
+  learning_spine: "design/learning-spine.md"
+  asset_plan: "design/asset-plan.md"
+  implementation_plan: "design/implementation-plan.md"
   final_check: "audit/final-check.md"
-  release_check: "audit/release-check.md"
-
-web:
-  canonical: "web/canonical"
   enhanced: "web/enhanced"
 
+web:
+  enhanced: "web/enhanced"
+
+release:
+  output: "html_output/{{paper_id}}/v1"
+
 paperskill:
-  canonical_version: null
-  enhanced_version: null
-  canonical_pr: {number: null, status: pending}
-  enhanced_pr: {number: null, status: pending}
+  tutorial_pr: {number: null, status: pending}
