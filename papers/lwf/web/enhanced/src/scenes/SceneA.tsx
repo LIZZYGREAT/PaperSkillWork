@@ -1,6 +1,5 @@
 import React from 'react';
 import { TermRef } from '../components/ReferencePrimitives';
-import { MathFormula } from '../components/MathFormula';
 import { InlineNotation } from '../components/InlineNotation';
 import { openWorkspaceFor } from '../components/workspaceActions';
 import { methodOrder, type LearningAction, type LearningSession, type MethodId } from '../data/session';
@@ -116,7 +115,7 @@ export function SceneA({ session, dispatch, onNext }: {
                 </div>
               ) : (
                 <div className="v2-lwf-discovery">
-                  <div><span className="v2-paper-layer-tag">PAPER MECHANISM</span><strong><MathFormula id="inline:teacher_response" compact /></strong><span>旧模型在新任务图像上的旧任务响应；不是旧图像、旧真值或回放样本。</span></div>
+                  <div><span className="v2-paper-layer-tag">PAPER MECHANISM</span><strong><code>Y_o = f_old(X_n)</code></strong><span>旧模型在新任务图像上的旧任务响应；不是旧图像、旧真值或回放样本。</span></div>
                   <div><span className="v2-next-question-label">由此引出</span><p>如何把这个响应与新任务输出放进同一个可训练系统？</p><button type="button" className="v2-primary-action" onClick={onNext}>进入 Scene 02 · 构造 LwF 系统 →</button></div>
                 </div>
               )}

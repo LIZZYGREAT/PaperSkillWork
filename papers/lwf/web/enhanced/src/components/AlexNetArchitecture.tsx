@@ -1,18 +1,19 @@
 import React from 'react';
 
 function DenseNetworkGlyph({ shape }: { shape: 'fc6' | 'fc7' }) {
-  const compressed = shape === 'fc6';
-  const equalWidthNodes = [8, 20, 32, 44, 56];
-  const inputYs = compressed ? [6, 16, 26, 36, 46, 56] : equalWidthNodes;
-  const outputYs = equalWidthNodes;
+  const isFc6 = shape === 'fc6';
+  const interfaceYs = [8, 20, 32, 44, 56];
+  const fc6InputYs = [4, 10.2, 16.4, 22.7, 29, 35, 41.3, 47.6, 53.8, 60];
+  const inputYs = isFc6 ? fc6InputYs : interfaceYs;
+  const outputYs = interfaceYs;
   const xs = [25, 83];
   return (
-    <svg className={`v2-alexnet-dense-glyph ${compressed ? 'is-compressed' : 'is-equal'}`} viewBox="0 0 108 64" aria-hidden="true">
+    <svg className={`v2-alexnet-dense-glyph ${isFc6 ? 'is-compressed' : 'is-equal'}`} viewBox="0 0 108 64" aria-hidden="true">
       {inputYs.flatMap((y) => outputYs.map((nextY) => (
         <line key={`${y}-${nextY}`} x1={xs[0] + 4} y1={y} x2={xs[1] - 4} y2={nextY} />
       )))}
-      {inputYs.map((y, index) => <circle key={`input-${index}`} cx={xs[0]} cy={y} r="3.3" />)}
-      {outputYs.map((y, index) => <circle key={`output-${index}`} cx={xs[1]} cy={y} r="3.3" className={compressed ? 'is-accent' : ''} />)}
+      {inputYs.map((y, index) => <circle key={`input-${index}`} cx={xs[0]} cy={y} r={isFc6 ? 2.4 : 3.3} />)}
+      {outputYs.map((y, index) => <circle key={`output-${index}`} cx={xs[1]} cy={y} r="3.3" className={isFc6 ? 'is-accent' : undefined} />)}
     </svg>
   );
 }

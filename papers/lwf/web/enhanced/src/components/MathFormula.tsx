@@ -11,9 +11,7 @@ type FormulaId =
   | 'formula:sgd_step'
   | 'formula:training_response'
   | 'formula:old_task_risk'
-  | 'inline:teacher_response'
   | 'inline:combined_loss'
-  | 'inline:loss_pair'
   | 'inline:old_head_gradient'
   | 'inline:new_head_gradient'
   | 'inline:sgd_update'
@@ -32,8 +30,6 @@ function FormulaContent({ id }: { id: FormulaId }) {
     case 'formula:total_loss':
     case 'inline:combined_loss':
       return <mrow><mi>L</mi><mo>=</mo><msub><mi>λ</mi><mi>o</mi></msub><msub><mi>L</mi><mi>old</mi></msub><mo>+</mo><msub><mi>L</mi><mi>new</mi></msub><mo>+</mo><mi>R</mi><mo>(</mo><msub><mi>θ</mi><mi>s</mi></msub><mo>,</mo><msub><mi>θ</mi><mi>o</mi></msub><mo>,</mo><msub><mi>θ</mi><mi>n</mi></msub><mo>)</mo></mrow>;
-    case 'inline:loss_pair':
-      return <mrow><msub><mi>L</mi><mi>old</mi></msub><mo>+</mo><msub><mi>L</mi><mi>new</mi></msub></mrow>;
     case 'formula:temperature':
       return <mrow><msubsup><mi>p</mi><mi>i</mi><mi>T</mi></msubsup><mo>=</mo><mfrac><msup><mi>p</mi><mrow><mn>1</mn><mo>/</mo><mi>T</mi></mrow></msup><mrow><munder><mo>∑</mo><mi>j</mi></munder><msup><mi>p</mi><mrow><mn>1</mn><mo>/</mo><mi>T</mi></mrow></msup></mrow></mfrac></mrow>;
     case 'formula:shared_gradient':
@@ -56,8 +52,6 @@ function FormulaContent({ id }: { id: FormulaId }) {
       return <mrow><msup><mi>θ</mi><mo>′</mo></msup><mo>=</mo><mi>θ</mi><mo>−</mo><msub><mi>η</mi><mi>s</mi></msub><mo>(</mo><msub><mi>λ</mi><mi>o</mi></msub><msub><mi>g</mi><mi>old</mi></msub><mo>+</mo><msub><mi>g</mi><mi>new</mi></msub><mo>)</mo></mrow>;
     case 'inline:sgd_update_regularized':
       return <mrow><msup><mi>θ</mi><mo>′</mo></msup><mo>=</mo><mi>θ</mi><mo>−</mo><msub><mi>η</mi><mi>s</mi></msub><mo>(</mo><msub><mi>λ</mi><mi>o</mi></msub><msub><mi>g</mi><mi>old</mi></msub><mo>+</mo><msub><mi>g</mi><mi>new</mi></msub><mo>+</mo><msub><mi>g</mi><mi>R</mi></msub><mo>)</mo></mrow>;
-    case 'inline:teacher_response':
-      return <mrow><msub><mi>Y</mi><mi>o</mi></msub><mo>=</mo><msub><mi>f</mi><mi>old</mi></msub><mo>(</mo><msub><mi>X</mi><mi>n</mi></msub><mo>)</mo></mrow>;
   }
 }
 
@@ -66,7 +60,7 @@ export function MathFormula({ id, compact = false }: { id: FormulaId | string; c
     'formula:l_new', 'formula:l_old', 'formula:total_loss', 'formula:temperature',
     'formula:shared_gradient', 'formula:parameter_l2', 'formula:response_preservation',
     'formula:sgd_step', 'formula:training_response', 'formula:old_task_risk',
-    'inline:teacher_response', 'inline:combined_loss', 'inline:loss_pair',
+    'inline:combined_loss',
     'inline:old_head_gradient', 'inline:new_head_gradient', 'inline:sgd_update', 'inline:sgd_update_regularized',
   ]);
   if (!supported.has(id as FormulaId)) return <span className="v2-math-fallback">{id}</span>;
