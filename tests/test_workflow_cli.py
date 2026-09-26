@@ -1,6 +1,6 @@
 import pytest
 
-from workflow_v3_helpers import (
+from workflow_helpers import (
     HUMAN_STAGES, STAGE_KEYS, invoke, load_config, make_project, mark_prior_stages_complete,
     save_config, write_export, write_manifest, write_upstream_report,
 )

@@ -1,6 +1,6 @@
 import yaml
 
-from workflow_v3_helpers import load_config, make_project, write_fenced_yaml
+from workflow_helpers import load_config, make_project, write_fenced_yaml
 
 
 def test_valid_learning_spine_and_priority_boundaries_pass(tmp_path):

@@ -180,7 +180,7 @@ def write_manifest(paper, complete_core=None):
 
 def load_paper_module(root):
     module_path = root / "tools" / "paper.py"
-    name = "paper_workflow_v3_{}".format(abs(hash(str(root))))
+    name = "paper_workflow_{}".format(abs(hash(str(root))))
     spec = importlib.util.spec_from_file_location(name, module_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

@@ -2,7 +2,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from workflow_v3_helpers import load_config, make_project, write_export, write_upstream_report
+from workflow_helpers import load_config, make_project, write_export, write_upstream_report
 
 
 def make_clean_upstream_repo(path):

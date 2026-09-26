@@ -1,6 +1,6 @@
 import json
 
-from workflow_v3_helpers import make_project, write_manifest, write_fenced_yaml
+from workflow_helpers import make_project, write_manifest, write_fenced_yaml
 
 
 def test_implementation_plan_covers_priorities_evidence_and_vertical_slice(tmp_path):

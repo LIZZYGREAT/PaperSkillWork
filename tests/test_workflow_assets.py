@@ -1,4 +1,4 @@
-from workflow_v3_helpers import load_config, make_project, write_export, write_upstream_report, write_fenced_yaml, write_manifest
+from workflow_helpers import load_config, make_project, write_export, write_upstream_report, write_fenced_yaml, write_manifest
 
 
 def test_w3_requires_original_source_and_approved_rights_but_not_derivative(tmp_path):

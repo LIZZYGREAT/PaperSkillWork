@@ -62,8 +62,8 @@ npm run dev
 | `src/styles/workspace-curtain.css` | 悬浮入口、展开式共享工作区及响应式布局 |
 | `src/data/registry.ts` | 解析项目内术语和证据登记 |
 | `src/data/knowledge.ts` | 全站 canonical knowledge cards |
-| `src/styles/v2.css` | 分页布局、场景容器、可读字级与窄屏样式 |
-| `src/App.v1.tsx` | 上一版入口快照，留作迁移核对 |
+| `src/styles/layout.css` | 分页布局、场景容器、可读字级与窄屏样式 |
+| `legacy/App.v1.tsx` | 上一版入口快照，留作迁移核对 |
 
 页面是 PaperSkillWork 中的 Enhanced 工作副本；Canonical 论文源和工作流门禁仍分别管理。
 

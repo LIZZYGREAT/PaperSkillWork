@@ -1,6 +1,6 @@
 import json
 
-from workflow_v3_helpers import load_config, make_project
+from workflow_helpers import load_config, make_project
 
 
 def test_new_creates_workflow_v3_workspace_without_legacy_scaffolds(tmp_path):
