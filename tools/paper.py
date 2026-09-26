@@ -66,6 +66,7 @@ STAGES: List[Tuple[str, str, str]] = [
 ]
 STAGE_IDS = [stage[0] for stage in STAGES]
 STAGE_BY_ID = {stage[0]: stage for stage in STAGES}
+HUMAN_REVIEW_STAGES = {"W2", "W4", "W7", "W9"}
 LEGACY_GATE_LABELS = [
     "Workspace", "Research", "Evidence Audit", "Canonical", "Narrative Design",
     "Interaction Design", "Enhanced", "Final Audit & Release",
@@ -286,10 +287,18 @@ def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
                 if status not in ("pending", "in_progress", "complete"):
                     errors.append("workflow.stages.{}.status must be pending, in_progress, or complete".format(stage_key))
                 if status == "complete":
-                    if not isinstance(entry.get("reviewed_by"), str) or not entry["reviewed_by"].strip():
-                        errors.append("workflow.stages.{}.reviewed_by is required for a completed stage".format(stage_key))
-                    if not isinstance(entry.get("note"), str) or not entry["note"].strip():
-                        errors.append("workflow.stages.{}.note is required for a completed stage".format(stage_key))
+                    if stage_id in HUMAN_REVIEW_STAGES:
+                        if not isinstance(entry.get("reviewed_by"), str) or not entry["reviewed_by"].strip():
+                            errors.append("workflow.stages.{}.reviewed_by is required for human-review stage {}".format(stage_key, stage_id))
+                        if not isinstance(entry.get("note"), str) or not entry["note"].strip():
+                            errors.append("workflow.stages.{}.note is required for human-review stage {}".format(stage_key, stage_id))
+                    elif entry.get("completed_by") != "automation":
+                        # Existing v3 workspaces that explicitly recorded a human reviewer remain readable.
+                        if not (isinstance(entry.get("reviewed_by"), str) and entry["reviewed_by"].strip()
+                                and isinstance(entry.get("note"), str) and entry["note"].strip()):
+                            errors.append("workflow.stages.{}.completed_by must be automation for stage {}".format(stage_key, stage_id))
+                    if entry.get("completed_by") not in (None, "automation"):
+                        errors.append("workflow.stages.{}.completed_by must be automation when present".format(stage_key))
 
     for group_name in ("artifacts", "web"):
         group = config.get(group_name)
@@ -864,8 +873,11 @@ def cmd_stage(args: argparse.Namespace) -> int:
     else:
         problems = []
     if args.status == "complete":
-        if not (args.reviewed_by and args.reviewed_by.strip() and args.note and args.note.strip()):
-            raise PaperError("--reviewed-by and --note are required to record human acceptance")
+        if args.stage in HUMAN_REVIEW_STAGES:
+            if not (args.reviewed_by and args.reviewed_by.strip() and args.note and args.note.strip()):
+                raise PaperError("{} requires --reviewed-by and --note for human acceptance".format(args.stage))
+        elif args.reviewed_by or args.note:
+            raise PaperError("{} is an automatic stage; omit --reviewed-by and --note".format(args.stage))
         problems.extend(stage_completion_problems(folder, args.stage, config))
         if problems:
             raise PaperError("Cannot mark {} complete:\n- {}".format(args.stage, "\n- ".join(problems)))
@@ -877,8 +889,14 @@ def cmd_stage(args: argparse.Namespace) -> int:
     entry = config["workflow"]["stages"][stage_key]
     entry["status"] = args.status
     if args.status == "complete":
-        entry["reviewed_by"] = args.reviewed_by.strip()
-        entry["note"] = args.note.strip()
+        if args.stage in HUMAN_REVIEW_STAGES:
+            entry["reviewed_by"] = args.reviewed_by.strip()
+            entry["note"] = args.note.strip()
+            entry.pop("completed_by", None)
+        else:
+            entry["completed_by"] = "automation"
+            entry.pop("reviewed_by", None)
+            entry.pop("note", None)
         index = STAGE_IDS.index(args.stage)
         config["workflow"]["current_stage"] = STAGE_IDS[min(index + 1, len(STAGE_IDS) - 1)]
     else:
@@ -1132,6 +1150,17 @@ def evidence_registry_ids_v3(folder: Path) -> Tuple[set, Dict[str, Dict[str, Any
     entries: Dict[str, Dict[str, Any]] = {}
     errors: List[str] = []
     for category, values in registry.items():
+        if category == "review":
+            if not isinstance(values, dict):
+                errors.append("evidence registry review must be a mapping")
+                continue
+            for flag in ("unresolved_source_conflicts", "unresolved_evidence_conflicts", "unsafe_claim_wording"):
+                items = values.get(flag, [])
+                if not isinstance(items, list) or any(not isinstance(item, str) or not item.strip() for item in items):
+                    errors.append("evidence registry review.{} must be a list of non-empty strings".format(flag))
+                elif items:
+                    errors.append("evidence registry review.{} must be resolved before W3 completes: {}".format(flag, "; ".join(items)))
+            continue
         if not isinstance(values, dict):
             errors.append("evidence registry section '{}' must be a mapping".format(category))
             continue

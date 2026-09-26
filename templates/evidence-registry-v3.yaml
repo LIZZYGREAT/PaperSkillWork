@@ -7,6 +7,12 @@ implementation_mappings: {}
 background: {}
 teaching_examples: {}
 
+# W3 may complete automatically only when all these lists are empty.
+review:
+  unresolved_source_conflicts: []
+  unresolved_evidence_conflicts: []
+  unsafe_claim_wording: []
+
 # Entry shape:
 # C01:
 #   claim: ""
