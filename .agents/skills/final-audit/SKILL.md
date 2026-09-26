@@ -29,8 +29,8 @@ Decide whether the finished tutorial teaches the approved main line, respects ev
 ## W10 Procedure
 
 1. Set `release.upstream_paper_name`, `release.upstream_version`, and matching `release.output`; these are separate from the internal `paper_id`.
-2. Update the clean PaperSkill checkout to the intended commit, then run `python tools/paper.py upstream-check <paper-id> --paperskill-repo <path> --participant <name>`. Supply `--pinyin` for a non-ASCII participant and `--github` when applicable. The command runs official import, validation, build, and preflight in an isolated temporary checkout; it does not write into the supplied PaperSkill checkout.
-3. Inspect `audit/upstream-preflight.json`. W10 requires the recorded upstream commit and successful exit codes for all commands. Do not enter a manual PASS marker.
+2. Update the clean PaperSkill checkout to the intended commit, then run `python tools/paper.py upstream-check <paper-id> --paperskill-repo <path> --participant <name>`. Supply `--pinyin` for a non-ASCII participant and `--github` when applicable. The command imports into an isolated clone, rejects changed paths outside `release.output`, commits only the tutorial on a local-only branch, then runs official validation, build, and preflight against that temporary commit. It does not write into the supplied PaperSkill checkout or its Git configuration.
+3. Inspect `audit/upstream-preflight.json`. W10 requires distinct upstream and temporary commit SHAs, changed paths confined to `release.output`, no unexpected paths, successful exit codes for all commands, and an export SHA-256 matching the copied output. Do not enter a manual PASS marker.
 4. If a generated export already exists, rerun with `--replace-output` to replace it. Confirm the export matches the configured upstream paperName/version and exact required files.
 5. Keep any future workflow/skill contribution in a separate PR. Do not claim that passing CI guarantees merge.
 

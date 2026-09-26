@@ -64,4 +64,5 @@ def test_w10_requires_exported_asset_and_readme_provenance(tmp_path):
     assert any("export README.md must document asset provenance" in problem for problem in problems)
 
     (output / "README.md").write_text("## Asset provenance\n", encoding="utf-8")
+    write_upstream_report(paper, config)
     assert module.v3_stage_completion_problems(paper, "W10", config) == []

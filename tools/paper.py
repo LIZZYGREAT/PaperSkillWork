@@ -987,6 +987,27 @@ def install_upstream_export(source: Path, target: Path, replace_output: bool) ->
             raise
 
 
+def porcelain_changed_paths(output: str) -> List[str]:
+    fields = output.split("\0")
+    paths: List[str] = []
+    index = 0
+    while index < len(fields):
+        entry = fields[index]
+        index += 1
+        if not entry:
+            continue
+        if len(entry) < 4:
+            raise PaperError("could not parse isolated Git status")
+        status, path = entry[:2], entry[3:]
+        paths.append(path.replace("\\", "/"))
+        if "R" in status or "C" in status:
+            if index >= len(fields) or not fields[index]:
+                raise PaperError("could not parse isolated Git rename status")
+            paths.append(fields[index].replace("\\", "/"))
+            index += 1
+    return sorted(set(paths))
+
+
 def run_upstream_check(
     folder: Path,
     config: Dict[str, Any],
@@ -1002,8 +1023,11 @@ def run_upstream_check(
     paper = config.get("paper", {})
     report: Dict[str, Any] = {
         "upstream_commit": "",
+        "temporary_commit": "",
         "paper_name": release.get("upstream_paper_name", ""),
         "version": release.get("upstream_version", ""),
+        "changed_paths": [],
+        "unexpected_paths": [],
         "commands": [],
         "status": "FAIL",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -1052,6 +1076,18 @@ def run_upstream_check(
             ], temp_root, temp_root)
             if clone.returncode != 0:
                 raise PaperError("could not create an isolated PaperSkill checkout: {}".format(summarize_process(clone, temp_root)))
+
+            def isolated_git(arguments: List[str]) -> Any:
+                return invoke(["git", "-C", str(temp_repo)] + arguments, temp_repo, temp_root)
+
+            branch = isolated_git(["checkout", "-b", "paperskillwork-preflight"])
+            if branch.returncode != 0:
+                raise PaperError("could not create a temporary upstream test branch: {}".format(summarize_process(branch, temp_root)))
+            for key, value in (("user.name", "PaperSkillWork Preflight"), ("user.email", "paperskillwork-preflight@example.invalid")):
+                configured = isolated_git(["config", key, value])
+                if configured.returncode != 0:
+                    raise PaperError("could not set temporary Git identity: {}".format(summarize_process(configured, temp_root)))
+
             source = folder / "web/enhanced"
             if not source.is_dir():
                 raise PaperError("web/enhanced is missing")
@@ -1072,13 +1108,8 @@ def run_upstream_check(
                 import_command.extend(["--year", str(paper["year"])])
             if isinstance(paper.get("venue"), str) and paper["venue"].strip():
                 import_command.extend(["--venue", paper["venue"].strip()])
-            commands = [
-                ("npm run import", import_command),
-                ("npm run validate", [npm, "run", "validate"]),
-                ("npm run build:paper", [npm, "run", "build:paper", "--", "{}/{}".format(release["upstream_paper_name"], release["upstream_version"])]),
-                ("npm run preflight", [npm, "run", "preflight"]),
-            ]
-            for label, command in commands:
+
+            def run_official_command(label: str, command: List[str]) -> None:
                 try:
                     result = invoke(command, temp_repo, temp_root)
                     exit_code = result.returncode
@@ -1087,20 +1118,83 @@ def run_upstream_check(
                     exit_code = 127
                     summary = str(exc)
                 report["commands"].append({"command": label, "exit_code": exit_code, "summary": summary})
+                if exit_code != 0:
+                    raise PaperError("{} failed: {}".format(label, summary or "exit code {}".format(exit_code)))
+
+            run_official_command("npm run import", import_command)
+            shutil.rmtree(source_copy, ignore_errors=True)
 
             imported = temp_repo / release["output"]
-            if any(command["exit_code"] != 0 for command in report["commands"]):
-                report["error"] = "one or more official import/validation/build/preflight commands failed"
-            elif not imported.is_dir():
-                report["error"] = "official import did not create the configured output directory"
-            else:
-                target = ROOT / release["output"]
-                try:
-                    install_upstream_export(imported, target, replace_output)
-                    report["export_sha256"] = directory_sha256(target)
-                    report["status"] = "PASS"
-                except (OSError, PaperError) as exc:
-                    report["error"] = str(exc)
+            if not imported.is_dir():
+                raise PaperError("official import did not create the configured output directory")
+
+            status = isolated_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
+            if status.returncode != 0:
+                raise PaperError("cannot inspect isolated import changes: {}".format(summarize_process(status, temp_root)))
+            changed_paths = porcelain_changed_paths(str(getattr(status, "stdout", "") or ""))
+            report["changed_paths"] = changed_paths
+            expected_prefix = release["output"].replace("\\", "/").strip("/") + "/"
+            report["unexpected_paths"] = [path for path in changed_paths if not path.startswith(expected_prefix)]
+            if report["unexpected_paths"]:
+                raise PaperError("official import changed paths outside {}: {}".format(
+                    expected_prefix.rstrip("/"), ", ".join(report["unexpected_paths"]),
+                ))
+            if not changed_paths:
+                raise PaperError("official import produced no changed tutorial files to commit")
+
+            added = isolated_git(["add", "-A", "--", release["output"]])
+            if added.returncode != 0:
+                raise PaperError("could not stage the imported tutorial: {}".format(summarize_process(added, temp_root)))
+            staged_status = isolated_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
+            if staged_status.returncode != 0:
+                raise PaperError("cannot inspect staged tutorial changes: {}".format(summarize_process(staged_status, temp_root)))
+            staged_paths = porcelain_changed_paths(str(getattr(staged_status, "stdout", "") or ""))
+            staged_unexpected = [path for path in staged_paths if not path.startswith(expected_prefix)]
+            if staged_unexpected or not staged_paths:
+                raise PaperError("temporary commit scope is invalid{}".format(
+                    ": " + ", ".join(staged_unexpected) if staged_unexpected else " (no staged tutorial changes)",
+                ))
+            commit = isolated_git(["commit", "-m", "Preflight tutorial {}/{}".format(
+                release["upstream_paper_name"], release["upstream_version"],
+            )])
+            if commit.returncode != 0:
+                raise PaperError("could not create a temporary tutorial commit: {}".format(summarize_process(commit, temp_root)))
+            temporary_head = isolated_git(["rev-parse", "HEAD"])
+            if temporary_head.returncode != 0:
+                raise PaperError("cannot read the temporary tutorial commit: {}".format(summarize_process(temporary_head, temp_root)))
+            temporary_commit = str(getattr(temporary_head, "stdout", "") or "").strip()
+            if not re.fullmatch(r"[0-9a-fA-F]{40,64}", temporary_commit) or temporary_commit == upstream_commit:
+                raise PaperError("temporary tutorial commit is invalid or matches upstream HEAD")
+            report["temporary_commit"] = temporary_commit
+
+            after_commit = isolated_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
+            if after_commit.returncode != 0:
+                raise PaperError("cannot verify the temporary checkout after commit: {}".format(summarize_process(after_commit, temp_root)))
+            if porcelain_changed_paths(str(getattr(after_commit, "stdout", "") or "")):
+                raise PaperError("temporary tutorial commit left uncommitted changes")
+
+            run_official_command("npm run validate", [npm, "run", "validate"])
+            run_official_command("npm run build:paper", [
+                npm, "run", "build:paper", "--", "{}/{}".format(release["upstream_paper_name"], release["upstream_version"]),
+            ])
+            before_preflight_status = isolated_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
+            if before_preflight_status.returncode != 0:
+                raise PaperError("cannot verify the isolated checkout before preflight: {}".format(summarize_process(before_preflight_status, temp_root)))
+            build_changes = porcelain_changed_paths(str(getattr(before_preflight_status, "stdout", "") or ""))
+            if build_changes:
+                raise PaperError("validation/build left uncommitted changes before preflight: {}".format(", ".join(build_changes)))
+            preflight_head = isolated_git(["rev-parse", "HEAD"])
+            if preflight_head.returncode != 0 or str(getattr(preflight_head, "stdout", "") or "").strip() != temporary_commit:
+                raise PaperError("upstream preflight is not positioned at the temporary tutorial commit")
+            run_official_command("npm run preflight", [npm, "run", "preflight"])
+
+            target = ROOT / release["output"]
+            try:
+                install_upstream_export(imported, target, replace_output)
+                report["export_sha256"] = directory_sha256(target)
+                report["status"] = "PASS"
+            except (OSError, PaperError) as exc:
+                report["error"] = str(exc)
         if report["status"] == "PASS":
             save_upstream_report(folder, report)
             completion_problems = v3_stage_completion_problems(folder, "W10", config)
@@ -1909,22 +2003,55 @@ def upstream_preflight_problems(folder: Path, config: Dict[str, Any]) -> List[st
     commit = report.get("upstream_commit")
     if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
         problems.append("upstream preflight report needs the upstream commit SHA")
+    temporary_commit = report.get("temporary_commit")
+    if not isinstance(temporary_commit, str) or not re.fullmatch(r"[0-9a-fA-F]{40,64}", temporary_commit):
+        problems.append("upstream preflight report needs the temporary tutorial commit SHA")
+    elif isinstance(commit, str) and temporary_commit == commit:
+        problems.append("temporary tutorial commit must differ from the upstream commit")
     release = config.get("release", {})
     if report.get("paper_name") != release.get("upstream_paper_name"):
         problems.append("upstream preflight paper_name does not match paper.yaml")
     if report.get("version") != release.get("upstream_version"):
         problems.append("upstream preflight version does not match paper.yaml")
+    changed_paths = report.get("changed_paths")
+    if not isinstance(changed_paths, list) or not changed_paths:
+        problems.append("upstream preflight changed_paths must list the committed tutorial files")
+    else:
+        output = release.get("output")
+        expected_prefix = output.replace("\\", "/").strip("/") + "/" if isinstance(output, str) else ""
+        if any(not isinstance(path, str) or not path.replace("\\", "/").startswith(expected_prefix) for path in changed_paths):
+            problems.append("upstream preflight changed_paths must stay within release.output")
+        normalized_paths = [path.replace("\\", "/") for path in changed_paths if isinstance(path, str)]
+        if len(normalized_paths) != len(set(normalized_paths)):
+            problems.append("upstream preflight changed_paths must not contain duplicates")
+    unexpected_paths = report.get("unexpected_paths")
+    if not isinstance(unexpected_paths, list) or unexpected_paths:
+        problems.append("upstream preflight unexpected_paths must be an empty list")
+    export_hash = report.get("export_sha256")
+    if not isinstance(export_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", export_hash):
+        problems.append("upstream preflight report needs the exported tutorial SHA-256")
+    else:
+        output = release.get("output")
+        export_path = ROOT / output if isinstance(output, str) else None
+        if export_path is None or not export_path.is_dir():
+            problems.append("upstream preflight export hash cannot be verified because release.output is missing")
+        elif directory_sha256(export_path).lower() != export_hash.lower():
+            problems.append("upstream preflight export SHA-256 does not match release.output")
     commands = report.get("commands")
     if not isinstance(commands, list):
         problems.append("upstream preflight commands must be a list")
         return problems
     expected = {"npm run import", "npm run validate", "npm run build:paper", "npm run preflight"}
     successful = set()
+    seen = set()
     for index, command in enumerate(commands):
         if not isinstance(command, dict) or not isinstance(command.get("command"), str):
             problems.append("upstream preflight command {} needs a command name".format(index + 1))
             continue
         name = command["command"]
+        if name in seen:
+            problems.append("upstream preflight '{}' must appear only once".format(name))
+        seen.add(name)
         exit_code = command.get("exit_code")
         if type(exit_code) is not int:
             problems.append("upstream preflight '{}' needs an integer exit_code".format(name))

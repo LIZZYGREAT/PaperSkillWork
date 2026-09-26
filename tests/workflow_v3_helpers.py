@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 import shutil
 import subprocess
@@ -243,10 +244,26 @@ def write_export(root, config, paper, with_asset=False):
 
 
 def write_upstream_report(paper, config, exit_code=0):
+    root = paper.parents[1]
+    export = root / config["release"]["output"]
+    digest = hashlib.sha256()
+    changed_paths = []
+    for item in sorted(path for path in export.rglob("*") if path.is_file()):
+        relative = item.relative_to(export).as_posix()
+        changed_paths.append((Path(config["release"]["output"]) / relative).as_posix())
+        digest.update(relative.encode("utf-8"))
+        digest.update(b"\0")
+        with item.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
     report = {
         "upstream_commit": "a" * 40,
+        "temporary_commit": "b" * 40,
         "paper_name": config["release"]["upstream_paper_name"],
         "version": config["release"]["upstream_version"],
+        "changed_paths": changed_paths,
+        "unexpected_paths": [],
+        "export_sha256": digest.hexdigest(),
         "commands": [
             {"command": "npm run import", "exit_code": 0},
             {"command": "npm run validate", "exit_code": 0},
