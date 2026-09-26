@@ -48,6 +48,7 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
   onPrevious: () => void;
   onReset: () => void;
 }) {
+  const [selectedStep, setSelectedStep] = React.useState(0);
   const { openHub } = useReferenceHub();
   const sample = toySamples.find((item) => item.id === session.selectedSampleId) || toySamples[0];
   const stage = session.trainingStage;
@@ -71,23 +72,36 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
   const loadBatch = () => {
     dispatchToy({ type: 'ZERO_GRAD' });
     dispatch({ type: 'SET_TRAINING_STAGE', stage: 'batch' });
+    setSelectedStep(0);
   };
-  const runForward = () => dispatch({ type: 'SET_TRAINING_STAGE', stage: 'forward' });
-  const computeLoss = () => dispatch({ type: 'SET_TRAINING_STAGE', stage: 'loss' });
+  const runForward = () => {
+    dispatch({ type: 'SET_TRAINING_STAGE', stage: 'forward' });
+    setSelectedStep(1);
+  };
+  const computeLoss = () => {
+    dispatch({ type: 'SET_TRAINING_STAGE', stage: 'loss' });
+    setSelectedStep(2);
+  };
   const runBackward = () => {
     dispatchToy({ type: 'BACKWARD', phase: session.phase });
     dispatch({ type: 'SET_TRAINING_STAGE', stage: 'backward' });
+    setSelectedStep(3);
   };
   const optimizerStep = () => {
     dispatchToy({ type: 'OPTIMIZER_STEP', phase: session.phase, optimizerGroups: session.optimizerGroups });
     dispatch({ type: 'SET_TRAINING_STAGE', stage: 'updated' });
+    setSelectedStep(4);
+  };
+  const resetTeachingModel = () => {
+    onReset();
+    setSelectedStep(0);
   };
 
   return (
     <div className="v2-scene-content v2-scene-c">
       <section className="v2-c-toy-banner">
         <div><span className="v2-source-badge is-toy">TEACHING TOY</span><strong>可计算的小型线性模型</strong><span>合成二维输入 · 3 个旧类 · 2 个新类 · 固定初始权重 · 抽象三组参数</span></div>
-        <button type="button" className="v2-secondary-action" onClick={onReset}>重置教学模型</button>
+        <button type="button" className="v2-secondary-action" onClick={resetTeachingModel}>重置教学模型</button>
       </section>
 
       {!inputReady ? (
@@ -109,8 +123,13 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
 
           <section className="v2-state-card v2-c-stepper-card" aria-labelledby="c-stepper-title">
             <div className="v2-section-title-row"><div><p className="v2-eyebrow">USER-CONTROLLED EXECUTION</p><h2 id="c-stepper-title">逐步运行一个 batch</h2></div><span className="v2-c-current-step">{stage === 'idle' ? '等待开始' : stage === 'updated' ? 'Optimizer step 完成' : `当前：${steps[rank - 1]?.title}`}</span></div>
-            <ol className="v2-c-stepper">
-              {steps.map((step, index) => <li key={step.stage} className={`${rank > index ? 'is-done' : ''} ${rank === index + 1 ? 'is-current' : ''}`}><span>{rank > index ? '✓' : step.label}</span><strong>{step.title}</strong></li>)}
+            <p className="v2-c-step-view-label">选择步骤查看对应细节</p>
+            <ol className="v2-c-stepper" aria-label="选择要查看的训练步骤">
+              {steps.map((step, index) => <li key={step.stage}>
+                <button type="button" className={`v2-c-step-tab ${selectedStep === index ? 'is-selected' : ''} ${rank > index ? 'is-done' : ''} ${rank === index + 1 ? 'is-current' : ''}`} aria-pressed={selectedStep === index} aria-label={`查看步骤 ${step.label}: ${step.title}`} onClick={() => setSelectedStep(index)}>
+                  <span>{rank > index ? '✓' : step.label}</span><strong>{step.title}</strong>
+                </button>
+              </li>)}
             </ol>
             <div className="v2-c-step-actions">
               <StepAction number="01" title={stage === 'updated' ? 'Load Next Batch' : 'Load Batch'} hint="本轮开始时先执行 zero_grad()，清除上轮 .grad。" disabled={!canLoad} complete={rank >= 1} onClick={loadBatch} />
@@ -122,13 +141,13 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
             <p className="v2-c-toy-disclaimer">这是 shared affine + 两个并行 affine head 的 Teaching Toy 计算，不是论文模型运行结果，也不模拟 B 中 backbone 的内部层数；每个操作只执行当前一步，不自动播放。</p>
           </section>
 
-          {rank >= 1 ? <BatchInspector session={session} dispatch={dispatch} sample={sample} forward={forward} teacherResponse={teacherResponse} /> : null}
-          {rank >= 2 ? <ForwardInspector session={session} sample={sample} forward={forward} teacherResponse={teacherResponse} /> : null}
-          {rank >= 3 ? <LossInspector result={result} onEvidence={() => openHub({ evidenceId: 'F01' })} /> : null}
-          <GradientInspector session={session} dispatch={dispatch} result={result} phase={session.phase} toyState={toyState} />
-          {rank >= 5 ? <UpdateInspector toyState={toyState} /> : null}
-
-          <section className="v2-state-card v2-c-optimizer-card" aria-labelledby="optimizer-c-title">
+          {selectedStep === 0 ? <BatchInspector session={session} dispatch={dispatch} sample={sample} forward={forward} teacherResponse={teacherResponse} /> : null}
+          {selectedStep === 1 ? <ForwardInspector session={session} sample={sample} forward={forward} teacherResponse={teacherResponse} /> : null}
+          {selectedStep === 2 ? <LossInspector result={result} onEvidence={() => openHub({ evidenceId: 'F01' })} /> : null}
+          {selectedStep === 3 ? <GradientInspector session={session} dispatch={dispatch} result={result} phase={session.phase} toyState={toyState} /> : null}
+          {selectedStep === 4 ? <>
+            <UpdateInspector toyState={toyState} />
+            <section className="v2-state-card v2-c-optimizer-card" aria-labelledby="optimizer-c-title">
             <div className="v2-section-title-row"><div><p className="v2-eyebrow">COMPUTATION GRAPH ≠ OPTIMIZER</p><h2 id="optimizer-c-title">梯度存在，不代表参数一定更新</h2></div></div>
             <div className="v2-c-membership-table">
               <div className="v2-c-membership-head"><span>Parameter group</span><span>requires_grad</span><span>.grad</span><span>Optimizer</span><span>本步变化</span></div>
@@ -142,7 +161,8 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
               })}
             </div>
             <p className="v2-c-membership-note">requires_grad 控制是否为该参数保留梯度；optimizer membership 控制 step 是否持有它。Warm-up 中冻结组即使被误加进 optimizer，也没有 .grad 可供本 toy 更新。</p>
-          </section>
+            </section>
+          </> : null}
 
           <details className="v2-implementation-details v2-c-advanced">
             <summary>Implementation notes：冻结、zero_grad 与计算图</summary>
@@ -242,7 +262,10 @@ function GradientInspector({ session, dispatch, result, phase, toyState }: { ses
 
 function UpdateInspector({ toyState }: { toyState: TeachingToyState }) {
   const update = toyState.lastUpdate;
-  if (!update) return null;
+  if (!update) return <section className="v2-c-panel v2-c-step-pending" aria-labelledby="update-inspector-title">
+    <PanelHeading step="E" eyebrow="STEP 5 · OPTIMIZER.STEP" title="只有 optimizer.step() 才尝试改变成员参数" />
+    <p>尚未执行参数更新。完成前向计算、损失计算和反向传播后，执行 Optimizer Step 即可在此查看各参数组的更新量。</p>
+  </section>;
   return <section className="v2-c-panel v2-c-update-panel" aria-labelledby="update-inspector-title">
     <PanelHeading step="E" eyebrow="STEP 5 · OPTIMIZER.STEP" title="只有 optimizer.step() 才尝试改变成员参数" />
     <div className="v2-c-update-table"><div className="v2-c-update-head"><span>Group</span><span>‖θ‖ before</span><span>‖grad‖</span><span>‖Δθ‖</span><span>‖θ‖ after</span><span>Changed</span></div>
