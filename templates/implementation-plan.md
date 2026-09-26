@@ -8,9 +8,19 @@ State the learner outcome this page must enable. List details deliberately kept 
 
 ## Primary Spine Mapping
 
-| Spine stage | Page/scene | CORE items | Evidence IDs | Chosen explanation pattern | Why this form helps |
-| --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |
+The YAML below is the sole structured source for implementation coverage. Give each CORE item one stage and one `primary_vehicle`. Use only stage IDs already defined by the Learning Spine. `supporting` and `reference` map lower-priority items to their placements; DELETE items do not appear here.
+
+```yaml
+implementation:
+  stages: []
+  supporting: []
+  reference: []
+  vertical_slice:
+    stages: []
+    required_core_items: []
+```
+
+Each `stages` entry requires `id`, `page`, `core_items`, `evidence_refs`, `primary_vehicle`, `reusable_pattern`, and `reason`. `reusable_pattern` may be null. Each `supporting` / `reference` entry has an `item` ID and a `placement`. The vertical slice lists the implementation stages and CORE IDs that W6 must finish.
 
 ## Reusable Pattern Library
 

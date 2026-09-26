@@ -1296,6 +1296,147 @@ def v3_priority_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Dict[str
     return data, problems
 
 
+def v3_implementation_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    plan, problems = fenced_yaml(folder / "design/implementation-plan.md")
+    if plan is None:
+        return None, problems
+    implementation = plan.get("implementation")
+    if not isinstance(implementation, dict):
+        return plan, problems + ["implementation-plan YAML must define an implementation mapping"]
+
+    spine, spine_problems = v3_priority_data(folder, evidence_ids)
+    problems.extend(spine_problems)
+    if not isinstance(spine, dict):
+        return plan, problems
+    spine_stages = {
+        stage.get("id") for stage in spine.get("stages", [])
+        if isinstance(stage, dict) and isinstance(stage.get("id"), str)
+    }
+    items_by_priority: Dict[str, set] = {priority: set() for priority in ("CORE", "SUPPORTING", "REFERENCE", "DELETE")}
+    for item in spine.get("items", []):
+        if isinstance(item, dict) and isinstance(item.get("priority"), str) and item.get("priority") in items_by_priority and isinstance(item.get("id"), str):
+            items_by_priority[item["priority"]].add(item["id"])
+
+    stages = implementation.get("stages")
+    if not isinstance(stages, list):
+        problems.append("implementation.stages must be a list")
+        stages = []
+    plan_stage_ids = set()
+    planned_core: Dict[str, List[str]] = {}
+    for index, stage in enumerate(stages):
+        label = "implementation stage {}".format(index + 1)
+        if not isinstance(stage, dict):
+            problems.append("{} must be a mapping".format(label))
+            continue
+        stage_id = stage.get("id")
+        if not isinstance(stage_id, str) or not stage_id.strip():
+            problems.append("{} needs an ID from the learning spine".format(label))
+        elif stage_id not in spine_stages:
+            problems.append("{} ID '{}' is not in the learning spine".format(label, stage_id))
+        elif stage_id in plan_stage_ids:
+            problems.append("implementation plan has duplicate stage ID '{}'".format(stage_id))
+        else:
+            plan_stage_ids.add(stage_id)
+        for key in ("page", "primary_vehicle", "reason"):
+            if not isinstance(stage.get(key), str) or not stage[key].strip():
+                problems.append("{} needs a non-empty {}".format(label, key))
+        if "reusable_pattern" in stage and stage["reusable_pattern"] is not None and not isinstance(stage["reusable_pattern"], str):
+            problems.append("{} reusable_pattern must be a string or null".format(label))
+        core_items = stage.get("core_items")
+        if not isinstance(core_items, list) or not core_items:
+            problems.append("{} core_items must be a non-empty list".format(label))
+            core_items = []
+        for item_id in core_items:
+            if not isinstance(item_id, str):
+                problems.append("{} core_items must contain item IDs".format(label))
+                continue
+            if item_id in items_by_priority["DELETE"]:
+                problems.append("DELETE item '{}' must not appear in the implementation plan".format(item_id))
+                continue
+            if item_id not in items_by_priority["CORE"]:
+                problems.append("{} includes '{}' which is not a CORE item".format(label, item_id))
+            planned_core.setdefault(item_id, []).append(stage_id if isinstance(stage_id, str) else "?")
+        evidence_refs = stage.get("evidence_refs")
+        if not isinstance(evidence_refs, list):
+            problems.append("{} evidence_refs must be a list".format(label))
+        else:
+            for reference in evidence_refs:
+                if not isinstance(reference, str) or reference not in evidence_ids:
+                    problems.append("{} references unknown evidence ID '{}'".format(label, reference))
+
+    for item_id in sorted(items_by_priority["CORE"]):
+        count = len(planned_core.get(item_id, []))
+        if count == 0:
+            problems.append("CORE item '{}' is missing from implementation.stages".format(item_id))
+        elif count > 1:
+            problems.append("CORE item '{}' must appear in exactly one implementation stage".format(item_id))
+
+    def validate_placements(key: str, priority: str, allowed: set) -> None:
+        rows = implementation.get(key)
+        if not isinstance(rows, list):
+            problems.append("implementation.{} must be a list".format(key))
+            return
+        seen: Dict[str, int] = {}
+        for index, row in enumerate(rows):
+            label = "implementation.{} item {}".format(key, index + 1)
+            if not isinstance(row, dict):
+                problems.append("{} must be a mapping".format(label))
+                continue
+            item_id = row.get("item")
+            if not isinstance(item_id, str):
+                problems.append("{} needs an item ID".format(label))
+                continue
+            seen[item_id] = seen.get(item_id, 0) + 1
+            if item_id not in items_by_priority[priority]:
+                if item_id in items_by_priority["DELETE"]:
+                    problems.append("DELETE item '{}' must not appear in the implementation plan".format(item_id))
+                else:
+                    problems.append("implementation.{} includes '{}' which is not {}".format(key, item_id, priority))
+            placement = row.get("placement")
+            if not isinstance(placement, str) or placement not in allowed:
+                problems.append("{} placement must be one of: {}".format(label, ", ".join(sorted(allowed))))
+        for item_id in sorted(items_by_priority[priority]):
+            count = seen.get(item_id, 0)
+            if count == 0:
+                problems.append("{} item '{}' is missing from implementation.{}".format(priority, item_id, key))
+            elif count > 1:
+                problems.append("{} item '{}' must appear only once in implementation.{}".format(priority, item_id, key))
+
+    validate_placements("supporting", "SUPPORTING", {"compact-inline", "hover", "expandable"})
+    validate_placements("reference", "REFERENCE", {"Reference Hub", "Hover", "Advanced details", "Implementation notes", "Evidence details"})
+
+    vertical_slice = implementation.get("vertical_slice")
+    if not isinstance(vertical_slice, dict):
+        problems.append("implementation.vertical_slice must be a mapping")
+    else:
+        slice_stages = vertical_slice.get("stages")
+        required_core = vertical_slice.get("required_core_items")
+        if not isinstance(slice_stages, list) or not slice_stages:
+            problems.append("implementation.vertical_slice.stages must be a non-empty list")
+            slice_stages = []
+        if not isinstance(required_core, list) or not required_core:
+            problems.append("implementation.vertical_slice.required_core_items must be a non-empty list")
+            required_core = []
+        if len(slice_stages) != len(set(item for item in slice_stages if isinstance(item, str))):
+            problems.append("implementation.vertical_slice.stages must not contain duplicates")
+        if len(required_core) != len(set(item for item in required_core if isinstance(item, str))):
+            problems.append("implementation.vertical_slice.required_core_items must not contain duplicates")
+        selected_core = {
+            core_id
+            for stage in stages if isinstance(stage, dict) and stage.get("id") in slice_stages
+            for core_id in stage.get("core_items", []) if isinstance(core_id, str)
+        }
+        for stage_id in slice_stages:
+            if not isinstance(stage_id, str) or stage_id not in plan_stage_ids:
+                problems.append("vertical-slice stage '{}' does not exist in the implementation plan".format(stage_id))
+        for item_id in required_core:
+            if not isinstance(item_id, str) or item_id not in items_by_priority["CORE"]:
+                problems.append("vertical slice requires '{}' which is not a CORE item".format(item_id))
+            elif item_id not in selected_core:
+                problems.append("vertical-slice CORE item '{}' is not assigned to a selected stage".format(item_id))
+    return plan, problems
+
+
 def v3_asset_data(folder: Path, manifest: Optional[Dict[str, Any]], evidence_ids: set) -> Tuple[Optional[Dict[str, Any]], List[str]]:
     data, problems = fenced_yaml(folder / "design/asset-plan.md")
     if data is None:
@@ -1441,8 +1582,12 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
             return ["design/implementation-plan.md is missing"]
         text = path.read_text(encoding="utf-8")
         for heading in ("Primary Spine Mapping", "Reusable Pattern Library", "Vertical Slice (W6)", "Vertical Slice Review (W7)"):
-            if not re.search(r"^##\s+{}\s*$".format(re.escape(heading)), text, re.MULTILINE):
+            if not re.search(r"^#{2,3}\s+{}\s*$".format(re.escape(heading)), text, re.MULTILINE):
                 problems.append("implementation-plan is missing section '{}'".format(heading))
+        evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
+        problems.extend(evidence_problems)
+        _plan, implementation_problems = v3_implementation_data(folder, evidence_ids)
+        problems.extend(implementation_problems)
         return problems
     if stage_id in ("W6", "W8"):
         web = folder / "web/enhanced"
