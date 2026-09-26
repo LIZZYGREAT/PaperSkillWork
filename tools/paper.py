@@ -103,6 +103,7 @@ V3_TEMPLATE_OUTPUTS = {
     "learning-spine.md": "design/learning-spine.md",
     "asset-plan.md": "design/asset-plan.md",
     "implementation-plan.md": "design/implementation-plan.md",
+    "implementation-manifest.json": "web/enhanced/implementation-manifest.json",
     "final-check-v3.md": "audit/final-check.md",
 }
 V2_GATE_ARTIFACTS = {
@@ -1437,6 +1438,102 @@ def v3_implementation_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Di
     return plan, problems
 
 
+def v3_implementation_coverage(folder: Path, stage_id: str, implementation_plan: Dict[str, Any]) -> List[str]:
+    problems: List[str] = []
+    manifest, manifest_problems = read_json_object(
+        folder / "web/enhanced/implementation-manifest.json",
+        "web/enhanced/implementation-manifest.json",
+    )
+    problems.extend(manifest_problems)
+    if manifest is None:
+        return problems
+    implementation = implementation_plan.get("implementation")
+    if not isinstance(implementation, dict):
+        return problems + ["implementation-plan has no implementation mapping"]
+
+    core_plan: Dict[str, str] = {}
+    for stage in implementation.get("stages", []) if isinstance(implementation.get("stages"), list) else []:
+        if not isinstance(stage, dict) or not isinstance(stage.get("id"), str):
+            continue
+        for item_id in stage.get("core_items", []) if isinstance(stage.get("core_items"), list) else []:
+            if isinstance(item_id, str):
+                core_plan[item_id] = stage["id"]
+    supporting_plan = {
+        row.get("item"): row.get("placement") for row in implementation.get("supporting", [])
+        if isinstance(row, dict) and isinstance(row.get("item"), str)
+    } if isinstance(implementation.get("supporting"), list) else {}
+    reference_plan = {
+        row.get("item"): row.get("placement") for row in implementation.get("reference", [])
+        if isinstance(row, dict) and isinstance(row.get("item"), str)
+    } if isinstance(implementation.get("reference"), list) else {}
+    vertical_slice = implementation.get("vertical_slice")
+    slice_core = {
+        item_id for item_id in vertical_slice.get("required_core_items", []) if isinstance(item_id, str)
+    } if isinstance(vertical_slice, dict) and isinstance(vertical_slice.get("required_core_items"), list) else set()
+
+    core_manifest = manifest.get("implemented_core")
+    if not isinstance(core_manifest, dict):
+        problems.append("implementation manifest implemented_core must be an object")
+        core_manifest = {}
+    for item_id, row in core_manifest.items():
+        if item_id not in core_plan:
+            problems.append("implementation manifest CORE item '{}' is not planned (DELETE items must stay out)".format(item_id))
+            continue
+        if not isinstance(row, dict):
+            problems.append("implementation manifest CORE item '{}' must be an object".format(item_id))
+            continue
+        if row.get("stage") != core_plan[item_id]:
+            problems.append("implementation manifest CORE item '{}' stage must be {}".format(item_id, core_plan[item_id]))
+        if not isinstance(row.get("component"), str) or not row["component"].strip():
+            problems.append("implementation manifest CORE item '{}' needs a component".format(item_id))
+        if row.get("status") not in ("planned", "in_progress", "complete"):
+            problems.append("implementation manifest CORE item '{}' status must be planned, in_progress, or complete".format(item_id))
+
+    if stage_id == "W6":
+        required_core = slice_core
+        required_label = "vertical-slice"
+    else:
+        required_core = set(core_plan)
+        required_label = "full implementation"
+    for item_id in sorted(required_core):
+        row = core_manifest.get(item_id)
+        if not isinstance(row, dict):
+            problems.append("{} CORE item '{}' is missing from implementation manifest".format(required_label, item_id))
+        elif row.get("status") != "complete":
+            problems.append("{} CORE item '{}' must have status complete".format(required_label, item_id))
+
+    supporting_manifest = manifest.get("supporting")
+    if not isinstance(supporting_manifest, dict):
+        problems.append("implementation manifest supporting must be an object")
+        supporting_manifest = {}
+    for item_id, row in supporting_manifest.items():
+        if item_id not in supporting_plan:
+            problems.append("implementation manifest SUPPORTING item '{}' is not planned".format(item_id))
+            continue
+        if not isinstance(row, dict) or row.get("placement") != supporting_plan[item_id]:
+            problems.append("implementation manifest SUPPORTING item '{}' placement must match the plan".format(item_id))
+    if stage_id == "W8":
+        for item_id in sorted(set(supporting_plan) - set(supporting_manifest)):
+            problems.append("SUPPORTING item '{}' is missing from implementation manifest".format(item_id))
+
+    reference_manifest = manifest.get("reference")
+    if not isinstance(reference_manifest, dict):
+        problems.append("implementation manifest reference must be an object")
+        reference_manifest = {}
+    for item_id, row in reference_manifest.items():
+        if item_id not in reference_plan:
+            problems.append("implementation manifest REFERENCE item '{}' is not planned".format(item_id))
+            continue
+        if isinstance(row, dict) and row.get("placement") == "mainline":
+            problems.append("REFERENCE item '{}' must not be marked mainline".format(item_id))
+        elif not isinstance(row, dict) or row.get("placement") != reference_plan[item_id]:
+            problems.append("implementation manifest REFERENCE item '{}' placement must match the plan".format(item_id))
+    if stage_id == "W8":
+        for item_id in sorted(set(reference_plan) - set(reference_manifest)):
+            problems.append("REFERENCE item '{}' is missing from implementation manifest".format(item_id))
+    return problems
+
+
 def v3_asset_data(folder: Path, manifest: Optional[Dict[str, Any]], evidence_ids: set) -> Tuple[Optional[Dict[str, Any]], List[str]]:
     data, problems = fenced_yaml(folder / "design/asset-plan.md")
     if data is None:
@@ -1598,6 +1695,12 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
             problems.append("web/enhanced/package-lock.json is missing")
         if not any((web / path).is_file() for path in ("src/App.tsx", "src/main.tsx")):
             problems.append("web/enhanced needs src/App.tsx or src/main.tsx")
+        evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
+        problems.extend(evidence_problems)
+        implementation_plan, implementation_problems = v3_implementation_data(folder, evidence_ids)
+        problems.extend(implementation_problems)
+        if isinstance(implementation_plan, dict):
+            problems.extend(v3_implementation_coverage(folder, stage_id, implementation_plan))
         return problems
     if stage_id == "W7":
         plan = folder / "design/implementation-plan.md"
