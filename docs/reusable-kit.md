@@ -42,6 +42,8 @@ Optional component imports use `./shared/optional/<component-folder>`. No npm wo
 
 Each recipe in `reusable-kit/recipes/` describes when a pattern helps, when to avoid it, a minimum interaction, suggested components, and anti-patterns.
 
+`TermRef` and the general-purpose `Popover` share the Foundation `usePopoverPosition` hook. Both keep their panels inside the viewport, reposition after scroll or resize, and dismiss on an outside press or Escape. `TermRef` opens on pointer hover and keyboard focus; click or tap pins it open, and its optional callback can route a term to the Reference Hub.
+
 ## Local demos and checks
 
 The local app at `reusable-kit/demo/` contains LwF and EWC mini demos. It illustrates component reuse only; the displayed method sketches need paper-specific source checking before use in a tutorial.

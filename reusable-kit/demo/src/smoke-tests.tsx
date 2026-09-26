@@ -100,7 +100,7 @@ function Fixtures() {
     <StateMachineExplorer spec={stateMachine} />
     <StateMachineExplorer spec={branchingMachine} />
     <ReferenceHub items={[{ id: "term-a", title: "Term A", kind: "term", summary: "Searchable reference." }, { id: "method-b", title: "Method B", kind: "method", summary: "Another reference." }]} />
-    <TermRef term={term} />
+    <TermRef term={term} onOpenReference={(termId) => { document.body.dataset.reference = termId; }} />
     <ExpandableDetail title="Supporting detail"><p>Expandable content.</p></ExpandableDetail>
     <PaperFigure src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='80'%3E%3Crect width='160' height='80' fill='%23e3f2f6'/%3E%3C/svg%3E" alt="Simple demo illustration" figureLabel="Demo figure" caption="A local illustration." source="Reusable Kit demo" annotations={[{ id: "a", x: 50, y: 50, label: "A", text: "Annotation detail." }]} />
     <CompareView variants={[{ id: "a", title: "A" }, { id: "b", title: "B" }]} />
@@ -238,11 +238,14 @@ async function run() {
     hub.querySelector<HTMLButtonElement>(".rk-reference-hub__list button")?.click(); await wait();
     assert(window.location.hash.includes("method-b"), "Selecting a reference did not update the deep link.");
   });
-  await check("TermRef opens on click and closes on Escape", async () => {
+  await check("TermRef opens on click, closes on Escape, and opens its reference", async () => {
     const button = document.querySelector<HTMLButtonElement>(".rk-term-ref")!;
     button.click(); await wait(); assert(button.getAttribute("aria-expanded") === "true", "Term did not open.");
     button.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); await wait();
     assert(button.getAttribute("aria-expanded") === "false", "Escape did not close the term.");
+    button.click(); await wait();
+    document.querySelector<HTMLButtonElement>(".rk-term-popover__link")?.click(); await wait();
+    assert(document.body.dataset.reference === term.id, "Open in Reference Hub did not report the selected term.");
   });
   await check("Native controls accept keyboard focus", () => {
     const target = document.getElementById("keyboard-target") as HTMLButtonElement; target.focus();
