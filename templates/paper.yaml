@@ -43,7 +43,9 @@ web:
   enhanced: "web/enhanced"
 
 release:
-  output: "html_output/{{paper_id}}/v1"
+  upstream_paper_name: ""
+  upstream_version: ""
+  output: ""
 
 paperskill:
   tutorial_pr: {number: null, status: pending}
