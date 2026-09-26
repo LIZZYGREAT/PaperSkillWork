@@ -4,6 +4,7 @@
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath, PureWindowsPath
@@ -574,6 +575,40 @@ def cmd_paths(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_open(args: argparse.Namespace) -> int:
+    folder, config = read_paper(args.paper_id)
+    validate_or_raise(config, args.paper_id)
+
+    web_config = config.get("web", {})
+    relative_path = web_config.get(args.edition) if isinstance(web_config, dict) else None
+    if not isinstance(relative_path, str) or path_problem(relative_path):
+        raise PaperError("papers/{}/paper.yaml has no valid web.{} path".format(args.paper_id, args.edition))
+
+    web_dir = folder / relative_path
+    package_path = web_dir / "package.json"
+    if not package_path.is_file():
+        raise PaperError("Web package not found: {}".format(package_path.relative_to(ROOT).as_posix()))
+    try:
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise PaperError("Cannot read {}: {}".format(package_path.relative_to(ROOT).as_posix(), exc))
+    if not isinstance(package, dict) or not isinstance(package.get("scripts"), dict) or not package["scripts"].get("dev"):
+        raise PaperError("{} must define an npm 'dev' script".format(package_path.relative_to(ROOT).as_posix()))
+
+    npm = shutil.which("npm")
+    if not npm:
+        raise PaperError("npm was not found. Install Node.js and npm, then retry.")
+
+    print("Opening {} ({})...".format(args.paper_id, args.edition), flush=True)
+    install_result = subprocess.run([npm, "install"], cwd=str(web_dir), check=False)
+    if install_result.returncode != 0:
+        print("npm install failed with exit code {}.".format(install_result.returncode), file=sys.stderr)
+        return install_result.returncode
+
+    print("Starting the development server and opening the browser. Press Ctrl+C to stop it.", flush=True)
+    return subprocess.run([npm, "run", "dev", "--", "--open"], cwd=str(web_dir), check=False).returncode
+
+
 def cmd_gate(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
@@ -989,6 +1024,11 @@ def build_parser() -> argparse.ArgumentParser:
     paths.add_argument("paper_id")
     paths.add_argument("--json", action="store_true")
     paths.set_defaults(func=cmd_paths)
+
+    open_web = subparsers.add_parser("open", help="install web dependencies and open a paper tutorial locally")
+    open_web.add_argument("paper_id")
+    open_web.add_argument("--edition", choices=("enhanced", "canonical"), default="enhanced")
+    open_web.set_defaults(func=cmd_open)
     return parser
 
 
@@ -997,6 +1037,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.func(args)
+    except KeyboardInterrupt:
+        print("\nDevelopment server stopped.")
+        return 130
     except PaperError as exc:
         print("ERROR: {}".format(exc), file=sys.stderr)
         return 2

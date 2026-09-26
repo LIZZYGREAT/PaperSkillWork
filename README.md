@@ -25,9 +25,13 @@ python3 tools/paper.py gate <paper-id> G1 complete
 python3 tools/paper.py paths <paper-id>
 python3 tools/paper.py release-check <paper-id>
 python3 tools/paper.py migrate-v2 <paper-id>
+python3 tools/paper.py open <paper-id>
+python3 tools/paper.py open <paper-id> --edition canonical
 ```
 
 `new` creates a v2 workspace. `migrate-v2` scaffolds v2 artifacts for an existing v1 paper, records old gate states, leaves every v2 gate pending, and preserves old files plus Canonical and Enhanced. `check` validates structure and registry references. `learning-check` validates scene structure and references; human learning acceptance is still required.
+
+`open` runs `npm install`, starts the selected paper's local web tutorial, and opens it in the browser. It defaults to Enhanced; pass `--edition canonical` to open the Canonical baseline. Keep the command running while using the tutorial, and press Ctrl+C to stop the development server.
 
 Run `python3 tools/paper.py --help` for options. Install development tools with `python3 -m pip install -r requirements-dev.txt`.
 
