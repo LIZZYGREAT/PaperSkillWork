@@ -21,13 +21,13 @@
 | `source-content.md` | `source-cache/content.md` |
 | `source-manifest.json` | `source-cache/manifest.json` |
 | `source-evidence.json` | `source-cache/evidence.json` |
-| `paper-model-v3.md` | `research/paper-model.md` |
-| `evidence-registry-v3.yaml` | `research/evidence-registry.yaml` |
+| `paper-model.md` | `research/paper-model.md` |
+| `evidence-registry.yaml` | `research/evidence-registry.yaml` |
 | `learning-spine.md` | `design/learning-spine.md` |
 | `asset-plan.md` | `design/asset-plan.md` |
 | `implementation-plan.md` | `design/implementation-plan.md` |
 | `implementation-manifest.json` | `web/enhanced/implementation-manifest.json` |
-| `final-check-v3.md` | `audit/final-check.md` |
+| `final-check.md` | `audit/final-check.md` |
 
 提供 `--url` 时会创建 `source/paper.url`。原文缓存模板只是待补充的脚手架；W1 应基于完整原文阅读填充占位内容，并登记所有图表。`source-cache/figures/` 存放捕获的原文视觉素材。W3 记录原图来源和处理计划，不要求先生成衍生图。W5 记录选用素材的位置和渲染方式，衍生图在实现阶段创建。`web/enhanced/` 会附带空的实现清单；W6 之前不会生成教程页面脚手架。
 
@@ -37,4 +37,4 @@
 
 ## 旧版模板
 
-`learning-contract.md`、`terms.yaml`、`learning-architecture.md`、`scene-spec.md` 和 `release-check.md` 仅供明确发起的 schema v1→v2 迁移使用。它们不属于新 v3 工作流，不应用来生成平行重复的设计文档。`templates/legacy/` 中的文件仅作为历史 v1 参考。
+旧版脚手架统一收在 `templates/legacy/`：v1 模板直接位于该目录，v2 模板位于 `templates/legacy/v2/`。这些文件只用于明确发起的旧工作区迁移或核对，不属于新工作流，也不应用来生成平行重复的设计文档。

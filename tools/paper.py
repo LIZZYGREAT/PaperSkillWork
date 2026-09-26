@@ -99,18 +99,27 @@ TEMPLATE_OUTPUTS = {
     "final-check.md": "audit/final-check.md",
     "release-check.md": "audit/release-check.md",
 }
+LEGACY_V2_TEMPLATE_PATHS = {
+    "learning-contract.md": "legacy/v2/learning-contract.md",
+    "paper-model.md": "legacy/v2/paper-model.md",
+    "evidence-registry.yaml": "legacy/v2/evidence-registry.yaml",
+    "terms.yaml": "legacy/v2/terms.yaml",
+    "learning-architecture.md": "legacy/v2/learning-architecture.md",
+    "final-check.md": "legacy/v2/final-check.md",
+    "release-check.md": "legacy/v2/release-check.md",
+}
 V3_TEMPLATE_OUTPUTS = {
     "paper.yaml": "paper.yaml",
     "source-content.md": "source-cache/content.md",
     "source-manifest.json": "source-cache/manifest.json",
     "source-evidence.json": "source-cache/evidence.json",
-    "paper-model-v3.md": "research/paper-model.md",
-    "evidence-registry-v3.yaml": "research/evidence-registry.yaml",
+    "paper-model.md": "research/paper-model.md",
+    "evidence-registry.yaml": "research/evidence-registry.yaml",
     "learning-spine.md": "design/learning-spine.md",
     "asset-plan.md": "design/asset-plan.md",
     "implementation-plan.md": "design/implementation-plan.md",
     "implementation-manifest.json": "web/enhanced/implementation-manifest.json",
-    "final-check-v3.md": "audit/final-check.md",
+    "final-check.md": "audit/final-check.md",
 }
 V2_GATE_ARTIFACTS = {
     "G0": ("file", "design/learning-contract.md"),
@@ -453,11 +462,11 @@ def quote_yaml(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
-def render_template(template_name: str, replacements: Dict[str, str]) -> str:
-    template_path = ROOT / "templates" / template_name
-    if not template_path.is_file():
+def render_template(template_name: str, replacements: Dict[str, str], source_path: Optional[str] = None) -> str:
+    template_file = ROOT / "templates" / (source_path or template_name)
+    if not template_file.is_file():
         raise PaperError("Required template is missing: templates/{}".format(template_name))
-    template = template_path.read_text(encoding="utf-8")
+    template = template_file.read_text(encoding="utf-8")
     unknown = sorted(set(PLACEHOLDER_RE.findall(template)) - ALLOWED_PLACEHOLDERS)
     if unknown:
         raise PaperError("Template {} has unsupported placeholders: {}".format(template_name, ", ".join(unknown)))
@@ -605,13 +614,19 @@ def cmd_migrate_v2(args: argparse.Namespace) -> int:
                     created.append("audit/legacy/release-check-v1.md")
                 else:
                     preserved.append("audit/legacy/release-check-v1.md")
-                target.write_text(render_template(template_name, replacements), encoding="utf-8")
+                target.write_text(
+                    render_template(template_name, replacements, LEGACY_V2_TEMPLATE_PATHS[template_name]),
+                    encoding="utf-8",
+                )
                 created.append(relative)
                 continue
             preserved.append(relative)
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(render_template(template_name, replacements), encoding="utf-8")
+        target.write_text(
+            render_template(template_name, replacements, LEGACY_V2_TEMPLATE_PATHS[template_name]),
+            encoding="utf-8",
+        )
         created.append(relative)
 
     url_path = folder / "source/paper.url"
