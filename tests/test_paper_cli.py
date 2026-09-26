@@ -32,7 +32,53 @@ def invoke(root, *args):
 
 
 def create_paper(root, paper_id="demo-paper", title="A Sample Paper"):
-    return invoke(root, "new", paper_id, "--title", title, "--url", "https://example.org/paper", "--arxiv-id", "1234.56789")
+    result = invoke(root, "new", paper_id, "--title", title, "--url", "https://example.org/paper", "--arxiv-id", "1234.56789")
+    if result.returncode != 0:
+        return result
+    path = root / "papers" / paper_id / "paper.yaml"
+    config = yaml.safe_load(path.read_text(encoding="utf-8"))
+    config["schema_version"] = 2
+    config["workflow"] = {
+        "version": 2,
+        "current_gate": "G0",
+        "gates": {
+            key: {"status": "pending"}
+            for key in (
+                "G0_workspace", "G1_research", "G2_evidence_audit", "G3_canonical",
+                "G4_narrative_design", "G5_interaction_design", "G6_enhanced", "G7_release",
+            )
+        },
+    }
+    config["artifacts"] = {
+        "learning_contract": "design/learning-contract.md",
+        "paper_model": "research/01_paper_model.md",
+        "evidence_registry": "research/02_evidence_registry.yaml",
+        "learning_architecture": "design/learning-architecture.md",
+        "scenes_dir": "design/scenes",
+        "terms": "knowledge/terms.yaml",
+        "final_check": "audit/final-check.md",
+        "release_check": "audit/release-check.md",
+    }
+    config["web"] = {"canonical": "web/canonical", "enhanced": "web/enhanced"}
+    config.pop("release", None)
+    config.pop("paperskill", None)
+    path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    paper = path.parent
+    artifacts = {
+        "research/01_paper_model.md": "# Paper Model\n\nStarter model.\n",
+        "research/02_evidence_registry.yaml": "claims: {}\nresults: {}\nimplementation: {}\nbackground: {}\nteaching_toys: {}\n",
+        "knowledge/terms.yaml": "{}\n",
+        "design/learning-contract.md": "# Learning Contract\n\nStarter contract.\n",
+        "design/learning-architecture.md": "# Learning Architecture\n\nStarter architecture.\n",
+        "audit/final-check.md": "Overall: PENDING\n",
+        "audit/release-check.md": "Release Check Status: PENDING\n",
+    }
+    for relative, content in artifacts.items():
+        target = paper / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+    (paper / "design/scenes").mkdir(parents=True, exist_ok=True)
+    return result
 
 
 def load_paper(root, paper_id="demo-paper"):
@@ -121,31 +167,33 @@ No model training in this scene.
     return scene
 
 
-def test_new_creates_v2_workspace(tmp_path):
+def test_new_creates_v3_workspace(tmp_path):
     root = make_project(tmp_path)
-    result = create_paper(root, title='A "Quoted" Paper')
+    result = invoke(root, "new", "demo-paper", "--title", 'A "Quoted" Paper', "--url", "https://example.org/paper", "--arxiv-id", "1234.56789")
     assert result.returncode == 0, result.stderr
     paper = root / "papers/demo-paper"
     config = yaml.safe_load((paper / "paper.yaml").read_text(encoding="utf-8"))
-    assert config["schema_version"] == 2
-    assert config["workflow"]["version"] == 2
+    assert config["schema_version"] == 3
+    assert config["workflow"]["version"] == 3
     for relative in (
         "paper.yaml",
         "source/paper.url",
-        "research/01_paper_model.md",
-        "research/02_evidence_registry.yaml",
-        "knowledge/terms.yaml",
-        "design/learning-contract.md",
-        "design/learning-architecture.md",
+        "source-cache/content.md",
+        "source-cache/manifest.json",
+        "source-cache/evidence.json",
+        "research/paper-model.md",
+        "research/evidence-registry.yaml",
+        "design/learning-spine.md",
+        "design/asset-plan.md",
+        "design/implementation-plan.md",
         "audit/final-check.md",
-        "audit/release-check.md",
     ):
         assert (paper / relative).is_file(), relative
-    assert (paper / "design/scenes").is_dir()
-    assert not list((paper / "design/scenes").glob("*.md"))
-    assert not (paper / "web").exists()
+    assert (paper / "web/enhanced").is_dir()
+    assert not (paper / "design/scenes").exists()
+    assert not (paper / "research/01_paper_model.md").exists()
     assert '"Quoted"' in config["title"]
-    assert "{{" not in (paper / "research/01_paper_model.md").read_text(encoding="utf-8")
+    assert "{{" not in (paper / "research/paper-model.md").read_text(encoding="utf-8")
 
 
 def test_new_rejects_duplicate_without_overwriting(tmp_path):

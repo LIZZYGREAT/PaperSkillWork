@@ -900,7 +900,7 @@ def cmd_stage(args: argparse.Namespace) -> int:
                 raise PaperError("{} requires --reviewed-by and --note for human acceptance".format(args.stage))
         elif args.reviewed_by or args.note:
             raise PaperError("{} is an automatic stage; omit --reviewed-by and --note".format(args.stage))
-        problems.extend(stage_completion_problems(folder, args.stage, config))
+        problems.extend(v3_stage_completion_problems(folder, args.stage, config))
         if problems:
             raise PaperError("Cannot mark {} complete:\n- {}".format(args.stage, "\n- ".join(problems)))
     elif args.reviewed_by or args.note:
@@ -1955,7 +1955,8 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
         source_record = manifest.get("paper") if isinstance(manifest, dict) else None
         if isinstance(source_record, dict):
             for key in ("title", "authors", "venue", "year", "source_type", "source_location", "source_hash"):
-                if source_record.get(key) != paper.get(key):
+                expected = config.get("title") if key == "title" else paper.get(key)
+                if source_record.get(key) != expected:
                     problems.append("source-cache manifest paper.{} does not match paper.yaml".format(key))
         return problems
     if stage_id == "W2":
@@ -2007,7 +2008,7 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
             return ["design/implementation-plan.md is missing"]
         text = path.read_text(encoding="utf-8")
         for heading in ("Primary Spine Mapping", "Reusable Pattern Library", "Vertical Slice (W6)", "Vertical Slice Review (W7)"):
-            if not re.search(r"^#{2,3}\s+{}\s*$".format(re.escape(heading)), text, re.MULTILINE):
+            if not re.search(r"^#{{2,3}}\s+{}\s*$".format(re.escape(heading)), text, re.MULTILINE):
                 problems.append("implementation-plan is missing section '{}'".format(heading))
         evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
         problems.extend(evidence_problems)
