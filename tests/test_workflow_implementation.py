@@ -44,6 +44,24 @@ def test_implementation_plan_rejects_invalid_vertical_slice_and_delete_item(tmp_
     assert any("vertical-slice CORE item 'C03' is not assigned" in problem for problem in problems)
 
 
+def test_implementation_plan_rejects_unregistered_reusable_pattern(tmp_path):
+    _root, paper, _config_path, module = make_project(tmp_path)
+    evidence_ids, _entries, _problems = module.evidence_registry_ids_v3(paper)
+    path = paper / "design/implementation-plan.md"
+    data, _ = module.fenced_yaml(path)
+    data["implementation"]["stages"][1]["reusable_pattern"] = "ImaginaryExplorer"
+    write_fenced_yaml(path, "Implementation Plan", data)
+    _plan, problems = module.v3_implementation_data(paper, evidence_ids)
+    assert any("unknown reusable_pattern 'ImaginaryExplorer'" in problem for problem in problems)
+
+
+def test_implementation_plan_accepts_registered_reusable_pattern(tmp_path):
+    _root, paper, _config_path, module = make_project(tmp_path)
+    evidence_ids, _entries, _problems = module.evidence_registry_ids_v3(paper)
+    _plan, problems = module.v3_implementation_data(paper, evidence_ids)
+    assert not any("reusable_pattern" in problem for problem in problems)
+
+
 def test_w6_requires_only_vertical_slice_core_and_w8_requires_all_core(tmp_path):
     _root, paper, config_path, module = make_project(tmp_path)
     config = module.load_yaml(config_path)

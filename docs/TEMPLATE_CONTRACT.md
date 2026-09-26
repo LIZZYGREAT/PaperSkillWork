@@ -35,6 +35,8 @@
 
 生成模板不会分析原文、分配内容优先级或推进工作流阶段。只有 W2、W4、W7、W9 需要人工评审；W0、W1、W3、W5、W6、W8、W10 在检查通过后记录 `completed_by: automation`。若 W3 的来源/证据冲突、不安全措辞或素材使用权问题尚未解决，就不能完成。
 
+`implementation-plan.md` 中非空的 `reusable_pattern` 必须匹配 `reusable-kit/registry.yaml`。持续学习项目可用 `tools/paper.py scaffold-kit <paper-id> --preset continual-learning` 复制 P0 源码，并用 `--add` 复制 W5 明确选择的 P1 组件；复制结果独立保存在论文的 `web/enhanced/src/shared/` 中。
+
 ## 旧版模板
 
 旧版脚手架统一收在 `templates/legacy/`：v1 模板直接位于该目录，v2 模板位于 `templates/legacy/v2/`。这些文件只用于明确发起的旧工作区迁移或核对，不属于新工作流，也不应用来生成平行重复的设计文档。

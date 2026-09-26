@@ -96,6 +96,14 @@ source-cache/
 
 如有适用模式，先查阅可复用模式库：Architecture Explorer、Flow Stepper、Branch Highlighter、Before/After Comparator、Timeline、Evidence Viewer、Term Hover、Reference Hub、Expandable Detail 或 Result Protocol Card。将选中的源代码复制或改编到 `web/enhanced/src/`，使每个导出项目都自包含；不要跨论文导入运行时代码。
 
+PaperSkillWork 内的 `reusable-kit/registry.yaml` 是可用模式名称的登记来源。`implementation.stages[].reusable_pattern` 为非空字符串时，W5 检查器会拒绝未登记的名称；不使用可复用模式时填写 `null`。持续学习工作区可在 W5/W6 复制默认组件，再按计划加入可选组件：
+
+```powershell
+python tools/paper.py scaffold-kit <paper-id> --preset continual-learning --add EvidenceViewer,BenchmarkExplorer
+```
+
+脚手架命令只在 `web/enhanced/src/shared/` 不存在时创建自包含副本。W5 明确选择 P1 可选组件后，在同一次调用中使用 `--add`；之后修改论文副本不会反向改写 Kit。
+
 建议提供 `Reference Hub` 和术语悬停解释。悬停内容应回答：术语是什么、它在本文中的作用是什么、以及容易与什么概念混淆。主线必需的推理应直接展示在主路径中。
 
 ## W6–W9：实现与评审

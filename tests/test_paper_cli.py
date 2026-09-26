@@ -16,6 +16,7 @@ TEMPLATES = REPO_ROOT / "templates"
 def make_project(tmp_path):
     shutil.copytree(REPO_ROOT / "tools", tmp_path / "tools")
     shutil.copytree(TEMPLATES, tmp_path / "templates")
+    shutil.copytree(REPO_ROOT / "reusable-kit", tmp_path / "reusable-kit", ignore=shutil.ignore_patterns("node_modules", "dist"))
     shutil.copy2(REPO_ROOT / ".gitignore", tmp_path / ".gitignore")
     (tmp_path / "papers").mkdir()
     return tmp_path
@@ -490,3 +491,58 @@ def test_check_ignores_untracked_nested_node_modules(tmp_path):
     assert result.returncode == 0, result.stdout + result.stderr
     assert "node_modules" not in result.stdout
     assert "CHECK PASS" in result.stdout
+
+
+def test_scaffold_kit_copies_default_continual_learning_components_once(tmp_path):
+    root = make_project(tmp_path)
+    created = invoke(root, "new", "demo-paper", "--title", "A Sample Paper", "--url", "https://example.org/paper")
+    assert created.returncode == 0, created.stderr
+    src = root / "papers/demo-paper/web/enhanced/src"
+    src.mkdir(parents=True, exist_ok=True)
+
+    result = invoke(root, "scaffold-kit", "demo-paper", "--preset", "continual-learning")
+
+    shared = src / "shared"
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (shared / "KIT_VERSION").read_text(encoding="utf-8").strip() == "1.0.0"
+    assert (shared / "foundation/styles/kit.css").is_file()
+    assert (shared / "core/process-loop/ProcessLoopExplorer.tsx").is_file()
+    assert (shared / "core/reference/ReferenceHub.tsx").is_file()
+    assert not (shared / "optional/evidence-viewer/EvidenceViewer.tsx").exists()
+
+    duplicate = invoke(root, "scaffold-kit", "demo-paper")
+    assert duplicate.returncode != 0
+    assert "destination already exists" in duplicate.stderr
+    assert (shared / "KIT_VERSION").is_file()
+
+
+def test_scaffold_kit_adds_only_selected_optional_components(tmp_path):
+    root = make_project(tmp_path)
+    created = invoke(root, "new", "demo-paper", "--title", "A Sample Paper", "--url", "https://example.org/paper")
+    assert created.returncode == 0, created.stderr
+    src = root / "papers/demo-paper/web/enhanced/src"
+    src.mkdir(parents=True, exist_ok=True)
+
+    result = invoke(root, "scaffold-kit", "demo-paper", "--add", "EvidenceViewer,BenchmarkExplorer,CompareView")
+
+    shared = src / "shared"
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (shared / "optional/evidence-viewer/EvidenceViewer.tsx").is_file()
+    assert (shared / "optional/benchmark-explorer/BenchmarkExplorer.tsx").is_file()
+    assert (shared / "optional/compare-view/CompareView.tsx").is_file()
+    assert not (shared / "optional/formula/FormulaBlock.tsx").exists()
+
+
+def test_scaffold_kit_rejects_unknown_or_non_optional_component_without_writing(tmp_path):
+    root = make_project(tmp_path)
+    created = invoke(root, "new", "demo-paper", "--title", "A Sample Paper", "--url", "https://example.org/paper")
+    assert created.returncode == 0, created.stderr
+    src = root / "papers/demo-paper/web/enhanced/src"
+    src.mkdir(parents=True, exist_ok=True)
+
+    unknown = invoke(root, "scaffold-kit", "demo-paper", "--add", "ImaginaryExplorer")
+    core = invoke(root, "scaffold-kit", "demo-paper", "--add", "ProcessLoopExplorer")
+
+    assert unknown.returncode != 0 and "Unknown reusable component" in unknown.stderr
+    assert core.returncode != 0 and "P1 components only" in core.stderr
+    assert not (src / "shared").exists()

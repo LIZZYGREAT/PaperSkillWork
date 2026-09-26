@@ -41,6 +41,7 @@ if yaml is not None:
 
 ROOT = Path(__file__).resolve().parents[1]
 PAPERS = ROOT / "papers"
+REUSABLE_KIT = ROOT / "reusable-kit"
 PAPER_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 UPSTREAM_PAPER_NAME_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 UPSTREAM_VERSION_RE = re.compile(r"^[a-z][a-z0-9]*[0-9]{4}(?:_[0-9]+)?$")
@@ -460,6 +461,123 @@ def gate_completion_problems(folder: Path, gate_id: str, config: Dict[str, Any])
 
 def quote_yaml(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def reusable_kit_registry() -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
+    """Load the reusable component registry and verify its source directories."""
+    registry_path = REUSABLE_KIT / "registry.yaml"
+    if not registry_path.is_file():
+        return {}, ["reusable-kit/registry.yaml is missing"]
+    require_yaml()
+    try:
+        data = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        return {}, ["could not read reusable-kit/registry.yaml: {}".format(exc)]
+    if not isinstance(data, dict) or not isinstance(data.get("components"), dict):
+        return {}, ["reusable-kit/registry.yaml must define a components mapping"]
+    components: Dict[str, Dict[str, Any]] = {}
+    problems: List[str] = []
+    for name, entry in data["components"].items():
+        if not isinstance(name, str) or not isinstance(entry, dict):
+            problems.append("reusable-kit registry entries need string names and mappings")
+            continue
+        tier = entry.get("tier")
+        relative = entry.get("path")
+        if tier not in ("P0", "P1", "P2"):
+            problems.append("reusable-kit component '{}' has an invalid tier".format(name))
+            continue
+        if not isinstance(relative, str) or not relative.strip():
+            problems.append("reusable-kit component '{}' needs a source path".format(name))
+            continue
+        path = PurePosixPath(relative)
+        if path.is_absolute() or ".." in path.parts or "\\" in relative:
+            problems.append("reusable-kit component '{}' has an unsafe source path".format(name))
+            continue
+        source = (REUSABLE_KIT / Path(*path.parts)).resolve()
+        try:
+            source.relative_to(REUSABLE_KIT.resolve())
+        except ValueError:
+            problems.append("reusable-kit component '{}' path escapes the Kit".format(name))
+            continue
+        if not source.is_dir():
+            problems.append("reusable-kit component '{}' source directory is missing: {}".format(name, relative))
+            continue
+        components[name] = entry
+    return components, problems
+
+
+def cmd_scaffold_kit(args: argparse.Namespace) -> int:
+    validate_paper_id(args.paper_id)
+    folder, config = read_paper(args.paper_id)
+    if config.get("schema_version") != 3:
+        raise PaperError("scaffold-kit only supports Workflow v3 paper workspaces")
+    if args.preset != "continual-learning":
+        raise PaperError("Unsupported Reusable Kit preset: {}".format(args.preset))
+    src_dir = folder / "web/enhanced/src"
+    if not src_dir.is_dir():
+        raise PaperError("Paper workspace is missing web/enhanced/src")
+    destination = src_dir / "shared"
+    if destination.exists():
+        raise PaperError("Reusable Kit destination already exists and was left unchanged: {}".format(destination.relative_to(folder).as_posix()))
+
+    registry, problems = reusable_kit_registry()
+    if problems:
+        raise PaperError("Reusable Kit registry is invalid: {}".format("; ".join(problems)))
+    requested = [name.strip() for name in (args.add or "").split(",") if name.strip()]
+    unknown = sorted(set(requested) - set(registry))
+    if unknown:
+        raise PaperError("Unknown reusable component(s): {}".format(", ".join(unknown)))
+    not_optional = sorted(name for name in requested if registry[name].get("tier") != "P1")
+    if not_optional:
+        raise PaperError("--add accepts optional P1 components only: {}".format(", ".join(not_optional)))
+
+    sources = ["foundation"]
+    for name, entry in registry.items():
+        if entry.get("tier") == "P0" and "continual-learning" in entry.get("default_for", []):
+            path = entry["path"]
+            if path != "foundation" and not path.startswith("foundation/"):
+                sources.append(path)
+    sources.extend(registry[name]["path"] for name in requested)
+    sources = list(dict.fromkeys(sources))
+    compact_sources = [path for path in sources if not any(path.startswith(parent + "/") for parent in sources)]
+
+    try:
+        kit_root = REUSABLE_KIT.resolve()
+        source_paths = []
+        for relative in compact_sources:
+            source = (REUSABLE_KIT / Path(*PurePosixPath(relative).parts)).resolve()
+            source.relative_to(kit_root)
+            if not source.is_dir():
+                raise PaperError("Reusable Kit source directory is missing: {}".format(relative))
+            source_paths.append((relative, source))
+        version_path = REUSABLE_KIT / "KIT_VERSION"
+        if not version_path.is_file():
+            raise PaperError("reusable-kit/KIT_VERSION is missing")
+        stage = Path(tempfile.mkdtemp(prefix=".shared-scaffold-", dir=str(src_dir)))
+        try:
+            for relative, source in source_paths:
+                target = stage / Path(*PurePosixPath(relative).parts)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(str(source), str(target))
+            shutil.copy2(str(version_path), str(stage / "KIT_VERSION"))
+            stage.rename(destination)
+        except Exception:
+            resolved_stage = stage.resolve()
+            resolved_stage.relative_to(src_dir.resolve())
+            shutil.rmtree(str(resolved_stage), ignore_errors=True)
+            raise
+    except PaperError:
+        raise
+    except (OSError, ValueError) as exc:
+        raise PaperError("Could not scaffold the Reusable Kit: {}".format(exc))
+
+    copied = ", ".join(compact_sources)
+    print("Copied Reusable Kit v{} into papers/{}/web/enhanced/src/shared".format(version_path.read_text(encoding="utf-8").strip(), args.paper_id))
+    print("Included: {}".format(copied))
+    if requested:
+        print("Optional components: {}".format(", ".join(requested)))
+    print("The paper now owns this source copy; later paper edits do not update reusable-kit/.")
+    return 0
 
 
 def render_template(template_name: str, replacements: Dict[str, str], source_path: Optional[str] = None) -> str:
@@ -1634,6 +1752,9 @@ def v3_implementation_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Di
     if not isinstance(implementation, dict):
         return plan, problems + ["implementation-plan YAML must define an implementation mapping"]
 
+    reusable_components, registry_problems = reusable_kit_registry()
+    problems.extend(registry_problems)
+
     spine, spine_problems = v3_priority_data(folder, evidence_ids)
     problems.extend(spine_problems)
     if not isinstance(spine, dict):
@@ -1672,6 +1793,8 @@ def v3_implementation_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Di
                 problems.append("{} needs a non-empty {}".format(label, key))
         if "reusable_pattern" in stage and stage["reusable_pattern"] is not None and not isinstance(stage["reusable_pattern"], str):
             problems.append("{} reusable_pattern must be a string or null".format(label))
+        elif isinstance(stage.get("reusable_pattern"), str) and stage["reusable_pattern"] not in reusable_components:
+            problems.append("{} uses unknown reusable_pattern '{}' (see reusable-kit/registry.yaml)".format(label, stage["reusable_pattern"]))
         core_items = stage.get("core_items")
         if not isinstance(core_items, list) or not core_items:
             problems.append("{} core_items must be a non-empty list".format(label))
@@ -2452,6 +2575,12 @@ def build_parser() -> argparse.ArgumentParser:
     new.add_argument("--source-location", default="")
     new.add_argument("--source-hash", default="")
     new.set_defaults(func=cmd_new)
+
+    scaffold = subparsers.add_parser("scaffold-kit", help="copy the selected Reusable Kit source into a paper's enhanced project")
+    scaffold.add_argument("paper_id")
+    scaffold.add_argument("--preset", choices=("continual-learning",), default="continual-learning")
+    scaffold.add_argument("--add", default="", help="comma-separated optional P1 component names selected in W5")
+    scaffold.set_defaults(func=cmd_scaffold_kit)
 
     for name, help_text, handler in (
         ("status", "show paper metadata, workflow states, and artifacts", cmd_status),
