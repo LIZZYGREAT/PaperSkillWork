@@ -5,6 +5,16 @@ Source: {{paper_url}}
 
 ## Problem
 
+## Research Positioning
+
+| Field | Source-grounded classification | Evidence / source location |
+| --- | --- | --- |
+| Topic | Broad research area and central phenomenon |  |
+| Problem type / setting | Concrete task, constraints, and data or system conditions |  |
+| Research direction | Technical approach contributed by this paper |  |
+
+Keep the three fields distinct. Avoid unsupported taxonomy labels and claims broader than the paper's evidence. These reviewed labels and explanations are used for the first-page topic tags.
+
 ## Prerequisite Map
 
 | Concept | Required / Helpful / Optional | Depth needed | Source |

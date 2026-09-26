@@ -17,6 +17,13 @@ export interface Meta {
   keywords: string[];
 }
 
+export interface ResearchTopicTag {
+  id: string;
+  category: string;
+  label: string;
+  detail: string;
+}
+
 export interface FigureRef {
   /** Path under public/ (e.g. "/images/fig1.png") or an absolute URL. Optional. */
   src: string;

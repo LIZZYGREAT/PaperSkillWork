@@ -2,6 +2,7 @@ import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { ReferenceProvider, useReferenceHub } from './components/ReferencePrimitives';
 import { ObjectInspector } from './components/ObjectInspector';
 import { PersistentWorkspace } from './components/PersistentWorkspace';
+import { TopicTags } from './components/TopicTags';
 import { openWorkspaceFor } from './components/workspaceActions';
 import { SceneA } from './scenes/SceneA';
 import { SceneB } from './scenes/SceneB';
@@ -20,6 +21,7 @@ import {
   type SceneId,
 } from './data/session';
 import { initialToyState, teachingToyReducer } from './simulation/lwfTeachingToy';
+import { LWF_RESEARCH_TOPICS } from './data/research-topics';
 
 const scenes: { id: SceneId; number: string; title: string; question: string }[] = [
   { id: '00', number: '00', title: '论文背景与研究目标', question: '为什么需要在学习新任务时保留旧任务能力？' },
@@ -214,6 +216,7 @@ function AppContent() {
               <div>
                 <p className="v2-eyebrow">SCENE {activeScene.number} · {sceneCategory(session.activeScene)}</p>
                 <h1 id="scene-title" ref={headingRef} tabIndex={-1}>{activeScene.title}</h1>
+                {session.activeScene === '00' ? <TopicTags tags={LWF_RESEARCH_TOPICS} /> : null}
                 <p className="v2-page-question">{activeScene.question}</p>
               </div>
               <div className="v2-progress-summary" aria-label={`第 ${currentIndex + 1} 页，共 ${scenes.length} 页`}>

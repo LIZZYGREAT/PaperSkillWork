@@ -32,3 +32,4 @@ Do not optimize for interaction count, animation coverage, metaphor consistency,
 8. Keep accessibility, reduced-motion, mobile, build validation, interaction deletion checks, human acceptance, and release boundaries.
 9. Do not require an animation, a fixed number or pattern of interactions, a single analogy, or a particular rendering technology.
 10. Build success does not override a learning or evidence failure.
+11. Every G1 paper model classifies the paper's topic, problem type/setting, and research direction with source evidence. G6 displays these as compact tags below the first-page title with explanations available on hover, keyboard focus, and touch; essential content must not live only in a tooltip.

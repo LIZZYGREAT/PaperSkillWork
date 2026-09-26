@@ -1,3 +1,5 @@
+import type { ResearchTopicTag } from '../types';
+
 export type PageEntry = {
   id: string;
   number: string;
@@ -7,6 +9,27 @@ export type PageEntry = {
   evidenceIds: string[];
   termIds: string[];
 };
+
+export const EWC_RESEARCH_TOPICS: ResearchTopicTag[] = [
+  {
+    id: 'topic',
+    category: '研究主题',
+    label: '持续学习与灾难性遗忘',
+    detail: '论文关注同一神经网络按顺序学习任务时，后续更新如何干扰先前任务能力。',
+  },
+  {
+    id: 'setting',
+    category: '问题类型',
+    label: '固定容量网络的顺序任务学习',
+    detail: '任务共享网络参数；EWC 在后续任务中保留旧解与重要性估计作为约束状态。MNIST 协议不重用旧任务数据，Atari 实验则属于包含任务回放等组件的完整系统。',
+  },
+  {
+    id: 'direction',
+    category: '研究方向',
+    label: 'Fisher 加权的参数空间正则化',
+    detail: '贝叶斯后验的局部高斯近似导出二次惩罚：对角 Fisher 为重要参数设更高偏移代价，旧任务参数解作为锚点；这是近似，不是精确后验或零遗忘保证。',
+  },
+];
 
 export const PAPER = {
   title: 'Overcoming catastrophic forgetting in neural networks',

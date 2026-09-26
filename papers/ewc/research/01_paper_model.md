@@ -9,6 +9,16 @@ Continual learning presents tasks in sequence. A network trained on task A reach
 
 The central hypothesis is that parameters differ in their importance to a learned task. Protecting all parameters equally can block B; allowing all parameters to move freely can damage A. EWC uses a task-specific, soft quadratic constraint whose stiffness varies by parameter (Section 2, Figure 1, Equation 3).
 
+## Research Positioning
+
+| Field | Classification | Evidence / source |
+| --- | --- | --- |
+| Topic | 持续学习中的灾难性遗忘与任务间干扰 | The paper studies how sequential updates can damage abilities learned on earlier tasks (`C01`, Sections 1–2). |
+| Problem type / setting | 固定容量共享网络上的顺序任务学习；用紧凑旧任务状态缓和参数干扰 | Task A's solution and importance estimate constrain learning task B (`C01`–`C03`). The MNIST protocol does not reuse prior task data (`C04`); the Atari evaluation includes per-task replay as part of its larger system (`C07`), so replay-free is not a universal label for the paper. |
+| Research direction | 受贝叶斯后验近似启发的参数空间正则化：以对角 Fisher 加权旧参数锚点 | The previous-task posterior is locally approximated by a Gaussian, producing a Fisher-weighted quadratic penalty around the prior solution (`C02`–`C03`, Equation 3). |
+
+These labels distinguish EWC's parameter-space constraint from the surrounding Atari system and do not imply exact Bayesian inference or guaranteed retention (`C03`, `C07`, `C10`–`C11`).
+
 ## Prerequisite Map
 
 | Concept | Required / Helpful / Optional | Depth needed | Source |

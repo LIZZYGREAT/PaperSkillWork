@@ -3,8 +3,9 @@ import { EvidenceList } from './components/EvidenceList';
 import { PersistentWorkspace } from './components/PersistentWorkspace';
 import { ReferenceButton, ReferenceProvider, useReferenceHub } from './components/ReferencePrimitives';
 import { TermGlossary } from './components/TermGlossary';
+import { TopicTags } from './components/TopicTags';
 import { INITIAL_SESSION, type Session } from './data/session';
-import { PAPER, PAGES } from './data/tutorial';
+import { EWC_RESEARCH_TOPICS, PAPER, PAGES } from './data/tutorial';
 import { SceneAtari } from './scenes/SceneAtari';
 import { SceneFisher } from './scenes/SceneFisher';
 import { SceneHandoff } from './scenes/SceneHandoff';
@@ -117,7 +118,7 @@ function PaperTutorial() {
           </div>
 
           <div className="page-masthead">
-            <div><span className="scene-number">第 {active.number} 页 · EWC 学习路径</span><h1 id="page-heading" tabIndex={-1}>{active.title}</h1><p>{active.question}</p></div>
+            <div><span className="scene-number">第 {active.number} 页 · EWC 学习路径</span><h1 id="page-heading" tabIndex={-1}>{active.title}</h1>{active.id === 'overview' ? <TopicTags tags={EWC_RESEARCH_TOPICS} /> : null}<p>{active.question}</p></div>
             <span className="progress-count">{String(activeIndex + 1).padStart(2, '0')} <i>/</i> {String(PAGES.length).padStart(2, '0')}</span>
           </div>
 

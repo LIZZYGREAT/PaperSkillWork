@@ -13,6 +13,8 @@ G0 Learning Contract → G1 Paper Model → G2 Evidence Registry
 
 Each paper lives at `papers/<paper-id>/`. Its `paper.yaml` records metadata and gate state. `tools/paper.py` handles workspace mechanics; Skills guide source reading, learning design, and audits. Structural checks never claim that a person learned the material.
 
+During G1, every paper model records its research topic, problem type/setting, and research direction with source evidence. G6 presents the reviewed positioning as explanatory tags below the first-page title.
+
 ## Common commands
 
 ```powershell
