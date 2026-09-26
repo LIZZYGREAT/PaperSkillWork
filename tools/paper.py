@@ -513,11 +513,22 @@ def cmd_scaffold_kit(args: argparse.Namespace) -> int:
         raise PaperError("scaffold-kit only supports Workflow v3 paper workspaces")
     if args.preset != "continual-learning":
         raise PaperError("Unsupported Reusable Kit preset: {}".format(args.preset))
-    src_dir = folder / "web/enhanced/src"
-    if not src_dir.is_dir():
-        raise PaperError("Paper workspace is missing web/enhanced/src")
+    web_dir = folder / "web/enhanced"
+    if not web_dir.is_dir():
+        raise PaperError("Paper workspace is missing web/enhanced")
+    src_dir = web_dir / "src"
+    if src_dir.is_symlink():
+        raise PaperError("web/enhanced/src cannot be a symlink")
+    if src_dir.exists() and not src_dir.is_dir():
+        raise PaperError("web/enhanced/src exists but is not a directory")
+    try:
+        workspace_root = folder.resolve()
+        web_dir.resolve().relative_to(workspace_root)
+        src_dir.resolve().relative_to(workspace_root)
+    except ValueError:
+        raise PaperError("web/enhanced/src resolves outside the paper workspace")
     destination = src_dir / "shared"
-    if destination.exists():
+    if destination.exists() or destination.is_symlink():
         raise PaperError("Reusable Kit destination already exists and was left unchanged: {}".format(destination.relative_to(folder).as_posix()))
 
     registry, problems = reusable_kit_registry()
@@ -553,6 +564,7 @@ def cmd_scaffold_kit(args: argparse.Namespace) -> int:
         version_path = REUSABLE_KIT / "KIT_VERSION"
         if not version_path.is_file():
             raise PaperError("reusable-kit/KIT_VERSION is missing")
+        src_dir.mkdir(parents=True, exist_ok=True)
         stage = Path(tempfile.mkdtemp(prefix=".shared-scaffold-", dir=str(src_dir)))
         try:
             for relative, source in source_paths:

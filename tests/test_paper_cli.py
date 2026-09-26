@@ -498,12 +498,13 @@ def test_scaffold_kit_copies_default_continual_learning_components_once(tmp_path
     created = invoke(root, "new", "demo-paper", "--title", "A Sample Paper", "--url", "https://example.org/paper")
     assert created.returncode == 0, created.stderr
     src = root / "papers/demo-paper/web/enhanced/src"
-    src.mkdir(parents=True, exist_ok=True)
+    assert not src.exists()
 
     result = invoke(root, "scaffold-kit", "demo-paper", "--preset", "continual-learning")
 
     shared = src / "shared"
     assert result.returncode == 0, result.stdout + result.stderr
+    assert src.is_dir()
     assert (shared / "KIT_VERSION").read_text(encoding="utf-8").strip() == "1.0.0"
     assert (shared / "foundation/styles/kit.css").is_file()
     assert (shared / "core/process-loop/ProcessLoopExplorer.tsx").is_file()
@@ -521,7 +522,7 @@ def test_scaffold_kit_adds_only_selected_optional_components(tmp_path):
     created = invoke(root, "new", "demo-paper", "--title", "A Sample Paper", "--url", "https://example.org/paper")
     assert created.returncode == 0, created.stderr
     src = root / "papers/demo-paper/web/enhanced/src"
-    src.mkdir(parents=True, exist_ok=True)
+    assert not src.exists()
 
     result = invoke(root, "scaffold-kit", "demo-paper", "--add", "EvidenceViewer,BenchmarkExplorer,CompareView")
 
@@ -538,11 +539,11 @@ def test_scaffold_kit_rejects_unknown_or_non_optional_component_without_writing(
     created = invoke(root, "new", "demo-paper", "--title", "A Sample Paper", "--url", "https://example.org/paper")
     assert created.returncode == 0, created.stderr
     src = root / "papers/demo-paper/web/enhanced/src"
-    src.mkdir(parents=True, exist_ok=True)
+    assert not src.exists()
 
     unknown = invoke(root, "scaffold-kit", "demo-paper", "--add", "ImaginaryExplorer")
     core = invoke(root, "scaffold-kit", "demo-paper", "--add", "ProcessLoopExplorer")
 
     assert unknown.returncode != 0 and "Unknown reusable component" in unknown.stderr
     assert core.returncode != 0 and "P1 components only" in core.stderr
-    assert not (src / "shared").exists()
+    assert not src.exists()

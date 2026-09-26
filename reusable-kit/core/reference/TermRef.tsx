@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FocusEvent, PointerEvent } from "react";
+import type { FocusEvent, KeyboardEvent, PointerEvent } from "react";
 import type { TermDefinition } from "./types";
 
 export function TermRef({ term, children, onOpenReference }: { term: TermDefinition; children?: string; onOpenReference?: (termId: string) => void }) {
@@ -11,10 +11,13 @@ export function TermRef({ term, children, onOpenReference }: { term: TermDefinit
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
   };
   const closeOnLeave = (_event: PointerEvent<HTMLSpanElement>) => setHovered(false);
+  const closeOnEscape = (event: KeyboardEvent<HTMLSpanElement>) => {
+    if (event.key === "Escape") { setPinned(false); setFocused(false); setHovered(false); }
+  };
 
   return (
-    <span className="rk-term-ref-wrap" onPointerEnter={() => setHovered(true)} onPointerLeave={closeOnLeave} onFocus={() => setFocused(true)} onBlur={closeOnBlur}>
-      <button type="button" className="rk-term-ref" aria-haspopup="dialog" aria-expanded={open} aria-controls={`rk-term-${term.id}`} onClick={() => setPinned((value) => !value)}>
+    <span className="rk-term-ref-wrap" onPointerEnter={() => setHovered(true)} onPointerLeave={closeOnLeave} onFocus={() => setFocused(true)} onBlur={closeOnBlur} onKeyDown={closeOnEscape}>
+      <button type="button" className="rk-term-ref" aria-haspopup="dialog" aria-expanded={open} aria-controls={`rk-term-${term.id}`} onClick={() => { setPinned(!pinned); if (pinned) setFocused(false); }}>
         {children ?? term.label}
       </button>
       {open ? (
