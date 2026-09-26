@@ -88,7 +88,7 @@ export function SceneE({ session, dispatch }: { session: LearningSession; dispat
         <div className="v2-e-geometry-controls" role="group" aria-label="选择教学用梯度几何">
           {geometryOptions.map((option) => <button key={option.id} type="button" aria-pressed={geometry === option.id} className={geometry === option.id ? 'is-active' : ''} onClick={() => setGeometry(option.id)}><strong>{option.label}</strong><span>{option.note}</span></button>)}
         </div>
-        <GradientVectorPlot old={current.oldGradient} oldScaled={current.oldScaledGradient} fresh={current.newGradient} total={current.totalGradient} />
+        <GradientVectorPlot old={current.oldGradient} oldScaled={current.oldScaledGradient} fresh={current.newGradient} regularization={current.regularizationGradient} total={current.totalGradient} />
         <div className="v2-e-gradient-readouts">
           <Metric label="λₒ · loss coefficient" value={lambdaOld.toFixed(1)} />
           <Metric label="‖g_old‖" value={fmt(current.oldNorm)} />
@@ -144,16 +144,52 @@ export function SceneE({ session, dispatch }: { session: LearningSession; dispat
   );
 }
 
-function GradientVectorPlot({ old, oldScaled, fresh, total }: { old: Vector2; oldScaled: Vector2; fresh: Vector2; total: Vector2 }) {
-  const maxLength = Math.max(norm(oldScaled), norm(fresh), norm(total), .08);
-  const factor = 72 / maxLength;
-  const line = (v: Vector2, color: string, key: string, label: string, width: number, dash?: string) => <g key={key}><line x1="140" y1="112" x2={140 + v[0] * factor} y2={112 - v[1] * factor} stroke={color} strokeWidth={width} strokeDasharray={dash} markerEnd={`url(#arr-${key})`} /><text x={140 + v[0] * factor * 1.08} y={112 - v[1] * factor * 1.08} fill={color}>{label}</text></g>;
-  return <div className="v2-e-vector-figure"><svg viewBox="0 0 280 225" role="img" aria-label="基于当前计算向量绘制的 old、new 与总梯度方向"><defs>{[['old', '#b3676c'], ['oldscaled', '#ad3f53'], ['new', '#536fc4'], ['total', '#292e43']].map(([id, color]) => <marker key={id} id={`arr-${id}`} markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill={color} /></marker>)}</defs><path d="M25 112 H255 M140 20 V205" stroke="#d9d6cf" strokeWidth="1" /><circle cx="140" cy="112" r="4" fill="#2f3140" />{line(old, '#b3676c', 'old', 'g old', 1.5, '4 3')}{line(oldScaled, '#ad3f53', 'oldscaled', 'lambda g old', 3)}{line(fresh, '#536fc4', 'new', 'g new', 3)}{line(total, '#292e43', 'total', 'g total', 4)}</svg><p>方向图按当前向量实时计算；线长按同一比例绘制。虚线显示未乘 λ<sub>o</sub> 的 g<sub>old</sub>。</p></div>;
+function GradientVectorPlot({ old, oldScaled, fresh, regularization, total }: { old: Vector2; oldScaled: Vector2; fresh: Vector2; regularization: Vector2; total: Vector2 }) {
+  const oldScaledTip: Vector2 = [...oldScaled];
+  const newTip: Vector2 = [oldScaled[0] + fresh[0], oldScaled[1] + fresh[1]];
+  const regularizedTip: Vector2 = [newTip[0] + regularization[0], newTip[1] + regularization[1]];
+  const extents = [old, oldScaledTip, newTip, regularizedTip, total];
+  const maxX = Math.max(...extents.map(([x]) => Math.abs(x)), .001);
+  const maxY = Math.max(...extents.map(([, y]) => Math.abs(y)), .001);
+  const factor = Math.min(225 / maxX, 82 / maxY);
+  const toSvg = ([x, y]: Vector2): Vector2 => [260 + x * factor, 120 - y * factor];
+  const line = (vector: Vector2, color: string, key: string, width: number, dash?: string, start: Vector2 = [0, 0]) => {
+    const from = toSvg(start);
+    const to = toSvg([start[0] + vector[0], start[1] + vector[1]]);
+    return <line key={key} x1={from[0]} y1={from[1]} x2={to[0]} y2={to[1]} stroke={color} strokeWidth={width} strokeDasharray={dash} markerEnd={`url(#arr-${key})`} />;
+  };
+  const hasRegularization = Math.hypot(...regularization) > 1e-8;
+  const markers = [['old', '#b3676c'], ['oldscaled', '#ad3f53'], ['new', '#536fc4'], ['regularization', '#8877a8'], ['total', '#292e43']];
+
+  return <div className="v2-e-vector-figure">
+    <svg viewBox="0 0 520 240" role="img" aria-label="按统一比例绘制的 old、new、正则化与总梯度；分量依次首尾相接">
+      <defs>{markers.map(([id, color]) => <marker key={id} id={`arr-${id}`} markerWidth="5" markerHeight="5" markerUnits="userSpaceOnUse" refX="4.4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill={color} /></marker>)}</defs>
+      <path d="M20 120 H500 M260 18 V222" stroke="#d9d6cf" strokeWidth="1.2" />
+      {line(total, '#292e43', 'total', 5)}
+      {line(oldScaled, '#ad3f53', 'oldscaled', 3.5)}
+      {line(fresh, '#536fc4', 'new', 3.5, undefined, oldScaledTip)}
+      {hasRegularization ? line(regularization, '#8877a8', 'regularization', 3.5, undefined, newTip) : null}
+      {line(old, '#b3676c', 'old', 2.5, '6 5')}
+      <circle cx="260" cy="120" r="5" fill="#2f3140" />
+    </svg>
+    <aside className="v2-e-vector-legend" aria-label="梯度向量图例与阅读说明">
+      <ul>
+        <li><i className="is-old" aria-hidden="true" /><span><code>g_old</code><small>未乘 λₒ</small></span></li>
+        <li><i className="is-old-scaled" aria-hidden="true" /><span><code>λₒ g_old</code><small>加权旧梯度</small></span></li>
+        <li><i className="is-new" aria-hidden="true" /><span><code>g_new</code><small>新任务梯度</small></span></li>
+        <li><i className="is-regularization" aria-hidden="true" /><span><code>g_R</code><small>可选正则梯度</small></span></li>
+        <li><i className="is-total" aria-hidden="true" /><span><code>g_total</code><small>从原点到向量和</small></span></li>
+      </ul>
+      <p>分量按统一比例首尾相接，<InlineNotation text="g_total = λ_o g_old + g_new + g_R" />。λₒ = 1 时，未加权与加权旧梯度方向和长度相同。</p>
+    </aside>
+  </div>;
 }
 
 function LandscapeGrid({ theta, trajectory, oldOptimum, newOptimum, temperature, oldReduction, newReduction, lambdaOld, regularization }: { theta: Vector2; trajectory: Vector2[]; oldOptimum: Vector2; newOptimum: Vector2; temperature: number; oldReduction: Reduction; newReduction: Reduction; lambdaOld: number; regularization: boolean }) {
   const count = 13;
-  const range = 2.4;
+  const visiblePoints = [...trajectory, theta, oldOptimum, newOptimum, [0, 0] as Vector2];
+  const coordinateExtent = Math.max(...visiblePoints.flatMap(([x, y]) => [Math.abs(x), Math.abs(y)]), 0);
+  const range = Math.max(1.6, coordinateExtent * 1.12);
   const samples = Array.from({ length: count * count }, (_, index) => {
     const x = ((index % count) / (count - 1) * 2 - 1) * range;
     const y = (1 - Math.floor(index / count) / (count - 1) * 2) * range;
@@ -167,9 +203,22 @@ function LandscapeGrid({ theta, trajectory, oldOptimum, newOptimum, temperature,
   const cells = (key: 'oldLoss' | 'newLoss' | 'totalLoss', hue: number, label: string, optimum: Vector2) => {
     const values = samples.map((sample) => sample[key]);
     const min = Math.min(...values); const max = Math.max(...values); const span = Math.max(1e-9, max - min);
-    return <svg viewBox="0 0 220 150" role="img" aria-label={`${label} 教学目标等高示意图，颜色来自逐点计算`} key={key}><rect width="220" height="150" rx="10" fill="#fbfaf7" />{samples.map((sample, index) => { const opacity = .08 + (1 - (sample[key] - min) / span) * .68; const cell = 196 / (count - 1); return <rect key={index} x={12 + index % count * cell} y={12 + Math.floor(index / count) * (124 / (count - 1))} width={cell + .2} height={124 / (count - 1) + .2} fill={`hsla(${hue}, 47%, 61%, ${opacity})`} />; })}<polyline points={trajectory.map((point) => mapPoint(point).join(',')).join(' ')} fill="none" stroke="#282d42" strokeWidth="2" />{trajectory.map((point, index) => <circle key={index} cx={mapPoint(point)[0]} cy={mapPoint(point)[1]} r={index === trajectory.length - 1 ? 4 : 2.5} fill={index === trajectory.length - 1 ? '#292e43' : '#f8f7f2'} stroke="#292d42" strokeWidth="1.5" />)}<circle cx={mapPoint(optimum)[0]} cy={mapPoint(optimum)[1]} r="5" fill="none" stroke="#31364e" strokeWidth="1.7" strokeDasharray="2 2" /></svg>;
+    const points = trajectory.map(mapPoint);
+    const pointString = points.map(([x, y]) => `${x},${y}`).join(' ');
+    const currentPoint = mapPoint(theta);
+    const optimumPoint = mapPoint(optimum);
+    return <svg viewBox="0 0 220 150" role="img" aria-label={`${label} Teaching Toy loss landscape and ${trajectory.length - 1} SGD updates`} key={key}>
+      <rect width="220" height="150" rx="10" fill="#fbfaf7" />
+      {samples.map((sample, index) => { const opacity = .08 + (1 - (sample[key] - min) / span) * .68; const cell = 196 / (count - 1); return <rect key={index} x={12 + index % count * cell} y={12 + Math.floor(index / count) * (124 / (count - 1))} width={cell + .2} height={124 / (count - 1) + .2} fill={`hsla(${hue}, 47%, 61%, ${opacity})`} />; })}
+      <circle cx={optimumPoint[0]} cy={optimumPoint[1]} r="7" fill="none" stroke="#31364e" strokeWidth="2" strokeDasharray="3 2" />
+      <polyline points={pointString} fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={pointString} fill="none" stroke="#282d42" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {points.slice(0, -1).map(([x, y], index) => <circle key={index} cx={x} cy={y} r="3" fill="#f8f7f2" stroke="#282d42" strokeWidth="1.5" />)}
+      <circle cx={currentPoint[0]} cy={currentPoint[1]} r="7" fill="#fff" stroke="#282d42" strokeWidth="2" />
+      <circle cx={currentPoint[0]} cy={currentPoint[1]} r="3.5" fill="#292e43" />
+    </svg>;
   };
-  return <div className="v2-e-landscapes"><div className="v2-e-landscape-grid">{cells('oldLoss', 354, 'L_old', oldOptimum)}{cells('newLoss', 224, 'L_new', newOptimum)}{cells('totalLoss', 250, 'L_total', [0, 0])}</div><div><span>● current θ · ○ objective optimum / origin · 颜色由当前 Teaching Toy objective 逐点计算</span><small>二维示意范围 [-2.4, 2.4]；不是论文数据。</small></div><div className="v2-e-landscape-labels"><span>Old response loss</span><span>New task toy loss</span><span>λₒL_old + L_new + R</span></div></div>;
+  return <div className="v2-e-landscapes"><div className="v2-e-landscape-grid">{cells('oldLoss', 354, 'L_old', oldOptimum)}{cells('newLoss', 224, 'L_new', newOptimum)}{cells('totalLoss', 250, 'L_total', [0, 0])}</div><div><span>● current θ · ○ objective optimum / origin · 颜色由当前 Teaching Toy objective 逐点计算</span><small>显示范围 ±{fmt(range)}，随轨迹保留边界余量；不是论文数据。</small></div><div className="v2-e-landscape-labels"><span>Old response loss</span><span>New task toy loss</span><span>λₒL_old + L_new + R</span></div></div>;
 }
 
 function ModuleList({ title, values, tone }: { title: string; values: readonly string[]; tone: 'shared' | 'private' }) { return <div className={`v2-e-module-list is-${tone}`}><strong>{title}</strong>{values.map((value, index) => <span key={`${value}-${index}`}>{value}</span>)}</div>; }

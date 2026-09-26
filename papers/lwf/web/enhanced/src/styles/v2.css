@@ -1243,6 +1243,31 @@
 
 /* Scene F · parameter distance, response drift, and observed-input scope */
 .v2-scene-f { display: grid; gap: 18px; }
+
+/* Scene E · vector composition uses a separate legend instead of colliding SVG labels. */
+.v2-e-vector-figure { grid-template-columns: minmax(0,1.25fr) minmax(280px,.85fr); gap: 16px 22px; padding: 16px 20px; }
+.v2-e-vector-figure svg { width: 100%; max-height: 300px; }
+.v2-e-vector-legend { display: grid; align-content: center; gap: 14px; min-width: 0; }
+.v2-e-vector-legend ul { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px 18px; margin: 0; padding: 0; list-style: none; }
+.v2-e-vector-legend li { display: flex; align-items: center; gap: 10px; min-width: 0; color: #454c62; }
+.v2-e-vector-legend li > i { position: relative; flex: 0 0 30px; height: 0; border-top: 3px solid currentColor; }
+.v2-e-vector-legend li > i::after { position: absolute; top: -5px; right: -1px; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 6px solid currentColor; content: ''; }
+.v2-e-vector-legend li > i.is-old { color: #b3676c; border-top-style: dashed; }
+.v2-e-vector-legend li > i.is-old-scaled { color: #ad3f53; }
+.v2-e-vector-legend li > i.is-new { color: #536fc4; }
+.v2-e-vector-legend li > i.is-regularization { color: #8877a8; }
+.v2-e-vector-legend li > i.is-total { color: #292e43; border-top-width: 4px; }
+.v2-e-vector-legend li > span { display: grid; gap: 2px; min-width: 0; }
+.v2-e-vector-legend code { color: #343c54; font: 700 14px/1.35 var(--ui-font-mono); white-space: nowrap; }
+.v2-e-vector-legend small { color: #74798a; font-size: 12px; line-height: 1.4; }
+.v2-e-vector-legend p { margin: 0; padding: 12px 14px; border: 1px solid #e7e4dd; border-radius: 10px; color: #63697a; background: #fff; font-size: 14px; line-height: 1.65; }
+@media (max-width: 600px) {
+  .v2-e-vector-figure { grid-template-columns: minmax(0,1fr); }
+  .v2-e-vector-figure svg { max-height: 250px; }
+}
+@media (max-width: 380px) {
+  .v2-e-vector-legend ul { grid-template-columns: minmax(0,1fr); }
+}
 .v2-f-intro, .v2-f-card, .v2-f-jacobian-card, .v2-f-same-distance-card, .v2-f-response-panel, .v2-f-function-map-card, .v2-f-penalty-card, .v2-f-neural-note, .v2-f-paper-evidence { padding: 22px; border: 1px solid #e5e1d8; border-radius: 18px; background: #fff; box-shadow: 0 8px 24px rgba(28,32,49,.035); }
 .v2-f-intro { border-top: 3px solid #657599; }
 .v2-f-intro > p, .v2-f-card > p, .v2-f-jacobian-card > p, .v2-f-same-distance-card p, .v2-f-penalty-card > p, .v2-f-paper-evidence > p { color: #646879; line-height: 1.62; }
