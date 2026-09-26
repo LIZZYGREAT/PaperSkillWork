@@ -1,0 +1,32 @@
+import { useState } from "react";
+import { Button } from "../../foundation/controls/Button";
+
+export type FlowStep = { id: string; title: string; description?: string; statusText?: string; relatedIds?: string[] };
+
+export function FlowStepper({ steps, initialStep = 0, step: controlledStep, onStepChange, label = "Process steps" }: {
+  steps: FlowStep[];
+  initialStep?: number;
+  step?: number;
+  onStepChange?: (step: FlowStep, index: number) => void;
+  label?: string;
+}) {
+  const [internalStep, setInternalStep] = useState(initialStep);
+  if (!steps.length) return <div className="rk-flow-stepper" role="status">No steps are available.</div>;
+  const activeIndex = Math.max(0, Math.min(controlledStep ?? internalStep, steps.length - 1));
+  const current = steps[activeIndex];
+  const choose = (index: number) => {
+    const bounded = Math.max(0, Math.min(index, steps.length - 1));
+    if (controlledStep === undefined) setInternalStep(bounded);
+    onStepChange?.(steps[bounded], bounded);
+  };
+
+  return (
+    <section className="rk-flow-stepper" aria-label={label}>
+      <ol className="rk-flow-stepper__list">
+        {steps.map((item, index) => <li key={item.id}><button type="button" className={`rk-flow-step ${index === activeIndex ? "is-active" : ""} ${index < activeIndex ? "is-complete" : ""}`} aria-current={index === activeIndex ? "step" : undefined} onClick={() => choose(index)}><span className="rk-flow-step__number">{index + 1}</span><span>{item.title}</span></button></li>)}
+      </ol>
+      <div className="rk-flow-stepper__detail" aria-live="polite"><span>Step {activeIndex + 1} of {steps.length}</span><h3>{current.title}</h3>{current.description ? <p>{current.description}</p> : null}{current.statusText ? <p className="rk-flow-stepper__status">{current.statusText}</p> : null}</div>
+      <div className="rk-flow-stepper__actions"><Button variant="secondary" onClick={() => choose(activeIndex - 1)} disabled={activeIndex === 0}>Previous</Button><Button variant="secondary" onClick={() => choose(activeIndex + 1)} disabled={activeIndex === steps.length - 1}>Next</Button></div>
+    </section>
+  );
+}

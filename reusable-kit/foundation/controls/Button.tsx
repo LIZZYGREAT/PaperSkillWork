@@ -6,9 +6,9 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
 };
 
-export function Button({ variant = "primary", size = "medium", className = "", children, ...props }: ButtonProps) {
+export function Button({ variant = "primary", size = "medium", className = "", type = "button", children, ...props }: ButtonProps) {
   return (
-    <button className={`rk-button rk-button--${variant} rk-button--${size} ${className}`.trim()} {...props}>
+    <button type={type} className={`rk-button rk-button--${variant} rk-button--${size} ${className}`.trim()} {...props}>
       {children}
     </button>
   );
