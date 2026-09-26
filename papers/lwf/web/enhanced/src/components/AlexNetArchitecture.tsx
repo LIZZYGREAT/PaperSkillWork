@@ -13,7 +13,7 @@ function DenseNetworkGlyph({ shape }: { shape: 'fc6' | 'fc7' }) {
         <line key={`${y}-${nextY}`} x1={xs[0] + 4} y1={y} x2={xs[1] - 4} y2={nextY} />
       )))}
       {inputYs.map((y, index) => <circle key={`input-${index}`} cx={xs[0]} cy={y} r={isFc6 ? 2.4 : 3.3} />)}
-      {outputYs.map((y, index) => <circle key={`output-${index}`} cx={xs[1]} cy={y} r="3.3" className={isFc6 ? 'is-accent' : undefined} />)}
+      {outputYs.map((y, index) => <circle key={`output-${index}`} cx={xs[1]} cy={y} r="3.3" />)}
     </svg>
   );
 }

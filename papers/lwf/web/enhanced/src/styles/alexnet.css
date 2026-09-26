@@ -32,7 +32,6 @@
 .v2-alexnet-dense-glyph{width:min(205px,96%);height:auto;overflow:visible}
 .v2-alexnet-dense-glyph line{stroke:#c0cddd;stroke-width:.65}
 .v2-alexnet-dense-glyph circle{fill:#d8e5f1;stroke:#7e9cba;stroke-width:1}
-.v2-alexnet-dense-glyph circle.is-accent{fill:#f7d7b8;stroke:#c48758}
 .v2-alexnet-feature-boundary{display:grid;grid-template-rows:minmax(90px,1fr) auto;align-content:stretch;padding:11px;background:#fff9f2}
 .v2-alexnet-feature-boundary .v2-alexnet-layer-art{grid-row:1}
 .v2-alexnet-heads{display:grid;gap:6px;min-width:0}
