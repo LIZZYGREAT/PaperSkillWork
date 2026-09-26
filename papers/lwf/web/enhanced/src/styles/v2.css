@@ -1548,3 +1548,188 @@
 .lwf-v2.slide-layout .v2-c-logit-note strong { font-size: 14px; }
 .lwf-v2.slide-layout .v2-c-logit-note code { font-size: 13px; }
 .lwf-v2.slide-layout .v2-c-logit-note small,.lwf-v2.slide-layout .v2-c-logit-note span { font-size: 12px; }
+
+/* Scene C readability pass: establish a real text floor, then size diagrams by role. */
+.lwf-v2 .v2-scene-content.v2-scene-c :is(p, span, small, code, strong, button, label, dt, dd, li, th, td) {
+  font-size: clamp(13px, .98vw, 15px);
+}
+.lwf-v2 .v2-scene-content.v2-scene-c { gap: 18px; padding-bottom: 100px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-toy-banner { gap: 16px; padding: 14px 18px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-toy-banner>div { gap: 5px 10px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-toy-banner strong { font-size: 16px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-toy-banner>div>span:last-child { line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-phase-note,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-toy-disclaimer,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-prerequisite p { font-size: 13px; line-height: 1.6; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-stepper-card { padding: 18px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-stepper-card h2 { font-size: 18px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-view-label { margin-bottom: 8px; font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-stepper { gap: 10px; margin-bottom: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-tab { min-height: 52px; padding: 9px 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-tab>strong { overflow: visible; font-size: 14px; line-height: 1.25; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-actions { gap: 9px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-action { gap: 7px; min-height: 132px; padding: 11px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-action-num { width: 25px; height: 25px; font-size: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-action>button { min-height: 38px; padding: 8px; font-size: 13px; line-height: 1.35; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-action>small { color: #5f7186; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-panel { gap: 13px; padding: 18px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-panel-heading { gap: 11px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-panel-heading>span { width: 32px; height: 32px; font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-panel-heading .v2-eyebrow { font-size: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-panel-heading h2 { font-size: 17px; }
+
+/* Batch objects and sample values */
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-tensor-cards { gap: 10px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-tensor-card { gap: 7px; padding: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-tensor-card code { font-size: 15px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-tensor-card strong,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-tensor-card>small { font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-tensor-card p { line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-selector { gap: 8px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-selector button { min-height: 34px; padding: 7px 10px; font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-selector>strong span { font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-detail { gap: 8px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-detail>div { gap: 5px; padding: 10px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-detail>div>span { color: #65778d; font-size: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-detail strong,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-detail code { font-size: 13px; line-height: 1.45; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-shape-note { font-size: 13px; line-height: 1.6; }
+
+/* Student forward: keep each branch full width and its notation legible. */
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-forward-diagram { grid-template-columns: minmax(100px,.8fr) auto minmax(130px,.9fr) auto minmax(240px,2fr); gap: 12px; padding: 16px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-forward-diagram>span { font-size: 22px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-flow-node { min-height: 72px; gap: 8px; padding: 12px 16px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-flow-node code { font-size: 19px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-flow-node small { font-size: 14px; line-height: 1.45; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-branch-lines { grid-column: 1 / -1; width: 100%; gap: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-branch-lines>div { gap: 8px; min-height: 210px; padding: 15px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-branch-lines b { font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-branch-lines span { font-size: 20px; line-height: 1.1; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-branch-lines code { font-size: 18px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-branch-lines small,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-branch-lines strong { font-size: 14px; line-height: 1.55; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-logit-note { gap: 10px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-logit-note>div { gap: 8px; padding: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-logit-note strong { font-size: 15px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-logit-note code { font-size: 13px; line-height: 1.55; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-logit-note small,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-logit-note span { font-size: 13px; line-height: 1.55; }
+
+/* Loss paths: distribute both signals evenly instead of pinning the loss at the far edge. */
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-formula { display: grid; grid-template-columns: minmax(110px,.65fr) minmax(0,2fr) minmax(120px,.7fr); gap: 14px; padding: 14px 16px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-formula span { font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-formula strong { justify-self: center; font-size: 20px; line-height: 1.4; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-formula code { justify-self: end; font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths>div { display: grid; grid-template-columns: minmax(0,.9fr) 28px minmax(0,1.25fr) 28px max-content; align-items: center; gap: 8px; min-width: 0; min-height: 112px; padding: 14px; font-size: 14px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths>div>span { min-width: 0; overflow-wrap: anywhere; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths i { color: #73859a; font-size: 22px; font-weight: 700; text-align: center; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths strong { margin: 0; font-size: 15px; line-height: 1.4; white-space: nowrap; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths .is-reg { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr) max-content 32px max-content minmax(0,1fr); min-height: 64px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths .is-reg>span { grid-column: 2; justify-self: end; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths .is-reg>i { grid-column: 3; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths .is-reg>strong { grid-column: 4; justify-self: start; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-total-loss { gap: 8px 12px; padding: 13px 15px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-total-loss span { font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-total-loss strong { font-size: 18px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-total-loss small { line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-dependency-grid { gap: 10px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-dependency-grid>div { gap: 7px; padding: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-dependency-grid strong,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-dependency-grid b { font-size: 14px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-dependency-grid span { font-size: 13px; line-height: 1.7; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-dependency-grid small { font-size: 13px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-evidence-link { font-size: 14px; }
+
+/* Backward and optimizer summaries: keep the graph centered and every state label readable. */
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-source { gap: 8px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-source strong { margin-right: 4px; font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-source button { padding: 7px 11px; font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-graph { padding: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-source { gap: 12px; padding: 10px 12px; font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-source small { font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-branches { grid-template-columns: minmax(0,1fr) 38px minmax(180px,.7fr) 38px minmax(0,1fr); gap: 12px; padding-top: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-arrow { color: #7c8fa4; font-size: 25px; font-weight: 700; text-align: center; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-branch { gap: 10px; min-height: 154px; align-content: center; padding: 16px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-branch.is-muted { opacity: .76; filter: grayscale(.18); }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-branch>b { font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-branch>button,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-shared button { min-width: 82px; gap: 5px; padding: 10px 13px; font-size: 17px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-branch>button small,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-shared button small { font-size: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-branch>span { font-size: 14px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-shared { gap: 9px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-shared>span { font-size: 19px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-shared>i { font-size: 12px; line-height: 1.4; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-table { overflow-x: auto; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-table-head,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-row { min-width: 680px; gap: 10px; padding: 10px 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-table-head { color: #61748a; font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-row>strong { font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-row>strong small { font-size: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-row>span { font-size: 13px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-backward-result { gap: 6px; padding: 12px 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-backward-result strong { font-size: 15px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-backward-result span,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-grad-pending,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-shared-conflict { font-size: 13px; line-height: 1.6; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-shared-conflict { padding: 11px 13px; }
+
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-table { overflow-x: auto; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-head,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-row { min-width: 720px; gap: 10px; padding: 10px 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-head { font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-row>strong { font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-row>strong small { font-size: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-row>span,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-row>b { font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-membership-note { font-size: 13px; line-height: 1.6; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-update-table { overflow-x: auto; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-update-head,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-update-row { min-width: 680px; gap: 10px; padding: 10px 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-update-head { color: #61748a; font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-update-row>strong { font-size: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-update-row>span,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-update-row>b { font-size: 13px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-update-formula { font-size: 13px; line-height: 1.6; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-parameter-trace { flex-wrap: wrap; gap: 12px; padding: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-parameter-trace>div { min-width: 0; gap: 5px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-parameter-trace span,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-parameter-trace code,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-parameter-trace strong { font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-optimizer-card { padding: 18px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-optimizer-card h2 { font-size: 18px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-advanced { padding: 12px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-advanced summary { font-size: 14px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-advanced p,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-advanced code { font-size: 13px; line-height: 1.6; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-ending { gap: 12px; padding: 14px; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-ending strong { font-size: 14px; line-height: 1.5; }
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-ending small,
+.lwf-v2 .v2-scene-content.v2-scene-c .v2-c-ending>button { font-size: 13px; line-height: 1.5; }
+
+@media (max-width: 980px) {
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths { grid-template-columns: minmax(0,1fr); }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-branches { grid-template-columns: minmax(0,1fr) 30px minmax(145px,.7fr) 30px minmax(0,1fr); gap: 8px; }
+}
+@media (max-width: 680px) {
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-stepper { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-step-actions { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-tensor-cards,
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-sample-detail,
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-dependency-grid,
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-logit-note { grid-template-columns: minmax(0,1fr); }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-formula { grid-template-columns: minmax(0,1fr); }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-formula strong,
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-formula code { justify-self: start; }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths>div:not(.is-reg) { grid-template-columns: minmax(0,1fr) 28px; }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths>div:not(.is-reg)>span:nth-of-type(2) { grid-column: 1; grid-row: 2; }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths>div:not(.is-reg)>i:nth-of-type(1) { grid-column: 2; grid-row: 1; }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths>div:not(.is-reg)>i:nth-of-type(2) { grid-column: 2; grid-row: 2; }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths>div:not(.is-reg)>strong { grid-column: 1 / -1; grid-row: 3; }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-loss-paths .is-reg { grid-template-columns: minmax(0,1fr) max-content 28px max-content minmax(0,1fr); }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-arrow { transform: none; font-size: 0; }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-arrow::after { content: '↓'; font-size: 23px; }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-gradient-branches { grid-template-columns: minmax(0,1fr); }
+  .lwf-v2 .v2-scene-content.v2-scene-c .v2-c-flow-node.is-feature { grid-column: 1 / -1; }
+}

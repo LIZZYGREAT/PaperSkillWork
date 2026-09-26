@@ -219,7 +219,11 @@ function LossInspector({ result, onEvidence }: { result: ReturnType<typeof compu
   return <section className="v2-c-panel" aria-labelledby="loss-inspector-title">
     <PanelHeading step="C" eyebrow="STEP 3 · COMPUTE LOSS" title="旧响应与新标签走不同分支，再汇合成标量" />
     <div className="v2-c-loss-formula"><span>论文目标</span><strong><MathFormula id="formula:total_loss" compact /></strong><code>λₒ = {TOY_LAMBDA_OLD} · T = {TOY_TEMPERATURE}</code></div>
-    <div className="v2-c-loss-paths"><div className="is-old"><span><InlineNotation text="Teacher target Y_o" /></span><i>→</i><span><InlineNotation text="student old soft response Ŷ_o" /></span><i>→</i><strong><InlineNotation text="L_old =" /> {fmt(result.oldLoss)}</strong></div><div className="is-new"><span><InlineNotation text="new label Y_n" /></span><i>→</i><span><InlineNotation text="student new output Ŷ_n" /></span><i>→</i><strong><InlineNotation text="L_new =" /> {fmt(result.newLoss)}</strong></div><div className="is-reg"><span>Student weights</span><i>→</i><strong>R = {fmt(result.regularizationLoss)}</strong></div></div>
+    <div className="v2-c-loss-paths">
+      <div className="v2-c-loss-path is-old"><span><InlineNotation text="Teacher target Y_o" /></span><i aria-hidden="true">→</i><span><InlineNotation text="student old soft response Ŷ_o" /></span><i aria-hidden="true">→</i><strong><InlineNotation text="L_old =" /> {fmt(result.oldLoss)}</strong></div>
+      <div className="v2-c-loss-path is-new"><span><InlineNotation text="new label Y_n" /></span><i aria-hidden="true">→</i><span><InlineNotation text="student new output Ŷ_n" /></span><i aria-hidden="true">→</i><strong><InlineNotation text="L_new =" /> {fmt(result.newLoss)}</strong></div>
+      <div className="v2-c-loss-path is-reg"><span>Student weights</span><i aria-hidden="true">→</i><strong>R = {fmt(result.regularizationLoss)}</strong></div>
+    </div>
     <div className="v2-c-total-loss"><span>Teaching Toy computed total</span><strong>{fmt(result.totalLoss)}</strong><small><InlineNotation text="本 toy 明确使用 ½ × 0.0005 × ΣW²；论文目标为 λ_o L_old + L_new + R。" /></small></div>
     <div className="v2-c-dependency-grid"><div><strong><InlineNotation text="L_new dependency" /></strong><span><InlineNotation text="Y_n → L_new ← Ŷ_n ← θ_n ← h ← θ_s" /></span><b><InlineNotation text="∂L_new / ∂θ_o = 0" /></b><small><InlineNotation text="θ_o 不在 L_new 的计算路径上。" /></small></div><div><strong><InlineNotation text="L_old dependency" /></strong><span><InlineNotation text="Y_o → L_old ← Ŷ_o ← θ_o ← h ← θ_s" /></span><b><InlineNotation text="∂L_old / ∂θ_n = 0" /></b><small><InlineNotation text="θ_n 不在 L_old 的计算路径上。" /></small></div></div>
     <button type="button" className="v2-c-evidence-link" onClick={onEvidence}>查看论文损失与温度依据 F01 ↗</button>
@@ -237,8 +241,11 @@ function GradientInspector({ session, dispatch, result, phase, toyState }: { ses
     </div>
     <div className={`v2-c-gradient-graph source-${source}`}>
       <div className="v2-c-loss-source">{sourceLabel}<small>{rank >= 4 ? 'backward 已执行' : 'backward 前：尚无 .grad'}</small></div>
-      <div className="v2-c-gradient-branches"><GradientBranch group="theta_o" source={source} trainable={phase === 'joint'} active={source === 'old' || source === 'total' || source === 'regularization'} />
+      <div className="v2-c-gradient-branches">
+        <GradientBranch group="theta_o" source={source} trainable={phase === 'joint'} active={source === 'old' || source === 'total' || source === 'regularization'} />
+        <span className="v2-c-gradient-arrow" aria-hidden="true">→</span>
         <div className="v2-c-grad-shared"><span>h</span><i>shared trunk gradient</i><button type="button" onClick={() => openWorkspaceFor('theta_s')} className={phase === 'joint' ? 'is-trainable' : 'is-frozen'}>θ_s <small>{phase === 'warmup' ? 'frozen' : 'trainable'}</small></button></div>
+        <span className="v2-c-gradient-arrow" aria-hidden="true">←</span>
         <GradientBranch group="theta_n" source={source} trainable={true} active={source === 'new' || source === 'total' || source === 'regularization'} />
       </div>
     </div>
