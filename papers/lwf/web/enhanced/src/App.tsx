@@ -274,7 +274,7 @@ function AppContent() {
               <PersistentWorkspace scene={session.activeScene} session={session} dispatch={dispatch} />
               <ObjectInspector scene={session.activeScene} session={session} selectedObject={session.selectedObject} onInspect={(id) => dispatch({ type: 'INSPECT_OBJECT', id })} />
             </div>
-            <footer className="v2-workspace-sheet-footer"><span>对象状态随场景和训练阶段更新</span><span>Paper meaning · Runtime mapping</span></footer>
+            <footer className="v2-workspace-sheet-footer"><span>对象状态随场景和训练阶段更新</span><span>论文含义 · 运行时映射</span></footer>
           </section>
         </div>
       ) : null}

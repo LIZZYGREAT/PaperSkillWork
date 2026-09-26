@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useReferenceHub } from '../components/ReferencePrimitives';
+import { MathFormula } from '../components/MathFormula';
+import { InlineNotation } from '../components/InlineNotation';
 import type { LearningAction, LearningSession } from '../data/session';
 import type { Reduction } from '../simulation/distillation';
 import {
@@ -72,7 +74,7 @@ export function SceneE({ session, dispatch }: { session: LearningSession; dispat
     <div className="v2-scene-content v2-scene-e">
       <section className="v2-e-intro v2-state-card">
         <div className="v2-section-title-row"><div><p className="v2-eyebrow">SHARED PARAMETER UPDATE · PAPER + TEACHING TOY</p><h2>旧、新目标同时作用时，优化器往哪里走？</h2></div><button className="v2-intro-evidence" type="button" onClick={() => openHub({ evidenceId: 'F04' })}>总目标 F04 ↗</button></div>
-        <div className="v2-e-objective"><strong>L = λ<sub>o</sub>L<sub>old</sub> + L<sub>new</sub> + R</strong><span>∇<sub>θs</sub>L = λ<sub>o</sub>g<sub>old</sub> + g<sub>new</sub> + g<sub>R</sub></span></div>
+        <div className="v2-e-objective"><strong><MathFormula id="formula:total_loss" compact /></strong><span><MathFormula id="formula:shared_gradient" compact /></span></div>
         <p>关注共享参数上的梯度向量，而不是把 λ<sub>o</sub> 读成任务占比。页面中的二维参数、线性旧响应映射与新任务二次目标均为可计算 Teaching Toy。</p>
       </section>
 
@@ -103,13 +105,13 @@ export function SceneE({ session, dispatch }: { session: LearningSession; dispat
           <p className="v2-eyebrow">GRADIENT ALIGNMENT INSPECTOR · DIAGNOSTIC</p><h2>方向也会改变合力</h2>
           <div className="v2-e-cosine"><strong>cos(g_old, g_new) = {fmt(current.alignment)}</strong><span>{selectedAngleLabel}</span></div>
           <p>这是当前 Teaching Toy 的局部诊断量，不是论文报告的实验指标。stability–plasticity 同时受梯度幅度和方向影响。</p>
-          <div className="v2-e-group-selector" role="group" aria-label="查看参数组梯度来源">{([['theta_s', 'θ_s Shared'], ['theta_o', 'θ_o Old-specific'], ['theta_n', 'θ_n New-specific']] as const).map(([id, label]) => <button key={id} type="button" aria-pressed={parameterGroup === id} onClick={() => setParameterGroup(id)}>{label}</button>)}</div>
-          <div className="v2-e-group-formula"><strong>{parameterGroup === 'theta_s' ? '∇θ_s L = λₒ ∇θ_s L_old + ∇θ_s L_new + ∇θ_s R' : parameterGroup === 'theta_o' ? '∇θ_o L = λₒ ∇θ_o L_old + ∇θ_o R' : '∇θ_n L = ∇θ_n L_new + ∇θ_n R'}</strong><span>{selectedGradient ? `当前共享参数 toy 梯度：(${fmt(selectedGradient[0])}, ${fmt(selectedGradient[1])})` : '此 Teaching Toy 向量合成器只计算 θ_s；这里显示参数组可接收的梯度来源。'}</span></div>
+          <div className="v2-e-group-selector" role="group" aria-label="查看参数组梯度来源">{([['theta_s', 'θ_s Shared'], ['theta_o', 'θ_o Old-specific'], ['theta_n', 'θ_n New-specific']] as const).map(([id, label]) => <button key={id} type="button" aria-pressed={parameterGroup === id} onClick={() => setParameterGroup(id)}><InlineNotation text={label} /></button>)}</div>
+          <div className="v2-e-group-formula"><strong><MathFormula id={parameterGroup === 'theta_s' ? 'formula:shared_gradient' : parameterGroup === 'theta_o' ? 'inline:old_head_gradient' : 'inline:new_head_gradient'} /></strong><span><InlineNotation text={selectedGradient ? `当前共享参数 toy 梯度：(${fmt(selectedGradient[0])}, ${fmt(selectedGradient[1])})` : '此教学示例的向量合成器只计算 θₛ；这里显示参数组可接收的梯度来源。'} /></span></div>
           <p className="v2-e-group-note">直接 old/new 梯度冲突主要发生在共享参数。θ<sub>o</sub> 不接收 L<sub>new</sub> 的直接梯度；θ<sub>n</sub> 不接收 L<sub>old</sub> 的直接梯度。</p>
         </article>
         <article className="v2-e-card v2-e-partition-card">
           <p className="v2-eyebrow">PARTITION EXPLORER · LINKED WITH SCENE B</p><h2>移动边界，查看冲突可能作用的区域</h2>
-          <div className="v2-e-boundary-controls" role="group" aria-label="共享表示边界"> <button type="button" aria-pressed={session.boundary === 'fc7'} onClick={() => dispatch({ type: 'SET_BOUNDARY', boundary: 'fc7' })}>θ_s 延伸到 fc7</button><button type="button" aria-pressed={session.boundary === 'features'} onClick={() => dispatch({ type: 'SET_BOUNDARY', boundary: 'features' })}>θ_s 仅含 features</button></div>
+          <div className="v2-e-boundary-controls" role="group" aria-label="共享表示边界"> <button type="button" aria-pressed={session.boundary === 'fc7'} onClick={() => dispatch({ type: 'SET_BOUNDARY', boundary: 'fc7' })}><InlineNotation text="θ_s 延伸到 fc7" /></button><button type="button" aria-pressed={session.boundary === 'features'} onClick={() => dispatch({ type: 'SET_BOUNDARY', boundary: 'features' })}><InlineNotation text="θ_s 仅含 features" /></button></div>
           <div className="v2-e-boundary-map"><ModuleList title="Shared · 同时接收 old / new" values={parameterNames[session.boundary].shared} tone="shared" /><ModuleList title="Task-specific · 各自目标" values={[...parameterNames[session.boundary].old, ...parameterNames[session.boundary].fresh]} tone="private" /></div>
           <p>这里展示实施映射中的模块边界，不虚构真实参数量。共享模块才是两类目标直接相遇的区域；调整边界会同步更新 Scene B。</p>
         </article>
@@ -118,7 +120,7 @@ export function SceneE({ session, dispatch }: { session: LearningSession; dispat
       <section className="v2-e-step-panel">
         <div className="v2-section-title-row"><div><p className="v2-eyebrow">ONE OPTIMIZER STEP · PLAIN SGD TEACHING TOY</p><h2>从梯度合成到参数更新</h2></div><span className="v2-source-badge is-toy">当前 θ = ({fmt(theta[0])}, {fmt(theta[1])})</span></div>
         <div className="v2-e-step-controls"><button type="button" onClick={() => runSteps(1)}>Take One Step</button><button type="button" onClick={() => runSteps(10)}>Run 10 steps</button><button type="button" onClick={reset}>Reset trajectory</button><label><input type="checkbox" checked={regularization} onChange={(event) => setRegularization(event.target.checked)} /> 显示参数正则梯度 g<sub>R</sub></label></div>
-        <div className="v2-e-sgd-equation"><span>θ′ = θ − η<sub>s</sub>(λ<sub>o</sub>g<sub>old</sub> + g<sub>new</sub>{regularization ? ' + g_R' : ''})</span><strong>Δθ = ({fmt(-learningRate * current.totalGradient[0])}, {fmt(-learningRate * current.totalGradient[1])})</strong></div>
+        <div className="v2-e-sgd-equation"><span><MathFormula id={regularization ? 'inline:sgd_update_regularized' : 'inline:sgd_update'} compact /></span><strong>Δθ = ({fmt(-learningRate * current.totalGradient[0])}, {fmt(-learningRate * current.totalGradient[1])})</strong></div>
         <div className="v2-e-loss-readouts"><Metric label="L_old" value={fmt(current.oldLoss)} /><Metric label="L_new" value={fmt(current.newLoss)} /><Metric label="R" value={fmt(current.regularizationLoss)} /><Metric label="Total loss" value={fmt(current.totalLoss)} /><Metric label="distance to old optimum" value={fmt(norm([theta[0] - oldParameterOptimum[0], theta[1] - oldParameterOptimum[1]]))} /><Metric label="distance to new optimum" value={fmt(norm([theta[0] - newOptimum[0], theta[1] - newOptimum[1]]))} /></div>
         <LandscapeGrid theta={theta} trajectory={trajectory} oldOptimum={oldParameterOptimum} newOptimum={newOptimum} temperature={temperature} oldReduction={oldReduction} newReduction={newReduction} lambdaOld={lambdaOld} regularization={regularization} />
       </section>
@@ -171,5 +173,5 @@ function LandscapeGrid({ theta, trajectory, oldOptimum, newOptimum, temperature,
 }
 
 function ModuleList({ title, values, tone }: { title: string; values: readonly string[]; tone: 'shared' | 'private' }) { return <div className={`v2-e-module-list is-${tone}`}><strong>{title}</strong>{values.map((value, index) => <span key={`${value}-${index}`}>{value}</span>)}</div>; }
-function Metric({ label, value }: { label: string; value: string }) { return <div><span>{label}</span><strong>{value}</strong></div>; }
+function Metric({ label, value }: { label: string; value: string }) { return <div><span><InlineNotation text={label} /></span><strong>{value}</strong></div>; }
 function fmt(value: number) { return Number.isFinite(value) ? value.toFixed(4) : '0.0000'; }

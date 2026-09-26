@@ -1,5 +1,8 @@
 import React from 'react';
 import { useReferenceHub } from '../components/ReferencePrimitives';
+import { AlexNetArchitecture } from '../components/AlexNetArchitecture';
+import { MathFormula } from '../components/MathFormula';
+import { InlineNotation } from '../components/InlineNotation';
 
 export function Scene00({ onNext }: { onNext: () => void }) {
   const { openHub } = useReferenceHub();
@@ -14,8 +17,8 @@ export function Scene00({ onNext }: { onNext: () => void }) {
         </p>
         <div className="v2-intro-setting" aria-label="任务到来时的数据条件">
           <div><span>保留下来的模型</span><code>旧模型 f_old</code><strong>可运行</strong></div>
-          <div><span>旧任务训练数据</span><code>X_o · Y_o^GT</code><strong>不可用</strong></div>
-          <div><span>当前新任务数据</span><code>X_n · Y_n</code><strong>可用于训练</strong></div>
+          <div><span>旧任务训练数据</span><code><InlineNotation text="X_o · Y_o^GT" /></code><strong>不可用</strong></div>
+          <div><span>当前新任务数据</span><code><InlineNotation text="X_n · Y_n" /></code><strong>可用于训练</strong></div>
         </div>
       </section>
 
@@ -41,14 +44,16 @@ export function Scene00({ onNext }: { onNext: () => void }) {
           <i aria-hidden="true">+</i>
           <div><span>新任务图像</span><strong>X_n</strong><small>当前训练输入</small></div>
           <i aria-hidden="true">→</i>
-          <div className="is-response"><span>旧任务响应</span><strong>Y_o = f_old(X_n)</strong><small>不是旧图像或旧真值</small></div>
+          <div className="is-response"><span>旧任务响应</span><strong><MathFormula id="inline:teacher_response" compact /></strong><small>不是旧图像或旧真值</small></div>
           <i aria-hidden="true">→</i>
-          <div className="is-student"><span>扩展后的 Student</span><strong>L_old + L_new</strong><small>保留旧响应，同时学习新标签</small></div>
+          <div className="is-student"><span>扩展后的 Student</span><strong><MathFormula id="inline:loss_pair" compact /></strong><small>保留旧响应，同时学习新标签</small></div>
         </div>
         <p className="v2-intro-method-note">
           旧模型对当前新图像给出的软响应，作为旧任务输出的学习目标；新任务标签则监督新增任务输出。这样训练不需要把旧任务图像重新送入训练。
         </p>
       </section>
+
+      <AlexNetArchitecture />
 
       <section className="v2-intro-goal" aria-label="论文目的与边界">
         <div><span className="v2-source-badge is-paper">论文目的</span><p>在没有旧任务训练数据的条件下学习新任务，同时尽量保留旧任务能力。</p></div>

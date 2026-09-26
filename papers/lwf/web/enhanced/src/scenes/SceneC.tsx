@@ -2,6 +2,8 @@ import React from 'react';
 import type { GradientSource, LearningAction, LearningSession, ParamGroupId, TrainingPhase, TrainingStage } from '../data/session';
 import { useReferenceHub } from '../components/ReferencePrimitives';
 import { openWorkspaceFor } from '../components/workspaceActions';
+import { MathFormula } from '../components/MathFormula';
+import { InlineNotation } from '../components/InlineNotation';
 import {
   computeToyGradients,
   getTeacherResponse,
@@ -152,7 +154,7 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
           </details>
 
           <div className="v2-c-ending">
-            <div><span className="v2-source-badge is-paper">PAPER OBJECTIVE</span><strong>λ_o L_old + L_new + R → backward → optimizer.step()</strong><small>下一专题将单独拆解温度与旧任务蒸馏损失。</small></div>
+            <div><span className="v2-source-badge is-paper">论文目标</span><strong><MathFormula id="formula:total_loss" compact /> → backward → optimizer.step()</strong><small>下一专题将单独拆解温度与旧任务蒸馏损失。</small></div>
             <button type="button" onClick={() => openHub({ evidenceId: 'F02' })}>查看温度依据 F02 ↗</button>
           </div>
         </>
@@ -175,8 +177,8 @@ function BatchInspector({ session, dispatch, sample, forward, teacherResponse }:
       <strong>检查单样本 <span>（仅用于查看；训练 loss 使用整个 batch）</span></strong>
       {toySamples.map((entry) => <button key={entry.id} type="button" aria-pressed={session.selectedSampleId === entry.id} className={session.selectedSampleId === entry.id ? 'is-active' : ''} disabled={stageRank(session.trainingStage) >= 2} onClick={() => dispatch({ type: 'SET_SAMPLE', id: entry.id })}>sample_id {entry.id}</button>)}
     </div>
-    <div className="v2-c-sample-detail"><div><span>sample_id</span><strong>{sample.id}</strong></div><div><span>x_n</span><code>{vector(sample.x)}</code></div><div><span>Y_n label</span><code>class {sample.y}</code></div><div><span>Y_o = f_old(x_n)</span><code>{vector(teacherResponse.probabilities)}</code></div><div><span>Y_o ≠ Y_o^GT</span><strong>Teacher response，不是旧真值</strong></div><div><span>Student Ŷ_n (Forward)</span><code>{vector(forward.newProbabilities)}</code></div></div>
-    <p className="v2-c-shape-note">batch 内 sample_id、X_n、Y_n、Y_o 保持一一对应。本 toy 的输入形状为 [B,2]；B 场景的图像形状说明仍是 [B,C,H,W]。</p>
+    <div className="v2-c-sample-detail"><div><span>sample_id</span><strong>{sample.id}</strong></div><div><span><InlineNotation text="x_n" /></span><code>{vector(sample.x)}</code></div><div><span><InlineNotation text="Y_n label" /></span><code>class {sample.y}</code></div><div><span><InlineNotation text="Y_o = f_old(x_n)" /></span><code>{vector(teacherResponse.probabilities)}</code></div><div><span><InlineNotation text="Y_o ≠ Y_o^GT" /></span><strong>Teacher response，不是旧真值</strong></div><div><span><InlineNotation text="Student Ŷ_n (Forward)" /></span><code>{vector(forward.newProbabilities)}</code></div></div>
+    <p className="v2-c-shape-note"><InlineNotation text="batch 内 sample_id、X_n、Y_n、Y_o 保持一一对应。本 toy 的输入形状为 [B,2]；B 场景的图像形状说明仍是 [B,C,H,W]。" /></p>
   </section>;
 }
 
@@ -184,22 +186,22 @@ function ForwardInspector({ session, sample, forward, teacherResponse }: { sessi
   return <section className="v2-c-panel" aria-labelledby="forward-inspector-title">
     <PanelHeading step="B" eyebrow="STEP 2 · STUDENT FORWARD" title="一个 shared feature，分成两条输出路径" />
     <div className="v2-c-forward-diagram">
-      <div className="v2-c-flow-node is-data"><code>x_{sample.id}</code><small>[2]</small></div><span>→</span>
-      <button type="button" className={`v2-c-flow-node is-shared ${session.phase === 'warmup' ? 'is-frozen' : ''}`}><code>θ_s</code><small>{session.phase === 'warmup' ? 'frozen' : 'trainable'}</small></button><span>→</span>
+      <div className="v2-c-flow-node is-data"><code><InlineNotation text={`x_${sample.id}`} /></code><small>[2]</small></div><span>→</span>
+      <button type="button" className={`v2-c-flow-node is-shared ${session.phase === 'warmup' ? 'is-frozen' : ''}`}><code><InlineNotation text="θ_s" /></code><small>{session.phase === 'warmup' ? 'frozen' : 'trainable'}</small></button><span>→</span>
       <div className="v2-c-flow-node is-feature"><code>h</code><small>{vector(forward.h)}</small></div>
-      <div className="v2-c-branch-lines"><div className="is-old"><b>old path</b><span>↓</span><code>θ_o</code><span>↓</span><code>ẑ_o</code><small>{vector(forward.oldLogits)}</small><span>softmax</span><strong>{vector(forward.oldProbabilities)}</strong></div><div className="is-new"><b>new path</b><span>↓</span><code>θ_n</code><span>↓</span><code>ẑ_n</code><small>{vector(forward.newLogits)}</small><span>softmax</span><strong>{vector(forward.newProbabilities)}</strong></div></div>
+      <div className="v2-c-branch-lines"><div className="is-old"><b>old path</b><span>↓</span><code><InlineNotation text="θ_o" /></code><span>↓</span><code><InlineNotation text="ẑ_o" /></code><small>{vector(forward.oldLogits)}</small><span>softmax</span><strong>{vector(forward.oldProbabilities)}</strong></div><div className="is-new"><b>new path</b><span>↓</span><code><InlineNotation text="θ_n" /></code><span>↓</span><code><InlineNotation text="ẑ_n" /></code><small>{vector(forward.newLogits)}</small><span>softmax</span><strong>{vector(forward.newProbabilities)}</strong></div></div>
     </div>
-    <div className="v2-c-logit-note"><div><strong>Logits</strong><code>ẑ_o = {vector(forward.oldLogits)}</code><small>未归一化分数；可为任意实数</small></div><div><strong>Probability</strong><code>softmax(ẑ_o) = {vector(forward.oldProbabilities)}</code><small>归一化后和为 1；Teaching Toy 的显示精度为 4 位</small></div><div className="is-temperature"><strong>Temperature node · T={TOY_TEMPERATURE}</strong><code>softmax(z_o / T)</code><small>旧损失分支使用温度响应；后续专题详解</small><span>Teacher raw Y_o: {vector(teacherResponse.probabilities)}</span></div></div>
+    <div className="v2-c-logit-note"><div><strong>Logits</strong><code><InlineNotation text="ẑ_o =" /> {vector(forward.oldLogits)}</code><small>未归一化分数；可为任意实数</small></div><div><strong>Probability</strong><code><InlineNotation text="softmax(ẑ_o) =" /> {vector(forward.oldProbabilities)}</code><small>归一化后和为 1；Teaching Toy 的显示精度为 4 位</small></div><div className="is-temperature"><strong>Temperature node · T={TOY_TEMPERATURE}</strong><code><InlineNotation text="softmax(z_o / T)" /></code><small>旧损失分支使用温度响应；后续专题详解</small><span><InlineNotation text="Teacher raw Y_o:" /> {vector(teacherResponse.probabilities)}</span></div></div>
   </section>;
 }
 
 function LossInspector({ result, onEvidence }: { result: ReturnType<typeof computeToyGradients>; onEvidence: () => void }) {
   return <section className="v2-c-panel" aria-labelledby="loss-inspector-title">
     <PanelHeading step="C" eyebrow="STEP 3 · COMPUTE LOSS" title="旧响应与新标签走不同分支，再汇合成标量" />
-    <div className="v2-c-loss-formula"><span>Paper objective</span><strong>L = λ_o L_old + L_new + R</strong><code>λ_o = {TOY_LAMBDA_OLD} · T = {TOY_TEMPERATURE}</code></div>
-    <div className="v2-c-loss-paths"><div className="is-old"><span>Teacher target Y_o</span><i>→</i><span>student old soft response Ŷ_o</span><i>→</i><strong>L_old = {fmt(result.oldLoss)}</strong></div><div className="is-new"><span>new label Y_n</span><i>→</i><span>student new output Ŷ_n</span><i>→</i><strong>L_new = {fmt(result.newLoss)}</strong></div><div className="is-reg"><span>Student weights</span><i>→</i><strong>R = {fmt(result.regularizationLoss)}</strong></div></div>
-    <div className="v2-c-total-loss"><span>Teaching Toy computed total</span><strong>{fmt(result.totalLoss)}</strong><small>本 toy 明确使用 ½ × 0.0005 × ΣW²；论文目标为 λ_o L_old + L_new + R。</small></div>
-    <div className="v2-c-dependency-grid"><div><strong>L_new dependency</strong><span>Y_n → L_new ← Ŷ_n ← θ_n ← h ← θ_s</span><b>∂L_new / ∂θ_o = 0</b><small>θ_o 不在 L_new 的计算路径上。</small></div><div><strong>L_old dependency</strong><span>Y_o → L_old ← Ŷ_o ← θ_o ← h ← θ_s</span><b>∂L_old / ∂θ_n = 0</b><small>θ_n 不在 L_old 的计算路径上。</small></div></div>
+    <div className="v2-c-loss-formula"><span>论文目标</span><strong><MathFormula id="formula:total_loss" compact /></strong><code>λₒ = {TOY_LAMBDA_OLD} · T = {TOY_TEMPERATURE}</code></div>
+    <div className="v2-c-loss-paths"><div className="is-old"><span><InlineNotation text="Teacher target Y_o" /></span><i>→</i><span><InlineNotation text="student old soft response Ŷ_o" /></span><i>→</i><strong><InlineNotation text="L_old =" /> {fmt(result.oldLoss)}</strong></div><div className="is-new"><span><InlineNotation text="new label Y_n" /></span><i>→</i><span><InlineNotation text="student new output Ŷ_n" /></span><i>→</i><strong><InlineNotation text="L_new =" /> {fmt(result.newLoss)}</strong></div><div className="is-reg"><span>Student weights</span><i>→</i><strong>R = {fmt(result.regularizationLoss)}</strong></div></div>
+    <div className="v2-c-total-loss"><span>Teaching Toy computed total</span><strong>{fmt(result.totalLoss)}</strong><small><InlineNotation text="本 toy 明确使用 ½ × 0.0005 × ΣW²；论文目标为 λ_o L_old + L_new + R。" /></small></div>
+    <div className="v2-c-dependency-grid"><div><strong><InlineNotation text="L_new dependency" /></strong><span><InlineNotation text="Y_n → L_new ← Ŷ_n ← θ_n ← h ← θ_s" /></span><b><InlineNotation text="∂L_new / ∂θ_o = 0" /></b><small><InlineNotation text="θ_o 不在 L_new 的计算路径上。" /></small></div><div><strong><InlineNotation text="L_old dependency" /></strong><span><InlineNotation text="Y_o → L_old ← Ŷ_o ← θ_o ← h ← θ_s" /></span><b><InlineNotation text="∂L_old / ∂θ_n = 0" /></b><small><InlineNotation text="θ_n 不在 L_old 的计算路径上。" /></small></div></div>
     <button type="button" className="v2-c-evidence-link" onClick={onEvidence}>查看论文损失与温度依据 F01 ↗</button>
   </section>;
 }
@@ -265,7 +267,7 @@ function PanelHeading({ step, eyebrow, title }: { step: string; eyebrow: string;
 }
 
 function TensorCard({ name, shape, description, value, tone }: { name: string; shape: string; description: string; value: string; tone?: 'new' | 'old' }) {
-  return <div className={`v2-c-tensor-card ${tone ? `is-${tone}` : ''}`}><div><code>{name}</code><strong>{shape}</strong></div><p>{description}</p><small>{value}</small></div>;
+  return <div className={`v2-c-tensor-card ${tone ? `is-${tone}` : ''}`}><div><code><InlineNotation text={name} /></code><strong><InlineNotation text={shape} /></strong></div><p><InlineNotation text={description} /></p><small><InlineNotation text={value} /></small></div>;
 }
 
 function fmt(value: number) { return Number.isFinite(value) ? value.toFixed(4) : '0.0000'; }

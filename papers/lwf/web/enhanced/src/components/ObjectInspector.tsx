@@ -1,5 +1,6 @@
 import React from 'react';
 import { useReferenceHub } from './ReferencePrimitives';
+import { InlineNotation } from './InlineNotation';
 import type { LearningSession, SceneId } from '../data/session';
 
 type ObjectId = 'theta_s' | 'theta_o' | 'theta_n' | 'teacher' | 'student' | 'x_n' | 'y_n' | 'y_o';
@@ -39,18 +40,18 @@ export function ObjectInspector({ selectedObject, scene, session, onInspect }: {
       <div className="v2-inspector-picker" role="group" aria-label="选择检查对象">
         {(Object.keys(objects) as ObjectId[]).map((key) => (
           <button type="button" key={key} className={id === key ? 'is-selected' : ''} aria-pressed={id === key} onClick={() => onInspect(key)}>
-            <code>{objects[key].symbol}</code><span>{objects[key].label}</span>
+            <code><InlineNotation text={objects[key].symbol} /></code><span>{objects[key].label}</span>
           </button>
         ))}
       </div>
       <article className="v2-inspector-detail" aria-live="polite">
-        <div className="v2-inspector-title"><code>{object.symbol}</code><h3>{object.label}</h3></div>
+        <div className="v2-inspector-title"><code><InlineNotation text={object.symbol} /></code><h3>{object.label}</h3></div>
         {notCreated ? <p className="v2-object-not-created">当前状态：尚未创建或生成。进入后续步骤后，此对象才会出现在 Workspace 中。</p> : null}
         <dl>
-          <div><dt>论文含义</dt><dd>{object.paper}</dd></div>
-          <div><dt>模型位置</dt><dd>{object.where}</dd></div>
-          <div><dt>Runtime 对象</dt><dd>{object.runtime}</dd></div>
-          <div><dt>Shape / 结构</dt><dd>{object.shape}</dd></div>
+          <div><dt>论文含义</dt><dd><InlineNotation text={object.paper} /></dd></div>
+          <div><dt>模型位置</dt><dd><InlineNotation text={object.where} /></dd></div>
+          <div><dt>Runtime 对象</dt><dd><InlineNotation text={object.runtime} /></dd></div>
+          <div><dt>Shape / 结构</dt><dd><InlineNotation text={object.shape} /></dd></div>
           <div><dt>当前状态</dt><dd>{currentState}</dd></div>
         </dl>
         <button className="v2-inspector-evidence" type="button" onClick={() => openHub({ evidenceId: object.evidence })}>

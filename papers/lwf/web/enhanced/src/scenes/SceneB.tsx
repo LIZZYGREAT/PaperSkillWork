@@ -1,4 +1,5 @@
 import React from 'react';
+import { InlineNotation } from '../components/InlineNotation';
 import { useReferenceHub } from '../components/ReferencePrimitives';
 import { openWorkspaceFor } from '../components/workspaceActions';
 import type { BoundaryId, LearningAction, LearningSession, ParamGroupId, TrainingPhase } from '../data/session';
@@ -51,17 +52,17 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
           <AssetCard symbol="new_dataset" label="新任务数据" state="X_n 与 Y_n 可用" tone="new" />
           <AssetCard symbol="X_o / Y_o^GT" label="旧训练数据" state="当前不可用" tone="missing" />
         </div>
-        <p className="v2-b-fact"><span className="v2-source-badge is-paper">PAPER</span> <code>θ_s</code> 与 <code>θ_o</code> 是按模型模块边界划分出的参数集合；它们不是框架自动生成的特殊变量。模型图是结构示意，不宣称论文实验只使用这一种 backbone。</p>
+            <p className="v2-b-fact"><span className="v2-source-badge is-paper">PAPER</span> <code><InlineNotation text="θ_s" /></code> 与 <code><InlineNotation text="θ_o" /></code> 是按模型模块边界划分出的参数集合；它们不是框架自动生成的特殊变量。模型图是结构示意，不宣称论文实验只使用这一种 backbone。</p>
       </section>
 
       <section className="v2-b-section" aria-labelledby="partition-title">
         <SectionHeading step="02" eyebrow="PARAMETER PARTITION EXPLORER" title="先决定任务边界，再得到参数集合" />
         <div className="v2-boundary-control" role="group" aria-label="选择共享与任务专属模块的边界">
           <button type="button" aria-pressed={session.boundary === 'fc7'} className={session.boundary === 'fc7' ? 'is-active' : ''} onClick={() => dispatch({ type: 'SET_BOUNDARY', boundary: 'fc7' })}>
-            <strong>边界在 fc7 之后</strong><span>θ_s = features + fc6 + fc7</span><small>θ_o / θ_n 只含各自分类头</small>
+            <strong>边界在 fc7 之后</strong><span><InlineNotation text="θ_s = features + fc6 + fc7" /></span><small><InlineNotation text="θ_o / θ_n 只含各自分类头" /></small>
           </button>
           <button type="button" aria-pressed={session.boundary === 'features'} className={session.boundary === 'features' ? 'is-active' : ''} onClick={() => dispatch({ type: 'SET_BOUNDARY', boundary: 'features' })}>
-            <strong>边界在 features 之后</strong><span>θ_s = features</span><small>fc6、fc7 和分类头分别进入两任务分支</small>
+            <strong>边界在 features 之后</strong><span><InlineNotation text="θ_s = features" /></span><small>fc6、fc7 和分类头分别进入两任务分支</small>
           </button>
         </div>
 
@@ -84,14 +85,14 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
           <div className="v2-parameter-groups">
             {groups.map((group) => (
               <button type="button" key={group.id} className={`v2-parameter-group is-${group.id} ${session.selectedObject === group.id ? 'is-selected' : ''}`} onClick={() => openWorkspaceFor(group.id)}>
-                <header><code>{group.symbol}</code><strong>{group.title}</strong><span>{group.id === 'theta_n' && session.studentCreated ? 'created' : group.id === 'theta_n' ? '待创建' : 'parameter set'}</span></header>
+                <header><code><InlineNotation text={group.symbol} /></code><strong>{group.title}</strong><span>{group.id === 'theta_n' && session.studentCreated ? 'created' : group.id === 'theta_n' ? '待创建' : 'parameter set'}</span></header>
                 <div className="v2-parameter-name-list">{group.names[session.boundary].map((name) => <code key={name}>{name}</code>)}</div>
-                <small>{group.shape}</small>
+                <small><InlineNotation text={group.shape} /></small>
                 <p>{group.meaning}</p>
               </button>
             ))}
           </div>
-          <div className="v2-parameter-set-note"><strong>θ 是集合，不是单一矩阵。</strong> 点击 θ_s 可在对象检查器查看论文含义、Runtime 映射和依据。当前结构没有配置真实 tensor 尺寸，因此不显示虚构参数量。</div>
+          <div className="v2-parameter-set-note"><strong>θ 是集合，不是单一矩阵。</strong> <InlineNotation text="点击 θ_s 可在对象检查器查看论文含义、Runtime 映射和依据。当前结构没有配置真实 tensor 尺寸，因此不显示虚构参数量。" /></div>
         </div>
       </section>
 
@@ -100,18 +101,18 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
         <div className="v2-create-student-grid">
           <div className="v2-student-state-card is-teacher">
             <span className="v2-source-badge is-paper">PAPER OBJECT</span><h3>Teacher · 旧模型快照</h3>
-            <p><code>(θ_s^T, θ_o^T)</code> 来自已训练检查点；供生成旧任务响应。</p>
+            <p><code><InlineNotation text="(θ_s^T, θ_o^T)" /></code> 来自已训练检查点；供生成旧任务响应。</p>
             <dl><div><dt>模式</dt><dd>eval</dd></div><div><dt>梯度跟踪</dt><dd>关闭</dd></div><div><dt>Optimizer</dt><dd>不加入</dd></div></dl>
             <button type="button" className="v2-inline-inspect" onClick={() => openWorkspaceFor('teacher')}>检查 Teacher ↗</button>
           </div>
           <div className="v2-student-create-action">
             <span className="v2-create-arrow" aria-hidden="true">→</span>
             <button type="button" className="v2-primary-action" onClick={() => dispatch({ type: 'CREATE_STUDENT' })} disabled={session.studentCreated}>{session.studentCreated ? 'Student 已创建 ✓' : '创建扩展后的 Student'}</button>
-            <small>复制 θ_s、θ_o 的初始值，再创建 θ_n；参数对象分别存储。</small>
+            <small><InlineNotation text="复制 θ_s、θ_o 的初始值，再创建 θ_n；参数对象分别存储。" /></small>
           </div>
           <div className={`v2-student-state-card is-student ${session.studentCreated ? 'is-ready' : ''}`}>
             <span className="v2-source-badge is-implementation">RUNTIME OBJECTS</span><h3>Student · 可训练的扩展模型</h3>
-            <p><code>θ_s^S</code>、<code>θ_o^S</code> 初始值复制自 Teacher；新建 <code>θ_n^S</code>。</p>
+            <p><code><InlineNotation text="θ_s^S" /></code>、<code><InlineNotation text="θ_o^S" /></code> 初始值复制自 Teacher；新建 <code><InlineNotation text="θ_n^S" /></code>。</p>
             <dl><div><dt>初值相等</dt><dd>{session.studentCreated ? '是' : '创建后成立'}</dd></div><div><dt>同一 Parameter 对象</dt><dd>{session.teacherStudentShared ? '是 · 错误示例' : '否 · 独立对象'}</dd></div><div><dt>后续可分化</dt><dd>{session.studentCreated && !session.teacherStudentShared ? '是' : 'Student 创建后可验证'}</dd></div></dl>
             <button type="button" className="v2-inline-inspect" onClick={() => openWorkspaceFor('student')}>检查 Student ↗</button>
           </div>
@@ -121,7 +122,7 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
           <button type="button" className="v2-secondary-action" onClick={() => dispatch({ type: 'TOGGLE_SHARED_TEACHER' })}>{session.teacherStudentShared ? '恢复独立对象' : '演示错误的共享引用'}</button>
           {session.teacherStudentShared ? <code className="v2-code-example">student.backbone = teacher.backbone</code> : null}
         </div>
-        <div className="v2-new-head-note"><strong>θ_n 从新任务结构创建。</strong><span>如果 shared feature 为 h:[B,D]，新任务有 C_n 类，则线性分类头示意为 W_n:[C_n,D]、b_n:[C_n]。论文实验初始化采用 Xavier；此页面未生成实际模型权重。</span><button type="button" onClick={() => openHub({ evidenceId: 'A03' })}>查看参数依据 A03 ↗</button></div>
+        <div className="v2-new-head-note"><strong><InlineNotation text="θ_n 从新任务结构创建。" /></strong><span><InlineNotation text="如果 shared feature 为 h:[B,D]，新任务有 C_n 类，则线性分类头示意为 W_n:[C_n,D]、b_n:[C_n]。论文实验初始化采用 Xavier；此页面未生成实际模型权重。" /></span><button type="button" onClick={() => openHub({ evidenceId: 'A03' })}>查看参数依据 A03 ↗</button></div>
       </section>
 
       <section className="v2-b-section" aria-labelledby="cache-title">
@@ -130,7 +131,7 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
           <div className="v2-cache-tensor-flow" aria-label="响应张量流">
             <TensorPill name="X_n" shape="[B, 3, H, W]" /><span aria-hidden="true">→</span><TensorPill name="h" shape="[B, D]" /><span aria-hidden="true">→</span><TensorPill name="old logits" shape="[B, C_o]" /><span aria-hidden="true">→</span><TensorPill name="Y_o" shape="[B, C_o]" tone="old" />
           </div>
-          <p className="v2-cache-caption"><code>Y_o = f_old(X_n)</code>：每个当前新任务样本得到一个旧任务响应向量，不是旧任务真值或旧样本回放。</p>
+          <p className="v2-cache-caption"><code><InlineNotation text="Y_o = f_old(X_n)" /></code>：每个当前新任务样本得到一个旧任务响应向量，不是旧任务真值或旧样本回放。</p>
           <div className="v2-cache-controls">
             <div><span className="v2-source-badge is-implementation">IMPLEMENTATION CHOICE</span><strong>响应生成方式</strong></div>
             <div className="v2-segmented" role="group" aria-label="选择 Teacher 响应生成方式">
@@ -155,7 +156,7 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
               <table className="v2-response-table"><thead><tr><th>sample_id</th><th>新输入</th><th>新标签</th><th>Teacher response</th></tr></thead><tbody>
                 {sampleIds.map((id, index) => {
                   const positionResponses = [901, 427, 428];
-                  return <tr key={id}><th scope="row">{id}</th><td><code>x_{id}</code></td><td><code>y_{id}</code></td><td>{session.responseCacheReady ? <code className={!session.cacheBySampleId ? 'is-misaligned' : ''}>{session.cacheBySampleId ? `y_o(${id}) ∈ ℝ^Cₒ` : `y_o(${positionResponses[index]}) · 错位`}</code> : <span>待生成</span>}</td></tr>;
+                  return <tr key={id}><th scope="row">{id}</th><td><code><InlineNotation text={`x_${id}`} /></code></td><td><code><InlineNotation text={`y_${id}`} /></code></td><td>{session.responseCacheReady ? <code className={!session.cacheBySampleId ? 'is-misaligned' : ''}><InlineNotation text={session.cacheBySampleId ? `y_o(${id}) ∈ ℝ^Cₒ` : `y_o(${positionResponses[index]}) · 错位`} /></code> : <span>待生成</span>}</td></tr>;
                 })}
               </tbody></table>
               <p>{session.cacheBySampleId ? '缓存键绑定样本身份，batch shuffle 后仍可取回同一张图像的 Teacher response。' : '错误示例：当前图像与另一行的 Teacher response 错配，因此不能用于正确训练。'}</p>
@@ -165,7 +166,7 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
           )}
           <details className="v2-implementation-details"><summary>实现边界：shuffle 与数据增强</summary><div><p><strong>按 batch 位置缓存的风险：</strong>如果 DataLoader shuffle 后把 x_A 配给 teacher_response_F，监督目标就和样本错位。这里用 sample_id 说明实现约束。</p><p><strong>增强策略：</strong>离线缓存若来自原图 x，而 Student 接收增强图 Augment(x)，约束就变成 f_S(Augment(x)) ≈ f_T(x)。这是复现实现选择，不是论文指定的唯一策略。</p></div></details>
         </div>
-        <div className="v2-cache-paper-link"><span className="v2-source-badge is-paper">PAPER</span><span>旧模型在新任务输入上产生旧任务目标；该目标与 <code>Y_n</code> 一起构成新任务训练监督。</span><button type="button" onClick={() => openHub({ evidenceId: 'A04' })}>查看依据 A04 ↗</button><button type="button" onClick={() => openHub({ evidenceId: 'F01' })}>查看依据 F01 ↗</button></div>
+        <div className="v2-cache-paper-link"><span className="v2-source-badge is-paper">PAPER</span><span>旧模型在新任务输入上产生旧任务目标；该目标与 <code><InlineNotation text="Y_n" /></code> 一起构成新任务训练监督。</span><button type="button" onClick={() => openHub({ evidenceId: 'A04' })}>查看依据 A04 ↗</button><button type="button" onClick={() => openHub({ evidenceId: 'F01' })}>查看依据 F01 ↗</button></div>
       </section>
 
       <section className="v2-b-section" aria-labelledby="optimizer-title">
@@ -176,16 +177,16 @@ export function SceneB({ session, dispatch, onNext, onPrevious }: {
         </div>
         <div className="v2-optimizer-panel">
           <div className="v2-optimizer-panel-heading"><div><span className="v2-source-badge is-implementation">OPTIMIZER INSPECTOR</span><h3>optimizer.param_groups</h3></div><button type="button" onClick={() => dispatch({ type: 'SET_PHASE', phase: session.phase })}>恢复本阶段配置</button></div>
-          <p>{session.phase === 'warmup' ? '论文 warm-up 设置：冻结 θ_s 与 θ_o，只训练 θ_n。' : 'Joint optimization：允许 θ_s、θ_o、θ_n 一同进入优化器。'}</p>
+          <p><InlineNotation text={session.phase === 'warmup' ? '论文 warm-up 设置：冻结 θ_s 与 θ_o，只训练 θ_n。' : 'Joint optimization：允许 θ_s、θ_o、θ_n 一同进入优化器。'} /></p>
           <div className="v2-optimizer-groups">{groups.map((group) => {
             const included = session.optimizerGroups.includes(group.id);
             const trainable = phaseGroups[session.phase].includes(group.id);
             return <button key={group.id} type="button" className={`${included ? 'is-included' : ''} is-${group.id}`} aria-pressed={included} onClick={() => dispatch({ type: 'TOGGLE_OPTIMIZER_GROUP', group: group.id })}>
-              <span><code>{group.symbol}</code><strong>{group.title}</strong></span><small>requires_grad = {trainable ? 'True' : 'False'}</small><b>{included ? 'optimizer member' : 'excluded'}</b>
+              <span><code><InlineNotation text={group.symbol} /></code><strong>{group.title}</strong></span><small>requires_grad = {trainable ? 'True' : 'False'}</small><b>{included ? 'optimizer member' : 'excluded'}</b>
             </button>;
           })}</div>
-          {session.phase === 'warmup' && !isWarmupConfig ? <p className="v2-warmup-deviation" role="status">当前设置不再匹配论文 warm-up；若 θ_s 入组，L_new 的梯度将有机会改变共享表示。</p> : null}
-          {session.phase === 'warmup' && isWarmupConfig ? <p className="v2-warmup-match">✓ Warm-up 配置匹配：optimizer 只包含 θ_n 的参数对象。</p> : null}
+          {session.phase === 'warmup' && !isWarmupConfig ? <p className="v2-warmup-deviation" role="status"><InlineNotation text="当前设置不再匹配论文 warm-up；若 θ_s 入组，L_new 的梯度将有机会改变共享表示。" /></p> : null}
+          {session.phase === 'warmup' && isWarmupConfig ? <p className="v2-warmup-match">✓ <InlineNotation text="Warm-up 配置匹配：optimizer 只包含 θ_n 的参数对象。" /></p> : null}
         </div>
       </section>
 
@@ -206,12 +207,12 @@ function SectionHeading({ step, eyebrow, title }: { step: string; eyebrow: strin
 }
 
 function AssetCard({ symbol, label, state, tone }: { symbol: string; label: string; state: string; tone: 'old' | 'new' | 'missing' }) {
-  return <div className={`v2-b-asset is-${tone}`}><code>{symbol}</code><strong>{label}</strong><small>{state}</small></div>;
+  return <div className={`v2-b-asset is-${tone}`}><code><InlineNotation text={symbol} /></code><strong>{label}</strong><small><InlineNotation text={state} /></small></div>;
 }
 
 function ModuleRow({ name, group, tone, dispatch }: { name: string; group: string; tone: 'shared' | 'branch' | 'old'; dispatch: React.Dispatch<LearningAction> }) {
   const objectId = tone === 'old' ? 'theta_o' : 'theta_s';
-  return <button type="button" className={`v2-module-row is-${tone}`} onClick={() => openWorkspaceFor(objectId)}><span className="v2-tree-marker" aria-hidden="true">├─</span><code>{name}</code><small>{group}</small></button>;
+  return <button type="button" className={`v2-module-row is-${tone}`} onClick={() => openWorkspaceFor(objectId)}><span className="v2-tree-marker" aria-hidden="true">├─</span><code>{name}</code><small><InlineNotation text={group} /></small></button>;
 }
 
 function BoundaryLine({ label }: { label: string }) {
@@ -219,7 +220,7 @@ function BoundaryLine({ label }: { label: string }) {
 }
 
 function TensorPill({ name, shape, tone }: { name: string; shape: string; tone?: 'old' }) {
-  return <div className={`v2-tensor-pill ${tone === 'old' ? 'is-old' : ''}`}><code>{name}</code><small>{shape}</small></div>;
+  return <div className={`v2-tensor-pill ${tone === 'old' ? 'is-old' : ''}`}><code><InlineNotation text={name} /></code><small><InlineNotation text={shape} /></small></div>;
 }
 
 function ReadyCheck({ label, ready }: { label: string; ready: boolean }) {
