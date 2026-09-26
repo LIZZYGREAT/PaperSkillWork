@@ -48,4 +48,4 @@ Establish what the paper does before planning pages or interactions. Do not summ
 
 ## Completion Criteria
 
-Save the model and have a person verify that its core explanation matches the complete source before marking W2 complete.
+Save the model and have a person verify that its core explanation matches the complete source. W2 is a human review gate; after acceptance, record it with `python tools/paper.py stage <paper-id> W2 complete --reviewed-by "Name" --note "Paper model matches the source"`.

@@ -41,4 +41,4 @@ Choose the one continuous path that lets a first-time reader understand the pape
 
 ## Completion Criteria
 
-A person confirms the learning order and priorities before W4 is marked complete.
+A person confirms the learning order and priorities before W4 is marked complete. Record acceptance with `python tools/paper.py stage <paper-id> W4 complete --reviewed-by "Name" --note "Learning spine and priorities accepted"`.

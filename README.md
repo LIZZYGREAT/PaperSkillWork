@@ -24,13 +24,17 @@ python tools/paper.py status <paper-id>
 python tools/paper.py check <paper-id>
 python tools/paper.py stage <paper-id>
 python tools/paper.py stage <paper-id> W0 in_progress
-python tools/paper.py stage <paper-id> W0 complete --reviewed-by "Name" --note "Source identity confirmed"
+python tools/paper.py stage <paper-id> W0 complete
+python tools/paper.py stage <paper-id> W4 complete --reviewed-by "Name" --note "Main learning spine accepted"
 python tools/paper.py release-check <paper-id>
 python tools/paper.py paths <paper-id>
 python tools/paper.py open <paper-id>
+python tools/paper.py upstream-check <paper-id> --paperskill-repo "C:\path\to\PaperSkill" --participant "Public name" [--pinyin "romanized-name"] [--github "username"]
 ```
 
-`new` records the paper identity and creates a v3 workspace. `--url` is optional when using `--source-location "user-provided PDF"`; use `--source-type`, repeat `--author` for all authors, and supply `--venue`/`--year` when known. Complete W0 metadata and W1's full-source cache by hand; no paper content is inferred from a URL. `check` validates structure and machine-resolvable references. It cannot evaluate teaching quality. `stage ... complete` always requires a human reviewer and note; no command auto-advances a stage.
+`new` records the paper identity and creates a v3 workspace. `--url` is optional when using `--source-location "user-provided PDF"`; use `--source-type`, repeat `--author` for all authors, and supply `--venue`/`--year` when known. No paper content is inferred from a URL. Only W2, W4, W7, and W9 require `--reviewed-by` and `--note`. W0, W1, W3, W5, W6, W8, and W10 record `completed_by: automation` after machine checks pass; W3 stops on unresolved evidence/source conflicts, unsafe wording, or unclear asset rights. `check` validates structure, paths, references, and implementation coverage. It cannot evaluate teaching quality.
+
+Set `release.upstream_paper_name` and `release.upstream_version` independently of `paper_id`, and set `release.output` to the matching `html_output/<paper-name>/<version>`. `upstream-check` records the clean PaperSkill checkout's commit, then runs official import, validation, build, and preflight in an isolated temporary checkout. It leaves the supplied PaperSkill checkout untouched, writes `audit/upstream-preflight.json`, and copies a passing export to `release.output`. If that generated export already exists, use `--replace-output` to replace it. W10 completion reads the JSON report; do not type a Markdown PASS.
 
 Workflow v1/v2 workspaces already in `papers/` remain readable by their existing checks and are not rewritten by this change. `migrate-v2` remains available for explicit v1 migrations.
 
@@ -52,4 +56,4 @@ $final-audit              # W9–W10
 
 ## Release boundary
 
-`PaperSkillWork` keeps the research and implementation workspace; `PaperSkill` is a separate repository. Export a complete independent React + TypeScript project to `html_output/<paper-name>/<version>/`. Tutorial PRs contain that export only. Workflow/skill improvements use a separate PR. Run the current official upstream preflight before release; passing CI does not guarantee merge. Never merge or cherry-pick PaperSkillWork Git history into PaperSkill.
+`PaperSkillWork` keeps the research and implementation workspace; `PaperSkill` is a separate repository. Export a complete independent React + TypeScript project to `html_output/<paper-name>/<version>/`. Tutorial PRs contain that export only. Workflow/skill improvements use a separate PR. Passing CI does not guarantee merge. Never merge or cherry-pick PaperSkillWork Git history into PaperSkill.

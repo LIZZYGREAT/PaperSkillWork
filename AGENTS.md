@@ -19,9 +19,9 @@ Do not build an interaction, animation, analogy, chapter, or formula display to 
 
 ## W0–W10 workflow
 
-Follow `docs/WORKFLOW.md`. Source intake and a one-time source cache precede the paper model. Evidence and asset curation precede the learning spine. The first code is a small vertical slice; a person reviews whether it teaches the intended mental model before full implementation proceeds. Learning quality and evidence validity remain human judgments; tools may check structure and references only.
+Follow `docs/WORKFLOW.md`. Source intake and a one-time source cache precede the paper model. Evidence and asset curation precede the learning spine. The first code is a small vertical slice; a person reviews whether it teaches the intended mental model before full implementation proceeds. Learning quality and evidence validity remain human judgments; tools may check structure, paths, references, coverage, and builds only.
 
-Never mark a workflow stage complete on behalf of a human reviewer. Never let build success override a failed learning or evidence review.
+Human review is required only at W2, W4, W7, and W9. These stages need `reviewed_by` and `note`; never invent a reviewer or mark them complete on a person's behalf. W0, W1, W3, W5, W6, W8, and W10 are recorded as `completed_by: automation` only after their mechanical checks pass. W3 remains blocked by unresolved source/evidence conflicts, unsafe claim wording, or unclear asset rights. Never let build success override a failed learning or evidence review.
 
 ## Source and evidence
 
@@ -31,16 +31,16 @@ Cache one complete, systematic paper read under `source-cache/`. Use the cache f
 
 ## Visual assets
 
-Inventory figures, tables, and other source visuals; classify and evaluate each; then record a use decision. Preserve selected source assets apart from derivatives, record source/page/caption/processing/evidence/reuse-rights metadata, and explain selected paper visuals in the tutorial. Do not publish assets whose reuse rights are unclear. Do not submit a paper PDF. Use relative image paths and include asset provenance in the exported project's `README.md`.
+Inventory figures, tables, and other source visuals; classify and evaluate each; then record a use decision. At W3 keep selected originals in `source-cache/figures/`, record source/page/caption/processing/evidence/reuse-rights metadata, and do not require a derivative yet. At W5 assign each selected public asset to a spine stage and choose its rendering. Generate derivatives during implementation; W8/W10 verify the derivative, web copy, export copy, and README provenance. Do not publish assets whose reuse rights are unclear. Do not submit a paper PDF. Use relative image paths and include asset provenance in the exported project's `README.md`.
 
 ## Project and release boundaries
 
 1. Each paper workspace lives under `papers/<paper-id>/`.
 2. Do not rewrite existing LwF scenes or modify frozen `web/canonical/` artifacts as part of a macro-workflow change.
-3. The tutorial export is an independent React + TypeScript project under `html_output/<paper-name>/<version>/`.
+3. The tutorial export is an independent React + TypeScript project under `html_output/<upstream-paperName>/<upstream-version>/`. Internal `paper_id` is not an upstream directory identifier; record `release.upstream_paper_name` and `release.upstream_version` separately, with `release.output` exactly matching those values.
 4. Copy any useful shared source into that project; do not depend on a cross-paper runtime package or local workspace path.
 5. Tutorial PRs contain only `html_output/<paper>/<version>/`. Workflow/skill changes, if ever contributed upstream, use a separate PR.
-6. Retain the upstream-required entry files and run the official current upstream preflight before release. A green CI run does not guarantee merge; maintainers decide.
+6. Retain the upstream-required entry files and run `tools/paper.py upstream-check` before release. It records the clean PaperSkill checkout's commit, runs official import/validation/build/preflight in an isolated temporary checkout, and writes `audit/upstream-preflight.json`. W10 reads this report; a Markdown PASS is not evidence. A green CI run does not guarantee merge; maintainers decide.
 7. PaperSkill is a separate repository. Use its official import flow; do not merge or cherry-pick PaperSkillWork history into it.
 
 ## Scope and verification

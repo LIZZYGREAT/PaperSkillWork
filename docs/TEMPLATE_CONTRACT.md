@@ -26,11 +26,14 @@ All new-workflow templates may use only these placeholders. An omitted arXiv ID 
 | `learning-spine.md` | `design/learning-spine.md` |
 | `asset-plan.md` | `design/asset-plan.md` |
 | `implementation-plan.md` | `design/implementation-plan.md` |
+| `implementation-manifest.json` | `web/enhanced/implementation-manifest.json` |
 | `final-check-v3.md` | `audit/final-check.md` |
 
-`source/paper.url` is created from `--url` when supplied. The source-cache templates are pending scaffolds; W1 replaces their placeholder content from a complete source read and inventories every figure/table. `source-cache/figures/` holds captured source visuals. `web/enhanced/` is created as the implementation location but the tutorial is not scaffolded before W6. `html_output/<paper-id>/v1/` is the default export target recorded in `paper.yaml`; W10 populates it.
+`source/paper.url` is created from `--url` when supplied. The source-cache templates are pending scaffolds; W1 replaces their placeholder content from a complete source read and inventories every figure/table. `source-cache/figures/` holds captured source visuals. W3 records original sources and a processing plan; it does not require a derivative. W5 records selected asset placement/rendering, and implementation creates derivatives. `web/enhanced/` is created with an empty implementation manifest, but the tutorial itself is not scaffolded before W6.
 
-Template generation creates no source analysis, assigns no priority, and advances no workflow stage. A person must review and explicitly accept each stage.
+`release.upstream_paper_name`, `release.upstream_version`, and `release.output` start empty. Set the two upstream identifiers explicitly; `release.output` must be exactly `html_output/<upstream_paper_name>/<upstream_version>`. It is not derived from the internal `paper_id`.
+
+Template generation creates no source analysis, assigns no priority, and advances no workflow stage. Human review is required only for W2, W4, W7, and W9. W0, W1, W3, W5, W6, W8, and W10 record `completed_by: automation` after their checks pass; W3 blocks on unresolved source/evidence conflicts, unsafe wording, or unclear reuse rights.
 
 ## Legacy templates
 
