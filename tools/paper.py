@@ -1406,6 +1406,43 @@ def v3_implementation_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Di
     validate_placements("supporting", "SUPPORTING", {"compact-inline", "hover", "expandable"})
     validate_placements("reference", "REFERENCE", {"Reference Hub", "Hover", "Advanced details", "Implementation notes", "Evidence details"})
 
+    source_manifest, cache_problems = v3_cache_data(folder)
+    problems.extend(cache_problems)
+    asset_plan, asset_problems = validate_asset_plan(folder, source_manifest, evidence_ids)
+    problems.extend(asset_problems)
+    selected_assets = {
+        row.get("id") for row in asset_plan.get("assets", [])
+        if isinstance(row, dict) and row.get("decision") in ("USE_DIRECTLY", "CROP_AND_USE", "REDRAW_FROM_PAPER") and isinstance(row.get("id"), str)
+    } if isinstance(asset_plan, dict) and isinstance(asset_plan.get("assets"), list) else set()
+    asset_rows = implementation.get("assets")
+    if not isinstance(asset_rows, list):
+        problems.append("implementation.assets must be a list")
+        asset_rows = []
+    seen_assets: Dict[str, int] = {}
+    for index, row in enumerate(asset_rows):
+        label = "implementation asset {}".format(index + 1)
+        if not isinstance(row, dict):
+            problems.append("{} must be a mapping".format(label))
+            continue
+        asset_id = row.get("asset")
+        if not isinstance(asset_id, str):
+            problems.append("{} needs an asset ID".format(label))
+            continue
+        seen_assets[asset_id] = seen_assets.get(asset_id, 0) + 1
+        if asset_id not in selected_assets:
+            problems.append("implementation asset '{}' is not a selected public asset".format(asset_id))
+        asset_stage = row.get("stage")
+        if asset_stage != "Reference Hub" and (not isinstance(asset_stage, str) or asset_stage not in spine_stages):
+            problems.append("implementation asset '{}' stage must be a Learning Spine stage or Reference Hub".format(asset_id))
+        if row.get("rendering") not in ("original", "crop", "redraw", "overlay"):
+            problems.append("implementation asset '{}' rendering must be original, crop, redraw, or overlay".format(asset_id))
+    for asset_id in sorted(selected_assets):
+        count = seen_assets.get(asset_id, 0)
+        if count == 0:
+            problems.append("selected public asset '{}' is missing from implementation.assets".format(asset_id))
+        elif count > 1:
+            problems.append("selected public asset '{}' must appear once in implementation.assets".format(asset_id))
+
     vertical_slice = implementation.get("vertical_slice")
     if not isinstance(vertical_slice, dict):
         problems.append("implementation.vertical_slice must be a mapping")
@@ -1534,7 +1571,7 @@ def v3_implementation_coverage(folder: Path, stage_id: str, implementation_plan:
     return problems
 
 
-def v3_asset_data(folder: Path, manifest: Optional[Dict[str, Any]], evidence_ids: set) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+def validate_asset_plan(folder: Path, manifest: Optional[Dict[str, Any]], evidence_ids: set) -> Tuple[Optional[Dict[str, Any]], List[str]]:
     data, problems = fenced_yaml(folder / "design/asset-plan.md")
     if data is None:
         return None, problems
@@ -1570,7 +1607,7 @@ def v3_asset_data(folder: Path, manifest: Optional[Dict[str, Any]], evidence_ids
         if not isinstance(item.get("type"), str) or item.get("type") not in allowed_asset_types:
             problems.append("asset '{}' has unknown type '{}'".format(item_id, item.get("type")))
         if decision in public_decisions:
-            required = ("paper_figure_id", "page", "caption", "source_paper_version", "source_location", "attribution", "reuse_rights", "processing", "derivative_path", "web_path", "explanation")
+            required = ("paper_figure_id", "page", "caption", "source_paper_version", "source_location", "source_locator", "teaching_role", "attribution", "reuse_rights", "processing", "derivative_path", "web_path", "explanation")
             for key in required:
                 if not isinstance(item.get(key), str) or not item[key].strip():
                     problems.append("selected asset '{}' is missing {}".format(item_id, key))
@@ -1584,14 +1621,12 @@ def v3_asset_data(folder: Path, manifest: Optional[Dict[str, Any]], evidence_ids
             path_issue = path_problem(derivative_path)
             if path_issue:
                 problems.append("selected asset '{}' derivative_path {}".format(item_id, path_issue))
-            elif not (folder / derivative_path).is_file():
-                problems.append("selected web derivative is missing: {}".format(derivative_path))
             web_path = item.get("web_path")
             path_issue = path_problem(web_path)
             if path_issue:
                 problems.append("selected asset '{}' web_path {}".format(item_id, path_issue))
             rights = str(item.get("reuse_rights", "")).lower()
-            if not rights or "unclear" in rights or "pending" in rights:
+            if not rights or re.search(r"unclear|pending|unknown|unverified|not checked|permission needed", rights):
                 problems.append("selected asset '{}' has no approved reuse-rights basis".format(item_id))
         elif decision in ("REFERENCE_ONLY", "DO_NOT_USE") and (not isinstance(item.get("reason"), str) or not item["reason"].strip()):
             problems.append("asset '{}' needs a reason for {}".format(item_id, decision))
@@ -1606,6 +1641,42 @@ def v3_asset_data(folder: Path, manifest: Optional[Dict[str, Any]], evidence_ids
         unregistered = sorted(str(item) for item in set(planned_figure_ids) - paper_figure_ids)
         if unregistered:
             problems.append("asset plan refers to unknown paper figures: {}".format(", ".join(unregistered)))
+    return data, problems
+
+
+def validate_asset_materialization(
+    folder: Path,
+    manifest: Optional[Dict[str, Any]],
+    evidence_ids: set,
+    export_root: Optional[Path] = None,
+) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    data, problems = validate_asset_plan(folder, manifest, evidence_ids)
+    if not isinstance(data, dict) or not isinstance(data.get("assets"), list):
+        return data, problems
+    selected = [
+        item for item in data["assets"]
+        if isinstance(item, dict) and item.get("decision") in ("USE_DIRECTLY", "CROP_AND_USE", "REDRAW_FROM_PAPER")
+    ]
+    for item in selected:
+        item_id = item.get("id", "?")
+        derivative_path = item.get("derivative_path")
+        if isinstance(derivative_path, str) and not path_problem(derivative_path) and not (folder / derivative_path).is_file():
+            problems.append("selected web derivative is missing: {}".format(derivative_path))
+        web_path = item.get("web_path")
+        if isinstance(web_path, str) and not path_problem(web_path):
+            local_web_asset = folder / "web/enhanced" / web_path
+            if not local_web_asset.is_file():
+                problems.append("selected asset '{}' is missing from web/enhanced: {}".format(item_id, web_path))
+            if export_root is not None and not (export_root / web_path).is_file():
+                problems.append("export is missing selected asset: {}".format(web_path))
+    if selected:
+        readme = (export_root or (folder / "web/enhanced")) / "README.md"
+        if not readme.is_file():
+            problems.append("{} is missing asset provenance README.md".format("export" if export_root else "web/enhanced"))
+        else:
+            readme_text = readme.read_text(encoding="utf-8")
+            if not re.search(r"asset\s+(provenance|sources)|image\s+(provenance|sources)", readme_text, re.IGNORECASE):
+                problems.append("{} README.md must document asset provenance".format("export" if export_root else "web/enhanced"))
     return data, problems
 
 
@@ -1666,7 +1737,7 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
                     problems.append("evidence entry '{}' is missing {}".format(entry_id, key))
             if not isinstance(entry.get("type"), str) or entry.get("type") not in allowed_evidence_types:
                 problems.append("evidence entry '{}' has unknown type '{}'".format(entry_id, entry.get("type")))
-        _assets, asset_problems = v3_asset_data(folder, manifest, evidence_ids)
+        _assets, asset_problems = validate_asset_plan(folder, manifest, evidence_ids)
         problems.extend(asset_problems)
         return problems
     if stage_id == "W4":
@@ -1701,6 +1772,11 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
         problems.extend(implementation_problems)
         if isinstance(implementation_plan, dict):
             problems.extend(v3_implementation_coverage(folder, stage_id, implementation_plan))
+        if stage_id == "W8":
+            source_manifest, source_problems = v3_cache_data(folder)
+            problems.extend(source_problems)
+            _assets, asset_problems = validate_asset_materialization(folder, source_manifest, evidence_ids)
+            problems.extend(asset_problems)
         return problems
     if stage_id == "W7":
         plan = folder / "design/implementation-plan.md"
@@ -1722,8 +1798,6 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
         readme = output / "README.md"
         if readme.is_file():
             readme_text = readme.read_text(encoding="utf-8")
-            if not re.search(r"asset\s+(provenance|sources)|image\s+(provenance|sources)", readme_text, re.IGNORECASE):
-                problems.append("export README.md must document asset provenance")
             for image_path in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", readme_text):
                 path_issue = path_problem(image_path.strip())
                 if path_issue:
@@ -1740,17 +1814,12 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
                         problems.append("export has a root-relative image/media path in {}".format(source_file.relative_to(output).as_posix()))
         if output.is_dir() and any(path.suffix.lower() == ".pdf" for path in output.rglob("*")):
             problems.append("upstream export must not include a PDF")
-        asset_plan, asset_plan_problems = fenced_yaml(folder / "design/asset-plan.md")
-        problems.extend(asset_plan_problems)
-        if isinstance(asset_plan, dict) and isinstance(asset_plan.get("assets"), list):
-            for asset in asset_plan["assets"]:
-                if not isinstance(asset, dict) or asset.get("decision") not in ("USE_DIRECTLY", "CROP_AND_USE", "REDRAW_FROM_PAPER"):
-                    continue
-                web_path = asset.get("web_path")
-                if not isinstance(web_path, str) or path_problem(web_path):
-                    problems.append("selected asset '{}' has an invalid export path".format(asset.get("id", "?")))
-                elif not (output / web_path).is_file():
-                    problems.append("export is missing selected asset: {}".format(web_path))
+        asset_manifest, source_problems = v3_cache_data(folder)
+        problems.extend(source_problems)
+        evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
+        problems.extend(evidence_problems)
+        _assets, materialization_problems = validate_asset_materialization(folder, asset_manifest, evidence_ids, output)
+        problems.extend(materialization_problems)
         final_check = folder / "audit/final-check.md"
         if not marker_present(final_check, "Upstream Preflight: PASS"):
             problems.append("audit/final-check.md must contain Upstream Preflight: PASS")
@@ -1768,7 +1837,7 @@ def v3_cross_reference_problems(folder: Path, stage_index: int) -> List[str]:
     if stage_index >= STAGE_IDS.index("W3"):
         evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
         problems.extend(evidence_problems)
-        _assets, asset_problems = v3_asset_data(folder, manifest, evidence_ids)
+        _assets, asset_problems = validate_asset_plan(folder, manifest, evidence_ids)
         problems.extend(asset_problems)
     if stage_index >= STAGE_IDS.index("W4"):
         _spine, spine_problems = v3_priority_data(folder, evidence_ids)

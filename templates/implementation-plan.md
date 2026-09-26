@@ -13,6 +13,7 @@ The YAML below is the sole structured source for implementation coverage. Give e
 ```yaml
 implementation:
   stages: []
+  assets: []
   supporting: []
   reference: []
   vertical_slice:
@@ -21,6 +22,8 @@ implementation:
 ```
 
 Each `stages` entry requires `id`, `page`, `core_items`, `evidence_refs`, `primary_vehicle`, `reusable_pattern`, and `reason`. `reusable_pattern` may be null. Each `supporting` / `reference` entry has an `item` ID and a `placement`. The vertical slice lists the implementation stages and CORE IDs that W6 must finish.
+
+Each selected public asset also appears once in `assets` with its asset-plan ID, a Learning Spine stage (or `Reference Hub`), and a `rendering` choice: `original`, `crop`, `redraw`, or `overlay`.
 
 ## Reusable Pattern Library
 
