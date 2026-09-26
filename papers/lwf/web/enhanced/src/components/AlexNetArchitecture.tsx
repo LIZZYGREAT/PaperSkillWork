@@ -2,8 +2,9 @@ import React from 'react';
 
 function DenseNetworkGlyph({ shape }: { shape: 'fc6' | 'fc7' }) {
   const compressed = shape === 'fc6';
-  const inputYs = compressed ? [6, 16, 26, 36, 46, 56] : [8, 18, 28, 38, 48];
-  const outputYs = compressed ? [11, 26, 41, 56] : [8, 18, 28, 38, 48];
+  const equalWidthNodes = [8, 20, 32, 44, 56];
+  const inputYs = compressed ? [6, 16, 26, 36, 46, 56] : equalWidthNodes;
+  const outputYs = equalWidthNodes;
   const xs = [25, 83];
   return (
     <svg className={`v2-alexnet-dense-glyph ${compressed ? 'is-compressed' : 'is-equal'}`} viewBox="0 0 108 64" aria-hidden="true">

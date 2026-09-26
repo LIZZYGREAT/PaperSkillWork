@@ -110,12 +110,11 @@
 @media(max-width:720px){.v2-alexnet-architecture{padding:14px}.v2-alexnet-heading{align-items:flex-start;flex-direction:column;gap:6px}.v2-alexnet-flow{grid-template-columns:62px 16px minmax(0,1fr);gap:6px}.v2-alexnet-flow>.v2-alexnet-arrow:last-of-type{display:none}.v2-alexnet-layer-grid{grid-template-columns:1fr}.v2-alexnet-layer{min-height:150px}.v2-alexnet-layer-art{min-height:75px}.v2-alexnet-conv-glyph{width:min(180px,90%)}.v2-alexnet-dense-glyph{width:min(165px,90%)}.v2-alexnet-heads{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}.v2-alexnet-task-head{min-height:76px}.v2-alexnet-explanation-grid{grid-template-columns:1fr}.v2-alexnet-note{font-size:11px}}
 @media(max-width:480px){.v2-alexnet-architecture.is-compact .v2-alexnet-flow{grid-template-columns:54px 12px minmax(0,1fr);gap:3px}.v2-alexnet-architecture.is-compact .v2-alexnet-layer-grid{grid-template-columns:1fr}.v2-alexnet-architecture.is-compact .v2-alexnet-layer{min-height:95px;grid-template-columns:72px minmax(0,1fr);grid-template-rows:1fr}.v2-alexnet-architecture.is-compact .v2-alexnet-layer-art{min-height:72px}.v2-alexnet-architecture.is-compact .v2-alexnet-layer-caption{align-self:center;padding:0;border:0}.v2-alexnet-architecture.is-compact .v2-alexnet-conv-glyph{width:66px}.v2-alexnet-architecture.is-compact .v2-alexnet-dense-glyph{width:58px}.v2-alexnet-architecture.is-compact .v2-alexnet-layer-caption strong{font-size:11px}.v2-alexnet-architecture.is-compact .v2-alexnet-layer-caption span{font-size:10px}}
 
-/* Inline notation is used throughout the tutorial, including short symbols embedded in prose. */
-.v2-inline-math{display:inline-block;white-space:nowrap;color:inherit;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-style:italic;font-size:1.08em;line-height:1.25;vertical-align:baseline}
-.v2-inline-math sub,.v2-inline-math sup{position:relative;font-size:.7em;line-height:0;vertical-align:baseline}
-.v2-inline-math sub{bottom:-.18em}
-.v2-inline-math sup{top:-.48em}
-code .v2-inline-math{font-size:1.12em}
+/* Keep short symbols in the surrounding UI typeface; only their indices are raised or lowered. */
+.v2-inline-math{display:inline;white-space:nowrap;color:inherit;font:inherit;letter-spacing:inherit;vertical-align:baseline}
+.v2-inline-math sub,.v2-inline-math sup{position:relative;font:inherit;font-size:.72em;line-height:0;vertical-align:baseline}
+.v2-inline-math sub{bottom:-.2em}
+.v2-inline-math sup{top:-.45em}
 
 /* Scene B's parameter map needs readable labels at normal desktop zoom. */
 .v2-scene-b .v2-b-asset code{font-size:15px}
