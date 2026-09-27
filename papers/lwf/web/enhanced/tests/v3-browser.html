@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LwF 00–03 浏览器验收</title>
+    <style>
+      body { margin: 0; padding: 24px; color: #1d3145; background: #f4f7f6; font: 16px/1.5 "Segoe UI", "Microsoft YaHei", sans-serif; }
+      main { width: min(1200px, 100%); margin: auto; }
+      h1 { margin: 0 0 6px; }
+      p { color: #5f7283; }
+      #summary { margin: 16px 0; padding: 14px; border: 1px solid #d8e1e7; border-radius: 10px; background: white; }
+      #results { display: grid; gap: 6px; margin: 0 0 18px; padding: 0; list-style: none; }
+      #results li { padding: 8px 10px; border-radius: 8px; background: white; }
+      #results .pass { border-left: 4px solid #218067; }
+      #results .fail { border-left: 4px solid #b44b3e; color: #8b342b; }
+      iframe { display: block; width: 100%; height: 720px; border: 1px solid #cbd7dc; border-radius: 12px; background: white; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>LwF 00–03 浏览器验收</h1>
+      <p>打开一份嵌入式新版页面，检查问题设定、模型状态、步骤同步、梯度路径和训练回放。</p>
+      <div id="summary" role="status" aria-live="polite">正在加载 LwF 新版页面…</div>
+      <ol id="results" aria-label="浏览器检查结果"></ol>
+      <iframe title="LwF First Vertical Slice" src="/?version=v3"></iframe>
+    </main>
+    <script>
+      const resultList = document.querySelector("#results");
+      const summary = document.querySelector("#summary");
+      const frame = document.querySelector("iframe");
+      const pause = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+      const assert = (condition, message) => { if (!condition) throw new Error(message); };
+      const run = async () => {
+        const doc = frame.contentDocument;
+        const check = async (name, action) => {
+          const item = document.createElement("li");
+          try { await action(); item.className = "pass"; item.textContent = `通过 · ${name}`; }
+          catch (error) { item.className = "fail"; item.textContent = `失败 · ${name}：${error instanceof Error ? error.message : String(error)}`; }
+          resultList.append(item);
+        };
+        try {
+          await pause(500);
+          await check("问题设定与 baseline 对比", () => {
+            assert(doc.querySelectorAll(".v3-fact-card").length === 3, "应显示旧模型、旧数据、新数据三项状态");
+            assert(doc.querySelectorAll(".v3-baseline-card").length === 3, "应比较三种 baseline");
+            assert(doc.querySelector(".v3-baseline-card.is-mismatch")?.textContent?.includes("需要旧任务训练数据"), "Joint Training 应标出旧数据约束冲突");
+          });
+          await check("Teacher / Student 参数状态", () => {
+            assert(doc.querySelectorAll(".rk-architecture__node--frozen").length === 2, "Teacher 的 θₛ 和 θₒ 应冻结");
+            assert(doc.querySelectorAll(".rk-architecture__node--trainable").length === 3, "Student 的 θₛ、θₒ、θₙ 应可训练");
+            assert(doc.querySelector("#architecture-node-student-new-head")?.textContent?.includes("θₙ"), "新任务 head θₙ 缺失");
+          });
+          await check("Yₒ 来源辨析", () => {
+            const copy = doc.querySelector(".v3-key-move")?.textContent ?? "";
+            assert(copy.includes("不是旧任务真值、旧数据集，也不是 replay sample"), "Yₒ 必须明确区别于真值和 replay");
+            assert(copy.includes("Teacher 对当前新任务输入 Xₙ"), "Yₒ 应说明为 Teacher 在 Xₙ 上的输出");
+          });
+          await check("手动步骤选择同步到共享图", async () => {
+            const step = [...doc.querySelectorAll(".v3-key-move .rk-flow-step")].find((item) => item.textContent?.includes("生成旧响应"));
+            assert(step, "缺少“生成旧响应”步骤");
+            step.click();
+            await pause(120);
+            assert(doc.querySelector(".rk-sticky-system")?.getAttribute("data-active-step-id") === "key-generate-response", "活动步骤 id 未同步");
+            assert(doc.querySelector(".v3-system-visual .rk-process-loop__step-heading h3")?.textContent?.trim() === "生成旧响应", "共享流程图未切换到 Teacher response 路径");
+            assert(doc.querySelector('[data-edge-id="teacher-yo"].is-active'), "Teacher → Yₒ 边应高亮");
+          });
+          await check("滚动步骤同步", async () => {
+            await pause(450);
+            doc.querySelector("#cycle-new-loss")?.scrollIntoView({ behavior: "auto", block: "center" });
+            await pause(350);
+            const activeStepId = doc.querySelector(".rk-sticky-system")?.getAttribute("data-active-step-id");
+            assert(activeStepId === "cycle-new-loss", `滚动到 L_new 说明后步骤 id 未同步，实际为 ${activeStepId ?? "空"}`);
+            assert(doc.querySelector(".v3-system-visual .rk-process-loop__step-heading h3")?.textContent?.trim() === "新任务损失", "共享流程图未切换到 L_new 路径");
+          });
+          await check("Backward 的旧、新梯度路径", async () => {
+            const step = [...doc.querySelectorAll(".v3-training-cycle .rk-flow-step")].find((item) => item.textContent?.includes("Backward"));
+            assert(step, "缺少 Backward 步骤");
+            step.click();
+            await pause(120);
+            for (const id of ["old-loss-head-gradient", "old-head-shared-gradient", "new-loss-head-gradient", "new-head-shared-gradient"]) {
+              assert(doc.querySelector(`[data-edge-id="${id}"].is-active`), `梯度边 ${id} 未高亮`);
+            }
+          });
+          await check("Optimizer Step 的参数更新路径", async () => {
+            const step = [...doc.querySelectorAll(".v3-training-cycle .rk-flow-step")].find((item) => item.textContent?.includes("Optimizer Step"));
+            assert(step, "缺少 Optimizer Step");
+            step.click();
+            await pause(120);
+            assert(doc.querySelector("[data-edge-id=\"optimizer-updated-student\"].is-active"), "优化器到更新后 Student 的边未高亮");
+            assert(doc.querySelector(".v3-objective-block")?.textContent?.includes("反向传播计算梯度"), "未区分 backward 与参数更新");
+          });
+          await check("单次训练回放完成", async () => {
+            const replay = [...doc.querySelectorAll(".v3-replay-button")].find((item) => item.textContent?.includes("Replay One Training Step"));
+            assert(replay, "缺少训练回放按钮");
+            replay.click();
+            await pause(5700);
+            assert(doc.querySelector(".v3-replay-status")?.textContent?.includes("一次训练周期已完成"), "回放未完成六个训练步骤");
+            assert(doc.querySelector(".v3-system-visual .rk-process-loop__step-heading h3")?.textContent?.trim() === "Optimizer Step", "回放结束时流程图不在 Optimizer Step");
+          });
+          await check("Reference Hub 符号条目", async () => {
+            doc.querySelector(".v3-reference-toggle")?.click();
+            await pause(80);
+            const entries = doc.querySelector(".rk-reference-hub__list")?.textContent ?? "";
+            for (const term of ["Teacher", "Student", "θₛ", "θₒ", "θₙ", "Xₙ", "Yₒ", "Yₙ", "Ŷₒ", "Ŷₙ", "L_old", "L_new", "λₒ", "R", "Warm-up", "联合优化"]) {
+              assert(entries.includes(term), `Reference Hub 缺少 ${term}`);
+            }
+            const teacherTarget = [...doc.querySelectorAll(".rk-reference-hub__list button")].find((item) => item.textContent?.includes("Yₒ"));
+            assert(teacherTarget, "缺少 Yₒ 参考项");
+            teacherTarget.click();
+            await pause(40);
+            assert(doc.querySelector(".rk-reference-hub__detail")?.textContent?.includes("当前任务输入 Xₙ"), "Yₒ 参考项未说明它是 Teacher 在 Xₙ 上的响应");
+          });
+          const failures = resultList.querySelectorAll(".fail").length;
+          summary.textContent = failures ? `浏览器验收完成：${resultList.children.length - failures} 项通过，${failures} 项失败。` : `浏览器验收通过：${resultList.children.length} 项检查全部通过。`;
+          summary.dataset.result = failures ? "failed" : "passed";
+        } catch (error) {
+          summary.textContent = `浏览器验收未能启动：${error instanceof Error ? error.message : String(error)}`;
+          summary.dataset.result = "failed";
+        }
+      };
+      frame.addEventListener("load", () => { void run(); }, { once: true });
+    </script>
+  </body>
+</html>
