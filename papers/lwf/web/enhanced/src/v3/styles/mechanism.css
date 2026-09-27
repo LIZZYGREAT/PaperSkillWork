@@ -89,10 +89,10 @@
 
 .v3-response-comparison {
   display: grid;
-  grid-template-columns: minmax(120px, .6fr) minmax(0, 2fr);
+  grid-template-columns: minmax(130px, 160px) minmax(0, 340px);
   align-items: center;
-  gap: 24px;
-  max-width: 760px;
+  gap: 20px;
+  max-width: 520px;
   margin: 0 auto;
 }
 
@@ -126,6 +126,7 @@
   position: relative;
   display: grid;
   gap: 10px;
+  max-width: 340px;
 }
 
 .v3-preservation-branch {
@@ -343,7 +344,8 @@
   .v3-compact-toggle { gap: 2px; }
   .v3-compact-toggle button { min-height: 37px; padding: 7px 9px; font-size: .7rem; }
   .v3-preservation-figure { padding: 13px 10px 10px; }
-  .v3-response-comparison { grid-template-columns: 82px minmax(0,1fr); gap: 9px; }
+  .v3-response-comparison { grid-template-columns: 82px minmax(0,1fr); gap: 9px; max-width: 100%; }
+  .v3-preservation-branches { max-width: none; }
   .v3-preservation-input { min-height: 65px; padding: 7px; }
   .v3-preservation-input strong { font-size: 1rem; }
   .v3-preservation-input span { font-size: .6rem; }
