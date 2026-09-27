@@ -102,9 +102,9 @@ const chapterContent: Record<LwfChapterId, ChapterAdapterFields> = {
   "07": {
     badge: "both",
     badgeLabel: "完整回放",
-    bridge: "沿着同一张系统图，从旧模型回放到下一阶段 Teacher。",
+    bridge: "沿着独立的模型轨迹，从旧模型走到下一阶段 Teacher。",
     analogy: { title: "本章焦点", text: "旧响应、新任务监督与模型交接组成可重复的任务生命周期。" },
-    modules: [{ kind: "module", id: "07.1", title: "手动回放完整生命周期", desc: "逐步运行九个高层状态，必要时查看联合训练内部顺序，并闭合到下一任务。", componentId: "lwf-full-replay" }],
+    modules: [{ kind: "module", id: "07.1", title: "回放模型生命周期轨迹", desc: "沿九个检查点查看输入、输出、参数状态与模型交接；联合训练步骤可回看 Chapter 03。", componentId: "lwf-grand-trail" }],
     insight: "完整流程以更新后的 Student 成为下一阶段 Teacher 收尾。",
     takeaways: [
       { icon: "1", title: "旧模型仍可用", desc: "即使旧训练样本不可访问，模型仍提供旧响应。" },

@@ -3,7 +3,7 @@ import { ReferenceHub, type HubRequest } from "../components/ReferenceHub";
 import type { WidgetProps } from "./registry";
 import { CoverageBoundaryView } from "../v3/components/CoverageBoundaryView";
 import { LwfEvidenceExplorer } from "../v3/components/LwfEvidenceExplorer";
-import { LwfFullReplay } from "../v3/components/LwfFullReplay";
+import { LwfGrandTrail } from "../v3/components/LwfGrandTrail";
 import { LwfTaskSequence } from "../v3/components/LwfTaskSequence";
 import { ObjectiveBalanceView } from "../v3/components/ObjectiveBalanceView";
 import { PreservationCompare } from "../v3/components/PreservationCompare";
@@ -16,6 +16,7 @@ import "../v3/styles/mechanism.css";
 import "../v3/styles/sequential.css";
 import "../v3/styles/evidence.css";
 import "../v3/styles/replay.css";
+import "../v3/styles/grand-trail.css";
 
 function ModuleFrame({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`lwf-v3-module-root ${className}`}>{children}</div>;
@@ -39,7 +40,7 @@ const ObjectiveWidget: React.FC<WidgetProps> = () => <ModuleFrame className="v3-
 const CoverageWidget: React.FC<WidgetProps> = () => <ModuleFrame className="v3-mechanism-chapter"><CoverageBoundaryView /></ModuleFrame>;
 const TaskSequenceWidget: React.FC<WidgetProps> = () => <ModuleFrame className="v3-sequential-chapter"><LwfTaskSequence /></ModuleFrame>;
 const EvidenceWidget: React.FC<WidgetProps> = () => <ReferenceBoundModule>{(openReference) => <LwfEvidenceExplorer onOpenReference={openReference} />}</ReferenceBoundModule>;
-const FullReplayWidget: React.FC<WidgetProps> = () => <ReferenceBoundModule>{(openReference) => <LwfFullReplay onOpenReference={openReference} />}</ReferenceBoundModule>;
+const GrandTrailWidget: React.FC<WidgetProps> = () => <ReferenceBoundModule>{(openReference) => <LwfGrandTrail onOpenReference={openReference} />}</ReferenceBoundModule>;
 
 export const v3WidgetRegistry: Record<string, React.FC<WidgetProps>> = {
   "lwf-preservation-compare": PreservationWidget,
@@ -47,5 +48,5 @@ export const v3WidgetRegistry: Record<string, React.FC<WidgetProps>> = {
   "lwf-coverage-boundary": CoverageWidget,
   "lwf-task-sequence": TaskSequenceWidget,
   "lwf-evidence-explorer": EvidenceWidget,
-  "lwf-full-replay": FullReplayWidget,
+  "lwf-grand-trail": GrandTrailWidget,
 };

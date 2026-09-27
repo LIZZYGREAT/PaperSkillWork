@@ -62,9 +62,8 @@ const edges = [
   { id: "optimizer-updated-student", d: "M366 669 C331 669 307 669 270 669" },
 ];
 
-export function LwfProcessView({ activeStepId, fullReplayLabel }: {
+export function LwfProcessView({ activeStepId }: {
   activeStepId: string | null;
-  fullReplayLabel?: { index: number; total: number; title: string };
 }) {
   const markerPrefix = `lwf-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const activeStep = lwfProcess.steps.find((step) => step.id === activeStepId) ?? lwfProcess.steps[0];
@@ -73,8 +72,8 @@ export function LwfProcessView({ activeStepId, fullReplayLabel }: {
   const activeEdges = new Set(activeStep.activeEdges ?? []);
   const nodeClass = (id: string) => `${stepIndex >= nodeRevealAt[id] ? "is-revealed" : ""} ${activeNodes.has(id) ? "is-active" : ""} ${id === "updated-student" && activeStep.id === "cycle-update" ? "is-updated" : ""}`;
 
-  return <div className={`v3-process-visual ${fullReplayLabel ? "is-full-replay" : ""}`} aria-label={fullReplayLabel ? "完整 LwF 系统图" : "LwF 持续系统图"}>
-    <header className="v3-process-visual-header"><div><p className="v3-eyebrow">{fullReplayLabel ? "FULL LOOP · SYSTEM GRAPH" : "PERSISTENT SYSTEM"}</p><span>{fullReplayLabel ? `STEP ${String(fullReplayLabel.index).padStart(2, "0")} / ${String(fullReplayLabel.total).padStart(2, "0")}` : `STEP ${String(stepIndex + 1).padStart(2, "0")} / 10`}</span></div><strong>{fullReplayLabel?.title ?? activeStep.title}</strong></header>
+  return <div className="v3-process-visual" aria-label="LwF 持续系统图">
+    <header className="v3-process-visual-header"><div><p className="v3-eyebrow">PERSISTENT SYSTEM</p><span>STEP {String(stepIndex + 1).padStart(2, "0")} / 10</span></div><strong>{activeStep.title}</strong></header>
     <svg className="v3-process-svg" viewBox="0 0 824 724" role="img" aria-labelledby={`${markerPrefix}-title ${markerPrefix}-desc`} preserveAspectRatio="xMidYMid meet">
       <title id={`${markerPrefix}-title`}>LwF Teacher 与 Student 的训练计算图</title>
       <desc id={`${markerPrefix}-desc`}>当前任务输入同时进入冻结 Teacher 与扩展 Student。Teacher 生成 Yₒ，Student 通过共享参数和两个任务 head 产生 Ŷₒ 与 Ŷₙ。两项损失汇入联合目标，再反向传播并由优化器更新 Student。</desc>

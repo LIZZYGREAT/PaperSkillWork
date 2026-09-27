@@ -28,6 +28,7 @@ import "./styles/mechanism.css";
 import "./styles/sequential.css";
 import "./styles/evidence.css";
 import "./styles/replay.css";
+import "./styles/grand-trail.css";
 
 const sceneChapters: Record<string, LwfChapterId> = {
   "00": "00", "01": "01", "02": "02", "03": "03", "04": "04", "05": "05", "06": "06", "07": "07",

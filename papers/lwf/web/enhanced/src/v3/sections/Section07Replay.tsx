@@ -1,5 +1,5 @@
 import { ChapterNavigation } from "../components/ChapterNavigation";
-import { LwfFullReplay } from "../components/LwfFullReplay";
+import { LwfGrandTrail } from "../components/LwfGrandTrail";
 import type { LwfChapterId } from "../data/chapters";
 
 export function Section07Replay({ onOpenReference, onNavigateChapter }: {
@@ -9,12 +9,12 @@ export function Section07Replay({ onOpenReference, onNavigateChapter }: {
   return <section className="v3-narrative-chapter v3-replay-chapter" id="chapter-07" aria-labelledby="v3-replay-title">
     <header className="v3-chapter-heading">
       <span className="v3-stage-number">07</span>
-      <div><p className="v3-eyebrow">CHAPTER 07 / 08 · END-TO-END REPLAY</p><h2 id="v3-replay-title">从旧模型开始，把 LwF 完整跑一遍</h2><p>手动逐步回放：看旧模型如何提供响应目标、Student 如何学习新任务，以及更新后的模型怎样交给下一阶段。</p></div>
+      <div><p className="v3-eyebrow">CHAPTER 07 / 08 · MODEL LINEAGE</p><h2 id="v3-replay-title">沿着模型轨迹，走完一次 LwF 生命周期</h2><p>从旧模型、新任务输入与响应刷新开始，跟随 Student 的训练与更新，直到它成为下一阶段 Teacher。</p></div>
     </header>
 
     <section className="v3-replay-block" aria-labelledby="v3-replay-block-title">
-      <div className="v3-replay-block-heading"><span>07A · GRAND LOOP</span><h3 id="v3-replay-block-title">一张系统图，跨过一次训练并回到下一任务</h3><p>默认手动控制。播放只辅助浏览；联合优化中的 minibatch 细节仍由 Chapter 03 解释。</p></div>
-      <LwfFullReplay onOpenReference={onOpenReference} />
+      <div className="v3-replay-block-heading"><span>07A · GRAND TRAIL</span><h3 id="v3-replay-block-title">九个检查点，追踪模型如何交接到下一任务</h3><p>选择节点查看输入、输出与参数状态，也可以单次播放整条轨迹；联合训练中的 minibatch 顺序仍由 Chapter 03 解释。</p></div>
+      <LwfGrandTrail onOpenReference={onOpenReference} onNavigateChapter={onNavigateChapter} />
     </section>
 
     <section className="v3-replay-takeaways" aria-labelledby="v3-replay-takeaways-title">
