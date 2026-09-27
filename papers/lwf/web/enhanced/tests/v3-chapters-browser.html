@@ -251,7 +251,68 @@
           await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
         });
 
-        await check("05–06 · 390px 移动视口无页面横向溢出", async () => {
+        await check("06 → 07 · 八章导航全部就绪", async () => {
+          const next = doc.querySelector("#chapter-06 .v3-chapter-navigation .is-next");
+          assert(next && !next.disabled, "06 的下一章入口应进入 07");
+          next.click();
+          await waitFor(() => doc.defaultView.location.hash === "#chapter-07");
+          const rail = [...doc.querySelectorAll(".v3-rail-nav button")];
+          assert(rail.length === 8 && !rail[7].disabled && rail[7].textContent.includes("完整回放"), "07 应在 StageRail 标记为已就绪");
+          assert(/8\s*\/\s*8/.test(doc.querySelector(".v3-rail-progress")?.textContent ?? ""), "八个章节均应就绪");
+        });
+
+        await check("07 · 重用同一系统图完成 9 步生命周期回放", async () => {
+          const chapter = doc.querySelector("#chapter-07");
+          const replay = chapter.querySelector(".v3-full-replay");
+          const systemGraph = replay.querySelector(".v3-process-visual");
+          assert(replay.getAttribute("data-replay-step") === "old-model", "回放应默认从旧模型手动开始");
+          assert(systemGraph.classList.contains("is-full-replay") && systemGraph.querySelector(".v3-process-svg"), "07 应重用 Chapter 02–03 的同一张系统图");
+          assert(systemGraph.querySelector(".v3-process-visual-header").textContent.includes("STEP 01 / 09"), "主图应显示高层回放进度而不是十个训练小步");
+          const expected = ["old-model", "new-task", "freeze-teacher", "generate-responses", "expand-student", "warmup", "joint-training", "updated-student", "next-teacher"];
+          const next = replay.querySelector('.v3-replay-step-controls button[aria-label="下一步"]');
+          for (const id of expected) {
+            await waitFor(() => replay.getAttribute("data-replay-step") === id);
+            if (id === "joint-training") {
+              assert(replay.querySelector(".v3-replay-joint-detail")?.textContent.includes("Forward") && replay.querySelector(".v3-replay-joint-detail").textContent.includes("Backward"), "联合优化应内嵌 Forward → losses → Backward → Update");
+            }
+            if (id === "next-teacher") assert(replay.querySelector(".v3-replay-loopback")?.textContent.includes("Teacherₜ₊₁") && replay.querySelector(".v3-replay-loopback").textContent.includes("Task t+2"), "最后一步应把新模型闭环到下一任务");
+            if (id !== expected[expected.length - 1]) {
+              next.click();
+              await waitFor(() => replay.getAttribute("data-replay-step") !== id);
+            }
+          }
+          assert(chapter.querySelector(".v3-replay-takeaways ol").querySelectorAll("li").length === 6, "回放结束后应收束为六条核心结论");
+        });
+
+        await check("07 · Previous / Next / Play / Pause / Speed 控件", async () => {
+          const replay = doc.querySelector("#chapter-07 .v3-full-replay");
+          const previous = replay.querySelector('.v3-replay-step-controls button[aria-label="上一步"]');
+          const next = replay.querySelector('.v3-replay-step-controls button[aria-label="下一步"]');
+          previous.click();
+          await waitFor(() => replay.getAttribute("data-replay-step") === "updated-student");
+          const fast = [...replay.querySelectorAll(".v3-replay-speed button")].find((button) => button.textContent === "1.5×");
+          fast.click();
+          await waitFor(() => fast.getAttribute("aria-pressed") === "true");
+          const play = replay.querySelector('.v3-replay-step-controls button[aria-label="播放回放"]');
+          play.click();
+          await waitFor(() => replay.querySelector(".v3-replay-step-controls button[aria-label=\"暂停回放\"]"), 3000);
+          await waitFor(() => replay.getAttribute("data-replay-step") === "next-teacher", 4000);
+          replay.querySelector('.v3-replay-step-controls button[aria-label="暂停回放"]').click();
+          await waitFor(() => replay.querySelector(".v3-replay-live").textContent.includes("Manual"));
+          next.click();
+          await waitFor(() => replay.getAttribute("data-replay-step") === "old-model");
+        });
+
+        await check("07 · Reference Hub 旧响应目标深链", async () => {
+          const reference = doc.querySelector("#chapter-07 .v3-replay-reference");
+          reference.click();
+          await waitFor(() => doc.querySelector(".v2-reference-drawer"));
+          await waitFor(() => doc.querySelector(".v2-hub-id")?.textContent.trim() === "formula:l_old");
+          doc.querySelector(".v2-reference-drawer").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
+        });
+
+        await check("05–07 · 390px 移动视口无页面横向溢出", async () => {
           const originalWidth = frame.style.width;
           try {
             frame.style.width = "390px";
@@ -263,6 +324,9 @@
             const evidence = doc.querySelector("#chapter-06 .v3-evidence-detail");
             assert(evidence.getBoundingClientRect().width <= root.clientWidth + 1, "06 的证据面板不应超出窄视口");
             assert(evidence.querySelector(".v3-table-scroll").scrollWidth > evidence.querySelector(".v3-table-scroll").clientWidth, "Table 1 应在自身容器中横向查看");
+            const replayGraph = doc.querySelector("#chapter-07 .v3-replay-system-visual .v3-process-visual");
+            assert(replayGraph.getBoundingClientRect().width <= root.clientWidth + 1, "07 的系统图不应超出窄视口");
+            assert(doc.defaultView.getComputedStyle(replayGraph.querySelector(".v3-process-mobile")).display !== "none", "窄屏回放应显示手机端系统图");
           } finally {
             frame.style.width = originalWidth;
           }
