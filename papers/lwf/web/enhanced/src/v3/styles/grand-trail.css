@@ -20,6 +20,7 @@
 .v3-grand-trail-route.is-active { stroke: #c77c43; stroke-dasharray: 7 6; animation: v3-grand-trail-flow 1.1s linear infinite; }
 .v3-grand-trail-route.is-loop { stroke: #d5c3a9; stroke-width: 2; stroke-dasharray: 4 6; }
 .v3-grand-trail-route.is-loop.is-active { stroke: #c77c43; }
+.v3-grand-trail-route marker path { fill: context-stroke; stroke: none; }
 .v3-grand-trail-node { position: relative; z-index: 1; display: flex; min-width: 0; min-height: 0; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 3px; margin: 10px; padding: 35px 10px 8px; overflow: hidden; border: 1px solid #dce7e3; border-radius: 10px; color: #49646b; background: rgba(255,255,255,.97); font: inherit; text-align: left; cursor: pointer; transition: border-color .28s ease,background-color .28s ease,box-shadow .28s ease,transform .28s ease; }
 .v3-grand-trail-node:hover { border-color: #9fc8b9; transform: translateY(-1px); }
 .v3-grand-trail-node.is-complete { border-color: #bdd6cb; background: #f8fcf9; }

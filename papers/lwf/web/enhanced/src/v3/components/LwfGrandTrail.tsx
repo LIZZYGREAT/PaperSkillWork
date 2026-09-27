@@ -69,8 +69,11 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
   const atEnd = stepIndex === grandTrailSteps.length - 1;
   const arrowId = `lwf-grand-trail-arrow-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const routesRef = useRef<SVGSVGElement | null>(null);
   const nodeRefs = useRef(new Map<string, HTMLButtonElement>());
   const [tokenPosition, setTokenPosition] = useState<{ left: number; top: number } | null>(null);
+  const [routePaths, setRoutePaths] = useState<string[]>([]);
+  const [loopPath, setLoopPath] = useState("");
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -88,11 +91,52 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
   useEffect(() => {
     const board = boardRef.current;
     const node = nodeRefs.current.get(step.id);
-    if (!board || !node) return;
+    const routes = routesRef.current;
+    if (!board || !node || !routes) return;
     const updatePosition = () => {
       const boardRect = board.getBoundingClientRect();
       const nodeRect = node.getBoundingClientRect();
+      const routesRect = routes.getBoundingClientRect();
+      if (!boardRect.width || !boardRect.height || !routesRect.width || !routesRect.height) return;
       setTokenPosition({ left: nodeRect.left - boardRect.left + nodeRect.width / 2, top: nodeRect.top - boardRect.top + 17 });
+
+      const scaleX = 900 / routesRect.width;
+      const scaleY = 540 / routesRect.height;
+      const getNodeRect = (id: string) => nodeRefs.current.get(id)?.getBoundingClientRect();
+      const nextPaths = grandTrailEdges.map((edge) => {
+        const source = getNodeRect(edge.from);
+        const destination = getNodeRect(edge.to);
+        if (!source || !destination) return "";
+        const sourceCenterX = source.left + source.width / 2;
+        const sourceCenterY = source.top + source.height / 2;
+        const destinationCenterX = destination.left + destination.width / 2;
+        const destinationCenterY = destination.top + destination.height / 2;
+        if (Math.abs(destinationCenterX - sourceCenterX) >= Math.abs(destinationCenterY - sourceCenterY)) {
+          const toRight = destinationCenterX > sourceCenterX;
+          const startX = ((toRight ? source.right + 2 : source.left - 2) - routesRect.left) * scaleX;
+          const endX = ((toRight ? destination.left - 3 : destination.right + 3) - routesRect.left) * scaleX;
+          const y = ((sourceCenterY + destinationCenterY) / 2 - routesRect.top) * scaleY;
+          return `M ${startX} ${y} H ${endX}`;
+        }
+        const downward = destinationCenterY > sourceCenterY;
+        const x = ((sourceCenterX + destinationCenterX) / 2 - routesRect.left) * scaleX;
+        const startY = ((downward ? source.bottom + 2 : source.top - 2) - routesRect.top) * scaleY;
+        const endY = ((downward ? destination.top - 3 : destination.bottom + 3) - routesRect.top) * scaleY;
+        return `M ${x} ${startY} V ${endY}`;
+      });
+      setRoutePaths(nextPaths);
+
+      const loopSource = getNodeRect(grandTrailSteps[grandTrailSteps.length - 1].id);
+      const loopTarget = getNodeRect(grandTrailSteps[0].id);
+      if (loopSource && loopTarget) {
+        const startX = (loopSource.right - routesRect.left + 2) * scaleX;
+        const startY = (loopSource.top + loopSource.height / 2 - routesRect.top) * scaleY;
+        const outerX = (routesRect.right - routesRect.left - 2) * scaleX;
+        const outerY = 2 * scaleY;
+        const targetX = (loopTarget.left + loopTarget.width / 2 - routesRect.left) * scaleX;
+        const targetY = (loopTarget.top - routesRect.top - 3) * scaleY;
+        setLoopPath(`M ${startX} ${startY} C ${startX + 8 * scaleX} ${startY}, ${outerX} ${startY}, ${outerX} ${startY} V ${outerY} Q ${outerX} ${outerY}, ${targetX} ${outerY} V ${targetY}`);
+      }
     };
     updatePosition();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updatePosition);
@@ -126,15 +170,15 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
           })}
         </div>
         <div className="v3-grand-trail-board" ref={boardRef}>
-          <svg className="v3-grand-trail-routes" viewBox="0 0 900 540" preserveAspectRatio="none" aria-hidden="true">
+          <svg ref={routesRef} className="v3-grand-trail-routes" viewBox="0 0 900 540" preserveAspectRatio="none" aria-hidden="true">
             <defs><marker id={arrowId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
-            {grandTrailEdges.map((edge) => {
+            {grandTrailEdges.map((edge, index) => {
               const destination = grandTrailSteps.findIndex((item) => item.id === edge.to);
               const completed = stepIndex > destination;
               const active = stepIndex === destination && step.activeFlows.includes(edge.flow);
-              return <path key={`${edge.from}-${edge.to}`} className={`v3-grand-trail-route ${completed ? "is-complete" : ""} ${active ? "is-active" : ""}`} data-flow={edge.flow} d={edge.path} markerEnd={`url(#${arrowId})`} />;
+              return <path key={`${edge.from}-${edge.to}`} className={`v3-grand-trail-route ${completed ? "is-complete" : ""} ${active ? "is-active" : ""}`} data-flow={edge.flow} d={routePaths[index] ?? ""} markerEnd={`url(#${arrowId})`} />;
             })}
-            <path className={`v3-grand-trail-route is-loop ${step.id === "next-teacher" ? "is-active" : ""}`} d="M 890 450 C 900 450 900 8 150 8" markerEnd={`url(#${arrowId})`} />
+            <path className={`v3-grand-trail-route is-loop ${step.id === "next-teacher" ? "is-active" : ""}`} d={loopPath} markerEnd={`url(#${arrowId})`} />
           </svg>
           {grandTrailSteps.map((item, index) => {
             const position = nodePositions[index];

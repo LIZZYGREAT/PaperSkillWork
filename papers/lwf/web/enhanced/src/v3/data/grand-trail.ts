@@ -17,7 +17,7 @@ export type GrandTrailStep = {
   durationMs: number;
 };
 
-export type GrandTrailEdge = { from: string; to: string; flow: string; path: string };
+export type GrandTrailEdge = { from: string; to: string; flow: string };
 
 export const grandTrailSteps: GrandTrailStep[] = [
   {
@@ -167,14 +167,14 @@ export const grandTrailSteps: GrandTrailStep[] = [
 ];
 
 export const grandTrailEdges: GrandTrailEdge[] = [
-  { from: "old-model", to: "new-task", flow: "task-arrival", path: "M 290 90 H 310" },
-  { from: "new-task", to: "teacher-student-split", flow: "student-copy", path: "M 590 90 H 610" },
-  { from: "teacher-student-split", to: "generate-responses", flow: "response-refresh", path: "M 750 170 V 190" },
-  { from: "generate-responses", to: "add-head", flow: "head-branch", path: "M 610 270 H 590" },
-  { from: "add-head", to: "warm-up", flow: "new-head-warmup", path: "M 310 270 H 290" },
-  { from: "warm-up", to: "joint-training", flow: "gradient-wave", path: "M 150 350 V 370" },
-  { from: "joint-training", to: "update", flow: "parameter-update", path: "M 290 450 H 310" },
-  { from: "update", to: "next-teacher", flow: "model-promotion", path: "M 590 450 H 610" },
+  { from: "old-model", to: "new-task", flow: "task-arrival" },
+  { from: "new-task", to: "teacher-student-split", flow: "student-copy" },
+  { from: "teacher-student-split", to: "generate-responses", flow: "response-refresh" },
+  { from: "generate-responses", to: "add-head", flow: "head-branch" },
+  { from: "add-head", to: "warm-up", flow: "new-head-warmup" },
+  { from: "warm-up", to: "joint-training", flow: "gradient-wave" },
+  { from: "joint-training", to: "update", flow: "parameter-update" },
+  { from: "update", to: "next-teacher", flow: "model-promotion" },
 ];
 
 export const jointTrainingSubsteps = ["Forward", "L_old / L_new", "Backward", "Optimizer Step"] as const;
