@@ -151,13 +151,16 @@ export function LwfEvidenceExplorer({ onOpenReference }: { onOpenReference: (ter
       <span className="v3-evidence-step-label">CLAIM SELECTOR</span>
       <p>从一个问题开始，逐组核对论文提供的材料。</p>
       <div role="tablist" aria-label="四组核心证据">
-        {evidenceOrder.map((id) => <button key={id} type="button" role="tab" aria-selected={selectedEvidence === id} data-evidence-id={id} onClick={() => setSelectedEvidence(id)}>
-          <strong>{evidenceLabels[id]}</strong><span>{evidenceQuestions[id]}</span>
-        </button>)}
+        {evidenceOrder.map((id) => {
+          const linkedToCurrentClaim = Boolean(selectedAnswer && claimEvidenceIds.includes(`evidence:${id}`));
+          return <button key={id} type="button" role="tab" aria-selected={selectedEvidence === id} aria-label={`${evidenceLabels[id]}${linkedToCurrentClaim ? " · 与当前判断主张相关" : ""}`} className={linkedToCurrentClaim ? "is-claim-linked" : ""} data-evidence-id={id} data-linked-claim={linkedToCurrentClaim || undefined} onClick={() => setSelectedEvidence(id)}>
+            <strong>{evidenceLabels[id]}</strong><span>{evidenceQuestions[id]}</span>{linkedToCurrentClaim ? <em>关联当前判断</em> : null}
+          </button>;
+        })}
       </div>
     </section>
 
-    <article className="v3-evidence-detail" data-evidence-id={selectedEvidence}>
+    <article key={selectedEvidence} className={`v3-evidence-detail ${selectedAnswer && claimEvidenceIds.includes(`evidence:${selectedEvidence}`) ? "is-claim-linked" : ""}`} data-evidence-id={selectedEvidence}>
       <header className="v3-evidence-detail-heading">
         <span>01 · CLAIM / QUESTION</span>
         <h3>{evidenceQuestions[selectedEvidence]}</h3>
