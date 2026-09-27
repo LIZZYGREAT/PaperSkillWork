@@ -37,10 +37,15 @@ export const v3ReferenceIds: Record<string, string> = {
   "l-old": "formula:l_old", "l-new": "formula:l_new", "lambda-o": "symbol:lambda_old", regularization: "symbol:regularization",
   "warm-up": "phase:warmup", "joint-optimization": "phase:joint", "fine-tuning": "method:fine_tuning",
   "feature-extraction": "method:feature_extraction", "joint-training": "method:joint_training",
+  "response-preservation": "formula:response_preservation", "parameter-l2": "formula:parameter_l2",
+  "domain-coverage": "claim:domain_mismatch", temperature: "symbol:temperature", "figure-7": "evidence:figure_7",
+  "stability-plasticity": "confusion:stability_plasticity", jacobian: "confusion:jacobian", "old-domain-risk": "confusion:global_function",
 };
 
 export const v3ReferencePriority = [
   "symbol:theta_s", "symbol:theta_o", "symbol:theta_n", "symbol:x_new", "symbol:y_old", "symbol:y_new", "symbol:yhat_old", "symbol:yhat_new",
   "term:teacher", "term:student", "method:lwf", "formula:l_old", "formula:l_new", "symbol:lambda_old", "symbol:regularization", "formula:total_loss", "phase:warmup", "phase:joint",
   "method:fine_tuning", "method:feature_extraction", "method:joint_training",
+  "formula:response_preservation", "formula:parameter_l2", "claim:domain_mismatch", "symbol:temperature", "evidence:figure_7",
+  "confusion:stability_plasticity", "confusion:jacobian", "confusion:global_function",
 ];

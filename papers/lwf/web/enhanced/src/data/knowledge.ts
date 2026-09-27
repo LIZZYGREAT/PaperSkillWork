@@ -161,6 +161,8 @@ export const confusions: ConfusionCard[] = [
   { id: 'confusion:freeze_detach', kind: 'confusion', title: 'freeze 不等于 detach', summary: '冻结参数状态和切断计算图是不同操作。', question: '冻结参数是否会切断计算图？', answer: '不必然。冻结通常是不为该参数累积梯度；若计算图仍连通，梯度仍可穿过该运算回到更早的可训练参数。', category: 'General Background', scenes: ['C', 'J'], evidence: ['I03'] },
   { id: 'confusion:lambda_share', kind: 'confusion', title: 'λ_o=1 不等于 50/50', summary: '损失系数不是任务贡献百分比。', question: '旧、新任务各贡献一半吗？', answer: '不是。λ_o 是 loss coefficient；梯度量级、方向、温度、reduction 和 batch scaling 共同影响实际更新。', category: 'Mechanism interpretation', scenes: ['E', 'I'], related: ['symbol:lambda_old'], evidence: ['F05'] },
   { id: 'confusion:global_function', kind: 'confusion', title: '响应保持不是全局函数不变', summary: '输出约束只覆盖训练时观察到的新任务输入。', question: '匹配 Y_o 是否证明所有旧输入都不变？', answer: '不证明。约束只作用于训练中观察到的新任务输入 X_n。', category: 'Mechanism interpretation', scenes: ['F', 'G', 'H'], related: ['formula:response_preservation'], evidence: ['C07', 'C11'] },
+  { id: 'confusion:stability_plasticity', kind: 'confusion', title: '稳定性—可塑性是目标张力的教学解读', summary: '旧响应保持与新任务学习共同作用于共享参数 θ_s。', question: 'λ_o 能直接设定旧、新任务的准确率比例吗？', answer: '不能。λ_o 只改变目标中 L_old 的相对权重；实际更新还取决于两项损失的梯度等因素。这是对目标张力的教学解读，不是准确率保证。', category: 'Mechanism interpretation', scenes: ['E', 'I'], related: ['formula:total_loss', 'symbol:lambda_old'], evidence: ['F04', 'F05'] },
+  { id: 'confusion:jacobian', kind: 'confusion', title: 'Jacobian：参数变化与输出变化的局部关系', summary: '作为进阶背景，Jacobian 描述输出对参数微小变化的局部敏感度。', question: '参数距离能否直接代表旧任务输出变化？', answer: '不能直接等同。不同参数方向可能以不同方式影响输出。这里仅提供一般局部敏感度背景，不是 LwF 的训练目标、论文中的定量结果或本教程的实验数据。', category: 'General Background', scenes: ['F'], related: ['formula:parameter_l2', 'formula:response_preservation'] },
 ];
 
 export const evidenceCards: EvidenceCard[] = [

@@ -3,7 +3,7 @@ export const LWF_CHAPTERS = [
   { id: "01", slug: "architecture", title: "模型结构", status: "ready" },
   { id: "02", slug: "key-move", title: "关键做法", status: "ready" },
   { id: "03", slug: "training-cycle", title: "一次训练", status: "ready" },
-  { id: "04", slug: "mechanism-boundary", title: "机制与边界", status: "planned" },
+  { id: "04", slug: "mechanism-boundary", title: "机制与边界", status: "ready" },
   { id: "05", slug: "sequential", title: "连续任务", status: "planned" },
   { id: "06", slug: "evidence", title: "论文证据", status: "planned" },
   { id: "07", slug: "replay", title: "完整回放", status: "planned" },

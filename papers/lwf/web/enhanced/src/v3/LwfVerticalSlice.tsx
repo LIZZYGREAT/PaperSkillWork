@@ -11,6 +11,7 @@ import { Section00Problem } from "./sections/Section00Problem";
 import { Section01Architecture } from "./sections/Section01Architecture";
 import { Section02KeyMove } from "./sections/Section02KeyMove";
 import { Section03TrainingCycle } from "./sections/Section03TrainingCycle";
+import { Section04MechanismBoundary } from "./sections/Section04MechanismBoundary";
 import "../styles/tokens.css";
 import "../styles/components.css";
 import "../styles/paper.css";
@@ -19,9 +20,11 @@ import "../styles/alexnet.css";
 import "../styles/reference-hub.css";
 import "../shared/foundation/styles/kit.css";
 import "./styles/vertical-slice.css";
+import "./styles/mechanism.css";
 
 const sceneChapters: Record<string, LwfChapterId> = {
-  "00": "00", "01": "01", "02": "02", "03": "03", A: "00", B: "01", C: "02", D: "03",
+  "00": "00", "01": "01", "02": "02", "03": "03", "04": "04", "05": "05", "06": "06", "07": "07",
+  A: "00", B: "01", C: "02", D: "03", E: "04", F: "04", G: "04", H: "05", I: "06", J: "07",
 };
 
 export function LwfVerticalSlice() {
@@ -151,6 +154,7 @@ export function LwfVerticalSlice() {
       </div>
 
       <MobileProcessGuide activeStepId={mobileStepId} onSelectStep={selectStep} onNavigateChapter={navigateChapter} />
+      <Section04MechanismBoundary onOpenReference={openReference} onNavigateChapter={navigateChapter} />
     </main>
 
     {referenceRequest ? <ReferenceHub request={referenceRequest} onClose={() => setReferenceRequest(null)} priorityIds={v3ReferencePriority} onOpenScene={openV3Scene} /> : null}

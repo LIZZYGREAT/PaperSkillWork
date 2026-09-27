@@ -55,7 +55,7 @@ export function LwfStageRail({ activeStepId, onOpenReferences, onSelectChapter }
     </div>
     <p className="v3-rail-label">FIRST VERTICAL SLICE</p>
     <div className="v3-rail-progress"><span>CHAPTER {activeChapterId} / {String(LWF_CHAPTERS.length).padStart(2, "0")}</span><strong>{activeChapter.title}</strong><small>{LWF_CHAPTERS.filter((chapter) => chapter.status === "ready").length} / {LWF_CHAPTERS.length} chapters ready</small></div>
-    <nav className="v3-rail-nav" aria-label="8 个章节；04 到 07 尚未实现">
+    <nav className="v3-rail-nav" aria-label={`${LWF_CHAPTERS.length} 个章节`}>
       {LWF_CHAPTERS.map((chapter) => {
         const ready = chapter.status === "ready";
         return <button key={chapter.id} type="button" className={`${activeChapterId === chapter.id ? "is-active" : ""}${ready ? "" : " is-planned"}`} aria-current={activeChapterId === chapter.id ? "page" : undefined} disabled={!ready} onClick={() => ready && onSelectChapter(chapter.id)}>

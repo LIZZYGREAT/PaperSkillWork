@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LwF 04–07 浏览器验收</title>
+    <style>
+      :root { color: #243b4b; background: #f4f7f5; font: 15px/1.5 "Segoe UI", "Microsoft YaHei", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 22px; }
+      main { width: min(1180px, 100%); margin: auto; }
+      h1 { margin: 0 0 5px; font-size: 1.55rem; }
+      main > p { margin: 0 0 14px; color: #657887; }
+      #summary { margin: 12px 0; padding: 12px 14px; border: 1px solid #d8e1e2; border-radius: 9px; background: white; }
+      #summary[data-result="passed"] { border-color: #9ac8b9; background: #edf7f2; }
+      #summary[data-result="failed"] { border-color: #d8a89e; background: #fff2ef; }
+      #results { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px 10px; margin: 0 0 16px; padding: 0; list-style: none; }
+      #results li { min-height: 35px; padding: 7px 10px; border-radius: 7px; background: white; font-size: .83rem; }
+      #results .pass { border-left: 3px solid #218067; }
+      #results .fail { border-left: 3px solid #b44b3e; color: #8b342b; }
+      iframe { display: block; width: 100%; height: min(850px,78vh); border: 1px solid #cbd7dc; border-radius: 10px; background: white; }
+      @media (max-width: 720px) { body { padding: 12px; } #results { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>LwF 04–07 浏览器验收</h1>
+      <p>检查新增章节的导航、交互状态、Reference Hub 与移动布局。此页只面向本地开发预览，不生成截图文件。</p>
+      <div id="summary" role="status" aria-live="polite">正在加载 LwF 新章节…</div>
+      <ol id="results" aria-label="章节检查结果"></ol>
+      <iframe title="LwF 章节预览" src="/?version=v3"></iframe>
+    </main>
+    <script>
+      const frame = document.querySelector("iframe");
+      const resultList = document.querySelector("#results");
+      const summary = document.querySelector("#summary");
+      const pause = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+      const assert = (condition, message) => { if (!condition) throw new Error(message); };
+      const waitFor = async (predicate, timeout = 6000) => {
+        const start = Date.now();
+        while (Date.now() - start < timeout) { if (predicate()) return; await pause(40); }
+        throw new Error("页面未在预期时间内完成更新");
+      };
+
+      async function runChecks(doc) {
+        const checks = [];
+        const check = async (name, action) => {
+          try { await action(); checks.push({ name, passed: true }); }
+          catch (error) { checks.push({ name, passed: false, message: error instanceof Error ? error.message : String(error) }); }
+        };
+        await waitFor(() => doc.querySelector(".lwf-v3") && doc.querySelector("#chapter-04"));
+
+        await check("04 · 主导航显示已完成章节", () => {
+          const chapters = [...doc.querySelectorAll(".v3-rail-nav button")];
+          assert(chapters.length === 8, "StageRail 应保留 00–07 八个章节");
+          assert(!chapters[4].disabled && chapters[4].textContent.includes("机制与边界"), "04 应可从 StageRail 进入");
+          assert(doc.querySelector("#chapter-04"), "04 章节内容缺失");
+        });
+
+        await check("03 → 04 · 章节翻页已接通", async () => {
+          const next = doc.querySelector("#chapter-03 .v3-chapter-navigation .is-next");
+          assert(next && !next.disabled, "03 的下一章入口应进入 04");
+          next.click();
+          await waitFor(() => doc.defaultView.location.hash === "#chapter-04");
+          assert(doc.querySelector("#chapter-04 h2")?.textContent.includes("保持旧响应"), "04 未成为当前目标");
+        });
+
+        await check("04 · 参数保持与响应保持切换", async () => {
+          const compare = doc.querySelector("#chapter-04 .v3-preservation-compare");
+          const parameter = [...compare.querySelectorAll("button")].find((button) => button.textContent.includes("Parameter"));
+          const response = [...compare.querySelectorAll("button")].find((button) => button.textContent.includes("Response"));
+          assert(parameter && response, "保持对象切换按钮缺失");
+          parameter.click();
+          await waitFor(() => parameter.getAttribute("aria-pressed") === "true" && compare.textContent.includes("参数坐标相对"));
+          assert(compare.querySelector(".v3-parameter-comparison"), "参数视角图示没有显示");
+          response.click();
+          await waitFor(() => response.getAttribute("aria-pressed") === "true" && compare.querySelector(".v3-response-comparison"));
+          assert(compare.textContent.includes("Teacher") && compare.textContent.includes("Student"), "响应视角应比较 Teacher 与 Student");
+        });
+
+        await check("04 · λₒ 与 Temperature 控件更新说明", async () => {
+          const objective = doc.querySelector("#chapter-04 .v3-objective-balance");
+          const high = [...objective.querySelectorAll(".v3-objective-controls button")].find((button) => button.textContent.includes("high"));
+          assert(high, "λₒ high 控件缺失");
+          high.click();
+          await waitFor(() => objective.classList.contains("emphasis-old") && objective.textContent.includes("更强调旧响应保持"));
+          const details = objective.querySelector(".v3-temperature-support");
+          details.querySelector("summary").click();
+          await waitFor(() => details.open);
+          const t1 = [...details.querySelectorAll(".v3-compact-toggle button")].find((button) => button.textContent.includes("T = 1"));
+          const t2 = [...details.querySelectorAll(".v3-compact-toggle button")].find((button) => button.textContent.includes("T = 2"));
+          t1.click();
+          await waitFor(() => details.textContent.includes("分布较尖锐"));
+          t2.click();
+          await waitFor(() => details.textContent.includes("论文采用 T = 2"));
+        });
+
+        await check("04 · Broad / Partial / Small 覆盖状态", async () => {
+          const coverage = doc.querySelector("#chapter-04 .v3-coverage-boundary");
+          const fixedPoints = coverage.querySelector(".v3-coverage-points").innerHTML;
+          for (const [label, className] of [["Broad overlap", "broad"], ["Partial overlap", "partial"], ["Small overlap", "small"]]) {
+            const button = [...coverage.querySelectorAll(".v3-coverage-controls button")].find((item) => item.textContent === label);
+            assert(button, `缺少 ${label} 覆盖状态`);
+            button.click();
+            await waitFor(() => coverage.querySelector(`.v3-current-coverage.coverage-${className}`));
+            assert(coverage.querySelector(".v3-coverage-points").innerHTML === fixedPoints, "切换时旧任务相关输入示意应保持不变");
+          }
+          assert(coverage.textContent.includes("没有被当前训练目标直接观察"), "边界说明应指出当前输入没有直接观察全部旧域行为");
+          assert(coverage.textContent.includes("不是数据集的实测分布或遗忘数值"), "图示应说明这不是实测分布或遗忘数值");
+        });
+
+        await check("04 · 从机制内容打开 Reference Hub", async () => {
+          const domainReference = [...doc.querySelectorAll("#chapter-04 .v3-mechanism-reference-links button")].find((button) => button.textContent.includes("domain coverage"));
+          assert(domainReference, "缺少域覆盖 Reference Hub 入口");
+          domainReference.click();
+          await waitFor(() => doc.querySelector(".v2-reference-drawer"));
+          await waitFor(() => doc.querySelector(".v2-hub-id")?.textContent.trim() === "claim:domain_mismatch");
+          assert(doc.querySelector(".v2-hub-detail")?.textContent.includes("任务不匹配可能削弱响应覆盖"), "Reference Hub 没有选中域差异证据条目");
+          doc.querySelector(".v2-reference-drawer").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
+        });
+
+        const failures = checks.filter((item) => !item.passed);
+        for (const item of checks) {
+          const row = document.createElement("li");
+          row.className = item.passed ? "pass" : "fail";
+          row.textContent = `${item.passed ? "通过" : "失败"} · ${item.name}${item.message ? `：${item.message}` : ""}`;
+          resultList.append(row);
+        }
+        summary.textContent = failures.length ? `浏览器验收完成：${checks.length - failures.length} 项通过，${failures.length} 项失败。` : `浏览器验收通过：${checks.length} 项检查全部通过。`;
+        summary.dataset.result = failures.length ? "failed" : "passed";
+        window.__chapterAuditResult = { passed: checks.length - failures.length, failed: failures.length, checks };
+      }
+
+      frame.addEventListener("load", () => {
+        void runChecks(frame.contentDocument).catch((error) => {
+          summary.textContent = `浏览器验收失败：${error instanceof Error ? error.message : String(error)}`;
+          summary.dataset.result = "failed";
+          window.__chapterAuditResult = { failed: 1, message: summary.textContent };
+        });
+      }, { once: true });
+    </script>
+  </body>
+</html>
