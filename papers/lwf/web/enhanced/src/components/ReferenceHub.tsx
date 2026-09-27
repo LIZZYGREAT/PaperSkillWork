@@ -60,6 +60,8 @@ const titleTranslations:Record<string,string>={
   'freeze 不等于 detach':'冻结参数不等于 detach','λ_o=1 不等于 50/50':'λₒ = 1 不等于新旧任务各占一半',
   '响应保持不是全局函数不变':'响应保持不代表全局函数不变',
   '旧任务响应会随新阶段重算':'新任务到来时重算旧任务响应',
+  'LwF adapts without old-task training data':'LwF 适配时不需要旧任务训练数据',
+  'LwF works on foundation models':'论文检验了 LwF 是否适用于基础模型',
 };
 function displayTitle(value:string) { return titleTranslations[value]||value; }
 function displaySymbol(value:string) {

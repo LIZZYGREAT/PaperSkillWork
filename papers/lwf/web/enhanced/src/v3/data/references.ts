@@ -40,6 +40,12 @@ export const v3ReferenceIds: Record<string, string> = {
   "response-preservation": "formula:response_preservation", "parameter-l2": "formula:parameter_l2",
   "domain-coverage": "claim:domain_mismatch", temperature: "symbol:temperature", "figure-7": "evidence:figure_7",
   "figure-4": "evidence:figure_4", "sequential-refresh": "confusion:sequential_refresh",
+  "table-1": "evidence:table_1", "table-2": "evidence:table_2",
+  "dataset-imagenet": "dataset:imagenet", "dataset-places365": "dataset:places365", "dataset-voc": "dataset:voc",
+  "dataset-cub": "dataset:cub", "dataset-scenes": "dataset:scenes", "dataset-mnist": "dataset:mnist",
+  "claim-forgetting": "claim:eliminates_forgetting", "claim-no-old-data": "claim:no_old_training_data",
+  "claim-response-l2": "claim:response_beats_parameter", "claim-foundation-scope": "claim:foundation_models_scope",
+  "tracking-appendix": "evidence:tracking",
   "stability-plasticity": "confusion:stability_plasticity", jacobian: "confusion:jacobian", "old-domain-risk": "confusion:global_function",
 };
 
@@ -48,5 +54,7 @@ export const v3ReferencePriority = [
   "term:teacher", "term:student", "method:lwf", "formula:l_old", "formula:l_new", "symbol:lambda_old", "symbol:regularization", "formula:total_loss", "phase:warmup", "phase:joint",
   "method:fine_tuning", "method:feature_extraction", "method:joint_training",
   "formula:response_preservation", "formula:parameter_l2", "claim:domain_mismatch", "symbol:temperature", "evidence:figure_7",
+  "evidence:table_1", "evidence:table_2", "evidence:figure_4", "evidence:figure_7", "evidence:tracking",
+  "claim:eliminates_forgetting", "claim:no_old_training_data", "claim:response_beats_parameter", "claim:foundation_models_scope",
   "confusion:stability_plasticity", "confusion:jacobian", "confusion:global_function",
 ];

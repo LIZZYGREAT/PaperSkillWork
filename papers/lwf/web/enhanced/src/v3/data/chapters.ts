@@ -5,7 +5,7 @@ export const LWF_CHAPTERS = [
   { id: "03", slug: "training-cycle", title: "一次训练", status: "ready" },
   { id: "04", slug: "mechanism-boundary", title: "机制与边界", status: "ready" },
   { id: "05", slug: "sequential", title: "连续任务", status: "ready" },
-  { id: "06", slug: "evidence", title: "论文证据", status: "planned" },
+  { id: "06", slug: "evidence", title: "论文证据", status: "ready" },
   { id: "07", slug: "replay", title: "完整回放", status: "planned" },
 ] as const;
 

@@ -13,6 +13,7 @@ import { Section02KeyMove } from "./sections/Section02KeyMove";
 import { Section03TrainingCycle } from "./sections/Section03TrainingCycle";
 import { Section04MechanismBoundary } from "./sections/Section04MechanismBoundary";
 import { Section05Sequential } from "./sections/Section05Sequential";
+import { Section06Evidence } from "./sections/Section06Evidence";
 import "../styles/tokens.css";
 import "../styles/components.css";
 import "../styles/paper.css";
@@ -23,6 +24,7 @@ import "../shared/foundation/styles/kit.css";
 import "./styles/vertical-slice.css";
 import "./styles/mechanism.css";
 import "./styles/sequential.css";
+import "./styles/evidence.css";
 
 const sceneChapters: Record<string, LwfChapterId> = {
   "00": "00", "01": "01", "02": "02", "03": "03", "04": "04", "05": "05", "06": "06", "07": "07",
@@ -158,6 +160,7 @@ export function LwfVerticalSlice() {
       <MobileProcessGuide activeStepId={mobileStepId} onSelectStep={selectStep} onNavigateChapter={navigateChapter} />
       <Section04MechanismBoundary onOpenReference={openReference} onNavigateChapter={navigateChapter} />
       <Section05Sequential onOpenReference={openReference} onNavigateChapter={navigateChapter} />
+      <Section06Evidence onOpenReference={openReference} onNavigateChapter={navigateChapter} />
     </main>
 
     {referenceRequest ? <ReferenceHub request={referenceRequest} onClose={() => setReferenceRequest(null)} priorityIds={v3ReferencePriority} onOpenScene={openV3Scene} /> : null}

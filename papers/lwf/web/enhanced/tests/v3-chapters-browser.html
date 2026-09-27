@@ -181,7 +181,77 @@
           await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
         });
 
-        await check("05 · 390px 移动视口不产生页面横向溢出", async () => {
+        await check("05 → 06 · 证据章节与协议优先顺序", async () => {
+          const next = doc.querySelector("#chapter-05 .v3-chapter-navigation .is-next");
+          assert(next && !next.disabled, "05 的下一章入口应进入 06");
+          next.click();
+          await waitFor(() => doc.defaultView.location.hash === "#chapter-06");
+          const protocol = doc.querySelector("#chapter-06 .v3-protocol-block");
+          const explorer = doc.querySelector("#chapter-06 .v3-evidence-main-block");
+          assert(protocol && explorer && protocol.compareDocumentPosition(explorer) & Node.DOCUMENT_POSITION_FOLLOWING, "全局协议应显示在结果浏览器之前");
+          assert(doc.querySelector("#chapter-06 h2")?.textContent.includes("真正支持了什么"), "06 章节内容缺失");
+        });
+
+        await check("06 · Table 1 保留原表差值格式，Table 2 按研究问题阅读", async () => {
+          const chapter = doc.querySelector("#chapter-06");
+          const table1 = chapter.querySelector('.v3-evidence-table[aria-label]') ?? chapter.querySelector(".v3-evidence-table");
+          assert(table1?.textContent.includes("54.7%") && table1.textContent.includes("57.7%"), "Table 1 应显示 LwF 原表绝对值");
+          assert(table1.textContent.includes("−3.8 pp") && table1.textContent.includes("−0.7 pp"), "比较方法应保留原表相对 LwF 的差值");
+          assert(table1.textContent.includes("图像与标签") && table1.textContent.includes("Joint Training"), "应标明 Joint Training 使用旧数据");
+          assert(chapter.textContent.includes("这里不重建绝对值"), "差值格式需要说明没有重建绝对值");
+          assert(!/winner|leaderboard|best method|rank/i.test(chapter.querySelector(".v3-evidence-main-block").textContent), "证据浏览器不应采用排行榜用语");
+          const selectors = [...chapter.querySelectorAll(".v3-evidence-selector [role=tab]")];
+          selectors[1].click();
+          await waitFor(() => chapter.querySelector(".v3-evidence-detail").getAttribute("data-evidence-id") === "table_2");
+          const warmup = [...chapter.querySelectorAll(".v3-table2-questions button")].find((button) => button.textContent.includes("warm-up"));
+          warmup.click();
+          await waitFor(() => chapter.querySelector(".v3-table2-answer").textContent.includes("并非关键"));
+          assert(chapter.querySelector(".v3-table2-answer").textContent.includes("Boundary"), "Table 2 每个问题需显示结论边界");
+        });
+
+        await check("06 · Figure 4 / Figure 7 原文与协议证据", async () => {
+          const chapter = doc.querySelector("#chapter-06");
+          const selectors = [...chapter.querySelectorAll(".v3-evidence-selector [role=tab]")];
+          selectors[2].click();
+          await waitFor(() => chapter.querySelector(".v3-evidence-detail").getAttribute("data-evidence-id") === "figure_4");
+          assert(chapter.querySelector(".v3-evidence-paper-preview iframe")?.src.includes("arxiv.org/pdf/1606.09282v3#page=8"), "Figure 4 应显示原论文第 8 页");
+          assert(chapter.querySelector(".v3-figure-reading-guide")?.textContent.includes("±2 个标准差"), "Figure 4 应说明误差线和重复次数");
+          selectors[3].click();
+          await waitFor(() => chapter.querySelector(".v3-evidence-detail").getAttribute("data-evidence-id") === "figure_7");
+          assert(chapter.querySelector(".v3-evidence-paper-preview iframe")?.src.includes("arxiv.org/pdf/1606.09282v3#page=10"), "Figure 7 应显示原论文第 10 页");
+          assert(chapter.querySelector(".v3-figure-reading-guide")?.textContent.includes("parameter-L2"), "Figure 7 应交代参数 L2 对照");
+        });
+
+        await check("06 · Supported / Too Strong / Unsupported 判断反馈", async () => {
+          const chapter = doc.querySelector("#chapter-06");
+          const claims = [...chapter.querySelectorAll(".v3-verdict-claim-list button")];
+          const choose = async (index, verdict) => {
+            claims[index].click();
+            await waitFor(() => chapter.querySelector(".v3-verdict-card").getAttribute("data-claim-id") === ["claim:eliminates_forgetting", "claim:no_old_training_data", "claim:response_beats_parameter", "claim:foundation_models_scope"][index]);
+            const button = [...chapter.querySelectorAll(".v3-verdict-options button")].find((item) => item.textContent === verdict);
+            button.click();
+            await waitFor(() => chapter.querySelector(".v3-verdict-feedback")?.textContent.includes("判断符合证据"));
+            return chapter.querySelector(".v3-verdict-feedback");
+          };
+          assert((await choose(0, "Too Strong"))?.textContent.includes("判断符合证据"), "消除遗忘主张应判断为 Too Strong");
+          assert((await choose(1, "Supported"))?.textContent.includes("判断符合证据"), "无需旧任务训练数据应判断为 Supported");
+          assert((await choose(2, "Supported"))?.textContent.includes("判断符合证据"), "响应正则与参数 L2 的受限比较应判断为 Supported");
+          assert((await choose(3, "Unsupported"))?.textContent.includes("判断符合证据"), "基础模型主张应判断为 Unsupported");
+        });
+
+        await check("06 · Evidence Explorer 可深链 Reference Hub", async () => {
+          const chapter = doc.querySelector("#chapter-06");
+          const selectors = [...chapter.querySelectorAll(".v3-evidence-selector [role=tab]")];
+          selectors[0].click();
+          await waitFor(() => chapter.querySelector(".v3-evidence-detail").getAttribute("data-evidence-id") === "table_1");
+          chapter.querySelector(".v3-evidence-reference-link").click();
+          await waitFor(() => doc.querySelector(".v2-reference-drawer"));
+          await waitFor(() => doc.querySelector(".v2-hub-id")?.textContent.trim() === "evidence:table_1");
+          doc.querySelector(".v2-reference-drawer").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
+        });
+
+        await check("05–06 · 390px 移动视口无页面横向溢出", async () => {
           const originalWidth = frame.style.width;
           try {
             frame.style.width = "390px";
@@ -190,6 +260,9 @@
             assert(root.scrollWidth <= root.clientWidth + 1, `章节主页面横向溢出：${root.scrollWidth}px > ${root.clientWidth}px`);
             const diagram = doc.querySelector("#chapter-05 .rk-state-machine__viewport");
             assert(diagram.scrollWidth > diagram.clientWidth, "窄视口下，流程图应在自己的可滚动区域内查看");
+            const evidence = doc.querySelector("#chapter-06 .v3-evidence-detail");
+            assert(evidence.getBoundingClientRect().width <= root.clientWidth + 1, "06 的证据面板不应超出窄视口");
+            assert(evidence.querySelector(".v3-table-scroll").scrollWidth > evidence.querySelector(".v3-table-scroll").clientWidth, "Table 1 应在自身容器中横向查看");
           } finally {
             frame.style.width = originalWidth;
           }
@@ -200,6 +273,12 @@
           figureFrame.loading = "eager";
           figureFrame.scrollIntoView({ behavior: "auto", block: "center" });
           await Promise.race([new Promise((resolve) => figureFrame.addEventListener("load", resolve, { once: true })), pause(6000)]);
+        }
+        const evidenceFigure = doc.querySelector("#chapter-06 .v3-evidence-paper-preview iframe");
+        if (evidenceFigure) {
+          evidenceFigure.loading = "eager";
+          evidenceFigure.scrollIntoView({ behavior: "auto", block: "center" });
+          await Promise.race([new Promise((resolve) => evidenceFigure.addEventListener("load", resolve, { once: true })), pause(6000)]);
         }
 
         const failures = checks.filter((item) => !item.passed);
