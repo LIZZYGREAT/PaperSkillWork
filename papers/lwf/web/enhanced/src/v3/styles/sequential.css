@@ -49,10 +49,12 @@
 .v3-sequential-reference-links button:focus-visible,.v3-figure4-actions button:focus-visible { outline: 3px solid #83c5b4; outline-offset: 2px; }
 .v3-sequential-evidence > p { max-width: 760px; margin: 0 0 12px; color: #587078; font-size: .8rem; line-height: 1.55; }
 .v3-figure4-preview { margin: 0; overflow: hidden; border: 1px solid #dbe4e5; border-radius: 10px; background: #fff; }
-.v3-figure4-preview iframe { display: block; width: 100%; height: clamp(360px,56vw,680px); border: 0; background: #f7f9f8; }
-.v3-figure4-preview figcaption { display: grid; gap: 4px; padding: 10px 12px; color: #556d73; font-size: .73rem; }
-.v3-figure4-preview figcaption strong { color: #244f57; }
-.v3-figure4-preview a { color: #176b63; font-weight: 700; }
+.v3-figure4-source { display: grid; gap: 6px; padding: 15px 16px; background: linear-gradient(120deg,#f4f8f6,#fbfcfb); }
+.v3-figure4-source > span { color: #6d8984; font-size: 8px; font-weight: 820; letter-spacing: .09em; }
+.v3-figure4-source > strong { color: #31575c; font-size: .86rem; }
+.v3-figure4-source > p { margin: 0; color: #60777a; font-size: .73rem; line-height: 1.5; }
+.v3-figure4-source > a { justify-self: start; margin-top: 2px; color: #176b63; font-size: .72rem; font-weight: 700; }
+.v3-figure4-preview figcaption { padding: 9px 12px; border-top: 1px solid #e3eae7; color: #556d73; font-size: .7rem; }
 .v3-figure4-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
 .v3-figure4-actions p { margin: 0; color: #61757a; font-size: .75rem; line-height: 1.5; }
 .v3-figure4-actions button { flex: 0 0 auto; min-height: 38px; padding: 8px 12px; border: 1px solid #bdd6cf; border-radius: 8px; color: #175f58; background: #f2f8f5; font: inherit; font-size: .75rem; font-weight: 740; cursor: pointer; }
@@ -66,7 +68,6 @@
   .v3-task-sequence-loopback { grid-template-columns: minmax(0,1fr); gap: 4px; }
   .v3-figure4-actions { align-items: stretch; flex-direction: column; }
   .v3-figure4-actions button { align-self: stretch; }
-  .v3-figure4-preview iframe { height: 440px; }
 }
 
 @media (max-width: 430px) {

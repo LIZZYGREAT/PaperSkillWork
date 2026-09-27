@@ -8,7 +8,7 @@ import {
   evidenceQuestions,
   figure4ReadingGuide,
   figure7ReadingGuide,
-  paperPdfPage,
+  arxivPaperRecord,
   table2Questions,
   verdictClaimIds,
   verdictQuestions,
@@ -119,11 +119,15 @@ export function LwfEvidenceExplorer({ onOpenReference }: { onOpenReference: (ter
     const isFigure4 = selectedEvidence === "figure_4";
     const readingGuide = isFigure4 ? figure4ReadingGuide : figure7ReadingGuide;
     const page = evidenceProtocol[selectedEvidence].sourcePage;
-    const url = paperPdfPage(page);
     return <>
       <figure className="v3-evidence-paper-preview">
-        <iframe src={url} title={`arXiv 原论文 PDF 第 ${page} 页，包含 ${isFigure4 ? "Figure 4" : "Figure 7"}`} loading="lazy" referrerPolicy="no-referrer" />
-        <figcaption><strong>{isFigure4 ? "Figure 4 · PDF p.8" : "Figure 7 · PDF p.10"}</strong><a href={url} target="_blank" rel="noreferrer">打开 arXiv 原文 ↗</a></figcaption>
+        <div className="v3-evidence-paper-source">
+          <span>原文图索引 · {isFigure4 ? "Figure 4" : "Figure 7"} · 第 {page} 页</span>
+          <strong>{isFigure4 ? "连续加入任务后的各任务表现" : "目标权重与损失选择下的表现对照"}</strong>
+          <p>此处提供原文定位和逐项读图说明；需要核对原图时，请从 arXiv 论文记录打开。</p>
+          <a href={arxivPaperRecord()} target="_blank" rel="noreferrer">打开 arXiv 论文记录 ↗</a>
+        </div>
+        <figcaption>下方读图指南只总结登记过的设置与结论，不补画论文中未登记的曲线坐标。</figcaption>
       </figure>
       <dl className="v3-figure-reading-guide">{readingGuide.map((item) => <div key={item.label}><dt>{item.label}</dt><dd>{item.text}</dd></div>)}</dl>
     </>;
@@ -162,7 +166,7 @@ export function LwfEvidenceExplorer({ onOpenReference }: { onOpenReference: (ter
       <section className="v3-evidence-chain-step is-evidence" aria-labelledby="v3-evidence-observation-title">
         <span className="v3-evidence-step-label">03 · EVIDENCE</span>
         <h4 id="v3-evidence-observation-title">{selectedEvidence === "table_1" ? "原表报告" : selectedEvidence === "table_2" ? "按研究问题查看 Table 2" : "原论文图与读图信息"}</h4>
-        {selectedEvidence === "table_1" ? <p className="v3-evidence-source-link"><a href={paperPdfPage(7)} target="_blank" rel="noreferrer">打开 arXiv Table 1 原文 ↗</a></p> : null}
+        {selectedEvidence === "table_1" ? <p className="v3-evidence-source-link"><a href={arxivPaperRecord()} target="_blank" rel="noreferrer">打开 arXiv 论文记录 · Table 1 位于第 7 页 ↗</a></p> : null}
         {renderEvidence()}
         <div className="v3-evidence-observation"><strong>测量内容</strong><p>{card.measures}</p><strong>观察结果</strong><p>{card.supports}</p></div>
       </section>

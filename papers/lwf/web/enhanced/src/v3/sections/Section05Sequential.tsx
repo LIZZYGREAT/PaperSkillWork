@@ -2,7 +2,7 @@ import { ChapterNavigation } from "../components/ChapterNavigation";
 import { LwfTaskSequence } from "../components/LwfTaskSequence";
 import { getLwfChapter, type LwfChapterId } from "../data/chapters";
 
-const figure4Pdf = "https://arxiv.org/pdf/1606.09282v3#page=8&view=FitH";
+const arxivPaperRecord = "https://arxiv.org/abs/1606.09282v3";
 
 export function Section05Sequential({ onOpenReference, onNavigateChapter }: {
   onOpenReference: (termId: string) => void;
@@ -44,11 +44,16 @@ export function Section05Sequential({ onOpenReference, onNavigateChapter }: {
     </section>
 
     <section className="v3-sequential-block v3-sequential-evidence" aria-labelledby="v3-figure4-preview-title">
-      <div className="v3-sequential-block-heading"><span>05C · PAPER PREVIEW</span><h3 id="v3-figure4-preview-title">Figure 4 · 连续加入任务</h3></div>
-      <p>论文在 Places365→VOC 与 ImageNet→Indoor Scenes 设置中分批加入任务，观察各任务在多个阶段的表现。这里仅预览原文图；曲线含义与证据边界留到 Chapter 06。</p>
+      <div className="v3-sequential-block-heading"><span>05C · PAPER EVIDENCE INDEX</span><h3 id="v3-figure4-preview-title">Figure 4 · 连续加入任务</h3></div>
+      <p>论文在 Places365→VOC 与 ImageNet→Indoor Scenes 设置中分批加入任务，观察各任务在多个阶段的表现。这里标出原文位置和证据边界；详细读图留到 Chapter 06。</p>
       <figure className="v3-figure4-preview">
-        <iframe src={figure4Pdf} title="arXiv 1606.09282v3 原论文 PDF 第 8 页，包含 Figure 4" loading="lazy" referrerPolicy="no-referrer" />
-        <figcaption><strong>Figure 4 · PDF p.8</strong><span>原论文页面预览。若内嵌 PDF 不可用，可打开 <a href={figure4Pdf} target="_blank" rel="noreferrer">arXiv 原文第 8 页 ↗</a>。</span></figcaption>
+        <div className="v3-figure4-source">
+          <span>原文定位 · Figure 4 · 第 8 页</span>
+          <strong>连续加入任务后，各阶段的任务表现如何变化？</strong>
+          <p>本页不直接展示或重绘论文原图。需要核对原图时，可从 arXiv 论文记录打开。</p>
+          <a href={arxivPaperRecord} target="_blank" rel="noreferrer">打开 arXiv 论文记录 ↗</a>
+        </div>
+        <figcaption>Chapter 06 按论文报告的任务设置、曲线含义和结论边界逐项说明。</figcaption>
       </figure>
       <div className="v3-figure4-actions">
         <p>连续加入任务后，旧任务表现仍可能下降；该图不表示退化必然单调或完全避免。</p>

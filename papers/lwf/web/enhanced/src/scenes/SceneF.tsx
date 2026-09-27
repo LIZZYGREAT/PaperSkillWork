@@ -107,7 +107,7 @@ export function SceneF() {
       <section className="v2-f-paper-evidence">
         <div className="v2-section-title-row"><div><p className="v2-eyebrow">PAPER EVIDENCE · FIGURE 7 / C11</p><h2>在论文测试的设置中，响应约束优于 parameter-L2 baseline</h2></div><button type="button" className="v2-intro-evidence" onClick={() => openHub({ evidenceId: 'C11' })}>打开审计 C11 ↗</button></div>
         <div className="v2-f-paper-pair"><div><strong>Mechanism Toy</strong><span>参数距离和响应漂移是不同计算量；只在 Xₙ 探针上比较输出。</span></div><i>↓</i><div><strong>Paper Evidence</strong><span>Figure 7 对比 response regularization 与参数 L₂ baseline。作者解释为多个小参数变化仍可能造成大的输出变化。</span></div></div>
-        <p>结论限定在论文所测试的任务对与训练协议。原图与任务坐标可从 <a href="https://arxiv.org/pdf/1606.09282#page=10" target="_blank" rel="noreferrer">原论文 Figure 7 ↗</a> 查看；页面不从图像像素估读数值。</p>
+        <p>结论限定在论文所测试的任务对与训练协议。原图与任务坐标可从 <a href="https://arxiv.org/abs/1606.09282v3" target="_blank" rel="noreferrer">arXiv 论文记录 ↗</a> 查看；页面不从图像像素估读数值。</p>
       </section>
 
       <div className="v2-f-conclusion-strip"><strong>small parameter change ⇏ small function change</strong><strong>large parameter change ⇏ large function change</strong><strong>preservation on Xₙ ⇏ global function preservation</strong></div>

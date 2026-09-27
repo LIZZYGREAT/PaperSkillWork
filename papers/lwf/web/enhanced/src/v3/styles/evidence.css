@@ -53,10 +53,12 @@
 .v3-table2-answer dt { color: #4d716b; font-size: .64rem; font-weight: 780; }
 .v3-table2-answer dd { margin: 3px 0 0; color: #596f74; font-size: .69rem; line-height: 1.5; }
 .v3-evidence-paper-preview { margin: 0; overflow: hidden; border: 1px solid #dfe8e5; border-radius: 8px; background: #fff; }
-.v3-evidence-paper-preview iframe { display: block; width: 100%; height: clamp(300px,40vw,510px); border: 0; background: #f7f9f8; }
-.v3-evidence-paper-preview figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px 10px; padding: 8px 10px; color: #63777b; font-size: .65rem; }
-.v3-evidence-paper-preview figcaption strong { color: #315b5d; }
-.v3-evidence-paper-preview a { color: #176b63; font-weight: 720; }
+.v3-evidence-paper-source { display: grid; gap: 6px; padding: 12px; background: linear-gradient(120deg,#f4f8f6,#fbfcfb); }
+.v3-evidence-paper-source > span { color: #6d8984; font-size: 8px; font-weight: 820; letter-spacing: .09em; }
+.v3-evidence-paper-source > strong { color: #31575c; font-size: .78rem; }
+.v3-evidence-paper-source > p { margin: 0; color: #60777a; font-size: .68rem; line-height: 1.5; }
+.v3-evidence-paper-source > a { justify-self: start; color: #176b63; font-size: .67rem; font-weight: 720; }
+.v3-evidence-paper-preview figcaption { padding: 8px 10px; border-top: 1px solid #e3eae7; color: #63777b; font-size: .63rem; line-height: 1.5; }
 .v3-figure-reading-guide { display: grid; gap: 6px; margin: 9px 0 0; }
 .v3-figure-reading-guide > div { display: grid; grid-template-columns: minmax(110px,.27fr) minmax(0,1fr); gap: 8px; padding: 7px 9px; border: 1px solid #e7edeb; border-radius: 7px; }
 .v3-figure-reading-guide dt { color: #4e706b; font-size: .65rem; font-weight: 780; }
@@ -101,5 +103,4 @@
   .v3-evidence-selector [role="tablist"] { grid-template-columns: minmax(0,1fr); }
   .v3-verdict-claim-list { grid-template-columns: minmax(0,1fr); }
   .v3-evidence-observation,.v3-figure-reading-guide > div { grid-template-columns: minmax(0,1fr); gap: 3px; }
-  .v3-evidence-paper-preview iframe { height: 390px; }
 }

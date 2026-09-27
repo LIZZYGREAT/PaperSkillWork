@@ -113,6 +113,6 @@ export const verdictQuestions: Record<(typeof verdictClaimIds)[number], string> 
   "claim:foundation_models_scope": "本文是否证明 LwF 可用于基础模型？",
 };
 
-export function paperPdfPage(page: number) {
-  return `https://arxiv.org/pdf/1606.09282v3#page=${page}&view=FitH`;
+export function arxivPaperRecord() {
+  return "https://arxiv.org/abs/1606.09282v3";
 }
