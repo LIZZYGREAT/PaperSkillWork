@@ -114,14 +114,14 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
         if (Math.abs(destinationCenterX - sourceCenterX) >= Math.abs(destinationCenterY - sourceCenterY)) {
           const toRight = destinationCenterX > sourceCenterX;
           const startX = ((toRight ? source.right + 2 : source.left - 2) - routesRect.left) * scaleX;
-          const endX = ((toRight ? destination.left - 3 : destination.right + 3) - routesRect.left) * scaleX;
+          const endX = ((toRight ? destination.left - 12 : destination.right + 12) - routesRect.left) * scaleX;
           const y = ((sourceCenterY + destinationCenterY) / 2 - routesRect.top) * scaleY;
           return `M ${startX} ${y} H ${endX}`;
         }
         const downward = destinationCenterY > sourceCenterY;
         const x = ((sourceCenterX + destinationCenterX) / 2 - routesRect.left) * scaleX;
         const startY = ((downward ? source.bottom + 2 : source.top - 2) - routesRect.top) * scaleY;
-        const endY = ((downward ? destination.top - 3 : destination.bottom + 3) - routesRect.top) * scaleY;
+        const endY = ((downward ? destination.top - 10 : destination.bottom + 10) - routesRect.top) * scaleY;
         return `M ${x} ${startY} V ${endY}`;
       });
       setRoutePaths(nextPaths);
@@ -131,11 +131,13 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
       if (loopSource && loopTarget) {
         const startX = (loopSource.right - routesRect.left + 2) * scaleX;
         const startY = (loopSource.top + loopSource.height / 2 - routesRect.top) * scaleY;
-        const outerX = (routesRect.right - routesRect.left - 2) * scaleX;
-        const outerY = 2 * scaleY;
+        const outerX = (routesRect.right - routesRect.left - 28) * scaleX;
+        const outerY = 20 * scaleY;
         const targetX = (loopTarget.left + loopTarget.width / 2 - routesRect.left) * scaleX;
-        const targetY = (loopTarget.top - routesRect.top - 3) * scaleY;
-        setLoopPath(`M ${startX} ${startY} C ${startX + 8 * scaleX} ${startY}, ${outerX} ${startY}, ${outerX} ${startY} V ${outerY} Q ${outerX} ${outerY}, ${targetX} ${outerY} V ${targetY}`);
+        const targetY = (loopTarget.top - routesRect.top - 8) * scaleY;
+        const cornerRadiusX = 26 * scaleX;
+        const cornerRadiusY = 14 * scaleY;
+        setLoopPath(`M ${startX} ${startY} C ${startX + 18 * scaleX} ${startY}, ${outerX} ${startY}, ${outerX} ${startY} V ${outerY + cornerRadiusY} C ${outerX} ${outerY + 10 * scaleY}, ${outerX - 10 * scaleX} ${outerY}, ${outerX - cornerRadiusX} ${outerY} H ${targetX + cornerRadiusX} C ${targetX + 10 * scaleX} ${outerY}, ${targetX} ${outerY + 10 * scaleY}, ${targetX} ${outerY + cornerRadiusY} V ${targetY}`);
       }
     };
     updatePosition();
@@ -171,7 +173,7 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
         </div>
         <div className="v3-grand-trail-board" ref={boardRef}>
           <svg ref={routesRef} className="v3-grand-trail-routes" viewBox="0 0 900 540" preserveAspectRatio="none" aria-hidden="true">
-            <defs><marker id={arrowId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
+            <defs><marker id={arrowId} viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" /></marker></defs>
             {grandTrailEdges.map((edge, index) => {
               const destination = grandTrailSteps.findIndex((item) => item.id === edge.to);
               const completed = stepIndex > destination;
