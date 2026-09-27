@@ -1,6 +1,6 @@
 # LwF 交互式精读 · Workflow v2
 
-当前版本在 *Learning without Forgetting*（LwF）的交互章节中提供 00 背景导读和 01–10 场景，沿用 PaperSkill 的章节目录和分页框架。各页共用一个持续工作区；Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注。00 用于解释论文背景，不计入人工学习验收；实现和构建不代表学习门禁通过。
+当前增强版保留旧版 A–J 场景供回看，并提供完整的 v3 `00–07` 八章主线。`?version=v3` 打开新主线；`src/data/tutorial.ts` 从同一章节清单生成上游 `kind: "chapter"` 数据，并为实际交互登记 `kind: "module"` 组件。Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注；实现和构建不代表学习门禁通过。
 
 ## 本地预览与构建
 
@@ -13,11 +13,13 @@ npm run dev
 
 生产构建运行 `npm run build`，构建后的静态文件位于 `dist/`；可用 `npm run preview` 查看构建结果。Vite 使用配置运行器加载配置，适配当前受限工作区。
 
-### 00–03 纵向切片开发版
+### 00–07 v3 学习主线
 
-运行开发服务器后，打开 `http://localhost:5173/?version=v3` 查看新的 00–03 单页教学主线。未带 `version=v3` 时仍进入现有 A–J 分页版。开发版的浏览器验收页为 `http://localhost:5173/tests/v3-browser.html`；该页面需在 Vite 开发服务器运行时打开。
+运行开发服务器后，打开 `http://localhost:5173/?version=v3` 查看 00–07 单页教学主线。浏览器验收页为 `http://localhost:5173/tests/v3-chapters-browser.html`；它检查导航、交互和移动布局，不生成截图文件。未带 `version=v3` 时仍进入旧版 A–J 场景。
 
-## 场景 00–10
+上游映射位于 `src/v3/data/upstream-adapter.ts`：8 个章节和 10 个已登记交互模块；Chapter 04 包含三个机制交互。官方 PaperSkill 导入与预检需在兼容的 Workflow v3 工作区和目标上游检出中运行。
+
+## 旧版场景 00–10（仅用于回看）
 
 - **00 · 论文背景与研究目标：** 简介旧任务数据不可用时加入新任务的问题设定、常见路线的取舍、LwF 的旧响应思路及其输入覆盖边界；不增加训练门禁。
 - **01 · 问题空间与方法约束：** 展示新旧数据可用性，比较特征提取、微调和联合训练，并由问题条件引出 LwF 需要的旧任务信号。
@@ -65,6 +67,9 @@ npm run dev
 | `src/styles/scene-j.css` | Scene J 工作流、运行时映射、参数表、检查清单与窄屏排版 |
 | `src/styles/workspace-curtain.css` | 悬浮入口、展开式共享工作区及响应式布局 |
 | `src/data/registry.ts` | 解析项目内术语和证据登记 |
+| `src/data/tutorial.ts` | 元数据和八章上游导入数据 |
+| `src/v3/data/upstream-adapter.ts` | v3 的 00–07 `kind: "chapter"` 与交互模块映射 |
+| `src/modules/v3-widgets.tsx` | Chapter 04–07 上游交互组件注册 |
 | `src/data/knowledge.ts` | 全站 canonical knowledge cards |
 | `src/styles/layout.css` | 分页布局、场景容器、可读字级与窄屏样式 |
 | `legacy/App.v1.tsx` | 上一版入口快照，留作迁移核对 |

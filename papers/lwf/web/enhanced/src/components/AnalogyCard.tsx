@@ -20,7 +20,7 @@ export function AnalogyCard({
         ) : analogy.figure ? (
           <Figure src={analogy.figure} alt={analogy.title} />
         ) : (
-          <canvas width={560} height={140} />
+          <div className="analogy-focus-visual"><strong>{analogy.title}</strong><span>{analogy.text}</span></div>
         )}
       </div>
       <div className="analogy-body">
