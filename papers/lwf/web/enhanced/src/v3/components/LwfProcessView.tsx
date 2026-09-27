@@ -2,17 +2,29 @@ import { useId } from "react";
 import { lwfProcess } from "../data/process";
 
 const nodeRevealAt: Record<string, number> = {
-  xn: 0, teacher: 0, yo: 2, student: 3, "old-branch": 3, "new-branch": 3,
+  xn: 0, teacher: 1, yo: 2, student: 3, "old-branch": 3, "new-branch": 3,
   "new-label": 7, "loss-old": 6, "loss-new": 7, objective: 9, optimizer: 9, "updated-student": 9,
 };
 
 const edgeRevealAt: Record<string, number> = {
-  "xn-teacher": 0, "teacher-yo": 2, "xn-student": 3,
-  "student-old": 3, "student-new": 3, "old-output-loss": 5, "yo-old-loss": 5,
-  "new-output-loss": 6, "label-new-loss": 6, "loss-old-objective": 9,
+  "xn-teacher": 1, "teacher-yo": 2, "xn-student": 3,
+  "student-old": 3, "student-new": 3, "old-output-loss": 6, "yo-old-loss": 6,
+  "new-output-loss": 7, "label-new-loss": 7, "loss-old-objective": 9,
   "loss-new-objective": 9, "old-loss-head-gradient": 8, "old-head-shared-gradient": 8,
   "new-loss-head-gradient": 8, "new-head-shared-gradient": 8,
   "objective-optimizer": 9, "optimizer-updated-student": 9,
+};
+
+const nodeRevealDelay: Record<string, number> = {
+  "old-branch": 120, "new-branch": 240, "loss-new": 140,
+  optimizer: 130, "updated-student": 260,
+};
+
+const edgeRevealDelay: Record<string, number> = {
+  "student-old": 150, "student-new": 300,
+  "old-output-loss": 180, "new-output-loss": 180,
+  "old-head-shared-gradient": 170, "new-loss-head-gradient": 340, "new-head-shared-gradient": 510,
+  "loss-new-objective": 150, "objective-optimizer": 300, "optimizer-updated-student": 450,
 };
 
 const nodes = [
@@ -63,31 +75,38 @@ export function LwfProcessView({ activeStepId }: { activeStepId: string | null }
     <svg className="v3-process-svg" viewBox="0 0 824 724" role="img" aria-labelledby={`${markerPrefix}-title ${markerPrefix}-desc`} preserveAspectRatio="xMidYMid meet">
       <title id={`${markerPrefix}-title`}>LwF Teacher 与 Student 的训练计算图</title>
       <desc id={`${markerPrefix}-desc`}>当前任务输入同时进入冻结 Teacher 与扩展 Student。Teacher 生成 Yₒ，Student 通过共享参数和两个任务 head 产生 Ŷₒ 与 Ŷₙ。两项损失汇入联合目标，再反向传播并由优化器更新 Student。</desc>
+      <path className={`v3-teacher-outline ${stepIndex >= nodeRevealAt.teacher ? "is-revealed" : ""}`} d="M184 25 H572 V132 H184 Z" />
+      <text className={`v3-svg-zone-label v3-svg-teacher-label ${stepIndex >= nodeRevealAt.teacher ? "is-revealed" : ""}`} x="198" y="24">FROZEN TEACHER</text>
+      <path className={`v3-student-outline ${stepIndex >= nodeRevealAt.student ? "is-revealed" : ""}`} d="M184 190 H570 V397 H184 Z" />
+      <text className={`v3-svg-zone-label v3-svg-student-label ${stepIndex >= nodeRevealAt.student ? "is-revealed" : ""}`} x="198" y="190">EXPANDED STUDENT</text>
       <defs>
-        <marker id={`${markerPrefix}-data`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>
-        <marker id={`${markerPrefix}-gradient`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>
+      {edges.map((edge) => {
+        const isGradient = edge.kind === "gradient";
+        const revealed = stepIndex >= edgeRevealAt[edge.id];
+        const active = activeEdges.has(edge.id);
+        const delay = edgeRevealDelay[edge.id] ?? 0;
+        return <marker key={edge.id} id={`${markerPrefix}-${edge.id}`} className={`v3-process-marker ${isGradient ? "is-gradient" : ""} ${revealed ? "is-revealed" : ""} ${active ? "is-active" : ""}`} style={{ transitionDelay: revealed ? `${delay}ms` : "0ms" }} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>;
+      })}
       </defs>
-      <path className="v3-teacher-outline" d="M184 25 H572 V132 H184 Z" />
-      <text className="v3-svg-zone-label v3-svg-teacher-label" x="198" y="24">FROZEN TEACHER</text>
-      <path className="v3-student-outline" d="M184 190 H570 V397 H184 Z" />
-      <text className="v3-svg-zone-label v3-svg-student-label" x="198" y="190">EXPANDED STUDENT</text>
       {edges.map((edge) => {
         const active = activeEdges.has(edge.id);
         const isGradient = edge.kind === "gradient";
         const revealed = stepIndex >= edgeRevealAt[edge.id];
-        return <path key={edge.id} className={`v3-process-edge ${isGradient ? "is-gradient" : ""} ${revealed ? "is-revealed" : ""} ${active ? "is-active" : ""}`} data-edge-id={edge.id} d={edge.d} markerEnd={isGradient ? `url(#${markerPrefix}-gradient)` : `url(#${markerPrefix}-data)`} />;
+        const delay = edgeRevealDelay[edge.id] ?? 0;
+        return <path key={edge.id} className={`v3-process-edge ${isGradient ? "is-gradient" : ""} ${revealed ? "is-revealed" : ""} ${active ? "is-active" : ""}`} style={{ transitionDelay: `${delay}ms`, animationDelay: `${delay}ms` }} data-edge-id={edge.id} d={edge.d} pathLength={1} markerEnd={`url(#${markerPrefix}-${edge.id})`} />;
       })}
       {nodes.map((node) => {
         const revealed = stepIndex >= nodeRevealAt[node.id];
         const active = activeNodes.has(node.id);
-        return <g key={node.id} className={`v3-process-node v3-process-node--${node.type} ${revealed ? "is-revealed" : ""} ${active ? "is-active" : ""} ${node.id === "updated-student" && activeStep.id === "cycle-update" ? "is-updated" : ""}`} data-process-node={node.id}>
+        const delay = nodeRevealDelay[node.id] ?? 0;
+        return <g key={node.id} className={`v3-process-node v3-process-node--${node.type} ${revealed ? "is-revealed" : ""} ${active ? "is-active" : ""} ${node.id === "updated-student" && activeStep.id === "cycle-update" ? "is-updated" : ""}`} style={{ transitionDelay: revealed ? `${delay}ms` : "0ms" }} data-process-node={node.id}>
           <rect x={node.x} y={node.y} width={node.w} height={node.h} rx="12" />
           {node.badge ? <text className="v3-node-badge" x={node.x + node.w / 2} y={node.y + 15}>{node.badge}</text> : null}
           <text className={`v3-node-title ${node.badge ? "has-badge" : ""}`} x={node.x + node.w / 2} y={node.y + (node.badge ? 41 : 27)}>{node.title}</text>
           <text className="v3-node-sub" x={node.x + node.w / 2} y={node.y + (node.badge ? 61 : 47)}>{node.sub}</text>
         </g>;
       })}
-      <text className="v3-gradient-caption" x="28" y="563">虚线反向路径：梯度经 θₒ / θₙ 回到共享 θₛ</text>
+      <text className={`v3-gradient-caption ${stepIndex >= 8 ? "is-revealed" : ""}`} x="28" y="563">虚线反向路径：梯度经 θₒ / θₙ 回到共享 θₛ</text>
     </svg>
     <div className="v3-process-mobile" aria-label="当前训练步骤的 LwF 计算路径">
       <div className={`v3-mobile-flow-node v3-mobile-input ${nodeClass("xn")}`} data-process-node="xn"><strong>Xₙ</strong><small>当前任务输入</small></div>
