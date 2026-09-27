@@ -9,11 +9,29 @@
 .v3-sequence-timescales span,.v3-refresh-stage { color: #6f8d89; font-size: 8px; font-weight: 820; letter-spacing: .09em; }
 .v3-sequence-timescales strong { color: #205e59; font-size: .9rem; }
 .v3-sequence-timescales small { color: #607780; font-size: .74rem; line-height: 1.45; }
-.v3-task-sequence-hint,.v3-task-sequence-footnote { margin: 0 0 10px; color: #5d7378; font-size: .76rem; }
-.v3-task-sequence-footnote { margin: 10px 0 0; }
-.v3-task-sequence .rk-state-machine__viewport { max-width: 100%; }
-.v3-task-sequence .rk-state-machine__canvas { min-width: 100%; }
-.v3-task-sequence .rk-state-machine__inspector { margin-top: 10px; }
+.v3-task-sequence { display: grid; gap: 10px; }
+.v3-task-sequence-hint,.v3-task-sequence-footnote { margin: 0; color: #5d7378; font-size: .76rem; line-height: 1.5; }
+.v3-task-sequence-list { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.v3-task-sequence-list li { min-width: 0; }
+.v3-task-sequence-list button { display: grid; grid-template-columns: 27px minmax(0,1fr); align-items: start; gap: 8px; width: 100%; min-height: 70px; padding: 10px 9px; border: 1px solid #dfe7e5; border-radius: 9px; color: #35515b; background: #fff; font: inherit; text-align: left; cursor: pointer; }
+.v3-task-sequence-list button[aria-pressed="true"] { border-color: #83b9a8; background: #eff7f3; box-shadow: inset 3px 0 #438f7d; }
+.v3-task-sequence-list button:focus-visible { outline: 3px solid #83c5b4; outline-offset: 2px; }
+.v3-task-sequence-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 7px; color: #287268; background: #edf6f2; font-size: .67rem; font-weight: 800; }
+.v3-task-sequence-label { display: grid; gap: 4px; min-width: 0; }
+.v3-task-sequence-label strong { color: #2f525c; font-size: .76rem; line-height: 1.35; }
+.v3-task-sequence-label small { color: #6d8083; font-size: .65rem; line-height: 1.4; }
+.v3-task-sequence-inspector { display: grid; grid-template-columns: minmax(0,1fr) minmax(180px,.55fr); gap: 14px; padding: 12px 14px; border: 1px solid #e0e8e5; border-radius: 9px; background: #f8fbf9; }
+.v3-task-sequence-current-label,.v3-task-sequence-next > span { color: #6e8b86; font-size: 8px; font-weight: 820; letter-spacing: .09em; text-transform: uppercase; }
+.v3-task-sequence-inspector h4 { margin: 3px 0 5px; color: #2b5256; font-size: .85rem; }
+.v3-task-sequence-inspector p { margin: 4px 0 0; color: #5f7479; font-size: .71rem; line-height: 1.5; }
+.v3-task-sequence-inspector p strong { color: #476561; }
+.v3-task-sequence-next { align-self: center; padding-left: 13px; border-left: 1px solid #dce7e2; }
+.v3-task-sequence-next strong { display: block; margin-top: 4px; color: #2f6d62; font-size: .76rem; }
+.v3-task-sequence-loopback { display: grid; grid-template-columns: auto auto minmax(0,1fr); align-items: center; gap: 5px 12px; padding: 10px 13px; border: 1px solid #dce7e1; border-radius: 8px; background: #f4f8f5; }
+.v3-task-sequence-loopback > span { color: #6d8984; font-size: 8px; font-weight: 820; letter-spacing: .09em; }
+.v3-task-sequence-loopback > strong { color: #38675f; font-size: .73rem; }
+.v3-task-sequence-loopback > small { color: #64797b; font-size: .68rem; line-height: 1.45; }
+.v3-task-sequence-footnote { padding-top: 2px; }
 .v3-refresh-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
 .v3-refresh-pair article { min-width: 0; padding: 14px; border: 1px solid #e0e7e5; border-radius: 10px; background: #fbfdfc; }
 .v3-refresh-pair article p { margin: 10px 0 8px; }
@@ -42,7 +60,15 @@
 @media (max-width: 700px) {
   .v3-sequential-block { padding: 15px 12px; }
   .v3-sequence-timescales,.v3-refresh-pair { grid-template-columns: 1fr; }
+  .v3-task-sequence-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .v3-task-sequence-inspector { grid-template-columns: minmax(0,1fr); gap: 9px; }
+  .v3-task-sequence-next { padding: 8px 0 0; border-top: 1px solid #dce7e2; border-left: 0; }
+  .v3-task-sequence-loopback { grid-template-columns: minmax(0,1fr); gap: 4px; }
   .v3-figure4-actions { align-items: stretch; flex-direction: column; }
   .v3-figure4-actions button { align-self: stretch; }
   .v3-figure4-preview iframe { height: 440px; }
+}
+
+@media (max-width: 430px) {
+  .v3-task-sequence-list { grid-template-columns: minmax(0,1fr); }
 }
