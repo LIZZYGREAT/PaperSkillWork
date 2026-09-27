@@ -1,18 +1,21 @@
 import { TermRef } from "../../shared/core/reference";
+import { ChapterNavigation } from "../components/ChapterNavigation";
 import { NarrativeStep } from "../components/NarrativeStep";
 import { ReplayControl } from "../components/ReplayControl";
+import type { LwfChapterId } from "../data/chapters";
 import { trainingSteps } from "../data/process";
 import { termsById } from "../data/references";
 
-export function Section03TrainingCycle({ activeStepId, onOpenReference, onSelectStep }: {
+export function Section03TrainingCycle({ activeStepId, onOpenReference, onSelectStep, onNavigateChapter }: {
   activeStepId: string | null;
   onOpenReference: (termId: string) => void;
   onSelectStep: (stepId: string) => void;
+  onNavigateChapter: (chapterId: LwfChapterId) => void;
 }) {
-  return <section className="v3-narrative-chapter v3-training-cycle" id="slice-03" aria-labelledby="v3-training-title">
+  return <section className="v3-narrative-chapter v3-training-cycle" id="chapter-03" aria-labelledby="v3-training-title">
     <header className="v3-chapter-heading">
       <span className="v3-stage-number">03</span>
-      <div><p className="v3-eyebrow">ONE TRAINING CYCLE</p><h2 id="v3-training-title">两项损失，更新同一个 Student</h2><p>目标提供梯度；Optimizer Step 才真正改变参数。</p></div>
+      <div><p className="v3-eyebrow">CHAPTER 03 / 08 · ONE TRAINING CYCLE</p><h2 id="v3-training-title">两项损失，更新同一个 Student</h2><p>目标提供梯度；Optimizer Step 才真正改变参数。</p></div>
     </header>
     <div className="v3-narrative-list">
       {trainingSteps.map((step, index) => <NarrativeStep key={step.id} id={step.id} index={index + 5} title={step.title} description={step.description} active={activeStepId === step.id} onSelect={onSelectStep}>
@@ -28,5 +31,6 @@ export function Section03TrainingCycle({ activeStepId, onOpenReference, onSelect
         </> : null}
       </NarrativeStep>)}
     </div>
+    <ChapterNavigation chapterId="03" onNavigate={onNavigateChapter} />
   </section>;
 }

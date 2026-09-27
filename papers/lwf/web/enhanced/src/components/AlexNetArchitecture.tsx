@@ -32,6 +32,9 @@ function ConvolutionGlyph() {
 export function AlexNetArchitecture({
   compact = false,
   boundary = 'fc7',
+  mode,
+  showNewHead,
+  parameterState,
   inputSymbol = 'Xₙ',
   sharedState = '共享主干',
   oldState = '保留旧任务输出',
@@ -40,6 +43,9 @@ export function AlexNetArchitecture({
 }: {
   compact?: boolean;
   boundary?: 'features' | 'fc7';
+  mode?: 'teacher' | 'student';
+  showNewHead?: boolean;
+  parameterState?: 'frozen' | 'trainable';
   inputSymbol?: string;
   sharedState?: string;
   oldState?: string;
@@ -47,8 +53,13 @@ export function AlexNetArchitecture({
   onInspect?: (objectId: string) => void;
 }) {
   const denseLayersShared = boundary === 'fc7';
+  const includesNewHead = showNewHead ?? mode !== 'teacher';
   return (
-    <section className={`v2-alexnet-architecture${compact ? ' is-compact' : ''}`} aria-label="AlexNet 参数结构">
+    <section className={`v2-alexnet-architecture${compact ? ' is-compact' : ''}${mode ? ` is-${mode}-mode` : ''}`} aria-label="AlexNet 参数结构">
+      {mode ? <div className="v2-alexnet-modebar">
+        <div><span>{mode === 'teacher' ? 'OLD MODEL / TEACHER' : 'EXPANDED STUDENT'}</span><strong>{mode === 'teacher' ? '旧模型保持固定结构' : '共享主体连接新旧任务输出'}</strong></div>
+        <b className={parameterState === 'trainable' ? 'is-trainable' : 'is-frozen'}>{parameterState === 'trainable' ? 'TRAINABLE · 可训练' : 'FROZEN · 固定'}</b>
+      </div> : null}
       {!compact ? (
         <header className="v2-alexnet-heading">
           <div><p className="v2-eyebrow">ALEXNET · 参数边界示意</p><h3>哪些层属于共享参数，哪些层属于任务输出？</h3></div>
@@ -71,9 +82,10 @@ export function AlexNetArchitecture({
           </div>
         </div>
         <span className="v2-alexnet-arrow" aria-hidden="true">→</span>
-        <div className="v2-alexnet-heads" aria-label="任务专属分类头">
-          <TaskHead code="θₒ" title="旧任务头" layerLabel={denseLayersShared ? 'fc8_old' : 'fc6 → fc7 → fc8_old'} state={oldState} old onInspect={() => onInspect('theta_o')} />
-          <TaskHead code="θₙ" title="新任务头" layerLabel={denseLayersShared ? 'fc8_new' : 'fc6 → fc7 → fc8_new'} state={newState} onInspect={() => onInspect('theta_n')} />
+        <div className={`v2-alexnet-heads${includesNewHead ? '' : ' is-single'}`} aria-label="任务专属分类头">
+          {mode === 'student' ? <span className="v2-alexnet-branch-label">共享表示从 fc7 分支</span> : null}
+          <TaskHead code="θₒ" title="旧任务头" layerLabel={denseLayersShared ? 'fc8_old' : 'fc6 → fc7 → fc8_old'} state={oldState} outputLabel={mode ? mode === 'teacher' ? 'Yₒ' : 'Ŷₒ' : undefined} old onInspect={() => onInspect('theta_o')} />
+          {includesNewHead ? <TaskHead code="θₙ" title="新任务头" layerLabel={denseLayersShared ? 'fc8_new' : 'fc6 → fc7 → fc8_new'} state={newState} outputLabel={mode ? 'Ŷₙ' : undefined} onInspect={() => onInspect('theta_n')} /> : null}
         </div>
       </div>
       <div className="v2-alexnet-explanation-grid">
@@ -90,8 +102,8 @@ function DenseLayer({ label, shape }: { label: 'fc6' | 'fc7'; shape: string }) {
   return <article className="v2-alexnet-layer v2-alexnet-dense-layer"><div className="v2-alexnet-layer-art"><DenseNetworkGlyph shape={label} /></div><div className="v2-alexnet-layer-caption"><strong>{label}</strong><span>{shape} · 全连接</span></div></article>;
 }
 
-function TaskHead({ code, title, layerLabel, state, old, onInspect }: { code: string; title: string; layerLabel: string; state: string; old?: boolean; onInspect: () => void }) {
+function TaskHead({ code, title, layerLabel, state, outputLabel, old, onInspect }: { code: string; title: string; layerLabel: string; state: string; outputLabel?: string; old?: boolean; onInspect: () => void }) {
   return <button type="button" className={`v2-alexnet-param v2-alexnet-task-head${old ? ' is-old' : ' is-new'}`} onClick={onInspect}>
-    <span>{title} · {code}</span><strong>{layerLabel}</strong><small>{state}</small>
+    <span>{title} · {code}</span><strong>{layerLabel}</strong><small>{state}</small>{outputLabel ? <em className="v2-alexnet-task-output">输出 · {outputLabel}</em> : null}
   </button>;
 }

@@ -5,6 +5,7 @@ export type StickySection = { id: string; stepId?: string };
 export type StickySectionChangeSource = "scroll" | "manual";
 type StickySyncOptions = {
   manualOverrideMs?: number;
+  readingLineRatio?: number;
   onActiveSectionChange?: (section: StickySection, source: StickySectionChangeSource) => void;
 };
 type StickySyncValue = { activeStepId: string | null; setManualStep: (stepId: string) => void };
@@ -15,7 +16,7 @@ export function useStickyStepSync(): StickySyncValue | null {
   return useContext(StickySyncContext);
 }
 
-export function useScrollStepSync(sections: StickySection[], { manualOverrideMs = 1100, onActiveSectionChange }: StickySyncOptions = {}) {
+export function useScrollStepSync(sections: StickySection[], { manualOverrideMs = 1100, readingLineRatio = 0.5, onActiveSectionChange }: StickySyncOptions = {}) {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const activeRef = useRef<StickySection | null>(null);
@@ -38,7 +39,7 @@ export function useScrollStepSync(sections: StickySection[], { manualOverrideMs 
   }, []);
 
   const sectionAtReadingLine = useCallback((): StickySection | null => {
-    const readingLine = window.innerHeight * 0.5;
+    const readingLine = window.innerHeight * readingLineRatio;
     const visible = sectionsRef.current.map((section) => {
       const element = document.getElementById(section.id);
       return element ? { section, rect: element.getBoundingClientRect() } : null;
@@ -47,7 +48,7 @@ export function useScrollStepSync(sections: StickySection[], { manualOverrideMs 
     if (containing.length) return containing[0].section;
     visible.sort((a, b) => Math.abs(a.rect.top - readingLine) - Math.abs(b.rect.top - readingLine));
     return visible[0]?.section ?? null;
-  }, []);
+  }, [readingLineRatio]);
 
   const selectManually = useCallback((stepId: string) => {
     const section = sectionsRef.current.find((item) => item.stepId === stepId) ?? null;
@@ -70,7 +71,9 @@ export function useScrollStepSync(sections: StickySection[], { manualOverrideMs 
       commitSection(sectionAtReadingLine(), "scroll");
     };
     const observed: Element[] = [];
-    const observer = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(syncFromScroll, { rootMargin: "-49% 0px -49% 0px", threshold: 0 });
+    const topMargin = Math.max(0, Math.round(readingLineRatio * 100 - 1));
+    const bottomMargin = Math.max(0, Math.round((1 - readingLineRatio) * 100 - 1));
+    const observer = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(syncFromScroll, { rootMargin: `-${topMargin}% 0px -${bottomMargin}% 0px`, threshold: 0 });
     for (const section of sectionsRef.current) {
       const element = document.getElementById(section.id);
       if (element) { observer?.observe(element); observed.push(element); }
@@ -86,7 +89,7 @@ export function useScrollStepSync(sections: StickySection[], { manualOverrideMs 
       if (releaseTimer.current !== null) window.clearTimeout(releaseTimer.current);
       releaseTimer.current = null;
     };
-  }, [commitSection, sectionAtReadingLine, sectionSignature]);
+  }, [commitSection, sectionAtReadingLine, sectionSignature, readingLineRatio]);
 
   return { activeSectionId, activeStepId, setManualStep: selectManually };
 }

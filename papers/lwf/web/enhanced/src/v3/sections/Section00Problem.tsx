@@ -1,6 +1,8 @@
 import { TermRef } from "../../shared/core/reference";
+import { ChapterNavigation } from "../components/ChapterNavigation";
 import { problemFacts } from "../data/problem";
 import { termsById } from "../data/references";
+import type { LwfChapterId } from "../data/chapters";
 
 const availability = [
   { id: "old-model", label: "OLD MODEL", state: "可运行", note: "保留旧任务模型" },
@@ -15,11 +17,11 @@ const matrix = [
   { id: "lwf", learn: "✓", preserve: "目标", withoutOldData: "✓", note: "用 Teacher 在 Xₙ 上的响应作旧任务目标。" },
 ];
 
-export function Section00Problem({ onOpenReference }: { onOpenReference: (termId: string) => void }) {
-  return <section className="v3-stage v3-problem" id="slice-00" aria-labelledby="v3-problem-title">
+export function Section00Problem({ onOpenReference, onNavigateChapter }: { onOpenReference: (termId: string) => void; onNavigateChapter: (chapterId: LwfChapterId) => void }) {
+  return <section className="v3-stage v3-problem" id="chapter-00" aria-labelledby="v3-problem-title">
     <header className="v3-stage-heading">
       <span className="v3-stage-number">00</span>
-      <div><p className="v3-eyebrow">PROBLEM SETTING</p><h2 id="v3-problem-title">旧模型还在，旧数据不在</h2><p>新任务到来时，要学习当前标签，同时尽量保留旧任务的输出行为。</p></div>
+      <div><p className="v3-eyebrow">CHAPTER 00 / 08 · PROBLEM SETTING</p><h2 id="v3-problem-title">旧模型还在，旧数据不在</h2><p>新任务到来时，要学习当前标签，同时尽量保留旧任务的输出行为。</p></div>
     </header>
 
     <div className="v3-constraint-strip" aria-label="问题设定中的模型与数据状态">
@@ -51,6 +53,6 @@ export function Section00Problem({ onOpenReference }: { onOpenReference: (termId
     </div>
 
     <p className="v3-one-line-method"><span>LwF 的关键动作</span>用旧模型对 Xₙ 的旧任务响应，替代不可访问的旧训练监督。</p>
-    <button className="v3-next-link" type="button" onClick={() => document.getElementById("slice-01")?.scrollIntoView({ behavior: "smooth", block: "start" })}>看 Teacher 与 Student 如何分工 <span aria-hidden="true">↓</span></button>
+    <ChapterNavigation chapterId="00" onNavigate={onNavigateChapter} />
   </section>;
 }

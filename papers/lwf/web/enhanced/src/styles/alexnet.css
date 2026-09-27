@@ -43,6 +43,15 @@
 .v2-alexnet-task-head.is-new{border-color:#ead2be;background:#fff8f1}
 .v2-alexnet-task-head.is-old>span{color:#54836c}
 .v2-alexnet-task-head.is-new>span{color:#ae754e}
+.v2-alexnet-modebar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:3px 4px 8px;border-bottom:1px solid #e6ebef}
+.v2-alexnet-modebar>div{display:grid;gap:2px}
+.v2-alexnet-modebar>div>span{color:#78899b;font-size:8px;font-weight:820;letter-spacing:.1em}
+.v2-alexnet-modebar>div>strong{color:#3c566e;font-size:12px}
+.v2-alexnet-modebar>b{flex:0 0 auto;padding:4px 7px;border-radius:99px;color:#5d637b;background:#e8e7f0;font-size:8px;letter-spacing:.04em}
+.v2-alexnet-modebar>b.is-trainable{color:#17675e;background:#dceee7}
+.v2-alexnet-branch-label{grid-column:1/-1;position:relative;padding:8px 0 1px;color:#768896;font-size:8px;font-weight:760;text-align:center}
+.v2-alexnet-branch-label:before{position:absolute;top:0;left:25%;right:25%;height:6px;border-top:1px solid #b8c8cf;border-left:1px solid #b8c8cf;border-right:1px solid #b8c8cf;content:""}
+.v2-alexnet-task-output{color:#58766d;font-size:10px;font-style:normal;font-weight:800}
 .v2-alexnet-explanation-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .v2-alexnet-explanation-grid>div{display:grid;align-content:start;gap:5px;padding:12px;border:1px solid #e0e7ef;border-radius:9px;background:#fff}
 .v2-alexnet-explanation-grid strong{color:#435a76;font-size:13px}
@@ -65,9 +74,12 @@
 .v2-alexnet-architecture.is-compact .v2-alexnet-layer-caption span{font-size:9px}
 .v2-alexnet-architecture.is-compact .v2-alexnet-arrow:last-of-type{display:none}
 .v2-alexnet-architecture.is-compact .v2-alexnet-heads{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.v2-alexnet-architecture.is-compact .v2-alexnet-heads.is-single{grid-template-columns:minmax(0,1fr)}
+.v2-alexnet-architecture.is-compact .v2-alexnet-branch-label{font-size:8px}
 .v2-alexnet-architecture.is-compact .v2-alexnet-task-head{grid-template-rows:auto auto auto;min-height:66px;padding:7px}
 .v2-alexnet-architecture.is-compact .v2-alexnet-task-head>span,.v2-alexnet-architecture.is-compact .v2-alexnet-task-head>small{font-size:11px}
 .v2-alexnet-architecture.is-compact .v2-alexnet-task-head>strong{font-size:11px}
+.v2-alexnet-architecture.is-compact .v2-alexnet-task-output{font-size:9px}
 .v2-alexnet-architecture.is-compact .v2-alexnet-explanation-grid{gap:5px}
 .v2-alexnet-architecture.is-compact .v2-alexnet-explanation-grid>div{gap:4px;padding:7px}
 .v2-alexnet-architecture.is-compact .v2-alexnet-explanation-grid strong{font-size:10px}

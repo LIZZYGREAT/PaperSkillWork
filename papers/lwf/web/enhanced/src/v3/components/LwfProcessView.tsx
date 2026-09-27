@@ -6,6 +6,15 @@ const nodeRevealAt: Record<string, number> = {
   "new-label": 7, "loss-old": 6, "loss-new": 7, objective: 9, optimizer: 9, "updated-student": 9,
 };
 
+const edgeRevealAt: Record<string, number> = {
+  "xn-teacher": 0, "teacher-yo": 2, "xn-student": 3,
+  "student-old": 3, "student-new": 3, "old-output-loss": 5, "yo-old-loss": 5,
+  "new-output-loss": 6, "label-new-loss": 6, "loss-old-objective": 9,
+  "loss-new-objective": 9, "old-loss-head-gradient": 8, "old-head-shared-gradient": 8,
+  "new-loss-head-gradient": 8, "new-head-shared-gradient": 8,
+  "objective-optimizer": 9, "optimizer-updated-student": 9,
+};
+
 const nodes = [
   { id: "xn", x: 22, y: 92, w: 108, h: 58, title: "Xₙ", sub: "当前任务输入", type: "input" },
   { id: "teacher", x: 196, y: 38, w: 170, h: 84, title: "Teacher", sub: "旧模型 · θₛ + θₒ", type: "teacher", badge: "FROZEN" },
@@ -31,8 +40,8 @@ const edges = [
   { id: "yo-old-loss", d: "M500 110 C579 143 603 197 666 222" },
   { id: "new-output-loss", d: "M534 349 C584 349 614 350 666 350" },
   { id: "label-new-loss", d: "M553 475 C601 465 628 402 680 382" },
-  { id: "loss-old-objective", d: "M722 269 C722 350 717 407 717 468" },
-  { id: "loss-new-objective", d: "M722 382 C723 414 722 436 722 468" },
+  { id: "loss-old-objective", d: "M680 269 C660 312 636 408 678 468" },
+  { id: "loss-new-objective", d: "M722 382 C732 415 759 438 766 468" },
   { id: "old-loss-head-gradient", d: "M666 215 C613 191 587 195 534 220", kind: "gradient" },
   { id: "old-head-shared-gradient", d: "M418 250 C396 280 393 282 370 278", kind: "gradient" },
   { id: "new-loss-head-gradient", d: "M666 370 C612 394 588 376 534 357", kind: "gradient" },
@@ -65,7 +74,8 @@ export function LwfProcessView({ activeStepId }: { activeStepId: string | null }
       {edges.map((edge) => {
         const active = activeEdges.has(edge.id);
         const isGradient = edge.kind === "gradient";
-        return <path key={edge.id} className={`v3-process-edge ${isGradient ? "is-gradient" : ""} ${active ? "is-active" : ""}`} data-edge-id={edge.id} d={edge.d} markerEnd={isGradient ? `url(#${markerPrefix}-gradient)` : `url(#${markerPrefix}-data)`} />;
+        const revealed = stepIndex >= edgeRevealAt[edge.id];
+        return <path key={edge.id} className={`v3-process-edge ${isGradient ? "is-gradient" : ""} ${revealed ? "is-revealed" : ""} ${active ? "is-active" : ""}`} data-edge-id={edge.id} d={edge.d} markerEnd={isGradient ? `url(#${markerPrefix}-gradient)` : `url(#${markerPrefix}-data)`} />;
       })}
       {nodes.map((node) => {
         const revealed = stepIndex >= nodeRevealAt[node.id];

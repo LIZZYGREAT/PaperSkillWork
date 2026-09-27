@@ -37,12 +37,21 @@
 .v3-rail-mark { display: grid; flex: 0 0 auto; place-items: center; width: 35px; height: 35px; border-radius: 10px; background: #183b49; color: #fff; font: 700 20px/1 Georgia, serif; }
 .v3-rail-brand strong { display: block; color: #1b3447; font-size: 12px; line-height: 1.35; }
 .v3-rail-brand small { display: block; margin-top: 3px; color: #718394; font-size: 10px; }
-.v3-rail-label { margin: 0 0 9px 8px; color: #85939c; font-size: 9px; font-weight: 800; letter-spacing: .13em; }
-.v3-rail-nav { display: grid; gap: 5px; }
-.v3-rail-nav button { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 7px 9px; border: 0; border-radius: 8px; background: transparent; color: #536879; text-align: left; cursor: pointer; }
+.v3-rail-label { margin: 0 0 4px 8px; color: #85939c; font-size: 9px; font-weight: 800; letter-spacing: .13em; }
+.v3-rail-progress { display: grid; gap: 1px; margin: 0 0 10px; padding: 7px 9px; border: 1px solid #dce5e2; border-radius: 8px; background: rgb(255 255 255 / 55%); }
+.v3-rail-progress span { color: #28756e; font-size: 8px; font-weight: 820; letter-spacing: .08em; }
+.v3-rail-progress strong { color: #405b64; font-size: 11px; }
+.v3-rail-progress small { color: #829096; font-size: 8px; }
+.v3-rail-nav { display: grid; gap: 4px; }
+.v3-rail-nav button { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 6px 8px; border: 0; border-radius: 8px; background: transparent; color: #536879; text-align: left; cursor: pointer; }
 .v3-rail-nav button:hover { background: #e6eeeb; color: var(--v3-ink); }
 .v3-rail-nav button.is-active { background: #dcece7; color: #155e5a; font-weight: 760; }
-.v3-rail-nav button span { color: #25817b; font-size: 11px; font-weight: 800; letter-spacing: .03em; }
+.v3-rail-nav button:disabled { cursor: not-allowed; }
+.v3-rail-nav button.is-planned { opacity: .58; }
+.v3-rail-nav button.is-planned:hover { background: transparent; }
+.v3-rail-nav .v3-rail-chapter-number { flex: 0 0 21px; color: #25817b; font-size: 10px; font-weight: 800; letter-spacing: .03em; }
+.v3-rail-nav button strong { flex: 1; min-width: 0; font-size: 11px; font-weight: 650; }
+.v3-rail-nav button small { color: #829096; font-size: 8px; }
 .v3-rail-reference { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 42px; margin-top: auto; padding: 7px 9px; border: 1px solid #ccd9d9; border-radius: 9px; background: #fff; color: #294a5a; text-align: left; font-size: 13px !important; font-weight: 720 !important; cursor: pointer; }
 .v3-rail-reference > span { color: var(--v3-teal); font-size: 19px; }
 .v3-rail-reference kbd { margin-left: auto; padding: 1px 5px; border: 1px solid #e0e6e5; border-radius: 4px; color: #809099; background: #f8faf9; font: 10px/1.5 inherit; }
@@ -62,3 +71,11 @@
 .v3-subheading > span { color: #7b8b95; font-size: .76rem; }
 .v3-next-link { display: inline-flex; align-items: center; gap: 7px; margin: 18px 0 0; padding: 4px 0; border: 0; background: transparent; color: var(--v3-teal-dark) !important; font-size: .86rem !important; font-weight: 750 !important; cursor: pointer; }
 .v3-next-link:hover { text-decoration: underline; }
+.v3-chapter-navigation { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:12px; margin-top:26px; padding-top:13px; border-top:1px solid #dce5e3; }
+.v3-chapter-navigation-link { display:grid; gap:2px; min-width:0; padding:5px 0; border:0; color:#175f5a; background:transparent; text-align:left; cursor:pointer; }
+.v3-chapter-navigation-link.is-next { justify-items:end; text-align:right; }
+.v3-chapter-navigation-link > span { color:#72908b; font-size:8px; font-weight:790; letter-spacing:.07em; text-transform:uppercase; }
+.v3-chapter-navigation-link > strong { font-size:.77rem; font-weight:740; }
+.v3-chapter-navigation-link:disabled { color:#8d9c9d; cursor:not-allowed; }
+.v3-chapter-navigation-link:disabled > span,.v3-chapter-navigation-link:disabled > strong { color:#9aa7a7; }
+.v3-chapter-page-count { color:#89999b; font-size:8px; font-weight:780; letter-spacing:.09em; white-space:nowrap; }

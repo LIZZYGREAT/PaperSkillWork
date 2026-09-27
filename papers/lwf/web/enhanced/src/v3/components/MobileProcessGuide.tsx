@@ -1,16 +1,19 @@
 import { LwfProcessView } from "./LwfProcessView";
 import { ReplayControl } from "./ReplayControl";
+import { ChapterNavigation } from "./ChapterNavigation";
 import { keyMoveSteps, trainingSteps } from "../data/process";
+import type { LwfChapterId } from "../data/chapters";
 
 const allSteps = [...keyMoveSteps, ...trainingSteps];
 
-export function MobileProcessGuide({ activeStepId, onSelectStep }: { activeStepId: string; onSelectStep: (stepId: string) => void }) {
+export function MobileProcessGuide({ activeStepId, onSelectStep, onNavigateChapter }: { activeStepId: string; onSelectStep: (stepId: string) => void; onNavigateChapter: (chapterId: LwfChapterId) => void }) {
   const index = Math.max(0, allSteps.findIndex((step) => step.id === activeStepId));
   const step = allSteps[index];
   const isKeyMove = index < keyMoveSteps.length;
+  const chapterId = isKeyMove ? "02" : "03";
 
   return <section className="v3-mobile-process" id="v3-mobile-process" aria-label="02–03 持续训练图与逐步说明">
-    <header className="v3-mobile-step-heading"><p className="v3-eyebrow">{isKeyMove ? "02 · KEY MOVE" : "03 · ONE TRAINING CYCLE"} <span>STEP {index + 1} / 10</span></p><h2>{step.title}</h2></header>
+    <header className="v3-mobile-step-heading"><p className="v3-eyebrow">CHAPTER {chapterId} / 08 · {isKeyMove ? "KEY MOVE" : "ONE TRAINING CYCLE"} <span>STEP {index + 1} / 10</span></p><h2>{step.title}</h2></header>
     <LwfProcessView activeStepId={step.id} />
     <div className="v3-mobile-step-copy" aria-live="polite">
       <p>{step.description}</p>
@@ -26,5 +29,6 @@ export function MobileProcessGuide({ activeStepId, onSelectStep }: { activeStepI
       <span>{String(index + 1).padStart(2, "0")} / 10</span>
       <button type="button" onClick={() => onSelectStep(allSteps[index + 1].id)} disabled={index === allSteps.length - 1}>下一步 →</button>
     </nav>
+    <ChapterNavigation chapterId={chapterId} onNavigate={onNavigateChapter} />
   </section>;
 }

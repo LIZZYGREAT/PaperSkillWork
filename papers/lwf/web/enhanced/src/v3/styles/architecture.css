@@ -1,5 +1,29 @@
 .v3-architecture-stage { padding-bottom: 32px; }
-.v3-architecture-composition { display: grid; gap: 11px; }
+.v3-alexnet-shell { display: grid; gap: 10px; }
+.v3-architecture-switch { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.v3-architecture-switch > div:first-child { min-width: 0; }
+.v3-architecture-switch .v3-eyebrow { margin-bottom: 2px; font-size: 8px; }
+.v3-architecture-switch > div:first-child > strong { color: #355261; font-size: .8rem; font-weight: 680; }
+.v3-architecture-switch-options { display: inline-flex; flex: 0 0 auto; gap: 3px; padding: 3px; border: 1px solid #d9e3e3; border-radius: 9px; background: #eef3f1; }
+.v3-architecture-switch-options button { min-height: 32px; padding: 5px 12px; border: 0; border-radius: 6px; color: #60757b; background: transparent; font-size: .76rem; font-weight: 720; cursor: pointer; }
+.v3-architecture-switch-options button[aria-pressed="true"] { color: #165f5b; background: #fff; box-shadow: 0 1px 4px rgb(31 68 70 / 12%); }
+.v3-alexnet-shell .v2-alexnet-architecture.is-compact { margin: 0; padding: 11px; border-color: #d9e2e5; background: #fff; }
+.v3-alexnet-shell .v2-alexnet-explanation-grid { display: none; }
+.v3-alexnet-shell .v2-alexnet-note { padding-top: 2px; font-size: 9px; }
+@media (min-width: 1101px) {
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-flow { grid-template-columns: 65px 16px minmax(0, 1fr) 16px minmax(205px, .34fr); align-items: stretch; gap: 6px; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-input,
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-arrow { align-self: center; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-arrow:last-of-type { display: grid; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-heads { grid-column: auto; grid-template-columns: minmax(0, 1fr); align-self: center; gap: 8px; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-branch-label { padding: 7px 0 3px; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-layer-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 7px; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-layer { grid-template-rows: minmax(148px, 1fr) auto; min-height: 275px; gap: 8px; padding: 10px; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-layer-art { min-height: 148px; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-conv-glyph { width: auto; max-width: 100%; height: 132px; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-dense-glyph { width: auto; max-width: 100%; height: 128px; }
+  .v3-alexnet-shell .v2-alexnet-architecture.is-compact .v2-alexnet-task-head { min-height: 68px; gap: 3px; padding: 8px 10px; }
+}
 .v3-model-zone { padding: 14px 16px 16px; border-radius: 12px; }
 .v3-teacher-zone { background: #f0eff6; }
 .v3-student-zone { background: #eaf4f1; }

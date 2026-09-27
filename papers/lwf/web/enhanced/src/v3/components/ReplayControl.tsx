@@ -3,7 +3,7 @@ import { trainingSteps } from "../data/process";
 
 export function ReplayControl({ onSelectStep }: { onSelectStep: (stepId: string) => void }) {
   const [playing, setPlaying] = useState(false);
-  const [status, setStatus] = useState("完成六步后，Student′ 保持高亮。");
+  const [status, setStatus] = useState("");
   const timer = useRef<number | null>(null);
 
   useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
@@ -13,7 +13,7 @@ export function ReplayControl({ onSelectStep }: { onSelectStep: (stepId: string)
       if (timer.current !== null) window.clearTimeout(timer.current);
       timer.current = null;
       setPlaying(false);
-      setStatus("回放已停止。当前图仍与所选步骤同步。");
+      setStatus("回放已停止。");
       return;
     }
     setPlaying(true);
@@ -24,7 +24,7 @@ export function ReplayControl({ onSelectStep }: { onSelectStep: (stepId: string)
       if (index === trainingSteps.length - 1) {
         timer.current = window.setTimeout(() => {
           setPlaying(false);
-          setStatus("Student updated · 参数在 Optimizer Step 后更新。");
+          setStatus("Student updated。参数在 Optimizer Step 后更新。");
           timer.current = null;
         }, delay);
         return;
@@ -35,7 +35,8 @@ export function ReplayControl({ onSelectStep }: { onSelectStep: (stepId: string)
   };
 
   return <div className="v3-replay-control">
-    <button type="button" onClick={replay} aria-pressed={playing}>{playing ? "■ 停止回放" : "▶ Replay one training cycle"}</button>
-    <span role="status" aria-live="polite">{status}</span>
+    <button type="button" onClick={replay} aria-pressed={playing}>{playing ? "■ Stop replay" : "▶ Replay training cycle"}</button>
+    <span>6 steps · ~5s</span>
+    <span className="v3-sr-status" role="status" aria-live="polite">{status}</span>
   </div>;
 }
