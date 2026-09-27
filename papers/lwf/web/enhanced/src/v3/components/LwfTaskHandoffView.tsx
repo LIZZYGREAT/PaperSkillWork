@@ -105,15 +105,15 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
         const destinationCenterY = destination.top + destination.height / 2;
         if (Math.abs(destinationCenterX - sourceCenterX) >= Math.abs(destinationCenterY - sourceCenterY)) {
           const toRight = destinationCenterX > sourceCenterX;
-          const startX = ((toRight ? source.right + 1 : source.left - 1) - routesRect.left) * scaleX;
-          const endX = ((toRight ? destination.left - 2 : destination.right + 2) - routesRect.left) * scaleX;
+          const startX = ((toRight ? source.right + 2 : source.left - 2) - routesRect.left) * scaleX;
+          const endX = ((toRight ? destination.left - 11 : destination.right + 11) - routesRect.left) * scaleX;
           const y = ((sourceCenterY + destinationCenterY) / 2 - routesRect.top) * scaleY;
           return `M ${startX} ${y} H ${endX}`;
         }
         const downward = destinationCenterY > sourceCenterY;
         const x = ((sourceCenterX + destinationCenterX) / 2 - routesRect.left) * scaleX;
-        const startY = ((downward ? source.bottom + 1 : source.top - 1) - routesRect.top) * scaleY;
-        const endY = ((downward ? destination.top - 2 : destination.bottom + 2) - routesRect.top) * scaleY;
+        const startY = ((downward ? source.bottom + 2 : source.top - 2) - routesRect.top) * scaleY;
+        const endY = ((downward ? destination.top - 11 : destination.bottom + 11) - routesRect.top) * scaleY;
         return `M ${x} ${startY} V ${endY}`;
       });
       setRoutePaths(nextPaths);
@@ -159,7 +159,7 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
         </div>
         <div className="v3-task-handoff-board" ref={boardRef}>
           <svg ref={routesRef} className="v3-task-handoff-routes" viewBox="0 0 1000 340" preserveAspectRatio="none" aria-hidden="true">
-            <defs><marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
+            <defs><marker id={markerId} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="20" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
             {trailEdges.map((edge, index) => {
               const completed = stepIndex > edge.to;
               const active = stepIndex === edge.to;
