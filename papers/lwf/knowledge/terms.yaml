@@ -18,6 +18,26 @@ catastrophic_forgetting:
   source_category: GENERAL_BACKGROUND
   source_ref: B03
 
+teacher:
+  label: Teacher
+  full_name: Frozen previous-task model snapshot
+  definition: 完成旧任务训练后保留的模型快照，持有共享主体和旧任务输出头的参数副本。
+  paper_role: 对当前新任务输入 Xₙ 运行并生成旧任务响应 Yₒ；本轮训练不更新 Teacher。
+  confusion: Teacher 不是 Student 中共享参数的可变引用；两套模型参数相互独立。
+  prerequisites: [shared_parameters, task_head]
+  source_category: PAPER_FACT
+  source_ref: A01
+
+student:
+  label: Student
+  full_name: Expanded model for the current task
+  definition: 由旧模型结构扩展出的当前模型，包含共享主体、旧任务输出头和新增任务输出头。
+  paper_role: 用旧响应目标保持旧任务输出，同时由当前任务标签学习新任务。
+  confusion: Student 的参数副本独立于冻结的 Teacher；新增 head 不等于整套 Student。
+  prerequisites: [shared_parameters, task_head]
+  source_category: PAPER_FACT
+  source_ref: A01
+
 shared_parameters:
   label: 共享参数
   full_name: Shared network parameters (θ_s)
