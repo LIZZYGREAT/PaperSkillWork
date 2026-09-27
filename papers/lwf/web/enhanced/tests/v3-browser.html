@@ -5,121 +5,204 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LwF 00–03 浏览器验收</title>
     <style>
-      body { margin: 0; padding: 24px; color: #1d3145; background: #f4f7f6; font: 16px/1.5 "Segoe UI", "Microsoft YaHei", sans-serif; }
-      main { width: min(1200px, 100%); margin: auto; }
-      h1 { margin: 0 0 6px; }
-      p { color: #5f7283; }
-      #summary { margin: 16px 0; padding: 14px; border: 1px solid #d8e1e7; border-radius: 10px; background: white; }
-      #results { display: grid; gap: 6px; margin: 0 0 18px; padding: 0; list-style: none; }
-      #results li { padding: 8px 10px; border-radius: 8px; background: white; }
-      #results .pass { border-left: 4px solid #218067; }
-      #results .fail { border-left: 4px solid #b44b3e; color: #8b342b; }
-      iframe { display: block; width: 100%; height: 720px; border: 1px solid #cbd7dc; border-radius: 12px; background: white; }
+      :root { color: #243b4b; background: #f4f7f5; font: 15px/1.5 "Segoe UI", "Microsoft YaHei", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 22px; }
+      main { width: min(1180px, 100%); margin: auto; }
+      h1 { margin: 0 0 5px; font-size: 1.55rem; }
+      main > p { margin: 0 0 14px; color: #657887; }
+      #summary { margin: 12px 0; padding: 12px 14px; border: 1px solid #d8e1e2; border-radius: 9px; background: white; }
+      #summary[data-result="passed"] { border-color: #9ac8b9; background: #edf7f2; }
+      #summary[data-result="failed"] { border-color: #d8a89e; background: #fff2ef; }
+      #results { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px 10px; margin: 0 0 16px; padding: 0; list-style: none; }
+      #results li { min-height: 35px; padding: 7px 10px; border-radius: 7px; background: white; font-size: .83rem; }
+      #results .pass { border-left: 3px solid #218067; }
+      #results .fail { border-left: 3px solid #b44b3e; color: #8b342b; }
+      iframe { display: block; width: 100%; height: min(850px,78vh); border: 1px solid #cbd7dc; border-radius: 10px; background: white; }
+      body.capture-mode { width: 100vw; height: 100vh; overflow: hidden; padding: 0; background: white; }
+      body.capture-mode main { width: 100%; max-width: none; margin: 0; }
+      body.capture-mode main > :not(iframe) { display: none; }
+      body.capture-mode iframe { position: fixed; inset: 0; width: 100vw; height: 100vh; border: 0; border-radius: 0; transform: scale(1.25); transform-origin: top left; }
+      @media (max-width: 720px) { body { padding: 12px; } #results { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body>
     <main>
       <h1>LwF 00–03 浏览器验收</h1>
-      <p>打开一份嵌入式新版页面，检查问题设定、模型状态、步骤同步、梯度路径和训练回放。</p>
+      <p>检查新版页面的结构、交互同步、Reference Hub、焦点恢复与训练回放。此页只面向本地开发预览。</p>
       <div id="summary" role="status" aria-live="polite">正在加载 LwF 新版页面…</div>
       <ol id="results" aria-label="浏览器检查结果"></ol>
       <iframe title="LwF First Vertical Slice" src="/?version=v3"></iframe>
     </main>
     <script>
+      const params = new URLSearchParams(location.search);
+      const capture = params.get("capture");
+      if (capture) document.body.classList.add("capture-mode");
+      const frame = document.querySelector("iframe");
       const resultList = document.querySelector("#results");
       const summary = document.querySelector("#summary");
-      const frame = document.querySelector("iframe");
       const pause = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
       const assert = (condition, message) => { if (!condition) throw new Error(message); };
-      const run = async () => {
-        const doc = frame.contentDocument;
-        const check = async (name, action) => {
-          const item = document.createElement("li");
-          try { await action(); item.className = "pass"; item.textContent = `通过 · ${name}`; }
-          catch (error) { item.className = "fail"; item.textContent = `失败 · ${name}：${error instanceof Error ? error.message : String(error)}`; }
-          resultList.append(item);
-        };
-        try {
-          await pause(500);
-          await check("问题设定与 baseline 对比", () => {
-            assert(doc.querySelectorAll(".v3-fact-card").length === 3, "应显示旧模型、旧数据、新数据三项状态");
-            assert(doc.querySelectorAll(".v3-baseline-card").length === 3, "应比较三种 baseline");
-            assert(doc.querySelector(".v3-baseline-card.is-mismatch")?.textContent?.includes("需要旧任务训练数据"), "Joint Training 应标出旧数据约束冲突");
-          });
-          await check("Teacher / Student 参数状态", () => {
-            assert(doc.querySelectorAll(".rk-architecture__node--frozen").length === 2, "Teacher 的 θₛ 和 θₒ 应冻结");
-            assert(doc.querySelectorAll(".rk-architecture__node--trainable").length === 3, "Student 的 θₛ、θₒ、θₙ 应可训练");
-            assert(doc.querySelector("#architecture-node-student-new-head")?.textContent?.includes("θₙ"), "新任务 head θₙ 缺失");
-          });
-          await check("Yₒ 来源辨析", () => {
-            const copy = doc.querySelector(".v3-key-move")?.textContent ?? "";
-            assert(copy.includes("不是旧任务真值、旧数据集，也不是 replay sample"), "Yₒ 必须明确区别于真值和 replay");
-            assert(copy.includes("Teacher 对当前新任务输入 Xₙ"), "Yₒ 应说明为 Teacher 在 Xₙ 上的输出");
-          });
-          await check("手动步骤选择同步到共享图", async () => {
-            const step = [...doc.querySelectorAll(".v3-key-move .rk-flow-step")].find((item) => item.textContent?.includes("生成旧响应"));
-            assert(step, "缺少“生成旧响应”步骤");
-            step.click();
-            await pause(120);
-            assert(doc.querySelector(".rk-sticky-system")?.getAttribute("data-active-step-id") === "key-generate-response", "活动步骤 id 未同步");
-            assert(doc.querySelector(".v3-system-visual .rk-process-loop__step-heading h3")?.textContent?.trim() === "生成旧响应", "共享流程图未切换到 Teacher response 路径");
-            assert(doc.querySelector('[data-edge-id="teacher-yo"].is-active'), "Teacher → Yₒ 边应高亮");
-          });
-          await check("滚动步骤同步", async () => {
-            await pause(450);
-            doc.querySelector("#cycle-new-loss")?.scrollIntoView({ behavior: "auto", block: "center" });
-            await pause(350);
-            const activeStepId = doc.querySelector(".rk-sticky-system")?.getAttribute("data-active-step-id");
-            assert(activeStepId === "cycle-new-loss", `滚动到 L_new 说明后步骤 id 未同步，实际为 ${activeStepId ?? "空"}`);
-            assert(doc.querySelector(".v3-system-visual .rk-process-loop__step-heading h3")?.textContent?.trim() === "新任务损失", "共享流程图未切换到 L_new 路径");
-          });
-          await check("Backward 的旧、新梯度路径", async () => {
-            const step = [...doc.querySelectorAll(".v3-training-cycle .rk-flow-step")].find((item) => item.textContent?.includes("Backward"));
-            assert(step, "缺少 Backward 步骤");
-            step.click();
-            await pause(120);
-            for (const id of ["old-loss-head-gradient", "old-head-shared-gradient", "new-loss-head-gradient", "new-head-shared-gradient"]) {
-              assert(doc.querySelector(`[data-edge-id="${id}"].is-active`), `梯度边 ${id} 未高亮`);
-            }
-          });
-          await check("Optimizer Step 的参数更新路径", async () => {
-            const step = [...doc.querySelectorAll(".v3-training-cycle .rk-flow-step")].find((item) => item.textContent?.includes("Optimizer Step"));
-            assert(step, "缺少 Optimizer Step");
-            step.click();
-            await pause(120);
-            assert(doc.querySelector("[data-edge-id=\"optimizer-updated-student\"].is-active"), "优化器到更新后 Student 的边未高亮");
-            assert(doc.querySelector(".v3-objective-block")?.textContent?.includes("反向传播计算梯度"), "未区分 backward 与参数更新");
-          });
-          await check("单次训练回放完成", async () => {
-            const replay = [...doc.querySelectorAll(".v3-replay-button")].find((item) => item.textContent?.includes("Replay One Training Step"));
-            assert(replay, "缺少训练回放按钮");
-            replay.click();
-            await pause(5700);
-            assert(doc.querySelector(".v3-replay-status")?.textContent?.includes("一次训练周期已完成"), "回放未完成六个训练步骤");
-            assert(doc.querySelector(".v3-system-visual .rk-process-loop__step-heading h3")?.textContent?.trim() === "Optimizer Step", "回放结束时流程图不在 Optimizer Step");
-          });
-          await check("Reference Hub 符号条目", async () => {
-            doc.querySelector(".v3-reference-toggle")?.click();
-            await pause(80);
-            const entries = doc.querySelector(".rk-reference-hub__list")?.textContent ?? "";
-            for (const term of ["Teacher", "Student", "θₛ", "θₒ", "θₙ", "Xₙ", "Yₒ", "Yₙ", "Ŷₒ", "Ŷₙ", "L_old", "L_new", "λₒ", "R", "Warm-up", "联合优化"]) {
-              assert(entries.includes(term), `Reference Hub 缺少 ${term}`);
-            }
-            const teacherTarget = [...doc.querySelectorAll(".rk-reference-hub__list button")].find((item) => item.textContent?.includes("Yₒ"));
-            assert(teacherTarget, "缺少 Yₒ 参考项");
-            teacherTarget.click();
-            await pause(40);
-            assert(doc.querySelector(".rk-reference-hub__detail")?.textContent?.includes("当前任务输入 Xₙ"), "Yₒ 参考项未说明它是 Teacher 在 Xₙ 上的响应");
-          });
-          const failures = resultList.querySelectorAll(".fail").length;
-          summary.textContent = failures ? `浏览器验收完成：${resultList.children.length - failures} 项通过，${failures} 项失败。` : `浏览器验收通过：${resultList.children.length} 项检查全部通过。`;
-          summary.dataset.result = failures ? "failed" : "passed";
-        } catch (error) {
-          summary.textContent = `浏览器验收未能启动：${error instanceof Error ? error.message : String(error)}`;
-          summary.dataset.result = "failed";
-        }
+      const waitFor = async (predicate, timeout = 5000) => {
+        const start = Date.now();
+        while (Date.now() - start < timeout) { if (predicate()) return; await pause(40); }
+        throw new Error("页面未在预期时间内完成更新");
       };
-      frame.addEventListener("load", () => { void run(); }, { once: true });
+      const referenceTerm = (doc, label, root = doc) => [...root.querySelectorAll(".rk-term-ref")].find((button) => button.textContent.trim() === label);
+      const showReferenceForYo = async (doc) => {
+        const story = doc.querySelector("#key-generate-response");
+        story.scrollIntoView({ behavior: "instant", block: "center" });
+        const term = referenceTerm(doc, "Yₒ", story);
+        assert(term, "当前步骤缺少 Yₒ 术语入口");
+        const scrollYBefore = doc.defaultView.scrollY;
+        term.focus();
+        await waitFor(() => doc.querySelector(".rk-term-popover__link"));
+        doc.querySelector(".rk-term-popover__link").click();
+        await waitFor(() => doc.querySelector(".v2-reference-drawer"));
+        await waitFor(() => doc.querySelector(".v2-hub-id")?.textContent.trim() === "symbol:y_old");
+        return { term, scrollYBefore };
+      };
+
+      const captures = {
+        "desktop-00": async (doc) => doc.querySelector("#slice-00").scrollIntoView({ behavior: "instant", block: "start" }),
+        "desktop-01": async (doc) => doc.querySelector("#slice-01").scrollIntoView({ behavior: "instant", block: "start" }),
+        "desktop-02": async (doc) => doc.querySelector("#key-generate-response").scrollIntoView({ behavior: "instant", block: "center" }),
+        "desktop-03": async (doc) => doc.querySelector("#cycle-backward").scrollIntoView({ behavior: "instant", block: "center" }),
+        "reference-desktop": async (doc) => { await showReferenceForYo(doc); },
+        "mobile-03": async (doc) => {
+          doc.querySelector(".v3-rail-nav button:nth-child(4)").click();
+          await waitFor(() => doc.querySelector("#v3-mobile-process")?.getBoundingClientRect().top < window.innerHeight);
+          for (let index = 0; index < 4; index += 1) { doc.querySelector(".v3-mobile-step-controls button:last-child").click(); await pause(100); }
+        },
+        "reference-mobile": async (doc) => { doc.querySelector(".v3-rail-reference").click(); await waitFor(() => doc.querySelector(".v2-reference-drawer")); },
+      };
+
+      async function runCapture(doc) {
+        await waitFor(() => doc.querySelector(".lwf-v3"));
+        await pause(180);
+        await captures[capture](doc);
+        await pause(320);
+        window.__captureReady = true;
+        document.body.dataset.captureReady = "true";
+      }
+
+      async function runTests(doc) {
+        const tests = [];
+        const check = async (name, action) => {
+          try { await action(); tests.push({ name, passed: true }); }
+          catch (error) { tests.push({ name, passed: false, message: error instanceof Error ? error.message : String(error) }); }
+        };
+        await waitFor(() => doc.querySelector(".lwf-v3"));
+
+        await check("00 · 约束条带与四路线矩阵", () => {
+          assert(doc.querySelectorAll(".v3-constraint-item").length === 3, "应以一条约束带展示三项可用性");
+          assert(doc.querySelectorAll(".v3-baseline-matrix tbody tr").length === 4, "应展示四种方法的对照矩阵");
+          assert(doc.querySelector(".v3-baseline-matrix .is-lwf")?.textContent.includes("Teacher"), "LwF 一行应说明旧响应目标");
+        });
+
+        await check("01 · Teacher / Student 参数归属与状态", async () => {
+          assert(doc.querySelector(".v3-teacher-zone")?.textContent.includes("FROZEN"), "Teacher 应标记为冻结");
+          assert(doc.querySelector(".v3-student-zone")?.textContent.includes("TRAINABLE"), "Student 应标记为可训练");
+          for (const label of ["θₛ", "θₒ", "θₙ", "Yₒ", "Ŷₒ", "Ŷₙ"]) assert(doc.querySelector(".v3-architecture-composition")?.textContent.includes(label), `架构缺少 ${label}`);
+          const newHead = [...doc.querySelectorAll(".v3-student-zone .v3-architecture-node")].find((node) => node.textContent.includes("θₙ"));
+          newHead.click();
+          await waitFor(() => doc.querySelector(".v3-architecture-inspector h3")?.textContent.includes("θₙ"));
+        });
+
+        await check("02 · 叙述步骤滚动与图形同步", async () => {
+          doc.querySelector("#key-generate-response").scrollIntoView({ behavior: "instant", block: "center" });
+          await waitFor(() => doc.querySelector(".v3-process-visual-header > strong")?.textContent.trim() === "生成旧响应");
+          assert(doc.querySelector('[data-edge-id="teacher-yo"].is-active'), "Teacher → Yₒ 路径应高亮");
+          const stepTitle = doc.querySelector("#cycle-backward h3 button");
+          stepTitle.click();
+          await waitFor(() => doc.querySelector(".v3-process-visual-header > strong")?.textContent.trim() === "Backward");
+        });
+
+        await check("Reference · Drawer 不跳正文且正确选中 Yₒ", async () => {
+          const { term, scrollYBefore } = await showReferenceForYo(doc);
+          const scrollAtOpen = doc.defaultView.scrollY;
+          assert(scrollAtOpen === scrollYBefore, "Drawer 打开时主文档不应跳转");
+          assert(doc.querySelector(".v2-hub-detail")?.textContent.includes("当前 Xₙ 上计算"), "Yₒ canonical 条目应解释其输入来源");
+          assert(doc.querySelector(".v2-reference-hub")?.textContent.includes("主张审计"), "Reference Hub 应保留类型分组与完整知识分类");
+          assert(doc.querySelector(".v2-hub-detail")?.textContent.includes("打开 LwF 原论文"), "详情应保留原论文入口");
+          const related = [...doc.querySelectorAll(".v2-hub-related button")].find((button) => button.textContent.includes("Ŷₒ"));
+          assert(related, "Yₒ 详情应提供相关 Ŷₒ 条目");
+          related.click();
+          await waitFor(() => doc.querySelector(".v2-hub-id")?.textContent.trim() === "symbol:yhat_old");
+          assert(doc.defaultView.scrollY === scrollAtOpen, "切换相关条目不应移动正文");
+          doc.querySelector(".v2-reference-drawer").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
+          await waitFor(() => doc.activeElement === term);
+          assert(doc.defaultView.scrollY === scrollAtOpen, "关闭 Drawer 后正文应停在原位置");
+        });
+
+        await check("Reference · 关闭后焦点返回触发术语", async () => {
+          const { term } = await showReferenceForYo(doc);
+          doc.querySelector(".v2-reference-drawer").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          await waitFor(() => doc.activeElement === term);
+        });
+
+        await check("Rail · 当前章节随滚动高亮", async () => {
+          doc.querySelector("#slice-00").scrollIntoView({ behavior: "instant", block: "start" });
+          await waitFor(() => doc.querySelector(".v3-rail-nav button.is-active")?.textContent.includes("问题设定"));
+          doc.querySelector("#slice-01").scrollIntoView({ behavior: "instant", block: "start" });
+          await waitFor(() => doc.querySelector(".v3-rail-nav button.is-active")?.textContent.includes("模型结构"));
+        });
+
+        await check("03 · Backward 高亮两条梯度路径", async () => {
+          doc.querySelector("#cycle-backward h3 button").click();
+          await waitFor(() => ["old-loss-head-gradient", "old-head-shared-gradient", "new-loss-head-gradient", "new-head-shared-gradient"].every((id) => doc.querySelector(`[data-edge-id="${id}"].is-active`)));
+        });
+
+        await check("03 · 回放驱动原流程图并停在 Student′", async () => {
+          const seen = new Set();
+          const monitor = window.setInterval(() => seen.add(doc.querySelector(".v3-process-visual-header > strong")?.textContent.trim()), 120);
+          const replay = doc.querySelector("#cycle-update .v3-replay-control button");
+          assert(replay, "Optimizer Step 应提供训练周期回放入口");
+          replay.click();
+          await pause(5300);
+          window.clearInterval(monitor);
+          for (const title of ["Warm-up", "Forward", "旧响应损失", "新任务损失", "Backward", "Optimizer Step"]) assert(seen.has(title), `回放没有显示 ${title}`);
+          assert(doc.querySelector('[data-process-node="updated-student"].is-updated'), "播放结束后 Student′ 应保持高亮");
+          assert(doc.querySelector("#cycle-update .v3-replay-control [role=status]")?.textContent.includes("Student updated"), "回放完成状态未显示");
+        });
+
+        await check("Reference · 完整索引保留并优先展示 00–03 条目", async () => {
+          doc.querySelector(".v3-rail-reference").click();
+          await waitFor(() => doc.querySelector(".v2-reference-drawer"));
+          const text = doc.querySelector(".v2-hub-results")?.textContent ?? "";
+          for (const term of ["θₛ", "θₒ", "θₙ", "Xₙ", "Yₒ", "Yₙ", "Ŷₒ", "Ŷₙ", "Teacher", "Student", "预热阶段", "联合优化", "微调", "特征提取", "联合训练"]) assert(text.includes(term), `Reference Hub 缺少 ${term}`);
+          for (const kind of ["公式", "数据集", "方法", "训练阶段", "常见误区", "论文证据", "主张审计"]) assert(text.includes(kind), `Reference Hub 缺少完整分类 ${kind}`);
+          assert(doc.querySelector(".v2-hub-results .v2-hub-result-group")?.textContent.includes("θₛ"), "高优先级符号应靠前显示");
+          doc.querySelector(".v2-reference-drawer").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
+        });
+
+        const failures = tests.filter((test) => !test.passed);
+        for (const test of tests) {
+          const item = document.createElement("li");
+          item.className = test.passed ? "pass" : "fail";
+          item.textContent = `${test.passed ? "通过" : "失败"} · ${test.name}${test.message ? `：${test.message}` : ""}`;
+          resultList.append(item);
+        }
+        summary.textContent = failures.length ? `浏览器验收完成：${tests.length - failures.length} 项通过，${failures.length} 项失败。` : `浏览器验收通过：${tests.length} 项检查全部通过。`;
+        summary.dataset.result = failures.length ? "failed" : "passed";
+        window.__browserAuditResult = { passed: tests.length - failures.length, failed: failures.length, tests };
+      }
+
+      frame.addEventListener("load", () => {
+        void (async () => {
+          try {
+            const doc = frame.contentDocument;
+            if (capture) await runCapture(doc);
+            else await runTests(doc);
+          } catch (error) {
+            summary.textContent = `浏览器验收失败：${error instanceof Error ? error.message : String(error)}`;
+            summary.dataset.result = "failed";
+            window.__browserAuditResult = { failed: 1, message: summary.textContent };
+          }
+        })();
+      }, { once: true });
     </script>
   </body>
 </html>

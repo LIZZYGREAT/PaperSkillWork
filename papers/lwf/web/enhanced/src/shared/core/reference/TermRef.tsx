@@ -48,6 +48,7 @@ export function TermRef({ term, children, onOpenReference }: { term: TermDefinit
     setPinned(true);
   };
   const openReference = () => {
+    triggerRef.current?.focus();
     onOpenReference?.(term.id);
     close();
   };
@@ -67,7 +68,7 @@ export function TermRef({ term, children, onOpenReference }: { term: TermDefinit
           <span>{term.definition}</span>
           {term.paperRole ? <span><b>本文中的作用：</b> {term.paperRole}</span> : null}
           {term.confusion ? <span><b>容易混淆：</b> {term.confusion}</span> : null}
-          {term.sourceKind ? <small>条目类别：{term.sourceKind}</small> : null}
+          {term.sourceKind || term.sourceRef ? <small className="rk-term-popover__source">来源：{[term.sourceKind, term.sourceRef].filter(Boolean).join(" · ")}</small> : null}
           {onOpenReference ? <button type="button" className="rk-term-popover__link" onClick={openReference}>在 Reference Hub 中查看</button> : null}
         </div>
       ) : null}

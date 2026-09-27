@@ -10,6 +10,7 @@ export type TermDefinition = {
   paperRole?: string;
   confusion?: string;
   sourceKind?: string;
+  sourceRef?: string;
 };
 
 export type ReferenceItem = {

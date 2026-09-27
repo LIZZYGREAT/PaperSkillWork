@@ -61,11 +61,16 @@ const titleTranslations:Record<string,string>={
   '响应保持不是全局函数不变':'响应保持不代表全局函数不变',
 };
 function displayTitle(value:string) { return titleTranslations[value]||value; }
+function displaySymbol(value:string) {
+  const labels:Record<string,string>={θ_s:'θₛ',θ_o:'θₒ',θ_n:'θₙ',X_n:'Xₙ',Y_o:'Yₒ',Y_n:'Yₙ',Ŷ_o:'Ŷₒ',Ŷ_n:'Ŷₙ',λ_o:'λₒ'};
+  return labels[value]||value;
+}
 const evidenceGroupLabels:Record<string,string>={claims:'论文主张',architecture:'模型架构',formulas:'数学公式',results:'实验结果',implementation:'实现细节',background:'背景概念',teaching_toys:'教学示例'};
 const verdictLabels:Record<string,string>={Supported:'有证据支持','Too strong':'表述过强','Not directly tested':'未直接检验'};
 
 function entryFromKnowledge(card:KnowledgeCard):RefEntry {
-  const common={id:card.id,kind:card.kind,title:displayTitle(card.title),summary:card.summary,category:categoryForRegistry(card.category),scenes:card.scenes,related:card.related||[],evidenceIds:card.evidence||[],boundary:card.boundary,keywords:`${card.title} ${card.summary} ${card.id}`};
+  const title=card.kind==='symbol'?`${displaySymbol((card as SymbolCard).symbol)} · ${displayTitle(card.title)}`:displayTitle(card.title);
+  const common={id:card.id,kind:card.kind,title,summary:card.summary,category:categoryForRegistry(card.category),scenes:card.scenes,related:card.related||[],evidenceIds:card.evidence||[],boundary:card.boundary,keywords:`${card.title} ${(card.kind==='symbol'?(card as SymbolCard).symbol:'')} ${card.summary} ${card.id}`};
   let fields:RefField[]=[];
   if(card.kind==='symbol') {const item=card as SymbolCard;fields=[['符号',item.symbol],['含义',item.summary],['来源分类',categoryForRegistry(item.category)],['运行时类型',item.runtimeType],['常见形状',item.typicalShape],['创建时机',item.createdWhen],['使用时机',item.usedWhen],['是否可训练',item.trainable],['梯度来源',item.gradientSources],['是否加入优化器',item.optimizerMembership],['常见混淆',item.commonConfusion]].map(([label,value])=>({label,value}));}
   if(card.kind==='formula') {const item=card as FormulaCard;fields=[{label:'表达式',value:item.expression},{label:'变量',value:item.variables.join(' · ')},{label:'含义',value:item.meaning},{label:'代码映射',value:item.codeMapping}];}
@@ -116,7 +121,7 @@ function resolveRelatedId(id:string) {
   return id;
 }
 
-export function ReferenceHub({request,onClose}:{request:HubRequest|null;onClose:()=>void}) {
+export function ReferenceHub({request,onClose,priorityIds=[],onOpenScene}:{request:HubRequest|null;onClose:()=>void;priorityIds?:string[];onOpenScene?:(scene:string)=>void}) {
   const [selectedId,setSelectedId]=useState('symbol:theta_s');
   const [query,setQuery]=useState('');
   const [kindFilter,setKindFilter]=useState<RefKind|'all'>('all');
@@ -143,11 +148,12 @@ export function ReferenceHub({request,onClose}:{request:HubRequest|null;onClose:
   }).sort((a,b)=>{
     const needle=query.trim().toLowerCase();
     if(needle){const rank=(entry:RefEntry)=>{const title=entry.title.toLowerCase();const id=entry.id.toLowerCase();return title===needle||id===needle?0:title.startsWith(needle)||id.startsWith(needle)?1:title.includes(needle)?2:3;};const ranked=rank(a)-rank(b);if(ranked)return ranked;}
+    if(!needle){const priority=(entry:RefEntry)=>{const index=priorityIds.indexOf(entry.id);return index<0?Number.MAX_SAFE_INTEGER:index;};const ranked=priority(a)-priority(b);if(ranked)return ranked;}
     return kindOrder.indexOf(a.kind)-kindOrder.indexOf(b.kind)||a.title.localeCompare(b.title);
-  }),[categoryFilter,kindFilter,query]);
+  }),[categoryFilter,kindFilter,priorityIds,query]);
   const grouped=useMemo(()=>groupedEntries(filteredEntries),[filteredEntries]);
   const selected=entriesById.get(selectedId);
-  const selectEntry=useCallback((id:string)=>{const resolved=resolveRelatedId(id);if(entriesById.has(resolved)){setSelectedId(resolved);return;}if(/^(00|[A-J])$/.test(id)){window.dispatchEvent(new CustomEvent('lwf:open-scene',{detail:id}));onClose();}},[onClose]);
+  const selectEntry=useCallback((id:string)=>{const resolved=resolveRelatedId(id);if(entriesById.has(resolved)){setSelectedId(resolved);return;}if(/^(00|[A-J])$/.test(id)){if(onOpenScene)onOpenScene(id);else window.dispatchEvent(new CustomEvent('lwf:open-scene',{detail:id}));onClose();}},[onClose,onOpenScene]);
 
   useEffect(()=>{
     if(filteredEntries.length&&!filteredEntries.some((entry)=>entry.id===selectedId)) setSelectedId(filteredEntries[0].id);
@@ -170,7 +176,7 @@ export function ReferenceHub({request,onClose}:{request:HubRequest|null;onClose:
       <label className="v2-reference-search"><span className="v2-sr-only">搜索参考资料</span><input value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="搜索 θₛ、Yₒ、温度、λₒ、MNIST、图 7、联合训练、反向传播或域差异…" /></label>
       <div className="v2-hub-filter-row"><label>内容类型<select value={kindFilter} onChange={(event)=>setKindFilter(event.target.value as RefKind|'all')}><option value="all">全部类型 · {allEntries.length}</option>{kindOrder.map((kind)=><option key={kind} value={kind}>{kindLabels[kind]}</option>)}</select></label><label>来源分类<select value={categoryFilter} onChange={(event)=>setCategoryFilter(event.target.value)}><option value="all">全部来源类别</option>{categoryOptions.map((category)=><option key={category} value={category}>{category}</option>)}</select></label><span>{filteredEntries.length} 条结果</span></div>
       <div className="v2-reference-columns v2-hub-columns">
-        <nav className="v2-reference-list v2-hub-results" aria-label="分组参考条目">{grouped.map(([kind,entries])=><section key={kind} className="v2-hub-result-group"><h3>{kindLabels[kind]} · {entries.length}</h3>{entries.map((entry)=><button key={entry.id} type="button" className={entry.id===selectedId?'is-selected':''} onClick={()=>setSelectedId(entry.id)}><strong>{entry.title}</strong><small>{entry.id} · {entry.category}</small></button>)}</section>)}{filteredEntries.length===0?<p className="v2-empty-state">没有匹配条目。</p>:null}</nav>
+        <nav className="v2-reference-list v2-hub-results" aria-label="分组参考条目">{grouped.map(([kind,entries])=><section key={kind} className="v2-hub-result-group"><h3>{kindLabels[kind]} · {entries.length}</h3>{entries.map((entry)=><button key={entry.id} type="button" className={entry.id===selectedId?'is-selected':''} onClick={()=>setSelectedId(entry.id)}><strong><InlineNotation text={entry.title} /></strong><small><InlineNotation text={entry.id} /> · {entry.category}</small></button>)}</section>)}{filteredEntries.length===0?<p className="v2-empty-state">没有匹配条目。</p>:null}</nav>
         {selected?<EntryDetails entry={selected} onSelect={selectEntry}/>:<p className="v2-empty-state">选择左侧条目查看定义与交叉引用。</p>}
       </div>
       <footer className="v2-drawer-footer">知识卡片、论文证据编号与术语说明均来自本项目的研究登记资料。</footer>

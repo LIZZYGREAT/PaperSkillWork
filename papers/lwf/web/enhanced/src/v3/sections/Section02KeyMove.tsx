@@ -1,36 +1,22 @@
-import { FlowStepper } from "../../shared/core/flow-stepper";
-import { ExpandableDetail, TermRef } from "../../shared/core/reference";
-import { InlineCallout } from "../../shared/foundation/feedback/InlineCallout";
-import { useStickyStepSync } from "../../shared/foundation/layout/StickySystemView";
+import { TermRef } from "../../shared/core/reference";
+import { NarrativeStep } from "../components/NarrativeStep";
 import { keyMoveSteps } from "../data/process";
 import { termsById } from "../data/references";
 
-export function Section02KeyMove({ onOpenReference }: { onOpenReference: (termId: string) => void }) {
-  const sync = useStickyStepSync();
-  const scrollToStep = (stepId: string) => {
-    document.getElementById(stepId)?.scrollIntoView({ behavior: "auto", block: "center" });
-  };
-
-  return (
-    <section className="v3-persistent-stage v3-key-move" id="slice-02" aria-labelledby="v3-key-move-title">
-      <header className="v3-stage-heading v3-stage-heading-compact">
-        <span className="v3-stage-number">02</span>
-        <div><p className="v3-eyebrow">KEY MOVE</p><h2 id="v3-key-move-title">没有旧数据，为什么还能保留旧知识？</h2><p>因为旧模型仍可运行：把当前 <TermRef term={termsById.xn} onOpenReference={onOpenReference} /> 输入 Teacher，生成旧响应 <TermRef term={termsById.yo} onOpenReference={onOpenReference} />。</p></div>
-      </header>
-
-      <FlowStepper steps={keyMoveSteps} label="构造 LwF 的四步过程" onStepChange={(step) => scrollToStep(step.id)} />
-      <div className="v3-step-notes" aria-label="旧响应生成与 Student 构造">
-        {keyMoveSteps.map((step) => <article className="v3-step-note" id={step.id} data-step-note={step.id} data-active={sync?.activeStepId === step.id} aria-current={sync?.activeStepId === step.id ? "step" : undefined} key={step.id}>
-          <span className="v3-step-note-number">{String(keyMoveSteps.indexOf(step) + 1).padStart(2, "0")}</span><div><h3>{step.title}</h3><p>{step.description}</p></div>
-        </article>)}
-      </div>
-
-      <InlineCallout kind="note" title="辨清 Yₒ 的来源">
-        <p><strong>Yₒ 不是旧任务真值、旧数据集，也不是 replay sample。</strong>它是 Teacher 对当前新任务输入 Xₙ 的旧任务输出。</p>
-      </InlineCallout>
-      <ExpandableDetail title="为什么要在新任务输入上生成响应？" summary="只用当前阶段仍可访问的输入建立旧行为目标。" level="supporting">
-        <p>当前只有 Xₙ 可用于训练，Teacher 仍能对它产生旧任务响应。因而 LwF 在新输入分布上约束 Student；这一约束覆盖到哪里，会影响方法的适用边界，后续阶段再讨论。</p>
-      </ExpandableDetail>
-    </section>
-  );
+export function Section02KeyMove({ activeStepId, onOpenReference, onSelectStep }: { activeStepId: string | null; onOpenReference: (termId: string) => void; onSelectStep: (stepId: string) => void }) {
+  return <section className="v3-narrative-chapter v3-key-move" id="slice-02" aria-labelledby="v3-key-move-title">
+    <header className="v3-chapter-heading">
+      <span className="v3-stage-number">02</span>
+      <div><p className="v3-eyebrow">KEY MOVE</p><h2 id="v3-key-move-title">用当前输入生成旧任务目标</h2><p>旧数据不可访问，但旧模型仍能运行。</p></div>
+    </header>
+    <div className="v3-narrative-list">
+      {keyMoveSteps.map((step, index) => <NarrativeStep key={step.id} id={step.id} index={index + 1} title={step.title} active={activeStepId === step.id} onSelect={onSelectStep}
+        description={step.id === "key-new-task" ? <>旧任务训练样本不可用；当前批次提供 <TermRef term={termsById.xn} onOpenReference={onOpenReference} /> 与 <TermRef term={termsById.yn} onOpenReference={onOpenReference} />。</>
+          : step.id === "key-generate-response" ? <>把 <TermRef term={termsById.xn} onOpenReference={onOpenReference} /> 输入 Teacher，得到 <TermRef term={termsById.yo} onOpenReference={onOpenReference} />。</>
+            : step.description}>
+        {step.id === "key-generate-response" ? <p className="v3-narrative-note">Yₒ 来自 Teacher 对当前 Xₙ 的输出；它不是旧任务真值标签，也不是保存下来的旧样本。</p> : null}
+        {step.id === "key-expand-student" ? <p className="v3-narrative-note"><TermRef term={termsById["theta-s"]} onOpenReference={onOpenReference} /> 是共享主体；<TermRef term={termsById["theta-o"]} onOpenReference={onOpenReference} /> 保留旧输出；新增 <TermRef term={termsById["theta-n"]} onOpenReference={onOpenReference} /> 学习新任务。</p> : null}
+      </NarrativeStep>)}
+    </div>
+  </section>;
 }

@@ -23,4 +23,10 @@ export const baselineRoutes = [
     good: "可用新旧数据共同学习。",
     limit: "需要旧任务训练数据，与当前约束冲突。",
   },
+  {
+    id: "lwf",
+    title: "LwF",
+    good: "学习新任务，并用 Teacher 的旧响应保持旧输出。",
+    limit: "旧行为约束来自当前新任务输入 Xₙ。",
+  },
 ] as const;
