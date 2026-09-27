@@ -1,5 +1,5 @@
 import { ChapterNavigation } from "../components/ChapterNavigation";
-import { LwfTaskSequence } from "../components/LwfTaskSequence";
+import { LwfTaskHandoffView } from "../components/LwfTaskHandoffView";
 import { getLwfChapter, type LwfChapterId } from "../data/chapters";
 
 const arxivPaperRecord = "https://arxiv.org/abs/1606.09282v3";
@@ -22,7 +22,7 @@ export function Section05Sequential({ onOpenReference, onNavigateChapter }: {
         <div><span>TRAINING-STEP LEVEL</span><strong>Chapter 03</strong><small>一个 minibatch 中的 Forward → Loss → Backward → Update</small></div>
         <div className="is-current"><span>TASK-SEQUENCE LEVEL</span><strong>Chapter 05</strong><small>一个任务阶段结束后，模型怎样交接到下一任务</small></div>
       </div>
-      <LwfTaskSequence />
+      <LwfTaskHandoffView onOpenReference={onOpenReference} onNavigateChapter={onNavigateChapter} />
     </section>
 
     <section className="v3-sequential-block" aria-labelledby="v3-refresh-title">

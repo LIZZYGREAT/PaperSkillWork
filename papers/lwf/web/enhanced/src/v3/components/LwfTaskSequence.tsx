@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { taskSequence } from "../data/sequential";
 
-export function LwfTaskSequence() {
-  const [selectedId, setSelectedId] = useState(taskSequence.initialState);
+export function LwfTaskSequence({ selectedStateId, onSelectState }: { selectedStateId?: string; onSelectState?: (stateId: string) => void }) {
+  const [localSelectedId, setLocalSelectedId] = useState(taskSequence.initialState);
+  const selectedId = selectedStateId ?? localSelectedId;
   const selectedState = taskSequence.states.find((state) => state.id === selectedId)!;
   const nextTransition = taskSequence.transitions.find((transition) => transition.from === selectedId);
   const nextState = nextTransition && taskSequence.states.find((state) => state.id === nextTransition.to);
@@ -11,7 +12,7 @@ export function LwfTaskSequence() {
     <p className="v3-task-sequence-hint">按顺序查看八个任务阶段；选择任意阶段可阅读它的作用和下一步。</p>
     <ol className="v3-task-sequence-list" aria-label="任务阶段顺序">
       {taskSequence.states.map((state, index) => <li key={state.id}>
-        <button type="button" data-state-id={state.id} aria-pressed={state.id === selectedId} onClick={() => setSelectedId(state.id)}>
+        <button type="button" data-state-id={state.id} aria-pressed={state.id === selectedId} onClick={() => { if (!selectedStateId) setLocalSelectedId(state.id); onSelectState?.(state.id); }}>
           <span className="v3-task-sequence-number">{String(index + 1).padStart(2, "0")}</span>
           <span className="v3-task-sequence-label"><strong>{state.label}</strong><small>{state.owner}</small></span>
         </button>
