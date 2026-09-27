@@ -19,8 +19,8 @@ export function ObjectiveBalanceView() {
 
     <div className="v3-objective-flow" aria-label="L old 与 L new 都影响共享参数 theta s">
       <div className="v3-objective-losses">
-        <div className="v3-objective-loss is-old"><strong>λₒ L_old</strong><span>保持旧响应</span><i aria-hidden="true" /></div>
-        <div className="v3-objective-loss is-new"><strong>L_new</strong><span>学习当前任务</span><i aria-hidden="true" /></div>
+        <div className="v3-objective-loss is-old"><strong>λₒ L_old</strong><span>保持旧响应</span><span className="v3-objective-signal" aria-hidden="true"><i /></span></div>
+        <div className="v3-objective-loss is-new"><strong>L_new</strong><span>学习当前任务</span><span className="v3-objective-signal" aria-hidden="true"><i /></span></div>
       </div>
       <div className="v3-objective-merge" aria-hidden="true"><span>↘</span><span>↗</span></div>
       <div className="v3-shared-target"><span>共同影响</span><strong>shared θₛ</strong></div>
@@ -28,6 +28,7 @@ export function ObjectiveBalanceView() {
 
     <p className="v3-objective-formula"><span>论文目标</span><strong>L = λₒ L_old + L_new + R</strong></p>
     <p className="v3-mechanism-note">进入 joint-optimize 后，L_old 与 L_new 都经各自输出路径影响共享 θₛ。λₒ 调整旧响应项的相对权重；它不预测具体准确率，也不保证旧任务表现。</p>
+    <p className="v3-objective-animation-note">信号动画只表示目标项的概念性相对强调，不代表实测梯度大小。</p>
 
     <details className="v3-temperature-support">
       <summary>Supporting mechanism · Temperature</summary>

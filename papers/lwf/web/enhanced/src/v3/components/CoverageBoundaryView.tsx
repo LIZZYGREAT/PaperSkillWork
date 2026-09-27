@@ -20,9 +20,16 @@ const coverageCopy: Record<Coverage, { label: string; observed: string; boundary
   },
 };
 
+const coveragePoints = [
+  { x: 96, y: 104 }, { x: 156, y: 164 }, { x: 210, y: 102 }, { x: 270, y: 168 },
+  { x: 332, y: 103 }, { x: 390, y: 163 }, { x: 455, y: 106 }, { x: 518, y: 162 },
+];
+const coverageRadius: Record<Coverage, number> = { broad: 245, partial: 144, small: 54 };
+
 export function CoverageBoundaryView() {
   const [coverage, setCoverage] = useState<Coverage>("partial");
   const state = coverageCopy[coverage];
+  const radius = coverageRadius[coverage];
 
   return <div className="v3-coverage-boundary">
     <div className="v3-compact-toggle v3-coverage-controls" role="group" aria-label="选择当前任务输入覆盖示意">
@@ -35,8 +42,10 @@ export function CoverageBoundaryView() {
         <rect className="v3-old-domain" x="28" y="32" width="564" height="184" rx="28" />
         <text className="v3-coverage-region-label" x="48" y="57">OLD-TASK RELEVANT INPUT REGION</text>
         <g className="v3-coverage-points" aria-hidden="true">
-          <circle cx="96" cy="104" r="7" /><circle cx="156" cy="164" r="7" /><circle cx="210" cy="102" r="7" /><circle cx="270" cy="168" r="7" />
-          <circle cx="332" cy="103" r="7" /><circle cx="390" cy="163" r="7" /><circle cx="455" cy="106" r="7" /><circle cx="518" cy="162" r="7" />
+          {coveragePoints.map(({ x, y }, index) => {
+            const inside = ((x - 310) / radius) ** 2 + ((y - 127) / 50) ** 2 <= 1;
+            return <circle key={`${x}-${y}`} className={inside ? "is-covered" : "is-uncovered"} data-point-index={index} cx={x} cy={y} r="7"><title>{inside ? "当前输入覆盖示意" : "当前输入未覆盖示意"}</title></circle>;
+          })}
         </g>
         <ellipse className={`v3-current-coverage coverage-${coverage}`} cx="310" cy="127" rx="100" ry="50" />
         <text className="v3-coverage-current-label" x="310" y="202">CURRENT TASK INPUTS · Xₙ</text>

@@ -23,6 +23,7 @@ import "../styles/alexnet.css";
 import "../styles/reference-hub.css";
 import "../shared/foundation/styles/kit.css";
 import "./styles/vertical-slice.css";
+import "./styles/motion.css";
 import "./styles/mechanism.css";
 import "./styles/sequential.css";
 import "./styles/evidence.css";
