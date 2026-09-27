@@ -18,10 +18,7 @@ export function Section06Evidence({ onOpenReference, onNavigateChapter }: {
       <ResultProtocolCard onOpenReference={onOpenReference} />
     </section>
 
-    <section className="v3-evidence-block v3-evidence-main-block" aria-labelledby="v3-evidence-main-title">
-      <div className="v3-evidence-block-heading"><span>06B · CLAIM ↔ EVIDENCE EXPLORER</span><h3 id="v3-evidence-main-title">按问题核对四组核心证据</h3><p>每组都先列出自己的任务与评估协议，再查看论文表格或图、作者解释和结论边界。</p></div>
-      <LwfEvidenceExplorer onOpenReference={onOpenReference} />
-    </section>
+    <LwfEvidenceExplorer onOpenReference={onOpenReference} />
 
     <ChapterNavigation chapterId="06" onNavigate={onNavigateChapter} />
   </section>;

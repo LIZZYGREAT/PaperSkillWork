@@ -66,7 +66,7 @@
 .v3-evidence-chain-step.is-interpretation { background: #fbfcfd; }
 .v3-evidence-chain-step.is-boundary { border-bottom: 0; background: #fcf8f2; }
 .v3-evidence-reference-link { margin: 10px 15px 14px; }
-.v3-verdict-explorer { grid-column: 1/-1; margin-top: 5px; padding: 15px; border: 1px solid #dfe8e5; border-radius: 10px; background: #fbfdfc; }
+.v3-verdict-explorer { padding: 15px; }
 .v3-verdict-explorer .v3-evidence-block-heading { margin-bottom: 11px; }
 .v3-verdict-layout { display: grid; grid-template-columns: minmax(170px,.36fr) minmax(0,1fr); gap: 10px; }
 .v3-verdict-claim-list { display: grid; align-content: start; gap: 5px; }

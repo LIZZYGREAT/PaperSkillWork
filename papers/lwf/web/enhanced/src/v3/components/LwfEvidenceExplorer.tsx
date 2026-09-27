@@ -143,7 +143,10 @@ export function LwfEvidenceExplorer({ onOpenReference }: { onOpenReference: (ter
     ? [...new Set([...selectedClaim.supportingEvidence, ...(selectedClaim.related ?? []).filter((id) => id.startsWith("evidence:"))])]
     : [];
 
-  return <div className="v3-evidence-explorer">
+  return <>
+    <section className="v3-evidence-block v3-evidence-main-block" aria-labelledby="v3-evidence-main-title">
+      <div className="v3-evidence-block-heading"><span>06B · CLAIM ↔ EVIDENCE EXPLORER</span><h3 id="v3-evidence-main-title">按问题核对四组核心证据</h3><p>每组都先列出自己的任务与评估协议，再查看论文表格或图、作者解释和结论边界。</p></div>
+      <div className="v3-evidence-explorer">
     <section className="v3-evidence-selector" aria-label="选择论文证据">
       <span className="v3-evidence-step-label">CLAIM SELECTOR</span>
       <p>从一个问题开始，逐组核对论文提供的材料。</p>
@@ -186,7 +189,9 @@ export function LwfEvidenceExplorer({ onOpenReference }: { onOpenReference: (ter
       <button className="v3-evidence-reference-link" type="button" onClick={() => openEvidenceReference(card.id)}>Reference Hub · 打开规范证据条目 ↗</button>
     </article>
 
-    <section className="v3-verdict-explorer" aria-labelledby="v3-verdict-title">
+      </div>
+    </section>
+    <section className="v3-evidence-block v3-verdict-explorer" aria-labelledby="v3-verdict-title">
       <div className="v3-evidence-block-heading"><span>06C · EVIDENCE VERDICT</span><h3 id="v3-verdict-title">哪些结论有证据支持？</h3><p>判断结论是否超出对应实验；“Unsupported”表示论文没有直接检验该主张。</p></div>
       <div className="v3-verdict-layout">
         <div className="v3-verdict-claim-list" role="tablist" aria-label="待判断主张">
@@ -216,5 +221,5 @@ export function LwfEvidenceExplorer({ onOpenReference }: { onOpenReference: (ter
         </article>
       </div>
     </section>
-  </div>;
+  </>;
 }
