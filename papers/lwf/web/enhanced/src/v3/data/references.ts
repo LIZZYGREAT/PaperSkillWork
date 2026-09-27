@@ -39,6 +39,7 @@ export const v3ReferenceIds: Record<string, string> = {
   "feature-extraction": "method:feature_extraction", "joint-training": "method:joint_training",
   "response-preservation": "formula:response_preservation", "parameter-l2": "formula:parameter_l2",
   "domain-coverage": "claim:domain_mismatch", temperature: "symbol:temperature", "figure-7": "evidence:figure_7",
+  "figure-4": "evidence:figure_4", "sequential-refresh": "confusion:sequential_refresh",
   "stability-plasticity": "confusion:stability_plasticity", jacobian: "confusion:jacobian", "old-domain-risk": "confusion:global_function",
 };
 

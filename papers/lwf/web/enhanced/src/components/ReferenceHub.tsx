@@ -59,6 +59,7 @@ const titleTranslations:Record<string,string>={
   'Y_o 不是旧任务真实标签':'Yₒ 不是旧任务真实标签','backward 不直接更新参数':'backward 不直接更新参数',
   'freeze 不等于 detach':'冻结参数不等于 detach','λ_o=1 不等于 50/50':'λₒ = 1 不等于新旧任务各占一半',
   '响应保持不是全局函数不变':'响应保持不代表全局函数不变',
+  '旧任务响应会随新阶段重算':'新任务到来时重算旧任务响应',
 };
 function displayTitle(value:string) { return titleTranslations[value]||value; }
 function displaySymbol(value:string) {

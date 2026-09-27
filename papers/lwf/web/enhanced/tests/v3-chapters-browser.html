@@ -120,6 +120,88 @@
           await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
         });
 
+        await check("04 → 05 · 连续任务章节已接通", async () => {
+          const next = doc.querySelector("#chapter-04 .v3-chapter-navigation .is-next");
+          assert(next && !next.disabled, "04 的下一章入口应进入 05");
+          next.click();
+          await waitFor(() => doc.defaultView.location.hash === "#chapter-05");
+          assert(doc.querySelector("#chapter-05 h2")?.textContent.includes("下一项怎样接上"), "05 未成为当前目标");
+        });
+
+        await check("05 · 明确区分训练步与任务序列", () => {
+          const chapter = doc.querySelector("#chapter-05");
+          assert(chapter.textContent.includes("TRAINING-STEP LEVEL") && chapter.textContent.includes("Chapter 03"), "05 应回链到 03 的训练步层级");
+          assert(chapter.textContent.includes("TASK-SEQUENCE LEVEL") && chapter.textContent.includes("Chapter 05"), "05 应明确任务序列层级");
+          assert(chapter.textContent.includes("minibatch") && chapter.textContent.includes("任务阶段"), "应指出 03 的循环位于任务阶段内部");
+        });
+
+        await check("05 · 状态机顺序与下一任务 loop-back", async () => {
+          const machine = doc.querySelector("#chapter-05 .rk-state-machine");
+          const advance = async (id) => {
+            const state = machine.querySelector(`#rk-state-${id}`);
+            assert(state, `缺少状态 ${id}`);
+            state.click();
+            await waitFor(() => state.getAttribute("aria-current") === "step");
+          };
+          await advance("freeze-teacher");
+          const skipped = machine.querySelector("#rk-state-refresh-responses");
+          skipped.click();
+          await waitFor(() => machine.querySelector("#rk-state-refresh-responses").getAttribute("aria-current") !== "step");
+          assert(machine.querySelector("#rk-state-freeze-teacher").getAttribute("aria-current") === "step", "guided state machine should not skip stages");
+          for (const id of ["task-arrives", "refresh-responses", "add-head", "adapt-student", "promote-model", "next-task", "freeze-teacher"]) await advance(id);
+          assert(machine.querySelector('[data-from="next-task"][data-to="freeze-teacher"]'), "最后一步应回到下一阶段 Teacher");
+        });
+
+        await check("05 · B/C 阶段响应目标重新生成", () => {
+          const refresh = doc.querySelector("#chapter-05 .v3-refresh-pair");
+          assert(refresh.textContent.includes("X_B") && refresh.textContent.includes("Teacher_A") && refresh.textContent.includes("Y_A on X_B"), "Task B 的示意不完整");
+          assert(refresh.textContent.includes("X_C") && refresh.textContent.includes("Teacher_AB") && refresh.textContent.includes("Y_A, Y_B on X_C"), "Task C 的示意不完整");
+          assert(doc.querySelector("#chapter-05 .v3-sequence-drift")?.textContent.includes("Model_ABC"), "需要说明模型可能跨任务阶段累积变化");
+          assert(doc.querySelector("#chapter-05").textContent.includes("不是永久 cache"), "需要明确回应不是永久缓存");
+        });
+
+        await check("05 · Figure 4 原文预览与 Chapter 06 入口", () => {
+          const preview = doc.querySelector("#chapter-05 .v3-figure4-preview iframe");
+          assert(preview?.src.includes("arxiv.org/pdf/1606.09282v3#page=8"), "预览应指向原论文 PDF 第 8 页");
+          const openSource = doc.querySelector("#chapter-05 .v3-figure4-preview figcaption a");
+          assert(openSource?.href.includes("arxiv.org/pdf/1606.09282v3#page=8"), "内嵌预览应提供原文回退链接");
+          const fullEvidence = [...doc.querySelectorAll("#chapter-05 .v3-figure4-actions button")].find((button) => button.textContent.includes("Chapter 06"));
+          assert(fullEvidence, "缺少 Chapter 06 完整证据入口");
+          assert(fullEvidence.disabled === !doc.querySelector("#chapter-06"), "06 尚未就绪时入口应禁用；就绪后应自动开放");
+        });
+
+        await check("05 · Reference Hub 收录阶段响应刷新", async () => {
+          const button = [...doc.querySelectorAll("#chapter-05 .v3-sequential-reference-links button")].find((item) => item.textContent.includes("response refresh"));
+          assert(button, "缺少 response refresh Reference Hub 入口");
+          button.click();
+          await waitFor(() => doc.querySelector(".v2-reference-drawer"));
+          await waitFor(() => doc.querySelector(".v2-hub-id")?.textContent.trim() === "confusion:sequential_refresh");
+          assert(doc.querySelector(".v2-hub-detail")?.textContent.includes("永久 cache"), "Reference Hub 未显示阶段刷新解释");
+          doc.querySelector(".v2-reference-drawer").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          await waitFor(() => !doc.querySelector(".v2-reference-drawer"));
+        });
+
+        await check("05 · 390px 移动视口不产生页面横向溢出", async () => {
+          const originalWidth = frame.style.width;
+          try {
+            frame.style.width = "390px";
+            await waitFor(() => doc.defaultView.innerWidth <= 400);
+            const root = doc.documentElement;
+            assert(root.scrollWidth <= root.clientWidth + 1, `章节主页面横向溢出：${root.scrollWidth}px > ${root.clientWidth}px`);
+            const diagram = doc.querySelector("#chapter-05 .rk-state-machine__viewport");
+            assert(diagram.scrollWidth > diagram.clientWidth, "窄视口下，流程图应在自己的可滚动区域内查看");
+          } finally {
+            frame.style.width = originalWidth;
+          }
+        });
+
+        const figureFrame = doc.querySelector("#chapter-05 .v3-figure4-preview iframe");
+        if (figureFrame) {
+          figureFrame.loading = "eager";
+          figureFrame.scrollIntoView({ behavior: "auto", block: "center" });
+          await Promise.race([new Promise((resolve) => figureFrame.addEventListener("load", resolve, { once: true })), pause(6000)]);
+        }
+
         const failures = checks.filter((item) => !item.passed);
         for (const item of checks) {
           const row = document.createElement("li");
