@@ -21,10 +21,8 @@ const details: Record<string, { input: string; output: string; state: string; wh
 };
 
 const trailEdges = [
-  { from: 0, to: 1, d: "M 125 82 H 375" }, { from: 1, to: 2, d: "M 375 82 H 625" },
-  { from: 2, to: 3, d: "M 625 82 H 875" }, { from: 3, to: 4, d: "M 875 82 V 258" },
-  { from: 4, to: 5, d: "M 875 258 H 625" }, { from: 5, to: 6, d: "M 625 258 H 375" },
-  { from: 6, to: 7, d: "M 375 258 H 125" },
+  { from: 0, to: 1 }, { from: 1, to: 2 }, { from: 2, to: 3 }, { from: 3, to: 4 },
+  { from: 4, to: 5 }, { from: 5, to: 6 }, { from: 6, to: 7 },
 ];
 
 function HandoffMiniVisual({ id }: { id: string }) {
@@ -61,8 +59,11 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
   const nextState = nextTransition && taskSequence.states.find((state) => state.id === nextTransition.to);
   const markerId = `lwf-handoff-arrow-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const routesRef = useRef<SVGSVGElement | null>(null);
   const nodeRefs = useRef(new Map<string, HTMLDivElement>());
   const [tokenPosition, setTokenPosition] = useState<{ left: number; top: number } | null>(null);
+  const [routePaths, setRoutePaths] = useState<string[]>([]);
+  const [loopPath, setLoopPath] = useState("");
   const atEnd = stepIndex === taskSequence.states.length - 1;
   const stepDetail = details[step.id];
 
@@ -82,11 +83,51 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
   useEffect(() => {
     const board = boardRef.current;
     const node = nodeRefs.current.get(step.id);
-    if (!board || !node) return;
+    const routes = routesRef.current;
+    if (!board || !node || !routes) return;
     const updatePosition = () => {
       const boardRect = board.getBoundingClientRect();
       const nodeRect = node.getBoundingClientRect();
+      const routesRect = routes.getBoundingClientRect();
+      if (!boardRect.width || !boardRect.height || !routesRect.width || !routesRect.height) return;
       setTokenPosition({ left: nodeRect.left - boardRect.left + nodeRect.width / 2, top: nodeRect.top - boardRect.top + 16 });
+
+      const scaleX = 1000 / routesRect.width;
+      const scaleY = 340 / routesRect.height;
+      const stateRect = (index: number) => nodeRefs.current.get(taskSequence.states[index].id)?.getBoundingClientRect();
+      const nextPaths = trailEdges.map(({ from, to }) => {
+        const source = stateRect(from);
+        const destination = stateRect(to);
+        if (!source || !destination) return "";
+        const sourceCenterX = source.left + source.width / 2;
+        const sourceCenterY = source.top + source.height / 2;
+        const destinationCenterX = destination.left + destination.width / 2;
+        const destinationCenterY = destination.top + destination.height / 2;
+        if (Math.abs(destinationCenterX - sourceCenterX) >= Math.abs(destinationCenterY - sourceCenterY)) {
+          const toRight = destinationCenterX > sourceCenterX;
+          const startX = ((toRight ? source.right + 1 : source.left - 1) - routesRect.left) * scaleX;
+          const endX = ((toRight ? destination.left - 2 : destination.right + 2) - routesRect.left) * scaleX;
+          const y = ((sourceCenterY + destinationCenterY) / 2 - routesRect.top) * scaleY;
+          return `M ${startX} ${y} H ${endX}`;
+        }
+        const downward = destinationCenterY > sourceCenterY;
+        const x = ((sourceCenterX + destinationCenterX) / 2 - routesRect.left) * scaleX;
+        const startY = ((downward ? source.bottom + 1 : source.top - 1) - routesRect.top) * scaleY;
+        const endY = ((downward ? destination.top - 2 : destination.bottom + 2) - routesRect.top) * scaleY;
+        return `M ${x} ${startY} V ${endY}`;
+      });
+      setRoutePaths(nextPaths);
+
+      const loopSource = stateRect(7);
+      const loopTarget = stateRect(0);
+      if (loopSource && loopTarget) {
+        const startX = (loopSource.left - routesRect.left - 3) * scaleX;
+        const startY = (loopSource.top + loopSource.height / 2 - routesRect.top) * scaleY;
+        const endX = (loopTarget.left - routesRect.left - 3) * scaleX;
+        const endY = (loopTarget.top + loopTarget.height / 2 - routesRect.top) * scaleY;
+        const outerX = 2 * scaleX;
+        setLoopPath(`M ${startX} ${startY} C ${startX - 8 * scaleX} ${startY}, ${outerX} ${startY}, ${outerX} ${startY} V ${endY} C ${outerX} ${endY}, ${endX - 8 * scaleX} ${endY}, ${endX} ${endY}`);
+      }
     };
     updatePosition();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updatePosition);
@@ -117,14 +158,14 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
           {stepIndex >= 4 ? <span className="is-student">Studentₜ₊₁ · ACTIVE</span> : null}
         </div>
         <div className="v3-task-handoff-board" ref={boardRef}>
-          <svg className="v3-task-handoff-routes" viewBox="0 0 1000 340" preserveAspectRatio="none">
+          <svg ref={routesRef} className="v3-task-handoff-routes" viewBox="0 0 1000 340" preserveAspectRatio="none" aria-hidden="true">
             <defs><marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
             {trailEdges.map((edge, index) => {
               const completed = stepIndex > edge.to;
               const active = stepIndex === edge.to;
-              return <path key={`${edge.from}-${edge.to}`} className={`v3-task-handoff-route ${completed ? "is-complete" : ""} ${active ? "is-active" : ""}`} d={edge.d} markerEnd={`url(#${markerId})`} />;
+              return <path key={`${edge.from}-${edge.to}`} className={`v3-task-handoff-route ${completed ? "is-complete" : ""} ${active ? "is-active" : ""}`} d={routePaths[index] ?? ""} markerEnd={`url(#${markerId})`} />;
             })}
-            <path className={`v3-task-handoff-route is-loop ${step.id === "next-task" ? "is-active" : ""}`} d="M 125 258 C 24 258 24 84 375 82" markerEnd={`url(#${markerId})`} />
+            <path className={`v3-task-handoff-route is-loop ${step.id === "next-task" ? "is-active" : ""}`} d={loopPath} markerEnd={`url(#${markerId})`} />
           </svg>
           {taskSequence.states.map((state, index) => {
             const position = positions[index];
