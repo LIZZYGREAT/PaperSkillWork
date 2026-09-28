@@ -221,38 +221,38 @@ fine-tune
 unchanged
 …
 …
-new task 
+new task
 ground truth
-new task 
+new task
 image
 Input: Target:
 (b) Fine-tuning
 (d) Joint Training
 …
 …
-new task 
+new task
 ground truth
-old tasks’ 
-ground truthimage for 
+old tasks’
+ground truthimage for
 each task
 Input: Target:
 (c) Feature Extraction
-new task 
+new task
 ground truth
 …
 …
-new task 
+new task
 image
 Input: Target:
 (e) Learning without Forgetting
 …
 …
-new task 
+new task
 ground truth
-new task 
+new task
 image
 model (a)’s
-response for 
+response for
 old tasks
 Input: Target:
 (a) Original Model
@@ -911,9 +911,9 @@ ing the network structure, which we refer to as “network
 
 9
 (a) More task-specific layers (b) Network Expansion
-… new task 
+… new task
 label
-new task 
+new task
 image
 Input: Target: rand init + train
 fine-tune
@@ -923,9 +923,9 @@ Net2Net weights
 …
 …
 new task label
-new task 
+new task
 image
-… recorded old 
+… recorded old
 tasks’ response
 Input: Target:
 Fig. 6. Illustration for alternative network modiﬁcation methods. In (a), more fully connected layers are task-speciﬁc, rather than shared. In (b),
