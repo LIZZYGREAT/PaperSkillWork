@@ -40,8 +40,8 @@ jobs:
       - name: Run PaperSkillWork tests
         run: python -m pytest -q -o "cache_dir=${{ runner.temp }}/pytest-cache" --basetemp="${{ runner.temp }}/pytest-tmp"
 
-      - name: Check Workflow v3 and PhyAgentOS workspace
-        run: python tools/paper.py check phyagentos
+      - name: Check Workflow v3 workspace
+        run: python tools/paper.py check lwf
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -50,7 +50,6 @@ jobs:
           cache: npm
           cache-dependency-path: |
             reusable-kit/demo/package-lock.json
-            papers/phyagentos/web/enhanced/package-lock.json
             papers/lwf/web/final/package-lock.json
 
       - name: Install Reusable Kit demo dependencies
@@ -84,15 +83,3 @@ jobs:
       - name: Run LwF Final browser acceptance
         working-directory: papers/lwf/web/final
         run: npm run test:browser
-
-      - name: Install Enhanced dependencies
-        working-directory: papers/phyagentos/web/enhanced
-        run: npm ci
-
-      - name: Build Enhanced project
-        working-directory: papers/phyagentos/web/enhanced
-        run: npm run build
-
-      - name: Audit Enhanced project
-        working-directory: papers/phyagentos/web/enhanced
-        run: npm run audit:enhanced
