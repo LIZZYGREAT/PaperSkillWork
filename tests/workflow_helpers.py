@@ -43,7 +43,11 @@ def make_project(tmp_path, selected_asset=False):
     root = tmp_path / "project"
     shutil.copytree(REPO_ROOT / "tools", root / "tools")
     shutil.copytree(TEMPLATES, root / "templates")
-    shutil.copytree(REPO_ROOT / "reusable-kit", root / "reusable-kit", ignore=shutil.ignore_patterns("node_modules", "dist"))
+    shutil.copytree(
+        REPO_ROOT / "reusable-kit",
+        root / "reusable-kit",
+        ignore=shutil.ignore_patterns("node_modules", "dist", ".playwright"),
+    )
     shutil.copy2(REPO_ROOT / ".gitignore", root / ".gitignore")
     (root / "papers").mkdir()
     result = invoke(

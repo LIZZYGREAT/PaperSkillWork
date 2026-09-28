@@ -16,7 +16,11 @@ TEMPLATES = REPO_ROOT / "templates"
 def make_project(tmp_path):
     shutil.copytree(REPO_ROOT / "tools", tmp_path / "tools")
     shutil.copytree(TEMPLATES, tmp_path / "templates")
-    shutil.copytree(REPO_ROOT / "reusable-kit", tmp_path / "reusable-kit", ignore=shutil.ignore_patterns("node_modules", "dist"))
+    shutil.copytree(
+        REPO_ROOT / "reusable-kit",
+        tmp_path / "reusable-kit",
+        ignore=shutil.ignore_patterns("node_modules", "dist", ".playwright"),
+    )
     shutil.copy2(REPO_ROOT / ".gitignore", tmp_path / ".gitignore")
     (tmp_path / "papers").mkdir()
     return tmp_path
