@@ -22,7 +22,9 @@ export function ObjectiveBalanceView() {
         <div className="v3-objective-loss is-old"><strong>λₒ L_old</strong><span>保持旧响应</span><span className="v3-objective-signal" aria-hidden="true"><i /></span></div>
         <div className="v3-objective-loss is-new"><strong>L_new</strong><span>学习当前任务</span><span className="v3-objective-signal" aria-hidden="true"><i /></span></div>
       </div>
-      <div className="v3-objective-merge" aria-hidden="true"><span>↘</span><span>↗</span></div>
+      <svg className="v3-objective-merge" viewBox="0 0 80 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M 4 28 L 74 54 M 74 54 L 66.2 48.3 M 74 54 L 68.7 54.8 M 4 92 L 74 66 M 74 66 L 66.2 68.4 M 74 66 L 68.7 71.7" />
+      </svg>
       <div className="v3-shared-target"><span>共同影响</span><strong>shared θₛ</strong></div>
     </div>
 
