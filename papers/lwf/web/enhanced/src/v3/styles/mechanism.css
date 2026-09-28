@@ -347,7 +347,9 @@
 .v3-coverage-figure { grid-column: 1; grid-row: 2; margin: 0; padding: 9px 11px 8px; border: 1px solid #e2e9e7; border-radius: 10px; background: #fbfdfc; }
 .v3-coverage-figure svg { display: block; width: 100%; height: auto; }
 .v3-old-domain { fill: #f6f8f7; stroke: #cbd9d8; stroke-width: 1.5; }
-.v3-coverage-region-label, .v3-coverage-current-label { fill: #829292; font: 700 10px/1 sans-serif; letter-spacing: .08em; text-anchor: middle; }
+.v3-coverage-region-label, .v3-coverage-current-label { fill: #829292; font: 700 10px/1 sans-serif; letter-spacing: .08em; }
+.v3-coverage-region-label { text-anchor: start; }
+.v3-coverage-current-label { text-anchor: middle; }
 .v3-coverage-points circle { fill: #edf0ef; stroke: #a4b1af; stroke-width: 2; opacity: .58; transition: fill var(--motion-normal) var(--motion-easing), stroke var(--motion-normal) var(--motion-easing), opacity var(--motion-normal) var(--motion-easing); }
 .v3-coverage-points circle.is-covered { fill: #d4eee4; stroke: #438f7a; opacity: 1; }
 .v3-current-coverage { fill: rgb(70 153 132 / 14%); stroke: #539d87; stroke-width: 2; transition: all var(--motion-flow) var(--motion-easing); }
