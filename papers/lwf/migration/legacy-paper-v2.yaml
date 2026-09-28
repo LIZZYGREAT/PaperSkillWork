@@ -1,0 +1,77 @@
+schema_version: 2
+id: lwf
+title: Learning without Forgetting
+paper:
+  url: https://arxiv.org/pdf/1606.09282
+  arxiv_id: arXiv:1606.09282
+  local_pdf: source/paper.pdf
+workflow:
+  current_gate: G0
+  gates:
+    G0_workspace:
+      status: pending
+    G1_research:
+      status: pending
+    G2_evidence_audit:
+      status: pending
+    G3_canonical:
+      status: pending
+    G4_narrative_design:
+      status: pending
+    G5_interaction_design:
+      status: pending
+    G6_enhanced:
+      status: pending
+    G7_release:
+      status: pending
+  version: 2
+artifacts:
+  learning_contract: design/learning-contract.md
+  paper_model: research/01_paper_model.md
+  evidence_registry: research/02_evidence_registry.yaml
+  learning_architecture: design/learning-architecture.md
+  scenes_dir: design/scenes
+  terms: knowledge/terms.yaml
+  final_check: audit/final-check.md
+  release_check: audit/release-check.md
+web:
+  canonical: web/canonical
+  enhanced: web/enhanced
+paperskill:
+  canonical_version: null
+  enhanced_version: null
+  canonical_pr:
+    number: null
+    status: pending
+  enhanced_pr:
+    number: null
+    status: pending
+legacy_artifacts:
+  paper.yaml: migration/legacy-paper-v1.yaml
+  research/01_review.md: research/01_review.md
+  research/02_evidence_audit.md: research/02_evidence_audit.md
+  research/03_terms.md: research/03_terms.md
+  web/canonical: web/canonical
+  design/storyboard.md: design/storyboard.md
+  design/interaction-plan.md: design/interaction-plan.md
+  web/enhanced/package.json: web/enhanced/package.json
+  audit/content-check.md: audit/content-check.md
+  audit/release-check.md: audit/legacy/release-check-v1.md
+migration_v2:
+  from_schema_version: 1
+  legacy_gate_states:
+    G0: pending
+    G1: pending
+    G2: pending
+    G3: pending
+    G4: pending
+    G5: pending
+    G6: pending
+    G7: pending
+  legacy_artifact_config:
+    review: research/01_review.md
+    evidence_audit: research/02_evidence_audit.md
+    terms: research/03_terms.md
+    storyboard: design/storyboard.md
+    interaction_plan: design/interaction-plan.md
+  legacy_paper_config_backup: migration/legacy-paper-v1.yaml
