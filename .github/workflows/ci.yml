@@ -51,6 +51,7 @@ jobs:
           cache-dependency-path: |
             reusable-kit/demo/package-lock.json
             papers/phyagentos/web/enhanced/package-lock.json
+            papers/lwf/web/final/package-lock.json
 
       - name: Install Reusable Kit demo dependencies
         working-directory: reusable-kit/demo
@@ -66,6 +67,22 @@ jobs:
 
       - name: Run Reusable Kit browser smoke tests
         working-directory: reusable-kit/demo
+        run: npm run test:browser
+
+      - name: Install LwF Final dependencies
+        working-directory: papers/lwf/web/final
+        run: npm ci
+
+      - name: Build LwF Final
+        working-directory: papers/lwf/web/final
+        run: npm run build
+
+      - name: Test LwF Final
+        working-directory: papers/lwf/web/final
+        run: npm test
+
+      - name: Run LwF Final browser acceptance
+        working-directory: papers/lwf/web/final
         run: npm run test:browser
 
       - name: Install Enhanced dependencies
