@@ -13,6 +13,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from urllib.parse import urlparse
 
 try:
     import yaml
@@ -1153,6 +1154,24 @@ def porcelain_changed_paths(output: str) -> List[str]:
     return sorted(set(paths))
 
 
+def is_canonical_paperskill_remote(remote_url: str) -> bool:
+    """Return whether a Git remote URL points at ReductTech/PaperSkill on GitHub."""
+    value = remote_url.strip()
+    if "://" in value:
+        parsed = urlparse(value)
+        host = (parsed.hostname or "").lower()
+        path = parsed.path
+    else:
+        match = re.match(r"^(?:[^@/]+@)?([^:/]+):/?(.+)$", value)
+        if not match:
+            return False
+        host, path = match.group(1).lower(), match.group(2)
+    normalized_path = path.strip("/").lower()
+    if normalized_path.endswith(".git"):
+        normalized_path = normalized_path[:-4]
+    return host in ("github.com", "ssh.github.com") and normalized_path == "reducttech/paperskill"
+
+
 def resolve_upstream_source(folder: Path, config: Dict[str, Any]) -> Path:
     """Select the configured standalone source, retaining compatibility with older v3 workspaces."""
     web = config.get("web", {})
@@ -1194,7 +1213,11 @@ def run_upstream_check(
     paper = config.get("paper", {})
     report: Dict[str, Any] = {
         "upstream_commit": "",
+        "canonical_main_commit": "",
         "temporary_commit": "",
+        "upstream_remote": "",
+        "upstream_remote_url": "",
+        "sibling_baseline": {},
         "paper_name": release.get("upstream_paper_name", ""),
         "version": release.get("upstream_version", ""),
         "changed_paths": [],
@@ -1208,27 +1231,58 @@ def run_upstream_check(
     def invoke(command: List[str], cwd: Path, temp_root: Optional[Path] = None) -> Any:
         return runner(command, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
 
+    def sibling_git(arguments: List[str]) -> Any:
+        return invoke([
+            "git", "-c", "safe.directory={}".format(paperskill_repo), "-C", str(paperskill_repo),
+        ] + arguments, paperskill_repo)
+
     try:
         if not paperskill_repo.is_dir() or not (paperskill_repo / ".git").exists():
             raise PaperError("--paperskill-repo must point to a Git checkout")
-        status = invoke([
-            "git", "-c", "safe.directory={}".format(paperskill_repo), "-C", str(paperskill_repo),
-            "status", "--porcelain", "--untracked-files=all",
-        ], paperskill_repo)
+        status = sibling_git(["status", "--porcelain", "--untracked-files=all"])
         if status.returncode != 0:
             raise PaperError("cannot read the PaperSkill working-tree status: {}".format(summarize_process(status)))
         if str(getattr(status, "stdout", "") or "").strip():
             raise PaperError("PaperSkill checkout has uncommitted changes; upstream-check requires a clean upstream commit")
-        head = invoke([
-            "git", "-c", "safe.directory={}".format(paperskill_repo), "-C", str(paperskill_repo),
-            "rev-parse", "HEAD",
-        ], paperskill_repo)
+        head = sibling_git(["rev-parse", "HEAD"])
         if head.returncode != 0:
             raise PaperError("cannot read the PaperSkill commit: {}".format(summarize_process(head)))
         upstream_commit = str(getattr(head, "stdout", "") or "").strip()
         if not re.fullmatch(r"[0-9a-fA-F]{40,64}", upstream_commit):
             raise PaperError("PaperSkill did not return a valid commit SHA")
         report["upstream_commit"] = upstream_commit
+
+        remote_list = sibling_git(["remote"])
+        if remote_list.returncode != 0:
+            raise PaperError("cannot list PaperSkill remotes: {}".format(summarize_process(remote_list)))
+        canonical_remotes = []
+        for remote_name in str(getattr(remote_list, "stdout", "") or "").splitlines():
+            remote_name = remote_name.strip()
+            if not remote_name:
+                continue
+            remote_url = sibling_git(["remote", "get-url", remote_name])
+            if remote_url.returncode != 0:
+                continue
+            candidate_url = str(getattr(remote_url, "stdout", "") or "").strip()
+            if is_canonical_paperskill_remote(candidate_url):
+                canonical_remotes.append((remote_name, candidate_url))
+        if not canonical_remotes:
+            raise PaperError("PaperSkill checkout has no remote for canonical ReductTech/PaperSkill")
+        canonical_remotes.sort(key=lambda remote: (remote[0] != "upstream", remote[0] != "origin", remote[0]))
+        canonical_remote_name, canonical_remote_url = canonical_remotes[0]
+        report["upstream_remote"] = canonical_remote_name
+        report["upstream_remote_url"] = canonical_remote_url
+
+        shallow = sibling_git(["rev-parse", "--is-shallow-repository"])
+        if shallow.returncode != 0:
+            raise PaperError("cannot inspect whether PaperSkill is a shallow checkout: {}".format(summarize_process(shallow)))
+        partial_filter = sibling_git(["config", "--get", "remote.{}.partialclonefilter".format(canonical_remote_name)])
+        sparse = sibling_git(["sparse-checkout", "list"])
+        report["sibling_baseline"] = {
+            "is_shallow": str(getattr(shallow, "stdout", "") or "").strip().lower() == "true",
+            "partial_clone_filter": str(getattr(partial_filter, "stdout", "") or "").strip(),
+            "sparse_checkout": [line.strip() for line in str(getattr(sparse, "stdout", "") or "").splitlines() if line.strip()],
+        }
 
         paper_url = paper.get("url", "")
         if not isinstance(paper_url, str) or not paper_url.startswith("https://"):
@@ -1244,16 +1298,42 @@ def run_upstream_check(
             temp_root = Path(temp_dir)
             temp_repo = temp_root / "PaperSkill"
             clone = invoke([
-                "git", "-c", "safe.directory={}".format(paperskill_repo), "clone", "--shared", "--no-hardlinks",
-                str(paperskill_repo), str(temp_repo),
+                "git", "-c", "safe.directory={}".format(paperskill_repo), "clone",
+                "--filter=blob:none", "--no-checkout", "--reference-if-able", str(paperskill_repo),
+                "--depth=1", "--single-branch", "--branch", "main", canonical_remote_url, str(temp_repo),
             ], temp_root, temp_root)
             if clone.returncode != 0:
-                raise PaperError("could not create an isolated PaperSkill checkout: {}".format(summarize_process(clone, temp_root)))
+                raise PaperError("could not create a partial clone of canonical PaperSkill main: {}".format(summarize_process(clone, temp_root)))
 
             def isolated_git(arguments: List[str]) -> Any:
                 return invoke(["git", "-C", str(temp_repo)] + arguments, temp_repo, temp_root)
 
-            branch = isolated_git(["checkout", "-b", "paperskillwork-preflight"])
+            canonical_main = isolated_git(["rev-parse", "refs/remotes/origin/main"])
+            if canonical_main.returncode != 0:
+                raise PaperError("could not read canonical PaperSkill main after the lightweight clone: {}".format(summarize_process(canonical_main, temp_root)))
+            canonical_main_commit = str(getattr(canonical_main, "stdout", "") or "").strip()
+            if not re.fullmatch(r"[0-9a-fA-F]{40,64}", canonical_main_commit):
+                raise PaperError("canonical PaperSkill main did not return a valid commit SHA")
+            report["canonical_main_commit"] = canonical_main_commit
+            if canonical_main_commit != upstream_commit:
+                raise PaperError(
+                    "PaperSkill sibling HEAD does not match canonical {}/main; refresh the sibling with "
+                    "`git fetch {} main --depth=1 --filter=tree:0` and confirm its HEAD before retrying".format(
+                        canonical_remote_name, canonical_remote_name,
+                    )
+                )
+
+            sparse_init = isolated_git(["sparse-checkout", "init", "--cone"])
+            if sparse_init.returncode != 0:
+                raise PaperError("could not initialize sparse checkout for the isolated PaperSkill clone: {}".format(summarize_process(sparse_init, temp_root)))
+            sparse_set = isolated_git([
+                "sparse-checkout", "set", "--skip-checks", "paper-skill", "scripts", ".github", "docs",
+                "html_output/{}".format(release["upstream_paper_name"]),
+            ])
+            if sparse_set.returncode != 0:
+                raise PaperError("could not set sparse paths for the isolated PaperSkill clone: {}".format(summarize_process(sparse_set, temp_root)))
+
+            branch = isolated_git(["checkout", "-b", "paperskillwork-preflight", upstream_commit])
             if branch.returncode != 0:
                 raise PaperError("could not create a temporary upstream test branch: {}".format(summarize_process(branch, temp_root)))
             for key, value in (("user.name", "PaperSkillWork Preflight"), ("user.email", "paperskillwork-preflight@example.invalid")):

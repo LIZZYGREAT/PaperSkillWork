@@ -7,15 +7,43 @@ import pytest
 from workflow_helpers import load_config, make_project, write_export, write_upstream_report
 
 
+CANONICAL_PAPERSKILL_URL = "https://github.com/ReductTech/PaperSkill.git"
+
+
 def make_clean_upstream_repo(path):
     path.mkdir()
-    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    subprocess.run(["git", "init", "-q", "-b", "main", str(path)], check=True)
     subprocess.run(["git", "-C", str(path), "config", "user.name", "Test User"], check=True)
     subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.org"], check=True)
     (path / "package.json").write_text(json.dumps({"scripts": {"import": "node noop.js", "validate": "node noop.js", "build:paper": "node noop.js", "preflight": "node noop.js"}}), encoding="utf-8")
     (path / "noop.js").write_text("process.exit(0);\n", encoding="utf-8")
     subprocess.run(["git", "-C", str(path), "add", "package.json", "noop.js"], check=True)
     subprocess.run(["git", "-C", str(path), "commit", "-q", "-m", "test upstream"], check=True)
+    subprocess.run(["git", "-C", str(path), "remote", "add", "upstream", CANONICAL_PAPERSKILL_URL], check=True)
+    subprocess.run(["git", "-C", str(path), "remote", "add", "origin", "https://github.com/LIZZYGREAT/PaperSkill.git"], check=True)
+    return path
+
+
+def run_git_with_local_canonical_remote(command, kwargs, canonical_source):
+    local_command = list(command)
+    if local_command[0] == "git" and "clone" in local_command:
+        local_command[local_command.index(CANONICAL_PAPERSKILL_URL)] = str(canonical_source)
+    return subprocess.run(local_command, **kwargs)
+
+
+def make_shallow_sparse_sibling(path, canonical_source):
+    remote_url = canonical_source.resolve().as_uri()
+    subprocess.run([
+        "git", "clone", "--filter=blob:none", "--depth=1", "--sparse", remote_url, str(path),
+    ], check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(path), "remote", "rename", "origin", "upstream"], check=True)
+    subprocess.run(["git", "-C", str(path), "remote", "set-url", "upstream", CANONICAL_PAPERSKILL_URL], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.name", "Test User"], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.org"], check=True)
+    subprocess.run([
+        "git", "-C", str(path), "sparse-checkout", "set", "--cone", "--skip-checks",
+        "paper-skill", "scripts", ".github", "docs",
+    ], check=True)
     return path
 
 
@@ -31,6 +59,18 @@ def make_imported_export(cwd, name="sample_paper_name", version="ada0926"):
         target.write_text("## Asset provenance\n" if relative == "README.md" else "{}\n", encoding="utf-8")
     (output / "paper.json").write_text(json.dumps({"paperName": name, "version": version}), encoding="utf-8")
     (output / "package.json").write_text("{}\n", encoding="utf-8")
+
+
+@pytest.mark.parametrize("remote_url", [
+    "https://github.com/ReductTech/PaperSkill.git",
+    "git@github.com:ReductTech/PaperSkill.git",
+    "ssh://git@ssh.github.com:443/ReductTech/PaperSkill.git",
+])
+def test_canonical_paperskill_remote_supports_https_and_ssh_urls(tmp_path, remote_url):
+    _root, _paper, _config_path, module = make_project(tmp_path)
+
+    assert module.is_canonical_paperskill_remote(remote_url)
+    assert not module.is_canonical_paperskill_remote("https://github.com/LIZZYGREAT/PaperSkill.git")
 
 
 def test_upstream_source_prefers_configured_final_directory(tmp_path):
@@ -85,7 +125,8 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     }
     config["paper"]["url"] = "https://example.org/paper"
     config_path.write_text(module.yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
-    upstream = make_clean_upstream_repo(tmp_path / "PaperSkill")
+    canonical = make_clean_upstream_repo(tmp_path / "canonical")
+    upstream = make_shallow_sparse_sibling(tmp_path / "PaperSkill", canonical)
     called = []
     npm_order = []
     preflight_heads = []
@@ -93,7 +134,7 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     def runner(command, **kwargs):
         called.append((command, Path(kwargs["cwd"])))
         if command[0] == "git":
-            result = subprocess.run(command, **kwargs)
+            result = run_git_with_local_canonical_remote(command, kwargs, canonical)
             if "commit" in command:
                 npm_order.append("git commit")
             return result
@@ -116,6 +157,19 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert len(report["upstream_commit"]) == 40
     assert len(report["temporary_commit"]) == 40
     assert report["temporary_commit"] != report["upstream_commit"]
+    assert report["upstream_remote"] == "upstream"
+    assert report["upstream_remote_url"] == CANONICAL_PAPERSKILL_URL
+    assert report["sibling_baseline"]["is_shallow"] is True
+    assert report["sibling_baseline"]["partial_clone_filter"] == "blob:none"
+    assert "scripts" in report["sibling_baseline"]["sparse_checkout"]
+    clone_call = next(command for command, _cwd in called if command[0] == "git" and "clone" in command)
+    assert "--filter=blob:none" in clone_call
+    assert "--no-checkout" in clone_call
+    assert "--shared" not in clone_call
+    assert "--reference-if-able" in clone_call
+    sparse_paths_call = next(command for command, _cwd in called if "sparse-checkout" in command and "set" in command)
+    assert "--skip-checks" in sparse_paths_call
+    assert "html_output/sample_paper_name" in sparse_paths_call
     assert report["changed_paths"]
     assert all(path.startswith("html_output/sample_paper_name/ada0926/") for path in report["changed_paths"])
     assert report["unexpected_paths"] == []
@@ -147,7 +201,7 @@ def test_upstream_check_rejects_import_changes_outside_tutorial_scope(tmp_path):
 
     def runner(command, **kwargs):
         if command[0] == "git":
-            return subprocess.run(command, **kwargs)
+            return run_git_with_local_canonical_remote(command, kwargs, upstream)
         npm_commands.append(command[2])
         if command[2] == "import":
             cwd = Path(kwargs["cwd"])
@@ -166,6 +220,42 @@ def test_upstream_check_rejects_import_changes_outside_tutorial_scope(tmp_path):
     assert report["temporary_commit"] == ""
     assert not (root / config["release"]["output"]).exists()
     status = subprocess.run(["git", "-C", str(upstream), "status", "--porcelain"], capture_output=True, text=True, check=True)
+    assert status.stdout == ""
+
+
+def test_upstream_check_rejects_sibling_behind_canonical_main(tmp_path):
+    _root, paper, config_path, module = make_project(tmp_path)
+    config = load_config(config_path)
+    config["release"] = {
+        "upstream_paper_name": "sample_paper_name",
+        "upstream_version": "ada0926",
+        "output": "html_output/sample_paper_name/ada0926",
+    }
+    config["paper"]["url"] = "https://example.org/paper"
+    config_path.write_text(module.yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+    canonical = make_clean_upstream_repo(tmp_path / "canonical")
+    sibling = tmp_path / "PaperSkill"
+    subprocess.run(["git", "clone", "-q", str(canonical), str(sibling)], check=True)
+    subprocess.run(["git", "-C", str(sibling), "remote", "set-url", "origin", CANONICAL_PAPERSKILL_URL], check=True)
+    (canonical / "main-only.txt").write_text("new canonical commit\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(canonical), "add", "main-only.txt"], check=True)
+    subprocess.run(["git", "-C", str(canonical), "commit", "-q", "-m", "advance canonical main"], check=True)
+    npm_commands = []
+
+    def runner(command, **kwargs):
+        if command[0] == "git":
+            return run_git_with_local_canonical_remote(command, kwargs, canonical)
+        npm_commands.append(command[2])
+        return subprocess.CompletedProcess(command, 0, stdout="passed\n", stderr="")
+
+    result = module.run_upstream_check(paper, config, sibling, "Ada Author", process_runner=runner)
+    report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
+    assert result == 1
+    assert npm_commands == []
+    assert report["upstream_commit"] != report["canonical_main_commit"]
+    assert "git fetch origin main --depth=1 --filter=tree:0" in report["error"]
+    status = subprocess.run(["git", "-C", str(sibling), "status", "--porcelain"], capture_output=True, text=True, check=True)
     assert status.stdout == ""
 
 
@@ -206,7 +296,7 @@ def test_upstream_check_command_failure_is_reported_and_does_not_copy_export(tmp
 
     def runner(command, **kwargs):
         if command[0] == "git":
-            return subprocess.run(command, **kwargs)
+            return run_git_with_local_canonical_remote(command, kwargs, upstream)
         if command[2] == "import":
             make_imported_export(Path(kwargs["cwd"]))
         exit_code = 1 if command[2] == "preflight" else 0
