@@ -75,6 +75,12 @@ The old response and current outputs are distributions over task labels. The pap
 
 The paper's sequence and training procedure are described in Figure 3 and the method, PDF pp. 4–5; sequential experiments appear in Figure 4, p. 8 (`A04`, `A05`, `C09`).
 
+## Human Review
+
+- Decision: PASS for W2.
+- Reviewer: the user, who explicitly confirmed in this conversation on 2026-09-28 that W2 was reviewed and approved.
+- Review findings: no item-level correction was supplied.
+
 ## Training
 
 For each current batch, compute old-model responses on `X_n`, then compute `Ŷ_o` and `Ŷ_n` from the expanded model. `L_old` matches the old model's response distribution; `L_new` compares the new-task prediction with `Y_n`; `R` is weight decay. The losses backpropagate through the paths permitted by the current training phase. Warm-up updates only `θ_n`; joint optimization updates the parameter groups together. Backpropagation computes gradients, while the optimizer step applies parameter updates. (`A05`, `F01`–`F06`, `I03`; PDF pp. 4–5.)

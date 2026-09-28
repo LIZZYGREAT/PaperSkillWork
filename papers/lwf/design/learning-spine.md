@@ -41,14 +41,14 @@ items:
   - {id: L18, title: "Keep the tracking appendix result and its significance caveat together", priority: CORE, stage: S06, placement: mainline, evidence_refs: [E06]}
   - {id: L19, title: "Keep the evidence scope and proposed future directions distinct", priority: CORE, stage: S06, placement: mainline, evidence_refs: [C09, C10]}
   - {id: L20, title: "Reconstruct the whole sequence from constraint through limits", priority: CORE, stage: S07, placement: mainline, evidence_refs: [C02, A05, F04, C07]}
-  - {id: S01, title: "Classification loss and probability prerequisites", priority: SUPPORTING, stage: S00, placement: compact-inline, evidence_refs: [B01]}
-  - {id: S02, title: "Autograd parameter-group terminology", priority: SUPPORTING, stage: S03, placement: expandable, evidence_refs: [I01, I02, I03]}
-  - {id: S03, title: "Task-pair and dataset protocol details beyond the selected result", priority: SUPPORTING, stage: S06, placement: compact-inline, evidence_refs: [E05]}
-  - {id: S04, title: "Task-specific layers and network expansion alternatives", priority: SUPPORTING, stage: S06, placement: expandable, evidence_refs: [A08]}
-  - {id: R01, title: "Full equations and per-class temperature derivation", priority: REFERENCE, stage: null, placement: Evidence details, evidence_refs: [F01, F02, F03, F04]}
-  - {id: R02, title: "All paper result protocols and source table locators", priority: REFERENCE, stage: null, placement: Evidence details, evidence_refs: [E01, E02, E03, E04, E05, E06]}
-  - {id: R03, title: "General continual-learning alternatives not evaluated as LwF components", priority: REFERENCE, stage: null, placement: Advanced details, evidence_refs: [C09, C10]}
-  - {id: R04, title: "Parameter-group to framework-object interpretation", priority: REFERENCE, stage: null, placement: Implementation notes, evidence_refs: [I01, I02, I03]}
+  - {id: SUP01, title: "Classification loss and probability prerequisites", priority: SUPPORTING, stage: S00, placement: compact-inline, evidence_refs: [B01]}
+  - {id: SUP02, title: "Autograd parameter-group terminology", priority: SUPPORTING, stage: S03, placement: expandable, evidence_refs: [I01, I02, I03]}
+  - {id: SUP03, title: "Task-pair and dataset protocol details beyond the selected result", priority: SUPPORTING, stage: S06, placement: compact-inline, evidence_refs: [E05]}
+  - {id: SUP04, title: "Task-specific layers and network expansion alternatives", priority: SUPPORTING, stage: S06, placement: expandable, evidence_refs: [A08]}
+  - {id: REF01, title: "Full equations and per-class temperature derivation", priority: REFERENCE, stage: null, placement: Evidence details, evidence_refs: [F01, F02, F03, F04]}
+  - {id: REF02, title: "All paper result protocols and source table locators", priority: REFERENCE, stage: null, placement: Evidence details, evidence_refs: [E01, E02, E03, E04, E05, E06]}
+  - {id: REF03, title: "General continual-learning alternatives not evaluated as LwF components", priority: REFERENCE, stage: null, placement: Advanced details, evidence_refs: [C09, C10]}
+  - {id: REF04, title: "Parameter-group to framework-object interpretation", priority: REFERENCE, stage: null, placement: Implementation notes, evidence_refs: [I01, I02, I03]}
   - {id: D01, title: "Claims that LwF guarantees no forgetting on every old input", priority: DELETE, stage: null, placement: none, evidence_refs: []}
   - {id: D02, title: "Claims that teacher outputs are cached old images or labels", priority: DELETE, stage: null, placement: none, evidence_refs: []}
   - {id: D03, title: "Claims that the paper validates LLMs or arbitrary online learning", priority: DELETE, stage: null, placement: none, evidence_refs: []}
@@ -60,6 +60,6 @@ The sequence starts from the missing-data constraint, because that determines wh
 
 ## Human Review
 
-- Reviewer: pending
-- Decision: pending
-- Required before W4 completion: a human confirms the causal order, CORE/SUPPORTING/REFERENCE boundaries, and removed overclaims.
+- Reviewer: the user, who explicitly confirmed in this conversation on 2026-09-28 that W4 was reviewed and approved.
+- Decision: PASS.
+- Review findings: no item-level correction was supplied.

@@ -14,7 +14,7 @@ paper:
   source_hash: f62623b398b2dfa417686e2fe7ec981fcb39ef1ce94837656fc64726c8085a66
 workflow:
   version: 3
-  current_stage: W2
+  current_stage: W10
   stages:
     W0_source_intake:
       status: complete
@@ -23,21 +23,33 @@ workflow:
       status: complete
       completed_by: automation
     W2_paper_model:
-      status: pending
+      status: complete
+      reviewed_by: 本次对话中的用户
+      note: 用户于 2026-09-28 明确确认已审查并批准 W2 论文理解模型。
     W3_evidence_assets:
-      status: pending
+      status: complete
+      completed_by: automation
     W4_learning_spine:
-      status: pending
+      status: complete
+      reviewed_by: 本次对话中的用户
+      note: 用户于 2026-09-28 明确确认已审查并批准 W4 学习主线与信息优先级。
     W5_interaction_plan:
-      status: pending
+      status: complete
+      completed_by: automation
     W6_vertical_slice:
-      status: pending
+      status: complete
+      completed_by: automation
     W7_human_review:
-      status: pending
+      status: complete
+      reviewed_by: 本次对话中的用户
+      note: 用户于 2026-09-28 明确确认已审查并批准 W7 纵向切片学习评审。
     W8_full_implementation:
-      status: pending
+      status: complete
+      completed_by: automation
     W9_final_audit:
-      status: pending
+      status: complete
+      reviewed_by: 本次对话中的用户
+      note: 用户于 2026-09-28 明确确认已审查并批准 W9 学习与证据审计。
     W10_upstream_preflight:
       status: pending
 artifacts:

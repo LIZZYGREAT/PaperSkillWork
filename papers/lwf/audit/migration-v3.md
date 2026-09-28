@@ -26,11 +26,11 @@ The earlier G0–G7 records were pending. They do not establish completion of an
 
 ## Review state
 
-- W0/W1 may be completed only by their source/cache checks.
-- W2 (paper model), W4 (learning spine), W7 (vertical-slice learning review), and W9 (final human learning/evidence audit) require a human reviewer. They remain pending until an actual reviewer records a decision.
-- W3/W5/W6/W8/W10 are not claimed complete by this migration. W10 also requires W9 and a real PaperSkill checkout for its preflight.
-- No author, participant, pinyin release identifier, review decision, PR, or publication has been inferred or fabricated.
+- W0/W1 were completed by their source/cache checks; W3/W5/W6/W8 were completed by their workflow checks.
+- W2 (paper model), W4 (learning spine), W7 (vertical-slice learning review), and W9 (final human learning/evidence audit) were explicitly reviewed and approved by the user on 2026-09-28. The confirmation is recorded in `paper.yaml` as `本次对话中的用户`; no item-level review comments were supplied.
+- W10 remains pending. It requires public release identifiers, a clean PaperSkill checkout, and a successful machine preflight report.
+- No participant identity, pinyin release identifier, PR, or publication has been inferred or fabricated.
 
 ## Result
 
-The v3 artifacts are a reviewable release candidate for the 00–07 tutorial. This migration preserves history and does not imply learning acceptance, an upstream preflight, or release readiness.
+The v3 artifacts are the reviewed 00–07 tutorial source. W0–W9 are completed: W0/W1/W3/W5/W6/W8 by workflow checks, and W2/W4/W7/W9 by the user's explicit approval recorded in `paper.yaml`. W10 remains pending because the public release identifiers and clean PaperSkill checkout are not yet supplied and no upstream preflight report exists. This does not imply upstream release readiness.

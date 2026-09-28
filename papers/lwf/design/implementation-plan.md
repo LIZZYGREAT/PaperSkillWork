@@ -25,15 +25,15 @@ implementation:
     - {id: S07, page: "07-grand-trail", core_items: [L20], evidence_refs: [C02, A05, F04, C07], primary_vehicle: "Nine-checkpoint integrated replay", reusable_pattern: FlowStepper, reason: "Let the learner reconstruct the complete state and information path in order."}
   assets: []
   supporting:
-    - {item: S01, placement: compact-inline}
-    - {item: S02, placement: expandable}
-    - {item: S03, placement: compact-inline}
-    - {item: S04, placement: expandable}
+    - {item: SUP01, placement: compact-inline}
+    - {item: SUP02, placement: expandable}
+    - {item: SUP03, placement: compact-inline}
+    - {item: SUP04, placement: expandable}
   reference:
-    - {item: R01, placement: Evidence details}
-    - {item: R02, placement: Evidence details}
-    - {item: R03, placement: Advanced details}
-    - {item: R04, placement: Implementation notes}
+    - {item: REF01, placement: Evidence details}
+    - {item: REF02, placement: Evidence details}
+    - {item: REF03, placement: Advanced details}
+    - {item: REF04, placement: Implementation notes}
   vertical_slice:
     stages: [S00, S01, S02, S03]
     required_core_items: [L01, L02, L03, L04, L05, L06, L07, L08, L09]
@@ -49,11 +49,11 @@ The first slice is the path through chapters 00–03: establish the no-old-data 
 
 ### Vertical Slice Review (W7)
 
-Vertical Slice Review: PENDING
+Vertical Slice Review: PASS
 
-- Reviewer: pending
-- Decision: pending
-- Learning reconstruction, information placement, and required revisions: pending human review.
+- Reviewer: the user, who explicitly confirmed in this conversation on 2026-09-28 that W7 was reviewed and approved.
+- Decision: PASS.
+- Review findings: no item-level correction was supplied.
 
 ## Full Implementation (W8)
 
@@ -61,4 +61,4 @@ The 00–07 tutorial source is present in `web/final/`; the chapter/data mapping
 
 ## Human Acceptance Record
 
-No W7 decision or learner finding has been entered. W4, W7, and W9 remain human-review stages; this plan records implementation structure but does not pass them.
+The user explicitly confirmed on 2026-09-28 that W7 was reviewed and approved. The W7 PASS is recorded above; no item-level correction or learner finding was supplied. W4 and W9 decisions are recorded in `design/learning-spine.md` and `audit/final-check.md` respectively.
