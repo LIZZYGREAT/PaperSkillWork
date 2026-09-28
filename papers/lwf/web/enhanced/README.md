@@ -1,4 +1,4 @@
-# LwF 交互式精读 · Workflow v2
+# LwF 交互式精读 · Enhanced 工作副本
 
 当前增强版保留旧版 A–J 场景供回看，并提供完整的 v3 `00–07` 八章主线。`?version=v3` 打开新主线；`src/data/tutorial.ts` 从同一章节清单生成上游 `kind: "chapter"` 数据，并为实际交互登记 `kind: "module"` 组件。Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注；实现和构建不代表学习门禁通过。
 
@@ -33,7 +33,7 @@ npm run dev
 - **09 · 论文证据与结论审计：** 以 claim selector 连接实验设置、Table 1/2、Figure 4/7 与结论边界；程序化重构 ImageNet→CUB 表中的绝对值，逐个检查方法信息条件，并将作者解释、机制说明与论文实测结果分层。
 - **10 · 端到端 LwF 工作流：** 将 A–I 汇为 8 步实现路线，提供可切换的 Paper / Runtime / Code 视图、参数组与 shape 示例、手动运行前核对表、实现排错路径，以及下一任务 Teacher 快照循环。页面伪代码是实现导向的说明，不是论文原始代码；shape 与元素数是明确标注的 AlexNet 示例，不代表当前工作区 checkpoint。
 - PaperSkill 左侧章节栏与上一页 / 下一页控件保持可用；正文维持单栏阅读宽度，右下角悬浮工作区入口可展开共享工作区与对象检查器，状态随章节更新。A、B、C、J 的相关正文还提供就近入口，可直接打开并定位对象。
-- 场景切换和构建不代表学习验收通过，学习问题与 `G0–G7` 仍待人工核阅。
+- 场景切换和构建不代表学习验收通过；学习效果仍需在 W7 与 W9 由人工确认。
 
 ## 证据与术语
 
@@ -72,7 +72,6 @@ npm run dev
 | `src/modules/v3-widgets.tsx` | Chapter 04–07 上游交互组件注册 |
 | `src/data/knowledge.ts` | 全站 canonical knowledge cards |
 | `src/styles/layout.css` | 分页布局、场景容器、可读字级与窄屏样式 |
-| `legacy/App.v1.tsx` | 上一版入口快照，留作迁移核对 |
 
 页面是 PaperSkillWork 中的 Enhanced 工作副本；Canonical 论文源和工作流门禁仍分别管理。
 

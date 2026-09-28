@@ -1,6 +1,6 @@
 # Final Learning, Evidence, and Release Check: Learning without Forgetting
 
-Scope: standalone source `web/final/`, chapters 00–07. This v3 audit replaces the active v2 checklist; the original v2 bytes are preserved at `migration/legacy-final-check-v2.md`.
+Scope: standalone source `web/final/`, chapters 00–07.
 
 ## W7 Vertical Slice Human Review
 
@@ -40,15 +40,15 @@ See `design/implementation-plan.md`. The user explicitly confirmed in this conve
 
 - 2026-09-28: `npm ci --cache .npm-cache` in `web/final/` — PASS.
 - 2026-09-28: `npm run build` in `web/final/` — PASS (TypeScript and Vite production build).
-- 2026-09-28: `npm test` in `web/final/` — PASS (5 tests).
+- 2026-09-28: `npm test` in `web/final/` — PASS (6 tests).
 - 2026-09-28: `npm run test:browser` in `web/final/` — PASS (11 browser checks, including chapter navigation, interactive controls, mobile width, and reduced motion).
 - 2026-09-28: `python tools/paper.py check lwf` — PASS after v3 migration; W0/W1 are machine-complete, and W2/W4 review is recorded from the user's explicit confirmation.
-- 2026-09-28: `python -m pytest -q` — PASS (77 tests before the pytest suite review; temporary/cache directories redirected inside the workspace). One redundant positive test was then removed. The suite was not rerun after that removal at the user's direction.
+- 2026-09-28: `python -m pytest -q -o "cache_dir=.pytest_cache" --basetemp=.pytest_cache/tmp` — PASS (80 tests; temporary/cache directories were redirected inside the workspace for this run).
 - 2026-09-28: W6/W8 Final-source coverage checks — PASS; all 20 CORE items, 4 SUPPORTING items, and 4 REFERENCE items are mapped in `web/final/implementation-manifest.json`.
 
 ## Pytest Suite Review
 
-On 2026-09-28, removed `test_implementation_plan_accepts_registered_reusable_pattern`: the preceding valid-plan test runs the same fixture through the full implementation-plan validator and already asserts that it returns no problems. The negative test for an unregistered reusable pattern remains. Legacy v1/v2 tests remain because the CLI and schema validator still support those formats and existing workspaces are explicitly preserved. No pytest run was performed after deleting the redundant case, per the user's instruction.
+On 2026-09-28, removed `test_implementation_plan_accepts_registered_reusable_pattern`: the preceding valid-plan test runs the same fixture through the full implementation-plan validator and already asserts that it returns no problems. The negative test for an unregistered reusable pattern remains. Historical schema 1/2 fixtures now verify that the v3-only CLI rejects unsupported workspaces; they do not exercise compatibility support. The final v3-only suite passed all 80 tests.
 
 ## Human Review Record
 
