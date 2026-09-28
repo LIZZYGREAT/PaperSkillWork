@@ -601,12 +601,6 @@ paper/<paper-name>
 
 这是轻量工作流的关键步骤。
 
-不要执行：
-
-```powershell
-git sparse-checkout add html_output
-```
-
 只执行：
 
 ```powershell
@@ -937,7 +931,9 @@ git status --short
 也可以对工作区文件做检查：
 
 ```powershell
-$CHANGED = git status --porcelain |
+$PREFIX = "html_output/$PAPER_NAME/$VERSION/"
+
+$CHANGED = git status --porcelain --untracked-files=all |
     ForEach-Object { $_.Substring(3).Replace('\','/') }
 
 $BAD = $CHANGED |
