@@ -59,3 +59,5 @@ $final-audit              # W9–W10
 ## 上游边界
 
 `PaperSkillWork` 保存研究与实现工作区；`PaperSkill` 是单独的仓库。完整、独立的 React + TypeScript 项目导出到 `html_output/<paper-name>/<version>/`。教程 PR 只包含该导出目录；工作流或 skill 改进应另行提交。CI 通过不代表一定会合并。不要把 PaperSkillWork 的 Git 历史合并或 cherry-pick 到 PaperSkill。
+
+准备 PaperSkill 检出、填写正式发布标识、运行官方导入与 W10 预检的完整步骤见[上游发布指南](docs/UPSTREAM_RELEASE.md)。
