@@ -48,17 +48,6 @@ UPSTREAM_PAPER_NAME_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 UPSTREAM_VERSION_RE = re.compile(r"^[a-z][a-z0-9]*[0-9]{4}(?:_[0-9]+)?$")
 PLACEHOLDER_RE = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
 ALLOWED_PLACEHOLDERS = {"paper_id", "paper_title", "paper_url", "arxiv_id"}
-STATUSES = {"pending", "in_progress", "complete", "skipped", "legacy"}
-GATES: List[Tuple[str, str, str]] = [
-    ("G0", "G0_workspace", "Workspace + Learning Contract"),
-    ("G1", "G1_research", "Paper Model"),
-    ("G2", "G2_evidence_audit", "Evidence Registry"),
-    ("G3", "G3_canonical", "Canonical Compatibility Baseline"),
-    ("G4", "G4_narrative_design", "Learning Architecture"),
-    ("G5", "G5_interaction_design", "Scene Specifications"),
-    ("G6", "G6_enhanced", "Incremental Enhanced"),
-    ("G7", "G7_release", "Learning + Evidence + Engineering Audit"),
-]
 STAGES: List[Tuple[str, str, str]] = [
     ("W0", "W0_source_intake", "Source Intake"),
     ("W1", "W1_source_cache", "Source Cache + Asset Inventory"),
@@ -75,41 +64,6 @@ STAGES: List[Tuple[str, str, str]] = [
 STAGE_IDS = [stage[0] for stage in STAGES]
 STAGE_BY_ID = {stage[0]: stage for stage in STAGES}
 HUMAN_REVIEW_STAGES = {"W2", "W4", "W7", "W9"}
-LEGACY_GATE_LABELS = [
-    "Workspace", "Research", "Evidence Audit", "Canonical", "Narrative Design",
-    "Interaction Design", "Enhanced", "Final Audit & Release",
-]
-GATE_IDS = [gate[0] for gate in GATES]
-GATE_BY_ID = {gate[0]: gate for gate in GATES}
-LEGACY_GATE_ARTIFACTS = {
-    "G0": ("file", "paper.yaml"),
-    "G1": ("file", "research/01_review.md"),
-    "G2": ("file", "research/02_evidence_audit.md"),
-    "G3": ("dir", "web/canonical"),
-    "G4": ("file", "design/storyboard.md"),
-    "G5": ("file", "design/interaction-plan.md"),
-    "G6": ("file", "web/enhanced/package.json"),
-    "G7": ("file", "audit/content-check.md"),
-}
-TEMPLATE_OUTPUTS = {
-    "paper.yaml": "paper.yaml",
-    "learning-contract.md": "design/learning-contract.md",
-    "paper-model.md": "research/01_paper_model.md",
-    "evidence-registry.yaml": "research/02_evidence_registry.yaml",
-    "terms.yaml": "knowledge/terms.yaml",
-    "learning-architecture.md": "design/learning-architecture.md",
-    "final-check.md": "audit/final-check.md",
-    "release-check.md": "audit/release-check.md",
-}
-LEGACY_V2_TEMPLATE_PATHS = {
-    "learning-contract.md": "legacy/v2/learning-contract.md",
-    "paper-model.md": "legacy/v2/paper-model.md",
-    "evidence-registry.yaml": "legacy/v2/evidence-registry.yaml",
-    "terms.yaml": "legacy/v2/terms.yaml",
-    "learning-architecture.md": "legacy/v2/learning-architecture.md",
-    "final-check.md": "legacy/v2/final-check.md",
-    "release-check.md": "legacy/v2/release-check.md",
-}
 V3_TEMPLATE_OUTPUTS = {
     "paper.yaml": "paper.yaml",
     "source-content.md": "source-cache/content.md",
@@ -122,26 +76,6 @@ V3_TEMPLATE_OUTPUTS = {
     "implementation-plan.md": "design/implementation-plan.md",
     "implementation-manifest.json": "web/enhanced/implementation-manifest.json",
     "final-check.md": "audit/final-check.md",
-}
-V2_GATE_ARTIFACTS = {
-    "G0": ("file", "design/learning-contract.md"),
-    "G1": ("file", "research/01_paper_model.md"),
-    "G2": ("file", "research/02_evidence_registry.yaml"),
-    "G3": ("dir", "web/canonical"),
-    "G4": ("file", "design/learning-architecture.md"),
-    "G5": ("dir", "design/scenes"),
-    "G6": ("file", "web/enhanced/package.json"),
-    "G7": ("file", "audit/final-check.md"),
-}
-V2_ARTIFACTS = {
-    "learning_contract": "design/learning-contract.md",
-    "paper_model": "research/01_paper_model.md",
-    "evidence_registry": "research/02_evidence_registry.yaml",
-    "learning_architecture": "design/learning-architecture.md",
-    "scenes_dir": "design/scenes",
-    "terms": "knowledge/terms.yaml",
-    "final_check": "audit/final-check.md",
-    "release_check": "audit/release-check.md",
 }
 V3_ARTIFACTS = {
     "source_cache": "source-cache",
@@ -217,8 +151,12 @@ def load_yaml(path: Path) -> Dict[str, Any]:
 def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
     errors: List[str] = []
     schema_version = config.get("schema_version")
-    if isinstance(schema_version, bool) or schema_version not in (1, 2, 3):
-        errors.append("schema_version must be 1, 2, or 3")
+    if type(schema_version) is not int or schema_version != 3:
+        return [
+            "Unsupported schema_version {!r}. Current PaperSkillWork tooling supports schema_version 3 only. "
+            "Historical workspaces must be inspected through Git history or migrated manually.".format(schema_version)
+        ]
+
     configured_id = config.get("id")
     if not isinstance(configured_id, str) or not PAPER_ID_RE.fullmatch(configured_id):
         errors.append("id is invalid")
@@ -230,71 +168,33 @@ def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
     paper = config.get("paper")
     if not isinstance(paper, dict) or not isinstance(paper.get("url"), str):
         errors.append("paper.url must be a string")
-    elif schema_version != 3 and not paper["url"].strip():
-        errors.append("paper.url must be non-empty")
     if isinstance(paper, dict) and "local_pdf" in paper and paper["local_pdf"] is not None:
         problem = path_problem(paper["local_pdf"])
         if problem:
             errors.append("paper.local_pdf {}".format(problem))
 
     workflow = config.get("workflow")
-    if schema_version in (1, 2):
-        if not isinstance(workflow, dict) or workflow.get("current_gate") not in GATE_IDS:
-            errors.append("workflow.current_gate must be one of G0 through G7")
-    elif not isinstance(workflow, dict) or workflow.get("current_stage") not in STAGE_IDS:
-        errors.append("workflow.current_stage must be one of W0 through W10")
-    if schema_version == 2 and isinstance(workflow, dict) and workflow.get("version") != 2:
-        errors.append("workflow.version must be 2 for schema_version 2")
-    if schema_version == 3 and isinstance(workflow, dict) and workflow.get("version") != 3:
-        errors.append("workflow.version must be 3 for schema_version 3")
-
-    if schema_version in (1, 2):
-        gates = workflow.get("gates") if isinstance(workflow, dict) else None
-        expected_keys = {item[1] for item in GATES}
-        if not isinstance(gates, dict):
-            errors.append("workflow.gates must be a mapping")
-        else:
-            missing = sorted(expected_keys - set(gates))
-            extra = sorted(set(gates) - expected_keys)
-            if missing:
-                errors.append("workflow.gates is missing: {}".format(", ".join(missing)))
-            if extra:
-                errors.append("workflow.gates has unknown keys: {}".format(", ".join(extra)))
-            for gate_id, gate_key, _label in GATES:
-                entry = gates.get(gate_key)
-                if not isinstance(entry, dict):
-                    if gate_key not in missing:
-                        errors.append("workflow.gates.{} must be a mapping".format(gate_key))
-                    continue
-                status = entry.get("status")
-                if not isinstance(status, str) or status not in STATUSES:
-                    errors.append("workflow.gates.{}.status must be one of: {}".format(gate_key, ", ".join(sorted(STATUSES))))
-                if status == "skipped" and not (isinstance(entry.get("reason"), str) and entry["reason"].strip()):
-                    errors.append("workflow.gates.{} skipped status requires a reason".format(gate_key))
-                if status != "skipped" and "reason" in entry:
-                    errors.append("workflow.gates.{}.reason is only valid when status is skipped".format(gate_key))
-            if schema_version == 2 and any(
-                isinstance(gates.get(key), dict) and gates[key].get("status") == "legacy"
-                for _gate_id, key, _label in GATES
-            ):
-                errors.append("Workflow v2 gates cannot use legacy status")
-            elif schema_version == 1 and configured_id != "phyagentos" and any(
-                isinstance(gates.get(key), dict) and gates[key].get("status") == "legacy"
-                for _gate_id, key, _label in GATES
-            ):
-                errors.append("legacy gate status is reserved for the PhyAgentOS Workflow v1 migration")
-    elif schema_version == 3 and isinstance(workflow, dict):
+    if not isinstance(workflow, dict):
+        errors.append("workflow must be a mapping")
+    else:
+        extra_workflow_keys = sorted(set(workflow) - {"version", "current_stage", "stages"}, key=str)
+        if extra_workflow_keys:
+            errors.append("workflow has unknown keys: {}".format(", ".join(map(str, extra_workflow_keys))))
+        if type(workflow.get("version")) is not int or workflow.get("version") != 3:
+            errors.append("workflow.version must be 3")
+        if workflow.get("current_stage") not in STAGE_IDS:
+            errors.append("workflow.current_stage must be one of W0 through W10")
         stages = workflow.get("stages")
         expected_keys = {item[1] for item in STAGES}
         if not isinstance(stages, dict):
             errors.append("workflow.stages must be a mapping")
         else:
             missing = sorted(expected_keys - set(stages))
-            extra = sorted(set(stages) - expected_keys)
+            extra = sorted(set(stages) - expected_keys, key=str)
             if missing:
                 errors.append("workflow.stages is missing: {}".format(", ".join(missing)))
             if extra:
-                errors.append("workflow.stages has unknown keys: {}".format(", ".join(extra)))
+                errors.append("workflow.stages has unknown keys: {}".format(", ".join(map(str, extra))))
             for stage_id, stage_key, _label in STAGES:
                 entry = stages.get(stage_key)
                 if not isinstance(entry, dict):
@@ -304,6 +204,12 @@ def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
                 status = entry.get("status")
                 if status not in ("pending", "in_progress", "complete"):
                     errors.append("workflow.stages.{}.status must be pending, in_progress, or complete".format(stage_key))
+                allowed_entry_keys = {"status"}
+                if status == "complete":
+                    allowed_entry_keys.update({"reviewed_by", "note"} if stage_id in HUMAN_REVIEW_STAGES else {"completed_by"})
+                extra_entry_keys = sorted(set(entry) - allowed_entry_keys, key=str)
+                if extra_entry_keys:
+                    errors.append("workflow.stages.{} has unknown or invalid fields: {}".format(stage_key, ", ".join(map(str, extra_entry_keys))))
                 if status == "complete":
                     if stage_id in HUMAN_REVIEW_STAGES:
                         if not isinstance(entry.get("reviewed_by"), str) or not entry["reviewed_by"].strip():
@@ -311,12 +217,7 @@ def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
                         if not isinstance(entry.get("note"), str) or not entry["note"].strip():
                             errors.append("workflow.stages.{}.note is required for human-review stage {}".format(stage_key, stage_id))
                     elif entry.get("completed_by") != "automation":
-                        # Existing v3 workspaces that explicitly recorded a human reviewer remain readable.
-                        if not (isinstance(entry.get("reviewed_by"), str) and entry["reviewed_by"].strip()
-                                and isinstance(entry.get("note"), str) and entry["note"].strip()):
-                            errors.append("workflow.stages.{}.completed_by must be automation for stage {}".format(stage_key, stage_id))
-                    if entry.get("completed_by") not in (None, "automation"):
-                        errors.append("workflow.stages.{}.completed_by must be automation when present".format(stage_key))
+                        errors.append("workflow.stages.{}.completed_by must be automation for stage {}".format(stage_key, stage_id))
 
     for group_name in ("artifacts", "web"):
         group = config.get(group_name)
@@ -328,56 +229,59 @@ def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
             if problem:
                 errors.append("{}.{} {}".format(group_name, key, problem))
 
-    if schema_version == 2:
-        artifacts = config.get("artifacts")
-        if isinstance(artifacts, dict):
-            missing_artifacts = sorted(set(V2_ARTIFACTS) - set(artifacts))
-            if missing_artifacts:
-                errors.append("artifacts is missing: {}".format(", ".join(missing_artifacts)))
-            for key, expected in V2_ARTIFACTS.items():
-                if key in artifacts and artifacts[key] != expected:
-                    errors.append("artifacts.{} must be {}".format(key, expected))
+    artifacts = config.get("artifacts")
+    if isinstance(artifacts, dict):
+        missing_artifacts = sorted(set(V3_ARTIFACTS) - set(artifacts))
+        extra_artifacts = sorted(set(artifacts) - set(V3_ARTIFACTS), key=str)
+        if missing_artifacts:
+            errors.append("artifacts is missing: {}".format(", ".join(missing_artifacts)))
+        if extra_artifacts:
+            errors.append("artifacts has unknown keys: {}".format(", ".join(map(str, extra_artifacts))))
+        for key, expected in V3_ARTIFACTS.items():
+            if key in artifacts and artifacts[key] != expected:
+                errors.append("artifacts.{} must be {}".format(key, expected))
 
-    if schema_version == 3:
-        artifacts = config.get("artifacts")
-        if isinstance(artifacts, dict):
-            missing_artifacts = sorted(set(V3_ARTIFACTS) - set(artifacts))
-            if missing_artifacts:
-                errors.append("artifacts is missing: {}".format(", ".join(missing_artifacts)))
-            for key, expected in V3_ARTIFACTS.items():
-                if key in artifacts and artifacts[key] != expected:
-                    errors.append("artifacts.{} must be {}".format(key, expected))
-        release = config.get("release")
-        if not isinstance(release, dict):
-            errors.append("release must be a mapping")
+    release = config.get("release")
+    if not isinstance(release, dict):
+        errors.append("release must be a mapping")
+    else:
+        release_fields = ("upstream_paper_name", "upstream_version", "output")
+        extra_release_fields = sorted(set(release) - set(release_fields), key=str)
+        if extra_release_fields:
+            errors.append("release has unknown keys: {}".format(", ".join(map(str, extra_release_fields))))
+        if any(not isinstance(release.get(key), str) for key in release_fields):
+            errors.append("release.upstream_paper_name, release.upstream_version, and release.output must be strings")
         else:
-            release_fields = ("upstream_paper_name", "upstream_version", "output")
-            if any(not isinstance(release.get(key), str) for key in release_fields):
-                errors.append("release.upstream_paper_name, release.upstream_version, and release.output must be strings")
-            else:
-                values = [release[key].strip() for key in release_fields]
-                if any(values) and not all(values):
-                    errors.append("release upstream identifiers and output must be configured together")
-                elif all(values):
-                    paper_name, version, output = values
-                    if not UPSTREAM_PAPER_NAME_RE.fullmatch(paper_name):
-                        errors.append("release.upstream_paper_name must be a lowercase underscore identifier")
-                    if not UPSTREAM_VERSION_RE.fullmatch(version):
-                        errors.append("release.upstream_version must match the upstream version naming rule")
-                    problem = path_problem(output)
-                    if problem:
-                        errors.append("release.output {}".format(problem))
-                    elif output.replace("\\", "/") != "html_output/{}/{}".format(paper_name, version):
-                        errors.append("release.output must equal html_output/<upstream_paper_name>/<upstream_version>")
-        if isinstance(paper, dict):
-            if not isinstance(paper.get("authors"), list) or any(not isinstance(author, str) for author in paper.get("authors", [])):
-                errors.append("paper.authors must be a list of strings")
-            if paper.get("year") is not None and (isinstance(paper.get("year"), bool) or not isinstance(paper.get("year"), int)):
-                errors.append("paper.year must be an integer or null")
-            for key in ("venue", "source_type", "source_location", "source_hash"):
-                if not isinstance(paper.get(key), str):
-                    errors.append("paper.{} must be a string".format(key))
-        if not isinstance(config.get("web"), dict) or config.get("web", {}).get("enhanced") != "web/enhanced":
+            values = [release[key].strip() for key in release_fields]
+            if any(values) and not all(values):
+                errors.append("release upstream identifiers and output must be configured together")
+            elif all(values):
+                paper_name, version, output = values
+                if not UPSTREAM_PAPER_NAME_RE.fullmatch(paper_name):
+                    errors.append("release.upstream_paper_name must be a lowercase underscore identifier")
+                if not UPSTREAM_VERSION_RE.fullmatch(version):
+                    errors.append("release.upstream_version must match the upstream version naming rule")
+                problem = path_problem(output)
+                if problem:
+                    errors.append("release.output {}".format(problem))
+                elif output.replace("\\", "/") != "html_output/{}/{}".format(paper_name, version):
+                    errors.append("release.output must equal html_output/<upstream_paper_name>/<upstream_version>")
+
+    if isinstance(paper, dict):
+        if not isinstance(paper.get("authors"), list) or any(not isinstance(author, str) for author in paper.get("authors", [])):
+            errors.append("paper.authors must be a list of strings")
+        if paper.get("year") is not None and (isinstance(paper.get("year"), bool) or not isinstance(paper.get("year"), int)):
+            errors.append("paper.year must be an integer or null")
+        for key in ("venue", "source_type", "source_location", "source_hash"):
+            if not isinstance(paper.get(key), str):
+                errors.append("paper.{} must be a string".format(key))
+
+    web = config.get("web")
+    if isinstance(web, dict):
+        extra_web_fields = sorted(set(web) - {"enhanced", "final"}, key=str)
+        if extra_web_fields:
+            errors.append("web has unknown keys: {}".format(", ".join(map(str, extra_web_fields))))
+        if web.get("enhanced") != "web/enhanced":
             errors.append("web.enhanced must be web/enhanced")
 
     return errors
@@ -408,56 +312,6 @@ def marker_present(path: Path, marker: str) -> bool:
         return False
     pattern = r"^\s*(?:(?:Content|Release) Check Status\s*:\s*)?{}\s*$".format(re.escape(marker))
     return re.search(pattern, text, re.IGNORECASE | re.MULTILINE) is not None
-
-
-def artifact_map(config: Dict[str, Any]) -> Dict[str, Tuple[str, str]]:
-    return V2_GATE_ARTIFACTS if config.get("schema_version") == 2 else LEGACY_GATE_ARTIFACTS
-
-
-def artifact_satisfied(folder: Path, gate_id: str, config: Dict[str, Any]) -> Tuple[bool, str]:
-    kind, relative = artifact_map(config)[gate_id]
-    target = folder / relative
-    if kind == "dir":
-        return target.is_dir() and any(target.iterdir()), relative
-    if not target.is_file():
-        return False, relative
-    if gate_id == "G2" and config.get("schema_version") == 2:
-        try:
-            return isinstance(load_yaml(target), dict), relative
-        except PaperError:
-            return False, relative
-    if gate_id in ("G0", "G1", "G2", "G4"):
-        try:
-            return bool(target.read_text(encoding="utf-8").strip()), relative
-        except (OSError, UnicodeError):
-            return False, relative
-    return True, relative
-
-
-def gate_completion_problems(folder: Path, gate_id: str, config: Dict[str, Any]) -> List[str]:
-    satisfied, relative = artifact_satisfied(folder, gate_id, config)
-    if not satisfied:
-        return ["required artifact missing or empty: {}".format(relative)]
-    if gate_id == "G5" and config.get("schema_version") == 2:
-        scene_problems = scene_acceptance_problems(folder)
-        if scene_problems:
-            return scene_problems
-    if gate_id == "G0" and config.get("schema_version") == 1:
-        url_file = folder / "source/paper.url"
-        if not url_file.is_file() or not url_file.read_text(encoding="utf-8").strip():
-            return ["required artifact missing or empty: source/paper.url"]
-    if gate_id == "G0" and config.get("schema_version") == 2:
-        url_file = folder / "source/paper.url"
-        if not url_file.is_file() or not url_file.read_text(encoding="utf-8").strip():
-            return ["required artifact missing or empty: source/paper.url"]
-    if gate_id == "G7":
-        check_path = folder / ("audit/final-check.md" if config.get("schema_version") == 2 else "audit/content-check.md")
-        check_marker = "Overall: PASS" if config.get("schema_version") == 2 else "PASS"
-        if not marker_present(check_path, check_marker):
-            return ["{} must contain {}".format(check_path.relative_to(folder).as_posix(), check_marker)]
-        if not marker_present(folder / "audit/release-check.md", "READY"):
-            return ["audit/release-check.md must contain READY"]
-    return []
 
 
 def quote_yaml(value: str) -> str:
@@ -510,8 +364,7 @@ def reusable_kit_registry() -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
 def cmd_scaffold_kit(args: argparse.Namespace) -> int:
     validate_paper_id(args.paper_id)
     folder, config = read_paper(args.paper_id)
-    if config.get("schema_version") != 3:
-        raise PaperError("scaffold-kit only supports Workflow v3 paper workspaces")
+    validate_or_raise(config, args.paper_id)
     if args.preset != "continual-learning":
         raise PaperError("Unsupported Reusable Kit preset: {}".format(args.preset))
     web_dir = folder / "web/enhanced"
@@ -681,131 +534,6 @@ def cmd_new(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_migrate_v2(args: argparse.Namespace) -> int:
-    folder, config = read_paper(args.paper_id)
-    validate_or_raise(config, args.paper_id)
-    if config.get("schema_version") != 1:
-        raise PaperError("Only schema_version 1 workspaces can be migrated to v2")
-
-    paper_config_path = folder / "paper.yaml"
-    legacy_paper_config = paper_config_path.read_bytes()
-    legacy_states = gate_states(config)
-    legacy_config = dict(config.get("artifacts", {}))
-    detected: Dict[str, str] = {}
-    for _gate_id, (_kind, relative) in LEGACY_GATE_ARTIFACTS.items():
-        if (folder / relative).exists():
-            detected[relative] = "migration/legacy-paper-v1.yaml" if relative == "paper.yaml" else relative
-    for relative in ("research/03_terms.md", "audit/release-check.md"):
-        if (folder / relative).exists():
-            detected[relative] = "audit/legacy/release-check-v1.md" if relative == "audit/release-check.md" else relative
-
-    config["title"] = " ".join(config["title"].split())
-    config["schema_version"] = 2
-    workflow = config["workflow"]
-    workflow["version"] = 2
-    workflow["current_gate"] = "G0"
-    workflow["gates"] = {key: {"status": "pending"} for _gate_id, key, _label in GATES}
-    config["artifacts"] = dict(V2_ARTIFACTS)
-    config["legacy_artifacts"] = detected
-    config["migration_v2"] = {
-        "from_schema_version": 1,
-        "legacy_gate_states": legacy_states,
-        "legacy_artifact_config": legacy_config,
-        "legacy_paper_config_backup": "migration/legacy-paper-v1.yaml",
-    }
-
-    replacements = {
-        "paper_id": args.paper_id,
-        "paper_title": " ".join(config["title"].split()),
-        "paper_url": quote_yaml(config["paper"]["url"]),
-        "arxiv_id": quote_yaml(str(config.get("paper", {}).get("arxiv_id", "") or "")),
-    }
-    created: List[str] = []
-    preserved: List[str] = []
-    directories = ("source", "research", "design/scenes", "knowledge", "audit", "audit/legacy", "migration")
-    for relative in directories:
-        (folder / relative).mkdir(parents=True, exist_ok=True)
-
-    paper_backup = folder / "migration/legacy-paper-v1.yaml"
-    if not paper_backup.exists():
-        paper_backup.write_bytes(legacy_paper_config)
-        created.append("migration/legacy-paper-v1.yaml")
-    else:
-        preserved.append("migration/legacy-paper-v1.yaml")
-
-    for template_name, relative in TEMPLATE_OUTPUTS.items():
-        if template_name == "paper.yaml":
-            continue
-        target = folder / relative
-        if target.exists():
-            if template_name == "release-check.md":
-                legacy_release_copy = folder / "audit/legacy/release-check-v1.md"
-                if not legacy_release_copy.exists():
-                    legacy_release_copy.write_bytes(target.read_bytes())
-                    created.append("audit/legacy/release-check-v1.md")
-                else:
-                    preserved.append("audit/legacy/release-check-v1.md")
-                target.write_text(
-                    render_template(template_name, replacements, LEGACY_V2_TEMPLATE_PATHS[template_name]),
-                    encoding="utf-8",
-                )
-                created.append(relative)
-                continue
-            preserved.append(relative)
-            continue
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(
-            render_template(template_name, replacements, LEGACY_V2_TEMPLATE_PATHS[template_name]),
-            encoding="utf-8",
-        )
-        created.append(relative)
-
-    url_path = folder / "source/paper.url"
-    if not url_path.exists():
-        url_path.write_text(str(config["paper"]["url"]).strip() + "\n", encoding="utf-8")
-        created.append("source/paper.url")
-    else:
-        preserved.append("source/paper.url")
-
-    report_path = folder / "audit/migration-v2.md"
-    if not report_path.exists():
-        lines = [
-            "# Workflow v2 Migration Report",
-            "",
-            "Migration created v2 artifacts without deleting legacy research, design, Canonical, or Enhanced files.",
-            "The v1 paper.yaml and release checklist are archived before their active paths move to v2. All v2 gates start pending.",
-            "",
-            "## Legacy gate states",
-            "",
-        ]
-        lines.extend("- {}: {}".format(gate_id, state) for gate_id, state in legacy_states.items())
-        lines.extend(["", "## Detected legacy artifacts", ""])
-        lines.extend("- `{}` → `{}`".format(source, archived) for source, archived in detected.items())
-        lines.extend(["", "## Created v2 artifacts", ""])
-        lines.extend("- `{}`".format(path) for path in created)
-        lines.extend(["", "## Preserved existing paths", ""])
-        lines.extend("- `{}`".format(path) for path in preserved)
-        report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        created.append("audit/migration-v2.md")
-    else:
-        preserved.append("audit/migration-v2.md")
-
-    require_yaml()
-    (folder / "paper.yaml").write_text(
-        yaml.safe_dump(config, allow_unicode=True, sort_keys=False, default_flow_style=False), encoding="utf-8"
-    )
-    print("Migrated papers/{} to Workflow v2.".format(args.paper_id))
-    print("Created: {}".format(", ".join(created) if created else "none"))
-    print("Preserved: {}".format(", ".join(preserved) if preserved else "none"))
-    print("Legacy gate states are recorded in migration_v2; all v2 gates are pending.")
-    return 0
-
-
-def gate_states(config: Dict[str, Any]) -> Dict[str, str]:
-    gates = config["workflow"]["gates"]
-    return {gate_id: gates[key]["status"] for gate_id, key, _label in GATES}
-
-
 def stage_states(config: Dict[str, Any]) -> Dict[str, str]:
     stages = config["workflow"]["stages"]
     return {stage_id: stages[key]["status"] for stage_id, key, _label in STAGES}
@@ -818,111 +546,52 @@ def recommended_stage(states: Dict[str, str]) -> str:
     return "No remaining stage"
 
 
-def recommended_gate(states: Dict[str, str]) -> str:
-    for gate_id, _key, label in GATES:
-        if states.get(gate_id) not in ("complete", "skipped"):
-            return "{} {}".format(gate_id, label)
-    return "No remaining gate"
-
-
 def cmd_status(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
-    if config.get("schema_version") == 3:
-        states = stage_states(config)
-        print("Paper: {}".format(args.paper_id))
-        print("Title: {}".format(" ".join(config["title"].split())))
-        print("Current Stage: {}".format(config["workflow"]["current_stage"]))
-        print("\nStages")
-        for stage_id, _key, label in STAGES:
-            print("{} {:<36} {}".format(stage_id, label, states[stage_id].upper()))
-        print("\nArtifacts")
-        for stage_id, (_kind, relative) in V3_STAGE_ARTIFACTS.items():
-            if stage_id == "W10":
-                target = ROOT / config["release"]["output"]
-                relative = config["release"]["output"]
-            else:
-                target = folder / relative
-            exists = target.is_dir() and any(target.iterdir()) if target.is_dir() else target.is_file()
-            print("[{}] {}".format("PRESENT" if exists else "MISSING", relative))
-        print("Next Recommended Stage: {}".format(recommended_stage(states)))
-        return 0
-    states = gate_states(config)
-    current = config["workflow"]["current_gate"]
+    states = stage_states(config)
     print("Paper: {}".format(args.paper_id))
     print("Title: {}".format(" ".join(config["title"].split())))
-    print("Current Gate: {}".format(current))
-    print("\nGates")
-    labels = LEGACY_GATE_LABELS if config.get("schema_version") == 1 else [gate[2] for gate in GATES]
-    for (gate_id, _key, _label), label in zip(GATES, labels):
-        print("{} {:<26} {}".format(gate_id, label, states[gate_id].upper()))
+    print("Current Stage: {}".format(config["workflow"]["current_stage"]))
+    print("\nStages")
+    for stage_id, _key, label in STAGES:
+        print("{} {:<36} {}".format(stage_id, label, states[stage_id].upper()))
     print("\nArtifacts")
-    mapping = artifact_map(config)
-    artifact_rows = [(gate_id, path, kind) for gate_id, (kind, path) in mapping.items()]
-    artifact_rows.append(("G7", "audit/release-check.md", "file"))
-    has_legacy = "legacy" in states.values()
-    for gate_id, relative, kind in artifact_rows:
-        target = folder / relative
-        exists = target.is_dir() and any(target.iterdir()) if kind == "dir" and target.is_dir() else target.is_file()
-        if exists:
-            mark = "PRESENT"
-        elif states[gate_id] == "legacy" or (gate_id == "G3" and states[gate_id] == "complete" and has_legacy):
-            mark = "LEGACY"
+    for stage_id, (_kind, relative) in V3_STAGE_ARTIFACTS.items():
+        if stage_id == "W10":
+            relative = config["release"]["output"]
+            if not relative:
+                continue
+            target = ROOT / relative
         else:
-            mark = "MISSING"
-        print("[{}] {}".format(mark, relative))
-    print("Next Recommended Gate: {}".format(recommended_gate(states)))
+            target = folder / relative
+        exists = target.is_dir() and any(target.iterdir()) if target.is_dir() else target.is_file()
+        print("[{}] {}".format("PRESENT" if exists else "MISSING", relative))
+    print("Next Recommended Stage: {}".format(recommended_stage(states)))
     return 0
 
 
 def cmd_paths(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
-    if config.get("schema_version") == 3:
-        values = {
-            "workspace": "papers/{}/".format(args.paper_id),
-            "source": "papers/{}/source/paper.url".format(args.paper_id),
-            "source_cache": "papers/{}/source-cache".format(args.paper_id),
-            "paper_model": "papers/{}/research/paper-model.md".format(args.paper_id),
-            "evidence_registry": "papers/{}/research/evidence-registry.yaml".format(args.paper_id),
-            "learning_spine": "papers/{}/design/learning-spine.md".format(args.paper_id),
-            "asset_plan": "papers/{}/design/asset-plan.md".format(args.paper_id),
-            "implementation_plan": "papers/{}/design/implementation-plan.md".format(args.paper_id),
-            "final_check": "papers/{}/audit/final-check.md".format(args.paper_id),
-            "enhanced": "papers/{}/web/enhanced".format(args.paper_id),
-            "release_output": config["release"]["output"],
-        }
-        labels = [(key, key.replace("_", " ").title()) for key in values]
-    elif config.get("schema_version") == 2:
-        values = {
-            "workspace": "papers/{}/".format(args.paper_id),
-            "paper_pdf": "papers/{}/source/paper.pdf".format(args.paper_id),
-            "learning_contract": "papers/{}/design/learning-contract.md".format(args.paper_id),
-            "paper_model": "papers/{}/research/01_paper_model.md".format(args.paper_id),
-            "evidence_registry": "papers/{}/research/02_evidence_registry.yaml".format(args.paper_id),
-            "learning_architecture": "papers/{}/design/learning-architecture.md".format(args.paper_id),
-            "scenes": "papers/{}/design/scenes".format(args.paper_id),
-            "terms": "papers/{}/knowledge/terms.yaml".format(args.paper_id),
-            "canonical": "papers/{}/web/canonical".format(args.paper_id),
-            "enhanced": "papers/{}/web/enhanced".format(args.paper_id),
-        }
-        labels = [(key, key.replace("_", " ").title()) for key in values]
-    else:
-        values = {
-        "workspace": "papers/{}".format(args.paper_id),
-        "paper_pdf": "papers/{}/source/paper.pdf".format(args.paper_id),
-        "review": "papers/{}/research/01_review.md".format(args.paper_id),
-        "evidence_audit": "papers/{}/research/02_evidence_audit.md".format(args.paper_id),
-        "storyboard": "papers/{}/design/storyboard.md".format(args.paper_id),
-        "interaction_plan": "papers/{}/design/interaction-plan.md".format(args.paper_id),
-        "canonical": "papers/{}/web/canonical".format(args.paper_id),
+    values = {
+        "workspace": "papers/{}/".format(args.paper_id),
+        "source": "papers/{}/source/paper.url".format(args.paper_id),
+        "source_cache": "papers/{}/source-cache".format(args.paper_id),
+        "paper_model": "papers/{}/research/paper-model.md".format(args.paper_id),
+        "evidence_registry": "papers/{}/research/evidence-registry.yaml".format(args.paper_id),
+        "learning_spine": "papers/{}/design/learning-spine.md".format(args.paper_id),
+        "asset_plan": "papers/{}/design/asset-plan.md".format(args.paper_id),
+        "implementation_plan": "papers/{}/design/implementation-plan.md".format(args.paper_id),
+        "final_check": "papers/{}/audit/final-check.md".format(args.paper_id),
         "enhanced": "papers/{}/web/enhanced".format(args.paper_id),
-        }
-        labels = [
-            ("workspace", "Workspace"), ("paper_pdf", "Paper PDF"), ("review", "Review"),
-            ("evidence_audit", "Evidence Audit"), ("storyboard", "Storyboard"),
-            ("interaction_plan", "Interaction Plan"), ("canonical", "Canonical"), ("enhanced", "Enhanced"),
-        ]
+    }
+    web = config.get("web", {})
+    if isinstance(web, dict) and web.get("final"):
+        values["final"] = "papers/{}/{}".format(args.paper_id, web["final"])
+    if config["release"]["output"]:
+        values["release_output"] = config["release"]["output"]
+    labels = [(key, key.replace("_", " ").title()) for key in values]
     if args.json:
         print(json.dumps(values, ensure_ascii=False, indent=2))
     else:
@@ -936,6 +605,8 @@ def cmd_open(args: argparse.Namespace) -> int:
     validate_or_raise(config, args.paper_id)
 
     web_config = config.get("web", {})
+    if args.edition == "final" and not web_config.get("final"):
+        raise PaperError("papers/{}/paper.yaml has not configured web.final; this workspace has no Final edition yet".format(args.paper_id))
     relative_path = web_config.get(args.edition) if isinstance(web_config, dict) else None
     if not isinstance(relative_path, str) or path_problem(relative_path):
         raise PaperError("papers/{}/paper.yaml has no valid web.{} path".format(args.paper_id, args.edition))
@@ -965,61 +636,9 @@ def cmd_open(args: argparse.Namespace) -> int:
     return subprocess.run([npm, "run", "dev", "--", "--open"], cwd=str(web_dir), check=False).returncode
 
 
-def cmd_gate(args: argparse.Namespace) -> int:
-    folder, config = read_paper(args.paper_id)
-    validate_or_raise(config, args.paper_id)
-    if config.get("schema_version") == 3:
-        raise PaperError("Workflow v3 uses 'stage <paper-id> W0..W10 <status>' instead of gate")
-    if args.gate is None and args.status is None:
-        print("Paper: {}".format(args.paper_id))
-        print("Current Gate: {}".format(config["workflow"]["current_gate"]))
-        labels = LEGACY_GATE_LABELS if config.get("schema_version") == 1 else [gate[2] for gate in GATES]
-        for (gate_id, gate_key, _label), label in zip(GATES, labels):
-            print("{} {:<26} {}".format(gate_id, label, config["workflow"]["gates"][gate_key]["status"].upper()))
-        return 0
-    if args.gate is None or args.status is None:
-        raise PaperError("Provide both <gate> and <status> when changing a gate")
-    if args.gate not in GATE_BY_ID:
-        raise PaperError("Unknown gate '{}'; expected G0 through G7".format(args.gate))
-    if args.status not in STATUSES:
-        raise PaperError("Unknown status '{}'; expected: {}".format(args.status, ", ".join(sorted(STATUSES))))
-    if args.status == "skipped" and not (args.reason and args.reason.strip()):
-        raise PaperError("--reason is required when setting a gate to skipped")
-    if args.status != "skipped" and args.reason:
-        raise PaperError("--reason can only be used with skipped")
-
-    problems: List[str] = []
-    if args.status == "complete":
-        problems.extend(gate_order_problems(config, args.gate))
-        problems.extend(gate_completion_problems(folder, args.gate, config))
-    if problems:
-        raise PaperError("Cannot mark {} complete:\n- {}".format(args.gate, "\n- ".join(problems)))
-
-    gate_key = GATE_BY_ID[args.gate][1]
-    entry = config["workflow"]["gates"][gate_key]
-    entry["status"] = args.status
-    if args.status == "skipped":
-        entry["reason"] = args.reason.strip()
-    else:
-        entry.pop("reason", None)
-    if args.status == "in_progress":
-        config["workflow"]["current_gate"] = args.gate
-    elif args.status == "complete":
-        index = GATE_IDS.index(args.gate)
-        config["workflow"]["current_gate"] = GATE_IDS[min(index + 1, len(GATE_IDS) - 1)]
-    validate_or_raise(config, args.paper_id)
-    require_yaml()
-    output = yaml.safe_dump(config, allow_unicode=True, sort_keys=False, default_flow_style=False)
-    (folder / "paper.yaml").write_text(output, encoding="utf-8")
-    print("Updated {} to {} for {}.".format(args.gate, args.status, args.paper_id))
-    return 0
-
-
 def cmd_stage(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
-    if config.get("schema_version") != 3:
-        raise PaperError("stage applies to Workflow v3 workspaces only")
     if args.stage is None and args.status is None:
         print("Paper: {}".format(args.paper_id))
         print("Current Stage: {}".format(config["workflow"]["current_stage"]))
@@ -1173,7 +792,7 @@ def is_canonical_paperskill_remote(remote_url: str) -> bool:
 
 
 def resolve_upstream_source(folder: Path, config: Dict[str, Any]) -> Path:
-    """Select the configured standalone source, retaining compatibility with older v3 workspaces."""
+    """Use Final when configured; use Enhanced while Final has not been created."""
     web = config.get("web", {})
     if not isinstance(web, dict):
         web = {}
@@ -1189,11 +808,11 @@ def resolve_upstream_source(folder: Path, config: Dict[str, Any]) -> Path:
             raise PaperError("configured web.final source is missing: {}".format(final_relative))
         return source
 
-    legacy_relative = web.get("enhanced", "web/enhanced")
-    source = folder / legacy_relative
+    enhanced_relative = web.get("enhanced", "web/enhanced")
+    source = folder / enhanced_relative
     if not source.is_dir():
         raise PaperError(
-            "web.final is not configured and fallback source '{}' is missing".format(legacy_relative)
+            "web.final is not configured and Enhanced source '{}' is missing".format(enhanced_relative)
         )
     return source
 
@@ -1468,8 +1087,6 @@ def run_upstream_check(
 def cmd_upstream_check(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
-    if config.get("schema_version") != 3:
-        raise PaperError("upstream-check applies to Workflow v3 workspaces only")
     problems = stage_order_problems(config, "W10")
     if problems:
         raise PaperError("Cannot run upstream-check:\n- {}".format("\n- ".join(problems)))
@@ -1482,22 +1099,6 @@ def cmd_upstream_check(args: argparse.Namespace) -> int:
         args.github or "",
         args.replace_output,
     )
-
-
-def gate_order_problems(config: Dict[str, Any], gate_id: str) -> List[str]:
-    """Require every earlier gate to be accepted before completing this gate."""
-    index = GATE_IDS.index(gate_id)
-    gates = config["workflow"]["gates"]
-    paper_id = config.get("id")
-    problems = []
-    for prior_id, prior_key, prior_label in GATES[:index]:
-        status = gates[prior_key]["status"]
-        if status in ("complete", "skipped"):
-            continue
-        if paper_id == "phyagentos" and status == "legacy":
-            continue
-        problems.append("{} {} is {}; must be complete or skipped".format(prior_id, prior_label, status))
-    return problems
 
 
 def tracked_workspace_paths(paper_id: str) -> List[str]:
@@ -1556,120 +1157,6 @@ def hygiene_warnings(folder: Path) -> List[str]:
 def markdown_section(markdown: str, heading: str) -> str:
     match = re.search(r"^##\s+{}\s*$([\s\S]*?)(?=^##\s+|\Z)".format(re.escape(heading)), markdown, re.MULTILINE)
     return match.group(1).strip() if match else ""
-
-
-def registry_ids(registry: Dict[str, Any], label: str, nested_sections: bool = False) -> Tuple[set, List[str]]:
-    ids = set()
-    errors: List[str] = []
-    if nested_sections:
-        candidates = []
-        for section, entries in registry.items():
-            if not isinstance(entries, dict):
-                errors.append("{} section '{}' must be a mapping".format(label, section))
-                continue
-            candidates.extend(entries.items())
-    else:
-        candidates = list(registry.items())
-    for entry_id, entry in candidates:
-            if not isinstance(entry_id, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", entry_id):
-                errors.append("{} has invalid id '{}'".format(label, entry_id))
-                continue
-            if entry_id in ids:
-                errors.append("{} has duplicate canonical knowledge id '{}'".format(label, entry_id))
-            ids.add(entry_id)
-            if not isinstance(entry, dict):
-                errors.append("{} entry '{}' must be a mapping".format(label, entry_id))
-    return ids, errors
-
-
-def read_registry_ids(folder: Path, relative: str, label: str, nested_sections: bool = False) -> Tuple[set, List[str]]:
-    path = folder / relative
-    if not path.is_file():
-        return set(), ["{} is missing: {}".format(label, relative)]
-    try:
-        registry = load_yaml(path)
-    except PaperError as exc:
-        return set(), ["{}: {}".format(label, exc)]
-    return registry_ids(registry, label, nested_sections)
-
-
-def scene_reference_problems(folder: Path) -> Tuple[List[Path], List[str]]:
-    scene_dir = folder / "design/scenes"
-    scenes = sorted(scene_dir.glob("*.md")) if scene_dir.is_dir() else []
-    evidence_ids, evidence_errors = read_registry_ids(folder, "research/02_evidence_registry.yaml", "evidence registry", True)
-    term_ids, term_errors = read_registry_ids(folder, "knowledge/terms.yaml", "term registry")
-    problems = evidence_errors + term_errors
-    duplicate_ids = evidence_ids & term_ids
-    problems.extend("duplicate canonical knowledge id '{}' across registries".format(item) for item in sorted(duplicate_ids))
-    terms_path = folder / "knowledge/terms.yaml"
-    if terms_path.is_file():
-        try:
-            terms = load_yaml(terms_path)
-            for term_id, term in terms.items():
-                if not isinstance(term, dict):
-                    continue
-                prerequisites = term.get("prerequisites", [])
-                if not isinstance(prerequisites, list):
-                    problems.append("term '{}' prerequisites must be a list".format(term_id))
-                else:
-                    for prerequisite in prerequisites:
-                        if prerequisite not in term_ids:
-                            problems.append("term '{}' references unknown prerequisite '{}'".format(term_id, prerequisite))
-                source_ref = term.get("source_ref")
-                if source_ref is not None and source_ref not in evidence_ids:
-                    problems.append("term '{}' references unknown evidence id '{}'".format(term_id, source_ref))
-        except PaperError:
-            pass
-    for scene_path in scenes:
-        try:
-            markdown = scene_path.read_text(encoding="utf-8")
-        except (OSError, UnicodeError):
-            problems.append("cannot read scene spec: {}".format(scene_path.relative_to(folder).as_posix()))
-            continue
-        paper_refs = re.findall(r"`([A-Za-z][A-Za-z0-9_-]*)`", markdown_section(markdown, "Paper Evidence"))
-        term_refs = re.findall(r"`([A-Za-z][A-Za-z0-9_-]*)`", markdown_section(markdown, "Prerequisite Terms"))
-        for reference in paper_refs:
-            if reference not in evidence_ids:
-                problems.append("{} references unknown evidence id '{}'".format(scene_path.relative_to(folder).as_posix(), reference))
-        for reference in term_refs:
-            if reference not in term_ids:
-                problems.append("{} references unknown prerequisite term '{}'".format(scene_path.relative_to(folder).as_posix(), reference))
-    return scenes, problems
-
-
-def v2_structure_problems(folder: Path) -> List[str]:
-    required_files = [
-        "source/paper.url", "design/learning-contract.md", "research/01_paper_model.md",
-        "research/02_evidence_registry.yaml", "design/learning-architecture.md",
-        "knowledge/terms.yaml", "audit/final-check.md", "audit/release-check.md",
-    ]
-    problems = ["required v2 artifact missing or empty: {}".format(path) for path in required_files
-                if not (folder / path).is_file() or not (folder / path).read_text(encoding="utf-8").strip()]
-    _scenes, reference_problems = scene_reference_problems(folder)
-    return problems + reference_problems
-
-
-def scene_acceptance_problems(folder: Path) -> List[str]:
-    scenes, problems = scene_reference_problems(folder)
-    if not scenes:
-        problems.append("no scene specifications found in design/scenes/")
-    required_sections = (
-        "Reconstruction Test", "Implementation Trace Test", "Global Dependency Test",
-        "Deletion Test", "Acceptance Questions",
-    )
-    for scene_path in scenes:
-        markdown = scene_path.read_text(encoding="utf-8")
-        for heading in required_sections:
-            body = markdown_section(markdown, heading)
-            normalized = re.sub(r"[`*_>#-]", "", body).strip()
-            if not normalized or normalized.startswith("What can the learner") or normalized.startswith("If an interaction is removed"):
-                problems.append("{} has an empty {}".format(scene_path.relative_to(folder).as_posix(), heading))
-        dependency_body = markdown_section(markdown, "Global Dependency Test")
-        for field in ("Consumes", "Produces", "Used later by"):
-            match = re.search(r"(?im)^\s*(?:[-*]\s*)?\*?\*?{}\*?\*?\s*:\s*(.+)$".format(field), dependency_body)
-            if not match or not match.group(1).strip() or match.group(1).strip() in ("—", "-"):
-                problems.append("{} is missing Global Dependency Test field {}".format(scene_path.relative_to(folder).as_posix(), field))
-    return problems
 
 
 def read_json_object(path: Path, label: str) -> Tuple[Optional[Dict[str, Any]], List[str]]:
@@ -2513,6 +2000,22 @@ def cmd_check_v3(folder: Path, config: Dict[str, Any], paper_id: str) -> int:
     warnings: List[str] = []
     for stage_id, _key, label in STAGES:
         print("[STAGE] {} {}: {}".format(stage_id, label, states[stage_id].upper()))
+        kind, relative = V3_STAGE_ARTIFACTS[stage_id]
+        if stage_id == "W10":
+            relative = config["release"]["output"]
+            if not relative:
+                print("[UNCONFIGURED] W10 artifact: release.output")
+                issues = v3_stage_completion_problems(folder, stage_id, config)
+                if states[stage_id] == "complete":
+                    failures.extend("{}: {}".format(stage_id, issue) for issue in issues)
+                elif stage_id == config["workflow"]["current_stage"]:
+                    warnings.extend("{}: {}".format(stage_id, issue) for issue in issues)
+                continue
+            target = ROOT / relative
+        else:
+            target = folder / relative
+        exists = target.is_dir() and any(target.iterdir()) if target.is_dir() else target.is_file()
+        print("[{}] {} artifact: {}".format("PRESENT" if exists else "MISSING", stage_id, relative))
         issues = v3_stage_completion_problems(folder, stage_id, config)
         if states[stage_id] == "complete":
             failures.extend("{}: {}".format(stage_id, issue) for issue in issues)
@@ -2532,23 +2035,6 @@ def cmd_check_v3(folder: Path, config: Dict[str, Any], paper_id: str) -> int:
     return 1 if failures else 0
 
 
-def cmd_learning_check(args: argparse.Namespace) -> int:
-    folder, config = read_paper(args.paper_id)
-    validate_or_raise(config, args.paper_id)
-    if config.get("schema_version") != 2:
-        raise PaperError("learning-check requires schema_version 2; run migrate-v2 first")
-    problems = scene_acceptance_problems(folder)
-    if problems:
-        for problem in problems:
-            print("[FAIL] {}".format(problem))
-        print("STRUCTURAL LEARNING CHECK FAILED")
-        return 1
-    print("[PASS] scene specs, reconstruction tests, acceptance questions, and registry references")
-    print("STRUCTURAL LEARNING CHECK PASS")
-    print("Human learning acceptance still required.")
-    return 0
-
-
 def cmd_check(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     errors = validate_config(config, args.paper_id)
@@ -2556,91 +2042,7 @@ def cmd_check(args: argparse.Namespace) -> int:
         for error in errors:
             print("[FAIL] {}".format(error))
         return 1
-    if config.get("schema_version") == 3:
-        return cmd_check_v3(folder, config, args.paper_id)
-    states = gate_states(config)
-    legacy = config.get("schema_version") == 1
-    artifact_definitions = artifact_map(config)
-    labels = LEGACY_GATE_LABELS if legacy else [gate[2] for gate in GATES]
-    has_legacy = "legacy" in states.values()
-    warnings: List[str] = []
-    failures: List[str] = []
-
-    url_file = folder / "source/paper.url"
-    if url_file.is_file() and url_file.read_text(encoding="utf-8").strip():
-        print("[PASS] source/paper.url")
-    else:
-        failures.append("source/paper.url missing or empty")
-
-    local_pdf = config.get("paper", {}).get("local_pdf")
-    if local_pdf and not (folder / local_pdf).is_file():
-        warnings.append("declared local PDF is not present: {}".format(local_pdf))
-
-    for (gate_id, _gate_key, _label), label in zip(GATES, labels):
-        state = states[gate_id]
-        satisfied, relative = artifact_satisfied(folder, gate_id, config)
-        artifact_target = folder / relative
-        if gate_id == "G0":
-            contract_ok = artifact_satisfied(folder, gate_id, config)[0]
-            paper_url_ok = url_file.is_file() and bool(url_file.read_text(encoding="utf-8").strip())
-            satisfied = contract_ok and paper_url_ok
-            artifact_present = (folder / "paper.yaml").is_file() and paper_url_ok and contract_ok
-        if gate_id == "G7":
-            content_check = folder / ("audit/final-check.md" if not legacy else "audit/content-check.md")
-            release_check = folder / "audit/release-check.md"
-            artifact_present = content_check.is_file() and release_check.is_file()
-            relative = content_check.relative_to(folder).as_posix() + " + audit/release-check.md"
-            satisfied = artifact_present
-            if satisfied and state == "complete":
-                check_marker = "Overall: PASS" if not legacy else "PASS"
-                satisfied = marker_present(content_check, check_marker) and marker_present(release_check, "READY")
-        elif gate_id != "G0":
-            kind = artifact_definitions[gate_id][0]
-            artifact_present = (artifact_target.is_dir() and any(artifact_target.iterdir())) if kind == "dir" and artifact_target.is_dir() else artifact_target.is_file()
-
-        print("[GATE] {} {}: {}".format(gate_id, label, state.upper()))
-        legacy_missing = state == "legacy" or (gate_id == "G3" and state == "complete" and has_legacy)
-        artifact_mark = "PRESENT" if artifact_present else ("LEGACY" if legacy_missing else "MISSING")
-        print("[{}] {} artifact: {}".format(artifact_mark, gate_id, relative))
-        if satisfied:
-            pass
-        elif legacy_missing:
-            warnings.append("{} marked {} but standard artifact is not archived locally: {}".format(gate_id, state, relative))
-        elif state == "complete":
-            failures.append("{} marked complete but required artifact is missing or incomplete: {}".format(gate_id, relative))
-        else:
-            warnings.append("{} {} artifact is empty or not yet present: {}".format(gate_id, label, relative))
-
-    enhanced_package = folder / "web/enhanced/package.json"
-    if states["G6"] == "complete" and not enhanced_package.is_file():
-        if has_legacy and states["G6"] == "legacy":
-            pass
-        else:
-            failures.append("G6 is complete but web/enhanced/package.json is missing")
-    if enhanced_package.is_file():
-        try:
-            package = json.loads(enhanced_package.read_text(encoding="utf-8"))
-            scripts = package.get("scripts", {}) if isinstance(package, dict) else {}
-            if scripts:
-                print("Available Enhanced scripts: {}".format(", ".join(sorted(scripts))))
-        except (OSError, UnicodeError, json.JSONDecodeError):
-            warnings.append("web/enhanced/package.json is not valid JSON")
-
-    if not legacy:
-        structure_problems = v2_structure_problems(folder)
-        failures.extend(structure_problems)
-        scenes = sorted((folder / "design/scenes").glob("*.md")) if (folder / "design/scenes").is_dir() else []
-        if not scenes:
-            warnings.append("no scene specifications yet; learning-check will remain blocked")
-
-    warnings.extend(hygiene_warnings(folder))
-    failures.extend(hygiene_failures(args.paper_id))
-    for warning in warnings:
-        print("[WARN] {}".format(warning))
-    for failure in failures:
-        print("[FAIL] {}".format(failure))
-    print("CHECK {}".format("FAILED" if failures else "PASS"))
-    return 1 if failures else 0
+    return cmd_check_v3(folder, config, args.paper_id)
 
 
 def cmd_release_check(args: argparse.Namespace) -> int:
@@ -2651,36 +2053,12 @@ def cmd_release_check(args: argparse.Namespace) -> int:
         for error in errors:
             print("- Invalid paper.yaml: {}".format(error))
         return 1
-    if config.get("schema_version") == 3:
-        blockers: List[str] = []
-        for stage_id, key, label in STAGES:
-            if config["workflow"]["stages"][key]["status"] != "complete":
-                blockers.append("{} {} not complete".format(stage_id, label))
-            blockers.extend("{}: {}".format(stage_id, problem) for problem in v3_stage_completion_problems(folder, stage_id, config))
-        if blockers:
-            print("NOT READY\n\nBLOCKERS:")
-            for blocker in dict.fromkeys(blockers):
-                print("- {}".format(blocker))
-            return 1
-        print("RELEASE READY")
-        return 0
-    states = gate_states(config)
+
     blockers: List[str] = []
-    legacy = config.get("schema_version") == 1
-    labels = LEGACY_GATE_LABELS if legacy else [gate[2] for gate in GATES]
-    for (gate_id, _key, _label), label in zip(GATES[:7], labels[:7]):
-        if states[gate_id] != "complete":
-            blockers.append("{} {} not complete".format(gate_id, label))
-    for gate_id in GATE_IDS[:7]:
-        for problem in gate_completion_problems(folder, gate_id, config):
-            blockers.append(problem)
-    content_check = folder / ("audit/final-check.md" if not legacy else "audit/content-check.md")
-    release_check = folder / "audit/release-check.md"
-    content_marker = "Overall: PASS" if not legacy else "PASS"
-    if not marker_present(content_check, content_marker):
-        blockers.append("{} is not {}".format(content_check.name, content_marker))
-    if not marker_present(release_check, "READY"):
-        blockers.append("release-check.md is not READY")
+    for stage_id, key, label in STAGES:
+        if config["workflow"]["stages"][key]["status"] != "complete":
+            blockers.append("{} {} not complete".format(stage_id, label))
+        blockers.extend("{}: {}".format(stage_id, problem) for problem in v3_stage_completion_problems(folder, stage_id, config))
     if blockers:
         print("NOT READY\n\nBLOCKERS:")
         for blocker in dict.fromkeys(blockers):
@@ -2689,9 +2067,8 @@ def cmd_release_check(args: argparse.Namespace) -> int:
     print("RELEASE READY")
     return 0
 
-
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Manage PaperSkillWork paper workspaces and Workflow v1–v3 state.")
+    parser = argparse.ArgumentParser(description="Manage PaperSkillWork Workflow v3 paper workspaces.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     new = subparsers.add_parser("new", help="create a paper workspace from the standard templates")
@@ -2716,23 +2093,11 @@ def build_parser() -> argparse.ArgumentParser:
     for name, help_text, handler in (
         ("status", "show paper metadata, workflow states, and artifacts", cmd_status),
         ("check", "run mechanical workspace checks", cmd_check),
-        ("learning-check", "check legacy v2 scene specs and registry references", cmd_learning_check),
         ("release-check", "check whether the paper meets release prerequisites", cmd_release_check),
     ):
         command = subparsers.add_parser(name, help=help_text)
         command.add_argument("paper_id")
         command.set_defaults(func=handler)
-
-    migrate = subparsers.add_parser("migrate-v2", help="non-destructively scaffold Workflow v2 artifacts for a v1 paper")
-    migrate.add_argument("paper_id")
-    migrate.set_defaults(func=cmd_migrate_v2)
-
-    gate = subparsers.add_parser("gate", help="read or explicitly update a legacy v1/v2 workflow gate")
-    gate.add_argument("paper_id")
-    gate.add_argument("gate", nargs="?", choices=GATE_IDS)
-    gate.add_argument("status", nargs="?", choices=sorted(STATUSES))
-    gate.add_argument("--reason", help="required explanation when marking a gate skipped")
-    gate.set_defaults(func=cmd_gate)
 
     stage = subparsers.add_parser("stage", help="read or explicitly update a Workflow v3 stage")
     stage.add_argument("paper_id")
@@ -2758,7 +2123,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     open_web = subparsers.add_parser("open", help="install web dependencies and open a paper tutorial locally")
     open_web.add_argument("paper_id")
-    open_web.add_argument("--edition", choices=("enhanced", "canonical"), default="enhanced")
+    open_web.add_argument("--edition", choices=("enhanced", "final"), default="enhanced")
     open_web.set_defaults(func=cmd_open)
     return parser
 

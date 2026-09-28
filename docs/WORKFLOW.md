@@ -183,8 +183,8 @@ html_output/<paper-name>/<version>/
 
 术语和参考内容按需放入应用的知识/参考数据中；不要另建设计文档重复记录相同内容。
 
-## 工具行为与旧工作区
+## 工具行为与历史工作区
 
-新工作区使用 schema/workflow v3。`tools/paper.py` 会校验元数据、缓存文件、证据/素材计划、实现覆盖、路径和导出结构。W2/W4/W7/W9 需要 `--reviewed-by` 和 `--note`；W0/W1/W3/W5/W6/W8/W10 在检查通过后记录 `completed_by: automation`。工具不会判断课程是否教得好。已有 schema v1/v2 工作区仍可按原有检查读取，且不会自动迁移。
+Workflow v3 is the only active workflow contract. `tools/paper.py` validates metadata, source caches, evidence and asset plans, implementation coverage, paths, and export structure. W2/W4/W7/W9 require `--reviewed-by` and `--note`; W0/W1/W3/W5/W6/W8/W10 record `completed_by: automation` after their checks pass. The tooling does not judge teaching quality.
 
-不要在本轮宏观工作流调整中批量迁移或重写现有 schema v1/v2 教程。`templates/legacy/` 中的 v1 模板和 v2 脚手架仅用于明确发起的旧工作区迁移，不用于创建新的论文工作。
+Historical v1/v2 artifacts are preserved by Git history and are not supported by the current CLI or tests. Inspect historical work through Git history or migrate it manually into a new Workflow v3 workspace.

@@ -36,7 +36,7 @@ Inventory figures, tables, and other source visuals; classify and evaluate each;
 ## Project and release boundaries
 
 1. Each paper workspace lives under `papers/<paper-id>/`.
-2. Do not rewrite existing LwF scenes or modify frozen `web/canonical/` artifacts as part of a macro-workflow change.
+2. Macro-workflow refactors must not redesign paper-specific teaching content unless explicitly requested.
 3. The tutorial export is an independent React + TypeScript project under `html_output/<upstream-paperName>/<upstream-version>/`. Internal `paper_id` is not an upstream directory identifier; record `release.upstream_paper_name` and `release.upstream_version` separately, with `release.output` exactly matching those values.
 4. Copy any useful shared source into that project; do not depend on a cross-paper runtime package or local workspace path.
 5. Tutorial PRs contain only `html_output/<paper>/<version>/`. Workflow/skill changes, if ever contributed upstream, use a separate PR.
@@ -45,6 +45,6 @@ Inventory figures, tables, and other source visuals; classify and evaluate each;
 
 ## Scope and verification
 
-For macro-workflow work, update the workflow, contract, templates, relevant skills, and the smallest necessary helper behavior. Do not redesign a paper's scenes, rebuild a shared component library, or modify the upstream repository unless explicitly requested. Keep existing v1/v2 workspaces readable; new workspaces use schema/workflow v3.
+For macro-workflow work, update the workflow, contract, templates, relevant skills, and the smallest necessary helper behavior. Do not redesign paper-specific teaching content, rebuild a shared component library, or modify the upstream repository unless explicitly requested. All active workspaces use `schema_version: 3`; do not introduce compatibility branches for older workflow schemas.
 
 `tools/paper.py` checks files, metadata shape, and resolvable references. It cannot decide whether an explanation teaches well. Preserve accessibility, keyboard/touch support, reduced motion, mobile behavior, build validation, human learning acceptance, and release boundaries in paper-specific work.

@@ -35,7 +35,7 @@ python tools/paper.py open <paper-id>
 
 只有 W2、W4、W7、W9 需要 `--reviewed-by` 和 `--note`。W0、W1、W3、W5、W6、W8、W10 在机器检查通过后由工具记录 `completed_by: automation`。若 W3 仍有未解决的来源或证据冲突、不安全的表述，或素材权利不明确，就不能完成。`check` 会校验结构、路径、引用和实现覆盖情况，但不会判断教学质量。
 
-`papers/` 中已有的 Workflow v1/v2 工作区仍由原有检查读取，本次变更不会重写它们。`migrate-v2` 仍用于显式执行 v1 迁移。
+PaperSkillWork current tooling supports Workflow v3 only. Historical workflow versions remain available through Git history but are not runtime compatibility targets.
 
 ## 仓库内技能
 
@@ -46,12 +46,9 @@ $paper-review             # W2
 $evidence-audit           # W3
 $learning-architecture    # W4
 $implementation-plan      # W5–W7
-$scene-spec               # 仅用于旧流程；新工作使用 implementation plan
 $enhanced-implementation  # W6–W8
 $final-audit              # W9–W10
 ```
-
-`$narrative-design` 和 `$interaction-design` 已弃用，只是旧名称别名；不会再创建独立的 storyboard 或 interaction-plan 文档。
 
 ## 上游发布
 
