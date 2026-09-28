@@ -78,7 +78,7 @@ const chapterContent: Record<LwfChapterId, ChapterAdapterFields> = {
     badgeLabel: "连续任务",
     bridge: "将一次训练提升到任务阶段：完成后的 Student 成为下一阶段 Teacher。",
     analogy: { title: "本章焦点", text: "每个新阶段都在当前输入上重新生成已有任务的响应目标。" },
-    modules: [{ kind: "module", id: "05.1", title: "跟随任务级状态机", desc: "手动推进冻结 Teacher、接收新任务、生成响应、适配 Student 与下一任务交接。", componentId: "lwf-task-sequence" }],
+    modules: [{ kind: "module", id: "05.1", title: "跟随任务级状态机", desc: "手动推进冻结 Teacher、接收新任务、生成响应、适配 Student 与下一任务交接。", componentId: "lwf-task-handoff" }],
     insight: "上一阶段的响应目标不是永久缓存；新阶段由当前 Teacher 在当前输入上重算。",
     takeaways: [
       { icon: "T", title: "固定阶段 Teacher", desc: "上一阶段模型提供旧任务响应。" },

@@ -4,7 +4,7 @@ import type { WidgetProps } from "./registry";
 import { CoverageBoundaryView } from "../v3/components/CoverageBoundaryView";
 import { LwfEvidenceExplorer } from "../v3/components/LwfEvidenceExplorer";
 import { LwfGrandTrail } from "../v3/components/LwfGrandTrail";
-import { LwfTaskSequence } from "../v3/components/LwfTaskSequence";
+import { LwfTaskHandoffView } from "../v3/components/LwfTaskHandoffView";
 import { ObjectiveBalanceView } from "../v3/components/ObjectiveBalanceView";
 import { PreservationCompare } from "../v3/components/PreservationCompare";
 import { v3ReferenceIds, v3ReferencePriority } from "../v3/data/references";
@@ -38,7 +38,7 @@ function ReferenceBoundModule({ children }: { children: (openReference: (termId:
 const PreservationWidget: React.FC<WidgetProps> = () => <ModuleFrame className="v3-mechanism-chapter"><PreservationCompare /></ModuleFrame>;
 const ObjectiveWidget: React.FC<WidgetProps> = () => <ModuleFrame className="v3-mechanism-chapter"><ObjectiveBalanceView /></ModuleFrame>;
 const CoverageWidget: React.FC<WidgetProps> = () => <ModuleFrame className="v3-mechanism-chapter"><CoverageBoundaryView /></ModuleFrame>;
-const TaskSequenceWidget: React.FC<WidgetProps> = () => <ModuleFrame className="v3-sequential-chapter"><LwfTaskSequence /></ModuleFrame>;
+const TaskHandoffWidget: React.FC<WidgetProps> = () => <ReferenceBoundModule>{(openReference) => <LwfTaskHandoffView onOpenReference={openReference} onNavigateChapter={(chapterId) => { window.location.hash = `chapter-${chapterId}`; }} />}</ReferenceBoundModule>;
 const EvidenceWidget: React.FC<WidgetProps> = () => <ReferenceBoundModule>{(openReference) => <LwfEvidenceExplorer onOpenReference={openReference} />}</ReferenceBoundModule>;
 const GrandTrailWidget: React.FC<WidgetProps> = () => <ReferenceBoundModule>{(openReference) => <LwfGrandTrail onOpenReference={openReference} />}</ReferenceBoundModule>;
 
@@ -46,7 +46,7 @@ export const v3WidgetRegistry: Record<string, React.FC<WidgetProps>> = {
   "lwf-preservation-compare": PreservationWidget,
   "lwf-objective-balance": ObjectiveWidget,
   "lwf-coverage-boundary": CoverageWidget,
-  "lwf-task-sequence": TaskSequenceWidget,
+  "lwf-task-handoff": TaskHandoffWidget,
   "lwf-evidence-explorer": EvidenceWidget,
   "lwf-grand-trail": GrandTrailWidget,
 };

@@ -29,5 +29,8 @@ test("upstream modules are real registered interactions and satisfy the import t
   assert.ok(modules.every((module) => module.kind === "module" && componentSources.includes(`"${module.componentId}"`)
     || module.kind === "module" && componentSources.includes(`'${module.componentId}'`)));
   assert.ok(modules.some((module) => module.componentId === "lwf-evidence-explorer"));
-  assert.ok(modules.some((module) => module.componentId === "lwf-full-replay"));
+  assert.ok(modules.some((module) => module.componentId === "lwf-grand-trail"));
+  assert.equal(LWF_UPSTREAM_CHAPTERS.find((chapter) => chapter.id === "chap-05")?.modules[0]?.componentId, "lwf-task-handoff");
+  assert.ok(componentSources.includes('"lwf-task-handoff": TaskHandoffWidget'));
+  assert.ok(componentSources.includes("LwfTaskHandoffView"));
 });

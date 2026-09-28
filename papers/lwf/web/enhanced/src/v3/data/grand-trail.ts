@@ -11,7 +11,6 @@ export type GrandTrailStep = {
   why: string;
   activeActors: string[];
   activeFlows: string[];
-  visibleObjects: string[];
   referenceId?: string;
   chapterRef?: LwfChapterId;
   durationMs: number;
@@ -31,7 +30,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "旧模型保留了可查询的旧行为，但不需要取回旧训练样本。",
     activeActors: ["model", "old-data-locked"],
     activeFlows: [],
-    visibleObjects: ["model-token", "old-data-lock", "theta-s", "theta-o"],
     referenceId: "teacher",
     chapterRef: "01",
     durationMs: 900,
@@ -47,7 +45,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "LwF 在新任务样本上同时学习新标签并查询旧模型响应。",
     activeActors: ["model", "new-task", "old-data-locked"],
     activeFlows: ["task-arrival"],
-    visibleObjects: ["model-token", "x-n", "y-n", "old-data-lock"],
     referenceId: "xn",
     chapterRef: "02",
     durationMs: 1100,
@@ -63,7 +60,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "两个模型角色分开后，旧响应目标稳定，当前模型仍可学习。",
     activeActors: ["teacher-frozen", "student-active", "new-task"],
     activeFlows: ["teacher-freeze", "student-copy"],
-    visibleObjects: ["model-token", "teacher-ghost", "student-token", "split-branch"],
     referenceId: "student",
     chapterRef: "02",
     durationMs: 1500,
@@ -79,7 +75,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "旧数据不能访问时，旧模型输出仍能为旧任务行为提供参照。",
     activeActors: ["teacher-frozen", "student-active", "new-task", "old-response"],
     activeFlows: ["response-refresh"],
-    visibleObjects: ["x-n", "teacher-ghost", "y-old", "student-token", "response-transfer"],
     referenceId: "yo",
     chapterRef: "02",
     durationMs: 1500,
@@ -95,7 +90,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "新 head 给新任务留出输出通道，无需替换旧任务 head。",
     activeActors: ["teacher-frozen", "student-active", "new-head"],
     activeFlows: ["head-branch"],
-    visibleObjects: ["teacher-ghost", "shared-trunk", "old-head", "theta-n", "student-token"],
     referenceId: "theta-n",
     chapterRef: "02",
     durationMs: 1300,
@@ -111,7 +105,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "先单独适配新输出层，之后再进入旧响应与新任务联合优化。",
     activeActors: ["teacher-frozen", "shared-frozen", "old-head-frozen", "new-head-active"],
     activeFlows: ["new-head-warmup"],
-    visibleObjects: ["theta-s-frozen", "theta-o-frozen", "theta-n-active", "student-token"],
     referenceId: "warm-up",
     chapterRef: "03",
     durationMs: 1300,
@@ -127,7 +120,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "联合目标在保持已观察旧响应与适配当前任务之间提供权衡。",
     activeActors: ["teacher-frozen", "student-active", "old-loss", "new-loss", "gradient"],
     activeFlows: ["old-loss", "new-loss", "gradient-wave"],
-    visibleObjects: ["old-response-pair", "new-label-pair", "loss-old", "loss-new", "objective", "gradient-wave", "theta-o", "theta-n", "theta-s"],
     referenceId: "joint-optimization",
     chapterRef: "03",
     durationMs: 2200,
@@ -143,7 +135,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "这一步才真正改变 Student 参数并完成当前阶段的适配。",
     activeActors: ["teacher-frozen", "student-updated", "optimizer"],
     activeFlows: ["parameter-update"],
-    visibleObjects: ["gradient-wave", "optimizer", "student-before", "updated-student"],
     referenceId: "joint-optimization",
     chapterRef: "03",
     durationMs: 1200,
@@ -159,7 +150,6 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "模型沿任务序列递归交接，构成完整生命周期。",
     activeActors: ["model-next", "teacher-next", "next-task"],
     activeFlows: ["model-promotion", "loop-closure"],
-    visibleObjects: ["updated-student", "model-next", "teacher-next", "next-task", "loopback"],
     referenceId: "sequential-refresh",
     chapterRef: "05",
     durationMs: 1700,
