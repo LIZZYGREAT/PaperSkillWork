@@ -65,9 +65,9 @@ web:
   enhanced: web/enhanced
   final: web/final
 release:
-  upstream_paper_name: ''
-  upstream_version: ''
-  output: ''
+  upstream_paper_name: learning_without_forgetting
+  upstream_version: ganwenjie0928
+  output: html_output/learning_without_forgetting/ganwenjie0928
 paperskill:
   tutorial_pr:
     number: null
