@@ -38,7 +38,7 @@ jobs:
           fi
 
       - name: Run PaperSkillWork tests
-        run: python -m pytest -q
+        run: python -m pytest -q -o "cache_dir=${{ runner.temp }}/pytest-cache" --basetemp="${{ runner.temp }}/pytest-tmp"
 
       - name: Check Workflow v3 and PhyAgentOS workspace
         run: python tools/paper.py check phyagentos
