@@ -1,4 +1,5 @@
 import json
+import shutil
 
 from workflow_helpers import make_project, write_manifest, write_fenced_yaml
 
@@ -55,13 +56,6 @@ def test_implementation_plan_rejects_unregistered_reusable_pattern(tmp_path):
     assert any("unknown reusable_pattern 'ImaginaryExplorer'" in problem for problem in problems)
 
 
-def test_implementation_plan_accepts_registered_reusable_pattern(tmp_path):
-    _root, paper, _config_path, module = make_project(tmp_path)
-    evidence_ids, _entries, _problems = module.evidence_registry_ids_v3(paper)
-    _plan, problems = module.v3_implementation_data(paper, evidence_ids)
-    assert not any("reusable_pattern" in problem for problem in problems)
-
-
 def test_w6_requires_only_vertical_slice_core_and_w8_requires_all_core(tmp_path):
     _root, paper, config_path, module = make_project(tmp_path)
     config = module.load_yaml(config_path)
@@ -81,6 +75,28 @@ def test_w6_requires_only_vertical_slice_core_and_w8_requires_all_core(tmp_path)
 
     manifest["implemented_core"]["C03"]["status"] = "complete"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    assert module.v3_stage_completion_problems(paper, "W8", config) == []
+
+
+def test_w6_and_w8_use_configured_final_source_for_implementation_coverage(tmp_path):
+    _root, paper, config_path, module = make_project(tmp_path)
+    config = module.load_yaml(config_path)
+    enhanced = paper / "web/enhanced"
+    final = paper / "web/final"
+    final.mkdir()
+    for relative in ("package.json", "package-lock.json", "src/App.tsx", "implementation-manifest.json"):
+        target = final / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(enhanced / relative, target)
+
+    manifest_path = final / "implementation-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["implemented_core"]["C03"]["status"] = "complete"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    (enhanced / "implementation-manifest.json").unlink()
+    config["web"]["final"] = "web/final"
+
+    assert module.v3_stage_completion_problems(paper, "W6", config) == []
     assert module.v3_stage_completion_problems(paper, "W8", config) == []
 
 

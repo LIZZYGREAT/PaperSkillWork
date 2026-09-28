@@ -1153,6 +1153,32 @@ def porcelain_changed_paths(output: str) -> List[str]:
     return sorted(set(paths))
 
 
+def resolve_upstream_source(folder: Path, config: Dict[str, Any]) -> Path:
+    """Select the configured standalone source, retaining compatibility with older v3 workspaces."""
+    web = config.get("web", {})
+    if not isinstance(web, dict):
+        web = {}
+    final_relative = web.get("final")
+    if final_relative is not None:
+        if not isinstance(final_relative, str) or not final_relative.strip():
+            raise PaperError("web.final must be a non-empty relative path when configured")
+        issue = path_problem(final_relative)
+        if issue:
+            raise PaperError("web.final {}".format(issue))
+        source = folder / final_relative
+        if not source.is_dir():
+            raise PaperError("configured web.final source is missing: {}".format(final_relative))
+        return source
+
+    legacy_relative = web.get("enhanced", "web/enhanced")
+    source = folder / legacy_relative
+    if not source.is_dir():
+        raise PaperError(
+            "web.final is not configured and fallback source '{}' is missing".format(legacy_relative)
+        )
+    return source
+
+
 def run_upstream_check(
     folder: Path,
     config: Dict[str, Any],
@@ -1212,6 +1238,8 @@ def run_upstream_check(
         if any(ord(character) > 127 for character in participant) and not pinyin.strip():
             raise PaperError("--pinyin is required for a non-ASCII --participant")
 
+        source = resolve_upstream_source(folder, config)
+
         with tempfile.TemporaryDirectory(prefix="paperskill-workflow-") as temp_dir:
             temp_root = Path(temp_dir)
             temp_repo = temp_root / "PaperSkill"
@@ -1233,9 +1261,6 @@ def run_upstream_check(
                 if configured.returncode != 0:
                     raise PaperError("could not set temporary Git identity: {}".format(summarize_process(configured, temp_root)))
 
-            source = folder / "web/enhanced"
-            if not source.is_dir():
-                raise PaperError("web/enhanced is missing")
             source_copy = temp_repo / ".paperskillwork-source"
             shutil.copytree(source, source_copy, ignore=shutil.ignore_patterns("node_modules", "dist", "dist-ssr", ".vite"))
 
@@ -1939,11 +1964,21 @@ def v3_implementation_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Di
     return plan, problems
 
 
-def v3_implementation_coverage(folder: Path, stage_id: str, implementation_plan: Dict[str, Any]) -> List[str]:
+def v3_implementation_coverage(
+    folder: Path,
+    stage_id: str,
+    implementation_plan: Dict[str, Any],
+    config: Dict[str, Any],
+) -> List[str]:
     problems: List[str] = []
+    try:
+        source = resolve_upstream_source(folder, config)
+    except PaperError as exc:
+        return [str(exc)]
+    source_label = source.relative_to(folder).as_posix()
     manifest, manifest_problems = read_json_object(
-        folder / "web/enhanced/implementation-manifest.json",
-        "web/enhanced/implementation-manifest.json",
+        source / "implementation-manifest.json",
+        "{}/implementation-manifest.json".format(source_label),
     )
     problems.extend(manifest_problems)
     if manifest is None:
@@ -2293,20 +2328,24 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
         problems.extend(implementation_problems)
         return problems
     if stage_id in ("W6", "W8"):
-        web = folder / "web/enhanced"
+        try:
+            web = resolve_upstream_source(folder, config)
+        except PaperError as exc:
+            return [str(exc)]
+        web_label = web.relative_to(folder).as_posix()
         package = web / "package.json"
         if not package.is_file():
-            problems.append("web/enhanced/package.json is missing")
+            problems.append("{}/package.json is missing".format(web_label))
         elif stage_id == "W8" and not (web / "package-lock.json").is_file():
-            problems.append("web/enhanced/package-lock.json is missing")
+            problems.append("{}/package-lock.json is missing".format(web_label))
         if not any((web / path).is_file() for path in ("src/App.tsx", "src/main.tsx")):
-            problems.append("web/enhanced needs src/App.tsx or src/main.tsx")
+            problems.append("{} needs src/App.tsx or src/main.tsx".format(web_label))
         evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
         problems.extend(evidence_problems)
         implementation_plan, implementation_problems = v3_implementation_data(folder, evidence_ids)
         problems.extend(implementation_problems)
         if isinstance(implementation_plan, dict):
-            problems.extend(v3_implementation_coverage(folder, stage_id, implementation_plan))
+            problems.extend(v3_implementation_coverage(folder, stage_id, implementation_plan, config))
         if stage_id == "W8":
             source_manifest, source_problems = v3_cache_data(folder)
             problems.extend(source_problems)

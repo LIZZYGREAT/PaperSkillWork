@@ -2,6 +2,8 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from workflow_helpers import load_config, make_project, write_export, write_upstream_report
 
 
@@ -31,6 +33,30 @@ def make_imported_export(cwd, name="sample_paper_name", version="ada0926"):
     (output / "package.json").write_text("{}\n", encoding="utf-8")
 
 
+def test_upstream_source_prefers_configured_final_directory(tmp_path):
+    _root, paper, _config_path, module = make_project(tmp_path)
+    final = paper / "web/final"
+    final.mkdir()
+    config = {"web": {"enhanced": "web/enhanced", "final": "web/final"}}
+
+    assert module.resolve_upstream_source(paper, config) == final
+
+
+def test_upstream_source_falls_back_to_enhanced_when_final_is_not_configured(tmp_path):
+    _root, paper, _config_path, module = make_project(tmp_path)
+    config = {"web": {"enhanced": "web/enhanced"}}
+
+    assert module.resolve_upstream_source(paper, config) == paper / "web/enhanced"
+
+
+def test_upstream_source_reports_missing_configured_final_without_fallback(tmp_path):
+    _root, paper, _config_path, module = make_project(tmp_path)
+    config = {"web": {"enhanced": "web/enhanced", "final": "web/final"}}
+
+    with pytest.raises(module.PaperError, match="configured web.final source is missing: web/final"):
+        module.resolve_upstream_source(paper, config)
+
+
 def test_w10_requires_machine_report_and_rejects_a_failed_upstream_command(tmp_path):
     root, paper, config_path, module = make_project(tmp_path)
     config = load_config(config_path)
@@ -47,6 +73,11 @@ def test_w10_requires_machine_report_and_rejects_a_failed_upstream_command(tmp_p
 def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_path):
     root, paper, config_path, module = make_project(tmp_path)
     config = load_config(config_path)
+    final = paper / "web/final"
+    final.mkdir()
+    (final / "source-choice.txt").write_text("final source\n", encoding="utf-8")
+    (paper / "web/enhanced/source-choice.txt").write_text("enhanced source\n", encoding="utf-8")
+    config["web"]["final"] = "web/final"
     config["release"] = {
         "upstream_paper_name": "sample_paper_name",
         "upstream_version": "ada0926",
@@ -71,6 +102,8 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
             head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=kwargs["cwd"], capture_output=True, text=True, check=True)
             preflight_heads.append(head.stdout.strip())
         if command[2] == "import":
+            source = Path(kwargs["cwd"]) / command[4]
+            assert (source / "source-choice.txt").read_text(encoding="utf-8") == "final source\n"
             make_imported_export(Path(kwargs["cwd"]))
         return subprocess.CompletedProcess(command, 0, stdout="passed\n", stderr="")
 
