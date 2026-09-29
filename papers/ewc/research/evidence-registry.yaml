@@ -1,0 +1,174 @@
+claims:
+  C01:
+    claim: "Sequentially optimizing a network for task B can change weights important to task A and cause catastrophic forgetting."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 1-2, Introduction; PDF p. 3, Figure 1"
+    conditions: "Sequential learning on tasks with one shared network."
+    allowed_wording: "The paper defines catastrophic forgetting as loss of earlier-task performance when shared weights are changed to fit a later task."
+  C02:
+    claim: "EWC constrains parameters around a previous task solution, with stronger penalties for parameters assigned greater importance."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 2-3, Section 2, Figure 1, Equations (2)-(3)"
+    conditions: "Task B is learned after task A using a shared parameter vector."
+    allowed_wording: "EWC uses an importance-weighted quadratic penalty around the earlier solution; it does not freeze every parameter."
+  C03:
+    claim: "The Bayesian derivation uses the posterior after task A as the prior contribution when learning task B."
+    type: PAPER_FACT
+    source_locator: "PDF p. 2, Section 2, Equations (1)-(2)"
+    conditions: "The derivation splits the data into task-A and task-B subsets."
+    allowed_wording: "In the paper's sequential update, information from task A is carried forward in its parameter posterior."
+  C04:
+    claim: "The intractable previous-task posterior is approximated by a Gaussian centered at the learned parameters, with diagonal precision from the Fisher information matrix."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, Section 2, paragraph before Equation (3)"
+    conditions: "This is the paper's stated Laplace approximation for EWC."
+    allowed_wording: "The paper uses a Gaussian Laplace approximation with mean at the task-A solution and diagonal Fisher precision; it is an approximation, not the exact posterior."
+  C05:
+    claim: "The paper motivates Fisher information by describing its local relation to loss curvature, first-order computability, and positive semi-definiteness."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, Section 2, paragraph before Equation (3)"
+    conditions: "Report this as the paper's stated rationale; do not generalize it into an exact identity for every diagonal-Fisher setting."
+    allowed_wording: "The authors cite these Fisher properties as reasons to use it as an approximate precision."
+  C06:
+    claim: "For task B, Equation (3) adds a Fisher-weighted quadratic penalty around the task-A parameters to task B's loss."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, Equation (3) and its following paragraph"
+    conditions: "The scalar lambda balances the earlier-task constraint against current-task loss."
+    allowed_wording: "State Equation (3) with task B loss, diagonal Fisher entries, task-A anchor, and lambda; keep lambda's value experiment-specific."
+  C07:
+    claim: "For a third task, the paper says earlier-task constraints can be kept as separate penalties or combined by summing quadratic penalties."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, paragraph after Equation (3)"
+    conditions: "The statement concerns the paper's quadratic-penalty formulation."
+    allowed_wording: "The paper describes separate or summed quadratic penalties for earlier tasks; do not infer an unreported compression scheme."
+  C08:
+    claim: "The Atari system combines EWC with a task-recognition model, task-specific gains and biases, and per-task replay buffers."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 5-6, Section 2.2, Figure 3; Appendix Section 4.2, pp. 10-12"
+    conditions: "This describes the full Atari system, not EWC in isolation."
+    allowed_wording: "Name task recognition, context-specific gains and biases, and per-task replay alongside EWC when describing the Atari system."
+  C09:
+    claim: "In Atari, the authors recompute Fisher at task switches and activate the EWC penalty after a game has at least 20 million frames."
+    type: PAPER_FACT
+    source_locator: "PDF p. 5, Section 2.2; PDF p. 12, Appendix Table 2"
+    conditions: "The 20-million-frame activation and Fisher recomputation describe the reported Atari setup."
+    allowed_wording: "For the reported Atari experiment, EWC is updated at task switches and applied after the stated per-game experience threshold."
+  C10:
+    claim: "Permuted MNIST tasks use fixed random input-pixel permutations while retaining the digit-classification task."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 3-4, Section 2.1; Appendix Section 4.1, p. 10"
+    conditions: "The claim is specific to the supervised experiment in the paper."
+    allowed_wording: "Each task uses its own fixed pixel permutation, so the input mapping changes while the digit labels remain the same."
+  C11:
+    claim: "The paper identifies the factorized Gaussian and point estimate of parameter uncertainty based on diagonal Fisher as a limitation of its tractable method."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "PDF pp. 6-7, Discussion"
+    conditions: "Attribute this limitation to the authors' discussion."
+    allowed_wording: "The authors call the factorized Gaussian and diagonal-Fisher uncertainty estimate a significant approximation weakness."
+results:
+  R01:
+    claim: "In the reported permuted-MNIST comparison, EWC retains earlier-task performance while continuing to learn later tasks better than the displayed uniform-L2 and plain-SGD baselines."
+    type: PAPER_RESULT
+    source_locator: "PDF pp. 3-4, Figure 2A-B and adjacent Section 2.1 text"
+    conditions: "Three random permutations are shown in Figure 2A; the broader comparison and training settings are those reported in Section 2.1."
+    allowed_wording: "Describe the trend and name the displayed baselines; do not claim universal superiority or invent exact values."
+  R02:
+    claim: "The Fisher-overlap result reports greater overlap for more similar permutations, with more distinct use of early-layer parameters as permutations become more different."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 4, Figure 2C and adjacent text; Appendix Section 4.3, p. 13"
+    conditions: "The comparison uses the stated 8x8 and 26x26 pixel permutation settings and network depths."
+    allowed_wording: "Present the plotted Fisher-overlap trend under these permutation settings; do not generalize it to all tasks or architectures."
+  R03:
+    claim: "The Atari comparison evaluates repeated sequences of ten games sampled from a pool of nineteen and reports higher total scores for the EWC-based agents than for the no-penalty baseline."
+    type: PAPER_RESULT
+    source_locator: "PDF pp. 5-6, Section 2.2 and Figure 3A-B; Appendix Section 4.2"
+    conditions: "The plotted outcome is for the full Atari system, including task recognition, task-specific parameters, and replay."
+    allowed_wording: "Describe the reported comparison as a result of the full Atari system, not as an EWC-only result."
+  R04:
+    claim: "In a single-game Breakout perturbation experiment, inverse-Fisher-shaped perturbations were more robust than uniform perturbations, while Fisher-nullspace perturbations unexpectedly affected performance similarly to inverse-Fisher perturbations."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 6, Figure 3C and adjacent Section 2.2 text"
+    conditions: "A single-game Breakout DQN is evaluated over ten full episodes with a new random perturbation at each timestep."
+    allowed_wording: "Report the perturbation conditions and the surprising nullspace outcome together."
+  R05:
+    claim: "The Atari EWC agent does not reach the score of the comparison using ten separately trained DQNs."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 6, Section 2.2; Figure S3 cited by the text"
+    conditions: "This is the reported Atari comparison against separate agents."
+    allowed_wording: "State the performance gap and avoid presenting EWC as matching a separate network per game."
+  R06:
+    claim: "The appendix includes per-game Atari learning curves comparing EWC, SGD, and single-game baselines."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 13, Figure 4"
+    conditions: "The figure is supporting detail and not a single aggregate result."
+    allowed_wording: "Refer readers to the per-game curves as supporting experimental detail."
+author_interpretations:
+  A01:
+    claim: "The authors interpret the nullspace perturbation result as evidence that their method is overconfident about some parameters being unimportant and underestimates parameter uncertainty."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "PDF p. 6, paragraph following Figure 3C"
+    conditions: "This is the authors' interpretation of the reported perturbation experiment."
+    allowed_wording: "Attribute the overconfidence explanation to the authors and connect it to the observed nullspace result."
+  A02:
+    claim: "The authors suggest tractable approximation of parameter uncertainty as one possible reason the Atari result falls short of ten separate DQNs."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "PDF p. 6, Section 2.2"
+    conditions: "The paper presents this as a possible explanation, not a demonstrated cause."
+    allowed_wording: "Say the authors suggest this as one possible reason; do not state it as a proven cause."
+our_interpretations:
+  I01:
+    claim: "The quadratic penalty can be taught as an anisotropic movement cost around the earlier solution: high-Fisher directions incur a larger cost for the same parameter displacement."
+    type: OUR_INTERPRETATION
+    source_locator: "Interpretation of PDF p. 3, Equation (3), with C04 and C06"
+    conditions: "This is an explanatory interpretation of the diagonal quadratic objective."
+    allowed_wording: "Use as an intuition for the equation, while stating that it is a teaching interpretation."
+  I02:
+    claim: "The Fisher-overlap plot can be used to discuss parameter reuse across the specific MNIST permutation tasks."
+    type: OUR_INTERPRETATION
+    source_locator: "Interpretation of PDF p. 4, Figure 2C and Appendix Section 4.3"
+    conditions: "Keep the conclusion within the studied permutation and network-depth settings."
+    allowed_wording: "Describe what the authors' overlap measure suggests in this experiment; do not call it a universal decomposition of network capacity."
+implementation_mappings:
+  M01:
+    claim: "A teaching interface may depict the task-A solution and its diagonal Fisher values as a saved anchor-and-importance record used during task-B updates."
+    type: IMPLEMENTATION_MAPPING
+    source_locator: "Tutorial mapping of PDF pp. 2-3, Equations (2)-(3); not a software schema specified by the paper"
+    conditions: "Use as a diagram of the mathematical quantities, not as a claimed checkpoint format."
+    allowed_wording: "Label the saved anchor and importance values as a teaching representation; the paper does not prescribe this software record."
+  M02:
+    claim: "Differentiating Equation (3) yields a current-task gradient plus a Fisher-weighted restoring term for each diagonal parameter."
+    type: IMPLEMENTATION_MAPPING
+    source_locator: "Algebraic derivative of PDF p. 3, Equation (3); derivative not separately printed in the paper"
+    conditions: "For parameter i, the penalty derivative is lambda times F_i times the displacement from the task-A anchor."
+    allowed_wording: "Introduce this as a derivative of Equation (3), not as an additional equation printed in the paper."
+background:
+  B01:
+    claim: "A conditional prediction probability such as p(y|x,theta) is standard background for explaining a probabilistic classifier; this notation is not given as the paper's EWC estimator."
+    type: GENERAL_BACKGROUND
+    source_locator: "General classification background; distinguish from PDF pp. 2-3, where the paper gives p(D|theta) and identifies its log with negative task loss"
+    conditions: "Use only for basic context and add a suitable independent reference if a detailed probability derivation is published."
+    allowed_wording: "Label the conditional classifier view as background; attribute only the dataset likelihood and loss relation to this paper."
+  B02:
+    claim: "A per-example squared-gradient empirical-Fisher estimator is not specified in the supplied PDF."
+    type: GENERAL_BACKGROUND
+    source_locator: "Absence boundary checked against PDF p. 3, Section 2, and PDF pp. 5, 10-12, Atari Fisher details"
+    conditions: "The supplied prerequisite note may motivate this topic but is not evidence for what this paper implemented."
+    allowed_wording: "Do not present a per-example gradient-squared formula as an estimator specified by this paper; cite another source if teaching it as background."
+teaching_examples:
+  T01:
+    claim: "A small two-parameter contour and update-path example may illustrate forgetting, a uniform penalty, and an importance-weighted penalty."
+    type: TEACHING_EXAMPLE
+    source_locator: "Illustrative teaching example motivated by PDF p. 3, Figure 1; example values are not paper data"
+    conditions: "Use newly created illustrative numbers and label the diagram as a teaching example."
+    allowed_wording: "Call the visualization illustrative and do not attribute its numeric values or exact paths to the experiment."
+  T02:
+    claim: "A final animation may integrate probability, the previous-task anchor, Fisher-weighted penalty, and the sequential task switch already taught in the preceding stages."
+    type: TEACHING_EXAMPLE
+    source_locator: "Grand Animation design specification; integration of PDF pp. 2-5 concepts"
+    conditions: "The animation introduces no new paper claim or unsupported estimator detail."
+    allowed_wording: "Present it as a teaching integration, with paper-reported and illustrative content visibly distinguished."
+
+review:
+  unresolved_source_conflicts: []
+  unresolved_evidence_conflicts: []
+  unsafe_claim_wording: []
