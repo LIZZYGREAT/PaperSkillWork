@@ -1,0 +1,72 @@
+schema_version: 3
+id: ewc
+title: Overcoming catastrophic forgetting in neural networks
+paper:
+  url: https://arxiv.org/abs/1612.00796v2
+  arxiv_id: '1612.00796'
+  authors:
+  - James Kirkpatrick
+  - Razvan Pascanu
+  - Neil Rabinowitz
+  - Joel Veness
+  - Guillaume Desjardins
+  - Andrei A. Rusu
+  - Kieran Milan
+  - John Quan
+  - Tiago Ramalho
+  - Agnieszka Grabska-Barwinska
+  - Demis Hassabis
+  - Claudia Clopath
+  - Dharshan Kumaran
+  - Raia Hadsell
+  venue: Proceedings of the National Academy of Sciences, 114(13), 3521-3526
+  year: 2017
+  source_type: User-provided PDF, arXiv v2
+  source_location: papers/ewc/source/EWC.pdf (arXiv:1612.00796v2, 2017-01-25)
+  source_hash: 5E181839191AB4582DA2B5FF9666F5222E40B8B8D2F1CDF4FA7100B3A58D7A29
+workflow:
+  version: 3
+  current_stage: W1
+  stages:
+    W0_source_intake:
+      status: complete
+      completed_by: automation
+    W1_source_cache:
+      status: pending
+    W2_paper_model:
+      status: pending
+    W3_evidence_assets:
+      status: pending
+    W4_learning_spine:
+      status: pending
+    W5_interaction_plan:
+      status: pending
+    W6_vertical_slice:
+      status: pending
+    W7_human_review:
+      status: pending
+    W8_full_implementation:
+      status: pending
+    W9_final_audit:
+      status: pending
+    W10_upstream_preflight:
+      status: pending
+artifacts:
+  source_cache: source-cache
+  paper_model: research/paper-model.md
+  evidence_registry: research/evidence-registry.yaml
+  learning_spine: design/learning-spine.md
+  asset_plan: design/asset-plan.md
+  implementation_plan: design/implementation-plan.md
+  final_check: audit/final-check.md
+  enhanced: web/enhanced
+web:
+  enhanced: web/enhanced
+release:
+  upstream_paper_name: ''
+  upstream_version: ''
+  output: ''
+paperskill:
+  tutorial_pr:
+    number: null
+    status: pending
