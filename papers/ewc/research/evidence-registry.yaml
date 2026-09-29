@@ -65,6 +65,12 @@ claims:
     source_locator: "PDF pp. 6-7, Discussion"
     conditions: "Attribute this limitation to the authors' discussion."
     allowed_wording: "The authors call the factorized Gaussian and diagonal-Fisher uncertainty estimate a significant approximation weakness."
+  C12:
+    claim: "The paper identifies the log likelihood of the data given parameters with the negative task loss."
+    type: PAPER_FACT
+    source_locator: "PDF p. 2, paragraph following Equation (1); PDF p. 3, Equation (3)"
+    conditions: "The specific per-example conditional classifier probability p_theta(y|x) is not derived in this paper."
+    allowed_wording: "Attribute the log data-likelihood and task-loss relation to this paper; label a p_theta(y|x) classifier explanation as general background."
 results:
   R01:
     claim: "In the reported permuted-MNIST comparison, EWC retains earlier-task performance while continuing to learn later tasks better than the displayed uniform-L2 and plain-SGD baselines."
@@ -145,7 +151,7 @@ background:
   B01:
     claim: "A conditional prediction probability such as p(y|x,theta) is standard background for explaining a probabilistic classifier; this notation is not given as the paper's EWC estimator."
     type: GENERAL_BACKGROUND
-    source_locator: "General classification background; distinguish from PDF pp. 2-3, where the paper gives p(D|theta) and identifies its log with negative task loss"
+    source_locator: "Goodfellow, Bengio, and Courville, Deep Learning, Section 6.2.1.1, https://www.deeplearningbook.org/contents/mlp.html; distinguish from PDF pp. 2-3"
     conditions: "Use only for basic context and add a suitable independent reference if a detailed probability derivation is published."
     allowed_wording: "Label the conditional classifier view as background; attribute only the dataset likelihood and loss relation to this paper."
   B02:
@@ -153,7 +159,13 @@ background:
     type: GENERAL_BACKGROUND
     source_locator: "Absence boundary checked against PDF p. 3, Section 2, and PDF pp. 5, 10-12, Atari Fisher details"
     conditions: "The supplied prerequisite note may motivate this topic but is not evidence for what this paper implemented."
-    allowed_wording: "Do not present a per-example gradient-squared formula as an estimator specified by this paper; cite another source if teaching it as background."
+    allowed_wording: "Do not present a per-example gradient-squared formula as an estimator specified by this paper; if teaching it as separate background, distinguish it from expected Fisher using B03."
+  B03:
+    claim: "The observed-label empirical Fisher is a sum of per-example score-gradient outer products and is distinct from the Fisher expectation over the model's predictive distribution."
+    type: GENERAL_BACKGROUND
+    source_locator: "Kunstner, Balles, and Hennig, NeurIPS 2019, Sections 1 and 3.1, Equations (2)-(3) and (6)-(7), https://proceedings.neurips.cc/paper/2019/hash/46a558d97954d0692411c861cf78ef79-Abstract.html"
+    conditions: "This later-methods source clarifies terminology; it does not specify the estimator used by Kirkpatrick et al."
+    allowed_wording: "If introduced as supplemental background, distinguish expected Fisher from observed-label empirical Fisher and state that the 2017 paper does not specify this empirical estimator."
 teaching_examples:
   T01:
     claim: "A small two-parameter contour and update-path example may illustrate forgetting, a uniform penalty, and an importance-weighted penalty."
