@@ -71,6 +71,12 @@ claims:
     source_locator: "PDF p. 2, paragraph following Equation (1); PDF p. 3, Equation (3)"
     conditions: "The specific per-example conditional classifier probability p_theta(y|x) is not derived in this paper."
     allowed_wording: "Attribute the log data-likelihood and task-loss relation to this paper; label a p_theta(y|x) classifier explanation as general background."
+  C13:
+    claim: "The paper writes Bayes' rule for parameters as posterior equals data likelihood times prior, up to the data evidence normalizer."
+    type: PAPER_FACT
+    source_locator: "PDF p. 2, Section 2, Equation (1)"
+    conditions: "Equation (1) states the relationship but does not prescribe a particular functional form for the general prior."
+    allowed_wording: "Explain the prior, likelihood, and posterior in Equation (1); for sequential EWC, emphasize that the task-A posterior supplies the prior contribution for task B."
 results:
   R01:
     claim: "In the reported permuted-MNIST comparison, EWC retains earlier-task performance while continuing to learn later tasks better than the displayed uniform-L2 and plain-SGD baselines."
