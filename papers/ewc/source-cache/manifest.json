@@ -1,0 +1,76 @@
+{
+  "paper": {
+    "title": "Overcoming catastrophic forgetting in neural networks",
+    "authors": [
+      "James Kirkpatrick",
+      "Razvan Pascanu",
+      "Neil Rabinowitz",
+      "Joel Veness",
+      "Guillaume Desjardins",
+      "Andrei A. Rusu",
+      "Kieran Milan",
+      "John Quan",
+      "Tiago Ramalho",
+      "Agnieszka Grabska-Barwinska",
+      "Demis Hassabis",
+      "Claudia Clopath",
+      "Dharshan Kumaran",
+      "Raia Hadsell"
+    ],
+    "venue": "Proceedings of the National Academy of Sciences, 114(13), 3521-3526",
+    "year": 2017,
+    "source_type": "User-provided PDF, arXiv v2",
+    "source_location": "papers/ewc/source/EWC.pdf (arXiv:1612.00796v2, 2017-01-25)",
+    "source_hash": "5E181839191AB4582DA2B5FF9666F5222E40B8B8D2F1CDF4FA7100B3A58D7A29",
+    "url": "https://arxiv.org/abs/1612.00796v2",
+    "arxiv_id": "1612.00796",
+    "source_version": "arXiv v2, 2017-01-25",
+    "source_hash_algorithm": "SHA-256"
+  },
+  "cache_status": "complete",
+  "extraction": "The 13-page user-provided PDF was extracted page by page with pypdf. PDF page boundaries are preserved in content.md. Figures and tables were inventoried from captions and visually checked by rendering pages 3, 4, 6, 10, 12, and 13.",
+  "figures": [
+    {
+      "id": "F1",
+      "locator": "PDF p. 3, Figure 1",
+      "caption": "Elastic weight consolidation (EWC) ensures task A is remembered whilst training on task B. Training trajectories are illustrated in a schematic parameter space, with parameter regions leading to good performance on task A (gray) and on task B (cream). After learning the first task, the parameters are at θ*_A. If we take gradient steps according to task B alone (blue arrow), we will minimize the loss of task B but destroy what we have learnt for task A. On the other hand, if we constrain each weight with the same coefficient (green arrow) the restriction imposed is too severe and we can only remember task A at the expense of not learning task B. EWC, conversely, finds a solution for task B without incurring a significant loss on task A (red arrow) by explicitly computing how important weights are for task A.",
+      "type": "MECHANISM",
+      "candidate_role": "Parameter-space schematic contrasting no penalty, uniform L2 constraint, and EWC."
+    },
+    {
+      "id": "F2",
+      "locator": "PDF p. 4, Figure 2 (panels A-C)",
+      "caption": "Results on the permuted MNIST task. A: Training curves for three random permutations A, B and C using EWC (red), L2 regularization (green) and plain SGD (blue). Note that only EWC is capable of mantaining a high performance on old tasks, while retaining the ability to learn new tasks. B: Average performance across all tasks using EWC (red) or SGD with dropout regularization (blue). The dashed line shows the performance on a single task only. C: Similarity between the Fisher information matrices as a function of network depth for two different amounts of permutation. Either a small square of 8x8 pixels in the middle of the image is permuted (grey) or a large square of 26x26 pixels is permuted (black). Note how the more different the tasks are, the smaller the overlap in Fisher information matrices in early layers.",
+      "type": "RESULT",
+      "candidate_role": "Permuted MNIST performance, comparison baselines, and Fisher overlap evidence."
+    },
+    {
+      "id": "F3",
+      "locator": "PDF p. 6, Figure 3 (panels A-C)",
+      "caption": "Results on Atari task. A: Schedule of games. Black bars indicate the sequential training periods (segments) for each game. After each training segment, performance on all games is measured. The EWC constraint is only activated to protect an agent's performance on each game once the agent has experienced 20 million frames in that game. B: Total scores for each method across all games. Red curve denotes the network which infers the task labels using the Forget Me Not algorithm; brown curve is the network provided with the task labels. The EWC and SGD curves start diverging when games start being played again that have been protected by EWC. C: Sensitivity of a single-game DQN, trained on Breakout, to noise added to its weights. The performance on Breakout is shown as a function of the magnitude (standard deviation) of the weight perturbation. The weight perturbation is drawn from a zero mean Gaussian with covariance that is either uniform (black; i.e. targets all weights equally), the inverse Fisher ((F + λI)^-1; blue; i.e. mimicking weight changes allowed by EWC), or uniform within the nullspace of the Fisher (orange; i.e. targets weights that the Fisher estimates that the network output is entirely invariant to). To evaluate the score, we ran the agent for ten full game episodes, drawing a new random weight perturbation for every timestep.",
+      "type": "RESULT",
+      "candidate_role": "Atari task schedule and score evidence, task-label control, and Fisher-perturbation diagnostic."
+    },
+    {
+      "id": "T1",
+      "locator": "PDF p. 10, Table 1",
+      "caption": "Hyperparameters for each of the MNIST figures",
+      "type": "LOW_VALUE",
+      "candidate_role": "MNIST model and training settings for reproducibility."
+    },
+    {
+      "id": "T2",
+      "locator": "PDF p. 12, Table 2",
+      "caption": "Hyperparameters for each of the MNIST figures",
+      "type": "LOW_VALUE",
+      "candidate_role": "Atari, task-recognition, and Fisher-estimation settings for reproducibility; caption appears inconsistent with the surrounding Atari appendix section."
+    },
+    {
+      "id": "F4",
+      "locator": "PDF p. 13, Figure 4 (Appendix §4.2)",
+      "caption": "Score in the individual games as a function of steps played in that game. The black baseline curves show learning on individual games alone.",
+      "type": "RESULT",
+      "candidate_role": "Per-game Atari learning curves for EWC, SGD, and single-game baselines."
+    }
+  ]
+}

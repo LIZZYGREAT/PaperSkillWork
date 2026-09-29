@@ -26,13 +26,14 @@ paper:
   source_hash: 5E181839191AB4582DA2B5FF9666F5222E40B8B8D2F1CDF4FA7100B3A58D7A29
 workflow:
   version: 3
-  current_stage: W1
+  current_stage: W2
   stages:
     W0_source_intake:
       status: complete
       completed_by: automation
     W1_source_cache:
-      status: pending
+      status: complete
+      completed_by: automation
     W2_paper_model:
       status: pending
     W3_evidence_assets:
