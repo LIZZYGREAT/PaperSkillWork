@@ -4,6 +4,17 @@ import { usePopoverPosition } from "../foundation/overlay/Popover";
 import type { CanonicalReferenceId } from "../../contracts/ids";
 import { referenceRegistry } from "../../data/referenceRegistry";
 import { useReferenceApi } from "./ReferenceProvider";
+import type { ReferenceHoverCopy } from "./types";
+
+const KIND_LABELS: Record<string, string> = {
+  term: "术语", symbol: "符号", formula: "公式", dataset: "数据集", environment: "环境",
+  method: "方法", phase: "阶段", evidence: "证据", confusion: "易混概念", implementation: "实现", advanced: "进阶",
+};
+const SOURCE_LABELS: Record<string, string> = {
+  PAPER_FACT: "论文事实", PAPER_RESULT: "论文结果", AUTHOR_INTERPRETATION: "作者解释",
+  GENERAL_BACKGROUND: "通用背景", MECHANISM_INTERPRETATION: "机制解释", IMPLEMENTATION_MAPPING: "实现对应",
+  TEACHING_EXAMPLE: "教学示例", LIMITATION: "局限",
+};
 
 export function ReferenceTrigger({ id, children, className = "", onActivate }: {
   id: CanonicalReferenceId;
@@ -13,6 +24,12 @@ export function ReferenceTrigger({ id, children, className = "", onActivate }: {
 }) {
   const api = useReferenceApi();
   const item = referenceRegistry[id];
+  const hoverCopy: ReferenceHoverCopy | undefined = item?.hoverCopy ?? (item ? {
+    title: item.title,
+    summary: item.summary,
+    role: item.role,
+    confusion: item.confusion,
+  } : undefined);
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const timerRef = useRef<number | undefined>(undefined);
@@ -66,19 +83,19 @@ export function ReferenceTrigger({ id, children, className = "", onActivate }: {
           id={`reference-preview-${id}`}
           className="ewc-reference-preview"
           role="dialog"
-          aria-label={`${item.title} quick reference`}
+          aria-label={`${hoverCopy?.title ?? "参考条目"}速览`}
           style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}
           onPointerEnter={cancelClose}
           onPointerLeave={scheduleClose}
           onBlur={onBlur}
         >
-          <div className="ewc-reference-preview__eyebrow">{item.kind} · {item.sourceCategory ?? "tutorial reference"}</div>
-          <h3>{item.title}</h3>
-          <p>{item.summary}</p>
-          <p className="ewc-reference-preview__role"><strong>作用</strong> {item.role}</p>
-          {item.confusion ? <p className="ewc-reference-preview__boundary"><strong>注意</strong> {item.confusion}</p> : null}
-          {item.boundary ? <p className="ewc-reference-preview__boundary">{item.boundary}</p> : null}
-          <button className="ewc-text-action" type="button" onClick={() => api.openReference({ referenceId: id })}>在 Reference Hub 中查看 →</button>
+          <div className="ewc-reference-preview__eyebrow">{KIND_LABELS[item.kind] ?? "参考条目"} · {SOURCE_LABELS[item.sourceCategory ?? ""] ?? "教学参考"}</div>
+          <h3>{hoverCopy?.title}</h3>
+          <p>{hoverCopy?.summary}</p>
+          {hoverCopy?.role ? <p className="ewc-reference-preview__role"><strong>作用</strong> {hoverCopy.role}</p> : null}
+          {hoverCopy?.details?.length ? <><h4 className="ewc-reference-preview__details-title">常见评测设置</h4><dl className="ewc-reference-preview__details">{hoverCopy.details.map((detail) => <div key={detail.label}><dt>{detail.label}</dt><dd>{detail.text}</dd></div>)}</dl></> : null}
+          {hoverCopy?.confusion ? <p className="ewc-reference-preview__boundary"><strong>注意</strong> {hoverCopy.confusion}</p> : null}
+          <button className="ewc-text-action" type="button" onClick={() => api.openReference({ referenceId: id })}>打开参考资料 →</button>
         </div>
       ) : null}
     </>

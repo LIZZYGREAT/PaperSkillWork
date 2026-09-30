@@ -33,9 +33,9 @@ export function ReferenceHubDrawer() {
     <MobileSheet open={api.hubOpen} title="Reference Hub" onClose={api.closeHub}>
       <div className="ewc-hub">
         <div className="ewc-hub__intro">
-          <p>按需回忆术语、符号及其在 EWC 中的作用。正文主线仍负责首次讲解。</p>
-          <label className="ewc-hub__search">搜索知识条目
-            <input autoFocus type="search" value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="例如：Fisher、旧任务位置、不更新参数" />
+          <p>Use this panel to recall terms, symbols, and their roles in EWC; the main text remains the first place each idea is introduced.</p>
+          <label className="ewc-hub__search">Search references
+            <input autoFocus type="search" value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="e.g. Fisher, Task-A anchor, parameter updates" />
           </label>
         </div>
         <div className="ewc-hub__columns">
@@ -57,17 +57,19 @@ export function ReferenceHubDrawer() {
               {"symbol" in selected ? <div className="ewc-hub__math">{selected.symbol}</div> : null}
               {"expression" in selected ? <div className="ewc-hub__math">{selected.expression}</div> : null}
               <p>{selected.summary}</p>
-              <section><h4>在 EWC 中的作用</h4><p>{selected.roleInEWC ?? selected.role}</p></section>
-              {"meaning" in selected ? <section><h4>含义</h4><p>{selected.meaning}</p></section> : null}
-              {selected.confusion ? <section className="ewc-hub__note"><h4>容易混淆</h4><p>{selected.confusion}</p></section> : null}
-              {selected.boundary ? <section className="ewc-hub__note"><h4>边界</h4><p>{selected.boundary}</p></section> : null}
-              <section><h4>来源类别与证据</h4><p>{selected.sourceCategory ?? "Tutorial reference"} · {sourceList(selected.sourceRefs)}</p></section>
-              {selected.relatedPages?.length ? <section><h4>相关页面</h4><div className="ewc-hub__links">{selected.relatedPages.map((target) => <button key={`${target.pageId}-${target.anchorId ?? "top"}`} type="button" onClick={() => api.openReference({ pageId: target.pageId, anchorId: target.anchorId })}>{target.pageId.replace("page-", "Page ")} →</button>)}</div></section> : null}
-              {selected.relatedIds?.length ? <section><h4>相关条目</h4><div className="ewc-hub__links">{selected.relatedIds.map((id) => <button key={id} type="button" onClick={() => api.openHub(id)}>{referenceRegistry[id]?.title ?? id}</button>)}</div></section> : null}
+              {"definition" in selected ? <section><h4>Definition</h4><p>{selected.definition}</p></section> : null}
+              <section><h4>Role in EWC</h4><p>{selected.roleInEWC ?? selected.role}</p></section>
+              {"meaning" in selected ? <section><h4>Meaning</h4><p>{selected.meaning}</p></section> : null}
+              {selected.details?.length ? <section><h4>Evaluation settings</h4><dl className="ewc-hub__details">{selected.details.map((detail) => <div key={detail.label}><dt>{detail.label}</dt><dd>{detail.text}</dd></div>)}</dl></section> : null}
+              {selected.confusion ? <section className="ewc-hub__note"><h4>Common confusion</h4><p>{selected.confusion}</p></section> : null}
+              {selected.boundary ? <section className="ewc-hub__note"><h4>Scope</h4><p>{selected.boundary}</p></section> : null}
+              <section><h4>Source and evidence</h4><p>{selected.sourceCategory ?? "Tutorial reference"} · {sourceList(selected.sourceRefs)}</p></section>
+              {selected.relatedPages?.length ? <section><h4>Related pages</h4><div className="ewc-hub__links">{selected.relatedPages.map((target) => <button key={`${target.pageId}-${target.anchorId ?? "top"}`} type="button" onClick={() => api.openReference({ pageId: target.pageId, anchorId: target.anchorId })}>{target.pageId.replace("page-", "Page ")} →</button>)}</div></section> : null}
+              {selected.relatedIds?.length ? <section><h4>Related entries</h4><div className="ewc-hub__links">{selected.relatedIds.map((id) => <button key={id} type="button" onClick={() => api.openHub(id)}>{referenceRegistry[id]?.title ?? id}</button>)}</div></section> : null}
             </> : <p>选择一个条目查看详情。</p>}
           </article>
         </div>
-        <p className="ewc-hub__scope">此面板是 W6 的 Reference shell；完整索引与全站交叉引用留待后续页面稳定后补齐。</p>
+        <p className="ewc-hub__scope">W6 reference shell. The full index and cross-page links will be added after the remaining pages are stable.</p>
       </div>
     </MobileSheet>
   );

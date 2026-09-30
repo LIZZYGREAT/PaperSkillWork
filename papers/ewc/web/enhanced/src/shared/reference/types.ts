@@ -3,6 +3,13 @@ import type { AnchorId, CanonicalReferenceId, GrandAnimationStateId, PageId, Pag
 export type ReferenceKind = "term" | "symbol" | "formula" | "dataset" | "environment" | "method" | "phase" | "evidence" | "confusion" | "implementation" | "advanced";
 export type SourceCategory = "PAPER_FACT" | "PAPER_RESULT" | "AUTHOR_INTERPRETATION" | "GENERAL_BACKGROUND" | "MECHANISM_INTERPRETATION" | "IMPLEMENTATION_MAPPING" | "TEACHING_EXAMPLE" | "LIMITATION";
 export type ReferenceDetail = { label: string; text: string; sourceRefs?: string[] };
+export type ReferenceHoverCopy = {
+  title: string;
+  summary: string;
+  role?: string;
+  confusion?: string;
+  details?: ReferenceDetail[];
+};
 
 export type ReferenceItem = {
   id: CanonicalReferenceId;
@@ -22,6 +29,7 @@ export type ReferenceItem = {
   tags?: string[];
   boundary?: string;
   details?: ReferenceDetail[];
+  hoverCopy?: ReferenceHoverCopy;
 };
 
 export type TermReference = ReferenceItem & {
