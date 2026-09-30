@@ -220,19 +220,21 @@ Keep the existing application frame, Reference Hub, and hover references. Do not
 
 ### Vertical Slice Review (W7)
 
-Vertical Slice Review: REVISE
+Vertical Slice Review: PASS
 
-- Reviewer: User (conversation review, 2026-09-30)
-- Decision: REVISE
+- Initial reviewer: User (conversation review, 2026-09-30)
+- Initial decision: REVISE
 - Findings: At the real desktop browser size, Reference Hub's list/detail columns were too compressed to read. Pale, small text and inconsistent font sizing weakened readability. Page 1 began with the method before explaining continual learning, task settings, catastrophic forgetting, and shared-parameter conflict. Its toggle was too shallow to teach the causal sequence. Figure 1's role was unclear in the opening, and L2/EWC appeared before the problem was established.
 - Required information-architecture changes: Start Page 1 with the approved three-to-four-sentence continual-learning background; add only a one-sentence Task-IL/Domain-IL/Class-IL orientation because the reviewer requested those categories, without turning Page 1 into a taxonomy survey. Follow the source specification's sequence: Task A data → the same model and θ_A* → Task B data → continued training and changed parameters; show Task B performance may improve while Task A performance may decline; define catastrophic forgetting and state the shared-parameter conflict; zoom into representative parameter groups and compare two parameters qualitatively; then give the concept-level EWC preview and hand off to Page 2's probability/likelihood/loss chain. Do not use synthetic loss curves, introduce L2, or name Fisher/posterior/Hessian/Gaussian/penalty details on Page 1. Move Figure 1 to Page 6 after Equation (3), where the competing mechanisms have context.
 - Required usability changes: Widen Reference Hub at desktop widths and keep its list and detail panes independently readable; strengthen body-text contrast and minimum type sizes; use a consistent prose font and type scale; inspect the result at a real desktop browser viewport. Replace the shallow toggle and invented parameter-space curves with a guided sequential-training flow, explicit possible performance outcomes, a parameter-level comparison, and the small interaction specified for before/after parameter changes.
 - User direction (2026-09-30): rebuild the teaching content from Page 1 and Page 2 for review, and keep the review scope to those pages. The main Page-1 visual must explicitly show `Task A Data → Model θ → Train → θ_A* → Task B Data → continue training the same model → θ changes` as a concrete data/model/update structure. Later page implementations are out of this review scope.
-- Re-review after W6 revision: PENDING. W7 remains open for human verification; W8 cannot start until the reviewer records PASS.
+- Re-review after W6 revision: PASS.
+- Re-reviewer: 甘文杰 (2026-09-30)
+- Re-review note: 测试页demo通过
 
 #### W7 Specification Alignment Correction — 2026-09-30
 
-On re-reading `task/EWC/Page1_Page2_设计规范.md`, the implementer identified that the first W7 revision had substituted a three-card taxonomy, invented shared-parameter loss curves, and a Page 5 link for the approved Page 1 pacing. Those design choices are withdrawn. The current revision follows the source document's process → parameter conflict → qualitative comparison → concept teaser → Page 2 handoff. The later reviewer request for task categories overrides only the source document's instruction not to mention Task-IL/Domain-IL/Class-IL: they appear in one compact orientation sentence, not as a section or cards. EWC is introduced only in the bottom concept preview after the problem is established; Page 1 contains no L2. Human re-review is still pending.
+On re-reading `task/EWC/Page1_Page2_设计规范.md`, the implementer identified that the first W7 revision had substituted a three-card taxonomy, invented shared-parameter loss curves, and a Page 5 link for the approved Page 1 pacing. Those design choices are withdrawn. The current revision follows the source document's process → parameter conflict → qualitative comparison → concept teaser → Page 2 handoff. The later reviewer request for task categories overrides only the source document's instruction not to mention Task-IL/Domain-IL/Class-IL: they appear in one compact orientation sentence, not as a section or cards. EWC is introduced only in the bottom concept preview after the problem is established; Page 1 contains no L2. The subsequent human re-review recorded PASS by 甘文杰 on 2026-09-30 (note: “测试页demo通过”).
 
 ## Full Implementation (W8)
 
@@ -503,4 +505,4 @@ All page interactions must work without hover and without relying on color alone
 
 ## Human Acceptance Record
 
-W4 was approved by 甘文杰 before this W5 plan was prepared. W7 remains pending and must be recorded only after a human has reviewed the implemented vertical slice.
+W4 was approved by 甘文杰 before this W5 plan was prepared. W7 was subsequently reviewed by 甘文杰 and recorded as PASS on 2026-09-30 (note: “测试页demo通过”).
