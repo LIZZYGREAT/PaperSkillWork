@@ -2,7 +2,7 @@
 
 Paper ID: ewc
 
-**W4 rework draft:** the previous W4 review covered an earlier draft and does not approve this revision. This version is based on the approved EWC page specifications, the EWC workflow, the Grand Animation and Hover/Reference specifications, the paper model, the evidence registry, and the supplied EWC notes. W4 remains in progress until a human reviews this revision.
+**W4 revision status:** this revised spine was approved by 甘文杰, as recorded in `paper.yaml` (note: “学习主线已通过评审”). It incorporates the approved EWC page specifications, workflow, Grand Animation and Hover/Reference specifications, paper model, evidence registry, and the supplied EWC notes.
 
 ## Design Authority and Source Boundaries
 
@@ -367,4 +367,4 @@ items:
 - Does Page 10 only integrate concepts already taught?
 - Are the SUPPORTING, REFERENCE, and DELETE choices appropriate?
 
-Record a new reviewer and decision in paper.yaml only after reviewing this revised draft. W4 remains in progress until then.
+W4 review record: 甘文杰 — PASS (“学习主线已通过评审”), recorded in `paper.yaml`. W7 remains pending until a human reviews the implemented vertical slice.
