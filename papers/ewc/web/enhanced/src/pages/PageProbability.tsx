@@ -156,8 +156,10 @@ export function PageProbability() {
         </div>
 
         <div className="p02-forward-caption">
-          <div className="p02-forward-caption__formula"><span>x₁</span><b>→</b><span>z = f<sub>θ</sub>(x₁)</span><b>→</b><span>Softmax(z)</span><b>→</b><strong>p<sub>θ</sub>(y | x₁)</strong></div>
-          <p><b>真实标签概率</b>取 class A 这一项。它越高，模型给正确答案的置信度越高；本例单样本 Loss 为 <code>−ln {formatProbability(selected.probabilities[0])} = {sampleNll.toFixed(2)}</code>。</p>
+          <div className="p02-forward-caption__formula" aria-label="输入 x 一，经过网络得到 logits z，再经 Softmax 得到预测概率">
+            <span>x₁</span><b aria-hidden="true">→</b><span>z = f<sub>θ</sub>(x₁)</span><b aria-hidden="true">→</b><span>Softmax(z)</span><b aria-hidden="true">→</b><strong>p<sub>θ</sub>(y | x₁)</strong>
+          </div>
+          <p className="p02-forward-caption__note"><b>真实标签概率</b>取 class A 这一项。它越高，模型给正确答案的置信度越高；本例单样本 Loss 为 <code>−ln {formatProbability(selected.probabilities[0])} = {sampleNll.toFixed(2)}</code>。</p>
         </div>
 
         <details className="p02-softmax-detail" open={showSoftmax} onToggle={(event) => setShowSoftmax(event.currentTarget.open)}>
@@ -173,16 +175,22 @@ export function PageProbability() {
           {SAMPLE_NAMES.map((name, index) => <span key={name}><i>{index + 1}</i><b>{name}</b></span>)}
         </div></div>
 
-        <div className="p02-likelihood-formula" role="math" aria-label="数据 D 在参数 theta 下的 likelihood 等于各样本真实标签概率的乘积">
-          <span><ReferenceTrigger id="p_D_given_theta">p(D | θ)</ReferenceTrigger></span><b>=</b><span className="p02-product-symbol">∏<sub>n=1</sub><sup>N</sup></span><span>p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)</span><span className="p02-assumption">在常见的条件独立样本假设下</span>
-        </div>
-        <div className="p02-sample-product" aria-live="polite" aria-label={`当前参数状态下的数据 likelihood：${selected.datasetProbabilities.map(formatProbability).join(" 乘 ")} 等于 ${formatProbability(likelihood)}`}>
-          {selected.datasetProbabilities.map((probability, index) => <Fragment key={`product-${index}`}><span className="p02-product-term"><small>样本 {index + 1}</small><b>{formatProbability(probability)}</b></span>{index < selected.datasetProbabilities.length - 1 ? <span className="p02-product-operator" aria-hidden="true">×</span> : null}</Fragment>)}
-          <b className="p02-product-equals" aria-hidden="true">=</b>
-          <span className="p02-product-result"><small>p(D | {selected.label})</small><b>{formatProbability(likelihood)}</b></span>
+        <div className="p02-likelihood-equation">
+          <div className="p02-likelihood-formula" role="math" aria-label="数据 D 在参数 theta 下的 likelihood 等于各样本真实标签概率的乘积">
+            <span><ReferenceTrigger id="p_D_given_theta">p(D | θ)</ReferenceTrigger></span><b>=</b><span className="p02-product-symbol" aria-label="从 n 等于 1 到 N 的乘积"><sup>N</sup><strong>∏</strong><sub>n=1</sub></span><span>p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)</span>
+          </div>
+          <div className="p02-sample-product" aria-live="polite" aria-label={`当前参数状态下的数据 likelihood：${selected.datasetProbabilities.map(formatProbability).join(" 乘 ")} 等于 ${formatProbability(likelihood)}`}>
+            {selected.datasetProbabilities.map((probability, index) => <Fragment key={`product-${index}`}><span className="p02-product-term"><small>样本 {index + 1}</small><b>{formatProbability(probability)}</b></span>{index < selected.datasetProbabilities.length - 1 ? <span className="p02-product-operator" aria-hidden="true">×</span> : null}</Fragment>)}
+            <b className="p02-product-equals" aria-hidden="true">=</b>
+            <span className="p02-product-result"><small>p(D | {selected.label})</small><b>{formatProbability(likelihood)}</b></span>
+          </div>
+          <small className="p02-assumption">在常见的条件独立样本假设下</small>
         </div>
 
-        <div className="p02-interpretation"><div className="p02-interpretation__mark" aria-hidden="true">θ</div><p><ReferenceTrigger id="likelihood">Likelihood</ReferenceTrigger> 问的是：<b>当数据 D 固定时，这组参数对已观察到的真实标签给出了多大的概率？</b> 它不是神经网络额外产生的一个输出。</p></div>
+        <div className="p02-perspective-compare" id="likelihood-comparison" aria-label="Probability 与 Likelihood 的观察视角对比">
+          <div className="p02-perspective-compare__item p02-perspective-compare__item--probability"><span>PROBABILITY · 固定 θ</span><p>给定一组参数，问某个结果或这份数据出现的概率是多少：<b>看可能出现什么数据。</b></p></div>
+          <div className="p02-perspective-compare__item p02-perspective-compare__item--likelihood"><span><ReferenceTrigger id="likelihood">LIKELIHOOD · 固定已观察的 D</ReferenceTrigger></span><p>观察到的数据保持不变，改变 θ，比较哪组参数更能解释 D：<b>看不同参数如何解释同一份数据。</b>它是关于 θ 的函数，不是 θ 的概率分布。</p></div>
+        </div>
 
         <div className="p02-comparison-heading"><div><span className="p02-overline">PARAMETER SWITCH · SAME DATA · DIFFERENT PREDICTIONS</span><h3>选一组参数，看三条样本概率怎样共同改变 Likelihood</h3></div><span>点击一行即可更新上方网络前向结果</span></div>
         <div className="p02-state-row-head" aria-hidden="true"><span>候选参数状态</span><span><i>x₁</i><i>x₂</i><i>x₃</i><b>每个样本真实标签的概率</b></span><span>数据 Likelihood</span><span>负对数损失</span></div>
@@ -192,6 +200,11 @@ export function PageProbability() {
 
       <section className="p02-loss-update" id="loss-and-update" aria-labelledby="p02-loss-title">
         <div className="p02-section-heading"><div><span className="p02-overline">03 · FROM LIKELIHOOD TO PARAMETER UPDATE</span><h2 id="p02-loss-title">最大化 Likelihood，等价于最小化负对数损失</h2></div><p>负号把“概率越大越好”改写成“Loss 越小越好”；对数把样本概率的乘积改写为求和。</p></div>
+        <div className="p02-nll-explanation" aria-label="负对数似然的定义和作用">
+          <span>NEGATIVE LOG-LIKELIHOOD · NLL</span>
+          <strong>L<sub>NLL</sub>(θ) = −log p(D | θ) = −<span className="p02-nll-sum" aria-label="从 n 等于 1 到 N 求和"><sup>N</sup><span>∑</span><sub>n=1</sub></span> log p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)</strong>
+          <p>对每个真实标签的预测概率取 log 再取负；概率越高，NLL 越小。这样就能把乘积形式的 Likelihood 写成可相加、可最小化的训练损失。</p>
+        </div>
         <div className="p02-training-chain" aria-label="Likelihood 变成 Loss，计算梯度后更新参数">
           <div className="p02-training-node"><span>DATA FIT</span><strong>log p(D | θ)</strong><small>越大越好</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
           <div className="p02-training-node p02-training-node--loss"><span>CHANGE SIGN</span><strong>−log p(D | θ)</strong><small>Negative Log-Likelihood</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
@@ -200,7 +213,12 @@ export function PageProbability() {
           <div className="p02-update-node"><span>OPTIMIZER STEP</span><strong>θ ← θ − η∇<sub>θ</sub>L</strong><small>参数状态改变</small></div>
         </div>
         <div className="p02-update-return"><span className="p02-update-return__line" aria-hidden="true"/><p>更新后的 <em>θ</em> 返回同一个模型；下一批样本再经过新的前向计算。</p><ReferenceTrigger id="optimizer_step">反向计算梯度与 optimizer.step() 是两个不同动作</ReferenceTrigger></div>
-        <div className="p02-dataset-loss" aria-live="polite"><span>当前参数 <b>{selected.label}</b></span><span>p(D | θ) <b>{formatProbability(likelihood)}</b></span><span>总 NLL <b>{datasetNll.toFixed(2)}</b></span><span className="p02-dataset-loss__interpretation">Likelihood 越高，NLL 越低</span></div>
+        <div className="p02-dataset-loss" aria-live="polite" aria-label={`当前参数 ${selected.label}；数据 Likelihood ${formatProbability(likelihood)}；总 NLL ${datasetNll.toFixed(2)}`}>
+          <span className="p02-dataset-loss__metric"><small>当前参数</small><b>{selected.label}</b></span>
+          <span className="p02-dataset-loss__metric"><small>p(D | θ)</small><b>{formatProbability(likelihood)}</b></span>
+          <span className="p02-dataset-loss__metric"><small>总 NLL</small><b>{datasetNll.toFixed(2)}</b></span>
+          <span className="p02-dataset-loss__interpretation">Likelihood 越高，NLL 越低</span>
+        </div>
       </section>
 
       <section className="p02-origin-table" id="probability-source-table" aria-labelledby="p02-origin-title">

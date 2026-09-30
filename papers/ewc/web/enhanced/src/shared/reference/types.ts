@@ -8,6 +8,7 @@ export type ReferenceHoverCopy = {
   summary: string;
   role?: string;
   confusion?: string;
+  detailsTitle?: string;
   details?: ReferenceDetail[];
 };
 

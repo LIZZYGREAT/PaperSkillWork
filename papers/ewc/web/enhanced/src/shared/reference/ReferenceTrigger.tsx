@@ -93,7 +93,7 @@ export function ReferenceTrigger({ id, children, className = "", onActivate }: {
           <h3>{hoverCopy?.title}</h3>
           <p>{hoverCopy?.summary}</p>
           {hoverCopy?.role ? <p className="ewc-reference-preview__role"><strong>作用</strong> {hoverCopy.role}</p> : null}
-          {hoverCopy?.details?.length ? <><h4 className="ewc-reference-preview__details-title">常见评测设置</h4><dl className="ewc-reference-preview__details">{hoverCopy.details.map((detail) => <div key={detail.label}><dt>{detail.label}</dt><dd>{detail.text}</dd></div>)}</dl></> : null}
+          {hoverCopy?.details?.length ? <><h4 className="ewc-reference-preview__details-title">{hoverCopy.detailsTitle ?? "常见评测设置"}</h4><dl className="ewc-reference-preview__details">{hoverCopy.details.map((detail) => <div key={detail.label}><dt>{detail.label}</dt><dd>{detail.text}</dd></div>)}</dl></> : null}
           {hoverCopy?.confusion ? <p className="ewc-reference-preview__boundary"><strong>注意</strong> {hoverCopy.confusion}</p> : null}
           <button className="ewc-text-action" type="button" onClick={() => api.openReference({ referenceId: id })}>打开参考资料 →</button>
         </div>
