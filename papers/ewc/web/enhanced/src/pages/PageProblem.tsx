@@ -95,9 +95,9 @@ function TrainingSignal({ task }: { task: "A" | "B" }) {
       <div className="p01-training-signal__steps">
         <span className="p01-training-signal__step"><i>01</i><b>前向计算</b></span>
         <TrainingArrow />
-        <span className="p01-training-signal__step"><i>02</i><b>比较目标</b></span>
+        <span className="p01-training-signal__step"><i>02</i><b>计算 Loss</b></span>
         <TrainingArrow />
-        <span className="p01-training-signal__step"><i>03</i><b>反向传递</b></span>
+        <span className="p01-training-signal__step"><i>03</i><b>反向传播</b></span>
         <TrainingArrow />
         <span className="p01-training-signal__step p01-training-signal__step--update"><i>04</i><b>更新参数</b></span>
       </div>
@@ -183,7 +183,7 @@ export function PageProblem() {
           <li className="p01-stage p01-stage--model">
             <span className="p01-stage__marker">02</span>
             <div className="p01-stage__content">
-              <div className="p01-stage__copy"><span className="p01-stage__type">SHARED NEURAL NETWORK</span><h3>Model <em>θ</em></h3><p>所有任务沿用这一个模型和参数集合。</p></div>
+              <div className="p01-stage__copy"><span className="p01-stage__type">SHARED NEURAL NETWORK</span><h3>Model <em>θ</em></h3><p>Task A 与 Task B 继续使用同一个共享模型，并持续更新参数 <em>θ</em>。</p></div>
               <div className="p01-model-object"><NeuralNetworkMark idPrefix="task-a-model" /><span className="p01-model-object__parameter">共享参数 <b>θ</b></span></div>
             </div>
           </li>
@@ -207,7 +207,7 @@ export function PageProblem() {
           <li className="p01-stage p01-stage--data-b">
             <span className="p01-stage__marker">05</span>
             <div className="p01-stage__content">
-              <div className="p01-stage__copy"><span className="p01-stage__type">INPUT · NEXT TASK</span><h3>Task B Data</h3><p>新的数据到来，训练目标随之改变。</p></div>
+              <div className="p01-stage__copy"><span className="p01-stage__type">INPUT · NEXT TASK</span><h3>Task B Data</h3><p>Task B 到来，模型开始针对新的任务数据继续优化。</p></div>
               <DataGlyph task="B" />
             </div>
           </li>
@@ -223,7 +223,7 @@ export function PageProblem() {
           <li className="p01-stage p01-stage--changed">
             <span className="p01-stage__marker">07</span>
             <div className="p01-stage__content">
-              <div className="p01-stage__copy"><span className="p01-stage__type">THE SHARED PARAMETERS MOVE</span><h3><em>θ</em> changes</h3><p>参数维度保持不变；Task B 训练后，部分值增大、部分值减小：<em>θ</em><sub>A</sub>* → <em>θ</em>′ → <em>θ</em>″。</p></div>
+              <div className="p01-stage__copy"><span className="p01-stage__type">THE SHARED PARAMETERS MOVE</span><h3><em>θ</em> changes</h3><p>同一组参数坐标持续更新：<em>θ</em><sub>A</sub><sup>*</sup> → <em>θ</em><sup>(t+1)</sup> → <em>θ</em><sup>(t+2)</sup> → ⋯。</p></div>
               <div className="p01-changed-state"><ParameterVector changed /><div className="p01-outcomes" aria-label="顺序学习中的可能表现变化">
                 <div><span>Task B · 新任务</span><b><i aria-hidden="true">↑</i> 可能改善</b></div>
                 <div><span>Task A · 先前任务</span><b><i aria-hidden="true">↓</i> 可能下降</b></div>
