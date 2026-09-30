@@ -6,12 +6,14 @@ import { PageProblem } from "./pages/PageProblem";
 import { PageProbability } from "./pages/PageProbability";
 import { PageBayes } from "./pages/PageBayes";
 import { PageLaplace } from "./pages/PageLaplace";
+import { PageFisher } from "./pages/PageFisher";
 
 const LEARNING_PAGES: { id: PageId; number: string; title: string; eyebrow: string }[] = [
   { id: "page-01-problem", number: "01", title: "顺序训练中的参数变化", eyebrow: "问题起点" },
   { id: "page-02-probability", number: "02", title: "从网络概率到 Loss", eyebrow: "普通训练" },
   { id: "page-03-bayes", number: "03", title: "参数的 Prior 与 Posterior", eyebrow: "Bayesian 视角" },
   { id: "page-04-laplace", number: "04", title: "Task A 解附近的局部约束", eyebrow: "Laplace 近似" },
+  { id: "page-05-fisher", number: "05", title: "参数局部敏感性", eyebrow: "Fisher Information" },
 ];
 
 function AppFrame() {
@@ -22,7 +24,8 @@ function AppFrame() {
     : api.currentPage === "page-02-probability" ? <PageProbability />
       : api.currentPage === "page-03-bayes" ? <PageBayes />
         : api.currentPage === "page-04-laplace" ? <PageLaplace />
-          : <section className="ewc-slice-placeholder"><div className="ewc-kicker">W8 · FULL IMPLEMENTATION</div><h1>这一页将在后续实现批次开放。</h1><p>当前学习主线已包含顺序训练问题、网络概率与损失、参数的 Bayes 更新，以及 Task A 解附近的局部近似。其余页面仍沿用已冻结的导航与 Reference ID。</p><div className="ewc-contract-preview"><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-01-problem")}>打开 Page 1</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-02-probability")}>打开 Page 2</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-03-bayes")}>打开 Page 3</button><button type="button" className="ewc-button ewc-button--primary" onClick={() => api.navigatePage("page-04-laplace")}>打开 Page 4</button></div></section>;
+          : api.currentPage === "page-05-fisher" ? <PageFisher />
+            : <section className="ewc-slice-placeholder"><div className="ewc-kicker">W8 · FULL IMPLEMENTATION</div><h1>这一页将在后续实现批次开放。</h1><p>当前学习主线已包含顺序训练问题、网络概率与损失、参数的 Bayes 更新、Laplace 局部近似，以及 Fisher 对参数局部敏感性的近似。其余页面仍沿用已冻结的导航与 Reference ID。</p><div className="ewc-contract-preview"><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-01-problem")}>打开 Page 1</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-02-probability")}>打开 Page 2</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-03-bayes")}>打开 Page 3</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-04-laplace")}>打开 Page 4</button><button type="button" className="ewc-button ewc-button--primary" onClick={() => api.navigatePage("page-05-fisher")}>打开 Page 5</button></div></section>;
   return (
     <div className={`ewc-app ${reducedMotion ? "is-reduced-motion" : ""}`}>
       <a className="ewc-skip-link" href="#main-content">跳到当前页面</a>
@@ -36,7 +39,7 @@ function AppFrame() {
             </button>
           ))}
         </nav>
-        <div className="ewc-rail__scope"><span className="ewc-status-dot" />W8 · Page 1–4<p>顺序训练问题 → 概率与损失 → 参数的 Bayesian 视角 → Laplace 局部近似。</p></div>
+        <div className="ewc-rail__scope"><span className="ewc-status-dot" />W8 · Page 1–5<p>顺序训练问题 → 概率与损失 → Bayes → Laplace → Fisher 局部敏感性。</p></div>
         <div className="ewc-rail__footer"><span>Overcoming catastrophic forgetting</span><small>Kirkpatrick et al. · PNAS 2017</small></div>
       </aside>
 

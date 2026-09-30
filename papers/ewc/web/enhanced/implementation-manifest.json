@@ -29,6 +29,16 @@
       "stage": "S3_local_posterior_approximation",
       "component": "PageLaplace",
       "status": "complete"
+    },
+    "fisher-estimation-path": {
+      "stage": "S4_fisher_to_ewc_constraint",
+      "component": "PageFisher",
+      "status": "complete"
+    },
+    "fisher-as-approximate-precision": {
+      "stage": "S4_fisher_to_ewc_constraint",
+      "component": "PageFisher",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -50,6 +60,16 @@
     "laplace-taylor-and-hessian-detail": {
       "placement": "expandable",
       "component": "PageLaplace",
+      "status": "complete"
+    },
+    "fisher-estimator-source-boundary": {
+      "placement": "compact-inline",
+      "component": "PageFisher",
+      "status": "complete"
+    },
+    "fisher-kl-local-metric": {
+      "placement": "expandable",
+      "component": "PageFisher",
       "status": "complete"
     }
   },

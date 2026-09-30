@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
+import { EWCNetworkDiagram } from "../shared/teaching/EWCNetworkDiagram";
 
 const SAMPLE_PIXEL_LEVELS: Record<"A" | "B", number[][]> = {
   A: [
@@ -19,46 +20,6 @@ const PIXEL_TONES: Record<"A" | "B", string[]> = {
   A: ["#f5f7f4", "#e6ece8", "#cbd9d1", "#9ab5a8", "#587a6b"],
   B: ["#f9f4f0", "#efddd3", "#e7c1af", "#d99a7c", "#b76548"],
 };
-
-const INPUT_NODES = [28, 63, 98];
-const HIDDEN_NODES = [17, 39, 61, 83, 105];
-const OUTPUT_NODES = [28, 63, 98];
-
-function NeuralNetworkMark({ compact = false, idPrefix }: { compact?: boolean; idPrefix: string }) {
-  const titleId = `${idPrefix}-title`;
-  const descriptionId = `${idPrefix}-description`;
-  return (
-    <svg
-      className={`p01-network ${compact ? "p01-network--compact" : ""}`}
-      viewBox="0 0 250 122"
-      role="img"
-      aria-labelledby={`${titleId} ${descriptionId}`}
-    >
-      <title id={titleId}>同一个共享参数神经网络</title>
-      <desc id={descriptionId}>输入层连接到隐藏层，再连接到输出层；网络参数统一记作 theta。</desc>
-      <g className="p01-network__wires" aria-hidden="true">
-        {INPUT_NODES.flatMap((inputY, inputIndex) => HIDDEN_NODES.map((hiddenY, hiddenIndex) => (
-          <line key={`ih-${inputIndex}-${hiddenIndex}`} x1="24" y1={inputY} x2="123" y2={hiddenY} />
-        )))}
-        {HIDDEN_NODES.flatMap((hiddenY, hiddenIndex) => OUTPUT_NODES.map((outputY, outputIndex) => (
-          <line key={`ho-${hiddenIndex}-${outputIndex}`} x1="127" y1={hiddenY} x2="226" y2={outputY} />
-        )))}
-      </g>
-      <g className="p01-network__nodes p01-network__nodes--input" aria-hidden="true">
-        {INPUT_NODES.map((y) => <circle key={`input-${y}`} cx="22" cy={y} r="7" />)}
-      </g>
-      <g className="p01-network__nodes p01-network__nodes--hidden" aria-hidden="true">
-        {HIDDEN_NODES.map((y) => <circle key={`hidden-${y}`} cx="125" cy={y} r="7" />)}
-      </g>
-      <g className="p01-network__nodes p01-network__nodes--output" aria-hidden="true">
-        {OUTPUT_NODES.map((y) => <circle key={`output-${y}`} cx="228" cy={y} r="7" />)}
-      </g>
-      <text className="p01-network__layer-label" x="22" y="119" textAnchor="middle">输入</text>
-      <text className="p01-network__layer-label" x="125" y="119" textAnchor="middle">网络层</text>
-      <text className="p01-network__layer-label" x="228" y="119" textAnchor="middle">输出</text>
-    </svg>
-  );
-}
 
 function DataGlyph({ task }: { task: "A" | "B" }) {
   const sampleOffset = task === "A" ? 0 : 3;
@@ -265,7 +226,7 @@ export function PageProblem() {
             <span className="p01-stage__marker">02</span>
             <div className="p01-stage__content">
               <div className="p01-stage__copy"><span className="p01-stage__type">SHARED NEURAL NETWORK</span><h3>Model <em>θ</em></h3><p>Task A 与 Task B 继续使用同一个共享模型，并持续更新参数 <em>θ</em>。</p></div>
-              <div className="p01-model-object"><NeuralNetworkMark idPrefix="task-a-model" /><span className="p01-model-object__parameter">共享参数 <b>θ</b></span></div>
+              <div className="p01-model-object"><EWCNetworkDiagram idPrefix="task-a-model" /><span className="p01-model-object__parameter">共享参数 <b>θ</b></span></div>
             </div>
           </li>
 
@@ -297,7 +258,7 @@ export function PageProblem() {
             <span className="p01-stage__marker">06</span>
             <div className="p01-stage__content">
               <div className="p01-stage__copy"><span className="p01-stage__type">SAME MODEL · CONTINUED TRAINING</span><h3>继续训练同一个模型</h3><p>训练从 <em>θ</em><sub>A</sub>* 接着进行；没有换成另一套网络。</p></div>
-              <div className="p01-reuse-model"><div className="p01-reuse-model__network"><NeuralNetworkMark compact idPrefix="task-b-same-model" /><span>same model</span></div><span className="p01-reuse-model__link" aria-hidden="true">←</span><div className="p01-reuse-model__update"><span>Task B 的更新信号</span><TrainingSignal task="B" /></div></div>
+              <div className="p01-reuse-model"><div className="p01-reuse-model__network"><EWCNetworkDiagram compact idPrefix="task-b-same-model" /><span>same model</span></div><span className="p01-reuse-model__link" aria-hidden="true">←</span><div className="p01-reuse-model__update"><span>Task B 的更新信号</span><TrainingSignal task="B" /></div></div>
             </div>
           </li>
 
