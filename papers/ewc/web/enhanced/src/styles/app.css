@@ -41,7 +41,7 @@ a { color: inherit; }
 .ewc-brand b { display: block; font-size: 14px; letter-spacing: .03em; }
 .ewc-brand small { display: block; margin-top: 3px; color: #a7bcba; font: 9px "DM Mono", monospace; letter-spacing: .12em; }
 .ewc-rail__section-label { margin: 0 8px 10px; color: #92a8a6; font: 10px "DM Mono", monospace; letter-spacing: .14em; text-transform: uppercase; }
-.ewc-slice-nav { display: grid; gap: 6px; }
+.ewc-slice-nav { display: grid; gap: 6px; min-height: 0; max-height: calc(100vh - 390px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .ewc-slice-nav__item { display: flex; gap: 12px; align-items: center; width: 100%; padding: 11px 10px; text-align: left; border: 1px solid transparent; border-radius: 11px; color: #c0d0ce; background: transparent; cursor: pointer; transition: background .18s ease, color .18s ease, border-color .18s ease; }
 .ewc-slice-nav__item:hover { color: #fff; background: #234347; }
 .ewc-slice-nav__item.is-active { color: #fffaf4; background: #2b4a4d; border-color: #527174; }
@@ -136,7 +136,7 @@ a { color: inherit; }
   .ewc-brand { padding: 0 0 11px; }
   .ewc-brand__mark { width: 29px; height: 29px; }
   .ewc-rail__section-label, .ewc-rail__scope, .ewc-rail__footer { display: none; }
-  .ewc-slice-nav { display: flex; gap: 5px; overflow-x: auto; }
+  .ewc-slice-nav { display: flex; max-height: none; gap: 5px; overflow-x: auto; overflow-y: hidden; }
   .ewc-slice-nav__item { width: auto; min-width: max-content; padding: 8px 9px; gap: 7px; }
   .ewc-slice-nav__number { min-width: 24px; }
   .ewc-slice-nav__copy b { font-size: 10px; }

@@ -49,6 +49,11 @@
       "stage": "S4_fisher_to_ewc_constraint",
       "component": "PageObjective",
       "status": "complete"
+    },
+    "task-boundary-lifecycle": {
+      "stage": "S5_sequential_lifecycle",
+      "component": "PageLifecycle",
+      "status": "complete"
     }
   },
   "supporting": {
