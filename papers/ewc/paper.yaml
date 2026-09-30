@@ -49,7 +49,7 @@ workflow:
       status: complete
       completed_by: automation
     W6_vertical_slice:
-      status: pending
+      status: in_progress
     W7_human_review:
       status: pending
     W8_full_implementation:
