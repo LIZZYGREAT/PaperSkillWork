@@ -121,7 +121,7 @@ function ParameterVector({ changed = false }: { changed?: boolean }) {
           <div aria-hidden="true">{group.values.map((height, index) => <i key={`${group.label}-${index}`} style={{ height }} />)}</div>
         </div>
       ))}
-      <span className="p01-parameter-vector__caption">parameter groups · schematic</span>
+      <span className="p01-parameter-vector__caption">参数示意</span>
     </div>
   );
 }
