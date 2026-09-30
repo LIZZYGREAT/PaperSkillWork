@@ -2,11 +2,18 @@ import { useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 
-const SAMPLE_MARKS = [
-  [1, 0, 1, 1, 0, 1, 0, 1],
-  [0, 1, 1, 0, 1, 0, 1, 1],
-  [1, 1, 0, 1, 1, 0, 0, 1],
-];
+const SAMPLE_MARKS: Record<"A" | "B", number[][]> = {
+  A: [
+    [1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0],
+    [0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0],
+    [1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0],
+  ],
+  B: [
+    [0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0],
+    [1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1],
+    [0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1],
+  ],
+};
 
 const INPUT_NODES = [28, 63, 98];
 const HIDDEN_NODES = [17, 39, 61, 83, 105];
@@ -49,21 +56,31 @@ function NeuralNetworkMark({ compact = false, idPrefix }: { compact?: boolean; i
 }
 
 function DataGlyph({ task }: { task: "A" | "B" }) {
+  const sampleOffset = task === "A" ? 0 : 3;
   return (
-    <div className={`p01-data-glyph p01-data-glyph--${task.toLowerCase()}`} aria-label={`Task ${task} 的示意数据样本`}>
+    <div className={`p01-data-glyph p01-data-glyph--${task.toLowerCase()}`} aria-label={`Task ${task} 的三组 12 维示意输入特征及对应目标`}>
       <div className="p01-data-glyph__samples" aria-hidden="true">
-        {SAMPLE_MARKS.map((sample, sampleIndex) => (
+        {SAMPLE_MARKS[task].map((sample, sampleIndex) => (
           <div className="p01-data-glyph__sample" key={`${task}-${sampleIndex}`}>
-            <span className="p01-data-glyph__sample-id">x<sub>{sampleIndex + 1}</sub></span>
+            <span className="p01-data-glyph__sample-id">x<sub>{sampleOffset + sampleIndex + 1}</sub></span>
             <span className="p01-data-glyph__pixels">
-              {sample.map((mark, markIndex) => <i className={mark ? "is-on" : ""} key={`${sampleIndex}-${markIndex}`} />)}
+              {sample.map((mark, markIndex) => <i className={mark ? "is-on" : ""} key={`${sampleIndex}-${markIndex}`}>{mark}</i>)}
             </span>
-            <span className="p01-data-glyph__target">y<sub>{sampleIndex + 1}</sub></span>
+            <span className="p01-data-glyph__target">y<sub>{sampleOffset + sampleIndex + 1}</sub></span>
           </div>
         ))}
       </div>
-      <span className="p01-data-glyph__note">{task === "A" ? "旧任务样本" : "新任务样本"} · schematic data</span>
+      <span className="p01-data-glyph__note">{task === "A" ? "旧任务样本" : "新任务样本"} · 12 维示意特征</span>
     </div>
+  );
+}
+
+function TrainingArrow() {
+  return (
+    <svg className="p01-training-signal__arrow" viewBox="0 0 42 20" aria-hidden="true">
+      <path d="M2 10h32" />
+      <path d="m28 4 8 6-8 6" />
+    </svg>
   );
 }
 
@@ -72,23 +89,29 @@ function TrainingSignal({ task }: { task: "A" | "B" }) {
     <div className={`p01-training-signal p01-training-signal--${task.toLowerCase()}`} aria-label={`Task ${task} 的训练过程` }>
       <div className="p01-training-signal__steps">
         <span className="p01-training-signal__step"><i>01</i><b>前向计算</b></span>
-        <span className="p01-training-signal__link" aria-hidden="true">→</span>
+        <TrainingArrow />
         <span className="p01-training-signal__step"><i>02</i><b>比较目标</b></span>
-        <span className="p01-training-signal__link" aria-hidden="true">→</span>
+        <TrainingArrow />
         <span className="p01-training-signal__step"><i>03</i><b>反向传递</b></span>
-        <span className="p01-training-signal__link" aria-hidden="true">→</span>
+        <TrainingArrow />
         <span className="p01-training-signal__step p01-training-signal__step--update"><i>04</i><b>更新参数</b></span>
       </div>
-      <div className="p01-training-signal__return" aria-hidden="true"><span /><b>重复训练步骤</b><span /></div>
+      <div className="p01-training-signal__return" aria-hidden="true">
+        <svg viewBox="0 0 120 26" preserveAspectRatio="none">
+          <path d="M2 3v8c0 7 6 12 14 12h88c8 0 14-5 14-12V5" />
+          <path d="m112 10 6-6 6 6" />
+        </svg>
+        <b>重复训练步骤</b>
+      </div>
     </div>
   );
 }
 
 function ParameterVector({ changed = false }: { changed?: boolean }) {
   const groups = [
-    { label: "θ¹", values: changed ? [19, 33, 24, 13, 27] : [19, 28, 24, 18, 27] },
-    { label: "θ²", values: changed ? [31, 15, 26, 21, 12] : [26, 20, 26, 17, 16] },
-    { label: "θ³", values: changed ? [13, 27, 18, 32, 20] : [13, 27, 22, 28, 20] },
+    { label: "θ¹", values: changed ? [38, 49, 27, 43, 22, 51, 34] : [18, 27, 23, 20, 29] },
+    { label: "θ²", values: changed ? [46, 25, 39, 31, 50, 28, 42] : [25, 19, 28, 17, 22] },
+    { label: "θ³", values: changed ? [24, 42, 33, 48, 21, 37, 29] : [17, 29, 22, 26, 19] },
   ];
   return (
     <div className={`p01-parameter-vector ${changed ? "is-changed" : ""}`} aria-label={changed ? "Task B 继续训练后的参数组" : "Task A 训练结束时保存的参数组"}>
