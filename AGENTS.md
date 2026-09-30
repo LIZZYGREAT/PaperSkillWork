@@ -29,6 +29,18 @@ Paper facts must resolve to the cited paper version and a source locator. Distin
 
 Cache one complete, systematic paper read under `source-cache/`. Use the cache for later planning and review; repeat a full extraction only to correct a failed or incomplete cache. The cache manifest includes the figure inventory and source metadata. Do not accumulate unrelated partial reads as a substitute for a reliable cache.
 
+## Visual feedback and iterative UI revisions
+
+When a user gives screenshot-based or visual revision feedback, translate it into explicit acceptance criteria before changing the UI. Record the affected object, the relationship it should show, direction and alignment, exact source/target pairs, what must stay invariant, what may change, semantic colors, language, and the requested scope.
+
+- Read the relevant conversation history together with the screenshot. Do not infer that an arrow should connect an entire sequence when the requested relation is between adjacent nodes. Write down the intended edges (for example, `01→02`, `02→03`) before implementing them.
+- For comparisons and charts, separate invariants from changing values: dimensions, coordinate identity, axes, scale, and zero point may need to stay fixed while measurements change.
+- Check terminal conditions as well as the middle of a diagram: stray lines before the first node or after the last node, arrow direction, clipping, and container bounds.
+- Preserve already accepted page framing and shared interactions unless the user asks to change them. After a local fix, inspect the full affected sequence and nearby sections so the same defect has not been repeated elsewhere.
+- Validate the rendered UI at the relevant viewport when possible, then run the project build. If the rendered result could not be inspected, say so instead of implying visual verification.
+
+For EWC Page 1 / Page 2 revisions, consult [`docs/ewc-ui-teaching-lessons.md`](docs/ewc-ui-teaching-lessons.md) for this project's recorded arrow, typography, palette, layout, input-vector, parameter-coordinate, and language feedback. Treat those visual mappings as EWC-specific rather than universal defaults.
+
 ## Visual assets
 
 Inventory figures, tables, and other source visuals; classify and evaluate each; then record a use decision. At W3 keep selected originals in `source-cache/figures/`, record source/page/caption/processing/evidence/reuse-rights metadata, and do not require a derivative yet. At W5 assign each selected public asset to a spine stage and choose its rendering. Generate derivatives during implementation; W8/W10 verify the derivative, web copy, export copy, and README provenance. Do not publish assets whose reuse rights are unclear. Do not submit a paper PDF. Use relative image paths and include asset provenance in the exported project's `README.md`.
