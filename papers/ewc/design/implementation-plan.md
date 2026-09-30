@@ -250,6 +250,8 @@ Page 10 / Grand Animation is the final implementation batch. Experiments remain 
 
 ### Contract status
 
+**W5.5 interface contract: FROZEN in this document before W6 page implementation.** W5.5 is a required execution step, not a separate Workflow stage.
+
 W5 freezes names and data relationships. W6 will implement and validate the TypeScript types and behavior; it may not silently rename contracts during page work. If a frozen ID or behavior must change because of a concrete technical conflict, update this section and all affected references together before adding dependent page code. No second contract document is created.
 
 ### Page IDs
@@ -290,7 +292,7 @@ IDs use one global namespace: lowercase snake_case for concepts, symbols, formul
 
 | Reference group | Frozen IDs |
 | --- | --- |
-| Learning concepts | continual_learning, catastrophic_forgetting, parameter_interference, ewc, likelihood, negative_log_likelihood, prior, posterior, sequential_bayes, laplace_approximation, local_precision, fisher_information, fisher_estimation, consolidation, task_boundary, optimizer_step |
+| Learning concepts | continual_learning, catastrophic_forgetting, parameter_interference, ewc, normal_training, likelihood, negative_log_likelihood, prior, posterior, sequential_bayes, laplace_approximation, local_precision, fisher_information, fisher_estimation, consolidation, task_boundary, optimizer_step |
 | Network/data objects | neural_network, p_theta_y_given_x, p_D_given_theta, p_theta, p_theta_given_D, task_a_posterior, task_b_posterior, task_a_data, task_b_data, task_a_loss |
 | EWC symbols/formulas | theta, theta_a_star, fisher_a, fisher_a_i, lambda_ewc, task_a_gradient, task_b_loss, ewc_penalty, ewc_objective, task_b_gradient, ewc_gradient, total_gradient |
 | Experiments/system | permuted_mnist, atari, replay, task_recognition, task_specific_modulation, fisher_perturbation, grand_animation |
@@ -322,6 +324,7 @@ type ReferenceItem = {
   title: string;
   fullName?: string;
   summary: string;
+  role: string;
   roleInEWC?: string;
   confusion?: string;
   sourceCategory?: SourceCategory;
@@ -375,6 +378,10 @@ type EvidenceReference = ReferenceItem & {
 };
 ~~~
 
+The required role field records the item's role in the method or learning path, matching the W5.5 workflow field name. The source-category vocabulary follows the Hover/Reference specification and the evidence registry boundaries.
+
+role is the concise required role field from the Workflow; roleInEWC is the optional EWC-specific refinement used by the Hover/Reference design when that distinction helps.
+
 The structured page targets extend the design document's page/anchor navigation example, so one Registry entry can link to a stable page and section rather than relying on page numbers alone. Evidence records keep claim, experiment, observation, interpretation, boundary, and source locator distinct.
 
 ### Reference API and interaction behavior
@@ -387,15 +394,17 @@ The names below are frozen for W6:
 <SymbolRef id="theta_a_star">θ_A*</SymbolRef>
 <FormulaRef id="ewc_objective">...</FormulaRef>
 
-openReference({
+type OpenReferenceTarget = {
   referenceId?: CanonicalReferenceId;
   pageId?: PageId;
   anchorId?: AnchorId;
   animationStateId?: GrandAnimationStateId;
-}): void
+};
 
-openHub(referenceId?: CanonicalReferenceId): void
-closeHub(): void
+function openReference(target: OpenReferenceTarget): void;
+
+function openHub(referenceId?: CanonicalReferenceId): void;
+function closeHub(): void;
 ~~~
 
 - Hover and keyboard focus show a short recall preview; click pins/opens it. On touch, tap opens it.
