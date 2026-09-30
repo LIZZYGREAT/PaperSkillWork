@@ -89,6 +89,17 @@ function TrainingArrow() {
   );
 }
 
+function EwcTraceArrow() {
+  return (
+    <li className="p01-ewc-trace__arrow" aria-hidden="true">
+      <svg viewBox="0 0 44 18" focusable="false">
+        <path d="M1 9h37" />
+        <path d="m31 3 7 6-7 6" />
+      </svg>
+    </li>
+  );
+}
+
 function TrainingSignal({ task }: { task: "A" | "B" }) {
   return (
     <div className={`p01-training-signal p01-training-signal--${task.toLowerCase()}`} aria-label={`Task ${task} 的训练过程` }>
@@ -328,9 +339,9 @@ export function PageProblem() {
       <section className="p01-ewc-preview" id="ewc-motivation" aria-labelledby="p01-ewc-title">
         <div className="p01-ewc-preview__intro"><span className="p01-overline">A CONCEPT PREVIEW · NO FORMULA YET</span><h2 id="p01-ewc-title"><ReferenceTrigger id="ewc">EWC</ReferenceTrigger> 要处理的矛盾</h2><p>不是冻结整个模型，而是记下 Task A 依赖参数的位置与敏感程度；学习 Task B 时，对更敏感的部分限制得更强。</p></div>
         <ol className="p01-ewc-trace" aria-label="EWC 的概念预告">
-          <li><span>01</span><b>训练 Task A</b></li><li aria-hidden="true">→</li>
-          <li><span>02</span><b>区分参数的旧任务敏感程度</b></li><li aria-hidden="true">→</li>
-          <li><span>03</span><b>保存旧任务参数状态</b></li><li aria-hidden="true">→</li>
+          <li><span>01</span><b>训练 Task A</b></li><EwcTraceArrow />
+          <li><span>02</span><b>区分参数的旧任务敏感程度</b></li><EwcTraceArrow />
+          <li><span>03</span><b>保存旧任务参数状态</b></li><EwcTraceArrow />
           <li><span>04</span><b>继续学 Task B，并区别约束</b></li>
         </ol>
       </section>
