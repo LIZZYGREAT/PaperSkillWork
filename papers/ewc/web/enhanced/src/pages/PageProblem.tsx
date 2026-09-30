@@ -15,7 +15,10 @@ const SAMPLE_PIXEL_LEVELS: Record<"A" | "B", number[][]> = {
   ],
 };
 
-const PIXEL_TONES = ["#f5f7f4", "#e6ece8", "#cbd9d1", "#9ab5a8", "#587a6b"];
+const PIXEL_TONES: Record<"A" | "B", string[]> = {
+  A: ["#f5f7f4", "#e6ece8", "#cbd9d1", "#9ab5a8", "#587a6b"],
+  B: ["#f9f4f0", "#efddd3", "#e7c1af", "#d99a7c", "#b76548"],
+};
 
 const INPUT_NODES = [28, 63, 98];
 const HIDDEN_NODES = [17, 39, 61, 83, 105];
@@ -66,7 +69,7 @@ function DataGlyph({ task }: { task: "A" | "B" }) {
           <div className="p01-data-glyph__sample" key={`${task}-${sampleIndex}`}>
             <span className="p01-data-glyph__sample-id">x<sub>{sampleOffset + sampleIndex + 1}</sub></span>
             <span className="p01-data-glyph__pixels">
-              {sample.map((level, markIndex) => <i key={`${sampleIndex}-${markIndex}`} style={{ backgroundColor: PIXEL_TONES[level] }} />)}
+              {sample.map((level, markIndex) => <i key={`${sampleIndex}-${markIndex}`} style={{ backgroundColor: PIXEL_TONES[task][level] }} />)}
             </span>
             <span className="p01-data-glyph__target">y<sub>{sampleOffset + sampleIndex + 1}</sub></span>
           </div>

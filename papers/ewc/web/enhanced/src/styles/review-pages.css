@@ -47,6 +47,7 @@
 .p01-data-glyph__target { justify-self: end; }
 .p01-data-glyph__pixels { display: grid; grid-template-columns: repeat(12, 16px); gap: 4px; }
 .p01-data-glyph__pixels i { display: block; width: 16px; height: 16px; border: 1px solid rgba(75,99,87,.16); border-radius: 3px; background: #f3f6f2; }
+.p01-data-glyph--b .p01-data-glyph__pixels i { border-color: rgba(173,91,59,.2); }
 .p01-data-glyph__note { display: block; margin: 10px 0 0 43px; color: #788b87; font-size: var(--p01-font-meta); letter-spacing: .025em; }
 .p01-model-object { display: flex; align-items: center; justify-content: space-around; gap: 18px; min-width: 0; padding: 9px 16px; border: 1px solid #e0e8e4; border-radius: 11px; background: #f8faf7; }
 .p01-network { display: block; width: min(100%, 265px); height: auto; overflow: visible; }
