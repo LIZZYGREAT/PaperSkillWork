@@ -112,21 +112,40 @@ function TrainingSignal({ task }: { task: "A" | "B" }) {
   );
 }
 
+// Each array index is a fixed parameter coordinate; before and after use the same signed scale.
+const PARAMETER_GROUPS = [
+  { label: "θ¹", before: [-26, 30, 15, -33, 22], after: [-18, 36, 12, -27, 28] },
+  { label: "θ²", before: [34, -18, 27, -23, 31], after: [28, -25, -9, -17, 26] },
+  { label: "θ³", before: [-15, 35, -28, 19, -32], after: [-23, 29, -20, 26, -27] },
+];
+
 function ParameterVector({ changed = false }: { changed?: boolean }) {
-  const groups = [
-    { label: "θ¹", values: changed ? [36, 24, 32, 30, 38] : [14, 38, 19, 42, 26] },
-    { label: "θ²", values: changed ? [24, 35, 29, 36, 20] : [40, 16, 43, 21, 34] },
-    { label: "θ³", values: changed ? [28, 26, 38, 29, 35] : [12, 41, 25, 40, 17] },
-  ];
   return (
-    <div className={`p01-parameter-vector ${changed ? "is-changed" : ""}`} aria-label={changed ? "Task B 更新后的参数组，与 Task A 参数快照维度相同" : "Task A 训练结束时保存的参数组，共三组示意参数"}>
-      {groups.map((group) => (
+    <div
+      className={`p01-parameter-vector ${changed ? "is-changed" : ""}`}
+      role="img"
+      aria-label={changed
+        ? "Task B 更新后的 15 个有符号参数坐标；淡色柱为 Task A 起始值，橙色柱为对应的新值，共享零轴与尺度"
+        : "Task A 训练结束时的 15 个有符号参数坐标，共享零轴与尺度"}
+    >
+      {PARAMETER_GROUPS.map((group) => (
         <div className="p01-parameter-vector__group" key={group.label}>
           <span>{group.label}</span>
-          <div aria-hidden="true">{group.values.map((height, index) => <i key={`${group.label}-${index}`} style={{ height }} />)}</div>
+          <div className="p01-parameter-vector__plot" aria-hidden="true">
+            <span className="p01-parameter-vector__zero" />
+            {group.before.map((before, index) => {
+              const value = changed ? group.after[index] : before;
+              return (
+                <span className="p01-parameter-vector__coordinate" key={`${group.label}-${index}`}>
+                  {changed && <i className={`p01-parameter-vector__bar p01-parameter-vector__bar--ghost ${before < 0 ? "is-negative" : "is-positive"}`} style={{ height: Math.abs(before) }} />}
+                  <i className={`p01-parameter-vector__bar ${changed ? "is-updated" : ""} ${value < 0 ? "is-negative" : "is-positive"}`} style={{ height: Math.abs(value) }} />
+                </span>
+              );
+            })}
+          </div>
         </div>
       ))}
-      <span className="p01-parameter-vector__caption">同一刻度</span>
+      <span className="p01-parameter-vector__caption">同一参数坐标 · 同一尺度</span>
     </div>
   );
 }
