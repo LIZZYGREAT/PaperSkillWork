@@ -65,7 +65,7 @@
 .p01-training-signal__step i { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #c7d7cf; border-radius: 50%; color: #58746e; background: #f3f7f3; font: normal var(--p01-font-meta) "DM Mono", monospace; }
 .p01-training-signal__step b { color: #526a66; font-size: var(--p01-font-process); font-weight: 600; white-space: nowrap; }
 .p01-training-signal__step--update i { border-color: #d8b7a3; color: #a75e40; background: #fbf0e8; }
-.p01-training-signal__arrow { display: block; flex: 1 1 30px; min-width: 24px; max-width: 46px; height: 20px; overflow: visible; }
+.p01-training-signal__arrow { display: block; flex: 1 1 30px; min-width: 24px; max-width: 46px; height: 20px; overflow: visible; transform: translateY(-11px); }
 .p01-training-signal__arrow path { fill: none; stroke: #819c91; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .p01-training-signal__return { position: relative; display: grid; place-items: center; width: 72%; height: 28px; margin: 5px auto 0; color: #71847d; font-size: var(--p01-font-meta); }
 .p01-training-signal__return svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
@@ -232,7 +232,7 @@
   .p01-training-signal__steps > :nth-child(3) { grid-area: 1 / 3; }
   .p01-training-signal__steps > :nth-child(4) { grid-area: 2 / 3; transform: rotate(90deg); }
   .p01-training-signal__steps > :nth-child(5) { grid-area: 3 / 3; }
-  .p01-training-signal__steps > :nth-child(6) { grid-area: 3 / 2; transform: rotate(180deg); }
+  .p01-training-signal__steps > :nth-child(6) { grid-area: 3 / 2; transform: translateY(-11px) rotate(180deg); }
   .p01-training-signal__steps > :nth-child(7) { grid-area: 3 / 1; }
   .p01-training-signal__step { min-width: 0; }
   .p01-training-signal__step b { font-size: var(--p01-font-meta); }
