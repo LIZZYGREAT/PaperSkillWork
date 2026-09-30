@@ -26,7 +26,7 @@ paper:
   source_hash: 5E181839191AB4582DA2B5FF9666F5222E40B8B8D2F1CDF4FA7100B3A58D7A29
 workflow:
   version: 3
-  current_stage: W4
+  current_stage: W6
   stages:
     W0_source_intake:
       status: complete
@@ -42,9 +42,12 @@ workflow:
       status: complete
       completed_by: automation
     W4_learning_spine:
-      status: in_progress
+      status: complete
+      reviewed_by: 甘文杰
+      note: 学习主线已通过评审
     W5_interaction_plan:
-      status: pending
+      status: complete
+      completed_by: automation
     W6_vertical_slice:
       status: pending
     W7_human_review:
