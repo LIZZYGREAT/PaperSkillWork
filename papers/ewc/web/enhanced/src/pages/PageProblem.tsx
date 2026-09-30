@@ -111,9 +111,9 @@ function TrainingSignal({ task }: { task: "A" | "B" }) {
 
 function ParameterVector({ changed = false }: { changed?: boolean }) {
   const groups = [
-    { label: "θ¹", values: changed ? [38, 49, 27, 43, 22, 51, 34] : [18, 27, 23, 20, 29] },
-    { label: "θ²", values: changed ? [46, 25, 39, 31, 50, 28, 42] : [25, 19, 28, 17, 22] },
-    { label: "θ³", values: changed ? [24, 42, 33, 48, 21, 37, 29] : [17, 29, 22, 26, 19] },
+    { label: "θ¹", values: changed ? [31, 28, 26, 35, 35] : [22, 34, 18, 42, 27] },
+    { label: "θ²", values: changed ? [28, 33, 36, 34, 24] : [38, 20, 42, 25, 31] },
+    { label: "θ³", values: changed ? [25, 31, 35, 34, 30] : [18, 39, 29, 41, 21] },
   ];
   return (
     <div className={`p01-parameter-vector ${changed ? "is-changed" : ""}`} aria-label={changed ? "Task B 继续训练后的参数组" : "Task A 训练结束时保存的参数组"}>
@@ -123,7 +123,7 @@ function ParameterVector({ changed = false }: { changed?: boolean }) {
           <div aria-hidden="true">{group.values.map((height, index) => <i key={`${group.label}-${index}`} style={{ height }} />)}</div>
         </div>
       ))}
-      <span className="p01-parameter-vector__caption">参数示意</span>
+      <span className="p01-parameter-vector__caption">同一刻度</span>
     </div>
   );
 }
@@ -220,7 +220,7 @@ export function PageProblem() {
           <li className="p01-stage p01-stage--changed">
             <span className="p01-stage__marker">07</span>
             <div className="p01-stage__content">
-              <div className="p01-stage__copy"><span className="p01-stage__type">THE SHARED PARAMETERS MOVE</span><h3><em>θ</em> changes</h3><p>为适应 Task B，模型继续更新参数：<em>θ</em><sub>A</sub>* → <em>θ</em>′ → <em>θ</em>″。</p></div>
+              <div className="p01-stage__copy"><span className="p01-stage__type">THE SHARED PARAMETERS MOVE</span><h3><em>θ</em> changes</h3><p>参数维度保持不变；Task B 训练后，部分值增大、部分值减小：<em>θ</em><sub>A</sub>* → <em>θ</em>′ → <em>θ</em>″。</p></div>
               <div className="p01-changed-state"><ParameterVector changed /><div className="p01-outcomes" aria-label="顺序学习中的可能表现变化">
                 <div><span>Task B · 新任务</span><b><i aria-hidden="true">↑</i> 可能改善</b></div>
                 <div><span>Task A · 先前任务</span><b><i aria-hidden="true">↓</i> 可能下降</b></div>

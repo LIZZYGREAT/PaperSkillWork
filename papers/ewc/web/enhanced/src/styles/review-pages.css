@@ -75,11 +75,11 @@
 .p01-parameter-vector { display: flex; align-items: end; gap: 10px; min-width: 0; padding: 3px 0 0; }
 .p01-parameter-vector__group { display: grid; gap: 5px; justify-items: center; }
 .p01-parameter-vector__group > span { color: #52706a; font: var(--p01-font-label) Georgia, serif; }
-.p01-parameter-vector__group > div { display: flex; align-items: end; gap: 3px; height: 44px; padding: 4px 5px; overflow: hidden; border: 1px solid #dbe7df; border-radius: 6px; background: #fbfcf8; box-sizing: border-box; }
+.p01-parameter-vector__group > div { display: flex; align-items: end; gap: 3px; height: 56px; padding: 4px 5px; overflow: hidden; border: 1px solid #dbe7df; border-radius: 6px; background-color: #fbfcf8; background-image: linear-gradient(to top, transparent 24%, #e7ede9 24.5%, #e7ede9 25.5%, transparent 26%, transparent 49%, #e7ede9 49.5%, #e7ede9 50.5%, transparent 51%, transparent 74%, #e7ede9 74.5%, #e7ede9 75.5%, transparent 76%); box-sizing: border-box; }
 .p01-parameter-vector__group i { display: block; flex: 0 0 6px; max-height: 100%; border-radius: 2px 2px 0 0; background: #84aa99; }
 .p01-parameter-vector__caption { align-self: center; margin-left: 3px; color: #7c8d87; font-size: var(--p01-font-micro); white-space: nowrap; }
-.p01-parameter-vector.is-changed .p01-parameter-vector__group > div { height: 64px; gap: 2px; padding-inline: 4px; border-color: #ead4c5; background: #fff7ef; }
-.p01-parameter-vector.is-changed .p01-parameter-vector__group i { flex-basis: 5px; background: #ca8664; }
+.p01-parameter-vector.is-changed .p01-parameter-vector__group > div { border-color: #ead4c5; background-color: #fffaf5; background-image: linear-gradient(to top, transparent 24%, #f1e5dc 24.5%, #f1e5dc 25.5%, transparent 26%, transparent 49%, #f1e5dc 49.5%, #f1e5dc 50.5%, transparent 51%, transparent 74%, #f1e5dc 74.5%, #f1e5dc 75.5%, transparent 76%); }
+.p01-parameter-vector.is-changed .p01-parameter-vector__group i { background: #ca8664; }
 .p01-state-object__note { display: grid; gap: 5px; color: #526a65; font-size: var(--p01-font-meta); text-align: right; }
 .p01-state-object__note b { color: #315c54; font-size: var(--p01-font-label); }
 .p01-reuse-model { display: grid; grid-template-columns: minmax(150px, .7fr) 27px minmax(0, 1.3fr); align-items: center; gap: 11px; min-width: 0; padding: 9px 12px; border: 1px solid #e5ded3; border-radius: 11px; background: #fffefa; }
