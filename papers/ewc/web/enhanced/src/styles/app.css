@@ -1,5 +1,5 @@
 :root {
-  font-family: "DM Sans", "Noto Sans SC", "Segoe UI", sans-serif;
+  font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", sans-serif;
   color: #1e3438;
   background: #f3f5f2;
   font-synthesis: none;
@@ -8,8 +8,8 @@
   --paper-strong: #e9eeea;
   --surface: #fffefa;
   --ink: #1e3438;
-  --ink-soft: #41575a;
-  --muted: #718184;
+  --ink-soft: #385154;
+  --muted: #596b6e;
   --line: #dce4e0;
   --line-strong: #c6d2cd;
   --nav: #183236;
@@ -142,4 +142,57 @@ a { color: inherit; }
   .ewc-hub__columns { display: flex; flex-direction: column; }
   .ewc-hub__list { max-height: 35vh; border-right: 0; border-bottom: 1px solid var(--line); }
   .ewc-hub__detail { overflow: visible; }
+}
+
+/* W7 revision: give the Hub its desktop width and use a readable text scale. */
+.ewc-slice-nav__copy b { font-size: 14px; }
+.ewc-slice-nav__copy small { color: #b2c5c2; font-size: 12px; }
+.ewc-rail__scope { font-size: 13px; }
+.ewc-rail__scope p { color: #c0cfcc; }
+.ewc-rail__footer { color: #c0cfcc; font-size: 12px; }
+.ewc-rail__footer small { color: #a5bcba; font-size: 11px; }
+.ewc-topbar__path { color: #53686b; font-size: 11px; }
+.ewc-topbar__path strong { color: #314b4e; }
+.ewc-hub-launch { font-size: 14px; }
+.ewc-hub-launch kbd { color: #52676a; font-size: 11px; }
+.rk-overlay .rk-drawer { width: min(980px, 84vw); max-width: none; }
+.rk-overlay .rk-overlay__header { padding: 20px 34px; }
+.rk-overlay .rk-overlay__header h2 { font-size: 22px; }
+.rk-overlay .rk-overlay__close { width: 42px; height: 42px; font-size: 24px; }
+.rk-overlay .rk-overlay__body { min-height: 0; padding: 0; }
+.ewc-hub__intro { padding: 18px 34px 20px; }
+.ewc-hub__intro > p { color: #465d60; font-size: 15px; line-height: 1.65; }
+.ewc-hub__search { color: #354f52; font-size: 14px; }
+.ewc-hub__search input { font-size: 15px; }
+.ewc-hub__columns { grid-template-columns: minmax(350px, .9fr) minmax(440px, 1.1fr); }
+.ewc-hub__list { padding: 17px 20px; }
+.ewc-hub__count { color: #52686a; font-size: 11px; }
+.ewc-hub__item { padding: 13px 12px; gap: 7px 10px; }
+.ewc-hub__item-title { color: #243d41; font-size: 15px; line-height: 1.4; }
+.ewc-hub__item-kind { color: #52686a; font-size: 11px; }
+.ewc-hub__item-summary { color: #4d6265; font-size: 13px; line-height: 1.6; }
+.ewc-hub__detail { min-width: 0; padding: 30px clamp(28px, 3vw, 42px); }
+.ewc-hub__detail-kind { font-size: 11px; }
+.ewc-hub__detail h3 { font-size: 27px; }
+.ewc-hub__detail > p, .ewc-hub__detail section p { color: #465d60; font-size: 15px; line-height: 1.75; }
+.ewc-hub__detail section { margin-top: 21px; }
+.ewc-hub__detail h4 { color: #344d50; font-size: 14px; }
+.ewc-hub__links { gap: 8px; }
+.ewc-hub__links button { padding: 8px 10px; color: #245e59; font-size: 13px; }
+.ewc-hub__scope { padding: 12px 34px; color: #465d60; font-size: 12px; }
+.ewc-hub__empty { color: #465d60; font-size: 14px; }
+.ewc-reference-preview__eyebrow { font-size: 11px; }
+.ewc-reference-preview p { color: #465d60; font-size: 14px; }
+.ewc-text-action { font-size: 13px; }
+
+@media (max-width: 1050px) {
+  .ewc-hub__columns { grid-template-columns: minmax(270px, .85fr) minmax(330px, 1.15fr); }
+}
+@media (max-width: 760px) {
+  .rk-mobile-sheet .rk-overlay .rk-drawer { width: 100%; height: min(92vh, 900px); margin: auto 0 0; }
+  .ewc-hub__columns { display: flex; flex-direction: column; }
+  .ewc-hub__list { max-height: 34vh; border-right: 0; border-bottom: 1px solid var(--line); }
+  .ewc-hub__detail { overflow: visible; padding: 22px 24px; }
+  .ewc-hub__intro { padding: 14px 20px 17px; }
+  .ewc-hub__scope { padding-inline: 20px; }
 }
