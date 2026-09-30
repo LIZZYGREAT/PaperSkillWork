@@ -399,6 +399,9 @@
   .p02-flow-node--logits > .p02-node-label, .p02-flow-node--probability > .p02-node-label { grid-row: 1; }
   .p02-flow-arrow { transform: rotate(90deg); padding: 2px; }
   .p02-input-sample { min-height: 118px; }
+  .p02-flow-node--input .p02-input-sample { grid-column: 1 / -1; grid-template-columns: auto minmax(0, 1fr); justify-items: start; min-height: 0; padding-inline: 8px; }
+  .p02-flow-node--input .p02-input-sample__pixels { grid-row: span 2; }
+  .p02-flow-node--input .p02-input-sample > small { grid-column: 2; text-align: left; }
   .p02-forward-caption { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .p02-state-row-head, .p02-state-row { grid-template-columns: minmax(90px, .55fr) minmax(215px, 1.2fr) minmax(105px, .65fr) minmax(75px, .4fr); gap: 7px; }
   .p02-state-row-head { padding-inline: 9px; font-size: 9px; }
