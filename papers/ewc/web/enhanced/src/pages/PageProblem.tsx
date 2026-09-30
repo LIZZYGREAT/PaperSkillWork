@@ -100,8 +100,8 @@ function TrainingSignal({ task }: { task: "A" | "B" }) {
       </div>
       <div className="p01-training-signal__return" aria-hidden="true">
         <svg viewBox="0 0 120 26" preserveAspectRatio="none">
-          <path d="M2 3v8c0 7 6 12 14 12h88c8 0 14-5 14-12V5" />
-          <path d="m112 10 6-6 6 6" />
+          <path d="M118 3v7c0 7-6 12-14 12H22c-8 0-14-5-14-12V5" />
+          <path d="m2 11 6-6 6 6" />
         </svg>
         <b>重复训练步骤</b>
       </div>
