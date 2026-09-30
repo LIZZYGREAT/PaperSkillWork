@@ -111,12 +111,12 @@ function TrainingSignal({ task }: { task: "A" | "B" }) {
 
 function ParameterVector({ changed = false }: { changed?: boolean }) {
   const groups = [
-    { label: "θ¹", values: changed ? [31, 28, 26, 35, 35] : [22, 34, 18, 42, 27] },
-    { label: "θ²", values: changed ? [28, 33, 36, 34, 24] : [38, 20, 42, 25, 31] },
-    { label: "θ³", values: changed ? [25, 31, 35, 34, 30] : [18, 39, 29, 41, 21] },
+    { label: "θ¹", values: changed ? [36, 24, 32, 30, 38] : [14, 38, 19, 42, 26] },
+    { label: "θ²", values: changed ? [24, 35, 29, 36, 20] : [40, 16, 43, 21, 34] },
+    { label: "θ³", values: changed ? [28, 26, 38, 29, 35] : [12, 41, 25, 40, 17] },
   ];
   return (
-    <div className={`p01-parameter-vector ${changed ? "is-changed" : ""}`} aria-label={changed ? "Task B 继续训练后的参数组" : "Task A 训练结束时保存的参数组"}>
+    <div className={`p01-parameter-vector ${changed ? "is-changed" : ""}`} aria-label={changed ? "Task B 更新后的参数组，与 Task A 参数快照维度相同" : "Task A 训练结束时保存的参数组，共三组示意参数"}>
       {groups.map((group) => (
         <div className="p01-parameter-vector__group" key={group.label}>
           <span>{group.label}</span>
