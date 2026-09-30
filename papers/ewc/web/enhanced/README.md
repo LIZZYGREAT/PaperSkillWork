@@ -2,6 +2,10 @@
 
 This standalone React/TypeScript site contains the W8 EWC tutorial implementation through Page 9. It uses the frozen page, anchor, reference, runtime-object, and animation-state IDs recorded in `design/implementation-plan.md`.
 
+## Web asset provenance
+
+The figure assets below are copied unchanged from the paper source cache for noncommercial educational use; their file paths, source citation, and reuse limits are documented individually.
+
 ## Figure 1 provenance
 
 `public/images/figure-1.png` and `../../assets/figures/web/figure-1.png` are byte-for-byte copies of `../../source-cache/figures/figure-1.png`. The source is the whole Figure 1 rendered from the paper PDF and cropped only to the figure bounds; no panel, label, data mark, or color inside the figure has been changed.
