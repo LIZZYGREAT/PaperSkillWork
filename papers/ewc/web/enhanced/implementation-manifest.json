@@ -14,8 +14,24 @@
       "stage": "S1_problem_and_loss",
       "component": "PageProbability",
       "status": "complete"
+    },
+    "sequential-bayesian-posterior": {
+      "stage": "S2_bayesian_parameter_view",
+      "component": "PageBayes",
+      "status": "complete"
     }
   },
-  "supporting": {},
+  "supporting": {
+    "gaussian-prior-l2-link": {
+      "placement": "expandable",
+      "component": "PageBayes",
+      "status": "complete"
+    },
+    "bayes-evidence-normalizer": {
+      "placement": "expandable",
+      "component": "PageBayes",
+      "status": "complete"
+    }
+  },
   "reference": {}
 }

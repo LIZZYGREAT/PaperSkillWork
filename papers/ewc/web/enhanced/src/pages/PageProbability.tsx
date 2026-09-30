@@ -239,7 +239,7 @@ export function PageProbability() {
         <div className="p02-handoff__question"><span>OPEN QUESTION</span><b>p(θ) = ?</b><small>not a network output</small></div>
       </section>
 
-      <div className="p02-review-exit"><span>W6 REVIEW SCOPE · PAGES 01–02</span><button type="button" onClick={() => api.navigatePage("page-01-problem")}>← 回到 Page 1 顺序训练流程</button></div>
+      <div className="p02-review-exit"><span>W8 IMPLEMENTATION · PAGES 01–03</span><button type="button" onClick={() => api.navigatePage("page-03-bayes")}>下一页：参数的 Prior 与 Posterior →</button></div>
     </article>
   );
 }
