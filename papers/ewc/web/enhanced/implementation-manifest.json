@@ -10,24 +10,9 @@
       "component": "PageProblem",
       "status": "complete"
     },
-    "fisher-estimation-path": {
-      "stage": "S4_fisher_to_ewc_constraint",
-      "component": "PageFisher",
-      "status": "complete"
-    },
-    "fisher-as-approximate-precision": {
-      "stage": "S4_fisher_to_ewc_constraint",
-      "component": "PageFisher",
-      "status": "complete"
-    },
-    "ewc-objective-assembly": {
-      "stage": "S4_fisher_to_ewc_constraint",
-      "component": "PageObjective",
-      "status": "complete"
-    },
-    "ewc-gradient-junction": {
-      "stage": "S4_fisher_to_ewc_constraint",
-      "component": "PageObjective",
+    "network-likelihood-loss-chain": {
+      "stage": "S1_problem_and_loss",
+      "component": "PageProbability",
       "status": "complete"
     }
   },

@@ -1,0 +1,227 @@
+import { Fragment, useMemo, useState } from "react";
+import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
+import { useReferenceApi } from "../shared/reference/ReferenceProvider";
+
+type ParameterState = {
+  id: string;
+  label: string;
+  logits: [number, number, number];
+  probabilities: [number, number, number];
+  datasetProbabilities: [number, number, number];
+};
+
+const PARAMETER_STATES: ParameterState[] = [
+  { id: "theta-1", label: "θ⁽¹⁾", logits: [-0.87, -0.97, -1.61], probabilities: [0.42, 0.38, 0.20], datasetProbabilities: [0.42, 0.65, 0.58] },
+  { id: "theta-2", label: "θ⁽²⁾", logits: [0.00, -1.30, -2.34], probabilities: [0.73, 0.20, 0.07], datasetProbabilities: [0.73, 0.80, 0.92] },
+  { id: "theta-3", label: "θ⁽³⁾", logits: [0.00, -2.40, -3.09], probabilities: [0.88, 0.08, 0.04], datasetProbabilities: [0.88, 0.89, 0.95] },
+];
+
+const CLASS_NAMES = ["class A", "class B", "class C"];
+const SAMPLE_NAMES = ["(x₁, y₁=A)", "(x₂, y₂=B)", "(x₃, y₃=C)"];
+const INPUT_PATTERN = [1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1];
+const INPUT_NODES = [25, 61, 97];
+const HIDDEN_NODES = [17, 39, 61, 83, 105];
+const OUTPUT_NODES = [25, 61, 97];
+
+function formatProbability(value: number) {
+  return value.toFixed(2);
+}
+
+function datasetLikelihood(state: ParameterState) {
+  return state.datasetProbabilities.reduce((likelihood, probability) => likelihood * probability, 1);
+}
+
+function negativeLogLikelihood(state: ParameterState) {
+  return -Math.log(datasetLikelihood(state));
+}
+
+function InputSample() {
+  return (
+    <div className="p02-input-sample" role="img" aria-label="用于演示的输入样本 x 一，右侧标签 y 一为 class A">
+      <div className="p02-input-sample__pixels" aria-hidden="true">{INPUT_PATTERN.map((pixel, index) => <i className={pixel ? "is-on" : ""} key={index} />)}</div>
+      <div className="p02-input-sample__label"><b>x₁</b><span>true label <strong>A</strong></span></div>
+      <small>schematic input · teaching example</small>
+    </div>
+  );
+}
+
+function ForwardNetwork() {
+  return (
+    <svg className="p02-network" viewBox="0 0 250 122" role="img" aria-labelledby="p02-network-title p02-network-description">
+      <title id="p02-network-title">前向计算的神经网络</title>
+      <desc id="p02-network-description">输入经过多个相连的网络层，输出由当前参数 theta 决定。</desc>
+      <g className="p02-network__wires" aria-hidden="true">
+        {INPUT_NODES.flatMap((inputY, inputIndex) => HIDDEN_NODES.map((hiddenY, hiddenIndex) => <line key={`ih-${inputIndex}-${hiddenIndex}`} x1="24" y1={inputY} x2="123" y2={hiddenY} />))}
+        {HIDDEN_NODES.flatMap((hiddenY, hiddenIndex) => OUTPUT_NODES.map((outputY, outputIndex) => <line key={`ho-${hiddenIndex}-${outputIndex}`} x1="127" y1={hiddenY} x2="226" y2={outputY} />))}
+      </g>
+      <g className="p02-network__nodes p02-network__nodes--input" aria-hidden="true">{INPUT_NODES.map((y) => <circle key={`i-${y}`} cx="22" cy={y} r="7" />)}</g>
+      <g className="p02-network__nodes p02-network__nodes--hidden" aria-hidden="true">{HIDDEN_NODES.map((y) => <circle key={`h-${y}`} cx="125" cy={y} r="7" />)}</g>
+      <g className="p02-network__nodes p02-network__nodes--output" aria-hidden="true">{OUTPUT_NODES.map((y) => <circle key={`o-${y}`} cx="228" cy={y} r="7" />)}</g>
+      <text className="p02-network__label" x="22" y="119" textAnchor="middle">input</text>
+      <text className="p02-network__label" x="125" y="119" textAnchor="middle">hidden</text>
+      <text className="p02-network__label" x="228" y="119" textAnchor="middle">output</text>
+    </svg>
+  );
+}
+
+function LogitValues({ values }: { values: ParameterState["logits"] }) {
+  return (
+    <div className="p02-logit-list" aria-label="神经网络输出的 logits">
+      {values.map((value, index) => (
+        <div className="p02-logit-row" key={CLASS_NAMES[index]}>
+          <span>{CLASS_NAMES[index]}</span>
+          <div className="p02-logit-row__bar"><i style={{ width: `${Math.max(4, ((value + 2) / 2) * 100)}%` }} /></div>
+          <b>{value.toFixed(2)}</b>
+        </div>
+      ))}
+      <div className="p02-logit-axis"><span>−2</span><span>logit z</span><span>0</span></div>
+    </div>
+  );
+}
+
+function ProbabilityValues({ values }: { values: ParameterState["probabilities"] }) {
+  return (
+    <div className="p02-probability-list" aria-label="Softmax 后的类别概率">
+      {values.map((value, index) => (
+        <div className={`p02-probability-row ${index === 0 ? "is-observed" : ""}`} key={CLASS_NAMES[index]}>
+          <span>{CLASS_NAMES[index]}{index === 0 ? " · y₁" : ""}</span>
+          <div className="p02-probability-row__bar"><i style={{ width: `${value * 100}%` }} /></div>
+          <b>{formatProbability(value)}</b>
+        </div>
+      ))}
+      <small>合计 1.00 · 真实标签是 class A</small>
+    </div>
+  );
+}
+
+function ParameterComparison({ selectedId, onSelect }: { selectedId: string; onSelect: (id: string) => void }) {
+  const maximumLikelihood = Math.max(...PARAMETER_STATES.map(datasetLikelihood));
+  return (
+    <div className="p02-state-comparison" role="group" aria-label="固定数据集，切换参数状态比较似然与损失">
+      {PARAMETER_STATES.map((state, index) => {
+        const likelihood = datasetLikelihood(state);
+        const loss = negativeLogLikelihood(state);
+        const selected = selectedId === state.id;
+        return (
+          <button className={`p02-state-row ${selected ? "is-selected" : ""}`} type="button" key={state.id} aria-pressed={selected} onClick={() => onSelect(state.id)}>
+            <span className="p02-state-row__model"><i>{String(index + 1).padStart(2, "0")}</i><b>{state.label}</b><small>{selected ? "当前网络参数" : "切换到此参数状态"}</small></span>
+            <span className="p02-state-row__samples" aria-label={`逐样本真实类别概率 ${state.datasetProbabilities.map(formatProbability).join(", ")}`}>
+              {state.datasetProbabilities.map((probability, sampleIndex) => <span className="p02-probability-chip" key={`${state.id}-${sampleIndex}`}>{formatProbability(probability)}</span>)}
+            </span>
+            <span className="p02-state-row__score"><small>p(D | θ)</small><b>{formatProbability(likelihood)}</b><i><em style={{ width: `${(likelihood / maximumLikelihood) * 100}%` }} /></i></span>
+            <span className="p02-state-row__loss"><small>NLL</small><b>{loss.toFixed(2)}</b></span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function PageProbability() {
+  const [selectedId, setSelectedId] = useState("theta-2");
+  const [showSoftmax, setShowSoftmax] = useState(false);
+  const api = useReferenceApi();
+  const selected = PARAMETER_STATES.find((state) => state.id === selectedId) ?? PARAMETER_STATES[1];
+  const likelihood = useMemo(() => datasetLikelihood(selected), [selected]);
+  const datasetNll = useMemo(() => negativeLogLikelihood(selected), [selected]);
+  const sampleNll = -Math.log(selected.probabilities[0]);
+
+  return (
+    <article className="ewc-page p02-page" aria-labelledby="p02-title">
+      <header className="ewc-page-header p02-header">
+        <div className="ewc-page-header__kicker"><span>02</span> ORDINARY TRAINING · PROBABILITY TO LOSS</div>
+        <h1 id="p02-title">从神经网络的输出，走到数据的 Likelihood 与训练 Loss。</h1>
+        <p className="ewc-page-header__dek">给定输入和当前参数，网络先预测类别概率；把每个训练样本真实标签的概率组合起来，就得到数据 Likelihood。取负对数后，便回到熟悉的训练损失。</p>
+      </header>
+
+      <section className="p02-forward" id="forward-probability" aria-labelledby="p02-forward-title">
+        <div className="p02-section-heading"><div><span className="p02-overline">01 · ONE INPUT THROUGH THE NETWORK</span><h2 id="p02-forward-title">概率不是额外加上的输出：它来自当前网络的前向计算</h2></div><span className="p02-example-badge">ILLUSTRATIVE VALUES · TEACHING EXAMPLE</span></div>
+
+        <div className="p02-forward-path" aria-label="输入经过神经网络，得到 logits 和类别概率">
+          <div className="p02-flow-node p02-flow-node--input">
+            <span className="p02-node-label">INPUT</span><InputSample />
+          </div>
+          <span className="p02-flow-arrow" aria-hidden="true">⟶</span>
+          <div className="p02-flow-node p02-flow-node--network">
+            <span className="p02-node-label">CURRENT MODEL</span><div className="p02-model-state"><ReferenceTrigger id="neural_network">Neural Network f<sub>θ</sub></ReferenceTrigger><b>{selected.label}</b></div><ForwardNetwork />
+          </div>
+          <span className="p02-flow-arrow" aria-hidden="true">⟶</span>
+          <div className="p02-flow-node p02-flow-node--logits">
+            <span className="p02-node-label">RAW OUTPUT</span><h3>logits z</h3><LogitValues values={selected.logits} />
+          </div>
+          <span className="p02-flow-arrow" aria-hidden="true">⟶</span>
+          <div className="p02-flow-node p02-flow-node--probability">
+            <span className="p02-node-label">SOFTMAX</span><h3><ReferenceTrigger id="p_theta_y_given_x">p<sub>θ</sub>(y | x)</ReferenceTrigger></h3><ProbabilityValues values={selected.probabilities} />
+          </div>
+        </div>
+
+        <div className="p02-forward-caption">
+          <div className="p02-forward-caption__formula"><span>x₁</span><b>→</b><span>z = f<sub>θ</sub>(x₁)</span><b>→</b><span>Softmax(z)</span><b>→</b><strong>p<sub>θ</sub>(y | x₁)</strong></div>
+          <p><b>真实标签概率</b>取 class A 这一项。它越高，模型给正确答案的置信度越高；本例单样本 Loss 为 <code>−ln {formatProbability(selected.probabilities[0])} = {sampleNll.toFixed(2)}</code>。</p>
+        </div>
+
+        <details className="p02-softmax-detail" open={showSoftmax} onToggle={(event) => setShowSoftmax(event.currentTarget.open)}>
+          <summary aria-expanded={showSoftmax}>Softmax 怎样把 logits 变成概率？</summary>
+          <div className="p02-softmax-detail__body"><span>p<sub>θ</sub>(y = c | x) = </span><span className="p02-fraction"><span>e<sup>z<sub>c</sub></sup></span><i /><span>Σ<sub>j</sub> e<sup>z<sub>j</sub></sup></span></span><p>它把各类别分数转换成总和为 1 的分布。主路径只需记住：网络先算 logits，Softmax 再给出类别概率。</p></div>
+        </details>
+      </section>
+
+      <section className="p02-likelihood" id="likelihood-origin" aria-labelledby="p02-likelihood-title">
+        <div className="p02-section-heading"><div><span className="p02-overline">02 · EXPAND FROM ONE SAMPLE TO DATASET D</span><h2 id="p02-likelihood-title">固定同一份数据 D，比较不同参数 θ 的解释能力</h2></div><span className="p02-fixed-data"><i /> D FIXED · θ CHANGES</span></div>
+
+        <div className="p02-dataset-definition"><span className="p02-dataset-symbol">D</span><div><b>同一份训练数据</b><span>每个样本都保留其输入和真实标签；切换 θ 时，x 和 y 不变。</span></div><div className="p02-dataset-samples" aria-label="固定的三个训练样本">
+          {SAMPLE_NAMES.map((name, index) => <span key={name}><i>{index + 1}</i><b>{name}</b></span>)}
+        </div></div>
+
+        <div className="p02-likelihood-formula" role="math" aria-label="数据 D 在参数 theta 下的 likelihood 等于各样本真实标签概率的乘积">
+          <span><ReferenceTrigger id="p_D_given_theta">p(D | θ)</ReferenceTrigger></span><b>=</b><span className="p02-product-symbol">∏<sub>n=1</sub><sup>N</sup></span><span>p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)</span><span className="p02-assumption">在常见的条件独立样本假设下</span>
+        </div>
+        <div className="p02-sample-product" aria-live="polite" aria-label={`当前参数状态下的数据 likelihood：${selected.datasetProbabilities.map(formatProbability).join(" 乘 ")} 等于 ${formatProbability(likelihood)}`}>
+          {selected.datasetProbabilities.map((probability, index) => <Fragment key={`product-${index}`}><span className="p02-product-term"><small>样本 {index + 1}</small><b>{formatProbability(probability)}</b></span>{index < selected.datasetProbabilities.length - 1 ? <span className="p02-product-operator" aria-hidden="true">×</span> : null}</Fragment>)}
+          <b className="p02-product-equals" aria-hidden="true">=</b>
+          <span className="p02-product-result"><small>p(D | {selected.label})</small><b>{formatProbability(likelihood)}</b></span>
+        </div>
+
+        <div className="p02-interpretation"><div className="p02-interpretation__mark" aria-hidden="true">θ</div><p><ReferenceTrigger id="likelihood">Likelihood</ReferenceTrigger> 问的是：<b>当数据 D 固定时，这组参数对已观察到的真实标签给出了多大的概率？</b> 它不是神经网络额外产生的一个输出。</p></div>
+
+        <div className="p02-comparison-heading"><div><span className="p02-overline">PARAMETER SWITCH · SAME DATA · DIFFERENT PREDICTIONS</span><h3>选一组参数，看三条样本概率怎样共同改变 Likelihood</h3></div><span>点击一行即可更新上方网络前向结果</span></div>
+        <div className="p02-state-row-head" aria-hidden="true"><span>候选参数状态</span><span><i>x₁</i><i>x₂</i><i>x₃</i><b>每个样本真实标签的概率</b></span><span>数据 Likelihood</span><span>负对数损失</span></div>
+        <ParameterComparison selectedId={selectedId} onSelect={setSelectedId} />
+        <p className="p02-boundary-note">这些概率是为了把乘积关系讲清楚而设置的教学示例，不是论文实验结果；表格只比较三组候选参数对同一份 D 的拟合程度。</p>
+      </section>
+
+      <section className="p02-loss-update" id="loss-and-update" aria-labelledby="p02-loss-title">
+        <div className="p02-section-heading"><div><span className="p02-overline">03 · FROM LIKELIHOOD TO PARAMETER UPDATE</span><h2 id="p02-loss-title">最大化 Likelihood，等价于最小化负对数损失</h2></div><p>负号把“概率越大越好”改写成“Loss 越小越好”；对数把样本概率的乘积改写为求和。</p></div>
+        <div className="p02-training-chain" aria-label="Likelihood 变成 Loss，计算梯度后更新参数">
+          <div className="p02-training-node"><span>DATA FIT</span><strong>log p(D | θ)</strong><small>越大越好</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
+          <div className="p02-training-node p02-training-node--loss"><span>CHANGE SIGN</span><strong>−log p(D | θ)</strong><small>Negative Log-Likelihood</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
+          <div className="p02-training-node p02-training-node--loss"><span>CLASSIFICATION LOSS</span><strong>L(θ)</strong><small>真实类别交叉熵的求和（常按 batch 求平均）</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
+          <div className="p02-gradient-node"><span>BACKWARD</span><strong>∇<sub>θ</sub>L</strong><div aria-hidden="true"><i /><i /><i /><i /></div><small>loss 对参数的梯度</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
+          <div className="p02-update-node"><span>OPTIMIZER STEP</span><strong>θ ← θ − η∇<sub>θ</sub>L</strong><small>参数状态改变</small></div>
+        </div>
+        <div className="p02-update-return"><span className="p02-update-return__line" aria-hidden="true"/><p>更新后的 <em>θ</em> 返回同一个模型；下一批样本再经过新的前向计算。</p><ReferenceTrigger id="optimizer_step">反向计算梯度与 optimizer.step() 是两个不同动作</ReferenceTrigger></div>
+        <div className="p02-dataset-loss" aria-live="polite"><span>当前参数 <b>{selected.label}</b></span><span>p(D | θ) <b>{formatProbability(likelihood)}</b></span><span>总 NLL <b>{datasetNll.toFixed(2)}</b></span><span className="p02-dataset-loss__interpretation">Likelihood 越高，NLL 越低</span></div>
+      </section>
+
+      <section className="p02-origin-table" id="probability-source-table" aria-labelledby="p02-origin-title">
+        <div className="p02-section-heading"><div><span className="p02-overline">WHAT HAS A SOURCE NOW?</span><h2 id="p02-origin-title">哪些概率已经从网络训练中得到解释？</h2></div></div>
+        <div className="p02-origin-table__scroll"><table>
+          <thead><tr><th>概率对象</th><th>本页状态</th><th>来源 / 下一步</th></tr></thead>
+          <tbody>
+            <tr><th><ReferenceTrigger id="p_theta_y_given_x">p<sub>θ</sub>(y | x)</ReferenceTrigger></th><td><span className="p02-status p02-status--done">已解释</span></td><td>当前网络前向计算，再经 Softmax 得到。</td></tr>
+            <tr><th><ReferenceTrigger id="p_D_given_theta">p(D | θ)</ReferenceTrigger></th><td><span className="p02-status p02-status--done">已解释</span></td><td>固定 θ 时，把数据中每个真实标签的预测概率组合起来。</td></tr>
+            <tr><th><ReferenceTrigger id="p_theta">p(θ)</ReferenceTrigger></th><td><span className="p02-status p02-status--next">留到下一页</span></td><td>不是 Forward 算出的输出；接下来要问，怎样给参数本身建立概率视角？</td></tr>
+            <tr><th><ReferenceTrigger id="p_theta_given_D">p(θ | D)</ReferenceTrigger></th><td><span className="p02-status p02-status--next">留到下一页</span></td><td>本页还没有解释；它需要把参数视角和数据 Likelihood 接在一起。</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section className="p02-handoff" aria-label="通往下一页的问题">
+        <div><span className="p02-overline">NEXT · BAYESIAN PARAMETER VIEW</span><h2>数据的概率来自网络；参数本身的概率从哪里来？</h2><p><ReferenceTrigger id="p_theta">p(θ)</ReferenceTrigger> 不会由这次 Forward 自动给出。下一步从这里开始，再理解 Prior、Bayes 和 Posterior。</p></div>
+        <div className="p02-handoff__question"><span>OPEN QUESTION</span><b>p(θ) = ?</b><small>not a network output</small></div>
+      </section>
+
+      <div className="p02-review-exit"><span>W6 REVIEW SCOPE · PAGES 01–02</span><button type="button" onClick={() => api.navigatePage("page-01-problem")}>← 回到 Page 1 顺序训练流程</button></div>
+    </article>
+  );
+}

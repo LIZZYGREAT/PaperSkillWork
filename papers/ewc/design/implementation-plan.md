@@ -130,18 +130,15 @@ implementation:
     - item: runtime-state-and-id-mapping
       placement: Implementation notes
   vertical_slice:
-    stages: [S1_problem_and_loss, S4_fisher_to_ewc_constraint]
+    stages: [S1_problem_and_loss]
     required_core_items:
       - continual-learning-scenario-types
       - parameter-conflict-and-ewc-question
-      - fisher-estimation-path
-      - fisher-as-approximate-precision
-      - ewc-objective-assembly
-      - ewc-gradient-junction
-    pages: [1, 5, 6]
-    source_figures: [EWC-F1]
-    learner_task: "Explain the shared-parameter conflict, trace how the selected Fisher estimate is formed at a fixed anchor, then identify how the Fisher-weighted constraint joins the Task-B gradient."
-    reviewable_without: "A reviewer can judge the problem framing, runtime visual language, estimator-versus-training distinction, formula readability, and formula-to-runtime mapping without the remaining pages or the Grand Animation."
+      - network-likelihood-loss-chain
+    pages: [1, 2]
+    source_figures: []
+    learner_task: "Trace one shared model from Task-A data through its Task-A parameter state, then through Task-B data to changed parameters; explain how a network forward pass produces sample probabilities, dataset likelihood, loss, and an update."
+    reviewable_without: "A reviewer can judge the opening problem, the visible shared-model sequence, the source of network probabilities, the fixed-data likelihood comparison, and the loss-to-update path without any later EWC derivation pages."
 ```
 
 ## Source-to-Plan Traceability
@@ -214,13 +211,12 @@ This copies sources only. Page components, page content, Reference data, animati
 
 ## Vertical Slice (W6)
 
-The W6 slice follows the EWC workflow's representative cross-section rather than implementing the opening pages consecutively:
+The revised W6 slice implements only the opening two pages, as requested for the next human review:
 
-- **Page 1 / S1:** parameter interference and why different parameters need different constraints;
-- **Page 5 / S4:** how the selected Fisher estimate is formed at fixed theta_A* and why estimation does not update parameters;
-- **Page 6 / S4:** how F_A and theta_A* enter the penalty and how its gradient joins the Task-B gradient.
+- **Page 1 / S1:** make the Task-A → same model → Task-B training sequence and parameter changes the central visual; establish possible forgetting and the parameter conflict.
+- **Page 2 / S1:** start at an actual network forward pass and connect logits, Softmax probabilities, dataset likelihood, negative log-likelihood, gradient, and parameter update.
 
-The slice includes a problem-first Page 1, one Figure 1 placement after Equation (3) on Page 6, one complete estimator-to-objective flow, the EWC symbol/runtime mapping, and only the minimal Reference shell needed to exercise a concept link. It does not implement Page 2–4, Page 7–9, the Grand Animation, or the complete Hub content. W7 must judge learning, spatial architecture, prose load, formula clarity, and whether each interaction earns its place before W8 begins.
+Keep the existing application frame, Reference Hub, and hover references. Do not expose the previous Page 5 or Page 6 content in this review slice. The visual must show the data/model/update structure itself, not reduce each stage to a text-only box. W7 remains the human learning review; do not begin the remaining spine before that review records PASS.
 
 ### Vertical Slice Review (W7)
 
@@ -231,6 +227,7 @@ Vertical Slice Review: REVISE
 - Findings: At the real desktop browser size, Reference Hub's list/detail columns were too compressed to read. Pale, small text and inconsistent font sizing weakened readability. Page 1 began with the method before explaining continual learning, task settings, catastrophic forgetting, and shared-parameter conflict. Its toggle was too shallow to teach the causal sequence. Figure 1's role was unclear in the opening, and L2/EWC appeared before the problem was established.
 - Required information-architecture changes: Start Page 1 with the approved three-to-four-sentence continual-learning background; add only a one-sentence Task-IL/Domain-IL/Class-IL orientation because the reviewer requested those categories, without turning Page 1 into a taxonomy survey. Follow the source specification's sequence: Task A data → the same model and θ_A* → Task B data → continued training and changed parameters; show Task B performance may improve while Task A performance may decline; define catastrophic forgetting and state the shared-parameter conflict; zoom into representative parameter groups and compare two parameters qualitatively; then give the concept-level EWC preview and hand off to Page 2's probability/likelihood/loss chain. Do not use synthetic loss curves, introduce L2, or name Fisher/posterior/Hessian/Gaussian/penalty details on Page 1. Move Figure 1 to Page 6 after Equation (3), where the competing mechanisms have context.
 - Required usability changes: Widen Reference Hub at desktop widths and keep its list and detail panes independently readable; strengthen body-text contrast and minimum type sizes; use a consistent prose font and type scale; inspect the result at a real desktop browser viewport. Replace the shallow toggle and invented parameter-space curves with a guided sequential-training flow, explicit possible performance outcomes, a parameter-level comparison, and the small interaction specified for before/after parameter changes.
+- User direction (2026-09-30): rebuild the teaching content from Page 1 and Page 2 for review, and keep the review scope to those pages. The main Page-1 visual must explicitly show `Task A Data → Model θ → Train → θ_A* → Task B Data → continue training the same model → θ changes` as a concrete data/model/update structure. Later page implementations are out of this review scope.
 - Re-review after W6 revision: PENDING. W7 remains open for human verification; W8 cannot start until the reviewer records PASS.
 
 #### W7 Specification Alignment Correction — 2026-09-30
@@ -241,7 +238,6 @@ On re-reading `task/EWC/Page1_Page2_设计规范.md`, the implementer identified
 
 W8 starts only after a human records W7 PASS. Complete the remaining CORE content in the approved order:
 
-- Finish Page 2's network-likelihood-loss chain from S1.
 - Implement S2 and S3: sequential Bayes, then the local Laplace approximation.
 - Complete S5's task-boundary lifecycle.
 - Complete S6's protocol-first Permuted-MNIST evidence and bounded Atari system/evidence explanation.
