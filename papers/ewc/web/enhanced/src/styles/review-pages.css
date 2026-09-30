@@ -46,10 +46,7 @@
 .p01-data-glyph__sample-id, .p01-data-glyph__target { color: #5c7371; font: var(--p01-font-label) Georgia, serif; }
 .p01-data-glyph__target { justify-self: end; }
 .p01-data-glyph__pixels { display: grid; grid-template-columns: repeat(12, 16px); gap: 4px; }
-.p01-data-glyph__pixels i { display: grid; place-items: center; width: 16px; height: 20px; border: 1px solid #dce5df; border-radius: 3px; color: #758781; background: #f3f6f2; font: normal var(--p01-font-micro)/1 "DM Mono", monospace; }
-.p01-data-glyph__pixels i.is-on { color: #385d54; font-weight: 700; }
-.p01-data-glyph--a .p01-data-glyph__pixels i.is-on { border-color: #a1bdb2; background: #cfe0d6; }
-.p01-data-glyph--b .p01-data-glyph__pixels i.is-on { border-color: #d9aa91; background: #efd2c2; }
+.p01-data-glyph__pixels i { display: block; width: 16px; height: 16px; border: 1px solid rgba(75,99,87,.16); border-radius: 3px; background: #f3f6f2; }
 .p01-data-glyph__note { display: block; margin: 10px 0 0 43px; color: #788b87; font-size: var(--p01-font-meta); letter-spacing: .025em; }
 .p01-model-object { display: flex; align-items: center; justify-content: space-around; gap: 18px; min-width: 0; padding: 9px 16px; border: 1px solid #e0e8e4; border-radius: 11px; background: #f8faf7; }
 .p01-network { display: block; width: min(100%, 265px); height: auto; overflow: visible; }
@@ -218,7 +215,7 @@
   .p01-data-glyph { padding: 11px 9px 10px; }
   .p01-data-glyph__sample { grid-template-columns: 29px minmax(0, 1fr) 27px; gap: 5px; }
   .p01-data-glyph__pixels { grid-template-columns: repeat(12, 12px); gap: 2px; }
-  .p01-data-glyph__pixels i { width: 12px; height: 18px; }
+  .p01-data-glyph__pixels i { width: 12px; height: 12px; }
   .p01-data-glyph__note { margin-left: 34px; }
   .p01-training-signal { padding-inline: 4px; }
   .p01-training-signal__step { min-width: 52px; }

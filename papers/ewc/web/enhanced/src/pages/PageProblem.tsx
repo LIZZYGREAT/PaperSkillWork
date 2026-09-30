@@ -2,18 +2,20 @@ import { useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 
-const SAMPLE_MARKS: Record<"A" | "B", number[][]> = {
+const SAMPLE_PIXEL_LEVELS: Record<"A" | "B", number[][]> = {
   A: [
-    [1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0],
-    [0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0],
-    [1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0],
+    [0, 1, 1, 0, 2, 3, 1, 0, 0, 2, 4, 1],
+    [1, 0, 2, 4, 3, 1, 0, 1, 2, 0, 1, 3],
+    [0, 1, 3, 2, 0, 0, 2, 4, 3, 1, 0, 1],
   ],
   B: [
-    [0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0],
-    [1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1],
-    [0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1],
+    [0, 2, 4, 3, 1, 0, 0, 2, 3, 4, 1, 0],
+    [2, 1, 0, 2, 4, 3, 0, 1, 3, 0, 2, 4],
+    [0, 1, 2, 3, 4, 1, 0, 2, 1, 3, 4, 2],
   ],
 };
+
+const PIXEL_TONES = ["#f5f7f4", "#e6ece8", "#cbd9d1", "#9ab5a8", "#587a6b"];
 
 const INPUT_NODES = [28, 63, 98];
 const HIDDEN_NODES = [17, 39, 61, 83, 105];
@@ -58,19 +60,19 @@ function NeuralNetworkMark({ compact = false, idPrefix }: { compact?: boolean; i
 function DataGlyph({ task }: { task: "A" | "B" }) {
   const sampleOffset = task === "A" ? 0 : 3;
   return (
-    <div className={`p01-data-glyph p01-data-glyph--${task.toLowerCase()}`} aria-label={`Task ${task} 的三组 12 维示意输入特征及对应目标`}>
+    <div className={`p01-data-glyph p01-data-glyph--${task.toLowerCase()}`} aria-label={`Task ${task} 的三组图像像素序列示意及对应目标`}>
       <div className="p01-data-glyph__samples" aria-hidden="true">
-        {SAMPLE_MARKS[task].map((sample, sampleIndex) => (
+        {SAMPLE_PIXEL_LEVELS[task].map((sample, sampleIndex) => (
           <div className="p01-data-glyph__sample" key={`${task}-${sampleIndex}`}>
             <span className="p01-data-glyph__sample-id">x<sub>{sampleOffset + sampleIndex + 1}</sub></span>
             <span className="p01-data-glyph__pixels">
-              {sample.map((mark, markIndex) => <i className={mark ? "is-on" : ""} key={`${sampleIndex}-${markIndex}`}>{mark}</i>)}
+              {sample.map((level, markIndex) => <i key={`${sampleIndex}-${markIndex}`} style={{ backgroundColor: PIXEL_TONES[level] }} />)}
             </span>
             <span className="p01-data-glyph__target">y<sub>{sampleOffset + sampleIndex + 1}</sub></span>
           </div>
         ))}
       </div>
-      <span className="p01-data-glyph__note">{task === "A" ? "旧任务样本" : "新任务样本"} · 12 维示意特征</span>
+      <span className="p01-data-glyph__note">{task === "A" ? "旧任务样本" : "新任务样本"} · 图像像素序列示意</span>
     </div>
   );
 }
