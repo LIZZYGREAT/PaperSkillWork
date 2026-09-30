@@ -1,6 +1,6 @@
 # EWC enhanced web slice
 
-This standalone React/TypeScript site contains the W8 EWC tutorial implementation through Page 5. It uses the frozen page, anchor, reference, runtime-object, and animation-state IDs recorded in `design/implementation-plan.md`.
+This standalone React/TypeScript site contains the W8 EWC tutorial implementation through Page 6. It uses the frozen page, anchor, reference, runtime-object, and animation-state IDs recorded in `design/implementation-plan.md`.
 
 ## Figure 1 provenance
 

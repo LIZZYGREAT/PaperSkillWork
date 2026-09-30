@@ -7,6 +7,7 @@ import "./styles/review-pages.css";
 import "./styles/page3.css";
 import "./styles/page4.css";
 import "./styles/page5.css";
+import "./styles/page6.css";
 import "./shared/foundation/styles/kit.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

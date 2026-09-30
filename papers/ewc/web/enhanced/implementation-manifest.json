@@ -39,6 +39,16 @@
       "stage": "S4_fisher_to_ewc_constraint",
       "component": "PageFisher",
       "status": "complete"
+    },
+    "ewc-objective-assembly": {
+      "stage": "S4_fisher_to_ewc_constraint",
+      "component": "PageObjective",
+      "status": "complete"
+    },
+    "ewc-gradient-junction": {
+      "stage": "S4_fisher_to_ewc_constraint",
+      "component": "PageObjective",
+      "status": "complete"
     }
   },
   "supporting": {
