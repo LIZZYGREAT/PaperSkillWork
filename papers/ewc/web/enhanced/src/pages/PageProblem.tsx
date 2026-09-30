@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 
@@ -173,6 +174,46 @@ function ParameterMovement({ parameter, sensitive }: { parameter: 1 | 2; sensiti
 
 export function PageProblem() {
   const api = useReferenceApi();
+  const flowRef = useRef<HTMLOListElement>(null);
+  const [flowArrow, setFlowArrow] = useState<{ width: number; height: number; path: string } | null>(null);
+
+  useLayoutEffect(() => {
+    const flow = flowRef.current;
+    if (!flow) return;
+
+    const updateArrow = () => {
+      const markers = Array.from(flow.querySelectorAll<HTMLElement>(".p01-stage__marker"));
+      if (markers.length < 2) return;
+
+      const flowBounds = flow.getBoundingClientRect();
+      const halfHeadWidth = 4.5;
+      const path = markers.slice(0, -1).map((marker, index) => {
+        const from = marker.getBoundingClientRect();
+        const to = markers[index + 1].getBoundingClientRect();
+        const startX = from.left + from.width / 2 - flowBounds.left;
+        const startY = from.bottom - flowBounds.top;
+        const tipX = to.left + to.width / 2 - flowBounds.left;
+        const tipY = to.top - flowBounds.top;
+        const shoulderY = Math.max(startY, tipY - 6);
+        return `M ${startX} ${startY} L ${tipX} ${shoulderY} M ${tipX - halfHeadWidth} ${shoulderY} L ${tipX} ${tipY} L ${tipX + halfHeadWidth} ${shoulderY}`;
+      }).join(" ");
+
+      setFlowArrow((current) => current?.width === flowBounds.width && current.height === flowBounds.height && current.path === path
+        ? current
+        : { width: flowBounds.width, height: flowBounds.height, path });
+    };
+
+    const observer = new ResizeObserver(updateArrow);
+    observer.observe(flow);
+    flow.querySelectorAll<HTMLElement>(".p01-stage").forEach((stage) => observer.observe(stage));
+    window.addEventListener("resize", updateArrow);
+    updateArrow();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateArrow);
+    };
+  }, []);
 
   return (
     <article className="ewc-page p01-page" aria-labelledby="p01-title">
@@ -191,7 +232,16 @@ export function PageProblem() {
           <p>从 Task A 的数据开始，跟住模型与参数，一直看到 Task B 到来之后。</p>
         </div>
 
-        <ol className="p01-flow" aria-label="Task A 到 Task B 的顺序训练流程">
+        <div className="p01-flow-shell">
+          <svg
+            className="p01-flow__arrow"
+            viewBox={flowArrow ? `0 0 ${flowArrow.width} ${flowArrow.height}` : "0 0 1 1"}
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            {flowArrow && <path d={flowArrow.path} />}
+          </svg>
+          <ol ref={flowRef} className="p01-flow" aria-label="Task A 到 Task B 的顺序训练流程">
           <li className="p01-stage p01-stage--data-a">
             <span className="p01-stage__marker">01</span>
             <div className="p01-stage__content">
@@ -251,7 +301,8 @@ export function PageProblem() {
               </div></div>
             </div>
           </li>
-        </ol>
+          </ol>
+        </div>
       </section>
 
       <section className="p01-forgetting" aria-labelledby="p01-forgetting-title">
