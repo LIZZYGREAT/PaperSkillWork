@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 
@@ -150,27 +149,29 @@ function ParameterVector({ changed = false }: { changed?: boolean }) {
   );
 }
 
-function ParameterMovement({ label, sensitive, changed }: { label: string; sensitive: boolean; changed: boolean }) {
+function ParameterMovement({ parameter, sensitive }: { parameter: 1 | 2; sensitive: boolean }) {
   return (
     <div className={`p01-movement ${sensitive ? "p01-movement--sensitive" : "p01-movement--flexible"}`}>
       <div className="p01-movement__identity">
-        <b>{label}</b>
-        <span>{sensitive ? "Task A 对变化敏感" : "Task A 对变化相对不敏感"}</span>
+        <b>θ<sub>{parameter}</sub></b>
+        <span>{sensitive ? "Task A 对变化更敏感" : "Task A 对变化较不敏感"}</span>
       </div>
-      <div className={`p01-movement__track ${changed ? "is-moved" : ""}`} aria-label={`${label} 从 Task A 参数位置到${changed ? "Task B 更新后的位置" : "Task A 参数位置"}`}>
-        <i className="p01-movement__anchor" />
-        <span className="p01-movement__anchor-label">θ<sub>A</sub>*</span>
-        <span className="p01-movement__motion" aria-hidden="true">→</span>
-        <i className="p01-movement__current" />
-        <span className="p01-movement__current-label">{changed ? "θ′" : "same θ"}</span>
+      <div className="p01-movement__track" role="img" aria-label={`参数 θ${parameter} 从 Task A 结束时的位置移动到新位置；移动幅度与另一行相同`}>
+        <span className="p01-movement__position p01-movement__position--start">θ<sub>A,{parameter}</sub><sup>*</sup></span>
+        <span className="p01-movement__position p01-movement__position--end">θ<sub>{parameter}</sub>′</span>
+        <span className="p01-movement__arrow" aria-hidden="true" />
+        <i className="p01-movement__anchor" aria-hidden="true" />
+        <i className="p01-movement__current" aria-hidden="true" />
       </div>
-      <strong className="p01-movement__effect">{sensitive ? "同样的移动，旧任务代价较大" : "同样的移动，旧任务代价较小"}</strong>
+      <div className="p01-movement__impact" aria-label={`Task A Loss 增加，示意相对影响${sensitive ? "较大" : "较小"}`}>
+        <span>Task A Loss 增加</span>
+        <div className="p01-movement__impact-track" aria-hidden="true"><i /></div>
+      </div>
     </div>
   );
 }
 
 export function PageProblem() {
-  const [showUpdate, setShowUpdate] = useState(false);
   const api = useReferenceApi();
 
   return (
@@ -261,20 +262,16 @@ export function PageProblem() {
 
       <section className="p01-parameters" aria-labelledby="p01-parameters-title">
         <div className="p01-section-heading">
-          <div><span className="p01-overline">ZOOM IN · REPRESENTATIVE PARAMETERS</span><h2 id="p01-parameters-title">相同幅度的改动，对旧任务的影响可以不同</h2></div>
-          <p>问题不是“能不能更新”，而是哪些参数应该少动，哪些参数可以更灵活。</p>
+          <div><span className="p01-overline">ZOOM IN · REPRESENTATIVE PARAMETERS</span><h2 id="p01-parameters-title">同样大小的参数更新，对旧任务的影响可能不同</h2></div>
+          <p>问题不是参数“能不能更新”，而是不同参数发生相同幅度的变化时，对旧任务造成的影响可能不同。</p>
         </div>
-        <div className="p01-parameter-controls" role="group" aria-label="查看 Task B 参数更新前后">
-          <span>参数状态</span>
-          <button type="button" aria-pressed={!showUpdate} className={!showUpdate ? "is-active" : ""} onClick={() => setShowUpdate(false)}>Task A 结束时</button>
-          <button type="button" aria-pressed={showUpdate} className={showUpdate ? "is-active" : ""} onClick={() => setShowUpdate(true)}>Task B 更新后</button>
-        </div>
-        <div className={`p01-movement-compare ${showUpdate ? "is-updated" : ""}`}>
-          <ParameterMovement label="θ₁" sensitive changed={showUpdate} />
-          <ParameterMovement label="θ₂" sensitive={false} changed={showUpdate} />
-          <div className="p01-movement-compare__key"><span><i className="is-anchor" /> Task-A 参数位置</span><span><i className="is-current" /> 当前状态</span><b>两行显示相同长度的参数移动</b></div>
-        </div>
-        <p className="p01-parameters__takeaway"><ReferenceTrigger id="parameter_interference">共享参数冲突</ReferenceTrigger>来自“参数会被共同使用”和“不同参数对旧任务的影响不同”这两件事同时成立。</p>
+        <figure className="p01-movement-compare" aria-label="两次相同幅度的参数移动，引起不同大小的 Task A Loss 增加">
+          <figcaption className="p01-movement-compare__equation"><span>两条参数移动的幅度相同</span><b>|Δθ₁| = |Δθ₂|</b></figcaption>
+          <ParameterMovement parameter={1} sensitive />
+          <ParameterMovement parameter={2} sensitive={false} />
+          <p className="p01-movement-compare__note">两条 Loss 使用同一尺度；长度仅示意相对影响，不代表论文实验测量值。</p>
+        </figure>
+        <p className="p01-parameters__takeaway"><ReferenceTrigger id="parameter_interference">不同参数对旧任务的敏感程度不同</ReferenceTrigger>，因此后续训练需要区分哪些参数应该受到更强约束，哪些参数可以更灵活地更新。</p>
       </section>
 
       <section className="p01-ewc-preview" id="ewc-motivation" aria-labelledby="p01-ewc-title">
