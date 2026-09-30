@@ -54,6 +54,11 @@
       "stage": "S5_sequential_lifecycle",
       "component": "PageLifecycle",
       "status": "complete"
+    },
+    "permuted-mnist-protocol-and-result": {
+      "stage": "S6_evidence_and_boundaries",
+      "component": "PageMnist",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -85,6 +90,16 @@
     "fisher-kl-local-metric": {
       "placement": "expandable",
       "component": "PageFisher",
+      "status": "complete"
+    },
+    "mnist-fisher-overlap": {
+      "placement": "expandable",
+      "component": "PageMnist",
+      "status": "complete"
+    },
+    "same-label-space-boundary": {
+      "placement": "compact-inline",
+      "component": "PageMnist",
       "status": "complete"
     }
   },

@@ -574,4 +574,23 @@ export const referenceRegistry: ReferenceRegistry = {
     relatedPages: [{ pageId: "page-07-lifecycle", anchorId: "task-boundary" }],
     keywords: ["consolidation", "任务固结", "Fisher estimation"],
   },
+  permuted_mnist: {
+    id: "permuted_mnist", kind: "dataset", title: "Permuted MNIST",
+    summary: "A sequence of digit-classification tasks where each task applies its own fixed random permutation to input pixels.",
+    role: "Creates controlled sequential input changes while retaining the digit labels, making it possible to inspect forgetting and retention in one shared model.",
+    sourceCategory: "PAPER_FACT", sourceRefs: ["C10", "R01"],
+    details: [
+      { label: "Across tasks", text: "Each task receives its own fixed random pixel permutation." },
+      { label: "Within one task", text: "The same permutation is applied to every image; labels remain the handwritten digit classes." },
+      { label: "What it tests", text: "Sequential retention and interference under a controlled supervised classification protocol." },
+    ],
+    hoverCopy: {
+      title: "置换 MNIST · Permuted MNIST",
+      summary: "每个任务给所有输入图像使用同一个固定随机像素排列。",
+      role: "保持数字分类目标，改变任务之间的输入映射，便于观察顺序学习时旧任务表现如何变化。",
+      confusion: "Task k 的排列对该任务内所有图像相同；不会对每张图重新洗牌。",
+    },
+    relatedPages: [{ pageId: "page-08-mnist", anchorId: "permuted-mnist-task" }],
+    keywords: ["MNIST", "permuted MNIST", "像素置换", "固定排列", "handwritten digits"],
+  },
 };
