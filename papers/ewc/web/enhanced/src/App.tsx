@@ -2,6 +2,9 @@ import { ReferenceProvider, useReferenceApi } from "./shared/reference/Reference
 import { ReferenceHubDrawer } from "./shared/reference/ReferenceHubDrawer";
 import { useReducedMotion } from "./shared/foundation/accessibility/useReducedMotion";
 import type { PageId } from "./contracts/ids";
+import { PageProblem } from "./pages/PageProblem";
+import { PageFisher } from "./pages/PageFisher";
+import { PageObjective } from "./pages/PageObjective";
 
 const SLICE_PAGES: { id: PageId; number: string; title: string; eyebrow: string }[] = [
   { id: "page-01-problem", number: "01", title: "为什么需要 EWC", eyebrow: "问题" },
@@ -13,6 +16,10 @@ function AppFrame() {
   const api = useReferenceApi();
   const reducedMotion = useReducedMotion();
   const active = SLICE_PAGES.find((page) => page.id === api.currentPage);
+  const content = api.currentPage === "page-01-problem" ? <PageProblem />
+    : api.currentPage === "page-05-fisher" ? <PageFisher />
+      : api.currentPage === "page-06-ewc-objective" ? <PageObjective />
+        : <section className="ewc-slice-placeholder"><div className="ewc-kicker">OUTSIDE THIS W6 SLICE</div><h1>此页面将在 W7 人工核验后继续实现。</h1><p>当前仍停在代表性切片：Page 1 问题、Page 5 Fisher 估计、Page 6 目标与梯度。回到任一已实现页面继续查看。</p><button type="button" className="ewc-button ewc-button--primary" onClick={() => api.navigatePage("page-01-problem")}>回到切片开头 →</button></section>;
   return (
     <div className={`ewc-app ${reducedMotion ? "is-reduced-motion" : ""}`}>
       <a className="ewc-skip-link" href="#main-content">跳到当前页面</a>
@@ -36,14 +43,7 @@ function AppFrame() {
           <button type="button" className="ewc-hub-launch" onClick={() => api.openHub()}><span className="ewc-hub-launch__icon">⌕</span><span>Reference Hub</span><kbd>R</kbd></button>
         </header>
 
-        <main id="main-content" className="ewc-main" tabIndex={-1}>
-          <section className="ewc-slice-placeholder" aria-labelledby="slice-title">
-            <div className="ewc-kicker">W6 · INTERFACE CONTRACT</div>
-            <h1 id="slice-title">EWC 切片工作区已就绪</h1>
-            <p>页面、引用、运行对象与动画状态共享同一组冻结 ID。教学页面正在接入这套基础结构。</p>
-            <div className="ewc-contract-preview"><span>Page IDs</span><i /> <span>Reference IDs</span><i /> <span>Runtime Objects</span><i /> <span>Grand Animation States</span></div>
-          </section>
-        </main>
+        <main id="main-content" className="ewc-main" tabIndex={-1}>{content}</main>
       </div>
       <ReferenceHubDrawer />
     </div>
