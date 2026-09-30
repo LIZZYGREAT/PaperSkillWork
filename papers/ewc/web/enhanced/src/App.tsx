@@ -10,6 +10,7 @@ import { PageFisher } from "./pages/PageFisher";
 import { PageObjective } from "./pages/PageObjective";
 import { PageLifecycle } from "./pages/PageLifecycle";
 import { PageMnist } from "./pages/PageMnist";
+import { PageAtari } from "./pages/PageAtari";
 
 const LEARNING_PAGES: { id: PageId; number: string; title: string; eyebrow: string }[] = [
   { id: "page-01-problem", number: "01", title: "顺序训练中的参数变化", eyebrow: "问题起点" },
@@ -20,6 +21,7 @@ const LEARNING_PAGES: { id: PageId; number: string; title: string; eyebrow: stri
   { id: "page-06-ewc-objective", number: "06", title: "Task B 的 EWC 目标", eyebrow: "EWC Objective" },
   { id: "page-07-lifecycle", number: "07", title: "EWC 顺序训练生命周期", eyebrow: "Task Boundary" },
   { id: "page-08-mnist", number: "08", title: "Permuted MNIST 实验", eyebrow: "受控分类证据" },
+  { id: "page-09-atari", number: "09", title: "Atari 系统与实验边界", eyebrow: "强化学习证据" },
 ];
 
 function AppFrame() {
@@ -34,6 +36,7 @@ function AppFrame() {
             : api.currentPage === "page-06-ewc-objective" ? <PageObjective />
               : api.currentPage === "page-07-lifecycle" ? <PageLifecycle />
                 : api.currentPage === "page-08-mnist" ? <PageMnist />
+                  : api.currentPage === "page-09-atari" ? <PageAtari />
               : <section className="ewc-slice-placeholder"><div className="ewc-kicker">W8 · FULL IMPLEMENTATION</div><h1>这一页将在后续实现批次开放。</h1><p>当前学习主线已包含顺序训练问题、网络概率与损失、参数的 Bayes 更新、Laplace 局部近似、Fisher 局部敏感性，以及 EWC 目标与梯度。其余页面仍沿用已冻结的导航与 Reference ID。</p><div className="ewc-contract-preview"><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-01-problem")}>打开 Page 1</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-02-probability")}>打开 Page 2</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-03-bayes")}>打开 Page 3</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-04-laplace")}>打开 Page 4</button><button type="button" className="ewc-button" onClick={() => api.navigatePage("page-05-fisher")}>打开 Page 5</button><button type="button" className="ewc-button ewc-button--primary" onClick={() => api.navigatePage("page-06-ewc-objective")}>打开 Page 6</button></div></section>;
   return (
     <div className={`ewc-app ${reducedMotion ? "is-reduced-motion" : ""}`}>
@@ -48,7 +51,7 @@ function AppFrame() {
             </button>
           ))}
         </nav>
-        <div className="ewc-rail__scope"><span className="ewc-status-dot" />W8 · Page 1–8<p>顺序训练问题 → 概率与损失 → Bayes → Fisher → EWC 生命周期 → 两组实验。</p></div>
+        <div className="ewc-rail__scope"><span className="ewc-status-dot" />W8 · Page 1–9<p>从顺序训练问题到概率、EWC 推导、生命周期和实验边界。</p></div>
         <div className="ewc-rail__footer"><span>Overcoming catastrophic forgetting</span><small>Kirkpatrick et al. · PNAS 2017</small></div>
       </aside>
 

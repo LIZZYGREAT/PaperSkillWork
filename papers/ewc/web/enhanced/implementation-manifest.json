@@ -59,6 +59,16 @@
       "stage": "S6_evidence_and_boundaries",
       "component": "PageMnist",
       "status": "complete"
+    },
+    "atari-system-responsibilities": {
+      "stage": "S6_evidence_and_boundaries",
+      "component": "PageAtari",
+      "status": "complete"
+    },
+    "atari-diagnostic-and-limits": {
+      "stage": "S6_evidence_and_boundaries",
+      "component": "PageAtari",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -101,7 +111,43 @@
       "placement": "compact-inline",
       "component": "PageMnist",
       "status": "complete"
+    },
+    "reported-atari-fisher-timing": {
+      "placement": "expandable",
+      "component": "PageAtari",
+      "status": "complete"
+    },
+    "detailed-atari-settings": {
+      "placement": "expandable",
+      "component": "PageAtari",
+      "status": "complete"
+    },
+    "fixed-capacity-tradeoff": {
+      "placement": "compact-inline",
+      "component": "PageAtari",
+      "status": "complete"
     }
   },
-  "reference": {}
+  "reference": {
+    "atari-task-recognition-details": {
+      "placement": "Reference Hub",
+      "component": "referenceRegistry.task_recognition",
+      "status": "complete"
+    },
+    "per-game-atari-curves": {
+      "placement": "Evidence details",
+      "component": "referenceRegistry.atari.details",
+      "status": "complete"
+    },
+    "full-experiment-settings": {
+      "placement": "Reference Hub",
+      "component": "referenceRegistry.atari.details",
+      "status": "complete"
+    },
+    "full-fisher-matrix-limit": {
+      "placement": "Advanced details",
+      "component": "referenceRegistry.diagonal_fisher_limit",
+      "status": "complete"
+    }
+  }
 }
