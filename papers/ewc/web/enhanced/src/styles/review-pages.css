@@ -66,10 +66,10 @@
 .p01-training-signal__step b { color: #526a66; font-size: var(--p01-font-process); font-weight: 600; white-space: nowrap; }
 .p01-training-signal__step--update i { border-color: #d8b7a3; color: #a75e40; background: #fbf0e8; }
 .p01-training-signal__arrow { display: block; flex: 1 1 30px; min-width: 24px; max-width: 46px; height: 20px; overflow: visible; }
-.p01-training-signal__arrow path { fill: none; stroke: #819c91; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.p01-training-signal__arrow path { fill: none; stroke: #819c91; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .p01-training-signal__return { position: relative; display: grid; place-items: center; width: 72%; height: 28px; margin: 5px auto 0; color: #71847d; font-size: var(--p01-font-meta); }
 .p01-training-signal__return svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.p01-training-signal__return svg path { fill: none; stroke: #8fa99d; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.p01-training-signal__return svg path { fill: none; stroke: #8fa99d; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 .p01-training-signal__return b { position: relative; z-index: 1; padding: 0 8px; background: #fffefa; font-weight: 550; }
 .p01-training-signal--b .p01-training-signal__step--update i { border-color: #e2b49d; color: #a65336; background: #fbefe8; }
 .p01-state-object { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 11px 15px; border: 1px solid #d8e6de; border-radius: 11px; background: #f4f8f3; }
