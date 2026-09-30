@@ -1,62 +1,174 @@
 import { useState } from "react";
-import { CompareView } from "../shared/optional/compare-view";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
-import { useReferenceApi } from "../shared/reference/ReferenceProvider";
-import { ParameterModel } from "../components/ParameterModel";
+
+const PROCESS_STEPS = [
+  {
+    title: "先学习 Task A",
+    description: "Task A 的数据训练同一个神经网络。训练结束时，参数停在一个能较好完成 Task A 的位置 θ_A*。",
+    stage: "task-a",
+  },
+  {
+    title: "Task B 到来",
+    description: "新任务到来后，模型从 θ_A* 继续训练；Task B 并没有得到一套互不相干的新参数。",
+    stage: "task-b",
+  },
+  {
+    title: "继续训练，参数发生变化",
+    description: "为了适应 Task B，优化过程会继续改变共享参数：θ_A* → θ′ → θ″。",
+    stage: "updates",
+  },
+  {
+    title: "新任务适应可能伴随旧任务退化",
+    description: "Task B 的表现可以改善，但如果更新了 Task A 依赖的参数，Task A 的表现也可能下降。这是顺序学习中的一种可能结果，不是每次更新都必然发生。",
+    stage: "outcome",
+  },
+] as const;
+
+function SequentialProcess({ step }: { step: number }) {
+  const stage = PROCESS_STEPS[step].stage;
+  const taskBArrived = step >= 1;
+  const paramsChanged = step >= 2;
+
+  return (
+    <div className={`sequence-board sequence-board--${stage}`} role="group" aria-label="Task A and Task B sequentially train the same model">
+      <div className="sequence-board__phase sequence-board__phase--a">
+        <span className="sequence-board__phase-label">阶段一 · 先前任务</span>
+        <div className={`sequence-node is-reached ${stage === "task-a" ? "is-current" : ""}`}>
+          <small>DATA</small><b>Task A 数据</b>
+        </div>
+        <span className="sequence-arrow" aria-hidden="true">→</span>
+        <div className={`sequence-node sequence-node--model is-reached ${stage === "task-a" ? "is-current" : ""}`}>
+          <small>同一个模型</small><b>神经网络 θ</b><span>训练 Task A</span>
+        </div>
+        <span className="sequence-arrow" aria-hidden="true">→</span>
+        <div className={`sequence-node sequence-node--state is-reached ${stage === "task-a" || stage === "task-b" ? "is-current" : ""}`}>
+          <small>学完 Task A</small><b>θ_A*</b><span>旧任务参数状态</span>
+        </div>
+      </div>
+
+      <div className={`sequence-board__continuation ${taskBArrived ? "is-active" : ""}`}>
+        <span aria-hidden="true">↓</span>
+        <b>任务切换，模型与参数继续沿用</b>
+        <span aria-hidden="true">↓</span>
+      </div>
+
+      <div className="sequence-board__phase sequence-board__phase--b">
+        <span className="sequence-board__phase-label">阶段二 · 后续任务</span>
+        <div className={`sequence-node ${taskBArrived ? "is-reached" : ""} ${stage === "task-b" ? "is-current" : ""}`}>
+          <small>DATA</small><b>Task B 数据</b>
+        </div>
+        <span className="sequence-arrow" aria-hidden="true">→</span>
+        <div className={`sequence-node sequence-node--model ${taskBArrived ? "is-reached" : ""} ${stage === "task-b" || stage === "updates" ? "is-current" : ""}`}>
+          <small>仍是同一个模型</small><b>继续训练</b><span>从 θ_A* 接着更新</span>
+        </div>
+        <span className="sequence-arrow" aria-hidden="true">→</span>
+        <div className={`sequence-node sequence-node--state ${paramsChanged ? "is-changed" : ""} ${stage === "updates" || stage === "outcome" ? "is-current" : ""}`}>
+          <small>参数继续移动</small><b>{paramsChanged ? "θ_A* → θ′ → θ″" : "θ_A*"}</b><span>{paramsChanged ? "共享参数已改变" : "等待 Task B 更新"}</span>
+        </div>
+      </div>
+
+      <div className={`sequence-outcomes ${paramsChanged ? "is-visible" : ""}`} aria-live="polite">
+        <span className="sequence-outcomes__title">可能的表现变化</span>
+        <div className="sequence-outcome sequence-outcome--new"><span>Task B · 新任务</span><b><i aria-hidden="true">{paramsChanged ? "↑" : "—"}</i> {paramsChanged ? "可能改善" : "等待训练"}</b></div>
+        <div className="sequence-outcome sequence-outcome--old"><span>Task A · 先前任务</span><b><i aria-hidden="true">{paramsChanged ? "↓" : "—"}</i> {paramsChanged ? "可能下降" : "等待参数更新"}</b></div>
+        <p>机制示意：只表达可能出现的方向，不代表论文实验数值，也不表示每次更新都会遗忘。</p>
+      </div>
+    </div>
+  );
+}
+
+function ParameterComparison() {
+  return (
+    <div className="parameter-comparison">
+      <div className="parameter-comparison__row">
+        <div className="parameter-comparison__identity"><b>θ₁</b><span>Task A 对这里的变化很敏感</span></div>
+        <div className="parameter-comparison__movement"><span>Task A 状态</span><b>θ₁,A*</b><i aria-hidden="true">→</i><span className="parameter-comparison__new-value">Task B 更新后 · θ₁′</span></div>
+        <strong className="parameter-comparison__effect">旧任务影响较大</strong>
+      </div>
+      <div className="parameter-comparison__row">
+        <div className="parameter-comparison__identity"><b>θ₂</b><span>Task A 对这里的变化相对不敏感</span></div>
+        <div className="parameter-comparison__movement"><span>Task A 状态</span><b>θ₂,A*</b><i aria-hidden="true">→</i><span className="parameter-comparison__new-value">Task B 更新后 · θ₂′</span></div>
+        <strong className="parameter-comparison__effect">旧任务影响较小</strong>
+      </div>
+      <p className="parameter-comparison__explanation">同样是为 Task B 留出更新空间，改动 θ₁ 更容易伤到 Task A；改动 θ₂ 的代价相对较小。因此两组参数不应被一概而论。</p>
+    </div>
+  );
+}
 
 export function PageProblem() {
-  const [taskBUpdated, setTaskBUpdated] = useState(false);
-  const api = useReferenceApi();
+  const [step, setStep] = useState(0);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const current = PROCESS_STEPS[step];
+
   return (
     <article className="ewc-page ewc-page--problem" aria-labelledby="problem-title">
       <header className="ewc-page-header" id="problem-context">
-        <div className="ewc-page-header__kicker"><span>01</span> THE PROBLEM</div>
-        <h1 id="problem-title">学习 Task B，模型仍会改动同一组参数。</h1>
-        <p className="ewc-page-header__dek">顺序学习让一个模型先后面对不同任务。继续适应新任务需要更新原有参数；其中一部分也支撑着已经学会的 Task A。</p>
+        <div className="ewc-page-header__kicker"><span>01</span> 持续学习 · 问题起点</div>
+        <h1 id="problem-title">为什么学习新任务，可能会忘掉旧任务？</h1>
+        <p className="ewc-page-header__dek">传统监督学习通常假设训练数据可以共同参与训练。许多系统会按时间不断收到新任务，而旧数据未必能一直保留。同一个模型需要适应新任务，同时尽量保持先前学到的能力。<ReferenceTrigger id="continual_learning">持续学习（Continual Learning）</ReferenceTrigger>研究的就是这个基本场景。</p>
+        <p className="task-types-note"><b>常见评测设定：</b><ReferenceTrigger id="continual_learning">Task-IL、Domain-IL 与 Class-IL</ReferenceTrigger>：Task-IL 测试时提供任务身份；Domain-IL 不提供任务身份但输入分布变化；Class-IL 不提供任务身份，并在累计类别中预测。这里先关注它们共有的冲突：多个任务依赖同一个持续更新的模型。</p>
       </header>
 
-      <section className="problem-story" aria-labelledby="conflict-heading">
+      <section className="problem-story" id="parameter-conflict" aria-labelledby="conflict-heading">
         <div className="problem-story__heading">
-          <div><span className="ewc-section-index">A / SHARED MODEL</span><h2 id="conflict-heading">新任务到来时，同一个模型继续训练</h2></div>
-          <span className={`problem-story__step ${taskBUpdated ? "is-after" : ""}`}>{taskBUpdated ? "AFTER TASK B UPDATE" : "AFTER TASK A"}</span>
+          <div><span className="ewc-section-index">同一个模型 · 按时间学习</span><h2 id="conflict-heading">Task B 到来后，训练还会继续改变参数</h2></div>
+          <span className="problem-story__step" aria-live="polite">第 {step + 1} / {PROCESS_STEPS.length} 步</span>
         </div>
-        <div className="problem-story__task-row">
-          <div className={`problem-story__task ${!taskBUpdated ? "is-current" : ""}`}><span className="problem-story__task-id">TASK A</span><b>旧任务已学会</b><small>当前参数位置 θ_A*</small></div>
-          <div className="problem-story__handoff"><span>same model</span><i aria-hidden="true" /></div>
-          <div className={`problem-story__task ${taskBUpdated ? "is-current" : ""}`}><span className="problem-story__task-id">TASK B</span><b>继续适应新数据</b><small>仍要更新原有参数</small></div>
+
+        <div className="process-narration" aria-live="polite" aria-atomic="true">
+          <span className="process-narration__number">{String(step + 1).padStart(2, "0")}</span>
+          <div><h3>{current.title}</h3><p>{current.description}</p></div>
         </div>
-        <ParameterModel mode={taskBUpdated ? "updating" : "overview"} changed={taskBUpdated} />
-        <div className="problem-story__consequence" aria-live="polite">
-          <div className={`problem-story__signal ${taskBUpdated ? "is-risk" : ""}`}><span>Task B performance</span><b>{taskBUpdated ? "↑ adapts" : "—"}</b></div>
-          <div className="problem-story__signal-divider" aria-hidden="true">↔</div>
-          <div className={`problem-story__signal ${taskBUpdated ? "is-risk" : ""}`}><span>Task A performance</span><b>{taskBUpdated ? "may fall" : "at risk"}</b></div>
-          <button type="button" className="ewc-button ewc-button--primary" aria-pressed={taskBUpdated} onClick={() => setTaskBUpdated((value) => !value)}>
-            {taskBUpdated ? "Reset to θ_A*" : "Show a Task B update"}<span aria-hidden="true">{taskBUpdated ? "↺" : "→"}</span>
-          </button>
+
+        <SequentialProcess step={step} />
+
+        <div className="story-controls" role="group" aria-label="顺序学习过程">
+          <button type="button" className="ewc-button" onClick={() => setStep((value) => Math.max(0, value - 1))} disabled={step === 0}>← 上一步</button>
+          <div className="story-controls__steps">
+            {PROCESS_STEPS.map((item, index) => <button key={item.title} type="button" aria-label={`第 ${index + 1} 步：${item.title}`} aria-current={step === index ? "step" : undefined} className={step === index ? "is-current" : ""} onClick={() => setStep(index)}>{index + 1}</button>)}
+          </div>
+          <button type="button" className="ewc-button ewc-button--primary" onClick={() => setStep((value) => Math.min(PROCESS_STEPS.length - 1, value + 1))} disabled={step === PROCESS_STEPS.length - 1}>下一步 →</button>
         </div>
-        <p className="problem-story__footnote">示意的是可能的参数冲突；此处没有绘制论文中的准确率或实验数值。</p>
       </section>
 
-      <figure className="paper-figure-card" aria-labelledby="figure-one-caption">
-        <div className="paper-figure-card__top"><span className="ewc-section-index">PAPER FIGURE / MECHANISM OVERVIEW</span><span className="source-badge source-badge--paper">FIGURE 1</span></div>
-        <img src="./images/figure-1.png" alt="论文 Figure 1 的参数空间示意：Task A 与 Task B 的低误差区域相交；无约束更新、统一 L2 约束与 EWC 分别沿蓝色、绿色和红色路径移动。" />
-        <figcaption id="figure-one-caption"><strong>论文 Figure 1.</strong> 示意无约束更新、统一约束与 EWC 对 Task-A/Task-B 参数区域的不同折衷。原图完整保留，仅沿图像边界裁切，供非商业教育用途展示。Kirkpatrick et al., PNAS 2017, 114(13):3521–3526, Fig. 1.</figcaption>
-      </figure>
+      <section className="forgetting-definition" aria-labelledby="forgetting-title">
+        <span className="forgetting-definition__label">这个现象称为</span>
+        <h2 id="forgetting-title"><ReferenceTrigger id="catastrophic_forgetting">灾难性遗忘（Catastrophic Forgetting）</ReferenceTrigger></h2>
+        <p>模型学习新任务时，参数更新破坏了旧任务所依赖的参数状态，导致旧任务性能显著下降。</p>
+        <div className="parameter-conflict-statement"><span>核心冲突</span><strong>学习 Task B 必须修改参数；但 Task A 也依赖这些参数。</strong></div>
+      </section>
 
-      <section className="parameter-sensitivity" id="parameter-conflict" aria-labelledby="sensitivity-heading">
-        <div className="ewc-section-heading"><div><span className="ewc-section-index">B / PARAMETER CONFLICT</span><h2 id="sensitivity-heading">问题不是“能不能改”，而是“哪些更该少改”</h2></div><p>Task A 对参数的依赖并不相同。相同大小的参数移动，可能对旧任务产生不同影响。</p></div>
-        <CompareView initialMode="side-by-side" variants={[
-          { id: "sensitive-parameter", title: "θ₁ · Task A 更敏感", summary: "相同大小的移动，可能更明显地影响旧任务行为。", content: <div className="parameter-compare-visual is-sensitive"><span className="parameter-compare-visual__anchor">θ_A*</span><i aria-hidden="true" /><span className={`parameter-compare-visual__current ${taskBUpdated ? "is-displaced" : ""}`}>θ₁</span><small>constrain more</small></div> },
-          { id: "flexible-parameter", title: "θ₂ · Task A 相对不敏感", summary: "相同大小的移动，对旧任务行为的影响可能较小。", content: <div className="parameter-compare-visual is-flexible"><span className="parameter-compare-visual__anchor">θ_A*</span><i aria-hidden="true" /><span className={`parameter-compare-visual__current ${taskBUpdated ? "is-displaced" : ""}`}>θ₂</span><small>leave more flexible</small></div> },
-        ]} changes={["Task B moves the same shared model.", "A later update can affect Task A differently across parameters."]} invariants={["The Task-A reference point is the same.", "These two groups are representative, not measured values."]} />
-        <div className="problem-question"><span className="problem-question__mark">?</span><p><strong>哪些参数可以多改，哪些应该少改？</strong><br />这就是 EWC 要处理的核心矛盾。</p></div>
+      <section className="parameter-sensitivity" aria-labelledby="sensitivity-title">
+        <div className="ewc-section-heading"><div><span className="ewc-section-index">从模型整体放大到参数</span><h2 id="sensitivity-title">哪些参数可以多改，哪些应该少改？</h2></div><p>参数组对旧任务的影响不同。接下来只比较两组代表性参数，不做数值计算。</p></div>
+        <div className="parameter-groups" role="group" aria-label="神经网络中的代表性参数组">
+          <div><span>Layer 1</span><b>θ¹</b><i aria-hidden="true">→</i><b>θ¹′</b></div>
+          <div><span>Layer 2</span><b>θ²</b><i aria-hidden="true">→</i><b>θ²′</b></div>
+          <div><span>Layer 3</span><b>θ³</b><i aria-hidden="true">→</i><b>θ³′</b></div>
+          <small>Task A 训练后的参数组 → Task B 继续训练后的参数组</small>
+        </div>
+        <div className="parameter-sensitivity-summary" aria-label="参数对 Task A 的敏感程度不同">
+          <div><b>θ₁</b><span>Task A 高度敏感 · 后续应更强约束</span></div>
+          <div><b>θ₂</b><span>Task A 相对不敏感 · 可以更灵活</span></div>
+        </div>
+        <div className="parameter-comparison__heading"><div><span className="ewc-section-index">参数敏感性 · 定性示例</span><h3>对 Task A 来说，两次同样的改动代价可能不同</h3></div><button type="button" className="ewc-button ewc-button--quiet" aria-expanded={compareOpen} aria-controls="parameter-comparison" onClick={() => setCompareOpen((value) => !value)}>{compareOpen ? "收起更新对比" : "Compare parameter updates"}</button></div>
+        <div id="parameter-comparison" hidden={!compareOpen}><ParameterComparison /></div>
+        <p className="parameter-sensitivity__conclusion"><b>关键不是“完全不改参数”。</b>而是辨别哪些旧任务敏感参数应少改，哪些相对不敏感的参数可以更灵活。</p>
       </section>
 
       <section className="ewc-preview" id="ewc-motivation" aria-labelledby="ewc-preview-title">
-        <div className="ewc-preview__copy"><span className="ewc-section-index">THE EWC IDEA</span><h2 id="ewc-preview-title">保留差异化约束，不冻结整个模型</h2><p><ReferenceTrigger id="ewc">Elastic Weight Consolidation</ReferenceTrigger> 在旧任务结束后估计参数的相对敏感性，并在后续训练中让不同参数承受不同强度的约束。</p></div>
-        <div className="ewc-preview__flow" aria-label="EWC high-level process"><div><span>01</span><b>Train Task A</b></div><i aria-hidden="true">→</i><div><span>02</span><b>Record sensitivity</b></div><i aria-hidden="true">→</i><div><span>03</span><b>Constrain Task B</b></div></div>
-        <div className="ewc-page-handoff"><p>在讨论怎样估计敏感性之前，先看 Fisher 估计如何沿着固定参数、梯度与样本累计这一条路径形成。</p><button type="button" className="ewc-button ewc-button--next" onClick={() => api.navigatePage("page-05-fisher")}>进入本次切片的 Fisher 段 <span>05 →</span></button></div>
-        <p className="ewc-slice-note">本次 W6 是代表性切片，暂时略过 Page 2–4；完整教程恢复已批准的 Page 1–10 顺序后才进入 W8。</p>
+        <div className="ewc-preview__copy"><span className="ewc-section-index">问题建立之后 · 方法预告</span><h2 id="ewc-preview-title"><ReferenceTrigger id="ewc">EWC</ReferenceTrigger> 的基本想法</h2><p>旧任务结束后，估计哪些参数对它更重要并保存这份信息；学习新任务时，对更重要的旧任务参数施加更强的约束。它不是把整个旧模型冻结。</p></div>
+        <ol className="ewc-preview__flow" aria-label="EWC 的概念流程">
+          <li><span>01</span><b>训练 Task A</b></li><li aria-hidden="true">→</li>
+          <li><span>02</span><b>估计参数重要程度</b></li><li aria-hidden="true">→</li>
+          <li><span>03</span><b>保存信息</b></li><li aria-hidden="true">→</li>
+          <li><span>04</span><b>训练 Task B</b></li><li aria-hidden="true">→</li>
+          <li><span>05</span><b>重要参数受到更强约束</b></li>
+        </ol>
+      </section>
+
+      <section className="page-handoff" aria-label="下一页学习目标">
+        <div><span className="ewc-section-index">NEXT · PAGE 02</span><h2>先把普通训练讲清楚</h2><p>神经网络输出什么概率？Likelihood 和 Loss 怎样从预测得到？参数又怎样被更新？下一页沿这条链回答，再进入参数重要性。</p></div>
+        <div className="page-handoff__destination"><span>下一页</span><b>Probability → Likelihood → Loss</b><i aria-hidden="true">02 →</i></div>
       </section>
     </article>
   );

@@ -7,7 +7,7 @@ import { PageFisher } from "./pages/PageFisher";
 import { PageObjective } from "./pages/PageObjective";
 
 const SLICE_PAGES: { id: PageId; number: string; title: string; eyebrow: string }[] = [
-  { id: "page-01-problem", number: "01", title: "为什么需要 EWC", eyebrow: "问题" },
+  { id: "page-01-problem", number: "01", title: "顺序学习中的冲突", eyebrow: "问题" },
   { id: "page-05-fisher", number: "05", title: "从概率到 Fisher", eyebrow: "估计" },
   { id: "page-06-ewc-objective", number: "06", title: "从 Fisher 到更新", eyebrow: "目标与梯度" },
 ];

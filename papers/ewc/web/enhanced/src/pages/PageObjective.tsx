@@ -76,6 +76,11 @@ export function PageObjective() {
       </section>
 
       {assemblyStep === 3 ? <>
+        <figure className="paper-figure-card ewc-objective-figure" aria-labelledby="figure-one-caption">
+          <div className="paper-figure-card__top"><span className="ewc-section-index">MECHANISM COMPARISON · AFTER THE OBJECTIVE</span><span className="source-badge source-badge--paper">PAPER · FIGURE 1</span></div>
+          <img src="./images/figure-1.png" alt="论文 Figure 1 参数空间示意：Task-B-only 更新、统一 L2 约束和 EWC 的参数移动路径与 Task-A、Task-B 的低误差区域关系。" />
+          <figcaption id="figure-one-caption"><strong>论文 Figure 1.</strong> 现在可以把图中的机制与刚才学过的目标对应起来：Task-B-only 更新、统一约束，以及按旧任务参数敏感性加权的 EWC。原图完整保留，仅沿图像边界裁切，供非商业教育用途展示。Kirkpatrick et al., PNAS 2017, 114(13):3521–3526, Fig. 1.</figcaption>
+        </figure>
         <section className="formula-runtime-link" aria-label="Formula to runtime links">
           <div className="formula-runtime-link__heading"><span className="ewc-section-index">SYMBOL ↔ RUNTIME</span><p>点击公式里的符号查看它对应的运行对象。</p></div>
           <div className="runtime-object-row">

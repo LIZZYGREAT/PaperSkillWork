@@ -107,4 +107,4 @@ assets:
 
 ## Scene Placement
 
-W5 should place Figure 1 with the forgetting/parameter-conflict explanation, Figure 2 with Permuted MNIST, and Figure 3 with Atari and its limits. Keep each figure intact and include accessible alt text and a full paper reference. Any tutorial annotation must be separate from the original image and clearly identified as a teaching annotation; do not paint annotations over the source figures.
+W5 should place Figure 1 on Page 6 after Equation (3), where the learner has enough context to interpret the paper's comparison of Task-B-only movement, a uniform constraint, and EWC's importance-weighted constraint. Place Figure 2 with Permuted MNIST and Figure 3 with Atari and its limits. Keep each figure intact and include accessible alt text and a full paper reference. Any tutorial annotation must be separate from the original image and clearly identified as a teaching annotation; do not paint annotations over the source figures. Figure 1 does not appear on Page 1.

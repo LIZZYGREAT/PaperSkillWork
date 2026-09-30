@@ -1,5 +1,10 @@
 {
   "implemented_core": {
+    "continual-learning-scenario-types": {
+      "stage": "S1_problem_and_loss",
+      "component": "PageProblem",
+      "status": "complete"
+    },
     "parameter-conflict-and-ewc-question": {
       "stage": "S1_problem_and_loss",
       "component": "PageProblem",

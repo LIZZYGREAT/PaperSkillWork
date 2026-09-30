@@ -2,10 +2,21 @@ import type { ReferenceRegistry } from "../shared/reference/types";
 
 /** W6 registry: only entries needed by the first vertical slice are populated. */
 export const referenceRegistry: ReferenceRegistry = {
+  continual_learning: {
+    id: "continual_learning", kind: "term", title: "Continual learning",
+    summary: "学习按顺序到来的多个任务，并设法在学习新任务时保留先前任务能力。",
+    role: "为 Task-IL、Domain-IL、Class-IL 的简短区分和后续遗忘问题提供共同背景。",
+    definition: "A learning setting in which a model encounters a sequence of tasks and must adapt over time while retaining useful knowledge from earlier tasks.",
+    sourceCategory: "GENERAL_BACKGROUND", sourceRefs: ["B06"],
+    relatedIds: ["catastrophic_forgetting", "parameter_interference"],
+    relatedPages: [{ pageId: "page-01-problem", anchorId: "problem-context" }],
+    boundary: "Task-IL、Domain-IL、Class-IL 是简要评测背景，不是 2017 年 EWC 论文提出的分类。",
+    keywords: ["continual learning", "lifelong learning", "持续学习", "Task-IL", "Domain-IL", "Class-IL"],
+  },
   catastrophic_forgetting: {
     id: "catastrophic_forgetting", kind: "term", title: "Catastrophic Forgetting",
     summary: "Later-task updates to a shared network can reduce performance on an earlier task.",
-    role: "Names the problem EWC addresses.",
+    role: "Names a possible failure of sequential learning when later updates reduce earlier-task performance.",
     definition: "Sequential optimization for a later task can change shared weights that matter to an earlier task, causing earlier-task performance to fall.",
     confusion: "It is a failure mode of sequential learning, not a separate parameter-update rule.",
     sourceCategory: "PAPER_FACT", sourceRefs: ["C01"], relatedIds: ["parameter_interference", "ewc"],
