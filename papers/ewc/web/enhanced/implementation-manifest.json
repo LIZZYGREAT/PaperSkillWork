@@ -19,6 +19,16 @@
       "stage": "S2_bayesian_parameter_view",
       "component": "PageBayes",
       "status": "complete"
+    },
+    "task-a-local-laplace": {
+      "stage": "S3_local_posterior_approximation",
+      "component": "PageLaplace",
+      "status": "complete"
+    },
+    "posterior-width-and-precision": {
+      "stage": "S3_local_posterior_approximation",
+      "component": "PageLaplace",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -30,6 +40,16 @@
     "bayes-evidence-normalizer": {
       "placement": "expandable",
       "component": "PageBayes",
+      "status": "complete"
+    },
+    "parameter-contour-example": {
+      "placement": "expandable",
+      "component": "PageLaplace",
+      "status": "complete"
+    },
+    "laplace-taylor-and-hessian-detail": {
+      "placement": "expandable",
+      "component": "PageLaplace",
       "status": "complete"
     }
   },
