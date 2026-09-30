@@ -22,7 +22,7 @@
 .p01-flow { position: relative; margin: 0; padding: 12px 0; list-style: none; border: 1px solid #dce6e1; border-radius: 19px; background: linear-gradient(180deg, #fffefa 0%, #fafbf8 100%); box-shadow: 0 14px 36px rgba(30,52,56,.055); overflow: hidden; }
 .p01-flow::before { content: ""; position: absolute; z-index: 0; left: 43px; top: 49px; bottom: 49px; width: 2px; background: linear-gradient(180deg, #8db0a5 0%, #aabcb5 49%, #d28b6e 100%); }
 .p01-stage { position: relative; display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 9px; align-items: stretch; min-height: 158px; padding: 19px 27px 21px 0; }
-.p01-stage--train-b { min-height: 218px; }
+.p01-stage--train-b { min-height: 250px; }
 .p01-stage--changed { min-height: 192px; }
 .p01-stage:not(:last-child)::after { content: "↓"; position: absolute; z-index: 2; left: 33px; bottom: -13px; display: grid; place-items: center; width: 22px; height: 24px; color: #819c93; background: #fbfcf9; font: 17px Georgia, serif; }
 .p01-stage__marker { position: relative; z-index: 1; align-self: center; justify-self: center; display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #b9cbc3; border-radius: 50%; color: #355b55; background: #f7faf6; font: var(--p01-font-meta) "DM Mono", monospace; box-shadow: 0 0 0 7px rgba(255,254,250,.94); }
