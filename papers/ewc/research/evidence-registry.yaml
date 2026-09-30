@@ -140,6 +140,12 @@ our_interpretations:
     source_locator: "Interpretation of PDF p. 4, Figure 2C and Appendix Section 4.3"
     conditions: "Keep the conclusion within the studied permutation and network-depth settings."
     allowed_wording: "Describe what the authors' overlap measure suggests in this experiment; do not call it a universal decomposition of network capacity."
+  I03:
+    claim: "In a fixed-capacity shared model, repeatedly constraining parameter directions judged sensitive by earlier tasks can reduce flexibility available to later tasks."
+    type: OUR_INTERPRETATION
+    source_locator: "Interpretation of PDF pp. 2-3, Equations (2)-(3), and p. 6, comparison with ten separate DQNs; EWC论文阅读.md, Section 7.5"
+    conditions: "This is a qualitative stability-plasticity implication, not a separately measured result or a guarantee that every task sequence exhausts capacity."
+    allowed_wording: "Describe a possible finite-capacity stability-plasticity tradeoff; do not claim that EWC inevitably runs out of capacity after a fixed number of tasks."
 implementation_mappings:
   M01:
     claim: "A teaching interface may depict the task-A solution and its diagonal Fisher values as a saved anchor-and-importance record used during task-B updates."
@@ -153,6 +159,12 @@ implementation_mappings:
     source_locator: "Algebraic derivative of PDF p. 3, Equation (3); derivative not separately printed in the paper"
     conditions: "For parameter i, the penalty derivative is lambda times F_i times the displacement from the task-A anchor."
     allowed_wording: "Introduce this as a derivative of Equation (3), not as an additional equation printed in the paper."
+  M03:
+    claim: "The tutorial's Fisher-estimation pass holds parameters fixed at the task-A solution, computes gradients to accumulate the chosen Fisher estimate, and does not call optimizer.step()."
+    type: IMPLEMENTATION_MAPPING
+    source_locator: "EWC论文阅读.md, Section 3.3; Page5_Page6_设计规范.md, Page 5 Fisher Estimation mode; this is a tutorial runtime contract, not a general estimator specified in the 2017 PDF"
+    conditions: "The specific per-example observed-label gradient-square estimator is separately labeled background and is not attributed to the EWC paper."
+    allowed_wording: "Show gradients enabled, optimizer off, and parameters fixed during this tutorial's Fisher-estimation pass; distinguish that implementation choice from paper facts."
 background:
   B01:
     claim: "A conditional prediction probability such as p(y|x,theta) is standard background for explaining a probabilistic classifier; this notation is not given as the paper's EWC estimator."
@@ -172,6 +184,18 @@ background:
     source_locator: "Kunstner, Balles, and Hennig, NeurIPS 2019, Sections 1 and 3.1, Equations (2)-(3) and (6)-(7), https://proceedings.neurips.cc/paper/2019/hash/46a558d97954d0692411c861cf78ef79-Abstract.html"
     conditions: "This later-methods source clarifies terminology; it does not specify the estimator used by Kirkpatrick et al."
     allowed_wording: "If introduced as supplemental background, distinguish expected Fisher from observed-label empirical Fisher and state that the 2017 paper does not specify this empirical estimator."
+  B04:
+    claim: "A zero-centered isotropic Gaussian prior on weights contributes an L2 penalty to the negative log-prior term in MAP estimation."
+    type: GENERAL_BACKGROUND
+    source_locator: "Goodfellow, Bengio, and Courville, Deep Learning, Chapter 7, Section 7.1.1, https://www.deeplearningbook.org/contents/regularization.html; also EWC前置知识.md, Section 1.3"
+    conditions: "This is a standard background example; the EWC paper's general Bayesian derivation does not prescribe this prior."
+    allowed_wording: "Use the Gaussian-prior/L2 connection as an optional background example, not as a prior selected by the EWC paper."
+  B05:
+    claim: "Locally, Fisher information can serve as the metric describing changes in a model's predictive distribution under small parameter perturbations, closely related to local KL geometry."
+    type: GENERAL_BACKGROUND
+    source_locator: "Amari, Karakida, and Oizumi, PMLR 2019, https://proceedings.mlr.press/v89/amari19a.html; EWC前置知识.md, Section 4.4"
+    conditions: "Optional general background only; this is not the 2017 EWC paper's derivation of its estimator and does not make diagonal empirical Fisher an exact Hessian."
+    allowed_wording: "Explain Fisher as a local prediction-distribution metric in an expandable background detail, with its scope and source stated."
 teaching_examples:
   T01:
     claim: "A small two-parameter contour and update-path example may illustrate forgetting, a uniform penalty, and an importance-weighted penalty."
