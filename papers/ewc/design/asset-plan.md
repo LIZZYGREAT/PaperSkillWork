@@ -31,7 +31,7 @@ assets:
     source_location: "User-provided papers/ewc/source/EWC.pdf; published article DOI 10.1073/pnas.1611835114"
     attribution: "Kirkpatrick J, et al. Overcoming catastrophic forgetting in neural networks. Proceedings of the National Academy of Sciences. 2017;114(13):3521-3526. doi:10.1073/pnas.1611835114. Original Figure 1, cropped to the figure bounds and reproduced unchanged for noncommercial educational use."
     reuse_rights: "PNAS standard License to Publish reuse policy permits original figures for noncommercial educational use with full journal reference; the article was received 2016-07-19. Commercial reuse is not covered."
-    explanation: "Core visual for Page 1's forgetting conflict and the method preview; the source caption's distinction between uniform and importance-weighted constraints is retained."
+    explanation: "Shown on Page 6 after Equation (3), where learners have enough context to read its comparison among Task-B-only movement, a uniform constraint, and EWC's importance-weighted constraint. It does not introduce the method on Page 1."
 
   - id: EWC-F2
     paper_figure_id: F2

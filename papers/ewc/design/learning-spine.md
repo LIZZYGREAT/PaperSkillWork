@@ -35,7 +35,7 @@ The seven stages preserve the human-approved page order. Pages grouped in one st
 
 | Stage | Pages | Question the reader answers | Handoff |
 | --- | --- | --- | --- |
-| S1 Problem and ordinary-training foundation | 1–2 | Why can Task B damage Task A, and how do an ordinary network prediction, data likelihood, and loss arise? | Page 1 identifies the shared-parameter conflict; Page 2 explains the training quantities. The reader still needs a probability view over parameters. |
+| S1 Problem and ordinary-training foundation | 1–2 | What is continual learning, how can Task B damage Task A, and how do ordinary network prediction, data likelihood, and loss arise? | Page 1 briefly orients the reader to common task settings, then identifies shared-parameter interference and catastrophic forgetting; Page 2 explains training quantities. The reader still needs a probability view over parameters. |
 | S2 Bayesian parameter view | 3 | Why introduce p(theta), how does Bayes form p(theta given data), and why does task-A posterior matter for task B? | The previous-task posterior carries information forward, but is too complex to preserve exactly. |
 | S3 Local posterior approximation | 4 | What part of the task-A posterior can be retained locally around theta_A*, and what do its narrow and wide directions mean? | A local precision/sensitivity signal is needed in a real network. |
 | S4 Fisher to EWC constraint | 5–6 | How is a local sensitivity estimate formed, and how do theta_A* and F_A enter task-B loss and gradient? | The objective is assembled; next put its quantities on the task timeline. |
@@ -45,7 +45,7 @@ The seven stages preserve the human-approved page order. Pages grouped in one st
 
 ## Source Boundaries for the Main Path
 
-- **Page 1:** teach the shared-parameter conflict and EWC's differentiated-constraint motivation. Do not introduce p_theta(y|x), p(D|theta), p(theta), posterior, Laplace, Fisher, or the EWC equation here.
+- **Page 1:** first orient the reader to continual learning and common task settings, then teach the shared-parameter conflict and catastrophic forgetting. Do not introduce an EWC/L2 remedy, p_theta(y|x), p(D|theta), p(theta), posterior, Laplace, Fisher, or the EWC equation here.
 - **Page 2:** explain p_theta(y|x) from a classifier forward pass as GENERAL_BACKGROUND (B01), then p(D|theta) and its relation to negative task loss as the paper-supported link (C12). The conditional softmax derivation is not an equation derived by the EWC paper.
 - **Page 3:** the Bayes equations and sequential posterior handoff are paper facts (C03, C13). The Gaussian prior/L2 example is optional GENERAL_BACKGROUND (B04); do not present it as the prior prescribed by this paper.
 - **Page 4:** teach the local Gaussian around theta_A* and the width/precision intuition (C04, C05). Keep the paper's Fisher-as-approximate-precision rationale distinct from an exact Hessian identity.
@@ -99,6 +99,12 @@ items:
     stage: S1_problem_and_loss
     placement: mainline
     evidence_refs: [C01, C02]
+  - id: continual-learning-scenario-types
+    title: "Continual learning and the Task-IL, Domain-IL, and Class-IL evaluation settings"
+    priority: CORE
+    stage: S1_problem_and_loss
+    placement: mainline
+    evidence_refs: [B06]
   - id: network-likelihood-loss-chain
     title: "Classifier prediction probability, data likelihood, and negative task loss"
     priority: CORE
@@ -367,4 +373,8 @@ items:
 - Does Page 10 only integrate concepts already taught?
 - Are the SUPPORTING, REFERENCE, and DELETE choices appropriate?
 
-W4 review record: 甘文杰 — PASS (“学习主线已通过评审”), recorded in `paper.yaml`. W7 remains pending until a human reviews the implemented vertical slice.
+W4 review record: 甘文杰 — PASS (“学习主线已通过评审”), recorded in `paper.yaml`. W7 review record and its 2026-09-30 REVISE requirements are appended below; re-review remains pending until the revised vertical slice is reviewed by a human.
+
+## W7 Reviewer Amendment — 2026-09-30
+
+The user reviewed the implemented W6 slice and requested a problem-first explanation. This amendment updates Page 1's entry contract while preserving the ten-page order and the Page 2 probability/loss boundary above. Page 1 now opens with continual learning, briefly distinguishes Task-IL, Domain-IL, and Class-IL, and uses a staged shared-parameter sequence to explain Task-A performance loss and catastrophic forgetting before naming any remedy. It does not introduce L2 or EWC. Figure 1 moves to Page 6 after Equation (3), where the learner can interpret its mechanism comparison. The three scenario definitions are supplemental GENERAL_BACKGROUND from B06, not claims about the 2017 EWC paper.

@@ -196,6 +196,12 @@ background:
     source_locator: "Amari, Karakida, and Oizumi, PMLR 2019, https://proceedings.mlr.press/v89/amari19a.html; EWC前置知识.md, Section 4.4"
     conditions: "Optional general background only; this is not the 2017 EWC paper's derivation of its estimator and does not make diagonal empirical Fisher an exact Hessian."
     allowed_wording: "Explain Fisher as a local prediction-distribution metric in an expandable background detail, with its scope and source stated."
+  B06:
+    claim: "Continual-learning benchmarks commonly distinguish Task-IL, Domain-IL, and Class-IL by whether task identity is available at test time and how the task/output space changes."
+    type: GENERAL_BACKGROUND
+    source_locator: "van de Ven and Tolias, 2019, Section 2 and Table 1, https://arxiv.org/abs/1904.07734"
+    conditions: "Brief terminology orientation only; this taxonomy is not introduced or evaluated by the 2017 EWC paper. Task-IL supplies task identity at inference, Domain-IL withholds task identity while the input distribution changes, and Class-IL requires prediction over classes accumulated across tasks without task identity."
+    allowed_wording: "Define the three settings compactly and cite this source; do not imply the taxonomy is a contribution or result of the EWC paper."
 teaching_examples:
   T01:
     claim: "A small two-parameter contour and update-path example may illustrate forgetting, a uniform penalty, and an importance-weighted penalty."

@@ -52,7 +52,7 @@ workflow:
       status: complete
       completed_by: automation
     W7_human_review:
-      status: pending
+      status: in_progress
     W8_full_implementation:
       status: pending
     W9_final_audit:

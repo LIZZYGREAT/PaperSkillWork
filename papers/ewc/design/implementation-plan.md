@@ -8,7 +8,7 @@ W8 must let a first-time reader reconstruct why sequential updates can damage ea
 
 The approved ten-page teaching order remains unchanged. Pages 1–9 teach each concept for the first time; Page 10 integrates those concepts in the Grand Animation. The implementation plan chooses visuals and interactions only where they clarify a relationship or let the reader inspect an important state.
 
-This plan does not add a continual-learning survey, a full DQN course, a general probability course, a new estimator claim, experiments to Page 10, a complete Reference Hub glossary before the page copy is stable, or any page implementation before W7 passes.
+This plan does not add a broad continual-learning survey, a full DQN course, a general probability course, a new estimator claim, experiments to Page 10, a complete Reference Hub glossary before the page copy is stable, or any page implementation before W7 passes. Page 1 includes only a compact orientation to the common Task-IL, Domain-IL, and Class-IL evaluation settings because the W7 reviewer asked that the learning problem and task types be explained before any method is named.
 
 ## Primary Spine Mapping
 
@@ -20,12 +20,13 @@ implementation:
     - id: S1_problem_and_loss
       page: "1–2"
       core_items:
+        - continual-learning-scenario-types
         - parameter-conflict-and-ewc-question
         - network-likelihood-loss-chain
-      evidence_refs: [C01, C02, B01, C12]
-      primary_vehicle: "Page 1 shared-parameter conflict and two-parameter comparison, followed by Page 2 forward-to-likelihood-to-loss flow and fixed-data parameter comparison."
+      evidence_refs: [B06, C01, C02, B01, C12]
+      primary_vehicle: "Page 1 brief continual-learning orientation and scenario taxonomy, followed by an interactive Task-A-to-Task-B shared-parameter trace; Page 2 then develops the forward-to-likelihood-to-loss flow and fixed-data parameter comparison."
       reusable_pattern: CompareView
-      reason: "The visual handoff keeps the human-designed boundary: Page 1 introduces no probability or Fisher notation; Page 2 starts from a forward pass, derives the data likelihood and loss, and leaves p(theta) unanswered. Figure 1 is used intact as the paper's mechanism overview."
+      reason: "Page 1 establishes the learning setting, shows how a Task-B update can raise Task-A loss through shared parameters, and names catastrophic forgetting before introducing a remedy. It contains no L2/EWC mechanism or probability/Fisher notation. Page 2 starts from a forward pass, derives the data likelihood and loss, and leaves p(theta) unanswered. Figure 1 appears on Page 6 after Equation (3), where its comparison of mechanisms has been taught."
     - id: S2_bayesian_parameter_view
       page: "3"
       core_items:
@@ -82,7 +83,7 @@ implementation:
       reason: "The approved camera, semantic zoom, memory rail, formula links, and Grand Replay need a paper-specific composition. Reusable state-machine primitives may inform data structure, but do not replace the designed workbench or alter its 18 states. Page 10 introduces no new core teaching or experiment."
   assets:
     - asset: EWC-F1
-      stage: S1_problem_and_loss
+      stage: S4_fisher_to_ewc_constraint
       rendering: crop
     - asset: EWC-F2
       stage: S6_evidence_and_boundaries
@@ -131,6 +132,7 @@ implementation:
   vertical_slice:
     stages: [S1_problem_and_loss, S4_fisher_to_ewc_constraint]
     required_core_items:
+      - continual-learning-scenario-types
       - parameter-conflict-and-ewc-question
       - fisher-estimation-path
       - fisher-as-approximate-precision
@@ -149,7 +151,7 @@ The EWC documents define the teaching and interaction intent. The paper model an
 | Design source | W5 constraint carried into this plan |
 | --- | --- |
 | EWC_Workflow.md | Preserve the approved Page 1–10 order, create the W6 representative slice around Page 1, Page 5 Fisher estimation, and Page 6 objective/gradient, and freeze the interface contract before W6 code. |
-| Page1_Page2_设计规范.md | Page 1 stays at shared-parameter conflict; Page 2 begins at network forward and explains probability, data likelihood, NLL/loss, update, and the open p(theta) question. |
+| Page1_Page2_设计规范.md plus W7 reviewer amendment | Page 1 first explains continual learning, briefly distinguishes Task-IL/Domain-IL/Class-IL, and traces shared-parameter interference to catastrophic forgetting; Page 2 begins at network forward and explains probability, data likelihood, NLL/loss, update, and the open p(theta) question. |
 | Page3_Page4_设计规范.md | Page 3 uses a Bayes box and sequential posterior handoff; Page 4 focuses locally on theta_A*, shows narrow/wide directions, and ends by motivating Fisher without teaching its estimator. |
 | Page5_Page6_设计规范.md | Page 5 uses the same network, fixed theta_A*, score-gradient/square/sample-aggregation path, and a clear optimizer-off mode. Page 6 assembles the penalty one part at a time and ends at the gradient junction. The empirical estimator remains labeled background. |
 | Page7_Page8_Page9_设计规范.md | Page 7 is a timeline and mode navigator; Page 8 presents protocol before results; Page 9 maps system responsibilities and evidence boundaries, including replay, task recognition, and Fisher perturbation. |
@@ -165,7 +167,7 @@ Use the three W3-selected source figures as intact figures, cropped only to the 
 
 | Asset | Placement | W5 rendering | Teaching use |
 | --- | --- | --- | --- |
-| EWC-F1 / Figure 1 | Page 1, S1 | crop | Show the paper's parameter-space contrast among Task-B-only updates, uniform constraint, and EWC. Keep the page's first explanation focused on the forgetting conflict. |
+| EWC-F1 / Figure 1 | Page 6, S4, after Equation (3) | crop | After the objective has been explained, use the paper's parameter-space illustration to compare Task-B-only updates, a uniform constraint, and EWC's importance-weighted constraint. It no longer interrupts the first explanation of continual learning and forgetting. |
 | EWC-F2 / Figure 2 | Page 8, S6 | crop | Show all panels after the task construction and comparison protocol. Use the Fisher-overlap panel only as a secondary analysis, not as a training step. |
 | EWC-F3 / Figure 3 | Page 9, S6 | crop | Show all panels while separating the Atari schedule/system results from the single-game perturbation diagnostic. Preserve the paper's system-level attribution and caveats. |
 
@@ -175,12 +177,12 @@ The W3 asset plan records noncommercial educational reuse with full journal cita
 
 These are implementation decisions, not a replacement page specification.
 
-1. **Page 1 — Why EWC:** Keep the opening to the specified short scenario. Use Figure 1 and a small shared-model sequence to show that Task B changes the same parameters Task A depends on. A compact two-parameter compare may reveal different old-task sensitivity. Do not show probability, Bayes, posterior, Laplace, Fisher, or the EWC equation.
+1. **Page 1 — Continual learning and forgetting:** Define continual learning in plain language, then briefly distinguish Task-IL, Domain-IL, and Class-IL by task-identity availability and output/task structure. Use a staged shared-parameter visualization to trace Task A learning, a Task-B-driven parameter move, and possible Task-A performance loss; define catastrophic forgetting and state the conflict explicitly. Do not introduce EWC, L2, Figure 1, probability, Bayes, posterior, Laplace, Fisher, or the EWC equation on this page.
 2. **Page 2 — Probability, likelihood, loss:** Start with input → network → logits → softmax probability. Continue through a true-label probability, per-sample loss, dataset likelihood under the stated independent-sample setup, log likelihood/NLL, gradient, and update. Let the reader compare parameter states while D stays fixed. End with p(theta) unresolved; do not start Bayes here.
 3. **Page 3 — Prior, Bayes, posterior:** Connect prior and likelihood in the Bayes box, then use a short sequential update from D_A to D_B. Show the posterior changing its weight over a few illustrative parameter candidates. Keep Gaussian-prior/L2 optional and labeled general background. End with the difficulty of retaining a full high-dimensional posterior.
 4. **Page 4 — Laplace:** Focus the view from the complex posterior onto theta_A*. Use an explicitly illustrative 2D slice of the high-dimensional parameter space and equal-sized movement along narrow and wide directions. Reveal local curvature/precision after the geometry. Do not equate diagonal Fisher with an exact Hessian or teach the estimator yet.
 5. **Page 5 — Fisher:** Reuse the same model representation introduced earlier. Sequence fixed theta_A* → sample probability → log-probability score gradient → square → sample aggregation → F_A. Compare normal training with Fisher estimation: gradients are computed, optimizer.step is off, and parameters do not move. Keep the chosen empirical-Fisher estimator and runtime mode labeled as background/implementation mapping, not as a general recipe specified in the paper.
-6. **Page 6 — Objective and gradient:** Begin from the sequential Bayesian handoff, show L_B, then assemble displacement from theta_A*, squared displacement, parameter-wise F_A,i weighting, summation, and global lambda. Link formula symbols to the same runtime/reference IDs. Finish at the Task-B plus EWC gradient junction before the optimizer update. EWC constrains movement; it does not freeze parameters.
+6. **Page 6 — Objective and gradient:** Begin from the sequential Bayesian handoff, show L_B, then assemble displacement from theta_A*, squared displacement, parameter-wise F_A,i weighting, summation, and global lambda. Link formula symbols to the same runtime/reference IDs. After Equation (3) and its symbols are clear, show Figure 1 as the paper's mechanism comparison; distinguish the uniform constraint from EWC's importance-weighted constraint. Finish at the Task-B plus EWC gradient junction before the optimizer update. EWC constrains movement; it does not freeze parameters.
 7. **Page 7 — Lifecycle:** Use a horizontal timeline with a substantial task-boundary region, three modes, and an active-state table. Make current data, theta movement, anchor, Fisher, gradient, and optimizer status visible. Keep this an algorithm navigator; reserve the detailed camera workbench for Page 10.
 8. **Page 8 — Permuted MNIST:** Establish MNIST, one fixed pixel permutation per task, unchanged labels, protocol, and baselines before exposing results. Display the full Figure 2. Read forgetting and plasticity separately; put Fisher overlap after the main result and label it analysis rather than a training step.
 9. **Page 9 — Atari:** Start from the minimal environment/observation/action/reward/learning loop, then use a responsibility map to distinguish the Q-network, short-timescale replay, task recognition, task-specific gains/biases, and long-timescale EWC. Display all of Figure 3 and separate system-level performance from the perturbation diagnostic, nullspace caveat, and gap to separate DQNs.
@@ -218,19 +220,18 @@ The W6 slice follows the EWC workflow's representative cross-section rather than
 - **Page 5 / S4:** how the selected Fisher estimate is formed at fixed theta_A* and why estimation does not update parameters;
 - **Page 6 / S4:** how F_A and theta_A* enter the penalty and how its gradient joins the Task-B gradient.
 
-The slice includes Figure 1, the shared network/parameter visual language, one complete estimator-to-objective flow, the EWC symbol/runtime mapping, and only the minimal Reference shell needed to exercise a concept link. It does not implement Page 2–4, Page 7–9, the Grand Animation, or the complete Hub content. W7 must judge learning, spatial architecture, prose load, formula clarity, and whether each interaction earns its place before W8 begins.
+The slice includes a problem-first Page 1, one Figure 1 placement after Equation (3) on Page 6, one complete estimator-to-objective flow, the EWC symbol/runtime mapping, and only the minimal Reference shell needed to exercise a concept link. It does not implement Page 2–4, Page 7–9, the Grand Animation, or the complete Hub content. W7 must judge learning, spatial architecture, prose load, formula clarity, and whether each interaction earns its place before W8 begins.
 
 ### Vertical Slice Review (W7)
 
-Vertical Slice Review: PENDING
+Vertical Slice Review: REVISE
 
-- Reviewer:
-- Decision: PASS / REVISE
-- Can the reviewer explain the problem and core idea after using the slice?
-- Can the reviewer reconstruct the architecture and one complete information/state flow?
-- Was any key explanation hidden in hover or omitted?
-- Were any formulas, toys, or interactions unnecessary?
-- Required information-architecture changes:
+- Reviewer: User (conversation review, 2026-09-30)
+- Decision: REVISE
+- Findings: At the real desktop browser size, Reference Hub's list/detail columns were too compressed to read. Pale, small text and inconsistent font sizing weakened readability. Page 1 began with the method before explaining continual learning, task settings, catastrophic forgetting, and shared-parameter conflict. Its toggle was too shallow to teach the causal sequence. Figure 1's role was unclear in the opening, and L2/EWC appeared before the problem was established.
+- Required information-architecture changes: Start Page 1 with a plain-language continual-learning definition and a concise Task-IL/Domain-IL/Class-IL orientation; show Task A learning, Task B updating the same model, and the possible loss of Task-A performance as a causal sequence; define catastrophic forgetting and state the shared-parameter conflict. Keep L2 and EWC out of the opening page. Move Figure 1 to Page 6 after Equation (3), where the competing mechanisms have context.
+- Required usability changes: Widen Reference Hub at desktop widths and keep its list and detail panes independently readable; strengthen body-text contrast and minimum type sizes; use a consistent prose font and type scale; replace the shallow toggle with a staged visualization that shows how movement in shared parameters can improve Task B while raising Task-A loss.
+- Re-review after W6 revision: PENDING. W7 remains open for human verification; W8 cannot start until the reviewer records PASS.
 
 ## Full Implementation (W8)
 
