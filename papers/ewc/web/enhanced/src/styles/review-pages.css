@@ -83,9 +83,9 @@
 .p01-parameter-vector.is-changed .p01-parameter-vector__group i { background: #ca8664; }
 .p01-state-object__note { display: grid; gap: 5px; color: #526a65; font-size: var(--p01-font-meta); text-align: right; }
 .p01-state-object__note b { color: #315c54; font-size: var(--p01-font-label); }
-.p01-reuse-model { display: grid; grid-template-columns: minmax(150px, .7fr) 27px minmax(0, 1.3fr); align-items: center; gap: 11px; min-width: 0; padding: 9px 12px; border: 1px solid #e5ded3; border-radius: 11px; background: #fffefa; }
-.p01-reuse-model__network { display: grid; justify-items: center; gap: 3px; padding: 2px 7px 0; border-right: 1px solid #eadfd3; }
-.p01-network--compact { width: min(100%, 170px); }
+.p01-reuse-model { display: grid; grid-template-columns: minmax(180px, .8fr) 26px minmax(0, 1.2fr); align-items: center; gap: 10px; min-width: 0; min-height: 186px; padding: 14px 15px; border: 1px solid #e5ded3; border-radius: 11px; background: #fffefa; }
+.p01-reuse-model__network { display: grid; justify-items: center; gap: 5px; padding: 5px 8px 3px; border-right: 1px solid #eadfd3; }
+.p01-reuse-model__network .p01-network--compact { width: min(100%, 220px); }
 .p01-reuse-model__network > span { color: #687b77; font: var(--p01-font-meta) "DM Mono", monospace; }
 .p01-reuse-model__link { color: #bd7553; font-size: 22px; text-align: center; }
 .p01-reuse-model__update { min-width: 0; }
