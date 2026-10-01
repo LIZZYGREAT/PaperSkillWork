@@ -94,14 +94,18 @@ export const referenceRegistry: ReferenceRegistry = {
   },
   fisher_information: {
     id: "fisher_information", kind: "term", title: "Fisher Information",
-    summary: "In EWC, diagonal Fisher values approximate local precision for the earlier-task solution.",
+    summary: "The full Fisher matrix is an expectation of score-gradient outer products; EWC uses its diagonal approximation for local precision.",
     role: "Weights the quadratic penalty differently for different parameters.",
     confusion: "It is an approximation, not an exact parameter-importance score or an exact full Hessian.",
     hoverCopy: {
       title: "Fisher Information · Fisher 信息",
-      summary: "描述模型输出对参数变化的局部敏感程度。",
+      summary: "完整 Fisher 矩阵的一般形式是 score gradient 的外积期望；EWC 使用其对角近似来表示参数级局部敏感性。",
       role: "在 EWC 中，对角 Fisher 近似 Task A 解附近的局部精度，用来区分参数约束的相对强弱。",
-      confusion: "论文使用的是对角近似；它不是完整 Hessian 的精确值。",
+      details: [
+        { label: "完整矩阵 · 一般数学形式", text: "F(θ) = Eₓ, y∼pθ(·|x)[g gᵀ]，其中 g = ∇θ log pθ(y|x)。" },
+        { label: "EWC 中的近似", text: "教程主路径展示对角项 F_A,i；它近似局部精度并按参数加权，不表示计算或保存了完整 Fisher 矩阵。" },
+      ],
+      confusion: "Page 5 / 10 的 observed-label empirical-Fisher 逐样本梯度平方是教学背景示例；2017 年论文没有规定这一通用估计配方。对角 Fisher 也不是完整 Hessian 的精确值。",
     },
     sourceCategory: "PAPER_FACT", sourceRefs: ["C04", "C05", "C11"],
     relatedIds: ["fisher_a", "fisher_a_i", "laplace_approximation", "ewc_penalty"],

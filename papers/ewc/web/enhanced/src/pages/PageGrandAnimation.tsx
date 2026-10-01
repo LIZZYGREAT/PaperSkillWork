@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import type { AnchorId, GrandAnimationStateId, RuntimeObjectId } from "../contracts/ids";
+import type { AnchorId, CanonicalReferenceId, GrandAnimationStateId, RuntimeObjectId } from "../contracts/ids";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
+import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import "../styles/page10.css";
 
 type PhaseId = "task-a" | "consolidation" | "task-b" | "continual";
@@ -37,7 +38,7 @@ const STATES: AnimationState[] = [
   { id: "laplace-view", title: "在解附近做局部近似", short: "Laplace", phase: "consolidation", task: "MATHEMATICAL VIEW", camera: "SEMANTIC ZOOM · LOCAL", annotation: "Laplace Approximation 用 θ_A* 附近的局部 Gaussian 描述复杂 Posterior 的形状。", why: "局部近似把参数偏移与局部曲率联系起来；下一步需要可计算的敏感性近似。", scene: "laplace", focus: ["current-parameters", "task-a-anchor"], math: "laplace", checkpoint: true, review: { page: "page-04-laplace", anchor: "laplace-local-view", label: "回顾 Page 4 · Laplace" } },
   { id: "return-runtime", title: "回到真实 Runtime", short: "返回 Runtime", phase: "consolidation", task: "TASK A · CONSOLIDATION", camera: "RUNTIME VIEW", annotation: "Posterior 与 Gaussian 是解释层。现在回到实际执行：EWC 需要可计算、可保存的局部敏感性近似。", why: "Mathematical View 收起后，同一个模型和参数对象仍在原来的训练流程中。", scene: "return", focus: ["neural-network", "current-parameters", "task-a-data"], review: { page: "page-05-fisher", anchor: "fisher-estimation", label: "前往 Page 5 · Fisher" } },
   { id: "save-anchor", title: "保存固定 Anchor", short: "Save Anchor", phase: "consolidation", task: "TASK A · CONSOLIDATION", camera: "PARAMETER + MEMORY FOCUS", annotation: "Anchor 是 Task A 结束时参数的固定快照。后续 Current Parameters 会变化，快照保持不变。", why: "比较当前 θ 与固定的 θ_A*，才能表示后续学习偏离旧任务解的距离。", scene: "anchor", focus: ["current-parameters", "task-a-anchor", "persistent-memory"], review: { page: "page-07-lifecycle", anchor: "task-boundary", label: "回顾 Page 7 · 保存时点" } },
-  { id: "fisher-estimation", title: "固定参数，估计 Fisher", short: "Fisher", phase: "consolidation", task: "TASK A · FISHER ESTIMATION", camera: "RUNTIME VIEW", annotation: "估计时参数保持固定，Backward 计算 log-likelihood 梯度并累积平方；optimizer.step() 不执行。", why: "Fisher 提供可计算的局部敏感性近似，并按参数位置与网络层对齐。", scene: "fisher", focus: ["task-a-data", "neural-network", "task-a-fisher", "persistent-memory"], math: "fisher", checkpoint: true, review: { page: "page-05-fisher", anchor: "fisher-estimation", label: "回顾 Page 5 · Fisher 估计" } },
+  { id: "fisher-estimation", title: "固定参数，估计对角 Fisher", short: "Diagonal Fisher", phase: "consolidation", task: "TASK A · FISHER ESTIMATION", camera: "RUNTIME VIEW", annotation: "本教程采用 Page 5 已标明来源边界的 observed-label empirical-Fisher 示例：固定在 θ_A*，计算观测标签 log probability 的梯度平方并跨样本汇总；optimizer.step() 不执行。", why: "当前示例取 Fisher 对角项 F_A,i；EWC 使用对角 Fisher 近似局部精度，但论文没有规定这套通用逐样本估计配方。", scene: "fisher", focus: ["task-a-data", "neural-network", "task-a-fisher", "persistent-memory"], math: "fisher", checkpoint: true, review: { page: "page-05-fisher", anchor: "fisher-estimation", label: "回顾 Page 5 · Fisher 估计" } },
   { id: "task-a-consolidated", title: "Task A 状态进入 Memory Rail", short: "Store S_A", phase: "consolidation", task: "PERSISTENT MEMORY", camera: "MEMORY FOCUS", annotation: "Task A 留下两类长期信息：结束时的参数位置 θ_A*，以及各参数附近的 Fisher 敏感性近似 F_A。", why: "它们组合成教学状态 S_A=(θ_A*,F_A)，供后续任务使用；原始 Task A 数据不需要进入 Task B 的 batch。", scene: "memory", focus: ["task-a-anchor", "task-a-fisher", "task-state-a", "persistent-memory"], checkpoint: true, review: { page: "page-07-lifecycle", anchor: "task-a-to-b-to-c", label: "回顾 Page 7 · A → B → C" } },
   { id: "task-b-arrives", title: "Task B 从旧参数继续", short: "Task B arrives", phase: "task-b", task: "TASK B", camera: "TRACK → TASK B", annotation: "Task B 使用新的数据 D_B，但同一个模型从 Task A 训练得到的参数状态继续学习。", why: "旧任务约束来自保存的 S_A；Task B 的 batch 仍只来自当前任务数据。", scene: "task-b", focus: ["task-b-data", "neural-network", "task-b-loss", "persistent-memory"] },
   { id: "ewc-objective", title: "组装 Task B 的 EWC 目标", short: "EWC Objective", phase: "task-b", task: "TASK B · EWC OBJECTIVE", camera: "RUNTIME + MEMORY FOCUS", annotation: "Task B Loss 与 Fisher 加权的旧任务参数约束合并。F_A,i 逐参数变化，λ 缩放整体约束。", why: "新任务目标来自 L_B；旧任务的 Anchor 与 Fisher 来自 Memory Rail 中的 S_A。", scene: "objective", focus: ["task-b-loss", "current-parameters", "task-a-anchor", "task-a-fisher", "ewc-penalty", "persistent-memory"], math: "objective", checkpoint: true, review: { page: "page-06-ewc-objective", anchor: "ewc-objective", label: "回顾 Page 6 · EWC Objective" } },
@@ -72,8 +73,8 @@ const OBJECT_INFO: Record<RuntimeObjectId, { title: string; badge: string; body:
   optimizer: { title: "Optimizer", badge: "UPDATE RULE", body: "读取 Total Gradient 并更新当前参数。", detail: "普通训练时它使用 Task Loss Gradient；EWC 训练时接收 Task B 与 EWC 合并后的 Total Gradient。Fisher 估计期间 optimizer.step() 关闭。" },
   "current-parameters": { title: "当前参数 · θ", badge: "TRAINABLE STATE", body: "当前网络实际使用、并在训练中继续变化的参数。", detail: "Task A 结束时得到 θ_A*。进入 Task B 后，当前参数从这个位置继续优化；θ_A* 的固定快照留在 Memory Rail。" },
   "task-a-anchor": { title: "固定 Anchor · θ_A*", badge: "STORED SNAPSHOT", body: "Task A 完成时复制并保留的参数快照。", detail: "Anchor 后续保持固定。EWC 比较当前 θ 与 θ_A*，形成旧任务约束中的参数偏移。" },
-  "task-a-fisher": { title: "Fisher · F_A", badge: "SENSITIVITY APPROXIMATION", body: "由固定参数下的 log-likelihood 梯度平方估计。", detail: "Fisher 与参数按位置对齐。它提供可计算的局部敏感性近似，不是精确参数重要性，也不等于精确 Posterior Hessian。" },
-  "fisher-estimator": { title: "Fisher estimation", badge: "CONSOLIDATION PASS", body: "计算梯度并累积平方，但不更新参数。", detail: "Parameters FIXED · Gradient ENABLED · Optimizer OFF。此页面按设计显示估计流程，不把 Fisher pass 画成普通训练。" },
+  "task-a-fisher": { title: "Diagonal Fisher · F_A", badge: "LOCAL SENSITIVITY APPROXIMATION", body: "EWC 使用对角 Fisher 近似 Task A 解附近的局部精度。", detail: "本教程采用 Page 5 说明来源边界的 observed-label empirical-Fisher 示例：固定在 θ_A*，按样本累计 log probability 梯度的逐坐标平方。论文没有规定这套通用逐样本估计配方；对角 Fisher 也不是精确参数重要性真值或完整 Posterior Hessian。" },
+  "fisher-estimator": { title: "Diagonal Fisher estimation", badge: "TEACHING ESTIMATOR", body: "本教程用 observed-label empirical-Fisher 示例演示逐坐标梯度平方的汇总。", detail: "Parameters FIXED at θ_A* · Gradient ENABLED · Optimizer OFF。该逐样本估计配方属于教学背景，并非 2017 年 EWC 论文规定的通用 estimator。" },
   "persistent-memory": { title: "Persistent Memory Rail", badge: "STORED TASK STATE", body: "旧任务的 Anchor 与 Fisher 跨越时间轴持续保留。", detail: "Task A 后保存 S_A=(θ_A*,F_A)。Task B 读取它构造约束；Task B 边界再加入 S_B。S_A 是教学状态表示。" },
   "task-state-a": { title: "Task A state · S_A", badge: "θ_A* + F_A", body: "由固定 Anchor 与 Fisher 组成的教学状态。", detail: "S_A=(θ_A*,F_A) 将 Task A 结束位置和参数局部敏感性近似带入后续任务。" },
   "task-b-data": { title: "Task B data · D_B", badge: "CURRENT DATA", body: "Task B 的新 batch 驱动当前任务 Loss。", detail: "Task B 不重新初始化模型，也不把 Task A 原始样本作为当前 batch；旧任务信息通过 Anchor 与 Fisher 进入约束。" },
@@ -105,12 +106,16 @@ function FormulaToken({ objectId, children, onSelect }: { objectId: RuntimeObjec
   return <button type="button" className="p10-formula-token" onClick={() => onSelect(objectId)}>{children}</button>;
 }
 
+function MathReference({ id, children }: { id: CanonicalReferenceId; children: ReactNode }) {
+  return <ReferenceTrigger id={id} className="p10-math-reference">{children}</ReferenceTrigger>;
+}
+
 function Formula({ kind, expanded, onSelect }: { kind: MathId; expanded: boolean; onSelect: (id: RuntimeObjectId) => void }) {
   const token = (id: RuntimeObjectId, label: ReactNode) => <FormulaToken key={`${id}-${String(label)}`} objectId={id} onSelect={onSelect}>{label}</FormulaToken>;
   if (kind === "probability") return <div className="p10-formula-line" aria-label="类别概率转化为任务损失">{token("prediction-probabilities", <>p<sub>θ</sub>(y | x)</>)} <span>→</span> {token("task-a-loss", expanded ? <>−log p<sub>θ</sub>(y | x) → L<sub>A</sub>(θ)</> : <>−log p<sub>θ</sub>(y | x)</>)}</div>;
-  if (kind === "posterior") return <div className="p10-formula-line" aria-label="Task A Posterior"><span className="p10-formula-static">p(θ | D<sub>A</sub>)</span> <span>∝</span> {token("task-a-data", <>p(D<sub>A</sub> | θ)</>)} <span>·</span> <span className="p10-formula-static">p(θ)</span>{expanded && <span className="p10-formula-tail"> / p(D<sub>A</sub>)</span>}</div>;
-  if (kind === "laplace") return <div className="p10-formula-line" aria-label="Laplace 局部 Gaussian 近似"><span className="p10-formula-static">p(θ | D<sub>A</sub>) ≈ 𝒩(</span>{token("current-parameters", <>θ<sub>A</sub>*</>)}<span className="p10-formula-static">, Σ<sub>A</sub>)</span>{expanded && <span className="p10-formula-tail"> · θ<sub>A</sub>* 周围的局部二次形状</span>}</div>;
-  if (kind === "fisher") return <div className="p10-formula-line" aria-label="Fisher 对数似然梯度平方的样本均值">{token("task-a-fisher", <>F<sub>A,i</sub></>)} <span>≈</span> <span className="p10-formula-static">{expanded ? <>1/N Σ<sub>n</sub> ( ∂ log p<sub>θA*</sub>(y<sub>n</sub>|x<sub>n</sub>) / ∂θ<sub>i</sub> )<sup>2</sup></> : <>1/N Σ<sub>n</sub> g<sub>i,n</sub><sup>2</sup></>}</span></div>;
+  if (kind === "posterior") return <div className="p10-formula-line" aria-label="Task A 参数后验：似然乘以先验再归一化"><MathReference id="task_a_posterior">p(θ | D<sub>A</sub>)</MathReference> <span>∝</span> <MathReference id="p_D_given_theta">p(D<sub>A</sub> | θ)</MathReference> <span>·</span> <MathReference id="p_theta">p(θ)</MathReference>{expanded && <span className="p10-formula-tail"> / p(D<sub>A</sub>)</span>}</div>;
+  if (kind === "laplace") return <div className="p10-formula-line" aria-label="Task A Posterior 的 Laplace 局部 Gaussian 近似"><MathReference id="laplace_approximation">p(θ | D<sub>A</sub>) ≈ 𝒩(</MathReference>{token("task-a-anchor", <>θ<sub>A</sub>*</>)}<span className="p10-formula-static">, Σ<sub>A</sub>)</span>{expanded && <span className="p10-formula-tail"> · <MathReference id="local_precision">Σ<sub>A</sub><sup>−1</sup> ≈ H<sub>A</sub></MathReference></span>}</div>;
+  if (kind === "fisher") return <div className="p10-formula-line" aria-label="Diagonal Fisher 的逐坐标 observed-label empirical-Fisher 教学示例">{token("task-a-fisher", <>F<sub>A,i</sub></>)} <span>≈</span> <span className="p10-formula-static">{expanded ? <>1/N Σ<sub>n</sub> [ ∂ log p<sub>θA*</sub>(y<sub>n</sub>|x<sub>n</sub>) / ∂θ<sub>i</sub> ]<sup>2</sup></> : <>1/N Σ<sub>n</sub> g<sub>i,n</sub><sup>2</sup></>}</span></div>;
   if (kind === "objective") return <div className="p10-formula-line" aria-label="EWC total objective"><span className="p10-formula-static">L<sub>total</sub> =</span> {token("task-b-loss", <>L<sub>B</sub></>)} <span>+</span> {expanded ? <span className="p10-expanded-penalty">{token("ewc-penalty", "λ")}<span>/2 Σ<sub>i</sub></span> {token("task-a-fisher", <>F<sub>A,i</sub></>)} <span>(</span>{token("current-parameters", <>θ<sub>i</sub></>)}<span>−</span>{token("task-a-anchor", <>θ<sub>A,i</sub>*</>)}<span>)<sup>2</sup></span></span> : token("ewc-penalty", <>λ Ω<sub>A</sub></>)}</div>;
   return <div className="p10-formula-line" aria-label="EWC combined gradient">{token("total-gradient", <>∇L<sub>total</sub></>)} <span>=</span> {token("task-b-gradient", <>g<sub>B</sub></>)} <span>+</span> {token("ewc-gradient", expanded ? <>λ F<sub>A</sub> ⊙ (θ − θ<sub>A</sub>*)</> : <>g<sub>EWC</sub></>)}</div>;
 }
@@ -295,7 +300,7 @@ function MemoryPanel({ activeIndex, selected, onSelect }: {
 }) {
   const items: { id: RuntimeObjectId; symbol: ReactNode; title: string; detail: ReactNode; ready: boolean }[] = [
     { id: "task-a-anchor", symbol: <>θ<sub>A</sub>*</>, title: "Task A 参数锚点", detail: "Task A 结束时复制 · 后续保持固定", ready: activeIndex >= 11 },
-    { id: "task-a-fisher", symbol: <>F<sub>A</sub></>, title: "Fisher 信息", detail: "逐参数敏感性近似 · 参数不更新", ready: activeIndex >= 12 },
+    { id: "task-a-fisher", symbol: <>F<sub>A</sub></>, title: "对角 Fisher", detail: "逐参数敏感性近似 · 参数不更新", ready: activeIndex >= 12 },
     { id: "task-state-a", symbol: <>S<sub>A</sub></>, title: "Task A 状态", detail: <><span>θ<sub>A</sub>* + F<sub>A</sub></span> · Task B 读取</>, ready: activeIndex >= 13 },
   ];
   return <section className="p10-panel p10-memory-panel" aria-label="持久记忆区">
@@ -509,13 +514,13 @@ function MathArea({ state, expandedFormula, setExpandedFormula, onSelect }: {
       {state.math ? <Formula kind={state.math} expanded={expandedFormula} onSelect={onSelect} /> : <p>{state.scene === "fisher" ? "参数固定 · 梯度平方累积 · 不执行 optimizer.step()" : state.scene === "gradient" ? "g_B + g_EWC → g_total → optimizer.step()" : "当前参数 θ 在共享网络中参与前向、Loss 与更新。"}</p>}
     </div>
     <div className="p10-math-principles" aria-label="先验、似然与后验关系">
-      <button type="button" onClick={() => onSelect("current-parameters")}><b>先验分布</b><span>p(θ)</span></button>
-      <button type="button" onClick={() => onSelect("task-a-data")}><b>似然函数</b><span>p(D_A|θ) = ∏ pθ(yₙ|xₙ)</span></button>
-      <button type="button" onClick={() => onSelect("prediction-probabilities")}><b>后验分布</b><span>p(θ|D_A) ∝ p(D_A|θ)p(θ)</span></button>
+      <MathReference id="p_theta"><b>先验分布</b><span>p(θ)</span></MathReference>
+      <MathReference id="p_D_given_theta"><b>条件似然</b><span>p(D_A|θ) = ∏ pθ(yₙ|xₙ)</span></MathReference>
+      <MathReference id="task_a_posterior"><b>后验分布</b><span>p(θ|D_A) ∝ p(D_A|θ)p(θ)</span></MathReference>
     </div>
     <div className="p10-math-supporting">
-      <button type="button" onClick={() => onSelect("task-a-anchor")}><b>Laplace 局部近似</b><span>p(θ|D_A) ≈ N(θ_A*, H_A⁻¹)</span></button>
-      <button type="button" onClick={() => onSelect("task-a-fisher")}><b>Fisher 信息矩阵</b><span>F_A = E[(∇ log pθ(y|x))²]</span></button>
+      <MathReference id="laplace_approximation"><b>Laplace 局部近似</b><span>p(θ|D_A) ≈ N(θ_A*, Σ_A)</span></MathReference>
+      <MathReference id="fisher_information"><b>Diagonal Fisher · 对角 Fisher</b><span>F_A,i ≈ 1/N Σₙ (∂ log pθA*(yₙ|xₙ) / ∂θᵢ)²</span></MathReference>
     </div>
     <button type="button" className="p10-ewc-equation" onClick={() => onSelect("ewc-penalty")}>
       <b>EWC 损失函数 · EWC Loss</b>

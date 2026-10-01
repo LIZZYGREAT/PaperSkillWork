@@ -109,15 +109,15 @@ function TrainingModeComparison() {
 }
 
 const PARAMETER_GROUPS = [
-  { layer: "Layer 1 · 视觉分组", parameters: ["θ₁", "θ₂", "θ₃"] },
-  { layer: "Layer 2 · 视觉分组", parameters: ["θ₄", "θ₅", "θ₆"] },
-  { layer: "Layer 3 · 视觉分组", parameters: ["θ₇", "θ₈", "θ₉"] },
+  { layer: "Layer 1 · 视觉分组", parameters: [{ theta: "θ₁", fisherIndex: 1 }, { theta: "θ₂", fisherIndex: 2 }, { theta: "θ₃", fisherIndex: 3 }] },
+  { layer: "Layer 2 · 视觉分组", parameters: [{ theta: "θ₄", fisherIndex: 4 }, { theta: "θ₅", fisherIndex: 5 }, { theta: "θ₆", fisherIndex: 6 }] },
+  { layer: "Layer 3 · 视觉分组", parameters: [{ theta: "θ₇", fisherIndex: 7 }, { theta: "θ₈", fisherIndex: 8 }, { theta: "θ₉", fisherIndex: 9 }] },
 ];
 
 function ParameterFisherMap() {
   return (
     <div className="p05-parameter-map" role="img" aria-label="每一个参数坐标都对应一个 Fisher 对角值；Layer 仅作视觉分组">
-      {PARAMETER_GROUPS.map((group) => <div className="p05-parameter-map__layer" key={group.layer}><span>{group.layer}</span><div>{group.parameters.map((parameter, index) => <div className="p05-parameter-map__pair" key={parameter}><b>{parameter}</b><i aria-hidden="true">↔</i><strong>F<sub>A,{index + 1}</sub></strong></div>)}</div></div>)}
+      {PARAMETER_GROUPS.map((group) => <div className="p05-parameter-map__layer" key={group.layer}><span>{group.layer}</span><div>{group.parameters.map(({ theta, fisherIndex }) => <div className="p05-parameter-map__pair" key={theta}><b>{theta}</b><i aria-hidden="true">↔</i><strong>F<sub>A,{fisherIndex}</sub></strong></div>)}</div></div>)}
     </div>
   );
 }
