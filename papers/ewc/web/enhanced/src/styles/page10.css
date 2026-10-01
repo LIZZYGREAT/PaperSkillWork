@@ -15,9 +15,10 @@
   --p10-b-pale: #f7ece6;
   --p10-memory: #567791;
   position: relative;
-  width: 100%;
+  width: min(100%, 1760px);
   height: 100%;
   min-height: 620px;
+  margin-inline: auto;
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr) auto;
   gap: 8px;
@@ -344,6 +345,89 @@
 .p10-minimap button.is-current { color: #305f50; font-weight: 700; }
 .p10-minimap button.is-current > i { border: 2px solid #4b7a68; background: #e8f1e8; box-shadow: 0 0 0 2px #cfdfd1; }
 .p10-minimap button:disabled { cursor: default; }
+
+@media (min-width: 1151px) {
+  .p10-header__top { height: 27px; }
+  .p10-back-page { gap: 8px; font-size: 15px; }
+  .p10-header__label { font-size: 12px; }
+  .p10-header__main { gap: 20px; }
+  .p10-header h1 { font-size: clamp(28px, 1.8vw, 32px); }
+  .p10-header__main p { font-size: 16px; }
+  .p10-recall { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 10px 18px 9px; }
+  .p10-recall__chain { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.45fr) auto minmax(0, 1fr); align-items: center; gap: clamp(7px, .9vw, 15px); font-size: 15px; }
+  .p10-recall__chain span { min-width: 0; display: flex; align-items: center; justify-content: center; padding: 8px 10px; border: 1px solid #e2e9e3; border-radius: 6px; background: #f8faf7; text-align: center; }
+  .p10-recall__chain i { font-size: 15px; text-align: center; }
+  .p10-recall p { font-size: 14px; text-align: center; }
+  .p10-phase-bar { gap: 10px; }
+  .p10-phase-bar__label { font-size: 11px; }
+  .p10-phase { gap: clamp(8px, 1.3vw, 22px); }
+  .p10-phase > button { gap: 4px; padding: 4px 5px; }
+  .p10-phase > button b { font-size: 12px; }
+  .p10-phase > button small { font-size: 14px; }
+  .p10-phase-arrow { font-size: 17px; }
+  .p10-execution { gap: 9px; }
+  .p10-execution__heading { min-height: 52px; }
+  .p10-overline { font-size: 11px; }
+  .p10-execution__heading h2 { font-size: clamp(24px, 1.7vw, 29px); }
+  .p10-execution__context > span, .p10-execution__context small { font-size: 12px; }
+  .p10-execution__annotation { min-height: 62px; gap: 13px; padding: 9px 15px; }
+  .p10-annotation-icon { font-size: 12px; }
+  .p10-execution__annotation p { font-size: 16px; }
+  .p10-execution__annotation p small { font-size: 14px; }
+  .p10-review-link { padding: 7px 11px; font-size: 14px !important; }
+  .p10-camera { width: min(100%, 1400px); justify-self: center; grid-template-rows: 25px auto minmax(0, 1fr) 26px; gap: 7px; padding: 11px 15px 9px; }
+  .p10-camera__chrome { font-size: 11px; }
+  .p10-math-rail { gap: 10px 22px; padding: 8px 15px; }
+  .p10-math-rail__head { font-size: 11px; }
+  .p10-math-rail__head button { padding: 6px 9px; font-size: 13px; }
+  .p10-formula-line { font-size: 23px; }
+  .p10-runtime-track { gap: 5px; }
+  .p10-runtime-track__step { gap: 6px; }
+  .p10-node { min-height: 62px; padding: 8px 10px; }
+  .p10-node__eyebrow { font-size: 10px; }
+  .p10-node b { font-size: 15px; }
+  .p10-node__inspect { font-size: 11px; }
+  .p10-flow-arrow { flex-basis: 15px; font-size: 17px; }
+  .p10-fisher-pass { padding: 7px 10px; font-size: 10px; }
+  .p10-fisher-pass b { font-size: 11px; }
+  .p10-scene { gap: 13px; padding: 10px 14px; }
+  .p10-world-ribbon { font-size: 11px; }
+  .p10-world-ribbon small { font-size: 12px; }
+  .p10-task-world { gap: 12px; }
+  .p10-task-world__task { padding: 14px 16px; }
+  .p10-task-world__task > b { font-size: 19px; }
+  .p10-task-world__task > small { font-size: 13px; }
+  .p10-sample-stack { width: 172px; gap: 6px; padding: 12px 14px; }
+  .p10-sample-stack > b { font-size: 22px; }
+  .p10-sample-stack > small, .p10-sample-stack > span { font-size: 12px; }
+  .p10-sample-pixels { width: 78px; height: 78px; }
+  .p10-scene--data > .p10-node { max-width: 200px; min-height: 88px; }
+  .p10-sample-note { max-width: 230px; gap: 6px; font-size: 14px; }
+  .p10-sample-note > b { font-size: 17px; }
+  .p10-sample-note button { padding: 6px 0; font-size: 13px; }
+  .p10-network-layers button, .p10-network-layers > span { padding: 8px 13px; font-size: 14px; }
+  .p10-network-layers button small { font-size: 12px; }
+  .p10-layer-card__heading { font-size: 13px; }
+  .p10-layer-card__shape { font-size: 10px; }
+  .p10-layer-card__anchor, .p10-layer-card__fisher { padding: 6px 8px; font-size: 11px; }
+  .p10-controls { gap: 9px; padding-top: 9px; }
+  .p10-controls__top { gap: 15px; }
+  .p10-breadcrumb { gap: 10px; font-size: 13px; }
+  .p10-breadcrumb button { padding: 6px 9px; font-size: 12px; }
+  .p10-transport, .p10-play-button { min-height: 42px; gap: 9px; padding: 7px 13px; font-size: 15px !important; }
+  .p10-play-button { min-width: 106px; }
+  .p10-state-count { font-size: 13px; }
+  .p10-controls__maps { gap: 19px; }
+  .p10-step-map, .p10-minimap { gap: 10px; }
+  .p10-step-map > span, .p10-minimap > span { font-size: 11px; }
+  .p10-step-map > div { gap: 5px; }
+  .p10-step-map button { height: 9px; }
+  .p10-step-map button.is-current { height: 13px; }
+  .p10-minimap button { gap: 7px; padding: 6px 8px; font-size: 10px; }
+  .p10-minimap button > i { width: 11px; height: 11px; }
+  .p10-camera__footer { font-size: 12px; }
+  .p10-camera__footer button { padding: 5px 9px; font-size: 12px; }
+}
 .p10-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
 .p10-overlay { position: fixed; z-index: 210; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(15, 35, 36, .65); backdrop-filter: blur(7px); }
