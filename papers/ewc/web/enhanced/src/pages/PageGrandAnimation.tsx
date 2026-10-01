@@ -43,7 +43,7 @@ const STATES: AnimationState[] = [
   { id: "task-b-arrives", title: "Task B 从旧参数继续", short: "Task B arrives", phase: "task-b", task: "TASK B", camera: "TRACK → TASK B", annotation: "Task B 使用新的数据 D_B，但同一个模型从 Task A 训练得到的参数状态继续学习。", why: "旧任务约束来自保存的 S_A；Task B 的 batch 仍只来自当前任务数据。", scene: "task-b", focus: ["task-b-data", "neural-network", "task-b-loss", "persistent-memory"] },
   { id: "ewc-objective", title: "组装 Task B 的 EWC 目标", short: "EWC Objective", phase: "task-b", task: "TASK B · EWC OBJECTIVE", camera: "RUNTIME + MEMORY FOCUS", annotation: "Task B Loss 与 Fisher 加权的旧任务参数约束合并。F_A,i 逐参数变化，λ 缩放整体约束。", why: "新任务目标来自 L_B；旧任务的 Anchor 与 Fisher 来自 Memory Rail 中的 S_A。", scene: "objective", focus: ["task-b-loss", "current-parameters", "task-a-anchor", "task-a-fisher", "ewc-penalty", "persistent-memory"], math: "objective", checkpoint: true, review: { page: "page-06-ewc-objective", anchor: "ewc-objective", label: "回顾 Page 6 · EWC Objective" } },
   { id: "combined-gradient", title: "两路梯度在 Junction 汇合", short: "Gradient Junction", phase: "task-b", task: "TASK B · OPTIMIZATION", camera: "GRADIENT JUNCTION FOCUS", annotation: "EWC 不冻结参数。Task B Gradient 与 EWC Gradient 汇合成 Total Gradient，再交给 Optimizer 更新当前 θ。", why: "EWC 改变 Optimizer 接收的 Total Gradient，而不是替换 Optimizer。", scene: "gradient", focus: ["task-b-gradient", "ewc-gradient", "total-gradient", "optimizer", "current-parameters"], math: "gradient", checkpoint: true, review: { page: "page-06-ewc-objective", anchor: "gradient-junction", label: "回顾 Page 6 · Gradient Junction" } },
-  { id: "continual-loop", title: "保存 Task B，再进入 Task C", short: "Continual Loop", phase: "continual", task: "TASK B → C", camera: "WORLD VIEW", annotation: "Task B 完成后，保存 θ_B* 并估计 F_B，形成 S_B。Task C 到来时，旧任务状态继续为当前训练提供约束。", why: "Train → Consolidate → Store → Learn under old-task constraints → Repeat。", scene: "loop", focus: ["task-state-a", "persistent-memory", "current-parameters", "task-b-data"], checkpoint: true, review: { page: "page-07-lifecycle", anchor: "task-a-to-b-to-c", label: "回顾 Page 7 · 生命周期" } },
+  { id: "continual-loop", title: "Task B 结束，Task C 到达", short: "Continual Loop", phase: "continual", task: "TASK B → C", camera: "WORLD VIEW", annotation: "Task B 结束后保存 θ_B*、估计对角 Fisher F_B，并形成 S_B=(θ_B*,F_B)；随后 Task C 数据到达，同一模型在旧任务约束下继续学习。", why: "B Boundary → Store S_B → Task C data → 同一模型继续；目标式是概念性延续，不增加训练数值。", scene: "loop", focus: ["task-state-a", "persistent-memory", "current-parameters", "task-b-data"], checkpoint: true, review: { page: "page-07-lifecycle", anchor: "task-a-to-b-to-c", label: "回顾 Page 7 · 生命周期" } },
 ];
 
 const PHASES: { id: PhaseId; title: string; sub: string; first: number; last: number }[] = [
@@ -179,19 +179,19 @@ function MemoryFormula({ children }: { children: ReactNode }) {
   return <span className="p10-memory-chip__formula">{children}</span>;
 }
 
-function SceneVisual({ state, selected, onSelect }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
+function SceneVisual({ state, selected, onSelect, onComplete }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void; onComplete?: () => void }) {
   const focus = state.focus;
   if (state.scene === "overview" || state.scene === "loop") return <div className={`p10-scene p10-scene--overview ${state.scene === "loop" ? "p10-scene--completed" : ""}`}>
-    <div className="p10-world-ribbon"><span>{state.scene === "loop" ? "FULL WORLD VIEW · EWC LIFECYCLE COMPLETE" : "WORLD VIEW · TRAINING TIME MOVES LEFT → RIGHT"}</span><small>one shared model · persistent task memory</small></div>
+    <div className="p10-world-ribbon"><span>{state.scene === "loop" ? "STATE 18 · BOUNDARY → STORE → CONTINUE" : "WORLD VIEW · TRAINING TIME MOVES LEFT → RIGHT"}</span><small>one shared model · persistent task memory</small></div>
     <div className="p10-task-world">
       <div className="p10-task-world__task is-task-a"><span>01</span><b>Task A</b><small>ordinary training</small><i>D<sub>A</sub> → θ<sub>A</sub>*</i></div>
       <div className="p10-task-world__boundary"><span>CONSOLIDATE A</span><b>Anchor + Fisher</b><i>S<sub>A</sub></i></div>
       <div className="p10-task-world__task is-task-b"><span>02</span><b>Task B</b><small>new loss + old constraint</small><i>L<sub>B</sub> + Ω<sub>A</sub></i></div>
-      <div className="p10-task-world__boundary"><span>CONSOLIDATE B</span><b>Anchor + Fisher</b><i>S<sub>B</sub></i></div>
-      <div className="p10-task-world__task is-task-c"><span>03</span><b>Task C</b><small>continual loop</small><i>L<sub>C</sub> + Ω<sub>A</sub> + Ω<sub>B</sub></i></div>
+      <div className="p10-task-world__boundary"><span>{state.scene === "loop" ? "TASK B ENDED" : "CONSOLIDATE B"}</span><b>{state.scene === "loop" ? <>save θ<sub>B</sub>* → estimate diag F<sub>B</sub></> : "Anchor + Fisher"}</b><i>{state.scene === "loop" ? <>S<sub>B</sub> = (θ<sub>B</sub>*, F<sub>B</sub>)</> : <>S<sub>B</sub></>}</i></div>
+      <div className="p10-task-world__task is-task-c"><span>03</span><b>Task C</b><small>{state.scene === "loop" ? <>D<sub>C</sub> arrives · same model continues</> : "continual loop"}</small><i>L<sub>C</sub>(θ) + Ω<sub>A</sub>(θ) + Ω<sub>B</sub>(θ)</i>{state.scene === "loop" && <em>conceptual continuation</em>}</div>
     </div>
     <div className="p10-memory-rail"><span className="p10-memory-rail__label">PERSISTENT MEMORY RAIL</span><button className="p10-memory-chip is-ready" onClick={() => onSelect("task-state-a")}><MemoryFormula>S<sub>A</sub> · θ<sub>A</sub>* + F<sub>A</sub></MemoryFormula></button>{state.scene === "loop" ? <button className="p10-memory-chip is-ready is-task-b" onClick={() => onSelect("persistent-memory")}><MemoryFormula>S<sub>B</sub> · θ<sub>B</sub>* + F<sub>B</sub></MemoryFormula></button> : <div className="p10-memory-chip is-pending"><MemoryFormula>S<sub>B</sub></MemoryFormula><small>after Task B</small></div>}</div>
-    {state.scene === "loop" && <div className="p10-world-complete">Train <i>→</i> Consolidate <i>→</i> Store <i>→</i> Learn under old-task constraints <i>→</i> Repeat · Task C reads S<sub>A</sub> and S<sub>B</sub>.</div>}
+    {state.scene === "loop" && <div className="p10-world-complete"><span>Task C reads S<sub>A</sub> and S<sub>B</sub>; the shared model continues.</span><button className="p10-world-complete__action" type="button" onClick={onComplete}>完成本次执行 / View Summary</button></div>}
   </div>;
   if (state.scene === "posterior" || state.scene === "laplace") return <div className={`p10-scene p10-scene--math ${state.scene === "posterior" ? "is-posterior" : "is-laplace"}`}>
     <div className="p10-math-view-banner"><b>MATHEMATICAL VIEW</b><span>解释当前训练状态 · 程序不会显式构造完整 Posterior</span></div>
@@ -582,7 +582,7 @@ function FirstVisitOverlay({ onStart }: { onStart: () => void }) {
   </div>;
 }
 
-function FinalSummary({ onReplay, onExplore }: { onReplay: () => void; onExplore: () => void }) {
+function FinalSummary({ onReplay, onExplore, onReturn }: { onReplay: () => void; onExplore: () => void; onReturn: () => void }) {
   return <section className="p10-completion" aria-labelledby="p10-final-title">
     <span className="p10-completion__eyebrow">FULL EWC EXECUTION · COMPLETE</span>
     <h3 id="p10-final-title">旧任务约束，进入同一个优化过程</h3>
@@ -593,6 +593,7 @@ function FinalSummary({ onReplay, onExplore }: { onReplay: () => void; onExplore
       <span>两路梯度共同决定参数更新</span>
     </div>
     <div className="p10-completion__actions">
+      <button type="button" onClick={onReturn}>返回 State 18</button>
       <button type="button" onClick={onReplay}>Replay Full Execution ↻</button>
       <button type="button" onClick={onExplore}>Explore Timeline →</button>
     </div>
@@ -607,6 +608,7 @@ export function PageGrandAnimation() {
   const [furthestIndex, setFurthestIndex] = useState(activeIndex);
   const [playing, setPlaying] = useState(false);
   const [replayMode, setReplayMode] = useState(false);
+  const [showCompletionSummary, setShowCompletionSummary] = useState(false);
   const [expandedFormula, setExpandedFormula] = useState(false);
   const [activeObject, setActiveObject] = useState<RuntimeObjectId | undefined>(api.activeRuntimeObject);
   const [announcement, setAnnouncement] = useState("");
@@ -622,6 +624,7 @@ export function PageGrandAnimation() {
     setActiveObject(undefined);
     setFurthestIndex((furthest) => Math.max(furthest, clampedIndex));
     setExpandedFormula(false);
+    setShowCompletionSummary(false);
     setAnnouncement(`状态 ${clampedIndex + 1}：${next.title}`);
     if (!options.replay) { setPlaying(false); setReplayMode(false); }
   };
@@ -641,18 +644,19 @@ export function PageGrandAnimation() {
     if (!playing) return;
     const nextIndex = Math.min(activeIndex + 1, STATES.length - 1);
     const nextState = STATES[nextIndex];
-    const nextPhase = TIMELINE_PHASES.find((phase) => nextIndex >= phase.first && nextIndex <= phase.last);
     const timer = window.setTimeout(() => {
       api.openReference({ animationStateId: nextState.id });
       setFurthestIndex((furthest) => Math.max(furthest, nextIndex));
       setAnnouncement(`状态 ${nextIndex + 1}：${nextState.title}`);
-      if (nextIndex === STATES.length - 1 || nextIndex === nextPhase?.last) {
+      if (nextIndex === STATES.length - 1 || (!replayMode && nextState.checkpoint)) {
         setPlaying(false);
         setReplayMode(false);
       }
     }, PLAYBACK_INTERVAL_MS);
     return () => window.clearTimeout(timer);
   }, [playing, replayMode, activeIndex, api]);
+
+  useEffect(() => { setShowCompletionSummary(false); }, [activeIndex]);
 
   useEffect(() => {
     if (api.currentPage !== "page-10-grand-animation") return;
@@ -715,9 +719,9 @@ export function PageGrandAnimation() {
         </div>
         <div className="p10-workbench__network"><NeuralWorkbench state={state} selected={activeObject} onSelect={selectObject} /></div>
         <div className="p10-workbench__focus" aria-label="当前步骤细节">
-          {pageIsFinal && !playing ? <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} /> : <>
+          {showCompletionSummary ? <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} onReturn={() => goTo(STATES.length - 1)} /> : <>
             <div className="p10-workbench__focus-head"><span>当前步骤细节 · {state.camera}</span>{(state.scene === "posterior" || state.scene === "laplace") && <button type="button" onClick={() => goTo(10)}>返回 Runtime ↑</button>}</div>
-            <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} />
+            <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} onComplete={() => setShowCompletionSummary(true)} />
           </>}
         </div>
         <ParameterStrip state={state} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />

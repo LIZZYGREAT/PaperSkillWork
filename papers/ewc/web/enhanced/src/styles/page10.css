@@ -113,6 +113,7 @@
 .p10-task-world__task > b { color: #e6f0e6; font-size: 17px; }
 .p10-task-world__task > small { color: #abc0b4; font-size: 11px; }
 .p10-task-world__task > i { margin-top: 5px; color: #c8d4cb; font: normal 12px Georgia, serif; }
+.p10-task-world__task > em { grid-column: 2; color: #b8cbd1; font-size: 9px; font-style: normal; line-height: 1.2; }
 .p10-task-world__task.is-task-b { border-color: rgba(196, 131, 99, .45); background: rgba(111, 62, 48, .43); }
 .p10-task-world__task.is-task-b > span { color: #e2a88b; }
 .p10-task-world__task.is-task-c { border-color: rgba(148, 169, 197, .4); background: rgba(54, 74, 94, .42); }
@@ -128,8 +129,8 @@
 .p10-memory-chip small { margin-left: 8px; color: #bdd1c0; font: 10px "DM Mono", Consolas, monospace; }
 .p10-memory-chip.is-pending { border-style: dashed; color: #a5b7ad; background: rgba(255,255,255,.025); }
 .p10-memory-chip.is-task-b { border-color: rgba(195, 126, 93, .52); background: rgba(112, 62, 46, .56); }
-.p10-world-complete { padding: 6px 10px; border-radius: 4px; color: #c2d3c8; background: rgba(224, 235, 221, .065); font-size: 11px; text-align: center; }
-.p10-world-complete i { color: #9cc0a3; font: normal 12px "DM Mono", Consolas, monospace; }
+.p10-world-complete { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 4px; color: #c2d3c8; background: rgba(224, 235, 221, .065); font-size: 11px; line-height: 1.35; }
+.p10-world-complete__action { flex: 0 0 auto; padding: 5px 8px; border: 1px solid #9fc1b0; border-radius: 4px; color: #fff; background: #285d55; font: inherit; font-size: 10px; cursor: pointer; }
 .p10-camera__footer { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 10px; color: #87a096; font-size: 10px; line-height: 1.3; }
 .p10-camera__footer button { padding: 3px 7px; border: 1px solid rgba(170, 199, 182, .24); border-radius: 4px; color: #bdd1c6; background: rgba(255,255,255,.045); font-size: 10px; cursor: pointer; }
 .p10-camera__footer button:disabled { opacity: .45; cursor: default; }
@@ -549,6 +550,8 @@
   .p10-task-world__boundary span { font-size: 7px; }
   .p10-task-world__boundary b, .p10-task-world__boundary i { font-size: 10px; }
   .p10-scene--overview .p10-memory-rail { margin-top: 3px; }
+  .p10-world-complete { align-items: stretch; flex-direction: column; }
+  .p10-world-complete__action { align-self: flex-start; }
   .p10-network-detail__heading { align-items: flex-start; flex-direction: column; gap: 3px; }
   .p10-network-layers { justify-content: flex-start; gap: 5px; }
   .p10-network-layers button, .p10-network-layers > span { padding: 5px 6px; font-size: 10px; }
@@ -998,6 +1001,7 @@ button.p10-memory-item { cursor: pointer; }
 .p10-workbench__focus .p10-task-world__task > b { color: #193f49; }
 .p10-workbench__focus .p10-task-world__task > small { color: #4c6970; }
 .p10-workbench__focus .p10-task-world__task > i { color: #34565f; }
+.p10-workbench__focus .p10-task-world__task > em { color: #425e6b; }
 .p10-workbench__focus .p10-task-world__task.is-task-b { border-color: #d8a184; background: #fff0e8; }
 .p10-workbench__focus .p10-task-world__task.is-task-b > span { color: #a9542d; }
 .p10-workbench__focus .p10-task-world__task.is-task-c { border-color: #a8bece; background: #edf3f8; }
@@ -1012,6 +1016,7 @@ button.p10-memory-item { cursor: pointer; }
 .p10-workbench__focus .p10-memory-chip.is-pending small { color: #4f7066; }
 .p10-workbench__focus .p10-world-complete { color: #335a4f; background: #e6f0e8; }
 .p10-workbench__focus .p10-world-complete i { color: #287660; }
+.p10-workbench__focus .p10-world-complete__action { border-color: #1d5b68; color: #fff; background: #1d5b68; }
 .p10-timeline__step { grid-template-columns: minmax(0,1fr); }
 .p10-timeline__step > b { width: 100%; min-width: 0; justify-self: stretch; overflow-wrap: anywhere; }
 .p10-net-node__eyebrow { max-width: 100%; overflow-wrap: anywhere; }
