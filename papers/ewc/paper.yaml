@@ -26,7 +26,7 @@ paper:
   source_hash: 5E181839191AB4582DA2B5FF9666F5222E40B8B8D2F1CDF4FA7100B3A58D7A29
 workflow:
   version: 3
-  current_stage: W8
+  current_stage: W9
   stages:
     W0_source_intake:
       status: complete
@@ -56,7 +56,8 @@ workflow:
       reviewed_by: 甘文杰
       note: 测试页demo通过
     W8_full_implementation:
-      status: pending
+      status: complete
+      completed_by: automation
     W9_final_audit:
       status: pending
     W10_upstream_preflight:
