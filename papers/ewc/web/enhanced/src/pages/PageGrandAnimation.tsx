@@ -305,10 +305,13 @@ function NeuralWorkbench({ state, selected, onSelect }: { state: AnimationState;
         <button type="button" className={`p10-feature-block ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`} onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}>
           <span className="p10-feature-stack"><i /><i /><i /></span><b>Conv 1</b><small>θ¹ · 3×3</small>
         </button>
+        <span className="p10-feature-link" aria-hidden="true" />
         <span className="p10-feature-op">ReLU</span>
+        <span className="p10-feature-link" aria-hidden="true" />
         <button type="button" className={`p10-feature-block p10-feature-block--second ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`} onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}>
           <span className="p10-feature-stack"><i /><i /><i /></span><b>Conv 2</b><small>θ² · 3×3</small>
         </button>
+        <span className="p10-feature-link" aria-hidden="true" />
         <span className="p10-feature-op">Pool</span>
       </div>
       <FlowArrow reverse={reverse} />
@@ -333,10 +336,10 @@ function NeuralWorkbench({ state, selected, onSelect }: { state: AnimationState;
 }
 
 function ParameterStrip({ state, selected, onSelect }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
-  const showAnchor = state.focus.includes("task-a-anchor") || state.scene === "objective" || state.scene === "gradient";
+  const showAnchor = state.focus.includes("task-a-anchor") || state.scene === "fisher" || state.scene === "objective" || state.scene === "gradient";
   const showFisher = state.focus.includes("task-a-fisher") || state.scene === "objective" || state.scene === "fisher";
   return <div className="p10-parameter-strip" aria-label="模型参数与存储参数">
-    <span className="p10-parameter-strip__label">模型参数（可交互）<small>Layer grouping · EWC 仍逐参数作用</small></span>
+    <span className="p10-parameter-strip__label">模型参数（可交互）<small>形状仅示意 · EWC 逐参数作用</small></span>
     {[
       { label: "卷积层 θ¹", shape: "[64, 1, 3, 3]" },
       { label: "卷积层 θ²", shape: "[64, 64, 3, 3]" },

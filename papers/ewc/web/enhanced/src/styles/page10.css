@@ -607,7 +607,7 @@
   width: min(100%, 1920px);
   min-height: 100svh;
   height: auto;
-  grid-template-rows: auto minmax(535px, 1fr) 150px;
+  grid-template-rows: auto minmax(535px, 1fr) 145px;
   gap: 9px;
   padding: 10px clamp(10px, 1vw, 18px) 12px;
   overflow: visible;
@@ -930,3 +930,173 @@ button.p10-memory-item { cursor: pointer; }
   .p10-timeline__step > b { font-size: 10px; }
   .p10-completion__takeaways { grid-template-columns: 1fr; }
 }
+
+/* Dense diagram labels stay readable, and state details expand instead of clipping. */
+.p10-feature-group { grid-template-columns: minmax(33px,1fr) 7px minmax(22px,.62fr) 7px minmax(33px,1fr) 7px minmax(20px,.48fr); }
+.p10-feature-link { position: relative; width: 8px; height: 1px; display: block; background: #66868b; }
+.p10-feature-link::after { content: ""; position: absolute; top: -2px; right: 0; width: 4px; height: 4px; border-top: 1px solid #66868b; border-right: 1px solid #66868b; transform: rotate(45deg); }
+.p10-neural-workbench__flow { grid-template-columns: minmax(58px,.58fr) 24px minmax(142px,1.42fr) 20px minmax(62px,.68fr) 20px minmax(78px,.86fr); }
+.p10-workbench { grid-template-rows: auto auto minmax(220px,1fr) minmax(190px,auto) auto; }
+.p10-workbench__focus .p10-scene { min-height: 190px !important; height: auto; flex: 1 1 auto; overflow: visible; }
+.p10-inspector-content { overflow: visible; }
+.p10-data-card > small, .p10-data-card__caption, .p10-data-card__inspect { font-size: 10px; }
+.p10-memory-item__copy small, .p10-memory-item__status, .p10-panel-note { font-size: 10px; }
+.p10-net-node__eyebrow, .p10-net-node > small, .p10-feature-block > small, .p10-feature-op { font-size: 10px; }
+.p10-zoom-heading span, .p10-neural-workbench__zoom > small { font-size: 10px; }
+.p10-parameter-chip b, .p10-parameter-chip small { font-size: 9px; }
+.p10-inspector-content__top, .p10-inspector-content__top button, .p10-inspector-content > small, .p10-review-shortcut { font-size: 10px; }
+.p10-reference-links > span, .p10-reference-links button { font-size: 10px; }
+.p10-timeline__band small, .p10-timeline__step > b { font-size: 10px; }
+.p10-workbench__focus .p10-parameter-inspectors dt, .p10-workbench__focus .p10-parameter-inspectors dd { font-size: 9px; }
+.p10-data-card { grid-template-columns: minmax(0,1fr); }
+.p10-data-card__head { width: auto; min-width: 0; justify-self: stretch; }
+.p10-workbench__focus-head { color: #365660; }
+.p10-workbench__focus .p10-scene--overview { color: #294d56; }
+.p10-workbench__focus .p10-world-ribbon { color: #30545c; }
+.p10-workbench__focus .p10-world-ribbon small { color: #496c70; }
+.p10-workbench__focus .p10-task-world__task { border-color: #9cbab0; color: #22434b; background: #e6f1eb; }
+.p10-workbench__focus .p10-task-world__task > span { color: #35695f; }
+.p10-workbench__focus .p10-task-world__task > b { color: #193f49; }
+.p10-workbench__focus .p10-task-world__task > small { color: #4c6970; }
+.p10-workbench__focus .p10-task-world__task > i { color: #34565f; }
+.p10-workbench__focus .p10-task-world__task.is-task-b { border-color: #d8a184; background: #fff0e8; }
+.p10-workbench__focus .p10-task-world__task.is-task-b > span { color: #a9542d; }
+.p10-workbench__focus .p10-task-world__task.is-task-c { border-color: #a8bece; background: #edf3f8; }
+.p10-workbench__focus .p10-task-world__task.is-task-c > span { color: #3e6179; }
+.p10-workbench__focus .p10-task-world__boundary { color: #65502f; }
+.p10-workbench__focus .p10-task-world__boundary span { color: #8c622e; }
+.p10-workbench__focus .p10-task-world__boundary b { color: #455e60; }
+.p10-workbench__focus .p10-task-world__boundary i { color: #3e625b; }
+.p10-workbench__focus .p10-memory-rail { border-color: #c0d0c9; background: #e5ece8; }
+.p10-workbench__focus .p10-memory-rail__label { color: #46656b; }
+.p10-workbench__focus .p10-memory-chip.is-pending { border-color: #b8c8c0; color: #526c65; background: #f5f8f5; }
+.p10-workbench__focus .p10-memory-chip.is-pending small { color: #4f7066; }
+.p10-workbench__focus .p10-world-complete { color: #335a4f; background: #e6f0e8; }
+.p10-workbench__focus .p10-world-complete i { color: #287660; }
+.p10-timeline__step { grid-template-columns: minmax(0,1fr); }
+.p10-timeline__step > b { width: 100%; min-width: 0; justify-self: stretch; overflow-wrap: anywhere; }
+.p10-net-node__eyebrow { max-width: 100%; overflow-wrap: anywhere; }
+.p10-net-node--input .p10-sample-matrix { width: min(100%,62px); }
+@media (max-width: 1500px) {
+  .p10-neural-workbench { grid-template-columns: minmax(0,1fr); }
+  .p10-neural-workbench__flow { grid-template-columns: minmax(58px,.58fr) 24px minmax(185px,1.7fr) 20px minmax(62px,.68fr) 20px minmax(78px,.86fr); }
+}
+@media (max-width: 920px) {
+  .p10-timeline__step::before { display: none; }
+}
+@media (max-width: 620px) {
+  .p10-neural-workbench__flow { grid-template-columns: minmax(34px,.5fr) 8px minmax(160px,1.75fr) 8px minmax(42px,.6fr) 8px minmax(50px,.72fr); gap: 1px; }
+  .p10-feature-group { grid-template-columns: minmax(28px,1fr) 5px minmax(18px,.52fr) 5px minmax(28px,1fr) 5px minmax(20px,.42fr); gap: 2px; }
+  .p10-feature-op { font-size: 9px; }
+  .p10-feature-block > b { max-width: 100%; font-size: 9px; overflow-wrap: anywhere; }
+  .p10-feature-block > small { max-width: 100%; font-size: 8px; overflow-wrap: anywhere; white-space: normal; }
+  .p10-net-node__eyebrow { font-size: 9px; }
+  .p10-net-node--fc > button { width: 100%; }
+  .p10-fc-bars { gap: 3px; }
+  .p10-fc-bars i { width: 7px; }
+  .p10-feature-stack { width: 24px; height: 24px; }
+  .p10-feature-stack i { width: 18px; height: 18px; }
+  .p10-feature-stack i:first-child { transform: translate(-3px,3px); }
+  .p10-feature-stack i:nth-child(2) { transform: translate(0,0); }
+  .p10-feature-stack i:nth-child(3) { transform: translate(3px,-3px); }
+  .p10-net-node--fc > button { grid-template-columns: minmax(0,1fr); }
+  .p10-net-node--fc > button > b, .p10-net-node--fc > button > small { max-width: 100%; overflow-wrap: anywhere; }
+  .p10-net-node--fc > button > b { font-size: 10px; }
+  .p10-net-node--fc > button > small { font-size: 9px; }
+}
+
+/* Runtime focus details use a light workbench; keep every state at the same readable contrast. */
+.p10-workbench__focus .p10-scene,
+.p10-workbench__focus .p10-scene * {
+  color: #294a53 !important;
+}
+.p10-workbench__focus .p10-scene .p10-world-ribbon,
+.p10-workbench__focus .p10-scene .p10-memory-rail__label,
+.p10-workbench__focus .p10-scene .p10-network-detail__heading,
+.p10-workbench__focus .p10-scene .p10-training-status span,
+.p10-workbench__focus .p10-scene .p10-training-status small,
+.p10-workbench__focus .p10-scene .p10-layer-card__shape span,
+.p10-workbench__focus .p10-scene .p10-sample-stack > small,
+.p10-workbench__focus .p10-scene .p10-sample-stack > span,
+.p10-workbench__focus .p10-scene .p10-probability-note small,
+.p10-workbench__focus .p10-scene .p10-boundary-stamp small,
+.p10-workbench__focus .p10-scene .p10-posterior-cloud i,
+.p10-workbench__focus .p10-scene .p10-gaussian__label,
+.p10-workbench__focus .p10-scene .p10-memory-explain > small,
+.p10-workbench__focus .p10-scene .p10-gradient-example small {
+  color: #526c72 !important;
+}
+.p10-workbench__focus .p10-scene .p10-large-arrow,
+.p10-workbench__focus .p10-scene .p10-network-layers i,
+.p10-workbench__focus .p10-scene .p10-semantic-arrow,
+.p10-workbench__focus .p10-scene .p10-fisher-flow,
+.p10-workbench__focus .p10-scene .p10-loop-sequence i {
+  color: #176b75 !important;
+}
+.p10-workbench__focus .p10-scene .p10-sample-stack,
+.p10-workbench__focus .p10-scene .p10-node,
+.p10-workbench__focus .p10-scene .p10-network-layers button,
+.p10-workbench__focus .p10-scene .p10-network-layers > span,
+.p10-workbench__focus .p10-scene .p10-score-card,
+.p10-workbench__focus .p10-scene .p10-anchor-clone > div:not(.p10-clone-branch),
+.p10-workbench__focus .p10-scene .p10-fixed-sample,
+.p10-workbench__focus .p10-scene .p10-parameter-inspectors article,
+.p10-workbench__focus .p10-scene .p10-task-b-model,
+.p10-workbench__focus .p10-scene .p10-gradient-input,
+.p10-workbench__focus .p10-scene .p10-gradient-total,
+.p10-workbench__focus .p10-scene .p10-task-c-node {
+  border-color: #a8c0b8;
+  background: #eaf2ed;
+}
+.p10-workbench__focus .p10-scene .p10-network-layers button,
+.p10-workbench__focus .p10-scene .p10-score-card,
+.p10-workbench__focus .p10-scene .p10-task-b-model,
+.p10-workbench__focus .p10-scene .p10-gradient-total { background: #e7f1eb; }
+.p10-workbench__focus .p10-scene .p10-layer-card,
+.p10-workbench__focus .p10-scene .p10-parameter-inspectors article,
+.p10-workbench__focus .p10-scene .p10-loop-state { border-color: #c3d2cd; background: #f0f5f2; }
+.p10-workbench__focus .p10-scene .p10-parameter-cells { border-color: #b7cbc2; background: #e0ece6; }
+.p10-workbench__focus .p10-scene .p10-layer-card__anchor { border-color: #d8c08e; background: #fbf2dc; }
+.p10-workbench__focus .p10-scene .p10-layer-card__fisher { border-color: #b4c6d3; background: #e7f0f5; }
+.p10-workbench__focus .p10-scene .p10-fisher-pass { border-color: #d4bd97; background: #f5ead7; }
+.p10-workbench__focus .p10-scene .p10-softmax-card,
+.p10-workbench__focus .p10-scene .p10-fisher-accumulator,
+.p10-workbench__focus .p10-scene .p10-task-b-loss { border-color: #aec3d0; background: #eaf1f6; }
+.p10-workbench__focus .p10-scene .p10-boundary-stamp,
+.p10-workbench__focus .p10-scene .p10-loss-card,
+.p10-workbench__focus .p10-scene .p10-anchor-copy,
+.p10-workbench__focus .p10-scene .p10-fisher-square,
+.p10-workbench__focus .p10-scene .p10-task-b-source,
+.p10-workbench__focus .p10-scene .p10-objective-input.is-old,
+.p10-workbench__focus .p10-scene .p10-objective-result,
+.p10-workbench__focus .p10-scene .p10-gradient-input.is-ewc {
+  border-color: #ddb89e;
+  background: #fff0e6;
+}
+.p10-workbench__focus .p10-scene .p10-fisher-square,
+.p10-workbench__focus .p10-scene .p10-anchor-copy,
+.p10-workbench__focus .p10-scene .p10-task-b-source,
+.p10-workbench__focus .p10-scene .p10-objective-input.is-old,
+.p10-workbench__focus .p10-scene .p10-gradient-input.is-ewc { color: #704630 !important; }
+.p10-workbench__focus .p10-scene .p10-posterior-cloud {
+  border-color: #a8c6bc;
+  color: #284f52 !important;
+  background: radial-gradient(ellipse, #dcebe4, #edf4ef 76%);
+}
+.p10-workbench__focus .p10-scene .p10-posterior-cloud.is-quiet { opacity: .85; }
+.p10-workbench__focus .p10-scene .p10-point-object { border-color: #d4b986; background: #fbf2dc; }
+.p10-workbench__focus .p10-scene .p10-gaussian ellipse { stroke: #6f9981; opacity: 1; }
+.p10-workbench__focus .p10-scene .p10-gaussian path { stroke: #698a82; }
+.p10-workbench__focus .p10-scene .p10-memory-rail { border-color: #c2d1ca; background: #e7efea; }
+.p10-workbench__focus .p10-scene .p10-memory-chip { border-color: #a8c2b3; background: #dcebe1; }
+.p10-workbench__focus .p10-scene .p10-memory-chip.is-pending { border-color: #bacac3; background: #f4f7f5; }
+.p10-workbench__focus .p10-scene .p10-iteration-pulse { border: 1px solid #bfcec7; background: #eaf1ec; }
+.p10-workbench__focus .p10-scene .p10-junction-core { border-color: #d2bd8b; background: #f7efd9; }
+.p10-workbench__focus .p10-scene .p10-gradient-optimizer { border-color: #d8b29d; background: #f9eae2; }
+.p10-workbench__focus .p10-scene .p10-math-view-banner { border-color: #d7c39c; background: #f8f1df; }
+.p10-workbench__focus .p10-scene .p10-task-world__task.is-task-b { border-color: #d8a184; background: #fff0e8; }
+.p10-workbench__focus .p10-scene .p10-task-world__task.is-task-c { border-color: #a8bece; background: #edf3f8; }
+.p10-workbench__focus .p10-scene .p10-memory-chip.is-task-b { border-color: #d8a184; background: #fff0e8; }
+.p10-workbench__network .p10-net-node__eyebrow { color: #4a6269; }
+.p10-workbench__network .p10-net-node > small,
+.p10-workbench__network .p10-feature-block > small { color: #4c656b; }
