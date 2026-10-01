@@ -159,8 +159,8 @@ export function PageLifecycle() {
         </article>
         <article>
           <span className="p07-overline">NEXT TASK · READ STORED STATE</span>
-          <h3>Task B 不重读 Task A 的原始样本</h3>
-          <p>Task B 的 batch 来自 D<sub>B</sub>；旧任务通过 Anchor 与 Fisher 进入约束。到 Task C 时，论文允许分别保留或求和旧任务的二次惩罚。</p>
+          <h3>EWC 约束不依赖把旧样本混入当前 batch</h3>
+          <p>EWC penalty 本身不要求把 Task A 样本混入当前 Task-B batch；旧任务约束由保存的 Anchor 与 Fisher 提供。论文的 Atari 系统另有 Replay 机制，见 Page 9。到 Task C 时，论文允许分别保留或求和旧任务的二次惩罚。</p>
         </article>
       </section>
 

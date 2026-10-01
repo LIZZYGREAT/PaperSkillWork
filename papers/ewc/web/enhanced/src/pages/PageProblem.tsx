@@ -195,7 +195,7 @@ export function PageProblem() {
         <p className="ewc-page-header__dek">
           普通监督学习通常让训练数据共同参与优化。<ReferenceTrigger id="continual_learning">持续学习</ReferenceTrigger>面对的情况是：任务或数据按时间到来，而旧数据未必能一直保留。同一个神经网络需要继续适应新任务，同时尽量保持先前的能力。关键在于，后续训练会不会改动旧任务也依赖的参数。
         </p>
-        <p className="p01-task-settings"><span>常见评测设置</span> Task-IL、Domain-IL 和 Class-IL 在任务身份是否可用、任务与输出如何组织等方面有所不同；这一页先聚焦它们共享的情形：同一模型依次处理多个任务。</p>
+        <p className="p01-task-settings"><span>常见评测设置</span> 不同持续学习设置对任务边界、输入与输出空间有不同假设；本页先看它们共同面对的问题：同一模型依次学习任务，参数持续更新。</p>
       </header>
 
       <section className="p01-sequence" aria-labelledby="p01-sequence-title">

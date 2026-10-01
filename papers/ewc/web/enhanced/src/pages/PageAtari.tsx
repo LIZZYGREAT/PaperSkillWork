@@ -179,7 +179,7 @@ export function PageAtari() {
           <article className="p09-evidence-reading__performance">
             <span className="p09-overline">1 · CONTINUAL RL PERFORMANCE</span>
             <h3>多游戏分数属于完整 Atari 系统</h3>
-            <p>论文比较了从 19 款游戏池中抽取十款形成的连续序列。EWC-based 系统的总分高于 no-penalty 对照；系统还包含 Replay、Task Recognition 与 task-specific 参数。该结果不能单独归因于 EWC。</p>
+            <p>Figure 3B 的绝对多游戏成绩属于完整 Atari 系统：DQN、Replay、Task Recognition、task-specific gains / biases 与 EWC。保留其余系统机制、对比有无 EWC penalty 后，EWC 与 no-EWC 曲线在重玩已保护游戏时分开，支持 EWC 在该设置下有助于任务保持。</p>
             <p className="p09-evidence-caveat">对照十个分别训练的 DQN 时，Atari EWC agent 没有达到独立网络的分数。</p>
           </article>
           <article className="p09-evidence-reading__perturbation">
@@ -211,6 +211,7 @@ export function PageAtari() {
           <div><dt>Task Discovery</dt><dd>EWC 需要已知任务切换信号。论文 Atari 系统用单独的 Task Recognition 机制识别游戏。</dd></div>
           <div><dt>Replay</dt><dd>Atari 系统继续使用各任务的 Replay buffer。EWC 提供跨 Task 的参数约束，没有替代经验回放。</dd></div>
           <div><dt>有限模型容量</dt><dd>旧任务约束可能减少后续任务可自由调整的参数方向。作者将与十个独立网络的分数差距和不确定性近似联系起来，但这只是可能解释。</dd></div>
+          <div><dt>结果范围</dt><dd>这些结果来自本文 Atari 游戏序列与系统设置；它们支持 EWC 在该对照条件下的贡献，但不能直接推广到所有 continual RL 场景。</dd></div>
           <div><dt>类别增量偏差</dt><dd>这些实验保留 MNIST 的 0–9 标签集合；它们没有评估新增类别下的 Class-Incremental 输出偏差。</dd></div>
           <div><dt>对角 Fisher</dt><dd>它是可计算的近似，忽略参数之间的耦合。Nullspace 扰动结果显示，被估作低敏感的变化仍可能影响表现。</dd></div>
         </dl>

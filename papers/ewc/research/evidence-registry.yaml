@@ -91,11 +91,11 @@ results:
     conditions: "The comparison uses the stated 8x8 and 26x26 pixel permutation settings and network depths."
     allowed_wording: "Present the plotted Fisher-overlap trend under these permutation settings; do not generalize it to all tasks or architectures."
   R03:
-    claim: "The Atari comparison evaluates repeated sequences of ten games sampled from a pool of nineteen and reports higher total scores for the EWC-based agents than for the no-penalty baseline."
+    claim: "The Atari experiment compares agents with and without the EWC penalty over repeated sequences of ten games sampled from a pool of nineteen and reports higher aggregate scores for the EWC condition; absolute performance belongs to the broader Atari system."
     type: PAPER_RESULT
     source_locator: "PDF pp. 5-6, Section 2.2 and Figure 3A-B; Appendix Section 4.2"
-    conditions: "The plotted outcome is for the full Atari system, including task recognition, task-specific parameters, and replay."
-    allowed_wording: "Describe the reported comparison as a result of the full Atari system, not as an EWC-only result."
+    conditions: "The broader system includes task recognition, per-task replay, and task-specific gains and biases; the EWC/no-EWC comparison supports contribution only under this reported Atari setup and does not establish a universal continual-RL result."
+    allowed_wording: "Separate absolute performance of the full system from the comparison that holds its other mechanisms in place and varies the EWC penalty. Describe the comparison as evidence for EWC's contribution to retention under this setup, not as an EWC-only account of absolute scores or a universal result."
   R04:
     claim: "In a single-game Breakout perturbation experiment, inverse-Fisher-shaped perturbations were more robust than uniform perturbations, while Fisher-nullspace perturbations unexpectedly affected performance similarly to inverse-Fisher perturbations."
     type: PAPER_RESULT
