@@ -349,7 +349,7 @@ function FlowGuideLayer({ state, activeIndex }: { state: AnimationState; activeI
           midX: rect.left - bounds.left + rect.width / 2,
         };
       };
-      const bridge = (from: NonNullable<ReturnType<typeof box>>, to: NonNullable<ReturnType<typeof box>>, reverse = false, horizontalEnd = false) => {
+      const bridge = (from: NonNullable<ReturnType<typeof box>>, to: NonNullable<ReturnType<typeof box>>, reverse = false, horizontalEnd = false, startYOffset = 0) => {
         const startX = reverse ? from.left : from.right;
         const endX = reverse ? to.right : to.left;
         const direction = Math.sign(endX - startX) || 1;
@@ -358,7 +358,7 @@ function FlowGuideLayer({ state, activeIndex }: { state: AnimationState; activeI
         const curveEndX = endX - direction * endStub;
         const curveSpan = Math.abs(curveEndX - startX);
         const bend = Math.max(16, Math.min(46, curveSpan * 0.52));
-        const startY = from.midY;
+        const startY = from.midY + startYOffset;
         const endY = to.midY;
         const startBend = horizontalEnd ? Math.min(bend, curveSpan * 0.42) : bend;
         const endBend = horizontalEnd ? Math.min(bend, curveSpan * 0.38) : bend;
@@ -366,15 +366,15 @@ function FlowGuideLayer({ state, activeIndex }: { state: AnimationState; activeI
         return horizontalEnd ? `${curve} L ${endX} ${endY}` : curve;
       };
       const edges: FlowGuideEdge[] = [];
-      const addBridge = (id: string, fromId: string, toId: string, tone: FlowGuideEdge["tone"], active: boolean, reverse = false, horizontalEnd = false) => {
+      const addBridge = (id: string, fromId: string, toId: string, tone: FlowGuideEdge["tone"], active: boolean, reverse = false, horizontalEnd = false, startYOffset = 0) => {
         const from = box(findNode(fromId));
         const to = box(findNode(toId));
-        if (from && to) edges.push({ id, path: bridge(from, to, reverse, horizontalEnd), tone, active });
+        if (from && to) edges.push({ id, path: bridge(from, to, reverse, horizontalEnd, startYOffset), tone, active });
       };
 
       if (activeIndex < 17) {
         const task = activeIndex >= 14 ? "b" : "a";
-        addBridge("data-input", `task-data-${task}`, "runtime-input", task === "b" ? "data-task-b" : "data", ["data", "forward", "probability", "compression", "task-b", "fisher"].includes(state.scene));
+        addBridge("data-input", `task-data-${task}`, "runtime-input", task === "b" ? "data-task-b" : "data", ["data", "forward", "probability", "compression", "task-b", "fisher"].includes(state.scene), false, false, task === "a" ? 28 : 0);
       } else {
         addBridge("data-input-task-c", "task-data-c", "runtime-input", "data-task-c", true);
       }
