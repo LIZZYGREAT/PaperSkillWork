@@ -59,6 +59,7 @@ const TIMELINE_PHASES = [
   { title: "阶段 4 · Task B + EWC", range: "States 15–17", first: 14, last: 16, tone: "task-b" },
   { title: "阶段 5 · Continual Loop", range: "State 18", first: 17, last: 17, tone: "loop" },
 ];
+const PLAYBACK_INTERVAL_MS = 2600;
 
 const OBJECT_INFO: Record<RuntimeObjectId, { title: string; badge: string; body: string; detail: string }> = {
   "task-a-data": { title: "Task A data · D_A", badge: "CURRENT DATA", body: "Task A 的样本和 batch 进入当前网络。", detail: "数据由输入 x 与目标 y 组成。Task A 结束前，数据仍用于任务训练，也在设计规定的 Fisher 估计路径中提供样本。" },
@@ -492,13 +493,16 @@ export function PageGrandAnimation() {
     if (!playing) return;
     const nextIndex = Math.min(activeIndex + 1, STATES.length - 1);
     const nextState = STATES[nextIndex];
+    const nextPhase = TIMELINE_PHASES.find((phase) => nextIndex >= phase.first && nextIndex <= phase.last);
     const timer = window.setTimeout(() => {
       api.openReference({ animationStateId: nextState.id });
       setFurthestIndex((furthest) => Math.max(furthest, nextIndex));
       setAnnouncement(`状态 ${nextIndex + 1}：${nextState.title}`);
-      if (nextIndex === STATES.length - 1) { setPlaying(false); setReplayMode(false); }
-      else if (!replayMode && nextState.checkpoint) setPlaying(false);
-    }, replayMode ? 820 : 1450);
+      if (nextIndex === STATES.length - 1 || nextIndex === nextPhase?.last) {
+        setPlaying(false);
+        setReplayMode(false);
+      }
+    }, PLAYBACK_INTERVAL_MS);
     return () => window.clearTimeout(timer);
   }, [playing, replayMode, activeIndex, api]);
 
@@ -534,7 +538,7 @@ export function PageGrandAnimation() {
       <div className="p10-board-player" aria-label="Grand Animation 播放控制">
         <div className="p10-board-player__transport">
           <button type="button" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex === 0} aria-label="上一步">|◀</button>
-          <button type="button" className="p10-board-player__play" onClick={() => { if (pageIsFinal && !playing) startReplay(); else setPlaying((value) => !value); }} aria-label={playing ? "暂停" : "播放"}>{playing ? "Ⅱ" : "▶"}</button>
+          <button type="button" className="p10-board-player__play" onClick={() => { if (pageIsFinal && !playing) startReplay(); else setPlaying((value) => !value); }} aria-label={playing ? "暂停播放" : "播放当前阶段"} title={playing ? "暂停播放" : "播放至本阶段结束后自动暂停；也可随时暂停"}>{playing ? "Ⅱ" : "▶"}</button>
           <button type="button" onClick={() => goTo(activeIndex + 1)} disabled={pageIsFinal} aria-label="下一步">▶|</button>
         </div>
         <input type="range" min="0" max={Math.max(1, unlockedThrough)} value={activeIndex} onChange={(event) => goTo(Number(event.currentTarget.value))} aria-label="动画状态进度" aria-valuetext={`状态 ${activeIndex + 1}：${state.title}`} />
