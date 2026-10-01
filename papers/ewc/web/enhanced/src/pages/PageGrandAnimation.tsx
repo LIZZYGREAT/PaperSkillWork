@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import type { AnchorId, CanonicalReferenceId, GrandAnimationStateId, RuntimeObjectId } from "../contracts/ids";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
@@ -180,7 +180,7 @@ function MemoryFormula({ children }: { children: ReactNode }) {
   return <span className="p10-memory-chip__formula">{children}</span>;
 }
 
-function SceneVisual({ state, selected, onSelect, onComplete }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void; onComplete?: () => void }) {
+function SceneVisual({ state, selected, onSelect, onComplete, summaryTriggerRef }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void; onComplete?: () => void; summaryTriggerRef?: RefObject<HTMLButtonElement> }) {
   const focus = state.focus;
   if (state.scene === "overview" || state.scene === "loop") return <div className={`p10-scene p10-scene--overview ${state.scene === "loop" ? "p10-scene--completed" : ""}`}>
     <div className="p10-world-ribbon"><span>{state.scene === "loop" ? "STATE 18 · BOUNDARY → STORE → CONTINUE" : "WORLD VIEW · TRAINING TIME MOVES LEFT → RIGHT"}</span><small>one shared model · persistent task memory</small></div>
@@ -192,7 +192,7 @@ function SceneVisual({ state, selected, onSelect, onComplete }: { state: Animati
       <div className="p10-task-world__task is-task-c" data-flow-node="task-data-c"><span>03</span><b>Task C</b><small>{state.scene === "loop" ? <>D<sub>C</sub> arrives · same model continues</> : "continual loop"}</small><i>L<sub>C</sub>(θ) + Ω<sub>A</sub>(θ) + Ω<sub>B</sub>(θ)</i>{state.scene === "loop" && <em>conceptual continuation</em>}</div>
     </div>
     <div className="p10-memory-rail"><span className="p10-memory-rail__label">PERSISTENT MEMORY RAIL</span><button className="p10-memory-chip is-ready" onClick={() => onSelect("task-state-a")}><MemoryFormula>S<sub>A</sub> · θ<sub>A</sub>* + F<sub>A</sub></MemoryFormula></button>{state.scene === "loop" ? <button className="p10-memory-chip is-ready is-task-b" onClick={() => onSelect("persistent-memory")}><MemoryFormula>S<sub>B</sub> · θ<sub>B</sub>* + F<sub>B</sub></MemoryFormula></button> : <div className="p10-memory-chip is-pending"><MemoryFormula>S<sub>B</sub></MemoryFormula><small>after Task B</small></div>}</div>
-    {state.scene === "loop" && <div className="p10-world-complete"><span>Task C reads S<sub>A</sub> and S<sub>B</sub>; the shared model continues.</span><button className="p10-world-complete__action" type="button" onClick={onComplete}>完成本次执行 / View Summary</button></div>}
+    {state.scene === "loop" && <div className="p10-world-complete"><span>Task C reads S<sub>A</sub> and S<sub>B</sub>; the shared model continues.</span><button ref={summaryTriggerRef} className="p10-world-complete__action" type="button" onClick={onComplete}>完成本次执行 / View Summary</button></div>}
   </div>;
   if (state.scene === "posterior" || state.scene === "laplace") return <div className={`p10-scene p10-scene--math ${state.scene === "posterior" ? "is-posterior" : "is-laplace"}`}>
     <div className="p10-math-view-banner"><b>MATHEMATICAL VIEW</b><span>解释当前训练状态 · 程序不会显式构造完整 Posterior</span></div>
@@ -580,10 +580,10 @@ function FirstVisitOverlay({ onStart }: { onStart: () => void }) {
   </div>;
 }
 
-function FinalSummary({ onReplay, onExplore, onReturn }: { onReplay: () => void; onExplore: () => void; onReturn: () => void }) {
+function FinalSummary({ onReplay, onExplore, onReturn, headingRef }: { onReplay: () => void; onExplore: () => void; onReturn: () => void; headingRef: RefObject<HTMLHeadingElement> }) {
   return <section className="p10-completion" aria-labelledby="p10-final-title">
     <span className="p10-completion__eyebrow">FULL EWC EXECUTION · COMPLETE</span>
-    <h3 id="p10-final-title">旧任务约束，进入同一个优化过程</h3>
+    <h3 ref={headingRef} id="p10-final-title" tabIndex={-1}>旧任务约束，进入同一个优化过程</h3>
     <div className="p10-completion__loop">Train <i>→</i> Consolidate <i>→</i> Store <i>→</i> Learn under old-task constraints <i>→</i> Repeat</div>
     <div className="p10-completion__takeaways">
       <span>旧任务结束位置与敏感性近似被保存</span>
@@ -607,12 +607,15 @@ export function PageGrandAnimation() {
   const [playing, setPlaying] = useState(false);
   const [replayMode, setReplayMode] = useState(false);
   const [showCompletionSummary, setShowCompletionSummary] = useState(false);
+  const summaryHeadingRef = useRef<HTMLHeadingElement>(null);
+  const summaryTriggerRef = useRef<HTMLButtonElement>(null);
+  const wasShowingSummary = useRef(false);
   const [expandedFormula, setExpandedFormula] = useState(false);
   const [activeObject, setActiveObject] = useState<RuntimeObjectId | undefined>(api.activeRuntimeObject);
   const [announcement, setAnnouncement] = useState("");
   const selectedInfo = activeObject ? OBJECT_INFO[activeObject] : undefined;
   const unlockedThrough = Math.max(furthestIndex, activeIndex);
-  const pageIsFinal = state.id === "continual-loop";
+  const activePhase = TIMELINE_PHASES.find((phase) => activeIndex >= phase.first && activeIndex <= phase.last)!;
 
   const goTo = (index: number, options: { replay?: boolean } = {}) => {
     const clampedIndex = Math.max(0, Math.min(STATES.length - 1, index));
@@ -640,32 +643,48 @@ export function PageGrandAnimation() {
   useEffect(() => { setActiveObject(api.activeRuntimeObject); }, [api.activeRuntimeObject]);
   useEffect(() => {
     if (!playing) return;
-    const nextIndex = Math.min(activeIndex + 1, STATES.length - 1);
+    const playbackEndIndex = replayMode ? STATES.length - 1 : activePhase.last;
+    if (activeIndex >= playbackEndIndex) {
+      setPlaying(false);
+      setReplayMode(false);
+      return;
+    }
+    const nextIndex = Math.min(activeIndex + 1, playbackEndIndex);
     const nextState = STATES[nextIndex];
     const timer = window.setTimeout(() => {
       api.openReference({ animationStateId: nextState.id });
       setFurthestIndex((furthest) => Math.max(furthest, nextIndex));
       setAnnouncement(`状态 ${nextIndex + 1}：${nextState.title}`);
-      if (nextIndex === STATES.length - 1 || (!replayMode && nextState.checkpoint)) {
+      if (nextIndex >= playbackEndIndex) {
         setPlaying(false);
         setReplayMode(false);
       }
     }, PLAYBACK_INTERVAL_MS);
     return () => window.clearTimeout(timer);
-  }, [playing, replayMode, activeIndex, api]);
+  }, [playing, replayMode, activeIndex, activePhase.last, api]);
 
   useEffect(() => { setShowCompletionSummary(false); }, [activeIndex]);
+
+  useEffect(() => {
+    if (showCompletionSummary) summaryHeadingRef.current?.focus();
+    else if (wasShowingSummary.current && summaryTriggerRef.current?.isConnected) summaryTriggerRef.current.focus();
+    wasShowingSummary.current = showCompletionSummary;
+  }, [showCompletionSummary]);
 
   useEffect(() => {
     if (api.currentPage !== "page-10-grand-animation") return;
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (api.hubOpen) return;
-      if (help.open || (pageIsFinal && !replayMode)) return;
+      if (help.open) return;
+      if (showCompletionSummary) {
+        if (event.key === "Escape") { event.preventDefault(); setShowCompletionSummary(false); }
+        return;
+      }
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
-      if (event.key === "ArrowLeft") { event.preventDefault(); goTo(activeIndex - 1); }
-      else if (event.key === "ArrowRight") { event.preventDefault(); goTo(activeIndex + 1); }
-      else if (event.code === "Space" && !target?.closest("button, a")) { event.preventDefault(); setPlaying((value) => !value); }
+      if (event.key === "ArrowLeft" && activeIndex > 0) { event.preventDefault(); goTo(activeIndex - 1); }
+      else if (event.key === "ArrowRight" && activeIndex < STATES.length - 1) { event.preventDefault(); goTo(activeIndex + 1); }
+      else if (event.code === "Space" && !target?.closest("button, a") && activeIndex < activePhase.last) { event.preventDefault(); setPlaying((value) => !value); }
       else if (event.key === "Escape") {
         if (activeObject) dismissInspector();
         else if (state.scene === "posterior" || state.scene === "laplace") goTo(10);
@@ -673,12 +692,10 @@ export function PageGrandAnimation() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [api.currentPage, api.hubOpen, activeIndex, activeObject, state.scene, help.open, pageIsFinal, replayMode]);
+  }, [api.currentPage, api.hubOpen, activeIndex, activeObject, state.scene, help.open, showCompletionSummary, activePhase.last]);
 
   const setRuntimeObject = (id?: RuntimeObjectId) => { api.setActiveRuntimeObject(id); setActiveObject(id); };
   const inspectorInfo = selectedInfo ?? (state.focus[0] ? OBJECT_INFO[state.focus[0]] : OBJECT_INFO["neural-network"]);
-  const activePhase = TIMELINE_PHASES.find((phase) => activeIndex >= phase.first && activeIndex <= phase.last)!;
-
   return <article className="p10-page p10-board" id="grand-animation" aria-label="EWC Grand Animation">
     <header className="p10-board__header">
       <div className="p10-board__identity">
@@ -688,10 +705,10 @@ export function PageGrandAnimation() {
       <div className="p10-board-player" aria-label="Grand Animation 播放控制">
         <div className="p10-board-player__transport">
           <button type="button" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex === 0} aria-label="上一步">|◀</button>
-          <button type="button" className="p10-board-player__play" onClick={() => { if (pageIsFinal && !playing) startReplay(); else setPlaying((value) => !value); }} aria-label={playing ? "暂停播放" : "播放当前阶段"} title={playing ? "暂停播放" : "播放至本阶段结束后自动暂停；也可随时暂停"}>{playing ? "Ⅱ" : "▶"}</button>
-          <button type="button" onClick={() => goTo(activeIndex + 1)} disabled={pageIsFinal} aria-label="下一步">▶|</button>
+          <button type="button" className="p10-board-player__play" onClick={() => setPlaying((value) => !value)} disabled={!playing && activeIndex >= activePhase.last} aria-label={playing ? "暂停播放" : "播放当前阶段"} title={playing ? "暂停播放" : "播放至本阶段结束后自动暂停；也可随时暂停"}>{playing ? "Ⅱ" : "▶"}</button>
+          <button type="button" onClick={() => goTo(activeIndex + 1)} disabled={activeIndex === STATES.length - 1} aria-label="下一步">▶|</button>
         </div>
-        <input type="range" min="0" max={Math.max(1, unlockedThrough)} value={activeIndex} onChange={(event) => goTo(Number(event.currentTarget.value))} aria-label="动画状态进度" aria-valuetext={`状态 ${activeIndex + 1}：${state.title}`} />
+        <input type="range" min="0" max={STATES.length - 1} value={activeIndex} onChange={(event) => goTo(Math.min(Number(event.currentTarget.value), unlockedThrough))} aria-label="动画状态进度" aria-valuetext={`状态 ${activeIndex + 1}：${state.title}`} />
         <span className="p10-board-player__count">{activeIndex + 1}<i>/</i>{STATES.length}</span>
       </div>
       <div className="p10-board__current" aria-live="polite">
@@ -717,10 +734,11 @@ export function PageGrandAnimation() {
         </div>
         <div className="p10-workbench__network"><NeuralWorkbench state={state} selected={activeObject} onSelect={selectObject} /></div>
         <div className="p10-workbench__focus" aria-label="当前步骤细节">
-          {showCompletionSummary ? <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} onReturn={() => goTo(STATES.length - 1)} /> : <>
+          {showCompletionSummary && <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} onReturn={() => goTo(STATES.length - 1)} headingRef={summaryHeadingRef} />}
+          <div hidden={showCompletionSummary} style={{ minHeight: 0, flex: "1 1 auto", display: showCompletionSummary ? "none" : "flex", flexDirection: "column" }}>
             <div className="p10-workbench__focus-head"><span>当前步骤细节 · {state.camera}</span>{(state.scene === "posterior" || state.scene === "laplace") && <button type="button" onClick={() => goTo(10)}>返回 Runtime ↑</button>}</div>
-            <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} onComplete={() => setShowCompletionSummary(true)} />
-          </>}
+            <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} onComplete={() => setShowCompletionSummary(true)} summaryTriggerRef={summaryTriggerRef} />
+          </div>
         </div>
         <ParameterStrip state={state} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
       </section>
