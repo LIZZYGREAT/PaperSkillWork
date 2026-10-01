@@ -223,6 +223,27 @@ function SampleMatrix({ task }: { task: "a" | "b" }) {
   </div>;
 }
 
+const FASHION_GLYPHS = [
+  "M9 14 17 8h10l8 6 5 9-6 3-4-6v17H14V20l-4 6-6-3z",
+  "M12 7h20l-3 30h-7l-2-15-3 15h-7z",
+  "M10 14 18 8h8l8 6 5 9-6 3-4-6v17H15V20l-4 6-6-3z",
+  "M17 8h10l2 10 7 19H8l7-19z",
+  "M15 8h14l7 7-4 22H12l-4-22z M22 9v27",
+  "M14 34c-2-5-1-12 3-19l4-7 6 2-2 11 7 8-2 6z",
+  "M12 13 19 8h8l7 5 4 10-6 2-4-7v16H15V18l-3 7-6-2z",
+  "M8 28c5 0 9-3 13-12l6 10 8 3 2 7H8z",
+  "M13 15h18l2 22H11z M17 15c0-7 3-10 6-10s6 3 6 10",
+  "M14 8h11v16c3 3 8 3 11 7v6H11v-7l3-4z",
+];
+
+function TaskExampleGrid({ task }: { task: "a" | "b" }) {
+  return <div className={`p10-task-examples p10-task-examples--${task}`} role="img" aria-label={task === "a" ? "MNIST 手写数字 0 到 9 示例" : "Fashion-MNIST 十类服饰示意"}>
+    {task === "a"
+      ? Array.from({ length: 10 }, (_, digit) => <span key={digit} aria-hidden="true">{digit}</span>)
+      : FASHION_GLYPHS.map((path, index) => <span key={index} aria-hidden="true"><svg viewBox="0 0 44 44"><path d={path} /></svg></span>)}
+  </div>;
+}
+
 function TaskDataCard({ task, status, active, selected, onSelect }: {
   task: "a" | "b";
   status: string;
@@ -233,9 +254,14 @@ function TaskDataCard({ task, status, active, selected, onSelect }: {
   const isA = task === "a";
   return <button type="button" className={`p10-data-card ${isA ? "is-task-a" : "is-task-b"} ${active ? "is-active" : ""} ${selected ? "is-selected" : ""}`} onClick={onSelect} aria-pressed={selected}>
     <span className="p10-data-card__head"><b>Task {isA ? "A" : "B"} Data</b><i>{isA ? "D_A" : "D_B"}</i></span>
+    <span className="p10-data-card__dataset">{isA ? "MNIST · 手写数字" : "Fashion-MNIST · 服饰图像"}</span>
     <small>{isA ? "旧任务样本" : "新任务样本"} · {status}</small>
-    <SampleMatrix task={task} />
-    <span className="p10-data-card__caption">{isA ? "代表性输入 xₙ 与目标 yₙ" : "新的 batch 输入"}</span>
+    <TaskExampleGrid task={task} />
+    <ul className="p10-data-card__facts" aria-label={`${isA ? "MNIST" : "Fashion-MNIST"} 数据说明`}>
+      <li><b>数据量</b><span>60,000</span></li>
+      <li><b>类别</b><span>{isA ? "0–9 · 10 类" : "10 类服饰"}</span></li>
+      <li><b>任务</b><span>{isA ? "手写数字分类" : "与 Task A 类别不同，可能存在分布差异"}</span></li>
+    </ul>
     <span className="p10-data-card__inspect">Inspect data ↗</span>
   </button>;
 }
@@ -249,7 +275,7 @@ function TaskDataPanel({ state, activeIndex, selected, onSelect }: {
   const taskAStatus = state.scene === "fisher" ? "Fisher 估计样本" : activeIndex < 7 ? "当前任务数据" : "旧任务来源";
   const taskBStatus = activeIndex < 14 ? "等待 Task B" : activeIndex < 17 ? "当前任务数据" : "训练已完成";
   return <section className="p10-panel p10-data-panel" aria-label="任务与数据区">
-    <BoardPanelTitle number="1" title="任务 / 数据区" subtitle="Tasks & Data · 当前 batch 来自正在学习的任务" />
+    <BoardPanelTitle number="1" title="任务 / 数据区" subtitle="手写数字 → 服饰分类 · 同一模型顺序学习" />
     <div className="p10-data-cards">
       <TaskDataCard task="a" status={taskAStatus} active={activeIndex < 7 || state.scene === "fisher"} selected={selected === "task-a-data"} onSelect={() => onSelect("task-a-data")} />
       <TaskDataCard task="b" status={taskBStatus} active={activeIndex >= 14 && activeIndex < 17} selected={selected === "task-b-data"} onSelect={() => onSelect("task-b-data")} />
