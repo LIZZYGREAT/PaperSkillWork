@@ -69,7 +69,7 @@ export function ReferenceHubDrawer() {
             </> : <p>选择一个条目查看详情。</p>}
           </article>
         </div>
-        <p className="ewc-hub__scope">W6 reference shell. The full index and cross-page links will be added after the remaining pages are stable.</p>
+        <p className="ewc-hub__scope">Reference index for the completed tutorial: entries distinguish paper claims, background, teaching examples, and implementation mappings, with links back to the relevant pages.</p>
       </div>
     </MobileSheet>
   );

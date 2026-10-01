@@ -69,6 +69,11 @@
       "stage": "S6_evidence_and_boundaries",
       "component": "PageAtari",
       "status": "complete"
+    },
+    "grand-animation-integration": {
+      "stage": "S7_full_system_integration",
+      "component": "PageGrandAnimation",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -126,6 +131,11 @@
       "placement": "compact-inline",
       "component": "PageAtari",
       "status": "complete"
+    },
+    "softmax-and-cross-entropy-detail": {
+      "placement": "expandable",
+      "component": "PageProbability: p02-softmax-detail and p02-training-chain",
+      "status": "complete"
     }
   },
   "reference": {
@@ -147,6 +157,16 @@
     "full-fisher-matrix-limit": {
       "placement": "Advanced details",
       "component": "referenceRegistry.diagonal_fisher_limit",
+      "status": "complete"
+    },
+    "extended-bayes-laplace-notation": {
+      "placement": "Advanced details",
+      "component": "referenceRegistry.extended_bayes_laplace_notation",
+      "status": "complete"
+    },
+    "runtime-state-and-id-mapping": {
+      "placement": "Implementation notes",
+      "component": "referenceRegistry.task_state_mapping",
       "status": "complete"
     }
   }

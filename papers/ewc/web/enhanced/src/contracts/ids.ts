@@ -35,7 +35,7 @@ export const CANONICAL_REFERENCE_IDS = [
   "fisher_a_i", "lambda_ewc", "task_a_gradient", "task_b_loss", "ewc_penalty", "ewc_objective",
   "task_b_gradient", "ewc_gradient", "total_gradient", "permuted_mnist", "atari", "replay", "task_recognition",
   "task_specific_modulation", "fisher_perturbation", "grand_animation", "empirical_fisher_estimator_background",
-  "diagonal_fisher_limit", "task_state_mapping",
+  "diagonal_fisher_limit", "task_state_mapping", "extended_bayes_laplace_notation",
 ] as const;
 export type CanonicalReferenceId = (typeof CANONICAL_REFERENCE_IDS)[number];
 
