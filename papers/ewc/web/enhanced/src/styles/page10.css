@@ -124,7 +124,10 @@
 .p10-task-world__boundary i { color: #b9c8bb; font: normal 11px Georgia, serif; }
 .p10-memory-rail { min-width: 0; display: flex; align-items: center; gap: 9px; padding: 6px 10px; border-top: 1px solid rgba(139, 169, 151, .37); border-bottom: 1px solid rgba(139, 169, 151, .23); background: rgba(10, 30, 33, .24); }
 .p10-memory-rail__label { margin-right: auto; color: #97b2a5; font: 8px "DM Mono", Consolas, monospace; letter-spacing: .08em; }
+.p10-memory-rail__inspect { padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.p10-memory-rail__inspect.is-selected { outline: 2px solid #d68c4f; outline-offset: 2px; }
 .p10-memory-chip { min-width: 0; display: inline-flex; align-items: center; gap: 0; padding: 6px 10px; border: 1px solid rgba(151, 180, 163, .36); border-radius: 5px; color: #e1eddf; background: rgba(52, 90, 69, .55); font: 13px Georgia, serif; white-space: nowrap; cursor: pointer; }
+.p10-memory-chip.is-selected { outline: 2px solid #d68c4f; outline-offset: 1px; }
 .p10-memory-chip__formula { display: inline-block; white-space: nowrap; letter-spacing: normal; }
 .p10-memory-chip small { margin-left: 8px; color: #bdd1c0; font: 10px "DM Mono", Consolas, monospace; }
 .p10-memory-chip.is-pending { border-style: dashed; color: #a5b7ad; background: rgba(255,255,255,.025); }

@@ -42,7 +42,7 @@ export type CanonicalReferenceId = (typeof CANONICAL_REFERENCE_IDS)[number];
 export const RUNTIME_OBJECT_IDS = [
   "task-a-data", "task-a-batch", "neural-network", "model-logits", "prediction-probabilities", "task-a-loss",
   "task-a-gradient", "optimizer", "current-parameters", "task-a-anchor", "task-a-fisher", "fisher-estimator",
-  "persistent-memory", "task-state-a", "task-b-data", "task-c-data", "task-b-loss", "ewc-penalty", "task-b-gradient",
+  "persistent-memory", "task-state-a", "task-state-b", "task-b-data", "task-c-data", "task-b-loss", "ewc-penalty", "task-b-gradient",
   "ewc-gradient", "total-gradient", "replay-buffer", "task-recognition", "task-specific-modulation",
 ] as const;
 export type RuntimeObjectId = (typeof RUNTIME_OBJECT_IDS)[number];

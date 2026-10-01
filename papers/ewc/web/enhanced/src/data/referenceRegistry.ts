@@ -718,7 +718,7 @@ export const referenceRegistry: ReferenceRegistry = {
     details: [
       { label: "Page and anchor IDs", text: "The integration lives on page-10-grand-animation and is grouped under the grand-animation and full-execution-replay anchors." },
       { label: "18 animation-state IDs", text: "overview → task-a-data → first-forward → probability-loss → backward → optimizer-update → task-a-compression → task-a-boundary → posterior-view → laplace-view → return-runtime → save-anchor → fisher-estimation → task-a-consolidated → task-b-arrives → ewc-objective → combined-gradient → continual-loop." },
-      { label: "Runtime-object IDs", text: "Selectable IDs connect Task A/B data, batches, the shared network, logits, probabilities, losses, gradients, optimizer, current parameters, saved Task-A anchor and Fisher, persistent memory, replay, task recognition, and task-specific modulation to their visible workbench objects." },
+      { label: "Runtime-object IDs", text: "Selectable IDs connect Task A/B data, batches, the shared network, logits, probabilities, losses, gradients, optimizer, current parameters, saved Task-A anchor and Fisher, separate Task-A and Task-B states, persistent memory, replay, task recognition, and task-specific modulation to their visible workbench objects." },
       { label: "Teaching boundary", text: "The replay integrates previously taught probability, parameter anchoring, Fisher weighting, and task switching. It does not add a new paper claim or specify a universal runtime architecture." },
     ],
     relatedIds: ["grand_animation", "ewc", "task_boundary", "fisher_information", "ewc_objective"],
