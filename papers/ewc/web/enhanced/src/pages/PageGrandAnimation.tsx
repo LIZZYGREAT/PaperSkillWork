@@ -61,6 +61,17 @@ const TIMELINE_PHASES = [
   { title: "阶段 5 · Continual Loop", range: "State 18", first: 17, last: 17, tone: "loop" },
 ];
 const PLAYBACK_INTERVAL_MS = 2600;
+const FLOWING_BOARD_EDGES: Partial<Record<GrandAnimationStateId, string[]>> = {
+  "task-a-data": ["data-input"],
+  "save-anchor": ["save-anchor"],
+  "fisher-estimation": ["data-input", "save-fisher"],
+  "task-a-consolidated": ["save-task-state-a"],
+  "task-b-arrives": ["data-input", "read-task-state-a"],
+  "ewc-objective": ["read-task-state-a"],
+  "combined-gradient": ["read-task-state-a"],
+  "continual-loop": ["data-input-task-c", "save-task-state-b"],
+};
+const FLOWING_NETWORK_SCENES = new Set<SceneId>(["data", "forward", "probability", "backward", "update", "compression", "fisher", "task-b", "objective", "gradient", "loop"]);
 
 const OBJECT_INFO: Record<RuntimeObjectId, { title: string; badge: string; body: string; detail: string }> = {
   "task-a-data": { title: "Task A data · D_A", badge: "CURRENT DATA", body: "Task A 的样本和 batch 进入当前网络。", detail: "数据由输入 x 与目标 y 组成。Task A 结束前，数据仍用于任务训练，也在设计规定的 Fisher 估计路径中提供样本。" },
@@ -105,7 +116,7 @@ function useFirstVisitHelp() {
 }
 
 function FormulaToken({ objectId, children, onSelect }: { objectId: RuntimeObjectId; children: ReactNode; onSelect: (id: RuntimeObjectId) => void }) {
-  return <button type="button" className="p10-formula-token" onClick={() => onSelect(objectId)}>{children}</button>;
+  return <button type="button" data-p10-transition-id={objectId} className="p10-formula-token" onClick={() => onSelect(objectId)}>{children}</button>;
 }
 
 function MathReference({ id, children }: { id: CanonicalReferenceId; children: ReactNode }) {
@@ -123,7 +134,7 @@ function Formula({ kind, expanded, onSelect }: { kind: MathId; expanded: boolean
 }
 
 function WorkbenchNode({ id, label, eyebrow, active, selected, onSelect, shape = "node" }: { id: RuntimeObjectId; label: ReactNode; eyebrow?: string; active: boolean; selected: boolean; onSelect: (id: RuntimeObjectId) => void; shape?: "node" | "data" | "parameter" }) {
-  return <button type="button" className={`p10-node p10-node--${shape} ${active ? "is-active" : ""} ${selected ? "is-linked" : ""}`} onClick={() => onSelect(id)} aria-pressed={selected}>
+  return <button type="button" data-p10-transition-id={id} className={`p10-node p10-node--${shape} ${active ? "is-active" : ""} ${selected ? "is-linked" : ""}`} onClick={() => onSelect(id)} aria-pressed={selected}>
     {eyebrow && <span className="p10-node__eyebrow">{eyebrow}</span>}<b>{label}</b><span className="p10-node__inspect">Inspect</span>
   </button>;
 }
@@ -135,7 +146,8 @@ function LayerBlocks({ focus, selected, onSelect, includeFisher = false, include
     { layer: "FC hidden weights", id: "task-a-anchor" as const, param: "θ³ · W³", fisher: "F³" },
     { layer: "Output weights", id: "task-a-anchor" as const, param: "θ⁴ · W⁴", fisher: "F⁴" },
   ];
-  return <div className="p10-layer-grid" aria-label="按网络层分组的代表性参数与 Fisher">
+  const transitionIds = ["current-parameters", includeAnchor ? "task-a-anchor" : "", includeFisher ? "task-a-fisher" : ""].filter(Boolean).join(" ");
+  return <div data-p10-transition-id={transitionIds} className="p10-layer-grid" aria-label="按网络层分组的代表性参数与 Fisher">
     {layers.map((layer, index) => <div className={`p10-layer-card ${focus.includes("current-parameters") ? "is-current" : ""}`} key={layer.layer}>
       <div className="p10-layer-card__heading"><span>{layer.layer}</span><small>θ<sup>{index + 1}</sup></small></div>
       <button type="button" className={`p10-parameter-cells ${selected === "current-parameters" ? "is-linked" : ""}`} onClick={() => onSelect("current-parameters")} aria-label={`${layer.param}，查看当前参数`}>
@@ -255,7 +267,7 @@ function TaskDataCard({ task, status, active, selected, onSelect }: {
   onSelect: () => void;
 }) {
   const isA = task === "a";
-  return <button type="button" data-flow-node={`task-data-${task}`} className={`p10-data-card ${isA ? "is-task-a" : "is-task-b"} ${active ? "is-active" : ""} ${selected ? "is-selected" : ""}`} onClick={onSelect} aria-pressed={selected}>
+  return <button type="button" data-flow-node={`task-data-${task}`} data-p10-transition-id={`task-${task}-data`} className={`p10-data-card ${isA ? "is-task-a" : "is-task-b"} ${active ? "is-active" : ""} ${selected ? "is-selected" : ""}`} onClick={onSelect} aria-pressed={selected}>
     <span className="p10-data-card__head"><b>Task {isA ? "A" : "B"} Data</b><i>{isA ? "D_A" : "D_B"}</i></span>
     <span className="p10-data-card__dataset">{isA ? "Illustrative samples · 3 classes" : "New illustrative samples"}</span>
     <small>{isA ? "旧任务样本" : "新任务样本"} · {status}</small>
@@ -297,15 +309,15 @@ function MemoryPanel({ activeIndex, selected, onSelect }: {
     { id: "task-a-fisher", symbol: <>F<sub>A</sub></>, title: "对角 Fisher", detail: "逐参数敏感性近似 · 参数不更新", ready: activeIndex >= 12 },
     { id: "task-state-a", symbol: <>S<sub>A</sub></>, title: "Task A 状态", detail: <><span>θ<sub>A</sub>* + F<sub>A</sub></span> · Task B 读取</>, ready: activeIndex >= 13 },
   ];
-  return <section className="p10-panel p10-memory-panel" aria-label="持久记忆区">
+  return <section data-p10-transition-id="persistent-memory" className="p10-panel p10-memory-panel" aria-label="持久记忆区">
     <BoardPanelTitle number="3" title="持久记忆区" subtitle="Persistent Memory · Task A 保存，Task B 读取" badge="MEMORY RAIL" />
     <div className="p10-memory-list">
-      {items.map((item) => <button key={item.id} type="button" data-flow-node={`memory-${item.id}`} className={`p10-memory-item ${item.ready ? "is-ready" : "is-pending"} ${selected === item.id ? "is-selected" : ""}`} onClick={() => onSelect(item.id)} aria-pressed={selected === item.id}>
+      {items.map((item) => <button key={item.id} type="button" data-flow-node={`memory-${item.id}`} data-p10-transition-id={item.id} className={`p10-memory-item ${item.ready ? "is-ready" : "is-pending"} ${selected === item.id ? "is-selected" : ""}`} onClick={() => onSelect(item.id)} aria-pressed={selected === item.id}>
         <span className="p10-memory-item__symbol">{item.symbol}</span>
         <span className="p10-memory-item__copy"><b>{item.title}</b><small>{item.detail}</small></span>
         <span className="p10-memory-item__status">{item.ready ? "已保存" : "待保存"}</span>
       </button>)}
-      <button type="button" data-flow-node="memory-task-state-b" className={`p10-memory-item p10-memory-item--next ${activeIndex >= 17 ? "is-ready" : "is-pending"} ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}>
+      <button type="button" data-flow-node="memory-task-state-b" data-p10-transition-id="task-state-b" className={`p10-memory-item p10-memory-item--next ${activeIndex >= 17 ? "is-ready" : "is-pending"} ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}>
         <span className="p10-memory-item__symbol">S<sub>B</sub></span>
         <span className="p10-memory-item__copy"><b>Task B 状态</b><small>θ<sub>B</sub>* + F<sub>B</sub> · Task C 可继续读取</small></span>
         <span className="p10-memory-item__status">{activeIndex >= 17 ? "已形成" : "Task B 后"}</span>
@@ -314,15 +326,19 @@ function MemoryPanel({ activeIndex, selected, onSelect }: {
   </section>;
 }
 
-function FlowArrow({ reverse = false }: { reverse?: boolean }) {
+function FlowArrow({ reverse = false, flowing = false, motionKey = "flow" }: { reverse?: boolean; flowing?: boolean; motionKey?: string }) {
+  const travelPath = reverse ? "M 46 8 H 5" : "M 2 8 H 43";
   return <svg className={`p10-flow-line ${reverse ? "is-reverse" : ""}`} viewBox="0 0 48 16" role="presentation" aria-hidden="true">
     <path d={reverse ? "M46 8H4m8-6L4 8l8 6" : "M2 8h42m-8-6 8 6-8 6"} />
+    {flowing && <circle key={motionKey} className="p10-flow-line__traveler" cx={reverse ? 46 : 2} cy="8" r="2.3">
+      <animateMotion dur="620ms" fill="freeze" path={travelPath} />
+    </circle>}
   </svg>;
 }
 
 type FlowGuideEdge = { id: string; path: string; tone: "data" | "data-task-b" | "data-task-c" | "zoom" | "formula" | "save" | "read"; active: boolean };
 
-function FlowGuideLayer({ state, activeIndex }: { state: AnimationState; activeIndex: number }) {
+function FlowGuideLayer({ state, activeIndex, flowingEdgeIds }: { state: AnimationState; activeIndex: number; flowingEdgeIds: string[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [geometry, setGeometry] = useState<{ width: number; height: number; edges: FlowGuideEdge[] }>({ width: 0, height: 0, edges: [] });
   const taskCue = activeIndex < 17 ? `Task ${activeIndex >= 14 ? "B" : "A"} Data → Runtime Input` : "Task B 完成后进入 Task C";
@@ -429,22 +445,28 @@ function FlowGuideLayer({ state, activeIndex }: { state: AnimationState; activeI
       <marker id="p10-flow-arrow-blue" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 7 4 1 7" /></marker>
       <marker id="p10-flow-arrow-green" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 7 4 1 7" /></marker>
     </defs>
-    {geometry.edges.map((edge) => <path key={edge.id} className={`p10-board-flow__edge is-${edge.tone} ${edge.active ? "is-active" : "is-muted"}`} d={edge.path} markerEnd={`url(#p10-flow-arrow-${edge.tone === "read" ? "green" : edge.tone === "data-task-c" ? "blue" : edge.tone === "zoom" || edge.tone === "save" || edge.tone === "data-task-b" ? "orange" : "ink"})`} />)}
+    {geometry.edges.map((edge) => <g key={edge.id}>
+      <path className={`p10-board-flow__edge is-${edge.tone} ${edge.active ? "is-active" : "is-muted"}`} d={edge.path} markerEnd={`url(#p10-flow-arrow-${edge.tone === "read" ? "green" : edge.tone === "data-task-c" ? "blue" : edge.tone === "zoom" || edge.tone === "save" || edge.tone === "data-task-b" ? "orange" : "ink"})`} />
+      {edge.active && flowingEdgeIds.includes(edge.id) && <circle key={`${state.id}-${edge.id}`} className={`p10-board-flow__traveler is-${edge.tone}`} r="4">
+        <animateMotion dur="700ms" calcMode="spline" keyTimes="0;1" keySplines="0.2 0 0.2 1" fill="freeze" path={edge.path} />
+      </circle>}
+    </g>)}
   </svg>;
 }
 
 function NeuralWorkbench({ state, selected, onSelect }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
   const hasFocus = (...ids: RuntimeObjectId[]) => ids.some((id) => state.focus.includes(id) || selected === id);
   const reverse = state.scene === "backward" || state.scene === "gradient";
+  const flowing = FLOWING_NETWORK_SCENES.has(state.scene);
   const inputTask: IllustrationTask = state.phase === "continual" ? "c" : state.phase === "task-b" ? "b" : "a";
   const dataId: RuntimeObjectId = inputTask === "c" ? "task-c-data" : inputTask === "b" ? "task-b-data" : "task-a-data";
   return <div className={`p10-neural-workbench ${reverse ? "is-backward" : ""}`} aria-label="交互式神经网络工作台">
     <div className="p10-neural-workbench__flow">
-      <button type="button" data-flow-node="runtime-input" className={`p10-net-node p10-net-node--input ${hasFocus(dataId) ? "is-active" : ""}`} onClick={() => onSelect(dataId)} aria-pressed={selected === dataId}>
+      <button type="button" data-flow-node="runtime-input" data-p10-transition-id={dataId} className={`p10-net-node p10-net-node--input ${hasFocus(dataId) ? "is-active" : ""}`} onClick={() => onSelect(dataId)} aria-pressed={selected === dataId}>
         <span className="p10-net-node__eyebrow">INPUT · xₙ</span><SampleMatrix task={inputTask} /><b>图像 / 数据</b><small>Task {inputTask.toUpperCase()} batch</small>
       </button>
-      <FlowArrow reverse={reverse} />
-      <div className="p10-feature-group">
+      <FlowArrow reverse={reverse} flowing={flowing} motionKey={state.id} />
+      <div data-p10-transition-id="neural-network current-parameters" className="p10-feature-group">
         <span className="p10-net-node__eyebrow">CNN FEATURE EXTRACTION</span>
         <button type="button" className={`p10-feature-block ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`} onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}>
           <span className="p10-feature-stack"><i /><i /><i /></span><b>Conv 1</b><small>θ¹ · 3×3</small>
@@ -458,14 +480,14 @@ function NeuralWorkbench({ state, selected, onSelect }: { state: AnimationState;
         <span className="p10-feature-link" aria-hidden="true" />
         <span className="p10-feature-op">Pool</span>
       </div>
-      <FlowArrow reverse={reverse} />
-      <div className={`p10-net-node p10-net-node--fc ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`}>
+      <FlowArrow reverse={reverse} flowing={flowing} motionKey={state.id} />
+      <div data-p10-transition-id="neural-network current-parameters" className={`p10-net-node p10-net-node--fc ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`}>
         <span className="p10-net-node__eyebrow">CLASSIFICATION</span>
         <button type="button" onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}><span className="p10-fc-bars"><i /><i /><i /></span><b>FC hidden</b><small>θ³</small></button>
         <small>Flatten → logits z</small>
       </div>
-      <FlowArrow reverse={reverse} />
-      <button type="button" className={`p10-net-node p10-net-node--output ${hasFocus("model-logits", "prediction-probabilities", "task-a-loss", "task-b-loss") ? "is-active" : ""}`} onClick={() => onSelect("prediction-probabilities")} aria-pressed={selected === "prediction-probabilities"}>
+      <FlowArrow reverse={reverse} flowing={flowing} motionKey={state.id} />
+      <button type="button" data-p10-transition-id="model-logits prediction-probabilities task-a-loss task-b-loss" className={`p10-net-node p10-net-node--output ${hasFocus("model-logits", "prediction-probabilities", "task-a-loss", "task-b-loss") ? "is-active" : ""}`} onClick={() => onSelect("prediction-probabilities")} aria-pressed={selected === "prediction-probabilities"}>
         <span className="p10-net-node__eyebrow">OUTPUT · θ⁴</span>
         <span className="p10-probability-bars"><i><b>A</b><em style={{ width: "58%" }} /></i><i><b>B</b><em style={{ width: "84%" }} /></i><i><b>C</b><em style={{ width: "31%" }} /></i></span>
         <small>p<sub>θ</sub>(y|x) · 3-class output</small>
@@ -484,7 +506,8 @@ function ParameterStrip({ state, activeIndex, selected, onSelect }: { state: Ani
   const showFisher = state.focus.includes("task-a-fisher") || state.scene === "memory" || state.scene === "objective" || state.scene === "fisher";
   const memoryFlow = activeIndex >= 11 && activeIndex <= 17;
   const memoryFlowTone = activeIndex >= 14 && activeIndex <= 16 ? "is-read" : "is-save";
-  return <div className="p10-parameter-strip" data-flow-node="runtime-parameters" aria-label="模型参数与存储参数">
+  const transitionIds = ["current-parameters", showAnchor ? "task-a-anchor" : "", showFisher ? "task-a-fisher" : ""].filter(Boolean).join(" ");
+  return <div data-p10-transition-id={transitionIds} className="p10-parameter-strip" data-flow-node="runtime-parameters" aria-label="模型参数与存储参数">
     {memoryFlow && <span data-flow-node="runtime-memory-port" className={`p10-parameter-strip__memory-port ${memoryFlowTone}`} aria-hidden="true" />}
     <span className="p10-parameter-strip__label">模型参数（可交互）<small>四组权重参数 · EWC 逐参数作用</small></span>
     {[
@@ -508,7 +531,7 @@ function MathArea({ state, expandedFormula, setExpandedFormula, onSelect }: {
 }) {
   return <section className="p10-panel p10-math-panel" aria-label="数学与公式区">
     <BoardPanelTitle number="2" title="数学视图" subtitle="Mathematical / Formula Area · 与当前运行状态关联" />
-    <div className="p10-math-live" data-flow-node="math-link">
+    <div className="p10-math-live" data-flow-node="math-link" data-p10-transition-id="math">
       <div className="p10-math-live__heading"><b>{state.math ? "当前状态关联公式" : "当前阶段的数学关系"}</b>{state.math && <button type="button" aria-pressed={expandedFormula} onClick={() => setExpandedFormula(!expandedFormula)}>{expandedFormula ? "收起" : "展开"}</button>}</div>
       {state.math ? <Formula kind={state.math} expanded={expandedFormula} onSelect={onSelect} /> : <p>{state.scene === "fisher" ? "参数固定 · 梯度平方累积 · 不执行 optimizer.step()" : state.scene === "gradient" ? "g_B + g_EWC → g_total → optimizer.step()" : "当前参数 θ 在共享网络中参与前向、Loss 与更新。"}</p>}
     </div>
@@ -521,7 +544,7 @@ function MathArea({ state, expandedFormula, setExpandedFormula, onSelect }: {
       <MathReference id="laplace_approximation"><b>Laplace 局部近似</b><span>p(θ|D_A) ≈ N(θ_A*, Σ_A)</span></MathReference>
       <MathReference id="fisher_information"><b>Diagonal Fisher · 对角 Fisher</b><span>F_A,i ≈ 1/N Σₙ (∂ log pθA*(yₙ|xₙ) / ∂θᵢ)²</span></MathReference>
     </div>
-    <button type="button" className="p10-ewc-equation" onClick={() => onSelect("ewc-penalty")}>
+    <button type="button" data-p10-transition-id="ewc-penalty" className="p10-ewc-equation" onClick={() => onSelect("ewc-penalty")}>
       <b>EWC 损失函数 · EWC Loss</b>
       <span>L_total = L_B + <i>λ</i>⁄2 Σ<sub>i</sub> F<sub>A,i</sub>(θ<sub>i</sub> − θ<sub>A,i</sub>*)²</span>
     </button>
@@ -559,12 +582,12 @@ function TimelinePanel({ activeIndex, unlockedThrough, onGoTo }: { activeIndex: 
   return <footer className="p10-timeline" aria-label="Grand Animation 18 步状态时间轴">
     <div className="p10-timeline__heading"><span className="p10-panel__number">5</span><div><b>状态时间轴 <small>State Timeline / State Machine</small></b><span>18 个状态 · 按顺序播放，也可返回已解锁步骤</span></div><span className="p10-timeline__legend"><i className="is-current" />当前状态 <i className="is-done" />已完成 <i className="is-locked" />未开始</span></div>
     <div className="p10-timeline__bands" aria-label="五个阶段">
-      {TIMELINE_PHASES.map((phase) => <button key={phase.tone} type="button" className={`p10-timeline__band p10-timeline__band--${phase.tone} ${activeIndex >= phase.first && activeIndex <= phase.last ? "is-active" : ""}`} style={{ gridColumn: `${phase.first + 1} / span ${phase.last - phase.first + 1}` }} onClick={() => onGoTo(phase.first)} disabled={unlockedThrough < phase.first} aria-current={activeIndex >= phase.first && activeIndex <= phase.last ? "step" : undefined}>
+      {TIMELINE_PHASES.map((phase) => <button key={phase.tone} type="button" data-p10-transition-id={`phase-${phase.tone}`} className={`p10-timeline__band p10-timeline__band--${phase.tone} ${activeIndex >= phase.first && activeIndex <= phase.last ? "is-active" : ""}`} style={{ gridColumn: `${phase.first + 1} / span ${phase.last - phase.first + 1}` }} onClick={() => onGoTo(phase.first)} disabled={unlockedThrough < phase.first} aria-current={activeIndex >= phase.first && activeIndex <= phase.last ? "step" : undefined}>
         <b>{phase.title}</b><small>{phase.range}</small>
       </button>)}
     </div>
     <div className="p10-timeline__steps" role="group" aria-label="18 个可导航状态">
-      {STATES.map((item, index) => <button key={item.id} type="button" className={`p10-timeline__step ${index === activeIndex ? "is-current" : index < activeIndex ? "is-done" : "is-locked"} ${item.checkpoint ? "is-checkpoint" : ""}`} onClick={() => onGoTo(index)} disabled={index > unlockedThrough} aria-current={index === activeIndex ? "step" : undefined} aria-label={`状态 ${index + 1}：${item.title}${index < activeIndex ? "，已完成" : index === activeIndex ? "，当前状态" : "，未开始"}`}>
+      {STATES.map((item, index) => <button key={item.id} type="button" data-p10-transition-id={`timeline-${item.id}`} className={`p10-timeline__step ${index === activeIndex ? "is-current" : index < activeIndex ? "is-done" : "is-locked"} ${item.checkpoint ? "is-checkpoint" : ""}`} onClick={() => onGoTo(index)} disabled={index > unlockedThrough} aria-current={index === activeIndex ? "step" : undefined} aria-label={`状态 ${index + 1}：${item.title}${index < activeIndex ? "，已完成" : index === activeIndex ? "，当前状态" : "，未开始"}`}>
         <span>{String(index + 1).padStart(2, "0")}</span><b>{item.title}</b>
       </button>)}
     </div>
@@ -614,9 +637,83 @@ export function PageGrandAnimation() {
   const [expandedFormula, setExpandedFormula] = useState(false);
   const [activeObject, setActiveObject] = useState<RuntimeObjectId | undefined>(api.activeRuntimeObject);
   const [announcement, setAnnouncement] = useState("");
+  const boardRef = useRef<HTMLElementTagNameMap["article"] | null>(null);
+  const previousTransitionIndex = useRef(activeIndex);
+  const [flowingTransition, setFlowingTransition] = useState<{ stateId: GrandAnimationStateId; edgeIds: string[] }>({ stateId: state.id, edgeIds: [] });
   const selectedInfo = activeObject ? OBJECT_INFO[activeObject] : undefined;
   const unlockedThrough = Math.max(furthestIndex, activeIndex);
   const activePhase = TIMELINE_PHASES.find((phase) => activeIndex >= phase.first && activeIndex <= phase.last)!;
+
+  useEffect(() => {
+    const previousIndex = previousTransitionIndex.current;
+    previousTransitionIndex.current = activeIndex;
+    if (previousIndex === activeIndex) return;
+
+    const previousState = STATES[previousIndex];
+    const nextState = STATES[activeIndex];
+    const board = boardRef.current;
+    if (!board) return;
+
+    const transitionTargets = new Set<string>(["step-copy", `timeline-${previousState.id}`, `timeline-${nextState.id}`]);
+    const previousFocus = new Set(previousState.focus);
+    const nextFocus = new Set(nextState.focus);
+    previousState.focus.forEach((id) => { if (!nextFocus.has(id)) transitionTargets.add(id); });
+    nextState.focus.forEach((id) => { if (!previousFocus.has(id)) transitionTargets.add(id); });
+    if (previousState.scene !== nextState.scene) transitionTargets.add("scene");
+    if (previousState.math !== nextState.math) transitionTargets.add("math");
+    const previousTimelinePhase = TIMELINE_PHASES.find((phase) => previousIndex >= phase.first && previousIndex <= phase.last)?.tone;
+    const nextTimelinePhase = TIMELINE_PHASES.find((phase) => activeIndex >= phase.first && activeIndex <= phase.last)?.tone;
+    if (previousTimelinePhase !== nextTimelinePhase) {
+      if (previousTimelinePhase) transitionTargets.add(`phase-${previousTimelinePhase}`);
+      if (nextTimelinePhase) transitionTargets.add(`phase-${nextTimelinePhase}`);
+    }
+
+    const crossed = (boundary: number) => (previousIndex < boundary) !== (activeIndex < boundary);
+    if (crossed(7)) transitionTargets.add("task-a-data");
+    if (crossed(14) || crossed(17)) transitionTargets.add("task-b-data");
+    if (crossed(11)) transitionTargets.add("task-a-anchor");
+    if (crossed(12)) transitionTargets.add("task-a-fisher");
+    if (crossed(13)) transitionTargets.add("task-state-a");
+    if (crossed(17)) transitionTargets.add("task-state-b");
+
+    setFlowingTransition({ stateId: nextState.id, edgeIds: [] });
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches || Boolean(board.closest(".is-reduced-motion"));
+    if (reducedMotion) return;
+
+    const animations: Animation[] = [];
+    board.querySelectorAll<HTMLElement>("[data-p10-transition-id]").forEach((element) => {
+      if (!element.getClientRects().length) return;
+      const matchingIds = (element.dataset.p10TransitionId ?? "").split(/\s+/).filter((id) => transitionTargets.has(id));
+      if (!matchingIds.length) return;
+
+      const targetId = matchingIds.find((id) => id.startsWith("task-b") || id.startsWith("task-c") || id === "task-state-b")
+        ?? matchingIds.find((id) => id.includes("anchor") || id.includes("fisher") || id === "task-state-a" || id === "persistent-memory")
+        ?? matchingIds[0];
+      const rgb = targetId.startsWith("task-b") || targetId.startsWith("task-c") || targetId === "task-state-b"
+        ? "217, 99, 50"
+        : targetId.includes("anchor") || targetId.includes("fisher") || targetId === "task-state-a" || targetId === "persistent-memory"
+          ? "67, 133, 118"
+          : "12, 82, 103";
+      const baseShadow = getComputedStyle(element).boxShadow;
+      const haloShadow = `${baseShadow === "none" ? "" : `${baseShadow}, `}0 0 0 3px rgba(${rgb}, .24), 0 0 12px rgba(${rgb}, .14)`;
+      animations.push(element.animate([
+        { boxShadow: baseShadow, offset: 0 },
+        { boxShadow: haloShadow, offset: .28 },
+        { boxShadow: baseShadow, offset: 1 },
+      ], { duration: 760, easing: "ease-out" }));
+    });
+
+    const edgeIds = FLOWING_BOARD_EDGES[nextState.id] ?? [];
+    if (edgeIds.length) {
+      setFlowingTransition({ stateId: nextState.id, edgeIds });
+      const timer = window.setTimeout(() => setFlowingTransition({ stateId: nextState.id, edgeIds: [] }), 900);
+      return () => {
+        window.clearTimeout(timer);
+        animations.forEach((animation) => animation.cancel());
+      };
+    }
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [activeIndex]);
 
   const goTo = (index: number, options: { replay?: boolean } = {}) => {
     const clampedIndex = Math.max(0, Math.min(STATES.length - 1, index));
@@ -697,7 +794,7 @@ export function PageGrandAnimation() {
 
   const setRuntimeObject = (id?: RuntimeObjectId) => { api.setActiveRuntimeObject(id); setActiveObject(id); };
   const inspectorInfo = selectedInfo ?? (state.focus[0] ? OBJECT_INFO[state.focus[0]] : OBJECT_INFO["neural-network"]);
-  return <article className="p10-page p10-board" id="grand-animation" aria-label="EWC Grand Animation">
+  return <article ref={boardRef} className="p10-page p10-board" id="grand-animation" aria-label="EWC Grand Animation">
     <header className="p10-board__header">
       <div className="p10-board__identity">
         <button type="button" className="p10-back-page" onClick={() => api.navigatePage("page-09-atari")} aria-label="返回 Page 9">← <span>Page 9</span></button>
@@ -720,7 +817,7 @@ export function PageGrandAnimation() {
     </header>
 
     <main className="p10-board__grid">
-      <FlowGuideLayer state={state} activeIndex={activeIndex} />
+      <FlowGuideLayer state={state} activeIndex={activeIndex} flowingEdgeIds={flowingTransition.stateId === state.id ? flowingTransition.edgeIds : []} />
       <aside className="p10-board__left">
         <TaskDataPanel state={state} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
         <MemoryPanel activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
@@ -728,13 +825,13 @@ export function PageGrandAnimation() {
 
       <section className="p10-panel p10-workbench" aria-labelledby="p10-current-title">
         <BoardPanelTitle number="" title="运行态视图（神经网络工作台）" subtitle="Runtime View · 同一个模型沿训练时间持续更新" badge={state.scene === "posterior" || state.scene === "laplace" ? "MATHEMATICAL VIEW" : state.camera} />
-        <div className="p10-workbench__current" data-flow-node="runtime-step">
+        <div className="p10-workbench__current" data-flow-node="runtime-step" data-p10-transition-id="step-copy">
           <div><span>STATE {String(activeIndex + 1).padStart(2, "0")} / 18 · {state.phase.toUpperCase()}</span><h2 id="p10-current-title">{state.title}</h2></div>
           <p>{state.annotation}<small>{state.why}</small></p>
           {state.review && <button type="button" onClick={() => api.openReference({ pageId: state.review!.page, anchorId: state.review!.anchor })}>{state.review.label} ↗</button>}
         </div>
         <div className="p10-workbench__network"><NeuralWorkbench state={state} selected={activeObject} onSelect={selectObject} /></div>
-        <div className="p10-workbench__focus" aria-label="当前步骤细节">
+        <div className="p10-workbench__focus" data-p10-transition-id="scene" aria-label="当前步骤细节">
           {showCompletionSummary && <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} onReturn={() => goTo(STATES.length - 1)} headingRef={summaryHeadingRef} />}
           <div hidden={showCompletionSummary} style={{ minHeight: 0, flex: "1 1 auto", display: showCompletionSummary ? "none" : "flex", flexDirection: "column" }}>
             <div className="p10-workbench__focus-head"><span>当前步骤细节 · {state.camera}</span>{(state.scene === "posterior" || state.scene === "laplace") && <button type="button" onClick={() => goTo(10)}>返回 Runtime ↑</button>}</div>

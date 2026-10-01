@@ -459,9 +459,12 @@
 .is-reduced-motion .p10-node,
 .is-reduced-motion .p10-task-world__task,
 .is-reduced-motion .p10-flow-arrow { transition-duration: .01ms !important; }
+.is-reduced-motion .p10-board-flow__traveler,
+.is-reduced-motion .p10-flow-line__traveler { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .p10-node, .p10-task-world__task, .p10-flow-arrow { transition-duration: .01ms !important; }
   .p10-scene { animation-duration: .01ms !important; }
+  .p10-board-flow__traveler, .p10-flow-line__traveler { display: none; }
   .p10-overlay { backdrop-filter: none; }
 }
 
@@ -656,6 +659,12 @@
 .p10-board-flow__edge.is-zoom { stroke: #df642e; stroke-dasharray: 5 4; opacity: .83; }
 .p10-board-flow__edge.is-formula { stroke: #286a79; stroke-dasharray: 2 4; opacity: .7; }
 .p10-board-flow__edge.is-read { stroke: #438576; stroke-dasharray: 6 3; }
+.p10-board-flow__traveler { fill: #fff; stroke: #0c5267; stroke-width: 2; pointer-events: none; animation: p10-flow-traveler-fade 180ms ease 720ms forwards; }
+.p10-board-flow__traveler.is-save, .p10-board-flow__traveler.is-data-task-b, .p10-board-flow__traveler.is-zoom { stroke: #d96332; }
+.p10-board-flow__traveler.is-read { stroke: #438576; }
+.p10-board-flow__traveler.is-data-task-c { stroke: #53799a; }
+.p10-flow-line__traveler { fill: #fff; stroke: currentColor; stroke-width: 1.35; pointer-events: none; animation: p10-flow-traveler-fade 180ms ease 640ms forwards; }
+@keyframes p10-flow-traveler-fade { to { opacity: 0; } }
 .p10-board-flow__edge.is-active { opacity: .95; stroke-width: 1.9; }
 .p10-board-flow__edge.is-muted { opacity: .32; }
 .p10-board-flow marker path { fill: none; stroke-width: 1.45; stroke-linecap: round; stroke-linejoin: round; }
