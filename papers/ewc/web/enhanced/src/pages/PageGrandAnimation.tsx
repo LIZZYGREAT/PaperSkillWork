@@ -52,6 +52,14 @@ const PHASES: { id: PhaseId; title: string; sub: string; first: number; last: nu
   { id: "continual", title: "CONTINUAL LOOP", sub: "Repeat", first: 17, last: 17 },
 ];
 
+const TIMELINE_PHASES = [
+  { title: "阶段 1 · Task A 训练", range: "States 1–7", first: 0, last: 6, tone: "task-a" },
+  { title: "阶段 2 · 边界与数学视图", range: "States 8–11", first: 7, last: 10, tone: "boundary" },
+  { title: "阶段 3 · Task A Consolidation", range: "States 12–14", first: 11, last: 13, tone: "consolidation" },
+  { title: "阶段 4 · Task B + EWC", range: "States 15–17", first: 14, last: 16, tone: "task-b" },
+  { title: "阶段 5 · Continual Loop", range: "State 18", first: 17, last: 17, tone: "loop" },
+];
+
 const OBJECT_INFO: Record<RuntimeObjectId, { title: string; badge: string; body: string; detail: string }> = {
   "task-a-data": { title: "Task A data · D_A", badge: "CURRENT DATA", body: "Task A 的样本和 batch 进入当前网络。", detail: "数据由输入 x 与目标 y 组成。Task A 结束前，数据仍用于任务训练，也在设计规定的 Fisher 估计路径中提供样本。" },
   "task-a-batch": { title: "Task A batch", badge: "BATCH", body: "一个 batch 含有多个训练样本。", detail: "Batch 用于一次前向、Loss 与梯度计算。图中只展示代表性样本，不代表固定 batch size。" },
@@ -200,6 +208,218 @@ function SceneVisual({ state, selected, onSelect }: { state: AnimationState; sel
   return <div className="p10-scene p10-scene--loop" />;
 }
 
+function BoardPanelTitle({ number, title, subtitle, badge }: { number: string; title: string; subtitle: string; badge?: string }) {
+  return <div className="p10-panel__title">
+    <span className="p10-panel__number">{number}</span>
+    <div><h2>{title}</h2><p>{subtitle}</p></div>
+    {badge && <span className="p10-panel__badge">{badge}</span>}
+  </div>;
+}
+
+function SampleMatrix({ task }: { task: "a" | "b" }) {
+  return <div className={`p10-sample-matrix p10-sample-matrix--${task}`} aria-label="示意样本像素图">
+    {Array.from({ length: 16 }, (_, index) => <i key={index} />)}
+  </div>;
+}
+
+function TaskDataCard({ task, status, active, selected, onSelect }: {
+  task: "a" | "b";
+  status: string;
+  active: boolean;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const isA = task === "a";
+  return <button type="button" className={`p10-data-card ${isA ? "is-task-a" : "is-task-b"} ${active ? "is-active" : ""} ${selected ? "is-selected" : ""}`} onClick={onSelect} aria-pressed={selected}>
+    <span className="p10-data-card__head"><b>Task {isA ? "A" : "B"} Data</b><i>{isA ? "D_A" : "D_B"}</i></span>
+    <small>{isA ? "旧任务样本" : "新任务样本"} · {status}</small>
+    <SampleMatrix task={task} />
+    <span className="p10-data-card__caption">{isA ? "代表性输入 xₙ 与目标 yₙ" : "新的 batch 输入"}</span>
+    <span className="p10-data-card__inspect">Inspect data ↗</span>
+  </button>;
+}
+
+function TaskDataPanel({ state, activeIndex, selected, onSelect }: {
+  state: AnimationState;
+  activeIndex: number;
+  selected?: RuntimeObjectId;
+  onSelect: (id: RuntimeObjectId) => void;
+}) {
+  const taskAStatus = state.scene === "fisher" ? "Fisher 估计样本" : activeIndex < 7 ? "当前任务数据" : "旧任务来源";
+  const taskBStatus = activeIndex < 14 ? "等待 Task B" : activeIndex < 17 ? "当前任务数据" : "训练已完成";
+  return <section className="p10-panel p10-data-panel" aria-label="任务与数据区">
+    <BoardPanelTitle number="1" title="任务 / 数据区" subtitle="Tasks & Data · 当前 batch 来自正在学习的任务" />
+    <div className="p10-data-cards">
+      <TaskDataCard task="a" status={taskAStatus} active={activeIndex < 7 || state.scene === "fisher"} selected={selected === "task-a-data"} onSelect={() => onSelect("task-a-data")} />
+      <TaskDataCard task="b" status={taskBStatus} active={activeIndex >= 14 && activeIndex < 17} selected={selected === "task-b-data"} onSelect={() => onSelect("task-b-data")} />
+    </div>
+    <p className="p10-panel-note">样本图示用于说明数据流，不表示论文实验样本或结果。</p>
+  </section>;
+}
+
+function MemoryPanel({ activeIndex, selected, onSelect }: {
+  activeIndex: number;
+  selected?: RuntimeObjectId;
+  onSelect: (id: RuntimeObjectId) => void;
+}) {
+  const items: { id: RuntimeObjectId; symbol: ReactNode; title: string; detail: string; ready: boolean }[] = [
+    { id: "task-a-anchor", symbol: <>θ<sub>A</sub>*</>, title: "Task A 参数锚点", detail: "Task A 结束时复制 · 后续保持固定", ready: activeIndex >= 11 },
+    { id: "task-a-fisher", symbol: <>F<sub>A</sub></>, title: "Fisher 信息", detail: "逐参数敏感性近似 · 参数不更新", ready: activeIndex >= 12 },
+    { id: "task-state-a", symbol: <>S<sub>A</sub></>, title: "Task A 状态", detail: "θ_A* + F_A · Task B 读取", ready: activeIndex >= 13 },
+  ];
+  return <section className="p10-panel p10-memory-panel" aria-label="持久记忆区">
+    <BoardPanelTitle number="3" title="持久记忆区" subtitle="Persistent Memory · 跨任务保留的对象" badge="MEMORY RAIL" />
+    <div className="p10-memory-list">
+      {items.map((item) => <button key={item.id} type="button" className={`p10-memory-item ${item.ready ? "is-ready" : "is-pending"} ${selected === item.id ? "is-selected" : ""}`} onClick={() => onSelect(item.id)} aria-pressed={selected === item.id}>
+        <span className="p10-memory-item__symbol">{item.symbol}</span>
+        <span className="p10-memory-item__copy"><b>{item.title}</b><small>{item.detail}</small></span>
+        <span className="p10-memory-item__status">{item.ready ? "已保存" : "待保存"}</span>
+      </button>)}
+      <div className={`p10-memory-item p10-memory-item--next ${activeIndex >= 17 ? "is-ready" : "is-pending"}`}>
+        <span className="p10-memory-item__symbol">S<sub>B</sub></span>
+        <span className="p10-memory-item__copy"><b>Task B 状态</b><small>θ_B* + F_B · Task C 可继续读取</small></span>
+        <span className="p10-memory-item__status">{activeIndex >= 17 ? "已形成" : "Task B 后"}</span>
+      </div>
+    </div>
+  </section>;
+}
+
+function FlowArrow({ reverse = false }: { reverse?: boolean }) {
+  return <svg className={`p10-flow-line ${reverse ? "is-reverse" : ""}`} viewBox="0 0 48 16" role="presentation" aria-hidden="true">
+    <path d={reverse ? "M46 8H4m8-6L4 8l8 6" : "M2 8h42m-8-6 8 6-8 6"} />
+  </svg>;
+}
+
+function NeuralWorkbench({ state, selected, onSelect }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
+  const hasFocus = (...ids: RuntimeObjectId[]) => ids.some((id) => state.focus.includes(id) || selected === id);
+  const reverse = state.scene === "backward" || state.scene === "gradient";
+  const dataId: RuntimeObjectId = state.phase === "task-b" ? "task-b-data" : "task-a-data";
+  return <div className={`p10-neural-workbench ${reverse ? "is-backward" : ""}`} aria-label="交互式神经网络工作台">
+    <div className="p10-neural-workbench__flow">
+      <button type="button" className={`p10-net-node p10-net-node--input ${hasFocus(dataId) ? "is-active" : ""}`} onClick={() => onSelect(dataId)} aria-pressed={selected === dataId}>
+        <span className="p10-net-node__eyebrow">INPUT · xₙ</span><SampleMatrix task={state.phase === "task-b" ? "b" : "a"} /><b>图像 / 数据</b><small>{state.phase === "task-b" ? "Task B batch" : "Task A batch"}</small>
+      </button>
+      <FlowArrow reverse={reverse} />
+      <div className="p10-feature-group">
+        <span className="p10-net-node__eyebrow">CNN FEATURE EXTRACTION</span>
+        <button type="button" className={`p10-feature-block ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`} onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}>
+          <span className="p10-feature-stack"><i /><i /><i /></span><b>Conv 1</b><small>θ¹ · 3×3</small>
+        </button>
+        <span className="p10-feature-op">ReLU</span>
+        <button type="button" className={`p10-feature-block p10-feature-block--second ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`} onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}>
+          <span className="p10-feature-stack"><i /><i /><i /></span><b>Conv 2</b><small>θ² · 3×3</small>
+        </button>
+        <span className="p10-feature-op">Pool</span>
+      </div>
+      <FlowArrow reverse={reverse} />
+      <div className={`p10-net-node p10-net-node--fc ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`}>
+        <span className="p10-net-node__eyebrow">CLASSIFICATION</span>
+        <button type="button" onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}><span className="p10-fc-bars"><i /><i /><i /></span><b>FC layers</b><small>θ³ · θ⁴</small></button>
+        <small>Flatten → logits z</small>
+      </div>
+      <FlowArrow reverse={reverse} />
+      <button type="button" className={`p10-net-node p10-net-node--output ${hasFocus("model-logits", "prediction-probabilities", "task-a-loss", "task-b-loss") ? "is-active" : ""}`} onClick={() => onSelect("prediction-probabilities")} aria-pressed={selected === "prediction-probabilities"}>
+        <span className="p10-net-node__eyebrow">OUTPUT · pθ(y|x)</span>
+        <span className="p10-probability-bars"><i><b>0</b><em style={{ width: "58%" }} /></i><i><b>1</b><em style={{ width: "84%" }} /></i><i><b>2</b><em style={{ width: "31%" }} /></i></span>
+        <small>类别概率 · 示意</small>
+      </button>
+    </div>
+    <div className="p10-neural-workbench__zoom" aria-label="卷积层局部放大示意">
+      <div className="p10-zoom-heading"><b>层内放大视图</b><span>FEATURE MAP · 示意</span></div>
+      <div className="p10-zoom-flow"><span className="p10-zoom-maps"><i /><i /><i /></span><b>Conv 2</b><i className="p10-zoom-arrow">→</i><span className="p10-zoom-op">ReLU</span><i className="p10-zoom-arrow">→</i><span className="p10-zoom-pool" /></div>
+      <small>卷积 → 激活 → 池化</small>
+    </div>
+  </div>;
+}
+
+function ParameterStrip({ state, selected, onSelect }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
+  const showAnchor = state.focus.includes("task-a-anchor") || state.scene === "objective" || state.scene === "gradient";
+  const showFisher = state.focus.includes("task-a-fisher") || state.scene === "objective" || state.scene === "fisher";
+  return <div className="p10-parameter-strip" aria-label="模型参数与存储参数">
+    <span className="p10-parameter-strip__label">模型参数（可交互）<small>Layer grouping · EWC 仍逐参数作用</small></span>
+    {[
+      { label: "卷积层 θ¹", shape: "[64, 1, 3, 3]" },
+      { label: "卷积层 θ²", shape: "[64, 64, 3, 3]" },
+      { label: "全连接 θ³/θ⁴", shape: "[128, 256]" },
+    ].map((item) => <button key={item.label} type="button" className={`p10-parameter-chip ${selected === "current-parameters" ? "is-selected" : ""}`} onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}>
+      <b>{item.label}</b><small>{item.shape}</small><span aria-hidden="true"><i /><i /><i /><i /><i /><i /></span>
+    </button>)}
+    {showAnchor && <button type="button" className="p10-parameter-chip p10-parameter-chip--anchor" onClick={() => onSelect("task-a-anchor")} aria-pressed={selected === "task-a-anchor"}><b>固定 Anchor θ_A*</b><small>Task A snapshot</small></button>}
+    {showFisher && <button type="button" className="p10-parameter-chip p10-parameter-chip--fisher" onClick={() => onSelect("task-a-fisher")} aria-pressed={selected === "task-a-fisher"}><b>Fisher F_A</b><small>参数位置对齐</small></button>}
+  </div>;
+}
+
+function MathArea({ state, expandedFormula, setExpandedFormula, onSelect }: {
+  state: AnimationState;
+  expandedFormula: boolean;
+  setExpandedFormula: (value: boolean) => void;
+  onSelect: (id: RuntimeObjectId) => void;
+}) {
+  return <section className="p10-panel p10-math-panel" aria-label="数学与公式区">
+    <BoardPanelTitle number="2" title="数学视图" subtitle="Mathematical / Formula Area · 与当前运行状态关联" />
+    <div className="p10-math-live">
+      <div className="p10-math-live__heading"><b>{state.math ? "当前状态关联公式" : "当前阶段的数学关系"}</b>{state.math && <button type="button" aria-pressed={expandedFormula} onClick={() => setExpandedFormula(!expandedFormula)}>{expandedFormula ? "收起" : "展开"}</button>}</div>
+      {state.math ? <Formula kind={state.math} expanded={expandedFormula} onSelect={onSelect} /> : <p>{state.scene === "fisher" ? "参数固定 · 梯度平方累积 · 不执行 optimizer.step()" : state.scene === "gradient" ? "g_B + g_EWC → g_total → optimizer.step()" : "当前参数 θ 在共享网络中参与前向、Loss 与更新。"}</p>}
+    </div>
+    <div className="p10-math-principles" aria-label="先验、似然与后验关系">
+      <button type="button" onClick={() => onSelect("current-parameters")}><b>先验分布</b><span>p(θ)</span></button>
+      <button type="button" onClick={() => onSelect("task-a-data")}><b>似然函数</b><span>p(D_A|θ) = ∏ pθ(yₙ|xₙ)</span></button>
+      <button type="button" onClick={() => onSelect("prediction-probabilities")}><b>后验分布</b><span>p(θ|D_A) ∝ p(D_A|θ)p(θ)</span></button>
+    </div>
+    <div className="p10-math-supporting">
+      <button type="button" onClick={() => onSelect("task-a-anchor")}><b>Laplace 局部近似</b><span>p(θ|D_A) ≈ N(θ_A*, H_A⁻¹)</span></button>
+      <button type="button" onClick={() => onSelect("task-a-fisher")}><b>Fisher 信息矩阵</b><span>F_A = E[(∇ log pθ(y|x))²]</span></button>
+    </div>
+    <button type="button" className="p10-ewc-equation" onClick={() => onSelect("ewc-penalty")}>
+      <b>EWC 损失函数 · EWC Loss</b>
+      <span>L_total = L_B + <i>λ</i>⁄2 Σ<sub>i</sub> F<sub>A,i</sub>(θ<sub>i</sub> − θ<sub>A,i</sub>*)²</span>
+    </button>
+  </section>;
+}
+
+function InspectorArea({ info, focusId, selected, review, onSelect, onReview, onOpenHub }: {
+  info: { title: string; badge: string; body: string; detail: string };
+  focusId?: RuntimeObjectId;
+  selected?: RuntimeObjectId;
+  review?: ReviewLink;
+  onSelect: (id: RuntimeObjectId) => void;
+  onReview: (review: ReviewLink) => void;
+  onOpenHub: () => void;
+}) {
+  const links: ReviewLink[] = [
+    { page: "page-03-bayes", anchor: "prior-likelihood-posterior", label: "Bayes" },
+    { page: "page-04-laplace", anchor: "laplace-local-view", label: "Laplace" },
+    { page: "page-05-fisher", anchor: "fisher-estimation", label: "Fisher" },
+    { page: "page-06-ewc-objective", anchor: "ewc-objective", label: "EWC Objective" },
+    { page: "page-07-lifecycle", anchor: "task-a-to-b-to-c", label: "Lifecycle" },
+  ];
+  return <section className="p10-panel p10-inspector-panel" aria-label="检查器与参考区">
+    <BoardPanelTitle number="4" title="检查器 / 参考区" subtitle="Inspect linked objects · 回看前文" badge="REFERENCE" />
+    <div className="p10-inspector-content" aria-live="polite">
+      <div className="p10-inspector-content__top"><span>{info.badge}</span>{focusId && <button type="button" onClick={() => onSelect(focusId)}>{selected === focusId ? "取消选中" : "查看当前对象 ↗"}</button>}</div>
+      <h3>{info.title}</h3><p>{info.body}</p><small>{info.detail}</small>
+    </div>
+    {review && <button type="button" className="p10-review-shortcut" onClick={() => onReview(review)}>当前步骤：{review.label} ↗</button>}
+    <div className="p10-reference-links"><span>相关章节</span>{links.map((link) => <button key={link.page} type="button" onClick={() => onReview(link)}>{link.label}</button>)}<button type="button" className="p10-hub-link" onClick={onOpenHub}>打开 Reference Hub ↗</button></div>
+  </section>;
+}
+
+function TimelinePanel({ activeIndex, unlockedThrough, onGoTo }: { activeIndex: number; unlockedThrough: number; onGoTo: (index: number) => void }) {
+  return <footer className="p10-timeline" aria-label="Grand Animation 18 步状态时间轴">
+    <div className="p10-timeline__heading"><span className="p10-panel__number">5</span><div><b>状态时间轴 <small>State Timeline / State Machine</small></b><span>18 个状态 · 按顺序播放，也可返回已解锁步骤</span></div><span className="p10-timeline__legend"><i className="is-current" />当前状态 <i className="is-done" />已完成 <i className="is-locked" />未开始</span></div>
+    <div className="p10-timeline__bands" aria-label="五个阶段">
+      {TIMELINE_PHASES.map((phase) => <button key={phase.tone} type="button" className={`p10-timeline__band p10-timeline__band--${phase.tone} ${activeIndex >= phase.first && activeIndex <= phase.last ? "is-active" : ""}`} style={{ gridColumn: `${phase.first + 1} / span ${phase.last - phase.first + 1}` }} onClick={() => onGoTo(phase.first)} disabled={unlockedThrough < phase.first} aria-current={activeIndex >= phase.first && activeIndex <= phase.last ? "step" : undefined}>
+        <b>{phase.title}</b><small>{phase.range}</small>
+      </button>)}
+    </div>
+    <div className="p10-timeline__steps" role="group" aria-label="18 个可导航状态">
+      {STATES.map((item, index) => <button key={item.id} type="button" className={`p10-timeline__step ${index === activeIndex ? "is-current" : index < activeIndex ? "is-done" : "is-locked"} ${item.checkpoint ? "is-checkpoint" : ""}`} onClick={() => onGoTo(index)} disabled={index > unlockedThrough} aria-current={index === activeIndex ? "step" : undefined} aria-label={`状态 ${index + 1}：${item.title}${index < activeIndex ? "，已完成" : index === activeIndex ? "，当前状态" : "，未开始"}`}>
+        <span>{String(index + 1).padStart(2, "0")}</span><b>{item.title}</b>
+      </button>)}
+    </div>
+  </footer>;
+}
+
 function FirstVisitOverlay({ onStart }: { onStart: () => void }) {
   const startRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { startRef.current?.focus(); }, []);
@@ -211,19 +431,20 @@ function FirstVisitOverlay({ onStart }: { onStart: () => void }) {
 }
 
 function FinalSummary({ onReplay, onExplore }: { onReplay: () => void; onExplore: () => void }) {
-  const replayRef = useRef<HTMLButtonElement>(null);
-  const exploreRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => { replayRef.current?.focus(); }, []);
-  return <div className="p10-overlay p10-overlay--final" role="dialog" aria-modal="true" aria-labelledby="p10-final-title" onKeyDown={(event) => {
-    if (event.key === "Tab" && event.shiftKey && document.activeElement === replayRef.current) { event.preventDefault(); exploreRef.current?.focus(); }
-    else if (event.key === "Tab" && !event.shiftKey && document.activeElement === exploreRef.current) { event.preventDefault(); replayRef.current?.focus(); }
-  }}>
-    <div className="p10-final-card"><span className="p10-overline">FULL EWC EXECUTION · COMPLETE</span><h2 id="p10-final-title">旧任务约束，进入了同一个优化过程</h2>
-      <div className="p10-final-loop" aria-label="EWC 生命周期闭环">Train <i>→</i> Consolidate <i>→</i> Store <i>→</i> Learn under old-task constraints <i>→</i> Repeat</div>
-      <ol className="p10-takeaways"><li><b>01</b><span>EWC 不保存完整旧任务行为，而是保存旧任务结束时的参数位置与局部敏感性近似。</span></li><li><b>02</b><span>Fisher-weighted quadratic penalty 把这些旧任务信息重新加入后续任务的优化目标。</span></li><li><b>03</b><span>EWC 最终改变的不是 Optimizer 本身，而是 Optimizer 接收到的 Total Gradient。</span></li></ol>
-      <div className="p10-final-actions"><button ref={replayRef} type="button" className="p10-primary-button" onClick={onReplay}>Replay Full Execution <span>↻</span></button><button ref={exploreRef} type="button" className="p10-secondary-button" onClick={onExplore}>Explore Timeline <span>→</span></button></div>
+  return <section className="p10-completion" aria-labelledby="p10-final-title">
+    <span className="p10-completion__eyebrow">FULL EWC EXECUTION · COMPLETE</span>
+    <h3 id="p10-final-title">旧任务约束，进入同一个优化过程</h3>
+    <div className="p10-completion__loop">Train <i>→</i> Consolidate <i>→</i> Store <i>→</i> Learn under old-task constraints <i>→</i> Repeat</div>
+    <div className="p10-completion__takeaways">
+      <span>旧任务结束位置与敏感性近似被保存</span>
+      <span>Fisher 加权约束进入新任务目标</span>
+      <span>两路梯度共同决定参数更新</span>
     </div>
-  </div>;
+    <div className="p10-completion__actions">
+      <button type="button" onClick={onReplay}>Replay Full Execution ↻</button>
+      <button type="button" onClick={onExplore}>Explore Timeline →</button>
+    </div>
+  </section>;
 }
 
 export function PageGrandAnimation() {
@@ -298,42 +519,62 @@ export function PageGrandAnimation() {
   }, [api.currentPage, api.hubOpen, activeIndex, activeObject, state.scene, help.open, pageIsFinal, replayMode]);
 
   const setRuntimeObject = (id?: RuntimeObjectId) => { api.setActiveRuntimeObject(id); setActiveObject(id); };
-  const activePhase = PHASES.find((phase) => phase.id === state.phase)!;
+  const inspectorInfo = selectedInfo ?? (state.focus[0] ? OBJECT_INFO[state.focus[0]] : OBJECT_INFO["neural-network"]);
+  const activePhase = TIMELINE_PHASES.find((phase) => activeIndex >= phase.first && activeIndex <= phase.last)!;
 
-  return <article className="p10-page" id="grand-animation" aria-label="EWC Grand Animation">
-    <header className="p10-header">
-      <div className="p10-header__top"><button type="button" className="p10-back-page" onClick={() => api.navigatePage("page-09-atari")} aria-label="返回 Page 9">← <span>Page 9</span></button><span className="p10-header__label">EWC <i>/</i> FINAL INTEGRATION</span><span className="p10-header__spacer" /></div>
-      <div className="p10-header__main"><h1>让 EWC 真正运行起来</h1><p>从 Task A 普通训练开始，跟随同一个模型经历 Consolidation、Fisher Estimation、Task B 的 EWC 约束训练，并继续进入后续任务。</p></div>
+  return <article className="p10-page p10-board" id="grand-animation" aria-label="EWC Grand Animation">
+    <header className="p10-board__header">
+      <div className="p10-board__identity">
+        <button type="button" className="p10-back-page" onClick={() => api.navigatePage("page-09-atari")} aria-label="返回 Page 9">← <span>Page 9</span></button>
+        <div className="p10-header__main"><h1>持续学习可视化实验室</h1><p>让概率、Bayes、Laplace、Fisher 与 EWC 在同一条训练流程中连接起来。</p></div>
+      </div>
+      <div className="p10-board-player" aria-label="Grand Animation 播放控制">
+        <div className="p10-board-player__transport">
+          <button type="button" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex === 0} aria-label="上一步">|◀</button>
+          <button type="button" className="p10-board-player__play" onClick={() => { if (pageIsFinal && !playing) startReplay(); else setPlaying((value) => !value); }} aria-label={playing ? "暂停" : "播放"}>{playing ? "Ⅱ" : "▶"}</button>
+          <button type="button" onClick={() => goTo(activeIndex + 1)} disabled={pageIsFinal} aria-label="下一步">▶|</button>
+        </div>
+        <input type="range" min="0" max={Math.max(1, unlockedThrough)} value={activeIndex} onChange={(event) => goTo(Number(event.currentTarget.value))} aria-label="动画状态进度" aria-valuetext={`状态 ${activeIndex + 1}：${state.title}`} />
+        <span className="p10-board-player__count">{activeIndex + 1}<i>/</i>{STATES.length}</span>
+      </div>
+      <div className="p10-board__current" aria-live="polite">
+        <b>当前步骤：{activeIndex + 1}. {state.short}</b>
+        <span>{activePhase.title} · {state.task}</span>
+        <small>{state.annotation}</small>
+      </div>
     </header>
 
-    <section className="p10-recall" aria-label="已学知识回顾"><div className="p10-recall__chain"><span>Probability</span><i>→</i><span>Bayes</span><i>→</i><span>Laplace</span><i>→</i><span>Fisher</span><i>→</i><span>EWC Objective</span><i>→</i><span>Lifecycle</span></div><p>这一次，它们不再是独立章节，而是同一个训练过程中的不同阶段。</p></section>
+    <main className="p10-board__grid">
+      <aside className="p10-board__left">
+        <TaskDataPanel state={state} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
+        <MemoryPanel activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
+      </aside>
 
-    <nav className="p10-phase-bar" aria-label="EWC 生命周期阶段">
-      <span className="p10-phase-bar__label">PHASE</span>{PHASES.map((phase, index) => <div className={`p10-phase ${phase.id === state.phase ? "is-active" : ""} ${unlockedThrough >= phase.first ? "is-unlocked" : ""}`} key={phase.id}>
-        <button type="button" aria-current={phase.id === state.phase ? "step" : undefined} disabled={unlockedThrough < phase.first} onClick={() => goTo(phase.first)}><b>{phase.title}</b><small>{phase.sub}</small></button>{index < PHASES.length - 1 && <span className="p10-phase-arrow" aria-hidden="true">→</span>}
-      </div>)}</nav>
+      <section className="p10-panel p10-workbench" aria-labelledby="p10-current-title">
+        <BoardPanelTitle number="" title="运行态视图（神经网络工作台）" subtitle="Runtime View · 同一个模型沿训练时间持续更新" badge={state.scene === "posterior" || state.scene === "laplace" ? "MATHEMATICAL VIEW" : state.camera} />
+        <div className="p10-workbench__current">
+          <div><span>STATE {String(activeIndex + 1).padStart(2, "0")} / 18 · {state.phase.toUpperCase()}</span><h2 id="p10-current-title">{state.title}</h2></div>
+          <p>{state.annotation}<small>{state.why}</small></p>
+          {state.review && <button type="button" onClick={() => api.openReference({ pageId: state.review!.page, anchorId: state.review!.anchor })}>{state.review.label} ↗</button>}
+        </div>
+        <div className="p10-workbench__network"><NeuralWorkbench state={state} selected={activeObject} onSelect={selectObject} /></div>
+        <div className="p10-workbench__focus" aria-label="当前步骤细节">
+          {pageIsFinal && !playing ? <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} /> : <>
+            <div className="p10-workbench__focus-head"><span>当前步骤细节 · {state.camera}</span>{(state.scene === "posterior" || state.scene === "laplace") && <button type="button" onClick={() => goTo(10)}>返回 Runtime ↑</button>}</div>
+            <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} />
+          </>}
+        </div>
+        <ParameterStrip state={state} selected={activeObject} onSelect={selectObject} />
+      </section>
 
-    <section className="p10-execution" aria-labelledby="p10-current-title">
-      <div className="p10-execution__heading"><div><span className="p10-overline">STATE {String(activeIndex + 1).padStart(2, "0")} / 18 <i>·</i> {activePhase.title}</span><h2 id="p10-current-title">{state.title}</h2></div><div className="p10-execution__context"><span>{state.task}</span><small>{state.camera}</small></div></div>
-      <div className="p10-execution__annotation" aria-live="polite"><span className="p10-annotation-icon" aria-hidden="true">●</span><p>{state.annotation}<small>{state.why}</small></p>{state.review && <button type="button" className="p10-review-link" onClick={() => api.openReference({ pageId: state.review!.page, anchorId: state.review!.anchor })}>{state.review.label} ↗</button>}</div>
+      <aside className="p10-board__right">
+        <MathArea state={state} expandedFormula={expandedFormula} setExpandedFormula={setExpandedFormula} onSelect={selectObject} />
+        <InspectorArea info={inspectorInfo} focusId={state.focus[0]} selected={activeObject} review={state.review} onSelect={selectObject} onReview={(review) => api.openReference({ pageId: review.page, anchorId: review.anchor })} onOpenHub={() => api.openHub()} />
+      </aside>
+    </main>
 
-      <div className={`p10-camera p10-camera--${state.scene}`}>
-        <div className="p10-camera__chrome"><span><i /> CAMERA · {state.camera}</span><span>{state.scene === "posterior" || state.scene === "laplace" ? "MATHEMATICAL VIEW" : "EWC RUNTIME"}</span></div>
-        {state.math && <div className="p10-math-rail"><div className="p10-math-rail__head"><span>FORMULA <small>· LINKED TO RUNTIME OBJECTS</small></span><button type="button" aria-pressed={expandedFormula} onClick={() => setExpandedFormula((value) => !value)}>{expandedFormula ? "Compact" : "Expand"}</button></div><Formula kind={state.math} expanded={expandedFormula} onSelect={selectObject} /></div>}
-        {state.scene !== "posterior" && state.scene !== "laplace" && state.scene !== "overview" && state.scene !== "loop" && <RuntimeTrack state={state} selected={activeObject} onSelect={selectObject} />}
-        <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} />
-        {selectedInfo && <aside className="p10-inspector" aria-live="polite" aria-label="对象检查器"><div className="p10-inspector__head"><span>{selectedInfo.badge}</span><button type="button" onClick={dismissInspector} aria-label="关闭对象检查器">×</button></div><h3>{selectedInfo.title}</h3><p>{selectedInfo.body}</p><p className="p10-inspector__detail">{selectedInfo.detail}</p></aside>}
-        <div className="p10-camera__footer"><span>点击带有 Inspect 标记的运行时对象，或公式中的符号，查看它对应的执行状态。</span><button type="button" onClick={() => setRuntimeObject(state.focus[0])} disabled={!state.focus.length}>Inspect current focus ↗</button></div>
-      </div>
-    </section>
-
-    <footer className="p10-controls" aria-label="Grand Animation 播放与导航控制">
-      <div className="p10-controls__top"><div className="p10-breadcrumb"><span>EWC Runtime</span><i>/</i><span>{state.task}</span><i>/</i><b>{state.short}</b>{(state.scene === "posterior" || state.scene === "laplace") && <button type="button" onClick={() => goTo(10)}>Return to Runtime ↑</button>}</div><div className="p10-playback"><button type="button" className="p10-transport" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex === 0} aria-label="Back">← <span>Back</span></button><button type="button" className="p10-play-button" onClick={() => { if (pageIsFinal && !playing) startReplay(); else setPlaying((value) => !value); }} aria-label={playing ? "Pause" : "Play"}>{playing ? "Ⅱ" : "▶"}<span>{playing ? "Pause" : "Play"}</span></button><button type="button" className="p10-transport p10-transport--next" onClick={() => goTo(activeIndex + 1)} disabled={pageIsFinal} aria-label="Next"><span>Next</span> →</button></div><div className="p10-state-count">{String(activeIndex + 1).padStart(2, "0")} <i>/</i> 18</div></div>
-      <div className="p10-controls__maps"><div className="p10-step-map"><span>STEP</span><div role="group" aria-label="18 个 Grand Animation 状态">{STATES.map((item, index) => <button key={item.id} type="button" className={`${index === activeIndex ? "is-current" : ""} ${index <= unlockedThrough ? "is-unlocked" : ""} ${item.checkpoint ? "is-checkpoint" : ""}`} disabled={index > unlockedThrough} aria-label={`状态 ${index + 1}：${item.title}`} aria-current={index === activeIndex ? "step" : undefined} onClick={() => goTo(index)} />)}</div></div><div className="p10-minimap"><span>MINI-MAP</span><div>{PHASES.map((phase) => <button type="button" key={phase.id} disabled={unlockedThrough < phase.first} className={`${phase.id === state.phase ? "is-current" : ""} ${unlockedThrough >= phase.first ? "is-unlocked" : ""}`} onClick={() => goTo(phase.first)}><i aria-hidden="true" /><span>{phase.title}</span></button>)}</div></div></div>
-      <span className="p10-sr-only" aria-live="polite">{announcement}</span>
-    </footer>
-
+    <TimelinePanel activeIndex={activeIndex} unlockedThrough={unlockedThrough} onGoTo={goTo} />
+    <span className="p10-sr-only" aria-live="polite">{announcement}</span>
     {help.open && <FirstVisitOverlay onStart={help.close} />}
-    {pageIsFinal && !help.open && !playing && <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} />}
   </article>;
 }
