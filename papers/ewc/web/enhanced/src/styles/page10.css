@@ -123,8 +123,9 @@
 .p10-task-world__boundary i { color: #b9c8bb; font: normal 11px Georgia, serif; }
 .p10-memory-rail { min-width: 0; display: flex; align-items: center; gap: 9px; padding: 6px 10px; border-top: 1px solid rgba(139, 169, 151, .37); border-bottom: 1px solid rgba(139, 169, 151, .23); background: rgba(10, 30, 33, .24); }
 .p10-memory-rail__label { margin-right: auto; color: #97b2a5; font: 8px "DM Mono", Consolas, monospace; letter-spacing: .08em; }
-.p10-memory-chip { min-width: 0; display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid rgba(151, 180, 163, .36); border-radius: 5px; color: #e1eddf; background: rgba(52, 90, 69, .55); font: 13px Georgia, serif; white-space: nowrap; cursor: pointer; }
-.p10-memory-chip small { color: #bdd1c0; font: 10px "DM Mono", Consolas, monospace; }
+.p10-memory-chip { min-width: 0; display: inline-flex; align-items: center; gap: 0; padding: 6px 10px; border: 1px solid rgba(151, 180, 163, .36); border-radius: 5px; color: #e1eddf; background: rgba(52, 90, 69, .55); font: 13px Georgia, serif; white-space: nowrap; cursor: pointer; }
+.p10-memory-chip__formula { display: inline-block; white-space: nowrap; letter-spacing: normal; }
+.p10-memory-chip small { margin-left: 8px; color: #bdd1c0; font: 10px "DM Mono", Consolas, monospace; }
 .p10-memory-chip.is-pending { border-style: dashed; color: #a5b7ad; background: rgba(255,255,255,.025); }
 .p10-memory-chip.is-task-b { border-color: rgba(195, 126, 93, .52); background: rgba(112, 62, 46, .56); }
 .p10-world-complete { padding: 6px 10px; border-radius: 4px; color: #c2d3c8; background: rgba(224, 235, 221, .065); font-size: 11px; text-align: center; }
@@ -210,11 +211,11 @@
 .p10-semantic-transition { min-height: 0; flex: 1; display: flex; align-items: center; justify-content: center; gap: clamp(12px, 3vw, 45px); }
 .p10-point-object { width: 134px; height: 110px; flex: 0 0 auto; display: grid; place-content: center; justify-items: center; gap: 5px; border: 1px solid rgba(226, 191, 126, .45); border-radius: 50%; color: #f2d8a4; background: rgba(107, 80, 40, .35); }
 .p10-point-object b { font: 26px Georgia, serif; }
-.p10-point-object small { color: #c7b995; font-size: 10px; }
+.p10-point-object small { max-width: 64px; color: #c7b995; font-size: 10px; line-height: 1.15; text-align: center; }
 .p10-semantic-arrow { color: #d7c08f; font: 23px "DM Mono", Consolas, monospace; }
 .p10-posterior-cloud { min-width: 180px; min-height: 119px; display: grid; align-content: center; justify-items: center; gap: 8px; padding: 12px 20px; border: 1px solid rgba(153, 182, 177, .4); border-radius: 50%; color: #e4eee8; background: radial-gradient(ellipse, rgba(87, 129, 121, .5), rgba(69, 104, 99, .12) 72%); text-align: center; }
 .p10-posterior-cloud b { color: #d3e1d9; font: 21px Georgia, serif; }
-.p10-posterior-cloud span { color: #c5d5ca; font-size: 12px; }
+.p10-posterior-cloud span { width: 100%; max-width: 120px; color: #c5d5ca; font-size: 12px; line-height: 1.18; text-align: center; }
 .p10-posterior-cloud i { color: #9fb7a9; font: italic 10px Georgia, serif; }
 .p10-posterior-cloud.is-quiet { min-width: 130px; min-height: 75px; opacity: .55; }
 .p10-gaussian { position: relative; width: min(34vw, 270px); display: grid; justify-items: center; }
@@ -767,9 +768,9 @@ button.p10-memory-item { cursor: pointer; }
 .p10-workbench__focus .p10-point-object { width: 78px; height: 68px; }
 .p10-workbench__focus .p10-point-object b { font-size: 18px; }
 .p10-workbench__focus .p10-point-object small, .p10-workbench__focus .p10-posterior-cloud i { font-size: 9px; }
-.p10-workbench__focus .p10-posterior-cloud { min-width: 115px; min-height: 70px; padding: 7px; }
+.p10-workbench__focus .p10-posterior-cloud { min-width: 152px; min-height: 90px; gap: 5px; padding: 8px; }
 .p10-workbench__focus .p10-posterior-cloud b { font-size: 15px; }
-.p10-workbench__focus .p10-posterior-cloud span { font-size: 10px; }
+.p10-workbench__focus .p10-posterior-cloud span { max-width: 100px; font-size: 10px; }
 .p10-workbench__focus .p10-gaussian { width: min(24vw, 170px); }
 .p10-workbench__focus .p10-math-legend { gap: 8px; font-size: 9px; }
 .p10-workbench__focus .p10-scene--data { gap: 10px; }
@@ -872,8 +873,8 @@ button.p10-memory-item { cursor: pointer; }
 .p10-timeline__steps { align-items: stretch; gap: 2px; }
 .p10-timeline__step { position: relative; min-width: 0; display: grid; grid-template-rows: 24px minmax(0,1fr); justify-items: center; align-content: start; gap: 2px; padding: 0 2px; border: 0; color: #536b70; background: transparent; text-align: center; cursor: pointer; }
 .p10-timeline__step::before { content: ""; position: absolute; top: 11px; left: 50%; width: 100%; height: 1px; background: #bdccca; }
-.p10-timeline__step:first-child::before { left: 50%; width: 50%; }
-.p10-timeline__step:last-child::before { width: 50%; }
+.p10-timeline__step:first-child::before { width: 100%; }
+.p10-timeline__step:last-child::before { display: none; }
 .p10-timeline__step > span { z-index: 1; width: 23px; height: 23px; display: grid; place-items: center; border: 1px solid #afc2c3; border-radius: 50%; color: #fff; background: #82999c; font: 600 10px "DM Mono",Consolas,monospace; }
 .p10-timeline__step > b { max-width: 100%; overflow: hidden; display: -webkit-box; color: #4d6268; font-size: 9px; font-weight: 500; line-height: 1.12; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .p10-timeline__step.is-done > span { border-color: #16495b; background: #16495b; }
