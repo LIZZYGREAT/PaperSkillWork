@@ -819,7 +819,10 @@ button.p10-memory-item { cursor: pointer; }
 .p10-workbench__focus .p10-fixed-sample, .p10-workbench__focus .p10-fisher-square, .p10-workbench__focus .p10-fisher-accumulator { min-width: 72px; padding: 5px; }
 .p10-workbench__focus .p10-fixed-sample span, .p10-workbench__focus .p10-fisher-square span, .p10-workbench__focus .p10-fisher-accumulator span { font-size: 8px; }
 .p10-workbench__focus .p10-fixed-sample b, .p10-workbench__focus .p10-fisher-square b, .p10-workbench__focus .p10-fisher-accumulator b { font-size: 10px; }
-.p10-parameter-strip { min-width: 0; display: flex; align-items: center; gap: 5px; }
+.p10-parameter-strip { min-width: 0; position: relative; display: flex; align-items: center; gap: 5px; }
+.p10-parameter-strip__memory-port { position: absolute; z-index: 5; left: -11px; top: 50%; width: 8px; height: 8px; transform: translateY(-50%); border: 1.5px solid #5a7c82; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(255,255,252,.92); }
+.p10-parameter-strip__memory-port.is-save { border-color: #d96332; background: #fff4ec; }
+.p10-parameter-strip__memory-port.is-read { border-color: #438576; background: #edf7f2; }
 .p10-parameter-strip__label { min-width: 93px; display: grid; gap: 2px; color: #284f59; font-size: 10px; font-weight: 700; }
 .p10-parameter-strip__label small { color: #688087; font-size: 8px; font-weight: 400; }
 .p10-parameter-chip { min-width: 0; flex: 1; display: grid; gap: 3px; padding: 5px 6px; border: 1px solid #c1d2d0; border-radius: 5px; color: #214852; background: #f5f9f6; text-align: left; cursor: pointer; }

@@ -350,20 +350,27 @@ function FlowGuideLayer({ state, activeIndex }: { state: AnimationState; activeI
           midX: rect.left - bounds.left + rect.width / 2,
         };
       };
-      const bridge = (from: NonNullable<ReturnType<typeof box>>, to: NonNullable<ReturnType<typeof box>>, reverse = false) => {
+      const bridge = (from: NonNullable<ReturnType<typeof box>>, to: NonNullable<ReturnType<typeof box>>, reverse = false, horizontalEnd = false) => {
         const startX = reverse ? from.left : from.right;
         const endX = reverse ? to.right : to.left;
         const direction = Math.sign(endX - startX) || 1;
-        const bend = Math.max(16, Math.min(46, Math.abs(endX - startX) * 0.52));
+        const span = Math.abs(endX - startX);
+        const endStub = horizontalEnd ? Math.min(26, span * 0.42, Math.max(8, span * 0.34)) : 0;
+        const curveEndX = endX - direction * endStub;
+        const curveSpan = Math.abs(curveEndX - startX);
+        const bend = Math.max(16, Math.min(46, curveSpan * 0.52));
         const startY = from.midY;
         const endY = to.midY;
-        return `M ${startX} ${startY} C ${startX + direction * bend} ${startY}, ${endX - direction * bend} ${endY}, ${endX} ${endY}`;
+        const startBend = horizontalEnd ? Math.min(bend, curveSpan * 0.42) : bend;
+        const endBend = horizontalEnd ? Math.min(bend, curveSpan * 0.38) : bend;
+        const curve = `M ${startX} ${startY} C ${startX + direction * startBend} ${startY}, ${curveEndX - direction * endBend} ${endY}, ${curveEndX} ${endY}`;
+        return horizontalEnd ? `${curve} L ${endX} ${endY}` : curve;
       };
       const edges: FlowGuideEdge[] = [];
-      const addBridge = (id: string, fromId: string, toId: string, tone: FlowGuideEdge["tone"], active: boolean, reverse = false) => {
+      const addBridge = (id: string, fromId: string, toId: string, tone: FlowGuideEdge["tone"], active: boolean, reverse = false, horizontalEnd = false) => {
         const from = box(findNode(fromId));
         const to = box(findNode(toId));
-        if (from && to) edges.push({ id, path: bridge(from, to, reverse), tone, active });
+        if (from && to) edges.push({ id, path: bridge(from, to, reverse, horizontalEnd), tone, active });
       };
 
       if (activeIndex < 17) {
@@ -390,11 +397,11 @@ function FlowGuideLayer({ state, activeIndex }: { state: AnimationState; activeI
 
       addBridge("runtime-formula", "runtime-step", "math-link", "formula", Boolean(state.math));
 
-      if (activeIndex === 11) addBridge("save-anchor", "runtime-parameters", "memory-task-a-anchor", "save", true, true);
-      else if (activeIndex === 12) addBridge("save-fisher", "runtime-parameters", "memory-task-a-fisher", "save", true, true);
-      else if (activeIndex === 13) addBridge("save-task-state-a", "runtime-parameters", "memory-task-state-a", "save", true, true);
-      else if (activeIndex >= 14 && activeIndex <= 16) addBridge("read-task-state-a", "memory-task-state-a", "runtime-parameters", "read", true);
-      else if (activeIndex === 17) addBridge("save-task-state-b", "runtime-parameters", "memory-task-state-b", "save", true, true);
+      if (activeIndex === 11) addBridge("save-anchor", "runtime-memory-port", "memory-task-a-anchor", "save", true, true, true);
+      else if (activeIndex === 12) addBridge("save-fisher", "runtime-memory-port", "memory-task-a-fisher", "save", true, true, true);
+      else if (activeIndex === 13) addBridge("save-task-state-a", "runtime-memory-port", "memory-task-state-a", "save", true, true, true);
+      else if (activeIndex >= 14 && activeIndex <= 16) addBridge("read-task-state-a", "memory-task-state-a", "runtime-memory-port", "read", true, false, true);
+      else if (activeIndex === 17) addBridge("save-task-state-b", "runtime-memory-port", "memory-task-state-b", "save", true, true, true);
 
       setGeometry((previous) => previous.width === bounds.width && previous.height === bounds.height && JSON.stringify(previous.edges) === JSON.stringify(edges)
         ? previous
@@ -469,10 +476,13 @@ function NeuralWorkbench({ state, selected, onSelect }: { state: AnimationState;
   </div>;
 }
 
-function ParameterStrip({ state, selected, onSelect }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
+function ParameterStrip({ state, activeIndex, selected, onSelect }: { state: AnimationState; activeIndex: number; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
   const showAnchor = state.focus.includes("task-a-anchor") || state.scene === "fisher" || state.scene === "memory" || state.scene === "objective" || state.scene === "gradient";
   const showFisher = state.focus.includes("task-a-fisher") || state.scene === "memory" || state.scene === "objective" || state.scene === "fisher";
+  const memoryFlow = activeIndex >= 11 && activeIndex <= 17;
+  const memoryFlowTone = activeIndex >= 14 && activeIndex <= 16 ? "is-read" : "is-save";
   return <div className="p10-parameter-strip" data-flow-node="runtime-parameters" aria-label="模型参数与存储参数">
+    {memoryFlow && <span data-flow-node="runtime-memory-port" className={`p10-parameter-strip__memory-port ${memoryFlowTone}`} aria-hidden="true" />}
     <span className="p10-parameter-strip__label">模型参数（可交互）<small>形状仅示意 · EWC 逐参数作用</small></span>
     {[
       { label: "卷积层 θ¹", shape: "[64, 1, 3, 3]" },
@@ -705,7 +715,7 @@ export function PageGrandAnimation() {
             <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} />
           </>}
         </div>
-        <ParameterStrip state={state} selected={activeObject} onSelect={selectObject} />
+        <ParameterStrip state={state} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
       </section>
 
       <aside className="p10-board__right">
