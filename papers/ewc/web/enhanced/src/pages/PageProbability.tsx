@@ -4,16 +4,16 @@ import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 
 type ParameterState = {
   id: string;
-  label: string;
+  candidate: "A" | "B" | "C";
   logits: [number, number, number];
   probabilities: [number, number, number];
   datasetProbabilities: [number, number, number];
 };
 
 const PARAMETER_STATES: ParameterState[] = [
-  { id: "theta-1", label: "θ⁽¹⁾", logits: [-0.87, -0.97, -1.61], probabilities: [0.42, 0.38, 0.20], datasetProbabilities: [0.42, 0.65, 0.58] },
-  { id: "theta-2", label: "θ⁽²⁾", logits: [0.00, -1.30, -2.34], probabilities: [0.73, 0.20, 0.07], datasetProbabilities: [0.73, 0.80, 0.92] },
-  { id: "theta-3", label: "θ⁽³⁾", logits: [0.00, -2.40, -3.09], probabilities: [0.88, 0.08, 0.04], datasetProbabilities: [0.88, 0.89, 0.95] },
+  { id: "theta-a", candidate: "A", logits: [-0.87, -0.97, -1.61], probabilities: [0.42, 0.38, 0.20], datasetProbabilities: [0.42, 0.65, 0.58] },
+  { id: "theta-b", candidate: "B", logits: [0.00, -1.30, -2.34], probabilities: [0.73, 0.20, 0.07], datasetProbabilities: [0.73, 0.80, 0.92] },
+  { id: "theta-c", candidate: "C", logits: [0.00, -2.40, -3.09], probabilities: [0.88, 0.08, 0.04], datasetProbabilities: [0.88, 0.89, 0.95] },
 ];
 
 const CLASS_NAMES = ["class A", "class B", "class C"];
@@ -25,6 +25,10 @@ const OUTPUT_NODES = [25, 61, 97];
 
 function formatProbability(value: number) {
   return value.toFixed(2);
+}
+
+function ParameterStateNotation({ candidate }: { candidate: ParameterState["candidate"] }) {
+  return <>θ<sup>[{candidate}]</sup></>;
 }
 
 function datasetLikelihood(state: ParameterState) {
@@ -104,11 +108,11 @@ function ParameterComparison({ selectedId, onSelect }: { selectedId: string; onS
         const selected = selectedId === state.id;
         return (
           <button className={`p02-state-row ${selected ? "is-selected" : ""}`} type="button" key={state.id} aria-pressed={selected} onClick={() => onSelect(state.id)}>
-            <span className="p02-state-row__model"><i>{String(index + 1).padStart(2, "0")}</i><b>{state.label}</b><small>{selected ? "当前网络参数" : "切换到此参数状态"}</small></span>
+            <span className="p02-state-row__model"><i>{String(index + 1).padStart(2, "0")}</i><b><ParameterStateNotation candidate={state.candidate} /></b><small>{selected ? `当前候选参数状态 · Parameter State ${state.candidate}` : `完整模型候选配置 · Parameter State ${state.candidate}`}</small></span>
             <span className="p02-state-row__samples" aria-label={`逐样本真实类别概率 ${state.datasetProbabilities.map(formatProbability).join(", ")}`}>
               {state.datasetProbabilities.map((probability, sampleIndex) => <span className="p02-probability-chip" key={`${state.id}-${sampleIndex}`}>{formatProbability(probability)}</span>)}
             </span>
-            <span className="p02-state-row__score"><small>p(D | θ)</small><b>{formatProbability(likelihood)}</b><i><em style={{ width: `${(likelihood / maximumLikelihood) * 100}%` }} /></i></span>
+            <span className="p02-state-row__score"><small>p(D | <ParameterStateNotation candidate={state.candidate} />)</small><b>{formatProbability(likelihood)}</b><i><em style={{ width: `${(likelihood / maximumLikelihood) * 100}%` }} /></i></span>
             <span className="p02-state-row__loss"><small>NLL</small><b>{loss.toFixed(2)}</b></span>
           </button>
         );
@@ -118,7 +122,7 @@ function ParameterComparison({ selectedId, onSelect }: { selectedId: string; onS
 }
 
 export function PageProbability() {
-  const [selectedId, setSelectedId] = useState("theta-2");
+  const [selectedId, setSelectedId] = useState("theta-b");
   const [showSoftmax, setShowSoftmax] = useState(false);
   const api = useReferenceApi();
   const selected = PARAMETER_STATES.find((state) => state.id === selectedId) ?? PARAMETER_STATES[1];
@@ -131,7 +135,7 @@ export function PageProbability() {
       <header className="ewc-page-header p02-header">
         <div className="ewc-page-header__kicker"><span>02</span> ORDINARY TRAINING · PROBABILITY TO LOSS</div>
         <h1 id="p02-title">从神经网络的输出，走到数据的 Likelihood 与训练 Loss。</h1>
-        <p className="ewc-page-header__dek">给定输入和当前参数，网络先预测类别概率；把每个训练样本真实标签的概率组合起来，就得到数据 Likelihood。取负对数后，便回到熟悉的训练损失。</p>
+        <p className="ewc-page-header__dek">给定已观察输入 x 和当前参数，网络先预测标签的条件概率 p<sub>θ</sub>(y|x)；再组合每个样本真实标签的条件概率，得到数据 Likelihood。取负对数后，便回到熟悉的训练损失。</p>
       </header>
 
       <section className="p02-forward" id="forward-probability" aria-labelledby="p02-forward-title">
@@ -143,7 +147,7 @@ export function PageProbability() {
           </div>
           <span className="p02-flow-arrow" aria-hidden="true">⟶</span>
           <div className="p02-flow-node p02-flow-node--network">
-            <span className="p02-node-label">CURRENT MODEL</span><div className="p02-model-state"><ReferenceTrigger id="neural_network">Neural Network f<sub>θ</sub></ReferenceTrigger><b>{selected.label}</b></div><ForwardNetwork />
+            <span className="p02-node-label">CURRENT MODEL</span><div className="p02-model-state"><ReferenceTrigger id="neural_network">Neural Network f<sub>θ</sub></ReferenceTrigger><b>当前候选参数状态 <ParameterStateNotation candidate={selected.candidate} /></b></div><ForwardNetwork />
           </div>
           <span className="p02-flow-arrow" aria-hidden="true">⟶</span>
           <div className="p02-flow-node p02-flow-node--logits">
@@ -182,20 +186,20 @@ export function PageProbability() {
           <div className="p02-sample-product" aria-live="polite" aria-label={`当前参数状态下的数据 likelihood：${selected.datasetProbabilities.map(formatProbability).join(" 乘 ")} 等于 ${formatProbability(likelihood)}`}>
             {selected.datasetProbabilities.map((probability, index) => <Fragment key={`product-${index}`}><span className="p02-product-term"><small>样本 {index + 1}</small><b>{formatProbability(probability)}</b></span>{index < selected.datasetProbabilities.length - 1 ? <span className="p02-product-operator" aria-hidden="true">×</span> : null}</Fragment>)}
             <b className="p02-product-equals" aria-hidden="true">=</b>
-            <span className="p02-product-result"><small>p(D | {selected.label})</small><b>{formatProbability(likelihood)}</b></span>
+            <span className="p02-product-result"><small>p(D | <ParameterStateNotation candidate={selected.candidate} />)</small><b>{formatProbability(likelihood)}</b></span>
           </div>
-          <small className="p02-assumption">在常见的条件独立样本假设下</small>
+          <small className="p02-assumption">把已观察输入 xₙ 作为条件，并假设样本条件独立</small>
         </div>
 
         <div className="p02-perspective-compare" id="likelihood-comparison" aria-label="Probability 与 Likelihood 的观察视角对比">
-          <div className="p02-perspective-compare__item p02-perspective-compare__item--probability"><span>PROBABILITY · 固定 θ</span><p>给定一组参数，问某个结果或这份数据出现的概率是多少：<b>看可能出现什么数据。</b></p></div>
-          <div className="p02-perspective-compare__item p02-perspective-compare__item--likelihood"><span><ReferenceTrigger id="likelihood">LIKELIHOOD · 固定已观察的 D</ReferenceTrigger></span><p>观察到的数据保持不变，改变 θ，比较哪组参数更能解释 D：<b>看不同参数如何解释同一份数据。</b>它是关于 θ 的函数，不是 θ 的概率分布。</p></div>
+          <div className="p02-perspective-compare__item p02-perspective-compare__item--probability"><span>PROBABILITY · 固定 θ 和已观察输入 x</span><p>看给定输入 x 时，模型为不同标签 y 预测的条件概率：<b>看哪些标签可能对应这个输入。</b></p></div>
+          <div className="p02-perspective-compare__item p02-perspective-compare__item--likelihood"><span><ReferenceTrigger id="likelihood">LIKELIHOOD · 固定已观察的 (xₙ, yₙ)</ReferenceTrigger></span><p>把已观察输入和标签保持不变，改变 θ，比较哪组参数给这些标签更高的条件似然：<b>看不同参数如何解释同一批已观察标签。</b>它是关于 θ 的函数，不是 θ 的概率分布。</p></div>
         </div>
 
         <div className="p02-comparison-heading"><div><span className="p02-overline">PARAMETER SWITCH · SAME DATA · DIFFERENT PREDICTIONS</span><h3>选一组参数，看三条样本概率怎样共同改变 Likelihood</h3></div><span>点击一行即可更新上方网络前向结果</span></div>
         <div className="p02-state-row-head" aria-hidden="true"><span>候选参数状态</span><span><i>x₁</i><i>x₂</i><i>x₃</i><b>每个样本真实标签的概率</b></span><span>数据 Likelihood</span><span>负对数损失</span></div>
         <ParameterComparison selectedId={selectedId} onSelect={setSelectedId} />
-        <p className="p02-boundary-note">这些概率是为了把乘积关系讲清楚而设置的教学示例，不是论文实验结果；表格只比较三组候选参数对同一份 D 的拟合程度。</p>
+        <p className="p02-boundary-note">这些概率是为了把乘积关系讲清楚而设置的教学示例，不是论文实验结果；每一行是同一模型的完整候选参数配置 θ<sup>[A]</sup> / θ<sup>[B]</sup> / θ<sup>[C]</sup>，不是某一层。表格比较三组配置对同一份 D 的条件似然。</p>
       </section>
 
       <section className="p02-loss-update" id="loss-and-update" aria-labelledby="p02-loss-title">
@@ -213,8 +217,8 @@ export function PageProbability() {
           <div className="p02-update-node"><span>OPTIMIZER STEP</span><strong>θ ← θ − η∇<sub>θ</sub>L</strong><small>参数状态改变</small></div>
         </div>
         <div className="p02-update-return"><span className="p02-update-return__line" aria-hidden="true"/><p>更新后的 <em>θ</em> 返回同一个模型；下一批样本再经过新的前向计算。</p><ReferenceTrigger id="optimizer_step">反向计算梯度与 optimizer.step() 是两个不同动作</ReferenceTrigger></div>
-        <div className="p02-dataset-loss" aria-live="polite" aria-label={`当前参数 ${selected.label}；数据 Likelihood ${formatProbability(likelihood)}；总 NLL ${datasetNll.toFixed(2)}`}>
-          <span className="p02-dataset-loss__metric"><small>当前参数</small><b>{selected.label}</b></span>
+        <div className="p02-dataset-loss" aria-live="polite" aria-label={`当前候选参数状态 theta [${selected.candidate}]；条件数据 likelihood ${formatProbability(likelihood)}；总 NLL ${datasetNll.toFixed(2)}`}>
+          <span className="p02-dataset-loss__metric"><small>当前候选参数状态</small><b><ParameterStateNotation candidate={selected.candidate} /></b></span>
           <span className="p02-dataset-loss__metric"><small>p(D | θ)</small><b>{formatProbability(likelihood)}</b></span>
           <span className="p02-dataset-loss__metric"><small>总 NLL</small><b>{datasetNll.toFixed(2)}</b></span>
           <span className="p02-dataset-loss__interpretation">Likelihood 越高，NLL 越低</span>
@@ -227,7 +231,7 @@ export function PageProbability() {
           <thead><tr><th>概率对象</th><th>本页状态</th><th>来源 / 下一步</th></tr></thead>
           <tbody>
             <tr><th><ReferenceTrigger id="p_theta_y_given_x">p<sub>θ</sub>(y | x)</ReferenceTrigger></th><td><span className="p02-status p02-status--done">已解释</span></td><td>当前网络前向计算，再经 Softmax 得到。</td></tr>
-            <tr><th><ReferenceTrigger id="p_D_given_theta">p(D | θ)</ReferenceTrigger></th><td><span className="p02-status p02-status--done">已解释</span></td><td>固定 θ 时，把数据中每个真实标签的预测概率组合起来。</td></tr>
+            <tr><th><ReferenceTrigger id="p_D_given_theta">p(D | θ)</ReferenceTrigger></th><td><span className="p02-status p02-status--done">已解释</span></td><td>把输入 xₙ 视为已观察条件，组合每个真实标签 yₙ 的条件概率 pθ(yₙ | xₙ)。</td></tr>
             <tr><th><ReferenceTrigger id="p_theta">p(θ)</ReferenceTrigger></th><td><span className="p02-status p02-status--next">留到下一页</span></td><td>不是 Forward 算出的输出；接下来要问，怎样给参数本身建立概率视角？</td></tr>
             <tr><th><ReferenceTrigger id="p_theta_given_D">p(θ | D)</ReferenceTrigger></th><td><span className="p02-status p02-status--next">留到下一页</span></td><td>本页还没有解释；它需要把参数视角和数据 Likelihood 接在一起。</td></tr>
           </tbody>
