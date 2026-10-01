@@ -331,7 +331,7 @@ function FlowArrow({ reverse = false, flowing = false, motionKey = "flow" }: { r
   return <svg className={`p10-flow-line ${reverse ? "is-reverse" : ""}`} viewBox="0 0 48 16" role="presentation" aria-hidden="true">
     <path d={reverse ? "M46 8H4m8-6L4 8l8 6" : "M2 8h42m-8-6 8 6-8 6"} />
     {flowing && <circle key={motionKey} className="p10-flow-line__traveler" cx={reverse ? 46 : 2} cy="8" r="2.3">
-      <animateMotion dur="620ms" fill="freeze" path={travelPath} />
+      <animateMotion dur="1240ms" fill="freeze" path={travelPath} />
     </circle>}
   </svg>;
 }
@@ -448,7 +448,7 @@ function FlowGuideLayer({ state, activeIndex, flowingEdgeIds }: { state: Animati
     {geometry.edges.map((edge) => <g key={edge.id}>
       <path className={`p10-board-flow__edge is-${edge.tone} ${edge.active ? "is-active" : "is-muted"}`} d={edge.path} markerEnd={`url(#p10-flow-arrow-${edge.tone === "read" ? "green" : edge.tone === "data-task-c" ? "blue" : edge.tone === "zoom" || edge.tone === "save" || edge.tone === "data-task-b" ? "orange" : "ink"})`} />
       {edge.active && flowingEdgeIds.includes(edge.id) && <circle key={`${state.id}-${edge.id}`} className={`p10-board-flow__traveler is-${edge.tone}`} r="4">
-        <animateMotion dur="700ms" calcMode="spline" keyTimes="0;1" keySplines="0.2 0 0.2 1" fill="freeze" path={edge.path} />
+        <animateMotion dur="1400ms" calcMode="spline" keyTimes="0;1" keySplines="0.2 0 0.2 1" fill="freeze" path={edge.path} />
       </circle>}
     </g>)}
   </svg>;
@@ -700,13 +700,13 @@ export function PageGrandAnimation() {
         { boxShadow: baseShadow, offset: 0 },
         { boxShadow: haloShadow, offset: .28 },
         { boxShadow: baseShadow, offset: 1 },
-      ], { duration: 760, easing: "ease-out" }));
+      ], { duration: 1520, easing: "ease-out" }));
     });
 
     const edgeIds = FLOWING_BOARD_EDGES[nextState.id] ?? [];
     if (edgeIds.length) {
       setFlowingTransition({ stateId: nextState.id, edgeIds });
-      const timer = window.setTimeout(() => setFlowingTransition({ stateId: nextState.id, edgeIds: [] }), 900);
+      const timer = window.setTimeout(() => setFlowingTransition({ stateId: nextState.id, edgeIds: [] }), 1800);
       return () => {
         window.clearTimeout(timer);
         animations.forEach((animation) => animation.cancel());
