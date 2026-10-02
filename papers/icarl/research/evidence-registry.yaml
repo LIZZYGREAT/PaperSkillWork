@@ -1,0 +1,317 @@
+# Workflow v3 evidence registry for iCaRL. Stable IDs are referenced by W4 and later plans.
+claims:
+  C01:
+    claim: "Class-incremental learning receives classes over time, must classify every class seen so far, and cannot keep all historical training data."
+    type: PAPER_FACT
+    source_locator: "PDF p. 1, Section 1"
+    conditions: "This is the paper's class-incremental setting; it is distinct from a task-incremental setting with a known task identity at test time."
+    allowed_wording: "New classes arrive over time, while the learner must continue classifying all seen classes under restricted access to old training data."
+    source_kind: "problem definition"
+  C02:
+    claim: "The learner predicts among all classes seen so far without being told which class batch produced the query."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 1-2, Section 1"
+    conditions: "The prediction set grows as new classes arrive."
+    allowed_wording: "At test time, iCaRL chooses from one prediction space containing all classes observed so far."
+    source_kind: "problem definition"
+  C03:
+    claim: "The network is a trainable feature extractor followed by one sigmoid output node per seen class."
+    type: PAPER_FACT
+    source_locator: "PDF p. 2, Section 2.1, Equation (1)"
+    conditions: "The sigmoid head supports representation learning and is not the final iCaRL prediction rule."
+    allowed_wording: "The training network has a shared feature extractor and one output node for each seen class."
+    source_kind: "architecture and equation"
+  C04:
+    claim: "iCaRL retains exemplar images by class and recomputes class prototypes in the current feature representation."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 2-3, Section 2.2, Algorithm 1"
+    conditions: "Stored items are input images, not stale feature vectors."
+    allowed_wording: "For each seen class, iCaRL re-encodes its stored exemplar images with the current feature extractor and averages their features."
+    source_kind: "method and algorithm"
+  C05:
+    claim: "The final prediction assigns a query to the nearest mean-of-exemplars prototype among all seen classes."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, Section 2.2, Equation (2), Algorithm 1"
+    conditions: "The feature vectors and their averages are L2-normalized; for normalized vectors, nearest Euclidean distance is equivalent to maximum inner product."
+    allowed_wording: "iCaRL predicts the seen class whose current exemplar-mean prototype is nearest to the query feature."
+    source_kind: "equation and algorithm"
+  C06:
+    claim: "The sigmoid output layer is used for representation learning, while the exemplar-mean rule performs final classification."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 2-3, Sections 2.1-2.2"
+    conditions: "Do not describe the output scores as the deployed iCaRL classifier."
+    allowed_wording: "The output layer supplies training signals; final class decisions use nearest means of exemplars."
+    source_kind: "method text"
+  C07:
+    claim: "Herding selects an ordered exemplar list by greedily choosing examples whose selected-prefix mean approaches the full-class mean in feature space."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 4-5, Section 2.4, Equation (3), Algorithm 4"
+    conditions: "The greedy criterion evaluates the resulting prefix mean; it is not independent sorting by distance of each example to the class mean."
+    allowed_wording: "Herding builds an ordered exemplar list so that each prefix approximates the full-class feature mean."
+    source_kind: "method, equation, and algorithm"
+  C08:
+    claim: "When a class memory is reduced, iCaRL keeps the first m items in its herding order."
+    type: PAPER_FACT
+    source_locator: "PDF p. 4, Section 2.4, Algorithm 5"
+    conditions: "The old full class dataset is no longer available to rerun herding."
+    allowed_wording: "A reduced exemplar set keeps the highest-priority prefix of the previously selected list."
+    source_kind: "method and algorithm"
+  C09:
+    claim: "At each update, iCaRL trains on all incoming images for new classes together with stored exemplars for earlier classes."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, Section 2.3, Algorithm 3"
+    conditions: "It does not replay the complete historical datasets."
+    allowed_wording: "The update set combines full data for incoming classes with the retained exemplar images from earlier classes."
+    source_kind: "method and algorithm"
+  C10:
+    claim: "Before updating the network, iCaRL records old-node responses from the current model for each example in the combined update set."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, Section 2.3, Algorithm 3"
+    conditions: "Responses are taken for old class nodes and for both incoming images and retained exemplars; they are not old ground-truth labels."
+    allowed_wording: "The pre-update model supplies soft targets for old output nodes on every example in the combined update set."
+    source_kind: "method and algorithm"
+  C11:
+    claim: "New output nodes use hard class-indicator targets, while old output nodes use the saved pre-update responses."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, Section 2.3, Algorithm 3"
+    conditions: "Target selection follows output-node age, not whether the input image is old or new."
+    allowed_wording: "The update learns incoming class labels at new nodes and distills the previous model responses at old nodes."
+    source_kind: "method and algorithm"
+  C12:
+    claim: "The representation update minimizes a sum of independent binary cross-entropy terms for class nodes with sigmoid responses."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 2-3, Section 2.3, Algorithm 3"
+    conditions: "The paper does not specify a tunable balance coefficient between the new-class and old-response terms in this algorithm."
+    allowed_wording: "The paper trains independent sigmoid nodes with hard targets for new classes and soft targets for old classes."
+    source_kind: "loss and algorithm"
+  C13:
+    claim: "After representation training, iCaRL allocates m=K/t exemplars per seen class by truncating old lists and constructing ordered lists for newly arrived classes."
+    type: PAPER_FACT
+    source_locator: "PDF p. 2, Algorithm 2; PDF pp. 4-5, Algorithms 4-5"
+    conditions: "The paper writes m=K/t; integer allocation and minimum-per-class resource limits apply in an implementation."
+    allowed_wording: "After an update, the total exemplar budget K is divided across t seen classes; old lists are truncated and new class lists are selected."
+    source_kind: "algorithm"
+  C14:
+    claim: "The feature extractor has fixed size in the described setup, but the output layer adds one weight vector per seen class."
+    type: PAPER_FACT
+    source_locator: "PDF p. 3, Resource usage"
+    conditions: "The exemplar-image budget K alone does not bound all model memory as the number of classes grows."
+    allowed_wording: "The exemplar budget is bounded, while class-specific output weights grow with the number of seen classes."
+    source_kind: "resource analysis"
+
+results:
+  R01:
+    claim: "The iCIFAR-100 benchmark uses five class-batch sizes, a 32-layer ResNet, at most 2,000 exemplars, ten class orders, and 70 training epochs per class batch."
+    type: PAPER_RESULT
+    source_locator: "PDF pp. 6-7, Benchmark protocol and Figure 2(a)"
+    conditions: "Metric is multi-class accuracy; the paper reports averages and standard deviations across the ten class-order runs."
+    allowed_wording: "On iCIFAR-100, the paper evaluates batches of 2, 5, 10, 20, or 50 classes with a 32-layer ResNet and K≤2,000."
+    source_kind: "benchmark protocol"
+    dataset: "iCIFAR-100"
+    model: "32-layer ResNet"
+    split: "Ten class orders; test all classes seen at each incremental step"
+    metric: "Multi-class accuracy; average incremental accuracy for a scalar summary"
+    protocol: "100 classes in batches of 2, 5, 10, 20, or 50; 70 epochs per class batch; K≤2,000"
+  R02:
+    claim: "The iILSVRC experiments cover a 100-class subset in batches of 10 and the full 1,000 classes in batches of 100."
+    type: PAPER_RESULT
+    source_locator: "PDF pp. 6-7, Benchmark protocol and Figure 2(b)"
+    conditions: "The model is an 18-layer ResNet; K≤20,000; metric is validation Top-5 accuracy; each class batch is trained for 60 epochs."
+    allowed_wording: "The paper evaluates iILSVRC-small (100 classes, 10 per batch) and iILSVRC-full (1,000 classes, 100 per batch) with validation Top-5 accuracy."
+    source_kind: "benchmark protocol"
+    dataset: "ImageNet ILSVRC 2012"
+    model: "18-layer ResNet"
+    split: "100-class subset or all 1,000 classes; validation evaluation after each step"
+    metric: "Top-5 accuracy"
+    protocol: "K≤20,000; 60 epochs per class batch; 10 or 100 classes per batch"
+  R03:
+    claim: "Figure 2 compares incremental accuracy across the paper's iCIFAR-100 and iILSVRC settings; the ordering has a stated exception on iILSVRC-full."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 7, Figure 2 and caption"
+    conditions: "Describe the exact dataset, class-batch setting, metric, and method when making a comparative statement. Fixed representation is better than LwF.MC on iILSVRC-full; the figure does not establish universal superiority."
+    allowed_wording: "In the reported settings, iCaRL outperforms the compared incremental methods; fixed representation is an exception to the usual LwF.MC ordering on iILSVRC-full."
+    source_kind: "figure and caption"
+    dataset: "iCIFAR-100; iILSVRC-small; iILSVRC-full"
+    model: "32-layer ResNet on iCIFAR-100; 18-layer ResNet on iILSVRC"
+    split: "Per benchmark protocol in R01 and R02"
+    metric: "Multi-class accuracy on iCIFAR-100; Top-5 accuracy on iILSVRC"
+    protocol: "Incremental evaluation over classes seen so far; exact curves are only available in Figure 2"
+  R04:
+    claim: "Table 1a reports average multi-class accuracy across incremental steps for the component ablations on iCIFAR-100."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 10, Table 1(a); experiment context PDF pp. 9-10"
+    conditions: "Values are percentages, grouped by class-batch size. Hybrid2 is 0.6 percentage points above iCaRL at 2 classes per batch; do not claim every component improves every setting."
+    allowed_wording: "Table 1a supports an overall contribution from the combined mechanisms, with batch-size-dependent exceptions."
+    source_kind: "table"
+    dataset: "iCIFAR-100"
+    model: "32-layer ResNet"
+    split: "Ten class orders as in the iCIFAR-100 protocol"
+    metric: "Average multi-class accuracy across incremental steps (%)"
+    protocol: "Table 1a differential analysis; rows are classes per batch; columns are iCaRL, hybrid1, hybrid2, hybrid3, LwF.MC"
+    values:
+      2: [57.0, 36.6, 57.6, 57.0, 11.7]
+      5: [61.2, 50.9, 57.9, 56.7, 32.6]
+      10: [64.1, 59.3, 59.9, 58.1, 44.4]
+      20: [67.2, 65.6, 63.2, 60.5, 54.4]
+      50: [68.6, 68.2, 65.3, 61.5, 64.5]
+    value_order: ["iCaRL", "hybrid1", "hybrid2", "hybrid3", "LwF.MC"]
+  R05:
+    claim: "Table 1b reports iCaRL and a nearest-class-mean reference using all historical training data."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 10, Table 1(b); comparison discussion PDF p. 9"
+    conditions: "Values are percentages on iCIFAR-100. NCM retains all training data and is not subject to the same bounded-memory constraint as iCaRL."
+    allowed_wording: "The Table 1b accuracy gap is small, but NCM is a full-data diagnostic reference rather than a memory-matched incremental baseline."
+    source_kind: "table"
+    dataset: "iCIFAR-100"
+    model: "32-layer ResNet representation learned by iCaRL"
+    split: "Ten class orders as in the iCIFAR-100 protocol"
+    metric: "Average multi-class accuracy across incremental steps (%)"
+    protocol: "Table 1b; NCM recomputes means from all historical training images"
+    values:
+      2: {iCaRL: 57.0, NCM: 59.3}
+      5: {iCaRL: 61.2, NCM: 62.1}
+      10: {iCaRL: 64.1, NCM: 64.5}
+      20: {iCaRL: 67.2, NCM: 67.5}
+      50: {iCaRL: 68.6, NCM: 68.7}
+  R06:
+    claim: "Figure 3 shows different class-position prediction biases in the iCIFAR-100 confusion matrices for iCaRL, LwF.MC, fixed representation, and finetuning."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 8, Figure 3 and caption"
+    conditions: "The matrices use 10 classes per batch and log(1+x) transformed entries for visibility; describe qualitative structure, not unreported exact probabilities."
+    allowed_wording: "The plotted matrices show more evenly distributed predictions for iCaRL, a recent-class tendency for LwF.MC, an early-class bias for fixed representation, and last-batch predictions for finetuning."
+    source_kind: "figure and caption"
+    dataset: "iCIFAR-100"
+    model: "Methods shown in Figure 3"
+    split: "10 classes per batch"
+    metric: "Confusion matrix; log(1+x) transformed entries"
+    protocol: "Qualitative comparison across class positions"
+  R07:
+    claim: "Figure 4 reports average incremental accuracy on iCIFAR-100 with 10 classes per batch for different memory budgets K."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 9, Figure 4 and discussion"
+    conditions: "The paper states that with at least 1,000 exemplars iCaRL is similar to NCM, while the network-output classifier is not competitive; exact curve values are not tabulated."
+    allowed_wording: "In this experiment, increasing K improves the compared methods; with K≥1,000, iCaRL approaches the NCM reference."
+    source_kind: "figure and discussion"
+    dataset: "iCIFAR-100"
+    model: "32-layer ResNet"
+    split: "10 classes per batch"
+    metric: "Average incremental accuracy"
+    protocol: "Memory budgets K varied; exact curve points are not supplied as a table"
+  R08:
+    claim: "Figure 2 includes a network trained in a batch setting with all data available, reporting 68.6% multi-class accuracy."
+    type: PAPER_RESULT
+    source_locator: "PDF p. 7, Figure 2 caption"
+    conditions: "This is an all-data batch-training reference, not an incremental method under the same memory restriction."
+    allowed_wording: "The Figure 2 caption reports 68.6% for the network trained with all data available; treat it as a separate batch-training reference."
+    source_kind: "figure caption"
+    dataset: "iCIFAR-100"
+    model: "Same network trained with all data available"
+    split: "All training data available together"
+    metric: "Multi-class accuracy"
+    protocol: "Batch-training reference, not memory-matched incremental evaluation"
+
+author_interpretations:
+  A01:
+    claim: "The authors interpret the ablations as evidence that all three new components contribute substantially overall, while their effects depend on class-batch size."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "PDF pp. 9-10, Section 4.2, Table 1a discussion"
+    conditions: "The authors explicitly note that distillation can hurt for very small class batches and helps at larger batch sizes."
+    allowed_wording: "The authors argue that the components help overall, with the relative benefit depending on the incremental regime."
+    source_kind: "author discussion of ablation"
+  A02:
+    claim: "The authors interpret the small Table 1b differences as evidence that selected exemplars can represent the class mean reliably in the tested setting."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "PDF p. 9, Section 4.2, Table 1b discussion"
+    conditions: "This comparison uses all training data for NCM and does not establish equal memory use."
+    allowed_wording: "The authors use the small accuracy gap to support the exemplar-mean approximation under the tested setting."
+    source_kind: "author discussion"
+  A03:
+    claim: "The authors identify the remaining gap to all-data batch training and privacy-sensitive storage of raw exemplars as limitations and future-work directions."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "PDF p. 10, Section 5"
+    conditions: "The paper proposes directions; it does not solve these limitations."
+    allowed_wording: "The authors leave the batch-training performance gap and settings that cannot store raw images as open problems."
+    source_kind: "conclusion"
+
+our_interpretations:
+  OI01:
+    claim: "For teaching, the persistent learner state can be summarized as current network parameters plus the ordered exemplar lists for seen classes."
+    type: OUR_INTERPRETATION
+    source_locator: "Derived from PDF pp. 2-4, Algorithms 1-5"
+    conditions: "This is a compact teaching abstraction; optimizer state and implementation-specific buffers are outside the paper's algorithm-level state description."
+    allowed_wording: "A useful runtime summary is S=(Θ,P): current network parameters Θ and per-class exemplar lists P."
+    source_kind: "teaching synthesis"
+  OI02:
+    claim: "Table 1b is best taught as a prototype-approximation diagnostic because its NCM reference has access to all historical training images."
+    type: OUR_INTERPRETATION
+    source_locator: "PDF p. 9, Section 4.2; PDF p. 10, Table 1b"
+    conditions: "Do not present iCaRL and NCM as methods under an identical memory constraint."
+    allowed_wording: "The small gap estimates the accuracy cost of the exemplar approximation against a full-data mean reference."
+    source_kind: "evidence interpretation"
+  OI03:
+    claim: "Figure 2 and Figure 4 should remain source-figure references unless reuse is approved; Table 1 values can support separately authored plots without reproducing the table image."
+    type: OUR_INTERPRETATION
+    source_locator: "PDF pp. 7, 9-10; source rights review recorded in design/asset-plan.md"
+    conditions: "A newly authored plot must identify its exact table values, protocol, attribution, and any calculations; it must not imply access to unreported curve data."
+    allowed_wording: "Use the exact Table 1 values for a newly authored comparison; consult the paper figures as references rather than embedding them without rights approval."
+    source_kind: "editorial and rights decision"
+
+implementation_mappings:
+  I01:
+    claim: "The paper's per-class exemplar sets P_y can map to ordered image collections in an explanatory runtime model."
+    type: IMPLEMENTATION_MAPPING
+    source_locator: "Algorithm-level mapping based on PDF pp. 2-4"
+    conditions: "The data structure name and storage format are tutorial abstractions, not names specified by the paper."
+    allowed_wording: "In a runtime diagram, show each P_y as an ordered collection of retained images."
+    source_kind: "conceptual implementation mapping"
+  I02:
+    claim: "The current feature extractor can re-encode saved exemplars to refresh each class prototype after the representation changes."
+    type: IMPLEMENTATION_MAPPING
+    source_locator: "PDF pp. 2-3, Section 2.2, Algorithm 1"
+    conditions: "This describes the algorithm's dependency; caching and batching are implementation choices."
+    allowed_wording: "After a representation update, recompute each displayed prototype from the retained images using the current feature extractor."
+    source_kind: "runtime mapping"
+  I03:
+    claim: "The two target sources can be shown as distinct signals feeding one representation-update objective."
+    type: IMPLEMENTATION_MAPPING
+    source_locator: "PDF p. 3, Section 2.3, Algorithm 3"
+    conditions: "A diagram may simplify the sums, but must preserve that old soft targets are computed before the update and new labels are hard targets."
+    allowed_wording: "Show saved old-node responses and incoming class labels as separate supervision signals for the update."
+    source_kind: "visual mapping"
+
+background:
+  B01:
+    claim: "A class-incremental learner must choose among all seen classes without relying on a test-time task identifier."
+    type: GENERAL_BACKGROUND
+    source_locator: "General continual-learning terminology; aligned with PDF p. 1 definition"
+    conditions: "Use this only to contrast task-incremental setups; do not imply all continual-learning benchmarks share the same protocol."
+    allowed_wording: "Unlike a task-incremental setup with a known task ID, this class-incremental prediction covers all seen classes."
+    source_kind: "terminology"
+  B02:
+    claim: "For unit-normalized vectors, minimizing squared Euclidean distance is equivalent to maximizing the inner product."
+    type: GENERAL_BACKGROUND
+    source_locator: "Standard vector identity; applied in PDF p. 3, Equation (2)"
+    conditions: "The equivalence depends on both vectors being L2-normalized."
+    allowed_wording: "Because the paper normalizes features and prototypes, nearest distance and largest inner product give the same class."
+    source_kind: "mathematical background"
+
+teaching_examples:
+  T01:
+    claim: "A small two-dimensional point set can illustrate how herding chooses a sequence whose prefix mean approaches a full-class mean."
+    type: TEACHING_EXAMPLE
+    source_locator: "Invented teaching example; method principle from PDF pp. 4-5, Equation (3)"
+    conditions: "Coordinates and selected points are invented and must not be presented as paper data or a reproduced experiment."
+    allowed_wording: "This toy point set illustrates the herding rule; its points are not data from the paper."
+    source_kind: "invented toy example"
+  T02:
+    claim: "A query-to-prototype sketch can illustrate nearest-mean classification in a normalized feature space."
+    type: TEACHING_EXAMPLE
+    source_locator: "Invented teaching diagram based on PDF p. 3, Equation (2)"
+    conditions: "The geometry is schematic and does not report learned features or measured accuracy."
+    allowed_wording: "This schematic shows the decision rule only; the positions are illustrative."
+    source_kind: "invented teaching diagram"
+
+review:
+  unresolved_source_conflicts: []
+  unresolved_evidence_conflicts: []
+  unsafe_claim_wording: []
