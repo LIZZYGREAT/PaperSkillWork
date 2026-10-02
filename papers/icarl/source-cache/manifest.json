@@ -67,21 +67,24 @@
       "locator": "PDF p. 7, Figure 2",
       "caption": "Experimental results of class-incremental training on iCIFAR-100 and iILSVRC: reported are multi-class accuracies across all classes observed up to a certain time point. iCaRL clearly outperforms the other methods in this setting. Fixing the data representation after having trained on the first batch (fixed repr.) performs worse than distillation-based LwF.MC, except for iILSVRC-full. Finetuning the network without preventing catastrophic forgetting (finetuning) achieves the worst results. For comparison, the same network trained with all data available achieves 68.6% multi-class accuracy.",
       "type": "RESULT",
-      "candidate_role": "Primary benchmark comparison across class-batch protocols and datasets."
+      "candidate_role": "Primary benchmark comparison across class-batch protocols and datasets.",
+      "image_path": "source-cache/figures/FIG-02.png"
     },
     {
       "id": "FIG-03",
       "locator": "PDF p. 8, Figure 3",
       "caption": "Confusion matrices of different method on iCIFAR-100 (with entries transformed by log(1+x) for better visibility). iCaRL’s predictions are distributed close to uniformly over all classes, whereas LwF.MC tends to predict classes from recent batches more frequently. The classifier with fixed representation has a bias towards classes from the first batch, while the network trained by finetuning predicts exclusively classes labels from the last batch.",
       "type": "RESULT",
-      "candidate_role": "Class-level error and prediction-bias comparison."
+      "candidate_role": "Class-level error and prediction-bias comparison.",
+      "image_path": "source-cache/figures/FIG-03.png"
     },
     {
       "id": "FIG-04",
       "locator": "PDF p. 9, Figure 4",
       "caption": "Average incremental accuracy on iCIFAR-100 with 10 classes per batch for different memory budgets K.",
       "type": "RESULT",
-      "candidate_role": "Performance trend as the exemplar-memory budget changes."
+      "candidate_role": "Performance trend as the exemplar-memory budget changes.",
+      "image_path": "source-cache/figures/FIG-04.png"
     },
     {
       "id": "TABLE-01",
