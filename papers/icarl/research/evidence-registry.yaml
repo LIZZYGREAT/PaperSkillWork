@@ -98,6 +98,13 @@ claims:
     conditions: "The exemplar-image budget K alone does not bound all model memory as the number of classes grows."
     allowed_wording: "The exemplar budget is bounded, while class-specific output weights grow with the number of seen classes."
     source_kind: "resource analysis"
+  C15:
+    claim: "Keeping all historical training images permits retraining from old data but violates the paper's restricted-memory setting; training only on incoming classes can overwrite earlier discriminative information."
+    type: PAPER_FACT
+    source_locator: "PDF pp. 1-2, Sections 1-2.1"
+    conditions: "These are motivating alternatives and risks; do not imply that every fine-tuning implementation forgets to the same degree."
+    allowed_wording: "Keeping every old image breaks the memory constraint, while updating only on new classes risks catastrophic forgetting."
+    source_kind: "problem motivation"
 
 results:
   R01:
