@@ -14,16 +14,20 @@ const actorDetails: Record<string, { label: string; className: string }> = {
   "old-data-locked": { label: "旧数据 · unavailable", className: "is-locked" },
   "new-task": { label: "Task t+1 · current data", className: "is-task" },
   "teacher-frozen": { label: "Teacherₜ · FROZEN", className: "is-teacher" },
-  "student-active": { label: "Student · ACTIVE", className: "is-student" },
-  "old-response": { label: "Yₒ · response target", className: "is-response" },
+  "student-active": { label: "Current Student · ACTIVE", className: "is-student" },
+  "old-response": { label: "Yₒ · RECORDED / FIXED TARGET", className: "is-response" },
   "new-head": { label: "θₙ · new head", className: "is-student" },
   "shared-frozen": { label: "θₛ · FROZEN", className: "is-frozen" },
   "old-head-frozen": { label: "θₒ · FROZEN", className: "is-frozen" },
   "new-head-active": { label: "θₙ · ACTIVE", className: "is-student" },
+  "shared-trainable": { label: "θₛ · TRAINABLE", className: "is-student" },
+  "old-head-trainable": { label: "θₒ · TRAINABLE", className: "is-student" },
+  "new-head-trainable": { label: "θₙ · TRAINABLE", className: "is-student" },
   "old-loss": { label: "L_old", className: "is-objective" },
   "new-loss": { label: "L_new", className: "is-objective" },
-  gradient: { label: "gradient · θₒ / θₙ → θₛ", className: "is-gradient" },
-  "student-updated": { label: "Studentₜ₊₁ · updated", className: "is-student" },
+  gradient: { label: "gradient · L_old → θₒ → θₛ · L_new → θₙ → θₛ", className: "is-gradient" },
+  "student-updated": { label: "Student^(k+1) · updated", className: "is-student" },
+  "student-final": { label: "Student* · task complete", className: "is-student" },
   optimizer: { label: "Optimizer Step", className: "is-model" },
   "model-next": { label: "Modelₜ₊₁", className: "is-model" },
   "teacher-next": { label: "Teacherₜ₊₁ · next stage", className: "is-teacher" },
@@ -33,28 +37,29 @@ const actorDetails: Record<string, { label: string; className: string }> = {
 function tokenLabel(stepId: string) {
   if (stepId === "old-model" || stepId === "new-task") return "Modelₜ";
   if (stepId === "teacher-student-split") return "Modelₜ · handoff";
-  if (stepId === "generate-responses") return "Student · ACTIVE";
+  if (stepId === "generate-responses") return "Yₒ · RECORDED";
   if (stepId === "add-head") return "Student + θₙ";
   if (stepId === "warm-up") return "θₙ · WARM-UP";
-  if (stepId === "joint-training") return "Student · JOINT TRAINING";
-  if (stepId === "update") return "Updated Studentₜ₊₁";
+  if (stepId === "joint-training") return "Current Student · JOINT";
+  if (stepId === "update") return "Student^(k+1)";
   return "Modelₜ₊₁";
 }
 
 function GrandTrailMiniVisual({ stepId }: { stepId: string }) {
   if (stepId === "old-model") return <div className="v3-grand-mini v3-grand-mini-model"><b>Modelₜ</b><span>θₛ + θₒ</span><small>LOCKED OLD DATA</small></div>;
   if (stepId === "new-task") return <div className="v3-grand-mini v3-grand-mini-input"><span>Xₙ</span><span>Yₙ</span><small>current task only</small></div>;
-  if (stepId === "teacher-student-split") return <div className="v3-grand-mini v3-grand-mini-split"><span>Modelₜ</span><i aria-hidden="true">↙</i><b>Teacherₜ <small>FROZEN</small></b><i aria-hidden="true">↘</i><strong>Student <small>ACTIVE</small></strong></div>;
-  if (stepId === "generate-responses") return <div className="v3-grand-mini v3-grand-mini-response"><span>Xₙ</span><i aria-hidden="true">→</i><b>Teacherₜ</b><i aria-hidden="true">→</i><strong>Yₒ</strong><small>enters Student context</small></div>;
-  if (stepId === "add-head") return <div className="v3-grand-mini v3-grand-mini-head"><span>shared trunk θₛ</span><div><i aria-hidden="true">├→</i><b>old θₒ</b><i aria-hidden="true">└→</i><strong>new θₙ</strong></div></div>;
+  if (stepId === "teacher-student-split") return <div className="v3-grand-mini v3-grand-mini-model"><b>Modelₜ</b><span>θₛ + θₒ</span><small>FROZEN REFERENCE · Teacherₜ</small></div>;
+  if (stepId === "generate-responses") return <div className="v3-grand-mini v3-grand-mini-response"><span>Xₙ</span><i aria-hidden="true">→</i><b>Frozen Modelₜ</b><i aria-hidden="true">→</i><strong>Yₒ</strong><small>RECORDED · FIXED TARGET</small></div>;
+  if (stepId === "add-head") return <div className="v3-grand-mini v3-grand-mini-head"><span>shared representation θₛ</span><div><i aria-hidden="true">├─</i><b>old head θₒ → Ŷₒ</b><i aria-hidden="true">└─</i><strong>new head θₙ → Ŷₙ</strong></div></div>;
   if (stepId === "warm-up") return <div className="v3-grand-mini v3-grand-mini-warmup"><span>θₛ <b>FROZEN</b></span><span>θₒ <b>FROZEN</b></span><strong>θₙ <small>ACTIVE</small></strong></div>;
   if (stepId === "joint-training") return <div className="v3-grand-mini v3-grand-mini-joint">
     <div><span>Yₒ / Ŷₒ</span><i aria-hidden="true">→</i><b>L_old</b></div>
     <div><span>Yₙ / Ŷₙ</span><i aria-hidden="true">→</i><b>L_new</b></div>
     <div className="v3-grand-mini-total"><strong>objective</strong><i aria-hidden="true">↶ gradient</i><span>θₒ / θₙ → θₛ</span></div>
+    <div className="v3-grand-mini-trainable"><span>θₛ · ACTIVE</span><span>θₒ · ACTIVE</span><span>θₙ · ACTIVE</span></div>
   </div>;
-  if (stepId === "update") return <div className="v3-grand-mini v3-grand-mini-update"><span>Studentₜ₊₁</span><i aria-hidden="true">→</i><strong>Updated Studentₜ₊₁</strong></div>;
-  return <div className="v3-grand-mini v3-grand-mini-promotion"><strong>Modelₜ₊₁</strong><i aria-hidden="true">→</i><b>Teacherₜ₊₁</b><span>↺ Task t+2</span></div>;
+  if (stepId === "update") return <div className="v3-grand-mini v3-grand-mini-update"><span>Student^(k)</span><i aria-hidden="true">→</i><strong>Student^(k+1)</strong></div>;
+  return <div className="v3-grand-mini v3-grand-mini-promotion"><strong>Student*</strong><i aria-hidden="true">→</i><b>Modelₜ₊₁ → Teacherₜ₊₁</b><span>current task finished · next task t+2</span></div>;
 }
 
 export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
@@ -195,7 +200,7 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
           })}
           {tokenPosition ? <span className={`v3-grand-trail-model-token ${step.id === "teacher-student-split" ? "is-split" : step.id === "next-teacher" ? "is-promoted" : ""}`} style={{ left: tokenPosition.left, top: tokenPosition.top }}>{tokenLabel(step.id)}</span> : null}
         </div>
-        <div className={`v3-grand-trail-loop-summary ${atEnd ? "is-current" : ""}`}><span>LOOP CLOSURE</span><strong>Updated Studentₜ₊₁ → Modelₜ₊₁ → Teacherₜ₊₁</strong><i aria-hidden="true">↺</i><small>Task t+2 arrives; the next stage generates fresh old-task responses.</small></div>
+        <div className={`v3-grand-trail-loop-summary ${atEnd ? "is-current" : ""}`}><span>LOOP CLOSURE</span><strong>Student* → Modelₜ₊₁ → Teacherₜ₊₁</strong><i aria-hidden="true">↺</i><small>当前任务训练结束后完成晋升；Task t+2 到来时再固定新参照。</small></div>
       </div>
 
       <aside className="v3-grand-trail-detail" aria-label="当前生命周期检查点" aria-live="polite">
@@ -208,7 +213,7 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
           <div><dt>State</dt><dd>{step.state}</dd></div>
           <div className="is-why"><dt>Why this step exists</dt><dd>{step.why}</dd></div>
         </dl>
-        {step.id === "joint-training" ? <div className="v3-grand-trail-minibatch"><span>CHAPTER 03 · MINIBATCH DETAIL</span><p>{jointTrainingSubsteps.map((substep, index) => <span key={substep}>{index ? <i aria-hidden="true">→</i> : null}{substep}</span>)}</p><small>这条微观训练顺序嵌在当前任务阶段中；Teacher 仍固定。</small></div> : null}
+        {step.id === "joint-training" ? <div className="v3-grand-trail-minibatch"><span>CHAPTER 03 · MINIBATCH DETAIL</span><p>{jointTrainingSubsteps.map((substep, index) => <span key={substep}>{index ? <i aria-hidden="true">→</i> : null}{substep}</span>)}</p><small>Yₒ 已预先记录；Backward 计算梯度，Optimizer Step 在下一检查点单独更新 θₛ、θₒ、θₙ。</small></div> : null}
         <div className="v3-grand-trail-detail-links">
           {step.referenceId ? <button type="button" onClick={() => onOpenReference(step.referenceId!)}>Reference Hub · 当前步骤 ↗</button> : null}
           {step.chapterRef && onNavigateChapter ? <button type="button" onClick={() => onNavigateChapter(step.chapterRef!)}>回看 Chapter {step.chapterRef} ↗</button> : null}

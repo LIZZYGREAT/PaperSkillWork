@@ -11,12 +11,12 @@ const positions = [
 
 const details: Record<string, { input: string; output: string; state: string; why: string; reference: string; chapter: LwfChapterId }> = {
   "model-ready": { input: "上一任务阶段完成的 Modelₜ", output: "可运行的旧模型", state: "旧训练数据不可用；模型参数仍可访问。", why: "旧模型是本阶段旧任务行为的参照。", reference: "teacher", chapter: "01" },
-  "freeze-teacher": { input: "Modelₜ · 共享表示与旧 head", output: "固定的 Teacherₜ", state: "Teacher 参数在本阶段不更新。", why: "固定副本提供稳定的旧响应来源。", reference: "teacher", chapter: "02" },
+  "freeze-teacher": { input: "Modelₜ · 共享表示与旧 head", output: "固定的 Teacherₜ", state: "Teacher 参数在本阶段不更新；它只用于训练前记录旧响应。", why: "固定旧模型为 Yₒ 提供稳定来源，不参与当前 Student 的更新。", reference: "teacher", chapter: "02" },
   "task-arrives": { input: "新任务输入 Xₜ₊₁ 与标签 Yₜ₊₁", output: "当前阶段可用的训练数据", state: "旧任务图像与标签继续不可用。", why: "LwF 只用当前任务样本来约束旧响应。", reference: "xn", chapter: "02" },
-  "refresh-responses": { input: "Teacherₜ + Xₜ₊₁", output: "当前阶段的旧任务响应 Yₒ", state: "响应从当前 Teacher 和当前输入重新生成。", why: "旧行为目标来自模型响应，不是旧样本。", reference: "yo", chapter: "02" },
-  "add-head": { input: "扩展后的 Studentₜ₊₁", output: "新增任务 head θₙ", state: "Teacherₜ 固定，Student 独立训练。", why: "新 head 为新任务提供专属输出路径。", reference: "theta-n", chapter: "02" },
-  "adapt-student": { input: "Yₒ、Yₙ 与 Student 输出", output: "适配后的 Studentₜ₊₁", state: "旧响应目标与新任务目标共同参与训练。", why: "两个目标让共享表示兼顾旧响应和新任务。", reference: "joint-optimization", chapter: "03" },
-  "promote-model": { input: "更新后的 Studentₜ₊₁", output: "下一阶段的 Modelₜ₊₁", state: "当前任务阶段完成，模型包含到 t+1 的任务输出。", why: "本阶段学到的模型成为后续任务的起点。", reference: "sequential-refresh", chapter: "05" },
+  "refresh-responses": { input: "Frozen Teacherₜ + Xₜ₊₁", output: "Yₒ · RECORDED / FIXED TARGET", state: "在 Student 正式训练前记录；本任务训练期间直接读取固定 Yₒ。", why: "旧行为目标来自模型在当前输入上的响应，不是旧样本。", reference: "yo", chapter: "02" },
+  "add-head": { input: "Modelₜ · θₛ + θₒ", output: "Current Student · θₛ + θₒ + θₙ", state: "保留共享表示和旧 head，并增加随机初始化的新任务 head θₙ。", why: "新 head 为当前任务提供专属输出路径。", reference: "theta-n", chapter: "02" },
+  "adapt-student": { input: "固定 Yₒ、Yₙ 与 Current Student", output: "Task t+1 训练中的 Student", state: "Warm-up 只训练 θₙ；联合阶段 θₛ、θₒ、θₙ 都可训练，Teacher snapshot 固定。", why: "L_old 保持旧响应，L_new 学习当前任务；这一阶段持续到 Task t+1 完成。", reference: "joint-optimization", chapter: "03" },
+  "promote-model": { input: "Task t+1 完成后的 Student*", output: "Modelₜ₊₁", state: "当前任务训练已结束；Modelₜ₊₁ 现在成为新任务序列状态。", why: "任务完成后才把模型级下标 t+1 交给最终 Student。", reference: "sequential-refresh", chapter: "05" },
   "next-task": { input: "Modelₜ₊₁ 与新任务 t+2", output: "固定的 Teacherₜ₊₁", state: "进入下一阶段后再次刷新旧任务响应。", why: "递归交接形成连续任务生命周期。", reference: "sequential-refresh", chapter: "05" },
 };
 
@@ -29,10 +29,10 @@ function HandoffMiniVisual({ id }: { id: string }) {
   if (id === "model-ready") return <div className="v3-handoff-mini-model"><b>Modelₜ</b><small>θₛ + θₒ</small></div>;
   if (id === "freeze-teacher") return <div className="v3-handoff-mini-split"><span>Modelₜ</span><i aria-hidden="true">→</i><b>Teacherₜ <small>FROZEN</small></b></div>;
   if (id === "task-arrives") return <div className="v3-handoff-mini-inputs"><b>Xₜ₊₁</b><b>Yₜ₊₁</b></div>;
-  if (id === "refresh-responses") return <div className="v3-handoff-mini-flow"><span>Teacherₜ</span><i aria-hidden="true">→</i><b>Yₒ</b><small>on Xₜ₊₁</small></div>;
-  if (id === "add-head") return <div className="v3-handoff-mini-head"><span>shared θₛ</span><i aria-hidden="true">└─</i><b>new θₙ</b></div>;
-  if (id === "adapt-student") return <div className="v3-handoff-mini-objective"><span>L_old</span><i aria-hidden="true">+</i><span>L_new</span><i aria-hidden="true">→</i><b>Student</b></div>;
-  if (id === "promote-model") return <div className="v3-handoff-mini-flow"><span>Studentₜ₊₁</span><i aria-hidden="true">→</i><b>Modelₜ₊₁</b></div>;
+  if (id === "refresh-responses") return <div className="v3-handoff-mini-flow"><span>Xₜ₊₁</span><i aria-hidden="true">→</i><b>Frozen Teacherₜ</b><i aria-hidden="true">→</i><strong>Yₒ · FIXED</strong></div>;
+  if (id === "add-head") return <div className="v3-handoff-mini-head"><span>shared θₛ + old θₒ</span><i aria-hidden="true">+ new head</i><b>θₙ</b></div>;
+  if (id === "adapt-student") return <div className="v3-handoff-mini-objective"><span>Warm-up · θₙ</span><i aria-hidden="true">→</i><span>Joint · θₛ / θₒ / θₙ</span><i aria-hidden="true">→</i><b>Task complete</b></div>;
+  if (id === "promote-model") return <div className="v3-handoff-mini-flow"><span>Student*</span><i aria-hidden="true">→</i><b>Modelₜ₊₁</b></div>;
   return <div className="v3-handoff-mini-flow"><span>Modelₜ₊₁</span><i aria-hidden="true">↺</i><b>Teacherₜ₊₁</b></div>;
 }
 
@@ -41,7 +41,7 @@ function modelTokenLabel(id: string) {
   if (id === "freeze-teacher") return "Teacherₜ · FROZEN";
   if (id === "task-arrives") return "Xₜ₊₁ / Yₜ₊₁";
   if (id === "refresh-responses") return "Yₒ · refreshed";
-  if (id === "add-head" || id === "adapt-student") return "Studentₜ₊₁";
+  if (id === "add-head" || id === "adapt-student") return "Current Student";
   if (id === "promote-model") return "Modelₜ₊₁";
   return "Teacherₜ₊₁";
 }
@@ -153,7 +153,7 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
       <div className="v3-task-handoff-visual" aria-hidden="true">
         <div className="v3-task-handoff-actors">
           {stepIndex >= 1 ? <span className="is-teacher">Teacherₜ · FROZEN</span> : <span className="is-model">Modelₜ · PREVIOUS STAGE</span>}
-          {stepIndex >= 4 ? <span className="is-student">Studentₜ₊₁ · ACTIVE</span> : null}
+          {stepIndex >= 4 ? <span className="is-student">Current Student · ACTIVE</span> : null}
         </div>
         <div className="v3-task-handoff-board" ref={boardRef}>
           <svg ref={routesRef} className="v3-task-handoff-routes" viewBox="0 0 1000 340" preserveAspectRatio="none" aria-hidden="true">
@@ -178,7 +178,7 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
           })}
           {tokenPosition ? <span className="v3-task-handoff-model-token" style={{ left: tokenPosition.left, top: tokenPosition.top }}>{modelTokenLabel(step.id)}</span> : null}
         </div>
-        <div className={`v3-task-handoff-loopback ${atEnd ? "is-current" : ""}`}><strong>Next task</strong><span>Modelₜ₊₁ → Teacherₜ₊₁ ↺ Task t+2</span></div>
+        <div className={`v3-task-handoff-loopback ${atEnd ? "is-current" : ""}`}><strong>Next task</strong><span>Student* → Modelₜ₊₁ → Teacherₜ₊₁ ↺ Task t+2</span></div>
       </div>
 
       <aside className="v3-task-handoff-detail" aria-label="当前任务交接阶段" aria-live="polite">

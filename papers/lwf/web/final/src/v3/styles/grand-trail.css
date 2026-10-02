@@ -69,8 +69,10 @@
 .v3-grand-mini-joint > div > b { color: #876b38; }
 .v3-grand-mini-joint > div > i { color: #91a69e; font-style: normal; }
 .v3-grand-mini-joint .v3-grand-mini-total { padding-top: 2px; border-top: 1px solid #e6ece8; color: #9a6038; font-weight: 740; }
+.v3-grand-mini-joint .v3-grand-mini-trainable { flex-wrap: wrap; gap: 3px 6px; padding-top: 2px; border-top: 1px solid #e6ece8; color: #287361; font-size: .68em; font-weight: 780; }
+.v3-grand-mini-joint .v3-grand-mini-trainable > span { padding: 2px 4px; border-radius: 4px; background: #edf8f3; }
 .v3-grand-mini-update { flex-wrap: wrap; }
-.v3-grand-mini-update > span { color: #718284; text-decoration: line-through; }
+.v3-grand-mini-update > span { color: #718284; }
 .v3-grand-mini-update > i { color: #91a69e; font-style: normal; }
 .v3-grand-mini-update > strong { color: #287361; }
 .v3-grand-mini-promotion { flex-wrap: wrap; }

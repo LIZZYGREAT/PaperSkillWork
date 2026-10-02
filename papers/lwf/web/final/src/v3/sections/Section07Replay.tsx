@@ -18,14 +18,16 @@ export function Section07Replay({ onOpenReference, onNavigateChapter }: {
     </section>
 
     <section className="v3-replay-takeaways" aria-labelledby="v3-replay-takeaways-title">
-      <div className="v3-replay-block-heading"><span>FINAL MENTAL MODEL</span><h3 id="v3-replay-takeaways-title">离开前记住这六件事</h3></div>
+      <div className="v3-replay-block-heading"><span>FINAL MENTAL MODEL</span><h3 id="v3-replay-takeaways-title">离开前记住这八件事</h3></div>
       <ol>
         <li>旧训练数据不可用，但旧模型仍可用。</li>
-        <li>Teacher 在当前新任务输入 Xₙ 上生成旧任务响应 Yₒ。</li>
+        <li>正式训练前，固定旧模型在当前新任务输入 Xₙ 上计算并记录 Yₒ；之后它作为固定 target。</li>
         <li>Student 保留共享主体和旧 head，并增加新 head θₙ。</li>
-        <li>L_old 保持旧响应；L_new 学习当前任务标签。</li>
-        <li>联合优化时，共享参数 θₛ 同时受旧响应与新任务目标影响。</li>
-        <li>当前 Student 完成后成为下一阶段 Teacher；下一任务会刷新响应目标。</li>
+        <li>训练 Forward 使用 Student(Xₙ) 产生 Ŷₒ、Ŷₙ；固定 Yₒ 与 Ŷₒ 形成 L_old，Yₙ 与 Ŷₙ 形成 L_new。</li>
+        <li>Warm-up 只训练 θₙ；联合优化时 θₛ、θₒ、θₙ 可训练，Teacher snapshot 保持固定。</li>
+        <li>Backward 计算梯度，Optimizer Step 才更新参数；单次 Student^(k) → Student^(k+1) 不代表任务已结束。</li>
+        <li>Task t+1 训练结束后 Student* 才成为 Modelₜ₊₁；Task t+2 到来时它再成为 Teacherₜ₊₁。</li>
+        <li>Yₒ 是旧模型对当前 Xₙ 的响应目标，不是旧任务真值标签、旧数据样本或 replay sample。</li>
       </ol>
     </section>
 

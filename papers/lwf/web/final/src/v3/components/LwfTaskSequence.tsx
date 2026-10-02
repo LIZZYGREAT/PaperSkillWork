@@ -29,8 +29,8 @@ export function LwfTaskSequence({ selectedStateId, onSelectState }: { selectedSt
     </aside>
     <div className="v3-task-sequence-loopback" aria-label="进入下一任务阶段">
       <span>NEXT TASK STAGE</span>
-      <strong>Modelₜ₊₁ → Freeze as Teacherₜ₊₁</strong>
-      <small>当 Task t+2 到来时，当前模型成为新阶段的固定 Teacher，并在新输入上重算旧任务响应。</small>
+      <strong>Student* → Modelₜ₊₁ → Freeze as Teacherₜ₊₁</strong>
+      <small>当 Task t+2 到来时，Modelₜ₊₁ 成为新阶段的固定 Teacher，并在 Student 训练前的新输入上重算旧任务响应。</small>
     </div>
     <p className="v3-task-sequence-footnote">概念性任务生命周期。“Adapt Student”包含第 03 章展示的 minibatch 训练步骤；这里没有额外增加一层训练循环。</p>
   </div>;
