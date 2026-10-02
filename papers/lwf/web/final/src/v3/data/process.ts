@@ -9,7 +9,7 @@ export const keyMoveSteps: FlowStep[] = [
 ];
 
 export const trainingSteps: FlowStep[] = [
-  { id: "cycle-warmup", title: "Warm-up", description: "先训练新 head θₙ；θₛ 与 θₒ 暂时冻结。", relatedIds: ["new-branch"] },
+  { id: "cycle-warmup", title: "Warm-up", description: "Xₙ 经过冻结的 θₛ；只用 Yₙ 形成 L_new 训练 θₙ。已记录的 Yₒ 暂不使用，θₒ 也保持冻结。", relatedIds: ["xn", "new-label", "new-branch", "loss-new"] },
   { id: "cycle-forward", title: "Forward", description: "读取已记录的固定 Yₒ；当前 Student 对 Xₙ 前向，产生 Ŷₒ 与 Ŷₙ。", relatedIds: ["student", "yo", "old-branch", "new-branch"] },
   { id: "cycle-old-loss", title: "旧响应损失", description: "比较已记录的固定 Yₒ 与 Student 的 Ŷₒ，得到 L_old。", relatedIds: ["yo", "old-branch", "loss-old"] },
   { id: "cycle-new-loss", title: "新任务损失", description: "用新任务标签 Yₙ 监督 Student 的 Ŷₙ，得到 L_new。", relatedIds: ["new-label", "new-branch", "loss-new"] },
@@ -73,10 +73,14 @@ export const lwfProcess: ProcessLoopSpec = {
       detail: { title: "Student 的结构", bullets: ["θₛ 是共享参数。", "θₒ 负责旧任务输出。", "θₙ 负责新任务输出。"] },
     },
     {
-      id: "cycle-warmup", title: "Warm-up", summary: "先训练新 head；共享参数 θₛ 与旧 head θₒ 暂时冻结。",
-      activeNodes: ["student", "new-branch"], activeEdges: ["student-new"],
-      annotations: [{ target: "new-branch", text: "仅 θₙ 可训练。" }],
-      detail: { title: "参数状态", bullets: ["θₛ 冻结。", "θₒ 冻结。", "新初始化的 θₙ 可训练。"] },
+      id: "cycle-warmup", title: "Warm-up", summary: "只用新任务监督训练 θₙ；固定 Yₒ 暂不参与。",
+      activeNodes: ["xn", "new-label", "new-branch", "loss-new"], activeEdges: ["xn-student", "student-new", "label-new-loss", "new-output-loss"],
+      annotations: [
+        { target: "student", text: "θₛ 冻结；仅用于前向提取表示。" },
+        { target: "new-branch", text: "只有新 head θₙ 可训练。" },
+        { target: "loss-new", text: "Yₙ → L_new；Yₒ 与 L_old 留到联合优化。" },
+      ],
+      detail: { title: "Warm-up 的监督与参数状态", bullets: ["Xₙ 经过冻结的共享表示 θₛ。", "Yₙ 与新任务输出形成 L_new。", "只更新 θₙ；θₛ 与 θₒ 保持冻结。", "训练前已记录的 Yₒ 暂不消费，也不计算 L_old；Joint Optimization 才使用它。"] },
     },
     {
       id: "cycle-forward", title: "Forward", summary: "读取已记录的固定 Yₒ；Student 对 Xₙ 前向产生 Ŷₒ 与 Ŷₙ。",

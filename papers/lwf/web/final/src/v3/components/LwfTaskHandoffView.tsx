@@ -13,7 +13,7 @@ const details: Record<string, { input: string; output: string; state: string; wh
   "model-ready": { input: "上一任务阶段完成的 Modelₜ", output: "可运行的旧模型", state: "旧训练数据不可用；模型参数仍可访问。", why: "它只会在正式训练前用来记录当前阶段的旧响应。", reference: "teacher", chapter: "01" },
   "task-arrives": { input: "新任务输入 Xₜ₊₁ 与标签 Yₜ₊₁", output: "当前阶段可用的训练数据", state: "旧任务图像与标签继续不可用。", why: "LwF 只用当前任务样本来约束旧响应。", reference: "xn", chapter: "02" },
   "prepare-adaptation": { input: "Modelₜ + Xₜ₊₁ / Yₜ₊₁", output: "Yₒ · RECORDED / FIXED + Student with θₙ", state: "记录 Yₒ 与初始化 θₙ 都属于正式训练前准备，两者没有严格先后依赖。", why: "旧模型只负责一次性生成当前阶段的旧响应目标；新 head 提供新任务输出路径。", reference: "yo", chapter: "02" },
-  warmup: { input: "Current Student · θₙ + Xₜ₊₁ / Yₜ₊₁", output: "Warm-up Student", state: "只训练新 head θₙ；θₛ 与 θₒ 冻结。", why: "这是论文采用的训练策略；消融结果显示它并非 LwF 的关键机制。", reference: "warm-up", chapter: "03" },
+  warmup: { input: "Current Student · Xₜ₊₁ / Yₜ₊₁", output: "由 L_new 更新后的 θₙ", state: "只用 Xₜ₊₁ 与 Yₜ₊₁ 形成 L_new 并训练 θₙ；θₛ 与 θₒ 冻结。已记录的 Yₒ 暂不参与，留到 Joint Optimization。", why: "这是论文采用的训练策略；消融结果显示它并非 LwF 的关键机制。", reference: "warm-up", chapter: "03" },
   "joint-optimize": { input: "固定 Yₒ、Yₜ₊₁ 与 Current Student", output: "联合目标与梯度", state: "θₛ、θₒ、θₙ 都可训练；训练期间读取固定 Yₒ，不再运行旧模型。", why: "L_old 保持记录的响应，L_new 学习当前任务。", reference: "joint-optimization", chapter: "03" },
   "minibatch-loop": { input: "Student^(k) + 当前 minibatch", output: "Student* · Task t+1 complete", state: "重复 Forward、Loss、Backward 与 Optimizer Step，直到 Task t+1 训练完成。", why: "一次 Student^(k+1) 更新不是任务结束；只有最终 Student* 才能晋升。", reference: "joint-optimization", chapter: "03" },
   "promote-model": { input: "Task t+1 完成后的 Student*", output: "Modelₜ₊₁", state: "当前任务训练已结束；Modelₜ₊₁ 现在成为下一阶段的起点。", why: "模型级下标 t+1 只在完整任务训练结束后赋予最终 Student。", reference: "sequential-refresh", chapter: "05" },
@@ -29,7 +29,7 @@ function HandoffMiniVisual({ id }: { id: string }) {
   if (id === "model-ready") return <div className="v3-handoff-mini-model"><b>Modelₜ</b><small>θₛ + θₒ</small></div>;
   if (id === "task-arrives") return <div className="v3-handoff-mini-inputs"><b>Xₜ₊₁</b><b>Yₜ₊₁</b></div>;
   if (id === "prepare-adaptation") return <div className="v3-handoff-mini-prepare"><div><span>Modelₜ + Xₜ₊₁</span><i aria-hidden="true">→</i><b>Yₒ · fixed</b></div><div><span>θₛ + θₒ</span><i aria-hidden="true">+</i><b>random θₙ</b></div><small>两项准备没有固定先后</small></div>;
-  if (id === "warmup") return <div className="v3-handoff-mini-objective"><span>θₛ / θₒ frozen</span><i aria-hidden="true">→</i><b>train θₙ</b></div>;
+  if (id === "warmup") return <div className="v3-handoff-mini-objective"><span>θₛ / θₒ frozen</span><i aria-hidden="true">→</i><b>Yₙ → L_new → θₙ</b></div>;
   if (id === "joint-optimize") return <div className="v3-handoff-mini-objective"><span>L_old + L_new</span><i aria-hidden="true">→</i><span>θₛ / θₒ / θₙ</span></div>;
   if (id === "minibatch-loop") return <div className="v3-handoff-mini-objective"><span>Forward → Loss</span><i aria-hidden="true">↻</i><span>Backward → Update</span><b>Task complete</b></div>;
   if (id === "promote-model") return <div className="v3-handoff-mini-flow"><span>Student*</span><i aria-hidden="true">→</i><b>Modelₜ₊₁</b></div>;
@@ -154,7 +154,7 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
       <div className="v3-task-handoff-visual" aria-hidden="true">
         <div className="v3-task-handoff-actors">
           {step.id === "prepare-adaptation" ? <span className="is-teacher">Modelₜ · RECORD Yₒ</span>
-            : stepIndex >= 3 && stepIndex <= 5 ? <span className="is-target">Yₒ · FIXED TARGET</span>
+            : stepIndex >= 4 && stepIndex <= 5 ? <span className="is-target">Yₒ · FIXED TARGET</span>
               : stepIndex === 6 ? <span className="is-model">Student* → Modelₜ₊₁</span>
                 : <span className="is-model">{stepIndex === 7 ? "Modelₜ₊₁ · NEXT TASK" : "Modelₜ · PREVIOUS STAGE"}</span>}
           {stepIndex >= 2 && stepIndex <= 6 ? <span className="is-student">{stepIndex === 6 ? "Student* · TASK COMPLETE" : "Current Student · ACTIVE"}</span> : null}

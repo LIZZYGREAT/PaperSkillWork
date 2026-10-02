@@ -31,8 +31,8 @@ export const taskSequence: StateMachineSpec = {
       id: "warmup",
       label: "Warm-up · θₙ",
       owner: "Current Student",
-      description: "Train the newly initialized head θₙ while the shared representation θₛ and old heads θₒ remain frozen.",
-      effect: "Warm-up is the paper's training strategy; Table 2(b) indicates that it is not crucial to LwF.",
+      description: "Train θₙ using the current-task inputs and labels while the shared representation θₛ and old heads θₒ remain frozen.",
+      effect: "Yₙ forms L_new and updates only θₙ. The recorded Yₒ is not used and L_old is not computed until joint optimization; Table 2(b) indicates Warm-up is not crucial to LwF.",
       position: { x: 948, y: 112 },
     },
     {
