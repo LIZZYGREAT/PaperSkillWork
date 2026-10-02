@@ -14,9 +14,9 @@ export function Section02KeyMove({ activeStepId, onOpenReference, onSelectStep, 
     <div className="v3-narrative-list">
       {keyMoveSteps.map((step, index) => <NarrativeStep key={step.id} id={step.id} index={index + 1} title={step.title} active={activeStepId === step.id} onSelect={onSelectStep}
         description={step.id === "key-new-task" ? <>旧任务训练样本不可用；当前批次提供 <TermRef term={termsById.xn} onOpenReference={onOpenReference} /> 与 <TermRef term={termsById.yn} onOpenReference={onOpenReference} />。</>
-          : step.id === "key-generate-response" ? <>把 <TermRef term={termsById.xn} onOpenReference={onOpenReference} /> 输入 Teacher，得到 <TermRef term={termsById.yo} onOpenReference={onOpenReference} />。</>
+          : step.id === "key-generate-response" ? <>正式训练前，把 <TermRef term={termsById.xn} onOpenReference={onOpenReference} /> 输入固定 Modelₜ，记录 <TermRef term={termsById.yo} onOpenReference={onOpenReference} /> 作为固定 target。</>
             : step.description}>
-        {step.id === "key-generate-response" ? <p className="v3-narrative-note">Yₒ 来自 Teacher 对当前 Xₙ 的输出；它不是旧任务真值标签，也不是保存下来的旧样本。</p> : null}
+      {step.id === "key-generate-response" ? <p className="v3-narrative-note">正式训练前，固定 Modelₜ 对当前 Xₙ 计算并记录 Yₒ；之后 Yₒ 是固定 target。它不是旧任务真值标签、旧样本或 replay sample。</p> : null}
         {step.id === "key-expand-student" ? <p className="v3-narrative-note"><TermRef term={termsById["theta-s"]} onOpenReference={onOpenReference} /> 是共享主体；<TermRef term={termsById["theta-o"]} onOpenReference={onOpenReference} /> 保留旧输出；新增 <TermRef term={termsById["theta-n"]} onOpenReference={onOpenReference} /> 学习新任务。</p> : null}
       </NarrativeStep>)}
     </div>

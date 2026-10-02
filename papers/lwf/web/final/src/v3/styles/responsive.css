@@ -83,6 +83,8 @@
   .v3-architecture-inspector h3 { font-size: .82rem; }
   .v3-architecture-inspector p { font-size: .7rem; }
   .v3-inspector-reference { justify-items: start; text-align: left; }
+  .v3-parameter-phase-matrix > div { grid-template-columns: 1fr; }
+  .v3-parameter-phase-matrix article { padding: 7px 8px; }
   .v3-architecture-switch { align-items: stretch; flex-direction: column; gap:8px; }
   .v3-architecture-switch-options { align-self:flex-start; }
   .v3-alexnet-shell .v2-alexnet-architecture.is-compact { padding:8px; }

@@ -56,3 +56,10 @@
 .v3-architecture-inspector h3 { margin: 0; color: #254354; font-size: .9rem; }
 .v3-architecture-inspector p { margin: 3px 0 0; color: #637980; font-size: .77rem; }
 .v3-inspector-reference { display: grid; justify-items: end; gap: 4px; color: #71858b; font-size: .65rem; text-align: right; }
+.v3-parameter-phase-matrix { display: grid; gap: 6px; }
+.v3-parameter-phase-matrix > .v3-eyebrow { margin: 0; color: #72898b; font-size: 8px; font-weight: 820; letter-spacing: .09em; }
+.v3-parameter-phase-matrix > div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
+.v3-parameter-phase-matrix article { display: grid; align-content: start; gap: 3px; padding: 8px 9px; border: 1px solid #dce7e4; border-radius: 8px; background: #fbfdfc; }
+.v3-parameter-phase-matrix article strong { color: #36565a; font-size: .7rem; }
+.v3-parameter-phase-matrix article span { color: #22665f; font-size: .65rem; font-weight: 760; line-height: 1.45; }
+.v3-parameter-phase-matrix article small { color: #718485; font-size: .62rem; line-height: 1.4; }
