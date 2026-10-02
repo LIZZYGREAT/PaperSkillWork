@@ -33,7 +33,7 @@ workflow:
       status: complete
       completed_by: automation
     W4_learning_spine:
-      status: pending
+      status: in_progress
     W5_interaction_plan:
       status: pending
     W6_vertical_slice:
