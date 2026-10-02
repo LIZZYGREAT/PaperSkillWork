@@ -111,7 +111,7 @@ results:
     model: "32-layer ResNet"
     split: "Ten class orders; test all classes seen at each incremental step"
     metric: "Multi-class accuracy; average incremental accuracy for a scalar summary"
-    protocol: "100 classes in batches of 2, 5, 10, 20, or 50; 70 epochs per class batch; K≤2,000"
+    protocol: "100 classes in batches of 2, 5, 10, 20, or 50; 70 epochs per class batch; K≤2,000; minibatches of 128; weight decay 0.00001; learning rate starts at 2.0 and is divided by 5 after epochs 49 and 63"
   R02:
     claim: "The iILSVRC experiments cover a 100-class subset in batches of 10 and the full 1,000 classes in batches of 100."
     type: PAPER_RESULT
@@ -123,7 +123,7 @@ results:
     model: "18-layer ResNet"
     split: "100-class subset or all 1,000 classes; validation evaluation after each step"
     metric: "Top-5 accuracy"
-    protocol: "K≤20,000; 60 epochs per class batch; 10 or 100 classes per batch"
+    protocol: "K≤20,000; 60 epochs per class batch; 10 or 100 classes per batch; minibatches of 128; weight decay 0.00001; learning rate starts at 2.0 and is divided by 5 after epochs 20, 30, 40, and 50"
   R03:
     claim: "Figure 2 compares incremental accuracy across the paper's iCIFAR-100 and iILSVRC settings; the ordering has a stated exception on iILSVRC-full."
     type: PAPER_RESULT
