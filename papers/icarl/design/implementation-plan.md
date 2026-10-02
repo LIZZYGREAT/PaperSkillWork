@@ -73,7 +73,7 @@ implementation:
       core_items: [L23]
       evidence_refs: [OI01, C09, C10, C13, C05]
       primary_vehicle: "Fixed runtime workbench driven by one ten-step state trace, with persistent, temporary, and derived objects separated"
-      reusable_pattern: ProcessLoopExplorer
+      reusable_pattern: FlowStepper
       reason: "A controlled step sequence integrates the established objects while the workbench keeps Θ/P, X_new, D/Q, and derived prototypes visible in their own lifetimes."
   assets:
     - {asset: A-FIG02, stage: S07, rendering: crop}
