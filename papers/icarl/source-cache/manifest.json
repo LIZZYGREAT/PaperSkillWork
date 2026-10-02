@@ -1,0 +1,122 @@
+{
+  "paper": {
+    "title": "iCaRL: Incremental Classifier and Representation Learning",
+    "authors": [
+      "Sylvestre-Alvise Rebuffi",
+      "Alexander Kolesnikov",
+      "Georg Sperl",
+      "Christoph H. Lampert"
+    ],
+    "venue": "Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)",
+    "year": 2017,
+    "source_type": "arXiv",
+    "source_location": "http://arxiv.org/abs/1611.07725",
+    "source_hash": "95b31caf45ddcef315e35f7111f5cd3de2b27affd6b8f83a0675ec5620819ca7",
+    "url": "http://arxiv.org/abs/1611.07725",
+    "arxiv_id": "arXiv:1611.07725",
+    "source_version": "arXiv:1611.07725v2, 14 April 2017",
+    "pdf_pages": 15
+  },
+  "cache_status": "complete",
+  "extraction": "Complete selectable-text extraction of the 15-page local source PDF with Poppler pdftotext; physical PDF page boundaries are retained in content.md. The figure, table, and algorithm inventory was reconciled against the PDF pages. Figures are inventoried here; original-image selection and reuse-rights review are deferred to W3.",
+  "figures": [
+    {
+      "id": "FIG-01",
+      "locator": "PDF p. 1, Figure 1",
+      "caption": "Class-incremental learning: an algorithm learns continuously from a sequential data stream in which new classes occur. At any time, the learner is able to perform multi-class classification for all classes observed so far.",
+      "type": "PIPELINE",
+      "candidate_role": "Class-incremental data stream and all-seen-class prediction setup."
+    },
+    {
+      "id": "ALG-01",
+      "locator": "PDF p. 2, Algorithm 1",
+      "caption": "Algorithm 1 iCaRL CLASSIFY",
+      "type": "ALGORITHM",
+      "candidate_role": "Nearest-mean-of-exemplars inference pseudocode."
+    },
+    {
+      "id": "ALG-02",
+      "locator": "PDF p. 2, Algorithm 2",
+      "caption": "Algorithm 2 iCaRL INCREMENTAL TRAIN",
+      "type": "ALGORITHM",
+      "candidate_role": "Incremental update and exemplar-budget management pseudocode."
+    },
+    {
+      "id": "ALG-03",
+      "locator": "PDF p. 3, Algorithm 3",
+      "caption": "Algorithm 3 iCaRL UPDATE REPRESENTATION",
+      "type": "ALGORITHM",
+      "candidate_role": "Combined training set, pre-update outputs, and representation-update pseudocode."
+    },
+    {
+      "id": "ALG-04",
+      "locator": "PDF p. 4, Algorithm 4",
+      "caption": "Algorithm 4 iCaRL CONSTRUCT EXEMPLAR SET",
+      "type": "ALGORITHM",
+      "candidate_role": "Ordered exemplar-selection pseudocode."
+    },
+    {
+      "id": "ALG-05",
+      "locator": "PDF p. 4, Algorithm 5",
+      "caption": "Algorithm 5 iCaRL REDUCE EXEMPLAR SET",
+      "type": "ALGORITHM",
+      "candidate_role": "Prefix-based exemplar-reduction pseudocode."
+    },
+    {
+      "id": "FIG-02",
+      "locator": "PDF p. 7, Figure 2",
+      "caption": "Experimental results of class-incremental training on iCIFAR-100 and iILSVRC: reported are multi-class accuracies across all classes observed up to a certain time point. iCaRL clearly outperforms the other methods in this setting. Fixing the data representation after having trained on the first batch (fixed repr.) performs worse than distillation-based LwF.MC, except for iILSVRC-full. Finetuning the network without preventing catastrophic forgetting (finetuning) achieves the worst results. For comparison, the same network trained with all data available achieves 68.6% multi-class accuracy.",
+      "type": "RESULT",
+      "candidate_role": "Primary benchmark comparison across class-batch protocols and datasets."
+    },
+    {
+      "id": "FIG-03",
+      "locator": "PDF p. 8, Figure 3",
+      "caption": "Confusion matrices of different method on iCIFAR-100 (with entries transformed by log(1+x) for better visibility). iCaRL’s predictions are distributed close to uniformly over all classes, whereas LwF.MC tends to predict classes from recent batches more frequently. The classifier with fixed representation has a bias towards classes from the first batch, while the network trained by finetuning predicts exclusively classes labels from the last batch.",
+      "type": "RESULT",
+      "candidate_role": "Class-level error and prediction-bias comparison."
+    },
+    {
+      "id": "FIG-04",
+      "locator": "PDF p. 9, Figure 4",
+      "caption": "Average incremental accuracy on iCIFAR-100 with 10 classes per batch for different memory budgets K.",
+      "type": "RESULT",
+      "candidate_role": "Performance trend as the exemplar-memory budget changes."
+    },
+    {
+      "id": "TABLE-01",
+      "locator": "PDF p. 10, Table 1 (parts a and b)",
+      "caption": "Average multi-class accuracy on iCIFAR-100 for different modifications of iCaRL.",
+      "type": "ABLATION",
+      "candidate_role": "Part (a) component ablations; part (b) nearest-class-mean comparison."
+    },
+    {
+      "id": "FIG-05",
+      "locator": "PDF p. 12, Figure 5",
+      "caption": "Confusion matrix for iCaRL on iILSVRC-large (1000 classes in batches of 100)",
+      "type": "RESULT",
+      "candidate_role": "Large-scale class-level error pattern for iCaRL."
+    },
+    {
+      "id": "FIG-06",
+      "locator": "PDF p. 13, Figure 6",
+      "caption": "Confusion matrix for LwF.MC on iILSVRC-large (1000 classes in batches of 100)",
+      "type": "RESULT",
+      "candidate_role": "Large-scale class-level error pattern for LwF.MC."
+    },
+    {
+      "id": "FIG-07",
+      "locator": "PDF p. 14, Figure 7",
+      "caption": "Confusion matrix for fixed representation on iILSVRC-large (1000 classes in batches of 100)",
+      "type": "RESULT",
+      "candidate_role": "Large-scale class-level error pattern for fixed representation."
+    },
+    {
+      "id": "FIG-08",
+      "locator": "PDF p. 15, Figure 8",
+      "caption": "Confusion matrix for finetuning on iILSVRC-large (1000 classes in batches of 100)",
+      "type": "RESULT",
+      "candidate_role": "Large-scale class-level error pattern for finetuning."
+    }
+  ]
+}
