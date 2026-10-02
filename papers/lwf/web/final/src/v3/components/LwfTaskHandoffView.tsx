@@ -157,7 +157,7 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
             : stepIndex >= 4 && stepIndex <= 5 ? <span className="is-target">Yₒ · FIXED TARGET</span>
               : stepIndex === 6 ? <span className="is-model">Student* → Modelₜ₊₁</span>
                 : <span className="is-model">{stepIndex === 7 ? "Modelₜ₊₁ · NEXT TASK" : "Modelₜ · PREVIOUS STAGE"}</span>}
-          {stepIndex >= 2 && stepIndex <= 6 ? <span className="is-student">{stepIndex === 6 ? "Student* · TASK COMPLETE" : "Current Student · ACTIVE"}</span> : null}
+          {stepIndex >= 2 && stepIndex <= 6 ? <span className="is-student">{stepIndex === 3 ? "Student · θₙ ONLY" : stepIndex === 6 ? "Student* · TASK COMPLETE" : "Current Student · ACTIVE"}</span> : null}
         </div>
         <div className="v3-task-handoff-board" ref={boardRef}>
           <svg ref={routesRef} className="v3-task-handoff-routes" viewBox="0 0 1000 340" preserveAspectRatio="none" aria-hidden="true">

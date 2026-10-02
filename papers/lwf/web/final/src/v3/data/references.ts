@@ -1,7 +1,7 @@
 import type { ReferenceItem, TermDefinition } from "../../shared/core/reference";
 
 export const terms: TermDefinition[] = [
-  { id: "teacher", label: "Teacher", fullName: "旧模型的响应记录角色", definition: "本教程用 Teacher 称呼论文主分类流程中，上一阶段模型在正式训练前记录旧响应时扮演的角色。", paperRole: "主分类实验中，旧模型在当前输入 Xₙ 上计算并记录 Yₒ；记录完成后，训练直接读取固定 Yₒ。", confusion: "这是教学称呼：主分类流程只在训练前记录 Yₒ，之后 Warm-up 与 joint optimization 读取固定目标。Tracking appendix 使用在线协议，在线训练时会运行旧网络计算响应。", sourceKind: "Mechanism interpretation · Teaching terminology", sourceRef: "A01 · C02 · E06" },
+  { id: "teacher", label: "Teacher", fullName: "旧模型的响应记录角色", definition: "本教程用 Teacher 称呼论文主分类流程中，上一阶段模型在正式训练前记录旧响应时扮演的角色。", paperRole: "主分类实验中，旧模型在当前输入 Xₙ 上计算并记录 Yₒ；Warm-up 只用 Yₙ，固定 Yₒ 从后续 joint optimization 开始读取。", confusion: "这是教学称呼：主分类流程只在训练前运行旧模型记录 Yₒ；Warm-up 不读取它，联合优化时读取固定目标。Tracking appendix 使用在线协议，在线训练时会运行旧网络计算响应。", sourceKind: "Mechanism interpretation · Teaching terminology", sourceRef: "A01 · C02 · E06" },
   { id: "student", label: "Student", fullName: "扩展后的当前可训练模型", definition: "本教程对保留旧 head 并增加新任务 head 的当前模型所用的教学称呼。", paperRole: "以旧响应保持项与当前任务目标共同学习。", confusion: "Student^(k+1) 是当前任务中的一次更新；只有完整任务结束后的 Student* 才成为 Modelₜ₊₁。", sourceKind: "Mechanism interpretation · Teaching terminology", sourceRef: "A01 · A02" },
   { id: "lwf", label: "LwF", fullName: "Learning without Forgetting", definition: "在当前新任务输入上匹配旧模型的响应，同时学习当前任务标签。", paperRole: "在旧训练数据不可访问时，为 Student 提供旧任务行为目标。", confusion: "保留的是观测到的 Xₙ 上的响应约束，不代表所有旧输入上全局不变。", sourceKind: "论文方法", sourceRef: "C01 · C02 · C03" },
   { id: "theta-s", label: "θₛ", fullName: "共享参数", definition: "多个任务共同使用的表示网络参数。", paperRole: "Warm-up 时冻结；联合优化时与 θₒ、θₙ 一起作为 Student 的可训练参数。", confusion: "不等同于某个任务专属 head。", sourceKind: "符号", sourceRef: "A01 · A05" },

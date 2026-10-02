@@ -69,10 +69,10 @@ export const tutorial: TutorialData = {
       "title": "模型结构",
       "badge": "inf",
       "badgeLabel": "模型结构",
-      "bridge": "识别固定的 Teacher、可训练的 Student、共享主体和任务专属输出头。",
+      "bridge": "区分上一阶段的 Modelₜ、训练前记录 Yₒ 的响应来源，以及负责后续适配的 Student。",
       "analogy": {
         "title": "本章焦点",
-        "text": "共享表示连接旧、新任务 head；Teacher 保留旧模型状态。"
+        "text": "共享表示连接旧、新任务 head；旧模型快照提供训练前记录 Yₒ 所需的参数。"
       },
       "modules": [
         {
@@ -83,17 +83,17 @@ export const tutorial: TutorialData = {
           "componentId": "architecture-map"
         }
       ],
-      "insight": "Teacher 提供旧行为目标；Student 保留旧 head 并新增当前任务 head。",
+      "insight": "主分类流程中，Modelₜ 只在正式训练前记录 Yₒ；扩展后的 Student 保留 θₒ、增加 θₙ，随后独立参与训练。",
       "takeaways": [
         {
           "icon": "T",
           "title": "Teacher 固定",
-          "desc": "它在当前适配阶段提供旧任务响应。"
+          "desc": "旧模型只在正式训练前对 Xₙ 记录 Yₒ。"
         },
         {
           "icon": "S",
           "title": "Student 更新",
-          "desc": "新旧目标会影响 Student 的共享主体。"
+          "desc": "Student 先以 Yₙ 预热 θₙ，之后在联合优化中使用固定 Yₒ 与 Yₙ。"
         },
         {
           "icon": "↗",
@@ -108,10 +108,10 @@ export const tutorial: TutorialData = {
       "title": "关键做法",
       "badge": "both",
       "badgeLabel": "核心做法",
-      "bridge": "旧模型对当前新任务输入给出旧任务响应；该响应成为 Student 的旧任务目标。",
+      "bridge": "同一组 Xₙ 分训练前与正式训练两个时点：先由 Modelₜ 记录 Yₒ，之后训练扩展后的 Student。",
       "analogy": {
         "title": "本章焦点",
-        "text": "Teacher 与 Student 处理同一批当前输入，监督来源按任务区分。"
+        "text": "训练前：Xₙ → Modelₜ → 记录 Yₒ；正式训练：Xₙ → Student → Ŷₒ / Ŷₙ。"
       },
       "modules": [
         {
@@ -122,17 +122,17 @@ export const tutorial: TutorialData = {
           "componentId": "signal-source"
         }
       ],
-      "insight": "旧任务响应是当前输入上的模型输出，不是旧样本或旧标签。",
+      "insight": "Yₒ 是 Modelₜ 在正式训练前对 Xₙ 的记录；Warm-up 只用 Yₙ，进入联合优化后 Student 才读取固定的 Yₒ。",
       "takeaways": [
         {
           "icon": "X",
           "title": "使用当前输入",
-          "desc": "同一新任务输入进入 Teacher 与 Student。"
+          "desc": "训练前 Xₙ 输入 Modelₜ；正式训练时 Xₙ 输入 Student。"
         },
         {
           "icon": "Yₒ",
           "title": "读取旧响应",
-          "desc": "Teacher 生成当前输入上的旧任务目标。"
+          "desc": "Yₒ 在正式训练前记录，Warm-up 暂不使用。"
         },
         {
           "icon": "Yₙ",
@@ -147,31 +147,31 @@ export const tutorial: TutorialData = {
       "title": "一次训练",
       "badge": "trn",
       "badgeLabel": "训练过程",
-      "bridge": "跟随一次 minibatch 的 forward、损失、反向传播与参数更新。",
+      "bridge": "跟随正式训练中的 Warm-up、Student 前向、损失、反向传播与参数更新。",
       "analogy": {
         "title": "本章焦点",
-        "text": "目标先产生梯度；Student 参数只在更新步骤后改变。"
+        "text": "Warm-up 只用 Yₙ 更新 θₙ；联合优化时才用固定 Yₒ 计算 L_old。"
       },
       "modules": [
         {
           "kind": "module",
           "id": "03.1",
           "title": "逐步执行一个训练周期",
-          "desc": "手动查看前向计算、旧响应与新任务损失、梯度传递和 Student 更新。",
+          "desc": "查看 Warm-up 的 Yₙ → L_new → θₙ，以及后续 Student 前向、联合损失、梯度传递和参数更新。",
           "componentId": "training-steps"
         }
       ],
-      "insight": "L_old 和 L_new 在共享参数上共同作用；Teacher 保持固定。",
+      "insight": "固定 Yₒ 与 Ŷₒ 形成 L_old；Yₙ 与 Ŷₙ 形成 L_new；两项损失在共享参数 θₛ 上共同作用。",
       "takeaways": [
         {
           "icon": "1",
           "title": "先前向",
-          "desc": "Teacher 与 Student 对当前输入产生输出。"
+          "desc": "正式训练只运行 Student；旧模型不再前向。"
         },
         {
           "icon": "2",
           "title": "再合并目标",
-          "desc": "旧响应损失与新标签损失组成训练目标。"
+          "desc": "联合优化时，固定 Yₒ 与新标签 Yₙ 分别监督旧、新任务输出。"
         },
         {
           "icon": "3",
@@ -196,7 +196,7 @@ export const tutorial: TutorialData = {
           "kind": "module",
           "id": "04.1",
           "title": "比较参数保持与响应保持",
-          "desc": "在同一输入上比较 Teacher 与 Student 的旧任务响应，并切换到参数位置视图。",
+          "desc": "在同一 Xₙ 上对照训练前 Modelₜ 记录的 Yₒ 与正式训练中 Student 的 Ŷₒ，并切换到参数位置视图。",
           "componentId": "lwf-preservation-compare"
         },
         {
@@ -239,36 +239,36 @@ export const tutorial: TutorialData = {
       "title": "连续任务",
       "badge": "trn",
       "badgeLabel": "连续任务",
-      "bridge": "将一次训练提升到任务阶段：完成后的 Student 成为下一阶段 Teacher。",
+      "bridge": "Task t+1 完成后，Student* 晋升为 Modelₜ₊₁；新任务到来后再进入 PREPARE。",
       "analogy": {
         "title": "本章焦点",
-        "text": "每个新阶段都在当前输入上重新生成已有任务的响应目标。"
+        "text": "每个新任务到来后，PREPARE 在正式训练前记录新的 Yₒ 并初始化新 head。"
       },
       "modules": [
         {
           "kind": "module",
           "id": "05.1",
           "title": "跟随任务级状态机",
-          "desc": "手动推进冻结 Teacher、接收新任务、生成响应、适配 Student 与下一任务交接。",
+          "desc": "手动推进 Modelₜ、任务到来、PREPARE、Warm-up、联合优化、Student* 晋升与下一任务交接。",
           "componentId": "lwf-task-handoff"
         }
       ],
-      "insight": "上一阶段的响应目标不是永久缓存；新阶段由当前 Teacher 在当前输入上重算。",
+      "insight": "Yₒ 只属于当前任务阶段；下一任务到来后，Modelₜ₊₁ 在新输入上重新记录旧响应。",
       "takeaways": [
         {
           "icon": "T",
-          "title": "固定阶段 Teacher",
-          "desc": "上一阶段模型提供旧任务响应。"
+          "title": "当前 Modelₜ",
+          "desc": "Modelₜ 在正式训练前提供当前阶段的 Yₒ。"
         },
         {
           "icon": "↻",
           "title": "刷新响应目标",
-          "desc": "当前输入到来后重新计算旧任务响应。"
+          "desc": "新任务进入 PREPARE 后，在其输入上重新记录 Yₒ。"
         },
         {
           "icon": "→",
           "title": "交接 Student",
-          "desc": "更新模型成为下一阶段的 Teacher。"
+          "desc": "完整任务训练结束后，Student* 晋升为 Modelₜ₊₁。"
         }
       ]
     },
@@ -317,7 +317,7 @@ export const tutorial: TutorialData = {
       "title": "完整回放",
       "badge": "both",
       "badgeLabel": "完整回放",
-      "bridge": "沿着独立的模型轨迹，从旧模型走到下一阶段 Teacher。",
+      "bridge": "从 Modelₜ 出发完成 Task t+1，再将 Student* 晋升为 Modelₜ₊₁；Task t+2 到来后回到 PREPARE。",
       "analogy": {
         "title": "本章焦点",
         "text": "旧响应、新任务监督与模型交接组成可重复的任务生命周期。"
@@ -331,22 +331,22 @@ export const tutorial: TutorialData = {
           "componentId": "lwf-grand-trail"
         }
       ],
-      "insight": "完整流程以更新后的 Student 成为下一阶段 Teacher 收尾。",
+      "insight": "每轮把训练前记录 Yₒ、只用 Yₙ 的 Warm-up、联合优化和模型晋升作为不同阶段。",
       "takeaways": [
         {
           "icon": "1",
           "title": "旧模型仍可用",
-          "desc": "即使旧训练样本不可访问，模型仍提供旧响应。"
+          "desc": "旧训练样本不可访问；Modelₜ 仍可在正式训练前记录 Yₒ。"
         },
         {
           "icon": "2",
           "title": "两个目标共同训练",
-          "desc": "旧响应保持与新任务学习影响共享 Student 参数。"
+          "desc": "联合优化中，固定 Yₒ 与当前标签共同作用于 Student。"
         },
         {
           "icon": "↻",
           "title": "任务阶段闭环",
-          "desc": "当前 Student 成为下一阶段 Teacher。"
+          "desc": "下一任务到来后回到 PREPARE，重新记录当前阶段的 Yₒ。"
         }
       ]
     }
