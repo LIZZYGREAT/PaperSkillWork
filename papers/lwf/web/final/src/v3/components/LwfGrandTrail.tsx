@@ -59,7 +59,7 @@ function GrandTrailMiniVisual({ stepId }: { stepId: string }) {
   if (stepId === "update") return <div className="v3-grand-mini v3-grand-mini-update"><span>Student^(k)</span><i aria-hidden="true">→</i><strong>Student^(k+1)</strong></div>;
   if (stepId === "task-completion") return <div className="v3-grand-mini v3-grand-mini-update"><span>Student^(k+1)</span><i aria-hidden="true">↻</i><strong>Student* · task complete</strong></div>;
   if (stepId === "promote-model") return <div className="v3-grand-mini v3-grand-mini-promotion"><strong>Student*</strong><i aria-hidden="true">→</i><b>Modelₜ₊₁</b><span>after full Task t+1 training</span></div>;
-  return <div className="v3-grand-mini v3-grand-mini-input"><span>Modelₜ₊₁</span><span>Xₜ₊₂ / Yₜ₊₂</span><small>next-stage response refresh</small></div>;
+  return <div className="v3-grand-mini v3-grand-mini-input"><span>Modelₜ₊₁</span><span>Xₜ₊₂ / Yₜ₊₂</span><small>next-stage inputs ready · no Yₒ recorded yet</small></div>;
 }
 
 export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
@@ -132,7 +132,7 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
       setRoutePaths(nextPaths);
 
       const loopSource = getNodeRect(grandTrailSteps[grandTrailSteps.length - 1].id);
-      const loopTarget = getNodeRect(grandTrailSteps[0].id);
+      const loopTarget = getNodeRect("prepare-adaptation");
       if (loopSource && loopTarget) {
         const startX = (loopSource.right - routesRect.left + 2) * scaleX;
         const startY = (loopSource.top + loopSource.height / 2 - routesRect.top) * scaleY;
@@ -200,7 +200,7 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
           })}
           {tokenPosition ? <span className={`v3-grand-trail-model-token ${step.id === "prepare-adaptation" ? "is-split" : step.id === "promote-model" ? "is-promoted" : ""}`} style={{ left: tokenPosition.left, top: tokenPosition.top }}>{tokenLabel(step.id)}</span> : null}
         </div>
-        <div className={`v3-grand-trail-loop-summary ${atEnd ? "is-current" : ""}`}><span>LOOP CLOSURE</span><strong>Student* → Modelₜ₊₁ → Task t+2 → fresh Yₒ</strong><i aria-hidden="true">↺</i><small>旧模型只在下一阶段正式训练前记录新输入的旧响应；训练循环读取固定 Yₒ。</small></div>
+        <div className={`v3-grand-trail-loop-summary ${atEnd ? "is-current" : ""}`}><span>LOOP CLOSURE</span><strong>Student* → Modelₜ₊₁ → Task t+2 → PREPARE</strong><i aria-hidden="true">↺</i><small>任务下标前移（t ← t+1）；进入 PREPARE 后，才在新 Xₜ₊₂ 上记录 Yₒ 并初始化 θₙ。</small></div>
       </div>
 
       <aside className="v3-grand-trail-detail" aria-label="当前生命周期检查点" aria-live="polite">
