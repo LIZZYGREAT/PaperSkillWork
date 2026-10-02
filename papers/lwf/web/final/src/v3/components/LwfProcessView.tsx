@@ -112,7 +112,7 @@ export function LwfProcessView({ activeStepId }: {
         </g>;
       })}
       <text className={`v3-gradient-caption ${stepIndex >= 8 ? "is-revealed" : ""}`} x="28" y="563">虚线反向路径：L_old → θₒ → θₛ · L_new → θₙ → θₛ</text>
-      <text className={`v3-gradient-caption ${stepIndex >= 8 ? "is-revealed" : ""}`} x="28" y="585">JOINT · θₛ / θₒ / θₙ TRAINABLE · Teacher snapshot FROZEN</text>
+      <text className={`v3-gradient-caption ${stepIndex >= 8 ? "is-revealed" : ""}`} x="28" y="585">JOINT · θₛ / θₒ / θₙ TRAINABLE · Yₒ FIXED TARGET</text>
     </svg>
     <div className="v3-process-mobile" aria-label="当前训练步骤的 LwF 计算路径">
       <div className={`v3-mobile-flow-node v3-mobile-input ${nodeClass("xn")}`} data-process-node="xn"><strong>Xₙ</strong><small>当前任务输入</small></div>

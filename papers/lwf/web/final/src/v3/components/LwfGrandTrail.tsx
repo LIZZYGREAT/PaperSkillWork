@@ -13,7 +13,7 @@ const actorDetails: Record<string, { label: string; className: string }> = {
   model: { label: "Modelₜ · ready", className: "is-model" },
   "old-data-locked": { label: "旧数据 · unavailable", className: "is-locked" },
   "new-task": { label: "Task t+1 · current data", className: "is-task" },
-  "teacher-frozen": { label: "Teacherₜ · FROZEN", className: "is-teacher" },
+  "response-source": { label: "Modelₜ · response recording only", className: "is-teacher" },
   "student-active": { label: "Current Student · ACTIVE", className: "is-student" },
   "old-response": { label: "Yₒ · RECORDED / FIXED TARGET", className: "is-response" },
   "new-head": { label: "θₙ · new head", className: "is-student" },
@@ -30,36 +30,36 @@ const actorDetails: Record<string, { label: string; className: string }> = {
   "student-final": { label: "Student* · task complete", className: "is-student" },
   optimizer: { label: "Optimizer Step", className: "is-model" },
   "model-next": { label: "Modelₜ₊₁", className: "is-model" },
-  "teacher-next": { label: "Teacherₜ₊₁ · next stage", className: "is-teacher" },
+  "model-next-ready": { label: "Modelₜ₊₁ · ready for next task", className: "is-model" },
   "next-task": { label: "Task t+2", className: "is-task" },
 };
 
 function tokenLabel(stepId: string) {
   if (stepId === "old-model" || stepId === "new-task") return "Modelₜ";
-  if (stepId === "teacher-student-split") return "Modelₜ · handoff";
-  if (stepId === "generate-responses") return "Yₒ · RECORDED";
-  if (stepId === "add-head") return "Student + θₙ";
+  if (stepId === "prepare-adaptation") return "Yₒ · RECORDED / FIXED + θₙ";
   if (stepId === "warm-up") return "θₙ · WARM-UP";
   if (stepId === "joint-training") return "Current Student · JOINT";
   if (stepId === "update") return "Student^(k+1)";
-  return "Modelₜ₊₁";
+  if (stepId === "task-completion") return "Student* · TASK COMPLETE";
+  if (stepId === "promote-model") return "Modelₜ₊₁";
+  return "Modelₜ₊₁ + Xₜ₊₂";
 }
 
 function GrandTrailMiniVisual({ stepId }: { stepId: string }) {
   if (stepId === "old-model") return <div className="v3-grand-mini v3-grand-mini-model"><b>Modelₜ</b><span>θₛ + θₒ</span><small>LOCKED OLD DATA</small></div>;
   if (stepId === "new-task") return <div className="v3-grand-mini v3-grand-mini-input"><span>Xₙ</span><span>Yₙ</span><small>current task only</small></div>;
-  if (stepId === "teacher-student-split") return <div className="v3-grand-mini v3-grand-mini-model"><b>Modelₜ</b><span>θₛ + θₒ</span><small>FROZEN REFERENCE · Teacherₜ</small></div>;
-  if (stepId === "generate-responses") return <div className="v3-grand-mini v3-grand-mini-response"><span>Xₙ</span><i aria-hidden="true">→</i><b>Frozen Modelₜ</b><i aria-hidden="true">→</i><strong>Yₒ</strong><small>RECORDED · FIXED TARGET</small></div>;
-  if (stepId === "add-head") return <div className="v3-grand-mini v3-grand-mini-head"><span>shared representation θₛ</span><div><i aria-hidden="true">├─</i><b>old head θₒ → Ŷₒ</b><i aria-hidden="true">└─</i><strong>new head θₙ → Ŷₙ</strong></div></div>;
+  if (stepId === "prepare-adaptation") return <div className="v3-grand-mini v3-grand-mini-prepare"><div><span>Xₙ</span><i aria-hidden="true">→</i><b>Modelₜ · record only</b><i aria-hidden="true">→</i><strong>Yₒ · fixed</strong></div><div><span>θₛ + θₒ</span><i aria-hidden="true">+</i><strong>random θₙ</strong></div><small>两项训练前准备 · 无严格先后依赖</small></div>;
   if (stepId === "warm-up") return <div className="v3-grand-mini v3-grand-mini-warmup"><span>θₛ <b>FROZEN</b></span><span>θₒ <b>FROZEN</b></span><strong>θₙ <small>ACTIVE</small></strong></div>;
   if (stepId === "joint-training") return <div className="v3-grand-mini v3-grand-mini-joint">
     <div><span>Yₒ / Ŷₒ</span><i aria-hidden="true">→</i><b>L_old</b></div>
     <div><span>Yₙ / Ŷₙ</span><i aria-hidden="true">→</i><b>L_new</b></div>
-    <div className="v3-grand-mini-total"><strong>objective</strong><i aria-hidden="true">↶ gradient</i><span>θₒ / θₙ → θₛ</span></div>
+    <div className="v3-grand-mini-total"><strong>L_old → θₒ → θₛ</strong><strong>L_new → θₙ → θₛ</strong></div>
     <div className="v3-grand-mini-trainable"><span>θₛ · ACTIVE</span><span>θₒ · ACTIVE</span><span>θₙ · ACTIVE</span></div>
   </div>;
   if (stepId === "update") return <div className="v3-grand-mini v3-grand-mini-update"><span>Student^(k)</span><i aria-hidden="true">→</i><strong>Student^(k+1)</strong></div>;
-  return <div className="v3-grand-mini v3-grand-mini-promotion"><strong>Student*</strong><i aria-hidden="true">→</i><b>Modelₜ₊₁ → Teacherₜ₊₁</b><span>current task finished · next task t+2</span></div>;
+  if (stepId === "task-completion") return <div className="v3-grand-mini v3-grand-mini-update"><span>Student^(k+1)</span><i aria-hidden="true">↻</i><strong>Student* · task complete</strong></div>;
+  if (stepId === "promote-model") return <div className="v3-grand-mini v3-grand-mini-promotion"><strong>Student*</strong><i aria-hidden="true">→</i><b>Modelₜ₊₁</b><span>after full Task t+1 training</span></div>;
+  return <div className="v3-grand-mini v3-grand-mini-input"><span>Modelₜ₊₁</span><span>Xₜ₊₂ / Yₜ₊₂</span><small>next-stage response refresh</small></div>;
 }
 
 export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
@@ -185,7 +185,7 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
               const active = stepIndex === destination && step.activeFlows.includes(edge.flow);
               return <path key={`${edge.from}-${edge.to}`} className={`v3-grand-trail-route ${completed ? "is-complete" : ""} ${active ? "is-active" : ""}`} data-flow={edge.flow} d={routePaths[index] ?? ""} markerEnd={`url(#${arrowId})`} />;
             })}
-            <path className={`v3-grand-trail-route is-loop ${step.id === "next-teacher" ? "is-active" : ""}`} d={loopPath} markerEnd={`url(#${arrowId})`} />
+            <path className={`v3-grand-trail-route is-loop ${step.id === "next-task" ? "is-active" : ""}`} d={loopPath} markerEnd={`url(#${arrowId})`} />
           </svg>
           {grandTrailSteps.map((item, index) => {
             const position = nodePositions[index];
@@ -198,9 +198,9 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
               <div aria-hidden="true"><GrandTrailMiniVisual stepId={item.id} /></div>
             </button>;
           })}
-          {tokenPosition ? <span className={`v3-grand-trail-model-token ${step.id === "teacher-student-split" ? "is-split" : step.id === "next-teacher" ? "is-promoted" : ""}`} style={{ left: tokenPosition.left, top: tokenPosition.top }}>{tokenLabel(step.id)}</span> : null}
+          {tokenPosition ? <span className={`v3-grand-trail-model-token ${step.id === "prepare-adaptation" ? "is-split" : step.id === "promote-model" ? "is-promoted" : ""}`} style={{ left: tokenPosition.left, top: tokenPosition.top }}>{tokenLabel(step.id)}</span> : null}
         </div>
-        <div className={`v3-grand-trail-loop-summary ${atEnd ? "is-current" : ""}`}><span>LOOP CLOSURE</span><strong>Student* → Modelₜ₊₁ → Teacherₜ₊₁</strong><i aria-hidden="true">↺</i><small>当前任务训练结束后完成晋升；Task t+2 到来时再固定新参照。</small></div>
+        <div className={`v3-grand-trail-loop-summary ${atEnd ? "is-current" : ""}`}><span>LOOP CLOSURE</span><strong>Student* → Modelₜ₊₁ → Task t+2 → fresh Yₒ</strong><i aria-hidden="true">↺</i><small>旧模型只在下一阶段正式训练前记录新输入的旧响应；训练循环读取固定 Yₒ。</small></div>
       </div>
 
       <aside className="v3-grand-trail-detail" aria-label="当前生命周期检查点" aria-live="polite">
@@ -213,7 +213,7 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
           <div><dt>State</dt><dd>{step.state}</dd></div>
           <div className="is-why"><dt>Why this step exists</dt><dd>{step.why}</dd></div>
         </dl>
-        {step.id === "joint-training" ? <div className="v3-grand-trail-minibatch"><span>CHAPTER 03 · MINIBATCH DETAIL</span><p>{jointTrainingSubsteps.map((substep, index) => <span key={substep}>{index ? <i aria-hidden="true">→</i> : null}{substep}</span>)}</p><small>Yₒ 已预先记录；Backward 计算梯度，Optimizer Step 在下一检查点单独更新 θₛ、θₒ、θₙ。</small></div> : null}
+        {step.id === "joint-training" ? <div className="v3-grand-trail-minibatch"><span>CHAPTER 03 · MINIBATCH DETAIL</span><p>{jointTrainingSubsteps.map((substep, index) => <span key={substep}>{index ? <i aria-hidden="true">→</i> : null}{substep}</span>)}</p><small>固定 Yₒ 已在训练前记录；梯度沿 L_old → θₒ → θₛ、L_new → θₙ → θₛ 传播。Optimizer Step 在下一检查点更新参数。</small></div> : null}
         <div className="v3-grand-trail-detail-links">
           {step.referenceId ? <button type="button" onClick={() => onOpenReference(step.referenceId!)}>Reference Hub · 当前步骤 ↗</button> : null}
           {step.chapterRef && onNavigateChapter ? <button type="button" onClick={() => onNavigateChapter(step.chapterRef!)}>回看 Chapter {step.chapterRef} ↗</button> : null}
@@ -232,7 +232,7 @@ export function LwfGrandTrail({ onOpenReference, onNavigateChapter }: {
       <div className="v3-grand-trail-speed" role="group" aria-label="GrandTrail 播放速度">
         <span>Speed</span>{([0.75, 1, 1.5] as const).map((option) => <button key={option} type="button" aria-pressed={speed === option} onClick={() => setSpeed(option)}>{option}×</button>)}
       </div>
-      <p role="status" aria-live="polite">{isPlaying ? `Playing · checkpoint ${stepIndex + 1} of ${grandTrailSteps.length}` : atEnd ? "GrandTrail complete · stopped at next Teacher" : `Manual · checkpoint ${stepIndex + 1} of ${grandTrailSteps.length}`}</p>
+      <p role="status" aria-live="polite">{isPlaying ? `Playing · checkpoint ${stepIndex + 1} of ${grandTrailSteps.length}` : atEnd ? "GrandTrail complete · next task ready" : `Manual · checkpoint ${stepIndex + 1} of ${grandTrailSteps.length}`}</p>
     </div>
 
     <nav className="v3-grand-trail-progress" aria-label="GrandTrail 检查点">

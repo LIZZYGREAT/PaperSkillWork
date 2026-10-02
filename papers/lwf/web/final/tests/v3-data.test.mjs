@@ -12,7 +12,7 @@ test("the release spine is exactly the ready 00–07 sequence", () => {
 
 test("GrandTrail has nine complete checkpoints and ends at the next Teacher", () => {
   assert.equal(grandTrailSteps.length, 9);
-  assert.equal(grandTrailSteps.at(-1)?.id, "next-teacher");
+  assert.equal(grandTrailSteps.at(-1)?.id, "next-task");
   assert.ok(grandTrailSteps.every((step) => step.title && step.input && step.output && step.state && step.why));
   assert.ok(grandTrailSteps.every((step) => step.durationMs > 0));
   assert.ok(grandTrailSteps.every((step) => !Object.hasOwn(step, "visibleObjects")));

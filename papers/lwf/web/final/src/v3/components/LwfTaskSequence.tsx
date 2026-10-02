@@ -9,7 +9,7 @@ export function LwfTaskSequence({ selectedStateId, onSelectState }: { selectedSt
   const nextState = nextTransition && taskSequence.states.find((state) => state.id === nextTransition.to);
 
   return <div className="v3-task-sequence" aria-label="LwF task-level sequence">
-    <p className="v3-task-sequence-hint">按顺序查看八个任务阶段；选择任意阶段可阅读它的作用和下一步。</p>
+    <p className="v3-task-sequence-hint">按顺序查看任务阶段；选择任意阶段可阅读它的作用和下一步。</p>
     <ol className="v3-task-sequence-list" aria-label="任务阶段顺序">
       {taskSequence.states.map((state, index) => <li key={state.id}>
         <button type="button" data-state-id={state.id} aria-pressed={state.id === selectedId} onClick={() => { if (!selectedStateId) setLocalSelectedId(state.id); onSelectState?.(state.id); }}>
@@ -29,9 +29,9 @@ export function LwfTaskSequence({ selectedStateId, onSelectState }: { selectedSt
     </aside>
     <div className="v3-task-sequence-loopback" aria-label="进入下一任务阶段">
       <span>NEXT TASK STAGE</span>
-      <strong>Student* → Modelₜ₊₁ → Freeze as Teacherₜ₊₁</strong>
-      <small>当 Task t+2 到来时，Modelₜ₊₁ 成为新阶段的固定 Teacher，并在 Student 训练前的新输入上重算旧任务响应。</small>
+      <strong>Student* → Modelₜ₊₁ → Task t+2 → record fresh Yₒ</strong>
+      <small>下一任务到来后，Modelₜ₊₁ 只在正式训练前对新输入记录固定旧响应；上一阶段的 Yₒ 不会沿用。</small>
     </div>
-    <p className="v3-task-sequence-footnote">概念性任务生命周期。“Adapt Student”包含第 03 章展示的 minibatch 训练步骤；这里没有额外增加一层训练循环。</p>
+    <p className="v3-task-sequence-footnote">概念性任务生命周期。每次 optimizer step 只更新当前 Student；完成整个任务后，最终 Student* 才成为新的 Model。</p>
   </div>;
 }

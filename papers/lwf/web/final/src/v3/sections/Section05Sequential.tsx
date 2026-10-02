@@ -13,7 +13,7 @@ export function Section05Sequential({ onOpenReference, onNavigateChapter }: {
   return <section className="v3-narrative-chapter v3-sequential-chapter" id="chapter-05" aria-labelledby="v3-sequential-title">
     <header className="v3-chapter-heading">
       <span className="v3-stage-number">05</span>
-      <div><p className="v3-eyebrow">CHAPTER 05 / 08 · SEQUENTIAL TASKS</p><h2 id="v3-sequential-title">Modelₜ₊₁ 如何成为下一阶段 Teacher</h2><p>当前任务训练完成后，最终 Student 成为 Modelₜ₊₁；下一项任务到来时，再将它固定为 Teacherₜ₊₁。</p></div>
+      <div><p className="v3-eyebrow">CHAPTER 05 / 08 · SEQUENTIAL TASKS</p><h2 id="v3-sequential-title">Modelₜ₊₁ 如何进入下一任务阶段</h2><p>当前任务训练完成后，最终 Student 成为 Modelₜ₊₁；下一项任务到来后，它只在训练前用于记录该阶段的旧响应。</p></div>
     </header>
 
     <section className="v3-sequential-block" aria-labelledby="v3-sequence-lifecycle-title">
@@ -28,15 +28,15 @@ export function Section05Sequential({ onOpenReference, onNavigateChapter }: {
     <section className="v3-sequential-block" aria-labelledby="v3-refresh-title">
       <div className="v3-sequential-block-heading"><span>05B · RESPONSE TARGET REFRESH</span><h3 id="v3-refresh-title">旧响应目标随阶段重新生成</h3></div>
       <div className="v3-refresh-pair">
-        <article><span className="v3-refresh-stage">TASK B STAGE</span><p className="v3-refresh-flow"><b>X_B</b><i aria-hidden="true">→</i><b>Frozen Teacher_A</b><i aria-hidden="true">→</i><b>Y_A on X_B</b></p><small>正式训练前，Teacher_A 在本阶段 B 输入上记录 A 任务的响应目标。</small></article>
-        <article><span className="v3-refresh-stage">TASK C STAGE</span><p className="v3-refresh-flow"><b>X_C</b><i aria-hidden="true">→</i><b>Frozen Teacher_AB</b><i aria-hidden="true">→</i><b>Y_A, Y_B on X_C</b></p><small>Task B 训练结束后的 Model_AB 在 C 阶段固定为 Teacher，并于训练前重新记录旧任务响应。</small></article>
+        <article><span className="v3-refresh-stage">TASK B STAGE</span><p className="v3-refresh-flow"><b>X<sub>B</sub></b><i aria-hidden="true">→</i><b>Model<sub>A</sub></b><i aria-hidden="true">→</i><b>Y<sub>A</sub><sup>(B)</sup></b></p><small>正式训练前，Model<sub>A</sub> 对 B 阶段输入记录 A 任务响应；Y<sub>A</sub><sup>(B)</sup> 在 B 阶段训练中保持固定。</small></article>
+        <article><span className="v3-refresh-stage">TASK C STAGE</span><p className="v3-refresh-flow"><b>X<sub>C</sub></b><i aria-hidden="true">→</i><b>Model<sub>AB</sub></b><i aria-hidden="true">→</i><b>Y<sub>A</sub><sup>(C)</sup>, Y<sub>B</sub><sup>(C)</sup></b></p><small>Task B 完成后的 Model<sub>AB</sub> 在 C 阶段训练前重新记录 A、B 两个旧任务响应。</small></article>
       </div>
       <div className="v3-sequence-drift" aria-label="跨任务阶段的概念性模型演进">
         <span>SEQUENTIAL DRIFT · CONCEPTUAL</span>
         <p>Task A → Model_A → Task B → Model_AB → Task C → Model_ABC</p>
         <small>每阶段先由当前 Teacher 在当前输入上记录固定响应 target；随着共享参数适配，旧任务表现仍可能逐阶段变化。</small>
       </div>
-      <p className="v3-refresh-boundary"><strong>不是永久 cache。</strong> 每一阶段只用当前 Teacher 在当前新任务输入上重算旧任务目标；不需要取回旧任务训练图像或标签。</p>
+      <p className="v3-refresh-boundary"><strong>不是永久 cache。</strong> Task B 记录的 Y<sub>A</sub><sup>(B)</sup> 不会拿到 Task C 复用：C 阶段使用更新后的 Model<sub>AB</sub>，并在新的 X<sub>C</sub> 上重新记录 Y<sub>A</sub><sup>(C)</sup> 与 Y<sub>B</sub><sup>(C)</sup>；不需要取回旧任务训练图像或标签。</p>
       <div className="v3-sequential-reference-links">
         <button type="button" onClick={() => onOpenReference("sequential-refresh")}>Reference Hub · response refresh ↗</button>
         <button type="button" onClick={() => onOpenReference("figure-4")}>Reference Hub · Figure 4 ↗</button>
