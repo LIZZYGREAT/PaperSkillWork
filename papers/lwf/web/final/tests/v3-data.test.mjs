@@ -10,7 +10,7 @@ test("the release spine is exactly the ready 00–07 sequence", () => {
   assert.ok(LWF_CHAPTERS.every((chapter) => chapter.status === "ready"));
 });
 
-test("GrandTrail has nine complete checkpoints and ends at the next Teacher", () => {
+test("GrandTrail has nine complete checkpoints and reaches the next task", () => {
   assert.equal(grandTrailSteps.length, 9);
   assert.equal(grandTrailSteps.at(-1)?.id, "next-task");
   assert.ok(grandTrailSteps.every((step) => step.title && step.input && step.output && step.state && step.why));

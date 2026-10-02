@@ -30,7 +30,7 @@ export const grandTrailSteps: GrandTrailStep[] = [
     why: "本阶段的旧响应目标由当前模型在新任务输入上的输出提供。",
     activeActors: ["model", "old-data-locked"],
     activeFlows: [],
-    referenceId: "student",
+    referenceId: "teacher",
     chapterRef: "01",
     durationMs: 900,
   },

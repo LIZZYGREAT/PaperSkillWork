@@ -148,7 +148,7 @@ test("Chapter 07 autoplay stops at Step 9 and Replay from start returns to Step 
   const status = trail.getByRole("status");
   await trail.getByRole("group", { name: "GrandTrail 播放速度" }).getByRole("button", { name: "1.5×" }).click();
   await trail.getByRole("button", { name: "▶ Play" }).click();
-  await expect(status).toHaveText("GrandTrail complete · stopped at next Teacher", { timeout: 20_000 });
+  await expect(status).toHaveText("GrandTrail complete · next task ready", { timeout: 20_000 });
   await expect(trail).toHaveAttribute("data-trail-step", "next-task");
   const replay = trail.getByRole("button", { name: "↺ Replay from start" });
   await replay.click();
