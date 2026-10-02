@@ -26,7 +26,7 @@ workflow:
       status: complete
       completed_by: automation
     W2_paper_model:
-      status: pending
+      status: in_progress
     W3_evidence_assets:
       status: pending
     W4_learning_spine:
