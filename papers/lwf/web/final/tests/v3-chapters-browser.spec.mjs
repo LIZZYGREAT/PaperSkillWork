@@ -47,9 +47,9 @@ test("AlexNet switches between Teacher and Student", async ({ page }) => {
 test("Chapter 02 and 03 selections stay synchronized with the process view", async ({ page }) => {
   await page.goto("/");
   await page.locator("#chapter-02").scrollIntoViewIfNeeded();
-  await page.locator("#key-generate-response").getByRole("button", { name: "生成旧响应" }).click();
+  await page.locator("#key-generate-response").getByRole("button", { name: "记录旧响应" }).click();
   await expect(page.locator("#key-generate-response")).toHaveAttribute("data-active", "true");
-  await expect(page.locator(".v3-process-visual-header strong")).toHaveText(["生成旧响应", "生成旧响应"]);
+  await expect(page.locator(".v3-process-visual-header strong")).toHaveText(["记录旧响应", "记录旧响应"]);
 
   await page.locator("#cycle-update").getByRole("button", { name: "Optimizer Step" }).click();
   await expect(page.locator("#cycle-update")).toHaveAttribute("data-active", "true");

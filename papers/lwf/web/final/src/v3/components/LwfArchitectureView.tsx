@@ -9,7 +9,7 @@ type ParameterNode = "theta_s" | "theta_o" | "theta_n";
 const parameterDetails: Record<ParameterNode, { title: string; body: string; termId: string; source: string }> = {
   theta_s: {
     title: "θₛ · 共享参数",
-    body: "AlexNet 的 conv1–5、fc6 与 fc7 构成共享主体。Teacher 的 θₛ 固定；Student 的 θₛ 在联合优化阶段可训练。",
+    body: "AlexNet 的 conv1–5、fc6 与 fc7 构成共享主体。固定旧模型只在训练前记录 Yₒ；Student 的 θₛ 在联合优化阶段可训练。",
     termId: "theta-s",
     source: "共享主体 · A01 / A05",
   },
@@ -67,9 +67,9 @@ export function LwfArchitectureView({ onOpenReference }: { onOpenReference: (ter
     <section className="v3-parameter-phase-matrix" aria-label="Teacher、Warm-up 与联合优化的参数状态">
       <p className="v3-eyebrow">PARAMETER STATE BY PHASE</p>
       <div>
-        <article><strong>Teacher / old snapshot</strong><span>θₛ frozen · θₒ frozen</span><small>用于训练前记录 Yₒ；不参与 Student 更新。</small></article>
+        <article><strong>Modelₜ · response recording</strong><span>θₛ frozen · θₒ frozen</span><small>只用于训练前记录 Yₒ；记录完成后退出训练循环。</small></article>
         <article><strong>Student · Warm-up</strong><span>θₛ frozen · θₒ frozen · θₙ trainable</span><small>只训练新任务 head。</small></article>
-        <article><strong>Student · Joint optimization</strong><span>θₛ trainable · θₒ trainable · θₙ trainable</span><small>Teacher / old snapshot 仍保持 frozen。</small></article>
+        <article><strong>Student · Joint optimization</strong><span>θₛ trainable · θₒ trainable · θₙ trainable</span><small>训练循环读取固定 Yₒ，不再运行旧模型。</small></article>
       </div>
     </section>
   </div>;

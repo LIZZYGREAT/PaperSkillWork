@@ -2,17 +2,17 @@ import { useId } from "react";
 import { lwfProcess } from "../data/process";
 
 const nodeRevealAt: Record<string, number> = {
-  xn: 0, teacher: 1, yo: 2, student: 3, "old-branch": 3, "new-branch": 3,
-  "new-label": 7, "loss-old": 6, "loss-new": 7, objective: 9, optimizer: 9, "updated-student": 9,
+  xn: 0, teacher: 0, yo: 1, student: 2, "old-branch": 2, "new-branch": 2,
+  "new-label": 0, "loss-old": 5, "loss-new": 6, objective: 8, optimizer: 8, "updated-student": 8,
 };
 
 const edgeRevealAt: Record<string, number> = {
-  "xn-teacher": 1, "teacher-yo": 2, "xn-student": 3,
-  "student-old": 3, "student-new": 3, "old-output-loss": 6, "yo-old-loss": 6,
-  "new-output-loss": 7, "label-new-loss": 7, "loss-old-objective": 9,
-  "loss-new-objective": 9, "old-loss-head-gradient": 8, "old-head-shared-gradient": 8,
-  "new-loss-head-gradient": 8, "new-head-shared-gradient": 8,
-  "objective-optimizer": 9, "optimizer-updated-student": 9,
+  "xn-teacher": 1, "teacher-yo": 1, "xn-student": 2,
+  "student-old": 2, "student-new": 2, "old-output-loss": 5, "yo-old-loss": 5,
+  "new-output-loss": 6, "label-new-loss": 6, "loss-old-objective": 8,
+  "loss-new-objective": 8, "old-loss-head-gradient": 7, "old-head-shared-gradient": 7,
+  "new-loss-head-gradient": 7, "new-head-shared-gradient": 7,
+  "objective-optimizer": 8, "optimizer-updated-student": 8,
 };
 
 const nodeRevealDelay: Record<string, number> = {
@@ -29,7 +29,7 @@ const edgeRevealDelay: Record<string, number> = {
 
 const nodes = [
   { id: "xn", x: 22, y: 92, w: 108, h: 58, title: "Xₙ", sub: "当前任务输入", type: "input" },
-  { id: "teacher", x: 196, y: 38, w: 170, h: 84, title: "Teacherₜ", sub: "θₛ + θₒ · 记录后不再调用", type: "teacher", badge: "FROZEN" },
+  { id: "teacher", x: 196, y: 38, w: 170, h: 84, title: "Modelₜ", sub: "旧参数 · 训练前记录 Yₒ", type: "teacher", badge: "RECORD ONLY" },
   { id: "yo", x: 445, y: 48, w: 108, h: 62, title: "Yₒ", sub: "RECORDED · FIXED", type: "output" },
   { id: "student", x: 198, y: 230, w: 172, h: 96, title: "Current Student", sub: "shared θₛ · trainable", type: "student", badge: "TRAINABLE" },
   { id: "old-branch", x: 418, y: 208, w: 116, h: 62, title: "θₒ → Ŷₒ", sub: "old head · trainable", type: "parameter" },
@@ -70,19 +70,22 @@ export function LwfProcessView({ activeStepId }: {
   const stepIndex = Math.max(0, lwfProcess.steps.findIndex((step) => step.id === activeStep.id));
   const activeNodes = new Set(activeStep.activeNodes ?? []);
   const activeEdges = new Set(activeStep.activeEdges ?? []);
+  const recordingComplete = stepIndex > nodeRevealAt.yo;
+  const visibleEdges = edges.filter((edge) => !recordingComplete || (edge.id !== "xn-teacher" && edge.id !== "teacher-yo"));
+  const visibleNodes = nodes.filter((node) => !recordingComplete || node.id !== "teacher");
   const nodeClass = (id: string) => `${stepIndex >= nodeRevealAt[id] ? "is-revealed" : ""} ${activeNodes.has(id) ? "is-active" : ""} ${id === "updated-student" && activeStep.id === "cycle-update" ? "is-updated" : ""}`;
 
   return <div className="v3-process-visual" aria-label="LwF 持续系统图">
-    <header className="v3-process-visual-header"><div><p className="v3-eyebrow">PERSISTENT SYSTEM</p><span>STEP {String(stepIndex + 1).padStart(2, "0")} / 10</span></div><strong>{activeStep.title}</strong></header>
+    <header className="v3-process-visual-header"><div><p className="v3-eyebrow">PERSISTENT SYSTEM</p><span>STEP {String(stepIndex + 1).padStart(2, "0")} / {lwfProcess.steps.length}</span></div><strong>{activeStep.title}</strong></header>
     <svg className="v3-process-svg" viewBox="0 0 824 724" role="img" aria-labelledby={`${markerPrefix}-title ${markerPrefix}-desc`} preserveAspectRatio="xMidYMid meet">
       <title id={`${markerPrefix}-title`}>LwF Teacher 与 Student 的训练计算图</title>
       <desc id={`${markerPrefix}-desc`}>正式训练前，固定 Modelₜ 在当前输入 Xₙ 上生成并记录 Yₒ。训练期间读取固定 Yₒ；只有当前 Student 对 Xₙ 前向，产生 Ŷₒ 与 Ŷₙ。L_old 与 L_new 汇入联合目标，Backward 计算梯度，Optimizer Step 才更新 Student 的 θₛ、θₒ、θₙ。</desc>
-      <path className={`v3-teacher-outline ${stepIndex >= nodeRevealAt.teacher ? "is-revealed" : ""}`} d="M184 25 H572 V132 H184 Z" />
-      <text className={`v3-svg-zone-label v3-svg-teacher-label ${stepIndex >= nodeRevealAt.teacher ? "is-revealed" : ""}`} x="198" y="24">FROZEN REFERENCE · RECORD BEFORE TRAINING</text>
+      {!recordingComplete ? <path className={`v3-teacher-outline ${stepIndex >= nodeRevealAt.teacher ? "is-revealed" : ""}`} d="M184 25 H572 V132 H184 Z" /> : null}
+      {!recordingComplete ? <text className={`v3-svg-zone-label v3-svg-teacher-label ${stepIndex >= nodeRevealAt.teacher ? "is-revealed" : ""}`} x="198" y="24">FIXED MODEL · RECORD BEFORE TRAINING</text> : null}
       <path className={`v3-student-outline ${stepIndex >= nodeRevealAt.student ? "is-revealed" : ""}`} d="M184 190 H570 V397 H184 Z" />
       <text className={`v3-svg-zone-label v3-svg-student-label ${stepIndex >= nodeRevealAt.student ? "is-revealed" : ""}`} x="198" y="190">EXPANDED STUDENT</text>
       <defs>
-      {edges.map((edge) => {
+      {visibleEdges.map((edge) => {
         const isGradient = edge.kind === "gradient";
         const revealed = stepIndex >= edgeRevealAt[edge.id];
         const active = activeEdges.has(edge.id);
@@ -90,14 +93,14 @@ export function LwfProcessView({ activeStepId }: {
         return <marker key={edge.id} id={`${markerPrefix}-${edge.id}`} className={`v3-process-marker ${isGradient ? "is-gradient" : ""} ${revealed ? "is-revealed" : ""} ${active ? "is-active" : ""}`} style={{ transitionDelay: revealed ? `${delay}ms` : "0ms" }} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>;
       })}
       </defs>
-      {edges.map((edge) => {
+      {visibleEdges.map((edge) => {
         const active = activeEdges.has(edge.id);
         const isGradient = edge.kind === "gradient";
         const revealed = stepIndex >= edgeRevealAt[edge.id];
         const delay = edgeRevealDelay[edge.id] ?? 0;
         return <path key={edge.id} className={`v3-process-edge ${isGradient ? "is-gradient" : ""} ${revealed ? "is-revealed" : ""} ${active ? "is-active" : ""}`} style={{ transitionDelay: `${delay}ms`, animationDelay: `${delay}ms` }} data-edge-id={edge.id} d={edge.d} pathLength={1} markerEnd={`url(#${markerPrefix}-${edge.id})`} />;
       })}
-      {nodes.map((node) => {
+      {visibleNodes.map((node) => {
         const revealed = stepIndex >= nodeRevealAt[node.id];
         const active = activeNodes.has(node.id);
         const delay = nodeRevealDelay[node.id] ?? 0;
@@ -113,15 +116,13 @@ export function LwfProcessView({ activeStepId }: {
     </svg>
     <div className="v3-process-mobile" aria-label="当前训练步骤的 LwF 计算路径">
       <div className={`v3-mobile-flow-node v3-mobile-input ${nodeClass("xn")}`} data-process-node="xn"><strong>Xₙ</strong><small>当前任务输入</small></div>
-      {activeStep.id.startsWith("cycle-")
-        ? <div className={`v3-mobile-flow-node v3-mobile-output is-active ${nodeClass("yo")}`} data-process-node="yo"><strong>Yₒ</strong><small>RECORDED · FIXED TARGET · 不再调用 Teacher</small></div>
-        : stepIndex < nodeRevealAt.yo
+      {activeStep.id.startsWith("cycle-") || recordingComplete
+        ? <div className={`v3-mobile-flow-node v3-mobile-output is-active ${nodeClass("yo")}`} data-process-node="yo"><strong>Yₒ</strong><small>RECORDED · FIXED TARGET · 不再调用旧模型</small></div>
+        : activeStep.id !== "key-generate-response"
           ? <div className={`v3-mobile-flow-row ${activeEdges.has("xn-teacher") ? "is-active" : ""}`} data-edge-id="xn-teacher">
-              {stepIndex >= nodeRevealAt.teacher
-                ? <div className={`v3-mobile-flow-node v3-mobile-teacher ${nodeClass("teacher")}`} data-process-node="teacher"><strong>Frozen Modelₜ</strong><small>固定参照 · 尚未记录 Yₒ</small></div>
-                : <div className="v3-mobile-flow-node v3-mobile-teacher is-active"><strong>Yₒ 尚未记录</strong><small>下一步用固定 Modelₜ 处理 Xₙ</small></div>}
+              <div className="v3-mobile-flow-node v3-mobile-teacher is-active"><strong>Modelₜ 可用</strong><small>旧模型仍可访问 · Yₒ 尚未记录</small></div>
             </div>
-          : <div className={`v3-mobile-flow-row ${activeEdges.has("xn-teacher") || activeEdges.has("teacher-yo") ? "is-active" : ""}`} data-edge-id="xn-teacher teacher-yo"><div className={`v3-mobile-flow-node v3-mobile-teacher ${nodeClass("teacher")}`} data-process-node="teacher"><strong>Frozen Modelₜ</strong><small>训练前一次性记录</small></div><span aria-hidden="true">→</span><div className={`v3-mobile-flow-node v3-mobile-output ${nodeClass("yo")}`} data-process-node="yo"><strong>Yₒ</strong><small>RECORDED · FIXED TARGET</small></div></div>}
+          : <div className={`v3-mobile-flow-row ${activeEdges.has("xn-teacher") || activeEdges.has("teacher-yo") ? "is-active" : ""}`} data-edge-id="xn-teacher teacher-yo"><div className={`v3-mobile-flow-node v3-mobile-teacher ${nodeClass("teacher")}`} data-process-node="teacher"><strong>Modelₜ</strong><small>只在训练前记录</small></div><span aria-hidden="true">→</span><div className={`v3-mobile-flow-node v3-mobile-output ${nodeClass("yo")}`} data-process-node="yo"><strong>Yₒ</strong><small>RECORDED · FIXED TARGET</small></div></div>}
       <div className={`v3-mobile-student ${nodeClass("student")}`} data-process-node="student"><strong>Student · θₛ</strong><small>共享表示</small></div>
       <div className="v3-mobile-branches">
         <div className={`v3-mobile-branch ${nodeClass("old-branch")}`} data-process-node="old-branch"><span>θₒ → Ŷₒ</span><i>→</i><strong className={nodeClass("loss-old")} data-process-node="loss-old">L_old</strong></div>
@@ -132,6 +133,6 @@ export function LwfProcessView({ activeStepId }: {
       <div className={`v3-mobile-gradient-flow ${activeEdges.has("old-loss-head-gradient") || activeEdges.has("new-loss-head-gradient") ? "is-active" : ""}`} data-edge-id="old-loss-head-gradient new-loss-head-gradient">L_old → θₒ → θₛ <span>·</span> L_new → θₙ → θₛ</div>
       <div className={`v3-mobile-update-row ${nodeClass("optimizer")}`}><div className="v3-mobile-flow-node" data-process-node="optimizer"><strong>Optimizer Step</strong><small>更新 θₛ、θₒ、θₙ</small></div><i>→</i><div className={`v3-mobile-flow-node v3-mobile-updated ${nodeClass("updated-student")}`} data-process-node="updated-student"><strong>Student^(k+1)</strong><small>本任务训练继续</small></div></div>
     </div>
-    <footer className="v3-process-legend"><span><i className="is-forward" />前向 / 目标</span><span><i className="is-gradient" />反向梯度</span><span><i className="is-frozen" />Teacher 固定</span></footer>
+    <footer className="v3-process-legend"><span><i className="is-forward" />前向 / 目标</span><span><i className="is-gradient" />反向梯度</span><span><i className="is-frozen" />旧模型仅训练前记录</span></footer>
   </div>;
 }

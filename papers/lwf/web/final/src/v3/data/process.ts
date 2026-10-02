@@ -3,8 +3,7 @@ import type { ProcessLoopSpec } from "../../shared/core/process-loop";
 import type { StickySection } from "../../shared/foundation/layout/StickySystemView";
 
 export const keyMoveSteps: FlowStep[] = [
-  { id: "key-new-task", title: "新任务到来", description: "旧任务数据不可访问；当前 Xₙ 与 Yₙ 可用。", relatedIds: ["xn"] },
-  { id: "key-freeze-teacher", title: "固定旧模型状态", description: "将 Modelₜ 保留为固定参照；它不参与当前 Student 的参数更新。", relatedIds: ["teacher"] },
+  { id: "key-new-task", title: "新任务到来", description: "旧任务数据不可访问；当前 Xₙ、Yₙ 与 Modelₜ 可用。", relatedIds: ["xn", "new-label", "teacher"] },
   { id: "key-generate-response", title: "记录旧响应", description: "正式训练前，在固定 Modelₜ 上计算并记录 Yₒ；之后把 Yₒ 作为固定 target。", relatedIds: ["xn", "teacher", "yo"] },
   { id: "key-expand-student", title: "扩展 Student", description: "保留共享参数 θₛ 与旧 head θₒ，并增加随机初始化的新任务 head θₙ。", relatedIds: ["student", "theta-s", "old-branch", "new-branch"] },
 ];
@@ -22,8 +21,8 @@ export const processSyncSections: StickySection[] = [...keyMoveSteps, ...trainin
 
 export const lwfProcess: ProcessLoopSpec = {
   nodes: [
-    { id: "xn", label: "Xₙ", kind: "input", group: "当前任务输入", description: "旧模型与 Student 都接收同一批当前任务输入。", position: { x: 130, y: 85 } },
-    { id: "teacher", label: "Frozen Modelₜ", kind: "module", group: "Response recording · before training", description: "固定旧模型只用于正式训练前在 Xₙ 上计算并记录 Yₒ，不参与当前 Student 的参数更新。", position: { x: 410, y: 85 } },
+    { id: "xn", label: "Xₙ", kind: "input", group: "当前任务输入", description: "正式训练前输入固定旧模型以记录 Yₒ；训练时输入当前 Student。", position: { x: 130, y: 85 } },
+    { id: "teacher", label: "Modelₜ", kind: "module", group: "Response source · before training", description: "固定旧模型只在正式训练前对当前 Xₙ 计算并记录 Yₒ；记录完成后，训练步骤不再调用它。", position: { x: 410, y: 85 } },
     { id: "yo", label: "Yₒ · fixed target", kind: "output", group: "Recorded old response", description: "旧模型在 joint optimization 前对当前任务输入 Xₙ 产生并记录的响应；训练期间不再由 Teacher 逐 minibatch 生成。", position: { x: 690, y: 85 } },
     { id: "student", label: "Current Student · θₛ", kind: "module", group: "Trainable Student", description: "当前可训练 Student 的共享表示；联合优化中 θₛ、θₒ、θₙ 都参与参数更新。", position: { x: 130, y: 235 } },
     { id: "old-branch", label: "θₒ → Ŷₒ", kind: "parameter", group: "Current Student", description: "Student 的旧任务 head；Warm-up 冻结，联合优化时可训练。", position: { x: 410, y: 235 } },
@@ -56,22 +55,16 @@ export const lwfProcess: ProcessLoopSpec = {
   ],
   steps: [
     {
-      id: "key-new-task", title: "新任务到来", summary: "旧训练数据不可用，但旧模型仍能运行；当前任务提供 Xₙ。",
-      activeNodes: ["xn", "teacher", "student"], activeEdges: ["xn-teacher", "xn-student"],
-      annotations: [{ target: "xn", text: "只有当前任务输入可用于本轮训练。" }],
-      detail: { title: "约束", bullets: ["旧训练图像与标签不可用。", "旧模型和新任务数据仍可访问。"] },
-    },
-    {
-      id: "key-freeze-teacher", title: "固定旧模型状态", summary: "保留一个不参与当前 Student 优化的固定参照。",
-      activeNodes: ["teacher"], activeEdges: [],
-      annotations: [{ target: "teacher", text: "固定旧模型仅用于记录 Yₒ，不进入当前 Student 的 optimizer。" }],
-      detail: { title: "固定旧模型的职责", bullets: ["θₛ 与 θₒ 在本阶段保持固定。", "下一步在 Xₙ 上记录旧响应 Yₒ。", "记录完成后，训练直接读取固定 Yₒ。"] },
+      id: "key-new-task", title: "新任务到来", summary: "旧训练数据不可用；新任务提供 Xₙ、Yₙ，Modelₜ 仍可访问。",
+      activeNodes: ["xn", "teacher", "new-label"], activeEdges: [],
+      annotations: [{ target: "xn", text: "当前输入和标签可用；Modelₜ 仍保留旧任务行为。" }],
+      detail: { title: "当前阶段可用的信息", bullets: ["当前新任务输入 Xₙ 与标签 Yₙ 可用。", "旧任务训练图像与标签不可用。", "训练前仍可运行上一阶段模型 Modelₜ。"] },
     },
     {
       id: "key-generate-response", title: "记录旧响应", summary: "正式训练前，把 Xₙ 输入固定 Modelₜ 并记录 Yₒ。",
       activeNodes: ["xn", "teacher", "yo"], activeEdges: ["xn-teacher", "teacher-yo"],
       annotations: [{ target: "yo", text: "Yₒ 已记录；它是训练时使用的固定旧响应 target。" }],
-      detail: { title: "Yₒ 的来源与状态", bullets: ["它是固定旧模型对当前新任务输入 Xₙ 的响应。", "在 joint optimization 前计算并记录。", "不是旧任务真值标签、旧数据样本或 replay sample。"] },
+      detail: { title: "Yₒ 的来源与状态", bullets: ["它是固定旧模型对当前新任务输入 Xₙ 的响应。", "在 Student 正式训练前计算并记录；之后作为固定 target。", "新增 θₙ 也属于训练前准备，两者没有严格的先后依赖。", "不是旧任务真值标签、旧数据样本或 replay sample。"] },
     },
     {
       id: "key-expand-student", title: "扩展 Student", summary: "建立可训练的 Student，并增加新任务 head θₙ。",
@@ -112,7 +105,7 @@ export const lwfProcess: ProcessLoopSpec = {
         { target: "old-branch", text: "L_old → θₒ → θₛ。" },
         { target: "new-branch", text: "L_new → θₙ → θₛ。" },
       ],
-      detail: { title: "梯度路径与可训练参数", bullets: ["L_old → θₒ → θₛ。", "L_new → θₙ → θₛ。", "联合阶段 θₛ、θₒ、θₙ 都可训练；Teacher snapshot 固定。"] },
+      detail: { title: "梯度路径与可训练参数", bullets: ["L_old → θₒ → θₛ。", "L_new → θₙ → θₛ。", "联合阶段 θₛ、θₒ、θₙ 都可训练；训练循环读取固定 Yₒ。"] },
     },
     {
       id: "cycle-update", title: "Optimizer Step", summary: "优化器应用梯度之后，Student 参数才真正改变。",
