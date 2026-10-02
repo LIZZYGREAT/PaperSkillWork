@@ -1,8 +1,8 @@
 import type { ReferenceItem, TermDefinition } from "../../shared/core/reference";
 
 export const terms: TermDefinition[] = [
-  { id: "teacher", label: "Teacher", fullName: "固定的旧模型", definition: "上一任务训练完成后保留下来的固定模型状态。", paperRole: "正式训练前先在当前输入 Xₙ 上计算并记录旧任务响应 Yₒ；训练时使用固定 Yₒ target。", confusion: "不是每个 minibatch 都重新生成 Yₒ 的当前 Student；Teacher 不参与本阶段参数更新。", sourceKind: "模型结构", sourceRef: "A01 · C02" },
-  { id: "student", label: "Student", fullName: "扩展后的可训练模型", definition: "包含共享参数、旧任务 head 和新增任务 head 的当前模型。", paperRole: "共同学习旧响应保持与新任务目标。", confusion: "不是 Teacher 的共享可变副本；两者参数对象独立。", sourceKind: "模型结构", sourceRef: "A01 · A02" },
+  { id: "teacher", label: "Teacher", fullName: "旧模型的响应记录角色", definition: "本教程用 Teacher 称呼上一阶段模型在正式训练前记录旧响应时扮演的角色。", paperRole: "论文中的旧模型在当前输入 Xₙ 上计算并记录 Yₒ；记录完成后，训练直接读取固定 Yₒ。", confusion: "Teacher 是教学称呼，只在响应记录步骤扮演该角色；Warm-up 与 joint optimization 不再运行旧模型。", sourceKind: "Mechanism interpretation · Teaching terminology", sourceRef: "A01 · C02" },
+  { id: "student", label: "Student", fullName: "扩展后的当前可训练模型", definition: "本教程对保留旧 head 并增加新任务 head 的当前模型所用的教学称呼。", paperRole: "以旧响应保持项与当前任务目标共同学习。", confusion: "Student^(k+1) 是当前任务中的一次更新；只有完整任务结束后的 Student* 才成为 Modelₜ₊₁。", sourceKind: "Mechanism interpretation · Teaching terminology", sourceRef: "A01 · A02" },
   { id: "lwf", label: "LwF", fullName: "Learning without Forgetting", definition: "在当前新任务输入上匹配旧模型的响应，同时学习当前任务标签。", paperRole: "在旧训练数据不可访问时，为 Student 提供旧任务行为目标。", confusion: "保留的是观测到的 Xₙ 上的响应约束，不代表所有旧输入上全局不变。", sourceKind: "论文方法", sourceRef: "C01 · C02 · C03" },
   { id: "theta-s", label: "θₛ", fullName: "共享参数", definition: "多个任务共同使用的表示网络参数。", paperRole: "Warm-up 时冻结；联合优化时与 θₒ、θₙ 一起作为 Student 的可训练参数。", confusion: "不等同于某个任务专属 head。", sourceKind: "符号", sourceRef: "A01 · A05" },
   { id: "theta-o", label: "θₒ", fullName: "旧任务 head 参数", definition: "Student 中连接共享表示与旧任务输出的参数。", paperRole: "产生 Ŷₒ，并在联合优化阶段接收 L_old 梯度。", confusion: "Teacher 的对应参数保持固定。", sourceKind: "符号", sourceRef: "A02 · A05" },
@@ -16,8 +16,8 @@ export const terms: TermDefinition[] = [
   { id: "l-new", label: "L_new", fullName: "新任务损失", definition: "由新任务真实标签监督 Student 新任务输出。", paperRole: "驱动 Student 学习当前任务。", confusion: "与旧响应蒸馏使用不同的目标。", sourceKind: "公式", sourceRef: "F01" },
   { id: "lambda-o", label: "λₒ", fullName: "旧任务损失权重", definition: "组合目标中乘在 L_old 前的权重。", paperRole: "调整旧任务保持项相对新任务损失的影响。", confusion: "不是温度参数或任务贡献百分比。", sourceKind: "符号", sourceRef: "F04 · F05" },
   { id: "regularization", label: "R", fullName: "普通正则项", definition: "组合目标中的常规正则化项。", paperRole: "与 L_old、L_new 一起构成优化目标。", confusion: "不是第三个任务的监督损失。", sourceKind: "公式", sourceRef: "A05 · F04" },
-  { id: "warm-up", label: "Warm-up", fullName: "新 head 预热阶段", definition: "先单独训练新任务 head 的阶段。", paperRole: "暂时冻结 Student 的共享参数与旧 head。", confusion: "它不是 Teacher 训练阶段；论文消融指出它不是关键条件。", sourceKind: "训练阶段", sourceRef: "A05 · C05" },
-  { id: "joint-optimization", label: "联合优化", fullName: "共享参数与任务 head 联合更新", definition: "Warm-up 后，用固定旧响应损失和新任务损失共同更新 Student。", paperRole: "θₛ、θₒ、θₙ 都是可训练参数；L_old → θₒ → θₛ，L_new → θₙ → θₛ。", confusion: "Teacher / old snapshot 仍保持固定；不同于需要旧数据的联合训练基线。", sourceKind: "训练阶段", sourceRef: "A05 · F04" },
+  { id: "warm-up", label: "Warm-up", fullName: "新 head 预热阶段", definition: "先单独训练新任务 head 的阶段。", paperRole: "暂时冻结 Student 的共享参数与旧 head。", confusion: "它从已记录 Yₒ 的目标开始训练；不是旧模型响应记录阶段，且论文消融指出它对 LwF 并非关键。", sourceKind: "训练阶段", sourceRef: "A05 · C05" },
+  { id: "joint-optimization", label: "联合优化", fullName: "共享参数与任务 head 联合更新", definition: "Warm-up 后，用固定旧响应损失和新任务损失共同更新 Student。", paperRole: "θₛ、θₒ、θₙ 都是可训练参数；L_old → θₒ → θₛ，L_new → θₙ → θₛ。", confusion: "旧模型在训练前已记录 Yₒ 并退出训练循环；不同于需要旧数据的联合训练基线。", sourceKind: "训练阶段", sourceRef: "A05 · F04" },
   { id: "fine-tuning", label: "Fine-tuning", fullName: "微调", definition: "用当前新任务监督更新共享表示和新任务输出头。", paperRole: "作为适应新任务的常见基线。", confusion: "共享参数改变可能使旧任务输出漂移。", sourceKind: "方法", sourceRef: "C06" },
   { id: "feature-extraction", label: "Feature Extraction", fullName: "特征提取", definition: "冻结共享表示，仅训练新任务输出头。", paperRole: "作为保护旧表示的对照路线。", confusion: "共享表示不能适应新任务。", sourceKind: "方法", sourceRef: "C06" },
   { id: "joint-training", label: "Joint Training", fullName: "联合训练基线", definition: "使用新旧任务样本与真实标签共同训练。", paperRole: "作为理想信息条件下的比较基线。", confusion: "需要旧任务训练数据，与本节问题约束冲突。", sourceKind: "方法", sourceRef: "C06" },
@@ -41,6 +41,7 @@ export const v3ReferenceIds: Record<string, string> = {
   "domain-coverage": "claim:domain_mismatch", temperature: "symbol:temperature", "figure-7": "evidence:figure_7",
   "figure-4": "evidence:figure_4", "sequential-refresh": "confusion:sequential_refresh",
   "table-1": "evidence:table_1", "table-2": "evidence:table_2",
+  "training-protocol": "evidence:training_protocol",
   "dataset-imagenet": "dataset:imagenet", "dataset-places365": "dataset:places365", "dataset-voc": "dataset:voc",
   "dataset-cub": "dataset:cub", "dataset-scenes": "dataset:scenes", "dataset-mnist": "dataset:mnist",
   "claim-forgetting": "claim:eliminates_forgetting", "claim-no-old-data": "claim:no_old_training_data",
@@ -54,7 +55,7 @@ export const v3ReferencePriority = [
   "term:teacher", "term:student", "method:lwf", "formula:l_old", "formula:l_new", "symbol:lambda_old", "symbol:regularization", "formula:total_loss", "phase:warmup", "phase:joint",
   "method:fine_tuning", "method:feature_extraction", "method:joint_training",
   "formula:response_preservation", "formula:parameter_l2", "claim:domain_mismatch", "symbol:temperature", "evidence:figure_7",
-  "evidence:table_1", "evidence:table_2", "evidence:figure_4", "evidence:figure_7", "evidence:tracking",
+  "evidence:table_1", "evidence:table_2", "evidence:training_protocol", "evidence:figure_4", "evidence:figure_7", "evidence:tracking",
   "claim:eliminates_forgetting", "claim:no_old_training_data", "claim:response_beats_parameter", "claim:foundation_models_scope",
   "confusion:stability_plasticity", "confusion:jacobian", "confusion:global_function",
 ];

@@ -36,6 +36,16 @@ export function Section00Problem({ onOpenReference, onNavigateChapter }: { onOpe
       })}
     </div>
 
+    <aside className="v3-task-semantics" aria-label="不同任务语义与任务专属输出 head">
+      <div className="v3-task-semantics-heading"><span>SETTING BOUNDARY</span><h3>不同任务含义，共享表示，分别输出</h3><p>原文主实验按任务保留输出层；新任务不只是把更多类别塞进同一个输出 head。</p></div>
+      <div className="v3-task-semantics-map">
+        <article><span>OLD TASK · OBJECTS</span><strong>ImageNet</strong><small>旧任务 head · <TermRef term={termsById["theta-o"]} onOpenReference={onOpenReference} /></small></article>
+        <div className="v3-task-semantics-shared"><strong><TermRef term={termsById["theta-s"]} onOpenReference={onOpenReference} /></strong><small>shared representation</small></div>
+        <article><span>NEW TASK · SCENES</span><strong>Indoor Scenes</strong><small>新任务 head · <TermRef term={termsById["theta-n"]} onOpenReference={onOpenReference} /></small></article>
+      </div>
+      <p className="v3-task-semantics-boundary">这是论文按任务分头的实验设定。不要把这里的结果直接读成“单一共享类别 head 持续加类”的现代类增量学习结论。</p>
+    </aside>
+
     <div className="v3-baseline-block">
       <div className="v3-subheading"><div><p className="v3-eyebrow">SAME INFORMATION CONSTRAINT</p><h3>常见路线的取舍</h3></div><span>快速比较，不展开实验细节</span></div>
       <div className="v3-matrix-wrap">

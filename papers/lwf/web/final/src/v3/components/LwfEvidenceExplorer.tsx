@@ -76,6 +76,8 @@ export function LwfEvidenceExplorer({ onOpenReference }: { onOpenReference: (ter
   const selectedClaim = claimFor(selectedClaimId);
   const selectedAnswer = answers[selectedClaimId];
   const question2 = table2Questions.find((question) => question.id === selectedTable2Question)!;
+  const fineTuningOldDelta = table1ImageNetCub.methods.find((method) => method.id === "fine-tuning")!.oldDelta!;
+  const derivedFineTuningOld = table1ImageNetCub.baseline.old + fineTuningOldDelta;
 
   const openEvidenceReference = (id: string) => {
     const alias = evidenceAliases[id];
@@ -89,18 +91,26 @@ export function LwfEvidenceExplorer({ onOpenReference }: { onOpenReference: (ter
     <div className="v3-evidence-source-line"><span>论文位置</span><strong>{evidenceProtocol[selectedEvidence].sourceLabel}</strong></div>
   </section>;
 
-  const renderTable1 = () => <div className="v3-table-scroll" role="region" aria-label="ImageNet 到 CUB 的 Table 1(a) 原始报告值" tabIndex={0}>
-    <table className="v3-evidence-table">
-      <caption>Table 1(a) 摘录 · ImageNet → CUB · Top-1 accuracy</caption>
-      <thead><tr><th scope="col">Method</th><th scope="col">Old task · ImageNet</th><th scope="col">New task · CUB</th><th scope="col">使用旧训练数据</th></tr></thead>
-      <tbody>{table1ImageNetCub.methods.map((method) => <tr key={method.id}>
-        <th scope="row">{method.label}</th>
-        <td>{method.id === "lwf" ? `${table1ImageNetCub.baseline.old.toFixed(1)}%` : formatDelta(method.oldDelta!)}</td>
-        <td>{method.id === "lwf" ? `${table1ImageNetCub.baseline.next.toFixed(1)}%` : formatDelta(method.newDelta!)}</td>
-        <td>{method.oldData ? "是 · 图像与标签" : "否"}</td>
-      </tr>)}</tbody>
-    </table>
-    <p className="v3-evidence-table-note">此处选取四种常见路线。原表还包含 LFL 与 Fine-tune FC。LwF 行是原表直接报告的绝对准确率；其他方法是相对 LwF 的带符号差值（百分点），这里不重建绝对值。</p>
+  const renderTable1 = () => <div className="v3-table1-evidence">
+    <div className="v3-table1-reading-guide" aria-label="Table 1(a) 读法">
+      <article><span>1 · LwF BASELINE</span><p>LwF 行是原表直接报告的准确率：ImageNet 旧任务 {table1ImageNetCub.baseline.old.toFixed(1)}%，CUB 新任务 {table1ImageNetCub.baseline.next.toFixed(1)}%。</p></article>
+      <article><span>2 · SIGNED DIFFERENCES</span><p>其他方法显示相对 LwF 的百分点差值。例如 Fine-tuning 的 ImageNet 差值为 {formatDelta(fineTuningOldDelta)}，换算后为 {table1ImageNetCub.baseline.old.toFixed(1)} − {Math.abs(fineTuningOldDelta).toFixed(1)} = {derivedFineTuningOld.toFixed(1)}%；换算值不是原表该单元格直接打印的数。</p></article>
+    </div>
+    <div className="v3-table-scroll" role="region" aria-label="ImageNet 到 CUB 的 Table 1(a) 原始报告值" tabIndex={0}>
+      <table className="v3-evidence-table">
+        <caption>Table 1(a) 摘录 · ImageNet → CUB · Top-1 accuracy</caption>
+        <thead><tr><th scope="col">Method</th><th scope="col">Old task · ImageNet</th><th scope="col">New task · CUB</th><th scope="col">使用旧训练数据</th></tr></thead>
+        <tbody>{table1ImageNetCub.methods.map((method) => <tr key={method.id}>
+          <th scope="row">{method.label}</th>
+          <td>{method.id === "lwf" ? `${table1ImageNetCub.baseline.old.toFixed(1)}%` : formatDelta(method.oldDelta!)}</td>
+          <td>{method.id === "lwf" ? `${table1ImageNetCub.baseline.next.toFixed(1)}%` : formatDelta(method.newDelta!)}</td>
+          <td>{method.oldData ? "是 · 图像与标签" : "否"}</td>
+        </tr>)}</tbody>
+      </table>
+      <p className="v3-evidence-table-note">此处选取四种常见路线。原表还包含 LFL 与 Fine-tune FC；除 LwF 行外，表中其他方法均以相对 LwF 的带符号差值报告。</p>
+    </div>
+    <aside className="v3-table1-architecture-boundary"><strong>架构边界</strong><p>本表是 AlexNet 结果。论文的小规模 VGG-16 验证中，Joint Training 一贯优于 LwF，因此不能把这张表的排序推广到所有架构。</p></aside>
+    <div className="v3-table1-reference-link"><span>Feature Extraction 的具体基线实现与训练协议</span><button type="button" onClick={() => onOpenReference("training-protocol")}>Reference Hub · protocol details ↗</button></div>
   </div>;
 
   const renderTable2 = () => <div className="v3-table2-explorer" aria-label="Table 2 研究问题">

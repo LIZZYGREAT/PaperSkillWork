@@ -368,6 +368,15 @@
 .v3-coverage-explanation small { color: #6d7f82; font-size: .68rem; line-height: 1.5; overflow-wrap: anywhere; }
 .v3-coverage-boundary-note { grid-column: 1 / -1; margin: 0; padding: 9px 11px; border-radius: 7px; color: #6d5b47; background: #fbf7ef; font-size: .72rem; line-height: 1.55; overflow-wrap: anywhere; }
 .v3-coverage-boundary-note strong { color: #775d3c; }
+.v3-domain-pair-cases { display: grid; grid-template-columns: minmax(0,1.05fr) repeat(3,minmax(0,1fr)); gap: 8px; margin-top: 11px; }
+.v3-domain-pair-heading { align-self: center; padding-right: 8px; }
+.v3-domain-pair-heading > span,.v3-domain-pair-cases article > span { color: #718985; font-size: 7px; font-weight: 830; letter-spacing: .08em; }
+.v3-domain-pair-heading h4 { margin: 4px 0; color: #35555d; font-size: .79rem; line-height: 1.4; }
+.v3-domain-pair-heading p { margin: 0; color: #77888b; font-size: .63rem; line-height: 1.45; }
+.v3-domain-pair-cases article { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 9px 10px; border: 1px solid #e0e8e5; border-radius: 7px; background: #fff; }
+.v3-domain-pair-cases article.is-related { border-color: #cfe1d9; background: #f5faf7; }
+.v3-domain-pair-cases article > strong { color: #35585d; font-size: .72rem; }
+.v3-domain-pair-cases article > p { margin: 0; color: #687d81; font-size: .65rem; line-height: 1.48; }
 
 @media (max-width: 760px) {
   .v3-mechanism-block { margin-top: 17px; padding: 14px 12px 13px; border-radius: 10px; }
@@ -409,6 +418,7 @@
   .v3-coverage-region-label,.v3-coverage-current-label { font-size: 8px; }
   .v3-coverage-explanation { grid-template-columns: 1fr; gap: 7px; }
   .v3-coverage-explanation article { min-height: auto; padding: 10px 11px; }
+  .v3-domain-pair-cases { grid-template-columns: minmax(0,1fr); }
 }
 
 @media (min-width: 761px) and (max-width: 1080px) {
@@ -424,6 +434,8 @@
   .v3-coverage-controls,.v3-coverage-figure,.v3-coverage-explanation,.v3-coverage-boundary-note { grid-column: 1; grid-row: auto; }
   .v3-coverage-figure { width: min(100%, 760px); justify-self: center; }
   .v3-coverage-explanation { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .v3-domain-pair-cases { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .v3-domain-pair-heading { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

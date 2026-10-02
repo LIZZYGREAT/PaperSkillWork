@@ -83,7 +83,7 @@ export const lwfProcess: ProcessLoopSpec = {
       activeNodes: ["xn", "yo", "student", "old-branch", "new-branch"],
       activeEdges: ["xn-student", "student-old", "student-new"],
       annotations: [{ target: "yo", text: "固定 target · 训练 Forward 不再调用 Teacher。" }],
-      detail: { title: "训练中的 Student Forward", bullets: ["Yₒ 已在训练开始前记录，当前直接读取为固定 target。", "Student: Xₙ → θₛ → θₒ / θₙ → Ŷₒ / Ŷₙ。", "Teacher 不需要在每个 minibatch 中重新生成 Yₒ。"] },
+      detail: { title: "训练中的 Student Forward", bullets: ["Yₒ 已在训练开始前记录，当前直接读取为固定 target。", "Student: Xₙ → θₛ → θₒ / θₙ → Ŷₒ / Ŷₙ。", "旧模型不需要在每个 minibatch 中重新生成 Yₒ。"] },
     },
     {
       id: "cycle-old-loss", title: "旧响应损失", summary: "已记录的固定 Yₒ 与 Student 的 Ŷₒ 一起形成 L_old。",

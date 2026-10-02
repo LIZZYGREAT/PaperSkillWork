@@ -34,7 +34,7 @@ export function Section05Sequential({ onOpenReference, onNavigateChapter }: {
       <div className="v3-sequence-drift" aria-label="跨任务阶段的概念性模型演进">
         <span>SEQUENTIAL DRIFT · CONCEPTUAL</span>
         <p>Task A → Model_A → Task B → Model_AB → Task C → Model_ABC</p>
-        <small>每阶段先由当前 Teacher 在当前输入上记录固定响应 target；随着共享参数适配，旧任务表现仍可能逐阶段变化。</small>
+        <small>每阶段先由当前旧模型在新输入上记录固定响应 target；随着共享参数适配，旧任务表现仍可能逐阶段变化。</small>
       </div>
       <p className="v3-refresh-boundary"><strong>不是永久 cache。</strong> Task B 记录的 Y<sub>A</sub><sup>(B)</sup> 不会拿到 Task C 复用：C 阶段使用更新后的 Model<sub>AB</sub>，并在新的 X<sub>C</sub> 上重新记录 Y<sub>A</sub><sup>(C)</sup> 与 Y<sub>B</sub><sup>(C)</sup>；不需要取回旧任务训练图像或标签。</p>
       <div className="v3-sequential-reference-links">

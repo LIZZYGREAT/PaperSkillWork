@@ -48,6 +48,13 @@
 .v3-evidence-observation { display: grid; grid-template-columns: minmax(110px,.26fr) minmax(0,1fr); gap: 5px 10px; margin-top: 10px; padding: 10px 11px; border-radius: 8px; background: #f7faf8; }
 .v3-evidence-observation strong { color: #51716e; font-size: .66rem; }
 .v3-evidence-observation p { margin: 0; color: #526b71; font-size: .69rem; line-height: 1.5; }
+.v3-table1-evidence { display: grid; gap: 8px; }
+.v3-table1-reading-guide { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: 7px; }
+.v3-table1-reading-guide article { min-width: 0; padding: 9px 10px; border: 1px solid #d8e6df; border-radius: 7px; background: #f5faf7; }
+.v3-table1-reading-guide article + article { border-color: #e2e2d6; background: #fafaf5; }
+.v3-table1-reading-guide article > span { color: #63817a; font-size: 7px; font-weight: 840; letter-spacing: .08em; }
+.v3-table1-reading-guide article > p { margin: 4px 0 0; color: #4f696d; font-size: .68rem; line-height: 1.5; }
+.v3-table1-reading-guide article > p strong { color: #2c655b; }
 .v3-table-scroll { max-width: 100%; overflow-x: auto; border: 1px solid #e3eae8; border-radius: 8px; }
 .v3-evidence-table { width: 100%; min-width: 560px; border-collapse: collapse; color: #50686e; font-size: .68rem; }
 .v3-evidence-table caption { padding: 8px 10px; color: #426762; background: #f7faf8; font-weight: 760; text-align: left; }
@@ -56,6 +63,11 @@
 .v3-evidence-table tbody th { color: #31565a; font-weight: 730; }
 .v3-evidence-table tbody tr:first-child { background: #f2f8f5; }
 .v3-evidence-table-note { margin: 7px 1px 0; color: #7a8889; font-size: .64rem; line-height: 1.5; }
+.v3-table1-architecture-boundary { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: baseline; gap: 5px 9px; padding: 8px 10px; border-left: 2px solid #c4a47e; background: #fbf8f2; }
+.v3-table1-architecture-boundary > strong { color: #806646; font-size: .64rem; }
+.v3-table1-architecture-boundary > p { margin: 0; color: #6f6b60; font-size: .66rem; line-height: 1.48; }
+.v3-table1-reference-link { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; padding: 7px 9px; border: 1px solid #e0e8e5; border-radius: 7px; color: #667c7c; background: #fafcfb; font-size: .64rem; }
+.v3-table1-reference-link button { min-height: 28px; padding: 4px 7px; border: 1px solid #d5e5df; border-radius: 6px; color: #28635d; background: #fff; font: inherit; font-size: .62rem; font-weight: 710; cursor: pointer; }
 .v3-evidence-source-link { margin: 0 0 8px !important; font-size: .67rem !important; }
 .v3-evidence-source-link a { color: #176b63; font-weight: 740; }
 .v3-table2-questions { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -110,6 +122,7 @@
   .v3-verdict-layout { grid-template-columns: minmax(0,1fr); }
   .v3-verdict-claim-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .v3-evidence-detail-heading,.v3-evidence-chain-step { padding-right: 12px; padding-left: 12px; }
+  .v3-table1-reading-guide { grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width: 480px) {
   .v3-protocol-card { grid-template-columns: minmax(0,1fr); }

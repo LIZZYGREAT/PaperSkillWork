@@ -78,7 +78,7 @@ export function LwfProcessView({ activeStepId }: {
   return <div className="v3-process-visual" aria-label="LwF 持续系统图">
     <header className="v3-process-visual-header"><div><p className="v3-eyebrow">PERSISTENT SYSTEM</p><span>STEP {String(stepIndex + 1).padStart(2, "0")} / {lwfProcess.steps.length}</span></div><strong>{activeStep.title}</strong></header>
     <svg className="v3-process-svg" viewBox="0 0 824 724" role="img" aria-labelledby={`${markerPrefix}-title ${markerPrefix}-desc`} preserveAspectRatio="xMidYMid meet">
-      <title id={`${markerPrefix}-title`}>LwF Teacher 与 Student 的训练计算图</title>
+      <title id={`${markerPrefix}-title`}>LwF 训练前响应记录与 Student 训练计算图</title>
       <desc id={`${markerPrefix}-desc`}>正式训练前，固定 Modelₜ 在当前输入 Xₙ 上生成并记录 Yₒ。训练期间读取固定 Yₒ；只有当前 Student 对 Xₙ 前向，产生 Ŷₒ 与 Ŷₙ。L_old 与 L_new 汇入联合目标，Backward 计算梯度，Optimizer Step 才更新 Student 的 θₛ、θₒ、θₙ。</desc>
       {!recordingComplete ? <path className={`v3-teacher-outline ${stepIndex >= nodeRevealAt.teacher ? "is-revealed" : ""}`} d="M184 25 H572 V132 H184 Z" /> : null}
       {!recordingComplete ? <text className={`v3-svg-zone-label v3-svg-teacher-label ${stepIndex >= nodeRevealAt.teacher ? "is-revealed" : ""}`} x="198" y="24">FIXED MODEL · RECORD BEFORE TRAINING</text> : null}

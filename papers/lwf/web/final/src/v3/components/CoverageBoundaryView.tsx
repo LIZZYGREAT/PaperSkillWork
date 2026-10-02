@@ -53,7 +53,7 @@ export function CoverageBoundaryView() {
       <figcaption>示意图表达覆盖关系，不是数据集的实测分布或遗忘数值。</figcaption>
     </figure>
     <div className="v3-coverage-explanation" aria-live="polite">
-      <article><span>WHAT L_old CONSTRAINS</span><p>Teacher 与 Student 在当前 Xₙ 上的旧任务响应。</p><small>{state.observed}</small></article>
+      <article><span>WHAT L_old CONSTRAINS</span><p>训练前记录的固定 Yₒ 与当前 Student 在 Xₙ 上的旧任务输出。</p><small>{state.observed}</small></article>
       <article><span>WHAT REMAINS UNCONSTRAINED</span><p>没有出现在当前 Xₙ 中的旧任务相关输入。</p><small>{state.boundary}</small></article>
     </div>
     <p className="v3-coverage-boundary-note"><strong>机制边界。</strong> 如果当前任务输入不能代表旧任务相关区域，匹配这些输入上的旧响应不等于在整个旧域保持行为。这里的 coverage 状态是教学解释，不是论文量化定律。</p>
