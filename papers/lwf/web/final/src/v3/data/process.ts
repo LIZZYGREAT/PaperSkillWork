@@ -68,7 +68,7 @@ export const lwfProcess: ProcessLoopSpec = {
     },
     {
       id: "key-expand-student", title: "扩展 Student", summary: "建立可训练的 Student，并增加新任务 head θₙ。",
-      activeNodes: ["student", "old-branch", "new-branch"], activeEdges: ["xn-student", "student-old", "student-new"],
+      activeNodes: ["student", "old-branch", "new-branch"], activeEdges: ["student-old", "student-new"],
       annotations: [{ target: "new-branch", text: "新任务 head θₙ 加入 Student。" }],
       detail: { title: "Student 的结构", bullets: ["θₛ 是共享参数。", "θₒ 负责旧任务输出。", "θₙ 负责新任务输出。"] },
     },

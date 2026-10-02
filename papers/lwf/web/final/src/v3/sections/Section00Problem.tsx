@@ -14,7 +14,7 @@ const matrix = [
   { id: "finetuning", learn: "✓", preserve: "弱", withoutOldData: "✓", note: "共享参数更新，旧输出可能漂移。" },
   { id: "feature-extraction", learn: "受限", preserve: "✓", withoutOldData: "✓", note: "冻结共享表示，适应能力受限。" },
   { id: "joint-training", learn: "✓", preserve: "✓", withoutOldData: "✕", note: "需要旧任务样本和真实标签。" },
-  { id: "lwf", learn: "✓", preserve: "目标", withoutOldData: "✓", note: "用 Teacher 在 Xₙ 上的响应作旧任务目标。" },
+  { id: "lwf", learn: "✓", preserve: "目标", withoutOldData: "✓", note: "用固定旧模型在 Xₙ 上记录的响应作旧任务目标。" },
 ];
 
 export function Section00Problem({ onOpenReference, onNavigateChapter }: { onOpenReference: (termId: string) => void; onNavigateChapter: (chapterId: LwfChapterId) => void }) {
