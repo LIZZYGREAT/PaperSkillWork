@@ -114,7 +114,7 @@ Pages 3–4 turn the all-class prediction requirement into a concrete rule: comp
 
 Page 6 prepares the update before any parameters change: combine incoming full data with old exemplars, then obtain old-node responses from the pre-update model on that whole set. Page 7 assigns targets by output-node age and updates the shared representation. Page 8 closes the structure: the head remains part of the training network, but final prediction recomputes exemplar prototypes and does not read the head argmax or temporary Q.
 
-Page 9 tests the mechanism against the paper's actual protocols, including the hybrid2 exception, the qualitative confusion patterns, memory trends, and the full-data NCM boundary. The planned original Figures 2–4 remain reference links only until reuse permission is documented; the learning path must not imply that their exact curves were reconstructed. Page 10 then runs one compact end-to-end trace using the already established objects and their lifetimes. It is an integration check, not another full explanation of herding, loss, or prototype geometry.
+Page 9 tests the mechanism against the paper's actual protocols, including the hybrid2 exception, the qualitative confusion patterns, memory trends, and the full-data NCM boundary. It displays original Figures 2–4 as `PaperFigure` evidence, as directed by the user and the global visual specification; the tutorial must not imply that exact curve values were reconstructed from the images. Page 10 then runs one compact end-to-end trace using the already established objects and their lifetimes. It is an integration check, not another full explanation of herding, loss, or prototype geometry.
 
 ## Ordering and Content Boundaries
 
@@ -129,7 +129,7 @@ Page 9 tests the mechanism against the paper's actual protocols, including the h
 
 ## Human Review
 
-W4 review is pending. Please review the eight-stage order and CORE/SUPPORTING/REFERENCE/DELETE assignments before implementation planning. The Page 9 plan requests original Figures 2–4; the asset plan currently records them as reference-only because no third-party reuse permission was found. The reviewer can approve this boundary or request a revision if permission documentation becomes available.
+The human review questions below are retained for the approval record in `paper.yaml`.
 
 - Can a new reader state the problem and central idea from this order?
 - Can the reader reconstruct the architecture and one full information/state flow?

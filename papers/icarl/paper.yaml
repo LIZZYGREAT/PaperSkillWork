@@ -17,7 +17,7 @@ paper:
   source_hash: 95b31caf45ddcef315e35f7111f5cd3de2b27affd6b8f83a0675ec5620819ca7
 workflow:
   version: 3
-  current_stage: W4
+  current_stage: W5
   stages:
     W0_source_intake:
       status: complete
@@ -33,7 +33,9 @@ workflow:
       status: complete
       completed_by: automation
     W4_learning_spine:
-      status: in_progress
+      status: complete
+      reviewed_by: 甘文杰
+      note: 用户批准按该学习主线进入W5/W6，并要求Page9展示原论文Figure 2–4。
     W5_interaction_plan:
       status: pending
     W6_vertical_slice:
