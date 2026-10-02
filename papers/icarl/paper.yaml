@@ -1,0 +1,63 @@
+schema_version: 3
+id: icarl
+title: 'iCaRL: Incremental Classifier and Representation Learning'
+paper:
+  url: http://arxiv.org/abs/1611.07725
+  arxiv_id: arXiv:1611.07725
+  authors:
+  - Sylvestre-Alvise Rebuffi
+  - Alexander Kolesnikov
+  - Georg Sperl
+  - Christoph H. Lampert
+  venue: Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition
+    (CVPR)
+  year: 2017
+  source_type: arXiv
+  source_location: http://arxiv.org/abs/1611.07725
+  source_hash: 95b31caf45ddcef315e35f7111f5cd3de2b27affd6b8f83a0675ec5620819ca7
+workflow:
+  version: 3
+  current_stage: W1
+  stages:
+    W0_source_intake:
+      status: complete
+      completed_by: automation
+    W1_source_cache:
+      status: pending
+    W2_paper_model:
+      status: pending
+    W3_evidence_assets:
+      status: pending
+    W4_learning_spine:
+      status: pending
+    W5_interaction_plan:
+      status: pending
+    W6_vertical_slice:
+      status: pending
+    W7_human_review:
+      status: pending
+    W8_full_implementation:
+      status: pending
+    W9_final_audit:
+      status: pending
+    W10_upstream_preflight:
+      status: pending
+artifacts:
+  source_cache: source-cache
+  paper_model: research/paper-model.md
+  evidence_registry: research/evidence-registry.yaml
+  learning_spine: design/learning-spine.md
+  asset_plan: design/asset-plan.md
+  implementation_plan: design/implementation-plan.md
+  final_check: audit/final-check.md
+  enhanced: web/enhanced
+web:
+  enhanced: web/enhanced
+release:
+  upstream_paper_name: ''
+  upstream_version: ''
+  output: ''
+paperskill:
+  tutorial_pr:
+    number: null
+    status: pending
