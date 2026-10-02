@@ -22,8 +22,8 @@ teacher:
   label: Teacher
   full_name: Frozen previous-task model snapshot
   definition: 完成旧任务训练后保留的模型快照，持有共享主体和旧任务输出头的参数副本。
-  paper_role: 对当前新任务输入 Xₙ 运行并生成旧任务响应 Yₒ；本轮训练不更新 Teacher。
-  confusion: Teacher 不是 Student 中共享参数的可变引用；两套模型参数相互独立。
+  paper_role: 主分类流程中，正式训练前将当前输入 Xₙ 输入固定旧模型并记录 Yₒ；后续 Warm-up 与 joint optimization 读取固定响应。Tracking appendix 是在线场景，作者在在线训练时运行旧网络计算响应。
+  confusion: Teacher 是本教程对主分类流程中旧模型响应记录角色的称呼；Tracking appendix 的响应在在线训练时计算，不能把主分类时序外推到跟踪附录。Teacher 与 Student 的模型参数各自独立，Teacher 不是 Student 共享参数的可变引用。
   prerequisites: [shared_parameters, task_head]
   source_category: PAPER_FACT
   source_ref: A01
