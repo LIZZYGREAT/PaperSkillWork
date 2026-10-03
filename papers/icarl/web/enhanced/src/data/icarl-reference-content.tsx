@@ -72,18 +72,41 @@ export const ICARL_TERMS: Record<string, TermDefinition> = {
   },
 };
 
-function TermReferenceContent({ term }: { term: TermDefinition }) {
-  return <div>{term.paperRole ? <p><strong>Role in this paper:</strong> {term.paperRole}</p> : null}{term.confusion ? <p><strong>Easy to confuse with:</strong> {term.confusion}</p> : null}</div>;
+type HubTermCopy = { title: string; summary: string; role?: string; confusion?: string; tags: string[] };
+const HUB_TERM_COPY: Record<string, HubTermCopy> = {
+  "class-incremental-learning": { title: "Class-Incremental Learning", summary: "Classes arrive in batches; after each stage, the model predicts among all classes seen so far.", role: "Defines the task setting studied by iCaRL.", confusion: "The model is not told which class batch a test sample came from.", tags: ["class incremental", "task setting"] },
+  "catastrophic-forgetting": { title: "Catastrophic Forgetting", summary: "Learning new classes can substantially reduce performance on previously learned classes.", role: "Motivates retaining old-class recognition during incremental updates.", tags: ["forgetting", "continual learning"] },
+  representation: { title: "Feature Representation", summary: "A vector produced by the shared feature mapping φΘ(x) and used by later output nodes or the classifier.", role: "iCaRL continues to update the shared representation as new classes arrive.", confusion: "A feature representation is neither a class label nor the final prediction.", tags: ["features", "representation learning"] },
+  "feature-extractor": { title: "Feature Extractor", summary: "The shared network component that maps an input image to a feature representation.", role: "Its parameters Θ are updated during incremental training and encode new images and retained exemplars.", tags: ["shared network", "mapping"] },
+  prototype: { title: "Class Prototype", summary: "A normalized mean vector of a class's sample features in the current representation space.", role: "iCaRL recomputes prototypes from retained exemplars for final classification.", confusion: "A prototype is not a classifier weight trained independently by gradient descent.", tags: ["class mean", "classifier"] },
+  "nearest-mean-of-exemplars": { title: "Nearest-Mean-of-Exemplars (NME)", summary: "Classify a query by comparing its feature with each class's exemplar mean and choosing the nearest one.", role: "This is iCaRL's final classification rule; the training head mainly supplies a representation-learning signal.", tags: ["nearest mean", "prediction"] },
+  exemplar: { title: "Exemplar", summary: "A real training image selected and retained as a representative sample of its class.", role: "The bounded memory supports old-class replay and approximates class means.", confusion: "An exemplar is an input image, not its feature vector.", tags: ["memory", "retained sample"] },
+  "memory-budget": { title: "Memory Budget K", summary: "The upper bound on the total number of images retained in exemplar memory.", role: "As t classes have been seen, the per-class quota is reduced to m = floor(K/t).", confusion: "K bounds retained exemplar images; it does not include output weights that grow with class count.", tags: ["quota", "bounded memory"] },
+  herding: { title: "Herding", summary: "An iterative selection rule that keeps each selected-prefix mean close to the normalized mean of the full class.", role: "Builds an ordered exemplar list when a class first arrives.", confusion: "When the quota later shrinks, the list is truncated; unavailable full historical data is not used to rerun selection.", tags: ["sample selection", "ordered memory"] },
+  "prefix-mean": { title: "Prefix Mean", summary: "The mean feature vector of the first k exemplars in the selected order.", role: "At each Herding step, candidate additions are compared by how closely the new prefix mean matches the full-class target.", tags: ["Herding", "mean"] },
+  "response-snapshot-q": { title: "Response Snapshot Q", summary: "Before parameters change, the current network's responses on old-class output nodes for every sample in training set D.", role: "Q supplies this update's distillation targets and can be released after training.", confusion: "Q is a temporary training target, not a persistent copy of the previous network.", tags: ["old responses", "training target"] },
+  distillation: { title: "Knowledge Distillation", summary: "A constraint that uses the pre-update old-class responses to preserve old output behavior after an update.", role: "Old output nodes fit snapshot Q on D; new nodes fit class-indicator labels.", tags: ["old classes", "training"] },
+  "soft-target": { title: "Soft Target", summary: "A continuous target value supplied by the pre-update model's response.", role: "iCaRL uses these targets for old output nodes; independent sigmoid targets need not sum to one.", confusion: "These are not a multiclass softmax probability distribution.", tags: ["response", "sigmoid"] },
+  "binary-cross-entropy": { title: "Binary Cross-Entropy (BCE)", summary: "A binary classification loss computed for one sigmoid output and its target.", role: "Old nodes use soft targets from Q, new nodes use hard labels, and the two BCE sums are added.", tags: ["loss", "sigmoid"] },
+  ncm: { title: "Nearest Class Mean (NCM)", summary: "Classify by selecting the nearest class-mean vector.", role: "The paper uses an all-data NCM reference to diagnose mean approximation; it is not subject to iCaRL's same bounded memory budget.", tags: ["diagnostic reference", "all-data mean"] },
+  "average-incremental-accuracy": { title: "Average Incremental Accuracy", summary: "A summary measure of multiclass accuracy across incremental evaluation stages.", role: "Figure 2 plots results by the number of classes seen at each stage.", confusion: "Read each benchmark's protocol and metric separately; results do not all share one evaluation protocol.", tags: ["metric", "Figure 2"] },
+};
+
+function TermReferenceContent({ copy }: { copy: HubTermCopy }) {
+  return <div>{copy.role ? <p><strong>Role in this paper:</strong> {copy.role}</p> : null}{copy.confusion ? <p><strong>Easy to confuse with:</strong> {copy.confusion}</p> : null}</div>;
 }
 
-const termReferences: ReferenceItem[] = Object.values(ICARL_TERMS).map((term) => ({
-  id: term.id,
-  title: term.fullName ?? term.label,
-  kind: "term",
-  summary: term.definition,
-  content: <TermReferenceContent term={term} />,
-  tags: [term.label, term.sourceKind ?? "paper term"],
-}));
+const termReferences: ReferenceItem[] = Object.values(ICARL_TERMS).map((term) => {
+  const copy = HUB_TERM_COPY[term.id];
+  return {
+    id: term.id,
+    title: copy.title,
+    kind: "term",
+    summary: copy.summary,
+    content: <TermReferenceContent copy={copy} />,
+    tags: copy.tags,
+  };
+});
 
 const sourceReferences: ReferenceItem[] = [
   {
