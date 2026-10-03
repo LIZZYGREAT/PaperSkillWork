@@ -17,7 +17,7 @@
 .p8-object-heading h3 { margin: 4px 0 0; color: #334f52; font-size: 15px; line-height: 1.4; }
 .p8-object-heading > span { flex: 0 0 auto; padding: 6px 8px; border-radius: 6px; color: #4a6b5b; background: #eaf2ec; font: 650 11px var(--mono); text-align: center; }
 .p8-training-objects.is-inactive .p8-object-heading > span { color: #665f53; background: #eceae2; }
-.p8-object-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+.p8-object-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
 .p8-object-list > div { display: grid; min-width: 0; min-height: 68px; align-content: center; justify-items: center; gap: 4px; padding: 8px 5px; border: 1px solid #e0e7e2; border-radius: 7px; background: white; text-align: center; }
 .p8-object-list b { color: #3d667e; font: 650 17px var(--mono); }
 .p8-object-list span { color: #566d70; font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
@@ -55,6 +55,16 @@
 .p8-transition-grid > div:last-child > span { color: #4d705d; }
 .p8-transition-grid > div > b { color: #304e50; font-size: 16px; line-height: 1.45; }
 .p8-transition-grid > div > small { color: #5a7072; font-size: 13px; line-height: 1.4; }
+.p8-memory-bridge { display: grid; grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1.25fr) 22px minmax(0, 1fr); align-items: center; gap: 8px; padding: 13px; border: 1px solid #dbe4df; border-radius: 9px; background: #fbfcfa; }
+.p8-memory-bridge__step { display: grid; gap: 5px; min-height: 94px; align-content: center; padding: 11px; border: 1px solid #d4e0e8; border-radius: 7px; background: #f3f8fb; }
+.p8-memory-bridge__step > span { color: #526d79; font: 700 11px var(--mono); letter-spacing: .03em; }
+.p8-memory-bridge__step > b { color: #304e50; font-size: 15px; line-height: 1.4; }
+.p8-memory-bridge__step > small { color: #5a7072; font-size: 12px; line-height: 1.4; }
+.p8-memory-bridge__step--memory { border-color: #d9d3c3; background: #f8f6ef; }
+.p8-memory-bridge__step--memory > span { color: #7a694a; }
+.p8-memory-bridge__step--ready { border-color: #cbdacf; background: #f1f7f2; }
+.p8-memory-bridge__step--ready > span { color: #4d705d; }
+.p8-memory-bridge > i { color: #9a6b4d; font-size: 19px; font-style: normal; text-align: center; }
 .p8-prediction-workbench { display: grid; grid-template-columns: minmax(320px, .95fr) minmax(390px, 1.15fr); align-items: start; gap: 14px; padding: 18px; border: 1px solid #d5e1d8; border-radius: 12px; background: #fffefa; box-shadow: 0 8px 26px rgb(30 52 56 / 5%); }
 .p8-prediction-workbench.is-active { border-color: #b8d0bf; box-shadow: 0 0 0 2px #e5f0e7, 0 8px 26px rgb(30 52 56 / 5%); }
 .p8-prediction-copy { display: grid; gap: 13px; min-width: 0; padding: 3px; }
@@ -149,6 +159,8 @@
   .p8-persistent-state { grid-template-columns: minmax(0, 1fr); }
   .p8-persistent-state > i { transform: rotate(90deg); }
   .p8-transition-grid { grid-template-columns: minmax(0, 1fr); }
+  .p8-memory-bridge { grid-template-columns: minmax(0, 1fr); }
+  .p8-memory-bridge > i { transform: rotate(90deg); }
   .p8-split-view { grid-template-columns: minmax(0, 1fr); }
   .p8-split-view__path .p8-train-flow { grid-template-columns: minmax(0, 1fr); }
   .p8-responsibility-table > [role="row"] { grid-template-columns: minmax(105px, .7fr) repeat(3, minmax(0, 1fr)); gap: 5px; padding: 9px 7px; }
@@ -164,7 +176,9 @@
   .p8-shared-model { padding: 11px; }
   .p8-object-heading { align-items: flex-start; flex-direction: column; }
   .p8-object-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .p8-object-list > div:last-child { grid-column: 1 / -1; }
+  .p8-object-list > div:last-child { grid-column: auto; }
+  .p8-memory-bridge { grid-template-columns: minmax(0, 1fr); }
+  .p8-memory-bridge > i { transform: rotate(90deg); }
   .p8-persistent-state > div { grid-template-columns: minmax(0, 1fr) 28px; padding: 10px; }
   .p8-persistent-state > div > span, .p8-persistent-state > div > small { font-size: 12px; }
   .p8-path-card, .p8-mode-transition, .p8-responsibility { padding: 15px; }

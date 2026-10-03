@@ -44,7 +44,7 @@ function TrainingObjects({ mode }: { mode: RuntimeMode }) {
   const trainingVisible = mode === "train";
   return <section className={`p8-training-objects${trainingVisible ? " is-active" : " is-inactive"}`} aria-label="训练阶段的临时对象" data-canonical-id="training_only_state">
     <div className="p8-object-heading"><div><span className="eyebrow">本轮更新中的临时对象</span><h3>参数更新结束后，这些对象不再参与预测</h3></div><span>{trainingVisible ? "训练中" : "预测时无需"}</span></div>
-    <div className="p8-object-list">{[["D", "训练集"], ["Q", "冻结的旧响应"], ["yᵢ", "真实标签"], ["L", "损失"], ["optimizer", "优化器状态"]].map(([symbol, label]) => <div key={symbol}><b>{symbol}</b><span>{label}</span></div>)}</div>
+    <div className="p8-object-list">{[["D", "训练集"], ["Q", "冻结的旧响应"], ["yᵢ", "真实标签"], ["L", "损失"]].map(([symbol, label]) => <div key={symbol}><b>{symbol}</b><span>{label}</span></div>)}</div>
   </section>;
 }
 
@@ -71,7 +71,7 @@ function PredictionPath({ stage, mode }: { stage: number; mode: RuntimeMode }) {
       <div className="p8-predict-flow">
         <section><b>P<sub>1</sub> · P<sub>2</sub> · P<sub>3</sub> · P<sub>4</sub></b><span>当前保留的原始 exemplars</span></section><i aria-hidden="true">→</i>
         <section className="p8-flow-feature"><b>当前 φ<sub>Θ</sub></b><span>由同一模型重新编码</span></section><i aria-hidden="true">→</i>
-        <section className="p8-flow-prototype"><b>μ<sub>A</sub> … μ<sub>D</sub></b><span>归一化 exemplar 均值</span></section>
+        <section className="p8-flow-prototype"><b>μ<sub>1</sub> … μ<sub>4</sub></b><span>归一化 exemplar 均值</span></section>
       </div>
       {showQuery ? <div className="p8-head-note"><span>Training Head</span><b>仍保留在网络中</b><small>本次最终决策不读取它的 sigmoid argmax</small></div> : null}
     </div>
@@ -101,7 +101,7 @@ function PrototypeKey({ showQuery = false }: { showQuery?: boolean }) {
 function PredictionSummary() {
   return <section className="p8-split-predict" data-canonical-id="inference_path">
     <div className="p8-path-heading"><span className="eyebrow">PREDICT · 最终分类器</span><b>原型路径</b></div>
-    <div className="p8-predict-summary-flow"><span>P</span><i aria-hidden="true">→</i><span>当前 φ<sub>Θ</sub></span><i aria-hidden="true">→</i><span>μ<sub>A</sub>…μ<sub>D</sub></span><i aria-hidden="true">→</i><strong>最近类均值</strong></div>
+    <div className="p8-predict-summary-flow"><span>P</span><i aria-hidden="true">→</i><span>当前 φ<sub>Θ</sub></span><i aria-hidden="true">→</i><span>μ<sub>1</sub>…μ<sub>4</sub></span><i aria-hidden="true">→</i><strong>最近类均值</strong></div>
     <p>从当前 exemplar memory 重新计算各类均值，再比较 query 与全部已见类别 prototype 的距离。</p>
   </section>;
 }
@@ -132,9 +132,19 @@ function ResponsibilityMap({ mode }: { mode: RuntimeMode }) {
       <div role="row"><b role="rowheader">Θ · φ<sub>Θ</sub></b><span role="cell">更新表示</span><span role="cell">编码 query 与 exemplars</span><span role="cell">持久共享</span></div>
       <div role="row"><b role="rowheader">Training Head</b><span role="cell">生成 sigmoid 输出并计算损失</span><span role="cell">不用于最终决策</span><span role="cell">保留在网络中</span></div>
       <div role="row"><b role="rowheader">P · 原始 exemplars</b><span role="cell">作为 D 中的 replay 输入</span><span role="cell">重新计算类别原型</span><span role="cell">持久记忆</span></div>
-      <div role="row"><b role="rowheader">D、Q、L、optimizer</b><span role="cell">准备数据并更新模型</span><span role="cell">预测时无需</span><span role="cell">仅本轮更新使用</span></div>
+      <div role="row"><b role="rowheader">D、Q、L</b><span role="cell">准备数据并更新模型</span><span role="cell">预测时无需</span><span role="cell">仅本轮更新使用</span></div>
     </div>
     <div className="p8-inference-rule"><span>最终分类器</span><b>当前 exemplar 原型的最近邻</b><small>不是 sigmoid head 的 argmax · 预测过程不读取 Q</small></div>
+  </section>;
+}
+
+function MemoryUpdateBridge() {
+  return <section className="p8-memory-bridge" aria-label="训练结束后更新 exemplar 记忆">
+    <div className="p8-memory-bridge__step"><span>训练结束</span><b>Θ_after + P_before</b><small>Θ 已更新；P 仍是旧列表</small></div>
+    <i aria-hidden="true">→</i>
+    <div className="p8-memory-bridge__step p8-memory-bridge__step--memory"><span>Memory Management</span><b>截短旧列表 + Herding 新类</b><small>分别处理旧记忆与新类 exemplars</small></div>
+    <i aria-hidden="true">→</i>
+    <div className="p8-memory-bridge__step p8-memory-bridge__step--ready"><span>下一轮就绪</span><b>Θ_after + P_after</b><small>模型与更新后的记忆共同保留</small></div>
   </section>;
 }
 
@@ -173,8 +183,9 @@ export function PageEight({ onContinue }: { onContinue?: () => void }) {
 
     {stage === 0 ? <TrainingRecap mode={mode} /> : null}
     {stage === 1 ? <section className="p8-mode-transition panel" aria-label="从训练模式切换到预测模式">
-      <div className="panel-heading"><div><span className="eyebrow">切换运行模式</span><h2>{mode === "predict" ? "临时训练对象退出，持久状态保留" : "选择 PREDICT 查看推理阶段"}</h2></div><span className={`p8-mini-tag${mode === "predict" ? " is-predict" : ""}`}>{mode === "predict" ? "预测" : "训练"}</span></div>
-      <div className="p8-transition-grid"><div className={mode === "predict" ? "is-muted" : ""}><span>本轮更新对象 · 当前不活跃</span><b>D + Q + labels + loss + optimizer</b><small>{mode === "predict" ? "这些对象不参与最终决策" : "更新期间会用到这些对象"}</small></div><div><span>持久状态 · 继续保留</span><b>当前 Θ + 当前 P</b><small>网络参数与 exemplar 图像在模式切换后仍保留</small></div></div>
+      <div className="panel-heading"><div><span className="eyebrow">切换运行模式</span><h2>{mode === "predict" ? "训练对象退出，先完成记忆更新" : "选择 PREDICT 查看推理阶段"}</h2></div><span className={`p8-mini-tag${mode === "predict" ? " is-predict" : ""}`}>{mode === "predict" ? "预测" : "训练"}</span></div>
+      <div className="p8-transition-grid"><div className={mode === "predict" ? "is-muted" : ""}><span>本轮更新对象 · 当前不活跃</span><b>D + Q + labels + loss</b><small>{mode === "predict" ? "这些对象不参与最终决策" : "更新期间会用到这些对象"}</small></div><div><span>训练结束时的持久状态</span><b>Θ_after + P_before</b><small>训练更新 Θ；旧 exemplar 记忆尚待整理</small></div></div>
+      <MemoryUpdateBridge />
       <TrainingRecap mode={mode} />
     </section> : null}
     {stage === 2 || stage === 3 ? <PredictionPath stage={stage} mode={mode} /> : null}
