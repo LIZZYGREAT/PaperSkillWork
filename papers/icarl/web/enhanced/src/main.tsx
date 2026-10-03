@@ -11,6 +11,9 @@ import "./styles/icarl-guided.css";
 import "./styles/page-four.css";
 import "./styles/page-five.css";
 import "./styles/page-six.css";
+import "./styles/page-seven.css";
+import "./styles/page-eight.css";
+import "./styles/page-nine.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing app root element.");

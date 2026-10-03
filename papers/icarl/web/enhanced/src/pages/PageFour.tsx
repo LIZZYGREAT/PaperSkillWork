@@ -109,7 +109,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
               <button type="button" aria-pressed={classCount === 3} onClick={() => setClassCount(3)}>3 个已见类别</button>
               <button type="button" aria-pressed={classCount === 4} onClick={() => setClassCount(4)}>新类别到达 → 4 类</button>
             </div>
-            <div className="p4-capacity-result"><div><span>总 exemplars</span><b>K = {MEMORY_BUDGET}</b></div><i aria-hidden="true">÷</i><div><span>已见类别</span><b>t = {classCount}</b></div><i aria-hidden="true">=</i><div className="p4-capacity-result__quota"><span>每类可用容量</span><b>m = ⌊K / t⌋ = {perClassBudget}</b></div></div>
+            <div className="p4-capacity-result"><div><span>总 exemplars</span><b>K = {MEMORY_BUDGET}</b></div><i aria-hidden="true">÷</i><div><span>已见类别</span><b>t = {classCount}</b></div><i aria-hidden="true">=</i><div className="p4-capacity-result__quota" title={`整数配额 m = ⌊K / t⌋。本例 K=${MEMORY_BUDGET}：t=3 时 m=4；t=4 时 m=3。当前每类容量为 ${perClassBudget}。`}><span>每类可用容量</span><b>m = ⌊K / t⌋ = {perClassBudget}</b></div></div>
             <p>{classCount === 3 ? "3 类时，每类最多保留 4 个 exemplars。" : "第 4 类加入后，各类最多保留 3 个；总预算 K 保持 12。"} K 限制 exemplar memory，不表示神经网络参数量完全不变。</p>
             {stage === 5 ? <div className="p4-mean-question"><span>FEATURE SPACE</span><div><i className="p4-mini-mean" /><span>当前 exemplars 的均值</span><b>?</b><span>要近似的类别中心</span></div><strong>{classCount === 4 ? "每类从 4 个槽位缩到 3 个，哪些样本应优先留下，才能让剩余均值继续代表这个类？" : "类别增加后每类容量将下降；哪些样本应优先留下，才能让剩余均值继续代表这个类？"}</strong></div> : null}
           </div> : null}

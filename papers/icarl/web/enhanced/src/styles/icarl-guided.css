@@ -121,6 +121,11 @@
 .p3-rule-note > span { display: grid; width: 17px; height: 17px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: #5e8171; font: 650 10px Georgia, serif; }
 .p3-rule-note p { margin: 0; color: #53696b; font-size: 12px; line-height: 1.55; }
 .p3-rule-note b { color: #304d4e; }
+.p3-normalized-note { margin-top: 9px; padding: 9px 10px; border: 1px solid #e1e8e3; border-radius: 7px; background: #fcfdfa; }
+.p3-normalized-note summary { color: #3e5d58; font-size: 13px; font-weight: 650; cursor: pointer; }
+.p3-normalized-note > div { display: grid; gap: 6px; padding-top: 8px; }
+.p3-normalized-note p { margin: 0; color: #53696b; font-size: 13px; line-height: 1.55; }
+.p3-normalized-note code { padding: 7px; border-radius: 5px; color: #31584c; background: #eef5ef; font-size: 13px; text-align: center; }
 .p3-unavailable-card { display: grid; gap: 10px; padding: 15px 12px; border: 1px dashed #c7d3cd; border-radius: 9px; background: #f5f7f3; }
 .p3-rule-symbol { color: #82918c; font: 600 23px var(--mono); }
 .p3-unavailable-card b { color: #354e50; font-size: 13px; }

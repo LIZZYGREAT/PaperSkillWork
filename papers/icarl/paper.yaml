@@ -17,7 +17,7 @@ paper:
   source_hash: 95b31caf45ddcef315e35f7111f5cd3de2b27affd6b8f83a0675ec5620819ca7
 workflow:
   version: 3
-  current_stage: W8
+  current_stage: W9
   stages:
     W0_source_intake:
       status: complete
@@ -47,7 +47,8 @@ workflow:
       reviewed_by: 用户（本次对话）
       note: 用户确认当前 iCaRL 实现可以接受，并明确要求将 W6 与 W7 标记为通过；本记录依据本次人工验收。
     W8_full_implementation:
-      status: pending
+      status: complete
+      completed_by: automation
     W9_final_audit:
       status: pending
     W10_upstream_preflight:

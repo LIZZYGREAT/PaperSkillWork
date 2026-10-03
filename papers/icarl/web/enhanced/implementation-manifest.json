@@ -1,66 +1,41 @@
 {
   "implemented_core": {
-    "L01": {
-      "stage": "S01",
-      "component": "PageOne",
-      "status": "complete"
-    },
-    "L02": {
-      "stage": "S01",
-      "component": "PageOne",
-      "status": "complete"
-    },
-    "L03": {
-      "stage": "S01",
-      "component": "PageOne",
-      "status": "complete"
-    },
-    "L04": {
-      "stage": "S02",
-      "component": "PageTwo",
-      "status": "complete"
-    },
-    "L05": {
-      "stage": "S03",
-      "component": "PageThree",
-      "status": "complete"
-    },
-    "L06": {
-      "stage": "S04",
-      "component": "PageFour",
-      "status": "complete"
-    },
-    "L07": {
-      "stage": "S04",
-      "component": "PageFour",
-      "status": "complete"
-    },
-    "L08": {
-      "stage": "S05",
-      "component": "PageFive",
-      "status": "complete"
-    },
-    "L09": {
-      "stage": "S05",
-      "component": "PageFive + runFeatureHerding",
-      "status": "complete"
-    },
-    "L10": {
-      "stage": "S06",
-      "component": "PageSix",
-      "status": "complete"
-    },
-    "L11": {
-      "stage": "S06",
-      "component": "PageSix + ResponseMatrix",
-      "status": "complete"
-    },
-    "L23": {
-      "stage": "S08",
-      "component": "PageTen + FeatureSpaceWorkbench",
-      "status": "complete"
-    }
+    "L01": { "stage": "S01", "component": "PageOne", "status": "complete" },
+    "L02": { "stage": "S01", "component": "PageOne", "status": "complete" },
+    "L03": { "stage": "S01", "component": "PageOne", "status": "complete" },
+    "L04": { "stage": "S02", "component": "PageTwo", "status": "complete" },
+    "L05": { "stage": "S03", "component": "PageThree", "status": "complete" },
+    "L06": { "stage": "S03", "component": "PageThree", "status": "complete" },
+    "L07": { "stage": "S03", "component": "PageFour", "status": "complete" },
+    "L08": { "stage": "S04", "component": "PageFive", "status": "complete" },
+    "L09": { "stage": "S04", "component": "PageFive", "status": "complete" },
+    "L10": { "stage": "S05", "component": "PageSix", "status": "complete" },
+    "L11": { "stage": "S05", "component": "PageSix", "status": "complete" },
+    "L12": { "stage": "S06", "component": "PageSeven", "status": "complete" },
+    "L13": { "stage": "S06", "component": "PageSeven", "status": "complete" },
+    "L14": { "stage": "S06", "component": "PageEight", "status": "complete" },
+    "L15": { "stage": "S06", "component": "PageEight", "status": "complete" },
+    "L16": { "stage": "S07", "component": "PageNine", "status": "complete" },
+    "L17": { "stage": "S07", "component": "PageNine", "status": "complete" },
+    "L18": { "stage": "S07", "component": "PageNine", "status": "complete" },
+    "L19": { "stage": "S07", "component": "PageNine", "status": "complete" },
+    "L20": { "stage": "S07", "component": "PageNine", "status": "complete" },
+    "L21": { "stage": "S07", "component": "PageNine", "status": "complete" },
+    "L22": { "stage": "S07", "component": "PageNine", "status": "complete" },
+    "L23": { "stage": "S08", "component": "PageTen + FeatureSpaceWorkbench", "status": "complete" }
   },
-  "supporting": {},
-  "reference": {}
+  "supporting": {
+    "SUP01": { "component": "PageThree normalized-vector explanation", "placement": "expandable" },
+    "SUP02": { "component": "PageFour quota calculation tooltip", "placement": "hover" },
+    "SUP03": { "component": "PageNine experiment settings details", "placement": "expandable" },
+    "SUP04": { "component": "PageNine Table 1a and 1b details", "placement": "expandable" },
+    "SUP05": { "component": "PageNine Figure 3 transformation tooltip", "placement": "hover" },
+    "SUP06": { "component": "PageFive herding and PageSeven loss details", "placement": "expandable" }
+  },
+  "reference": {
+    "REF01": { "component": "Evidence registry and paper model", "placement": "Evidence details" },
+    "REF02": { "component": "Evidence registry and PageNine exact tables", "placement": "Evidence details" },
+    "REF03": { "component": "Asset plan with source figure locators and rights decision", "placement": "Reference Hub" },
+    "REF04": { "component": "Evidence registry background claims", "placement": "Advanced details" }
+  }
 }

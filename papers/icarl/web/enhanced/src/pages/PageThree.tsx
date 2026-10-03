@@ -269,6 +269,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
           </>}
           {stage === 5 ? <div className="p3-approx-formula">μ<sub>A</sub> ≈ mean&#123;φ<sub>Θ new</sub>(p)&#125;<small>少量保留样本 · Page 4 正式定义</small></div> : null}
           <div className="p3-rule-note"><span>i</span><p><b>Prototype ≠ 权重向量 w<sub>y</sub></b><br />Prototype 从当前样本表示计算；它不是独立通过梯度训练的分类权重。</p></div>
+          {stage === 2 ? <details className="p3-normalized-note"><summary>为什么最近距离等价于最大内积？</summary><div><p>当特征 z 与类别原型 μ<sub>y</sub> 都经过 L2 归一化时：</p><code>‖z − μ<sub>y</sub>‖₂² = 2 − 2 zᵀμ<sub>y</sub></code><p>因此，距离最小的类别也就是内积最大的类别。此等价依赖两者都为单位向量。</p></div></details> : null}
         </aside>
       </section>
 
