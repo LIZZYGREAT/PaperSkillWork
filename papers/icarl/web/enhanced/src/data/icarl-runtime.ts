@@ -16,10 +16,10 @@ export type SampleFeaturePoint = {
 };
 
 export const CLASS_VISUALS: Record<ClassId, { label: string; glyph: string; color: string }> = {
-  A: { label: "Class A", glyph: "△", color: "#28659a" },
-  B: { label: "Class B", glyph: "○", color: "#31775f" },
-  C: { label: "Class C", glyph: "□", color: "#b46a2d" },
-  D: { label: "Class D", glyph: "◇", color: "#76559a" },
+  A: { label: "A 类", glyph: "△", color: "#28659a" },
+  B: { label: "B 类", glyph: "○", color: "#31775f" },
+  C: { label: "C 类", glyph: "□", color: "#b46a2d" },
+  D: { label: "D 类", glyph: "◇", color: "#76559a" },
 };
 
 /** Fixed synthetic coordinates shared by the representation projection and runtime trace. */

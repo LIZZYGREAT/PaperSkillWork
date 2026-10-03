@@ -61,13 +61,13 @@ export function FeatureSpaceWorkbench({
   const prefixXY = prefixMean ? xy(prefixMean, unitCircle) : null;
   const queryXY = query ? xy(query, unitCircle) : null;
   const prototypeRows = prototypes.map((prototype) => ({ prototype, point: xy(prototype.point, unitCircle) }));
-  const label = mode === "projection" ? "2D teaching projection" : `${mode} feature space`;
+  const modeLabel = mode === "projection" ? "二维投影" : mode === "herding" ? "Herding 选择" : mode === "prototypes" ? "类别均值向量" : "最近均值分类";
 
   return (
     <figure className={`feature-space feature-space--${mode}`} data-canonical-id="unit_circle">
       <figcaption className="feature-space__header">
         <div>
-          <span className="eyebrow">{label}</span>
+          <span className="eyebrow">{modeLabel}</span>
           <h3>{title}</h3>
           <p>{description}</p>
         </div>
@@ -90,40 +90,40 @@ export function FeatureSpaceWorkbench({
             if (!current) return null;
             const from = xy(oldPoint.point, unitCircle);
             const to = xy(current.point, unitCircle);
-            return <g key={`drift-${oldPoint.id}`}><line className="feature-space__drift" x1={from.x} y1={from.y} x2={to.x} y2={to.y} /><circle className="feature-space__ghost" cx={from.x} cy={from.y} r="4" /><title>{oldPoint.id}: previous position to current position</title></g>;
+            return <g key={`drift-${oldPoint.id}`}><line className="feature-space__drift" x1={from.x} y1={from.y} x2={to.x} y2={to.y} /><circle className="feature-space__ghost" cx={from.x} cy={from.y} r="4" /><title>{`样本 ${oldPoint.id}：更新前的位置`}</title></g>;
           })}
 
           {points.map((item) => {
             const position = xy(item.point, unitCircle);
             const color = CLASS_VISUALS[item.classId].color;
             return (
-              <g key={item.id} className="feature-space__sample" tabIndex={0} role="img" aria-label={`${CLASS_VISUALS[item.classId].label}, ${item.id}${item.order ? `, herding order ${item.order}` : ""}`}>
+              <g key={item.id} className="feature-space__sample" tabIndex={0} role="img" aria-label={`${CLASS_VISUALS[item.classId].label}，样本 ${item.id}${item.order ? `，Herding 顺序 p${item.order}` : ""}`}>
                 <circle className="sample-mark" cx={position.x} cy={position.y} r={item.order ? "6.5" : "5.5"} fill={color} />
-                <title>{`${CLASS_VISUALS[item.classId].label} · ${item.id}${item.order ? ` · Herding ${item.order}` : ""}`}</title>
+                <title>{`${CLASS_VISUALS[item.classId].label} · 样本 ${item.id}${item.order ? ` · Herding 顺序 p${item.order}` : ""}`}</title>
                 {showSampleLabels ? <text x={position.x + 8} y={position.y - 7}>{item.order ? `p${item.order}` : item.id}</text> : null}
               </g>
             );
           })}
 
-          {rawMeanXY ? <g className="feature-space__raw-mean"><path d={`M ${rawMeanXY.x} ${rawMeanXY.y - 6} L ${rawMeanXY.x + 6} ${rawMeanXY.y} L ${rawMeanXY.x} ${rawMeanXY.y + 6} L ${rawMeanXY.x - 6} ${rawMeanXY.y} Z`} /><text x={rawMeanXY.x + 9} y={rawMeanXY.y + 15}>raw mean</text></g> : null}
-          {prefixXY ? <g className="feature-space__prefix-mean"><path d={`M ${prefixXY.x} ${prefixXY.y - 6} L ${prefixXY.x + 6} ${prefixXY.y} L ${prefixXY.x} ${prefixXY.y + 6} L ${prefixXY.x - 6} ${prefixXY.y} Z`} /><text x={prefixXY.x + 8} y={prefixXY.y + 17}>prefix mean</text></g> : null}
-          {targetXY ? <g className="feature-space__target"><path d={starPath(targetXY.x, targetXY.y)} /><text x={targetXY.x + 11} y={targetXY.y - 9}>normalized class mean</text></g> : null}
+          {rawMeanXY ? <g className="feature-space__raw-mean"><path d={`M ${rawMeanXY.x} ${rawMeanXY.y - 6} L ${rawMeanXY.x + 6} ${rawMeanXY.y} L ${rawMeanXY.x} ${rawMeanXY.y + 6} L ${rawMeanXY.x - 6} ${rawMeanXY.y} Z`} /><text x={rawMeanXY.x + 9} y={rawMeanXY.y + 15}>原始均值</text></g> : null}
+          {prefixXY ? <g className="feature-space__prefix-mean"><path d={`M ${prefixXY.x} ${prefixXY.y - 6} L ${prefixXY.x + 6} ${prefixXY.y} L ${prefixXY.x} ${prefixXY.y + 6} L ${prefixXY.x - 6} ${prefixXY.y} Z`} /><text x={prefixXY.x + 8} y={prefixXY.y + 17}>当前前缀均值</text></g> : null}
+          {targetXY ? <g className="feature-space__target"><path d={starPath(targetXY.x, targetXY.y)} /><text x={targetXY.x + 11} y={targetXY.y - 9}>归一化类均值</text></g> : null}
 
           {prototypeRows.map(({ prototype, point }) => (
             <g key={`prototype-${prototype.classId}`} className="feature-space__prototype" style={{ "--class-accent": CLASS_VISUALS[prototype.classId].color } as CSSProperties}>
               <rect x={point.x - 6} y={point.y - 6} width="12" height="12" rx="2" />
-              <text x={point.x + 9} y={point.y + 18}>{CLASS_VISUALS[prototype.classId].label} prototype</text>
+              <text x={point.x + 9} y={point.y + 18}>{CLASS_VISUALS[prototype.classId].label} 均值</text>
             </g>
           ))}
 
-          {queryXY ? <g className="feature-space__query"><path d={`M ${queryXY.x} ${queryXY.y - 8} L ${queryXY.x + 8} ${queryXY.y} L ${queryXY.x} ${queryXY.y + 8} L ${queryXY.x - 8} ${queryXY.y} Z`} /><text x={queryXY.x + 10} y={queryXY.y - 10}>query</text></g> : null}
+          {queryXY ? <g className="feature-space__query"><path d={`M ${queryXY.x} ${queryXY.y - 8} L ${queryXY.x + 8} ${queryXY.y} L ${queryXY.x} ${queryXY.y + 8} L ${queryXY.x - 8} ${queryXY.y} Z`} /><text x={queryXY.x + 10} y={queryXY.y - 10}>待分类样本</text></g> : null}
         </svg>
       </div>
-      <div className="feature-space__legend" aria-label="Feature space legend">
-        {unitCircle ? <span><i className="legend-ring" /> Unit circle</span> : null}
-        {mode === "herding" ? <><span><i className="legend-dot" /> normalized samples</span><span><i className="legend-raw" /> raw mean</span><span><i className="legend-star" /> normalized target</span></> : null}
-        {mode === "prototypes" || mode === "inference" ? <span><i className="legend-square" /> current exemplar prototype</span> : null}
-        {mode === "projection" ? <span><i className="legend-ghost" /> same sample before update</span> : null}
+      <div className="feature-space__legend" aria-label="特征空间图例">
+        {unitCircle ? <span><i className="legend-ring" /> 单位圆</span> : null}
+        {mode === "herding" ? <><span><i className="legend-dot" /> 归一化样本</span><span><i className="legend-raw" /> 原始均值</span><span><i className="legend-star" /> 目标均值</span></> : null}
+        {mode === "prototypes" || mode === "inference" ? <span><i className="legend-square" /> 当前 exemplar 均值</span> : null}
+        {mode === "projection" ? <span><i className="legend-ghost" /> 更新前的位置</span> : null}
       </div>
     </figure>
   );
