@@ -14,11 +14,9 @@ export type FeatureSpaceMode = "projection" | "herding" | "prototypes" | "infere
 const ORIGIN = { x: 180, y: 132 };
 const UNIT_RADIUS = 124;
 const PROJECTION_SCALE = 39;
-
-function xy(point: Vector2, unitCircle: boolean) {
-  const scale = unitCircle ? UNIT_RADIUS : PROJECTION_SCALE;
-  return { x: ORIGIN.x + point[0] * scale, y: ORIGIN.y - point[1] * scale };
-}
+const NORMALIZATION_ORIGIN = { x: 320, y: 170 };
+const NORMALIZATION_UNIT_RADIUS = 145;
+const NORMALIZATION_RAW_SCALE = 72;
 
 function starPath(x: number, y: number, outer = 8, inner = 3.6) {
   return Array.from({ length: 10 }, (_, index) => {
@@ -40,6 +38,8 @@ export function FeatureSpaceWorkbench({
   prefixMean,
   prototypes = [],
   query,
+  normalizationSources = [],
+  markerScale = 1,
   showSampleLabels = true,
 }: {
   mode: FeatureSpaceMode;
@@ -53,8 +53,18 @@ export function FeatureSpaceWorkbench({
   prefixMean?: Vector2;
   prototypes?: Prototype[];
   query?: Vector2;
+  normalizationSources?: FeaturePoint[];
+  markerScale?: number;
   showSampleLabels?: boolean;
 }) {
+  const showNormalization = unitCircle && normalizationSources.length > 0;
+  const origin = showNormalization ? NORMALIZATION_ORIGIN : ORIGIN;
+  const unitRadius = showNormalization ? NORMALIZATION_UNIT_RADIUS : UNIT_RADIUS;
+  const rawScale = showNormalization ? NORMALIZATION_RAW_SCALE : PROJECTION_SCALE;
+  const xy = (point: Vector2, useUnitScale: boolean, useRawScale = false) => {
+    const scale = useRawScale ? rawScale : useUnitScale ? unitRadius : PROJECTION_SCALE;
+    return { x: origin.x + point[0] * scale, y: origin.y - point[1] * scale };
+  };
   const pointById = new Map(points.map((item) => [item.id, item]));
   const rawMeanXY = rawMean ? xy(rawMean, unitCircle) : null;
   const targetXY = target ? xy(target, unitCircle) : null;
@@ -74,15 +84,28 @@ export function FeatureSpaceWorkbench({
         {unitCircle ? <span className="unit-badge">‖z‖₂ = 1</span> : null}
       </figcaption>
       <div className="feature-space__viewport">
-        <svg viewBox="0 0 360 264" role="img" aria-label={`${title}. ${description}`}>
+        <svg viewBox={showNormalization ? "0 0 640 340" : "0 0 360 264"} role="img" aria-label={`${title}. ${description}`}>
           <title>{title}</title>
           <desc>{description}</desc>
-          {unitCircle ? <circle className="feature-space__unit-circle" cx={ORIGIN.x} cy={ORIGIN.y} r={UNIT_RADIUS} data-canonical-id="l2_normalization" /> : null}
-          <line className="feature-space__axis" x1="26" x2="334" y1={ORIGIN.y} y2={ORIGIN.y} />
-          <line className="feature-space__axis" x1={ORIGIN.x} x2={ORIGIN.x} y1="16" y2="246" />
-          <circle className="feature-space__origin" cx={ORIGIN.x} cy={ORIGIN.y} r="3" />
+          {unitCircle ? <circle className="feature-space__unit-circle" cx={origin.x} cy={origin.y} r={unitRadius} data-canonical-id="l2_normalization" /> : null}
+          <line className="feature-space__axis" x1={showNormalization ? 30 : 26} x2={showNormalization ? 610 : 334} y1={origin.y} y2={origin.y} />
+          <line className="feature-space__axis" x1={origin.x} x2={origin.x} y1="16" y2={showNormalization ? 324 : 246} />
 
-          {targetXY ? <line className="feature-space__target-ray" x1={ORIGIN.x} y1={ORIGIN.y} x2={targetXY.x} y2={targetXY.y} /> : null}
+          {showNormalization ? normalizationSources.map((source) => {
+            const normalized = pointById.get(source.id);
+            if (!normalized) return null;
+            const rawPoint = xy(source.point, false, true);
+            return (
+              <g key={`normalization-${source.id}`} className="feature-space__normalization" style={{ "--class-accent": CLASS_VISUALS[source.classId].color } as CSSProperties}>
+                <line className="feature-space__normalization-ray" x1={origin.x} y1={origin.y} x2={rawPoint.x} y2={rawPoint.y} />
+                <circle className="feature-space__raw-point" cx={rawPoint.x} cy={rawPoint.y} r="4.2" />
+                <title>{`样本 ${source.id}：原始表示 φ_after(x) 沿虚线经过原点方向，单位化点落在单位圆上`}</title>
+              </g>
+            );
+          }) : null}
+          <circle className="feature-space__origin" cx={origin.x} cy={origin.y} r="3" />
+
+          {targetXY ? <line className="feature-space__target-ray" x1={origin.x} y1={origin.y} x2={targetXY.x} y2={targetXY.y} /> : null}
           {queryXY ? prototypeRows.map(({ prototype, point }) => <line key={`distance-${prototype.classId}`} className="feature-space__distance" x1={queryXY.x} y1={queryXY.y} x2={point.x} y2={point.y} style={{ "--class-accent": CLASS_VISUALS[prototype.classId].color } as CSSProperties} />) : null}
 
           {previousPoints.map((oldPoint) => {
@@ -105,7 +128,7 @@ export function FeatureSpaceWorkbench({
                   : { x: position.x + 8, y: position.y - 7, textAnchor: "start" as const };
             return (
               <g key={item.id} className="feature-space__sample" tabIndex={0} role="img" aria-label={`${CLASS_VISUALS[item.classId].label}，样本 ${item.id}${item.order ? `，Herding 顺序 p${item.order}` : ""}`} data-herding-selected={item.order ? "true" : undefined} style={{ "--selection-order": item.order ?? 0 } as CSSProperties}>
-                <circle className={`sample-mark${item.order ? " is-herding-selected" : ""}`} cx={position.x} cy={position.y} r={item.order ? "7" : "5.5"} fill={color} />
+                <circle className={`sample-mark${item.order ? " is-herding-selected" : ""}`} cx={position.x} cy={position.y} r={(item.order ? 7 : 5.5) * markerScale} fill={color} />
                 <title>{`${CLASS_VISUALS[item.classId].label} · 样本 ${item.id}${item.order ? ` · Herding 顺序 p${item.order}` : ""}`}</title>
                 {showSampleLabels ? <text {...sampleLabel}>{item.order ? `p${item.order}` : item.id}</text> : null}
               </g>
@@ -128,7 +151,7 @@ export function FeatureSpaceWorkbench({
       </div>
       <div className="feature-space__legend" aria-label="特征空间图例">
         {unitCircle ? <span><i className="legend-ring" /> 单位圆</span> : null}
-        {mode === "herding" ? <><span><i className="legend-dot" /> 归一化样本</span><span><i className="legend-raw" /> 原始均值</span>{prefixMean ? <span><i className="legend-prefix" /> 当前前缀均值</span> : null}<span><i className="legend-star" /> 目标均值</span></> : null}
+        {mode === "herding" ? <><span><i className="legend-dot" /> 单位化样本</span>{showNormalization ? <span><i className="legend-source" /> 原始表示 φ(x)</span> : null}<span><i className="legend-raw" /> 原始均值</span>{prefixMean ? <span><i className="legend-prefix" /> 当前前缀均值</span> : null}<span><i className="legend-star" /> 目标均值</span></> : null}
         {mode === "prototypes" || mode === "inference" ? <span><i className="legend-square" /> 当前 exemplar 均值</span> : null}
         {mode === "projection" ? <span><i className="legend-ghost" /> 更新前的位置</span> : null}
       </div>

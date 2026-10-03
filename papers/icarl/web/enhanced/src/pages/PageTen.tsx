@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { FeatureSpaceWorkbench, type FeatureSpaceMode } from "../components/FeatureSpaceWorkbench";
 import { SampleToken } from "../components/SampleToken";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
@@ -52,7 +52,9 @@ const runtimePhases = [
   { id: "PREDICT", title: "预测" },
 ] as const;
 
-function phaseAt(stepIndex: number) {
+type PhaseId = (typeof runtimePhases)[number]["id"];
+
+function phaseAt(stepIndex: number): PhaseId {
   if (stepIndex <= 1) return "ARRIVE";
   if (stepIndex === 2) return "PREPARE";
   if (stepIndex === 3) return "SNAPSHOT";
@@ -63,7 +65,7 @@ function phaseAt(stepIndex: number) {
 }
 
 const phaseEntryStep: Record<(typeof runtimePhases)[number]["id"], number> = {
-  ARRIVE: 1,
+  ARRIVE: 0,
   PREPARE: 2,
   SNAPSHOT: 3,
   TRAIN: 4,
@@ -72,18 +74,40 @@ const phaseEntryStep: Record<(typeof runtimePhases)[number]["id"], number> = {
   PREDICT: 8,
 };
 
-function RuntimeTimeline({ stepIndex, stepDurationMs, isPlaying, onSelect }: {
+function durationForStep(stepIndex: number) {
+  return stepIndex === 6 ? 2450 : 2050;
+}
+
+function durationForPhase(phaseIndex: number) {
+  const phase = runtimePhases[phaseIndex];
+  const nextPhase = runtimePhases[phaseIndex + 1];
+  if (!phase || !nextPhase) return 0;
+  const startStep = phaseEntryStep[phase.id];
+  const endStep = phaseEntryStep[nextPhase.id];
+  let duration = 0;
+  for (let step = startStep; step < endStep; step += 1) duration += durationForStep(step);
+  return duration;
+}
+
+function phaseOffsetAtStep(stepIndex: number) {
+  const phase = phaseAt(stepIndex);
+  let elapsed = 0;
+  for (let step = phaseEntryStep[phase]; step < stepIndex; step += 1) elapsed += durationForStep(step);
+  return elapsed;
+}
+
+function RuntimeTimeline({ stepIndex, journeyDurationMs, animationRevision, initialOffsetMs, isPlaying, onSelect }: {
   stepIndex: number;
-  stepDurationMs: number;
+  journeyDurationMs: number;
+  animationRevision: number;
+  initialOffsetMs: number;
   isPlaying: boolean;
   onSelect: (step: number) => void;
 }) {
   const activePhase = phaseAt(stepIndex);
   const activeIndex = runtimePhases.findIndex((phase) => phase.id === activePhase);
-  const nextIndex = stepIndex < runtimeSteps.length - 1
-    ? runtimePhases.findIndex((phase) => phase.id === phaseAt(stepIndex + 1))
-    : activeIndex;
-  const movesToNextPhase = nextIndex === activeIndex + 1;
+  const movesToNextPhase = activeIndex < runtimePhases.length - 1;
+  const nextIndex = movesToNextPhase ? activeIndex + 1 : activeIndex;
   const stageCenter = (index: number) => 1.5 + (97 * (index + 0.5)) / runtimePhases.length;
   const completedStyle = {
     "--timeline-start": `${stageCenter(0)}%`,
@@ -92,12 +116,13 @@ function RuntimeTimeline({ stepIndex, stepDurationMs, isPlaying, onSelect }: {
   const journeyStyle = {
     "--timeline-start": `${stageCenter(activeIndex)}%`,
     "--timeline-width": `${stageCenter(nextIndex) - stageCenter(activeIndex)}%`,
-    "--timeline-duration": `${stepDurationMs}ms`,
+    "--timeline-duration": `${journeyDurationMs}ms`,
+    "--timeline-delay": `${-Math.min(journeyDurationMs, initialOffsetMs)}ms`,
   } as CSSProperties;
   return (
     <nav className="p10-timeline" aria-label="本轮运行阶段">
       {activeIndex > 0 ? <span className="p10-timeline__completed" style={completedStyle} aria-hidden="true" /> : null}
-      {movesToNextPhase ? <span key={`${stepIndex}-${activeIndex}-${nextIndex}`} className={`p10-timeline__journey ${isPlaying ? "is-playing" : "is-paused"}`} style={journeyStyle} aria-hidden="true" /> : null}
+      {movesToNextPhase ? <span key={`${activePhase}-${animationRevision}`} className={`p10-timeline__journey ${isPlaying ? "is-playing" : "is-paused"}`} style={journeyStyle} aria-hidden="true" /> : null}
       {runtimePhases.map((phase, index) => {
         const current = phase.id === activePhase;
         const passed = index < activeIndex;
@@ -199,11 +224,15 @@ function ObjectLifetimeRail({ stepIndex }: { stepIndex: number }) {
 export function PageTen({ onExit }: { onExit: () => void }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const stepTimerRef = useRef<{ stepIndex: number; remainingMs: number } | null>(null);
+  const [timelineAnimationRevision, setTimelineAnimationRevision] = useState(0);
+  const [timelineSeed, setTimelineSeed] = useState<{ phaseId: PhaseId; offsetMs: number }>({ phaseId: "ARRIVE", offsetMs: 0 });
   const reducedMotion = useReducedMotion();
   const herdingOrders = useMemo(() => new Map(NEW_CLASS_HERDING.ordered.map((sample, index) => [sample.id, index + 1])), []);
   const initialNewClassPoints = useMemo(() => projectSampleFeatures(INCOMING_SAMPLES, "before"), []);
   const updatedNewClassPoints = useMemo(() => projectSampleFeatures(INCOMING_SAMPLES, "after"), []);
   const herdingPoints = useMemo(() => projectSampleFeatures(INCOMING_SAMPLES, "after", true, herdingOrders), [herdingOrders]);
+  const herdingRawPoints = useMemo(() => projectSampleFeatures(INCOMING_SAMPLES, "after", false, herdingOrders), [herdingOrders]);
   const exemplarPoints = useMemo(() => projectSampleFeatures(CURRENT_EXEMPLARS, "after", true), []);
   const isTrainingPhase = stepIndex === 4;
   const quotaReduced = stepIndex >= 5;
@@ -215,21 +244,39 @@ export function PageTen({ onExit }: { onExit: () => void }) {
     : OLD_MEMORY_SIZE;
   const activePhase = phaseAt(stepIndex);
   const herdingLastStep = NEW_CLASS_HERDING.steps[NEW_CLASS_HERDING.steps.length - 1];
-  const stepDurationMs = stepIndex === 6 ? 2450 : 2050;
+  const stepDurationMs = durationForStep(stepIndex);
+  const activePhaseIndex = runtimePhases.findIndex((phase) => phase.id === activePhase);
+  const journeyDurationMs = durationForPhase(activePhaseIndex);
 
   useEffect(() => {
+    if (stepTimerRef.current?.stepIndex !== stepIndex) {
+      stepTimerRef.current = { stepIndex, remainingMs: stepDurationMs };
+    }
     if (!isPlaying || reducedMotion) return;
     if (stepIndex >= runtimeSteps.length - 1) {
       setIsPlaying(false);
       return;
     }
-    const timer = window.setTimeout(() => setStepIndex((value) => Math.min(runtimeSteps.length - 1, value + 1)), stepDurationMs);
-    return () => window.clearTimeout(timer);
+    const timerState = stepTimerRef.current;
+    const startedAt = performance.now();
+    const timer = window.setTimeout(() => {
+      stepTimerRef.current = null;
+      setStepIndex((value) => Math.min(runtimeSteps.length - 1, value + 1));
+    }, timerState?.remainingMs ?? stepDurationMs);
+    return () => {
+      window.clearTimeout(timer);
+      if (timerState && stepTimerRef.current === timerState) {
+        timerState.remainingMs = Math.max(0, timerState.remainingMs - (performance.now() - startedAt));
+      }
+    };
   }, [isPlaying, reducedMotion, stepIndex, stepDurationMs]);
 
   function chooseStep(nextStep: number) {
+    const clampedStep = Math.max(0, Math.min(runtimeSteps.length - 1, nextStep));
     setIsPlaying(false);
-    setStepIndex(Math.max(0, Math.min(runtimeSteps.length - 1, nextStep)));
+    setStepIndex(clampedStep);
+    setTimelineSeed({ phaseId: phaseAt(clampedStep), offsetMs: phaseOffsetAtStep(clampedStep) });
+    setTimelineAnimationRevision((value) => value + 1);
   }
 
   function togglePlayback() {
@@ -247,6 +294,8 @@ export function PageTen({ onExit }: { onExit: () => void }) {
 
   function restartPlayback() {
     setStepIndex(0);
+    setTimelineSeed({ phaseId: "ARRIVE", offsetMs: 0 });
+    setTimelineAnimationRevision((value) => value + 1);
     setIsPlaying(!reducedMotion);
   }
 
@@ -265,7 +314,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
   if (stepIndex >= 6 && stepIndex < 8) {
     featureMode = "herding";
     featureTitle = "Herding · 新类 D 的 exemplar 选择";
-    featureDescription = "先由 D 类全部 6 个样本计算归一化目标均值，再按贪心顺序选出 3 个 exemplar。";
+    featureDescription = "虚线连接原始表示 φ_after(x) 与单位圆上的 z/‖z‖，方向经过原点；再按 Herding 目标选出 3 个 exemplar。";
     featurePoints = herdingPoints;
     previousPoints = [];
     useUnitCircle = true;
@@ -329,12 +378,12 @@ export function PageTen({ onExit }: { onExit: () => void }) {
             <button type="button" onClick={() => chooseStep(stepIndex + 1)} disabled={stepIndex === runtimeSteps.length - 1} aria-label="下一步" title="下一步">›</button>
           </div>
           <label className="p10-player-range"><span className="p10-sr-only">动画状态进度</span><input type="range" min="0" max={runtimeSteps.length - 1} value={stepIndex} onChange={(event) => chooseStep(Number(event.currentTarget.value))} aria-valuetext={`第 ${stepIndex + 1} 步：${runtimeSteps[stepIndex].title}`} /></label>
-          <b className="p10-player-count">{String(stepIndex + 1).padStart(2, "0")}<i>/</i>{runtimeSteps.length}</b>
+          <b className="p10-player-count"><span>步骤</span>{String(stepIndex + 1).padStart(2, "0")}<i>/</i>{runtimeSteps.length}</b>
         </div>
-        <div className="p10-current-step" aria-live="polite"><span>本轮步骤 {String(stepIndex + 1).padStart(2, "0")} · {runtimePhases.find((phase) => phase.id === activePhase)?.title}</span><strong>{runtimeSteps[stepIndex].title}</strong><p>{runtimeSteps[stepIndex].description}</p></div>
+        <div className="p10-current-step" aria-live="polite"><span>阶段 {String(activePhaseIndex + 1).padStart(2, "0")} / {runtimePhases.length} · {runtimePhases[activePhaseIndex]?.title}</span><strong>{runtimeSteps[stepIndex].title}</strong><p>{runtimeSteps[stepIndex].description}</p></div>
       </header>
 
-      <RuntimeTimeline stepIndex={stepIndex} stepDurationMs={stepDurationMs} isPlaying={isPlaying && !reducedMotion} onSelect={chooseStep} />
+      <RuntimeTimeline stepIndex={stepIndex} journeyDurationMs={journeyDurationMs} animationRevision={timelineAnimationRevision} initialOffsetMs={timelineSeed.phaseId === activePhase ? timelineSeed.offsetMs : 0} isPlaying={isPlaying && !reducedMotion} onSelect={chooseStep} />
 
       <section className="p10-board-grid" aria-label="iCaRL 一次完整增量更新总图">
         <section className={`panel p10-panel p10-incoming ${stepIndex >= 1 && stepIndex < 7 ? "is-current" : ""}`} id="incoming_class_batch" data-canonical-id="incoming_class_batch" aria-labelledby="p10-incoming-title">
@@ -386,8 +435,8 @@ export function PageTen({ onExit }: { onExit: () => void }) {
         </section>
 
         <section className="panel p10-feature-panel" id="unit_circle" data-canonical-id="unit_circle" aria-labelledby="p10-feature-heading">
-          <div className="p10-panel-heading"><div><span className="p10-eyebrow">共享特征空间</span><h2 id="p10-feature-heading">{featureTitle}</h2></div><span className={`p10-mode-badge p10-mode-badge--${featureMode}`} data-canonical-id={stepIndex >= 9 ? "inference_mode" : stepIndex === 8 ? "prototype_mode" : stepIndex >= 6 ? "herding_mode" : "representation_mode"}>{featureMode === "projection" ? "表示变化" : featureMode === "herding" ? "HERDING" : featureMode === "prototypes" ? "类别均值" : "预测"}</span></div>
-          <FeatureSpaceWorkbench mode={featureMode} title={featureTitle} description={featureDescription} points={featurePoints} previousPoints={previousPoints} unitCircle={useUnitCircle} rawMean={rawMean} target={target} prefixMean={prefixMean} prototypes={prototypes} query={query} showSampleLabels={featureMode === "herding"} />
+          <div className="p10-panel-heading"><div><span className="p10-eyebrow">共享特征空间</span><h2 id="p10-feature-heading">{featureTitle}</h2></div><span className={`p10-mode-badge p10-mode-badge--${featureMode}`} data-canonical-id={stepIndex >= 9 ? "inference_mode" : stepIndex === 8 ? "prototype_mode" : stepIndex >= 6 ? "herding_mode" : "representation_mode"}>{featureMode === "projection" ? "表示变化" : featureMode === "herding" ? "Herding 选样" : featureMode === "prototypes" ? "类别均值" : "预测"}</span></div>
+          <FeatureSpaceWorkbench mode={featureMode} title={featureTitle} description={featureDescription} points={featurePoints} previousPoints={previousPoints} unitCircle={useUnitCircle} rawMean={rawMean} target={target} prefixMean={prefixMean} prototypes={prototypes} query={query} normalizationSources={featureMode === "herding" ? herdingRawPoints : []} markerScale={0.62} showSampleLabels={featureMode === "herding"} />
           {predictionReady ? <div className="p10-prediction-result" aria-live="polite"><span>最小距离 · 最近类别均值</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].label}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 对全部已见类别比较</small></div> : stepIndex >= 6 ? <p className="p10-feature-note">选中的 p<sub>1</sub>、p<sub>2</sub>、p<sub>3</sub> 按确定性 Herding 结果标记；原始均值与归一化目标也来自同一批完整数据。</p> : <p className="p10-feature-note">当前投影只用于展示表示变化；尚未进入 Herding 时，不会提前展示类别中心。</p>}
         </section>
 
@@ -403,7 +452,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
       <details className="panel p10-inspect">
         <summary>示例边界与计算细节 · 复用上方同一组输入</summary>
         <div className="p10-inspect-grid">
-          <section><h3>示例边界</h3><p>本页用固定合成特征真实计算配额、Herding 顺序、类别均值与预测距离；Θ 的参数更新只表示状态变化，不虚构梯度轨迹或论文 checkpoint。</p><p>引导顺序严格区分训练更新 Θ 与记忆更新 P。</p></section>
+          <section><h3>示例边界</h3><p>本页用固定合成特征真实计算配额、Herding 顺序、类别均值与预测距离；Θ 的参数更新只表示状态变化，不虚构梯度轨迹或论文 checkpoint。</p><p>旧节点拟合快照 Q，新节点拟合新类硬标签；ℒ = ℒ_old + ℒ_new。</p></section>
           <section><h3>配额与旧列表截短</h3><p>新类别总数 t = {NEXT_CLASS_COUNT}，每类配额 m = floor(K/t) = floor({MEMORY_BUDGET}/{NEXT_CLASS_COUNT}) = {NEXT_QUOTA}。每个旧列表保留 P_before 的前 m 项；本轮不读取旧完整数据集。</p><p>更新前共 {OLD_MEMORY_SIZE} 个 exemplar；截短后旧类共 {REDUCED_MEMORY_SIZE} 个，新类完成选择后总计 {COMMITTED_MEMORY_SIZE} 个。</p></section>
           <section><h3>新类 Herding 顺序</h3><p>先对 D 类完整特征求均值并归一化，再逐次挑选使当前前缀均值最接近目标的样本。</p><ol className="p10-herding-order">{NEW_CLASS_HERDING.steps.map((step, index) => <li key={step.chosen.id}><strong>p{index + 1} = {step.chosen.id}</strong><span>与目标的距离 {step.distanceToTarget.toFixed(3)}</span><details><summary>查看候选距离</summary><ul>{step.candidateScores.map((candidate) => <li key={candidate.sample.id}>{candidate.sample.id}：{candidate.distanceToTarget.toFixed(3)}</li>)}</ul></details></li>)}</ol></section>
           <section><h3>当前 prototype 与预测距离</h3><p>逐类对归一化 exemplar 表示求均值，再把均值归一化。以下距离与图中的预测使用完全相同的向量。</p><ul className="p10-distance-list">{QUERY_DISTANCES.map((row) => <li key={row.classId}><span>{CLASS_VISUALS[row.classId].glyph} {CLASS_VISUALS[row.classId].label}</span><code>{row.distance.toFixed(3)}</code></li>)}</ul></section>
