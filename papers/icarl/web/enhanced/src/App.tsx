@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { PageOne } from "./pages/PageOne";
 import { PageTwo } from "./pages/PageTwo";
+import { PageThree } from "./pages/PageThree";
 import { PageTen } from "./pages/PageTen";
 
-type PageId = "page-1" | "page-2" | "page-10";
+type PageId = "page-1" | "page-2" | "page-3" | "page-10";
 
 const pages: { id: PageId; number: string; title: string; subtitle: string }[] = [
   { id: "page-1", number: "01", title: "类别增量学习", subtitle: "类别随时间逐批加入" },
   { id: "page-2", number: "02", title: "图像与特征表示", subtitle: "打开模型内部路径" },
+  { id: "page-3", number: "03", title: "原型分类", subtitle: "类均值与最近距离" },
   { id: "page-10", number: "10", title: "一次完整更新", subtitle: "跟踪运行时状态" },
 ];
 
@@ -39,14 +41,15 @@ export default function App() {
       <div className="ewc-main-column">
         <header className="ewc-topbar">
           <div className="ewc-topbar__path"><span>ICARL</span><span className="ewc-slash">/</span><strong>{activePageInfo.number} · {activePageInfo.title}</strong></div>
-          <span className="ewc-topbar__edition"><i /> W6 · 交互式教程</span>
+          <span className="ewc-topbar__edition"><i /> W8 · 交互式教程</span>
         </header>
         <main className="tutorial-main ewc-main" id="top">
           {activePage === "page-1" ? <PageOne onOpenPageTwo={() => setActivePage("page-2")} /> : null}
-          {activePage === "page-2" ? <PageTwo /> : null}
+          {activePage === "page-2" ? <PageTwo onOpenPageThree={() => setActivePage("page-3")} /> : null}
+          {activePage === "page-3" ? <PageThree /> : null}
           {activePage === "page-10" ? <PageTen onExit={() => setActivePage("page-2")} /> : null}
         </main>
-        <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 10 页</span></footer>
+        <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 03 · 10 页</span></footer>
       </div>
     </div>
   );

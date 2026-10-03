@@ -20,6 +20,11 @@
       "component": "PageTwo",
       "status": "complete"
     },
+    "L05": {
+      "stage": "S03",
+      "component": "PageThree",
+      "status": "complete"
+    },
     "L23": {
       "stage": "S08",
       "component": "PageTen + FeatureSpaceWorkbench",

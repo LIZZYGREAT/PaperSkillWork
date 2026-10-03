@@ -14,7 +14,7 @@ const flowStages = [
 
 const projectionIds = ["x_7", "x_3", "x_2", "x_8"];
 
-export function PageTwo() {
+export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
   const [modelOpen, setModelOpen] = useState(false);
   const [stage, setStage] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -162,7 +162,7 @@ export function PageTwo() {
             </section>
           </section>
 
-          <section className="p2-handoff"><span className="p2-eyebrow">接下来的问题</span><p>现在已经认识 z。保存下来的样本怎样代表各个类别，并支持最终预测？</p><span>继续了解类别表示机制 <b>→</b></span></section>
+          <section className="p2-handoff"><span className="p2-eyebrow">接下来的问题</span><p>现在已经认识 z。保存下来的样本怎样代表各个类别，并支持最终预测？</p><button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>继续了解类别表示机制 <b aria-hidden="true">→</b></button></section>
         </>
       )}
     </article>

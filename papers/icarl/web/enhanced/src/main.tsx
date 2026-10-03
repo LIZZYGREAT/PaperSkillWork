@@ -7,6 +7,7 @@ import "./styles/shell.css";
 import "./styles/page-one.css";
 import "./styles/page-two.css";
 import "./styles/page-ten.css";
+import "./styles/icarl-guided.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing app root element.");
