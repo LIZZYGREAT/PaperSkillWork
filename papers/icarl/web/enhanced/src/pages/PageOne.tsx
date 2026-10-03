@@ -74,7 +74,7 @@ export function PageOne({ onOpenPageTwo }: PageOneProps) {
                 <div className="p1-batch__card">
                   <div className="p1-batch__top"><span>{batch.name}</span><em>{arrived ? (index === currentBatch ? "当前" : "已见") : "待到达"}</em></div>
                   <strong>{batch.range}</strong>
-                  <div className="p1-batch__classes" aria-label={`${batch.range}, ten class labels`}>
+                  <div className="p1-batch__classes" aria-label={`${batch.range}，十个类别`}>
                     {Array.from({ length: 10 }, (_, classIndex) => <i key={classIndex} />)}
                   </div>
                   <small>{arrived ? "类别继续保留在预测范围中" : "尚未到达"}</small>
@@ -86,7 +86,7 @@ export function PageOne({ onOpenPageTwo }: PageOneProps) {
         <div className="p1-stream-caption"><span>每批加入新的类别。</span><span>同一个学习器贯穿整个序列。</span></div>
       </section>
 
-      <section className="p1-model-map" aria-label="One learner and one unified prediction space">
+      <section className="p1-model-map" aria-label="同一个学习器与统一预测空间">
         <section className="p1-learner panel">
           <div className="p1-section-head"><div><span className="p1-eyebrow">02 · 持续使用的模型</span><h2>同一个学习器</h2></div><span className="p1-object-badge">共享模型</span></div>
           <div className="p1-model-diagram">
@@ -106,12 +106,12 @@ export function PageOne({ onOpenPageTwo }: PageOneProps) {
               return <div className={`p1-label-group p1-label-group--${index}`} key={first}><span>C{first}–C{last}</span><i /><i /><i /></div>;
             })}
           </div>
-          <div className="p1-query-route"><span className="p1-query-icon">x</span><svg viewBox="0 0 80 20" aria-hidden="true"><path d="M2 10h70m-7-7 7 7-7 7" /></svg><strong>one prediction over C1–C{seenCount}</strong></div>
+          <div className="p1-query-route"><span className="p1-query-icon">x</span><svg viewBox="0 0 80 20" aria-hidden="true"><path d="M2 10h70m-7-7 7 7-7 7" /></svg><strong>在 C1–C{seenCount} 中作出统一预测</strong></div>
           <p>测试时不依赖样本来自哪个类别批次。</p>
         </section>
       </section>
 
-      <section className={`p1-memory panel ${step >= 3 ? "is-emphasized" : ""}`} aria-label="Growing class history and fixed image memory">
+      <section className={`p1-memory panel ${step >= 3 ? "is-emphasized" : ""}`} aria-label="增长的类别历史与固定容量图像记忆">
         <div className="p1-section-head"><div><span className="p1-eyebrow">贯穿全程的约束</span><h2>历史变长，可用图像记忆仍有上限</h2></div><span className="p1-fixed-tag">K · 固定容量</span></div>
         <div className="p1-memory-compare">
           <div className="p1-memory-row"><strong>已到达的类别</strong><div className="p1-history-rail" aria-label={`已到达 ${arrivedCount} 个类别批次`}>{[0, 1, 2].map((index) => <i key={index} className={index < arrivedCount ? "is-filled" : ""} />)}</div><span>{arrivedCount * 10} 个类别</span></div>
