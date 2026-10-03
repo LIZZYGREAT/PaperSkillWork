@@ -112,15 +112,16 @@ Figures 2–4 are not rendered inside these three pages because their approved h
 
 ### Vertical Slice Review (W7)
 
-Vertical Slice Review: PENDING
+Vertical Slice Review: PASS
 
-- Reviewer: awaiting user review
-- Decision: PENDING
+- Reviewer: 用户（本次对话）
+- Decision: PASS
+- Review note: 用户确认当前 iCaRL 实现可以接受，并明确要求将 W6 与 W7 标记为通过；本记录依据本次人工验收。
 - Can a first-time reader explain the class-incremental constraints, the feature-extractor/training-head split, and the purpose of the full runtime trace?
 - Can the reader state when Θ changes, when P changes, how long Q and X_new remain available, and which path makes the final prediction?
 - Were any key explanations hidden in hover or omitted?
 - Were any formulas, toys, or interactions unnecessary?
-- Required information-architecture changes: record after the user reviews W6.
+- Required information-architecture changes: none requested in this review.
 
 ## Full Implementation (W8)
 
@@ -128,4 +129,4 @@ After W7 PASS, implement remaining CORE items L05–L22 in S03–S07, including 
 
 ## Human Acceptance Record
 
-No W7 decision recorded yet. W4 approval and the request to display original Figures 2–4 are recorded in `paper.yaml` and the W3 asset plan.
+W7 passed based on the user's explicit acceptance of the current iCaRL implementation. W4 approval and the request to display original Figures 2–4 are recorded in `paper.yaml` and the W3 asset plan.
