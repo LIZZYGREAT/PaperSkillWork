@@ -242,8 +242,7 @@
 /* At presentation width, use the board's open card area for readable Chinese labels. */
 @media(min-width:1241px){
  .p10-page.p10-board{grid-template-rows:minmax(70px,.6fr) minmax(44px,.38fr) minmax(0,6fr) 24px}
- .p10-board-grid{grid-template-rows:minmax(0,.98fr) minmax(0,.94fr) minmax(132px,.54fr)}
- .p10-board[data-feature-mode="herding"] .p10-board-grid,.p10-board[data-feature-mode="prototypes"] .p10-board-grid{grid-template-rows:minmax(0,.9fr) minmax(0,1.08fr) minmax(132px,.48fr)}
+ .p10-board-grid{grid-template-rows:minmax(0,.9fr) minmax(0,1.08fr) minmax(132px,.48fr)}
  .p10-board .panel{padding:14px 15px}
  .p10-kicker{font-size:12px}.p10-board-heading h1{font-size:clamp(29px,2vw,35px)}.p10-board-heading p{font-size:14px}
  .p10-back-page{min-height:34px;font-size:12px!important}.p10-player-controls button{width:31px;height:32px;font-size:21px}.p10-player-controls .p10-player-play{width:38px;height:38px;font-size:16px}.p10-player-count{font-size:13px}
@@ -353,6 +352,15 @@
  .p10-page.p10-board{height:auto;min-height:100dvh;grid-template-rows:auto auto minmax(0,1fr) 30px;overflow:visible}
  .p10-board-grid{grid-template-rows:repeat(2,minmax(270px,auto)) minmax(120px,auto)}
  .p10-inspect[open]{position:fixed;z-index:50;top:clamp(128px,16vh,148px);right:18px;bottom:auto;left:18px;height:auto;max-height:min(calc(100dvh - 16vh - 28px),760px)}
+}
+
+/* Expanded calculation notes belong after the runtime board in normal page flow. */
+.ewc-app.ewc-app--runtime:has(.p10-inspect[open]){height:auto;min-height:100dvh;overflow:visible}
+.ewc-app--runtime:has(.p10-inspect[open]) .ewc-main-column,.ewc-app--runtime:has(.p10-inspect[open]) .tutorial-main.ewc-main{height:auto;min-height:100dvh;overflow:visible}
+.p10-page.p10-board:has(.p10-inspect[open]){overflow:visible}
+@media(min-width:761px){
+ .p10-inspect[open]{position:absolute;z-index:30;top:calc(100% - 30px);right:clamp(12px,1vw,20px);bottom:auto;left:clamp(12px,1vw,20px);height:auto;max-height:none;overflow:visible;background:#fffefa!important;box-shadow:0 12px 38px rgba(22,57,62,.2)!important}
+ .p10-inspect[open]>summary{position:static;background:#fffefa}
 }
 @media(prefers-reduced-motion:reduce){
  .p10-timeline__journey{animation:none;opacity:0}

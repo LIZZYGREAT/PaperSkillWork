@@ -362,7 +362,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
             : "分类均值与查询向量由 Θ_after + P_after 推导，不会改变已提交的持久状态。";
 
   return (
-    <article className="p10-page p10-board" id="runtime_workbench" data-canonical-id="runtime_workbench" data-feature-mode={featureMode} aria-labelledby="page-ten-title">
+    <article className="p10-page p10-board" id="runtime_workbench" data-canonical-id="runtime_workbench" aria-labelledby="page-ten-title">
       <header className="p10-board-header">
         <div className="p10-board-heading">
           <div className="p10-kicker"><span>第 10 页</span><i /> iCaRL 运行总图</div>
@@ -449,7 +449,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
       </section>
 
       <details className="panel p10-inspect">
-        <summary>示例边界与计算细节 · 复用上方同一组输入</summary>
+        <summary onClick={(event) => { const details = event.currentTarget.parentElement as HTMLDetailsElement; window.setTimeout(() => { if (details.open) details.scrollIntoView({ block: "end", behavior: "auto" }); }, 0); }}>示例边界与计算细节 · 复用上方同一组输入</summary>
         <div className="p10-inspect-grid">
           <section><h3>示例边界</h3><p>本页用固定合成特征真实计算配额、Herding 顺序、类别均值与预测距离；Θ 的参数更新只表示状态变化，不虚构梯度轨迹或论文 checkpoint。</p><p>旧节点拟合快照 Q，新节点拟合新类硬标签；ℒ = ℒ_old + ℒ_new。</p></section>
           <section><h3>配额与旧列表截短</h3><p>新类别总数 t = {NEXT_CLASS_COUNT}，每类配额 m = floor(K/t) = floor({MEMORY_BUDGET}/{NEXT_CLASS_COUNT}) = {NEXT_QUOTA}。每个旧列表保留 P_before 的前 m 项；本轮不读取旧完整数据集。</p><p>更新前共 {OLD_MEMORY_SIZE} 个 exemplar；截短后旧类共 {REDUCED_MEMORY_SIZE} 个，新类完成选择后总计 {COMMITTED_MEMORY_SIZE} 个。</p></section>
