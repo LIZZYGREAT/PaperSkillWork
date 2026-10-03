@@ -4,9 +4,10 @@ import { PageTwo } from "./pages/PageTwo";
 import { PageThree } from "./pages/PageThree";
 import { PageFour } from "./pages/PageFour";
 import { PageFive } from "./pages/PageFive";
+import { PageSix } from "./pages/PageSix";
 import { PageTen } from "./pages/PageTen";
 
-type PageId = "page-1" | "page-2" | "page-3" | "page-4" | "page-5" | "page-10";
+type PageId = "page-1" | "page-2" | "page-3" | "page-4" | "page-5" | "page-6" | "page-10";
 
 const pages: { id: PageId; number: string; title: string; subtitle: string }[] = [
   { id: "page-1", number: "01", title: "类别增量学习", subtitle: "类别随时间逐批加入" },
@@ -14,6 +15,7 @@ const pages: { id: PageId; number: string; title: string; subtitle: string }[] =
   { id: "page-3", number: "03", title: "原型分类", subtitle: "类均值与最近距离" },
   { id: "page-4", number: "04", title: "Exemplar 记忆", subtitle: "真实样本与固定预算" },
   { id: "page-5", number: "05", title: "Herding 选择", subtitle: "有序 exemplar 与 prefix" },
+  { id: "page-6", number: "06", title: "更新前准备", subtitle: "训练集 D 与 response Q" },
   { id: "page-10", number: "10", title: "一次完整更新", subtitle: "跟踪运行时状态" },
 ];
 
@@ -52,10 +54,11 @@ export default function App() {
           {activePage === "page-2" ? <PageTwo onOpenPageThree={() => setActivePage("page-3")} /> : null}
           {activePage === "page-3" ? <PageThree onContinue={() => setActivePage("page-4")} /> : null}
           {activePage === "page-4" ? <PageFour onContinue={() => setActivePage("page-5")} /> : null}
-          {activePage === "page-5" ? <PageFive /> : null}
+          {activePage === "page-5" ? <PageFive onContinue={() => setActivePage("page-6")} /> : null}
+          {activePage === "page-6" ? <PageSix /> : null}
           {activePage === "page-10" ? <PageTen onExit={() => setActivePage("page-2")} /> : null}
         </main>
-        <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 03 · 04 · 05 · 10 页</span></footer>
+        <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 03 · 04 · 05 · 06 · 10 页</span></footer>
       </div>
     </div>
   );

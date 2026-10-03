@@ -45,6 +45,16 @@
       "component": "PageFive + runFeatureHerding",
       "status": "complete"
     },
+    "L10": {
+      "stage": "S06",
+      "component": "PageSix",
+      "status": "complete"
+    },
+    "L11": {
+      "stage": "S06",
+      "component": "PageSix + ResponseMatrix",
+      "status": "complete"
+    },
     "L23": {
       "stage": "S08",
       "component": "PageTen + FeatureSpaceWorkbench",
