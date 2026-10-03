@@ -42,12 +42,12 @@ export const SAMPLES: readonly Sample[] = [
   { id: "x_16", classId: "C", raw: [-1.8, 0.1] },
   { id: "x_19", classId: "C", raw: [-2.4, 0.2] },
   { id: "x_22", classId: "C", raw: [-1.9, -0.6] },
-  { id: "x_20", classId: "D", raw: [1.1, -2.2] },
-  { id: "x_23", classId: "D", raw: [0.5, -2.6] },
-  { id: "x_24", classId: "D", raw: [1.6, -2.7] },
-  { id: "x_25", classId: "D", raw: [0.8, -1.8] },
-  { id: "x_26", classId: "D", raw: [1.5, -2.0] },
-  { id: "x_27", classId: "D", raw: [0.9, -2.9] },
+  { id: "x_20", classId: "D", raw: [1.606, -2.044] },
+  { id: "x_23", classId: "D", raw: [2.337, -0.988] },
+  { id: "x_24", classId: "D", raw: [2.327, 0.771] },
+  { id: "x_25", classId: "D", raw: [-0.013, 2.572] },
+  { id: "x_26", classId: "D", raw: [-1.606, 2.045] },
+  { id: "x_27", classId: "D", raw: [-2.443, -0.333] },
 ];
 
 const SAMPLE_MODIFIERS = ["•", "╱", ":", "+", "*", "·"] as const;

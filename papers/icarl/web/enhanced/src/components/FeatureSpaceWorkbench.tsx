@@ -12,7 +12,7 @@ export type FeaturePoint = {
 export type FeatureSpaceMode = "projection" | "herding" | "prototypes" | "inference";
 
 const ORIGIN = { x: 180, y: 132 };
-const UNIT_RADIUS = 94;
+const UNIT_RADIUS = 124;
 const PROJECTION_SCALE = 39;
 
 function xy(point: Vector2, unitCircle: boolean) {
@@ -96,11 +96,18 @@ export function FeatureSpaceWorkbench({
           {points.map((item) => {
             const position = xy(item.point, unitCircle);
             const color = CLASS_VISUALS[item.classId].color;
+            const sampleLabel = item.order === 1
+              ? { x: position.x - 8, y: position.y - 8, textAnchor: "end" as const }
+              : item.order === 2
+                ? { x: position.x + 9, y: position.y < 42 ? position.y + 19 : position.y - 8, textAnchor: "start" as const }
+                : item.order === 3
+                  ? { x: position.x + 9, y: position.y + 13, textAnchor: "start" as const }
+                  : { x: position.x + 8, y: position.y - 7, textAnchor: "start" as const };
             return (
-              <g key={item.id} className="feature-space__sample" tabIndex={0} role="img" aria-label={`${CLASS_VISUALS[item.classId].label}，样本 ${item.id}${item.order ? `，Herding 顺序 p${item.order}` : ""}`}>
-                <circle className="sample-mark" cx={position.x} cy={position.y} r={item.order ? "6.5" : "5.5"} fill={color} />
+              <g key={item.id} className="feature-space__sample" tabIndex={0} role="img" aria-label={`${CLASS_VISUALS[item.classId].label}，样本 ${item.id}${item.order ? `，Herding 顺序 p${item.order}` : ""}`} data-herding-selected={item.order ? "true" : undefined} style={{ "--selection-order": item.order ?? 0 } as CSSProperties}>
+                <circle className={`sample-mark${item.order ? " is-herding-selected" : ""}`} cx={position.x} cy={position.y} r={item.order ? "7" : "5.5"} fill={color} />
                 <title>{`${CLASS_VISUALS[item.classId].label} · 样本 ${item.id}${item.order ? ` · Herding 顺序 p${item.order}` : ""}`}</title>
-                {showSampleLabels ? <text x={position.x + 8} y={position.y - 7}>{item.order ? `p${item.order}` : item.id}</text> : null}
+                {showSampleLabels ? <text {...sampleLabel}>{item.order ? `p${item.order}` : item.id}</text> : null}
               </g>
             );
           })}
@@ -121,7 +128,7 @@ export function FeatureSpaceWorkbench({
       </div>
       <div className="feature-space__legend" aria-label="特征空间图例">
         {unitCircle ? <span><i className="legend-ring" /> 单位圆</span> : null}
-        {mode === "herding" ? <><span><i className="legend-dot" /> 归一化样本</span><span><i className="legend-raw" /> 原始均值</span><span><i className="legend-star" /> 目标均值</span></> : null}
+        {mode === "herding" ? <><span><i className="legend-dot" /> 归一化样本</span><span><i className="legend-raw" /> 原始均值</span>{prefixMean ? <span><i className="legend-prefix" /> 当前前缀均值</span> : null}<span><i className="legend-star" /> 目标均值</span></> : null}
         {mode === "prototypes" || mode === "inference" ? <span><i className="legend-square" /> 当前 exemplar 均值</span> : null}
         {mode === "projection" ? <span><i className="legend-ghost" /> 更新前的位置</span> : null}
       </div>

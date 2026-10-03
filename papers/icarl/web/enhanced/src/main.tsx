@@ -6,6 +6,7 @@ import "./styles.css";
 import "./styles/shell.css";
 import "./styles/page-one.css";
 import "./styles/page-two.css";
+import "./styles/page-ten.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing app root element.");

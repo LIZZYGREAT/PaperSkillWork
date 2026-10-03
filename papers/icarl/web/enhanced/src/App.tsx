@@ -16,7 +16,7 @@ export default function App() {
   const activePageInfo = pages.find((page) => page.id === activePage)!;
 
   return (
-    <div className="paper-app ewc-app" id="icarL_runtime" data-canonical-id="icarL_runtime">
+    <div className={`paper-app ewc-app ${activePage === "page-10" ? "ewc-app--runtime" : ""}`} id="icarL_runtime" data-canonical-id="icarL_runtime">
       <a className="ewc-skip-link" href="#top">跳到当前页面</a>
       <aside className="ewc-rail" aria-label="Tutorial navigation">
         <a className="ewc-brand" href="#top" onClick={(event) => { event.preventDefault(); setActivePage("page-1"); }} aria-label="iCaRL tutorial home">
@@ -44,7 +44,7 @@ export default function App() {
         <main className="tutorial-main ewc-main" id="top">
           {activePage === "page-1" ? <PageOne onOpenPageTwo={() => setActivePage("page-2")} /> : null}
           {activePage === "page-2" ? <PageTwo /> : null}
-          {activePage === "page-10" ? <PageTen /> : null}
+          {activePage === "page-10" ? <PageTen onExit={() => setActivePage("page-2")} /> : null}
         </main>
         <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 10 页</span></footer>
       </div>
