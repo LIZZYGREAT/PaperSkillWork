@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { PaperFigure } from "../shared/core/paper-figure";
-import { ReferenceHub } from "../shared/core/reference";
-import type { ReferenceItem } from "../shared/core/reference/types";
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B, type AblationResult } from "../data/table1-results";
 
 type EvidenceTab = "setup" | "overall" | "components" | "approximation" | "memory" | "boundaries";
@@ -53,11 +51,6 @@ function BatchSelector({ value, onChange, label = "每批新类别数" }: { valu
 function DatasetCard({ title, strap, classes, batches, metric, backbone, memory, background, sourceHref, sourceLabel }: { title: string; strap: string; classes: string; batches: string; metric: string; backbone: string; memory: string; background: string; sourceHref: string; sourceLabel: string }) {
   return <section className="p9-dataset-card"><div className="p9-dataset-card__top"><div><span className="eyebrow">{strap}</span><h2>{title}</h2></div><span className="p9-image-icon" aria-hidden="true">▧</span></div><div className="p9-dataset-card__background"><EvidenceTag kind="GENERAL BACKGROUND" /><p>{background}</p><a href={sourceHref} target="_blank" rel="noreferrer">{sourceLabel}</a></div><div className="p9-dataset-card__scale"><span>类别数</span><b>{classes}</b></div><div className="p9-dataset-card__batches"><span>每批类别数</span><b>{batches}</b></div><dl><div><dt>指标</dt><dd>{metric}</dd></div><div><dt>骨干网络</dt><dd>{backbone}</dd></div><div><dt>Exemplar 预算</dt><dd>{memory}</dd></div></dl></section>;
 }
-
-const datasetReferences: ReferenceItem[] = [
-  { id: "cifar-100-dataset", title: "CIFAR-100 dataset", kind: "dataset", summary: "Official dataset description: 100 classes, fine and coarse labels, and its relationship to CIFAR-10.", content: <p><a href="https://www.cs.toronto.edu/~kriz/cifar.html" target="_blank" rel="noreferrer">CIFAR-10 and CIFAR-100 datasets · University of Toronto</a></p>, tags: ["dataset background", "official source"] },
-  { id: "ilsvrc-2012-dataset", title: "ImageNet ILSVRC 2012", kind: "dataset", summary: "Official challenge description of its image-classification task and 1,000 object categories.", content: <p><a href="https://www.image-net.org/challenges/LSVRC/2012/" target="_blank" rel="noreferrer">ILSVRC 2012 · ImageNet</a></p>, tags: ["dataset background", "official source"] },
-];
 
 function SetupPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)[number]; setBatch: (value: (typeof CLASSES_PER_BATCH)[number]) => void }) {
   const stages = 100 / batch;
@@ -290,6 +283,5 @@ export function PageNine({ onContinue }: { onContinue?: () => void }) {
     {tab === "memory" ? <MemoryPanel /> : null}
     {tab === "boundaries" ? <BoundariesPanel onContinue={onContinue} /> : null}
     {tab !== "boundaries" ? <div className="p9-step-controls"><span>{String(currentIndex + 1).padStart(2, "0")} / {String(tabs.length).padStart(2, "0")} · 论文证据工作台</span><div><button type="button" className="icarl-button icarl-button--quiet" disabled={currentIndex === 0} onClick={() => navigateTab(-1)}>上一部分</button><button type="button" className="icarl-button icarl-button--primary" disabled={currentIndex === tabs.length - 1} onClick={() => navigateTab(1)}>下一部分 <span aria-hidden="true">→</span></button></div></div> : null}
-    <details className="p9-reference-hub"><summary>Reference Hub · 数据集背景与来源</summary><ReferenceHub items={datasetReferences} /></details>
   </article>;
 }

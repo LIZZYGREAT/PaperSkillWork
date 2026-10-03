@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageOne } from "./pages/PageOne";
 import { PageTwo } from "./pages/PageTwo";
 import { PageThree } from "./pages/PageThree";
@@ -9,6 +9,8 @@ import { PageSeven } from "./pages/PageSeven";
 import { PageEight } from "./pages/PageEight";
 import { PageNine } from "./pages/PageNine";
 import { PageTen } from "./pages/PageTen";
+import { ICARL_REFERENCE_ITEMS, type ReferenceOpenEvent } from "./data/icarl-reference-content";
+import { ReferenceHub } from "./shared/core/reference";
 
 type PageId = "page-1" | "page-2" | "page-3" | "page-4" | "page-5" | "page-6" | "page-7" | "page-8" | "page-9" | "page-10";
 
@@ -27,9 +29,33 @@ const pages: { id: PageId; number: string; title: string; subtitle: string }[] =
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>("page-1");
+  const [referenceOpen, setReferenceOpen] = useState(false);
+  const closeReferenceRef = useRef<HTMLButtonElement | null>(null);
   const activePageInfo = pages.find((page) => page.id === activePage)!;
 
+  useEffect(() => {
+    const handleReferenceOpen = (event: Event) => {
+      const { termId } = (event as ReferenceOpenEvent).detail;
+      setReferenceOpen(true);
+      const nextHash = `#ref-${encodeURIComponent(termId)}`;
+      if (window.location.hash !== nextHash) window.location.hash = nextHash;
+    };
+    window.addEventListener("icarl:open-reference", handleReferenceOpen);
+    return () => window.removeEventListener("icarl:open-reference", handleReferenceOpen);
+  }, []);
+
+  useEffect(() => {
+    if (!referenceOpen) return;
+    closeReferenceRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setReferenceOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [referenceOpen]);
+
   return (
+    <>
     <div className={`paper-app ewc-app ${activePage === "page-10" ? "ewc-app--runtime" : ""}`} id="icarL_runtime" data-canonical-id="icarL_runtime">
       <a className="ewc-skip-link" href="#top">跳到当前页面</a>
       <aside className="ewc-rail" aria-label="Tutorial navigation">
@@ -70,5 +96,13 @@ export default function App() {
         <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 03 · 04 · 05 · 06 · 07 · 08 · 09 · 10 页</span></footer>
       </div>
     </div>
+    <button type="button" className="icarl-reference-launcher" aria-haspopup="dialog" aria-expanded={referenceOpen} onClick={() => setReferenceOpen(true)}>Reference Hub</button>
+    {referenceOpen ? <div className="icarl-reference-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setReferenceOpen(false); }}>
+      <section className="icarl-reference-dialog" role="dialog" aria-modal="true" aria-label="Reference Hub">
+        <header className="icarl-reference-dialog__toolbar"><span>iCaRL · on-demand reference</span><button ref={closeReferenceRef} type="button" onClick={() => setReferenceOpen(false)}>Close</button></header>
+        <ReferenceHub items={ICARL_REFERENCE_ITEMS} />
+      </section>
+    </div> : null}
+    </>
   );
 }

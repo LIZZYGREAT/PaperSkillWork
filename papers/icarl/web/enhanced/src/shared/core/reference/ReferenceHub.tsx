@@ -14,8 +14,15 @@ export function ReferenceHub({ items, title = "Reference Hub", onOpen }: { items
   const selected = items.find((item) => item.id === selectedId) ?? null;
 
   useEffect(() => {
-    const match = window.location.hash.match(/^#ref-(.+)$/);
-    if (match && items.some((item) => item.id === decodeURIComponent(match[1]))) setSelectedId(decodeURIComponent(match[1]));
+    const selectFromHash = () => {
+      const match = window.location.hash.match(/^#ref-(.+)$/);
+      if (!match) return;
+      const id = decodeURIComponent(match[1]);
+      if (items.some((item) => item.id === id)) setSelectedId(id);
+    };
+    selectFromHash();
+    window.addEventListener("hashchange", selectFromHash);
+    return () => window.removeEventListener("hashchange", selectFromHash);
   }, [items]);
 
   const select = (item: ReferenceItem) => {

@@ -65,9 +65,9 @@ export function TermRef({ term, children, onOpenReference }: { term: TermDefinit
         <div ref={panelRef} className="rk-term-popover" id={`rk-term-${term.id}`} role="dialog" aria-label={`${term.label} definition`} style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}>
           <strong>{term.fullName ?? term.label}</strong>
           <span>{term.definition}</span>
-          {term.paperRole ? <span><b>Role in this paper:</b> {term.paperRole}</span> : null}
-          {term.confusion ? <span><b>Easy to confuse with:</b> {term.confusion}</span> : null}
-          {term.sourceKind ? <small>Source type: {term.sourceKind}</small> : null}
+          {term.paperRole ? <span><b>在本文中的作用：</b> {term.paperRole}</span> : null}
+          {term.confusion ? <span><b>容易混淆：</b> {term.confusion}</span> : null}
+          {term.sourceKind ? <small>来源类型：{term.sourceKind}</small> : null}
           {onOpenReference ? <button type="button" className="rk-term-popover__link" onClick={openReference}>Open in Reference Hub</button> : null}
         </div>
       ) : null}
