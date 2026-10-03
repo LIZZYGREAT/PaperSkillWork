@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { Prototype, Vector2, ClassId } from "../data/icarl-runtime";
 import { CLASS_VISUALS } from "../data/icarl-runtime";
 
@@ -41,6 +41,7 @@ export function FeatureSpaceWorkbench({
   normalizationSources = [],
   markerScale = 1,
   showSampleLabels = true,
+  asideContent,
 }: {
   mode: FeatureSpaceMode;
   title: string;
@@ -56,6 +57,7 @@ export function FeatureSpaceWorkbench({
   normalizationSources?: FeaturePoint[];
   markerScale?: number;
   showSampleLabels?: boolean;
+  asideContent?: ReactNode;
 }) {
   const showNormalization = unitCircle && normalizationSources.length > 0;
   const origin = showNormalization ? NORMALIZATION_ORIGIN : ORIGIN;
@@ -142,19 +144,22 @@ export function FeatureSpaceWorkbench({
           {prototypeRows.map(({ prototype, point }) => (
             <g key={`prototype-${prototype.classId}`} className="feature-space__prototype" style={{ "--class-accent": CLASS_VISUALS[prototype.classId].color } as CSSProperties}>
               <rect x={point.x - 6} y={point.y - 6} width="12" height="12" rx="2" />
-              <text x={point.x + 9} y={point.y + 18}>{CLASS_VISUALS[prototype.classId].label} 均值</text>
+              <text x={point.x + 9} y={point.y + (prototype.classId === "D" ? -2 : prototype.classId === "A" ? 22 : 18)}>{CLASS_VISUALS[prototype.classId].label} 均值</text>
             </g>
           ))}
 
           {queryXY ? <g className="feature-space__query"><path d={`M ${queryXY.x} ${queryXY.y - 8} L ${queryXY.x + 8} ${queryXY.y} L ${queryXY.x} ${queryXY.y + 8} L ${queryXY.x - 8} ${queryXY.y} Z`} /><text x={queryXY.x + 10} y={queryXY.y - 10}>待分类样本</text></g> : null}
         </svg>
       </div>
-      <div className="feature-space__legend" aria-label="特征空间图例">
-        {unitCircle ? <span><i className="legend-ring" /> 单位圆</span> : null}
-        {mode === "herding" ? <><span><i className="legend-dot" /> 单位化样本</span>{showNormalization ? <span><i className="legend-source" /> 原始表示 φ(x)</span> : null}<span><i className="legend-raw" /> 原始均值</span>{prefixMean ? <span><i className="legend-prefix" /> 当前前缀均值</span> : null}<span><i className="legend-star" /> 目标均值</span></> : null}
-        {mode === "prototypes" || mode === "inference" ? <span><i className="legend-square" /> 当前 exemplar 均值</span> : null}
-        {mode === "projection" ? <span><i className="legend-ghost" /> 更新前的位置</span> : null}
-      </div>
+      <aside className="feature-space__aside">
+        <div className="feature-space__legend" aria-label="特征空间图例">
+          {unitCircle ? <span><i className="legend-ring" /> 单位圆</span> : null}
+          {mode === "herding" ? <><span><i className="legend-dot" /> 单位化样本</span>{showNormalization ? <span><i className="legend-source" /> 原始表示 φ(x)</span> : null}<span><i className="legend-raw" /> 原始均值</span>{prefixMean ? <span><i className="legend-prefix" /> 当前前缀均值</span> : null}<span><i className="legend-star" /> 目标均值</span></> : null}
+          {mode === "prototypes" || mode === "inference" ? <span><i className="legend-square" /> 当前 exemplar 均值</span> : null}
+          {mode === "projection" ? <span><i className="legend-ghost" /> 更新前的位置</span> : null}
+        </div>
+        {asideContent ? <div className="feature-space__aside-content">{asideContent}</div> : null}
+      </aside>
     </figure>
   );
 }

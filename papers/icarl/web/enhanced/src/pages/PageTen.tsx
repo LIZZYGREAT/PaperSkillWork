@@ -362,7 +362,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
             : "分类均值与查询向量由 Θ_after + P_after 推导，不会改变已提交的持久状态。";
 
   return (
-    <article className="p10-page p10-board" id="runtime_workbench" data-canonical-id="runtime_workbench" aria-labelledby="page-ten-title">
+    <article className="p10-page p10-board" id="runtime_workbench" data-canonical-id="runtime_workbench" data-feature-mode={featureMode} aria-labelledby="page-ten-title">
       <header className="p10-board-header">
         <div className="p10-board-heading">
           <div className="p10-kicker"><span>第 10 页</span><i /> iCaRL 运行总图</div>
@@ -436,8 +436,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
 
         <section className="panel p10-feature-panel" id="unit_circle" data-canonical-id="unit_circle" aria-labelledby="p10-feature-heading">
           <div className="p10-panel-heading"><div><span className="p10-eyebrow">共享特征空间</span><h2 id="p10-feature-heading">{featureTitle}</h2></div><span className={`p10-mode-badge p10-mode-badge--${featureMode}`} data-canonical-id={stepIndex >= 9 ? "inference_mode" : stepIndex === 8 ? "prototype_mode" : stepIndex >= 6 ? "herding_mode" : "representation_mode"}>{featureMode === "projection" ? "表示变化" : featureMode === "herding" ? "Herding 选样" : featureMode === "prototypes" ? "类别均值" : "预测"}</span></div>
-          <FeatureSpaceWorkbench mode={featureMode} title={featureTitle} description={featureDescription} points={featurePoints} previousPoints={previousPoints} unitCircle={useUnitCircle} rawMean={rawMean} target={target} prefixMean={prefixMean} prototypes={prototypes} query={query} normalizationSources={featureMode === "herding" ? herdingRawPoints : []} markerScale={0.62} showSampleLabels={featureMode === "herding"} />
-          {predictionReady ? <div className="p10-prediction-result" aria-live="polite"><span>最小距离 · 最近类别均值</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].label}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 对全部已见类别比较</small></div> : stepIndex >= 6 ? <p className="p10-feature-note">选中的 p<sub>1</sub>、p<sub>2</sub>、p<sub>3</sub> 按确定性 Herding 结果标记；原始均值与归一化目标也来自同一批完整数据。</p> : <p className="p10-feature-note">当前投影只用于展示表示变化；尚未进入 Herding 时，不会提前展示类别中心。</p>}
+          <FeatureSpaceWorkbench mode={featureMode} title={featureTitle} description={featureDescription} points={featurePoints} previousPoints={previousPoints} unitCircle={useUnitCircle} rawMean={rawMean} target={target} prefixMean={prefixMean} prototypes={prototypes} query={query} normalizationSources={featureMode === "herding" ? herdingRawPoints : []} markerScale={0.62} showSampleLabels={featureMode === "herding"} asideContent={predictionReady ? <div className="p10-prediction-result" aria-live="polite"><span>最小距离 · 最近类别均值</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].label}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 对全部已见类别比较</small></div> : stepIndex >= 6 ? <p className="p10-feature-note">选中的 p<sub>1</sub>、p<sub>2</sub>、p<sub>3</sub> 按确定性 Herding 结果标记；原始均值与归一化目标也来自同一批完整数据。</p> : <p className="p10-feature-note">当前投影只用于展示表示变化；尚未进入 Herding 时，不会提前展示类别中心。</p>} />
         </section>
 
         <ObjectLifetimeRail stepIndex={stepIndex} />
