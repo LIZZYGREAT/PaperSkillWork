@@ -39,7 +39,7 @@ When a user gives screenshot-based or visual revision feedback, translate it int
 - Preserve already accepted page framing and shared interactions unless the user asks to change them. After a local fix, inspect the full affected sequence and nearby sections so the same defect has not been repeated elsewhere.
 - Validate the rendered UI at the relevant viewport when possible, then run the project build. If the rendered result could not be inspected, say so instead of implying visual verification.
 
-For EWC Page 1 / Page 2 revisions, consult [`docs/ewc-ui-teaching-lessons.md`](docs/ewc-ui-teaching-lessons.md) for this project's recorded arrow, typography, palette, layout, input-vector, parameter-coordinate, and language feedback. Treat those visual mappings as EWC-specific rather than universal defaults.
+For screenshot-based UI revisions, consult [`docs/ui-teaching-lessons.md`](docs/ui-teaching-lessons.md) for recorded layout, typography, animation, diagram, and language feedback. Check each entry's paper scope; reuse general layout lessons while keeping paper-specific visual mappings and semantics scoped to their original project.
 
 ## Visual assets
 
