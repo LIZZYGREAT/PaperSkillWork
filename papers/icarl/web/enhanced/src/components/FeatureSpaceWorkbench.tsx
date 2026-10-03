@@ -40,6 +40,7 @@ export function FeatureSpaceWorkbench({
   query,
   normalizationSources = [],
   markerScale = 1,
+  projectionScale = PROJECTION_SCALE,
   showSampleLabels = true,
   asideContent,
 }: {
@@ -56,6 +57,7 @@ export function FeatureSpaceWorkbench({
   query?: Vector2;
   normalizationSources?: FeaturePoint[];
   markerScale?: number;
+  projectionScale?: number;
   showSampleLabels?: boolean;
   asideContent?: ReactNode;
 }) {
@@ -64,7 +66,7 @@ export function FeatureSpaceWorkbench({
   const unitRadius = showNormalization ? NORMALIZATION_UNIT_RADIUS : UNIT_RADIUS;
   const rawScale = showNormalization ? NORMALIZATION_RAW_SCALE : PROJECTION_SCALE;
   const xy = (point: Vector2, useUnitScale: boolean, useRawScale = false) => {
-    const scale = useRawScale ? rawScale : useUnitScale ? unitRadius : PROJECTION_SCALE;
+    const scale = useRawScale ? rawScale : useUnitScale ? unitRadius : projectionScale;
     return { x: origin.x + point[0] * scale, y: origin.y - point[1] * scale };
   };
   const pointById = new Map(points.map((item) => [item.id, item]));

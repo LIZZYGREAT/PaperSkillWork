@@ -23,7 +23,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const [classCount, setClassCount] = useState(3);
   const firstExemplar = examplesByClass.get("A")![0];
   const perClassBudget = Math.floor(MEMORY_BUDGET / classCount);
-  const reencodePoint = (vector: Vector2) => ({ x: 34 + vector[0] * 53, y: 87 - vector[1] * 72 });
+  const reencodePoint = (vector: Vector2) => ({ x: 34 + vector[0] * 90, y: 87 - vector[1] * 100 });
   const oldFeaturePoint = reencodePoint(encode2D(firstExemplar, "before"));
   const currentFeaturePoint = reencodePoint(encode2D(firstExemplar, modelState));
 

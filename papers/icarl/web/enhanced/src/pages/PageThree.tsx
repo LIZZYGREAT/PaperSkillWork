@@ -14,9 +14,9 @@ const steps: readonly GuidedStep[] = [
 ];
 
 const classIds: readonly ClassId[] = ["A", "B", "C"];
-const query: Vector2 = [0.4, 2.0];
-const chartOrigin = { x: 320, y: 275 };
-const chartScale = 98;
+const query: Vector2 = [1.732, -1.0];
+const chartOrigin = { x: 320, y: 260 };
+const chartScale = 160;
 
 function p3SamplesForClass(classId: ClassId): Sample[] {
   return samplesForClass(classId);
@@ -26,9 +26,9 @@ const allSamples = classIds.flatMap((classId) => p3SamplesForClass(classId));
 const retainedSubset = P_BEFORE.A.slice(0, 3);
 const normalizedQuery = normalize(encodeRawVector(query, "before"));
 const oldMeanLabelOffsets: Record<ClassId, Vector2> = {
-  A: [-68, -16],
-  B: [-88, 62],
-  C: [35, -5],
+  A: [-96, -18],
+  B: [-92, 50],
+  C: [40, -5],
   D: [10, -10],
 };
 
@@ -100,13 +100,13 @@ function FeatureMap({
   return (
     <div className={`p3-map p3-map--stage-${stage}`}>
       <div className="p3-map__meta"><span>FIXED SYNTHETIC · RAW → L2-NORMALIZED</span><span>{historicalOnly ? "历史分布 · 当前不可访问" : `当前映射 · φ${currentState === "before" ? "old" : "new"}`}</span><span>所选身份 · {historicalOnly ? "—" : selectedSampleId}</span></div>
-      <svg viewBox="0 0 640 400" role="img" aria-label="原始特征点沿虚线经过原点映射到 L2 单位圆；填充点、类别均值与 query 展示当前分类关系">
+      <svg viewBox="0 0 640 520" role="img" aria-label="原始特征点沿虚线经过原点映射到 L2 单位圆；填充点、类别均值与 query 展示当前分类关系">
         <title>Feature space workbench</title>
         <desc>空心点是未归一化的 φΘ(x)，径向虚线经过原点，填充点是落在单位圆上的 L2 归一化特征 z。星形代表由样本计算出的类均值。</desc>
         <circle className="p3-map__unit-circle" cx={chartOrigin.x} cy={chartOrigin.y} r={chartScale} />
         <defs><marker id="p3-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 8 4 L 0 8" fill="none" stroke="#b88050" strokeWidth="1.2" /></marker></defs>
         <line className="p3-map__axis" x1="24" y1={chartOrigin.y} x2="616" y2={chartOrigin.y} />
-        <line className="p3-map__axis" x1={chartOrigin.x} y1="14" x2={chartOrigin.x} y2="386" />
+        <line className="p3-map__axis" x1={chartOrigin.x} y1="14" x2={chartOrigin.x} y2="506" />
         {points.map((sample) => {
           const rawPosition = chartPoint(encode2D(sample, currentState));
           const isSelected = !historicalOnly && selectedSampleId === sample.id;

@@ -146,6 +146,7 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
                 description="二维教学投影：固定的合成坐标会随所选模型状态作确定性移动，并非论文测得的特征。"
                 points={points}
                 previousPoints={previousPoints}
+                projectionScale={64}
               />
               <div className="p2-projection-note"><span className="p2-note-mark">i</span><p>实际 representation 通常位于高维 R<sup>d</sup>。这里用二维投影表达样本间的位置关系；同一编号样本在更新前后保持不变。</p></div>
             </section>

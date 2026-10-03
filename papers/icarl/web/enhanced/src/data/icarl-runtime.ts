@@ -22,26 +22,26 @@ export const CLASS_VISUALS: Record<ClassId, { displayLabel: string; outputNodeLa
   D: { displayLabel: "Class 4", outputNodeLabel: "g₄", index: 4, glyph: "◇", color: "#76559a" },
 };
 
-/** Fixed synthetic coordinates shared by the representation projection and runtime trace. */
+/** Fixed synthetic coordinates shared by all pages; old classes use spaced angles so L2-normalized teaching points remain individually visible. */
 export const SAMPLES: readonly Sample[] = [
-  { id: "x_7", classId: "A", raw: [2.2, 0.7] },
-  { id: "x_3", classId: "A", raw: [2.6, 1.1] },
-  { id: "x_9", classId: "A", raw: [1.8, 1.0] },
-  { id: "x_12", classId: "A", raw: [1.8, 0.4] },
-  { id: "x_15", classId: "A", raw: [2.6, 0.4] },
-  { id: "x_18", classId: "A", raw: [2.3, 0.8] },
-  { id: "x_2", classId: "B", raw: [0.3, 2.2] },
-  { id: "x_4", classId: "B", raw: [-0.2, 2.5] },
-  { id: "x_6", classId: "B", raw: [0.7, 2.7] },
-  { id: "x_8", classId: "B", raw: [0.8, 1.9] },
-  { id: "x_10", classId: "B", raw: [0.1, 1.8] },
-  { id: "x_13", classId: "B", raw: [0.4, 2.4] },
-  { id: "x_1", classId: "C", raw: [-2.1, -0.4] },
-  { id: "x_5", classId: "C", raw: [-2.6, -0.7] },
-  { id: "x_11", classId: "C", raw: [-1.8, -0.9] },
-  { id: "x_16", classId: "C", raw: [-1.8, 0.1] },
-  { id: "x_19", classId: "C", raw: [-2.4, 0.2] },
-  { id: "x_22", classId: "C", raw: [-1.9, -0.6] },
+  { id: "x_7", classId: "A", raw: [1.337, 0.188] },
+  { id: "x_3", classId: "A", raw: [1.394, 0.400] },
+  { id: "x_9", classId: "A", raw: [1.188, 0.529] },
+  { id: "x_12", classId: "A", raw: [1.272, 0.795] },
+  { id: "x_15", classId: "A", raw: [1.034, 0.868] },
+  { id: "x_18", classId: "A", raw: [0.970, 1.078] },
+  { id: "x_2", classId: "B", raw: [0.202, 1.436] },
+  { id: "x_4", classId: "B", raw: [0.000, 1.350] },
+  { id: "x_6", classId: "B", raw: [-0.209, 1.485] },
+  { id: "x_8", classId: "B", raw: [-0.358, 1.250] },
+  { id: "x_10", classId: "B", raw: [-0.590, 1.325] },
+  { id: "x_13", classId: "B", raw: [-0.715, 1.145] },
+  { id: "x_1", classId: "C", raw: [-1.256, 0.725] },
+  { id: "x_5", classId: "C", raw: [-1.252, 0.506] },
+  { id: "x_11", classId: "C", raw: [-1.455, 0.363] },
+  { id: "x_16", classId: "C", raw: [-1.293, 0.136] },
+  { id: "x_19", classId: "C", raw: [-1.449, -0.051] },
+  { id: "x_22", classId: "C", raw: [-1.329, -0.234] },
   { id: "x_20", classId: "D", raw: [1.606, -2.044] },
   { id: "x_23", classId: "D", raw: [2.337, -0.988] },
   { id: "x_24", classId: "D", raw: [2.327, 0.771] },
@@ -196,7 +196,7 @@ export const PROTOTYPES: Prototype[] = OLD_CLASS_IDS.concat(INCOMING_CLASS_ID).m
   return { classId, rawMean, point: normalize(rawMean) };
 });
 
-export const QUERY_VECTOR: Vector2 = [1.05, -2.35];
+export const QUERY_VECTOR: Vector2 = [1.5, 1.0];
 export const QUERY_FEATURE = normalize(encodeRawVector(QUERY_VECTOR, "after"));
 export const QUERY_DISTANCES = PROTOTYPES.map((prototype) => ({
   classId: prototype.classId,
