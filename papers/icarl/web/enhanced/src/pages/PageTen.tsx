@@ -367,7 +367,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
         <div className="p10-board-heading">
           <div className="p10-kicker"><span>第 10 页</span><i /> iCaRL 运行总图</div>
           <h1 id="page-ten-title">从新类别到下一轮就绪状态</h1>
-          <p>一次性看完整个运行工作台：输入、模型、记忆、训练对象、Herding 与预测。</p>
+          <p>全流程工作台：输入、模型、记忆、训练对象、Herding 与预测。</p>
         </div>
         <div className="p10-board-player" aria-label="完整运行动画播放控制">
           <button type="button" className="p10-back-page" onClick={onExit} title="返回前两页">← 返回教程</button>

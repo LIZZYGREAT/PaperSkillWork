@@ -187,7 +187,7 @@
 
 /* Larger desktop typography uses the existing card area instead of leaving it empty. */
 @media(min-width:761px){
- .p10-page.p10-board{grid-template-rows:minmax(70px,.75fr) minmax(43px,.44fr) minmax(0,6fr) 24px}
+ .p10-page.p10-board{grid-template-rows:minmax(70px,.75fr) minmax(68px,.55fr) minmax(0,6fr) 24px}
  .p10-board-grid{grid-template-rows:minmax(0,.96fr) minmax(0,1.3fr) minmax(128px,.5fr)}
  .p10-kicker{font-size:11px}.p10-board-heading p{font-size:13px}
  .p10-back-page{font-size:11px!important}.p10-current-step>span{font-size:10px}.p10-current-step>strong{font-size:13px}.p10-current-step>p{font-size:11px}
@@ -241,10 +241,11 @@
 
 /* At presentation width, use the board's open card area for readable Chinese labels. */
 @media(min-width:1241px){
- .p10-page.p10-board{grid-template-rows:minmax(70px,.6fr) minmax(44px,.38fr) minmax(0,6fr) 24px}
+ .p10-board-header{grid-template-columns:minmax(280px,1.09fr) minmax(350px,.96fr) minmax(310px,1.15fr)}
+ .p10-page.p10-board{grid-template-rows:94px minmax(68px,.55fr) minmax(0,6fr) 24px}
  .p10-board-grid{grid-template-rows:minmax(0,.9fr) minmax(0,1.08fr) minmax(132px,.48fr)}
  .p10-board .panel{padding:14px 15px}
- .p10-kicker{font-size:12px}.p10-board-heading h1{font-size:clamp(29px,2vw,35px)}.p10-board-heading p{font-size:14px}
+ .p10-kicker{font-size:12px}.p10-board-heading h1{font-size:clamp(29px,2vw,35px)}.p10-board-heading p{font-size:14px;letter-spacing:-.02em}
  .p10-back-page{min-height:34px;font-size:12px!important}.p10-player-controls button{width:31px;height:32px;font-size:21px}.p10-player-controls .p10-player-play{width:38px;height:38px;font-size:16px}.p10-player-count{font-size:13px}
  .p10-current-step{gap:3px;padding:8px 12px}.p10-current-step>span{font-size:11px}.p10-current-step>strong{font-size:16px}.p10-current-step>p{font-size:12px;line-height:1.4}
  .p10-timeline__node{width:28px;height:28px}.p10-timeline::before{top:14px}.p10-timeline__completed,.p10-timeline__journey{top:14px}.p10-timeline__stage b{font-size:12px}.p10-timeline__stage small{font-size:10px}
@@ -264,6 +265,7 @@
  .p10-object__heading{gap:7px}.p10-object__heading h3{gap:7px;font-size:13px}.p10-object__heading h3>span{width:23px;height:23px;font-size:14px}.p10-object__heading small{font-size:9px}
  .p10-object__content{font-size:12px;line-height:1.2}.p10-object__content strong{font-size:13px;line-height:1.15}.p10-object__content p{display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.p10-object__content code{display:none}.p10-workspace-grid{gap:7px}.p10-workspace-note{font-size:10px}
  .p10-mode-badge{padding:6px 9px;font-size:12px}.p10-feature-panel .feature-space{grid-template-columns:minmax(0,1fr) minmax(190px,.4fr);gap:12px;padding:6px 10px}
+ .p10-feature-panel>.p10-panel-heading>div{min-width:0;display:flex;align-items:baseline;gap:9px}.p10-feature-panel>.p10-panel-heading .p10-eyebrow{flex:0 0 auto;line-height:1}.p10-feature-panel>.p10-panel-heading h2{min-width:0;margin:0}
  .p10-feature-panel .feature-space__viewport{width:100%;height:100%}.p10-feature-panel .feature-space__viewport svg{display:block;width:100%;height:100%;max-width:100%;max-height:none}
  .p10-feature-panel .feature-space__aside{gap:13px;padding-left:16px}
  .p10-feature-panel .feature-space svg text{font-size:14px}.p10-feature-panel .feature-space__legend{gap:10px;font-size:11px}.p10-feature-panel .feature-space__legend i{width:10px;height:10px}.p10-feature-note{font-size:10px}

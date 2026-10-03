@@ -16,7 +16,7 @@ const UNIT_RADIUS = 124;
 const PROJECTION_SCALE = 39;
 const NORMALIZATION_ORIGIN = { x: 320, y: 170 };
 const NORMALIZATION_UNIT_RADIUS = 145;
-const NORMALIZATION_RAW_SCALE = 72;
+const NORMALIZATION_RAW_SCALE = 78;
 
 function starPath(x: number, y: number, outer = 8, inner = 3.6) {
   return Array.from({ length: 10 }, (_, index) => {
@@ -86,12 +86,12 @@ export function FeatureSpaceWorkbench({
         {unitCircle ? <span className="unit-badge">‖z‖₂ = 1</span> : null}
       </figcaption>
       <div className="feature-space__viewport">
-        <svg viewBox={showNormalization ? "0 0 640 340" : "0 0 360 264"} role="img" aria-label={`${title}. ${description}`}>
+        <svg viewBox={showNormalization ? "0 -16 640 372" : "0 0 360 264"} role="img" aria-label={`${title}. ${description}`}>
           <title>{title}</title>
           <desc>{description}</desc>
           {unitCircle ? <circle className="feature-space__unit-circle" cx={origin.x} cy={origin.y} r={unitRadius} data-canonical-id="l2_normalization" /> : null}
           <line className="feature-space__axis" x1={showNormalization ? 30 : 26} x2={showNormalization ? 610 : 334} y1={origin.y} y2={origin.y} />
-          <line className="feature-space__axis" x1={origin.x} x2={origin.x} y1="16" y2={showNormalization ? 324 : 246} />
+          <line className="feature-space__axis" x1={origin.x} x2={origin.x} y1={showNormalization ? -16 : 16} y2={showNormalization ? 356 : 246} />
 
           {showNormalization ? normalizationSources.map((source) => {
             const normalized = pointById.get(source.id);
