@@ -370,7 +370,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
           <p>全流程工作台：输入、模型、记忆、训练对象、Herding 与预测。</p>
         </div>
         <div className="p10-board-player" aria-label="完整运行动画播放控制">
-          <button type="button" className="p10-back-page" onClick={onExit} title="返回前两页">← 返回教程</button>
+          <button type="button" className="p10-back-page" onClick={onExit} title="返回第 9 页 · 实验与边界">← 返回第 9 页</button>
           <div className="p10-player-controls">
             <button type="button" onClick={() => chooseStep(stepIndex - 1)} disabled={stepIndex === 0} aria-label="上一步" title="上一步">‹</button>
             <button type="button" className="p10-player-play" onClick={togglePlayback} aria-label={reducedMotion ? "前进一步" : isPlaying ? "暂停播放" : stepIndex === runtimeSteps.length - 1 ? "重新播放" : "播放完整过程"} title={reducedMotion ? "前进一步" : isPlaying ? "暂停播放" : "播放完整过程"}>{reducedMotion ? "→" : isPlaying ? "Ⅱ" : "▶"}</button>

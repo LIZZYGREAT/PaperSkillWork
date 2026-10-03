@@ -94,7 +94,7 @@ function ObjectLifetime() {
   </details>;
 }
 
-export function PageSix() {
+export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const [stage, setStage] = useState(0);
 
   return (
@@ -188,7 +188,7 @@ export function PageSix() {
 
       <footer className="icarl-handoff">
         <div><span className="eyebrow">NEXT · PAGE 07</span><p>怎样把旧类 response 与新类 label 变成不同输出节点的训练目标？</p></div>
-        <span className="icarl-handoff__upcoming">下一页</span>
+        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入第 7 页 · 目标与损失 <b aria-hidden="true">→</b></button> : <span className="icarl-handoff__upcoming">下一页</span>}
       </footer>
     </article>
   );

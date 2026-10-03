@@ -61,11 +61,11 @@ export default function App() {
           {activePage === "page-3" ? <PageThree onContinue={() => setActivePage("page-4")} /> : null}
           {activePage === "page-4" ? <PageFour onContinue={() => setActivePage("page-5")} /> : null}
           {activePage === "page-5" ? <PageFive onContinue={() => setActivePage("page-6")} /> : null}
-          {activePage === "page-6" ? <PageSix /> : null}
+          {activePage === "page-6" ? <PageSix onContinue={() => setActivePage("page-7")} /> : null}
           {activePage === "page-7" ? <PageSeven onContinue={() => setActivePage("page-8")} /> : null}
           {activePage === "page-8" ? <PageEight onContinue={() => setActivePage("page-9")} /> : null}
           {activePage === "page-9" ? <PageNine onContinue={() => setActivePage("page-10")} /> : null}
-          {activePage === "page-10" ? <PageTen onExit={() => setActivePage("page-2")} /> : null}
+          {activePage === "page-10" ? <PageTen onExit={() => setActivePage("page-9")} /> : null}
         </main>
         <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 03 · 04 · 05 · 06 · 07 · 08 · 09 · 10 页</span></footer>
       </div>
