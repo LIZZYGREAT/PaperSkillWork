@@ -97,9 +97,11 @@ export function FeatureSpaceWorkbench({
             const normalized = pointById.get(source.id);
             if (!normalized) return null;
             const rawPoint = xy(source.point, false, true);
+            const normalizedPoint = xy(normalized.point, true);
             return (
               <g key={`normalization-${source.id}`} className="feature-space__normalization" style={{ "--class-accent": CLASS_VISUALS[source.classId].color } as CSSProperties}>
                 <line className="feature-space__normalization-ray" x1={origin.x} y1={origin.y} x2={rawPoint.x} y2={rawPoint.y} />
+                <line className="feature-space__normalization-segment" x1={rawPoint.x} y1={rawPoint.y} x2={normalizedPoint.x} y2={normalizedPoint.y} />
                 <circle className="feature-space__raw-point" cx={rawPoint.x} cy={rawPoint.y} r="4.2" />
                 <title>{`样本 ${source.id}：原始表示 φ_after(x) 沿虚线经过原点方向，单位化点落在单位圆上`}</title>
               </g>

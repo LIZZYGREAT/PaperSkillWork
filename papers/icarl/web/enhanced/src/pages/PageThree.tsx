@@ -1,6 +1,7 @@
-import { useMemo, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
-import { CLASS_VISUALS, encode2D, mean, samplesForClass, type ClassId, type FeatureState, type Sample, type Vector2 } from "../data/icarl-runtime";
+import { SampleToken } from "../components/SampleToken";
+import { CLASS_VISUALS, encode2D, encodeRawVector, mean, normalize, P_BEFORE, samplesForClass, type ClassId, type FeatureState, type Sample, type Vector2 } from "../data/icarl-runtime";
 
 const steps: readonly GuidedStep[] = [
   { title: "样本怎样进入特征空间？", short: "样本 → 特征" },
@@ -13,36 +14,14 @@ const steps: readonly GuidedStep[] = [
 
 const classIds: readonly ClassId[] = ["A", "B", "C"];
 const query: Vector2 = [0.4, 2.0];
-const p3SamplesByClass = new Map<ClassId, Sample[]>();
-const classCloudPhases: Record<ClassId, number> = {
-  A: 0,
-  B: Math.PI / 9,
-  C: (2 * Math.PI) / 9,
-  D: 0,
-};
-
-// Use opposite sample pairs so each class keeps its prototype while its points stay off the center.
-for (const classId of classIds) {
-  const sourceSamples = samplesForClass(classId);
-  const center = mean(sourceSamples.map((sample) => sample.raw));
-  p3SamplesByClass.set(classId, sourceSamples.map((sample, index) => {
-    const radius = index % 3 === 1 ? 0.84 : 0.72;
-    const angle = classCloudPhases[classId] + (index * Math.PI) / 3;
-    return {
-      ...sample,
-      raw: [
-        center[0] + Math.cos(angle) * radius,
-        center[1] + Math.sin(angle) * radius,
-      ],
-    };
-  }));
-}
 
 function p3SamplesForClass(classId: ClassId): Sample[] {
-  return p3SamplesByClass.get(classId) ?? [];
+  return samplesForClass(classId);
 }
 
 const allSamples = classIds.flatMap((classId) => p3SamplesForClass(classId));
+const retainedSubset = P_BEFORE.A.slice(0, 3);
+const normalizedQuery = normalize(encodeRawVector(query, "before"));
 const oldMeanLabelOffsets: Record<ClassId, Vector2> = {
   A: [-68, -16],
   B: [-88, 62],
@@ -51,7 +30,8 @@ const oldMeanLabelOffsets: Record<ClassId, Vector2> = {
 };
 
 function classMean(classId: ClassId, state: FeatureState, samples: readonly Sample[] = p3SamplesForClass(classId)): Vector2 {
-  return mean(samples.map((sample) => encode2D(sample, state)));
+  const normalizedFeatures = samples.map((sample) => normalize(encode2D(sample, state)));
+  return normalize(mean(normalizedFeatures));
 }
 
 function distance(a: Vector2, b: Vector2) {
@@ -59,12 +39,10 @@ function distance(a: Vector2, b: Vector2) {
 }
 
 const prototypeBefore = new Map(classIds.map((id) => [id, classMean(id, "before")]));
-const prototypeAfter = new Map(classIds.map((id) => [id, classMean(id, "after")]));
 const queryDistances = classIds
-  .map((classId) => ({ classId, distance: distance(query, prototypeBefore.get(classId)!) }))
+  .map((classId) => ({ classId, distance: distance(normalizedQuery, prototypeBefore.get(classId)!) }))
   .sort((a, b) => a.distance - b.distance);
 const predictedClass = queryDistances[0].classId;
-const retainedSubset = p3SamplesForClass("A").slice(0, 3);
 
 type FormulaFocus = "feature" | "mean" | "distance" | "decision";
 
@@ -118,10 +96,11 @@ function FeatureMap({
 
   return (
     <div className={`p3-map p3-map--stage-${stage}`}>
-      <div className="p3-map__meta"><span>FIXED SYNTHETIC 2D EXAMPLE</span><span>{historicalOnly ? "历史分布 · 当前不可访问" : `当前映射 · φ${currentState === "before" ? "old" : "new"}`}</span><span>所选身份 · {historicalOnly ? "—" : selectedSampleId}</span></div>
+      <div className="p3-map__meta"><span>FIXED SYNTHETIC · L2-NORMALIZED</span><span>{historicalOnly ? "历史分布 · 当前不可访问" : `当前映射 · φ${currentState === "before" ? "old" : "new"}`}</span><span>所选身份 · {historicalOnly ? "—" : selectedSampleId}</span></div>
       <svg viewBox="90 8 380 242" role="img" aria-label="二维特征空间中，样本点、类别均值与 query 的位置关系">
         <title>Feature space workbench</title>
         <desc>同一编号的样本从输入图像映射到二维特征位置。星形代表由样本计算出的类均值。</desc>
+        <circle className="p3-map__unit-circle" cx="280" cy="175" r="52" />
         <defs><marker id="p3-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 8 4 L 0 8" fill="none" stroke="#b88050" strokeWidth="1.2" /></marker></defs>
         <line className="p3-map__axis" x1="90" y1="175" x2="470" y2="175" />
         <line className="p3-map__axis" x1="280" y1="20" x2="280" y2="257.5" />
@@ -130,7 +109,7 @@ function FeatureMap({
           const oldPosition = chartPoint(old);
           return <g key={`mean-links-${classId}`}>
             {stage === 1 && classId === "A" ? points.map((sample) => {
-              const pos = chartPoint(encode2D(sample, currentState));
+              const pos = chartPoint(normalize(encode2D(sample, currentState)));
               return <line key={`${sample.id}-mean-line`} className="p3-map__mean-link" x1={pos.x} y1={pos.y} x2={currentPosition.x} y2={currentPosition.y} />;
             }) : null}
             {stage === 3 && phase === 2 ? <>
@@ -149,7 +128,7 @@ function FeatureMap({
           </g>;
         }) : null}
         {showQuery ? (() => {
-          const q = chartPoint(query);
+          const q = chartPoint(normalizedQuery);
           return <g>
             {classIds.map((classId) => {
               const m = chartPoint(prototypeBefore.get(classId)!);
@@ -161,8 +140,8 @@ function FeatureMap({
           </g>;
         })() : null}
         {points.map((sample) => {
-          const old = encode2D(sample, "before");
-          const current = encode2D(sample, currentState);
+          const old = normalize(encode2D(sample, "before"));
+          const current = normalize(encode2D(sample, currentState));
           const position = chartPoint(current);
           const oldPosition = chartPoint(old);
           const color = CLASS_VISUALS[sample.classId].color;
@@ -226,7 +205,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
         <h1>类别原型如何<br className="p3-title-break" />决定预测？</h1>
-        <p>把图像变成当前特征表示，以类均值作为 prototype，再选择离 query 最近的类别。表示变化时，原型也必须从当前样本重新计算。</p>
+        <p>先对当前特征做 L2 归一化，再将同类特征均值归一化为 prototype，并选择离 query 最近的类别。表示变化后，原型必须从当前样本重新计算。</p>
       </header>
 
       <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 3 原型分类教学步骤" />
@@ -238,8 +217,8 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
           <div className="p3-source__samples">
             {shownSourceSamples.map((sample) => (
               <button key={sample.id} type="button" className={`p3-source__sample${selectedSampleId === sample.id ? " is-selected" : ""}`} onClick={() => setSelectedSampleId(sample.id)} aria-pressed={selectedSampleId === sample.id}>
-                <span className="p3-source__tile" style={{ "--sample-accent": CLASS_VISUALS[sample.classId].color } as CSSProperties} aria-hidden="true"><i /><i /><i /><i /></span>
-                <span><b>{sample.id}</b><small>{CLASS_VISUALS[sample.classId].label} · 合成样本</small></span>
+                <SampleToken sample={sample} role="raw" compact />
+                <span><small>{CLASS_VISUALS[sample.classId].label} · 合成样本</small></span>
               </button>
             ))}
           </div>
@@ -260,8 +239,8 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
           <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE</span><h2>运算与图形联动</h2></div></div>
           {stage >= 4 ? <div className="p3-unavailable-card"><span className="p3-rule-symbol">{stage === 4 ? <>μ<sub>A</sub> = ?</> : <>μ<sub>A</sub> ≈ μ<sub>A,subset</sub></>}</span><b>{stage === 4 ? "完整 X_A 不可访问" : "保留子集的近似中心已计算"}</b><p>{stage === 4 ? "不是均值定义失效，而是求和所需的全部旧样本已经不在训练者可访问的数据中。" : "图中的星形是这 3 个保留样本在当前 φ 下重新编码后得到的均值估计。"}</p></div> : <>
             <div className="p3-formula-list">
-              <button type="button" className={focus === "mean" ? "is-active" : ""} onClick={() => setFocus("mean")} aria-pressed={focus === "mean"}><span>类均值</span><strong>μ<sub>y</sub> = (1/|X<sub>y</sub>|) ∑<sub>x ∈ X<sub>y</sub></sub> φ<sub>Θ</sub>(x)</strong></button>
-              <button type="button" className={focus === "feature" ? "is-active" : ""} onClick={() => setFocus("feature")} aria-pressed={focus === "feature"}><span>当前表示</span><strong>z = φ<sub>Θ</sub>(x)</strong></button>
+              <button type="button" className={focus === "mean" ? "is-active" : ""} onClick={() => setFocus("mean")} aria-pressed={focus === "mean"}><span>归一化类原型</span><strong>μ<sub>y</sub> = normalize(mean&#123; ẑ<sub>x</sub> &#125;)</strong></button>
+              <button type="button" className={focus === "feature" ? "is-active" : ""} onClick={() => setFocus("feature")} aria-pressed={focus === "feature"}><span>当前表示</span><strong>ẑ<sub>x</sub> = normalize(φ<sub>Θ</sub>(x))</strong></button>
               <button type="button" className={focus === "distance" ? "is-active" : ""} onClick={() => setFocus("distance")} aria-pressed={focus === "distance"}><span>距离</span><strong>d = ‖z − μ<sub>y</sub>‖₂</strong></button>
               <button type="button" className={focus === "decision" ? "is-active" : ""} onClick={() => setFocus("decision")} aria-pressed={focus === "decision"}><span>分类决定</span><strong>ŷ = arg min<sub>y</sub> d</strong></button>
             </div>

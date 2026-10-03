@@ -46,6 +46,8 @@
 .feature-space__sample .sample-mark { stroke: white; stroke-width: 1.8; }
 .feature-space__sample:focus circle { stroke: #1d3438; stroke-width: 2.5; }
 .feature-space__target-ray { stroke: #cf9545; stroke-dasharray: 4 4; stroke-width: 1; }
+.feature-space__normalization-ray { stroke: #8d78a6; stroke-dasharray: 3 3; stroke-opacity: .66; stroke-width: 1; }
+.feature-space__normalization-segment { stroke: var(--class-accent); stroke-width: 1.8; }
 .feature-space__distance { stroke: var(--class-accent); stroke-dasharray: 4 3; stroke-opacity: .52; stroke-width: 1.2; }
 .feature-space__ghost { fill: white; stroke: #94a5a0; stroke-dasharray: 2 2; stroke-width: 1.6; }
 .feature-space__drift { stroke: #829794; stroke-dasharray: 3 3; stroke-width: 1; }

@@ -48,9 +48,7 @@
 .p3-source__sample > span:last-child { display: grid; min-width: 0; gap: 3px; }
 .p3-source__sample b { font: 650 12px var(--mono); }
 .p3-source__sample small { overflow: hidden; color: #63787a; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.p3-source__tile { display: grid; width: 37px; height: 34px; flex: 0 0 auto; grid-template-columns: repeat(2, 1fr); gap: 2px; padding: 6px; border: 1px solid color-mix(in srgb, var(--sample-accent) 40%, white); border-radius: 6px; background: color-mix(in srgb, var(--sample-accent) 9%, white); }
-.p3-source__tile i { border-radius: 2px; background: color-mix(in srgb, var(--sample-accent) 42%, white); }
-.p3-source__tile i:nth-child(2), .p3-source__tile i:nth-child(3) { opacity: .52; }
+.p3-source__sample > .sample-token { flex: 0 0 auto; }
 .p3-source__mapping { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 7px; margin-top: 15px; padding: 11px 9px; border: 1px solid #e2e9e4; border-radius: 8px; color: #50686a; background: #fbfcfa; text-align: center; }
 .p3-source__mapping > span:first-child, .p3-source__mapping > strong { font: 650 12px var(--mono); }
 .p3-source__mapping > b { color: #447e70; font: italic 17px Georgia, serif; }
@@ -66,6 +64,7 @@
 .p3-map__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 12px; color: #617678; font-size: 12px; }
 .p3-map__meta span:first-child { color: #817055; font: 650 12px var(--mono); letter-spacing: .07em; }
 .p3-map svg { display: block; width: 100%; height: auto; max-height: 350px; align-self: center; overflow: visible; }
+.p3-map__unit-circle { fill: none; stroke: #b8c9bf; stroke-dasharray: 4 4; stroke-width: 1.2; }
 .p3-map__axis { stroke: #e0e7e3; stroke-width: 1; }
 .p3-map__point { cursor: pointer; outline: none; }
 .p3-map__point circle:first-of-type { stroke: white; stroke-width: 2; transition: r .2s ease, fill .2s ease; }
