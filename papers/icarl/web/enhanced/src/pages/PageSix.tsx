@@ -43,9 +43,10 @@ function MemoryBuckets() {
 }
 
 function OutputNodes({ compact = false }: { compact?: boolean }) {
-  return <div className={`p6-output-nodes${compact ? " p6-output-nodes--compact" : ""}`} aria-label="当前网络的旧类别输出节点">
+  return <div className={`p6-output-nodes${compact ? " p6-output-nodes--compact" : ""}`} aria-label="本轮扩展后的旧类与新类输出节点">
     {OLD_CLASS_IDS.map((classId) => <span key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}><i />{CLASS_VISUALS[classId].outputNodeLabel}</span>)}
-    {compact ? null : <small>new class output nodes · Page 7</small>}
+    <span className="p6-output-nodes__new" style={{ "--node-accent": CLASS_VISUALS[INCOMING_CLASS_ID].color } as React.CSSProperties}><i />{CLASS_VISUALS[INCOMING_CLASS_ID].outputNodeLabel}</span>
+    {compact ? null : <small>新增 g₄ 已在本轮训练前加入；Q 只快照旧节点响应。</small>}
   </div>;
 }
 
@@ -110,7 +111,7 @@ export function PageSix() {
       {stage === 0 ? <section className="p6-start-grid" aria-label="更新前已有状态与到达的新类别">
         <section className="panel p6-persistent-state">
           <div className="panel-heading"><div><span className="eyebrow">CURRENT PERSISTENT STATE</span><h2>网络 Θ 与旧记忆 P</h2></div><span className="p6-persistent-badge">跨阶段保留</span></div>
-          <div className="p6-theta-card"><div><b>Θ</b><span>current network parameters</span></div><i aria-hidden="true">→</i><div className="p6-feature-head"><b>φ</b><span>feature extractor</span></div><i aria-hidden="true">+</i><div><b>g₁, g₂, g₃</b><span>old-class output nodes</span></div></div>
+          <div className="p6-theta-card"><div><b>Θ</b><span>current network parameters</span></div><i aria-hidden="true">→</i><div className="p6-feature-head"><b>φ</b><span>feature extractor</span></div><i aria-hidden="true">+</i><div><b>g₁, g₂, g₃, g₄</b><span>expanded output layer · before training</span></div></div>
           <OutputNodes />
           <div className="p6-memory-heading"><b>P = (P<sub>1</sub>, P<sub>2</sub>, P<sub>3</sub>)</b><span>persistent exemplar memory · {OLD_MEMORY_SIZE} images</span></div>
           <MemoryBuckets />
@@ -153,7 +154,7 @@ export function PageSix() {
         </section>
         <section className="panel p6-snapshot-pipeline"><div className="panel-heading"><div><span className="eyebrow">BEFORE ANY PARAMETER UPDATE</span><h2>先快照旧节点响应</h2></div><span className="p6-snapshot-badge">pre-update</span></div>
           <div className="p6-snapshot-flow"><div className="p6-flow-node p6-flow-node--d"><b>D</b><span>all {TRAINING_SET_SIZE} samples</span></div><i aria-hidden="true">→</i><div className="p6-flow-network"><span className="eyebrow">CURRENT MODEL · Θ<sub>before</sub></span><b>φ + old output head</b><OutputNodes compact /><small>此刻还是本轮唯一的 current network</small></div><i aria-hidden="true">→</i><div className="p6-flow-node p6-flow-node--q"><b>Q</b><span>update-local response snapshot</span></div></div>
-          <div className="p6-response-formula"><b>q<sub>i</sub><sup>y</sup> = g<sub>y</sub>(x<sub>i</sub>)</b><span>y ∈ {"{"}{OLD_CLASS_IDS.join(", ")}{"}"}</span></div>
+          <div className="p6-response-formula"><b>q<sub>i</sub><sup>y</sup> = g<sub>y</sub>(x<sub>i</sub>)</b><span>y ∈ {"{"}{OLD_CLASS_IDS.map((classId) => CLASS_VISUALS[classId].index).join(", ")}{"}"}</span></div>
           <p className="p6-snapshot-note">只有先记录 Q，后续改变 Θ 时才不会丢掉此次更新开始前的旧类 response。Q 完成后固定于本轮 update；它不是永久维护的第二个模型。</p>
         </section>
       </section> : null}
@@ -168,7 +169,7 @@ export function PageSix() {
         </div>
         <div className="p6-all-samples-takeaway"><b>all |D| = {TRAINING_SET_SIZE}</b><span>old exemplars and new-class images are treated alike for the pre-update old-node snapshot.</span></div>
         <div className="p6-q-locked"><span>Q</span><b>LOCKED DURING THIS UPDATE</b><small>Θ changes later; these pre-update responses do not.</small></div>
-        <p className="p6-new-nodes-note">New-class output nodes are reserved for the next page; this matrix covers the existing old nodes only.</p>
+          <p className="p6-new-nodes-note">All four output nodes are present before training. Q snapshots only g₁–g₃; the new node g₄ receives its hard target from the label.</p>
       </section> : null}
 
       {stage === 4 ? <section className="p6-ready" aria-label="更新前准备完成">
