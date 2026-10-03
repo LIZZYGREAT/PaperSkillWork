@@ -246,7 +246,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
             </div>
             {stage === 2 ? <div className="p3-distance-list"><span className="eyebrow">QUERY 距离 · 固定合成值</span>{queryDistances.map(({ classId, distance: value }, index) => <div key={classId} className={index === 0 ? "is-nearest" : ""}><span>μ<sub>{CLASS_VISUALS[classId].index}</sub></span><b>{value.toFixed(2)}</b><small>{index === 0 ? "最近" : ""}</small></div>)}<strong className="p3-prediction">预测：{CLASS_VISUALS[predictedClass].displayLabel}</strong></div> : null}
           </>}
-          {stage === 5 ? <div className="p3-approx-formula">μ<sub>A</sub> ≈ mean&#123;φ<sub>Θ new</sub>(p)&#125;<small>少量保留样本 · Page 4 正式定义</small></div> : null}
+          {stage === 5 ? <div className="p3-approx-formula">μ<sub>1</sub> ≈ mean&#123;φ<sub>Θ new</sub>(p)&#125;<small>少量保留样本 · Page 4 正式定义</small></div> : null}
           <div className="p3-rule-note"><span>i</span><p><b>Prototype ≠ 权重向量 w<sub>y</sub></b><br />Prototype 从当前样本表示计算；它不是独立通过梯度训练的分类权重。</p></div>
           {stage === 2 ? <details className="p3-normalized-note"><summary>为什么最近距离等价于最大内积？</summary><div><p>当特征 z 与类别原型 μ<sub>y</sub> 都经过 L2 归一化时：</p><code>‖z − μ<sub>y</sub>‖₂² = 2 − 2 zᵀμ<sub>y</sub></code><p>因此，距离最小的类别也就是内积最大的类别。此等价依赖两者都为单位向量。</p></div></details> : null}
         </aside>

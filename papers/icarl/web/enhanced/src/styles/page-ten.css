@@ -370,3 +370,44 @@
  .p10-feature-panel .feature-space--herding .feature-space__sample[data-herding-selected="true"] .sample-mark{animation:none;opacity:1}
  .p10-head__nodes>span{animation:none}
 }
+
+/* Keep the runtime board readable and scrollable unless a large presentation viewport fits it. */
+.ewc-app.ewc-app--runtime{display:block;height:auto;min-height:100dvh;overflow:visible}
+.ewc-app--runtime .ewc-main-column,.ewc-app--runtime .tutorial-main.ewc-main{height:auto;min-height:100dvh;overflow:visible}
+.p10-page.p10-board{height:auto;min-height:100dvh;grid-template-rows:auto auto auto auto;overflow:visible}
+@media(min-width:1241px){
+ .p10-board-grid{grid-template-rows:minmax(220px,auto) minmax(270px,auto) minmax(132px,auto)}
+}
+@media(min-width:1440px) and (min-height:900px){
+ .ewc-app.ewc-app--runtime{height:100dvh;overflow:hidden}
+ .ewc-app--runtime .ewc-main-column,.ewc-app--runtime .tutorial-main.ewc-main{height:100%;min-height:0;overflow:hidden}
+ .p10-page.p10-board{height:100dvh;min-height:900px;grid-template-rows:minmax(94px,auto) minmax(68px,auto) minmax(0,1fr) 30px;overflow:hidden}
+ .p10-board-grid{grid-template-rows:minmax(0,.9fr) minmax(0,1.08fr) minmax(132px,.48fr)}
+}
+
+/* Semantic labels stay at least 10px; order dots remain compact decoration. */
+@media(max-width:1240px){
+ .p10-board .p10-back-page,.p10-board .p10-player-count,.p10-board .p10-current-step>span,.p10-board .p10-timeline__stage b,.p10-board .p10-timeline__stage small,.p10-board .p10-eyebrow,.p10-board .p10-panel-index,.p10-board .p10-empty span,.p10-board .p10-released span,.p10-board .p10-incoming-class strong,.p10-board .p10-incoming-class small,.p10-board .p10-object-note,.p10-board .p10-extractor>small,.p10-board .p10-head>small,.p10-board .p10-head__nodes small,.p10-board .p10-budget-chip,.p10-board .p10-memory-summary,.p10-board .p10-memory-summary b,.p10-board .p10-memory-bucket__heading small,.p10-board .p10-memory-bucket__heading em,.p10-board .p10-bucket-status,.p10-board .p10-memory-bucket__count,.p10-board .p10-memory-note,.p10-board .p10-object__heading h3,.p10-board .p10-object__heading small,.p10-board .p10-object__content,.p10-board .p10-object__content strong,.p10-board .p10-object__content code,.p10-board .p10-workspace-note,.p10-board .p10-mode-badge,.p10-board .p10-feature-panel .feature-space__header p,.p10-board .p10-feature-panel .feature-space__legend,.p10-board .p10-feature-note,.p10-board .p10-prediction-result>span,.p10-board .p10-prediction-result>strong,.p10-board .p10-prediction-result>small,.p10-board .p10-muted-hint,.p10-board .p10-lifetime-row>strong,.p10-board .p10-lifetime-row>small,.p10-board .p10-state-equation small,.p10-board .p10-state-equation strong,.p10-board .p10-system-state>p,.p10-board .p10-next-batch-note b,.p10-board .p10-next-batch-note span,.p10-board .p10-inspect>summary,.p10-board .p10-herding-order>li,.p10-board .p10-herding-order summary,.p10-board .p10-herding-order ul,.p10-board .p10-distance-list li,.p10-board .p10-incoming-samples .sample-token__class,.p10-board .p10-incoming-samples .sample-token__id,.p10-board .p10-memory-bucket__tokens .sample-token__class,.p10-board .p10-memory-bucket__tokens .sample-token__id,.p10-board .p10-memory-bucket__tokens .sample-token__role{font-size:10px!important}
+ .p10-board .p10-feature-panel .feature-space svg text{font-size:10px}
+}
+@media(min-width:1241px){
+ .p10-board .p10-head__nodes small,.p10-board .p10-memory-bucket__heading em,.p10-board .p10-object__heading small,.p10-board .p10-lifetime-row>small,.p10-board .p10-next-batch-note b,.p10-board .p10-next-batch-note span,.p10-board .p10-herding-order ul{font-size:10px}
+}
+.p10-board .p10-extractor>strong{font-family:var(--math)}
+.p10-board .p10-memory-bucket__heading strong{font-family:var(--math)}
+.p10-board .p10-object__heading h3>span{font-family:var(--math)}
+.p10-board .p10-state-equation strong{font-family:var(--math);font-weight:600}
+
+/* Expanded calculation details use one fixed, scrollable overlay at every viewport size. */
+body:has(.p10-inspect[open]){overflow:hidden}
+.p10-page.p10-board .p10-inspect[open]{position:fixed;z-index:1000;inset:5vh 4vw;width:auto;height:auto;max-height:90dvh;overflow:auto;overscroll-behavior:contain;border:1px solid #c7d7cf!important;border-radius:12px!important;background:#fffefa!important;box-shadow:0 0 0 100vmax rgb(20 43 44 / 38%),0 18px 48px rgb(20 43 44 / 24%)!important}
+.p10-page.p10-board .p10-inspect[open]>summary{position:sticky;z-index:1;top:0;padding:13px 16px;border-bottom:1px solid #e2e9e4;background:#fffefa;font-size:14px;white-space:normal}
+.p10-page.p10-board .p10-inspect-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:18px}
+.p10-page.p10-board .p10-inspect-grid h3{font-size:15px}
+.p10-page.p10-board .p10-inspect-grid p{font-size:12px;line-height:1.5}
+.p10-page.p10-board .p10-inspect-grid code,.p10-page.p10-board .p10-herding-order ul{font-size:10px}
+@media(max-width:1000px){.p10-page.p10-board .p10-inspect-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){
+ .p10-page.p10-board .p10-inspect[open]{inset:12px;max-height:calc(100dvh - 24px)}
+ .p10-page.p10-board .p10-inspect-grid{grid-template-columns:minmax(0,1fr);padding:14px}
+}

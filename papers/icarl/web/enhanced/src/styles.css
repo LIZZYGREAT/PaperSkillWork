@@ -1,4 +1,4 @@
-:root { --mono: "Cascadia Code", "Consolas", "Microsoft YaHei UI", monospace; --radius: 12px; }
+:root { --mono: "Cascadia Code", "Consolas", "Microsoft YaHei UI", monospace; --math: "Cambria Math", "STIX Two Math", "Times New Roman", serif; --radius: 12px; }
 
 .tutorial-page { display: grid; gap: 20px; min-width: 0; }
 .page-heading { max-width: 920px; padding: 0 0 5px; }
