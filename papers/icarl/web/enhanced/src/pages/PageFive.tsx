@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
+import { PaperTerm } from "../components/PaperTerm";
 import { euclideanDistance, type Vector2 } from "../data/icarl-runtime";
 import { HERDING_TEACHING_POINTS, HERDING_TEACHING_QUOTA, HERDING_TEACHING_RESULT, summarizeFeaturePrefix, type HerdingTeachingPoint } from "../data/herding-example";
 
@@ -172,8 +173,8 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
     <article className="tutorial-page icarl-page icarl-page--p5">
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 05</span><i /> EXEMPLAR SELECTION</div>
-        <h1>Herding 为记忆建立优先顺序</h1>
-        <p>用当前更新后的特征映射，把完整新类的 normalized features 汇成目标；逐个加入候选，让每个 prefix 的均值尽量贴近这个目标。</p>
+        <h1><PaperTerm termId="herding">Herding</PaperTerm> 为记忆建立优先顺序</h1>
+        <p>用当前更新后的特征映射，把完整新类的 normalized features 汇成目标；逐个加入候选，让每个<PaperTerm termId="prefix-mean">prefix 均值</PaperTerm>尽量贴近这个目标。</p>
       </header>
 
       <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 5 Herding 教学步骤" />

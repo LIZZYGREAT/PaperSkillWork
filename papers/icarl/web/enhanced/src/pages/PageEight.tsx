@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
+import { PaperTerm } from "../components/PaperTerm";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import {
   CLASS_VISUALS,
@@ -170,7 +171,7 @@ export function PageEight({ onContinue }: { onContinue?: () => void }) {
     <header className="page-heading icarl-page__heading">
       <div className="icarl-page__eyebrow"><span>PAGE 08</span><i /> TRAIN ≠ PREDICT</div>
       <h1>同一表示网络，连接两条不同的运行路径</h1>
-      <p>Training Head 为共享表示提供可微学习信号；最终预测则用同一 φ<sub>Θ</sub> 重新编码当前 exemplars，并按最近类均值 prototype 分类。</p>
+      <p>Training Head 为共享表示提供可微学习信号；最终预测则用同一 φ<sub>Θ</sub> 重新编码当前 exemplars，并按<PaperTerm termId="nearest-mean-of-exemplars">最近 exemplar 均值分类</PaperTerm>作出决定。</p>
     </header>
 
     <div className="p8-controls-row"><GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 8 训练与预测路径教学步骤" /><ModeSwitch mode={mode} onChange={setMode} /></div>

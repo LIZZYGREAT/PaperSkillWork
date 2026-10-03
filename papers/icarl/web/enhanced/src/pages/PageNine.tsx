@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PaperFigure } from "../shared/core/paper-figure";
+import { PaperTerm } from "../components/PaperTerm";
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B, type AblationResult } from "../data/table1-results";
 
 type EvidenceTab = "setup" | "overall" | "components" | "approximation" | "memory" | "boundaries";
@@ -75,7 +76,7 @@ function SetupPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)[num
         {stages > shownTicks ? <b>另有 {stages - shownTicks} 阶段</b> : null}
       </div>
       <p className="p9-stage-copy">每一步先训练新到达的 {batch} 个类别，再在已见类别 1–{Math.min(firstSeen * shownTicks, finalSeen)} 上评估；最后一步覆盖 1–100。</p>
-      <div className="p9-average-note"><EvidenceTag kind="TEACHING EXPLANATION" /><span>Average incremental accuracy 是各增量阶段多类准确率的汇总；Figure 2 横轴表示截至该阶段已学习的类别总数。</span></div>
+      <div className="p9-average-note"><EvidenceTag kind="TEACHING EXPLANATION" /><span><PaperTerm termId="average-incremental-accuracy" /> 是各增量阶段多类准确率的汇总；Figure 2 横轴表示截至该阶段已学习的类别总数。</span></div>
       <details className="p9-details"><summary>查看实验训练设置</summary><div><p><b>iCIFAR-100</b> · 10 种类别顺序；每批训练 70 epochs；batch size 128；K ≤ 2,000。</p><p><b>iILSVRC</b> · 每批训练 60 epochs；batch size 128；K ≤ 20,000。</p><small>更完整的学习率与 weight decay 配置见来源证据记录。</small></div></details>
     </aside>
   </section>;
@@ -196,7 +197,7 @@ function ApproximationPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BA
       <div className="panel-heading"><div><span className="eyebrow">TABLE 1b · 原型近似</span><h2>少量 exemplar 的均值接近全数据类别均值吗？</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
       <div className="p9-mean-compare">
         <section><span className="p9-mean-label">iCaRL · 受限图像记忆</span><div className="p9-mean-flow"><b>仅当前 P<sub>y</sub></b><i>↓</i><b>当前 φ<sub>Θ</sub></b><i>↓</i><strong>exemplar 均值</strong></div></section>
-        <section className="p9-mean-compare__ncm"><span className="p9-mean-label">NCM · 全数据诊断参照</span><div className="p9-mean-flow"><b>全部历史 X<sub>y</sub></b><i>↓</i><b>当前 φ<sub>Θ</sub></b><i>↓</i><strong>全类别均值</strong></div></section>
+        <section className="p9-mean-compare__ncm"><span className="p9-mean-label"><PaperTerm termId="ncm" /> · 全数据诊断参照</span><div className="p9-mean-flow"><b>全部历史 X<sub>y</sub></b><i>↓</i><b>当前 φ<sub>Θ</sub></b><i>↓</i><strong>全类别均值</strong></div></section>
       </div>
       <div className="p9-feature-recall"><span className="eyebrow">特征空间回顾 · 教学解释</span><div className="p9-feature-recall__picture"><div><span>全部历史类别图像</span><i>• • • • • • •</i><b>★ 全数据均值</b></div><i className="p9-recall-arrow">↔</i><div><span>Exemplar 子集</span><i>■　■　■</i><b>◆ exemplar 均值</b></div></div><p>这项实验衡量：使用 exemplar 均值时，分类准确率会下降多少。</p></div>
       <BatchSelector value={batch} onChange={setBatch} />

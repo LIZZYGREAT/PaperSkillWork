@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
+import { PaperTerm } from "../components/PaperTerm";
 import { SampleToken } from "../components/SampleToken";
 import { encode2D, sampleById } from "../data/icarl-runtime";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
@@ -74,7 +75,7 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
       <div className="p1-kicker p2-kicker"><span>第 02 页</span><i /> 从图像到特征表示</div>
       <header className="page-heading p2-heading">
         <h1 id="page-two-title">打开模型：图片怎样变成可比较的特征表示</h1>
-        <p>iCaRL 持续更新共享的 feature extractor。先看一张图像如何穿过模型，再区分内部表示、训练输出和最终分类。</p>
+        <p>iCaRL 持续更新共享的 <PaperTerm termId="feature-extractor">feature extractor</PaperTerm>。先看一张图像如何穿过模型，再区分内部<PaperTerm termId="representation">表示</PaperTerm>、训练输出和最终分类。</p>
       </header>
 
       {!modelOpen ? (

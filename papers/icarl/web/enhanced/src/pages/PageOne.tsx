@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from "react";
+import { PaperTerm } from "../components/PaperTerm";
 
 type PageOneProps = { onOpenPageTwo: () => void };
 
@@ -38,7 +39,7 @@ export function PageOne({ onOpenPageTwo }: PageOneProps) {
       <div className="p1-kicker"><span>第 01 页</span><i /> 类别增量学习的任务设定</div>
       <header className="page-heading p1-heading">
         <h1 id="page-one-title">类别逐批到来，分类器不能重新开始</h1>
-        <p>Class-Incremental Learning 中，新类别会随时间出现。同一个模型要在所有已见类别中直接预测，同时面对有限的旧数据记忆。</p>
+        <p><PaperTerm termId="class-incremental-learning" /> 中，新类别会随时间出现。同一个模型要在所有已见类别中直接预测，同时面对有限的旧数据记忆。</p>
       </header>
 
       <section className="p1-guided panel" aria-labelledby="p1-guided-title">
@@ -91,8 +92,8 @@ export function PageOne({ onOpenPageTwo }: PageOneProps) {
           <div className="p1-section-head"><div><span className="p1-eyebrow">02 · 持续使用的模型</span><h2>同一个学习器</h2></div><span className="p1-object-badge">共享模型</span></div>
           <div className="p1-model-diagram">
             <div className="p1-model-layers" aria-hidden="true"><i /><i /><i /><i /><i /></div>
-            <div><strong>Feature Extractor</strong><span>随着学习持续更新</span></div>
-            <b className="p1-model-symbol">φ<sub>Θ</sub></b>
+            <div><strong>同一个学习器</strong><span>参数随类别批次持续更新</span></div>
+            <b className="p1-model-symbol">θ</b>
           </div>
           <div className="p1-learner-foot"><span><i /> 模型保持连续</span><span>不会为每一批新建分类器</span></div>
         </section>
@@ -129,7 +130,7 @@ export function PageOne({ onOpenPageTwo }: PageOneProps) {
           </article>
           <article className="p1-naive-card p1-naive-card--new">
             <div className="p1-naive-card__visual" aria-hidden="true"><span className="p1-model-mini">模型</span><svg viewBox="0 0 84 24"><path d="M2 12h75m-8-7 8 7-8 7" /></svg><span className="p1-new-mini">新数据</span></div>
-            <span className="p1-card-label">做法 B · 只使用新数据训练</span><h3>只围绕刚到达的类别继续训练</h3><p>新类能力可以提升，但旧类别区分能力可能下降。</p>
+            <span className="p1-card-label">做法 B · 只使用新数据训练</span><h3>只围绕刚到达的类别继续训练</h3><p>新类能力可以提升，但可能出现<PaperTerm termId="catastrophic-forgetting">灾难性遗忘</PaperTerm>，旧类别区分能力因此下降。</p>
             <div className="p1-verdict"><i>×</i><span>旧类别能力可能退化</span></div>
           </article>
         </div>

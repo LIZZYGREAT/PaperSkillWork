@@ -1,5 +1,6 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
+import { PaperTerm } from "../components/PaperTerm";
 import { SampleToken } from "../components/SampleToken";
 import { CLASS_VISUALS, encode2D, encodeRawVector, mean, normalize, P_BEFORE, samplesForClass, type ClassId, type FeatureState, type Sample, type Vector2 } from "../data/icarl-runtime";
 
@@ -205,7 +206,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
         <h1>类别原型如何<br className="p3-title-break" />决定预测？</h1>
-        <p>先对当前特征做 L2 归一化，再将同类特征均值归一化为 prototype，并选择离 query 最近的类别。表示变化后，原型必须从当前样本重新计算。</p>
+        <p>先对当前特征做 L2 归一化，再将同类特征均值归一化为<PaperTerm termId="prototype">类别原型</PaperTerm>，并按<PaperTerm termId="nearest-mean-of-exemplars">最近 exemplar 均值分类</PaperTerm>选择类别。表示变化后，原型必须从当前样本重新计算。</p>
       </header>
 
       <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 3 原型分类教学步骤" />

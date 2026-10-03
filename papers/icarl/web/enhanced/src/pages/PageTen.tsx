@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { FeatureSpaceWorkbench, type FeatureSpaceMode } from "../components/FeatureSpaceWorkbench";
 import { SampleToken } from "../components/SampleToken";
+import { PaperTerm } from "../components/PaperTerm";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import {
   CLASS_VISUALS,
@@ -431,7 +432,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
             <WorkspaceObject title="训练目标" symbol="y" status={stepIndex < 4 ? "pending" : stepIndex === 4 ? "training" : "released"} statusText={stepIndex < 4 ? "待生成" : stepIndex === 4 ? "参与训练" : "训练后释放"} content={<><p><b>旧节点</b> ← Q 中的软响应</p><p><b>新节点 Class 4</b> ← 新类硬标签</p></>} />
             <WorkspaceObject title="损失与反向传播" symbol="ℒ" status={stepIndex < 4 ? "pending" : stepIndex === 4 ? "training" : "released"} statusText={stepIndex < 4 ? "待计算" : stepIndex === 4 ? "更新 Θ" : "训练后释放"} content={<><strong>逐节点 sigmoid BCE</strong><p>联合更新共享表示与输出层参数。</p><code>ℒ = ℒ_old + ℒ_new</code></>} />
           </div>
-          <p className="p10-workspace-note">D、Q、目标与损失都不进入持久状态；Q 必须在 Θ 改变前计算。</p>
+          <p className="p10-workspace-note">D、<PaperTerm termId="response-snapshot-q" />、目标与损失都不进入持久状态；Q 必须在 Θ 改变前计算。</p>
         </section>
 
         <section className="panel p10-feature-panel" id="unit_circle" data-canonical-id="unit_circle" aria-labelledby="p10-feature-heading">

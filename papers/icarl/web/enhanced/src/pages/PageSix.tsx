@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
+import { PaperTerm } from "../components/PaperTerm";
 import { CLASS_VISUALS, INCOMING_CLASS_ID, INCOMING_SAMPLES, OLD_CLASS_IDS, OLD_MEMORY_SIZE, P_BEFORE, TRAINING_SET_SIZE, type Sample } from "../data/icarl-runtime";
 
 const steps: readonly GuidedStep[] = [
@@ -102,7 +103,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 06</span><i /> BEFORE UPDATE</div>
         <h1>更新开始前，先准备样本与旧类响应</h1>
-        <p>新类数据和旧 exemplars 先组成训练集 D。任何参数变化发生之前，当前网络对 D 中每个样本记录旧类别 response snapshot Q。</p>
+        <p>新类数据和旧 exemplars 先组成训练集 D。任何参数变化发生之前，当前网络对 D 中每个样本记录旧类别<PaperTerm termId="response-snapshot-q" />。</p>
       </header>
 
       <UpdateTimeline stage={stage} />

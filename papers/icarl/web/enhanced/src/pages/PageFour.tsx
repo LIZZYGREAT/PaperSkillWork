@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
+import { PaperTerm } from "../components/PaperTerm";
 import { SampleToken } from "../components/SampleToken";
 import { CLASS_VISUALS, encode2D, MEMORY_BUDGET, samplesForClass, type ClassId, type FeatureState, type Vector2 } from "../data/icarl-runtime";
 
@@ -36,7 +37,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 04</span><i /> EXEMPLAR MEMORY</div>
         <h1>一份有界记忆，<br className="p4-title-break" />两种运行职责</h1>
-        <p>iCaRL 长期保存少量真实训练图像。后续模型更新可以重读它们，最终预测也会重新编码它们并计算当前 prototype。</p>
+        <p>iCaRL 将少量真实训练图像作为<PaperTerm termId="exemplar" />长期保存，并受<PaperTerm termId="memory-budget">固定总预算 K</PaperTerm>约束。后续模型更新可以重读它们，最终预测也会重新编码它们并计算当前 prototype。</p>
       </header>
 
       <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 4 exemplar memory 教学步骤" />

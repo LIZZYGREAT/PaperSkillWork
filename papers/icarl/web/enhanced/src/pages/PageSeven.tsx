@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
+import { PaperTerm } from "../components/PaperTerm";
 
 const steps: readonly GuidedStep[] = [
   { title: "先按输出节点的年龄分组", short: "旧节点 / 新节点" },
@@ -48,14 +49,16 @@ function TargetRow({ oldSample, active = false }: { oldSample?: boolean; active?
 }
 
 function TargetMatrix({ compact = false }: { compact?: boolean }) {
-  return <div className={`p7-target-matrix${compact ? " p7-target-matrix--compact" : ""}`} role="table" aria-label="训练样本与输出节点目标矩阵" data-canonical-id="target_matrix">
-    <div className="p7-target-row p7-target-row--head" role="row">
-      <span role="columnheader">训练集 D 中的样本</span>
-      <span className="p7-target-band p7-target-band--old" role="columnheader" aria-label="旧节点 1、2、3">旧节点 <small>1 · 2 · 3</small></span>
-      <span className="p7-target-band p7-target-band--new" role="columnheader" aria-label="新节点 4">新节点 <small>4</small></span>
+  return <div className="p7-matrix-scroll" role="region" aria-label="训练样本与所有输出节点目标，可横向滚动" tabIndex={0}>
+    <div className={`p7-target-matrix${compact ? " p7-target-matrix--compact" : ""}`} role="table" aria-label="训练样本与输出节点目标矩阵" data-canonical-id="target_matrix">
+      <div className="p7-target-row p7-target-row--head" role="row">
+        <span role="columnheader">训练集 D 中的样本</span>
+        <span className="p7-target-band p7-target-band--old" role="columnheader" aria-label="旧节点 1、2、3">旧节点 <small>1 · 2 · 3</small></span>
+        <span className="p7-target-band p7-target-band--new" role="columnheader" aria-label="新节点 4">新节点 <small>4</small></span>
+      </div>
+      <TargetRow />
+      <TargetRow oldSample active={compact} />
     </div>
-    <TargetRow />
-    <TargetRow oldSample active={compact} />
   </div>;
 }
 
@@ -93,7 +96,7 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
     <header className="page-heading icarl-page__heading">
       <div className="icarl-page__eyebrow"><span>PAGE 07</span><i /> 蒸馏与损失</div>
       <h1>每张图像都在旧节点与新节点上学习</h1>
-      <p>从第 6 页准备好的训练集 D 与响应快照 Q 出发：旧输出节点保留更新前的响应，新输出节点学习当前标签，随后共同更新表示。</p>
+      <p>从第 6 页准备好的训练集 D 与<PaperTerm termId="response-snapshot-q" />出发：旧节点用<PaperTerm termId="soft-target" />保留更新前响应，这一机制称为<PaperTerm termId="distillation" />；新节点学习当前标签。两部分都使用<PaperTerm termId="binary-cross-entropy">逐节点二元交叉熵（BCE）</PaperTerm>，随后共同更新表示。</p>
     </header>
 
     <GuidedStepControls steps={steps} current={stage} onChange={setStage} label="Page 7 目标分配与损失教学步骤" />
