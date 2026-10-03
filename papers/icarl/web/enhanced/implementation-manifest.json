@@ -25,6 +25,16 @@
       "component": "PageThree",
       "status": "complete"
     },
+    "L06": {
+      "stage": "S04",
+      "component": "PageFour",
+      "status": "complete"
+    },
+    "L07": {
+      "stage": "S04",
+      "component": "PageFour",
+      "status": "complete"
+    },
     "L23": {
       "stage": "S08",
       "component": "PageTen + FeatureSpaceWorkbench",
