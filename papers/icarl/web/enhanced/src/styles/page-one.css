@@ -210,9 +210,9 @@
   .p1-step-actions { gap: 5px; }
   .p1-control { min-width: 38px; padding: 0 7px; }
   .p1-section-head { align-items: flex-start; }
-  .p1-time-label { font-size: 9px; }
+  .p1-time-label { font-size: 10px; }
   .p1-time-label svg { width: 30px; }
-  .p1-object-badge, .p1-fixed-tag { padding: 5px 6px; font-size: 9px; }
+  .p1-object-badge, .p1-fixed-tag { padding: 5px 6px; font-size: 10px; }
   .p1-model-diagram { grid-template-columns: 65px minmax(0, 1fr) auto; gap: 8px; padding: 9px; }
   .p1-model-layers { height: 62px; }
   .p1-model-diagram strong { font-size: 13px; }
