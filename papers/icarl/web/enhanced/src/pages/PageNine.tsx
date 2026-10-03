@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { PaperFigure } from "../shared/core/paper-figure";
+import { ReferenceHub } from "../shared/core/reference";
+import type { ReferenceItem } from "../shared/core/reference/types";
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B, type AblationResult } from "../data/table1-results";
 
 type EvidenceTab = "setup" | "overall" | "components" | "approximation" | "memory" | "boundaries";
@@ -16,10 +18,10 @@ const methods: { id: MethodKey; label: string; color: string }[] = [
   { id: "hybrid2", label: "Hybrid 2", color: "#58845c" }, { id: "hybrid3", label: "Hybrid 3", color: "#a36b56" },
   { id: "lwfMC", label: "LwF.MC", color: "#68747a" },
 ];
-const mechanismComparisons: Record<Mechanism, { title: string; pair: string[]; explanation: string; question: string; nuance: string }> = {
-  prototype: { title: "原型分类器", pair: ["iCaRL", "Hybrid 1"], explanation: "两者都使用相同的表示学习与 exemplar；区别在最终分类器：iCaRL 使用 exemplar 均值，Hybrid 1 使用网络输出。", question: "按 exemplar 均值最近邻分类是否有帮助？", nuance: "iCaRL 与 Hybrid 1 在较小类别批次下差距尤其明显；这些设置经历了更多轮表示更新。" },
-  rehearsal: { title: "Exemplar 回放", pair: ["Hybrid 3", "LwF.MC"], explanation: "两种方法都使用 distillation；该对照聚焦于表示学习时是否能访问保留的旧 exemplars。", question: "旧 exemplar 输入能否帮助保持早期类别？", nuance: "这是 iCIFAR-100 上的组件对照，不能据此断定所有持续学习任务都有同样效果。" },
-  distillation: { title: "知识蒸馏", pair: ["iCaRL", "Hybrid 2"], explanation: "两者都使用原型分类与 exemplar；Hybrid 2 移除了 distillation loss。", question: "保持旧节点响应带来了什么？", nuance: "效果取决于每批类别数。每批 2 类时，Hybrid 2 为 57.6%，iCaRL 为 57.0%。" },
+const mechanismComparisons: Record<Mechanism, { title: string; comparisonKind: string; pair: string[]; explanation: string; question: string; nuance: string }> = {
+  prototype: { title: "原型分类器", comparisonKind: "CLEANER CONTROLLED COMPARISON", pair: ["iCaRL", "Hybrid 1"], explanation: "两者都使用相同的表示学习与 exemplar；区别在最终分类器：iCaRL 使用 exemplar 均值，Hybrid 1 使用网络输出。", question: "按 exemplar 均值最近邻分类是否有帮助？", nuance: "iCaRL 与 Hybrid 1 在较小类别批次下差距尤其明显；这些设置经历了更多轮表示更新。" },
+  rehearsal: { title: "Exemplar 回放", comparisonKind: "CONTRAST PAIR", pair: ["Hybrid 3", "LwF.MC"], explanation: "Hybrid 3 用 exemplars 参与表示学习、不使用蒸馏，最终用网络输出分类；LwF.MC 不使用 exemplars、使用蒸馏，最终同样用网络输出分类。因此两者同时改变了 exemplar 回放和 distillation，并非只改变回放的单变量对照。", question: "加入 exemplar 回放的配置呈现出什么差异？", nuance: "论文作者据此讨论 exemplar rehearsal 的重要性；但该对照不是纯单变量消融，不能把差异只归因于 exemplar。它是 iCIFAR-100 上的对照性证据，也不能推广为所有持续学习任务的普遍结论。" },
+  distillation: { title: "知识蒸馏", comparisonKind: "CLEANER CONTROLLED COMPARISON", pair: ["iCaRL", "Hybrid 2"], explanation: "两者都使用原型分类与 exemplar；Hybrid 2 移除了 distillation loss。", question: "保持旧节点响应带来了什么？", nuance: "效果取决于每批类别数。每批 2 类时，Hybrid 2 为 57.6%，iCaRL 为 57.0%。" },
 };
 const focusLabels: Record<Benchmark, string> = { cifar: "iCIFAR-100", small: "iILSVRC-small", full: "iILSVRC-full" };
 const focusDetails: Record<Benchmark, string> = {
@@ -28,7 +30,7 @@ const focusDetails: Record<Benchmark, string> = {
   full: "iILSVRC-full · 1,000 个 ImageNet 类别，每批 100 类 · 验证集 Top-5 准确率 · ResNet-18 · K ≤ 20,000",
 };
 
-function EvidenceTag({ kind }: { kind: "PAPER RESULT" | "PAPER INTERPRETATION" | "PAPER LIMITATION" | "TEACHING EXPLANATION" }) {
+function EvidenceTag({ kind }: { kind: "PAPER RESULT" | "PAPER INTERPRETATION" | "PAPER LIMITATION" | "TEACHING EXPLANATION" | "GENERAL BACKGROUND" }) {
   return <span className={`p9-tag p9-tag--${kind.toLowerCase().replace(/ /g, "-")}`}>[{kind}]</span>;
 }
 
@@ -48,9 +50,14 @@ function BatchSelector({ value, onChange, label = "每批新类别数" }: { valu
   return <div className="p9-batch-selector"><span>{label}</span><div role="group" aria-label={label}>{CLASSES_PER_BATCH.map((batch) => <button key={batch} type="button" className={value === batch ? "is-active" : ""} aria-pressed={value === batch} onClick={() => onChange(batch)}>{batch}</button>)}</div></div>;
 }
 
-function DatasetCard({ title, strap, classes, batches, metric, backbone, memory }: { title: string; strap: string; classes: string; batches: string; metric: string; backbone: string; memory: string }) {
-  return <section className="p9-dataset-card"><div className="p9-dataset-card__top"><div><span className="eyebrow">{strap}</span><h2>{title}</h2></div><span className="p9-image-icon" aria-hidden="true">▧</span></div><div className="p9-dataset-card__scale"><span>类别数</span><b>{classes}</b></div><div className="p9-dataset-card__batches"><span>每批类别数</span><b>{batches}</b></div><dl><div><dt>指标</dt><dd>{metric}</dd></div><div><dt>骨干网络</dt><dd>{backbone}</dd></div><div><dt>Exemplar 预算</dt><dd>{memory}</dd></div></dl></section>;
+function DatasetCard({ title, strap, classes, batches, metric, backbone, memory, background, sourceHref, sourceLabel }: { title: string; strap: string; classes: string; batches: string; metric: string; backbone: string; memory: string; background: string; sourceHref: string; sourceLabel: string }) {
+  return <section className="p9-dataset-card"><div className="p9-dataset-card__top"><div><span className="eyebrow">{strap}</span><h2>{title}</h2></div><span className="p9-image-icon" aria-hidden="true">▧</span></div><div className="p9-dataset-card__background"><EvidenceTag kind="GENERAL BACKGROUND" /><p>{background}</p><a href={sourceHref} target="_blank" rel="noreferrer">{sourceLabel}</a></div><div className="p9-dataset-card__scale"><span>类别数</span><b>{classes}</b></div><div className="p9-dataset-card__batches"><span>每批类别数</span><b>{batches}</b></div><dl><div><dt>指标</dt><dd>{metric}</dd></div><div><dt>骨干网络</dt><dd>{backbone}</dd></div><div><dt>Exemplar 预算</dt><dd>{memory}</dd></div></dl></section>;
 }
+
+const datasetReferences: ReferenceItem[] = [
+  { id: "cifar-100-dataset", title: "CIFAR-100 dataset", kind: "dataset", summary: "Official dataset description: 100 classes, fine and coarse labels, and its relationship to CIFAR-10.", content: <p><a href="https://www.cs.toronto.edu/~kriz/cifar.html" target="_blank" rel="noreferrer">CIFAR-10 and CIFAR-100 datasets · University of Toronto</a></p>, tags: ["dataset background", "official source"] },
+  { id: "ilsvrc-2012-dataset", title: "ImageNet ILSVRC 2012", kind: "dataset", summary: "Official challenge description of its image-classification task and 1,000 object categories.", content: <p><a href="https://www.image-net.org/challenges/LSVRC/2012/" target="_blank" rel="noreferrer">ILSVRC 2012 · ImageNet</a></p>, tags: ["dataset background", "official source"] },
+];
 
 function SetupPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)[number]; setBatch: (value: (typeof CLASSES_PER_BATCH)[number]) => void }) {
   const stages = 100 / batch;
@@ -59,10 +66,10 @@ function SetupPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)[num
   const finalSeen = 100;
   return <section className="p9-workbench" role="tabpanel" aria-label="数据集与评估设置">
     <div className="p9-workbench__evidence">
-      <div className="panel-heading"><div><span className="eyebrow">数据集概览</span><h2>类别按批次到达，评估范围逐步扩大</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
+      <div className="panel-heading"><div><span className="eyebrow">数据集概览</span><h2>类别按批次到达，评估范围逐步扩大</h2></div></div>
       <div className="p9-dataset-grid">
-        <DatasetCard title="iCIFAR-100" strap="小图像分类" classes="100 个视觉类别" batches="2 / 5 / 10 / 20 / 50" metric="多类准确率" backbone="ResNet-32" memory="K ≤ 2,000" />
-        <DatasetCard title="iILSVRC" strap="ImageNet ILSVRC 2012" classes="100 或 1,000 类" batches="10 或 100" metric="验证集 Top-5 准确率" backbone="ResNet-18" memory="K ≤ 20,000" />
+        <DatasetCard title="iCIFAR-100" strap="小图像分类" classes="100 个视觉类别" batches="2 / 5 / 10 / 20 / 50" metric="多类准确率" backbone="ResNet-32" memory="K ≤ 2,000" background="CIFAR-100 是自然图像物体分类数据集，含 100 个细类，并组织为 20 个超类。" sourceHref="https://www.cs.toronto.edu/~kriz/cifar.html" sourceLabel="来源：University of Toronto" />
+        <DatasetCard title="iILSVRC" strap="ImageNet ILSVRC 2012" classes="100 或 1,000 类" batches="10 或 100" metric="验证集 Top-5 准确率" backbone="ResNet-18" memory="K ≤ 20,000" background="ILSVRC 2012 是面向自然照片中物体识别的大规模 benchmark；官方设置包含 1,000 个对象类别。" sourceHref="https://www.image-net.org/challenges/LSVRC/2012/" sourceLabel="来源：ImageNet ILSVRC 2012" />
       </div>
       <div className="p9-protocol-foot"><span>iILSVRC-small</span><b>100 类 · 每批 10 类</b><i aria-hidden="true">↔</i><span>iILSVRC-full</span><b>1,000 类 · 每批 100 类</b></div>
     </div>
@@ -153,7 +160,7 @@ function ComponentPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)
   const comparison = mechanismComparisons[mechanism];
   return <section className="p9-workbench p9-workbench--components" role="tabpanel" aria-label="组件对照分析">
       <div className="p9-workbench__evidence">
-      <div className="panel-heading"><div><span className="eyebrow">受控组件对照</span><h2>先选择机制，再查看对应实验</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
+      <div className="panel-heading"><div><span className="eyebrow">Component Differential Analysis · 组件差异分析</span><h2>先选择机制，再查看对应实验</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
       <div className="p9-mechanism-select" role="group" aria-label="选择要检查的 iCaRL 机制">{(["prototype", "rehearsal", "distillation"] as const).map((item) => <button key={item} type="button" className={mechanism === item ? "is-active" : ""} aria-pressed={mechanism === item} onClick={() => { setMechanism(item); setInspected(null); }}>{mechanismComparisons[item].title}</button>)}</div>
       <ComponentMatrix />
       <div className="p9-ablation-meta"><span><i className="is-enabled">●</i> 启用</span><span><i className="is-disabled">○</i> 未启用</span><span>Hybrid 行表示消融配置</span></div>
@@ -164,9 +171,9 @@ function ComponentPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)
       <Table1aDetails />
     </div>
     <aside className="p9-workbench__interpretation p9-claim-panel">
-      <span className="eyebrow">{comparison.title} · {comparison.pair.join(" vs ")}</span><h2>{comparison.question}</h2>
+      <span className="eyebrow">{comparison.comparisonKind} · {comparison.title} · {comparison.pair.join(" vs ")}</span><h2>{comparison.question}</h2>
       <div className="p9-claim-block"><span>对照问题</span><p>{comparison.explanation}</p></div>
-      <div className="p9-claim-block p9-claim-block--supported"><span>实验依据</span><p>在所选 iCIFAR-100 每批类别设置下，对照 {comparison.pair.join(" vs ")}。</p></div>
+      <div className="p9-claim-block p9-claim-block--supported"><span>{mechanism === "rehearsal" ? "对照性证据" : "单因素对照"}</span><p>在所选 iCIFAR-100 每批类别设置下，对照 {comparison.pair.join(" vs ")}。</p></div>
       <div className="p9-claim-block p9-claim-block--boundary"><span>补充说明</span><p>{comparison.nuance}</p></div>
       <div className="p9-claim-block"><span>适用边界</span><p>这些平均值来自论文对 iCIFAR-100 的组件分析，不能说明每个组件在所有设置下都严格提升性能。</p></div>
       {mechanism === "distillation" ? <div className="p9-exception"><b>每种设置下各组件都有帮助吗？</b><strong>并非如此</strong><span>每批 2 类 · iCaRL 57.0% · Hybrid 2 57.6%</span><p>Table 1a 支持蒸馏总体上有贡献，但效果受实验条件影响；作者指出，类别批次最小时蒸馏也可能降低准确率。</p></div> : null}
@@ -283,5 +290,6 @@ export function PageNine({ onContinue }: { onContinue?: () => void }) {
     {tab === "memory" ? <MemoryPanel /> : null}
     {tab === "boundaries" ? <BoundariesPanel onContinue={onContinue} /> : null}
     {tab !== "boundaries" ? <div className="p9-step-controls"><span>{String(currentIndex + 1).padStart(2, "0")} / {String(tabs.length).padStart(2, "0")} · 论文证据工作台</span><div><button type="button" className="icarl-button icarl-button--quiet" disabled={currentIndex === 0} onClick={() => navigateTab(-1)}>上一部分</button><button type="button" className="icarl-button icarl-button--primary" disabled={currentIndex === tabs.length - 1} onClick={() => navigateTab(1)}>下一部分 <span aria-hidden="true">→</span></button></div></div> : null}
+    <details className="p9-reference-hub"><summary>Reference Hub · 数据集背景与来源</summary><ReferenceHub items={datasetReferences} /></details>
   </article>;
 }

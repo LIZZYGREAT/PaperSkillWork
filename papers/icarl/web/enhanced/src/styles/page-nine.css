@@ -16,6 +16,7 @@
 .p9-tag--paper-interpretation { color: #4e745a; border-color: #d0dfd2; background: #eff6ef; }
 .p9-tag--paper-limitation { color: #925a39; border-color: #ead8ca; background: #fbf2ea; }
 .p9-tag--teaching-explanation { color: #665e4a; border-color: #e5dfc9; background: #f8f5e9; }
+.p9-tag--general-background { color: #655e84; border-color: #dad5e9; background: #f4f2fa; }
 .p9-dataset-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .p9-dataset-card { display: grid; align-content: start; min-width: 0; gap: 10px; padding: 13px; border: 1px solid #dce5e0; border-radius: 9px; background: #fbfcfa; }
 .p9-dataset-card:first-child { border-top: 3px solid #56806c; }
@@ -23,6 +24,9 @@
 .p9-dataset-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .p9-dataset-card__top h2 { margin: 4px 0 0; color: #304e50; font-size: 18px; }
 .p9-dataset-card__top .eyebrow { font-size: 11px; }
+.p9-dataset-card__background { display: grid; justify-items: start; gap: 6px; }
+.p9-dataset-card__background p { margin: 0; color: #53696b; font-size: 13px; line-height: 1.5; }
+.p9-dataset-card__background a { color: #446e67; font-size: 12px; text-decoration-thickness: 1px; text-underline-offset: 2px; }
 .p9-image-icon { display: grid; width: 35px; height: 35px; place-items: center; border: 1px solid #d9e4dc; border-radius: 8px; color: #597a66; background: #f1f7f2; font-size: 21px; }
 .p9-dataset-card__scale, .p9-dataset-card__batches { display: grid; gap: 3px; padding: 8px 9px; border-radius: 6px; background: #f1f5f1; }
 .p9-dataset-card__scale > span, .p9-dataset-card__batches > span { color: #617676; font: 700 11px var(--mono); letter-spacing: .04em; }
@@ -95,6 +99,11 @@
 .p9-workbench--overall .p9-workbench__evidence { overflow: hidden; }
 .p9-workbench--overall .p9-workbench__evidence > .p9-batch-selector { justify-content: flex-start; }
 .p9-workbench--components .p9-workbench__evidence { gap: 12px; }
+.p9-reference-hub { padding: 12px 14px; border: 1px solid #dce5e0; border-radius: 9px; background: #fffefa; }
+.p9-reference-hub > summary { color: #3e5d58; font-size: 14px; font-weight: 650; cursor: pointer; }
+.p9-reference-hub[open] { padding: 14px; }
+.p9-reference-hub .rk-reference-hub { margin-top: 14px; }
+.p9-reference-hub .rk-reference-hub__heading p { font-size: 13px; }
 .p9-component-matrix { display: grid; gap: 4px; padding: 10px; border: 1px solid #e0e7e2; border-radius: 8px; background: #fafbf8; }
 .p9-component-matrix > [role="row"] { display: grid; grid-template-columns: minmax(90px, 1fr) repeat(3, minmax(62px, .7fr)); align-items: center; gap: 5px; }
 .p9-component-matrix > [role="row"]:first-child { padding: 2px 6px 7px; border-bottom: 1px solid #e1e8e3; }
