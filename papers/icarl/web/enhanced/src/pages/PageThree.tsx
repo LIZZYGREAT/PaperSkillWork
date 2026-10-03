@@ -84,12 +84,12 @@ function FeatureMap({
   return (
     <div className={`p3-map p3-map--stage-${stage}`}>
       <div className="p3-map__meta"><span>FIXED SYNTHETIC 2D EXAMPLE</span><span>{historicalOnly ? "历史分布 · 当前不可访问" : `当前映射 · φ${currentState === "before" ? "old" : "new"}`}</span><span>所选身份 · {historicalOnly ? "—" : selectedSampleId}</span></div>
-      <svg viewBox="0 0 560 350" role="img" aria-label="二维特征空间中，样本点、类别均值与 query 的位置关系">
+      <svg viewBox="90 20 380 237.5" role="img" aria-label="二维特征空间中，样本点、类别均值与 query 的位置关系">
         <title>Feature space workbench</title>
         <desc>同一编号的样本从输入图像映射到二维特征位置。星形代表由样本计算出的类均值。</desc>
         <defs><marker id="p3-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 8 4 L 0 8" fill="none" stroke="#b88050" strokeWidth="1.2" /></marker></defs>
-        <line className="p3-map__axis" x1="50" y1="175" x2="510" y2="175" />
-        <line className="p3-map__axis" x1="280" y1="22" x2="280" y2="328" />
+        <line className="p3-map__axis" x1="90" y1="175" x2="470" y2="175" />
+        <line className="p3-map__axis" x1="280" y1="20" x2="280" y2="257.5" />
         {showMeans && !historicalOnly ? means.map(({ classId, current, old }) => {
           const currentPosition = chartPoint(current);
           const oldPosition = chartPoint(old);
