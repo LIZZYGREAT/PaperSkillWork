@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
 import { SampleToken } from "../components/SampleToken";
 import { encode2D, sampleById } from "../data/icarl-runtime";
@@ -112,17 +112,19 @@ export function PageTwo() {
 
             <div className="p2-pipeline" aria-label="模型处理的五个阶段">
               {flowStages.map((item, index) => (
-                <div className={`p2-node ${stage === index ? "is-active" : ""} ${index < stage ? "is-complete" : ""}`} key={item.title} aria-current={stage === index ? "step" : undefined}>
-                  <div className="p2-node__top"><span>{String(index + 1).padStart(2, "0")}</span><small>{item.tag}</small></div>
-                  <h3>{item.title}</h3>
-                  {index === 0 ? <div className="p2-node__sample"><SampleToken sample={sampleById("x_7")} role="raw" /><span>同一张样本 x</span></div> : null}
-                  {index === 1 ? <div className="p2-extractor-visual"><div className="p2-feature-blocks"><i /><i /><i /><i /></div><span>卷积与特征块</span><b>φ<sub>Θ</sub></b></div> : null}
-                  {index === 2 ? <div className="p2-vector-visual"><div aria-hidden="true">{[26, 43, 32, 52, 36, 48].map((height, bar) => <i key={bar} style={{ height: `${height}px` }} />)}</div><strong>z = φ<sub>Θ</sub>(x)</strong><small>z ∈ R<sup>d</sup></small></div> : null}
-                  {index === 3 ? <div className="p2-head-visual"><div><i>w<sub>1</sub></i><i>w<sub>2</sub></i><i>w<sub>3</sub></i><b>···</b><i>w<sub>t</sub></i></div><strong>每个已见类别<br />对应一个权重向量</strong></div> : null}
-                  {index === 4 ? <div className="p2-output-visual"><div><span>g<sub>1</sub>(x)</span><i /><b>σ</b></div><div><span>g<sub>2</sub>(x)</span><i /><b>σ</b></div><div><span>g<sub>t</sub>(x)</span><i /><b>σ</b></div><small>逐类独立响应</small></div> : null}
-                </div>
+                <Fragment key={item.title}>
+                  <div className={`p2-node ${stage === index ? "is-active" : ""} ${index < stage ? "is-complete" : ""}`} aria-current={stage === index ? "step" : undefined}>
+                    <div className="p2-node__top"><span>{String(index + 1).padStart(2, "0")}</span><small>{item.tag}</small></div>
+                    <h3>{item.title}</h3>
+                    {index === 0 ? <div className="p2-node__sample"><SampleToken sample={sampleById("x_7")} role="raw" /><span>同一张样本 x</span></div> : null}
+                    {index === 1 ? <div className="p2-extractor-visual"><div className="p2-feature-blocks"><i /><i /><i /><i /></div><span>卷积与特征块</span><b>φ<sub>Θ</sub></b></div> : null}
+                    {index === 2 ? <div className="p2-vector-visual"><div aria-hidden="true">{[26, 43, 32, 52, 36, 48].map((height, bar) => <i key={bar} style={{ height: `${height}px` }} />)}</div><strong>z = φ<sub>Θ</sub>(x)</strong><small>z ∈ R<sup>d</sup></small></div> : null}
+                    {index === 3 ? <div className="p2-head-visual"><div><i>w<sub>1</sub></i><i>w<sub>2</sub></i><i>w<sub>3</sub></i><b>···</b><i>w<sub>t</sub></i></div><strong>每个已见类别<br />对应一个权重向量</strong></div> : null}
+                    {index === 4 ? <div className="p2-output-visual"><div><span>g<sub>1</sub>(x)</span><i /><b>σ</b></div><div><span>g<sub>2</sub>(x)</span><i /><b>σ</b></div><div><span>g<sub>t</sub>(x)</span><i /><b>σ</b></div><small>逐类独立响应</small></div> : null}
+                  </div>
+                  {index < flowStages.length - 1 ? <div className={`p2-pipeline-arrow ${index < stage ? "is-complete" : ""}`} aria-hidden="true"><svg viewBox="0 0 48 22"><path d="M2 11h39m-7-7 7 7-7 7" /></svg></div> : null}
+                </Fragment>
               ))}
-              {flowStages.slice(0, -1).map((item, index) => <div className={`p2-pipeline-arrow ${index < stage ? "is-complete" : ""}`} aria-hidden="true" key={`${item.title}-to-next`}><svg viewBox="0 0 48 22"><path d="M2 11h39m-7-7 7 7-7 7" /></svg></div>)}
             </div>
 
             <div className="p2-stage-caption" aria-live="polite"><span className="p2-stage-caption__dot" /><div><b>{flowStages[stage].tag}</b><p>{flowStages[stage].description}</p></div><span className="p2-stage-caption__count">{stage + 1} / {flowStages.length}</span></div>
