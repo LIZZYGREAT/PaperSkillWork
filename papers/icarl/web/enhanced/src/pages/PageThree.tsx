@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
 import { SampleToken } from "../components/SampleToken";
@@ -15,6 +15,8 @@ const steps: readonly GuidedStep[] = [
 
 const classIds: readonly ClassId[] = ["A", "B", "C"];
 const query: Vector2 = [0.4, 2.0];
+const chartOrigin = { x: 320, y: 275 };
+const chartScale = 98;
 
 function p3SamplesForClass(classId: ClassId): Sample[] {
   return samplesForClass(classId);
@@ -77,7 +79,7 @@ function FeatureMap({
   }, [stage]);
 
   const currentState: FeatureState = stage === 3 && phase > 0 || stage === 5 ? "after" : "before";
-  const chartPoint = (vector: Vector2) => ({ x: 280 + vector[0] * 52, y: 175 - vector[1] * 52 });
+  const chartPoint = (vector: Vector2) => ({ x: chartOrigin.x + vector[0] * chartScale, y: chartOrigin.y - vector[1] * chartScale });
   const historicalOnly = stage === 4;
   const showQuery = stage === 2;
   const showMeans = stage === 1 || stage === 2 || stage === 3 && (phase === 0 || phase === 2) || stage === 5;
@@ -97,14 +99,23 @@ function FeatureMap({
 
   return (
     <div className={`p3-map p3-map--stage-${stage}`}>
-      <div className="p3-map__meta"><span>FIXED SYNTHETIC · L2-NORMALIZED</span><span>{historicalOnly ? "历史分布 · 当前不可访问" : `当前映射 · φ${currentState === "before" ? "old" : "new"}`}</span><span>所选身份 · {historicalOnly ? "—" : selectedSampleId}</span></div>
-      <svg viewBox="90 8 380 242" role="img" aria-label="二维特征空间中，样本点、类别均值与 query 的位置关系">
+      <div className="p3-map__meta"><span>FIXED SYNTHETIC · RAW → L2-NORMALIZED</span><span>{historicalOnly ? "历史分布 · 当前不可访问" : `当前映射 · φ${currentState === "before" ? "old" : "new"}`}</span><span>所选身份 · {historicalOnly ? "—" : selectedSampleId}</span></div>
+      <svg viewBox="0 0 640 400" role="img" aria-label="原始特征点沿虚线经过原点映射到 L2 单位圆；填充点、类别均值与 query 展示当前分类关系">
         <title>Feature space workbench</title>
-        <desc>同一编号的样本从输入图像映射到二维特征位置。星形代表由样本计算出的类均值。</desc>
-        <circle className="p3-map__unit-circle" cx="280" cy="175" r="52" />
+        <desc>空心点是未归一化的 φΘ(x)，径向虚线经过原点，填充点是落在单位圆上的 L2 归一化特征 z。星形代表由样本计算出的类均值。</desc>
+        <circle className="p3-map__unit-circle" cx={chartOrigin.x} cy={chartOrigin.y} r={chartScale} />
         <defs><marker id="p3-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 8 4 L 0 8" fill="none" stroke="#b88050" strokeWidth="1.2" /></marker></defs>
-        <line className="p3-map__axis" x1="90" y1="175" x2="470" y2="175" />
-        <line className="p3-map__axis" x1="280" y1="20" x2="280" y2="257.5" />
+        <line className="p3-map__axis" x1="24" y1={chartOrigin.y} x2="616" y2={chartOrigin.y} />
+        <line className="p3-map__axis" x1={chartOrigin.x} y1="14" x2={chartOrigin.x} y2="386" />
+        {points.map((sample) => {
+          const rawPosition = chartPoint(encode2D(sample, currentState));
+          const isSelected = !historicalOnly && selectedSampleId === sample.id;
+          return <g key={`normalization-${sample.id}`} className={`p3-map__normalization${historicalOnly ? " is-unavailable" : ""}${isSelected ? " is-selected" : ""}`} aria-hidden="true" style={{ "--p3-point-color": CLASS_VISUALS[sample.classId].color } as CSSProperties}>
+            <line className="p3-map__normalization-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={rawPosition.x} y2={rawPosition.y} />
+            <circle className="p3-map__raw-point" cx={rawPosition.x} cy={rawPosition.y} r="2.8" />
+          </g>;
+        })}
+        <circle className="p3-map__origin" cx={chartOrigin.x} cy={chartOrigin.y} r="3.2" />
         {showMeans && !historicalOnly ? means.map(({ classId, current, old }) => {
           const currentPosition = chartPoint(current);
           const oldPosition = chartPoint(old);
@@ -142,7 +153,8 @@ function FeatureMap({
         })() : null}
         {points.map((sample) => {
           const old = normalize(encode2D(sample, "before"));
-          const current = normalize(encode2D(sample, currentState));
+          const rawCurrent = encode2D(sample, currentState);
+          const current = normalize(rawCurrent);
           const position = chartPoint(current);
           const oldPosition = chartPoint(old);
           const color = CLASS_VISUALS[sample.classId].color;
@@ -160,13 +172,15 @@ function FeatureMap({
               <line className="p3-map__movement" x1={oldPosition.x} y1={oldPosition.y} x2={position.x} y2={position.y} />
               <circle className="p3-map__old-position" cx={oldPosition.x} cy={oldPosition.y} r="3" />
             </> : null}
-            <circle cx={position.x} cy={position.y} r={isSelected ? 5.5 : 4.2} fill={historicalOnly ? "#cbd2cf" : color} />
+            <circle className="p3-map__normalized-point" cx={position.x} cy={position.y} r={isSelected ? 4.2 : 3.2} fill={historicalOnly ? "#cbd2cf" : color} />
             <title>{`${sample.id} ↔ 原始图像身份 ↔ φ(x)`}</title>
           </g>;
         })}
       </svg>
       <div className="p3-map__legend">
-        <span><i className={historicalOnly ? "p3-map__legend-ghost" : "p3-map__legend-dot"} />{historicalOnly ? "历史分布 · 当前不可访问" : "特征样本"}</span>
+        <span><i className="p3-map__legend-raw" />原始特征 φ<sub>Θ</sub>(x)</span>
+        <span><i className={historicalOnly ? "p3-map__legend-ghost" : "p3-map__legend-dot"} />{historicalOnly ? "历史归一化特征 · 当前不可访问" : "L2 归一化特征 z"}</span>
+        <span><i className="p3-map__legend-origin" />原点与径向虚线</span>
         {(showMeans || stage === 3 && phase === 1) && !historicalOnly ? visibleClasses.map((classId) => <span key={`legend-${classId}`}><i className={`p3-map__legend-mean p3-map__legend-mean--${classId}`} />μ<sub>{CLASS_VISUALS[classId].index}</sub>{stage === 3 && phase < 2 ? " · φold" : stage === 3 ? " · φnew" : ""}</span>) : null}
         {stage === 3 && phase > 0 ? <span><i className="p3-map__legend-ghost" />φold 位置</span> : null}
         {showQuery ? <span><i className="p3-map__legend-query" />query q</span> : null}
@@ -223,11 +237,11 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
               </button>
             ))}
           </div>
-          {stage === 4 ? <div className="p3-source__unavailable"><b>X<sub>A</sub></b><span>完整旧类样本不可访问</span></div> : <div className="p3-source__mapping"><span>IMAGE</span><b>φ<sub>Θ</sub></b><span className="p3-source__mapping-line" aria-hidden="true" /><strong>{selectedSample.id}</strong><small>同一身份，两个表示</small></div>}
+          {stage === 4 ? <div className="p3-source__unavailable"><b>X<sub>A</sub></b><span>完整旧类样本不可访问</span></div> : <div className="p3-source__mapping" aria-label={`样本 ${selectedSample.id} 从图像映射为特征表示`}><span>IMAGE</span><b>φ<sub>Θ</sub></b><span className="p3-source__mapping-line" aria-hidden="true" /><strong>{selectedSample.id}</strong><small>同一身份，两个表示</small></div>}
         </section>
 
         <section className="panel p3-space-panel">
-          <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>类别点、均值与 query</h2></div>{stage === 3 ? <span className="p3-phase-badge">{phase + 1} / 3 · {phase === 0 ? "更新 Θ" : phase === 1 ? "移动特征" : "重算均值"}</span> : null}</div>
+          <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>类别点、均值与 query</h2></div><span className={`p3-phase-badge${stage === 3 ? "" : " is-placeholder"}`} aria-hidden={stage !== 3}>{stage === 3 ? `${phase + 1} / 3 · ${phase === 0 ? "更新 Θ" : phase === 1 ? "移动特征" : "重算均值"}` : "1 / 3 · 更新 Θ"}</span></div>
           <FeatureMap stage={stage} phase={phase} selectedSampleId={selectedSampleId} focus={focus} onSelectSample={setSelectedSampleId} />
           {stage === 3 ? <div className="p3-transition-controls">
             <div><b>{phase === 0 ? "① Θ 更新" : phase === 1 ? "② φΘ 改变，样本位置移动" : "③ 用当前 φΘ 重算 prototype"}</b><span>{phase < 2 ? "依次推进，观察样本先变、均值后变。" : "所有类别均值现已对应新表示。"}</span></div>
