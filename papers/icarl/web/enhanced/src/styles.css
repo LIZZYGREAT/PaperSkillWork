@@ -78,21 +78,67 @@
   .feature-space__legend { font-size: 11px; }
 }
 
-.icarl-reference-launcher { position: fixed; z-index: 1200; right: 20px; bottom: 18px; min-height: 42px; padding: 0 15px; border: 1px solid #326c63; border-radius: 999px; color: #fff; background: #326c63; box-shadow: 0 5px 18px rgb(31 54 54 / 22%); font: 600 13px/1.2 "Segoe UI", "Microsoft YaHei UI", sans-serif; cursor: pointer; }
-.icarl-reference-launcher:focus-visible,.icarl-reference-dialog button:focus-visible { outline: 3px solid #d89242; outline-offset: 3px; }
-.icarl-reference-overlay { position: fixed; z-index: 1400; inset: 0; display: grid; place-items: center; padding: 16px; background: rgb(21 39 40 / 48%); }
-.icarl-reference-dialog { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 15px; box-sizing: border-box; width: min(1180px, calc(100vw - 32px)); max-height: min(900px, calc(100dvh - 32px)); overflow: auto; padding: 18px; border: 1px solid #d4e0d9; border-radius: 14px; background: #fffefa; box-shadow: 0 20px 70px rgb(13 32 33 / 28%); }
-.icarl-reference-dialog__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #597274; font-size: 12px; font-weight: 650; letter-spacing: .03em; }
-.icarl-reference-dialog__toolbar button { min-height: 36px; padding: 0 13px; border: 1px solid #cbd9d2; border-radius: 7px; color: #355953; background: #f5f8f5; font: inherit; cursor: pointer; }
-.icarl-reference-dialog .rk-reference-hub { min-height: 0; }
-.icarl-reference-dialog .rk-reference-hub__grid { min-height: 0; }
-.icarl-reference-dialog .rk-reference-hub__list { max-height: 56vh; overflow: auto; padding-right: 4px; }
-.icarl-reference-dialog .rk-reference-hub__detail { min-width: 0; overflow-wrap: anywhere; }
-.icarl-reference-dialog .rk-reference-hub__detail a { color: #326c63; }
+.icarl-topbar__actions { display: flex; align-items: center; gap: 13px; }
+.icarl-hub-launch { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 11px; border: 1px solid #dce4e0; border-radius: 9px; color: #385154; background: #fffefa; font-size: 14px; cursor: pointer; }
+.icarl-hub-launch:hover { border-color: #9eb0ab; background: #fff; }
+.icarl-hub-launch > span { color: #397f78; font-size: 19px; line-height: 1; }
+.icarl-hub-launch:focus-visible,.icarl-reference-dialog button:focus-visible { outline: 3px solid #d28b50; outline-offset: 3px; }
+.icarl-reference-overlay { position: fixed; z-index: 1400; inset: 0; display: flex; justify-content: flex-end; background: rgb(18 37 40 / 42%); backdrop-filter: blur(3px); }
+.icarl-reference-dialog { display: flex; width: min(980px, 84vw); height: 100dvh; min-height: 0; flex-direction: column; overflow: hidden; border-left: 1px solid #dce4e0; color: #1e3438; background: #fffefa; box-shadow: -16px 0 45px rgb(18 37 40 / 18%); }
+.icarl-reference-dialog__toolbar { display: flex; min-height: 68px; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 34px; border-bottom: 1px solid #dce4e0; }
+.icarl-reference-dialog__toolbar > span { color: #53686a; font-size: 12px; font-weight: 650; letter-spacing: .1em; }
+.icarl-reference-dialog__toolbar button { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #dce4e0; border-radius: 8px; color: #385154; background: #fff; font-size: 24px; line-height: 1; cursor: pointer; }
+.icarl-reference-dialog .rk-reference-hub { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 0; overflow: hidden; color: #1e3438; }
+.icarl-reference-dialog .rk-reference-hub__heading { flex: 0 0 auto; align-items: center; padding: 16px 34px 12px; border-bottom: 1px solid #dce4e0; }
+.icarl-reference-dialog .rk-reference-hub__heading h2 { color: #243d41; font-size: 22px; line-height: 1.25; }
+.icarl-reference-dialog .rk-reference-hub__heading p { margin-top: 6px; color: #465d60; font-size: 15px; line-height: 1.65; }
+.icarl-reference-dialog .rk-reference-hub__heading > span { color: #52686a; font-size: 12px; }
+.icarl-reference-dialog .rk-reference-hub__filters { flex: 0 0 auto; align-items: end; padding: 15px 34px 18px; border-bottom: 1px solid #dce4e0; }
+.icarl-reference-dialog .rk-reference-hub__filters label { gap: 7px; color: #354f52; font-size: 14px; font-weight: 600; }
+.icarl-reference-dialog .rk-reference-hub__filters input,.icarl-reference-dialog .rk-reference-hub__filters select { min-height: 46px; border-color: #c6d2cd; color: #1e3438; background: #fbfcfa; font-size: 15px; }
+.icarl-reference-dialog .rk-reference-hub__filters input:focus,.icarl-reference-dialog .rk-reference-hub__filters select:focus { outline: 0; border-color: #83a29d; box-shadow: 0 0 0 3px rgb(78 128 119 / 12%); }
+.icarl-reference-dialog .rk-reference-hub__grid { min-height: 0; flex: 1; grid-template-columns: minmax(350px, .9fr) minmax(440px, 1.1fr); gap: 0; overflow: hidden; }
+.icarl-reference-dialog .rk-reference-hub__list { min-height: 0; padding: 17px 20px; border-right: 1px solid #dce4e0; overflow: auto; }
+.icarl-reference-dialog .rk-reference-hub__list button { padding: 13px 12px; gap: 7px 10px; border-color: transparent; border-radius: 9px; color: #1e3438; background: transparent; }
+.icarl-reference-dialog .rk-reference-hub__list button:hover,.icarl-reference-dialog .rk-reference-hub__list button.is-selected { border-color: #d7e4df; background: #f0f5f2; }
+.icarl-reference-dialog .rk-reference-hub__list button > span:first-child b { color: #243d41; font-size: 15px; line-height: 1.4; }
+.icarl-reference-dialog .rk-reference-hub__list small { color: #4d6265; font-size: 13px; line-height: 1.6; }
+.icarl-reference-dialog .rk-reference-hub__kind { color: #397f78; font-size: 11px; }
+.icarl-reference-dialog .rk-reference-hub__detail { min-width: 0; min-height: 0; padding: 30px clamp(28px, 3vw, 42px); overflow: auto; border: 0; border-radius: 0; background: #fff; overflow-wrap: anywhere; }
+.icarl-reference-dialog .rk-reference-hub__detail h3 { margin: 10px 0 8px; color: #243d41; font-size: 27px; line-height: 1.2; }
+.icarl-reference-dialog .rk-reference-hub__detail p { color: #465d60; font-size: 15px; line-height: 1.75; }
+.icarl-reference-dialog .rk-reference-hub__detail a { color: #245e59; font-size: 14px; }
+.icarl-reference-dialog .rk-reference-hub__tags span { color: #4d6265; font-size: 12px; }
+.icarl-reference-dialog .rk-reference-hub__empty { color: #465d60; font-size: 14px; line-height: 1.6; }
 body:has(.icarl-reference-overlay) { overflow: hidden; }
+
+.rk-term-ref { color: #2f726b; }
+.rk-term-ref:hover,.rk-term-ref:focus-visible { color: #194d48; border-bottom-style: solid; }
+.rk-term-popover { width: min(420px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); min-width: 0; padding: 18px; border-color: #cfdbd6; border-radius: 12px; color: #1e3438; background: #fffefa; box-shadow: 0 16px 42px rgb(22 49 51 / 18%); overflow-wrap: anywhere; }
+.icarl-term-popover__eyebrow { color: #397f78; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+.rk-term-popover h3 { margin: 9px 0 7px; color: #243d41; font-size: 18px; line-height: 1.35; }
+.rk-term-popover p { margin: 9px 0; color: #465d60; font-size: 15px; line-height: 1.7; }
+.rk-term-popover p b { color: #385154; }
+.rk-term-popover__note { padding: 10px 12px; border-left: 2px solid #d6a15a; background: #faf5e8; }
+.rk-term-popover__link { padding: 8px 0 0; color: #245e59; font-size: 14px; text-decoration: none; }
+
+@media (max-width: 900px) {
+  .icarl-reference-dialog { width: 100vw; }
+  .icarl-reference-dialog .rk-reference-hub__grid { grid-template-columns: minmax(270px, .85fr) minmax(330px, 1.15fr); }
+}
 @media (max-width: 760px) {
-  .icarl-reference-launcher { right: 12px; bottom: 12px; min-height: 40px; }
-  .icarl-reference-overlay { padding: 8px; }
-  .icarl-reference-dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); padding: 12px; }
-  .icarl-reference-dialog .rk-reference-hub__list { max-height: 34vh; }
+  .icarl-topbar__actions { gap: 8px; }
+  .icarl-hub-launch { min-height: 36px; padding: 5px 8px; font-size: 12px; }
+  .icarl-reference-overlay { align-items: flex-end; }
+  .icarl-reference-dialog { width: 100%; height: min(92vh, 900px); margin: auto 0 0; border-radius: 18px 18px 0 0; border: 0; }
+  .icarl-reference-dialog__toolbar { min-height: 58px; padding: 9px 20px; }
+  .icarl-reference-dialog .rk-reference-hub__heading h2 { font-size: 20px; }
+  .icarl-reference-dialog .rk-reference-hub__heading { padding: 14px 20px 12px; }
+  .icarl-reference-dialog .rk-reference-hub__heading p { font-size: 14px; }
+  .icarl-reference-dialog .rk-reference-hub__filters { align-items: stretch; flex-direction: column; padding: 14px 20px 16px; }
+  .icarl-reference-dialog .rk-reference-hub__grid { display: flex; flex: none; flex-direction: column; overflow: visible; }
+  .icarl-reference-dialog .rk-reference-hub__list { max-height: 34vh; padding: 12px 14px; border-right: 0; border-bottom: 1px solid #dce4e0; }
+  .icarl-reference-dialog .rk-reference-hub__detail { overflow: visible; padding: 22px 24px; }
+  .icarl-reference-dialog .rk-reference-hub__detail h3 { font-size: 23px; }
+  .icarl-reference-dialog .rk-reference-hub__detail p { font-size: 14px; }
 }

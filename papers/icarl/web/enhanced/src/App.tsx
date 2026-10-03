@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PageOne } from "./pages/PageOne";
 import { PageTwo } from "./pages/PageTwo";
 import { PageThree } from "./pages/PageThree";
@@ -11,6 +11,7 @@ import { PageNine } from "./pages/PageNine";
 import { PageTen } from "./pages/PageTen";
 import { ICARL_REFERENCE_ITEMS, type ReferenceOpenEvent } from "./data/icarl-reference-content";
 import { ReferenceHub } from "./shared/core/reference";
+import { useFocusTrap } from "./shared/foundation/accessibility/useReducedMotion";
 
 type PageId = "page-1" | "page-2" | "page-3" | "page-4" | "page-5" | "page-6" | "page-7" | "page-8" | "page-9" | "page-10";
 
@@ -30,8 +31,9 @@ const pages: { id: PageId; number: string; title: string; subtitle: string }[] =
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>("page-1");
   const [referenceOpen, setReferenceOpen] = useState(false);
-  const closeReferenceRef = useRef<HTMLButtonElement | null>(null);
   const activePageInfo = pages.find((page) => page.id === activePage)!;
+  const closeReference = useCallback(() => setReferenceOpen(false), []);
+  const referenceDialogRef = useFocusTrap<HTMLElement>(referenceOpen, closeReference);
 
   useEffect(() => {
     const handleReferenceOpen = (event: Event) => {
@@ -43,16 +45,6 @@ export default function App() {
     window.addEventListener("icarl:open-reference", handleReferenceOpen);
     return () => window.removeEventListener("icarl:open-reference", handleReferenceOpen);
   }, []);
-
-  useEffect(() => {
-    if (!referenceOpen) return;
-    closeReferenceRef.current?.focus();
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setReferenceOpen(false);
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [referenceOpen]);
 
   return (
     <>
@@ -79,7 +71,7 @@ export default function App() {
       <div className="ewc-main-column">
         <header className="ewc-topbar">
           <div className="ewc-topbar__path"><span>ICARL</span><span className="ewc-slash">/</span><strong>{activePageInfo.number} · {activePageInfo.title}</strong></div>
-          <span className="ewc-topbar__edition"><i /> W8 · 交互式教程</span>
+          <div className="icarl-topbar__actions"><button type="button" className="icarl-hub-launch" aria-haspopup="dialog" aria-expanded={referenceOpen} onClick={() => setReferenceOpen(true)}><span aria-hidden="true">⌕</span> Reference Hub</button><span className="ewc-topbar__edition"><i /> W8 · 交互式教程</span></div>
         </header>
         <main className="tutorial-main ewc-main" id="top">
           {activePage === "page-1" ? <PageOne onOpenPageTwo={() => setActivePage("page-2")} /> : null}
@@ -96,10 +88,9 @@ export default function App() {
         <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 03 · 04 · 05 · 06 · 07 · 08 · 09 · 10 页</span></footer>
       </div>
     </div>
-    <button type="button" className="icarl-reference-launcher" aria-haspopup="dialog" aria-expanded={referenceOpen} onClick={() => setReferenceOpen(true)}>Reference Hub</button>
     {referenceOpen ? <div className="icarl-reference-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setReferenceOpen(false); }}>
-      <section className="icarl-reference-dialog" role="dialog" aria-modal="true" aria-label="Reference Hub">
-        <header className="icarl-reference-dialog__toolbar"><span>iCaRL · on-demand reference</span><button ref={closeReferenceRef} type="button" onClick={() => setReferenceOpen(false)}>Close</button></header>
+      <section ref={referenceDialogRef} className="icarl-reference-dialog" role="dialog" aria-modal="true" aria-label="Reference Hub" tabIndex={-1}>
+        <header className="icarl-reference-dialog__toolbar"><span>iCaRL · REFERENCE INDEX</span><button type="button" onClick={closeReference} aria-label="Close Reference Hub">×</button></header>
         <ReferenceHub items={ICARL_REFERENCE_ITEMS} />
       </section>
     </div> : null}
