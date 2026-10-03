@@ -35,6 +35,16 @@
       "component": "PageFour",
       "status": "complete"
     },
+    "L08": {
+      "stage": "S05",
+      "component": "PageFive",
+      "status": "complete"
+    },
+    "L09": {
+      "stage": "S05",
+      "component": "PageFive + runFeatureHerding",
+      "status": "complete"
+    },
     "L23": {
       "stage": "S08",
       "component": "PageTen + FeatureSpaceWorkbench",
