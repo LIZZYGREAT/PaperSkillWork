@@ -120,7 +120,13 @@ export function PageSix() {
           <div className="panel-heading"><div><span className="eyebrow">INCOMING STAGE DATA</span><h2>新类 D 的完整训练图像</h2></div><span className="p6-new-count">{INCOMING_SAMPLES.length} images</span></div>
           <p className="p6-panel-intro">新类到达时，当前阶段可以访问 X<sub>D</sub> 中的全部样本。</p>
           <div className="p6-incoming-list">{INCOMING_SAMPLES.map((sample) => <SampleChip key={sample.id} sample={sample} origin="new" />)}</div>
-          <div className="p6-state-separation"><span>Persistent model state</span><b>Θ</b><i>+</i><span>Persistent memory state</span><b>P</b><i>+</i><span>Incoming stage data</span><strong>X<sub>D</sub></strong></div>
+          <div className="p6-state-separation" aria-label="持久模型、持久记忆和新阶段数据共同组成当前更新状态">
+            <div className="p6-state-item"><span>网络参数</span><b>Θ</b></div>
+            <i aria-hidden="true">+</i>
+            <div className="p6-state-item"><span>旧类记忆</span><b>P</b></div>
+            <i aria-hidden="true">+</i>
+            <div className="p6-state-item"><span>新类数据</span><strong>X<sub>D</sub></strong></div>
+          </div>
         </section>
       </section> : null}
 
