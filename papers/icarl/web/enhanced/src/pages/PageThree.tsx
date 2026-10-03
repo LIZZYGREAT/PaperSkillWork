@@ -13,9 +13,44 @@ const steps: readonly GuidedStep[] = [
 
 const classIds: readonly ClassId[] = ["A", "B", "C"];
 const query: Vector2 = [0.4, 2.0];
-const allSamples = classIds.flatMap((classId) => samplesForClass(classId));
+const p3SamplesByClass = new Map<ClassId, Sample[]>();
+const classCloudPhases: Record<ClassId, number> = {
+  A: 0,
+  B: Math.PI / 9,
+  C: (2 * Math.PI) / 9,
+  D: 0,
+};
 
-function classMean(classId: ClassId, state: FeatureState, samples: readonly Sample[] = samplesForClass(classId)): Vector2 {
+// Use opposite sample pairs so each class keeps its prototype while its points stay off the center.
+for (const classId of classIds) {
+  const sourceSamples = samplesForClass(classId);
+  const center = mean(sourceSamples.map((sample) => sample.raw));
+  p3SamplesByClass.set(classId, sourceSamples.map((sample, index) => {
+    const radius = index % 3 === 1 ? 0.84 : 0.72;
+    const angle = classCloudPhases[classId] + (index * Math.PI) / 3;
+    return {
+      ...sample,
+      raw: [
+        center[0] + Math.cos(angle) * radius,
+        center[1] + Math.sin(angle) * radius,
+      ],
+    };
+  }));
+}
+
+function p3SamplesForClass(classId: ClassId): Sample[] {
+  return p3SamplesByClass.get(classId) ?? [];
+}
+
+const allSamples = classIds.flatMap((classId) => p3SamplesForClass(classId));
+const oldMeanLabelOffsets: Record<ClassId, Vector2> = {
+  A: [-68, -16],
+  B: [-88, 62],
+  C: [35, -5],
+  D: [10, -10],
+};
+
+function classMean(classId: ClassId, state: FeatureState, samples: readonly Sample[] = p3SamplesForClass(classId)): Vector2 {
   return mean(samples.map((sample) => encode2D(sample, state)));
 }
 
@@ -29,13 +64,13 @@ const queryDistances = classIds
   .map((classId) => ({ classId, distance: distance(query, prototypeBefore.get(classId)!) }))
   .sort((a, b) => a.distance - b.distance);
 const predictedClass = queryDistances[0].classId;
-const retainedSubset = samplesForClass("A").slice(0, 3);
+const retainedSubset = p3SamplesForClass("A").slice(0, 3);
 
 type FormulaFocus = "feature" | "mean" | "distance" | "decision";
 
 function starPath(x: number, y: number) {
   return Array.from({ length: 10 }, (_, index) => {
-    const radius = index % 2 === 0 ? 9 : 4;
+    const radius = index % 2 === 0 ? 6.5 : 3.2;
     const angle = -Math.PI / 2 + (index * Math.PI) / 5;
     return `${index === 0 ? "M" : "L"}${x + Math.cos(angle) * radius},${y + Math.sin(angle) * radius}`;
   }).join(" ") + " Z";
@@ -55,10 +90,10 @@ function FeatureMap({
   onSelectSample: (id: string) => void;
 }) {
   const points = useMemo(() => {
-    if (stage === 0 || stage === 1) return samplesForClass("A");
+    if (stage === 0 || stage === 1) return p3SamplesForClass("A");
     if (stage === 2) return allSamples;
     if (stage === 3) return allSamples;
-    if (stage === 4) return samplesForClass("A");
+    if (stage === 4) return p3SamplesForClass("A");
     return retainedSubset;
   }, [stage]);
 
@@ -84,7 +119,7 @@ function FeatureMap({
   return (
     <div className={`p3-map p3-map--stage-${stage}`}>
       <div className="p3-map__meta"><span>FIXED SYNTHETIC 2D EXAMPLE</span><span>{historicalOnly ? "历史分布 · 当前不可访问" : `当前映射 · φ${currentState === "before" ? "old" : "new"}`}</span><span>所选身份 · {historicalOnly ? "—" : selectedSampleId}</span></div>
-      <svg viewBox="90 20 380 237.5" role="img" aria-label="二维特征空间中，样本点、类别均值与 query 的位置关系">
+      <svg viewBox="90 8 380 242" role="img" aria-label="二维特征空间中，样本点、类别均值与 query 的位置关系">
         <title>Feature space workbench</title>
         <desc>同一编号的样本从输入图像映射到二维特征位置。星形代表由样本计算出的类均值。</desc>
         <defs><marker id="p3-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 8 4 L 0 8" fill="none" stroke="#b88050" strokeWidth="1.2" /></marker></defs>
@@ -107,9 +142,10 @@ function FeatureMap({
         }) : null}
         {stage === 3 && phase === 1 ? means.map(({ classId, old }) => {
           const oldPosition = chartPoint(old);
+          const [labelXOffset, labelYOffset] = oldMeanLabelOffsets[classId];
           return <g key={`old-mean-${classId}`}>
             <path className={`p3-map__mean p3-map__mean--${classId}`} d={`M ${oldPosition.x} ${oldPosition.y - 9} L ${oldPosition.x + 9} ${oldPosition.y} L ${oldPosition.x} ${oldPosition.y + 9} L ${oldPosition.x - 9} ${oldPosition.y} Z`} />
-            <text className="p3-map__label" x={oldPosition.x + 11} y={oldPosition.y - 10}>μ{classId} · φold</text>
+            <text className="p3-map__label" x={oldPosition.x + labelXOffset} y={oldPosition.y + labelYOffset}>μ{classId} · φold</text>
           </g>;
         }) : null}
         {showQuery ? (() => {
@@ -119,8 +155,8 @@ function FeatureMap({
               const m = chartPoint(prototypeBefore.get(classId)!);
               return <line key={`q-${classId}`} className={`p3-map__distance${classId === predictedClass || focus === "distance" ? " is-nearest" : ""}`} x1={q.x} y1={q.y} x2={m.x} y2={m.y} />;
             })}
-            <circle className={`p3-map__query${focus === "feature" ? " is-focused" : ""}`} cx={q.x} cy={q.y} r="6" />
-            <path className="p3-map__query-cross" d={`M ${q.x - 10} ${q.y} H ${q.x + 10} M ${q.x} ${q.y - 10} V ${q.y + 10}`} />
+            <circle className={`p3-map__query${focus === "feature" ? " is-focused" : ""}`} cx={q.x} cy={q.y} r="3.2" />
+            <path className="p3-map__query-cross" d={`M ${q.x - 3.5} ${q.y} H ${q.x + 3.5} M ${q.x} ${q.y - 3.5} V ${q.y + 3.5}`} />
             <text className="p3-map__query-label" x={q.x + 13} y={q.y + 18}>query q</text>
           </g>;
         })() : null}
@@ -142,9 +178,9 @@ function FeatureMap({
           >
             {stage === 3 && phase > 0 ? <>
               <line className="p3-map__movement" x1={oldPosition.x} y1={oldPosition.y} x2={position.x} y2={position.y} />
-              <circle className="p3-map__old-position" cx={oldPosition.x} cy={oldPosition.y} r="4.5" />
+              <circle className="p3-map__old-position" cx={oldPosition.x} cy={oldPosition.y} r="3" />
             </> : null}
-            <circle cx={position.x} cy={position.y} r={isSelected ? 8 : 6} fill={historicalOnly ? "#cbd2cf" : color} />
+            <circle cx={position.x} cy={position.y} r={isSelected ? 5.5 : 4.2} fill={historicalOnly ? "#cbd2cf" : color} />
             <title>{`${sample.id} ↔ 原始图像身份 ↔ φ(x)`}</title>
           </g>;
         })}
@@ -162,7 +198,7 @@ function FeatureMap({
 export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   const [stage, setStage] = useState(0);
   const [phase, setPhase] = useState(0);
-  const [selectedSampleId, setSelectedSampleId] = useState(samplesForClass("A")[0].id);
+  const [selectedSampleId, setSelectedSampleId] = useState(p3SamplesForClass("A")[0].id);
   const [focus, setFocus] = useState<FormulaFocus>("feature");
   const selectedSample = allSamples.find((sample) => sample.id === selectedSampleId) ?? allSamples[0];
 
@@ -183,7 +219,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
             ? "问题不是不知道均值怎么算，而是完整旧类样本已不可访问，无法按原式重算真实 μA。"
             : "若长期只保留少量真实旧样本，就能在当前 φ 下重新编码它们；下一页会正式定义这些 exemplar。";
 
-  const shownSourceSamples = stage <= 1 ? samplesForClass("A") : stage === 4 ? [] : stage === 5 ? retainedSubset : [selectedSample];
+  const shownSourceSamples = stage <= 1 ? p3SamplesForClass("A") : stage === 4 ? [] : stage === 5 ? retainedSubset : [selectedSample];
 
   return (
     <article className="tutorial-page icarl-page icarl-page--p3">
