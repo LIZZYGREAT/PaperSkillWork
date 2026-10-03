@@ -131,9 +131,9 @@ export function FeatureSpaceWorkbench({
                   ? { x: position.x + 9, y: position.y + 13, textAnchor: "start" as const }
                   : { x: position.x + 8, y: position.y - 7, textAnchor: "start" as const };
             return (
-              <g key={item.id} className="feature-space__sample" tabIndex={0} role="img" aria-label={`${CLASS_VISUALS[item.classId].label}，样本 ${item.id}${item.order ? `，Herding 顺序 p${item.order}` : ""}`} data-herding-selected={item.order ? "true" : undefined} style={{ "--selection-order": item.order ?? 0 } as CSSProperties}>
+              <g key={item.id} className="feature-space__sample" tabIndex={0} role="img" aria-label={`${CLASS_VISUALS[item.classId].displayLabel}，样本 ${item.id}${item.order ? `，Herding 顺序 p${item.order}` : ""}`} data-herding-selected={item.order ? "true" : undefined} style={{ "--selection-order": item.order ?? 0 } as CSSProperties}>
                 <circle className={`sample-mark${item.order ? " is-herding-selected" : ""}`} cx={position.x} cy={position.y} r={(item.order ? 7 : 5.5) * markerScale} fill={color} />
-                <title>{`${CLASS_VISUALS[item.classId].label} · 样本 ${item.id}${item.order ? ` · Herding 顺序 p${item.order}` : ""}`}</title>
+                <title>{`${CLASS_VISUALS[item.classId].displayLabel} · 样本 ${item.id}${item.order ? ` · Herding 顺序 p${item.order}` : ""}`}</title>
                 {showSampleLabels ? <text {...sampleLabel}>{item.order ? `p${item.order}` : item.id}</text> : null}
               </g>
             );
@@ -146,7 +146,7 @@ export function FeatureSpaceWorkbench({
           {prototypeRows.map(({ prototype, point }) => (
             <g key={`prototype-${prototype.classId}`} className="feature-space__prototype" style={{ "--class-accent": CLASS_VISUALS[prototype.classId].color } as CSSProperties}>
               <rect x={point.x - 6} y={point.y - 6} width="12" height="12" rx="2" />
-              <text x={point.x + 9} y={point.y + (prototype.classId === "D" ? -2 : prototype.classId === "A" ? 22 : 18)}>{CLASS_VISUALS[prototype.classId].label} 均值</text>
+              <text x={point.x + 9} y={point.y + (prototype.classId === "D" ? -2 : prototype.classId === "A" ? 22 : 18)}>{CLASS_VISUALS[prototype.classId].displayLabel} 均值</text>
             </g>
           ))}
 

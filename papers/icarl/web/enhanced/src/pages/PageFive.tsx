@@ -243,7 +243,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
             <div className="panel-heading"><div><span className="eyebrow">ORDERED EXEMPLAR LIST</span><h2>算法构造顺序就是优先级</h2></div></div>
             <p className="p5-explain">继续对每个 prefix 实际运行同一选择规则，得到 P<sub>y</sub> = (p₁, p₂, …, pₘ)。它是有序列表，不是任意集合。</p>
             <div className="p5-budget-switch" role="group" aria-label="查看不同 prefix 长度">
-              <button type="button" aria-pressed={prefixCount === HERDING_TEACHING_QUOTA} onClick={() => setPrefixCount(HERDING_TEACHING_QUOTA)}>m = 5 · 完整列表</button>
+              <button type="button" aria-pressed={prefixCount === HERDING_TEACHING_QUOTA} onClick={() => setPrefixCount(HERDING_TEACHING_QUOTA)}>m = 4 · 完整列表</button>
               <button type="button" aria-pressed={prefixCount === 3} onClick={() => setPrefixCount(3)}>m = 3 · 当前 prefix</button>
             </div>
             <OrderedList visibleCount={HERDING_TEACHING_QUOTA} prefixCount={prefixCount} showRemoved={false} />
@@ -252,7 +252,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
           </> : null}
 
           {stage === 4 ? <>
-            <div className="panel-heading"><div><span className="eyebrow">PREFIX TRUNCATION</span><h2>从 m = 5 缩到 m = 3</h2></div><span className="p5-k-badge">K fixed</span></div>
+            <div className="panel-heading"><div><span className="eyebrow">PREFIX TRUNCATION</span><h2>从 m = 4 缩到 m = 3</h2></div><span className="p5-k-badge">K fixed</span></div>
             <p className="p5-explain">预算下降时保留列表前缀，截断 tail。Herding 构造时已按 prefix 顺序设计代表性，因此本例只保留前三个。</p>
             <div className="p5-truncate-label"><span>保留 P′<sub>y</sub> = (p₁, p₂, p₃)</span><b>truncate list tail ↑</b></div>
             <OrderedList visibleCount={HERDING_TEACHING_QUOTA} prefixCount={3} showRemoved />
@@ -265,7 +265,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
               <button type="button" aria-pressed={timelineMode === "construct"} onClick={() => changeTimelineMode("construct")}>Class y 首次出现</button>
               <button type="button" aria-pressed={timelineMode === "later"} onClick={() => changeTimelineMode("later")}>后续增量阶段</button>
             </div>
-            {timelineMode === "construct" ? <div className="p5-lifecycle-flow"><span>FULL X<sub>y</sub> available</span><i>↓</i><span>current post-update φ</span><i>↓</i><span>compute μ<sub>y</sub> → run Herding</span><i>↓</i><b>P<sub>y</sub> = (p₁, …, p₅)</b></div> : <div className="p5-lifecycle-flow p5-lifecycle-flow--later"><span>FULL X<sub>y</sub> unavailable</span><i>↓</i><span>existing ordered P<sub>y</sub> retained</span><i>↓</i><span>m decreases → truncate tail</span><i>↓</i><b>P′<sub>y</sub> = (p₁, p₂, p₃)</b></div>}
+            {timelineMode === "construct" ? <div className="p5-lifecycle-flow"><span>FULL X<sub>y</sub> available</span><i>↓</i><span>current post-update φ</span><i>↓</i><span>compute μ<sub>y</sub> → run Herding</span><i>↓</i><b>P<sub>y</sub> = (p₁, …, p₄)</b></div> : <div className="p5-lifecycle-flow p5-lifecycle-flow--later"><span>FULL X<sub>y</sub> unavailable</span><i>↓</i><span>existing ordered P<sub>y</sub> retained</span><i>↓</i><span>m decreases → truncate tail</span><i>↓</i><b>P′<sub>y</sub> = (p₁, p₂, p₃)</b></div>}
             <p className="p5-lifecycle-note">{timelineMode === "construct" ? "Herding 使用 representation update 后的当前特征映射；不是先选 exemplar 再训练表示。" : "旧类完整 Xᵧ 已不可用，因此之后不重跑完整 Herding；已有列表只按新预算截去尾部。图中的均值和点位仅回看首次构造时的几何参照。"}</p>
             <OrderedList visibleCount={HERDING_TEACHING_QUOTA} prefixCount={timelineMode === "construct" ? HERDING_TEACHING_QUOTA : 3} showRemoved={timelineMode === "later"} />
           </> : null}

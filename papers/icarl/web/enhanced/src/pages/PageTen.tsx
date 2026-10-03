@@ -31,7 +31,7 @@ import {
 
 const runtimeSteps = [
   { title: "读取当前状态", description: "持久对象从上一轮延续而来：模型参数 Θ_before 与有序 exemplar 记忆 P_before。" },
-  { title: "新类别完整到达", description: "新类别 D 的整批图像组成 X_new；训练输出层追加对应节点，旧类别节点继续保留。" },
+  { title: "新类别完整到达", description: "新类别 Class 4 的整批图像组成 X_new；训练输出层追加对应节点，旧类别节点继续保留。" },
   { title: "构造训练集 D", description: "把旧记忆中的 exemplar 与新类的全部图像合并，形成这轮更新的训练集。" },
   { title: "保存响应快照 Q", description: "在参数更新前，记录 D 中样本对旧类别节点的响应，供旧类别蒸馏目标使用。" },
   { title: "只更新模型参数 Θ", description: "旧节点使用 Q 中的软目标，新节点使用新类别标签；本阶段更新 Θ，P 仍保持原样。" },
@@ -152,10 +152,10 @@ function MemoryBucket({ classId, stepIndex }: { classId: ClassId; stepIndex: num
   const beforeArrival = isIncomingClass && stepIndex < 1;
 
   return (
-    <section className={`p10-memory-bucket ${isIncomingClass ? "is-new-class" : ""}`} title={`${visual.label} exemplar 列表，按 p₁、p₂、p₃ 的顺序保存`}>
+    <section className={`p10-memory-bucket ${isIncomingClass ? "is-new-class" : ""}`} title={`${visual.displayLabel} exemplar 列表，按 p₁、p₂、p₃ 的顺序保存`}>
       <div className="p10-memory-bucket__heading">
         <span className="p10-memory-bucket__glyph" style={{ color: visual.color }}>{visual.glyph}</span>
-        <span><strong>P<sub>{classId}</sub></strong><small>{visual.label}</small></span>
+        <span><strong>P<sub>{visual.index}</sub></strong><small>{visual.displayLabel}</small></span>
         <em>{isIncomingClass ? "新类" : "旧类"}</em>
       </div>
       <div className="p10-memory-bucket__tokens">
@@ -300,7 +300,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
   }
 
   let featureMode: FeatureSpaceMode = "projection";
-  let featureTitle = "新类别 D 的样本表示";
+  let featureTitle = "Class 4 的样本表示";
   let featureDescription = "同一批新类样本随当前特征映射变化；二维坐标是固定的教学数据。";
   let featurePoints = stepIndex >= 4 ? updatedNewClassPoints : initialNewClassPoints;
   let previousPoints = stepIndex >= 4 ? initialNewClassPoints : [];
@@ -313,7 +313,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
 
   if (stepIndex >= 6 && stepIndex < 8) {
     featureMode = "herding";
-    featureTitle = "Herding · 新类 D 的 exemplar 选择";
+    featureTitle = "Herding · Class 4 的 exemplar 选择";
     featureDescription = "虚线连接原始表示 φ_after(x) 与单位圆上的 z/‖z‖，方向经过原点；再按 Herding 目标选出 3 个 exemplar。";
     featurePoints = herdingPoints;
     previousPoints = [];
@@ -389,7 +389,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
         <section className={`panel p10-panel p10-incoming ${stepIndex >= 1 && stepIndex < 7 ? "is-current" : ""}`} id="incoming_class_batch" data-canonical-id="incoming_class_batch" aria-labelledby="p10-incoming-title">
           <div className="p10-panel-heading"><div><span className="p10-eyebrow">新类输入 · X<sub>new</sub></span><h2 id="p10-incoming-title">完整批次到达</h2></div><span className="p10-panel-index">01</span></div>
           {stepIndex === 0 ? <div className="p10-empty"><b>下一批尚未到达</b><span>当前持久状态继续保留。</span></div> : stepIndex < 7 ? <>
-            <div className="p10-incoming-class"><span className="p10-incoming-class__glyph" style={{ color: CLASS_VISUALS[INCOMING_CLASS_ID].color }}>{CLASS_VISUALS[INCOMING_CLASS_ID].glyph}</span><div><strong>D 类 · 全量图像</strong><small>{INCOMING_SAMPLES.length} 个样本，无预筛选</small></div></div>
+            <div className="p10-incoming-class"><span className="p10-incoming-class__glyph" style={{ color: CLASS_VISUALS[INCOMING_CLASS_ID].color }}>{CLASS_VISUALS[INCOMING_CLASS_ID].glyph}</span><div><strong>Class 4 · 全量图像</strong><small>{INCOMING_SAMPLES.length} 个样本，无预筛选</small></div></div>
             <div className="p10-incoming-samples">{INCOMING_SAMPLES.map((sample) => <SampleToken key={sample.id} sample={sample} role={herdingComplete && herdingOrders.has(sample.id) ? "selected" : "incoming"} order={herdingOrders.get(sample.id)} compact />)}</div>
             <p className="p10-object-note">X<sub>new</sub> 从构造 D 一直保留到 Herding 完成。</p>
           </> : <div className="p10-released"><strong>X<sub>new</sub> 已释放</strong><span>新类 exemplar 已构造，未入选图像也不再占用运行工作区。</span></div>}
@@ -404,7 +404,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
             <span className="p10-model-arrow" aria-hidden="true">→</span>
             <div className={`p10-head ${predictionReady ? "is-dimmed" : ""}`} id="training_head" data-canonical-id="training_head" title="训练输出层在测试阶段仍保留，但最终分类规则不使用它">
               <span className="p10-eyebrow">训练输出层 · 持续保留</span>
-              <div className="p10-head__nodes">{OLD_CLASS_IDS.map((classId) => <span key={classId} style={{ "--node-color": CLASS_VISUALS[classId].color } as CSSProperties}>{CLASS_VISUALS[classId].glyph}<small>{classId}</small></span>)}{stepIndex >= 1 ? <span className="is-new" style={{ "--node-color": CLASS_VISUALS.D.color } as CSSProperties}>{CLASS_VISUALS.D.glyph}<small>D</small></span> : null}</div>
+              <div className="p10-head__nodes">{OLD_CLASS_IDS.map((classId) => <span key={classId} style={{ "--node-color": CLASS_VISUALS[classId].color } as CSSProperties}>{CLASS_VISUALS[classId].glyph}<small>{CLASS_VISUALS[classId].index}</small></span>)}{stepIndex >= 1 ? <span className="is-new" style={{ "--node-color": CLASS_VISUALS.D.color } as CSSProperties}>{CLASS_VISUALS.D.glyph}<small>{CLASS_VISUALS.D.index}</small></span> : null}</div>
               <small>每个已见类别一个 sigmoid 节点</small>
             </div>
           </div>
@@ -436,7 +436,7 @@ export function PageTen({ onExit }: { onExit: () => void }) {
 
         <section className="panel p10-feature-panel" id="unit_circle" data-canonical-id="unit_circle" aria-labelledby="p10-feature-heading">
           <div className="p10-panel-heading"><div><span className="p10-eyebrow">共享特征空间</span><h2 id="p10-feature-heading">{featureTitle}</h2></div><span className={`p10-mode-badge p10-mode-badge--${featureMode}`} data-canonical-id={stepIndex >= 9 ? "inference_mode" : stepIndex === 8 ? "prototype_mode" : stepIndex >= 6 ? "herding_mode" : "representation_mode"}>{featureMode === "projection" ? "表示变化" : featureMode === "herding" ? "Herding 选样" : featureMode === "prototypes" ? "类别均值" : "预测"}</span></div>
-          <FeatureSpaceWorkbench mode={featureMode} title={featureTitle} description={featureDescription} points={featurePoints} previousPoints={previousPoints} unitCircle={useUnitCircle} rawMean={rawMean} target={target} prefixMean={prefixMean} prototypes={prototypes} query={query} normalizationSources={featureMode === "herding" ? herdingRawPoints : []} markerScale={0.62} showSampleLabels={featureMode === "herding"} asideContent={predictionReady ? <div className="p10-prediction-result" aria-live="polite"><span>最小距离 · 最近类别均值</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].label}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 对全部已见类别比较</small></div> : stepIndex >= 6 ? <p className="p10-feature-note">选中的 p<sub>1</sub>、p<sub>2</sub>、p<sub>3</sub> 按确定性 Herding 结果标记；原始均值与归一化目标也来自同一批完整数据。</p> : <p className="p10-feature-note">当前投影只用于展示表示变化；尚未进入 Herding 时，不会提前展示类别中心。</p>} />
+          <FeatureSpaceWorkbench mode={featureMode} title={featureTitle} description={featureDescription} points={featurePoints} previousPoints={previousPoints} unitCircle={useUnitCircle} rawMean={rawMean} target={target} prefixMean={prefixMean} prototypes={prototypes} query={query} normalizationSources={featureMode === "herding" ? herdingRawPoints : []} markerScale={0.62} showSampleLabels={featureMode === "herding"} asideContent={predictionReady ? <div className="p10-prediction-result" aria-live="polite"><span>最小距离 · 最近类别均值</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 对全部已见类别比较</small></div> : stepIndex >= 6 ? <p className="p10-feature-note">选中的 p<sub>1</sub>、p<sub>2</sub>、p<sub>3</sub> 按确定性 Herding 结果标记；原始均值与归一化目标也来自同一批完整数据。</p> : <p className="p10-feature-note">当前投影只用于展示表示变化；尚未进入 Herding 时，不会提前展示类别中心。</p>} />
         </section>
 
         <ObjectLifetimeRail stepIndex={stepIndex} />
@@ -453,8 +453,8 @@ export function PageTen({ onExit }: { onExit: () => void }) {
         <div className="p10-inspect-grid">
           <section><h3>示例边界</h3><p>本页用固定合成特征真实计算配额、Herding 顺序、类别均值与预测距离；Θ 的参数更新只表示状态变化，不虚构梯度轨迹或论文 checkpoint。</p><p>旧节点拟合快照 Q，新节点拟合新类硬标签；ℒ = ℒ_old + ℒ_new。</p></section>
           <section><h3>配额与旧列表截短</h3><p>新类别总数 t = {NEXT_CLASS_COUNT}，每类配额 m = floor(K/t) = floor({MEMORY_BUDGET}/{NEXT_CLASS_COUNT}) = {NEXT_QUOTA}。每个旧列表保留 P_before 的前 m 项；本轮不读取旧完整数据集。</p><p>更新前共 {OLD_MEMORY_SIZE} 个 exemplar；截短后旧类共 {REDUCED_MEMORY_SIZE} 个，新类完成选择后总计 {COMMITTED_MEMORY_SIZE} 个。</p></section>
-          <section><h3>新类 Herding 顺序</h3><p>先对 D 类完整特征求均值并归一化，再逐次挑选使当前前缀均值最接近目标的样本。</p><ol className="p10-herding-order">{NEW_CLASS_HERDING.steps.map((step, index) => <li key={step.chosen.id}><strong>p{index + 1} = {step.chosen.id}</strong><span>与目标的距离 {step.distanceToTarget.toFixed(3)}</span><details><summary>查看候选距离</summary><ul>{step.candidateScores.map((candidate) => <li key={candidate.sample.id}>{candidate.sample.id}：{candidate.distanceToTarget.toFixed(3)}</li>)}</ul></details></li>)}</ol></section>
-          <section><h3>当前 prototype 与预测距离</h3><p>逐类对归一化 exemplar 表示求均值，再把均值归一化。以下距离与图中的预测使用完全相同的向量。</p><ul className="p10-distance-list">{QUERY_DISTANCES.map((row) => <li key={row.classId}><span>{CLASS_VISUALS[row.classId].glyph} {CLASS_VISUALS[row.classId].label}</span><code>{row.distance.toFixed(3)}</code></li>)}</ul></section>
+          <section><h3>新类 Herding 顺序</h3><p>先对 Class 4 的完整特征求均值并归一化，再逐次挑选使当前前缀均值最接近目标的样本。</p><ol className="p10-herding-order">{NEW_CLASS_HERDING.steps.map((step, index) => <li key={step.chosen.id}><strong>p{index + 1} = {step.chosen.id}</strong><span>与目标的距离 {step.distanceToTarget.toFixed(3)}</span><details><summary>查看候选距离</summary><ul>{step.candidateScores.map((candidate) => <li key={candidate.sample.id}>{candidate.sample.id}：{candidate.distanceToTarget.toFixed(3)}</li>)}</ul></details></li>)}</ol></section>
+          <section><h3>当前 prototype 与预测距离</h3><p>逐类对归一化 exemplar 表示求均值，再把均值归一化。以下距离与图中的预测使用完全相同的向量。</p><ul className="p10-distance-list">{QUERY_DISTANCES.map((row) => <li key={row.classId}><span>{CLASS_VISUALS[row.classId].glyph} {CLASS_VISUALS[row.classId].displayLabel}</span><code>{row.distance.toFixed(3)}</code></li>)}</ul></section>
         </div>
       </details>
 

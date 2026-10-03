@@ -15,11 +15,11 @@ export type SampleFeaturePoint = {
   order?: number;
 };
 
-export const CLASS_VISUALS: Record<ClassId, { label: string; glyph: string; color: string }> = {
-  A: { label: "A 类", glyph: "△", color: "#28659a" },
-  B: { label: "B 类", glyph: "○", color: "#31775f" },
-  C: { label: "C 类", glyph: "□", color: "#b46a2d" },
-  D: { label: "D 类", glyph: "◇", color: "#76559a" },
+export const CLASS_VISUALS: Record<ClassId, { displayLabel: string; outputNodeLabel: string; index: number; glyph: string; color: string }> = {
+  A: { displayLabel: "Class 1", outputNodeLabel: "g₁", index: 1, glyph: "△", color: "#28659a" },
+  B: { displayLabel: "Class 2", outputNodeLabel: "g₂", index: 2, glyph: "○", color: "#31775f" },
+  C: { displayLabel: "Class 3", outputNodeLabel: "g₃", index: 3, glyph: "□", color: "#b46a2d" },
+  D: { displayLabel: "Class 4", outputNodeLabel: "g₄", index: 4, glyph: "◇", color: "#76559a" },
 };
 
 /** Fixed synthetic coordinates shared by the representation projection and runtime trace. */

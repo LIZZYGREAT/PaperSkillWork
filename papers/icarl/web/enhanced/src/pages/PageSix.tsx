@@ -29,14 +29,14 @@ function sampleStyle(sample: Sample) {
 
 function SampleChip({ sample, origin }: { sample: Sample; origin: "old" | "new" }) {
   return <span className={`p6-sample-chip p6-sample-chip--${origin}`} style={sampleStyle(sample)}>
-    <b>{CLASS_VISUALS[sample.classId].glyph} {sample.classId}</b><span>{sample.id}</span><small>{origin === "old" ? "old exemplar" : "new full data"}</small>
+    <b>{CLASS_VISUALS[sample.classId].glyph} {CLASS_VISUALS[sample.classId].displayLabel}</b><span>{sample.id}</span><small>{origin === "old" ? "old exemplar" : "new full data"}</small>
   </span>;
 }
 
 function MemoryBuckets() {
   return <div className="p6-memory-buckets">
     {OLD_CLASS_IDS.map((classId) => <section className="p6-memory-bucket" key={classId} style={{ "--bucket-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}>
-      <div><b>Class {classId}</b><small>P<sub>{classId}</sub> · {P_BEFORE[classId].length}</small></div>
+      <div><b>{CLASS_VISUALS[classId].displayLabel}</b><small>P<sub>{CLASS_VISUALS[classId].index}</sub> · {P_BEFORE[classId].length}</small></div>
       <div className="p6-memory-bucket__samples">{P_BEFORE[classId].map((sample) => <SampleChip key={sample.id} sample={sample} origin="old" />)}</div>
     </section>)}
   </div>;
@@ -44,7 +44,7 @@ function MemoryBuckets() {
 
 function OutputNodes({ compact = false }: { compact?: boolean }) {
   return <div className={`p6-output-nodes${compact ? " p6-output-nodes--compact" : ""}`} aria-label="当前网络的旧类别输出节点">
-    {OLD_CLASS_IDS.map((classId) => <span key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}><i />Class {classId}</span>)}
+    {OLD_CLASS_IDS.map((classId) => <span key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}><i />{CLASS_VISUALS[classId].outputNodeLabel}</span>)}
     {compact ? null : <small>new class output nodes · Page 7</small>}
   </div>;
 }
@@ -67,13 +67,13 @@ function ResponseMatrix({ items = TRAINING_ITEMS }: { items?: readonly Sample[] 
   return <div className="p6-response-matrix" role="table" aria-label={`D 中全部 ${items.length} 个样本，对应 ${OLD_CLASS_IDS.length} 个旧类别 response targets`}>
     <div className="p6-response-row p6-response-row--head" role="row">
       <span role="columnheader">D 中样本</span>
-      {OLD_CLASS_IDS.map((classId) => <span role="columnheader" key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}>g<sub>{classId}</sub></span>)}
+      {OLD_CLASS_IDS.map((classId) => <span role="columnheader" key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}>{CLASS_VISUALS[classId].outputNodeLabel}</span>)}
     </div>
     {items.map((sample) => {
       const origin = sample.classId === INCOMING_CLASS_ID ? "new" : "old";
       return <div className={`p6-response-row p6-response-row--${origin}`} role="row" key={sample.id}>
-        <span className="p6-response-row__sample" role="rowheader" style={sampleStyle(sample)}><b>{sample.classId}</b><span>{sample.id}</span><small>{origin === "old" ? "P" : "X"}</small></span>
-        {OLD_CLASS_IDS.map((classId) => <span className="p6-q-cell" role="cell" key={classId} aria-label={`q_${sample.id}^${classId} 已记录`} title={`q_${sample.id}^${classId} · 更新前旧类 response`}><i aria-hidden="true">●</i><small className="p6-sr-only">qᵢ^{classId} response 已记录并锁定</small></span>)}
+        <span className="p6-response-row__sample" role="rowheader" style={sampleStyle(sample)}><b>{CLASS_VISUALS[sample.classId].index}</b><span>{sample.id}</span><small>{origin === "old" ? "P" : "X"}</small></span>
+        {OLD_CLASS_IDS.map((classId) => <span className="p6-q-cell" role="cell" key={classId} aria-label={`q_${sample.id}^${CLASS_VISUALS[classId].index} 已记录`} title={`q_${sample.id}^${CLASS_VISUALS[classId].index} · 更新前旧类 response`}><i aria-hidden="true">●</i><small className="p6-sr-only">qᵢ^{CLASS_VISUALS[classId].index} response 已记录并锁定</small></span>)}
       </div>;
     })}
   </div>;
@@ -110,14 +110,14 @@ export function PageSix() {
       {stage === 0 ? <section className="p6-start-grid" aria-label="更新前已有状态与到达的新类别">
         <section className="panel p6-persistent-state">
           <div className="panel-heading"><div><span className="eyebrow">CURRENT PERSISTENT STATE</span><h2>网络 Θ 与旧记忆 P</h2></div><span className="p6-persistent-badge">跨阶段保留</span></div>
-          <div className="p6-theta-card"><div><b>Θ</b><span>current network parameters</span></div><i aria-hidden="true">→</i><div className="p6-feature-head"><b>φ</b><span>feature extractor</span></div><i aria-hidden="true">+</i><div><b>g<sub>A</sub>, g<sub>B</sub>, g<sub>C</sub></b><span>old-class output nodes</span></div></div>
+          <div className="p6-theta-card"><div><b>Θ</b><span>current network parameters</span></div><i aria-hidden="true">→</i><div className="p6-feature-head"><b>φ</b><span>feature extractor</span></div><i aria-hidden="true">+</i><div><b>g₁, g₂, g₃</b><span>old-class output nodes</span></div></div>
           <OutputNodes />
-          <div className="p6-memory-heading"><b>P = (P<sub>A</sub>, P<sub>B</sub>, P<sub>C</sub>)</b><span>persistent exemplar memory · {OLD_MEMORY_SIZE} images</span></div>
+          <div className="p6-memory-heading"><b>P = (P<sub>1</sub>, P<sub>2</sub>, P<sub>3</sub>)</b><span>persistent exemplar memory · {OLD_MEMORY_SIZE} images</span></div>
           <MemoryBuckets />
           <p className="p6-persistent-note">这些旧 exemplars 会被读取并放入 D；P 仍留在持久 memory 中。</p>
         </section>
         <section className="panel p6-incoming-state">
-          <div className="panel-heading"><div><span className="eyebrow">INCOMING STAGE DATA</span><h2>新类 D 的完整训练图像</h2></div><span className="p6-new-count">{INCOMING_SAMPLES.length} images</span></div>
+          <div className="panel-heading"><div><span className="eyebrow">INCOMING STAGE DATA</span><h2>Class 4 的完整训练图像</h2></div><span className="p6-new-count">{INCOMING_SAMPLES.length} images</span></div>
           <p className="p6-panel-intro">新类到达时，当前阶段可以访问 X<sub>D</sub> 中的全部样本。</p>
           <div className="p6-incoming-list">{INCOMING_SAMPLES.map((sample) => <SampleChip key={sample.id} sample={sample} origin="new" />)}</div>
           <div className="p6-state-separation" aria-label="持久模型、持久记忆和新阶段数据共同组成当前更新状态">

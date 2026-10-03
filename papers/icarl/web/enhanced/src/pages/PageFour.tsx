@@ -50,8 +50,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
               const samples = examplesByClass.get(classId)!;
               const visibleCount = stage === 0 ? 1 : stage >= 4 ? perClassBudget : 4;
               return <section className="p4-bucket" key={classId} style={{ "--bucket-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}>
-                <div className="p4-bucket__heading">{stage === 0 ? <><b>保留的样本</b><span>raw image</span></> : <><b>Class {classId}</b><span>P<sub>{classId}</sub></span></>}</div>
-                <div className="p4-bucket__items" aria-label={`Class ${classId} 的 exemplar collection`}>
+                <div className="p4-bucket__heading">{stage === 0 ? <><b>保留的样本</b><span>raw image</span></> : <><b>{CLASS_VISUALS[classId].displayLabel}</b><span>P<sub>{CLASS_VISUALS[classId].index}</sub></span></>}</div>
+                <div className="p4-bucket__items" aria-label={`${CLASS_VISUALS[classId].displayLabel} 的 exemplar collection`}>
                   {stage >= 4
                     ? Array.from({ length: visibleCount }, (_, index) => <span key={`budget-${classId}-${index}`} className="p4-budget-slot" aria-label="尚未指定具体样本的记忆容量槽"><i aria-hidden="true" /><small>slot</small></span>)
                     : samples.slice(0, visibleCount).map((sample) => <SampleToken key={sample.id} sample={sample} role="exemplar" compact />)}

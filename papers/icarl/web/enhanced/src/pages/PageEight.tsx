@@ -67,9 +67,9 @@ function PredictionPath({ stage, mode }: { stage: number; mode: RuntimeMode }) {
   return <section className={`p8-prediction-workbench${mode === "predict" ? " is-active" : ""}`} data-canonical-id="inference_path" aria-label="原型预测路径工作台">
     <div className="p8-prediction-copy">
       <div className="p8-path-heading"><span className="eyebrow">PREDICT · exemplar 均值最近邻</span><b>{showQuery ? "最终决策读取最近原型" : "先用当前 exemplars 重建 prototypes"}</b></div>
-      <div className="p8-exemplar-buckets" aria-label="当前记忆 P_after 中各类别的 exemplar 身份">{classOrder.map((classId) => <section key={classId} style={{ "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties}><b>{CLASS_VISUALS[classId].glyph} {classId}<small>{P_AFTER[classId].length} 个 exemplar</small></b><div>{P_AFTER[classId].map((sample) => <span key={sample.id} title={`样本 ${sample.id}`}>{sample.id}</span>)}</div></section>)}</div>
+      <div className="p8-exemplar-buckets" aria-label="当前记忆 P_after 中各类别的 exemplar 身份">{classOrder.map((classId) => <section key={classId} style={{ "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties}><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}<small>{P_AFTER[classId].length} 个 exemplar</small></b><div>{P_AFTER[classId].map((sample) => <span key={sample.id} title={`样本 ${sample.id}`}>{sample.id}</span>)}</div></section>)}</div>
       <div className="p8-predict-flow">
-        <section><b>P<sub>A</sub> · P<sub>B</sub> · P<sub>C</sub> · P<sub>D</sub></b><span>当前保留的原始 exemplars</span></section><i aria-hidden="true">→</i>
+        <section><b>P<sub>1</sub> · P<sub>2</sub> · P<sub>3</sub> · P<sub>4</sub></b><span>当前保留的原始 exemplars</span></section><i aria-hidden="true">→</i>
         <section className="p8-flow-feature"><b>当前 φ<sub>Θ</sub></b><span>由同一模型重新编码</span></section><i aria-hidden="true">→</i>
         <section className="p8-flow-prototype"><b>μ<sub>A</sub> … μ<sub>D</sub></b><span>归一化 exemplar 均值</span></section>
       </div>
@@ -85,7 +85,7 @@ function PredictionPath({ stage, mode }: { stage: number; mode: RuntimeMode }) {
       unitCircle
       markerScale={0.82}
       showSampleLabels={false}
-      asideContent={<><PrototypeKey showQuery={showQuery} />{showQuery ? <div className="p8-result" aria-live="polite"><span>最近原型距离</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i> {CLASS_VISUALS[QUERY_PREDICTION].label}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 与第 10 页使用同一 query 和结果</small></div> : <p className="p8-feature-note">P<sub>after</sub> 与各类原型都由当前 φ<sub>Θ</sub> 表示；训练时的 Q 不参与原型计算。</p>}</>}
+      asideContent={<><PrototypeKey showQuery={showQuery} />{showQuery ? <div className="p8-result" aria-live="polite"><span>最近原型距离</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i> {CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 与第 10 页使用同一 query 和结果</small></div> : <p className="p8-feature-note">P<sub>after</sub> 与各类原型都由当前 φ<sub>Θ</sub> 表示；训练时的 Q 不参与原型计算。</p>}</>}
     />
     {showQuery ? <p className="p8-source-note">教学示例复用自第 10 页 · 坐标为固定合成数据，不是训练得到的 checkpoint，也不是论文结果。</p> : null}
   </section>;
@@ -93,7 +93,7 @@ function PredictionPath({ stage, mode }: { stage: number; mode: RuntimeMode }) {
 
 function PrototypeKey({ showQuery = false }: { showQuery?: boolean }) {
   return <div className="p8-visual-key" aria-label="特征图类别标记">
-    {classOrder.map((classId) => <span key={classId}><i style={{ "--key-color": CLASS_VISUALS[classId].color } as CSSProperties} />{CLASS_VISUALS[classId].label} 原型</span>)}
+    {classOrder.map((classId) => <span key={classId}><i style={{ "--key-color": CLASS_VISUALS[classId].color } as CSSProperties} />{CLASS_VISUALS[classId].displayLabel} 原型</span>)}
     {showQuery ? <span><i className="p8-visual-key__query" />待分类 query</span> : null}
   </div>;
 }
@@ -118,7 +118,7 @@ function PredictionFeatureSpace() {
       unitCircle
       markerScale={0.82}
       showSampleLabels={false}
-      asideContent={<><PrototypeKey showQuery /><div className="p8-result" aria-live="polite"><span>最近原型距离</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i> {CLASS_VISUALS[QUERY_PREDICTION].label}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 与第 10 页使用同一 query 和结果</small></div></>}
+      asideContent={<><PrototypeKey showQuery /><div className="p8-result" aria-live="polite"><span>最近原型距离</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i> {CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 与第 10 页使用同一 query 和结果</small></div></>}
     />
     <p className="p8-source-note">教学示例复用自第 10 页 · 坐标为固定合成数据，不是训练得到的 checkpoint，也不是论文结果。</p>
   </section>;

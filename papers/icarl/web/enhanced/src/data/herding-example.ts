@@ -38,7 +38,7 @@ export const HERDING_TEACHING_POINTS: HerdingTeachingPoint[] = FEATURE_ANGLES.ma
   return { id: `h${index + 1}`, angleDegrees, feature: [Math.cos(radians), Math.sin(radians)] };
 });
 
-export const HERDING_TEACHING_QUOTA = 5;
+export const HERDING_TEACHING_QUOTA = 4;
 
 export function runFeatureHerding(
   points: readonly HerdingTeachingPoint[] = HERDING_TEACHING_POINTS,
