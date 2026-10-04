@@ -215,6 +215,16 @@
 .p9-step-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 3px; color: #5b7173; font-size: 13px; }
 .p9-step-controls > div { display: flex; gap: 7px; }
 .p9-step-controls .icarl-button:disabled { opacity: .45; cursor: default; }
+.p9-figure-focus .rk-paper-figure__marker { box-sizing: border-box; width: 36px; height: 36px; min-height: 36px; padding: 0; overflow: hidden; font-size: 15px; line-height: 1; white-space: nowrap; }
+
+@media (min-width: 761px) {
+  .icarl-page--p9 .p9-figure-focus .rk-mobile-sheet .rk-overlay { align-items: center; justify-content: center; padding: 24px; }
+  .icarl-page--p9 .p9-figure-focus .rk-mobile-sheet .rk-drawer { width: min(94vw, 1440px); height: min(96dvh, 1200px); margin: 0; border-radius: 14px; }
+  .icarl-page--p9 .p9-figure-focus .rk-mobile-sheet .rk-overlay__body { display: flex; min-height: 0; flex-direction: column; align-items: center; gap: 10px; padding: 16px 24px 20px; }
+  .icarl-page--p9 .p9-figure-focus .rk-mobile-sheet .rk-paper-figure__zoomed { max-width: 100%; max-height: min(92dvh, 1200px); }
+  .icarl-page--p9 .p9-figure-focus .rk-mobile-sheet .rk-overlay__body > p,
+  .icarl-page--p9 .p9-figure-focus .rk-mobile-sheet .rk-overlay__body > small { width: min(100%, 1260px); margin: 0; }
+}
 
 @media (max-width: 1100px) {
   .p9-workbench { grid-template-columns: minmax(0, 1fr); }
