@@ -11,12 +11,30 @@ export type FeaturePoint = {
 
 export type FeatureSpaceMode = "projection" | "herding" | "prototypes" | "inference";
 
+export function ClassFeatureMarker({ classId, x, y, radius, selected, className = "sample-mark", selectedClassName = "is-selected", fillOverride }: {
+  classId: ClassId;
+  x: number;
+  y: number;
+  radius: number;
+  selected: boolean;
+  className?: string;
+  selectedClassName?: string;
+  fillOverride?: string;
+}) {
+  const markerClassName = `${className}${selected ? ` ${selectedClassName}` : ""}`;
+  const fill = fillOverride ?? CLASS_VISUALS[classId].color;
+  if (classId === "A") return <polygon className={markerClassName} points={`${x},${y - radius} ${x + radius},${y + radius} ${x - radius},${y + radius}`} fill={fill} />;
+  if (classId === "B") return <circle className={markerClassName} cx={x} cy={y} r={radius} fill={fill} />;
+  if (classId === "C") return <rect className={markerClassName} x={x - radius} y={y - radius} width={radius * 2} height={radius * 2} fill={fill} />;
+  return <polygon className={markerClassName} points={`${x},${y - radius} ${x + radius},${y} ${x},${y + radius} ${x - radius},${y}`} fill={fill} />;
+}
+
 const ORIGIN = { x: 180, y: 132 };
 const UNIT_RADIUS = 124;
 const PROJECTION_SCALE = 39;
-const NORMALIZATION_ORIGIN = { x: 320, y: 170 };
+const NORMALIZATION_ORIGIN = { x: 380, y: 170 };
 const NORMALIZATION_UNIT_RADIUS = 145;
-const NORMALIZATION_RAW_SCALE = 78;
+const NORMALIZATION_RAW_SCALE = NORMALIZATION_UNIT_RADIUS;
 
 function starPath(x: number, y: number, outer = 8, inner = 3.6) {
   return Array.from({ length: 10 }, (_, index) => {
@@ -42,6 +60,8 @@ export function FeatureSpaceWorkbench({
   markerScale = 1,
   projectionScale = PROJECTION_SCALE,
   showSampleLabels = true,
+  herdingRevealCount,
+  focusableSamples = true,
   asideContent,
 }: {
   mode: FeatureSpaceMode;
@@ -59,6 +79,8 @@ export function FeatureSpaceWorkbench({
   markerScale?: number;
   projectionScale?: number;
   showSampleLabels?: boolean;
+  herdingRevealCount?: number;
+  focusableSamples?: boolean;
   asideContent?: ReactNode;
 }) {
   const showNormalization = unitCircle && normalizationSources.length > 0;
@@ -88,12 +110,12 @@ export function FeatureSpaceWorkbench({
         {unitCircle ? <span className="unit-badge">‖z‖₂ = 1</span> : null}
       </figcaption>
       <div className="feature-space__viewport">
-        <svg viewBox={showNormalization ? "0 -16 640 372" : "0 0 360 264"} role="img" aria-label={`${title}. ${description}`}>
+        <svg viewBox={showNormalization ? "0 -220 760 780" : "0 0 360 264"} role="img" aria-label={`${title}. ${description}`}>
           <title>{title}</title>
           <desc>{description}</desc>
           {unitCircle ? <circle className="feature-space__unit-circle" cx={origin.x} cy={origin.y} r={unitRadius} data-canonical-id="l2_normalization" /> : null}
-          <line className="feature-space__axis" x1={showNormalization ? 30 : 26} x2={showNormalization ? 610 : 334} y1={origin.y} y2={origin.y} />
-          <line className="feature-space__axis" x1={origin.x} x2={origin.x} y1={showNormalization ? -16 : 16} y2={showNormalization ? 356 : 246} />
+          <line className="feature-space__axis" x1={showNormalization ? 30 : 26} x2={showNormalization ? 730 : 334} y1={origin.y} y2={origin.y} />
+          <line className="feature-space__axis" x1={origin.x} x2={origin.x} y1={showNormalization ? -220 : 16} y2={showNormalization ? 560 : 246} />
 
           {showNormalization ? normalizationSources.map((source) => {
             const normalized = pointById.get(source.id);
@@ -124,19 +146,19 @@ export function FeatureSpaceWorkbench({
 
           {points.map((item) => {
             const position = xy(item.point, unitCircle);
-            const color = CLASS_VISUALS[item.classId].color;
-            const sampleLabel = item.order === 1
+            const visibleOrder = item.order !== undefined && (herdingRevealCount === undefined || item.order <= herdingRevealCount) ? item.order : undefined;
+            const sampleLabel = visibleOrder === 1
               ? { x: position.x - 8, y: position.y - 8, textAnchor: "end" as const }
-              : item.order === 2
+              : visibleOrder === 2
                 ? { x: position.x + 9, y: position.y < 42 ? position.y + 19 : position.y - 8, textAnchor: "start" as const }
-                : item.order === 3
+                : visibleOrder === 3
                   ? { x: position.x + 9, y: position.y + 13, textAnchor: "start" as const }
                   : { x: position.x + 8, y: position.y - 7, textAnchor: "start" as const };
             return (
-              <g key={item.id} className="feature-space__sample" tabIndex={0} role="img" aria-label={`${CLASS_VISUALS[item.classId].displayLabel}，样本 ${item.id}${item.order ? `，Herding 顺序 p${item.order}` : ""}`} data-herding-selected={item.order ? "true" : undefined} style={{ "--selection-order": item.order ?? 0 } as CSSProperties}>
-                <circle className={`sample-mark${item.order ? " is-herding-selected" : ""}`} cx={position.x} cy={position.y} r={(item.order ? 7 : 5.5) * markerScale} fill={color} />
-                <title>{`${CLASS_VISUALS[item.classId].displayLabel} · 样本 ${item.id}${item.order ? ` · Herding 顺序 p${item.order}` : ""}`}</title>
-                {showSampleLabels ? <text {...sampleLabel}>{item.order ? `p${item.order}` : item.id}</text> : null}
+              <g key={item.id} className="feature-space__sample" tabIndex={focusableSamples ? 0 : -1} role="img" aria-label={`${CLASS_VISUALS[item.classId].displayLabel}，样本 ${item.id}${visibleOrder ? `，Herding 顺序 p${visibleOrder}` : ""}`} data-herding-selected={visibleOrder ? "true" : undefined}>
+                <ClassFeatureMarker classId={item.classId} x={position.x} y={position.y} radius={(visibleOrder ? 7 : 5.5) * markerScale} selected={visibleOrder !== undefined} selectedClassName="is-herding-selected" />
+                <title>{`${CLASS_VISUALS[item.classId].displayLabel} · 样本 ${item.id}${visibleOrder ? ` · Herding 顺序 p${visibleOrder}` : ""}`}</title>
+                {showSampleLabels ? <text {...sampleLabel}>{visibleOrder ? `p${visibleOrder}` : item.id}</text> : null}
               </g>
             );
           })}

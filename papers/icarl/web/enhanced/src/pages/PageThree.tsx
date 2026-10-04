@@ -2,6 +2,7 @@ import { useMemo, useState, type CSSProperties, type KeyboardEvent } from "react
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
 import { SampleToken } from "../components/SampleToken";
+import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
 import { CLASS_VISUALS, encode2D, encodeRawVector, mean, normalize, P_BEFORE, samplesForClass, type ClassId, type FeatureState, type Sample, type Vector2 } from "../data/icarl-runtime";
 
 const steps: readonly GuidedStep[] = [
@@ -172,7 +173,7 @@ function FeatureMap({
               <line className="p3-map__movement" x1={oldPosition.x} y1={oldPosition.y} x2={position.x} y2={position.y} />
               <circle className="p3-map__old-position" cx={oldPosition.x} cy={oldPosition.y} r="3" />
             </> : null}
-            <circle className="p3-map__normalized-point" cx={position.x} cy={position.y} r={isSelected ? 4.2 : 3.2} fill={historicalOnly ? "#cbd2cf" : color} />
+            <ClassFeatureMarker className="p3-map__normalized-point" classId={sample.classId} x={position.x} y={position.y} radius={isSelected ? 4.2 : 3.2} selected={false} fillOverride={historicalOnly ? "#cbd2cf" : color} />
             <title>{`${sample.id} ↔ 原始图像身份 ↔ φ(x)`}</title>
           </g>;
         })}
