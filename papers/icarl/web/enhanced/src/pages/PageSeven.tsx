@@ -1,6 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
+import { SampleToken } from "../components/SampleToken";
+import { P_BEFORE } from "../data/icarl-runtime";
+
+const OLD_EXAMPLE = P_BEFORE.A[0]!;
 
 const steps: readonly GuidedStep[] = [
   { title: "先按输出节点的年龄分组", short: "旧节点 / 新节点" },
@@ -36,8 +40,8 @@ function TargetRow({ oldSample, active = false }: { oldSample?: boolean; active?
   const classes = ["p7-target-row", oldSample ? "p7-target-row--old" : "p7-target-row--new", active ? "is-active" : ""];
   return <div className={classes.join(" ")} role="row">
     <span className="p7-target-row__sample" role="rowheader">
-      <b>{oldSample ? "P₁" : "D-01"}</b>
-      <small>{oldSample ? "保留的 exemplar · 真实类别 Class 1" : "新到图像 · 真实类别 Class 4"}</small>
+      <b>{oldSample ? `${OLD_EXAMPLE.id} ∈ P₁` : "D-01"}</b>
+      <small>{oldSample ? "P₁ 中的具体 exemplar · 真实类别 Class 1" : "新到图像 · 真实类别 Class 4"}</small>
     </span>
     {(["1", "2", "3"] as const).map((node) => <span className="p7-target-cell p7-target-cell--soft" role="cell" key={node}>
       <small>g<sub>{node}</sub></small><TargetPill kind="soft">q<sub>i</sub><sup>{node}</sup></TargetPill>
@@ -76,8 +80,8 @@ function ResponseAxis({ target, current }: { target: number; current: number }) 
 
 function TargetSample({ oldSample }: { oldSample?: boolean }) {
   return <div className={`p7-sample-card${oldSample ? " p7-sample-card--old" : " p7-sample-card--new"}`}>
-    <span className="p7-sample-card__image" aria-hidden="true">{oldSample ? "P" : "X"}</span>
-    <div><span className="eyebrow">{oldSample ? "来自 exemplar 记忆" : "来自新到数据"}</span><b>{oldSample ? "旧 exemplar P₁" : "新图像 D-01"}</b><small>{oldSample ? "保留的原始图像之一" : "真实类别：Class 4"}</small></div>
+    {oldSample ? <SampleToken sample={OLD_EXAMPLE} role="exemplar" compact /> : <span className="p7-sample-card__image" aria-hidden="true">X</span>}
+    <div><span className="eyebrow">{oldSample ? "来自 exemplar 记忆" : "来自新到数据"}</span><b>{oldSample ? `${OLD_EXAMPLE.id} ∈ P₁` : "新图像 D-01"}</b><small>{oldSample ? "P₁ 是有序 exemplar 列表；此处展示其中一个样本" : "真实类别：Class 4"}</small></div>
   </div>;
 }
 
