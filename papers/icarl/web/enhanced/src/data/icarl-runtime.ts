@@ -157,7 +157,8 @@ export const NEXT_CLASS_COUNT = OLD_CLASS_IDS.length + 1;
 export const NEXT_QUOTA = Math.floor(MEMORY_BUDGET / NEXT_CLASS_COUNT);
 export const INCOMING_SAMPLES = samplesForClass(INCOMING_CLASS_ID);
 
-// The first runtime state is a compact synthetic fixture produced by the same Herding calculation.
+// Synthetic inherited P_before fixture. The current increment consumes these saved samples only;
+// it does not access omitted old-class data or rerun Herding. This calculation creates fixture data.
 export const P_BEFORE: Record<ClassId, Sample[]> = {
   A: herd(samplesForClass("A"), OLD_QUOTA, "before").ordered,
   B: herd(samplesForClass("B"), OLD_QUOTA, "before").ordered,
@@ -165,7 +166,8 @@ export const P_BEFORE: Record<ClassId, Sample[]> = {
   D: [],
 };
 
-export const NEW_CLASS_HERDING = herd(INCOMING_SAMPLES, NEXT_QUOTA, "after");
+// Shared ordered source: Page 5 shows the four-item list and truncation; Page 10 commits its first three.
+export const NEW_CLASS_HERDING = herd(INCOMING_SAMPLES, OLD_QUOTA, "after");
 
 export const P_AFTER: Record<ClassId, Sample[]> = {
   A: P_BEFORE.A.slice(0, NEXT_QUOTA),

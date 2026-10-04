@@ -1,20 +1,73 @@
 import { useState } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
-import { euclideanDistance, type Vector2 } from "../data/icarl-runtime";
-import { HERDING_TEACHING_POINTS, HERDING_TEACHING_QUOTA, HERDING_TEACHING_RESULT, summarizeFeaturePrefix, type HerdingTeachingPoint } from "../data/herding-example";
+import { euclideanDistance, mean, normalize, INCOMING_SAMPLES, NEW_CLASS_HERDING, OLD_QUOTA, projectSampleFeatures, type Vector2 } from "../data/icarl-runtime";
 
 const steps: readonly GuidedStep[] = [
   { title: "完整类别均值怎样成为目标？", short: "完整目标" },
   { title: "第一个 exemplar 怎样选？", short: "选出 p₁" },
   { title: "为什么 p₂ 不是最近的点？", short: "prefix 补偿" },
   { title: "怎样构造有优先级的列表？", short: "ordered list" },
-  { title: "预算从 5 缩到 3 时怎么办？", short: "截断 tail" },
+  { title: "预算从 4 缩到 3 时怎么办？", short: "截断 tail" },
   { title: "首次构造与后续缩减怎样衔接？", short: "先构造，后缩减" },
 ];
 
 type Point2D = { x: number; y: number };
 const CHART = { centerX: 210, centerY: 180, radius: 126 };
+
+type HerdingTeachingPoint = { id: string; feature: Vector2 };
+type HerdingTeachingCandidate = {
+  point: HerdingTeachingPoint;
+  rawPrefixMean: [number, number];
+  prefixMean: Vector2;
+  distanceToTarget: number;
+  individualDistanceToTarget: number;
+};
+type HerdingTeachingStep = {
+  chosen: HerdingTeachingPoint;
+  rawPrefixMean: [number, number];
+  prefixMean: Vector2;
+  distanceToTarget: number;
+  candidates: HerdingTeachingCandidate[];
+};
+
+const HERDING_TEACHING_QUOTA = OLD_QUOTA;
+const HERDING_TEACHING_POINTS: HerdingTeachingPoint[] = projectSampleFeatures(INCOMING_SAMPLES, "after", true)
+  .map(({ id, point }) => ({ id, feature: point }));
+const HERDING_TEACHING_POINT_BY_ID = new Map(HERDING_TEACHING_POINTS.map((point) => [point.id, point]));
+const HERDING_TEACHING_RESULT = (() => {
+  const selected: HerdingTeachingPoint[] = [];
+  const steps: HerdingTeachingStep[] = NEW_CLASS_HERDING.steps.map((step) => {
+    const selectedFeatures = selected.map((point) => point.feature);
+    const candidates = step.candidateScores.map((candidate): HerdingTeachingCandidate => {
+      const point = HERDING_TEACHING_POINT_BY_ID.get(candidate.sample.id)!;
+      const rawPrefixMean = mean([...selectedFeatures, point.feature]);
+      return {
+        point,
+        rawPrefixMean,
+        prefixMean: candidate.prefixMean,
+        distanceToTarget: candidate.distanceToTarget,
+        individualDistanceToTarget: euclideanDistance(point.feature, NEW_CLASS_HERDING.target),
+      };
+    });
+    const chosen = HERDING_TEACHING_POINT_BY_ID.get(step.chosen.id)!;
+    selected.push(chosen);
+    return {
+      chosen,
+      rawPrefixMean: mean([...selectedFeatures, chosen.feature]),
+      prefixMean: step.prefixMean,
+      distanceToTarget: step.distanceToTarget,
+      candidates,
+    };
+  });
+  return {
+    points: HERDING_TEACHING_POINTS,
+    targetRawMean: NEW_CLASS_HERDING.rawTargetMean,
+    target: NEW_CLASS_HERDING.target,
+    ordered: selected,
+    steps,
+  };
+})();
 
 function toChartPoint(vector: Vector2): Point2D {
   return { x: CHART.centerX + vector[0] * CHART.radius, y: CHART.centerY - vector[1] * CHART.radius };
@@ -34,7 +87,8 @@ function format(value: number) {
 
 function prefixMean(points: readonly HerdingTeachingPoint[]) {
   if (points.length === 0) return null;
-  return summarizeFeaturePrefix(points);
+  const rawMean = mean(points.map((point) => point.feature));
+  return { rawMean, normalizedMean: normalize(rawMean) };
 }
 
 function UnitCircle({
@@ -61,7 +115,7 @@ function UnitCircle({
   const selectedIds = new Set(selected.map((point) => point.id));
 
   return (
-    <svg className="p5-unit-circle" viewBox="0 0 420 360" role="img" aria-label={`固定合成特征示例的单位圆。${referenceOnly ? "点位和完整类别均值来自初次构造时的历史参考；后续阶段完整数据不可用。" : `${HERDING_TEACHING_POINTS.length} 个归一化特征点，完整类别目标 μy 位于单位圆上。`}${selected.length ? `当前 prefix 长度 ${selected.length}，` : ""}${candidateId ? `当前候选 ${candidateId}。` : ""}`}>
+    <svg className="p5-unit-circle" viewBox="0 0 420 360" role="img" aria-label={`共享 runtime 中 Class 4 的完整新类示例。${referenceOnly ? "点位和完整类别均值来自首次构造时的历史参考；后续阶段完整数据不可用。" : `${HERDING_TEACHING_POINTS.length} 个归一化特征点，完整类别目标 μy 位于单位圆上。`}${selected.length ? `当前 prefix 长度 ${selected.length}，` : ""}${candidateId ? `当前候选 ${candidateId}。` : ""}`}>
       <title>归一化特征空间中的 Herding 计算</title>
       <desc>所有输入特征先经 L2 normalization 位于单位圆上。完整类别均值在圆内，归一化后得到目标 μy。当前 prefix 均值也由输入特征计算，再归一化到单位圆。</desc>
       <line className="p5-axis" x1="34" y1={CHART.centerY} x2="386" y2={CHART.centerY} />
@@ -84,7 +138,7 @@ function UnitCircle({
           {selectedPoint ? <circle className="p5-selected-ring" cx={x} cy={y} r="9" /> : null}
           {candidateId === point.id ? <circle className="p5-candidate-ring" cx={x} cy={y} r="13" /> : null}
           {comparisonId === point.id ? <circle className="p5-comparison-ring" cx={x} cy={y} r="16" /> : null}
-          <circle className={`p5-data-point${selectedPoint ? " is-selected" : ""}${referenceOnly && !selectedPoint ? " is-reference" : ""}`} cx={x} cy={y} r={selectedPoint ? 5.1 : 3.6} />
+          <polygon className={`p5-data-point${selectedPoint ? " is-selected" : ""}${referenceOnly && !selectedPoint ? " is-reference" : ""}`} points={`${x},${y - (selectedPoint ? 6 : 4.5)} ${x + (selectedPoint ? 6 : 4.5)},${y} ${x},${y + (selectedPoint ? 6 : 4.5)} ${x - (selectedPoint ? 6 : 4.5)},${y}`} />
         </g>;
       })}
       <polygon className={`p5-marker p5-marker--target${referenceOnly ? " is-reference" : ""}`} points={starPoints(targetPoint.x, targetPoint.y)} />
@@ -132,7 +186,7 @@ function InspectTarget() {
     <summary>Inspect target calculation</summary>
     <div className="p5-inspector__body">
       <p>每个 feature 已先 L2-normalize。先对 {points.length} 个 unit feature 求 mean，再把完整类均值归一化到单位圆。</p>
-      <code>μ̄<sub>y</sub> = mean(φ(x₁), …, φ(x₈)) = ({format(targetRawMean[0])}, {format(targetRawMean[1])})</code>
+      <code>μ̄<sub>y</sub> = mean({points.map((point) => `φ(${point.id})`).join(", ")}) = ({format(targetRawMean[0])}, {format(targetRawMean[1])})</code>
       <code>‖μ̄<sub>y</sub>‖₂ = {format(norm)} → μ<sub>y</sub> = normalize(μ̄<sub>y</sub>) = ({format(target[0])}, {format(target[1])})</code>
       <small>归一化没有使用接近零的退化均值；所有数值由页面中的固定点实时计算。</small>
     </div>
@@ -179,7 +233,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
 
       <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 5 Herding 教学步骤" />
 
-      <div className="p5-example-note"><span>FIXED SYNTHETIC TEACHING EXAMPLE</span><b>{stage === 5 && timelineMode === "later" ? "construction snapshot φ" : "current post-update φ"}</b><small>{stage === 5 && timelineMode === "later" ? "完整旧类数据已不可用；图中几何只回看首次构造顺序时的固定示例。" : "8 个固定、单位长度的二维 feature vectors · 可复算，无随机点"}</small></div>
+      <div className="p5-example-note"><span>FIXED SYNTHETIC TEACHING EXAMPLE</span><b>{stage === 5 && timelineMode === "later" ? "construction snapshot φ" : "current post-update φ"}</b><small>{stage === 5 && timelineMode === "later" ? "完整旧类数据已不可用；图中几何只回看首次构造顺序时的固定示例。" : `${INCOMING_SAMPLES.length} 个共享 runtime 样本身份 · 特征与 Page 10 使用同一 Herding 结果`}</small></div>
 
       <section className="p5-workbench" aria-label="Herding normalized feature space 和优先列表">
         <section className="panel p5-space-panel">
@@ -244,7 +298,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
             <div className="panel-heading"><div><span className="eyebrow">ORDERED EXEMPLAR LIST</span><h2>算法构造顺序就是优先级</h2></div></div>
             <p className="p5-explain">继续对每个 prefix 实际运行同一选择规则，得到 P<sub>y</sub> = (p₁, p₂, …, pₘ)。它是有序列表，不是任意集合。</p>
             <div className="p5-budget-switch" role="group" aria-label="查看不同 prefix 长度">
-              <button type="button" aria-pressed={prefixCount === HERDING_TEACHING_QUOTA} onClick={() => setPrefixCount(HERDING_TEACHING_QUOTA)}>m = 4 · 完整列表</button>
+              <button type="button" aria-pressed={prefixCount === HERDING_TEACHING_QUOTA} onClick={() => setPrefixCount(HERDING_TEACHING_QUOTA)}>m = {HERDING_TEACHING_QUOTA} · 完整列表</button>
               <button type="button" aria-pressed={prefixCount === 3} onClick={() => setPrefixCount(3)}>m = 3 · 当前 prefix</button>
             </div>
             <OrderedList visibleCount={HERDING_TEACHING_QUOTA} prefixCount={prefixCount} showRemoved={false} />
