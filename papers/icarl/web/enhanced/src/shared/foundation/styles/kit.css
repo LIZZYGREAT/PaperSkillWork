@@ -188,11 +188,8 @@
 .rk-paper-figure { margin: 0; }
 .rk-paper-figure__image-wrap { position: relative; }
 .rk-paper-figure__image-wrap img { display: block; width: 100%; max-height: 70vh; object-fit: contain; border-radius: 8px; }
-.rk-paper-figure__marker { position: absolute; display: grid; place-items: center; width: 34px; height: 34px; transform: translate(-50%, -50%); border: 2px solid white; border-radius: 50%; background: var(--rk-accent); color: white; font: inherit; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgb(0 0 0 / 25%); }
-.rk-paper-figure__marker.is-active { background: var(--rk-warn); }
 .rk-paper-figure__zoom { position: absolute; right: 8px; bottom: 8px; min-height: 38px; padding: 4px 10px; border: 1px solid var(--rk-line); border-radius: 8px; background: white; color: var(--rk-ink); cursor: pointer; }
 .rk-paper-figure figcaption { display: grid; gap: 4px; margin-top: 8px; color: var(--rk-muted); }
-.rk-paper-figure__annotation { padding: 10px 12px; border-radius: 8px; background: var(--rk-accent-soft); }
 .rk-paper-figure__zoomed { display: block; max-width: 100%; max-height: 68vh; margin: auto; object-fit: contain; }
 .rk-compare { display: grid; gap: 12px; }
 .rk-compare__panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }

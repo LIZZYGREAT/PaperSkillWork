@@ -89,21 +89,8 @@ function overallFocus(benchmark: Benchmark, batch: number): string {
 
 function Figure2Evidence({ benchmark, batch }: { benchmark: Benchmark; batch: number }) {
   const focus = overallFocus(benchmark, batch);
-  const annotationAnchors: Record<string, { x: number; y: number }> = {
-    "cifar-2": { x: 30, y: 22 },
-    "cifar-5": { x: 63, y: 22 },
-    "cifar-10": { x: 95, y: 29 },
-    "cifar-20": { x: 40, y: 46 },
-    "cifar-50": { x: 78, y: 46 },
-    "ilsvrc-small": { x: 47, y: 80 },
-    "ilsvrc-full": { x: 52, y: 80 },
-  };
-  const annotationAnchor = annotationAnchors[focus];
-  const annotations = [
-    { id: "setting", ...annotationAnchor, label: "读横轴", buttonLabel: "i", text: "横轴表示截至当前阶段已学习的类别总数，不是当前批次的类别数。" },
-  ];
   return <div className={`p9-figure-focus p9-figure-focus--${focus}`} data-focus={focus}>
-    <PaperFigure src="/assets/figures/figure-2.png" mode="crop" figureLabel="Figure 2" alt="论文原始 Figure 2：比较 iCIFAR-100 与 iILSVRC 设置下的增量准确率。" caption="iCIFAR-100 与 iILSVRC 类别增量训练结果；曲线报告每个阶段对已见类别的准确率。iCIFAR-100 的全数据单批训练参照值为 68.6%。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 2, pp. 7–8." annotations={annotations} />
+    <PaperFigure src="/assets/figures/figure-2.png" mode="crop" figureLabel="Figure 2" alt="论文原始 Figure 2：比较 iCIFAR-100 与 iILSVRC 设置下的增量准确率。" caption="iCIFAR-100 与 iILSVRC 类别增量训练结果；曲线报告每个阶段对已见类别的准确率。iCIFAR-100 的全数据单批训练参照值为 68.6%。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 2, pp. 7–8." />
   </div>;
 }
 

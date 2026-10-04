@@ -66,14 +66,15 @@
 .p9-setting-controls button, .p9-mechanism-select button, .p9-memory-focus button { min-height: 38px; padding: 7px 10px; border: 1px solid #dce5e0; border-radius: 7px; color: #526a6c; background: #fbfcfa; font-size: 13px; font-weight: 650; cursor: pointer; }
 .p9-setting-controls button.is-active, .p9-mechanism-select button.is-active, .p9-memory-focus button.is-active { color: #345b4a; border-color: #9db8a5; background: #eff6ef; }
 .p9-figure-focus { position: relative; min-width: 0; }
-.p9-figure-focus .rk-paper-figure__image-wrap::after { position: absolute; z-index: 1; border: 3px solid #d2763e; border-radius: 3px; background: rgb(224 139 78 / 8%); box-shadow: 0 0 0 1px white, 0 0 0 5px rgb(210 121 62 / 20%); content: ""; pointer-events: none; }
-.p9-figure-focus--cifar-2 .rk-paper-figure__image-wrap::after { top: .5%; left: 1.5%; width: 32%; height: 24%; }
-.p9-figure-focus--cifar-5 .rk-paper-figure__image-wrap::after { top: .5%; left: 34%; width: 32%; height: 24%; }
-.p9-figure-focus--cifar-10 .rk-paper-figure__image-wrap::after { top: .5%; left: 67%; width: 32%; height: 24%; }
-.p9-figure-focus--cifar-20 .rk-paper-figure__image-wrap::after { top: 25%; left: 10%; width: 32%; height: 23%; }
-.p9-figure-focus--cifar-50 .rk-paper-figure__image-wrap::after { top: 25%; left: 43%; width: 32%; height: 23%; }
-.p9-figure-focus--ilsvrc-small .rk-paper-figure__image-wrap::after { top: 53%; left: 0; width: 43%; height: 29%; }
-.p9-figure-focus--ilsvrc-full .rk-paper-figure__image-wrap::after { top: 53%; left: 56%; width: 43%; height: 29%; }
+.p9-figure-focus .rk-paper-figure__image-wrap { width: min(100%, 68.4vh); margin-inline: auto; }
+.p9-figure-focus .rk-paper-figure__image-wrap::after { position: absolute; z-index: 1; border: 2px solid #c96f38; border-radius: 2px; background: rgb(224 139 78 / 3%); content: ""; pointer-events: none; }
+.p9-figure-focus--cifar-2 .rk-paper-figure__image-wrap::after { top: 1.9%; left: 9.8%; width: 24.5%; height: 18.2%; }
+.p9-figure-focus--cifar-5 .rk-paper-figure__image-wrap::after { top: 1.9%; left: 41.8%; width: 23.7%; height: 18.2%; }
+.p9-figure-focus--cifar-10 .rk-paper-figure__image-wrap::after { top: 1.9%; left: 71.8%; width: 24.6%; height: 18.2%; }
+.p9-figure-focus--cifar-20 .rk-paper-figure__image-wrap::after { top: 26.3%; left: 17.4%; width: 24.8%; height: 17.7%; }
+.p9-figure-focus--cifar-50 .rk-paper-figure__image-wrap::after { top: 26.3%; left: 48.4%; width: 25.5%; height: 17.7%; }
+.p9-figure-focus--ilsvrc-small .rk-paper-figure__image-wrap::after { top: 57%; left: 11%; width: 28.1%; height: 20.2%; }
+.p9-figure-focus--ilsvrc-full .rk-paper-figure__image-wrap::after { top: 57%; left: 62%; width: 32.3%; height: 20.2%; }
 .p9-figure-focus--memory-prototype .rk-paper-figure__image-wrap::after { top: 0; left: 50%; width: 49%; height: 72%; border-color: #557f9b; background: rgb(96 144 172 / 7%); box-shadow: 0 0 0 1px white, 0 0 0 5px rgb(77 121 149 / 20%); }
 .p9-figure-focus--memory-head .rk-paper-figure__image-wrap::after { top: 42%; left: 57%; width: 39%; height: 32%; border-color: #9b7847; background: rgb(176 139 70 / 8%); box-shadow: 0 0 0 1px white, 0 0 0 5px rgb(176 139 70 / 20%); }
 .p9-figure-focus .rk-paper-figure figcaption { color: #566c6e; font-size: 13px; line-height: 1.5; }
@@ -215,8 +216,6 @@
 .p9-step-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 3px; color: #5b7173; font-size: 13px; }
 .p9-step-controls > div { display: flex; gap: 7px; }
 .p9-step-controls .icarl-button:disabled { opacity: .45; cursor: default; }
-.p9-figure-focus .rk-paper-figure__marker { box-sizing: border-box; width: 36px; height: 36px; min-height: 36px; padding: 0; overflow: hidden; font-size: 15px; line-height: 1; white-space: nowrap; }
-
 @media (min-width: 761px) {
   .icarl-page--p9 .p9-figure-focus .rk-mobile-sheet .rk-overlay { align-items: center; justify-content: center; padding: 24px; }
   .icarl-page--p9 .p9-figure-focus .rk-mobile-sheet .rk-drawer { width: min(94vw, 1440px); height: min(96dvh, 1200px); margin: 0; border-radius: 14px; }
