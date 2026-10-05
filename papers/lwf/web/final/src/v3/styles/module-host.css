@@ -9,7 +9,7 @@
   --v3-paper: #fff;
   min-width: 0;
   color: var(--v3-ink);
-  font: 16px/1.55 Inter, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font: 17.28px/1.55 Inter, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
 }
 .lwf-v3-module-root *, .lwf-v3-module-root *::before, .lwf-v3-module-root *::after { box-sizing: border-box; }
 .lwf-v3-module-root button { color: inherit; font: inherit; }
