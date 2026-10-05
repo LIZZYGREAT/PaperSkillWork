@@ -119,12 +119,16 @@ export function LwfTaskHandoffView({ onOpenReference, onNavigateChapter }: {
       setRoutePaths(nextPaths);
 
       const loopSource = stateRect(7);
-      const loopTarget = stateRect(0);
+      const loopTarget = stateRect(2);
       if (loopSource && loopTarget) {
-        const x = (loopSource.left + loopSource.width / 2 - routesRect.left) * scaleX;
-        const startY = (loopSource.top - routesRect.top - 2) * scaleY;
-        const endY = (loopTarget.bottom - routesRect.top + 10) * scaleY;
-        setLoopPath(`M ${x} ${startY} V ${endY}`);
+        const startX = (loopSource.left + loopSource.width / 2 - routesRect.left) * scaleX;
+        const startY = (loopSource.bottom - routesRect.top + 4) * scaleY;
+        const endX = (loopTarget.left + loopTarget.width / 2 - routesRect.left) * scaleX;
+        const endY = (loopTarget.top - routesRect.top + 2) * scaleY;
+        const outsideBottom = (routesRect.height - 4) * scaleY;
+        const outsideRight = (routesRect.width - 4) * scaleX;
+        const outsideTop = 4;
+        setLoopPath(`M ${startX} ${startY} V ${outsideBottom} H ${outsideRight} V ${outsideTop} H ${endX} V ${endY}`);
       }
     };
     updatePosition();
