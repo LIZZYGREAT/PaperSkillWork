@@ -1182,12 +1182,6 @@ git push -u origin HEAD
 git push --force-with-lease
 ```
 
-不要使用：
-
-```powershell
-git push --force
-```
-
 如果 `--force-with-lease` 报 stale info：
 
 ```powershell
