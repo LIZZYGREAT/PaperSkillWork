@@ -126,7 +126,7 @@ export function PageMnist() {
           <div className="p08-sample-flow" aria-label={`Task ${task.id} 中的样本共用固定排列 ${task.permutation}`}>
             {[1, 2, 3].map((sample) => <div key={sample}><span>x<sub>{sample}</sub></span><i>{task.permutation}</i><b>x<sub>{sample}</sub><sup>({task.id})</sup></b></div>)}
           </div>
-          <p>随机的是每个任务所选的映射；同一 Task 的所有样本都使用这一个映射。论文中不是每张图像都重新随机打乱。</p>
+          <p>随机的是每个任务所选的映射；训练与测试样本都使用该任务的同一映射，标签不变。置换可逆，没有删掉像素信息，所以仍可学习数字分类；但同一输入坐标在不同任务中对应不同原图位置，网络必须适应不同映射，共享参数更新便可能干扰旧任务。</p>
         </div>
       </section>
 
@@ -139,7 +139,7 @@ export function PageMnist() {
           <li><span>02</span><b>顺序训练</b><p>同一个网络依次训练各 Task；切换后不再用旧任务样本继续训练。</p></li>
           <li><span>03</span><b>分别评估</b><p>检查当前任务的学习效果，也复测前面任务的测试集表现。</p></li>
         </ol>
-        <p className="p08-protocol-note">这个设置保留相同的分类目标，同时用固定输入变换制造任务间差异，便于观察共享参数受到的新旧任务干扰。</p>
+        <p className="p08-protocol-note">十类输出始终共用，类别空间没有增长。每个任务的测试 Accuracy 是预测正确样本数 / 该任务测试样本数；复测旧任务观察保持程度，当前任务正确率观察学习能力。Figure 2B 的平均正确率汇总已训练任务，可能掩盖单任务差异，需与 2A 一起读。</p>
       </section>
 
       <section className="p08-baselines" aria-labelledby="p08-baselines-title">
@@ -182,7 +182,7 @@ export function PageMnist() {
           <article><span>FORGETTING</span><h3>后续训练后，旧任务还能做对多少？</h3><p>看 Task A、B 的测试表现如何随训练推进而变化。</p></article>
           <article><span>PLASTICITY</span><h3>模型还能学会当前的新任务吗？</h3><p>同时检查模型是否能在每个新 Task 上获得较好的表现。</p></article>
         </div>
-        <p className="p08-result-boundary"><b>证据范围：</b>在论文报告的 Permuted MNIST 设置中，结果支持 Fisher 加权约束缓解旧任务遗忘，同时保留继续学习新任务的能力。这一受控结果不证明 EWC 在所有持续学习环境都有效。</p>
+        <p className="p08-result-boundary"><b>证据范围（R01，PDF pp. 3–4，§2.1 / Figure 2）：</b>论文使用全连接 ReLU 网络、固定任务训练时长与清晰边界。2A 是三个置换任务的 EWC / Uniform L2 / SGD 对照；2B 随任务数增加比较 EWC 与 SGD + Dropout。结果在这些网络、置换和训练设置下支持保持旧任务并继续学习，不能推为所有持续学习环境的保证。</p>
       </section>
 
       <details className="p08-overlap" id="fisher-overlap">

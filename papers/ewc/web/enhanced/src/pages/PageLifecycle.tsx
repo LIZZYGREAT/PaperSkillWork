@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 import "../styles/page7.css";
+import { MathFormula } from "../shared/teaching/Math";
 
 type Stage = {
   id: string;
@@ -39,14 +40,14 @@ const STAGES: Stage[] = [
   },
   {
     id: "boundary-b", title: "Task B 边界", shortTitle: "Boundary B", kind: "boundary", mode: "consolidate",
-    summary: "Task B 完成后重复 consolidation。S_A 保留，新增 S_B 供后续任务读取。",
+    summary: "Task B 完成后先复制当前 θ_B* 并停止更新，再用仍可用的 D_B 在该位置估计 F_B。S_A 保持固定，新增 S_B。",
     steps: ["固定 θ_B*", "用 D_B 估计 F_B", "保留旧状态并存下 S_B"],
     params: "固定在 θ_B*", optimizer: "停止更新", data: "D_B 仍需可用", anchor: "保存 θ_B*", fisher: "估计 F_B",
   },
   {
     id: "train-c", title: "训练 Task C", shortTitle: "Train C", kind: "train", mode: "ewc",
-    summary: "训练继续在同一模型上进行。Task C 读取已保存的旧任务状态，为各任务约束保留空间。",
-    steps: ["读取 Task C batch", "计算 L_C 与旧任务约束", "更新 θ 并继续顺序训练"],
+    summary: "同一个模型从 θ_B* 开始训练 C。D_C 提供新 Loss；S_A 与 S_B 的 Anchor、Fisher 保持固定，只读取、不随当前 θ 更新。",
+    steps: ["从 θ_B* 继续，读取 D_C batch", "计算 L_C + Ω_A + Ω_B", "optimizer.step() 只更新当前 θ"],
     params: "继续更新", optimizer: "执行", data: "D_C 正在使用", anchor: "读取 θ_A*、θ_B*", fisher: "读取 F_A、F_B",
   },
 ];
@@ -166,7 +167,9 @@ export function PageLifecycle() {
 
       <aside className="p07-cycle-note" aria-label="Task C 状态累积">
         <span className="p07-overline">AFTER TASK B</span>
-        <p>保存 θ<sub>B</sub>* 并估计 F<sub>B</sub> 后，后续任务可同时读取 A 与 B 的状态。此处 S<sub>A</sub>、S<sub>B</sub> 是生命周期示意记号。</p>
+        <p>保存 θ<sub>B</sub>* 并估计 F<sub>B</sub> 后，C 从 θ_B* 开始；固定旧记录提供两项惩罚。边界估计时必须仍能读取刚结束任务的数据，不能先丢弃数据再计算 Fisher。进入新任务后，EWC penalty 本身只读取旧记录。</p>
+        <MathFormula block tex={String.raw`L_C(\theta)+\frac{\lambda_A}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2+\frac{\lambda_B}{2}\sum_iF_{B,i}(\theta_i-\theta_{B,i}^*)^2`} />
+        <p>这展示分别保留惩罚的实现映射（C07 / M01），并非论文规定的 checkpoint 格式；λ_A、λ_B 表示各约束的权衡。S_A、S_B 是教学记号。</p>
         <button type="button" onClick={() => api.openHub("task_boundary")}>在 Reference Hub 查看 Task Boundary</button>
       </aside>
 

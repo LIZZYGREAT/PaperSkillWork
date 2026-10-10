@@ -14,13 +14,13 @@ const COMPONENTS = [
   {
     id: "replay", label: "Replay", sublabel: "per-game transitions",
     title: "Replay 支持当前游戏内的强化学习训练",
-    description: "Atari 系统为各任务使用 Replay buffer 保存 transition，并从对应缓冲区抽取经验训练网络。EWC 没有取代 Replay。",
+    description: "Atari 系统为各任务保存 transition，并从对应 Replay buffer 抽取经验。重复使用历史经验、打散连续交互的强相关性，支持当前游戏的 Q 学习；EWC penalty 提供跨任务的参数偏移代价，两者互补。",
     source: "论文 Atari 系统 · C08",
   },
   {
     id: "recognition", label: "Task Recognition", sublabel: "game context",
     title: "单独判断当前处于哪个游戏任务",
-    description: "论文 Atari 系统额外使用 task-recognition 模块。EWC 本身接收任务切换信息，不负责自动发现 Task Boundary。",
+    description: "游戏画面不直接附带监督任务标签，系统以额外的 task-recognition 模块推断上下文，用于选择相应 Replay 与 task-specific 调制。EWC 依赖系统提供的切换信号，不能独自发现 Task Boundary。",
     source: "论文 Atari 系统 · C08",
   },
   {
@@ -78,7 +78,7 @@ export function PageAtari() {
           </li>)}
         </ol>
         <div className="p09-rl-step-detail" aria-live="polite"><b>{step.label}</b><p>{step.detail}</p><span>sₜ → Q<sub>θ</sub>(sₜ, a) → aₜ → rₜ, sₜ₊₁</span></div>
-        <p className="p09-rl-return">这条交互链产生 transition；强化学习更新使用这些经验继续调整 action-value network。</p>
+        <p className="p09-rl-return">交互产生 (sₜ, aₜ, rₜ, sₜ₊₁) transition。没有直接给出“正确动作”标签；通用 DQN 用即时 Reward 加折扣后的下一状态价值构造训练目标，让当前 Q 预测靠近这个目标。改变参数会改变动作选择，进而改变以后访问的状态与训练经验；这与 P2 的固定标签分类数据不同。</p>
       </section>
 
       <section className="p09-comparison" aria-label="Permuted MNIST 与 Atari 的训练环境对比">
@@ -163,7 +163,7 @@ export function PageAtari() {
         <div className="p09-section-heading">
           <div><span className="p09-overline">EVIDENCE · FULL SYSTEM</span><h2 id="p09-evidence-title">先读跨游戏表现，再读 Fisher 诊断</h2></div>
         </div>
-        <p className="p09-evidence-intro">Figure 3A 展示游戏训练安排。Figure 3B 汇总多游戏表现。Figure 3C 单独检验参数扰动后的 Breakout 表现。</p>
+        <p className="p09-evidence-intro">该对照从 19 款游戏池中抽取 10 款并反复顺序训练（R03，§2.2）。Figure 3A 展示训练安排；3B 汇总 human-normalized score，它将游戏得分相对于随机与人类基准归一化后求和，不是分类 Accuracy，也不能保证每款游戏都提高。3C 单独检验 Breakout 参数扰动。</p>
         <div className="p09-figure-wrap">
           <PaperFigure
             src="/images/figure-3.png"
