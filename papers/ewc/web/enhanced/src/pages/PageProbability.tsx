@@ -2,19 +2,8 @@ import { Fragment, useMemo, useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 
-type ParameterState = {
-  id: string;
-  candidate: "A" | "B" | "C";
-  logits: [number, number, number];
-  probabilities: [number, number, number];
-  datasetProbabilities: [number, number, number];
-};
-
-const PARAMETER_STATES: ParameterState[] = [
-  { id: "theta-a", candidate: "A", logits: [-0.87, -0.97, -1.61], probabilities: [0.42, 0.38, 0.20], datasetProbabilities: [0.42, 0.65, 0.58] },
-  { id: "theta-b", candidate: "B", logits: [0.00, -1.30, -2.34], probabilities: [0.73, 0.20, 0.07], datasetProbabilities: [0.73, 0.80, 0.92] },
-  { id: "theta-c", candidate: "C", logits: [0.00, -2.40, -3.09], probabilities: [0.88, 0.08, 0.04], datasetProbabilities: [0.88, 0.89, 0.95] },
-];
+import { PARAMETER_STATES, datasetLikelihood, negativeLogLikelihood, type ParameterState } from "../data/probabilityExample";
+import { MathFormula } from "../shared/teaching/Math";
 
 const CLASS_NAMES = ["class A", "class B", "class C"];
 const SAMPLE_NAMES = ["(x₁, y₁=A)", "(x₂, y₂=B)", "(x₃, y₃=C)"];
@@ -28,15 +17,7 @@ function formatProbability(value: number) {
 }
 
 function ParameterStateNotation({ candidate }: { candidate: ParameterState["candidate"] }) {
-  return <>θ<sup>[{candidate}]</sup></>;
-}
-
-function datasetLikelihood(state: ParameterState) {
-  return state.datasetProbabilities.reduce((likelihood, probability) => likelihood * probability, 1);
-}
-
-function negativeLogLikelihood(state: ParameterState) {
-  return -Math.log(datasetLikelihood(state));
+  return <>θ<sup>({{ A: 1, B: 2, C: 3 }[candidate]})</sup></>;
 }
 
 function InputSample() {
@@ -74,11 +55,11 @@ function LogitValues({ values }: { values: ParameterState["logits"] }) {
       {values.map((value, index) => (
         <div className="p02-logit-row" key={CLASS_NAMES[index]}>
           <span>{CLASS_NAMES[index]}</span>
-          <div className="p02-logit-row__bar"><i style={{ width: `${Math.max(4, ((value + 2) / 2) * 100)}%` }} /></div>
+          <div className="p02-logit-row__bar"><i style={{ width: `${Math.max(4, Math.min(100, ((value + 4) / 4) * 100))}%` }} /></div>
           <b>{value.toFixed(2)}</b>
         </div>
       ))}
-      <div className="p02-logit-axis"><span>−2</span><span>logit z</span><span>0</span></div>
+      <div className="p02-logit-axis"><span>−4</span><span>logit z</span><span>0</span></div>
     </div>
   );
 }
@@ -196,17 +177,24 @@ export function PageProbability() {
           <div className="p02-perspective-compare__item p02-perspective-compare__item--likelihood"><span><ReferenceTrigger id="likelihood">LIKELIHOOD · 固定已观察的 (xₙ, yₙ)</ReferenceTrigger></span><p>把已观察输入和标签保持不变，改变 θ，比较哪组参数给这些标签更高的条件似然：<b>看不同参数如何解释同一批已观察标签。</b>它是关于 θ 的函数，不是 θ 的概率分布。</p></div>
         </div>
 
-        <div className="p02-comparison-heading"><div><span className="p02-overline">PARAMETER SWITCH · SAME DATA · DIFFERENT PREDICTIONS</span><h3>选一组参数，看三条样本概率怎样共同改变 Likelihood</h3></div><span>点击一行即可更新上方网络前向结果</span></div>
+        <details className="p02-softmax-detail">
+          <summary>核对当前配置的三条 Forward 输出与真实标签概率</summary>
+          <div className="p02-origin-table__scroll"><table>
+            <thead><tr><th>固定样本 / 标签</th><th>logits（A, B, C）</th><th>Softmax（A, B, C）</th><th>取真实标签项</th></tr></thead>
+            <tbody>{selected.sampleLogits.map((row, n) => <tr key={n}><th>{SAMPLE_NAMES[n]}</th><td>{row.map(v => v.toFixed(2)).join(", ")}</td><td>{selected.sampleProbabilities[n].map(v => v.toFixed(4)).join(", ")}</td><td>{selected.datasetProbabilities[n].toFixed(4)}</td></tr>)}</tbody>
+          </table></div>
+        </details>
+        <div className="p02-comparison-heading"><div><span className="p02-overline">PARAMETER SWITCH · SAME DATA · DIFFERENT PREDICTIONS</span><h3>选一组参数，看三条样本概率怎样共同改变 Likelihood</h3></div><span>点击一行查看该配置的预设 Forward 输出</span></div>
         <div className="p02-state-row-head" aria-hidden="true"><span>候选参数状态</span><span><i>x₁</i><i>x₂</i><i>x₃</i><b>每个样本真实标签的概率</b></span><span>数据 Likelihood</span><span>负对数损失</span></div>
         <ParameterComparison selectedId={selectedId} onSelect={setSelectedId} />
-        <p className="p02-boundary-note">这些概率是为了把乘积关系讲清楚而设置的教学示例，不是论文实验结果；每一行是同一模型的完整候选参数配置 θ<sup>[A]</sup> / θ<sup>[B]</sup> / θ<sup>[C]</sup>，不是某一层。表格比较三组配置对同一份 D 的条件似然。</p>
+        <p className="p02-boundary-note">教学示例，非论文实测。每一行是完整参数配置 θ⁽¹⁾ / θ⁽²⁾ / θ⁽³⁾，θᵢ 才是单个坐标。网络图只示意结构，本例预设每个配置的三条 Forward logits；概率由 Softmax 计算。显示值舍入，Likelihood 与 NLL 使用未舍入值。P3 直接复用这份 D 和这三组 Likelihood。</p>
       </section>
 
       <section className="p02-loss-update" id="loss-and-update" aria-labelledby="p02-loss-title">
         <div className="p02-section-heading"><div><span className="p02-overline">03 · FROM LIKELIHOOD TO PARAMETER UPDATE</span><h2 id="p02-loss-title">最大化 Likelihood，等价于最小化负对数损失</h2></div><p>负号把“概率越大越好”改写成“Loss 越小越好”；对数把样本概率的乘积改写为求和。</p></div>
         <div className="p02-nll-explanation" aria-label="负对数似然的定义和作用">
           <span>NEGATIVE LOG-LIKELIHOOD · NLL</span>
-          <strong>L<sub>NLL</sub>(θ) = −log p(D | θ) = −<span className="p02-nll-sum" aria-label="从 n 等于 1 到 N 求和"><sup>N</sup><span>∑</span><sub>n=1</sub></span> log p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)</strong>
+          <MathFormula block tex={String.raw`L_{\mathrm{NLL}}(\theta)=-\log p(D\mid\theta)=-\sum_{n=1}^{N}\log p_\theta(y_n\mid x_n)`} />
           <p>对每个真实标签的预测概率取 log 再取负；概率越高，NLL 越小。这样就能把乘积形式的 Likelihood 写成可相加、可最小化的训练损失。</p>
         </div>
         <div className="p02-training-chain" aria-label="Likelihood 变成 Loss，计算梯度后更新参数">
@@ -239,7 +227,7 @@ export function PageProbability() {
       </section>
 
       <section className="p02-handoff" aria-label="通往下一页的问题">
-        <div><span className="p02-overline">NEXT · BAYESIAN PARAMETER VIEW</span><h2>数据的概率来自网络；参数本身的概率从哪里来？</h2><p><ReferenceTrigger id="p_theta">p(θ)</ReferenceTrigger> 不会由这次 Forward 自动给出。下一步从这里开始，再理解 Prior、Bayes 和 Posterior。</p></div>
+        <div><span className="p02-overline">NEXT · BAYESIAN PARAMETER VIEW</span><h2>有了拟合分数，怎样保留旧任务对参数的支持？</h2><p>Likelihood 评价指定 θ 对同一份 D 的解释力，却没有在参数空间归一化，也没有表达已有参数知识。下一页用 <ReferenceTrigger id="prior">Prior</ReferenceTrigger> 与 Bayes Rule 把这些分数变成 Posterior，让旧任务信息参与后续更新。</p></div>
         <div className="p02-handoff__question"><span>OPEN QUESTION</span><b>p(θ) = ?</b><small>not a network output</small></div>
       </section>
 

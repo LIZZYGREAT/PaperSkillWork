@@ -2,15 +2,15 @@ import { useMemo, useState } from "react";
 import { FlowStepper, type FlowStep } from "../shared/core/flow-stepper";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
+import { PARAMETER_STATES, datasetLikelihood, EXAMPLE_EVIDENCE } from "../data/probabilityExample";
+import { MathFormula } from "../shared/teaching/Math";
 
 type Candidate = { id: string; prior: number; likelihood: number };
 type DistributionView = "prior" | "posterior";
 
-const CANDIDATES: Candidate[] = [
-  { id: "θ₁", prior: 0.5, likelihood: 0.15 },
-  { id: "θ₂", prior: 0.35, likelihood: 0.45 },
-  { id: "θ₃", prior: 0.15, likelihood: 0.85 },
-];
+const CANDIDATES: Candidate[] = PARAMETER_STATES.map(state => ({
+  id: `θ⁽${state.index}⁾`, prior: state.prior, likelihood: datasetLikelihood(state),
+}));
 
 const BAYES_STEPS: FlowStep[] = [
   {
@@ -34,7 +34,7 @@ const BAYES_STEPS: FlowStep[] = [
 ];
 
 function formatPercent(value: number) {
-  return `${Math.round(value * 100)}%`;
+  return `${(value * 100).toFixed(1)}%`;
 }
 
 function ProbabilityOriginTable() {
@@ -118,12 +118,12 @@ function BayesBox() {
           <span>AFTER DATA</span><b>Posterior</b><strong>p(θ | D)</strong><small>看到数据后的参数评价</small>
         </a>
         <div className="p03-bayes-normalizer" id="bayes-evidence-normalizer">
-          <span>归一化 by p(D)</span><p>Evidence 使结果成为合法的概率分布。</p>
+          <span>归一化 p(D)</span><p>由 Prior 加权的 Likelihood 求和（连续参数用积分），使后验总权重为 1。</p>
         </div>
       </div>
       <div className="p03-bayes-explanations">
-        <div id="prior-explanation"><span>01 · PRIOR</span><h3><ReferenceTrigger id="prior">p(θ)</ReferenceTrigger> 不是模型输出</h3><p>它是数据到来前，对参数配置合理性的先验描述。Prior 是建模选择，不是已知答案。</p></div>
-        <div id="likelihood-explanation"><span>02 · LIKELIHOOD</span><h3><ReferenceTrigger id="likelihood">p(D | θ)</ReferenceTrigger> 评价数据拟合</h3><p>给定 θ，衡量模型对已观察数据 D 的解释能力。第 2 页已从网络输出推导出它。</p></div>
+        <div id="prior-explanation"><span>01 · PRIOR</span><h3><ReferenceTrigger id="prior">p(θ)</ReferenceTrigger> 不是模型输出</h3><p>它由建模者在使用当前 D 之前选择，必须非负并归一化。可编码已有知识或偏好；Prior 为零的区域不会被这次更新恢复。不能看完这份 D 后随意挑数冒充先验。</p></div>
+        <div id="likelihood-explanation"><span>02 · LIKELIHOOD</span><h3><ReferenceTrigger id="likelihood">p(D | θ)</ReferenceTrigger> 评价数据拟合</h3><p>给定 θ，由模型预测与实际标签共同决定。P2 已从 logits、Softmax 和真实标签项推导出它，本页直接复用；不能为得到想要的后验任意填写 Likelihood。</p></div>
         <div id="posterior-explanation"><span>03 · POSTERIOR</span><h3><ReferenceTrigger id="posterior">p(θ | D)</ReferenceTrigger> 更新参数信念</h3><p>Posterior 将先验偏好与数据证据结合，重新分配不同参数配置的概率。</p></div>
       </div>
       <details className="p03-full-bayes" id="bayes-evidence-normalizer-detail">
@@ -139,7 +139,7 @@ function BayesBox() {
 
 function CandidateUpdate() {
   const [view, setView] = useState<DistributionView>("prior");
-  const evidence = useMemo(() => CANDIDATES.reduce((sum, candidate) => sum + candidate.prior * candidate.likelihood, 0), []);
+  const evidence = useMemo(() => EXAMPLE_EVIDENCE, []);
   const distribution = (candidate: Candidate) => view === "prior" ? candidate.prior : (candidate.prior * candidate.likelihood) / evidence;
 
   return (
@@ -164,23 +164,45 @@ function CandidateUpdate() {
                 <div className="p03-candidate-weight__label"><span>{view === "prior" ? "Prior p(θ)" : "Posterior p(θ | D)"}</span><b>{formatPercent(weight)}</b></div>
                 <span className="p03-candidate-weight__track" aria-hidden="true"><i className={view === "posterior" ? "is-posterior" : ""} style={{ width: `${weight * 100}%` }} /></span>
               </div>
-              <span className="p03-candidate-likelihood">p(D | {candidate.id}) = {formatPercent(candidate.likelihood)}</span>
+              <span className="p03-candidate-likelihood">p(D | {candidate.id}) = {candidate.likelihood.toFixed(4)}</span>
               <span className="p03-candidate-posterior">{formatPercent(posterior)}</span>
             </div>
           );
         })}
       </div>
       <div className="p03-candidate-result" aria-live="polite">
-        <span>示例归一化项 p(D) = {evidence.toFixed(2)}</span>
-        <p>{view === "prior" ? "当前显示数据到来前的 Prior；数据越支持某组参数，它在 Posterior 中的相对权重越可能上升。" : "当前显示 Posterior。θ₂ 与 θ₃ 对这份示意数据的 Likelihood 较高，因此它们的相对权重上升。"}</p>
+        <span>示例归一化项 p(D) = {evidence.toFixed(4)}</span>
+        <p>{view === "prior" ? "当前显示 Prior；选择 Posterior 可检查数据如何重新分配权重。" : "θ⁽¹⁾ 的权重下降，θ⁽²⁾ 与 θ⁽³⁾ 上升；每项由 Prior × Likelihood / Evidence 决定。"}</p>
       </div>
-      <p className="p03-teaching-boundary">示意数值只用于演示 Bayes 更新，不是论文中的参数、数据或实验结果。</p>
+      <p className="p03-teaching-boundary">D 与 Likelihood 复用 P2。Prior = (0.50, 0.35, 0.15) 是本例建模假设，仅在三组候选配置中分配概率，非论文参数后验。显示值舍入，归一化使用未舍入值。</p>
+    </section>
+  );
+}
+
+function PosteriorConstraint() {
+  return (
+    <section className="p03-section ewc-reasoning" id="posterior-constraint" aria-labelledby="p03-constraint-title">
+      <h2 id="p03-constraint-title">旧数据如何通过 Bayes 运算约束参数？</h2>
+      <p>我们已有 D_A、共享参数 θ，以及网络在给定 θ 时对旧标签的预测概率。固定同一份 D_A，改变 θ 会改变 Likelihood。Bayes 更新用这个分数乘原有 Prior，再除以由所有配置共同决定的 Evidence：</p>
+      <MathFormula block tex={String.raw`p(\theta\mid D_A)=\frac{p(D_A\mid\theta)p(\theta)}{p(D_A)}`} />
+      <p>比较两组配置时，Evidence 消去。若 Prior 相同，对旧标签给出更高概率的配置就有更大的后验权重；解释很差的配置被相对降权。Prior 不同时，还必须计入先验偏好：</p>
+      <MathFormula block tex={String.raw`\frac{p(\theta^{(a)}\mid D_A)}{p(\theta^{(b)}\mid D_A)}=\frac{p(D_A\mid\theta^{(a)})}{p(D_A\mid\theta^{(b)})}\frac{p(\theta^{(a)})}{p(\theta^{(b)})}`} />
+      <p>本页 θ⁽³⁾ 的 Likelihood 是 θ⁽¹⁾ 的 {(CANDIDATES[2].likelihood / CANDIDATES[0].likelihood).toFixed(2)} 倍，但 Prior 只有它的 0.30 倍，后验比值约为 {(CANDIDATES[2].likelihood / CANDIDATES[0].likelihood * 0.3).toFixed(2)}。Evidence 统一缩放，不改变同一 D 下配置之间的排序。某项后验相对其先验上升，当且仅当该项 Likelihood 高于先验加权的平均值 p(D)。</p>
+      <MathFormula block tex={String.raw`p(D)=\sum_k p(D\mid\theta^{(k)})p(\theta^{(k)}),\qquad p(D)=\int p(D\mid\theta)p(\theta)\,d\theta`} />
+      <p>前式适用于本页离散例子，后式适用于连续参数。p(D) 由模型、数据与 Prior 决定，不是可以任意选择的常数。</p>
+      <p>这种相对支持还描述解附近的变化：从受支持的位置沿某方向移动，若旧数据的解释力在控制 Prior 等条件后迅速下降，这个区域的 Posterior 也下降。保留这部分信息，才能让后续任务为离开旧解付出代价。MAP 只回答中心在哪里；附近形状才回答哪些偏移代价大。</p>
+      <MathFormula block tex={String.raw`\Phi(\theta)=-\log p(\theta\mid D_A)=-\log p(D_A\mid\theta)-\log p(\theta)+C`} />
+      <p>在局部 MAP 驻点 θ_A* 附近，若 Φ 可二阶展开且曲率正定（或作适当正则化），一阶项为零：</p>
+      <MathFormula block tex={String.raw`\Phi(\theta)\approx\Phi(\theta_A^*)+\frac12(\theta-\theta_A^*)^\mathsf{T}H_A(\theta-\theta_A^*)`} />
+      <p>沿曲率较大的方向，同样偏移增加更多 Φ；因为密度相对中心为 exp(−ΔΦ)，局部 Gaussian 在该方向更窄，约束更强。负对数 Posterior 还包含 Prior，不能直接等同于旧任务 Loss。</p>
+      <MathFormula block tex={String.raw`\Delta\Phi=\tfrac12[8\Delta\theta_1^2+0.5\Delta\theta_2^2]`} />
+      <p>二维教学例子：两坐标分别单独偏移 0.5，密度因子为 e⁻¹ ≈ 0.368 与 e⁻⁰·⁰⁶²⁵ ≈ 0.939。它说明同幅偏移的代价不同，非论文测得的 Fisher。P4 解释怎样保留局部形状，P5 再用对角 Fisher 近似可计算的局部精度；完整 Hessian、Fisher 与经验估计并不精确等价。</p>
     </section>
   );
 }
 
 function SequentialUpdate() {
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(0);
   const equations = [
     { expression: "p(θ)", note: "Task A 数据到来前的参数 Prior" },
     { expression: "p(θ | D_A) ∝ p(D_A | θ) p(θ)", note: "Task A Posterior 汇总旧任务数据带来的更新" },
@@ -192,7 +214,7 @@ function SequentialUpdate() {
     <section className="p03-section p03-sequential" id="sequential-update" aria-labelledby="p03-sequential-title">
       <div className="p03-section-heading">
         <div><span className="p03-overline">CONTINUAL LEARNING · SEQUENTIAL BAYES</span><h2 id="p03-sequential-title">Task A 学完后，旧 Posterior 怎样进入 Task B？</h2></div>
-        <p>对顺序任务而言，前一任务的参数 Posterior 会参与下一次更新。</p>
+        <p>给定 θ 后假设两任务数据条件独立，把 Task A Posterior 作为 Task B 的先验贡献，与 p(D_B | θ) 相乘。</p>
       </div>
       <div className="p03-sequential-flow" aria-label="Task A posterior 延续到 Task B 的更新关系">
         <div><span>START</span><b>Prior</b><strong>p(θ)</strong></div><i aria-hidden="true" />
@@ -223,7 +245,7 @@ export function PageBayes() {
       <header className="ewc-page-header p03-header">
         <div className="ewc-page-header__kicker"><span>03</span> BAYESIAN VIEW · PRIOR TO POSTERIOR</div>
         <h1 id="p03-title">参数的 Prior 与 Posterior</h1>
-        <p className="ewc-page-header__dek">第 2 页解释了网络怎样给数据概率。现在继续追问：如果数据有 Likelihood，参数 θ 本身的概率从哪里来？</p>
+        <p className="ewc-page-header__dek">第 2 页能比较指定参数对旧数据的解释力；但 Likelihood 不是参数空间的分布。为了保留已有参数知识并继续接收新数据，我们用 Prior 与 Bayes 更新得到 Posterior。</p>
       </header>
 
       <section className="p03-entry" aria-labelledby="p03-entry-title">
@@ -237,13 +259,14 @@ export function PageBayes() {
       <ParameterPerspectives />
       <BayesBox />
       <CandidateUpdate />
+      <PosteriorConstraint />
       <SequentialUpdate />
 
       <section className="p03-handoff" aria-labelledby="p03-handoff-title">
         <div>
           <span className="p03-overline">NEXT · LOCAL POSTERIOR APPROXIMATION</span>
           <h2 id="p03-handoff-title">完整的 Task A Posterior 太复杂，难以直接带到 Task B</h2>
-          <p>因此下一步要问：旧任务的关键约束，能不能只在 <ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger> 附近保留？</p>
+          <p>旧 Posterior 已记录相对支持；EWC 需要中心与周围的变化代价。完整高维分布难以保存与运算，下一页用中心与局部曲率近似 <ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger> 附近的约束。</p>
         </div>
         <button type="button" onClick={() => api.navigatePage("page-04-laplace")}>继续到 Page 4 · Laplace 局部近似 <span aria-hidden="true">→</span></button>
       </section>

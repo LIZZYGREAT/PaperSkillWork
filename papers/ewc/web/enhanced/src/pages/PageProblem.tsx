@@ -308,7 +308,7 @@ export function PageProblem() {
       </section>
 
       <section className="p01-handoff" aria-label="下一页学习目标">
-        <div><span className="p01-overline">NEXT · PAGE 02</span><h2>先把普通训练这条链看清楚</h2><p>神经网络怎样产生概率？整份数据的 Likelihood 和 Loss 怎样从这些概率得到？参数又怎样被更新？</p></div>
+        <div><span className="p01-overline">NEXT · PAGE 02</span><h2>先建立能评价参数偏移代价的 Task A 目标</h2><p>同样偏移为什么会造成不同损失，取决于旧样本预测如何随 θ 改变。我们需要从 D_A 得到可比较不同参数配置的分数：分类网络给真实标签的概率，组合成 Likelihood，再转成 Loss。下一页先建立这条链，之后才能解释旧解附近哪些变化代价更高。</p></div>
         <button type="button" className="p01-handoff__button" onClick={() => api.navigatePage("page-02-probability")}><span>打开 Page 2</span><b aria-hidden="true">02 →</b></button>
       </section>
     </article>

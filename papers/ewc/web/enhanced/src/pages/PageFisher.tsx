@@ -5,6 +5,7 @@ import { EWCNetworkDiagram } from "../shared/teaching/EWCNetworkDiagram";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 import type { CanonicalReferenceId, RuntimeObjectId } from "../contracts/ids";
+import { MathFormula } from "../shared/teaching/Math";
 
 const FISHER_STEPS: FlowStep[] = [
   { id: "anchor", title: "固定 Task A 参数", description: "Task A 普通训练已结束；本轮计算以 θ_A* 为中心，参数不再更新。", statusText: "Parameters FIXED · Gradient ENABLED · Optimizer OFF" },
@@ -172,6 +173,15 @@ export function PageFisher() {
         <div className="p05-opening__handoff"><b><ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger></b><i aria-hidden="true">→</i><span>固定参数<br />读取旧样本</span><i aria-hidden="true">→</i><b><ReferenceTrigger id="fisher_information">F<sub>A</sub></ReferenceTrigger></b></div>
       </section>
 
+      <section className="p05-section ewc-reasoning" aria-labelledby="p05-definition-title">
+        <h2 id="p05-definition-title">为什么从完整曲率转向 Fisher？</h2>
+        <p>P 个参数的完整 Hessian 需要 P² 项，还包含参数间的耦合。EWC 保留逐坐标精度，只存 P 个对角项；它放弃了相关方向的信息，换取可计算、可保存的约束。</p>
+        <MathFormula block tex={String.raw`g=\nabla_\theta\log p_\theta(y\mid x),\quad F(\theta)=\mathbb{E}_{x,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]`} />
+        <p>这是一般 Fisher 定义：对输入分布及模型预测分布中的标签取期望。对角项 Fᵢᵢ = E[gᵢ²] 非负，并可由一阶梯度估计。在可微、可交换积分与求导等正则条件下，它等于模型分布期望下的负 Log Likelihood Hessian；有限旧数据的后验 Hessian 还包含 Prior，因此不是同一个量。</p>
+        <MathFormula block tex={String.raw`\mathbb{E}_x D_{\mathrm{KL}}(p_\theta(\cdot\mid x)\parallel p_{\theta+\Delta\theta}(\cdot\mid x))\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} />
+        <p>小幅移动下，Fisher 大的方向会使预测分布变化更大，这是它近似局部敏感性的机制（背景 B05）。论文以对角 Fisher 近似旧 Posterior 精度；大幅位移、模型失配、忽略相关性和强 Prior 都可能削弱这层近似。</p>
+        <p>下面用观测标签 yₙ 的逐样本梯度平方平均演示估计流程。这是 observed-label empirical Fisher：标签来自数据，而非按模型预测抽样；与上面的期望 Fisher 一般不同，不能保证精确表示后验曲率，也不是 2017 论文唯一规定的配方。</p>
+      </section>
       <FisherWorkbench />
       <TrainingModeComparison />
       <FisherRole />

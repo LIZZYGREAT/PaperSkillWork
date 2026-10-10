@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
+import { MathFormula } from "../shared/teaching/Math";
 
 type Direction = "wide" | "narrow";
 
@@ -56,20 +57,20 @@ function LaplaceEquation() {
       <div className="p04-equation-card" role="group" aria-label="Laplace 近似的局部二次展开与 Gaussian 表示">
         <div className="p04-equation-row" role="math" aria-label="Phi theta 等于负的 Task A 参数 Posterior 对数">
           <span className="p04-equation-label">先定义要近似的形状</span>
-          <strong>Φ(θ) = − log <ReferenceTrigger id="task_a_posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger></strong>
+          <MathFormula tex={String.raw`\Phi(\theta)=-\log p(\theta\mid D_A)`} />
         </div>
         <div className="p04-equation-row" role="math" aria-label="Phi theta 约等于 Phi theta A 星加二分之一乘参数位移转置、局部 Hessian 和参数位移">
           <span className="p04-equation-label">θ<sub>A</sub>* 附近的二阶 Taylor 近似</span>
-          <strong>Φ(θ) ≈ Φ(θ<sub>A</sub>*) + ½ (θ − θ<sub>A</sub>*)<sup>T</sup> H<sub>A</sub> (θ − θ<sub>A</sub>*)</strong>
+          <MathFormula block tex={String.raw`\Phi(\theta)\approx\Phi(\theta_A^*)+\tfrac12(\theta-\theta_A^*)^\mathsf{T}H_A(\theta-\theta_A^*)`} />
         </div>
         <div className="p04-equation-row p04-equation-row--result" role="math" aria-label="Task A 参数 Posterior 的局部近似是均值 theta A 星、协方差为 H A 逆的 Gaussian 分布">
           <span className="p04-equation-label">对应的局部 Gaussian</span>
-          <strong>q(θ | D<sub>A</sub>) ≈ 𝒩(θ<sub>A</sub>*, H<sub>A</sub><sup>−1</sup>)</strong>
+          <MathFormula tex={String.raw`q(\theta\mid D_A)=\mathcal{N}(\theta_A^*,H_A^{-1})`} />
         </div>
       </div>
 
       <div className="p04-concept-notes">
-        <div><b>中心 θ<sub>A</sub>*</b><p>由 Task A 的普通训练学到；此处把它作为局部近似的中心，而不是说训练实际存储了整条 Posterior。</p></div>
+        <div><b>中心 θ<sub>A</sub>*</b><p>理想 Taylor 展开以局部 MAP 驻点为中心，∇Φ = 0，因而一阶项消失。实现中使用训练所得 θ_A* 作为近似中心；普通优化器未必找到精确 MAP。</p></div>
         <div><b>局部曲率 H<sub>A</sub></b><p>描述负对数 Posterior 在中心附近变陡或变平的程度。曲率越大，Gaussian 对应方向越窄。</p></div>
       </div>
 
@@ -80,7 +81,7 @@ function LaplaceEquation() {
           <p>对这个二次型取指数，就得到以 θ<sub>A</sub>* 为中心的 Gaussian。<ReferenceTrigger id="local_precision">局部精度</ReferenceTrigger> H<sub>A</sub> 描述分布收缩程度；协方差是它的逆。</p>
         </div>
       </details>
-      <p className="p04-teaching-note">以上是 Laplace 近似的数学视图。论文使用对角 Fisher 作为对角精度近似；图中的 H<sub>A</sub> 不表示论文精确计算或保存了完整 Hessian。</p>
+      <p className="p04-teaching-note">Gaussian 协方差 H_A⁻¹ 要求局部曲率正定；零或负曲率需要适当正则化，此近似只适合旧解附近。论文使用对角 Fisher 近似精度，未精确计算或保存这里的完整 Hessian。</p>
     </section>
   );
 }
@@ -88,8 +89,8 @@ function LaplaceEquation() {
 function DirectionalPrecision() {
   const [direction, setDirection] = useState<Direction>("wide");
   const explanation = direction === "wide"
-    ? "沿宽方向移动距离 d，局部 Posterior 变化较缓；相同位移仍落在较宽的等高线范围内。"
-    : "沿窄方向移动同样的距离 d，局部 Posterior 下降更快；该方向的局部精度更高。";
+    ? "宽方向精度 0.5，d = 0.5：ΔΦ = 0.0625，密度相对中心为 exp(−0.0625) ≈ 0.939。"
+    : "窄方向精度 2.18，d = 0.5：ΔΦ ≈ 0.2725，密度相对中心为 exp(−0.2725) ≈ 0.761。";
 
   return (
     <section className="p04-section p04-directions" id="narrow-wide-directions" aria-labelledby="p04-directions-title">
@@ -110,8 +111,8 @@ function DirectionalPrecision() {
           <line className="p04-axis" x1="104" y1="164" x2="575" y2="164" />
           <line className="p04-axis" x1="340" y1="32" x2="340" y2="278" />
           <ellipse className="p04-chart-contour p04-chart-contour--outer" cx="340" cy="164" rx="190" ry="91" />
-          <ellipse className="p04-chart-contour p04-chart-contour--middle" cx="340" cy="164" rx="135" ry="65" />
-          <ellipse className="p04-chart-contour p04-chart-contour--inner" cx="340" cy="164" rx="80" ry="39" />
+          <ellipse className="p04-chart-contour p04-chart-contour--middle" cx="340" cy="164" rx="135" ry="64.65" />
+          <ellipse className="p04-chart-contour p04-chart-contour--inner" cx="340" cy="164" rx="80" ry="38.31" />
           <line className={`p04-displacement p04-displacement--wide ${direction === "wide" ? "is-selected" : ""}`} x1="340" y1="164" x2="408" y2="164" markerEnd="url(#p04-arrow-wide)" />
           <line className={`p04-displacement p04-displacement--narrow ${direction === "narrow" ? "is-selected" : ""}`} x1="340" y1="164" x2="340" y2="96" markerEnd="url(#p04-arrow-narrow)" />
           <circle className="p04-center-dot" cx="340" cy="164" r="5" />
@@ -140,7 +141,7 @@ function DirectionalPrecision() {
           <p>这是解释几何关系的二维教学示例，不是论文中的实测轮廓或真实参数子空间切片。</p>
         </div>
       </details>
-      <p className="p04-boundary-note">宽 / 窄描述局部 Gaussian 的相对形状；这张二维示意图不表示论文中实际绘制或估计了这两个具体方向。</p>
+      <p className="p04-boundary-note">二维教学示例，非论文实测；每参数单位 136 图像单位，等长箭头为 d = 0.5。椭圆短长轴比约 √(0.5 / 2.18)，与上述二次型一致。中心加局部精度描述偏移代价；下页解决精度怎样计算。</p>
     </section>
   );
 }
@@ -153,7 +154,7 @@ export function PageLaplace() {
       <header className="ewc-page-header p04-header">
         <div className="ewc-page-header__kicker"><span>04</span> FROM GLOBAL POSTERIOR TO LOCAL GAUSSIAN</div>
         <h1 id="p04-title">在 Task A 解附近保留局部约束</h1>
-        <p className="ewc-page-header__dek">完整的 Task A 参数 Posterior 太复杂。Laplace 近似把镜头拉近到普通训练得到的 θ<sub>A</sub>* 附近，用局部 Gaussian 描述参数移动的方向差异。</p>
+        <p className="ewc-page-header__dek">完整高维 Posterior 需要描述整个参数空间，难以保存、积分与继续更新。只要后续参数暂留在旧解附近，就可用中心 θ<sub>A</sub>* 与局部曲率近似那里的支持度变化；Laplace 近似用 Gaussian 表达这部分约束。</p>
       </header>
 
       <section className="p04-section p04-global-local" id="posterior-global-to-local" aria-labelledby="p04-global-local-title">

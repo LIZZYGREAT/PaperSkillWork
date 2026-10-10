@@ -1,0 +1,5 @@
+.ewc-math { font-size: 1em; max-width: 100%; }
+.ewc-math .katex { font-size: 1.08em; }
+.ewc-math--block { display: block; overflow-x: auto; padding: 8px 2px; margin: 12px 0; }
+.ewc-math--block .katex-display { margin: 0; text-align: left; }
+.ewc-math--block .katex-display > .katex { text-align: left; }

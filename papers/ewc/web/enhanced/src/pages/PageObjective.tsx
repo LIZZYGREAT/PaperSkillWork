@@ -5,6 +5,7 @@ import { PaperFigure } from "../shared/core/paper-figure/PaperFigure";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 import type { CanonicalReferenceId, RuntimeObjectId } from "../contracts/ids";
+import { MathFormula } from "../shared/teaching/Math";
 
 const PENALTY_STEPS: FlowStep[] = [
   { id: "displacement", title: "当前参数减去旧锚点", description: "逐参数比较现在的 θ_i 与 Task A 训练结束时保存的 θ_A,i*。先问：当前参数已经离旧位置多远？", statusText: "θ 可训练 · θ_A* 是固定参考快照" },
@@ -140,6 +141,10 @@ function SequentialBayes() {
       <span className="p06-overline">FROM ONE TASK POSTERIOR TO THE NEXT</span>
       <h2 id="p06-bayes-title">先把 Task A 的 Posterior 带到 Task B</h2>
       <p className="p06-section-lead">Task B 到来后，参数既要解释新数据，也要保留旧任务建立的局部约束。</p>
+      <MathFormula block tex={String.raw`-\log p(\theta\mid D_A,D_B)=\underbrace{-\log p(D_B\mid\theta)}_{L_B(\theta)}-\log p(\theta\mid D_A)+C`} />
+      <p>在给定 θ 后任务数据条件独立的假设下，Sequential Bayes 的乘积取负对数变成两项之和。C 不依赖 θ。旧 Posterior 的负对数含有 Task A 数据与已有 Prior 的信息，下一步以局部二次型近似，再用 diag(F_A) 近似精度。</p>
+      <MathFormula block tex={String.raw`L_{\mathrm{EWC}}(\theta)=L_B(\theta)+\frac{\lambda}{2}\sum_i F_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
+      <p>这给出论文 Eq.(3)。λ 是实践中的整体权衡系数；Likelihood 的求和/平均尺度、Fisher 估计尺度都会影响其取值，不能认为任意 λ 都对应未经调整的精确 Bayesian 后验。</p>
       <div className="p06-bayes-equation" role="math" aria-label="Sequential Bayes 更新">
         <ReferenceTrigger id="task_b_posterior">p(θ | D<sub>A</sub>, D<sub>B</sub>)</ReferenceTrigger>
         <span>∝</span>
@@ -404,7 +409,7 @@ export function PageObjective() {
         : <div className="p06-locked-note" role="status">完整的 EWC Objective 将在逐项装配到第 5 步后显示。</div>}
       <nav className="p06-page-nav" aria-label="学习页面导航">
         <button type="button" onClick={() => api.navigatePage("page-05-fisher")}>← Page 5 · Fisher Information</button>
-        <button type="button" disabled>Page 7 · Task Boundary Lifecycle →</button>
+        <button type="button" onClick={() => api.navigatePage("page-07-lifecycle")}>Page 7 · Task Boundary Lifecycle →</button>
       </nav>
     </article>
   );
