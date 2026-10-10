@@ -163,11 +163,10 @@ function SequentialBayes() {
       <span className="p06-overline">FROM ONE TASK POSTERIOR TO THE NEXT</span>
       <h2 id="p06-bayes-title">先把 Task A 的 Posterior 带到 Task B</h2>
       <p className="p06-section-lead">Task B 到来后，参数既要解释新数据，也要保留旧任务建立的局部约束。</p>
-      <MathFormula block tex={String.raw`-\log p(\theta\mid D_A,D_B)=\underbrace{-\log p(D_B\mid\theta)}_{L_B(\theta)}-\log p(\theta\mid D_A)+C`} />
-      <p>在给定 θ 后任务数据条件独立的假设下，Sequential Bayes 的乘积取负对数变成两项之和。C 不依赖 θ。旧 Posterior 的负对数含有 Task A 数据与已有 Prior 的信息，下一步以局部二次型近似，再用 diag(F_A) 近似精度。</p>
-      <MathFormula block tex={String.raw`L_{\mathrm{EWC}}(\theta)=L_B(\theta)+\frac{\lambda}{2}\sum_i F_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
-      <p>这给出论文 Eq.(3)。λ 是实践中的整体权衡系数；Likelihood 的求和/平均尺度、Fisher 估计尺度都会影响其取值，不能认为任意 λ 都对应未经调整的精确 Bayesian 后验。</p>
       <MathFormula block tex={String.raw`p(\theta\mid D_A,D_B)\propto p(D_B\mid\theta)p(\theta\mid D_A)`} />
+      <p>这里假设给定 θ 后，Task A 与 Task B 的数据条件独立，因此新任务 Likelihood 可以乘到旧 Posterior 上。先看这个概率更新关系，再取负对数拆成两路：</p>
+      <MathFormula block tex={String.raw`-\log p(\theta\mid D_A,D_B)=-\log p(D_B\mid\theta)-\log p(\theta\mid D_A)+C`} />
+      <p>C 与当前 θ 无关，优化时可以忽略。第一项是新任务的负 Log Likelihood；第二项保留 Task A 数据和已有 Prior 的信息。下面两张卡分别追踪它们的来源，旧 Posterior 的局部二次近似则由后续步骤逐项装配。</p>
       <div className="p06-bayes-branches">
         <article className="p06-source-card p06-source-card--new">
           <span className="p06-source-label">TASK B · LEARN THE NEW TASK</span>
@@ -240,7 +239,7 @@ function CompleteObjective() {
         <span className="p06-overline">EQUATION (3) · TASK-B TRAINING OBJECTIVE</span>
         <h2 id="p06-objective-title">把新任务 Loss 与旧任务约束相加</h2>
         <MathFormula block tex={String.raw`L_{\mathrm{EWC}}(\theta)=L_B(\theta)+\frac{\lambda}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
-        <p className="p06-objective-note">Equation (3) 是 Task B 的 Loss 加上以 θ_A* 为中心、由 F_A,i 加权的二次惩罚。参数仍参与优化；惩罚改变的是偏移代价。</p>
+        <p className="p06-objective-note">Equation (3) 把 Task B 的负 Log Likelihood 与以 θ_A* 为中心、由对角 F_A 加权的二次惩罚相加。λ 是实践中的整体权衡系数；Likelihood 的求和或平均方式、Fisher 估计尺度都会影响其取值，任意 λ 不自动对应未经调整的精确 Bayesian 后验。参数仍参与优化，惩罚改变的是偏移代价。</p>
         <div className="p06-symbol-legend" aria-label="公式符号说明">
           <div><b><RuntimeReference id="task_b_loss" objectId="task-b-loss">L<sub>B</sub></RuntimeReference></b><span>Task B 的新任务 Loss</span></div>
           <div><b><RuntimeReference id="theta" objectId="current-parameters">θ</RuntimeReference></b><span>当前可训练参数</span></div>
