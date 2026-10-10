@@ -68,7 +68,10 @@
 .p07-clarifiers p { margin: 0; color: #596f68; font-size: 14px; line-height: 1.65; }
 .p07-cycle-note { display: flex; align-items: center; gap: 15px; margin-bottom: 36px; padding: 14px 16px; border: 1px dashed #cfd9d0; border-radius: 8px; background: #fffefa; }
 .p07-cycle-note .p07-overline { flex: 0 0 auto; }
-.p07-cycle-note p { flex: 1; margin: 0; color: #5c7169; font-size: 14px; line-height: 1.6; }
+.p07-cycle-note__content { flex: 1; min-width: 0; }
+.p07-cycle-note__content p { margin: 0; color: #5c7169; font-size: 14px; line-height: 1.6; }
+.p07-cycle-note__content p + .ewc-math--block { margin-top: 8px; }
+.p07-cycle-note__content .ewc-math--block { margin-bottom: 8px; }
 .p07-cycle-note button { flex: 0 0 auto; padding: 8px 10px; border: 1px solid #d5e1da; border-radius: 6px; color: #376d61; background: white; font-size: 13px; cursor: pointer; }
 .p07-handoff { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; padding: 20px 0 23px; border-block: 1px solid #dbe5df; }
 .p07-handoff h2 { max-width: 830px; margin: 7px 0; color: #304e49; font-size: clamp(22px, 2.5vw, 29px); line-height: 1.35; }
@@ -102,7 +105,8 @@
   .p07-state-table tbody th { color: #3b6258; }
   .p07-clarifiers { grid-template-columns: minmax(0, 1fr); }
   .p07-cycle-note { align-items: start; flex-wrap: wrap; }
-  .p07-cycle-note p { flex-basis: 100%; order: 2; }
+  .p07-cycle-note__content { flex-basis: 100%; order: 2; }
+  .p07-cycle-note__content p { font-size: 13px; }
   .p07-cycle-note button { order: 3; }
   .p07-handoff { grid-template-columns: minmax(0, 1fr); }
   .p07-handoff > button { justify-self: start; }
