@@ -81,16 +81,16 @@ a { color: inherit; }
 .rk-mobile-sheet { display: contents; }
 .ewc-reference-trigger { display: inline; padding: 0 1px; border: 0; border-bottom: 1px dotted #6b9790; color: #2f726b; background: transparent; font: inherit; cursor: pointer; }
 .ewc-reference-trigger:hover, .ewc-reference-trigger:focus-visible { color: #194d48; border-bottom-style: solid; }
-.ewc-reference-preview { box-sizing: border-box; position: fixed; z-index: 90; width: min(420px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); min-width: 0; overflow-x: hidden; overflow-y: auto; overflow-wrap: anywhere; white-space: normal; padding: 18px; font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif; font-size: 15px; line-height: 1.7; border: 1px solid #cfdbd6; border-radius: 12px; background: #fffefa; box-shadow: 0 16px 42px rgba(22,49,51,.18); }
-.ewc-reference-preview > * { box-sizing: border-box; min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+.ewc-reference-preview { box-sizing: border-box; position: fixed; z-index: 90; width: min(420px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); min-width: 0; overflow-x: hidden; overflow-y: auto; overflow-wrap: anywhere; white-space: normal; padding: 18px; font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif; font-size: 15px; font-weight: 400; font-style: normal; text-align: left; letter-spacing: normal; font-variant: normal; text-transform: none; line-height: 1.7; border: 1px solid #cfdbd6; border-radius: 12px; background: #fffefa; box-shadow: 0 16px 42px rgba(22,49,51,.18); }
+.ewc-reference-preview > * { box-sizing: border-box; min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: normal; text-align: left; font-style: normal; text-transform: none; }
 .ewc-reference-preview__eyebrow { color: var(--teal); font-size: 12px; font-weight: 600; letter-spacing: .03em; }
-.ewc-reference-preview h3 { margin: 9px 0 7px; font-size: 18px; line-height: 1.35; }
-.ewc-reference-preview p { margin: 9px 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
+.ewc-reference-preview h3 { margin: 9px 0 7px; font-size: 18px; font-weight: 650; font-style: normal; text-align: left; letter-spacing: normal; line-height: 1.35; }
+.ewc-reference-preview p { margin: 9px 0; color: var(--muted); font-size: 15px; font-weight: 400; font-style: normal; text-align: left; letter-spacing: normal; line-height: 1.7; }
 .ewc-reference-preview__details-title { margin: 11px 0 0; color: #344d50; font-size: 14px; }
-.ewc-reference-preview__role strong, .ewc-reference-preview__boundary strong { color: var(--ink-soft); }
+.ewc-reference-preview__role strong, .ewc-reference-preview__boundary strong { color: var(--ink-soft); font-size: inherit; font-weight: 600; font-style: normal; letter-spacing: normal; }
 .ewc-reference-preview__details { display: grid; gap: 7px; margin: 8px 0; }
-.ewc-reference-preview__details dt { margin-bottom: 1px; color: var(--ink-soft); font-size: 14px; font-weight: 700; line-height: 1.4; }
-.ewc-reference-preview__details dd { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.ewc-reference-preview__details dt { margin-bottom: 1px; color: var(--ink-soft); font-size: 14px; font-weight: 600; font-style: normal; text-align: left; letter-spacing: normal; line-height: 1.4; }
+.ewc-reference-preview__details dd { margin: 0; color: var(--muted); font-size: 14px; font-weight: 400; font-style: normal; text-align: left; letter-spacing: normal; line-height: 1.5; }
 .ewc-text-action { padding: 8px 0 0; border: 0; color: var(--teal); background: transparent; font-size: 14px; cursor: pointer; }
 .is-reduced-motion *, .is-reduced-motion *::before, .is-reduced-motion *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 

@@ -24,12 +24,7 @@ export function ReferenceTrigger({ id, children, className = "", onActivate }: {
 }) {
   const api = useReferenceApi();
   const item = referenceRegistry[id];
-  const hoverCopy: ReferenceHoverCopy | undefined = item?.hoverCopy ?? (item ? {
-    title: item.title,
-    summary: item.summary,
-    role: item.role,
-    confusion: item.confusion,
-  } : undefined);
+  const hoverCopy: ReferenceHoverCopy | undefined = item?.hoverCopy;
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const timerRef = useRef<number | undefined>(undefined);

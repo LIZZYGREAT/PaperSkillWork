@@ -30,7 +30,7 @@ export type ReferenceItem = {
   tags?: string[];
   boundary?: string;
   details?: ReferenceDetail[];
-  hoverCopy?: ReferenceHoverCopy;
+  hoverCopy: ReferenceHoverCopy;
 };
 
 export type TermReference = ReferenceItem & {

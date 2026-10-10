@@ -25,16 +25,12 @@
 .p06-offset-point--current > b { color: var(--ewc-current); }
 .p06-junction-branch--task { border-color: var(--ewc-new-task); }
 .p06-junction-branch--constraint { border-color: var(--ewc-constraint); }
-.p04-equation-row .ewc-math { font-size: 18px; }
-.p03-page .ewc-math, .p05-page .ewc-math, .p06-page .ewc-math, .p07-page .ewc-math { font-size: 18px; }
-.p02-nll-explanation > .ewc-math { font-size: 18px; color: var(--ink); letter-spacing: normal; }
 .p03-bayes-node--posterior { grid-column: auto; grid-row: auto; }
 @media (max-width: 1050px) and (min-width: 761px) {
   .p03-bayes-node--posterior { grid-column: 3; grid-row: 2; }
 }
 @media (max-width: 760px) {
   .ewc-reasoning { padding-block: 16px; }
-  .p03-page .ewc-math, .p05-page .ewc-math, .p06-page .ewc-math, .p07-page .ewc-math { font-size: 16px; }
   .p01-model-object { flex-direction: column; align-items: stretch; }
   .p01-model-object__parameter { display: flex; align-items: center; gap: 12px; }
   .p01-model-object .p01-network { align-self: center; }
