@@ -193,7 +193,7 @@ export function PageAtari() {
           <summary>查看 Fisher 扰动实验如何检验 Page 5 的直觉</summary>
           <div>
             <p>设网络位于 θ*。Uniform noise 对各参数施加同尺度随机扰动；inverse-Fisher covariance 会在 Fisher 较小的方向允许较大扰动；nullspace 条件则测试对角 Fisher 估为零影响的方向。</p>
-            <p><ReferenceTrigger id="diagonal_fisher_limit">对角 Fisher</ReferenceTrigger> 忽略参数间的 off-diagonal coupling。因此估为低敏感或 nullspace 的方向仍可能改变模型表现。</p>
+            <p><ReferenceTrigger id="diagonal_fisher_limit">对角 Fisher</ReferenceTrigger> 忽略参数耦合，局部方差点估计也存在误差。被判为低敏感的方向仍可能影响表现；这项诊断没有单独证明误差只来自忽略 off-diagonal coupling。</p>
             <button type="button" onClick={() => api.openHub("fisher_information")}>回顾 Page 5 · Fisher 局部敏感性</button>
           </div>
         </details>

@@ -66,7 +66,7 @@
 .p06-builder .rk-flow-stepper__actions { margin-top: 12px; }
 .p06-builder .rk-flow-stepper__actions .rk-button { min-height: 40px; padding: 8px 13px; color: #42675f; font-size: 14px; }
 .p06-builder-stage { display: grid; grid-template-columns: minmax(0,1.12fr) minmax(300px,.88fr); align-items: stretch; gap: 13px; margin-top: 15px; }
-.p06-penalty-motion { display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 220px; padding: 17px 20px 14px; border: 1px solid #dfe8e2; border-radius: 9px; background: #fbfcfa; animation: p06-motion-enter .32s ease-out both; }
+.p06-penalty-motion { display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 220px; padding: 17px 20px 14px; border: 1px solid #dfe8e2; border-radius: 9px; background: #fbfcfa; }
 .p06-motion-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 5px 12px; margin-bottom: 8px; }
 .p06-motion-heading > span { color: #82908a; font-size: 12px; }
 .p06-motion-heading > b { color: #45675c; font-size: 14px; font-weight: 650; }
@@ -83,7 +83,7 @@
 .p06-offset-point--current > b { color: #9b6348; }
 .p06-offset-point > small { margin-top: 3px; color: #819087; font-size: 11px; white-space: nowrap; }
 .p06-offset-distance { position: absolute; top: 17px; left: 21%; display: flex; align-items: center; justify-content: space-between; width: 58%; color: #59806f; font: 14px Georgia,serif; }
-.p06-offset-distance > i { position: relative; display: block; width: 100%; height: 1px; margin-right: -100%; background: #739786; transform-origin: left; animation: p06-measure-draw .6s .12s ease-out both; }
+.p06-offset-distance > i { position: relative; display: block; width: 100%; height: 1px; margin-right: -100%; background: #739786; transform-origin: left; }
 .p06-offset-distance > i::before, .p06-offset-distance > i::after { position: absolute; top: -3px; width: 6px; height: 6px; border-top: 1px solid #739786; content: ""; }
 .p06-offset-distance > i::before { left: 0; border-left: 1px solid #739786; transform: rotate(-45deg); }
 .p06-offset-distance > i::after { right: 0; border-right: 1px solid #739786; transform: rotate(45deg); }
@@ -307,8 +307,6 @@
   .p06-page-nav { flex-direction: column; }
 }
 @media (max-width: 420px) { .p06-junction-objects { grid-template-columns: 1fr; } }
-@keyframes p06-motion-enter { from { opacity: .55; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes p06-measure-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes p06-square-reveal { from { opacity: .45; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes p06-cost-grow { from { width: 0; } to { width: var(--p06-cost-width); } }
 @keyframes p06-arrow-drop { from { opacity: .35; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }

@@ -23,13 +23,16 @@ function RuntimeReference({ id, objectId, children }: { id: CanonicalReferenceId
 }
 
 function FisherStepEquation({ step }: { step: number }) {
-  if (step === 0) return <span><RuntimeReference id="theta" objectId="current-parameters">θ</RuntimeReference> = <RuntimeReference id="theta_a_star" objectId="task-a-anchor">θ<sub>A</sub>*</RuntimeReference></span>;
-  if (step === 1) return <span>(x<sub>n</sub>, y<sub>n</sub>) ∈ D<sub>A</sub></span>;
-  if (step === 2) return <span><RuntimeReference id="p_theta_y_given_x" objectId="prediction-probabilities">p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)</RuntimeReference></span>;
-  if (step === 3) return <span>log <RuntimeReference id="p_theta_y_given_x" objectId="prediction-probabilities">p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)</RuntimeReference></span>;
-  if (step === 4) return <span>∂ / ∂θ<sub>i</sub> log <RuntimeReference id="p_theta_y_given_x" objectId="prediction-probabilities">p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)</RuntimeReference></span>;
-  if (step === 5) return <span>[∂ / ∂θ<sub>i</sub> log p<sub>θ</sub>(y<sub>n</sub> | x<sub>n</sub>)]<sup>2</sup></span>;
-  return <span><RuntimeReference id="fisher_a_i" objectId="task-a-fisher">F<sub>A,i</sub></RuntimeReference> ≈ <span className="p05-fraction"><i>1</i><i>N</i></span> Σ<sub>n=1</sub><sup>N</sup> [∂ / ∂θ<sub>i</sub> log p<sub><RuntimeReference id="theta" objectId="current-parameters">θ</RuntimeReference></sub>(y<sub>n</sub> | x<sub>n</sub>)]<sup>2</sup></span>;
+  const equations = [
+    String.raw`\theta=\theta_A^*`,
+    String.raw`(x_n,y_n)\in D_A`,
+    String.raw`p_\theta(y_n\mid x_n)`,
+    String.raw`\log p_\theta(y_n\mid x_n)`,
+    String.raw`g_{n,i}=\frac{\partial}{\partial\theta_i}\log p_\theta(y_n\mid x_n)`,
+    String.raw`g_{n,i}^2=\left[\frac{\partial}{\partial\theta_i}\log p_\theta(y_n\mid x_n)\right]^2`,
+    String.raw`\widehat F^{\mathrm{emp}}_{A,i}=\left.\frac1N\sum_{n=1}^N g_{n,i}^2\right|_{\theta=\theta_A^*}`,
+  ];
+  return <MathFormula tex={equations[step]} />;
 }
 
 function SamplePath() {

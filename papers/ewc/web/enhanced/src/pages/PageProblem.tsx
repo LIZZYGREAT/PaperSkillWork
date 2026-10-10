@@ -283,7 +283,7 @@ export function PageProblem() {
         <p className="p01-forgetting__conflict"><span>落到参数层</span><strong>学习 Task B 必须修改参数；但 Task A 也依赖这些参数。</strong></p>
       </section>
 
-      <section className="p01-parameters" aria-labelledby="p01-parameters-title">
+      <section className="p01-parameters" id="parameter-conflict" aria-labelledby="p01-parameters-title">
         <div className="p01-section-heading">
           <div><span className="p01-overline">ZOOM IN · REPRESENTATIVE PARAMETERS</span><h2 id="p01-parameters-title">同样大小的参数更新，对旧任务的影响可能不同</h2></div>
           <p>问题不是参数“能不能更新”，而是不同参数发生相同幅度的变化时，对旧任务造成的影响可能不同。</p>

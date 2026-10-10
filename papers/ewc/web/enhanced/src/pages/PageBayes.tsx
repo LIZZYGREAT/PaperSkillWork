@@ -15,8 +15,8 @@ const CANDIDATES: Candidate[] = PARAMETER_STATES.map(state => ({
 const BAYES_STEPS: FlowStep[] = [
   {
     id: "task-a-update",
-    title: "观察 Task A 数据",
-    description: "将参数先验 p(θ) 与 Task A 的 Likelihood p(D_A | θ) 结合，得到 Task A Posterior。",
+    title: "Task A 更新之前",
+    description: "先明确数据到来前的 Prior；下一步再结合 Task A Likelihood 得到 Posterior。",
     statusText: "这一步把普通训练中的数据解释能力，接到参数概率上。",
   },
   {
@@ -143,7 +143,7 @@ function CandidateUpdate() {
   const distribution = (candidate: Candidate) => view === "prior" ? candidate.prior : (candidate.prior * candidate.likelihood) / evidence;
 
   return (
-    <section className="p03-section p03-candidates" aria-labelledby="p03-candidates-title">
+    <section className="p03-section p03-candidates" id="parameter-belief-update" aria-labelledby="p03-candidates-title">
       <div className="p03-section-heading">
         <div><span className="p03-overline">AN ILLUSTRATIVE UPDATE · THREE CANDIDATE CONFIGURATIONS</span><h2 id="p03-candidates-title">看到数据后，参数配置的相对权重会改变</h2></div>
         <p>选择更新前后，观察同一组候选参数的分布怎样变化。</p>

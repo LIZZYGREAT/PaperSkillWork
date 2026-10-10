@@ -219,12 +219,7 @@ function CompleteObjective() {
       <section className="p06-objective" id="ewc-objective" aria-labelledby="p06-objective-title">
         <span className="p06-overline">EQUATION (3) · TASK-B TRAINING OBJECTIVE</span>
         <h2 id="p06-objective-title">把新任务 Loss 与旧任务约束相加</h2>
-        <div className="p06-objective-equation" role="math" aria-label="EWC objective: Task B loss plus Fisher-weighted quadratic penalty">
-          <ReferenceTrigger id="ewc_objective">L<sub>EWC</sub></ReferenceTrigger>(<RuntimeReference id="theta" objectId="current-parameters">θ</RuntimeReference>) =
-          <RuntimeReference id="task_b_loss" objectId="task-b-loss">L<sub>B</sub>(θ)</RuntimeReference>
-          <span>+</span>
-          <WeightedQuadratic includeLambda/>
-        </div>
+        <MathFormula block tex={String.raw`L_{\mathrm{EWC}}(\theta)=L_B(\theta)+\frac{\lambda}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
         <p className="p06-objective-note">Equation (3) 是 Task B 的 Loss 加上以 θ_A* 为中心、由 F_A,i 加权的二次惩罚。参数仍参与优化；惩罚改变的是偏移代价。</p>
         <div className="p06-symbol-legend" aria-label="公式符号说明">
           <div><b><RuntimeReference id="task_b_loss" objectId="task-b-loss">L<sub>B</sub></RuntimeReference></b><span>Task B 的新任务 Loss</span></div>
@@ -296,13 +291,7 @@ function CompleteObjective() {
         </div>
         <div className="p06-derivative" role="math" aria-label="EWC objective derivative with respect to parameter theta i">
           <span className="p06-derivative__label">对 Equation (3) 求导</span>
-          <strong>
-            ∂L<sub>EWC</sub> / ∂θ<sub>i</sub> =
-            <RuntimeReference id="task_b_gradient" objectId="task-b-gradient">∂L<sub>B</sub> / ∂θ<sub>i</sub></RuntimeReference>
-            + <RuntimeReference id="lambda_ewc" objectId="ewc-penalty">λ</RuntimeReference>
-            <RuntimeReference id="fisher_a_i" objectId="task-a-fisher">F<sub>A,i</sub></RuntimeReference>
-            (<RuntimeReference id="theta" objectId="current-parameters">θ<sub>i</sub></RuntimeReference> − <RuntimeReference id="theta_a_star" objectId="task-a-anchor">θ<sub>A,i</sub>*</RuntimeReference>)
-          </strong>
+          <MathFormula block tex={String.raw`\frac{\partial L_{\mathrm{EWC}}}{\partial\theta_i}=\frac{\partial L_B}{\partial\theta_i}+\lambda F_{A,i}(\theta_i-\theta_{A,i}^*)`} />
         </div>
         <p className="p06-derivative-note">这是对 Equation (3) 的求导展开，属于梯度实现对应（M02）；原文没有把它另列为独立公式。</p>
 
@@ -379,7 +368,7 @@ function CompleteObjective() {
       <section className="p06-closing" aria-labelledby="p06-closing-title">
         <span className="p06-overline">THE OBJECTIVE IS CLOSED · THE LIFECYCLE IS NEXT</span>
         <h2 id="p06-closing-title">一个 Task-B update 已经能从公式追到参数变化</h2>
-        <p>现在，EWC 的损失、两路梯度与 optimizer.update 已经接起来。完整训练还要按任务边界管理旧参数快照与 Fisher：</p>
+        <p>现在，EWC 的损失、两路梯度与 optimizer.step() 已经接起来。完整训练还要按任务边界管理旧参数快照与 Fisher：</p>
         <ul>
           <li>Task A 结束时，什么时候保存 θ_A*？</li>
           <li>Fisher 什么时候计算，计算时参数是否继续更新？</li>

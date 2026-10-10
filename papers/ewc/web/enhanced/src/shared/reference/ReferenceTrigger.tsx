@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FocusEvent, MouseEvent, PointerEvent, ReactNode } from "react";
 import { usePopoverPosition } from "../foundation/overlay/Popover";
 import type { CanonicalReferenceId } from "../../contracts/ids";
@@ -37,6 +37,8 @@ export function ReferenceTrigger({ id, children, className = "", onActivate }: {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const close = useCallback(() => { setOpen(false); setPinned(false); }, []);
   const position = usePopoverPosition(triggerRef, panelRef, open, close);
+  const previewId = useId();
+  useEffect(() => () => { if (timerRef.current !== undefined) window.clearTimeout(timerRef.current); }, []);
 
   const cancelClose = () => {
     if (timerRef.current !== undefined) window.clearTimeout(timerRef.current);
@@ -70,7 +72,8 @@ export function ReferenceTrigger({ id, children, className = "", onActivate }: {
         className={`ewc-reference-trigger ${className}`.trim()}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-controls={`reference-preview-${id}`}
+        aria-controls={previewId}
+        onKeyDown={(event) => { if (event.key === "Escape") { cancelClose(); close(); event.stopPropagation(); } }}
         onPointerEnter={(_event: PointerEvent<HTMLButtonElement>) => { cancelClose(); setOpen(true); }}
         onPointerLeave={scheduleClose}
         onFocus={() => { cancelClose(); setOpen(true); }}
@@ -80,8 +83,9 @@ export function ReferenceTrigger({ id, children, className = "", onActivate }: {
       {open ? (
         <div
           ref={panelRef}
-          id={`reference-preview-${id}`}
+          id={previewId}
           className="ewc-reference-preview"
+          onKeyDown={(event) => { if (event.key === "Escape") { cancelClose(); triggerRef.current?.focus(); close(); event.stopPropagation(); } }}
           role="dialog"
           aria-label={`${hoverCopy?.title ?? "参考条目"}速览`}
           style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}
@@ -93,7 +97,6 @@ export function ReferenceTrigger({ id, children, className = "", onActivate }: {
           <h3>{hoverCopy?.title}</h3>
           <p>{hoverCopy?.summary}</p>
           {hoverCopy?.role ? <p className="ewc-reference-preview__role"><strong>作用</strong> {hoverCopy.role}</p> : null}
-          {hoverCopy?.details?.length ? <><h4 className="ewc-reference-preview__details-title">{hoverCopy.detailsTitle ?? "常见评测设置"}</h4><dl className="ewc-reference-preview__details">{hoverCopy.details.map((detail) => <div key={detail.label}><dt>{detail.label}</dt><dd>{detail.text}</dd></div>)}</dl></> : null}
           {hoverCopy?.confusion ? <p className="ewc-reference-preview__boundary"><strong>注意</strong> {hoverCopy.confusion}</p> : null}
           <button className="ewc-text-action" type="button" onClick={() => api.openReference({ referenceId: id })}>打开参考资料 →</button>
         </div>
