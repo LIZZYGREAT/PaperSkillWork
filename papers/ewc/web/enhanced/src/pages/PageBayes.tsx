@@ -83,7 +83,7 @@ function ParameterPerspectives() {
       <details className="p03-background-detail" id="gaussian-prior-l2-link">
         <summary>展开背景：Gaussian Prior 与 L2 正则</summary>
         <div>
-          <p>一个常见背景示例是 <span className="p03-math">p(θ) = 𝒩(0, σ²I)</span>。它会降低极端参数值的先验权重。在相应设定下，负对数先验会产生二次惩罚，因此与 L2 正则有形式上的联系。</p>
+          <p>一个常见背景示例是 <MathFormula tex={String.raw`p(\theta)=\mathcal{N}(0,\sigma^2 I)`} />。它会降低极端参数值的先验权重。在相应设定下，负对数先验会产生二次惩罚，因此与 L2 正则有形式上的联系。</p>
           <p className="p03-boundary">这是一般背景示例。EWC 论文没有为一般 Bayes 公式指定这种 Gaussian Prior。</p>
         </div>
       </details>
@@ -141,7 +141,6 @@ function CandidateUpdate() {
   const selected = CANDIDATES.find((candidate) => candidate.id === selectedId) ?? CANDIDATES[0];
   const reference = CANDIDATES[0];
   const score = (candidate: Candidate) => view === "prior" ? candidate.prior : view === "likelihood" ? candidate.likelihood : candidate.posterior;
-  const maximumScore = Math.max(...CANDIDATES.map(score));
   const viewCopy: Record<DistributionView, { label: string; note: string }> = {
     prior: { label: "Prior mass", note: "Prior 是观察 D_A 前的离散概率质量；本例三项之和为 1。" },
     likelihood: { label: "Raw Likelihood", note: "固定 D_A 后得到的拟合分数；这些值不在候选 θ 上归一化，也不需要相加为 1。" },
@@ -163,9 +162,10 @@ function CandidateUpdate() {
         <button type="button" aria-pressed={view === "likelihood"} className={view === "likelihood" ? "is-active" : ""} onClick={() => setView("likelihood")}>Likelihood · fixed D_A</button>
         <button type="button" aria-pressed={view === "posterior"} className={view === "posterior" ? "is-active" : ""} onClick={() => setView("posterior")}>Posterior · after D_A</button>
       </div>
-      <div className="p03-view-note" aria-live="polite"><b>{viewCopy[view].label}</b><span>{viewCopy[view].note}</span></div>
-      <div className="p03-candidate-head" aria-hidden="true"><span>完整参数配置</span><span>当前视图</span><span>Prior</span><span>Likelihood</span><span>Prior × Likelihood</span><span>Posterior</span></div>
-      <div className="p03-candidate-list" role="group" aria-label="点击候选参数配置查看 Prior、Likelihood 乘积与 Posterior">
+      <div className="p03-view-note" aria-live="polite"><b>{viewCopy[view].label}</b><span>{viewCopy[view].note} 条形共用 0–1 线性尺度，长度 = 当前数值 × 100%，不会随模式重新归一。</span></div>
+      <div className="p03-candidate-table-scroll">
+        <div className="p03-candidate-head" aria-hidden="true"><span>完整参数配置</span><span>当前视图</span><span>Prior</span><span>Likelihood</span><span>Prior × Likelihood</span><span>Posterior</span></div>
+        <div className="p03-candidate-list" role="group" aria-label="点击候选参数配置查看 Prior、Likelihood 乘积与 Posterior">
         {CANDIDATES.map((candidate) => {
           const value = score(candidate);
           const product = candidate.prior * candidate.likelihood;
@@ -175,7 +175,7 @@ function CandidateUpdate() {
               <span className="p03-candidate-config"><strong>{candidate.id}</strong><small>完整配置</small></span>
               <span className="p03-candidate-weight" aria-label={`${viewCopy[view].label} ${value.toFixed(6)}`}>
                 <span className="p03-candidate-weight__label"><span>{viewCopy[view].label}</span><b>{value.toFixed(4)}</b></span>
-                <span className="p03-candidate-weight__track" aria-hidden="true"><i className={`p03-candidate-weight__bar p03-candidate-weight__bar--${view}`} style={{ width: `${(value / maximumScore) * 100}%` }} /></span>
+                <span className="p03-candidate-weight__track" aria-hidden="true"><i className={`p03-candidate-weight__bar p03-candidate-weight__bar--${view}`} style={{ width: `${value * 100}%` }} /></span>
               </span>
               <span className="p03-candidate-value" data-label="Prior">{candidate.prior.toFixed(4)}</span>
               <span className="p03-candidate-value" data-label="Likelihood">{candidate.likelihood.toFixed(6)}</span>
@@ -184,6 +184,7 @@ function CandidateUpdate() {
             </button>
           );
         })}
+        </div>
       </div>
       <div className="p03-evidence-check">
         <div><span>DISCRETE EVIDENCE · WEIGHTED SUM</span><MathFormula block tex={String.raw`p(D_A)=\sum_k p(D_A\mid\theta^{(k)})p(\theta^{(k)})`} /></div>

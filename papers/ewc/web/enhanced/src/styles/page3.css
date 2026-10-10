@@ -28,16 +28,15 @@
 .p03-vector b { color: #9baca5; font-weight: 400; }
 .p03-perspective__divider { display: grid; align-content: center; justify-items: center; gap: 12px; padding: 18px 8px; color: #657a77; font-size: 13px; line-height: 1.4; text-align: center; }
 .p03-perspective__divider i { width: 44px; height: 1px; background: #9eb3aa; }
-.p03-prior-points { display: flex; align-items: end; gap: 28px; min-height: 85px; padding: 10px 4px 0; border-bottom: 1px solid #ccd9d3; }
+.p03-prior-points { display: flex; flex-wrap: wrap; align-items: end; gap: 28px; min-height: 85px; padding: 10px 4px 0; border-bottom: 1px solid #ccd9d3; }
 .p03-prior-points > span { display: grid; justify-items: center; gap: 5px; min-width: 35px; color: #3b655c; font-size: 14px; }
 .p03-prior-points i { display: block; width: 22px; border-radius: 5px 5px 0 0; background: #6d9a8c; }
-.p03-prior-points small { align-self: center; margin-left: auto; color: #667a78; font-size: 13px; }
+.p03-prior-points small { max-width: 100%; align-self: center; margin-left: auto; color: #667a78; font-size: 13px; }
 .p03-background-detail, .p03-full-bayes { margin-top: 18px; border-top: 1px solid var(--p03-line); border-bottom: 1px solid var(--p03-line); background: rgba(255,255,255,.32); }
 .p03-background-detail summary, .p03-full-bayes summary { padding: 13px 3px; color: #376c62; font-size: 15px; font-weight: 650; cursor: pointer; }
 .p03-background-detail > div, .p03-full-bayes > p { padding: 0 4px 15px; color: var(--p03-muted); font-size: 15px; line-height: 1.75; }
 .p03-background-detail p, .p03-full-bayes p { margin: 8px 0; }
 .p03-background-detail .p03-boundary { color: #805239; }
-.p03-math { color: #315f58; font: 18px Georgia,serif; }
 .p03-joint-derivation { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px 30px; margin: 8px 0 16px; padding: 17px 20px; border: 1px solid #d9e4de; background: #fffefa; }
 .p03-joint-derivation > div { min-width: 0; }
 .p03-joint-derivation > div > span, .p03-bayes-result > span { display: block; margin-bottom: 7px; color: #627773; font-size: 14px; }
@@ -174,8 +173,9 @@
   .p03-perspective h3 { margin: 8px 0 12px; font-size: 19px; }
   .p03-perspective p { font-size: 15px; }
   .p03-entry-question { font-size: 17px; }
-  .p03-bayes-box { grid-template-columns: minmax(0,1fr); gap: 8px; padding: 14px 14px 65px; }
+  .p03-bayes-box { grid-template-columns: minmax(0,1fr); gap: 8px; padding: 14px 14px 110px; }
   .p03-bayes-node { min-height: 110px; padding: 13px 15px; }
+  .p03-bayes-node--posterior { grid-column: 1; grid-row: auto; }
   .p03-bayes-node b { font-size: 19px; }
   .p03-bayes-node strong { font-size: 22px; }
   .p03-bayes-operator { justify-self: center; line-height: 1; transform: rotate(90deg); }
