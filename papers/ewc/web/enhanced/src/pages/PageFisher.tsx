@@ -147,7 +147,7 @@ function FisherRole() {
       <details className="p05-kl-detail">
         <summary>展开背景：小幅参数移动如何改变预测分布？</summary>
         <div>
-          <p role="math">D<sub>KL</sub>(p<sub>θ</sub> ∥ p<sub>θ+Δθ</sub>) ≈ ½ Δθ<sup>T</sup> F Δθ</p>
+          <MathFormula block tex={String.raw`D_{\mathrm{KL}}(p_\theta\parallel p_{\theta+\Delta\theta})\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} />
           <p>在非常小的参数变化下，Fisher 可作为描述预测分布局部变化的度量。这个 KL 几何解释属于一般背景 <b>(B05)</b>，不是 2017 年 EWC 论文对该逐样本估计配方的证明。</p>
         </div>
       </details>
