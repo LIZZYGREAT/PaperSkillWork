@@ -98,7 +98,7 @@
 .p08-reading-questions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 16px 0; }
 .p08-reading-questions article { padding: 13px 15px; border-top: 2px solid #849eaa; background: #f2f6f7; }
 .p08-reading-questions article:last-child { border-color: #88a78e; background: #f2f7f2; }
-.p08-reading-questions span { color: #637e87; font: 11px "DM Mono", monospace; letter-spacing: .07em; }
+.p08-reading-questions span { color: #637e87; font: 12px "DM Mono", monospace; letter-spacing: .07em; }
 .p08-reading-questions article:last-child span { color: #66846d; }
 .p08-reading-questions h3 { margin: 6px 0 4px; color: #36545b; font-size: 17px; line-height: 1.4; }
 .p08-reading-questions article:last-child h3 { color: #3c6148; }
@@ -109,7 +109,7 @@
 .p08-overlap summary { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 16px 4px; color: #355950; cursor: pointer; list-style: none; }
 .p08-overlap summary::-webkit-details-marker { display: none; }
 .p08-overlap summary > span { display: grid; gap: 5px; }
-.p08-overlap summary small { color: #7a8a80; font: 11px "DM Mono", monospace; letter-spacing: .07em; }
+.p08-overlap summary small { color: #7a8a80; font: 12px "DM Mono", monospace; letter-spacing: .07em; }
 .p08-overlap summary b { font-size: 18px; line-height: 1.45; }
 .p08-overlap summary i { position: relative; flex: 0 0 auto; width: 26px; height: 26px; border: 1px solid #cedbd2; border-radius: 50%; }
 .p08-overlap summary i::before, .p08-overlap summary i::after { content: ""; position: absolute; top: 12px; left: 7px; width: 10px; border-top: 1px solid #617e71; }
@@ -182,7 +182,7 @@
   .p08-result-figure .rk-paper-figure__image-wrap img { width: 740px; max-width: none; }
   .p08-result-figure .rk-paper-figure__zoom { position: sticky; float: right; right: 5px; bottom: 5px; }
   .p08-result-figure .rk-paper-figure figcaption { font-size: 13px; }
-  .p08-result-figure .rk-paper-figure figcaption small { font-size: 11px; }
+  .p08-result-figure .rk-paper-figure figcaption small { font-size: 12px; }
   .p08-reading-questions { grid-template-columns: minmax(0, 1fr); gap: 9px; }
   .p08-reading-questions h3 { font-size: 16px; }
   .p08-result-boundary { font-size: 13px; }

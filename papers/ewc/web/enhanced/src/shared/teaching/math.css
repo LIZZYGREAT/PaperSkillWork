@@ -3,3 +3,4 @@
 .ewc-math--block { display: block; overflow-x: auto; padding: 8px 2px; margin: 12px 0; }
 .ewc-math--block .katex-display { margin: 0; text-align: left; }
 .ewc-math--block .katex-display > .katex { text-align: left; }
+.ewc-math--block:focus-visible { outline: 2px solid #4d7191; outline-offset: 3px; }

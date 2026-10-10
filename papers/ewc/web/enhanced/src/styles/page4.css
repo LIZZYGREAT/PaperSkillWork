@@ -11,7 +11,7 @@
 .p04-zoom-panel { min-width: 0; padding: 22px 22px 18px; border: 1px solid var(--p04-line); border-radius: 14px; background: rgba(255,255,255,.68); }
 .p04-zoom-panel--local { border-color: #c9ddd3; background: #f8fbf7; }
 .p04-zoom-panel__heading { display: grid; gap: 7px; }
-.p04-zoom-panel__heading span { color: #728580; font: 11px "DM Mono", monospace; letter-spacing: .1em; }
+.p04-zoom-panel__heading span { color: #728580; font: 12px "DM Mono", monospace; letter-spacing: .1em; }
 .p04-zoom-panel__heading b { color: #334e4d; font-size: 18px; }
 .p04-zoom-panel svg { display: block; width: 100%; height: auto; max-height: 230px; margin: 10px auto 4px; }
 .p04-zoom-panel > p { margin: 5px 0 0; color: #586d6c; font-size: 15px; line-height: 1.65; }
@@ -49,7 +49,7 @@
 .p04-derivation p { margin: 0; color: #5b716e; font-size: 15px; line-height: 1.75; }
 .p04-teaching-note { margin: 14px 0 0; padding: 13px 16px; border-left: 3px solid #bd8b6d; color: #6d5d4d; background: #fbf5ee; font-size: 14px; line-height: 1.7; }
 .p04-contour-card { padding: 19px 24px 20px; border: 1px solid var(--p04-line); border-radius: 14px; background: #fffefa; }
-.p04-contour-meta { display: flex; justify-content: space-between; gap: 16px; color: #71827d; font: 11px "DM Mono",monospace; letter-spacing: .06em; }
+.p04-contour-meta { display: flex; justify-content: space-between; gap: 16px; color: #71827d; font: 12px "DM Mono",monospace; letter-spacing: .06em; }
 .p04-contour-chart { display: block; width: min(100%, 840px); height: auto; margin: 5px auto; overflow: visible; }
 .p04-axis { stroke: #aebdb6; stroke-width: 1.2; }
 .p04-chart-contour { fill: rgba(91,136,117,.035); stroke-width: 1.7; }

@@ -676,6 +676,7 @@ export const referenceRegistry: ReferenceRegistry = {
     "summary": "把已观察输入 xₙ 作为条件，在样本条件独立假设下相乘各真实标签的预测概率。",
     "role": "固定已观察的 (xₙ,yₙ)，切换 θ；乘积越大，这组参数给观测标签的条件似然越高。",
     "sourceCategory": "GENERAL_BACKGROUND",
+    "sourceRefs": ["B01", "C12"],
     "symbol": "p(D | θ)",
     "relatedIds": [
       "likelihood",

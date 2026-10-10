@@ -17,7 +17,7 @@ const BAYES_STEPS: FlowStep[] = [
     id: "task-a-update",
     title: "Task A 更新之前",
     description: "先明确数据到来前的 Prior；下一步再结合 Task A Likelihood 得到 Posterior。",
-    statusText: "这一步把普通训练中的数据解释能力，接到参数概率上。",
+    statusText: "初态只显示 Prior；尚未吸收 Task A 的数据。",
   },
   {
     id: "task-boundary",

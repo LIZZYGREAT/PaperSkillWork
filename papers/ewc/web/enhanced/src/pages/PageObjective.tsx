@@ -37,20 +37,15 @@ function RuntimeNode({ objectId, eyebrow, title, detail }: {
   );
 }
 
-function GapFormula() {
-  return <><RuntimeReference id="theta" objectId="current-parameters">θ</RuntimeReference><sub>i</sub> − <RuntimeReference id="theta_a_star" objectId="task-a-anchor">θ<sub>A,i</sub>*</RuntimeReference></>;
-}
-
-function WeightedQuadratic({ includeLambda = false }: { includeLambda?: boolean }) {
-  return <>{includeLambda ? <><RuntimeReference id="lambda_ewc" objectId="ewc-penalty">λ</RuntimeReference> / 2&nbsp;</> : null}<span className="p06-sigma">Σ<sub>i</sub>&nbsp;</span><RuntimeReference id="fisher_a_i" objectId="task-a-fisher">F<sub>A,i</sub></RuntimeReference><span className="p06-nobr">(<GapFormula/>)<sup>2</sup></span></>;
-}
-
 function PenaltyBuildFormula({ step }: { step: number }) {
-  if (step === 0) return <GapFormula/>;
-  if (step === 1) return <span className="p06-nobr">(<GapFormula/>)<sup>2</sup></span>;
-  if (step === 2) return <><RuntimeReference id="fisher_a_i" objectId="task-a-fisher">F<sub>A,i</sub></RuntimeReference>&nbsp;<span className="p06-times">×</span>&nbsp;<span className="p06-nobr">(<GapFormula/>)<sup>2</sup></span></>;
-  if (step === 3) return <WeightedQuadratic/>;
-  return <WeightedQuadratic includeLambda/>;
+  const formulas = [
+    String.raw`\theta_i-\theta_{A,i}^*`,
+    String.raw`(\theta_i-\theta_{A,i}^*)^2`,
+    String.raw`F_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
+    String.raw`\sum_i F_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
+    String.raw`\frac{\lambda}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
+  ];
+  return <MathFormula block tex={formulas[step]} />;
 }
 
 const PENALTY_MOTION_LABELS = [
@@ -164,10 +159,7 @@ function SequentialBayes() {
           <div className="p06-posterior-reference"><ReferenceTrigger id="task_a_posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger><span>旧任务 Posterior</span></div>
           <i aria-hidden="true">↓</i>
           <p className="p06-source-copy">在 θ_A* 附近做局部近似，后验负对数变成加权二次约束：</p>
-          <div className="p06-old-approximation" role="math">
-            −log <ReferenceTrigger id="task_a_posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger>
-            <span>≈ C + 1/2&nbsp;</span><WeightedQuadratic/>
-          </div>
+          <MathFormula block tex={String.raw`-\log p(\theta\mid D_A)\approx C+\frac12\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
           <div className="p06-old-objects">
             <RuntimeNode objectId="task-a-anchor" eyebrow="TASK A · ANCHOR" title="θ_A*" detail="固定参数快照"/>
             <RuntimeNode objectId="task-a-fisher" eyebrow="TASK A · DIAGONAL FISHER" title="F_A" detail="参数级敏感性近似"/>
@@ -191,6 +183,12 @@ function PenaltyBuilder({ step, onStepChange }: { step: number; onStepChange: (i
         <span className="p06-builder-context__compare">与旧位置比较</span>
         <RuntimeNode objectId="task-a-anchor" eyebrow="SAVED · FIXED" title="Task A Anchor θ_A*" detail="旧任务训练结束时的快照"/>
       </div>
+      <p className="p06-builder-symbols">变量说明：
+        <RuntimeReference id="theta" objectId="current-parameters">当前 θ</RuntimeReference> ·
+        <RuntimeReference id="theta_a_star" objectId="task-a-anchor">旧 Anchor θ_A*</RuntimeReference> ·
+        <RuntimeReference id="fisher_a_i" objectId="task-a-fisher">Fisher 权重 F_A,i</RuntimeReference> ·
+        <RuntimeReference id="lambda_ewc" objectId="ewc-penalty">整体强度 λ</RuntimeReference>
+      </p>
       <FlowStepper
         label="EWC 惩罚项装配步骤"
         steps={PENALTY_STEPS}
@@ -293,6 +291,7 @@ function CompleteObjective() {
           <span className="p06-derivative__label">对 Equation (3) 求导</span>
           <MathFormula block tex={String.raw`\frac{\partial L_{\mathrm{EWC}}}{\partial\theta_i}=\frac{\partial L_B}{\partial\theta_i}+\lambda F_{A,i}(\theta_i-\theta_{A,i}^*)`} />
         </div>
+        <p className="p06-builder-symbols">梯度说明：<RuntimeReference id="task_b_gradient" objectId="task-b-gradient">Task B 梯度</RuntimeReference> · <RuntimeReference id="ewc_gradient" objectId="ewc-gradient">EWC 梯度</RuntimeReference> · <RuntimeReference id="total_gradient" objectId="total-gradient">总梯度</RuntimeReference></p>
         <p className="p06-derivative-note">这是对 Equation (3) 的求导展开，属于梯度实现对应（M02）；原文没有把它另列为独立公式。</p>
 
         <div className="p06-gradient-junction">

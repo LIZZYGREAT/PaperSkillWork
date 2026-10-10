@@ -86,9 +86,9 @@ function TrainingSignal({ task }: { task: "A" | "B" }) {
 
 // Each array index is a fixed parameter coordinate; before and after use the same signed scale.
 const PARAMETER_GROUPS = [
-  { label: "θ¹", before: [-26, 30, 15, -33, 22], after: [-18, 36, 12, -27, 28] },
-  { label: "θ²", before: [34, -18, 27, -23, 31], after: [28, -25, -9, -17, 26] },
-  { label: "θ³", before: [-15, 35, -28, 19, -32], after: [-23, 29, -20, 26, -27] },
+  { label: "组 1", before: [-26, 30, 15, -33, 22], after: [-18, 36, 12, -27, 28] },
+  { label: "组 2", before: [34, -18, 27, -23, 31], after: [28, -25, -9, -17, 26] },
+  { label: "组 3", before: [-15, 35, -28, 19, -32], after: [-23, 29, -20, 26, -27] },
 ];
 
 function ParameterVector({ changed = false }: { changed?: boolean }) {

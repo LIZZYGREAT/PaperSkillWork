@@ -32,7 +32,7 @@ function FisherStepEquation({ step }: { step: number }) {
     String.raw`g_{n,i}^2=\left[\frac{\partial}{\partial\theta_i}\log p_\theta(y_n\mid x_n)\right]^2`,
     String.raw`\widehat F^{\mathrm{emp}}_{A,i}=\left.\frac1N\sum_{n=1}^N g_{n,i}^2\right|_{\theta=\theta_A^*}`,
   ];
-  return <MathFormula tex={equations[step]} />;
+  return <MathFormula block tex={equations[step]} />;
 }
 
 function SamplePath() {

@@ -169,7 +169,7 @@ export function PageProbability() {
             <b className="p02-product-equals" aria-hidden="true">=</b>
             <span className="p02-product-result"><small>p(D | <ParameterStateNotation candidate={selected.candidate} />)</small><b>{likelihood.toFixed(4)}</b></span>
           </div>
-          <small className="p02-assumption">D = ［(xₙ, yₙ)］；将输入作为条件，假设给定 θ 与输入后，各标签条件独立。p(D | θ) 简记条件标签似然，不建模输入生成。</small>
+          <small className="p02-assumption">D = {'{'}(xₙ, yₙ){'}'}；将输入作为条件，假设给定 θ 与输入后，各标签条件独立。p(D | θ) 简记条件标签似然，不建模输入生成。</small>
         </div>
 
         <div className="p02-perspective-compare" id="likelihood-comparison" aria-label="Probability 与 Likelihood 的观察视角对比">
@@ -235,4 +235,3 @@ export function PageProbability() {
     </article>
   );
 }
-
