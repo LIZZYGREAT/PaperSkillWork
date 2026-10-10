@@ -91,7 +91,7 @@ function PenaltyMotion({ step }: { step: number }) {
         <div className="p06-offset-visual">
           <div className="p06-offset-track" aria-hidden="true">
             <div className="p06-offset-axis"/>
-            <div className="p06-offset-distance"><i/><b>Δθ_i</b></div>
+            <div className="p06-offset-distance"><i/><b>Δθ<sub>i</sub></b></div>
             <div className="p06-offset-point p06-offset-point--anchor"><i/><b>θ<sub>A,i</sub>*</b><small>Task A · 固定</small></div>
             <div className="p06-offset-point p06-offset-point--current"><i/><b>θ<sub>i</sub></b><small>当前 · 可训练</small></div>
           </div>
@@ -101,13 +101,13 @@ function PenaltyMotion({ step }: { step: number }) {
       {step === 1 ? (
         <div className="p06-square-visual">
           <div className="p06-signed-axis" aria-hidden="true">
-            <span className="p06-signed-point p06-signed-point--minus"><i/><b>−Δθ_i</b></span>
+            <span className="p06-signed-point p06-signed-point--minus"><i/><b>−Δθ<sub>i</sub></b></span>
             <span className="p06-signed-point p06-signed-point--anchor"><i/><b>θ<sub>A,i</sub>*</b></span>
-            <span className="p06-signed-point p06-signed-point--plus"><i/><b>+Δθ_i</b></span>
+            <span className="p06-signed-point p06-signed-point--plus"><i/><b>+Δθ<sub>i</sub></b></span>
           </div>
           <div className="p06-square-results">
-            <div><span>左侧偏移</span><b>(−Δθ_i)² = Δθ_i²</b></div>
-            <div><span>右侧偏移</span><b>(+Δθ_i)² = Δθ_i²</b></div>
+            <div><span>左侧偏移</span><b>(−Δθ<sub>i</sub>)<sup>2</sup> = Δθ<sub>i</sub><sup>2</sup></b></div>
+            <div><span>右侧偏移</span><b>(+Δθ<sub>i</sub>)<sup>2</sup> = Δθ<sub>i</sub><sup>2</sup></b></div>
           </div>
           <p>偏移方向可以不同，平方后的大小相同。</p>
         </div>
@@ -115,14 +115,14 @@ function PenaltyMotion({ step }: { step: number }) {
       {step === 2 ? (
         <div className="p06-fisher-visual">
           <div className="p06-fisher-lane p06-fisher-lane--high">
-            <div className="p06-fisher-lane__title"><b>High F<sub>A,i</sub></b><span>同样的 Δθ_i</span></div>
+            <div className="p06-fisher-lane__title"><b>High F<sub>A,i</sub></b><span>同样的 Δθ<sub>i</sub></span></div>
             <div className="p06-fisher-lane__track" aria-hidden="true"><i/><b/></div>
-            <div className="p06-fisher-cost"><span>F × Δθ²</span><i><b/></i><strong>代价较高</strong></div>
+            <div className="p06-fisher-cost"><span>F × Δθ<sup>2</sup></span><i><b/></i><strong>代价较高</strong></div>
           </div>
           <div className="p06-fisher-lane p06-fisher-lane--low">
-            <div className="p06-fisher-lane__title"><b>Low F<sub>A,j</sub></b><span>同样的 Δθ_j</span></div>
+            <div className="p06-fisher-lane__title"><b>Low F<sub>A,j</sub></b><span>同样的 Δθ<sub>j</sub></span></div>
             <div className="p06-fisher-lane__track" aria-hidden="true"><i/><b/></div>
-            <div className="p06-fisher-cost"><span>F × Δθ²</span><i><b/></i><strong>代价较低</strong></div>
+            <div className="p06-fisher-cost"><span>F × Δθ<sup>2</sup></span><i><b/></i><strong>代价较低</strong></div>
           </div>
           <p>柱长只作相对大小示意，不代表测量数据。</p>
         </div>
