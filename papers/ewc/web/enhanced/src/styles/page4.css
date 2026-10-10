@@ -34,9 +34,9 @@
 .p04-equation-row { display: grid; grid-template-columns: minmax(215px, .72fr) minmax(0, 1.5fr); align-items: center; gap: 22px; min-height: 80px; padding: 18px 25px; border-bottom: 1px solid #e7ece8; }
 .p04-equation-row:last-child { border-bottom: 0; }
 .p04-equation-label { color: #6d807c; font-size: 15px; line-height: 1.55; }
-.p04-equation-row strong { color: #294a47; font: 22px/1.65 Georgia,"Times New Roman",serif; overflow-wrap: anywhere; }
+.p04-equation-row > .ewc-math--block { margin: 0; padding: 4px 0; color: #294a47; overflow-wrap: anywhere; }
 .p04-equation-row--result { background: #f2f7f2; }
-.p04-equation-row--result strong { color: #386f61; font-size: 25px; }
+.p04-equation-row--result > .ewc-math--block { color: #386f61; }
 .p04-equation-row sub, .p04-equation-row sup { font-size: .68em; }
 .p04-concept-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 17px; }
 .p04-concept-notes > div { padding: 17px 19px; border-left: 3px solid #9db9ac; background: #f5f8f5; }
@@ -105,8 +105,6 @@
   .p04-zoom-link i { width: 100%; transform: rotate(90deg); transform-origin: left center; }
   .p04-zoom-panel svg { max-height: 210px; }
   .p04-equation-row { grid-template-columns: 1fr; gap: 7px; padding: 16px 18px; }
-  .p04-equation-row strong { font-size: 19px; }
-  .p04-equation-row--result strong { font-size: 22px; }
   .p04-concept-notes { grid-template-columns: 1fr; }
   .p04-contour-card { padding: 15px 12px; }
   .p04-contour-meta { flex-direction: column; gap: 5px; }

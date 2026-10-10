@@ -176,14 +176,22 @@ export function PageFisher() {
         <div className="p05-opening__handoff"><b><ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger></b><i aria-hidden="true">→</i><span>固定参数<br />读取旧样本</span><i aria-hidden="true">→</i><b><ReferenceTrigger id="fisher_information">F<sub>A</sub></ReferenceTrigger></b></div>
       </section>
 
-      <section className="p05-section ewc-reasoning" aria-labelledby="p05-definition-title">
-        <h2 id="p05-definition-title">为什么从完整曲率转向 Fisher？</h2>
-        <p>P 个参数的完整 Hessian 需要 P² 项，还包含参数间的耦合。EWC 保留逐坐标精度，只存 P 个对角项；它放弃了相关方向的信息，换取可计算、可保存的约束。</p>
-        <MathFormula block tex={String.raw`g=\nabla_\theta\log p_\theta(y\mid x),\quad F(\theta)=\mathbb{E}_{x,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]`} />
-        <p>这是一般 Fisher 定义：对输入分布及模型预测分布中的标签取期望。对角项 Fᵢᵢ = E[gᵢ²] 非负，并可由一阶梯度估计。在可微、可交换积分与求导等正则条件下，它等于模型分布期望下的负 Log Likelihood Hessian；有限旧数据的后验 Hessian 还包含 Prior，因此不是同一个量。</p>
-        <MathFormula block tex={String.raw`\mathbb{E}_x D_{\mathrm{KL}}(p_\theta(\cdot\mid x)\parallel p_{\theta+\Delta\theta}(\cdot\mid x))\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} />
-        <p>小幅移动下，Fisher 大的方向会使预测分布变化更大，这是它近似局部敏感性的机制（背景 B05）。论文以对角 Fisher 近似旧 Posterior 精度；大幅位移、模型失配、忽略相关性和强 Prior 都可能削弱这层近似。</p>
-        <p>下面用观测标签 yₙ 的逐样本梯度平方平均演示估计流程。这是 observed-label empirical Fisher：标签来自数据，而非按模型预测抽样；与上面的期望 Fisher 一般不同，不能保证精确表示后验曲率，也不是 2017 论文唯一规定的配方。</p>
+      <section className="p05-section p05-curvature-bridge" aria-labelledby="p05-definition-title">
+        <div className="p05-section-heading">
+          <div><span className="p05-overline">FROM FULL CURVATURE TO A COMPUTABLE SIGNAL</span><h2 id="p05-definition-title">为什么用 Fisher 近似，而不保存完整 Hessian？</h2></div>
+          <p>旧解附近的曲率有用，但完整高维矩阵很难存取；EWC 保留一个可计算的参数级近似。</p>
+        </div>
+        <div className="p05-curvature-cost" aria-label="完整 Hessian 和对角 Fisher 存储规模比较">
+          <div><span>FULL HESSIAN</span><b>P × P entries</b><small>保留参数间的交叉曲率，成本随参数对增长。</small></div>
+          <i aria-hidden="true">→</i>
+          <div><span>DIAGONAL FISHER</span><b>P entries</b><small>每个坐标一个非负权重；忽略参数间耦合，换取更低存储成本。</small></div>
+        </div>
+        <div className="p05-fisher-mechanism">
+          <div><span>THEORETICAL FISHER · SCORE SECOND MOMENT</span><MathFormula block tex={String.raw`g=\nabla_\theta\log p_\theta(y\mid x),\qquad F(\theta)=\mathbb{E}_{x,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]`} /><p>对输入分布与模型预测的标签取期望，得到 score gradient 的外积二阶矩；对角上 F<sub>ii</sub> = E[g<sub>i</sub><sup>2</sup>] 非负。在适当正则条件下，它等于模型分布期望下的负 log-likelihood Hessian；有限数据的 Posterior Hessian 还含 Prior 曲率。</p></div>
+          <div><span>WHY THE SECOND MOMENT TRACKS LOCAL CHANGE</span><MathFormula block tex={String.raw`\mathbb{E}_x D_{\mathrm{KL}}(p_\theta(\cdot\mid x)\parallel p_{\theta+\Delta\theta}(\cdot\mid x))\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} /><p>对小幅参数移动，Fisher 二次型近似描述预测分布改变多少；Fisher 较大的方向会更快改变输出，因此可作为局部敏感性的线索。</p></div>
+        </div>
+        <p className="p05-curvature-boundary">边界：EWC 用对角 Fisher 近似 Task A Posterior 的局部精度，不等于一般情形的完整后验 Hessian。大幅移动、模型失配、先验曲率与被省略的非对角项都会限制这一近似。</p>
+        <p className="p05-estimator-lead">接下来区分理论期望与可执行的示例估计：本页对旧数据观测到的标签求逐样本 score，再平方、累计并平均；它是 observed-label empirical-Fisher 教学例子，不是论文唯一规定的配方。</p>
       </section>
       <FisherWorkbench />
       <TrainingModeComparison />

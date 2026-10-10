@@ -57,15 +57,19 @@ function LaplaceEquation() {
       <div className="p04-equation-card" role="group" aria-label="Laplace 近似的局部二次展开与 Gaussian 表示">
         <div className="p04-equation-row" role="math" aria-label="Phi theta 等于负的 Task A 参数 Posterior 对数">
           <span className="p04-equation-label">先定义要近似的形状</span>
-          <MathFormula tex={String.raw`\Phi(\theta)=-\log p(\theta\mid D_A)`} />
+          <MathFormula block tex={String.raw`\Phi(\theta)=-\log p(\theta\mid D_A)`} />
+        </div>
+        <div className="p04-equation-row" role="math" aria-label="在局部最大后验点，一阶导数为零，局部 Hessian 是 Phi 的二阶导数">
+          <span className="p04-equation-label">以局部 MAP 为中心：驻点条件与二阶曲率</span>
+          <MathFormula block tex={String.raw`\nabla\Phi(\theta_A^*)=0,\qquad H_A=\nabla^2\Phi(\theta_A^*)`} />
         </div>
         <div className="p04-equation-row" role="math" aria-label="Phi theta 约等于 Phi theta A 星加二分之一乘参数位移转置、局部 Hessian 和参数位移">
-          <span className="p04-equation-label">θ<sub>A</sub>* 附近的二阶 Taylor 近似</span>
+          <span className="p04-equation-label">Taylor 展开的一阶项因驻点条件消失</span>
           <MathFormula block tex={String.raw`\Phi(\theta)\approx\Phi(\theta_A^*)+\tfrac12(\theta-\theta_A^*)^\mathsf{T}H_A(\theta-\theta_A^*)`} />
         </div>
         <div className="p04-equation-row p04-equation-row--result" role="math" aria-label="Task A 参数 Posterior 的局部近似是均值 theta A 星、协方差为 H A 逆的 Gaussian 分布">
           <span className="p04-equation-label">对应的局部 Gaussian</span>
-          <MathFormula tex={String.raw`q(\theta\mid D_A)=\mathcal{N}(\theta_A^*,H_A^{-1})`} />
+          <MathFormula block tex={String.raw`q(\theta\mid D_A)=\mathcal{N}(\theta_A^*,H_A^{-1})`} />
         </div>
       </div>
 
@@ -81,7 +85,7 @@ function LaplaceEquation() {
           <p>对这个二次型取指数，就得到以 θ<sub>A</sub>* 为中心的 Gaussian。<ReferenceTrigger id="local_precision">局部精度</ReferenceTrigger> H<sub>A</sub> 描述分布收缩程度；协方差是它的逆。</p>
         </div>
       </details>
-      <p className="p04-teaching-note">Gaussian 协方差 H_A⁻¹ 要求局部曲率正定；零或负曲率需要适当正则化，此近似只适合旧解附近。论文使用对角 Fisher 近似精度，未精确计算或保存这里的完整 Hessian。</p>
+      <p className="p04-teaching-note">若局部曲率正定，指数化这个二次型就得到局部 Gaussian；曲率越大，方差越小、等高线越窄。普通优化器得到的 θ_A* 只是局部中心的近似。零或负曲率需要适当正则化；论文以对角 Fisher 近似局部精度，没有精确计算或保存这里的完整 Hessian。</p>
     </section>
   );
 }

@@ -201,7 +201,7 @@
 .p06-method-card--ewc { border-color: #bfd5c8; background: #f3f8f3; }
 .p06-method-card > span { color: #7b8982; font: 12px "DM Mono",monospace; letter-spacing: .055em; line-height: 1.5; }
 .p06-method-card h3 { margin: 8px 0; color: #39574f; font-size: 18px; line-height: 1.4; }
-.p06-method-equation { min-height: 48px; margin: 12px 0; color: #356d60; font: 19px/1.55 Georgia,serif; overflow-wrap: anywhere; }
+.p06-method-card > .ewc-math--block { min-height: 48px; margin: 12px 0; color: #356d60; overflow-wrap: anywhere; }
 .p06-method-card > p:last-child { margin: 0; color: #61736b; font-size: 14px; line-height: 1.6; }
 
 .p06-gradient-section { margin-bottom: 42px; padding: 24px; border: 1px solid #dce6e0; border-radius: 13px; background: #fbfcfa; }
@@ -231,10 +231,12 @@
 .p06-lambda-note > i { color: #91a198; font-style: normal; text-align: center; }
 
 .p06-update-example { margin-bottom: 42px; }
+.p06-update-context { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 14px; }
+.p06-update-context > span { padding: 7px 10px; border: 1px solid #e1e8e2; border-radius: 6px; color: #587064; background: #fbfcf9; font-size: 13px; }
 .p06-update-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
 .p06-update-card { padding: 18px 20px; border: 1px solid #ead6c8; border-radius: 10px; background: #fcf6ef; }
 .p06-update-card--low { border-color: #d7e5dc; background: #f4f9f5; }
-.p06-update-card > span { display: block; margin-bottom: 8px; color: #94674e; font: 12px "DM Mono",monospace; letter-spacing: .055em; line-height: 1.5; }
+.p06-update-card > span:not(.ewc-math) { display: block; margin-bottom: 8px; color: #94674e; font: 12px "DM Mono",monospace; letter-spacing: .055em; line-height: 1.5; }
 .p06-update-card--low > span { color: #618276; }
 .p06-update-card > div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #eee3db; color: #65756e; font-size: 14px; }
 .p06-update-card--low > div { border-color: #e2ebe4; }
@@ -242,9 +244,10 @@
 .p06-update-card--low > div b { color: #416e5f; }
 .p06-update-card > div.p06-update-total { border-bottom: 0; color: #8f5b3e; font-weight: 700; }
 .p06-update-card--low > div.p06-update-total { color: #427364; }
+.p06-update-card > .ewc-math--block { margin: 12px 0 7px; padding: 9px 4px; border-top: 1px solid #eadfd6; border-bottom: 1px solid #eadfd6; color: #76533d; text-align: center; }
+.p06-update-card--low > .ewc-math--block { border-color: #dce8df; color: #416e5f; }
 .p06-update-card p { margin: 8px 0 0; color: #5e7068; font-size: 14px; line-height: 1.6; }
-.p06-update-rule { display: flex; align-items: baseline; flex-wrap: wrap; gap: 9px 15px; margin: 12px 0 0; padding: 14px 17px; border-left: 3px solid #789b89; color: #396c5d; background: #f2f7f2; font: 19px/1.6 Georgia,serif; }
-.p06-update-rule > span { color: #61736a; font: 14px/1.6 system-ui,sans-serif; }
+.p06-update-rule { margin: 12px 0 0; padding: 14px 17px; border-left: 3px solid #789b89; color: #61736a; background: #f2f7f2; font: 14px/1.6 system-ui,sans-serif; }
 
 .p06-closing { margin: 0 0 25px; padding: 23px 24px; border-top: 1px solid var(--p06-line); border-bottom: 1px solid var(--p06-line); }
 .p06-closing h2 { margin: 8px 0; color: #304d48; font-size: 25px; line-height: 1.35; }

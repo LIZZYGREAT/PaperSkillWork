@@ -7,6 +7,20 @@
 .p05-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 20px; }
 .p05-section-heading h2 { margin: 7px 0 0; color: var(--p05-ink); font-size: clamp(25px, 2.5vw, 32px); letter-spacing: -.025em; line-height: 1.25; }
 .p05-section-heading > p { max-width: 430px; margin: 0; color: var(--p05-muted); font-size: 16px; line-height: 1.7; }
+.p05-curvature-bridge { padding: 24px; border: 1px solid var(--p05-line); border-radius: 13px; background: #fbfcfa; }
+.p05-curvature-cost { display: grid; grid-template-columns: minmax(0,1fr) 34px minmax(0,1fr); align-items: center; gap: 12px; margin-bottom: 16px; }
+.p05-curvature-cost > div { display: grid; gap: 5px; min-height: 112px; align-content: center; padding: 15px 18px; border: 1px solid #e1e8e2; border-radius: 9px; background: #fffefa; }
+.p05-curvature-cost > div:last-child { border-color: #cdded3; background: #f2f7f3; }
+.p05-curvature-cost > div > span, .p05-fisher-mechanism > div > span { color: #72837d; font: 11px "DM Mono",monospace; letter-spacing: .07em; line-height: 1.5; }
+.p05-curvature-cost b { color: #3e695d; font: 21px Georgia,serif; }
+.p05-curvature-cost small { color: #62756e; font-size: 14px; line-height: 1.55; }
+.p05-curvature-cost > i { color: #8da79b; font: 21px Georgia,serif; font-style: normal; text-align: center; }
+.p05-fisher-mechanism { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
+.p05-fisher-mechanism > div { min-width: 0; padding: 16px 17px; border: 1px solid #dfe8e2; border-radius: 9px; background: white; }
+.p05-fisher-mechanism .ewc-math--block { min-height: 62px; margin: 8px 0; padding: 10px 2px; color: #315f53; }
+.p05-fisher-mechanism p { margin: 8px 0 0; color: #5d716a; font-size: 14px; line-height: 1.65; }
+.p05-curvature-boundary { margin: 15px 0 0; padding: 12px 15px; border-left: 3px solid #b98b6c; color: #66594d; background: #fbf5ef; font-size: 14px; line-height: 1.65; }
+.p05-estimator-lead { margin: 14px 0 0; color: #586e66; font-size: 15px; line-height: 1.7; }
 .p05-opening { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(300px,.8fr); align-items: center; gap: 25px; margin: 0 0 45px; padding: 23px 25px; border-left: 3px solid #92b1a2; background: #f3f7f3; }
 .p05-opening h2 { margin: 7px 0 8px; color: #2d4b47; font-size: 24px; line-height: 1.35; }
 .p05-opening p { max-width: 720px; margin: 0; color: #536a65; font-size: 16px; line-height: 1.7; }
@@ -150,6 +164,10 @@
   .p05-section-heading > p { max-width: 100%; }
   .p05-opening { grid-template-columns: 1fr; gap: 17px; padding: 19px; }
   .p05-opening__handoff { justify-content: flex-start; }
+  .p05-curvature-bridge { padding: 17px; }
+  .p05-curvature-cost { grid-template-columns: minmax(0,1fr); gap: 7px; }
+  .p05-curvature-cost > i { transform: rotate(90deg); }
+  .p05-fisher-mechanism { grid-template-columns: minmax(0,1fr); }
   .p05-workbench { padding: 16px; }
   .p05-sample-path { grid-template-columns: 1fr; gap: 9px; }
   .p05-sample-path > i { width: 2px; height: 20px; justify-self: center; }

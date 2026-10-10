@@ -7,6 +7,33 @@ import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 import type { CanonicalReferenceId, RuntimeObjectId } from "../contracts/ids";
 import { MathFormula } from "../shared/teaching/Math";
 
+const UPDATE_EXAMPLE = {
+  anchor: 0,
+  current: 0.2,
+  lambda: 1,
+  learningRate: 1,
+  taskBMinimum: 0.6,
+  taskBCurvature: 0.25,
+  fisherHigh: 0.8,
+  fisherLow: 0.05,
+};
+const exampleOffset = UPDATE_EXAMPLE.current - UPDATE_EXAMPLE.anchor;
+const exampleTaskBLoss = UPDATE_EXAMPLE.taskBCurvature * (UPDATE_EXAMPLE.current - UPDATE_EXAMPLE.taskBMinimum) ** 2;
+const exampleTaskBGradient = 2 * UPDATE_EXAMPLE.taskBCurvature * (UPDATE_EXAMPLE.current - UPDATE_EXAMPLE.taskBMinimum);
+const updateByFisher = (fisher: number) => {
+  const penalty = (UPDATE_EXAMPLE.lambda / 2) * fisher * exampleOffset ** 2;
+  const ewcGradient = UPDATE_EXAMPLE.lambda * fisher * exampleOffset;
+  const totalGradient = exampleTaskBGradient + ewcGradient;
+  const nextTheta = UPDATE_EXAMPLE.current - UPDATE_EXAMPLE.learningRate * totalGradient;
+  return { fisher, penalty, ewcGradient, totalGradient, nextTheta, movement: nextTheta - UPDATE_EXAMPLE.current };
+};
+const HIGH_FISHER_UPDATE = updateByFisher(UPDATE_EXAMPLE.fisherHigh);
+const LOW_FISHER_UPDATE = updateByFisher(UPDATE_EXAMPLE.fisherLow);
+
+function signedValue(value: number, digits = 2) {
+  return `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value).toFixed(digits)}`;
+}
+
 const PENALTY_STEPS: FlowStep[] = [
   { id: "displacement", title: "当前参数减去旧锚点", description: "逐参数比较现在的 θ_i 与 Task A 训练结束时保存的 θ_A,i*。先问：当前参数已经离旧位置多远？", statusText: "θ 可训练 · θ_A* 是固定参考快照" },
   { id: "square", title: "平方偏移", description: "平方只记录偏离大小，使正负方向不会相互抵消；形式也与前面的局部 Gaussian 二次约束一致。", statusText: "正负方向都按偏移幅度计价" },
@@ -140,12 +167,7 @@ function SequentialBayes() {
       <p>在给定 θ 后任务数据条件独立的假设下，Sequential Bayes 的乘积取负对数变成两项之和。C 不依赖 θ。旧 Posterior 的负对数含有 Task A 数据与已有 Prior 的信息，下一步以局部二次型近似，再用 diag(F_A) 近似精度。</p>
       <MathFormula block tex={String.raw`L_{\mathrm{EWC}}(\theta)=L_B(\theta)+\frac{\lambda}{2}\sum_i F_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
       <p>这给出论文 Eq.(3)。λ 是实践中的整体权衡系数；Likelihood 的求和/平均尺度、Fisher 估计尺度都会影响其取值，不能认为任意 λ 都对应未经调整的精确 Bayesian 后验。</p>
-      <div className="p06-bayes-equation" role="math" aria-label="Sequential Bayes 更新">
-        <ReferenceTrigger id="task_b_posterior">p(θ | D<sub>A</sub>, D<sub>B</sub>)</ReferenceTrigger>
-        <span>∝</span>
-        <ReferenceTrigger id="p_D_given_theta">p(D<sub>B</sub> | θ)</ReferenceTrigger>
-        <ReferenceTrigger id="task_a_posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger>
-      </div>
+      <MathFormula block tex={String.raw`p(\theta\mid D_A,D_B)\propto p(D_B\mid\theta)p(\theta\mid D_A)`} />
       <div className="p06-bayes-branches">
         <article className="p06-source-card p06-source-card--new">
           <span className="p06-source-label">TASK B · LEARN THE NEW TASK</span>
@@ -266,17 +288,17 @@ function CompleteObjective() {
         <div className="p06-method-grid">
           <article className="p06-method-card">
             <span>PLAIN FINE-TUNING</span><h3>只优化新任务</h3>
-            <p className="p06-method-equation">L = L<sub>B</sub></p>
+            <MathFormula block tex={String.raw`L=L_B(\theta)`} />
             <p>更新只由 Task B Loss 决定。</p>
           </article>
           <article className="p06-method-card p06-method-card--uniform">
             <span>UNIFORM L2 · A CONCEPTUAL COMPARISON</span><h3>所有坐标同等加权</h3>
-            <p className="p06-method-equation">L<sub>B</sub> + <sup>λ</sup>⁄<sub>2</sub> Σ<sub>i</sub> (θ<sub>i</sub> − θ<sub>A,i</sub>*)²</p>
+            <MathFormula block tex={String.raw`L_B(\theta)+\frac{\lambda}{2}\sum_i(\theta_i-\theta_{A,i}^*)^2`} />
             <p>以旧参数为中心，但不给不同坐标区分 Fisher 权重。</p>
           </article>
           <article className="p06-method-card p06-method-card--ewc">
             <span>EWC</span><h3>按旧任务敏感性加权</h3>
-            <p className="p06-method-equation">L<sub>B</sub> + <sup>λ</sup>⁄<sub>2</sub> Σ<sub>i</sub> F<sub>A,i</sub>(θ<sub>i</sub> − θ<sub>A,i</sub>*)²</p>
+            <MathFormula block tex={String.raw`L_B(\theta)+\frac{\lambda}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
             <p>每个参数使用自己的 Fisher 相对敏感度，偏移代价各不相同。</p>
           </article>
         </div>
@@ -343,25 +365,40 @@ function CompleteObjective() {
       <section className="p06-update-example" aria-labelledby="p06-update-title">
         <div className="p06-section-heading">
           <div><span className="p06-overline">ILLUSTRATIVE GRADIENTS · NOT PAPER DATA</span><h2 id="p06-update-title">高 Fisher 参数仍会动，只是受到更强约束</h2></div>
-          <p>两者起始偏移相同、Task-B gradient 相同；变化来自 Fisher 权重不同。</p>
+          <p>Task B 的局部示例损失为 <MathFormula tex={String.raw`L_B(\theta)=0.25(\theta-0.60)^2`} />。在 θ=0.20 时，它的 Loss 是 {exampleTaskBLoss.toFixed(2)}，梯度是 {signedValue(exampleTaskBGradient)}。两种情况使用相同的旧 Anchor、当前参数、λ、学习率和 Task-B 梯度；只改变 Fisher。</p>
+        </div>
+        <div className="p06-update-context">
+          <span>共同起点：θ<sub>A</sub>* = {UPDATE_EXAMPLE.anchor.toFixed(2)}</span>
+          <span>当前参数：θ = {UPDATE_EXAMPLE.current.toFixed(2)}</span>
+          <span>偏移：Δθ = {exampleOffset.toFixed(2)}</span>
+          <span>约束强度：λ = {UPDATE_EXAMPLE.lambda.toFixed(1)}</span>
+          <span>学习率：η = {UPDATE_EXAMPLE.learningRate.toFixed(1)}</span>
         </div>
         <div className="p06-update-grid">
           <article className="p06-update-card p06-update-card--high">
             <span>HIGH FISHER · LARGER OFFSET COST</span>
-            <div><span>Task-B gradient</span><b>−0.20</b></div>
-            <div><span>EWC gradient</span><b>+0.16</b></div>
-            <div className="p06-update-total"><span>Total gradient</span><b>−0.04</b></div>
-            <p>参数仍参与 optimizer 更新；EWC 抵消了更多远离 Anchor 的梯度。</p>
+            <div><span>Fisher weight</span><b>{HIGH_FISHER_UPDATE.fisher.toFixed(2)}</b></div>
+            <div><span>Task-B loss</span><b>{exampleTaskBLoss.toFixed(2)}</b></div>
+            <div><span>EWC penalty</span><b>{HIGH_FISHER_UPDATE.penalty.toFixed(3)}</b></div>
+            <div><span>Task-B gradient</span><b>{signedValue(exampleTaskBGradient)}</b></div>
+            <div><span>EWC gradient</span><b>{signedValue(HIGH_FISHER_UPDATE.ewcGradient)}</b></div>
+            <div className="p06-update-total"><span>Total gradient</span><b>{signedValue(HIGH_FISHER_UPDATE.totalGradient)}</b></div>
+            <MathFormula block tex={String.raw`\theta'=\theta-\eta g_{\mathrm{total}}=${UPDATE_EXAMPLE.current.toFixed(2)}-\left(${HIGH_FISHER_UPDATE.totalGradient.toFixed(2)}\right)=${HIGH_FISHER_UPDATE.nextTheta.toFixed(2)}`} />
+            <p>更新后移动 {signedValue(HIGH_FISHER_UPDATE.movement)}。参数仍在 optimizer 中更新；较大的 EWC 梯度抵消了更多远离 Anchor 的任务梯度。</p>
           </article>
           <article className="p06-update-card p06-update-card--low">
             <span>LOW FISHER · SMALLER OFFSET COST</span>
-            <div><span>Task-B gradient</span><b>−0.20</b></div>
-            <div><span>EWC gradient</span><b>+0.01</b></div>
-            <div className="p06-update-total"><span>Total gradient</span><b>−0.19</b></div>
-            <p>约束较弱，参数可以更自由地适应 Task B。</p>
+            <div><span>Fisher weight</span><b>{LOW_FISHER_UPDATE.fisher.toFixed(2)}</b></div>
+            <div><span>Task-B loss</span><b>{exampleTaskBLoss.toFixed(2)}</b></div>
+            <div><span>EWC penalty</span><b>{LOW_FISHER_UPDATE.penalty.toFixed(3)}</b></div>
+            <div><span>Task-B gradient</span><b>{signedValue(exampleTaskBGradient)}</b></div>
+            <div><span>EWC gradient</span><b>{signedValue(LOW_FISHER_UPDATE.ewcGradient)}</b></div>
+            <div className="p06-update-total"><span>Total gradient</span><b>{signedValue(LOW_FISHER_UPDATE.totalGradient)}</b></div>
+            <MathFormula block tex={String.raw`\theta'=\theta-\eta g_{\mathrm{total}}=${UPDATE_EXAMPLE.current.toFixed(2)}-\left(${LOW_FISHER_UPDATE.totalGradient.toFixed(2)}\right)=${LOW_FISHER_UPDATE.nextTheta.toFixed(2)}`} />
+            <p>更新后移动 {signedValue(LOW_FISHER_UPDATE.movement)}。Fisher 权重较小，Task B 的梯度更大程度决定参数移动。</p>
           </article>
         </div>
-        <p className="p06-update-rule" role="math">θ′ = θ − η g<sub>total</sub> <span>同一正学习率下，+0.04η 与 +0.19η 都不是零更新；高 Fisher 坐标变化较小，但没有被冻结。</span></p>
+        <p className="p06-update-rule">两种更新都使用同一正学习率。高 Fisher 参数变化较小，但仍然可以更新；该例只说明梯度路径，不代表论文数据或通用训练数值。</p>
       </section>
 
       <section className="p06-closing" aria-labelledby="p06-closing-title">
