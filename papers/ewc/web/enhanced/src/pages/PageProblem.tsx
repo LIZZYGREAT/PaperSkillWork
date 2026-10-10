@@ -294,7 +294,7 @@ export function PageProblem() {
           <ParameterMovement parameter={2} sensitive={false} />
           <p className="p01-movement-compare__note">两条 Loss 使用同一尺度；长度仅示意相对影响，不代表论文实验测量值。</p>
         </figure>
-        <p className="p01-parameters__takeaway"><ReferenceTrigger id="parameter_interference">不同参数对旧任务的敏感程度不同</ReferenceTrigger>，因此后续训练需要区分哪些参数应该受到更强约束，哪些参数可以更灵活地更新。</p>
+        <p className="p01-parameters__takeaway"><ReferenceTrigger id="parameter_interference">不同参数对旧任务的敏感程度不同</ReferenceTrigger>。这里的“重要性”是相对于 Task A 的目标而言：同幅偏移对 Task A Loss 的影响不同，因此后续训练需要区分哪些参数应受到更强约束，哪些可以更灵活地更新。</p>
       </section>
 
       <section className="p01-ewc-preview" id="ewc-motivation" aria-labelledby="p01-ewc-title">

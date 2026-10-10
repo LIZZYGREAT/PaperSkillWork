@@ -1,16 +1,18 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { FlowStepper, type FlowStep } from "../shared/core/flow-stepper";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
-import { PARAMETER_STATES, datasetLikelihood, EXAMPLE_EVIDENCE } from "../data/probabilityExample";
+import { PARAMETER_STATES, datasetLikelihood, EXAMPLE_EVIDENCE, type ParameterState } from "../data/probabilityExample";
 import { MathFormula } from "../shared/teaching/Math";
 
-type Candidate = { id: string; prior: number; likelihood: number };
-type DistributionView = "prior" | "posterior";
+type Candidate = { id: string; index: number; prior: number; likelihood: number; posterior: number; state: ParameterState };
+type DistributionView = "prior" | "likelihood" | "posterior";
 
-const CANDIDATES: Candidate[] = PARAMETER_STATES.map(state => ({
-  id: `θ⁽${state.index}⁾`, prior: state.prior, likelihood: datasetLikelihood(state),
-}));
+const CANDIDATES: Candidate[] = PARAMETER_STATES.map((state) => {
+  const likelihood = datasetLikelihood(state);
+  const posterior = (state.prior * likelihood) / EXAMPLE_EVIDENCE;
+  return { id: `θ⁽${state.index}⁾`, index: state.index, prior: state.prior, likelihood, posterior, state };
+});
 
 const BAYES_STEPS: FlowStep[] = [
   {
@@ -33,10 +35,6 @@ const BAYES_STEPS: FlowStep[] = [
   },
 ];
 
-function formatPercent(value: number) {
-  return `${(value * 100).toFixed(1)}%`;
-}
-
 function ProbabilityOriginTable() {
   return (
     <div className="p03-origin-wrap">
@@ -46,9 +44,9 @@ function ProbabilityOriginTable() {
         </thead>
         <tbody>
           <tr><th scope="row"><ReferenceTrigger id="p_theta_y_given_x">p<sub>θ</sub>(y | x)</ReferenceTrigger></th><td>已解释</td><td>神经网络的前向计算</td></tr>
-          <tr><th scope="row"><ReferenceTrigger id="p_D_given_theta">p(D | θ)</ReferenceTrigger></th><td>已解释</td><td>各样本真实标签的预测概率组合</td></tr>
+          <tr><th scope="row"><ReferenceTrigger id="p_D_given_theta">p(D<sub>A</sub> | θ)</ReferenceTrigger></th><td>已解释</td><td>各样本真实标签的预测概率组合</td></tr>
           <tr className="is-current"><th scope="row"><ReferenceTrigger id="p_theta">p(θ)</ReferenceTrigger></th><td>本页解释</td><td>数据到来前对参数配置的先验建模</td></tr>
-          <tr className="is-current"><th scope="row"><ReferenceTrigger id="p_theta_given_D">p(θ | D)</ReferenceTrigger></th><td>本页解释</td><td>结合数据之后对参数的重新评价</td></tr>
+          <tr className="is-current"><th scope="row"><ReferenceTrigger id="p_theta_given_D">p(θ | D<sub>A</sub>)</ReferenceTrigger></th><td>本页解释</td><td>结合 Task A 数据之后对参数配置的重新评价</td></tr>
         </tbody>
       </table>
     </div>
@@ -98,40 +96,40 @@ function BayesBox() {
     <section className="p03-section p03-bayes-section" id="prior-likelihood-posterior" aria-labelledby="p03-bayes-title">
       <div className="p03-section-heading">
         <div><span className="p03-overline">PRIOR × LIKELIHOOD · BAYES UPDATE</span><h2 id="p03-bayes-title">Bayes Rule 把数据和参数先验接起来</h2></div>
-        <p>先看比例关系。点击每一项，可跳到本页的解释。</p>
+        <p>从联合概率的两种分解得到更新式；数据、Prior 与 Posterior 的来源各不相同。</p>
       </div>
-      <div className="p03-bayes-equation" role="math" aria-label="Posterior 正比于数据 Likelihood 乘以参数 Prior">
-        <span><ReferenceTrigger id="posterior">p(θ | D)</ReferenceTrigger></span><b>∝</b>
-        <span><ReferenceTrigger id="likelihood">p(D | θ)</ReferenceTrigger></span><b>×</b>
-        <span><ReferenceTrigger id="prior">p(θ)</ReferenceTrigger></span>
+      <div className="p03-joint-derivation" aria-label="联合概率 p(theta, D A) 的两种分解">
+        <div><span>同一联合概率，从 Likelihood 与 Prior 分解</span><MathFormula block tex={String.raw`p(\theta,D_A)=p(D_A\mid\theta)p(\theta)`} /></div>
+        <div><span>从 Posterior 与 Evidence 分解</span><MathFormula block tex={String.raw`p(\theta,D_A)=p(\theta\mid D_A)p(D_A)`} /></div>
       </div>
-      <div className="p03-bayes-box" aria-label="Bayes 方块图，Prior 与 Likelihood 结合并经 Evidence 归一化得到 Posterior">
+      <div className="p03-bayes-result" role="group" aria-label="由联合概率分解得到 Bayes 更新公式">
+        <span>令两种分解相等，整理得到 Bayes Rule</span>
+        <MathFormula block tex={String.raw`p(\theta\mid D_A)=\frac{p(D_A\mid\theta)p(\theta)}{p(D_A)}`} />
+      </div>
+      <div className="p03-bayes-box" aria-label="Bayes 更新示意：Likelihood 与 Prior 相乘，Evidence 归一化后得到 Posterior">
         <a className="p03-bayes-node p03-bayes-node--prior" href="#prior-explanation">
-          <span>BEFORE DATA</span><b>Prior</b><strong>p(θ)</strong><small>参数配置的先验权重</small>
+          <span>BEFORE TASK A DATA</span><b>Prior</b><strong><MathFormula tex={String.raw`p(\theta)`} /></strong><small>观察当前 D<sub>A</sub> 之前的参数权重</small>
         </a>
         <span className="p03-bayes-operator" aria-hidden="true">×</span>
         <a className="p03-bayes-node p03-bayes-node--likelihood" href="#likelihood-explanation">
-          <span>OBSERVED DATA</span><b>Likelihood</b><strong>p(D | θ)</strong><small>这组参数对数据解释得如何</small>
+          <span>FIXED TASK A DATA</span><b>Likelihood</b><strong><MathFormula tex={String.raw`p(D_A\mid\theta)`} /></strong><small>这组参数怎样解释同一份 D<sub>A</sub></small>
         </a>
         <span className="p03-bayes-combine" aria-hidden="true"><i /><b>重新加权</b><i /></span>
         <a className="p03-bayes-node p03-bayes-node--posterior" href="#posterior-explanation">
-          <span>AFTER DATA</span><b>Posterior</b><strong>p(θ | D)</strong><small>看到数据后的参数评价</small>
+          <span>AFTER TASK A DATA</span><b>Posterior</b><strong><MathFormula tex={String.raw`p(\theta\mid D_A)`} /></strong><small>数据之后对参数配置的评价</small>
         </a>
         <div className="p03-bayes-normalizer" id="bayes-evidence-normalizer">
-          <span>归一化 p(D)</span><p>由 Prior 加权的 Likelihood 求和（连续参数用积分），使后验总权重为 1。</p>
+          <span>Evidence · p(D<sub>A</sub>)</span><p>对所有候选权重求和，得到归一化分母；后面用同一组示例数值核对。</p>
         </div>
       </div>
       <div className="p03-bayes-explanations">
-        <div id="prior-explanation"><span>01 · PRIOR</span><h3><ReferenceTrigger id="prior">p(θ)</ReferenceTrigger> 不是模型输出</h3><p>它由建模者在使用当前 D 之前选择，必须非负并归一化。可编码已有知识或偏好；Prior 为零的区域不会被这次更新恢复。不能看完这份 D 后随意挑数冒充先验。</p></div>
-        <div id="likelihood-explanation"><span>02 · LIKELIHOOD</span><h3><ReferenceTrigger id="likelihood">p(D | θ)</ReferenceTrigger> 评价数据拟合</h3><p>给定 θ，由模型预测与实际标签共同决定。P2 已从 logits、Softmax 和真实标签项推导出它，本页直接复用；不能为得到想要的后验任意填写 Likelihood。</p></div>
-        <div id="posterior-explanation"><span>03 · POSTERIOR</span><h3><ReferenceTrigger id="posterior">p(θ | D)</ReferenceTrigger> 更新参数信念</h3><p>Posterior 将先验偏好与数据证据结合，重新分配不同参数配置的概率。</p></div>
+        <div id="prior-explanation"><span>01 · PRIOR</span><h3><ReferenceTrigger id="prior">p(θ)</ReferenceTrigger> 在当前数据之前设定</h3><p>Prior 是观察这份 D<sub>A</sub> 之前对参数配置的建模分布。它须非负且归一化；已有知识可影响它，但不能看完 D<sub>A</sub> 后为了预设结果任意改数。</p></div>
+        <div id="likelihood-explanation"><span>02 · LIKELIHOOD</span><h3><ReferenceTrigger id="likelihood">p(D<sub>A</sub> | θ)</ReferenceTrigger> 对固定数据评价 θ</h3><p>Page 2 已从 logits、Softmax 与真实标签概率算出它。Likelihood 是固定 D<sub>A</sub> 下关于 θ 的函数，不是参数空间上的归一化分布。</p></div>
+        <div id="posterior-explanation"><span>03 · POSTERIOR</span><h3><ReferenceTrigger id="posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger> 结合两种来源</h3><p>Likelihood 按旧数据支持度重加权 Prior，Evidence 统一归一化。Posterior 中心回答哪组配置权重最高，不等于告诉我们哪个单一坐标最重要。</p></div>
       </div>
       <details className="p03-full-bayes" id="bayes-evidence-normalizer-detail">
-        <summary>展开完整 Bayes Rule</summary>
-        <div className="p03-full-bayes__formula" role="math" aria-label="Posterior 等于 Likelihood 乘 Prior 再除以 Evidence">
-          <span>p(θ | D)</span><b>=</b><span className="p03-fraction"><i>p(D | θ)p(θ)</i><i>p(D)</i></span>
-        </div>
-        <p>分子合并 Likelihood 与 Prior；分母 p(D) 负责归一化。论文用这一关系描述 Task A 的 Posterior 如何进入 Task B 的更新。</p>
+        <summary>连续参数空间：Evidence 是 Prior 加权 Likelihood 的积分</summary>
+        <div className="p03-continuous-evidence"><MathFormula block tex={String.raw`p(D_A)=\int p(D_A\mid\theta)p(\theta)\,d\theta`} /><p>这里的 θ 是连续网络参数，p(θ) 表示概率密度；单个精确参数点的概率质量为 0，某个参数区域的概率由密度积分得到。上面的三候选交互则是离散教学例子，用求和而非积分。</p></div>
       </details>
     </section>
   );
@@ -139,64 +137,64 @@ function BayesBox() {
 
 function CandidateUpdate() {
   const [view, setView] = useState<DistributionView>("prior");
-  const evidence = useMemo(() => EXAMPLE_EVIDENCE, []);
-  const distribution = (candidate: Candidate) => view === "prior" ? candidate.prior : (candidate.prior * candidate.likelihood) / evidence;
+  const [selectedId, setSelectedId] = useState(CANDIDATES[0].id);
+  const selected = CANDIDATES.find((candidate) => candidate.id === selectedId) ?? CANDIDATES[0];
+  const reference = CANDIDATES[0];
+  const score = (candidate: Candidate) => view === "prior" ? candidate.prior : view === "likelihood" ? candidate.likelihood : candidate.posterior;
+  const maximumScore = Math.max(...CANDIDATES.map(score));
+  const viewCopy: Record<DistributionView, { label: string; note: string }> = {
+    prior: { label: "Prior mass", note: "Prior 是观察 D_A 前的离散概率质量；本例三项之和为 1。" },
+    likelihood: { label: "Raw Likelihood", note: "固定 D_A 后得到的拟合分数；这些值不在候选 θ 上归一化，也不需要相加为 1。" },
+    posterior: { label: "Posterior mass", note: "Prior × Likelihood 经 Evidence 归一化；本例三项之和为 1。" },
+  };
+  const relativeLikelihood = selected.likelihood / reference.likelihood;
+  const relativePrior = selected.prior / reference.prior;
+  const relativePosterior = selected.posterior / reference.posterior;
+  const oddsEquation = String.raw`\frac{p(\theta^{(${selected.index})}\mid D_A)}{p(\theta^{(1)}\mid D_A)}=\frac{p(D_A\mid\theta^{(${selected.index})})}{p(D_A\mid\theta^{(1)})}\times\frac{p(\theta^{(${selected.index})})}{p(\theta^{(1)})}=\frac{${selected.likelihood.toFixed(4)}}{${reference.likelihood.toFixed(4)}}\times\frac{${selected.prior.toFixed(2)}}{${reference.prior.toFixed(2)}}=${relativePosterior.toFixed(2)}`;
 
   return (
     <section className="p03-section p03-candidates" id="parameter-belief-update" aria-labelledby="p03-candidates-title">
       <div className="p03-section-heading">
         <div><span className="p03-overline">AN ILLUSTRATIVE UPDATE · THREE CANDIDATE CONFIGURATIONS</span><h2 id="p03-candidates-title">看到数据后，参数配置的相对权重会改变</h2></div>
-        <p>选择更新前后，观察同一组候选参数的分布怎样变化。</p>
+        <p>三组配置和 D_A 直接复用 Page 2。逐个切换 Prior、Likelihood 与 Posterior，并点选配置核对更新来源。</p>
       </div>
-      <div className="p03-distribution-controls" role="group" aria-label="切换观察参数分布的更新前后状态">
-        <button type="button" aria-pressed={view === "prior"} className={view === "prior" ? "is-active" : ""} onClick={() => setView("prior")}>数据到来前 · Prior</button>
-        <button type="button" aria-pressed={view === "posterior"} className={view === "posterior" ? "is-active" : ""} onClick={() => setView("posterior")}>看到 D 之后 · Posterior</button>
+      <div className="p03-distribution-controls" role="group" aria-label="选择参数配置的概率对象">
+        <button type="button" aria-pressed={view === "prior"} className={view === "prior" ? "is-active" : ""} onClick={() => setView("prior")}>Prior · before D_A</button>
+        <button type="button" aria-pressed={view === "likelihood"} className={view === "likelihood" ? "is-active" : ""} onClick={() => setView("likelihood")}>Likelihood · fixed D_A</button>
+        <button type="button" aria-pressed={view === "posterior"} className={view === "posterior" ? "is-active" : ""} onClick={() => setView("posterior")}>Posterior · after D_A</button>
       </div>
-      <div className="p03-candidate-head" aria-hidden="true"><span>候选参数</span><span>当前分布权重</span><span>数据 Likelihood</span><span>更新后 Posterior</span></div>
-      <div className="p03-candidate-list" role="group" aria-label="三个示意参数配置的先验、Likelihood 与 Posterior">
+      <div className="p03-view-note" aria-live="polite"><b>{viewCopy[view].label}</b><span>{viewCopy[view].note}</span></div>
+      <div className="p03-candidate-head" aria-hidden="true"><span>完整参数配置</span><span>当前视图</span><span>Prior</span><span>Likelihood</span><span>Prior × Likelihood</span><span>Posterior</span></div>
+      <div className="p03-candidate-list" role="group" aria-label="点击候选参数配置查看 Prior、Likelihood 乘积与 Posterior">
         {CANDIDATES.map((candidate) => {
-          const posterior = (candidate.prior * candidate.likelihood) / evidence;
-          const weight = distribution(candidate);
+          const value = score(candidate);
+          const product = candidate.prior * candidate.likelihood;
+          const active = selected.id === candidate.id;
           return (
-            <div className="p03-candidate-row" key={candidate.id} aria-label={`${candidate.id}：Prior ${formatPercent(candidate.prior)}，Likelihood ${formatPercent(candidate.likelihood)}，Posterior ${formatPercent(posterior)}`}>
-              <strong>{candidate.id}</strong>
-              <div className="p03-candidate-weight" aria-label={`${view === "prior" ? "Prior" : "Posterior"} 权重 ${formatPercent(weight)}`}>
-                <div className="p03-candidate-weight__label"><span>{view === "prior" ? "Prior p(θ)" : "Posterior p(θ | D)"}</span><b>{formatPercent(weight)}</b></div>
-                <span className="p03-candidate-weight__track" aria-hidden="true"><i className={view === "posterior" ? "is-posterior" : ""} style={{ width: `${weight * 100}%` }} /></span>
-              </div>
-              <span className="p03-candidate-likelihood">p(D | {candidate.id}) = {candidate.likelihood.toFixed(4)}</span>
-              <span className="p03-candidate-posterior">{formatPercent(posterior)}</span>
-            </div>
+            <button className={`p03-candidate-row ${active ? "is-selected" : ""}`} key={candidate.id} type="button" aria-pressed={active} aria-label={`${candidate.id}：Prior ${candidate.prior.toFixed(4)}，Likelihood ${candidate.likelihood.toFixed(6)}，未归一化乘积 ${product.toFixed(6)}，Posterior ${candidate.posterior.toFixed(6)}`} onClick={() => setSelectedId(candidate.id)}>
+              <span className="p03-candidate-config"><strong>{candidate.id}</strong><small>完整配置</small></span>
+              <span className="p03-candidate-weight" aria-label={`${viewCopy[view].label} ${value.toFixed(6)}`}>
+                <span className="p03-candidate-weight__label"><span>{viewCopy[view].label}</span><b>{value.toFixed(4)}</b></span>
+                <span className="p03-candidate-weight__track" aria-hidden="true"><i className={`p03-candidate-weight__bar p03-candidate-weight__bar--${view}`} style={{ width: `${(value / maximumScore) * 100}%` }} /></span>
+              </span>
+              <span className="p03-candidate-value" data-label="Prior">{candidate.prior.toFixed(4)}</span>
+              <span className="p03-candidate-value" data-label="Likelihood">{candidate.likelihood.toFixed(6)}</span>
+              <span className="p03-candidate-value" data-label="Prior × Likelihood">{product.toFixed(6)}</span>
+              <span className="p03-candidate-value p03-candidate-value--posterior" data-label="Posterior">{candidate.posterior.toFixed(6)}</span>
+            </button>
           );
         })}
       </div>
-      <div className="p03-candidate-result" aria-live="polite">
-        <span>示例归一化项 p(D) = {evidence.toFixed(4)}</span>
-        <p>{view === "prior" ? "当前显示 Prior；选择 Posterior 可检查数据如何重新分配权重。" : "θ⁽¹⁾ 的权重下降，θ⁽²⁾ 与 θ⁽³⁾ 上升；每项由 Prior × Likelihood / Evidence 决定。"}</p>
+      <div className="p03-evidence-check">
+        <div><span>DISCRETE EVIDENCE · WEIGHTED SUM</span><MathFormula block tex={String.raw`p(D_A)=\sum_k p(D_A\mid\theta^{(k)})p(\theta^{(k)})`} /></div>
+        <p><b>本例 p(D<sub>A</sub>) = {EXAMPLE_EVIDENCE.toFixed(6)}</b>。它是由 Prior 加权后的 Likelihood 总和，既提供 Posterior 的共同分母，也使后验质量归一化。</p>
       </div>
-      <p className="p03-teaching-boundary">D 与 Likelihood 复用 P2。Prior = (0.50, 0.35, 0.15) 是本例建模假设，仅在三组候选配置中分配概率，非论文参数后验。显示值舍入，归一化使用未舍入值。</p>
-    </section>
-  );
-}
-
-function PosteriorConstraint() {
-  return (
-    <section className="p03-section ewc-reasoning" id="posterior-constraint" aria-labelledby="p03-constraint-title">
-      <h2 id="p03-constraint-title">旧数据如何通过 Bayes 运算约束参数？</h2>
-      <p>我们已有 D_A、共享参数 θ，以及网络在给定 θ 时对旧标签的预测概率。固定同一份 D_A，改变 θ 会改变 Likelihood。Bayes 更新用这个分数乘原有 Prior，再除以由所有配置共同决定的 Evidence：</p>
-      <MathFormula block tex={String.raw`p(\theta\mid D_A)=\frac{p(D_A\mid\theta)p(\theta)}{p(D_A)}`} />
-      <p>比较两组配置时，Evidence 消去。若 Prior 相同，对旧标签给出更高概率的配置就有更大的后验权重；解释很差的配置被相对降权。Prior 不同时，还必须计入先验偏好：</p>
-      <MathFormula block tex={String.raw`\frac{p(\theta^{(a)}\mid D_A)}{p(\theta^{(b)}\mid D_A)}=\frac{p(D_A\mid\theta^{(a)})}{p(D_A\mid\theta^{(b)})}\frac{p(\theta^{(a)})}{p(\theta^{(b)})}`} />
-      <p>本页 θ⁽³⁾ 的 Likelihood 是 θ⁽¹⁾ 的 {(CANDIDATES[2].likelihood / CANDIDATES[0].likelihood).toFixed(2)} 倍，但 Prior 只有它的 0.30 倍，后验比值约为 {(CANDIDATES[2].likelihood / CANDIDATES[0].likelihood * 0.3).toFixed(2)}。Evidence 统一缩放，不改变同一 D 下配置之间的排序。某项后验相对其先验上升，当且仅当该项 Likelihood 高于先验加权的平均值 p(D)。</p>
-      <MathFormula block tex={String.raw`p(D)=\sum_k p(D\mid\theta^{(k)})p(\theta^{(k)}),\qquad p(D)=\int p(D\mid\theta)p(\theta)\,d\theta`} />
-      <p>前式适用于本页离散例子，后式适用于连续参数。p(D) 由模型、数据与 Prior 决定，不是可以任意选择的常数。</p>
-      <p>这种相对支持还描述解附近的变化：从受支持的位置沿某方向移动，若旧数据的解释力在控制 Prior 等条件后迅速下降，这个区域的 Posterior 也下降。保留这部分信息，才能让后续任务为离开旧解付出代价。MAP 只回答中心在哪里；附近形状才回答哪些偏移代价大。</p>
-      <MathFormula block tex={String.raw`\Phi(\theta)=-\log p(\theta\mid D_A)=-\log p(D_A\mid\theta)-\log p(\theta)+C`} />
-      <p>在局部 MAP 驻点 θ_A* 附近，若 Φ 可二阶展开且曲率正定（或作适当正则化），一阶项为零：</p>
-      <MathFormula block tex={String.raw`\Phi(\theta)\approx\Phi(\theta_A^*)+\frac12(\theta-\theta_A^*)^\mathsf{T}H_A(\theta-\theta_A^*)`} />
-      <p>沿曲率较大的方向，同样偏移增加更多 Φ；因为密度相对中心为 exp(−ΔΦ)，局部 Gaussian 在该方向更窄，约束更强。负对数 Posterior 还包含 Prior，不能直接等同于旧任务 Loss。</p>
-      <MathFormula block tex={String.raw`\Delta\Phi=\tfrac12[8\Delta\theta_1^2+0.5\Delta\theta_2^2]`} />
-      <p>二维教学例子：两坐标分别单独偏移 0.5，密度因子为 e⁻¹ ≈ 0.368 与 e⁻⁰·⁰⁶²⁵ ≈ 0.939。它说明同幅偏移的代价不同，非论文测得的 Fisher。P4 解释怎样保留局部形状，P5 再用对角 Fisher 近似可计算的局部精度；完整 Hessian、Fisher 与经验估计并不精确等价。</p>
+      <div className="p03-selected-explanation" aria-live="polite">
+        <div><span>SELECTED CONFIGURATION · {selected.id}</span><p>Page 2 的三条 Task A 真实标签概率：{selected.state.datasetProbabilities.map((probability) => probability.toFixed(4)).join(" × ")} = {selected.likelihood.toFixed(6)}。这正是该配置的固定数据 Likelihood。</p></div>
+        <MathFormula block tex={oddsEquation} />
+        <p>与 θ⁽¹⁾ 比较时，共同 Evidence p(D<sub>A</sub>) 抵消；后验比值由 Likelihood 比值和 Prior 比值共同决定。当前数值：Likelihood 比值 {relativeLikelihood.toFixed(2)}，Prior 比值 {relativePrior.toFixed(2)}，Posterior 比值 {relativePosterior.toFixed(2)}。这比较的是完整参数配置，不是在排名单个重要坐标。</p>
+      </div>
+      <p className="p03-teaching-boundary">三组完整配置、D<sub>A</sub> 与 Likelihood 复用 P2。Prior = (0.50, 0.35, 0.15) 是符合归一化规则的教学假设，并非论文报告的网络参数后验。所有显示值来自未舍入计算。</p>
     </section>
   );
 }
@@ -204,9 +202,9 @@ function PosteriorConstraint() {
 function SequentialUpdate() {
   const [step, setStep] = useState(0);
   const equations = [
-    { expression: "p(θ)", note: "Task A 数据到来前的参数 Prior" },
-    { expression: "p(θ | D_A) ∝ p(D_A | θ) p(θ)", note: "Task A Posterior 汇总旧任务数据带来的更新" },
-    { expression: "p(θ | D_A, D_B) ∝ p(D_B | θ) p(θ | D_A)", note: "Task A Posterior 成为 Task B 更新中的先验贡献" },
+    { expression: String.raw`p(\theta)`, note: "Task A 数据到来前的参数 Prior" },
+    { expression: String.raw`p(\theta\mid D_A)\propto p(D_A\mid\theta)p(\theta)`, note: "Task A Posterior 汇总旧任务数据带来的更新" },
+    { expression: String.raw`p(\theta\mid D_A,D_B)\propto p(D_B\mid\theta)p(\theta\mid D_A)`, note: "Task A Posterior 成为 Task B 更新中的先验贡献" },
   ];
   const current = equations[step];
 
@@ -214,12 +212,12 @@ function SequentialUpdate() {
     <section className="p03-section p03-sequential" id="sequential-update" aria-labelledby="p03-sequential-title">
       <div className="p03-section-heading">
         <div><span className="p03-overline">CONTINUAL LEARNING · SEQUENTIAL BAYES</span><h2 id="p03-sequential-title">Task A 学完后，旧 Posterior 怎样进入 Task B？</h2></div>
-        <p>给定 θ 后假设两任务数据条件独立，把 Task A Posterior 作为 Task B 的先验贡献，与 p(D_B | θ) 相乘。</p>
+        <p>假设给定 θ 后，Task A 与 Task B 数据条件独立。于是联合数据 Likelihood 可分解为两项，Task A Posterior 就能作为 Task B 更新的先验贡献。</p>
       </div>
       <div className="p03-sequential-flow" aria-label="Task A posterior 延续到 Task B 的更新关系">
-        <div><span>START</span><b>Prior</b><strong>p(θ)</strong></div><i aria-hidden="true" />
-        <div><span>AFTER TASK A</span><b>Task A Posterior</b><strong><ReferenceTrigger id="task_a_posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger></strong></div><i aria-hidden="true" />
-        <div><span>AFTER TASK B</span><b>Updated Posterior</b><strong><ReferenceTrigger id="task_b_posterior">p(θ | D<sub>A</sub>, D<sub>B</sub>)</ReferenceTrigger></strong></div>
+        <div><span>START</span><b>Prior</b><strong><MathFormula tex={String.raw`p(\theta)`} /></strong></div><i aria-hidden="true" />
+        <div><span>AFTER TASK A</span><b>Task A Posterior</b><strong><ReferenceTrigger id="task_a_posterior"><MathFormula tex={String.raw`p(\theta\mid D_A)`} /></ReferenceTrigger></strong></div><i aria-hidden="true" />
+        <div><span>AFTER TASK B</span><b>Updated Posterior</b><strong><ReferenceTrigger id="task_b_posterior"><MathFormula tex={String.raw`p(\theta\mid D_A,D_B)`} /></ReferenceTrigger></strong></div>
       </div>
       <FlowStepper
         label="Task A 到 Task B 的 Bayes 更新步骤"
@@ -230,9 +228,9 @@ function SequentialUpdate() {
       />
       <div className="p03-sequential-equation" aria-live="polite">
         <span>{current.note}</span>
-        <strong>{current.expression}</strong>
+        <MathFormula block tex={current.expression} />
       </div>
-      <p className="p03-sequential-boundary">这是论文中的顺序 Bayesian 更新关系：Task A 的信息随 <ReferenceTrigger id="task_a_posterior">Posterior</ReferenceTrigger> 进入 Task B；这里还没有说明如何在真实网络里存储或近似它。</p>
+      <div className="p03-sequential-boundary"><MathFormula block tex={String.raw`p(D_A,D_B\mid\theta)=p(D_A\mid\theta)p(D_B\mid\theta)`} /><p>因此，结合 Task B 数据时可用 <ReferenceTrigger id="task_a_posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger> 作为下一步的先验来源。此式只说明 Bayesian 信息如何顺序更新；真实网络如何保存和近似它留给 P4–P6。</p></div>
     </section>
   );
 }
@@ -245,7 +243,7 @@ export function PageBayes() {
       <header className="ewc-page-header p03-header">
         <div className="ewc-page-header__kicker"><span>03</span> BAYESIAN VIEW · PRIOR TO POSTERIOR</div>
         <h1 id="p03-title">参数的 Prior 与 Posterior</h1>
-        <p className="ewc-page-header__dek">第 2 页能比较指定参数对旧数据的解释力；但 Likelihood 不是参数空间的分布。为了保留已有参数知识并继续接收新数据，我们用 Prior 与 Bayes 更新得到 Posterior。</p>
+        <p className="ewc-page-header__dek">第 2 页已比较三组参数配置对同一份 Task A 数据 D<sub>A</sub> 的解释力。Likelihood 是固定数据下关于 θ 的函数，不是参数空间上的概率分布；本页用 Prior 与 Bayes 更新把旧数据支持度转为 Posterior。</p>
       </header>
 
       <section className="p03-entry" aria-labelledby="p03-entry-title">
@@ -253,20 +251,19 @@ export function PageBayes() {
           <div><span className="p03-overline">CONTINUE FROM PAGE 02</span><h2 id="p03-entry-title">先把已经解释和仍待解释的概率并排放好</h2></div>
         </div>
         <ProbabilityOriginTable />
-        <p className="p03-entry-question">数据的概率来源已经清楚。参数只是网络里的权重，为什么也能写成 <ReferenceTrigger id="p_theta">p(θ)</ReferenceTrigger>？</p>
+        <p className="p03-entry-question">同一份 D<sub>A</sub> 与三组完整参数配置已经在 Page 2 逐项算过。Likelihood 给每组配置一个拟合分数，却没有在 θ 上归一化；还需要先验权重，才能得到关于参数配置的 Posterior。</p>
       </section>
 
       <ParameterPerspectives />
       <BayesBox />
       <CandidateUpdate />
-      <PosteriorConstraint />
       <SequentialUpdate />
 
       <section className="p03-handoff" aria-labelledby="p03-handoff-title">
         <div>
           <span className="p03-overline">NEXT · LOCAL POSTERIOR APPROXIMATION</span>
           <h2 id="p03-handoff-title">完整的 Task A Posterior 太复杂，难以直接带到 Task B</h2>
-          <p>旧 Posterior 已记录相对支持；EWC 需要中心与周围的变化代价。完整高维分布难以保存与运算，下一页用中心与局部曲率近似 <ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger> 附近的约束。</p>
+          <p>旧 Posterior 记录了不同参数配置的支持度；但在连续参数空间里，EWC 还需要知道旧解附近的支持度如何随偏移变化。下一页从 <ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger> 附近的负对数 Posterior 开始，用局部曲率描述这个变化。</p>
         </div>
         <button type="button" onClick={() => api.navigatePage("page-04-laplace")}>继续到 Page 4 · Laplace 局部近似 <span aria-hidden="true">→</span></button>
       </section>
