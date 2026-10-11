@@ -298,10 +298,9 @@ export function PageProblem() {
         <p className="p01-parameters__takeaway"><ReferenceTrigger id="parameter_interference">不同参数对旧任务的敏感程度不同</ReferenceTrigger>。这里的“重要性”是相对于 Task A 的目标而言：同幅偏移对 Task A Loss 的影响不同，因此后续训练需要区分哪些参数应受到更强约束，哪些可以更灵活地更新。</p>
         <div className="p01-loss-origin" id="sensitivity-to-loss">
           <h3>图中的旧任务代价，怎样从数据算出来？</h3>
-          <p>上图保持偏移幅度和 Loss 尺度相同，比较的是旧目标的增加量：</p>
+          <p>固定 Task A 的评价目标，只改变参数；比较这次偏移带来的旧 Loss 增量：</p>
           <MathFormula block tex={String.raw`\Delta L_A=L_A(\theta_A^*+\Delta\theta)-L_A(\theta_A^*)`} />
-          <p>参数偏移 → 旧样本的预测变化 → 旧任务 Loss 变化。我们要保留的是这种偏移代价，而不是按参数数值的大小决定保护谁。在分类任务中，Loss 可以由网络赋给真实标签的概率构造：概率的负对数越大，说明模型越难解释正确答案。P2 将把这条联系算出来。</p>
-          <p>但只有旧 Loss 的定义还不够：当旧数据不再参与 Task B 训练，怎样继续保留它对参数的限制？EWC 采用顺序 Bayesian 更新来推导可保存的近似约束。它并非衡量敏感性的唯一途径；引入 Prior 与 Posterior，是为了说明旧任务信息如何进入下一次学习，而普通分类 Loss 本身并不需要 Prior。</p>
+          <p>分类 Loss 来自旧数据真实标签的预测概率：概率越低，负对数 Loss 越高。P2 会固定同一份 Task A 数据，沿 Forward → Softmax → 真实标签概率 → Likelihood → Loss 拆开这条来源。</p>
         </div>
       </section>
 

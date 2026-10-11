@@ -109,14 +109,13 @@ export function PageProbability() {
   const selected = PARAMETER_STATES.find((state) => state.id === selectedId) ?? PARAMETER_STATES[1];
   const likelihood = useMemo(() => datasetLikelihood(selected), [selected]);
   const datasetNll = useMemo(() => negativeLogLikelihood(selected), [selected]);
-  const sampleNll = -Math.log(selected.probabilities[0]);
 
   return (
     <article className="ewc-page p02-page" aria-labelledby="p02-title">
       <header className="ewc-page-header p02-header">
         <div className="ewc-page-header__kicker"><span>02</span> ORDINARY TRAINING · PROBABILITY TO LOSS</div>
         <h1 id="p02-title">从神经网络的输出，走到数据的 Likelihood 与训练 Loss。</h1>
-        <p className="ewc-page-header__dek">P1 要比较参数偏移引起的旧 Loss 变化。本页先建立这个评价量：给定输入与参数，网络预测标签的条件概率；组合真实标签概率得到 Likelihood，再取负对数得到分类 NLL。研究概率，就是在研究同一个旧任务目标。</p>
+        <p className="ewc-page-header__dek">P1 要比较参数偏移引起的旧 Loss。本页固定 Task A 的样本与标签，观察网络怎样给真实标签概率；这些概率合成 Likelihood，再由负对数形成分类 Loss。</p>
       </header>
 
       <section className="p02-forward" id="forward-probability" aria-labelledby="p02-forward-title">
@@ -144,7 +143,7 @@ export function PageProbability() {
           <div className="p02-forward-caption__formula" aria-label="输入 x 一，经过网络得到 logits z，再经 Softmax 得到预测概率">
             <span>x₁</span><b aria-hidden="true">→</b><span>z = f<sub>θ</sub>(x₁)</span><b aria-hidden="true">→</b><span>Softmax(z)</span><b aria-hidden="true">→</b><strong>p<sub>θ</sub>(y | x₁)</strong>
           </div>
-          <p className="p02-forward-caption__note"><b>真实标签概率</b>取 class A 这一项。它越高，模型给正确答案的置信度越高；本例单样本 Loss 为 <code>−ln {formatProbability(selected.probabilities[0])} = {sampleNll.toFixed(2)}</code>。</p>
+          <p className="p02-forward-caption__note"><b>真实标签概率</b>取 class A 这一项；它越低，对应的单样本负对数 Loss 越高。</p>
         </div>
 
         <details className="p02-softmax-detail" open={showSoftmax} onToggle={(event) => setShowSoftmax(event.currentTarget.open)}>
@@ -165,11 +164,12 @@ export function PageProbability() {
             <MathFormula tex={String.raw`p(D_A\mid\theta)=\prod_{n=1}^{N}p_\theta(y_n\mid x_n)`} />
           </div>
           <div className="p02-sample-product" aria-live="polite" aria-label={`当前参数状态下的数据 likelihood：${selected.datasetProbabilities.map(formatProbability).join(" 乘 ")} 等于 ${likelihood.toFixed(4)}`}>
-            {selected.datasetProbabilities.map((probability, index) => <Fragment key={`product-${index}`}><span className="p02-product-term"><small>样本 {index + 1}</small><b>{formatProbability(probability)}</b></span>{index < selected.datasetProbabilities.length - 1 ? <span className="p02-product-operator" aria-hidden="true">×</span> : null}</Fragment>)}
+            {selected.datasetProbabilities.map((probability, index) => <Fragment key={`product-${index}`}><span className="p02-product-term"><small>y<sub>{index + 1}</sub>={String.fromCharCode(65 + index)}</small><b>{formatProbability(probability)}</b></span>{index < selected.datasetProbabilities.length - 1 ? <span className="p02-product-operator" aria-hidden="true">×</span> : null}</Fragment>)}
             <b className="p02-product-equals" aria-hidden="true">=</b>
             <span className="p02-product-result"><small>p(D<sub>A</sub> | <ParameterStateNotation candidate={selected.candidate} />)</small><b>{likelihood.toFixed(4)}</b></span>
           </div>
           <small className="p02-assumption">D<sub>A</sub> = {'{'}(xₙ, yₙ){'}'}；将输入作为条件，假设给定 θ 与输入后，各标签条件独立。p(D<sub>A</sub> | θ) 简记条件标签似然，不建模输入生成。</small>
+          <p className="p02-likelihood-cause">真实标签概率降低 <span aria-hidden="true">→</span> 数据 Likelihood 降低 <span aria-hidden="true">→</span> 旧任务 NLL 升高</p>
         </div>
 
         <div className="p02-perspective-compare" id="likelihood-comparison" aria-label="Probability 与 Likelihood 的观察视角对比">
@@ -187,48 +187,33 @@ export function PageProbability() {
         <div className="p02-comparison-heading"><div><span className="p02-overline">PARAMETER SWITCH · SAME DATA · DIFFERENT PREDICTIONS</span><h3>选一组参数，看三条样本概率怎样共同改变 Likelihood</h3></div><span>点击一行查看该配置的预设 Forward 输出</span></div>
         <div className="p02-state-row-head" aria-hidden="true"><span>候选参数状态</span><span><i>x₁</i><i>x₂</i><i>x₃</i><b>每个样本真实标签的概率</b></span><span>数据 Likelihood</span><span>负对数损失</span></div>
         <ParameterComparison selectedId={selectedId} onSelect={setSelectedId} />
-        <p>切换一行时，固定的数据没有改变，变化的是完整参数配置及其预测。真实标签概率下降会使 Likelihood 下降、NLL 上升，这正是 P1 所说的旧任务代价。本例只比较三个配置，尚不能据此求出某个坐标的局部敏感性。</p>
-        <p className="p02-boundary-note">教学示例，非论文实测。每一行是完整配置 <MathFormula tex={String.raw`\theta^{(k)}`} />，<MathFormula tex={String.raw`\theta_i`} /> 才是单个坐标。网络图只示意结构，本例预设每个配置的三条 Forward logits；概率由 Softmax 计算。显示值舍入，Likelihood 与 NLL 使用未舍入值。P3 直接复用这份数据与 Likelihood。</p>
+        <p>切换一行时，D<sub>A</sub> 不变，变化的是完整参数配置及其预测。三组候选只展示整体拟合差异，不能单独推出某个参数坐标的局部敏感性。</p>
+        <details className="p02-softmax-detail p02-calculation-detail">
+          <summary>查看教学数据与数值精度说明</summary>
+          <p className="p02-boundary-note">这是教学示例，非论文实测。每行表示完整配置 θ⁽ᵏ⁾，不是单个坐标 θᵢ；网络图只示意结构，三组 Forward logits 预先设定，Softmax 概率由 logits 计算。屏幕显示值经舍入，Likelihood 和 NLL 使用未舍入数值。P3 复用同一份数据与 Likelihood。</p>
+        </details>
       </section>
 
       <section className="p02-loss-update" id="loss-and-update" aria-labelledby="p02-loss-title">
         <div className="p02-section-heading"><div><span className="p02-overline">03 · FROM LIKELIHOOD TO PARAMETER UPDATE</span><h2 id="p02-loss-title">最大化 Likelihood，等价于最小化负对数损失</h2></div><p>负号把“概率越大越好”改写成“Loss 越小越好”；对数把样本概率的乘积改写为求和。</p></div>
         <div className="p02-nll-explanation" aria-label="负对数似然的定义和作用">
           <span>NEGATIVE LOG-LIKELIHOOD · NLL</span>
-          <MathFormula block tex={String.raw`L_{\mathrm{NLL}}(\theta)=-\log p(D_A\mid\theta)=-\sum_{n=1}^{N}\log p_\theta(y_n\mid x_n)`} />
-          <p>本页以总 NLL 作为旧目标 <MathFormula tex={String.raw`L_A`} />。若训练使用平均交叉熵，则 <MathFormula tex={String.raw`L_A^{\mathrm{mean}}=L_{\mathrm{NLL}}/N`} />。本例 N = {selected.datasetProbabilities.length}，当前总 NLL 为 {datasetNll.toFixed(4)}，平均值为 {(datasetNll / selected.datasetProbabilities.length).toFixed(4)}；两者最优位置相同，但梯度与后续约束的相对尺度需要一致。</p>
+          <MathFormula block tex={String.raw`L_A(\theta)=-\log p(D_A\mid\theta)`} />
         </div>
+        <details className="p02-softmax-detail p02-nll-detail">
+          <summary>了解总 NLL、平均 Loss 与数值尺度</summary>
+          <div className="p02-softmax-detail__body"><MathFormula tex={String.raw`L_{\mathrm{NLL}}(\theta)=-\sum_{n=1}^{N}\log p_\theta(y_n\mid x_n)`} /><p>本页以总 NLL 表示旧目标。若训练使用平均交叉熵，则为总 NLL 除以样本数 N；两者最优位置相同，但梯度及其与 Fisher 惩罚的相对尺度不同。本例 N={selected.datasetProbabilities.length}，总 NLL={datasetNll.toFixed(4)}，平均值={(datasetNll / selected.datasetProbabilities.length).toFixed(4)}。</p></div>
+        </details>
         <div className="p02-training-chain" aria-label="Likelihood 变成 Loss，计算梯度后更新参数">
-          <div className="p02-training-node"><span>DATA FIT</span><strong>log p(D<sub>A</sub> | θ)</strong><small>越大越好</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
-          <div className="p02-training-node p02-training-node--loss"><span>CHANGE SIGN</span><strong>−log p(D<sub>A</sub> | θ)</strong><small>Negative Log-Likelihood</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
-          <div className="p02-training-node p02-training-node--loss"><span>CLASSIFICATION LOSS</span><strong>L(θ)</strong><small>真实类别交叉熵的求和（常按 batch 求平均）</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
+          <div className="p02-training-node p02-training-node--loss"><span>OLD TASK LOSS</span><strong>L<sub>A</sub>(θ)</strong><small>真实标签概率的负对数</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
           <div className="p02-gradient-node"><span>BACKWARD</span><strong>∇<sub>θ</sub>L</strong><div aria-hidden="true"><i /><i /><i /><i /></div><small>loss 对参数的梯度</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
-          <div className="p02-update-node"><span>OPTIMIZER STEP</span><strong>θ ← θ − η∇<sub>θ</sub>L</strong><small>参数状态改变</small></div>
+          <div className="p02-update-node"><span>OPTIMIZER STEP</span><strong>θ ← θ − η∇<sub>θ</sub>L<sub>A</sub></strong><small>参数状态改变</small></div>
         </div>
         <div className="p02-update-return"><span className="p02-update-return__line" aria-hidden="true"/><p>更新后的 <em>θ</em> 返回同一个模型；下一批样本再经过新的前向计算。</p><ReferenceTrigger id="optimizer_step">反向计算梯度与 optimizer.step() 是两个不同动作</ReferenceTrigger></div>
-        <div className="p02-dataset-loss" aria-live="polite" aria-label={`当前候选参数状态 theta [${selected.candidate}]；Task A 条件 likelihood ${likelihood.toFixed(4)}；总 NLL ${datasetNll.toFixed(2)}`}>
-          <span className="p02-dataset-loss__metric"><small>当前候选参数状态</small><b><ParameterStateNotation candidate={selected.candidate} /></b></span>
-          <span className="p02-dataset-loss__metric"><small>p(D<sub>A</sub> | θ)</small><b>{likelihood.toFixed(4)}</b></span>
-          <span className="p02-dataset-loss__metric"><small>总 NLL</small><b>{datasetNll.toFixed(2)}</b></span>
-          <span className="p02-dataset-loss__interpretation">Likelihood 越高，NLL 越低</span>
-        </div>
-      </section>
-
-      <section className="p02-origin-table" id="probability-source-table" aria-labelledby="p02-origin-title">
-        <div className="p02-section-heading"><div><span className="p02-overline">WHAT HAS A SOURCE NOW?</span><h2 id="p02-origin-title">哪些概率已经从网络训练中得到解释？</h2></div></div>
-        <div className="p02-origin-table__scroll"><table>
-          <thead><tr><th>概率对象</th><th>本页状态</th><th>来源 / 下一步</th></tr></thead>
-          <tbody>
-            <tr><th><ReferenceTrigger id="p_theta_y_given_x">p<sub>θ</sub>(y | x)</ReferenceTrigger></th><td><span className="p02-status p02-status--done">已解释</span></td><td>当前网络前向计算，再经 Softmax 得到。</td></tr>
-            <tr><th><ReferenceTrigger id="p_D_given_theta">p(D<sub>A</sub> | θ)</ReferenceTrigger></th><td><span className="p02-status p02-status--done">已解释</span></td><td>把输入 xₙ 视为已观察条件，组合每个真实标签 yₙ 的条件概率 pθ(yₙ | xₙ)。</td></tr>
-            <tr><th><ReferenceTrigger id="p_theta">p(θ)</ReferenceTrigger></th><td><span className="p02-status p02-status--next">留到下一页</span></td><td>不是 Forward 算出的输出；接下来要问，怎样给参数本身建立概率视角？</td></tr>
-            <tr><th><ReferenceTrigger id="p_theta_given_D">p(θ | D<sub>A</sub>)</ReferenceTrigger></th><td><span className="p02-status p02-status--next">留到下一页</span></td><td>本页还没有解释；它需要把参数视角和数据 Likelihood 接在一起。</td></tr>
-          </tbody>
-        </table></div>
       </section>
 
       <section className="p02-handoff" aria-label="通往下一页的问题">
-        <div><span className="p02-overline">NEXT · BAYESIAN PARAMETER VIEW</span><h2>能评价旧数据，还缺少怎样的记忆？</h2><p><MathFormula tex={String.raw`p(D_A\mid\theta)\ne p(\theta\mid D_A)`} />：拟合分数并未表达看到数据前的参数知识，也不是参数空间上的归一化分布。只留下最低 Loss 的位置，仍不知道哪些偏移会快速损害旧任务。</p><p>为了让旧信息参与下一任务，我们先用 <ReferenceTrigger id="prior">Prior</ReferenceTrigger> 表达数据到来前对完整配置的分布，再由数据更新成 Posterior。P3 解释这个更新为何成立、如何改变相对支持；之后才研究旧解附近的形状。普通 NLL 不需要 Prior，这里采用 Bayesian 视角是为了顺序保留信息。</p></div>
+        <div><span className="p02-overline">NEXT · BAYESIAN PARAMETER VIEW</span><h2>能评价旧数据，还缺少怎样的记忆？</h2><p>Likelihood 可以比较不同参数配置对固定旧数据的解释力，但它本身不是参数空间上的归一化概率分布。只留下最低 Loss 的位置，仍看不到不同偏移的支持度。</p><p>下一页用 <ReferenceTrigger id="prior">Prior</ReferenceTrigger> 表达数据到来前对完整参数配置的分布，再由旧数据更新为 Posterior；这提供一种顺序保留任务信息的 Bayesian 框架，不是普通分类 Loss 必须采用的步骤。</p></div>
         <div className="p02-handoff__question"><span>OPEN QUESTION</span><b>p(θ) = ?</b><small>not a network output</small></div>
       </section>
 
