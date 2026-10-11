@@ -66,11 +66,11 @@ function RuntimeNode({ objectId, eyebrow, title, detail }: {
 
 function PenaltyBuildFormula({ step }: { step: number }) {
   const formulas = [
-    String.raw`\theta_i-\theta_{A,i}^*`,
-    String.raw`(\theta_i-\theta_{A,i}^*)^2`,
-    String.raw`F_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
-    String.raw`\sum_i F_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
-    String.raw`\frac{\lambda}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
+    String.raw`\textstyle \theta_i-\theta_{A,i}^*`,
+    String.raw`\textstyle (\theta_i-\theta_{A,i}^*)^2`,
+    String.raw`\textstyle F_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
+    String.raw`\textstyle \sum_i F_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
+    String.raw`\textstyle \frac{\lambda}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`,
   ];
   return <MathFormula block tex={formulas[step]} />;
 }

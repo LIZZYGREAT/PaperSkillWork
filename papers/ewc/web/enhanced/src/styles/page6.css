@@ -70,8 +70,8 @@
 .p06-builder .rk-flow-stepper__status { color: #487064 !important; font-size: 13px !important; }
 .p06-builder .rk-flow-stepper__actions { margin-top: 12px; }
 .p06-builder .rk-flow-stepper__actions .rk-button { min-height: 40px; padding: 8px 13px; color: #42675f; font-size: 14px; }
-.p06-builder-stage { display: grid; grid-template-columns: minmax(0,1.12fr) minmax(300px,.88fr); align-items: stretch; gap: 13px; margin-top: 15px; }
-.p06-penalty-motion { display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 220px; padding: 17px 20px 14px; border: 1px solid #dfe8e2; border-radius: 9px; background: #fbfcfa; }
+.p06-builder-stage { display: grid; grid-template-columns: minmax(0,1.12fr) minmax(300px,.88fr); grid-template-rows: minmax(0,1fr); align-items: stretch; gap: 13px; height: 288px; margin-top: 15px; }
+.p06-penalty-motion { display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 0; height: 100%; box-sizing: border-box; padding: 17px 20px 14px; border: 1px solid #dfe8e2; border-radius: 9px; background: #fbfcfa; }
 .p06-motion-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 5px 12px; margin-bottom: 8px; }
 .p06-motion-heading > span { color: #82908a; font-size: 12px; }
 .p06-motion-heading > b { color: #45675c; font-size: 14px; font-weight: 650; }
@@ -149,9 +149,11 @@
 .p06-objective-chip--task > b { color: #a05d3e; }
 .p06-objective-chip--total { border-color: #bbd2c3; background: #eef6ef; }
 .p06-objective-join > strong:last-of-type { animation: p06-merge-arrow .4s .2s ease-out both; }
-.p06-builder-equation { display: grid; grid-template-columns: 1fr; align-content: center; gap: 12px; min-width: 0; min-height: 220px; margin: 0; padding: 21px 22px; border-left: 4px solid #628b7c; background: #f1f7f2; }
+.p06-builder-equation { display: grid; grid-template-columns: 1fr; grid-template-rows: auto minmax(0,1fr); align-content: center; gap: 12px; min-width: 0; min-height: 0; height: 100%; box-sizing: border-box; margin: 0; padding: 21px 22px; border-left: 4px solid #628b7c; background: #f1f7f2; }
 .p06-builder-equation > span { color: #627873; font-size: 14px; }
-.p06-builder-equation > strong { color: #284d46; font: 25px/1.8 Georgia,"Times New Roman",serif; overflow-wrap: anywhere; }
+.p06-builder-equation > strong { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; min-height: 0; color: #284d46; font: 22px/1.4 Georgia,"Times New Roman",serif; }
+.p06-builder-equation .ewc-math--block { width: 100%; max-width: 100%; max-height: 100%; margin: 0; padding: 0; font-size: 1em; }
+.p06-builder-equation .katex-display, .p06-builder-equation .katex-display > .katex { text-align: center; white-space: nowrap; }
 .p06-builder-equation sub, .p06-builder-equation sup { font-size: .68em; }
 .p06-sigma { white-space: nowrap; }
 .p06-times { color: #8ca198; }
@@ -270,8 +272,9 @@
   .p06-method-card--ewc { grid-column: 1 / -1; }
   .p06-symbol-legend { grid-template-columns: repeat(3,minmax(0,1fr)); }
   .p06-builder .rk-flow-stepper__list { grid-template-columns: repeat(3,minmax(0,1fr)); }
-  .p06-builder-stage { grid-template-columns: 1fr; }
-  .p06-penalty-motion, .p06-builder-equation { min-height: 0; }
+  .p06-builder-stage { grid-template-columns: 1fr; grid-template-rows: auto auto; height: auto; }
+  .p06-penalty-motion { height: 288px; }
+  .p06-builder-equation { height: 188px; }
   .p06-paper-context { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
@@ -289,8 +292,8 @@
   .p06-builder .rk-flow-stepper { padding: 11px; }
   .p06-builder .rk-flow-stepper__list { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .p06-builder-equation { grid-template-columns: 1fr; gap: 8px; padding: 15px; }
-  .p06-builder-equation > strong { font-size: 21px; }
-  .p06-penalty-motion { padding: 14px; }
+  .p06-builder-equation > strong { font-size: 20px; }
+  .p06-penalty-motion { height: 320px; padding: 14px; }
   .p06-square-results { grid-template-columns: 1fr; }
   .p06-square-results b { white-space: normal; }
   .p06-objective-join { grid-template-columns: minmax(0,1fr) 14px minmax(0,1fr); }

@@ -24,13 +24,13 @@ function RuntimeReference({ id, objectId, children }: { id: CanonicalReferenceId
 
 function FisherStepEquation({ step }: { step: number }) {
   const equations = [
-    String.raw`\theta=\theta_A^*`,
-    String.raw`(x_n,y_n)\in D_A`,
-    String.raw`p_\theta(y_n\mid x_n)`,
-    String.raw`\log p_\theta(y_n\mid x_n)`,
-    String.raw`g_{n,i}=\frac{\partial}{\partial\theta_i}\log p_\theta(y_n\mid x_n)`,
-    String.raw`g_{n,i}^2=\left[\frac{\partial}{\partial\theta_i}\log p_\theta(y_n\mid x_n)\right]^2`,
-    String.raw`\widehat F^{\mathrm{emp}}_{A,i}=\left.\frac1N\sum_{n=1}^N g_{n,i}^2\right|_{\theta=\theta_A^*}`,
+    String.raw`\textstyle \theta=\theta_A^*`,
+    String.raw`\textstyle (x_n,y_n)\in D_A`,
+    String.raw`\textstyle p_\theta(y_n\mid x_n)`,
+    String.raw`\textstyle \log p_\theta(y_n\mid x_n)`,
+    String.raw`\textstyle g_{n,i}=\frac{\partial}{\partial\theta_i}\log p_\theta(y_n\mid x_n)`,
+    String.raw`\textstyle g_{n,i}^2=\left[\frac{\partial}{\partial\theta_i}\log p_\theta(y_n\mid x_n)\right]^2`,
+    String.raw`\textstyle \widehat F^{\mathrm{emp}}_{A,i}=\left.\frac1N\sum_{n=1}^N g_{n,i}^2\right|_{\theta=\theta_A^*}`,
   ];
   return <MathFormula block tex={equations[step]} />;
 }

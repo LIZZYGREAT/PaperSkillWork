@@ -62,9 +62,11 @@
 .p05-workbench .rk-flow-stepper__status { color: #487064 !important; font-size: 13px !important; }
 .p05-workbench .rk-flow-stepper__actions { margin-top: 12px; }
 .p05-workbench .rk-flow-stepper__actions .rk-button { min-height: 39px; padding: 8px 13px; font-size: 14px; }
-.p05-step-equation { display: grid; grid-template-columns: minmax(180px,.55fr) minmax(0,1.45fr); align-items: center; gap: 18px; min-height: 112px; margin-top: 15px; padding: 20px 24px; border-left: 4px solid #628b7c; background: #f1f7f2; }
+.p05-step-equation { display: grid; grid-template-columns: minmax(180px,.55fr) minmax(0,1.45fr); grid-template-rows: auto minmax(0,1fr); align-items: center; gap: 18px; height: 156px; min-height: 0; box-sizing: border-box; margin-top: 15px; padding: 20px 24px; border-left: 4px solid #628b7c; background: #f1f7f2; }
 .p05-step-equation > span { color: #627873; font-size: 15px; line-height: 1.55; }
-.p05-step-equation > strong { color: #284d46; font: 23px/1.75 Georgia,"Times New Roman",serif; overflow-wrap: anywhere; }
+.p05-step-equation > strong { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; color: #284d46; font: 22px/1.4 Georgia,"Times New Roman",serif; }
+.p05-step-equation .ewc-math--block { width: 100%; max-width: 100%; max-height: 100%; margin: 0; padding: 0; font-size: 1em; }
+.p05-step-equation .katex-display, .p05-step-equation .katex-display > .katex { text-align: center; white-space: nowrap; }
 .p05-step-equation sub, .p05-step-equation sup { font-size: .7em; }
 .p05-step-equation .ewc-reference-trigger { color: #286d62; font: inherit; }
 .p05-fraction { display: inline-grid; justify-items: center; vertical-align: middle; font-size: .72em; line-height: 1; }
@@ -190,7 +192,7 @@
   .p05-runtime-status { align-items: flex-start; flex-direction: column; }
   .p05-runtime-status strong { margin: 0; }
   .p05-workbench .rk-flow-stepper__list { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .p05-step-equation { grid-template-columns: 1fr; gap: 8px; padding: 17px; }
+  .p05-step-equation { grid-template-columns: 1fr; gap: 8px; height: 180px; padding: 15px 17px; }
   .p05-step-equation > strong { font-size: 20px; }
   .p05-square-examples { grid-template-columns: 1fr; }
   .p05-sample-accumulator { gap: 7px; padding: 10px; }
