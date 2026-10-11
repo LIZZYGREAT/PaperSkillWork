@@ -621,7 +621,8 @@
 .p03-perspective__divider i { width:30px; }
 .p03-page .p03-perspective h3 { min-height:0; margin:9px 0 12px; }
 .p03-perspective p { margin-top:10px; font-size:15px; }
-.p03-page .p03-prior-points { gap:12px; }
+.p03-page .p03-prior-points { justify-content:center; gap:12px; }
+.p03-page .p03-prior-points small { margin-left:0; }
 .p03-candidate-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
 .p03-candidate-row { display:grid; grid-template-columns:minmax(0,1fr); align-content:center; gap:13px; width:100%; min-width:0; min-height:110px; padding:14px; border:1px solid #e0e8e2; border-radius:9px; text-align:left; }
 .p03-candidate-row.is-selected { border-color:#6c9a8c; box-shadow:inset 0 0 0 1px #6c9a8c; }
