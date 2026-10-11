@@ -72,3 +72,5 @@ node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo
 ```
 
 首次运行前，按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 安装 Kit demo 锁定的 Playwright 依赖和 Chromium，并先执行目标项目自己的构建命令。默认产物写入忽略目录 `.visual-qa/`。工具会生成 JSON 和 Markdown 报告，但不会替代对截图的实际查看，也不会自动更新已批准基准图。
+
+维护 runner 时，从仓库根目录运行 `node tools/visual-qa/self-check.mjs`。它在两个宽屏视口验证正常报告、截图产物，以及横向溢出、浏览器 `pageerror` 和跨状态稳定布局违例的失败报告。该自检验证机器行为，不会把 `VISUAL_REVIEW` 或 `HUMAN_ACCEPTANCE` 标成通过。

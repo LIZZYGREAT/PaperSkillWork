@@ -62,3 +62,13 @@ The default report treats unexpected page-wide horizontal overflow and configure
 To compare a few manually approved screenshots, set `regression.baselineDir`. The directory uses the same `page-id/viewport/state-id.png` layout as the screenshot output. Set `required: true` when every generated capture must have a baseline. Configure `maxDiffPixels`, `maxDiffPixelRatio`, and `pixelThreshold` for the project's expected rendering noise. A missing optional baseline is reported as `NOT_RUN`; a mismatch fails the run and saves a red difference image. The runner has no baseline-update mode.
 
 The report keeps independent `BUILD`, `GEOMETRY_QA`, `VISUAL_REVIEW`, `REGRESSION`, `BROWSER_ERRORS`, and `HUMAN_ACCEPTANCE` statuses. `VISUAL_REVIEW` remains `NOT_RUN` until an Agent actually inspects the screenshots, and `HUMAN_ACCEPTANCE` remains `PENDING` until the user reviews them.
+
+## Check the runner itself
+
+From the repository root, run:
+
+```powershell
+node tools/visual-qa/self-check.mjs
+```
+
+The self-check runs normal and intentionally failing pages in both viewports. It verifies report fields and screenshots, and confirms that horizontal overflow, a browser `pageerror`, and a changed stable layout produce failing outcomes. Its artifacts are written under `.visual-qa/runner-self-check-<timestamp>/`. Expected failure fixtures do not count as visual review or human acceptance.
