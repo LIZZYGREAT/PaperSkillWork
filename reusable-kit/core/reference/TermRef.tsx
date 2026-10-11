@@ -1,4 +1,4 @@
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { FocusEvent, PointerEvent } from "react";
 import { usePopoverPosition } from "../../foundation/overlay/Popover";
 import type { TermDefinition, TermRefLabels } from "./types";
@@ -24,7 +24,7 @@ export function TermRef({ term, children, onOpenReference, labels }: {
   const skipNextFocusOpen = useRef(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const panelId = useId();
+  const panelId = "rk-term-" + term.id;
   const copy = { ...DEFAULT_LABELS, ...labels };
   const open = !dismissed && (hovered || focused || pinned);
 
