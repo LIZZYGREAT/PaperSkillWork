@@ -23,13 +23,21 @@ Implement the reviewed learning spine as an inspectable mental model. Optimize f
 
 For rendered UI, follow docs/VISUAL_QA.md. Capture and inspect actual Chromium screenshots at the planned states and viewports; check geometry, visual balance, and any protected design baseline. Do not mark a check PASS if its screenshot or browser state was not inspected; record NOT_RUN with the reason.
 
-1. Confirm W0–W5 are complete. W2 and W4 must have human review records; W0, W1, W3, and W5 are automatic after their checks pass.
-2. Implement only the slice named in the plan: the problem/opening, core architecture, and one primary end-to-end mechanism (normally 2–3 spine stages).
-3. Update `implementation-manifest.json` for each implemented slice CORE item with its planned stage, component, and `status: complete`.
-4. Preserve source/evidence boundaries and clearly label teaching examples.
-5. Stop when the slice is usable. Do not fill out the remaining spine yet.
+1. Confirm W0–W5 are complete. W2 and W4 must have human review records; W0, W1, W3, and W5 are automatic after their checks pass. Read the approved `Upstream Release Compatibility` mapping in the implementation plan.
+2. Create the configured release source with the upstream-required files and directories from the first runnable project. Preserve the planned template-driven or custom React runtime; do not create a second runtime or empty compatibility stubs.
+3. Implement only the slice named in the plan: the problem/opening, core architecture, and one primary end-to-end mechanism (normally 2–3 spine stages). Put real metadata for implemented content in `src/data/tutorial.ts`; unimplemented chapters may be planned but are not completed content. Register a `componentId` only when it maps to the actual component.
+4. Update `implementation-manifest.json` for each implemented slice CORE item with its planned stage, component, and `status: complete`.
+5. Preserve source/evidence boundaries and clearly label teaching examples.
+6. Run the early source check on the actual configured publish source:
 
-W6 completes automatically when every `vertical_slice.required_core_items` entry is complete in the manifest and the project entry checks pass. No reviewer fields are used for W6.
+   ```powershell
+   python tools/paper.py upstream-source-check <paper-id> --paperskill-repo <clean-PaperSkill-checkout> --level structure
+   ```
+
+   `structure` checks the required entry files, lockfile, basic content metadata, and independence, then runs `npm ci` and `npm run build` on that source. It does not enforce the full chapter/module thresholds and must print `FULL_UPSTREAM_VALIDATION NOT_RUN (pending W8)`. Save the result to `audit/upstream-source-check.json`; the W6 completion gate requires a passing report whose source path and fingerprint still match.
+7. Stop when the slice is usable. Do not implement or count the remaining spine yet.
+
+W6 completes automatically when every `vertical_slice.required_core_items` entry is complete in the manifest and the current release source passes `structure`, dependency installation, and build checks. No reviewer fields are used for W6.
 
 ## W7: Human Learning Review
 
@@ -48,7 +56,15 @@ Before editing, read `AGENTS.md`, `docs/WORKFLOW.md`, `docs/TEACHING_DESIGN_STAN
 5. Support keyboard/focus, reduced motion, mobile, touch, and non-drag operation where applicable.
 6. Run declared project build/audit commands when the user requests verification; report their actual outcomes.
 
-Update the implementation manifest for every CORE item and for each SUPPORTING/REFERENCE placement. W8 completes automatically only when every planned CORE is complete, lower-priority placements match the plan, and selected asset derivatives/web copies plus README provenance exist.
+Update the implementation manifest for every CORE item and for each SUPPORTING/REFERENCE placement. Then run the full source check against the same actual publish source:
+
+```powershell
+python tools/paper.py upstream-source-check <paper-id> --paperskill-repo <clean-PaperSkill-checkout> --level full
+```
+
+`full` runs `npm ci`, `npm run build`, and the supplied checkout's official `paper-skill/scripts/validate-output.js <absolute-publish-source>`. Require exit code 0 and the official `RESULT: PASS`; the live script and its adjacent `paper-skill/contract.md` are authoritative. The report binds the result to the PaperSkill commit, validator/contract hashes, actual publish-source path, and source fingerprint. Any meaningful source change makes the report stale. Do not substitute a local imitation, alternate source folder, stale report, or W6 `structure` result. If Node/npm, the clean upstream checkout, or its validator are missing, leave W8 blocked and record the failure.
+
+W8 completes automatically only when every planned CORE is complete, lower-priority placements match the plan, selected asset derivatives/web copies plus README provenance exist, and the current full source-check evidence matches the actual release source.
 
 ## Forbidden Actions
 
@@ -56,6 +72,8 @@ Update the implementation manifest for every CORE item and for each SUPPORTING/R
 - Do not add controls, animation, or formula labs to satisfy a quota.
 - Do not continue after a failed W7 review.
 - Do not mark W7 complete without human approval. W6/W8 are automatic stages and complete only after their structural coverage checks pass.
+- Do not satisfy the official validator with empty files, placeholder chapters, unrelated modules, or fake registrations.
+- Do not mark full upstream validation as passed based on a structure check, build, Visual QA, or a hand-authored report.
 
 ## Completion Criteria
 
