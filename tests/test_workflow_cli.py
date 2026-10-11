@@ -2,7 +2,7 @@ import pytest
 
 from workflow_helpers import (
     HUMAN_STAGES, STAGE_KEYS, invoke, load_config, make_project, mark_prior_stages_complete,
-    save_config, write_export, write_manifest, write_upstream_report,
+    run_source_check, save_config, write_export, write_manifest, write_upstream_report,
 )
 
 
@@ -39,6 +39,7 @@ def test_automatic_stages_complete_without_fake_reviewer(tmp_path, stage):
                 "C02": ("S2", "ArchitectureExplorer", "complete"),
                 "C03": ("S2", "ArchitectureExplorer", "complete"),
             })
+            assert run_source_check(_module, paper, config, root / "PaperSkill", "full") == 0
         save_config(config_path, config)
     result = invoke(root, "stage", "demo-paper", stage, "complete")
     assert result.returncode == 0, result.stderr

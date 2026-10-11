@@ -100,6 +100,23 @@ V3_STAGE_ARTIFACTS = {
     "W9": ("file", "audit/final-check.md"),
     "W10": ("dir", "html_output"),
 }
+UPSTREAM_SOURCE_REQUIRED_FILES = (
+    "README.md",
+    "package.json",
+    "package-lock.json",
+    "index.html",
+    "vite.config.ts",
+    "tsconfig.json",
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/types.ts",
+    "src/data/tutorial.ts",
+    "src/styles/tokens.css",
+    "src/styles/components.css",
+    "src/styles/paper.css",
+    "src/modules/registry.tsx",
+)
+UPSTREAM_SOURCE_FINGERPRINT_EXCLUDED_DIRS = {".git", "node_modules", "dist", ".vite"}
 ABSOLUTE_LOCAL_PATH_RE = re.compile(
     r"(?:[A-Za-z]:\\Users\\[^\s\"'<>]+|/Users/[^/\s]+/[^\s\"'<>]+)"
 )
@@ -717,6 +734,31 @@ def directory_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def source_directory_sha256(path: Path) -> str:
+    """Fingerprint source inputs while excluding dependency and build output directories."""
+    digest = hashlib.sha256()
+    candidates = []
+    for candidate in path.rglob("*"):
+        relative = candidate.relative_to(path)
+        if candidate.is_file() and not (set(relative.parts) & UPSTREAM_SOURCE_FINGERPRINT_EXCLUDED_DIRS):
+            candidates.append(candidate)
+    for item in sorted(candidates):
+        digest.update(item.relative_to(path).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        with item.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+    return digest.hexdigest()
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def summarize_process(result: Any, temp_root: Optional[Path] = None) -> str:
     output = "\n".join(str(getattr(result, key, "") or "") for key in ("stdout", "stderr")).strip()
     if temp_root is not None:
@@ -815,6 +857,385 @@ def resolve_upstream_source(folder: Path, config: Dict[str, Any]) -> Path:
             "web.final is not configured and Enhanced source '{}' is missing".format(enhanced_relative)
         )
     return source
+
+
+def upstream_source_structure_problems(source: Path) -> List[str]:
+    """Check early release structure without enforcing full upstream content thresholds."""
+    problems: List[str] = []
+    for relative in UPSTREAM_SOURCE_REQUIRED_FILES:
+        path = source / relative
+        if not path.is_file():
+            problems.append("missing required source file: {}".format(relative))
+        else:
+            try:
+                if not path.read_bytes().strip():
+                    problems.append("required source file is empty: {}".format(relative))
+            except OSError as exc:
+                problems.append("cannot read required source file {}: {}".format(relative, exc))
+
+    package_path = source / "package.json"
+    package: Optional[Dict[str, Any]] = None
+    if package_path.is_file():
+        try:
+            value = json.loads(package_path.read_text(encoding="utf-8"))
+            if isinstance(value, dict):
+                package = value
+            else:
+                problems.append("package.json must contain a JSON object")
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            problems.append("package.json is not valid JSON: {}".format(exc))
+    if package is not None:
+        scripts = package.get("scripts")
+        if not isinstance(scripts, dict) or not isinstance(scripts.get("build"), str) or not scripts["build"].strip():
+            problems.append("package.json must define a build script")
+        for group_name in ("dependencies", "devDependencies", "optionalDependencies"):
+            dependencies = package.get(group_name, {})
+            if not isinstance(dependencies, dict):
+                continue
+            for dependency, version in dependencies.items():
+                if isinstance(version, str) and re.match(r"^(?:file:|workspace:|link:)", version):
+                    problems.append(
+                        "package.json {}.{} uses a local/workspace dependency; release source must be self-contained".format(
+                            group_name, dependency
+                        )
+                    )
+
+    lock_path = source / "package-lock.json"
+    if lock_path.is_file():
+        try:
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+            if not isinstance(lock, dict):
+                problems.append("package-lock.json must contain a JSON object")
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            problems.append("package-lock.json is not valid JSON: {}".format(exc))
+
+    vite_config = source / "vite.config.ts"
+    if vite_config.is_file():
+        try:
+            vite_text = vite_config.read_text(encoding="utf-8")
+            if not re.search(r"\bbase\s*:\s*['\"]\.\/['\"]", vite_text):
+                problems.append("vite.config.ts must set a relative base ('./') for upstream subpath deployment")
+        except (OSError, UnicodeError) as exc:
+            problems.append("cannot read vite.config.ts: {}".format(exc))
+
+    tutorial_path = source / "src/data/tutorial.ts"
+    if tutorial_path.is_file():
+        try:
+            tutorial = tutorial_path.read_text(encoding="utf-8")
+            if not re.search(r"[\"']?kind[\"']?\s*:\s*[\"']chapter[\"']", tutorial):
+                problems.append("src/data/tutorial.ts needs metadata for at least one real implemented chapter")
+        except (OSError, UnicodeError) as exc:
+            problems.append("cannot read src/data/tutorial.ts: {}".format(exc))
+    return problems
+
+
+def save_upstream_source_report(folder: Path, report: Dict[str, Any]) -> None:
+    path = folder / "audit/upstream-source-check.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data: Dict[str, Any] = {"schema_version": 1, "checks": {}}
+    if path.is_file():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(existing, dict) and existing.get("schema_version") == 1 and isinstance(existing.get("checks"), dict):
+                data = existing
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            pass
+    checks = data.setdefault("checks", {})
+    checks[report["level"]] = report
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def invoke_source_check_command(
+    report: Dict[str, Any],
+    runner: Callable[..., Any],
+    label: str,
+    command: List[str],
+    cwd: Path,
+    keep_output: bool = False,
+) -> Any:
+    entry: Dict[str, Any] = {
+        "command": label,
+        "args": command,
+        "cwd": str(cwd.resolve()),
+        "exit_code": None,
+        "summary": "",
+    }
+    report.setdefault("commands", []).append(entry)
+    try:
+        result = runner(
+            command,
+            cwd=str(cwd),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+    except OSError as exc:
+        entry["summary"] = str(exc)
+        return None
+    entry["exit_code"] = result.returncode
+    entry["summary"] = summarize_process(result)
+    if keep_output:
+        entry["output"] = "\n".join(
+            value for value in (str(getattr(result, "stdout", "") or ""), str(getattr(result, "stderr", "") or ""))
+            if value
+        )
+    return result
+
+
+def run_upstream_source_check(
+    folder: Path,
+    config: Dict[str, Any],
+    level: str,
+    paperskill_repo: Optional[Path] = None,
+    process_runner: Optional[Callable[..., Any]] = None,
+) -> int:
+    """Run early structure/build checks or the official full source validator."""
+    runner = process_runner or subprocess.run
+    report: Dict[str, Any] = {
+        "schema_version": 1,
+        "level": level,
+        "status": "FAIL",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "source": {"path": "", "fingerprint_sha256": ""},
+        "commands": [],
+        "official_validation": {"status": "NOT_RUN", "exit_code": None, "result": "NOT_RUN"},
+        "error_summary": "",
+    }
+    problems: List[str] = []
+    try:
+        source = resolve_upstream_source(folder, config).resolve()
+        relative_source = source.relative_to(folder.resolve()).as_posix()
+        report["source"] = {
+            "path": relative_source,
+            "fingerprint_sha256": source_directory_sha256(source),
+        }
+    except (PaperError, ValueError, OSError) as exc:
+        source = None
+        problems.append(str(exc))
+
+    if source is not None:
+        problems.extend(upstream_source_structure_problems(source))
+
+    node = shutil.which("node")
+    npm = shutil.which("npm")
+    if not node:
+        problems.append("Node.js was not found; source check cannot run")
+    if not npm:
+        problems.append("npm was not found; source check cannot install or build the project")
+
+    validator: Optional[Path] = None
+    contract: Optional[Path] = None
+    upstream: Optional[Path] = None
+    if level == "full":
+        report["official_validation"] = {"status": "NOT_RUN", "exit_code": None, "result": "NOT_RUN"}
+        if paperskill_repo is None:
+            problems.append("full validation requires --paperskill-repo with a clean PaperSkill checkout")
+        else:
+            upstream = paperskill_repo.expanduser().resolve()
+            validator = upstream / "paper-skill/scripts/validate-output.js"
+            contract = upstream / "paper-skill/contract.md"
+            if not upstream.is_dir() or not ((upstream / ".git").exists()):
+                problems.append("--paperskill-repo must point to a local PaperSkill Git checkout")
+            if not validator.is_file():
+                problems.append("official PaperSkill validator is missing: paper-skill/scripts/validate-output.js")
+            if not contract.is_file():
+                problems.append("official PaperSkill contract is missing: paper-skill/contract.md")
+            git = shutil.which("git")
+            if not git:
+                problems.append("git was not found; full validation cannot bind the result to an upstream commit")
+            elif upstream.is_dir() and (upstream / ".git").exists():
+                status = invoke_source_check_command(
+                    report, runner, "git status --porcelain --untracked-files=all",
+                    [git, "-C", str(upstream), "status", "--porcelain", "--untracked-files=all"], upstream,
+                )
+                if status is None or status.returncode != 0:
+                    problems.append("cannot read PaperSkill checkout status")
+                elif str(getattr(status, "stdout", "") or "").strip():
+                    problems.append("PaperSkill checkout has uncommitted changes; full validation requires a clean checkout")
+                head = invoke_source_check_command(
+                    report, runner, "git rev-parse HEAD",
+                    [git, "-C", str(upstream), "rev-parse", "HEAD"], upstream,
+                )
+                commit = str(getattr(head, "stdout", "") or "").strip() if head is not None else ""
+                if head is None or head.returncode != 0 or not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
+                    problems.append("cannot read a valid PaperSkill commit SHA")
+                if validator.is_file() and contract.is_file() and commit:
+                    report["upstream"] = {
+                        "repository": str(upstream),
+                        "commit": commit,
+                        "validator": "paper-skill/scripts/validate-output.js",
+                        "validator_sha256": file_sha256(validator),
+                        "contract": "paper-skill/contract.md",
+                        "contract_sha256": file_sha256(contract),
+                    }
+
+    if not problems and source is not None and npm and node:
+        install = invoke_source_check_command(report, runner, "npm ci", [npm, "ci"], source)
+        if install is None or install.returncode != 0:
+            problems.append("npm ci failed: {}".format(report["commands"][-1].get("summary") or "process could not start"))
+        if not problems:
+            build = invoke_source_check_command(report, runner, "npm run build", [npm, "run", "build"], source)
+            if build is None or build.returncode != 0:
+                problems.append("npm run build failed: {}".format(report["commands"][-1].get("summary") or "process could not start"))
+        if not problems and level == "full" and upstream is not None and validator is not None and validator.is_file():
+            absolute_source = str(source.resolve())
+            official = invoke_source_check_command(
+                report,
+                runner,
+                "node paper-skill/scripts/validate-output.js <absolute source>",
+                [node, str(validator), absolute_source],
+                upstream,
+                keep_output=True,
+            )
+            official_text = "\n".join(
+                value for value in (
+                    str(getattr(official, "stdout", "") or "") if official is not None else "",
+                    str(getattr(official, "stderr", "") or "") if official is not None else "",
+                ) if value
+            )
+            result_marker = "PASS" if re.search(r"^RESULT:\s*PASS\s*$", official_text, re.MULTILINE) else (
+                "FAIL" if re.search(r"^RESULT:\s*FAIL\s*$", official_text, re.MULTILINE) else "MISSING"
+            )
+            report["official_validation"] = {
+                "status": "PASS" if official is not None and official.returncode == 0 and result_marker == "PASS" else "FAIL",
+                "exit_code": official.returncode if official is not None else None,
+                "result": result_marker,
+                "source_argument": absolute_source,
+            }
+            if official is None or official.returncode != 0 or result_marker != "PASS":
+                problems.append("official validate-output.js did not return exit 0 and RESULT: PASS")
+
+    if source is not None:
+        final_fingerprint = source_directory_sha256(source)
+        initial_fingerprint = report["source"].get("fingerprint_sha256")
+        report["source"]["fingerprint_sha256"] = final_fingerprint
+        if initial_fingerprint != final_fingerprint:
+            problems.append("release source changed while checks were running; rerun the source check")
+
+    report["status"] = "PASS" if not problems else "FAIL"
+    report["error_summary"] = "\n".join(problems)
+    save_upstream_source_report(folder, report)
+    if level == "structure":
+        print("STRUCTURE {}".format(report["status"]))
+        print("FULL_UPSTREAM_VALIDATION NOT_RUN (pending W8)")
+    else:
+        print("FULL_UPSTREAM_VALIDATION {}".format(report["status"]))
+    for problem in problems:
+        print("- {}".format(problem), file=sys.stderr)
+    return 0 if report["status"] == "PASS" else 1
+
+
+def upstream_source_evidence_problems(folder: Path, config: Dict[str, Any], level: str) -> List[str]:
+    report_path = folder / "audit/upstream-source-check.json"
+    evidence, problems = read_json_object(report_path, "audit/upstream-source-check.json")
+    if evidence is None:
+        if not report_path.is_file():
+            return ["audit/upstream-source-check.json is missing; run upstream-source-check --level {}".format(level)]
+        return problems + ["repair audit/upstream-source-check.json, then rerun upstream-source-check --level {}".format(level)]
+    if evidence.get("schema_version") != 1 or not isinstance(evidence.get("checks"), dict):
+        return ["audit/upstream-source-check.json must contain schema_version 1 and independent checks records"]
+    report = evidence["checks"].get(level)
+    if not isinstance(report, dict):
+        return ["audit/upstream-source-check.json has no {} result; run upstream-source-check --level {}".format(level, level)]
+    if report.get("schema_version") != 1:
+        problems.append("audit/upstream-source-check.json schema_version must be 1")
+    if report.get("level") != level:
+        problems.append("audit/upstream-source-check.json must contain a {} check (W6 and W8 evidence are separate)".format(level))
+    if report.get("status") != "PASS":
+        problems.append("audit/upstream-source-check.json status must be PASS")
+        summary = report.get("error_summary")
+        if isinstance(summary, str) and summary.strip():
+            problems.extend("source-check: {}".format(line) for line in summary.splitlines() if line.strip())
+    try:
+        source = resolve_upstream_source(folder, config).resolve()
+    except PaperError as exc:
+        return problems + [str(exc)]
+    source_record = report.get("source")
+    expected_path = source.relative_to(folder.resolve()).as_posix()
+    if not isinstance(source_record, dict) or source_record.get("path") != expected_path:
+        problems.append("source-check evidence does not match the configured publish source '{}'; rerun the check".format(expected_path))
+    else:
+        current_fingerprint = source_directory_sha256(source)
+        if source_record.get("fingerprint_sha256") != current_fingerprint:
+            problems.append("source-check fingerprint is stale for {}; rerun upstream-source-check --level {}".format(expected_path, level))
+    commands = report.get("commands")
+    if not isinstance(commands, list):
+        problems.append("source-check commands must be a list")
+        commands = []
+    by_name = {item.get("command"): item for item in commands if isinstance(item, dict) and isinstance(item.get("command"), str)}
+    for name in ("npm ci", "npm run build"):
+        command = by_name.get(name)
+        if not isinstance(command, dict) or command.get("exit_code") != 0:
+            problems.append("source-check is missing a successful '{}' for the publish source".format(name))
+        elif command.get("cwd") != str(source.resolve()):
+            problems.append("source-check '{}' did not run in the configured publish source".format(name))
+    if level == "full":
+        upstream = report.get("upstream")
+        if not isinstance(upstream, dict):
+            problems.append("full source-check is missing PaperSkill commit and validator evidence")
+            return problems
+        commit = upstream.get("commit")
+        if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
+            problems.append("full source-check needs a PaperSkill commit SHA")
+        repo_value = upstream.get("repository")
+        repo = Path(repo_value).expanduser() if isinstance(repo_value, str) else None
+        if repo is None or not repo.is_dir() or not (repo / ".git").exists():
+            problems.append("recorded PaperSkill checkout is unavailable; rerun full validation with a local checkout")
+        else:
+            validator = repo / "paper-skill/scripts/validate-output.js"
+            contract = repo / "paper-skill/contract.md"
+            if upstream.get("validator") != "paper-skill/scripts/validate-output.js" or not validator.is_file():
+                problems.append("recorded official validate-output.js path is missing or unexpected")
+            elif upstream.get("validator_sha256") != file_sha256(validator):
+                problems.append("official validator changed since full validation; rerun W8 full check")
+            if upstream.get("contract") != "paper-skill/contract.md" or not contract.is_file():
+                problems.append("recorded official paper-skill/contract.md path is missing or unexpected")
+            elif upstream.get("contract_sha256") != file_sha256(contract):
+                problems.append("official contract changed since full validation; rerun W8 full check")
+            git = shutil.which("git")
+            if not git:
+                problems.append("git is unavailable; cannot verify the recorded PaperSkill commit")
+            else:
+                try:
+                    status = subprocess.run(
+                        [git, "-C", str(repo), "status", "--porcelain", "--untracked-files=all"],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+                    )
+                    head = subprocess.run(
+                        [git, "-C", str(repo), "rev-parse", "HEAD"],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+                    )
+                    if status.returncode != 0 or str(status.stdout or "").strip():
+                        problems.append("recorded PaperSkill checkout is no longer clean; rerun W8 full check")
+                    if head.returncode != 0 or str(head.stdout or "").strip().lower() != str(commit).lower():
+                        problems.append("PaperSkill commit changed since full validation; rerun W8 full check")
+                except OSError as exc:
+                    problems.append("cannot verify the recorded PaperSkill checkout: {}".format(exc))
+        official = report.get("official_validation")
+        if not isinstance(official, dict) or official.get("status") != "PASS" or official.get("exit_code") != 0 or official.get("result") != "PASS":
+            problems.append("official validate-output.js must record exit code 0 and RESULT: PASS")
+        else:
+            official_commands = [
+                item for item in commands
+                if isinstance(item, dict) and item.get("command") == "node paper-skill/scripts/validate-output.js <absolute source>"
+            ]
+            if len(official_commands) != 1 or official_commands[0].get("exit_code") != 0:
+                problems.append("full source-check is missing the successful official validator command")
+            elif (
+                not isinstance(official_commands[0].get("args"), list)
+                or len(official_commands[0]["args"]) != 3
+                or official_commands[0]["args"][2] != str(source.resolve())
+                or official.get("source_argument") != str(source.resolve())
+            ):
+                problems.append("official validator did not target the configured publish source")
+            output = str(official_commands[0].get("output", "")) if official_commands else ""
+            if not re.search(r"^RESULT:\s*PASS\s*$", output, re.MULTILINE):
+                problems.append("official validator output does not contain RESULT: PASS")
+    return problems
 
 
 def run_upstream_check(
@@ -1099,6 +1520,13 @@ def cmd_upstream_check(args: argparse.Namespace) -> int:
         args.github or "",
         args.replace_output,
     )
+
+
+def cmd_upstream_source_check(args: argparse.Namespace) -> int:
+    folder, config = read_paper(args.paper_id)
+    validate_or_raise(config, args.paper_id)
+    paperskill_repo = Path(args.paperskill_repo) if args.paperskill_repo else None
+    return run_upstream_source_check(folder, config, args.level, paperskill_repo)
 
 
 def tracked_workspace_paths(paper_id: str) -> List[str]:
@@ -1715,6 +2143,7 @@ def validate_asset_materialization(
     manifest: Optional[Dict[str, Any]],
     evidence_ids: set,
     export_root: Optional[Path] = None,
+    source_root: Optional[Path] = None,
 ) -> Tuple[Optional[Dict[str, Any]], List[str]]:
     data, problems = validate_asset_plan(folder, manifest, evidence_ids)
     if not isinstance(data, dict) or not isinstance(data.get("assets"), list):
@@ -1730,19 +2159,22 @@ def validate_asset_materialization(
             problems.append("selected web derivative is missing: {}".format(derivative_path))
         web_path = item.get("web_path")
         if isinstance(web_path, str) and not path_problem(web_path):
-            local_web_asset = folder / "web/enhanced" / web_path
+            local_web_asset = (source_root or folder / "web/enhanced") / web_path
             if not local_web_asset.is_file():
-                problems.append("selected asset '{}' is missing from web/enhanced: {}".format(item_id, web_path))
+                problems.append("selected asset '{}' is missing from the configured release source: {}".format(item_id, web_path))
             if export_root is not None and not (export_root / web_path).is_file():
                 problems.append("export is missing selected asset: {}".format(web_path))
     if selected:
-        readme = (export_root or (folder / "web/enhanced")) / "README.md"
+        readme = (export_root or source_root or (folder / "web/enhanced")) / "README.md"
+        source_label = "export" if export_root else (
+            source_root.relative_to(folder).as_posix() if source_root else "web/enhanced"
+        )
         if not readme.is_file():
-            problems.append("{} is missing asset provenance README.md".format("export" if export_root else "web/enhanced"))
+            problems.append("{} is missing asset provenance README.md".format(source_label))
         else:
             readme_text = readme.read_text(encoding="utf-8")
             if not re.search(r"asset\s+(provenance|sources)|image\s+(provenance|sources)", readme_text, re.IGNORECASE):
-                problems.append("{} README.md must document asset provenance".format("export" if export_root else "web/enhanced"))
+                problems.append("{} README.md must document asset provenance".format(source_label))
     return data, problems
 
 
@@ -1886,9 +2318,36 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
         if not path.is_file():
             return ["design/implementation-plan.md is missing"]
         text = path.read_text(encoding="utf-8")
-        for heading in ("Primary Spine Mapping", "Reusable Pattern Library", "Vertical Slice (W6)", "Vertical Slice Review (W7)"):
+        for heading in ("Primary Spine Mapping", "Reusable Pattern Library", "Upstream Release Compatibility", "Vertical Slice (W6)", "Vertical Slice Review (W7)"):
             if not re.search(r"^#{{2,3}}\s+{}\s*$".format(re.escape(heading)), text, re.MULTILINE):
                 problems.append("implementation-plan is missing section '{}'".format(heading))
+        compatibility = markdown_section(text, "Upstream Release Compatibility")
+        if compatibility:
+            expected_source = config.get("web", {}).get("final") or config.get("web", {}).get("enhanced", "web/enhanced")
+            source_match = re.search(r"(?m)^-\s*Publish source:\s*`?([^`\r\n]+?)`?\s*$", compatibility)
+            if not source_match or source_match.group(1).strip() != expected_source:
+                problems.append("Upstream Release Compatibility must name the configured publish source '{}' exactly".format(expected_source))
+            for label in (
+                "Runtime",
+                "Target upstream PaperSkill checkout and intended revision",
+                "Source of truth for chapter metadata, titles, and navigation",
+                "Registration strategy for `componentId` (or why custom interactions need none)",
+                "Risks or conflicts requiring a human decision",
+            ):
+                match = re.search(r"(?m)^-\s*{}:\s*(.+?)\s*$".format(re.escape(label)), compatibility)
+                if not match or not match.group(1).strip() or match.group(1).strip().lower() in ("tbd", "todo", "pending", "fill this in"):
+                    problems.append("Upstream Release Compatibility needs a completed '{}' field".format(label))
+            mapping_rows = [
+                line for line in compatibility.splitlines()
+                if line.strip().startswith("|") and not re.match(r"^\s*\|\s*:?-{2,}", line)
+            ]
+            if len(mapping_rows) < 2 or not any(
+                len([cell for cell in row.strip().strip("|").split("|") if cell.strip()]) >= 3
+                for row in mapping_rows[1:]
+            ):
+                problems.append("Upstream Release Compatibility needs at least one real spine-to-chapter/module/runtime mapping row")
+            if "validate-output.js" not in compatibility or "contract.md" not in compatibility:
+                problems.append("Upstream Release Compatibility must cite the official validator and paper-skill/contract.md")
         evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
         problems.extend(evidence_problems)
         _plan, implementation_problems = v3_implementation_data(folder, evidence_ids)
@@ -1913,10 +2372,13 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
         problems.extend(implementation_problems)
         if isinstance(implementation_plan, dict):
             problems.extend(v3_implementation_coverage(folder, stage_id, implementation_plan, config))
+        problems.extend(upstream_source_evidence_problems(folder, config, "structure" if stage_id == "W6" else "full"))
         if stage_id == "W8":
             source_manifest, source_problems = v3_cache_data(folder)
             problems.extend(source_problems)
-            _assets, asset_problems = validate_asset_materialization(folder, source_manifest, evidence_ids)
+            _assets, asset_problems = validate_asset_materialization(
+                folder, source_manifest, evidence_ids, source_root=web,
+            )
             problems.extend(asset_problems)
         return problems
     if stage_id == "W7":
@@ -1928,6 +2390,22 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
         final_check = folder / "audit/final-check.md"
         if not marker_present(final_check, "Overall: PASS"):
             problems.append("audit/final-check.md must contain Overall: PASS")
+        if not final_check.is_file():
+            return problems
+        final_check_text = final_check.read_text(encoding="utf-8")
+        upstream_rows = (
+            "UPSTREAM_SOURCE_STRUCTURE",
+            "UPSTREAM_OFFICIAL_VALIDATE_OUTPUT",
+            "UPSTREAM_RELEASE_SOURCE_BUILD",
+            "RUNTIME_MAPPING_REVIEW",
+        )
+        for row_name in upstream_rows:
+            match = re.search(r"(?m)^\|\s*`?{}`?\s*\|\s*(PASS|FAIL|NOT_RUN)\s*\|".format(re.escape(row_name)), final_check_text)
+            if not match:
+                problems.append("audit/final-check.md must record {} as PASS, FAIL, or NOT_RUN".format(row_name))
+            elif match.group(1) != "PASS":
+                problems.append("{} must be PASS before W9 can be accepted".format(row_name))
+        problems.extend(upstream_source_evidence_problems(folder, config, "full"))
         return problems
     if stage_id == "W10":
         release = config.get("release", {})
@@ -2001,8 +2479,19 @@ def cmd_check_v3(folder: Path, config: Dict[str, Any], paper_id: str) -> int:
     for stage_id, _key, label in STAGES:
         print("[STAGE] {} {}: {}".format(stage_id, label, states[stage_id].upper()))
         kind, relative = V3_STAGE_ARTIFACTS[stage_id]
-        if stage_id == "W10":
+        artifact_label = relative
+        if stage_id in ("W6", "W8"):
+            try:
+                configured_source = resolve_upstream_source(folder, config)
+                target = configured_source / "package.json"
+                kind = "file"
+                artifact_label = "{}/package.json".format(configured_source.relative_to(folder).as_posix())
+            except PaperError:
+                target = folder / relative
+                artifact_label = "configured release source ({})".format(relative)
+        elif stage_id == "W10":
             relative = config["release"]["output"]
+            artifact_label = relative
             if not relative:
                 print("[UNCONFIGURED] W10 artifact: release.output")
                 issues = v3_stage_completion_problems(folder, stage_id, config)
@@ -2012,10 +2501,10 @@ def cmd_check_v3(folder: Path, config: Dict[str, Any], paper_id: str) -> int:
                     warnings.extend("{}: {}".format(stage_id, issue) for issue in issues)
                 continue
             target = ROOT / relative
-        else:
+        elif stage_id not in ("W6", "W8"):
             target = folder / relative
         exists = target.is_dir() and any(target.iterdir()) if target.is_dir() else target.is_file()
-        print("[{}] {} artifact: {}".format("PRESENT" if exists else "MISSING", stage_id, relative))
+        print("[{}] {} artifact: {}".format("PRESENT" if exists else "MISSING", stage_id, artifact_label))
         issues = v3_stage_completion_problems(folder, stage_id, config)
         if states[stage_id] == "complete":
             failures.extend("{}: {}".format(stage_id, issue) for issue in issues)
@@ -2115,6 +2604,15 @@ def build_parser() -> argparse.ArgumentParser:
     upstream.add_argument("--github", help="optional public GitHub username")
     upstream.add_argument("--replace-output", action="store_true", help="replace the configured generated export if it already exists")
     upstream.set_defaults(func=cmd_upstream_check)
+
+    source_check = subparsers.add_parser(
+        "upstream-source-check",
+        help="check the configured release source early or run its full official PaperSkill validator",
+    )
+    source_check.add_argument("paper_id")
+    source_check.add_argument("--paperskill-repo", help="local PaperSkill Git checkout; required for --level full")
+    source_check.add_argument("--level", required=True, choices=("structure", "full"))
+    source_check.set_defaults(func=cmd_upstream_source_check)
 
     paths = subparsers.add_parser("paths", help="show standard workspace paths")
     paths.add_argument("paper_id")

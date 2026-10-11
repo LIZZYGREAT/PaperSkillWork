@@ -1,4 +1,4 @@
-from workflow_helpers import load_config, make_project, write_export, write_upstream_report, write_fenced_yaml, write_manifest
+from workflow_helpers import load_config, make_project, run_source_check, write_export, write_upstream_report, write_fenced_yaml, write_manifest
 
 
 def test_w3_requires_original_source_and_approved_rights_but_not_derivative(tmp_path):
@@ -21,7 +21,7 @@ def test_w3_requires_original_source_and_approved_rights_but_not_derivative(tmp_
 
 
 def test_w8_requires_asset_derivative_web_copy_and_provenance(tmp_path):
-    _root, paper, config_path, module = make_project(tmp_path, selected_asset=True)
+    root, paper, config_path, module = make_project(tmp_path, selected_asset=True)
     config = load_config(config_path)
     write_manifest(paper, complete_core={
         "C01": ("S1", "Problem", "complete"),
@@ -30,8 +30,8 @@ def test_w8_requires_asset_derivative_web_copy_and_provenance(tmp_path):
     })
     problems = module.v3_stage_completion_problems(paper, "W8", config)
     assert any("selected web derivative is missing" in problem for problem in problems)
-    assert any("is missing from web/enhanced" in problem for problem in problems)
-    assert any("web/enhanced is missing asset provenance README.md" in problem for problem in problems)
+    assert any("is missing from the configured release source" in problem for problem in problems)
+    assert any("README.md must document asset provenance" in problem for problem in problems)
 
     derivative = paper / "assets/figures/web/F01.png"
     derivative.parent.mkdir(parents=True, exist_ok=True)
@@ -40,6 +40,7 @@ def test_w8_requires_asset_derivative_web_copy_and_provenance(tmp_path):
     web_asset.parent.mkdir(parents=True, exist_ok=True)
     web_asset.write_bytes(b"web-asset")
     (paper / "web/enhanced/README.md").write_text("## Asset provenance\n", encoding="utf-8")
+    assert run_source_check(module, paper, config, root / "PaperSkill", "full") == 0
     assert module.v3_stage_completion_problems(paper, "W8", config) == []
 
 
