@@ -10,11 +10,19 @@ State the learner outcome this page must enable. List details deliberately kept 
 
 Record the latest confirmed W4/W5 decisions here. Keep this as the single project-level decision source.
 
+- Design confirmation: DRAFT / CONFIRMED (the user approved the target and constraints).
+- Rendered-page acceptance: PENDING / PASS / REVISE (the user reviewed the actual browser rendering; this is separate from design confirmation).
 - Confirmed learning and visual goals:
 - Protected structures, semantics, data, scales, colors, object identities, and interactions:
 - Changes allowed without a new design decision:
 - Open choices that require user input:
 - Pages, shared components, and states affected by this change:
+
+For each confirmed page/state, record the approved effect or screenshot reference and its change boundary:
+
+| Page / state | Confirmed effect or screenshot reference | Protected objects, scales, colors, connections, and animation | Layout changes allowed | Open trade-offs |
+| --- | --- | --- | --- | --- |
+|  |  |  |  |  |
 
 For substantial motion, record the initial, key intermediate, and final states and the required object connections. Do not duplicate the same page contract in a new document.
 

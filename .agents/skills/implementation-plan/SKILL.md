@@ -19,7 +19,7 @@ Translate the reviewed spine into the smallest useful visual plan, then expose t
 
 ## Procedure
 
-Read docs/TEACHING_DESIGN_STANDARD.md and docs/VISUAL_QA.md. Use the confirmed project W4/W5 design as input, not as a request to redesign it. In the existing implementation plan, record the text/visual/interaction task, key states and viewports, protected invariants, safe local adjustments, affected areas, and unresolved decisions. For substantial motion, identify key frames and object connections. Keep these notes outside the machine-readable implementation YAML.
+Read docs/TEACHING_DESIGN_STANDARD.md and docs/VISUAL_QA.md. Use the confirmed project W4/W5 design as input, not as a request to redesign it. In the existing implementation plan, record the text/visual/interaction task, key states and viewports, protected invariants, safe local adjustments, affected areas, and unresolved decisions. Keep design confirmation separate from rendered-page acceptance: list each confirmed page/state with its approved effect or screenshot reference, protected objects/scales/colors/connections/animations, allowed layout changes, and open choices. For substantial motion, identify key frames and object connections. Keep these notes outside the machine-readable implementation YAML.
 
 1. For each spine stage, ask whether prose, a table, or a selected paper figure already explains it.
 2. Visualize only relationships that are hard to understand in text: architecture, branching, data/state flow, lifecycle, training steps, ownership, dependencies, comparisons, or evidence.

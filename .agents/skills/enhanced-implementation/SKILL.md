@@ -39,6 +39,8 @@ Present the slice for a person to judge the learning path, architecture, flow, e
 
 After each page or complete interaction, inspect its relevant states. When a shared style or component changes, expand regression to affected pages and overlays. Preserve confirmed design invariants; pause for the user's decision if implementation would change an approved semantic or structural choice.
 
+Before editing, read `AGENTS.md`, `docs/WORKFLOW.md`, `docs/TEACHING_DESIGN_STANDARD.md`, `docs/VISUAL_QA.md`, and the project's `design/implementation-plan.md`. State the invariants and allowed local changes that will be protected. Fix ordinary layout defects within that scope; ask for a decision before changing approved diagram meaning, state order, primary workspace layout, or main animation.
+
 1. Implement all remaining CORE content on the accepted spine.
 2. Keep SUPPORTING content compact; put REFERENCE material in the Reference Hub/advanced area; omit DELETE.
 3. Copy any reusable source into this paper's project. Do not import a cross-paper runtime package.
