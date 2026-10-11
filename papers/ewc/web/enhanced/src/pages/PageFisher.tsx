@@ -143,7 +143,7 @@ function FisherRole() {
       <p className="p05-teaching-note">概率条共用 0–1 尺度且各行合计为 1；数值是教学示意，不是模型测量结果或论文实验数据。</p>
 
       <div className="p05-laplace-bridge">
-        <span>FROM PAGE 4 · LAPLACE</span><b>局部宽度 / 精度</b><i aria-hidden="true">→</i><span>需要一个可计算的近似</span><i aria-hidden="true">→</i><b><ReferenceTrigger id="fisher_information">Fisher Information</ReferenceTrigger></b><small>参数级局部敏感性近似；不等于精确 Hessian。</small>
+        <div className="p05-laplace-bridge__source"><span>FROM PAGE 4 · LAPLACE</span><b>局部宽度 / 精度</b></div><i aria-hidden="true">→</i><span>需要一个可计算的近似</span><i aria-hidden="true">→</i><b><ReferenceTrigger id="fisher_information">Fisher Information</ReferenceTrigger></b><small>参数级局部敏感性近似；不等于精确 Hessian。</small>
       </div>
 
 
@@ -184,8 +184,8 @@ export function PageFisher() {
         <details className="p05-theory-detail">
           <summary>展开数学背景：Fisher 为何能提示局部预测变化？</summary>
           <div className="p05-fisher-mechanism">
-            <div><span>THEORETICAL FISHER · SCORE SECOND MOMENT</span><MathFormula block tex={String.raw`g=\nabla_\theta\log p_\theta(y\mid x),\qquad F(\theta)=\mathbb{E}_{x\sim\mu_A,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]`} /><p>理论 Fisher 对固定的 Task A 输入分布 μ<sub>A</sub> 与模型标签分布取期望；对角项为 <MathFormula tex={String.raw`F_{ii}=\mathbb E[g_i^2]`} />。在适当正则条件下，它等于模型期望下负 log-likelihood 的 Hessian；Posterior Hessian 还可能包含 Prior 曲率。</p></div>
-            <div><span>LOCAL CHANGE · SECOND-ORDER APPROXIMATION</span><MathFormula block tex={String.raw`\mathbb{E}_{x\sim\mu_A}D_{\mathrm{KL}}(p_\theta(\cdot\mid x)\parallel p_{\theta+\Delta\theta}(\cdot\mid x))\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} /><p>在可微、可交换求导与积分、分布支撑不随参数变化等条件下，零偏移的一阶项消失，二阶项近似局部预测分布的变化。有限偏移、模型失配和对角化都会限制这一关系。</p></div>
+            <div><span>THEORETICAL FISHER · SCORE SECOND MOMENT</span><MathFormula block tex={String.raw`\begin{aligned}g&=\nabla_\theta\log p_\theta(y\mid x)\\F(\theta)&=\mathbb{E}_{x\sim\mu_A,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]\end{aligned}`} /><p>理论 Fisher 对固定的 Task A 输入分布 μ<sub>A</sub> 与模型标签分布取期望；对角项为 <MathFormula tex={String.raw`F_{ii}=\mathbb E[g_i^2]`} />。在适当正则条件下，它等于模型期望下负 log-likelihood 的 Hessian；Posterior Hessian 还可能包含 Prior 曲率。</p></div>
+            <div><span>LOCAL CHANGE · SECOND-ORDER APPROXIMATION</span><MathFormula block tex={String.raw`\begin{gathered}\mathbb{E}_{x\sim\mu_A}D_{\mathrm{KL}}\bigl(p_\theta(\cdot\mid x)\parallel\\p_{\theta+\Delta\theta}(\cdot\mid x)\bigr)\\\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta\end{gathered}`} /><p>在可微、可交换求导与积分、分布支撑不随参数变化等条件下，零偏移的一阶项消失，二阶项近似局部预测分布的变化。有限偏移、模型失配和对角化都会限制这一关系。</p></div>
             <p className="p05-curvature-boundary">本页工作台采用 observed-label empirical-Fisher 教学配方：对观测标签的逐样本 score 求平方并平均。理论 Fisher 则对模型标签分布取期望；两者不无条件等价，且论文未规定本页这套配方为唯一估计器。</p>
           </div>
         </details>
