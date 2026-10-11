@@ -673,47 +673,69 @@ True
 
 如果配置的 release source 不存在或尚未冻结，则停止正式发布；不要临时换用其他目录。
 
+上述四项只是快速检查。正式源还必须满足当前 PaperSkill 校验器的完整文件契约，并在 **Official Import 之前**通过构建与结构校验。以下命令应从 PaperSkill 仓库根目录执行：
+
+```powershell
+$REQUIRED = @(
+  "README.md", "package.json", "package-lock.json",
+  "index.html", "vite.config.ts", "tsconfig.json",
+  "src/main.tsx", "src/App.tsx", "src/types.ts",
+  "src/data/tutorial.ts", "src/modules/registry.tsx",
+  "src/styles/tokens.css", "src/styles/components.css", "src/styles/paper.css"
+)
+$MISSING = $REQUIRED | Where-Object { -not (Test-Path (Join-Path $SOURCE $_)) }
+if ($MISSING) {
+  $MISSING
+  throw "SOURCE_CONTRACT_MISSING"
+}
+"SOURCE_FILES_OK"
+
+Push-Location $SOURCE
+try {
+  npm ci
+  if ($LASTEXITCODE -ne 0) { throw "npm ci failed" }
+  npm run build
+  if ($LASTEXITCODE -ne 0) { throw "EWC build failed" }
+}
+finally {
+  Pop-Location
+}
+
+# The following validator paths are relative to the PaperSkill repository root.
+$SYNTAX_CHECK = ".\paper-skill\scripts\syntax-check.js"
+if (Test-Path $SYNTAX_CHECK) {
+  node $SYNTAX_CHECK $SOURCE --require-parser
+  if ($LASTEXITCODE -ne 0) { throw "syntax-check failed" }
+}
+else {
+  Write-Host "当前 PaperSkill checkout 未提供 syntax-check.js；npm run build 已执行严格 TypeScript 编译。"
+}
+
+node .\paper-skill\scripts\validate-output.js $SOURCE
+if ($LASTEXITCODE -ne 0) { throw "upstream validate-output failed" }
+```
+
+必须看到 `SOURCE_FILES_OK` 和 `validate-output.js` 的 `RESULT: PASS` 才能继续。若源项目在门禁通过后又有修改，必须从头重跑本节。
+
+`npm run import` 在源目录上只强制检查 `package.json`，随后复制文件；Import 成功不代表完整上游结构合规。不要跳过上述导入前门禁。
+
+校验器脚本以刚同步的 PaperSkill 基线为准。2026-10-12 核对到官方 `main` 的 `c986d44` 中，`paper-skill/scripts/` 没有独立的 `syntax-check.js`，而 `validate-output.js` 使用源码括号平衡检查；旧的本地 PaperSkill 检出可能仍包含独立语法检查脚本。因此仅在当前检出确实存在该脚本时运行它，源项目严格 TypeScript/Vite 构建和当前 `validate-output.js` 始终是必需门禁。
+
 ---
 
 # 十五、先检查 Final 本身
 
-进入 Final：
+第十四节已对冻结后的 Final 执行 `npm ci`、`npm run build` 和当前 PaperSkill 输出校验器；全部通过后才能 Import。若 Final 后续发生任何修改，应返回第十四节重跑完整门禁，再继续。
+
+如果项目定义下列检查，则在 Final 目录中一并运行：
 
 ```powershell
-Push-Location $SOURCE
-```
-
-至少执行：
-
-```powershell
-npm ci
-npm run build
-```
-
-如果项目定义：
-
-```text
 npm test
 npm run test:browser
 npm run check
 ```
 
-则一并运行。
-
-例如：
-
-```powershell
-npm test
-npm run test:browser
-```
-
-完成：
-
-```powershell
-Pop-Location
-```
-
-Final 自身失败时，不进入 PaperSkill Import。
+这些项目测试不能替代第十四节的构建、语法和结构门禁。Final 自身任何检查失败时，不进入 PaperSkill Import。
 
 ---
 
