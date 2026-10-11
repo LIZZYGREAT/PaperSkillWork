@@ -129,7 +129,7 @@
 .p09-perturbation-detail { margin-top: 8px; border-top: 1px solid #dfe6e0; }
 .p09-perturbation-detail > div { max-width: 990px; padding: 0 5px 12px; }
 .p09-perturbation-detail p { margin: 7px 0; color: #5b7067; font-size: 14px; line-height: 1.65; }
-.p09-perturbation-detail button { margin-top: 5px; padding: 8px 10px; border: 1px solid #d6e1d9; border-radius: 6px; color: #3d6d60; background: white; font-size: 13px; cursor: pointer; }
+.p09-perturbation-detail > div > button { margin-top: 5px; padding: 8px 10px; border: 1px solid #d6e1d9; border-radius: 6px; color: #3d6d60; background: white; font-size: 13px; cursor: pointer; }
 .p09-limits { margin: 0 0 35px; }
 .p09-limit-list { display: grid; margin: 0; border-top: 1px solid #dce5df; }
 .p09-limit-list > div { display: grid; grid-template-columns: minmax(180px, .4fr) minmax(0, 1fr); gap: 18px; padding: 12px 8px; border-bottom: 1px solid #e4eae5; }

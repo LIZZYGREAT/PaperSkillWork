@@ -177,7 +177,10 @@ function SequentialBayes() {
           <span className="p06-source-label">TASK B · LEARN THE NEW TASK</span>
           <RuntimeNode objectId="task-b-data" eyebrow="NEW DATA" title="Task B Data" detail="D_B"/>
           <i aria-hidden="true">↓</i>
-          <p className="p06-branch-math"><ReferenceTrigger id="p_D_given_theta">p(D<sub>B</sub> | θ)</ReferenceTrigger><span>−log →</span><RuntimeReference id="task_b_loss" objectId="task-b-loss">L<sub>B</sub>(θ)</RuntimeReference></p>
+          <p className="p06-branch-math" aria-label="Task B Loss 等于 Task B 数据似然的负对数">
+            <span>−log</span><ReferenceTrigger id="p_D_given_theta">p(D<sub>B</sub> | θ)</ReferenceTrigger>
+            <span>=</span><RuntimeReference id="task_b_loss" objectId="task-b-loss">L<sub>B</sub>(θ)</RuntimeReference>
+          </p>
           <p className="p06-source-copy">沿用 P2 的计算方式，换成 Task B 的输入与标签，得到新数据 Loss。</p>
         </article>
         <article className="p06-source-card p06-source-card--old">

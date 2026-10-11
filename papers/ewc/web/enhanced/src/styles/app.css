@@ -79,8 +79,9 @@ a { color: inherit; }
 .rk-overlay__close { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink-soft); background: white; cursor: pointer; }
 .rk-overlay__body { min-height: 0; flex: 1; overflow: auto; }
 .rk-mobile-sheet { display: contents; }
-.ewc-reference-trigger { display: inline; padding: 0 1px; border: 0; border-bottom: 1px dotted #6b9790; color: #2f726b; background: transparent; font: inherit; cursor: pointer; }
-.ewc-reference-trigger:hover, .ewc-reference-trigger:focus-visible { color: #194d48; border-bottom-style: solid; }
+.ewc-app .ewc-reference-trigger { appearance: none; display: inline; min-height: 0; margin: 0; padding: 0; border: 0; border-bottom: 1px dotted #6b9790; border-radius: 0; box-shadow: none; color: #2f726b; background: transparent; font: inherit; line-height: inherit; text-align: inherit; text-decoration: none; vertical-align: baseline; cursor: pointer; }
+.ewc-app .ewc-reference-trigger:hover { color: #194d48; border-bottom-style: solid; background: transparent; box-shadow: none; }
+.ewc-app .ewc-reference-trigger:focus-visible { outline: 2px solid #83a998; outline-offset: 2px; }
 .ewc-reference-preview { box-sizing: border-box; position: fixed; z-index: 90; width: min(420px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); min-width: 0; overflow-x: hidden; overflow-y: auto; overflow-wrap: anywhere; white-space: normal; padding: 18px; font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif; font-size: 15px; font-weight: 400; font-style: normal; text-align: left; letter-spacing: normal; font-variant: normal; text-transform: none; line-height: 1.7; border: 1px solid #cfdbd6; border-radius: 12px; background: #fffefa; box-shadow: 0 16px 42px rgba(22,49,51,.18); }
 .ewc-reference-preview > * { box-sizing: border-box; min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: normal; text-align: left; font-style: normal; text-transform: none; }
 .ewc-reference-preview__eyebrow { color: var(--teal); font-size: 12px; font-weight: 600; letter-spacing: .03em; }
