@@ -144,13 +144,6 @@ function FisherRole() {
         <span>FROM PAGE 4 · LAPLACE</span><b>局部宽度 / 精度</b><i aria-hidden="true">→</i><span>需要一个可计算的近似</span><i aria-hidden="true">→</i><b><ReferenceTrigger id="fisher_information">Fisher Information</ReferenceTrigger></b><small>参数级局部敏感性近似；不等于精确 Hessian。</small>
       </div>
 
-      <details className="p05-kl-detail">
-        <summary>展开背景：小幅参数移动如何改变预测分布？</summary>
-        <div>
-          <MathFormula block tex={String.raw`D_{\mathrm{KL}}(p_\theta\parallel p_{\theta+\Delta\theta})\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} />
-          <p>在非常小的参数变化下，Fisher 可作为描述预测分布局部变化的度量。这个 KL 几何解释属于一般背景 <b>(B05)</b>，不是 2017 年 EWC 论文对该逐样本估计配方的证明。</p>
-        </div>
-      </details>
 
       <div className="p05-result-objects">
         <div><span>TASK A · FIXED REFERENCE</span><b><ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger></b><p>Task A 普通训练最终停下来的参数位置。</p></div>
@@ -172,7 +165,7 @@ export function PageFisher() {
       </header>
 
       <section className="p05-opening" aria-labelledby="p05-opening-title">
-        <div><span className="p05-overline">WHAT IS STILL MISSING?</span><h2 id="p05-opening-title">局部约束需要一个能从模型计算的量</h2><p>旧任务对不同参数方向的容忍度不同，但模型里不会自动贴上“敏感度标签”。从单个参数 θ<sub>i</sub> 和一条 Task A 样本开始。</p></div>
+        <div><span className="p05-overline">WHAT IS STILL MISSING?</span><h2 id="p05-opening-title">局部约束需要一个能从模型计算的量</h2><p>P4 的完整曲率矩阵需要 P² 个量。我们需要更便宜的近似，但先要解释它为何与偏移代价有关：从预测概率对参数的局部响应开始，再决定保留哪些项。</p></div>
         <div className="p05-opening__handoff"><b><ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger></b><i aria-hidden="true">→</i><span>固定参数<br />读取旧样本</span><i aria-hidden="true">→</i><b><ReferenceTrigger id="fisher_information">F<sub>A</sub></ReferenceTrigger></b></div>
       </section>
 
@@ -181,14 +174,14 @@ export function PageFisher() {
           <div><span className="p05-overline">FROM FULL CURVATURE TO A COMPUTABLE SIGNAL</span><h2 id="p05-definition-title">为什么用 Fisher 近似，而不保存完整 Hessian？</h2></div>
           <p>旧解附近的曲率有用，但完整高维矩阵很难存取；EWC 保留一个可计算的参数级近似。</p>
         </div>
-        <div className="p05-curvature-cost" aria-label="完整 Hessian 和对角 Fisher 存储规模比较">
-          <div><span>FULL HESSIAN</span><b>P × P entries</b><small>保留参数间的交叉曲率，成本随参数对增长。</small></div>
-          <i aria-hidden="true">→</i>
-          <div><span>DIAGONAL FISHER</span><b>P entries</b><small>每个坐标一个非负权重；忽略参数间耦合，换取更低存储成本。</small></div>
-        </div>
         <div className="p05-fisher-mechanism">
-          <div><span>THEORETICAL FISHER · SCORE SECOND MOMENT</span><MathFormula block tex={String.raw`g=\nabla_\theta\log p_\theta(y\mid x),\qquad F(\theta)=\mathbb{E}_{x,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]`} /><p>对输入分布与模型预测的标签取期望，得到 score gradient 的外积二阶矩；对角上 F<sub>ii</sub> = E[g<sub>i</sub><sup>2</sup>] 非负。在适当正则条件下，它等于模型分布期望下的负 log-likelihood Hessian；有限数据的 Posterior Hessian 还含 Prior 曲率。</p></div>
-          <div><span>WHY THE SECOND MOMENT TRACKS LOCAL CHANGE</span><MathFormula block tex={String.raw`\mathbb{E}_x D_{\mathrm{KL}}(p_\theta(\cdot\mid x)\parallel p_{\theta+\Delta\theta}(\cdot\mid x))\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} /><p>对小幅参数移动，Fisher 二次型近似描述预测分布改变多少；Fisher 较大的方向会更快改变输出，因此可作为局部敏感性的线索。</p></div>
+          <div><span>THEORETICAL FISHER · SCORE SECOND MOMENT</span><MathFormula block tex={String.raw`\begin{aligned}g&=\nabla_\theta\log p_\theta(y\mid x)\\F(\theta)&=\mathbb{E}_{x\sim\mu_A,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]\end{aligned}`} /><p>score 是 log probability 对参数的局部变化率。这里 μ<sub>A</sub> 是固定的 Task A 输入分布（可用旧输入的经验分布），标签从模型预测分布取期望；外积的对角项 <MathFormula tex={String.raw`F_{ii}=\mathbb E[g_i^2]`} /> 非负。在适当正则条件下，Fisher 等于模型期望下负 log-likelihood 的 Hessian；有限数据的 Posterior Hessian 还含 Prior 曲率。</p></div>
+          <div><span>WHY THE SECOND MOMENT TRACKS LOCAL CHANGE</span><MathFormula block tex={String.raw`\mathbb{E}_{x\sim\mu_A} D_{\mathrm{KL}}(p_\theta(\cdot\mid x)\parallel p_{\theta+\Delta\theta}(\cdot\mid x))\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} /><p>在可微、可交换求导与积分且分布支撑不随参数变化等正则条件下，零偏移处的一阶项消失，二阶项给出这个局部度量。沿方向 v 的代价由 <MathFormula tex={String.raw`v^\mathsf TFv=\mathbb E[(g^\mathsf Tv)^2]`} /> 决定。因此取梯度平方的期望有局部几何依据，不只是为了消除正负号。</p></div>
+        </div>
+        <div className="p05-curvature-cost" aria-label="完整 Hessian 和对角 Fisher 存储规模比较">
+          <div><span>FULL HESSIAN</span><b>P × P entries</b><small>保留参数间的交叉曲率，存储为 O(P²)。</small></div>
+          <i aria-hidden="true">→</i>
+          <div><span>DIAGONAL FISHER</span><b>P entries</b><small>只保存逐坐标平方的期望，存储为 O(P)；省略交叉项，也失去参数间的耦合信息。</small></div>
         </div>
         <p className="p05-curvature-boundary">边界：EWC 用对角 Fisher 近似 Task A Posterior 的局部精度，不等于一般情形的完整后验 Hessian。大幅移动、模型失配、先验曲率与被省略的非对角项都会限制这一近似。</p>
         <p className="p05-estimator-lead">接下来区分理论期望与可执行的示例估计：本页对旧数据观测到的标签求逐样本 score，再平方、累计并平均；它是 observed-label empirical-Fisher 教学例子，不是论文唯一规定的配方。</p>

@@ -173,19 +173,18 @@ function SequentialBayes() {
           <RuntimeNode objectId="task-b-data" eyebrow="NEW DATA" title="Task B Data" detail="D_B"/>
           <i aria-hidden="true">↓</i>
           <p className="p06-branch-math"><ReferenceTrigger id="p_D_given_theta">p(D<sub>B</sub> | θ)</ReferenceTrigger><span>−log →</span><RuntimeReference id="task_b_loss" objectId="task-b-loss">L<sub>B</sub>(θ)</RuntimeReference></p>
-          <p className="p06-source-copy">第 2 页已经建立的普通 Task-B Loss。</p>
+          <p className="p06-source-copy">沿用 P2 的计算方式，换成 Task B 的输入与标签，得到新数据 Loss。</p>
         </article>
         <article className="p06-source-card p06-source-card--old">
           <span className="p06-source-label">TASK A · PRESERVE LOCAL CONSTRAINTS</span>
           <div className="p06-posterior-reference"><ReferenceTrigger id="task_a_posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger><span>旧任务 Posterior</span></div>
           <i aria-hidden="true">↓</i>
-          <p className="p06-source-copy">在 θ_A* 附近做局部近似，后验负对数变成加权二次约束：</p>
-          <MathFormula block tex={String.raw`-\log p(\theta\mid D_A)\approx C+\frac12\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
+          <p className="p06-source-copy">P4 将负对数后验的局部变化写成二次代价，P5 用对角 Fisher 近似局部精度。现在读出这两个已保存对象：</p>
           <div className="p06-old-objects">
             <RuntimeNode objectId="task-a-anchor" eyebrow="TASK A · ANCHOR" title="θ_A*" detail="固定参数快照"/>
             <RuntimeNode objectId="task-a-fisher" eyebrow="TASK A · DIAGONAL FISHER" title="F_A" detail="参数级敏感性近似"/>
           </div>
-          <p className="p06-source-copy">常数 C 不依赖当前参数，优化时可以忽略。高 Fisher 坐标的偏移代价更高。</p>
+          <p className="p06-source-copy">Anchor 指定从哪里量偏移，Fisher 指定各坐标的代价权重；缺少任意一个都无法定义旧任务约束。下面按这一来源逐项构造。</p>
         </article>
       </div>
     </section>
@@ -397,7 +396,7 @@ function CompleteObjective() {
             <p>更新后移动 {signedValue(LOW_FISHER_UPDATE.movement)}。Fisher 权重较小，Task B 的梯度更大程度决定参数移动。</p>
           </article>
         </div>
-        <p className="p06-update-rule">两种更新都使用同一正学习率。高 Fisher 参数变化较小，但仍然可以更新；该例只说明梯度路径，不代表论文数据或通用训练数值。</p>
+        <p className="p06-update-rule">本例中，约束梯度与 Task B 梯度相反，较高 Fisher 抵消更多向外移动，所以本次移动较小。一般更新还取决于任务梯度、当前偏移、λ 和优化器，不能保证高 Fisher 坐标每一步移动都更小。特别是在旧 Anchor 上偏移为零时，约束梯度也为零；参数仍可更新。</p>
       </section>
 
       <section className="p06-closing" aria-labelledby="p06-closing-title">

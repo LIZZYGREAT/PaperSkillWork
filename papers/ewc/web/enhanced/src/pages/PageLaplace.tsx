@@ -51,7 +51,7 @@ function LaplaceEquation() {
     <section className="p04-section p04-laplace" id="laplace-local-view" aria-labelledby="p04-laplace-title">
       <div className="p04-section-heading">
         <div><span className="p04-overline">LOCAL QUADRATIC · GAUSSIAN VIEW</span><h2 id="p04-laplace-title">在 Task A 解附近，用曲率描述 Posterior</h2></div>
-        <p>从普通训练得到的 <ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger> 出发，把它附近的负对数 Posterior 看成局部二次曲面。</p>
+        <p>先以 <ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger> 为近似局部 MAP 中心。我们要计算的不是中心高度，而是偏离中心之后负对数密度增加多少。</p>
       </div>
 
       <div className="p04-equation-card" role="group" aria-label="Laplace 近似的局部二次展开与 Gaussian 表示">
@@ -65,10 +65,13 @@ function LaplaceEquation() {
         </div>
         <div className="p04-equation-row" role="math" aria-label="Phi theta 约等于 Phi theta A 星加二分之一乘参数位移转置、局部 Hessian 和参数位移">
           <span className="p04-equation-label">Taylor 展开的一阶项因驻点条件消失</span>
-          <MathFormula block tex={String.raw`\Phi(\theta)\approx\Phi(\theta_A^*)+\tfrac12(\theta-\theta_A^*)^\mathsf{T}H_A(\theta-\theta_A^*)`} />
+          <MathFormula block tex={String.raw`\Delta\theta=\theta-\theta_A^*,\quad\Phi(\theta)-\Phi(\theta_A^*)\approx\tfrac12\Delta\theta^\mathsf{T}H_A\Delta\theta`} />
+          <p>左侧就是偏移的额外代价。右侧把方向差异留在曲率矩阵中：相同长度的偏移，沿较陡方向会付出更大代价。</p>
         </div>
         <div className="p04-equation-row p04-equation-row--result" role="math" aria-label="Task A 参数 Posterior 的局部近似是均值 theta A 星、协方差为 H A 逆的 Gaussian 分布">
-          <span className="p04-equation-label">对应的局部 Gaussian</span>
+          <span className="p04-equation-label">取负号并指数化：代价增加，密度下降</span>
+          <MathFormula block tex={String.raw`\frac{q(\theta_A^*+\Delta\theta\mid D_A)}{q(\theta_A^*\mid D_A)}=\exp\!\left(-\tfrac12\Delta\theta^\mathsf{T}H_A\Delta\theta\right)`} />
+          <p>当曲率正定时，这个可归一化的指数二次式就是 Gaussian。其精度为 <MathFormula tex="H_A" />，协方差为它的逆：</p>
           <MathFormula block tex={String.raw`q(\theta\mid D_A)=\mathcal{N}(\theta_A^*,H_A^{-1})`} />
         </div>
       </div>
@@ -78,23 +81,16 @@ function LaplaceEquation() {
         <div><b>局部曲率 H<sub>A</sub></b><p>描述负对数 Posterior 在中心附近变陡或变平的程度。曲率越大，Gaussian 对应方向越窄。</p></div>
       </div>
 
-      <details className="p04-derivation">
-        <summary>展开：为什么二阶展开会得到 Gaussian？</summary>
-        <div>
-          <p>在局部极值 <ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger> 附近，一阶项为零；保留二阶项后，负对数 Posterior 的变化是一个二次型。</p>
-          <p>对这个二次型取指数，就得到以 θ<sub>A</sub>* 为中心的 Gaussian。<ReferenceTrigger id="local_precision">局部精度</ReferenceTrigger> H<sub>A</sub> 描述分布收缩程度；协方差是它的逆。</p>
-        </div>
-      </details>
+      <p>由 Bayes，<MathFormula tex={String.raw`\Phi=-\log p(D_A\mid\theta)-\log p(\theta)+C`} />，所以 <ReferenceTrigger id="local_precision">局部精度</ReferenceTrigger> 还可能包含 Prior 曲率，不能无条件等同于旧数据 Loss 的 Hessian。</p>
       <p className="p04-teaching-note">若局部曲率正定，指数化这个二次型就得到局部 Gaussian；曲率越大，方差越小、等高线越窄。普通优化器得到的 θ_A* 只是局部中心的近似。零或负曲率需要适当正则化；论文以对角 Fisher 近似局部精度，没有精确计算或保存这里的完整 Hessian。</p>
     </section>
   );
 }
 
-function DirectionalPrecision() {
-  const [direction, setDirection] = useState<Direction>("wide");
+function DirectionalPrecision({ direction, onDirectionChange }: { direction: Direction; onDirectionChange: (direction: Direction) => void }) {
   const explanation = direction === "wide"
-    ? "宽方向精度 0.5，d = 0.5：ΔΦ = 0.0625，密度相对中心为 exp(−0.0625) ≈ 0.939。"
-    : "窄方向精度 2.18，d = 0.5：ΔΦ ≈ 0.2725，密度相对中心为 exp(−0.2725) ≈ 0.761。";
+    ? "沿宽方向移动相同距离，仍留在靠近中心的高密度区域；旧信息对这类偏移相对宽松。"
+    : "沿窄方向移动相同距离，跨过更多等密度线；密度下降更快，保持旧信息允许的偏移更小。";
 
   return (
     <section className="p04-section p04-directions" id="narrow-wide-directions" aria-labelledby="p04-directions-title">
@@ -132,8 +128,8 @@ function DirectionalPrecision() {
         </svg>
 
         <div className="p04-direction-controls" role="group" aria-label="查看等长移动在不同方向上的局部变化">
-          <button type="button" aria-pressed={direction === "wide"} className={direction === "wide" ? "is-active" : ""} onClick={() => setDirection("wide")}>沿宽方向移动 d</button>
-          <button type="button" aria-pressed={direction === "narrow"} className={direction === "narrow" ? "is-active" : ""} onClick={() => setDirection("narrow")}>沿窄方向移动 d</button>
+          <button type="button" aria-pressed={direction === "wide"} className={direction === "wide" ? "is-active" : ""} onClick={() => onDirectionChange("wide")}>沿宽方向移动 d</button>
+          <button type="button" aria-pressed={direction === "narrow"} className={direction === "narrow" ? "is-active" : ""} onClick={() => onDirectionChange("narrow")}>沿窄方向移动 d</button>
         </div>
         <p className="p04-direction-explanation" aria-live="polite">{explanation}</p>
         <div className="p04-direction-legend"><span className="p04-legend-item p04-legend-item--wide"><i /> 宽方向：局部精度较低</span><span className="p04-legend-item p04-legend-item--narrow"><i /> 窄方向：局部精度较高</span></div>
@@ -145,20 +141,23 @@ function DirectionalPrecision() {
           <p>这是解释几何关系的二维教学示例，不是论文中的实测轮廓或真实参数子空间切片。</p>
         </div>
       </details>
-      <p className="p04-boundary-note">二维教学示例，非论文实测；每参数单位 136 图像单位，等长箭头为 d = 0.5。椭圆短长轴比约 √(0.5 / 2.18)，与上述二次型一致。中心加局部精度描述偏移代价；下页解决精度怎样计算。</p>
+      <p className="p04-boundary-note">二维教学示例，非论文实测；每参数单位 136 图像单位，等长箭头为 d = 0.5。先观察方向差异，下面推导并计算同一幅图的局部代价。</p>
     </section>
   );
 }
 
 export function PageLaplace() {
   const api = useReferenceApi();
+  const [direction, setDirection] = useState<Direction>("wide");
+  const precision = direction === "wide" ? 0.5 : 2.18;
+  const cost = 0.5 * precision * 0.5 ** 2;
 
   return (
     <article className="ewc-page p04-page" aria-labelledby="p04-title">
       <header className="ewc-page-header p04-header">
         <div className="ewc-page-header__kicker"><span>04</span> FROM GLOBAL POSTERIOR TO LOCAL GAUSSIAN</div>
         <h1 id="p04-title">在 Task A 解附近保留局部约束</h1>
-        <p className="ewc-page-header__dek">完整高维 Posterior 需要描述整个参数空间，难以保存、积分与继续更新。只要后续参数暂留在旧解附近，就可用中心 θ<sub>A</sub>* 与局部曲率近似那里的支持度变化；Laplace 近似用 Gaussian 表达这部分约束。</p>
+        <p className="ewc-page-header__dek">P3 已说明旧数据会改变参数支持度；只保存最高点的位置，仍不知道离开它一点会损害多少。完整高维 Posterior 又难以保存。因此先看旧解附近的宽窄，再用局部二阶近似留下中心与偏移代价。</p>
       </header>
 
       <section className="p04-section p04-global-local" id="posterior-global-to-local" aria-labelledby="p04-global-local-title">
@@ -170,12 +169,18 @@ export function PageLaplace() {
         <p className="p04-visual-boundary">这是帮助理解数学近似关系的概念图：完整 Posterior 与局部 Gaussian 都不是教程声称实际分配、保存的网络对象。</p>
       </section>
 
+      <DirectionalPrecision direction={direction} onDirectionChange={setDirection} />
       <LaplaceEquation />
-      <DirectionalPrecision />
+      <div className="p04-equation-card" aria-live="polite">
+        <h3>把推导代回上图：当前选择{direction === "wide" ? "宽" : "窄"}方向</h3>
+        <MathFormula block tex={String.raw`d=0.5,\quad h=${precision},\quad\Delta\Phi\approx\tfrac12 h d^2=${cost.toFixed(4)}`} />
+        <MathFormula block tex={String.raw`q(\theta_A^*+\Delta\theta)/q(\theta_A^*)=e^{-${cost.toFixed(4)}}\approx ${Math.exp(-cost).toFixed(3)}`} />
+        <p>上图的方向选择同步决定这里的曲率、代价和相对密度。椭圆短长轴比约为 <MathFormula tex={String.raw`\sqrt{0.5/2.18}`} />；同一中心不变，二次型才区分偏移方向。</p>
+      </div>
 
       <section className="p04-handoff" id="fisher-handoff" aria-labelledby="p04-handoff-title">
         <div><span className="p04-overline">NEXT · A COMPUTABLE LOCAL PRECISION</span><h2 id="p04-handoff-title">论文用对角 Fisher 近似局部精度</h2>
-          <p>局部 Gaussian 解释了“参数移动多少、Posterior 会变化多少”。论文以对角 <ReferenceTrigger id="fisher_information">Fisher Information</ReferenceTrigger> 作为局部精度的近似，供后续 EWC 使用；它不是完整 Hessian 的精确值，也不是这里已经展开的估计步骤。</p>
+          <p>现在得到旧中心与局部曲率，但 P 个参数需要一个 P × P 的 Hessian，难存也难算。能否从网络预测得到每个坐标的近似权重？下一页解释 <ReferenceTrigger id="fisher_information">Fisher Information</ReferenceTrigger> 与局部预测变化的关系，以及只保留对角项的代价。</p>
         </div>
         <button type="button" onClick={() => api.navigatePage("page-05-fisher")}>继续到 Page 5 · Fisher <span aria-hidden="true">→</span></button>
       </section>
