@@ -84,7 +84,13 @@ export function usePopoverPosition(
   return position;
 }
 
-export function Popover({ label, trigger, children, className = "" }: { label: string; trigger: ReactNode; children: ReactNode; className?: string }) {
+export function Popover({ label, trigger, children, className = "", closeLabel = "Close" }: {
+  label: string;
+  trigger: ReactNode;
+  children: ReactNode;
+  className?: string;
+  closeLabel?: string;
+}) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -98,7 +104,7 @@ export function Popover({ label, trigger, children, className = "" }: { label: s
       </button>
       {open ? (
         <div ref={panelRef} className={`rk-popover ${className}`.trim()} role="dialog" aria-label={label} style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}>
-          <button type="button" className="rk-overlay__close" aria-label="Close" onClick={close}>×</button>
+          <button type="button" className="rk-overlay__close" aria-label={closeLabel} onClick={close}>×</button>
           {children}
         </div>
       ) : null}

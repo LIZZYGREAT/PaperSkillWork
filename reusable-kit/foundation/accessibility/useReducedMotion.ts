@@ -27,9 +27,11 @@ export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () =
     if (!open || !containerRef.current) return;
     const container = containerRef.current;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const selector = "button:not(:disabled), a[href], input:not(:disabled), [tabindex='0']";
-    const focusables = () => Array.from(container.querySelectorAll<HTMLElement>(selector));
-    focusables()[0]?.focus();
+    const selector = "button:not(:disabled), a[href], input:not(:disabled):not([type='hidden']), select:not(:disabled), textarea:not(:disabled), [contenteditable='true'], [tabindex]:not([tabindex^='-'])";
+    const focusables = () => Array.from(container.querySelectorAll<HTMLElement>(selector))
+      .filter((element) => element.getClientRects().length > 0 && !element.closest("[hidden], [aria-hidden='true']"));
+    const initial = focusables()[0];
+    (initial ?? container).focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
@@ -44,10 +46,10 @@ export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () =
       }
       const first = items[0];
       const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      if (event.shiftKey && (document.activeElement === first || !container.contains(document.activeElement))) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      } else if (!event.shiftKey && (document.activeElement === last || !container.contains(document.activeElement))) {
         event.preventDefault();
         first.focus();
       }
@@ -55,7 +57,7 @@ export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () =
     container.addEventListener("keydown", onKeyDown);
     return () => {
       container.removeEventListener("keydown", onKeyDown);
-      previous?.focus();
+      if (previous?.isConnected) previous.focus();
     };
   }, [open, onClose]);
 

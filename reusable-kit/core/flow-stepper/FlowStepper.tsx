@@ -3,17 +3,27 @@ import { useStickyStepSync } from "../../foundation/layout/StickySystemView";
 import { Button } from "../../foundation/controls/Button";
 
 export type FlowStep = { id: string; title: string; description?: string; statusText?: string; relatedIds?: string[] };
+export type FlowStepperLabels = { previous: string; next: string; stepOf: string; empty: string };
 
-export function FlowStepper({ steps, initialStep = 0, step: controlledStep, onStepChange, label = "Process steps" }: {
+const DEFAULT_LABELS: FlowStepperLabels = {
+  previous: "Previous",
+  next: "Next",
+  stepOf: "Step {current} of {total}",
+  empty: "No steps are available.",
+};
+
+export function FlowStepper({ steps, initialStep = 0, step: controlledStep, onStepChange, label = "Process steps", labels }: {
   steps: FlowStep[];
   initialStep?: number;
   step?: number;
   onStepChange?: (step: FlowStep, index: number) => void;
   label?: string;
+  labels?: Partial<FlowStepperLabels>;
 }) {
   const [internalStep, setInternalStep] = useState(initialStep);
   const stickySync = useStickyStepSync();
-  if (!steps.length) return <div className="rk-flow-stepper" role="status">No steps are available.</div>;
+  const copy = { ...DEFAULT_LABELS, ...labels };
+  if (!steps.length) return <div className="rk-flow-stepper" role="status">{copy.empty}</div>;
   const stickyIndex = stickySync?.activeStepId ? steps.findIndex((item) => item.id === stickySync.activeStepId) : -1;
   const activeIndex = Math.max(0, Math.min(controlledStep ?? (stickyIndex >= 0 ? stickyIndex : internalStep), steps.length - 1));
   const current = steps[activeIndex];
@@ -29,8 +39,8 @@ export function FlowStepper({ steps, initialStep = 0, step: controlledStep, onSt
       <ol className="rk-flow-stepper__list">
         {steps.map((item, index) => <li key={item.id}><button type="button" className={`rk-flow-step ${index === activeIndex ? "is-active" : ""} ${index < activeIndex ? "is-complete" : ""}`} aria-current={index === activeIndex ? "step" : undefined} onClick={() => choose(index)}><span className="rk-flow-step__number">{index + 1}</span><span>{item.title}</span></button></li>)}
       </ol>
-      <div className="rk-flow-stepper__detail" aria-live="polite"><span>Step {activeIndex + 1} of {steps.length}</span><h3>{current.title}</h3>{current.description ? <p>{current.description}</p> : null}{current.statusText ? <p className="rk-flow-stepper__status">{current.statusText}</p> : null}</div>
-      <div className="rk-flow-stepper__actions"><Button variant="secondary" onClick={() => choose(activeIndex - 1)} disabled={activeIndex === 0}>Previous</Button><Button variant="secondary" onClick={() => choose(activeIndex + 1)} disabled={activeIndex === steps.length - 1}>Next</Button></div>
+      <div className="rk-flow-stepper__detail" aria-live="polite"><span>{copy.stepOf.replace("{current}", String(activeIndex + 1)).replace("{total}", String(steps.length))}</span><h3>{current.title}</h3>{current.description ? <p>{current.description}</p> : null}{current.statusText ? <p className="rk-flow-stepper__status">{current.statusText}</p> : null}</div>
+      <div className="rk-flow-stepper__actions"><Button variant="secondary" onClick={() => choose(activeIndex - 1)} disabled={activeIndex === 0}>{copy.previous}</Button><Button variant="secondary" onClick={() => choose(activeIndex + 1)} disabled={activeIndex === steps.length - 1}>{copy.next}</Button></div>
     </section>
   );
 }

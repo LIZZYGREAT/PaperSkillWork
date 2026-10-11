@@ -12,6 +12,27 @@ export type TermDefinition = {
   sourceKind?: string;
 };
 
+export type TermRefLabels = {
+  definition: string;
+  paperRole: string;
+  easyToConfuse: string;
+  sourceKind: string;
+  openReference: string;
+};
+
+export type ReferenceHubLabels = {
+  description: string;
+  search: string;
+  searchPlaceholder: string;
+  category: string;
+  allCategories: string;
+  itemCount: string;
+  noMatches: string;
+  selectPrompt: string;
+  jumpToSection: string;
+  categoryNames?: Partial<Record<ReferenceKind, string>>;
+};
+
 export type ReferenceItem = {
   id: string;
   title: string;

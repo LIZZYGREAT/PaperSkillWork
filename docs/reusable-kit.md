@@ -48,6 +48,16 @@ Each recipe in `reusable-kit/recipes/` describes when a pattern helps, when to a
 
 `TermRef` and the general-purpose `Popover` share the Foundation `usePopoverPosition` hook. Both keep their panels inside the viewport, reposition after scroll or resize, and dismiss on an outside press or Escape. `TermRef` opens on pointer hover and keyboard focus; click or tap pins it open, and its optional callback can route a term to the Reference Hub.
 
+## Component behavior and expression boundaries
+
+TermRef, ReferenceHub, Popover, and Drawer accept copy labels so the trigger language can match the paper's selected language. ReferenceHub keeps its entry list and detail pane independently scrollable, and resets only the detail pane when selection changes. Drawer uses the visible title as its dialog name, traps keyboard focus while open, restores focus when closed, and supports pointer dismissal on the backdrop.
+
+Use FlowStepper for an ordered sequence only. If other views share its current stage, pass a controlled step and handle onStepChange with the same shared state; the component does not infer graph edges or transitions.
+
+Simple mathematical notation can remain ordinary text. FormulaBlock is for a complete expression that benefits from a dedicated, horizontally scrollable region; pass an accessible label and a rendered MathML/KaTeX node for complex typesetting. FormulaTerm should represent only terms the learner can inspect or connect to another view, not every symbol in the equation.
+
+Typography roles are exposed as overridable CSS custom properties in foundation/styles/kit.css. Paper themes may override these tokens; component defaults should not force a global typeface or color system.
+
 ## Local demos and checks
 
 The local app at `reusable-kit/demo/` contains LwF and EWC mini demos. It illustrates component reuse only; the displayed method sketches need paper-specific source checking before use in a tutorial.
