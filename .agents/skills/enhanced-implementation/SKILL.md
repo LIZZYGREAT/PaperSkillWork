@@ -21,6 +21,8 @@ Implement the reviewed learning spine as an inspectable mental model. Optimize f
 
 ## W6: First Vertical Slice
 
+For rendered UI, follow docs/VISUAL_QA.md. Capture and inspect actual Chromium screenshots at the planned states and viewports; check geometry, visual balance, and any protected design baseline. Do not mark a check PASS if its screenshot or browser state was not inspected; record NOT_RUN with the reason.
+
 1. Confirm W0–W5 are complete. W2 and W4 must have human review records; W0, W1, W3, and W5 are automatic after their checks pass.
 2. Implement only the slice named in the plan: the problem/opening, core architecture, and one primary end-to-end mechanism (normally 2–3 spine stages).
 3. Update `implementation-manifest.json` for each implemented slice CORE item with its planned stage, component, and `status: complete`.
@@ -34,6 +36,8 @@ W6 completes automatically when every `vertical_slice.required_core_items` entry
 Present the slice for a person to judge the learning path, architecture, flow, emphasis, prose load, necessary math, and the value of each interaction. Record the decision and required edits in `design/implementation-plan.md`. Complete W7 with `--reviewed-by` and `--note` only after a person records PASS. If the decision is REVISE, return to the spine/plan and repeat W6/W7.
 
 ## W8: Full Implementation
+
+After each page or complete interaction, inspect its relevant states. When a shared style or component changes, expand regression to affected pages and overlays. Preserve confirmed design invariants; pause for the user's decision if implementation would change an approved semantic or structural choice.
 
 1. Implement all remaining CORE content on the accepted spine.
 2. Keep SUPPORTING content compact; put REFERENCE material in the Reference Hub/advanced area; omit DELETE.

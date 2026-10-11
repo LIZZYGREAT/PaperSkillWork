@@ -6,6 +6,26 @@ Paper ID: `{{paper_id}}`
 
 State the learner outcome this page must enable. List details deliberately kept in Reference or omitted. Do not start with a fixed chapter count, animation plan, or interaction quota.
 
+## Design Handoff, Invariants, and Change Scope
+
+Record the latest confirmed W4/W5 decisions here. Keep this as the single project-level decision source.
+
+- Confirmed learning and visual goals:
+- Protected structures, semantics, data, scales, colors, object identities, and interactions:
+- Changes allowed without a new design decision:
+- Open choices that require user input:
+- Pages, shared components, and states affected by this change:
+
+For substantial motion, record the initial, key intermediate, and final states and the required object connections. Do not duplicate the same page contract in a new document.
+
+## Visual QA State Plan
+
+List only the pages, states, and viewports relevant to this project or revision. Follow docs/VISUAL_QA.md.
+
+| Page / area | State | Viewport | Observable expectation |
+| --- | --- | --- | --- |
+|  |  | 1440x900 / 1920x1080 |  |
+
 ## Primary Spine Mapping
 
 The YAML below is the sole structured source for implementation coverage. Give each CORE item one stage and one `primary_vehicle`. Use only stage IDs already defined by the Learning Spine. `supporting` and `reference` map lower-priority items to their placements; DELETE items do not appear here.
@@ -53,4 +73,4 @@ List the remaining CORE stages to complete. List compact placements for SUPPORTI
 
 ## Human Acceptance Record
 
-Keep concise decisions and follow-up changes here; do not create duplicate review documents.
+Keep concise decisions, approved design changes, protected invariants, and follow-up changes here; do not create duplicate review documents.

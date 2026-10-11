@@ -19,6 +19,8 @@ Decide whether the finished tutorial teaches the approved main line, respects ev
 
 ## W9 Procedure
 
+Use docs/VISUAL_QA.md and record BUILD, GEOMETRY_QA, VISUAL_REVIEW, REGRESSION, and HUMAN_ACCEPTANCE separately in the existing final-check template. Include real commands, checked states and viewports, screenshot/report locations, and any NOT_RUN reason. A successful build or geometry check is not a visual or learning PASS.
+
 1. Review learning: Can a first-time reader state the problem/idea, reconstruct architecture and flow, explain training/inference and design rationale, summarize key results, and state limitations?
 2. Review evidence: Trace important facts, formulas, values, dataset/protocol statements, architecture, and limits through registry IDs to source locators.
 3. Review assets: Check full inventory, selection rationale, source/derivative separation, attribution, reuse rights, explanatory placement, accessibility, relative paths, and README provenance.

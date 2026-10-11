@@ -27,6 +27,8 @@ Choose the one continuous path that lets a first-time reader understand the pape
 
 ## Validation
 
+Use docs/TEACHING_DESIGN_STANDARD.md as the review contract. For each CORE stage, check the known fact, current gap, reason for the next mechanism, what changes, and what observable result hands off to the next question. These are review prompts, not mandatory page fields. Introduce a technical term only when the reader needs to name or understand its object or relation, and assign one primary teaching location.
+
 - One continuous, explainable causal/runtime path exists.
 - All CORE items are assigned to the path, without duplicate item IDs.
 - Supporting content remains compact; reference content does not take a mainline scene.

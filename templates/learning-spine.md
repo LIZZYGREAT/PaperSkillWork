@@ -25,11 +25,14 @@ An item example: `{id: C01, title: "Core mechanism", priority: CORE, stage: S1, 
 
 Explain why each stage follows the previous one. Keep the whole spine readable as one continuous argument.
 
+For each CORE stage, review: what the reader already knows; what gap remains; why the next mechanism is introduced; what changes; and what observable result hands off to the next question. Use these as design questions, not required page fields or a fixed card sequence. Introduce each technical term where the reader first needs it and select one primary teaching location.
+
 ## Human Review
 
 - Can a new reader state the problem and central idea from this order?
 - Can the reader reconstruct the architecture and one complete flow?
 - Is anything required to understand the main mechanism incorrectly placed in Reference?
+- Does each CORE stage follow from a clear gap, without unexplained terms or repeated full explanations?
 - What correct but unnecessary content was deleted?
 
 Record reviewer and decision in `paper.yaml` only after the review.

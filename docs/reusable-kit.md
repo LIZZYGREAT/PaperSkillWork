@@ -30,6 +30,10 @@ import { ResponsibilityMap } from "./shared/core/responsibility-map";
 
 Optional component imports use `./shared/optional/<component-folder>`. No npm workspace package, symlink, or cross-paper runtime import is created.
 
+## Reuse and abstraction boundary
+
+Reusable patterns express interaction behavior and visual relationships, not paper-specific conclusions or algorithm data. A recipe should state the learning task it serves, when not to use it, its inputs and state changes, responsive and accessibility behavior, and common misuse. Prefer existing CSS recipes and semantic HTML; add a shared component only when the same behavior recurs across projects and can be described without embedding one paper's content. Do not retrofit Kit source into existing paper copies automatically.
+
 ## Registry and selection
 
 `reusable-kit/registry.yaml` is the canonical list of names available to `implementation.stages[].reusable_pattern`. A non-null name not in the registry makes the Workflow v3 implementation-plan check fail. Use `null` when no reusable pattern applies. `--add` accepts registered P1 components only; the default continual-learning preset includes Foundation and P0.

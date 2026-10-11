@@ -17,6 +17,8 @@ Before page implementation, assign each candidate item exactly one priority:
 
 Do not build an interaction, animation, analogy, chapter, or formula display to meet a quota. Choose a visual or interaction only when it explains a relationship or makes a real learning task easier. Prefer a validated reusable pattern, copied into the paper project when useful; do not import a shared runtime across paper projects.
 
+Apply the teaching design standard in docs/TEACHING_DESIGN_STANDARD.md when planning narrative, language, mathematics, visuals, or interactions. Apply docs/VISUAL_QA.md when checking rendered UI. These documents add guidance to Workflow v3; they do not change its stage schema or human review gates.
+
 ## W0–W10 workflow
 
 Follow `docs/WORKFLOW.md`. Source intake and a one-time source cache precede the paper model. Evidence and asset curation precede the learning spine. The first code is a small vertical slice; a person reviews whether it teaches the intended mental model before full implementation proceeds. Learning quality and evidence validity remain human judgments; tools may check structure, paths, references, coverage, and builds only.
@@ -31,15 +33,7 @@ Cache one complete, systematic paper read under `source-cache/`. Use the cache f
 
 ## Visual feedback and iterative UI revisions
 
-When a user gives screenshot-based or visual revision feedback, translate it into explicit acceptance criteria before changing the UI. Record the affected object, the relationship it should show, direction and alignment, exact source/target pairs, what must stay invariant, what may change, semantic colors, language, and the requested scope.
-
-- Read the relevant conversation history together with the screenshot. Do not infer that an arrow should connect an entire sequence when the requested relation is between adjacent nodes. Write down the intended edges (for example, `01→02`, `02→03`) before implementing them.
-- For comparisons and charts, separate invariants from changing values: dimensions, coordinate identity, axes, scale, and zero point may need to stay fixed while measurements change.
-- Check terminal conditions as well as the middle of a diagram: stray lines before the first node or after the last node, arrow direction, clipping, and container bounds.
-- Preserve already accepted page framing and shared interactions unless the user asks to change them. After a local fix, inspect the full affected sequence and nearby sections so the same defect has not been repeated elsewhere.
-- Validate the rendered UI at the relevant viewport when possible, then run the project build. If the rendered result could not be inspected, say so instead of implying visual verification.
-
-For screenshot-based UI revisions, consult [`docs/ui-teaching-lessons.md`](docs/ui-teaching-lessons.md) for recorded layout, typography, animation, diagram, and language feedback. Check each entry's paper scope; reuse general layout lessons while keeping paper-specific visual mappings and semantics scoped to their original project.
+Follow docs/VISUAL_QA.md for browser screenshots, geometry checks, regression scope, reporting, and stop conditions. If the rendered result cannot be inspected, report NOT_RUN rather than implying visual verification. Consult docs/ui-teaching-lessons.md for historical examples; reuse general layout lessons while keeping paper-specific visual mappings and semantics scoped to their original project.
 
 ## Visual assets
 
@@ -56,6 +50,8 @@ Inventory figures, tables, and other source visuals; classify and evaluate each;
 7. PaperSkill is a separate repository. Use its official import flow; do not merge or cherry-pick PaperSkillWork history into it.
 
 ## Scope and verification
+
+For macro-workflow work, treat papers/<paper-id>/ as out of scope unless the user specifically requests work there. Do not use architecture changes as a reason to redesign paper-specific teaching content.
 
 For macro-workflow work, update the workflow, contract, templates, relevant skills, and the smallest necessary helper behavior. Do not redesign paper-specific teaching content, rebuild a shared component library, or modify the upstream repository unless explicitly requested. All active workspaces use `schema_version: 3`; do not introduce compatibility branches for older workflow schemas.
 

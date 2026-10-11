@@ -23,6 +23,20 @@ See `design/implementation-plan.md` for the first-slice review and any revision 
 - [ ] All source figures/tables are inventoried; selected images have correct provenance and reuse rights.
 - [ ] Asset paths are relative; exported README includes image provenance; no PDF is included.
 
+## W9 Visual QA Record
+
+Record the actual commands, pages, states, viewports, screenshot/report locations, and findings. Use NOT_RUN when a check was unavailable.
+
+| Status | Result | Evidence / notes |
+| --- | --- | --- |
+| BUILD | PASS / FAIL / NOT_RUN |  |
+| GEOMETRY_QA | PASS / FAIL / NOT_RUN |  |
+| VISUAL_REVIEW | PASS / FAIL / NOT_RUN |  |
+| REGRESSION | PASS / FAIL / NOT_RUN |  |
+| HUMAN_ACCEPTANCE | PENDING / PASS / REVISE |  |
+
+BUILD, geometry, screenshot review, regression, and human acceptance are separate decisions. An agent must not record human W7/W9 acceptance on a person's behalf.
+
 ## Engineering, Accessibility, and Mobile
 
 - [ ] Build and project checks were run; actual outcomes are recorded.
