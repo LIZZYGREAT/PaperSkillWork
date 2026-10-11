@@ -169,7 +169,7 @@ export function PageMnist() {
 
         <div className="p08-result-figure">
           <PaperFigure
-            src="/images/figure-2.png"
+            src={new URL("images/figure-2.png", document.baseURI).toString()}
             mode="crop"
             figureLabel="论文 Figure 2A–C"
             alt="论文 Figure 2 的三个面板：A 为 EWC、L2 和普通 SGD 在三个依次训练任务上的正确率曲线；B 为任务数增加时 EWC 与 SGD 加 Dropout 的平均正确率；C 为两种像素排列幅度下，不同网络深度的 Fisher overlap。"

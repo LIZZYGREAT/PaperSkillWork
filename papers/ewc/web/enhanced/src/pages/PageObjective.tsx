@@ -267,7 +267,7 @@ function CompleteObjective() {
         </div>
         <div className="p06-figure-preview">
           <PaperFigure
-            src="/images/figure-1.png"
+            src={new URL("images/figure-1.png", document.baseURI).toString()}
             alt="Kirkpatrick 等人在 EWC 论文 Figure 1 中展示的连续任务参数区域与 EWC 约束示意。"
             figureLabel="Figure 1"
             caption="图中对比了学习新任务时不同参数约束对旧任务低误差区域的影响。此处重看论文原图，不把后面的教学梯度示例当作论文实验数值。"

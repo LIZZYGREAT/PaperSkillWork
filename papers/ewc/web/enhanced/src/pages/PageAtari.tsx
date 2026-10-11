@@ -167,7 +167,7 @@ export function PageAtari() {
         <p className="p09-evidence-intro">该对照从 19 款游戏池中抽取 10 款并反复顺序训练（R03，§2.2）。Figure 3A 展示训练安排；3B 汇总 human-normalized score，它将游戏得分相对于随机与人类基准归一化后求和，不是分类 Accuracy，也不能保证每款游戏都提高。3C 单独检验 Breakout 参数扰动。</p>
         <div className="p09-figure-wrap">
           <PaperFigure
-            src="/images/figure-3.png"
+            src={new URL("images/figure-3.png", document.baseURI).toString()}
             mode="crop"
             figureLabel="论文 Figure 3A–C"
             alt="论文 Figure 3 的三个面板：A 为十款 Atari 游戏的顺序训练安排；B 为包含 EWC、任务识别与任务专属机制的系统在多游戏序列上的总 human-normalized score；C 为 Breakout DQN 在 uniform、inverse-Fisher 与 Fisher-nullspace 权重扰动下的分数。"
