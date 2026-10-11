@@ -1,0 +1,27 @@
+{
+  "upstream_commit": "403d58484e689f97652f9bb1f7a7fd8ec86b56cb",
+  "canonical_main_commit": "04984a9f523d48e8ba58e67f78136ace1ec5044a",
+  "temporary_commit": "",
+  "upstream_remote": "upstream",
+  "upstream_remote_url": "ssh://git@ssh.github.com:443/ReductTech/PaperSkill.git",
+  "sibling_baseline": {
+    "is_shallow": true,
+    "partial_clone_filter": "blob:none",
+    "sparse_checkout": [
+      "catalog",
+      "docs",
+      "html_output/learning_without_forgetting",
+      "paper-skill",
+      "schemas",
+      "scripts"
+    ]
+  },
+  "paper_name": "",
+  "version": "",
+  "changed_paths": [],
+  "unexpected_paths": [],
+  "commands": [],
+  "status": "FAIL",
+  "created_at": "2026-10-11T15:44:01.849380+00:00",
+  "error": "PaperSkill sibling HEAD does not match canonical upstream/main; refresh the sibling with `git fetch upstream main --depth=1 --filter=tree:0` and confirm its HEAD before retrying"
+}
