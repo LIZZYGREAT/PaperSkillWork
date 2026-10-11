@@ -46,7 +46,7 @@ function PosteriorZoom() {
   );
 }
 
-function LaplaceEquation() {
+function LaplaceEquation({ direction, precision, cost }: { direction: Direction; precision: number; cost: number }) {
   return (
     <section className="p04-section p04-laplace" id="laplace-local-view" aria-labelledby="p04-laplace-title">
       <div className="p04-section-heading">
@@ -58,6 +58,7 @@ function LaplaceEquation() {
         <div className="p04-equation-row p04-equation-row--result" role="math" aria-label="相对参数偏移的局部代价约等于二分之一乘偏移转置、曲率矩阵和偏移">
           <span className="p04-equation-label">相同距离的偏移，沿曲率更大的方向代价更高</span>
           <MathFormula block tex={String.raw`\Delta\Phi\approx\tfrac12\Delta\theta^\mathsf{T}H_A\Delta\theta`} />
+          <p className="p04-live-cost" aria-live="polite">当前沿{direction === "wide" ? "宽" : "窄"}方向：d = 0.5，局部精度 h = {precision.toFixed(2)}，代价约为 {cost.toFixed(4)}。</p>
         </div>
       </div>
       <details className="p04-derivation">
@@ -151,12 +152,7 @@ export function PageLaplace() {
       </section>
 
       <DirectionalPrecision direction={direction} onDirectionChange={setDirection} />
-      <LaplaceEquation />
-      <div className="p04-equation-card" aria-live="polite">
-        <h3>把推导代回上图：当前选择{direction === "wide" ? "宽" : "窄"}方向</h3>
-        <MathFormula block tex={String.raw`d=0.5,\quad h=${precision},\quad\Delta\Phi\approx\tfrac12 h d^2=${cost.toFixed(4)}`} />
-        <p>同一中心与偏移距离不变；方向切换只改变曲率，因此代价随之变化。</p>
-      </div>
+      <LaplaceEquation direction={direction} precision={precision} cost={cost} />
 
       <section className="p04-handoff" id="fisher-handoff" aria-labelledby="p04-handoff-title">
         <div><span className="p04-overline">NEXT · A COMPUTABLE LOCAL PRECISION</span><h2 id="p04-handoff-title">论文用对角 Fisher 近似局部精度</h2>

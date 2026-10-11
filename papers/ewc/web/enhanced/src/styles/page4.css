@@ -122,3 +122,5 @@
 @media (prefers-reduced-motion: reduce) {
   .p04-displacement { transition: none; }
 }
+
+.p04-live-cost { margin: 0; padding: 10px 14px 13px; border-top: 1px solid var(--p04-line); color: #52686a; font-size: 14px; line-height: 1.55; }
