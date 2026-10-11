@@ -1,0 +1,41 @@
+{
+  "baseUrl": "http://127.0.0.1:4175",
+  "server": {
+    "command": "node",
+    "args": [
+      "node_modules/vite/bin/vite.js",
+      "preview",
+      "--configLoader",
+      "runner",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "4175",
+      "--strictPort"
+    ],
+    "cwd": "../../../reusable-kit/demo",
+    "readyPath": "/",
+    "startupTimeoutMs": 30000
+  },
+  "pages": [
+    {
+      "id": "kit-demo",
+      "path": "/",
+      "states": [
+        { "id": "lwf-default" },
+        {
+          "id": "ewc-tab",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"EWC mini demo\"]" }
+          ]
+        }
+      ]
+    }
+  ],
+  "geometry": {
+    "checkPageHorizontalOverflow": true,
+    "minSemanticFontSizePx": 12,
+    "clippingSelectors": []
+  },
+  "settleMs": 200
+}

@@ -60,3 +60,15 @@
 | HUMAN_ACCEPTANCE | 用户尚未审阅时保持 PENDING；不得由 Agent 代填 W7/W9 PASS |
 
 交付记录应包含修改范围、运行命令、截图/报告位置、未检查项和仍需用户决定的取舍。构建通过不代表视觉或人工学习验收通过。
+
+## 7. 通用 Chromium 工具
+
+仓库的公共 runner 位于 [`tools/visual-qa/`](../tools/visual-qa/README.md)。它按项目 JSON 配置启动或连接本地服务、执行声明的页面状态操作，在 1440×900 和 1920×1080 采集截图，并记录浏览器 console/pageerror 与配置过的几何诊断。公共引擎不包含具体论文页面选择器；页面和状态由对应项目的配置声明。
+
+从仓库根目录运行示例：
+
+```powershell
+node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json
+```
+
+首次运行前，按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 安装 Kit demo 锁定的 Playwright 依赖和 Chromium，并先执行目标项目自己的构建命令。默认产物写入忽略目录 `.visual-qa/`。工具会生成 JSON 和 Markdown 报告，但不会替代对截图的实际查看，也不会自动更新已批准基准图。
