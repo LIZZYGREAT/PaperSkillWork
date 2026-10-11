@@ -102,6 +102,7 @@ const OBJECT_INFO: Record<RuntimeObjectId, { title: string; badge: string; body:
 };
 
 const STATE_INDEX = new Map(STATES.map((state, index) => [state.id, index]));
+const LAST_STATE_INDEX = STATES.length - 1;
 
 function useFirstVisitHelp() {
   const [open, setOpen] = useState(() => {
@@ -629,7 +630,6 @@ export function PageGrandAnimation() {
   const state = STATES[activeIndex];
   const [furthestIndex, setFurthestIndex] = useState(activeIndex);
   const [playing, setPlaying] = useState(false);
-  const [replayMode, setReplayMode] = useState(false);
   const [showCompletionSummary, setShowCompletionSummary] = useState(false);
   const summaryHeadingRef = useRef<HTMLHeadingElement>(null);
   const summaryTriggerRef = useRef<HTMLButtonElement>(null);
@@ -715,7 +715,7 @@ export function PageGrandAnimation() {
     return () => animations.forEach((animation) => animation.cancel());
   }, [activeIndex]);
 
-  const goTo = (index: number, options: { replay?: boolean } = {}) => {
+  const goTo = (index: number, options: { continuePlayback?: boolean } = {}) => {
     const clampedIndex = Math.max(0, Math.min(STATES.length - 1, index));
     const next = STATES[clampedIndex];
     api.openReference({ animationStateId: next.id });
@@ -725,7 +725,7 @@ export function PageGrandAnimation() {
     setExpandedFormula(false);
     setShowCompletionSummary(false);
     setAnnouncement(`状态 ${clampedIndex + 1}：${next.title}`);
-    if (!options.replay) { setPlaying(false); setReplayMode(false); }
+    if (!options.continuePlayback) setPlaying(false);
   };
 
   const selectObject = (id: RuntimeObjectId) => {
@@ -735,31 +735,26 @@ export function PageGrandAnimation() {
   };
 
   const dismissInspector = () => { setActiveObject(undefined); api.setActiveRuntimeObject(undefined); };
-  const startReplay = () => { setPlaying(true); setReplayMode(true); goTo(0, { replay: true }); };
-  const exploreTimeline = () => { setPlaying(false); setReplayMode(false); dismissInspector(); goTo(0); };
+  const startReplay = () => { goTo(0, { continuePlayback: true }); setPlaying(true); };
+  const exploreTimeline = () => { dismissInspector(); goTo(0); };
 
   useEffect(() => { setActiveObject(api.activeRuntimeObject); }, [api.activeRuntimeObject]);
   useEffect(() => {
     if (!playing) return;
-    const playbackEndIndex = replayMode ? STATES.length - 1 : activePhase.last;
-    if (activeIndex >= playbackEndIndex) {
+    if (activeIndex >= LAST_STATE_INDEX) {
       setPlaying(false);
-      setReplayMode(false);
       return;
     }
-    const nextIndex = Math.min(activeIndex + 1, playbackEndIndex);
+    const nextIndex = Math.min(activeIndex + 1, LAST_STATE_INDEX);
     const nextState = STATES[nextIndex];
     const timer = window.setTimeout(() => {
       api.openReference({ animationStateId: nextState.id });
       setFurthestIndex((furthest) => Math.max(furthest, nextIndex));
       setAnnouncement(`状态 ${nextIndex + 1}：${nextState.title}`);
-      if (nextIndex >= playbackEndIndex) {
-        setPlaying(false);
-        setReplayMode(false);
-      }
+      if (nextIndex >= LAST_STATE_INDEX) setPlaying(false);
     }, PLAYBACK_INTERVAL_MS);
     return () => window.clearTimeout(timer);
-  }, [playing, replayMode, activeIndex, activePhase.last, api]);
+  }, [playing, activeIndex, api]);
 
   useEffect(() => { setShowCompletionSummary(false); }, [activeIndex]);
 
@@ -781,8 +776,8 @@ export function PageGrandAnimation() {
       }
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
       if (event.key === "ArrowLeft" && activeIndex > 0) { event.preventDefault(); goTo(activeIndex - 1); }
-      else if (event.key === "ArrowRight" && activeIndex < STATES.length - 1) { event.preventDefault(); goTo(activeIndex + 1); }
-      else if (event.code === "Space" && !target?.closest("button, a") && activeIndex < activePhase.last) { event.preventDefault(); setPlaying((value) => !value); }
+      else if (event.key === "ArrowRight" && activeIndex < LAST_STATE_INDEX) { event.preventDefault(); goTo(activeIndex + 1); }
+      else if (event.code === "Space" && !target?.closest("button, a") && activeIndex < LAST_STATE_INDEX) { event.preventDefault(); setPlaying((value) => !value); }
       else if (event.key === "Escape") {
         if (activeObject) dismissInspector();
         else if (state.scene === "posterior" || state.scene === "laplace") goTo(10);
@@ -790,7 +785,7 @@ export function PageGrandAnimation() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [api.currentPage, api.hubOpen, activeIndex, activeObject, state.scene, help.open, showCompletionSummary, activePhase.last]);
+  }, [api.currentPage, api.hubOpen, activeIndex, activeObject, state.scene, help.open, showCompletionSummary]);
 
   const setRuntimeObject = (id?: RuntimeObjectId) => { api.setActiveRuntimeObject(id); setActiveObject(id); };
   const inspectorInfo = selectedInfo ?? (state.focus[0] ? OBJECT_INFO[state.focus[0]] : OBJECT_INFO["neural-network"]);
@@ -803,8 +798,8 @@ export function PageGrandAnimation() {
       <div className="p10-board-player" aria-label="Grand Animation 播放控制">
         <div className="p10-board-player__transport">
           <button type="button" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex === 0} aria-label="上一步">|◀</button>
-          <button type="button" className="p10-board-player__play" onClick={() => setPlaying((value) => !value)} disabled={!playing && activeIndex >= activePhase.last} aria-label={playing ? "暂停播放" : "播放当前阶段"} title={playing ? "暂停播放" : "播放至本阶段结束后自动暂停；也可随时暂停"}>{playing ? "Ⅱ" : "▶"}</button>
-          <button type="button" onClick={() => goTo(activeIndex + 1)} disabled={activeIndex === STATES.length - 1} aria-label="下一步">▶|</button>
+          <button type="button" className="p10-board-player__play" onClick={() => setPlaying((value) => !value)} disabled={!playing && activeIndex >= LAST_STATE_INDEX} aria-label={playing ? "暂停播放" : "播放完整流程"} title={playing ? "暂停播放" : "从当前状态连续播放，到 State 18 自动暂停；也可随时暂停"}>{playing ? "Ⅱ" : "▶"}</button>
+          <button type="button" onClick={() => goTo(activeIndex + 1)} disabled={activeIndex >= LAST_STATE_INDEX} aria-label="下一步">▶|</button>
         </div>
         <input type="range" min="0" max={STATES.length - 1} value={activeIndex} onChange={(event) => goTo(Math.min(Number(event.currentTarget.value), unlockedThrough))} aria-label="动画状态进度" aria-valuetext={`状态 ${activeIndex + 1}：${state.title}`} />
         <span className="p10-board-player__count">{activeIndex + 1}<i>/</i>{STATES.length}</span>
