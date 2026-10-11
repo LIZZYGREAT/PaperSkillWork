@@ -3,12 +3,10 @@ import type { ReactNode, RefObject } from "react";
 import type { AnchorId, CanonicalReferenceId, GrandAnimationStateId, RuntimeObjectId } from "../contracts/ids";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
-import { GRAND_TASK_EXAMPLES, GRAND_TASK_OUTPUTS, lifecycleAt, parameterUpdate, TASK_B_GRADIENT_EXAMPLE, type GrandTaskKey } from "../data/grandAnimationExample";
 import "../styles/page10.css";
 
 type PhaseId = "task-a" | "consolidation" | "task-b" | "continual";
 type SceneId = "overview" | "data" | "forward" | "probability" | "backward" | "update" | "compression" | "boundary" | "posterior" | "laplace" | "return" | "anchor" | "fisher" | "memory" | "task-b" | "objective" | "gradient" | "loop";
-type RuntimeSnapshot = ReturnType<typeof lifecycleAt>;
 type MathId = "probability" | "posterior" | "laplace" | "fisher" | "objective" | "gradient";
 type ReviewLink = { page: "page-03-bayes" | "page-04-laplace" | "page-05-fisher" | "page-06-ewc-objective" | "page-07-lifecycle"; anchor: AnchorId; label: string };
 type AnimationState = {
@@ -62,8 +60,7 @@ const TIMELINE_PHASES = [
   { title: "阶段 4 · Task B + EWC", range: "States 15–17", first: 14, last: 16, tone: "task-b" },
   { title: "阶段 5 · Continual Loop", range: "State 18", first: 17, last: 17, tone: "loop" },
 ];
-const PLAYBACK_INTERVAL_MS = 3000;
-const STATE_MOTION_MS = 1250;
+const PLAYBACK_INTERVAL_MS = 2600;
 const FLOWING_BOARD_EDGES: Partial<Record<GrandAnimationStateId, string[]>> = {
   "task-a-data": ["data-input"],
   "save-anchor": ["save-anchor"],
@@ -75,12 +72,6 @@ const FLOWING_BOARD_EDGES: Partial<Record<GrandAnimationStateId, string[]>> = {
   "continual-loop": ["data-input-task-c", "save-task-state-b"],
 };
 const FLOWING_NETWORK_SCENES = new Set<SceneId>(["data", "forward", "probability", "backward", "update", "compression", "fisher", "task-b", "objective", "gradient", "loop"]);
-const CAMERA_TARGET_BY_SCENE: Record<SceneId, string> = {
-  overview: "world", data: "data", forward: "network", probability: "output", backward: "network",
-  update: "network", compression: "world", boundary: "network", posterior: "network", laplace: "network",
-  return: "network", anchor: "network", fisher: "data", memory: "network", "task-b": "data",
-  objective: "output", gradient: "network", loop: "world",
-};
 
 const OBJECT_INFO: Record<RuntimeObjectId, { title: string; badge: string; body: string; detail: string }> = {
   "task-a-data": { title: "Task A data · D_A", badge: "CURRENT DATA", body: "Task A 的样本和 batch 进入当前网络。", detail: "数据由输入 x 与目标 y 组成。Task A 结束前，数据仍用于任务训练，也在设计规定的 Fisher 估计路径中提供样本。" },
@@ -202,13 +193,8 @@ function MemoryFormula({ children }: { children: ReactNode }) {
   return <span className="p10-memory-chip__formula">{children}</span>;
 }
 
-function SceneVisual({ state, selected, onSelect, onComplete, summaryTriggerRef, snapshot }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void; onComplete?: () => void; summaryTriggerRef?: RefObject<HTMLButtonElement>; snapshot: RuntimeSnapshot }) {
+function SceneVisual({ state, selected, onSelect, onComplete, summaryTriggerRef }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void; onComplete?: () => void; summaryTriggerRef?: RefObject<HTMLButtonElement> }) {
   const focus = state.focus;
-  const taskExample = GRAND_TASK_EXAMPLES[snapshot.task];
-  const taskOutput = GRAND_TASK_OUTPUTS[snapshot.task];
-  const highUpdate = parameterUpdate(TASK_B_GRADIENT_EXAMPLE.fisherHigh);
-  const lowUpdate = parameterUpdate(TASK_B_GRADIENT_EXAMPLE.fisherLow);
-  const signed = (value: number) => `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(2)}`;
   if (state.scene === "overview" || state.scene === "loop") return <div className={`p10-scene p10-scene--overview ${state.scene === "loop" ? "p10-scene--completed" : ""}`}>
     <div className="p10-world-ribbon"><span>{state.scene === "loop" ? "STATE 18 · BOUNDARY → STORE → CONTINUE" : "WORLD VIEW · TRAINING TIME MOVES LEFT → RIGHT"}</span><small>one shared model · persistent task memory</small></div>
     <div className="p10-task-world">
@@ -227,7 +213,7 @@ function SceneVisual({ state, selected, onSelect, onComplete, summaryTriggerRef,
     {state.scene === "laplace" && <div className="p10-math-legend"><span>中心 θ<sub>A</sub>*</span><span>宽度 Σ<sub>A</sub></span><span>局部精度 Σ<sub>A</sub><sup>−1</sup></span></div>}
   </div>;
   if (state.scene === "data") return <div className="p10-scene p10-scene--data">
-    <div className="p10-sample-stack"><b>D<sub>{taskExample.task}</sub></b><small>Task {taskExample.task} Dataset</small><div className="p10-sample-pixels" aria-label="教学用样本像素示意">{Array.from(taskExample.examples[taskExample.targetIndex].pixels, (pixel, index) => <i className={pixel === "1" ? "is-on" : ""} key={index} />)}</div><span>x<sub>n</sub>, y<sub>n</sub> → batch</span></div><span className="p10-large-arrow">→</span><WorkbenchNode id="neural-network" label={<>Network f<sub>θ</sub></>} eyebrow="SAME MODEL" active selected={selected === "neural-network"} onSelect={onSelect} /><div className="p10-sample-note"><b>Inspect the input</b><span>Dataset → Batch → Sample</span><button type="button" onClick={() => onSelect("task-a-batch")}>View a representative batch</button></div>
+    <div className="p10-sample-stack"><b>D<sub>A</sub></b><small>Task A Dataset</small><div className="p10-sample-pixels" aria-label="教学用样本像素示意"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div><span>x<sub>n</sub>, y<sub>n</sub> → batch</span></div><span className="p10-large-arrow">→</span><WorkbenchNode id="neural-network" label={<>Network f<sub>θ</sub></>} eyebrow="SAME MODEL" active selected={selected === "neural-network"} onSelect={onSelect} /><div className="p10-sample-note"><b>Inspect the input</b><span>Dataset → Batch → Sample</span><button type="button" onClick={() => onSelect("task-a-batch")}>View a representative batch</button></div>
   </div>;
   if (state.scene === "forward" || state.scene === "backward" || state.scene === "update" || state.scene === "compression" || state.scene === "return") return <div className={`p10-scene p10-scene--training p10-scene--${state.scene}`}>
     <div className="p10-network-detail"><div className="p10-network-detail__heading"><b>TEACHING CNN-LIKE CLASSIFIER</b><span>illustrative carrier · EWC does not require a CNN</span></div><div className="p10-network-layers"><span>Input x</span><i>→</i><button onClick={() => onSelect("current-parameters")}>Conv 1<small>θ¹</small></button><i>→</i><span>ReLU</span><i>→</i><button onClick={() => onSelect("current-parameters")}>Conv 2<small>θ²</small></button><i>→</i><span>Pool · Flatten</span><i>→</i><button onClick={() => onSelect("current-parameters")}>FC<small>θ³</small></button><i>→</i><button onClick={() => onSelect("current-parameters")}>Output<small>θ⁴</small></button></div></div>
@@ -235,28 +221,14 @@ function SceneVisual({ state, selected, onSelect, onComplete, summaryTriggerRef,
     <div className="p10-training-status"><span>FORWARD <b>{state.scene === "forward" ? "COMPUTING" : "DONE"}</b></span><span>BACKWARD <b>{state.scene === "backward" ? "GRADIENT FLOWS ←" : state.scene === "update" ? "GRADIENT READY" : "—"}</b></span><span>OPTIMIZER <b>{state.scene === "update" ? "STEP() · UPDATE θ" : "WAITING"}</b></span><span>PARAMETERS <b>{state.scene === "update" ? "θ 0.412 → 0.420" : "SHAPE HELD FIXED"}</b></span>{state.scene === "update" && <small>Representative parameter · illustrative mechanism values</small>}</div>
     {state.scene === "compression" && <div className="p10-iteration-pulse"><b>batch 1 → update</b><span>·</span><b>batch 2 → update</b><span>·</span><b>batch 3 → update</b><span className="p10-pulse-dots">···</span><strong>θ<sup>(0)</sup> → θ<sub>A</sub>*</strong></div>}
   </div>;
-  if (state.scene === "probability") return <div className="p10-scene p10-scene--probability"><div className="p10-probability-chain"><div className="p10-score-card"><span>LOGITS · TASK {taskExample.task}</span><b>z = [{taskExample.logits.map((value) => value.toFixed(1)).join(", ")}]</b><small>un-normalized scores</small></div><span className="p10-large-arrow">→</span><div className="p10-softmax-card"><span>SOFTMAX</span><b>[{taskOutput.probabilities.map((value) => value.toFixed(2)).join(", ")}]</b><small>class probabilities</small></div><span className="p10-large-arrow">→</span><div className="p10-loss-card"><span>NEGATIVE LOG PROBABILITY</span><b>−log {taskOutput.targetProbability.toFixed(2)}</b><small>target class {taskExample.examples[taskExample.targetIndex].label} → −log p = {(-Math.log(taskOutput.targetProbability)).toFixed(2)}</small></div></div><div className="p10-probability-note"><b>Same input → logits → softmax → target probability → loss</b><span>y = {taskExample.examples[taskExample.targetIndex].label} · p(y|x) = {taskOutput.targetProbability.toFixed(2)} · L = −log p(y|x)</span><small>Shared teaching values; synthetic and not paper experiment data.</small></div></div>;
+  if (state.scene === "probability") return <div className="p10-scene p10-scene--probability"><div className="p10-probability-chain"><div className="p10-score-card"><span>LOGITS</span><b>z = [1.3, 0.4, −0.2]</b><small>un-normalized scores</small></div><span className="p10-large-arrow">→</span><div className="p10-softmax-card"><span>SOFTMAX</span><b>[0.61, 0.25, 0.14]</b><small>class probabilities</small></div><span className="p10-large-arrow">→</span><div className="p10-loss-card"><span>NEGATIVE LOG PROBABILITY</span><b>−log p<sub>θ</sub>(y|x)</b><small>correct label → L<sub>A</sub></small></div></div><div className="p10-probability-note"><b>Optional likelihood expansion</b><span>p(D<sub>A</sub>|θ) = ∏<sub>n</sub> p<sub>θ</sub>(y<sub>n</sub>|x<sub>n</sub>)</span><small>Each correct-label probability contributes to the batch loss.</small></div></div>;
   if (state.scene === "boundary") return <div className="p10-scene p10-scene--boundary"><div className="p10-boundary-stamp"><span>TASK A ENDED</span><b>θ = θ<sub>A</sub>*</b><small>optimizer stopped</small></div><div className="p10-boundary-question"><span className="p10-muted-answer">θ<sub>A</sub>* tells us <b>where Task A ended</b></span><div className="p10-question-divider" /><span>θ<sub>A</sub>* does not tell us <b>which nearby directions are sensitive</b></span></div><div className="p10-boundary-timeline"><span>Task A training</span><i /><b>CONSOLIDATION</b><i /><span>Task B</span></div></div>;
   if (state.scene === "anchor") return <div className="p10-scene p10-scene--anchor"><div className="p10-anchor-clone"><div><span>CURRENT θ</span><b>Trainable</b><small>continues changing</small></div><span className="p10-clone-branch">clone →</span><div className="p10-anchor-copy"><span>STORED θ<sub>A</sub>*</span><b>Fixed snapshot</b><small>remains unchanged</small></div></div><LayerBlocks focus={focus} selected={selected} onSelect={onSelect} includeAnchor /></div>;
   if (state.scene === "fisher") return <div className="p10-scene p10-scene--fisher"><div className="p10-fisher-flow"><div className="p10-fixed-sample"><span>Task A sample</span><b>(x<sub>n</sub>, y<sub>n</sub>)</b></div><span>→</span><div className="p10-fixed-sample"><span>log-likelihood</span><b>log p<sub>θA*</sub>(y|x)</b></div><span>→</span><div className="p10-fisher-square"><span>gradient</span><b>g<sub>i</sub> → g<sub>i</sub><sup>2</sup></b></div><span>→</span><div className="p10-fisher-accumulator"><span>ACCUMULATOR</span><b>Σ g<sub>i</sub><sup>2</sup> / N</b></div></div><LayerBlocks focus={focus} selected={selected} onSelect={onSelect} includeFisher /><div className="p10-fisher-accuracy"><b>PARAMETERS FIXED</b><span>·</span><b>GRADIENT ENABLED</b><span>·</span><b>optimizer.step() OFF</b></div></div>;
   if (state.scene === "memory") return <div className="p10-scene p10-scene--memory"><div className="p10-memory-explain"><span>Task A data leaves the active pipeline</span><b>θ<sub>A</sub>* + F<sub>A</sub> → S<sub>A</sub></b><small>Anchor position + parameter-wise local sensitivity</small></div><div className="p10-memory-rail p10-memory-rail--focused"><button type="button" data-flow-node="memory-persistent-memory" className="p10-memory-rail__label p10-memory-rail__inspect" onClick={() => onSelect("persistent-memory")}>PERSISTENT TASK MEMORY</button><button type="button" data-flow-node="memory-task-state-a" className={`p10-memory-chip is-ready ${selected === "task-state-a" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-a")} aria-pressed={selected === "task-state-a"}><MemoryFormula>S<sub>A</sub></MemoryFormula><small><MemoryFormula>θ<sub>A</sub>* · F<sub>A</sub></MemoryFormula></small></button><button type="button" data-flow-node="memory-task-state-b" className={`p10-memory-chip is-pending ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}><MemoryFormula>S<sub>B</sub></MemoryFormula><small>pending</small></button></div></div>;
   if (state.scene === "task-b") return <div className="p10-scene p10-scene--task-b"><div className="p10-task-b-path"><div className="p10-task-b-source"><span>TASK B DATA</span><b>D<sub>B</sub></b><small>new batch</small></div><span className="p10-large-arrow">→</span><div className="p10-task-b-model"><span>SAME MODEL</span><b>θ<sub>start,B</sub> = θ<sub>A</sub>*</b><small>continue, do not reinitialize</small></div><span className="p10-large-arrow">→</span><div className="p10-task-b-loss"><span>TASK B OBJECTIVE</span><b>L<sub>B</sub></b><small>new task data</small></div></div><div className="p10-memory-rail"><span className="p10-memory-rail__label">READ OLD STATE</span><button className="p10-memory-chip is-ready" onClick={() => onSelect("persistent-memory")}><MemoryFormula>S<sub>A</sub> → θ<sub>A</sub>* + F<sub>A</sub></MemoryFormula></button></div></div>;
   if (state.scene === "objective") return <div className="p10-scene p10-scene--objective"><div className="p10-objective-inputs"><button type="button" className="p10-objective-input is-new" onClick={() => onSelect("task-b-loss")}><span>NEW TASK</span><b>L<sub>B</sub></b><small>from D<sub>B</sub></small></button><span className="p10-objective-plus">+</span><button type="button" className="p10-objective-input is-old" onClick={() => onSelect("ewc-penalty")}><span>OLD TASK CONSTRAINT</span><b>λ Ω<sub>A</sub></b><small>from S<sub>A</sub>=(θ<sub>A</sub>*,F<sub>A</sub>)</small></button><span className="p10-objective-equals">=</span><div className="p10-objective-result">L<sub>total</sub></div></div><div className="p10-objective-mapping"><span><b>F<sub>A,i</sub></b> parameter-specific weight</span><span><b>λ</b> global constraint scale</span><span><b>θ<sub>A</sub>*</b> fixed stored anchor</span><span><b>θ</b> current trainable value</span></div><LayerBlocks focus={focus} selected={selected} onSelect={onSelect} includeFisher includeAnchor /></div>;
-  if (state.scene === "gradient") return <div className="p10-scene p10-scene--gradient">
-    <div className="p10-gradient-junction">
-      <button type="button" className="p10-gradient-input is-task" onClick={() => onSelect("task-b-gradient")}><span>TASK B</span><b>g<sub>B</sub></b><small>{signed(TASK_B_GRADIENT_EXAMPLE.taskGradient)}</small></button>
-      <span className="p10-junction-branch">↘</span><div className="p10-junction-core">Σ</div><span className="p10-junction-branch">↗</span>
-      <button type="button" className="p10-gradient-input is-ewc" onClick={() => onSelect("ewc-gradient")}><span>EWC · HIGH F</span><b>g<sub>EWC</sub></b><small>{signed(highUpdate.ewcGradient)}</small></button>
-      <span className="p10-junction-arrow">→</span><button type="button" className="p10-gradient-total" onClick={() => onSelect("total-gradient")}><span>TOTAL GRADIENT</span><b>g<sub>total</sub></b><small>{signed(highUpdate.totalGradient)}</small></button>
-      <span className="p10-junction-arrow">→</span><button type="button" className="p10-gradient-optimizer" onClick={() => onSelect("optimizer")}><span>optimizer.step()</span><b>θ updates</b></button>
-    </div>
-    <div className="p10-gradient-setup"><span>θ<sub>A</sub>* = {TASK_B_GRADIENT_EXAMPLE.anchor.toFixed(2)}</span><i>→</i><span>θ = {TASK_B_GRADIENT_EXAMPLE.current.toFixed(2)}</span><span>λ = {TASK_B_GRADIENT_EXAMPLE.lambda.toFixed(1)}</span><span>η = {TASK_B_GRADIENT_EXAMPLE.learningRate.toFixed(1)}</span></div>
-    <div className="p10-parameter-inspectors">
-      <article><b>High-Fisher parameter · θ<sub>i</sub></b><dl><div><dt>Task-B gradient</dt><dd>{signed(TASK_B_GRADIENT_EXAMPLE.taskGradient)}</dd></div><div><dt>θ − θ<sub>A</sub>*</dt><dd>{(TASK_B_GRADIENT_EXAMPLE.current - TASK_B_GRADIENT_EXAMPLE.anchor).toFixed(2)}</dd></div><div><dt>F<sub>A,i</sub> · λ</dt><dd>{TASK_B_GRADIENT_EXAMPLE.fisherHigh.toFixed(1)} · {TASK_B_GRADIENT_EXAMPLE.lambda.toFixed(1)}</dd></div><div><dt>g<sub>EWC</sub> = λF(θ−θ*)</dt><dd>{signed(highUpdate.ewcGradient)}</dd></div><div><dt>g<sub>total</sub> → θ′</dt><dd>{signed(highUpdate.totalGradient)} → {highUpdate.next.toFixed(3)}</dd></div></dl></article>
-      <article><b>Low-Fisher parameter · θ<sub>j</sub></b><dl><div><dt>Task-B gradient</dt><dd>{signed(TASK_B_GRADIENT_EXAMPLE.taskGradient)}</dd></div><div><dt>θ − θ<sub>A</sub>*</dt><dd>{(TASK_B_GRADIENT_EXAMPLE.current - TASK_B_GRADIENT_EXAMPLE.anchor).toFixed(2)}</dd></div><div><dt>F<sub>A,j</sub> · λ</dt><dd>{TASK_B_GRADIENT_EXAMPLE.fisherLow.toFixed(1)} · {TASK_B_GRADIENT_EXAMPLE.lambda.toFixed(1)}</dd></div><div><dt>g<sub>EWC</sub></dt><dd>{signed(lowUpdate.ewcGradient)}</dd></div><div><dt>g<sub>total</sub> → θ′</dt><dd>{signed(lowUpdate.totalGradient)} → {lowUpdate.next.toFixed(3)}</dd></div></dl></article>
-    </div>
-    <div className="p10-gradient-example"><small>从同一 Task-B 梯度出发；高、低 Fisher 改变约束梯度和参数步长。仅为机制示例，不是实测结果。</small></div>
-  </div>;
+  if (state.scene === "gradient") return <div className="p10-scene p10-scene--gradient"><div className="p10-gradient-junction"><button type="button" className="p10-gradient-input is-task" onClick={() => onSelect("task-b-gradient")}><span>TASK B</span><b>g<sub>B</sub></b><small>−0.20</small></button><span className="p10-junction-branch">↘</span><div className="p10-junction-core">Σ</div><span className="p10-junction-branch">↗</span><button type="button" className="p10-gradient-input is-ewc" onClick={() => onSelect("ewc-gradient")}><span>EWC</span><b>g<sub>EWC</sub></b><small>+0.16</small></button><span className="p10-junction-arrow">→</span><button type="button" className="p10-gradient-total" onClick={() => onSelect("total-gradient")}><span>TOTAL GRADIENT</span><b>g<sub>total</sub></b><small>−0.04</small></button><span className="p10-junction-arrow">→</span><button type="button" className="p10-gradient-optimizer" onClick={() => onSelect("optimizer")}><span>optimizer.step()</span><b>θ updates</b></button></div><div className="p10-parameter-inspectors"><article><b>High-Fisher parameter · θ<sub>i</sub></b><dl><div><dt>Task-B gradient</dt><dd>−0.20</dd></div><div><dt>Anchor displacement</dt><dd>+0.10</dd></div><div><dt>F<sub>A,i</sub> · λ</dt><dd>8.0 · 0.2</dd></div><div><dt>EWC gradient</dt><dd>+0.16</dd></div><div><dt>Total gradient</dt><dd>−0.04</dd></div></dl></article><article><b>Low-Fisher parameter · θ<sub>j</sub></b><dl><div><dt>Task-B gradient</dt><dd>−0.20</dd></div><div><dt>EWC gradient</dt><dd>+0.01</dd></div><div><dt>Total gradient</dt><dd>−0.19</dd></div></dl></article></div><div className="p10-gradient-example"><small>Representative mechanism values only · not measured experiment results</small></div></div>;
   return <div className="p10-scene p10-scene--loop" />;
 }
 
@@ -268,41 +240,39 @@ function BoardPanelTitle({ number, title, subtitle, badge }: { number: string; t
   </div>;
 }
 
-type IllustrationTask = GrandTaskKey;
-const CLASS_EXAMPLES: Record<IllustrationTask, readonly { label: string; pixels: string }[]> = {
-  a: GRAND_TASK_EXAMPLES.a.examples,
-  b: GRAND_TASK_EXAMPLES.b.examples,
-  c: GRAND_TASK_EXAMPLES.c.examples,
+type IllustrationTask = "a" | "b" | "c";
+const CLASS_EXAMPLES: Record<IllustrationTask, { label: string; pixels: string }[]> = {
+  a: [{ label: "A", pixels: "0110111111110110" }, { label: "B", pixels: "0100111001001110" }, { label: "C", pixels: "1111001111001111" }],
+  b: [{ label: "A", pixels: "1100101010100011" }, { label: "B", pixels: "1111100110011110" }, { label: "C", pixels: "0110100111101011" }],
+  c: [{ label: "A", pixels: "1001011001101001" }, { label: "B", pixels: "1010101010101010" }, { label: "C", pixels: "0101010110101010" }],
 };
 
 function SampleMatrix({ task }: { task: IllustrationTask }) {
-  const sample = CLASS_EXAMPLES[task][GRAND_TASK_EXAMPLES[task].targetIndex];
   return <div className={`p10-sample-matrix p10-sample-matrix--${task}`} aria-label="示意样本像素图">
-    {Array.from(sample.pixels, (pixel, index) => <i className={pixel === "1" ? "is-on" : ""} key={index} />)}
+    {Array.from({ length: 32 }, (_, index) => <i className={CLASS_EXAMPLES[task][0].pixels[index % 16] === "1" ? "is-on" : ""} key={index} />)}
   </div>;
 }
 
-function TaskExampleGrid({ task }: { task: IllustrationTask }) {
+function TaskExampleGrid({ task }: { task: "a" | "b" }) {
   return <div className={`p10-task-examples p10-task-examples--${task}`} role="img" aria-label={`Task ${task.toUpperCase()} synthetic illustrative samples for output classes A, B and C`}>
     {CLASS_EXAMPLES[task].map((example) => <span key={example.label} aria-hidden="true"><span className="p10-task-example__pixels">{Array.from(example.pixels, (pixel, index) => <i className={pixel === "1" ? "is-on" : ""} key={index} />)}</span><b>Class {example.label}</b></span>)}
   </div>;
 }
 
 function TaskDataCard({ task, status, active, selected, onSelect }: {
-  task: IllustrationTask;
+  task: "a" | "b";
   status: string;
   active: boolean;
   selected: boolean;
   onSelect: () => void;
 }) {
-  const taskName = task.toUpperCase();
   const isA = task === "a";
-  return <button type="button" data-flow-node={`task-data-${task}`} data-p10-transition-id={`task-${task}-data`} className={`p10-data-card is-task-${task} ${active ? "is-active" : ""} ${selected ? "is-selected" : ""}`} onClick={onSelect} aria-pressed={selected}>
-    <span className="p10-data-card__head"><b>Task {taskName} Data</b><i>D_{taskName}</i></span>
+  return <button type="button" data-flow-node={`task-data-${task}`} data-p10-transition-id={`task-${task}-data`} className={`p10-data-card ${isA ? "is-task-a" : "is-task-b"} ${active ? "is-active" : ""} ${selected ? "is-selected" : ""}`} onClick={onSelect} aria-pressed={selected}>
+    <span className="p10-data-card__head"><b>Task {isA ? "A" : "B"} Data</b><i>{isA ? "D_A" : "D_B"}</i></span>
     <span className="p10-data-card__dataset">{isA ? "Illustrative samples · 3 classes" : "New illustrative samples"}</span>
     <small>{isA ? "旧任务样本" : "新任务样本"} · {status}</small>
     <TaskExampleGrid task={task} />
-    <ul className="p10-data-card__facts" aria-label={`Task ${taskName} illustrative task details`}>
+    <ul className="p10-data-card__facts" aria-label={`Task ${isA ? "A" : "B"} illustrative task details`}>
       <li><b>示例</b><span>Teaching only</span></li>
       <li><b>类别</b><span>A / B / C · 3 类</span></li>
       <li><b>任务</b><span>{isA ? "illustrative classification" : "new input patterns · same output space"}</span></li>
@@ -311,39 +281,33 @@ function TaskDataCard({ task, status, active, selected, onSelect }: {
   </button>;
 }
 
-function TaskDataPanel({ state, snapshot, selected, onSelect }: {
+function TaskDataPanel({ state, activeIndex, selected, onSelect }: {
   state: AnimationState;
-  snapshot: RuntimeSnapshot;
+  activeIndex: number;
   selected?: RuntimeObjectId;
   onSelect: (id: RuntimeObjectId) => void;
 }) {
-  const taskAStatus = state.scene === "fisher" ? "Fisher estimation example" : snapshot.taskAIsOldSource ? "旧任务来源" : "当前任务数据";
-  const taskBStatus = snapshot.currentTaskActive ? "当前任务数据" : snapshot.taskBStateReady ? "训练已完成" : "等待 Task B";
-  const taskCStatus = snapshot.task === "c" ? "当前任务数据" : "后续任务示意";
-  const currentTaskId: RuntimeObjectId = snapshot.task === "c" ? "task-c-data" : snapshot.task === "b" ? "task-b-data" : "task-a-data";
-  const historyTasks = snapshot.task === "c" ? ["a", "b"] as const : [];
+  const taskAStatus = state.scene === "fisher" ? "Fisher estimation example" : activeIndex < 7 ? "当前任务数据" : "旧任务来源";
+  const taskBStatus = activeIndex < 14 ? "等待 Task B" : activeIndex < 17 ? "当前任务数据" : "训练已完成";
   return <section className="p10-panel p10-data-panel" aria-label="任务与数据区">
     <BoardPanelTitle number="1" title="任务 / 数据区" subtitle="Illustrative tasks · shared 3-class output space" />
-    {snapshot.task !== "c" ? <div className="p10-data-cards">
-      <TaskDataCard task="a" status={taskAStatus} active={snapshot.task === "a" || state.scene === "fisher"} selected={selected === "task-a-data"} onSelect={() => onSelect("task-a-data")} />
-      <TaskDataCard task="b" status={taskBStatus} active={snapshot.currentTaskActive} selected={selected === "task-b-data"} onSelect={() => onSelect("task-b-data")} />
-    </div> : <div className="p10-data-cards is-current-only">
-      <TaskDataCard task="c" status={taskCStatus} active selected={selected === currentTaskId} onSelect={() => onSelect(currentTaskId)} />
-      <div className="p10-data-history" aria-label="已完成的旧任务数据">{historyTasks.map((task) => <button key={task} type="button" onClick={() => onSelect(task === "a" ? "task-a-data" : "task-b-data")}>Task {task.toUpperCase()} · {task === "a" ? "S_A 已保存" : "Task B 已完成"}</button>)}</div>
-    </div>}
+    <div className="p10-data-cards">
+      <TaskDataCard task="a" status={taskAStatus} active={activeIndex < 7 || state.scene === "fisher"} selected={selected === "task-a-data"} onSelect={() => onSelect("task-a-data")} />
+      <TaskDataCard task="b" status={taskBStatus} active={activeIndex >= 14 && activeIndex < 17} selected={selected === "task-b-data"} onSelect={() => onSelect("task-b-data")} />
+    </div>
     <p className="p10-panel-note">Teaching examples · not paper experiment data.</p>
   </section>;
 }
 
-function MemoryPanel({ snapshot, selected, onSelect }: {
-  snapshot: RuntimeSnapshot;
+function MemoryPanel({ activeIndex, selected, onSelect }: {
+  activeIndex: number;
   selected?: RuntimeObjectId;
   onSelect: (id: RuntimeObjectId) => void;
 }) {
   const items: { id: RuntimeObjectId; symbol: ReactNode; title: string; detail: ReactNode; ready: boolean }[] = [
-    { id: "task-a-anchor", symbol: <>θ<sub>A</sub>*</>, title: "Task A 参数锚点", detail: "Task A 结束时复制 · 后续保持固定", ready: snapshot.anchorReady },
-    { id: "task-a-fisher", symbol: <>F<sub>A</sub></>, title: "对角 Fisher", detail: "逐参数敏感性近似 · 参数不更新", ready: snapshot.fisherReady },
-    { id: "task-state-a", symbol: <>S<sub>A</sub></>, title: "Task A 状态", detail: <><span>θ<sub>A</sub>* + F<sub>A</sub></span> · Task B 读取</>, ready: snapshot.taskAStateReady },
+    { id: "task-a-anchor", symbol: <>θ<sub>A</sub>*</>, title: "Task A 参数锚点", detail: "Task A 结束时复制 · 后续保持固定", ready: activeIndex >= 11 },
+    { id: "task-a-fisher", symbol: <>F<sub>A</sub></>, title: "对角 Fisher", detail: "逐参数敏感性近似 · 参数不更新", ready: activeIndex >= 12 },
+    { id: "task-state-a", symbol: <>S<sub>A</sub></>, title: "Task A 状态", detail: <><span>θ<sub>A</sub>* + F<sub>A</sub></span> · Task B 读取</>, ready: activeIndex >= 13 },
   ];
   return <section data-p10-transition-id="persistent-memory" className="p10-panel p10-memory-panel" aria-label="持久记忆区">
     <BoardPanelTitle number="3" title="持久记忆区" subtitle="Persistent Memory · Task A 保存，Task B 读取" badge="MEMORY RAIL" />
@@ -353,10 +317,10 @@ function MemoryPanel({ snapshot, selected, onSelect }: {
         <span className="p10-memory-item__copy"><b>{item.title}</b><small>{item.detail}</small></span>
         <span className="p10-memory-item__status">{item.ready ? "已保存" : "待保存"}</span>
       </button>)}
-      <button type="button" data-flow-node="memory-task-state-b" data-p10-transition-id="task-state-b" className={`p10-memory-item p10-memory-item--next ${snapshot.taskBStateReady ? "is-ready" : "is-pending"} ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}>
+      <button type="button" data-flow-node="memory-task-state-b" data-p10-transition-id="task-state-b" className={`p10-memory-item p10-memory-item--next ${activeIndex >= 17 ? "is-ready" : "is-pending"} ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}>
         <span className="p10-memory-item__symbol">S<sub>B</sub></span>
         <span className="p10-memory-item__copy"><b>Task B 状态</b><small>θ<sub>B</sub>* + F<sub>B</sub> · Task C 可继续读取</small></span>
-        <span className="p10-memory-item__status">{snapshot.taskBStateReady ? "已形成" : "Task B 后"}</span>
+        <span className="p10-memory-item__status">{activeIndex >= 17 ? "已形成" : "Task B 后"}</span>
       </button>
     </div>
   </section>;
@@ -367,7 +331,7 @@ function FlowArrow({ reverse = false, flowing = false, motionKey = "flow" }: { r
   return <svg className={`p10-flow-line ${reverse ? "is-reverse" : ""}`} viewBox="0 0 48 16" role="presentation" aria-hidden="true">
     <path d={reverse ? "M46 8H4m8-6L4 8l8 6" : "M2 8h42m-8-6 8 6-8 6"} />
     {flowing && <circle key={motionKey} className="p10-flow-line__traveler" cx={reverse ? 46 : 2} cy="8" r="2.3">
-      <animateMotion dur="1500ms" fill="freeze" path={travelPath} />
+      <animateMotion dur="2480ms" fill="freeze" path={travelPath} />
     </circle>}
   </svg>;
 }
@@ -484,72 +448,25 @@ function FlowGuideLayer({ state, activeIndex, flowingEdgeIds }: { state: Animati
     {geometry.edges.map((edge) => <g key={edge.id}>
       <path className={`p10-board-flow__edge is-${edge.tone} ${edge.active ? "is-active" : "is-muted"}`} d={edge.path} markerEnd={`url(#p10-flow-arrow-${edge.tone === "read" ? "green" : edge.tone === "data-task-c" ? "blue" : edge.tone === "zoom" || edge.tone === "save" || edge.tone === "data-task-b" ? "orange" : "ink"})`} />
       {edge.active && flowingEdgeIds.includes(edge.id) && <circle key={`${state.id}-${edge.id}`} className={`p10-board-flow__traveler is-${edge.tone}`} r="4">
-        <animateMotion dur="1500ms" calcMode="spline" keyTimes="0;1" keySplines="0.2 0 0.2 1" fill="freeze" path={edge.path} />
+        <animateMotion dur="2800ms" calcMode="spline" keyTimes="0;1" keySplines="0.2 0 0.2 1" fill="freeze" path={edge.path} />
       </circle>}
     </g>)}
   </svg>;
 }
 
-function RuntimeCamera({ state, children }: { state: AnimationState; children: ReactNode }) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const worldRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const viewport = viewportRef.current;
-    const world = worldRef.current;
-    if (!viewport || !world) return;
-
-    const updateCamera = () => {
-      const viewportWidth = viewport.clientWidth;
-      const viewportHeight = viewport.clientHeight;
-      const worldWidth = world.offsetWidth;
-      const worldHeight = world.offsetHeight;
-      if (!viewportWidth || !viewportHeight || !worldWidth || !worldHeight) return;
-
-      const targetName = CAMERA_TARGET_BY_SCENE[state.scene];
-      const target = targetName === "world" ? world : world.querySelector<HTMLElement>(`[data-camera-node="${targetName}"]`) ?? world;
-      const worldBounds = world.getBoundingClientRect();
-      const targetBounds = target.getBoundingClientRect();
-      const transform = getComputedStyle(world).transform;
-      const currentScale = Number(transform.match(/^matrix\(([^,]+)/)?.[1]) || 1;
-      const centerX = (targetBounds.left + targetBounds.width / 2 - worldBounds.left) / currentScale;
-      const centerY = (targetBounds.top + targetBounds.height / 2 - worldBounds.top) / currentScale;
-      const fitScale = Math.min(1, viewportWidth / worldWidth, viewportHeight / worldHeight);
-      const scale = targetName === "world" ? fitScale : Math.min(1.24, Math.max(0.9, fitScale) * 1.16);
-      const translateX = viewportWidth / 2 - centerX * scale;
-      const translateY = viewportHeight / 2 - centerY * scale;
-      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      world.style.transition = reducedMotion ? "none" : `transform ${STATE_MOTION_MS}ms cubic-bezier(.22,.68,.18,1)`;
-      world.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-    };
-
-    updateCamera();
-    const observer = new ResizeObserver(updateCamera);
-    observer.observe(viewport);
-    observer.observe(world);
-    return () => observer.disconnect();
-  }, [state.id, state.scene]);
-
-  return <div ref={viewportRef} className="p10-camera-viewport" aria-label={`连续镜头：${state.camera}`}>
-    <div ref={worldRef} className="p10-camera-world">{children}</div>
-    <span className="p10-camera-readout" aria-hidden="true">CAMERA · {state.camera}</span>
-  </div>;
-}
-
-function NeuralWorkbench({ state, snapshot, selected, onSelect }: { state: AnimationState; snapshot: RuntimeSnapshot; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
+function NeuralWorkbench({ state, selected, onSelect }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
   const hasFocus = (...ids: RuntimeObjectId[]) => ids.some((id) => state.focus.includes(id) || selected === id);
   const reverse = state.scene === "backward" || state.scene === "gradient";
   const flowing = FLOWING_NETWORK_SCENES.has(state.scene);
-  const inputTask: IllustrationTask = snapshot.task;
-  const probabilities = GRAND_TASK_OUTPUTS[inputTask].probabilities;
+  const inputTask: IllustrationTask = state.phase === "continual" ? "c" : state.phase === "task-b" ? "b" : "a";
   const dataId: RuntimeObjectId = inputTask === "c" ? "task-c-data" : inputTask === "b" ? "task-b-data" : "task-a-data";
   return <div className={`p10-neural-workbench ${reverse ? "is-backward" : ""}`} aria-label="交互式神经网络工作台">
     <div className="p10-neural-workbench__flow">
-      <button type="button" data-camera-node="data" data-flow-node="runtime-input" data-p10-transition-id={dataId} className={`p10-net-node p10-net-node--input ${hasFocus(dataId) ? "is-active" : ""}`} onClick={() => onSelect(dataId)} aria-pressed={selected === dataId}>
+      <button type="button" data-flow-node="runtime-input" data-p10-transition-id={dataId} className={`p10-net-node p10-net-node--input ${hasFocus(dataId) ? "is-active" : ""}`} onClick={() => onSelect(dataId)} aria-pressed={selected === dataId}>
         <span className="p10-net-node__eyebrow">INPUT · xₙ</span><SampleMatrix task={inputTask} /><b>图像 / 数据</b><small>Task {inputTask.toUpperCase()} batch</small>
       </button>
       <FlowArrow reverse={reverse} flowing={flowing} motionKey={state.id} />
-      <div data-camera-node="network" data-p10-transition-id="neural-network current-parameters" className="p10-feature-group">
+      <div data-p10-transition-id="neural-network current-parameters" className="p10-feature-group">
         <span className="p10-net-node__eyebrow">CNN FEATURE EXTRACTION</span>
         <button type="button" className={`p10-feature-block ${hasFocus("neural-network", "current-parameters") ? "is-active" : ""}`} onClick={() => onSelect("current-parameters")} aria-pressed={selected === "current-parameters"}>
           <span className="p10-feature-stack"><i /><i /><i /></span><b>Conv 1</b><small>θ¹ · 3×3</small>
@@ -570,9 +487,9 @@ function NeuralWorkbench({ state, snapshot, selected, onSelect }: { state: Anima
         <small>Flatten → logits z</small>
       </div>
       <FlowArrow reverse={reverse} flowing={flowing} motionKey={state.id} />
-      <button type="button" data-camera-node="output" data-p10-transition-id="model-logits prediction-probabilities task-a-loss task-b-loss" className={`p10-net-node p10-net-node--output ${hasFocus("model-logits", "prediction-probabilities", "task-a-loss", "task-b-loss") ? "is-active" : ""}`} onClick={() => onSelect("prediction-probabilities")} aria-pressed={selected === "prediction-probabilities"}>
+      <button type="button" data-p10-transition-id="model-logits prediction-probabilities task-a-loss task-b-loss" className={`p10-net-node p10-net-node--output ${hasFocus("model-logits", "prediction-probabilities", "task-a-loss", "task-b-loss") ? "is-active" : ""}`} onClick={() => onSelect("prediction-probabilities")} aria-pressed={selected === "prediction-probabilities"}>
         <span className="p10-net-node__eyebrow">OUTPUT · θ⁴</span>
-        <span className="p10-probability-bars">{probabilities.map((probability, index) => <i key={index}><b>{String.fromCharCode(65 + index)}</b><em style={{ width: `${(probability * 100).toFixed(1)}%` }} /></i>)}</span>
+        <span className="p10-probability-bars"><i><b>A</b><em style={{ width: "58%" }} /></i><i><b>B</b><em style={{ width: "84%" }} /></i><i><b>C</b><em style={{ width: "31%" }} /></i></span>
         <small>p<sub>θ</sub>(y|x) · 3-class output</small>
       </button>
     </div>
@@ -584,11 +501,11 @@ function NeuralWorkbench({ state, snapshot, selected, onSelect }: { state: Anima
   </div>;
 }
 
-function ParameterStrip({ state, snapshot, activeIndex, selected, onSelect }: { state: AnimationState; snapshot: RuntimeSnapshot; activeIndex: number; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
+function ParameterStrip({ state, activeIndex, selected, onSelect }: { state: AnimationState; activeIndex: number; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void }) {
   const showAnchor = state.focus.includes("task-a-anchor") || state.scene === "fisher" || state.scene === "memory" || state.scene === "objective" || state.scene === "gradient";
   const showFisher = state.focus.includes("task-a-fisher") || state.scene === "memory" || state.scene === "objective" || state.scene === "fisher";
-  const memoryFlow = snapshot.anchorReady && activeIndex <= 17;
-  const memoryFlowTone = snapshot.currentTaskActive || snapshot.taskBStateReady ? "is-read" : "is-save";
+  const memoryFlow = activeIndex >= 11 && activeIndex <= 17;
+  const memoryFlowTone = activeIndex >= 14 && activeIndex <= 16 ? "is-read" : "is-save";
   const transitionIds = ["current-parameters", showAnchor ? "task-a-anchor" : "", showFisher ? "task-a-fisher" : ""].filter(Boolean).join(" ");
   return <div data-p10-transition-id={transitionIds} className="p10-parameter-strip" data-flow-node="runtime-parameters" aria-label="模型参数与存储参数">
     {memoryFlow && <span data-flow-node="runtime-memory-port" className={`p10-parameter-strip__memory-port ${memoryFlowTone}`} aria-hidden="true" />}
@@ -606,9 +523,8 @@ function ParameterStrip({ state, snapshot, activeIndex, selected, onSelect }: { 
   </div>;
 }
 
-function MathArea({ state, snapshot, expandedFormula, setExpandedFormula, onSelect }: {
+function MathArea({ state, expandedFormula, setExpandedFormula, onSelect }: {
   state: AnimationState;
-  snapshot: RuntimeSnapshot;
   expandedFormula: boolean;
   setExpandedFormula: (value: boolean) => void;
   onSelect: (id: RuntimeObjectId) => void;
@@ -619,7 +535,6 @@ function MathArea({ state, snapshot, expandedFormula, setExpandedFormula, onSele
       <div className="p10-math-live__heading"><b>{state.math ? "当前状态关联公式" : "当前阶段的数学关系"}</b>{state.math && <button type="button" aria-pressed={expandedFormula} onClick={() => setExpandedFormula(!expandedFormula)}>{expandedFormula ? "收起" : "展开"}</button>}</div>
       {state.math ? <Formula kind={state.math} expanded={expandedFormula} onSelect={onSelect} /> : <p>{state.scene === "fisher" ? "参数固定 · 梯度平方累积 · 不执行 optimizer.step()" : state.scene === "gradient" ? "g_B + g_EWC → g_total → optimizer.step()" : "当前参数 θ 在共享网络中参与前向、Loss 与更新。"}</p>}
     </div>
-    <div className="p10-math-reference-label">数学关系目录 · 理论参考，不代表此刻已经生成的运行时对象</div>
     <div className="p10-math-principles" aria-label="先验、似然与后验关系">
       <MathReference id="p_theta"><b>先验分布</b><span>p(θ)</span></MathReference>
       <MathReference id="p_D_given_theta"><b>条件似然</b><span>p(D_A|θ) = ∏ pθ(yₙ|xₙ)</span></MathReference>
@@ -629,9 +544,9 @@ function MathArea({ state, snapshot, expandedFormula, setExpandedFormula, onSele
       <MathReference id="laplace_approximation"><b>Laplace 局部近似</b><span>p(θ|D_A) ≈ N(θ_A*, Σ_A)</span></MathReference>
       <MathReference id="fisher_information"><b>Diagonal Fisher · 对角 Fisher</b><span>F_A,i ≈ 1/N Σₙ (∂ log pθA*(yₙ|xₙ) / ∂θᵢ)²</span></MathReference>
     </div>
-    <button type="button" data-p10-transition-id="ewc-penalty" className={`p10-ewc-equation ${snapshot.taskAStateReady && (snapshot.currentTaskActive || snapshot.taskBStateReady) ? "is-ready" : "is-pending"}`} onClick={() => snapshot.taskAStateReady && (snapshot.currentTaskActive || snapshot.taskBStateReady) && onSelect("ewc-penalty")} disabled={!snapshot.taskAStateReady || (!snapshot.currentTaskActive && !snapshot.taskBStateReady)}>
-      <b>{snapshot.taskAStateReady ? "EWC 损失函数 · 由后续任务读取" : "EWC 目标 · 等待 Task A 状态保存"}</b>
-      <span>{snapshot.taskBStateReady ? <>L<sub>C</sub> + Ω<sub>A</sub> + Ω<sub>B</sub></> : snapshot.currentTaskActive ? <>L<sub>B</sub> + <i>λ</i>⁄2 Σ<sub>i</sub> F<sub>A,i</sub>(θ<sub>i</sub> − θ<sub>A,i</sub>*)²</> : "S_A = (θ_A*, F_A) 保存后，Task B 才会读取该约束。"}</span>
+    <button type="button" data-p10-transition-id="ewc-penalty" className="p10-ewc-equation" onClick={() => onSelect("ewc-penalty")}>
+      <b>EWC 损失函数 · EWC Loss</b>
+      <span>L_total = L_B + <i>λ</i>⁄2 Σ<sub>i</sub> F<sub>A,i</sub>(θ<sub>i</sub> − θ<sub>A,i</sub>*)²</span>
     </button>
   </section>;
 }
@@ -712,7 +627,6 @@ export function PageGrandAnimation() {
   const help = useFirstVisitHelp();
   const activeIndex = useMemo(() => api.activeAnimationStateId ? STATE_INDEX.get(api.activeAnimationStateId) ?? 0 : 0, [api.activeAnimationStateId]);
   const state = STATES[activeIndex];
-  const snapshot = lifecycleAt(activeIndex);
   const [furthestIndex, setFurthestIndex] = useState(activeIndex);
   const [playing, setPlaying] = useState(false);
   const [replayMode, setReplayMode] = useState(false);
@@ -786,13 +700,13 @@ export function PageGrandAnimation() {
         { boxShadow: baseShadow, offset: 0 },
         { boxShadow: haloShadow, offset: .28 },
         { boxShadow: baseShadow, offset: 1 },
-      ], { duration: STATE_MOTION_MS, easing: "ease-out" }));
+      ], { duration: 3040, easing: "ease-out" }));
     });
 
     const edgeIds = FLOWING_BOARD_EDGES[nextState.id] ?? [];
     if (edgeIds.length) {
       setFlowingTransition({ stateId: nextState.id, edgeIds });
-      const timer = window.setTimeout(() => setFlowingTransition({ stateId: nextState.id, edgeIds: [] }), 1700);
+      const timer = window.setTimeout(() => setFlowingTransition({ stateId: nextState.id, edgeIds: [] }), 3600);
       return () => {
         window.clearTimeout(timer);
         animations.forEach((animation) => animation.cancel());
@@ -905,8 +819,8 @@ export function PageGrandAnimation() {
     <main className="p10-board__grid">
       <FlowGuideLayer state={state} activeIndex={activeIndex} flowingEdgeIds={flowingTransition.stateId === state.id ? flowingTransition.edgeIds : []} />
       <aside className="p10-board__left">
-        <TaskDataPanel state={state} snapshot={snapshot} selected={activeObject} onSelect={selectObject} />
-        <MemoryPanel snapshot={snapshot} selected={activeObject} onSelect={selectObject} />
+        <TaskDataPanel state={state} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
+        <MemoryPanel activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
       </aside>
 
       <section className="p10-panel p10-workbench" aria-labelledby="p10-current-title">
@@ -916,19 +830,19 @@ export function PageGrandAnimation() {
           <p>{state.annotation}<small>{state.why}</small></p>
           {state.review && <button type="button" onClick={() => api.openReference({ pageId: state.review!.page, anchorId: state.review!.anchor })}>{state.review.label} ↗</button>}
         </div>
-        <div className="p10-workbench__network"><RuntimeCamera state={state}><NeuralWorkbench state={state} snapshot={snapshot} selected={activeObject} onSelect={selectObject} /></RuntimeCamera></div>
+        <div className="p10-workbench__network"><NeuralWorkbench state={state} selected={activeObject} onSelect={selectObject} /></div>
         <div className="p10-workbench__focus" data-p10-transition-id="scene" aria-label="当前步骤细节">
           {showCompletionSummary && <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} onReturn={() => goTo(STATES.length - 1)} headingRef={summaryHeadingRef} />}
           <div hidden={showCompletionSummary} style={{ minHeight: 0, flex: "1 1 auto", display: showCompletionSummary ? "none" : "flex", flexDirection: "column" }}>
             <div className="p10-workbench__focus-head"><span>当前步骤细节 · {state.camera}</span>{(state.scene === "posterior" || state.scene === "laplace") && <button type="button" onClick={() => goTo(10)}>返回 Runtime ↑</button>}</div>
-            <SceneVisual key={state.id} state={state} snapshot={snapshot} selected={activeObject} onSelect={selectObject} onComplete={() => setShowCompletionSummary(true)} summaryTriggerRef={summaryTriggerRef} />
+            <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} onComplete={() => setShowCompletionSummary(true)} summaryTriggerRef={summaryTriggerRef} />
           </div>
         </div>
-        <ParameterStrip state={state} snapshot={snapshot} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
+        <ParameterStrip state={state} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
       </section>
 
       <aside className="p10-board__right">
-        <MathArea state={state} snapshot={snapshot} expandedFormula={expandedFormula} setExpandedFormula={setExpandedFormula} onSelect={selectObject} />
+        <MathArea state={state} expandedFormula={expandedFormula} setExpandedFormula={setExpandedFormula} onSelect={selectObject} />
         <InspectorArea info={inspectorInfo} focusId={state.focus[0]} selected={activeObject} review={state.review} onSelect={selectObject} onReview={(review) => api.openReference({ pageId: review.page, anchorId: review.anchor })} onOpenHub={() => api.openHub()} />
       </aside>
     </main>
