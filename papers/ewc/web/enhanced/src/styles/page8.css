@@ -194,3 +194,6 @@
 @media (prefers-reduced-motion: reduce) {
   .p08-task-picker__buttons button, .p08-reading-focus__button { transition-duration: .01ms !important; }
 }
+
+.p08-baseline-list article > small { color: #60776d; font-size: 13px; line-height: 1.5; text-align: right; }
+@media (max-width: 760px) { .p08-baseline-list article > small { grid-column: 2; text-align: left; } }

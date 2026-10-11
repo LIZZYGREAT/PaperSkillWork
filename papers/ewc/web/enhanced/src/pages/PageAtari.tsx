@@ -62,8 +62,24 @@ export function PageAtari() {
 
       <section className="p09-intro" aria-labelledby="p09-intro-title">
         <div><span className="p09-overline">A DIFFERENT TRAINING SETTING</span><h2 id="p09-intro-title">Atari 改变的是训练过程</h2></div>
-        <p><ReferenceTrigger id="atari">Atari</ReferenceTrigger> 中，agent 选择动作后会改变环境。下一批经验因此依赖先前的交互，训练数据持续从行为中产生。</p>
+        <p><ReferenceTrigger id="atari">Atari</ReferenceTrigger> 和 P8 的固定监督分类不同：没有直接提供正确动作标签，训练信号来自 agent 与环境交互。Agent 的动作会改变环境，也会改变之后收集到的经验。</p>
       </section>
+
+      <section className="p09-comparison" aria-label="Permuted MNIST 与 Atari 的训练环境对比">
+        <div className="p09-comparison__side">
+          <span className="p09-overline">PAGE 8 · PERMUTED MNIST</span>
+          <h2>固定监督数据</h2>
+          <ul><li>图像与类别标签已给定</li><li>输入任务边界清楚</li><li>模型按顺序读取数据集</li></ul>
+        </div>
+        <div className="p09-comparison__divider" aria-hidden="true"><i /></div>
+        <div className="p09-comparison__side p09-comparison__side--atari">
+          <span className="p09-overline">PAGE 9 · ATARI</span>
+          <h2>由行为产生经验</h2>
+          <ul><li>Agent 自己选择动作</li><li>环境状态随动作变化</li><li>后续经验依赖交互历史</li></ul>
+        </div>
+        <p className="p09-comparison__caption">这改变了训练信号的来源：分类标签来自数据集，强化学习反馈来自环境。</p>
+      </section>
+
 
       <section className="p09-rl-section" id="atari-rl-loop" aria-labelledby="p09-rl-title">
         <div className="p09-section-heading">
@@ -79,21 +95,6 @@ export function PageAtari() {
         </ol>
         <div className="p09-rl-step-detail" aria-live="polite"><b>{step.label}</b><p>{step.detail}</p><span>sₜ → Q<sub>θ</sub>(sₜ, a) → aₜ → rₜ, sₜ₊₁</span></div>
         <p className="p09-rl-return">交互产生 (sₜ, aₜ, rₜ, sₜ₊₁) transition。没有直接给出“正确动作”标签；通用 DQN 用即时 Reward 加折扣后的下一状态价值构造训练目标，让当前 Q 预测靠近这个目标。改变参数会改变动作选择，进而改变以后访问的状态与训练经验；这与 P2 的固定标签分类数据不同。</p>
-      </section>
-
-      <section className="p09-comparison" aria-label="Permuted MNIST 与 Atari 的训练环境对比">
-        <div className="p09-comparison__side">
-          <span className="p09-overline">PAGE 8 · PERMUTED MNIST</span>
-          <h2>固定监督数据</h2>
-          <ul><li>图像与类别标签已给定</li><li>输入任务边界清楚</li><li>模型按顺序读取数据集</li></ul>
-        </div>
-        <div className="p09-comparison__divider" aria-hidden="true"><i /></div>
-        <div className="p09-comparison__side p09-comparison__side--atari">
-          <span className="p09-overline">PAGE 9 · ATARI</span>
-          <h2>由行为产生经验</h2>
-          <ul><li>Agent 自己选择动作</li><li>环境状态随动作变化</li><li>后续经验依赖交互历史</li></ul>
-        </div>
-        <p className="p09-comparison__caption">这是训练范式的变化，不只是把一个数据集换成更难的数据。</p>
       </section>
 
       <section className="p09-responsibilities" id="system-responsibilities" aria-labelledby="p09-system-title">
@@ -120,7 +121,7 @@ export function PageAtari() {
             <div><span className="p09-overline">{component.source}</span><h3>{component.title}</h3></div>
             <p>{component.description}</p>
           </div>
-          <p className="p09-system-boundary">Replay、Task Recognition、task-specific gain / bias 和 EWC 分别承担不同职责。论文的 Atari 结果反映完整系统。</p>
+          <p className="p09-system-boundary">以上交互选择会更新职责说明。Replay 在任务内部复用经验；EWC 在任务之间约束参数偏移。</p>
         </div>
       </section>
 
@@ -208,11 +209,8 @@ export function PageAtari() {
           <div><span className="p09-overline">EVIDENCE BOUNDARY</span><h2 id="p09-limits-title">实验支持了机制，也显示了它的边界</h2></div>
         </div>
         <dl className="p09-limit-list">
-          <div><dt>Task Discovery</dt><dd>EWC 需要已知任务切换信号。论文 Atari 系统用单独的 Task Recognition 机制识别游戏。</dd></div>
-          <div><dt>Replay</dt><dd>Atari 系统继续使用各任务的 Replay buffer。EWC 提供跨 Task 的参数约束，没有替代经验回放。</dd></div>
           <div><dt>有限模型容量</dt><dd>旧任务约束可能减少后续任务可自由调整的参数方向。作者将与十个独立网络的分数差距和不确定性近似联系起来，但这只是可能解释。</dd></div>
           <div><dt>结果范围</dt><dd>这些结果来自本文 Atari 游戏序列与系统设置；它们支持 EWC 在该对照条件下的贡献，但不能直接推广到所有 continual RL 场景。</dd></div>
-          <div><dt>类别增量偏差</dt><dd>这些实验保留 MNIST 的 0–9 标签集合；它们没有评估新增类别下的 Class-Incremental 输出偏差。</dd></div>
           <div><dt>对角 Fisher</dt><dd>它是可计算的近似，忽略参数之间的耦合。Nullspace 扰动结果显示，被估作低敏感的变化仍可能影响表现。</dd></div>
         </dl>
         <p className="p09-capacity-note">有关容量与任务数的关系属于方法边界解释，不是论文测得的固定任务上限。</p>

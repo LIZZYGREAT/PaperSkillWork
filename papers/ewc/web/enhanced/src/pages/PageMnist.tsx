@@ -147,9 +147,9 @@ export function PageMnist() {
           <div><span className="p08-overline">THREE COMPARISONS</span><h2 id="p08-baselines-title">每个 Baseline 回答一个问题</h2></div>
         </div>
         <div className="p08-baseline-list">
-          <article><span className="p08-method-mark p08-method-mark--blue" /><div><h3>Sequential SGD / Fine-tuning</h3><p>只优化当前 Task 的 Loss，没有专门保护旧任务参数。</p></div><code>L = L<sub>current</sub></code></article>
-          <article><span className="p08-method-mark p08-method-mark--green" /><div><h3>Uniform L2</h3><p>围绕旧解限制所有参数的移动，逐参数约束强度相同。</p></div><code>L<sub>B</sub> + λ/2 Σ<sub>i</sub>(θ<sub>i</sub> − θ<sub>A,i</sub>*)²</code></article>
-          <article><span className="p08-method-mark p08-method-mark--red" /><div><h3>EWC</h3><p>仍限制参数偏移，但通过 Fisher 区分参数约束强度。</p></div><code>L<sub>B</sub> + λ/2 Σ<sub>i</sub>F<sub>A,i</sub>(θ<sub>i</sub> − θ<sub>A,i</sub>*)²</code></article>
+          <article><span className="p08-method-mark p08-method-mark--blue" /><div><h3>Sequential SGD / Fine-tuning</h3><p>只优化当前任务；检验不保护旧参数时遗忘会怎样累积。</p></div><small>没有旧任务惩罚</small></article>
+          <article><span className="p08-method-mark p08-method-mark--green" /><div><h3>Uniform L2</h3><p>围绕旧解对所有参数施加相同强度的偏移约束。</p></div><small>每个坐标权重相同</small></article>
+          <article><span className="p08-method-mark p08-method-mark--red" /><div><h3>EWC</h3><p>同样围绕旧解约束偏移，但按 Fisher 对参数逐项加权。</p></div><small>坐标权重由 Fisher 区分</small></article>
         </div>
       </section>
 
