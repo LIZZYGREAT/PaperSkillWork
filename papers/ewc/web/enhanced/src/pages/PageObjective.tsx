@@ -162,11 +162,16 @@ function SequentialBayes() {
     <section className="p06-bayes" aria-labelledby="p06-bayes-title">
       <span className="p06-overline">FROM ONE TASK POSTERIOR TO THE NEXT</span>
       <h2 id="p06-bayes-title">先把 Task A 的 Posterior 带到 Task B</h2>
-      <p className="p06-section-lead">Task B 到来后，参数既要解释新数据，也要保留旧任务建立的局部约束。</p>
-      <MathFormula block tex={String.raw`p(\theta\mid D_A,D_B)\propto p(D_B\mid\theta)p(\theta\mid D_A)`} />
-      <p>这里假设给定 θ 后，Task A 与 Task B 的数据条件独立，因此新任务 Likelihood 可以乘到旧 Posterior 上。先看这个概率更新关系，再取负对数拆成两路：</p>
-      <MathFormula block tex={String.raw`-\log p(\theta\mid D_A,D_B)=-\log p(D_B\mid\theta)-\log p(\theta\mid D_A)+C`} />
-      <p>C 与当前 θ 无关，优化时可以忽略。第一项是新任务的负 Log Likelihood；第二项保留 Task A 数据和已有 Prior 的信息。下面两张卡分别追踪它们的来源，旧 Posterior 的局部二次近似则由后续步骤逐项装配。</p>
+      <p className="p06-section-lead">Task B 的新数据提供当前 Loss，Task A 的 Posterior 携带旧任务信息。下面两路分别追踪它们的来源。</p>
+      <details className="p06-bayes-derivation">
+        <summary>为何得到加法目标？展开 Sequential Bayes 推导</summary>
+        <div>
+          <p>假设给定 θ 后两批任务数据条件独立，Task A Posterior 作为 Task B 更新的先验贡献：</p>
+          <MathFormula block tex={String.raw`p(\theta\mid D_A,D_B)\propto p(D_B\mid\theta)p(\theta\mid D_A)`} />
+          <p>取负对数后，乘积变为相加；C 与当前 θ 无关，优化时可忽略。第二项保留 Task A 信息，其局部二次近似稍后由 Anchor 与 Fisher 装配。</p>
+          <MathFormula block tex={String.raw`-\log p(\theta\mid D_A,D_B)=-\log p(D_B\mid\theta)-\log p(\theta\mid D_A)+C`} />
+        </div>
+      </details>
       <div className="p06-bayes-branches">
         <article className="p06-source-card p06-source-card--new">
           <span className="p06-source-label">TASK B · LEARN THE NEW TASK</span>
@@ -203,12 +208,6 @@ function PenaltyBuilder({ step, onStepChange }: { step: number; onStepChange: (i
         <span className="p06-builder-context__compare">与旧位置比较</span>
         <RuntimeNode objectId="task-a-anchor" eyebrow="SAVED · FIXED" title="Task A Anchor θ_A*" detail="旧任务训练结束时的快照"/>
       </div>
-      <p className="p06-builder-symbols">变量说明：
-        <RuntimeReference id="theta" objectId="current-parameters">当前 θ</RuntimeReference> ·
-        <RuntimeReference id="theta_a_star" objectId="task-a-anchor">旧 Anchor θ_A*</RuntimeReference> ·
-        <RuntimeReference id="fisher_a_i" objectId="task-a-fisher">Fisher 权重 F_A,i</RuntimeReference> ·
-        <RuntimeReference id="lambda_ewc" objectId="ewc-penalty">整体强度 λ</RuntimeReference>
-      </p>
       <FlowStepper
         label="EWC 惩罚项装配步骤"
         steps={PENALTY_STEPS}
@@ -286,17 +285,14 @@ function CompleteObjective() {
         <div className="p06-method-grid">
           <article className="p06-method-card">
             <span>PLAIN FINE-TUNING</span><h3>只优化新任务</h3>
-            <MathFormula block tex={String.raw`L=L_B(\theta)`} />
             <p>更新只由 Task B Loss 决定。</p>
           </article>
           <article className="p06-method-card p06-method-card--uniform">
             <span>UNIFORM L2 · A CONCEPTUAL COMPARISON</span><h3>所有坐标同等加权</h3>
-            <MathFormula block tex={String.raw`L_B(\theta)+\frac{\lambda}{2}\sum_i(\theta_i-\theta_{A,i}^*)^2`} />
             <p>以旧参数为中心，但不给不同坐标区分 Fisher 权重。</p>
           </article>
           <article className="p06-method-card p06-method-card--ewc">
             <span>EWC</span><h3>按旧任务敏感性加权</h3>
-            <MathFormula block tex={String.raw`L_B(\theta)+\frac{\lambda}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2`} />
             <p>每个参数使用自己的 Fisher 相对敏感度，偏移代价各不相同。</p>
           </article>
         </div>
@@ -307,12 +303,16 @@ function CompleteObjective() {
           <div><span className="p06-overline">FROM OBJECTIVE TO UPDATE</span><h2 id="p06-gradient-title">两路梯度在优化器前汇合</h2></div>
           <p>EWC 改变送入优化器的总梯度；优化器仍然更新同一个模型参数 θ。</p>
         </div>
-        <div className="p06-derivative" role="math" aria-label="EWC objective derivative with respect to parameter theta i">
-          <span className="p06-derivative__label">对 Equation (3) 求导</span>
-          <MathFormula block tex={String.raw`\frac{\partial L_{\mathrm{EWC}}}{\partial\theta_i}=\frac{\partial L_B}{\partial\theta_i}+\lambda F_{A,i}(\theta_i-\theta_{A,i}^*)`} />
-        </div>
-        <p className="p06-builder-symbols">梯度说明：<RuntimeReference id="task_b_gradient" objectId="task-b-gradient">Task B 梯度</RuntimeReference> · <RuntimeReference id="ewc_gradient" objectId="ewc-gradient">EWC 梯度</RuntimeReference> · <RuntimeReference id="total_gradient" objectId="total-gradient">总梯度</RuntimeReference></p>
-        <p className="p06-derivative-note">这是对 Equation (3) 的求导展开，属于梯度实现对应（M02）；原文没有把它另列为独立公式。</p>
+        <details className="p06-gradient-derivation">
+          <summary>展开导数式：验证两路梯度的来源</summary>
+          <div>
+            <div className="p06-derivative" role="math" aria-label="EWC objective derivative with respect to parameter theta i">
+              <span className="p06-derivative__label">对 Equation (3) 求导</span>
+              <MathFormula block tex={String.raw`\frac{\partial L_{\mathrm{EWC}}}{\partial\theta_i}=\frac{\partial L_B}{\partial\theta_i}+\lambda F_{A,i}(\theta_i-\theta_{A,i}^*)`} />
+            </div>
+            <p className="p06-derivative-note">这是 Equation (3) 的梯度实现展开；论文没有将其另列为独立公式。</p>
+          </div>
+        </details>
 
         <div className="p06-gradient-junction">
           <div className="p06-junction-inputs">
