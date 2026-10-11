@@ -34,13 +34,13 @@ const STATES: AnimationState[] = [
   { id: "optimizer-update", title: "Optimizer 更新参数", short: "Update", phase: "task-a", task: "TASK A", camera: "PARAMETER FOCUS", annotation: "Backward 已得到梯度。真正让当前参数发生变化的是 optimizer.step()。", why: "梯度提供更新方向，Optimizer 根据它移动当前参数 θ。", scene: "update", focus: ["task-a-gradient", "optimizer", "current-parameters"] },
   { id: "task-a-compression", title: "重复训练直到 Task A 完成", short: "训练压缩", phase: "task-a", task: "TASK A", camera: "WORLD VIEW", annotation: "熟悉的 batch → loss → backward → update 循环被压缩展示，模型逐步到达 Task A 的训练结果 θ_A*。", why: "真实训练包含许多 iteration；整合动画只保留一次循环的结构，再压缩重复过程。", scene: "compression", focus: ["task-a-data", "task-a-loss", "optimizer", "current-parameters"] },
   { id: "task-a-boundary", title: "Task A 到达边界", short: "Task A Boundary", phase: "consolidation", task: "TASK A · BOUNDARY", camera: "RUNTIME VIEW", annotation: "Task A 已经训练完成。接下来不再降低 Task A Loss，而要记录后续训练可能破坏哪些参数状态。", why: "θ_A* 告诉我们 Task A 在哪里结束，却没有告诉我们附近哪些参数方向敏感。", scene: "boundary", focus: ["current-parameters", "task-a-data"], checkpoint: true, review: { page: "page-07-lifecycle", anchor: "task-boundary", label: "回顾 Page 7 · Task Boundary" } },
-  { id: "posterior-view", title: "从参数点转向 Posterior", short: "Posterior", phase: "consolidation", task: "MATHEMATICAL VIEW", camera: "SEMANTIC ZOOM", annotation: "θ_A* 是一个参数点；Posterior 描述观察 Task A 数据之后，附近哪些参数状态仍然合理。", why: "完整 Posterior 仍然很复杂。这是解释模型状态的数学视图，不表示程序显式保存了完整分布。", scene: "posterior", focus: ["task-a-data", "current-parameters"], math: "posterior", checkpoint: true, review: { page: "page-03-bayes", anchor: "prior-likelihood-posterior", label: "回顾 Page 3 · Posterior" } },
-  { id: "laplace-view", title: "在解附近做局部近似", short: "Laplace", phase: "consolidation", task: "MATHEMATICAL VIEW", camera: "SEMANTIC ZOOM · LOCAL", annotation: "Laplace Approximation 用 θ_A* 附近的局部 Gaussian 描述复杂 Posterior 的形状。", why: "局部近似把参数偏移与局部曲率联系起来；下一步需要可计算的敏感性近似。", scene: "laplace", focus: ["current-parameters", "task-a-anchor"], math: "laplace", checkpoint: true, review: { page: "page-04-laplace", anchor: "laplace-local-view", label: "回顾 Page 4 · Laplace" } },
+  { id: "posterior-view", title: "从参数点转向 Posterior", short: "Posterior", phase: "consolidation", task: "MATHEMATICAL VIEW", camera: "SEMANTIC ZOOM", annotation: "θ_A* 是一个参数点；Posterior 描述观察 Task A 数据之后，附近哪些参数状态仍然合理。", why: "先理解旧任务解附近的可能状态，再用 Laplace 构造可计算的局部近似。", scene: "posterior", focus: ["task-a-data", "current-parameters"], math: "posterior", checkpoint: true, review: { page: "page-03-bayes", anchor: "prior-likelihood-posterior", label: "回顾 Page 3 · Posterior" } },
+  { id: "laplace-view", title: "在解附近做局部近似", short: "Laplace", phase: "consolidation", task: "MATHEMATICAL VIEW", camera: "SEMANTIC ZOOM · LOCAL", annotation: "Laplace Approximation 用 θ_A* 附近的局部 Gaussian 描述复杂 Posterior 的形状。", why: "局部曲率把参数偏移与敏感性联系起来，为下一步的可计算近似提供依据。", scene: "laplace", focus: ["current-parameters", "task-a-anchor"], math: "laplace", checkpoint: true, review: { page: "page-04-laplace", anchor: "laplace-local-view", label: "回顾 Page 4 · Laplace" } },
   { id: "return-runtime", title: "回到真实 Runtime", short: "返回 Runtime", phase: "consolidation", task: "TASK A · CONSOLIDATION", camera: "RUNTIME VIEW", annotation: "Posterior 与 Gaussian 是解释层。现在回到实际执行：EWC 需要可计算、可保存的局部敏感性近似。", why: "Mathematical View 收起后，同一个模型和参数对象仍在原来的训练流程中。", scene: "return", focus: ["neural-network", "current-parameters", "task-a-data"], review: { page: "page-05-fisher", anchor: "fisher-estimation", label: "前往 Page 5 · Fisher" } },
   { id: "save-anchor", title: "保存固定 Anchor", short: "Save Anchor", phase: "consolidation", task: "TASK A · CONSOLIDATION", camera: "PARAMETER + MEMORY FOCUS", annotation: "Anchor 是 Task A 结束时参数的固定快照。后续 Current Parameters 会变化，快照保持不变。", why: "比较当前 θ 与固定的 θ_A*，才能表示后续学习偏离旧任务解的距离。", scene: "anchor", focus: ["current-parameters", "task-a-anchor", "persistent-memory"], review: { page: "page-07-lifecycle", anchor: "task-boundary", label: "回顾 Page 7 · 保存时点" } },
-  { id: "fisher-estimation", title: "固定参数，估计对角 Fisher", short: "Diagonal Fisher", phase: "consolidation", task: "TASK A · FISHER ESTIMATION", camera: "RUNTIME VIEW", annotation: "本教程采用 Page 5 已标明来源边界的 observed-label empirical-Fisher 示例：固定在 θ_A*，计算观测标签 log probability 的梯度平方并跨样本汇总；optimizer.step() 不执行。", why: "当前示例取 Fisher 对角项 F_A,i；EWC 使用对角 Fisher 近似局部精度，但论文没有规定这套通用逐样本估计配方。", scene: "fisher", focus: ["task-a-data", "neural-network", "task-a-fisher", "persistent-memory"], math: "fisher", checkpoint: true, review: { page: "page-05-fisher", anchor: "fisher-estimation", label: "回顾 Page 5 · Fisher 估计" } },
-  { id: "task-a-consolidated", title: "Task A 状态进入 Memory Rail", short: "Store S_A", phase: "consolidation", task: "PERSISTENT MEMORY", camera: "MEMORY FOCUS", annotation: "Task A 留下两类长期信息：结束时的参数位置 θ_A*，以及各参数附近的 Fisher 敏感性近似 F_A。", why: "通用 EWC 教学路径将它们记作 S_A=(θ_A*,F_A)；penalty 本身不要求旧样本混入当前 batch。Atari Replay 是另一项系统机制，见 Page 9。", scene: "memory", focus: ["task-a-anchor", "task-a-fisher", "task-state-a", "persistent-memory"], checkpoint: true, review: { page: "page-07-lifecycle", anchor: "task-a-to-b-to-c", label: "回顾 Page 7 · A → B → C" } },
-  { id: "task-b-arrives", title: "Task B 从旧参数继续", short: "Task B arrives", phase: "task-b", task: "TASK B", camera: "TRACK → TASK B", annotation: "Task B 使用新的数据 D_B，但同一个模型从 Task A 训练得到的参数状态继续学习。", why: "这条通用 EWC 路径用 Task B 当前数据训练，由 S_A 提供旧任务约束；Atari 系统另有 Replay，见 Page 9。", scene: "task-b", focus: ["task-b-data", "neural-network", "task-b-loss", "persistent-memory"] },
+  { id: "fisher-estimation", title: "固定参数，估计对角 Fisher", short: "Diagonal Fisher", phase: "consolidation", task: "TASK A · FISHER ESTIMATION", camera: "RUNTIME VIEW", annotation: "固定 θ_A*，逐样本计算观测标签 log probability 的梯度平方并汇总。", why: "汇总得到对角 F_A，以近似旧解附近的局部精度；此步骤只估计敏感性，不更新参数。", scene: "fisher", focus: ["task-a-data", "neural-network", "task-a-fisher", "persistent-memory"], math: "fisher", checkpoint: true, review: { page: "page-05-fisher", anchor: "fisher-estimation", label: "回顾 Page 5 · Fisher 估计" } },
+  { id: "task-a-consolidated", title: "Task A 状态进入 Memory Rail", short: "Store S_A", phase: "consolidation", task: "PERSISTENT MEMORY", camera: "MEMORY FOCUS", annotation: "Task A 留下两类长期信息：结束时的参数位置 θ_A*，以及各参数附近的 Fisher 敏感性近似 F_A。", why: "S_A=(θ_A*,F_A) 为后续旧任务约束保留参数位置与敏感性；原始样本不属于这组状态。", scene: "memory", focus: ["task-a-anchor", "task-a-fisher", "task-state-a", "persistent-memory"], checkpoint: true, review: { page: "page-07-lifecycle", anchor: "task-a-to-b-to-c", label: "回顾 Page 7 · A → B → C" } },
+  { id: "task-b-arrives", title: "Task B 从旧参数继续", short: "Task B arrives", phase: "task-b", task: "TASK B", camera: "TRACK → TASK B", annotation: "Task B 使用新的数据 D_B，但同一个模型从 Task A 训练得到的参数状态继续学习。", why: "Task B 用新数据产生当前 Loss，并由 Memory Rail 中的 S_A 提供旧任务约束。", scene: "task-b", focus: ["task-b-data", "neural-network", "task-b-loss", "persistent-memory"] },
   { id: "ewc-objective", title: "组装 Task B 的 EWC 目标", short: "EWC Objective", phase: "task-b", task: "TASK B · EWC OBJECTIVE", camera: "RUNTIME + MEMORY FOCUS", annotation: "Task B Loss 与 Fisher 加权的旧任务参数约束合并。F_A,i 逐参数变化，λ 缩放整体约束。", why: "新任务目标来自 L_B；旧任务的 Anchor 与 Fisher 来自 Memory Rail 中的 S_A。", scene: "objective", focus: ["task-b-loss", "current-parameters", "task-a-anchor", "task-a-fisher", "ewc-penalty", "persistent-memory"], math: "objective", checkpoint: true, review: { page: "page-06-ewc-objective", anchor: "ewc-objective", label: "回顾 Page 6 · EWC Objective" } },
   { id: "combined-gradient", title: "两路梯度在 Junction 汇合", short: "Gradient Junction", phase: "task-b", task: "TASK B · OPTIMIZATION", camera: "GRADIENT JUNCTION FOCUS", annotation: "EWC 不冻结参数。Task B Gradient 与 EWC Gradient 汇合成 Total Gradient，再交给 Optimizer 更新当前 θ。", why: "EWC 改变 Optimizer 接收的 Total Gradient，而不是替换 Optimizer。", scene: "gradient", focus: ["task-b-gradient", "ewc-gradient", "total-gradient", "optimizer", "current-parameters"], math: "gradient", checkpoint: true, review: { page: "page-06-ewc-objective", anchor: "gradient-junction", label: "回顾 Page 6 · Gradient Junction" } },
   { id: "continual-loop", title: "Task B 结束，Task C 到达", short: "Continual Loop", phase: "continual", task: "TASK B → C", camera: "WORLD VIEW", annotation: "Task B 结束后保存 θ_B*、估计对角 Fisher F_B，并形成 S_B=(θ_B*,F_B)；随后 Task C 数据到达，同一模型在旧任务约束下继续学习。", why: "B Boundary → Store S_B → Task C data → 同一模型继续；目标式是概念性延续，不增加训练数值。", scene: "loop", focus: ["task-c-data", "task-state-a", "task-state-b", "persistent-memory", "current-parameters"], checkpoint: true, review: { page: "page-07-lifecycle", anchor: "task-a-to-b-to-c", label: "回顾 Page 7 · 生命周期" } },
@@ -60,7 +60,16 @@ const TIMELINE_PHASES = [
   { title: "阶段 4 · Task B + EWC", range: "States 15–17", first: 14, last: 16, tone: "task-b" },
   { title: "阶段 5 · Continual Loop", range: "State 18", first: 17, last: 17, tone: "loop" },
 ];
-const PLAYBACK_INTERVAL_MS = 2600;
+const NORMAL_STATE_HOLD_MS = 5200;
+const READING_STATE_HOLD_MS = 6500;
+const READING_STATE_IDS = new Set<GrandAnimationStateId>([
+  "probability-loss",
+  "posterior-view",
+  "laplace-view",
+  "fisher-estimation",
+  "ewc-objective",
+  "combined-gradient",
+]);
 const FLOWING_BOARD_EDGES: Partial<Record<GrandAnimationStateId, string[]>> = {
   "task-a-data": ["data-input"],
   "save-anchor": ["save-anchor"],
@@ -85,12 +94,12 @@ const OBJECT_INFO: Record<RuntimeObjectId, { title: string; badge: string; body:
   optimizer: { title: "Optimizer", badge: "UPDATE RULE", body: "读取 Total Gradient 并更新当前参数。", detail: "普通训练时它使用 Task Loss Gradient；EWC 训练时接收 Task B 与 EWC 合并后的 Total Gradient。Fisher 估计期间 optimizer.step() 关闭。" },
   "current-parameters": { title: "当前参数 · θ", badge: "TRAINABLE STATE", body: "当前网络实际使用、并在训练中继续变化的参数。", detail: "Task A 结束时得到 θ_A*。进入 Task B 后，当前参数从这个位置继续优化；θ_A* 的固定快照留在 Memory Rail。" },
   "task-a-anchor": { title: "固定 Anchor · θ_A*", badge: "STORED SNAPSHOT", body: "Task A 完成时复制并保留的参数快照。", detail: "Anchor 后续保持固定。EWC 比较当前 θ 与 θ_A*，形成旧任务约束中的参数偏移。" },
-  "task-a-fisher": { title: "Diagonal Fisher · F_A", badge: "LOCAL SENSITIVITY APPROXIMATION", body: "EWC 使用对角 Fisher 近似 Task A 解附近的局部精度。", detail: "本教程采用 Page 5 说明来源边界的 observed-label empirical-Fisher 示例：固定在 θ_A*，按样本累计 log probability 梯度的逐坐标平方。论文没有规定这套通用逐样本估计配方；对角 Fisher 也不是精确参数重要性真值或完整 Posterior Hessian。" },
-  "fisher-estimator": { title: "Diagonal Fisher estimation", badge: "TEACHING ESTIMATOR", body: "本教程用 observed-label empirical-Fisher 示例演示逐坐标梯度平方的汇总。", detail: "Parameters FIXED at θ_A* · Gradient ENABLED · Optimizer OFF。该逐样本估计配方属于教学背景，并非 2017 年 EWC 论文规定的通用 estimator。" },
+  "task-a-fisher": { title: "Diagonal Fisher · F_A", badge: "LOCAL SENSITIVITY APPROXIMATION", body: "EWC 使用对角 Fisher 近似 Task A 解附近的局部精度。", detail: "这里展示 observed-label empirical-Fisher 教学示例：固定 θ_A*，按样本累计观测标签 log probability 梯度的逐坐标平方。它与理论 Fisher（对模型预测分布取期望）的定义不同；EWC 论文未规定这套通用逐样本估计配方。对角 Fisher 是局部精度近似，不是精确参数重要性真值或完整 Posterior Hessian。" },
+  "fisher-estimator": { title: "Diagonal Fisher estimation", badge: "TEACHING ESTIMATOR", body: "本教程用 observed-label empirical-Fisher 示例演示逐坐标梯度平方的汇总。", detail: "Parameters FIXED at θ_A* · Gradient ENABLED · Optimizer OFF。每个样本的逐坐标梯度平方加入对应 Fisher 累积项。" },
   "persistent-memory": { title: "Persistent Memory Rail", badge: "STORED TASK STATE", body: "旧任务的 Anchor 与 Fisher 跨越时间轴持续保留。", detail: "Task A 后保存 S_A=(θ_A*,F_A)。Task B 读取它构造约束；Task B 边界再加入 S_B。S_A 是教学状态表示。" },
   "task-state-a": { title: "Task A state · S_A", badge: "θ_A* + F_A", body: "由固定 Anchor 与 Fisher 组成的教学状态。", detail: "S_A=(θ_A*,F_A) 将 Task A 结束位置和参数局部敏感性近似带入后续任务。" },
   "task-state-b": { title: "Task B state · S_B", badge: "θ_B* + F_B", body: "Task B 结束时保存的 Anchor 与 Fisher 状态，供后续任务继续读取。", detail: "State 18 示意 Task B 结束后形成 S_B=(θ_B*,F_B)，供 Task C 等后续任务读取；此前状态中它仍待形成。这里是生命周期延续示意，Task B 当前 EWC 目标仍由 S_A=(θ_A*,F_A) 约束。" },
-  "task-b-data": { title: "Task B data · D_B", badge: "CURRENT DATA", body: "Task B 的新 batch 驱动当前任务 Loss。", detail: "本页是通用 EWC 教学路径：旧任务约束由 Anchor 与 Fisher 提供。Atari 系统另有 Replay 机制，见 Page 9。" },
+  "task-b-data": { title: "Task B data · D_B", badge: "CURRENT DATA", body: "Task B 的新 batch 驱动当前任务 Loss。", detail: "本页的通用 EWC 路径由 Anchor 与 Fisher 提供旧任务约束；Task B 当前 batch 提供新任务数据。" },
   "task-b-loss": { title: "Task B Loss · L_B", badge: "NEW TASK OBJECTIVE", body: "由 Task B 数据与当前预测产生。", detail: "L_B 与旧任务 EWC penalty 相加，组成 L_total。" },
   "ewc-penalty": { title: "EWC penalty · Ω_A", badge: "OLD TASK CONSTRAINT", body: "对偏离 Task A Anchor 的变化施加 Fisher 加权代价。", detail: "逐参数项由 F_A,i(θ_i−θ_A,i*)² 构成，λ 缩放整体约束。它限制更新方向，不冻结参数。" },
   "task-b-gradient": { title: "Task B Gradient · g_B", badge: "NEW TASK SIGNAL", body: "Task B Loss 对当前参数产生的梯度。", detail: "它推动参数改善新任务目标。" },
@@ -113,6 +122,16 @@ function getPlaybackEndIndex(activeIndex: number) {
   return TIMELINE_PHASES[phaseIndex + 1]?.last ?? LAST_STATE_INDEX;
 }
 
+function getStateHoldMs(stateId: GrandAnimationStateId) {
+  return READING_STATE_IDS.has(stateId) ? READING_STATE_HOLD_MS : NORMAL_STATE_HOLD_MS;
+}
+
+function getStateViewLabel(state: AnimationState) {
+  if (state.scene === "posterior") return "MATHEMATICAL VIEW";
+  if (state.scene === "laplace") return "LOCAL APPROXIMATION";
+  return state.camera;
+}
+
 function useFirstVisitHelp() {
   const [open, setOpen] = useState(() => {
     try { return typeof window !== "undefined" && window.localStorage.getItem("ewc-grand-animation-help-seen") !== "1"; }
@@ -129,8 +148,8 @@ function FormulaToken({ objectId, children, onSelect }: { objectId: RuntimeObjec
   return <button type="button" data-p10-transition-id={objectId} className="p10-formula-token" onClick={() => onSelect(objectId)}>{children}</button>;
 }
 
-function MathReference({ id, children }: { id: CanonicalReferenceId; children: ReactNode }) {
-  return <ReferenceTrigger id={id} className="p10-math-reference">{children}</ReferenceTrigger>;
+function MathReference({ id, children, className = "" }: { id: CanonicalReferenceId; children: ReactNode; className?: string }) {
+  return <ReferenceTrigger id={id} className={`p10-math-reference ${className}`.trim()}>{children}</ReferenceTrigger>;
 }
 
 function Formula({ kind, expanded, onSelect }: { kind: MathId; expanded: boolean; onSelect: (id: RuntimeObjectId) => void }) {
@@ -205,20 +224,23 @@ function MemoryFormula({ children }: { children: ReactNode }) {
 
 function SceneVisual({ state, selected, onSelect, onComplete, summaryTriggerRef }: { state: AnimationState; selected?: RuntimeObjectId; onSelect: (id: RuntimeObjectId) => void; onComplete?: () => void; summaryTriggerRef?: RefObject<HTMLButtonElement> }) {
   const focus = state.focus;
-  if (state.scene === "overview" || state.scene === "loop") return <div className={`p10-scene p10-scene--overview ${state.scene === "loop" ? "p10-scene--completed" : ""}`}>
-    <div className="p10-world-ribbon"><span>{state.scene === "loop" ? "STATE 18 · BOUNDARY → STORE → CONTINUE" : "WORLD VIEW · TRAINING TIME MOVES LEFT → RIGHT"}</span><small>one shared model · persistent task memory</small></div>
+  if (state.scene === "overview" || state.scene === "loop") {
+    const isCompleted = state.scene === "loop";
+    return <div className={`p10-scene p10-scene--overview ${isCompleted ? "p10-scene--completed" : ""}`}>
+    <div className="p10-world-ribbon"><span>{isCompleted ? "STATE 18 · BOUNDARY → STORE → CONTINUE" : "WORLD VIEW · TRAINING TIME MOVES LEFT → RIGHT"}</span><small>one shared model · persistent task memory</small></div>
     <div className="p10-task-world">
       <div className="p10-task-world__task is-task-a"><span>01</span><b>Task A</b><small>ordinary training</small><i>D<sub>A</sub> → θ<sub>A</sub>*</i></div>
       <div className="p10-task-world__boundary"><span>CONSOLIDATE A</span><b>Anchor + Fisher</b><i>S<sub>A</sub></i></div>
       <div className="p10-task-world__task is-task-b"><span>02</span><b>Task B</b><small>new loss + old constraint</small><i>L<sub>B</sub> + Ω<sub>A</sub></i></div>
-      <div className="p10-task-world__boundary"><span>{state.scene === "loop" ? "TASK B ENDED" : "CONSOLIDATE B"}</span><b>{state.scene === "loop" ? <>save θ<sub>B</sub>* → estimate diag F<sub>B</sub></> : "Anchor + Fisher"}</b><i>{state.scene === "loop" ? <>S<sub>B</sub> = (θ<sub>B</sub>*, F<sub>B</sub>)</> : <>S<sub>B</sub></>}</i></div>
-      <div className="p10-task-world__task is-task-c" data-flow-node="task-data-c"><span>03</span><b>Task C</b><small>{state.scene === "loop" ? <>D<sub>C</sub> arrives · same model continues</> : "continual loop"}</small><i>L<sub>C</sub>(θ) + Ω<sub>A</sub>(θ) + Ω<sub>B</sub>(θ)</i>{state.scene === "loop" && <em>conceptual continuation</em>}</div>
+      <div className="p10-task-world__boundary"><span>{isCompleted ? "TASK B ENDED" : "CONSOLIDATE B"}</span><b>{isCompleted ? <>save θ<sub>B</sub>* → estimate diag F<sub>B</sub></> : "Anchor + Fisher"}</b><i>{isCompleted ? <>S<sub>B</sub> = (θ<sub>B</sub>*, F<sub>B</sub>)</> : <>S<sub>B</sub></>}</i></div>
+      <div className="p10-task-world__task is-task-c" data-flow-node={isCompleted ? undefined : "task-data-c"}><span>03</span><b>Task C</b><small>{isCompleted ? <>D<sub>C</sub> arrives · same model continues</> : "continual loop"}</small><i>L<sub>C</sub>(θ) + Ω<sub>A</sub>(θ) + Ω<sub>B</sub>(θ)</i>{isCompleted && <em>conceptual continuation</em>}</div>
     </div>
-    <div className="p10-memory-rail"><button type="button" data-flow-node="memory-persistent-memory" className={`p10-memory-rail__label p10-memory-rail__inspect ${selected === "persistent-memory" ? "is-selected" : ""}`} onClick={() => onSelect("persistent-memory")} aria-pressed={selected === "persistent-memory"}>PERSISTENT MEMORY RAIL</button><button type="button" data-flow-node="memory-task-state-a" className={`p10-memory-chip is-ready ${selected === "task-state-a" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-a")} aria-pressed={selected === "task-state-a"}><MemoryFormula>S<sub>A</sub> · θ<sub>A</sub>* + F<sub>A</sub></MemoryFormula></button>{state.scene === "loop" ? <button type="button" data-flow-node="memory-task-state-b" className={`p10-memory-chip is-ready is-task-b ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}><MemoryFormula>S<sub>B</sub> · θ<sub>B</sub>* + F<sub>B</sub></MemoryFormula></button> : <button type="button" data-flow-node="memory-task-state-b" className={`p10-memory-chip is-pending ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}><MemoryFormula>S<sub>B</sub></MemoryFormula><small>after Task B</small></button>}</div>
-    {state.scene === "loop" && <div className="p10-world-complete"><span>Task C reads S<sub>A</sub> and S<sub>B</sub>; the shared model continues.</span><button ref={summaryTriggerRef} className="p10-world-complete__action" type="button" onClick={onComplete}>完成本次执行 / View Summary</button></div>}
+    <div className="p10-memory-rail"><button type="button" data-flow-node="memory-persistent-memory" className={`p10-memory-rail__label p10-memory-rail__inspect ${selected === "persistent-memory" ? "is-selected" : ""}`} onClick={() => onSelect("persistent-memory")} aria-pressed={selected === "persistent-memory"}>PERSISTENT MEMORY RAIL</button><button type="button" data-flow-node="memory-task-state-a" className={`p10-memory-chip ${isCompleted ? "is-ready" : "is-pending"} ${selected === "task-state-a" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-a")} aria-pressed={selected === "task-state-a"}><MemoryFormula>S<sub>A</sub>{isCompleted && <> · θ<sub>A</sub>* + F<sub>A</sub></>}</MemoryFormula>{!isCompleted && <small>after Task A</small>}</button>{isCompleted ? <button type="button" data-flow-node="memory-task-state-b" className={`p10-memory-chip is-ready is-task-b ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}><MemoryFormula>S<sub>B</sub> · θ<sub>B</sub>* + F<sub>B</sub></MemoryFormula></button> : <button type="button" data-flow-node="memory-task-state-b" className={`p10-memory-chip is-pending ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}><MemoryFormula>S<sub>B</sub></MemoryFormula><small>after Task B</small></button>}</div>
+    {isCompleted && <div className="p10-world-complete"><span>Task C can read S<sub>A</sub> and S<sub>B</sub>; the shared model continues.</span><button ref={summaryTriggerRef} className="p10-world-complete__action" type="button" onClick={onComplete}>完成本次执行 / View Summary</button></div>}
   </div>;
+  }
   if (state.scene === "posterior" || state.scene === "laplace") return <div className={`p10-scene p10-scene--math ${state.scene === "posterior" ? "is-posterior" : "is-laplace"}`}>
-    <div className="p10-math-view-banner"><b>MATHEMATICAL VIEW</b><span>解释当前训练状态 · 程序不会显式构造完整 Posterior</span></div>
+    <div className="p10-math-view-banner"><b>{state.scene === "laplace" ? "LOCAL APPROXIMATION" : "MATHEMATICAL VIEW"}</b><span>解释旧任务解附近的约束关系 · 不表示运行时储存完整 Posterior</span></div>
     <div className="p10-semantic-transition"><div className="p10-point-object"><b>θ<sub>A</sub>*</b><small>one parameter<br />point</small></div><span className="p10-semantic-arrow">→</span>{state.scene === "posterior" ? <div className="p10-posterior-cloud"><span>附近哪些参数状态<br />仍然合理？</span><b>Posterior</b><i>full local shape</i></div> : <><div className="p10-posterior-cloud is-quiet"><b>full Posterior</b></div><span className="p10-semantic-arrow">→</span><GaussianSketch /></>}</div>
     {state.scene === "laplace" && <div className="p10-math-legend"><span>中心 θ<sub>A</sub>*</span><span>宽度 Σ<sub>A</sub></span><span>局部精度 Σ<sub>A</sub><sup>−1</sup></span></div>}
   </div>;
@@ -226,7 +248,7 @@ function SceneVisual({ state, selected, onSelect, onComplete, summaryTriggerRef 
     <div className="p10-sample-stack"><b>D<sub>A</sub></b><small>Task A Dataset</small><div className="p10-sample-pixels" aria-label="教学用样本像素示意"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div><span>x<sub>n</sub>, y<sub>n</sub> → batch</span></div><span className="p10-large-arrow">→</span><WorkbenchNode id="neural-network" label={<>Network f<sub>θ</sub></>} eyebrow="SAME MODEL" active selected={selected === "neural-network"} onSelect={onSelect} /><div className="p10-sample-note"><b>Inspect the input</b><span>Dataset → Batch → Sample</span><button type="button" onClick={() => onSelect("task-a-batch")}>View a representative batch</button></div>
   </div>;
   if (state.scene === "forward" || state.scene === "backward" || state.scene === "update" || state.scene === "compression" || state.scene === "return") return <div className={`p10-scene p10-scene--training p10-scene--${state.scene}`}>
-    <div className="p10-network-detail"><div className="p10-network-detail__heading"><b>TEACHING CNN-LIKE CLASSIFIER</b><span>illustrative carrier · EWC does not require a CNN</span></div><div className="p10-network-layers"><span>Input x</span><i>→</i><button onClick={() => onSelect("current-parameters")}>Conv 1<small>θ¹</small></button><i>→</i><span>ReLU</span><i>→</i><button onClick={() => onSelect("current-parameters")}>Conv 2<small>θ²</small></button><i>→</i><span>Pool · Flatten</span><i>→</i><button onClick={() => onSelect("current-parameters")}>FC<small>θ³</small></button><i>→</i><button onClick={() => onSelect("current-parameters")}>Output<small>θ⁴</small></button></div></div>
+    <div className="p10-network-detail"><div className="p10-network-detail__heading"><b>ILLUSTRATIVE CNN-LIKE CLASSIFIER</b><span>example architecture</span></div><div className="p10-network-layers"><span>Input x</span><i>→</i><button onClick={() => onSelect("current-parameters")}>Conv 1<small>θ¹</small></button><i>→</i><span>ReLU</span><i>→</i><button onClick={() => onSelect("current-parameters")}>Conv 2<small>θ²</small></button><i>→</i><span>Pool · Flatten</span><i>→</i><button onClick={() => onSelect("current-parameters")}>FC<small>θ³</small></button><i>→</i><button onClick={() => onSelect("current-parameters")}>Output<small>θ⁴</small></button></div></div>
     <LayerBlocks focus={focus} selected={selected} onSelect={onSelect} />
     <div className="p10-training-status"><span>FORWARD <b>{state.scene === "compression" ? "REPEATED" : state.scene === "forward" ? "COMPUTING" : "DONE"}</b></span><span>BACKWARD <b>{state.scene === "compression" ? "REPEATED" : state.scene === "backward" ? "GRADIENT FLOWS ←" : state.scene === "update" ? "GRADIENT READY" : "—"}</b></span><span>OPTIMIZER <b>{state.scene === "compression" ? "MULTIPLE STEP() UPDATES" : state.scene === "update" ? "STEP() · UPDATE θ" : "WAITING"}</b></span><span>PARAMETERS <b>{state.scene === "compression" ? "θ⁽⁰⁾ → θ_A*" : state.scene === "update" ? "θ 0.412 → 0.420" : "SHAPE HELD FIXED"}</b></span>{state.scene === "compression" && <small>Many mini-batch updates are compressed into this timeline step.</small>}{state.scene === "update" && <small>Representative parameter · illustrative mechanism values</small>}</div>
     {state.scene === "compression" && <div className="p10-iteration-pulse"><b>batch 1 → update</b><span>·</span><b>batch 2 → update</b><span>·</span><b>batch 3 → update</b><span className="p10-pulse-dots">···</span><strong>θ<sup>(0)</sup> → θ<sub>A</sub>*</strong></div>}
@@ -238,7 +260,7 @@ function SceneVisual({ state, selected, onSelect, onComplete, summaryTriggerRef 
   if (state.scene === "memory") return <div className="p10-scene p10-scene--memory"><div className="p10-memory-explain"><span>Task A data leaves the active pipeline</span><b>θ<sub>A</sub>* + F<sub>A</sub> → S<sub>A</sub></b><small>Anchor position + parameter-wise local sensitivity</small></div><div className="p10-memory-rail p10-memory-rail--focused"><button type="button" data-flow-node="memory-persistent-memory" className="p10-memory-rail__label p10-memory-rail__inspect" onClick={() => onSelect("persistent-memory")}>PERSISTENT TASK MEMORY</button><button type="button" data-flow-node="memory-task-state-a" className={`p10-memory-chip is-ready ${selected === "task-state-a" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-a")} aria-pressed={selected === "task-state-a"}><MemoryFormula>S<sub>A</sub></MemoryFormula><small><MemoryFormula>θ<sub>A</sub>* · F<sub>A</sub></MemoryFormula></small></button><button type="button" data-flow-node="memory-task-state-b" className={`p10-memory-chip is-pending ${selected === "task-state-b" ? "is-selected" : ""}`} onClick={() => onSelect("task-state-b")} aria-pressed={selected === "task-state-b"}><MemoryFormula>S<sub>B</sub></MemoryFormula><small>pending</small></button></div></div>;
   if (state.scene === "task-b") return <div className="p10-scene p10-scene--task-b"><div className="p10-task-b-path"><div className="p10-task-b-source"><span>TASK B DATA</span><b>D<sub>B</sub></b><small>new batch</small></div><span className="p10-large-arrow">→</span><div className="p10-task-b-model"><span>SAME MODEL</span><b>θ<sub>start,B</sub> = θ<sub>A</sub>*</b><small>continue, do not reinitialize</small></div><span className="p10-large-arrow">→</span><div className="p10-task-b-loss"><span>TASK B OBJECTIVE</span><b>L<sub>B</sub></b><small>new task data</small></div></div><div className="p10-memory-rail"><span className="p10-memory-rail__label">READ OLD STATE</span><button className="p10-memory-chip is-ready" onClick={() => onSelect("persistent-memory")}><MemoryFormula>S<sub>A</sub> → θ<sub>A</sub>* + F<sub>A</sub></MemoryFormula></button></div></div>;
   if (state.scene === "objective") return <div className="p10-scene p10-scene--objective"><div className="p10-objective-inputs"><button type="button" className="p10-objective-input is-new" onClick={() => onSelect("task-b-loss")}><span>NEW TASK</span><b>L<sub>B</sub></b><small>from D<sub>B</sub></small></button><span className="p10-objective-plus">+</span><button type="button" className="p10-objective-input is-old" onClick={() => onSelect("ewc-penalty")}><span>OLD TASK CONSTRAINT</span><b>λ Ω<sub>A</sub></b><small>from S<sub>A</sub>=(θ<sub>A</sub>*,F<sub>A</sub>)</small></button><span className="p10-objective-equals">=</span><div className="p10-objective-result">L<sub>total</sub></div></div><div className="p10-objective-mapping"><span><b>F<sub>A,i</sub></b> parameter-specific weight</span><span><b>λ</b> global constraint scale</span><span><b>θ<sub>A</sub>*</b> fixed stored anchor</span><span><b>θ</b> current trainable value</span></div><LayerBlocks focus={focus} selected={selected} onSelect={onSelect} includeFisher includeAnchor /></div>;
-  if (state.scene === "gradient") return <div className="p10-scene p10-scene--gradient"><div className="p10-gradient-junction"><button type="button" className="p10-gradient-input is-task" onClick={() => onSelect("task-b-gradient")}><span>TASK B</span><b>g<sub>B</sub></b><small>−0.20</small></button><span className="p10-junction-branch">↘</span><div className="p10-junction-core">Σ</div><span className="p10-junction-branch">↗</span><button type="button" className="p10-gradient-input is-ewc" onClick={() => onSelect("ewc-gradient")}><span>EWC</span><b>g<sub>EWC</sub></b><small>+0.16</small></button><span className="p10-junction-arrow">→</span><button type="button" className="p10-gradient-total" onClick={() => onSelect("total-gradient")}><span>TOTAL GRADIENT</span><b>g<sub>total</sub></b><small>−0.04</small></button><span className="p10-junction-arrow">→</span><button type="button" className="p10-gradient-optimizer" onClick={() => onSelect("optimizer")}><span>optimizer.step()</span><b>θ updates</b></button></div><div className="p10-parameter-inspectors"><article><b>High-Fisher parameter · θ<sub>i</sub></b><dl><div><dt>Task-B gradient</dt><dd>−0.20</dd></div><div><dt>Anchor displacement</dt><dd>+0.10</dd></div><div><dt>F<sub>A,i</sub> · λ</dt><dd>8.0 · 0.2</dd></div><div><dt>EWC gradient</dt><dd>+0.16</dd></div><div><dt>Total gradient</dt><dd>−0.04</dd></div></dl></article><article><b>Low-Fisher parameter · θ<sub>j</sub></b><dl><div><dt>Task-B gradient</dt><dd>−0.20</dd></div><div><dt>EWC gradient</dt><dd>+0.01</dd></div><div><dt>Total gradient</dt><dd>−0.19</dd></div></dl></article></div><div className="p10-gradient-example"><small>Representative mechanism values only · not measured experiment results</small></div></div>;
+  if (state.scene === "gradient") return <div className="p10-scene p10-scene--gradient"><div className="p10-gradient-junction"><button type="button" className="p10-gradient-input is-task" onClick={() => onSelect("task-b-gradient")}><span>TASK B</span><b>g<sub>B</sub></b><small>−0.20</small></button><span className="p10-junction-branch">↘</span><div className="p10-junction-core">Σ</div><span className="p10-junction-branch">↗</span><button type="button" className="p10-gradient-input is-ewc" onClick={() => onSelect("ewc-gradient")}><span>EWC</span><b>g<sub>EWC</sub></b><small>+0.16</small></button><span className="p10-junction-arrow">→</span><button type="button" className="p10-gradient-total" onClick={() => onSelect("total-gradient")}><span>TOTAL GRADIENT</span><b>g<sub>total</sub></b><small>−0.04</small></button><span className="p10-junction-arrow">→</span><button type="button" className="p10-gradient-optimizer" onClick={() => onSelect("optimizer")}><span>optimizer.step()</span><b>θ updates</b></button></div><div className="p10-parameter-inspectors"><article><b>High-Fisher parameter · θ<sub>i</sub></b><dl><div><dt>Task-B gradient</dt><dd>−0.20</dd></div><div><dt>Anchor displacement</dt><dd>+0.10</dd></div><div><dt>F<sub>A,i</sub> · λ</dt><dd>8.0 · 0.2</dd></div><div><dt>EWC gradient</dt><dd>+0.16</dd></div><div><dt>Total gradient</dt><dd>−0.04</dd></div></dl></article><article><b>Low-Fisher parameter · θ<sub>j</sub></b><dl><div><dt>Task-B gradient</dt><dd>−0.20</dd></div><div><dt>EWC gradient</dt><dd>+0.01</dd></div><div><dt>Total gradient</dt><dd>−0.19</dd></div></dl></article></div></div>;
   return <div className="p10-scene p10-scene--loop" />;
 }
 
@@ -283,7 +305,6 @@ function TaskDataCard({ task, status, active, selected, onSelect }: {
     <small>{isA ? "旧任务样本" : "新任务样本"} · {status}</small>
     <TaskExampleGrid task={task} />
     <ul className="p10-data-card__facts" aria-label={`Task ${isA ? "A" : "B"} illustrative task details`}>
-      <li><b>示例</b><span>Teaching only</span></li>
       <li><b>类别</b><span>A / B / C · 3 类</span></li>
       <li><b>任务</b><span>{isA ? "illustrative classification" : "new input patterns · same output space"}</span></li>
     </ul>
@@ -297,15 +318,19 @@ function TaskDataPanel({ state, activeIndex, selected, onSelect }: {
   selected?: RuntimeObjectId;
   onSelect: (id: RuntimeObjectId) => void;
 }) {
-  const taskAStatus = state.scene === "fisher" ? "Fisher estimation example" : activeIndex < 7 ? "当前任务数据" : "旧任务来源";
+  const taskAStatus = activeIndex === 0 ? "预览 · 尚未开始" : state.scene === "fisher" ? "Fisher estimation example" : activeIndex < 7 ? "当前任务数据" : "旧任务来源";
   const taskBStatus = activeIndex < 14 ? "等待 Task B" : activeIndex < 17 ? "当前任务数据" : "训练已完成";
+  const showTaskC = activeIndex >= 17;
   return <section className="p10-panel p10-data-panel" aria-label="任务与数据区">
     <BoardPanelTitle number="1" title="任务 / 数据区" subtitle="Illustrative tasks · shared 3-class output space" />
-    <div className="p10-data-cards">
-      <TaskDataCard task="a" status={taskAStatus} active={activeIndex < 7 || state.scene === "fisher"} selected={selected === "task-a-data"} onSelect={() => onSelect("task-a-data")} />
+    <div className={`p10-data-cards ${showTaskC ? "p10-data-cards--with-task-c" : ""}`}>
+      <TaskDataCard task="a" status={taskAStatus} active={activeIndex > 0 && activeIndex < 7 || state.scene === "fisher"} selected={selected === "task-a-data"} onSelect={() => onSelect("task-a-data")} />
       <TaskDataCard task="b" status={taskBStatus} active={activeIndex >= 14 && activeIndex < 17} selected={selected === "task-b-data"} onSelect={() => onSelect("task-b-data")} />
+      {showTaskC && <button type="button" data-flow-node="task-data-c" data-p10-transition-id="task-c-data" className={`p10-task-c-current ${selected === "task-c-data" ? "is-selected" : ""}`} onClick={() => onSelect("task-c-data")} aria-pressed={selected === "task-c-data"}>
+        <span>Task C · D<sub>C</sub></span><b>CURRENT INPUT</b><small>数据已到达 · 同一模型可读取 S<sub>A</sub> / S<sub>B</sub> 并继续；未绘制 Task C 数值更新</small>
+      </button>}
     </div>
-    <p className="p10-panel-note" aria-live="polite">{state.scene === "loop" || activeIndex >= 17 ? <>Task C · D<sub>C</sub> has arrived as the current input; conceptual continuation. </> : null}Teaching examples · not paper experiment data.</p>
+    <p className="p10-panel-note">本页数值与示意网络用于说明 EWC 运行机制，不代表论文实测结果。</p>
   </section>;
 }
 
@@ -533,28 +558,30 @@ function ParameterStrip({ state, activeIndex, selected, onSelect }: { state: Ani
   </div>;
 }
 
-function MathArea({ state, expandedFormula, setExpandedFormula, onSelect }: {
+function MathArea({ state, expandedFormula, onExpandedFormulaChange, onSelect }: {
   state: AnimationState;
   expandedFormula: boolean;
-  setExpandedFormula: (value: boolean) => void;
+  onExpandedFormulaChange: (value: boolean) => void;
   onSelect: (id: RuntimeObjectId) => void;
 }) {
-  return <section className="p10-panel p10-math-panel" aria-label="数学与公式区">
+  const relevant = (states: MathId[]) => state.math !== undefined && states.includes(state.math);
+  const referenceClass = (isRelevant: boolean) => isRelevant ? "is-related" : "is-muted";
+  return <section className="p10-panel p10-math-panel" aria-label="数学与公式区" data-math-focus={state.math ?? "none"}>
     <BoardPanelTitle number="2" title="数学视图" subtitle="Mathematical / Formula Area · 与当前运行状态关联" />
     <div className="p10-math-live" data-flow-node="math-link" data-p10-transition-id="math">
-      <div className="p10-math-live__heading"><b>{state.math ? "当前状态关联公式" : "当前阶段的数学关系"}</b>{state.math && <button type="button" aria-pressed={expandedFormula} onClick={() => setExpandedFormula(!expandedFormula)}>{expandedFormula ? "收起" : "展开"}</button>}</div>
+      <div className="p10-math-live__heading"><b>{state.math ? "当前状态关联公式" : "当前阶段的数学关系"}</b>{state.math && <button type="button" aria-pressed={expandedFormula} onClick={() => onExpandedFormulaChange(!expandedFormula)}>{expandedFormula ? "收起" : "展开"}</button>}</div>
       {state.math ? <Formula kind={state.math} expanded={expandedFormula} onSelect={onSelect} /> : <p>{state.scene === "fisher" ? "参数固定 · 梯度平方累积 · 不执行 optimizer.step()" : state.scene === "gradient" ? "g_B + g_EWC → g_total → optimizer.step()" : "当前参数 θ 在共享网络中参与前向、Loss 与更新。"}</p>}
     </div>
     <div className="p10-math-principles" aria-label="先验、似然与后验关系">
-      <MathReference id="p_theta"><b>先验分布</b><span>p(θ)</span></MathReference>
-      <MathReference id="p_D_given_theta"><b>条件似然</b><span>p(D_A|θ) = ∏ pθ(yₙ|xₙ)</span></MathReference>
-      <MathReference id="task_a_posterior"><b>后验分布</b><span>p(θ|D_A) ∝ p(D_A|θ)p(θ)</span></MathReference>
+      <MathReference id="p_theta" className={referenceClass(relevant(["posterior"]))}><b>先验分布</b><span>p(θ)</span></MathReference>
+      <MathReference id="p_D_given_theta" className={referenceClass(relevant(["probability", "posterior"]))}><b>条件似然</b><span>p(D_A|θ) = ∏ pθ(yₙ|xₙ)</span></MathReference>
+      <MathReference id="task_a_posterior" className={referenceClass(relevant(["posterior"]))}><b>后验分布</b><span>p(θ|D_A) ∝ p(D_A|θ)p(θ)</span></MathReference>
     </div>
     <div className="p10-math-supporting">
-      <MathReference id="laplace_approximation"><b>Laplace 局部近似</b><span>p(θ|D_A) ≈ N(θ_A*, Σ_A)</span></MathReference>
-      <MathReference id="fisher_information"><b>Diagonal Fisher · 对角 Fisher</b><span>F_A,i ≈ 1/N Σₙ (∂ log pθA*(yₙ|xₙ) / ∂θᵢ)²</span></MathReference>
+      <MathReference id="laplace_approximation" className={referenceClass(relevant(["laplace"]))}><b>Laplace 局部近似</b><span>p(θ|D_A) ≈ N(θ_A*, Σ_A)</span></MathReference>
+      <MathReference id="fisher_information" className={referenceClass(relevant(["fisher"]))}><b>Diagonal Fisher · 对角 Fisher</b><span>F_A,i ≈ 1/N Σₙ (∂ log pθA*(yₙ|xₙ) / ∂θᵢ)²</span></MathReference>
     </div>
-    <button type="button" data-p10-transition-id="ewc-penalty" className="p10-ewc-equation" onClick={() => onSelect("ewc-penalty")}>
+    <button type="button" data-p10-transition-id="ewc-penalty" className={`p10-ewc-equation ${referenceClass(relevant(["objective", "gradient"]))}`} onClick={() => onSelect("ewc-penalty")}>
       <b>EWC 损失函数 · EWC Loss</b>
       <span>L_total = L_B + <i>λ</i>⁄2 Σ<sub>i</sub> F<sub>A,i</sub>(θ<sub>i</sub> − θ<sub>A,i</sub>*)²</span>
     </button>
@@ -741,6 +768,12 @@ export function PageGrandAnimation() {
     const next = activeObject === id ? undefined : id;
     api.setActiveRuntimeObject(next);
     setActiveObject(next);
+    setPlaying(false);
+  };
+
+  const setFormulaExpanded = (expanded: boolean) => {
+    setExpandedFormula(expanded);
+    setPlaying(false);
   };
 
   const dismissInspector = () => { setActiveObject(undefined); api.setActiveRuntimeObject(undefined); };
@@ -762,7 +795,7 @@ export function PageGrandAnimation() {
       setFurthestIndex((furthest) => Math.max(furthest, nextIndex));
       setAnnouncement(`状态 ${nextIndex + 1}：${nextState.title}`);
       if (nextIndex >= playbackEndIndex) setPlaying(false);
-    }, PLAYBACK_INTERVAL_MS);
+    }, getStateHoldMs(state.id));
     return () => window.clearTimeout(timer);
   }, [playing, activeIndex, api]);
 
@@ -817,11 +850,10 @@ export function PageGrandAnimation() {
       <div className="p10-board__current" aria-live="polite">
         <b>当前步骤：{activeIndex + 1}. {state.short}</b>
         <span>{activePhase.title} · {state.task}</span>
-        <small>{state.annotation}</small>
       </div>
     </header>
 
-    <main className="p10-board__grid">
+    <div className="p10-board__grid">
       <FlowGuideLayer state={state} activeIndex={activeIndex} flowingEdgeIds={flowingTransition.stateId === state.id ? flowingTransition.edgeIds : []} />
       <aside className="p10-board__left">
         <TaskDataPanel state={state} activeIndex={activeIndex} selected={activeObject} onSelect={selectObject} />
@@ -829,7 +861,7 @@ export function PageGrandAnimation() {
       </aside>
 
       <section className="p10-panel p10-workbench" aria-labelledby="p10-current-title">
-        <BoardPanelTitle number="" title="运行态视图（神经网络工作台）" subtitle="Runtime View · 同一个模型沿训练时间持续更新" badge={state.scene === "posterior" || state.scene === "laplace" ? "MATHEMATICAL VIEW" : state.camera} />
+        <BoardPanelTitle number="" title="运行态视图（神经网络工作台）" subtitle="Runtime View · 同一个模型沿训练时间持续更新" badge={getStateViewLabel(state)} />
         <div className="p10-workbench__current" data-flow-node="runtime-step" data-p10-transition-id="step-copy">
           <div><span>STATE {String(activeIndex + 1).padStart(2, "0")} / 18 · {state.phase.toUpperCase()}</span><h2 id="p10-current-title">{state.title}</h2></div>
           <p>{state.annotation}<small>{state.why}</small></p>
@@ -839,7 +871,7 @@ export function PageGrandAnimation() {
         <div className="p10-workbench__focus" data-p10-transition-id="scene" aria-label="当前步骤细节">
           {showCompletionSummary && <FinalSummary onReplay={startReplay} onExplore={exploreTimeline} onReturn={() => goTo(STATES.length - 1)} headingRef={summaryHeadingRef} />}
           <div hidden={showCompletionSummary} style={{ minHeight: 0, flex: "1 1 auto", display: showCompletionSummary ? "none" : "flex", flexDirection: "column" }}>
-            <div className="p10-workbench__focus-head"><span>当前步骤细节 · {state.camera}</span>{(state.scene === "posterior" || state.scene === "laplace") && <button type="button" onClick={() => goTo(10)}>返回 Runtime ↑</button>}</div>
+            <div className="p10-workbench__focus-head"><span>当前步骤细节 · {getStateViewLabel(state)}</span>{(state.scene === "posterior" || state.scene === "laplace") && <button type="button" onClick={() => goTo(10)}>返回 Runtime ↑</button>}</div>
             <SceneVisual key={state.id} state={state} selected={activeObject} onSelect={selectObject} onComplete={() => setShowCompletionSummary(true)} summaryTriggerRef={summaryTriggerRef} />
           </div>
         </div>
@@ -847,10 +879,10 @@ export function PageGrandAnimation() {
       </section>
 
       <aside className="p10-board__right">
-        <MathArea state={state} expandedFormula={expandedFormula} setExpandedFormula={setExpandedFormula} onSelect={selectObject} />
+        <MathArea state={state} expandedFormula={expandedFormula} onExpandedFormulaChange={setFormulaExpanded} onSelect={selectObject} />
         <InspectorArea info={inspectorInfo} focusId={state.focus[0]} selected={activeObject} review={state.review} onSelect={selectObject} onReview={(review) => api.openReference({ pageId: review.page, anchorId: review.anchor })} onOpenHub={() => api.openHub()} />
       </aside>
-    </main>
+    </div>
 
     <TimelinePanel activeIndex={activeIndex} unlockedThrough={unlockedThrough} onGoTo={goTo} />
     <span className="p10-sr-only" aria-live="polite">{announcement}</span>

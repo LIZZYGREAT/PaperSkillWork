@@ -467,7 +467,6 @@
   .p10-board-flow__traveler, .p10-flow-line__traveler { display: none; }
   .p10-overlay { backdrop-filter: none; }
 }
-
 @media (max-width: 1150px) {
   .p10-page { gap: 6px; padding-inline: 15px; }
   .p10-recall { gap: 10px; }
@@ -1160,3 +1159,109 @@ button.p10-memory-item { cursor: pointer; }
 .p10-workbench__network .p10-net-node__eyebrow { color: #4a6269; }
 .p10-workbench__network .p10-net-node > small,
 .p10-workbench__network .p10-feature-block > small { color: #4c656b; }
+
+.p10-data-cards--with-task-c { grid-template-rows: minmax(0,1fr) auto; }
+.p10-task-c-current {
+  min-width: 0;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto auto minmax(0,1fr);
+  align-items: center;
+  gap: 3px 9px;
+  padding: 6px 8px;
+  border: 1px solid #a8bece;
+  border-top: 3px solid #53799a;
+  border-radius: 7px;
+  color: #29495f;
+  background: #edf3f8;
+  text-align: left;
+  cursor: pointer;
+}
+.p10-task-c-current.is-selected { outline: 2px solid #d68c4f; outline-offset: 1px; }
+.p10-task-c-current > span { font-size: 11px; font-weight: 700; }
+.p10-task-c-current > b { color: #3e6179; font: 10px "DM Mono",Consolas,monospace; }
+.p10-task-c-current > small { grid-column: 1 / -1; color: #506b7c; font-size: 10px; line-height: 1.25; }
+.p10-math-reference, .p10-ewc-equation { transition: border-color .18s ease, background-color .18s ease, color .18s ease; }
+.p10-math-principles .p10-math-reference.is-muted,
+.p10-math-supporting .p10-math-reference.is-muted { border-color: #d8e1de; background: #fafbf9; }
+.p10-math-principles .p10-math-reference.is-muted span,
+.p10-math-supporting .p10-math-reference.is-muted span { color: #5b7076; }
+.p10-math-principles .p10-math-reference.is-related,
+.p10-math-supporting .p10-math-reference.is-related { border-color: #8eafb3; background: #edf5f2; }
+.p10-math-principles .p10-math-reference.is-related span,
+.p10-math-supporting .p10-math-reference.is-related span { color: #244b55; }
+.p10-ewc-equation.is-muted { border-color: #dfd1c5; color: #7d5949; background: #fbf7f2; }
+.p10-ewc-equation.is-muted span { color: #43545a; }
+.p10-ewc-equation.is-related { border-color: #d78d66; }
+
+@media (min-width: 1351px) {
+  .p10-data-card__dataset { font-size: 11px; }
+  .p10-data-card > small, .p10-data-card__facts li { font-size: 10px; }
+  .p10-data-card__inspect { font-size: 11px; }
+  .p10-task-examples > span > b { font-size: 9px; }
+  .p10-panel-note { font-size: 11px; }
+  .p10-memory-item__copy small, .p10-memory-item__status { font-size: 10px; }
+  .p10-workbench__current > div > span { font-size: 10px; }
+  .p10-workbench__current h2 { font-size: 16px; }
+  .p10-workbench__current p { font-size: 12px; line-height: 1.35; }
+  .p10-workbench__current p small { font-size: 11px; }
+  .p10-workbench__focus-head { font-size: 11px; }
+  .p10-workbench__focus .p10-task-world__task > small,
+  .p10-workbench__focus .p10-task-world__task > i,
+  .p10-workbench__focus .p10-task-world__task > em,
+  .p10-workbench__focus .p10-task-world__boundary span,
+  .p10-workbench__focus .p10-task-world__boundary b,
+  .p10-workbench__focus .p10-task-world__boundary i { font-size: 10px; }
+  .p10-workbench__focus .p10-point-object small,
+  .p10-workbench__focus .p10-posterior-cloud i,
+  .p10-workbench__focus .p10-gaussian__label,
+  .p10-workbench__focus .p10-math-legend { font-size: 10px; }
+  .p10-workbench__focus .p10-posterior-cloud span { font-size: 11px; }
+  .p10-workbench__focus .p10-sample-stack > small,
+  .p10-workbench__focus .p10-sample-stack > span { font-size: 10px; }
+  .p10-workbench__focus .p10-sample-note { font-size: 10px; }
+  .p10-workbench__focus .p10-sample-note > b { font-size: 12px; }
+  .p10-workbench__focus .p10-network-layers button,
+  .p10-workbench__focus .p10-network-layers > span { font-size: 10px; }
+  .p10-workbench__focus .p10-layer-card__heading { font-size: 10px; }
+  .p10-workbench__focus .p10-layer-card__shape { font-size: 9px; }
+  .p10-workbench__focus .p10-score-card span,
+  .p10-workbench__focus .p10-softmax-card span,
+  .p10-workbench__focus .p10-loss-card span { font-size: 10px; }
+  .p10-workbench__focus .p10-score-card b,
+  .p10-workbench__focus .p10-softmax-card b,
+  .p10-workbench__focus .p10-loss-card b { font-size: 12px; }
+  .p10-workbench__focus .p10-probability-note { font-size: 10px; }
+  .p10-workbench__focus .p10-probability-note small { font-size: 10px; }
+  .p10-workbench__focus .p10-objective-input span { font-size: 10px; }
+  .p10-workbench__focus .p10-objective-input small { font-size: 10px; }
+  .p10-workbench__focus .p10-objective-mapping { font-size: 11px; }
+  .p10-workbench__focus .p10-gradient-input span,
+  .p10-workbench__focus .p10-gradient-total span,
+  .p10-workbench__focus .p10-gradient-optimizer span { font-size: 10px; }
+  .p10-workbench__focus .p10-gradient-input b,
+  .p10-workbench__focus .p10-gradient-total b { font-size: 14px; }
+  .p10-workbench__focus .p10-parameter-inspectors article > b { font-size: 10px; }
+  .p10-workbench__focus .p10-parameter-inspectors dl { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .p10-workbench__focus .p10-parameter-inspectors dt,
+  .p10-workbench__focus .p10-parameter-inspectors dd { font-size: 10px; }
+  .p10-workbench__focus .p10-fixed-sample span,
+  .p10-workbench__focus .p10-fisher-square span,
+  .p10-workbench__focus .p10-fisher-accumulator span { font-size: 10px; }
+  .p10-workbench__focus .p10-fixed-sample b,
+  .p10-workbench__focus .p10-fisher-square b,
+  .p10-workbench__focus .p10-fisher-accumulator b { font-size: 11px; }
+  .p10-math-live__heading { font-size: 11px; }
+  .p10-math-live__heading button { font-size: 10px; }
+  .p10-math-principles button b, .p10-math-supporting button b { font-size: 11px; }
+  .p10-inspector-content__top { font-size: 10px; }
+  .p10-inspector-content__top button { font-size: 10px; }
+  .p10-inspector-content h3 { font-size: 14px; }
+  .p10-inspector-content p, .p10-inspector-content > small { font-size: 11px; line-height: 1.35; }
+  .p10-reference-links > span, .p10-reference-links button, .p10-review-shortcut { font-size: 10px; }
+  .p10-timeline__band small, .p10-timeline__step > b { font-size: 10px; }
+  .p10-workbench__current { grid-template-columns: minmax(205px,.85fr) minmax(0,1.55fr) auto; }
+  .p10-workbench__current h2 { overflow: visible; text-overflow: clip; white-space: normal; }
+}
+
+\r\n
