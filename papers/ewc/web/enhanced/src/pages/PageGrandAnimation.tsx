@@ -104,6 +104,15 @@ const OBJECT_INFO: Record<RuntimeObjectId, { title: string; badge: string; body:
 const STATE_INDEX = new Map(STATES.map((state, index) => [state.id, index]));
 const LAST_STATE_INDEX = STATES.length - 1;
 
+function getPlaybackEndIndex(activeIndex: number) {
+  const phaseIndex = TIMELINE_PHASES.findIndex((phase) => activeIndex >= phase.first && activeIndex <= phase.last);
+  if (phaseIndex < 0) return LAST_STATE_INDEX;
+
+  const currentPhase = TIMELINE_PHASES[phaseIndex];
+  if (activeIndex < currentPhase.last) return currentPhase.last;
+  return TIMELINE_PHASES[phaseIndex + 1]?.last ?? LAST_STATE_INDEX;
+}
+
 function useFirstVisitHelp() {
   const [open, setOpen] = useState(() => {
     try { return typeof window !== "undefined" && window.localStorage.getItem("ewc-grand-animation-help-seen") !== "1"; }
@@ -741,17 +750,18 @@ export function PageGrandAnimation() {
   useEffect(() => { setActiveObject(api.activeRuntimeObject); }, [api.activeRuntimeObject]);
   useEffect(() => {
     if (!playing) return;
-    if (activeIndex >= LAST_STATE_INDEX) {
+    const playbackEndIndex = getPlaybackEndIndex(activeIndex);
+    if (activeIndex >= playbackEndIndex) {
       setPlaying(false);
       return;
     }
-    const nextIndex = Math.min(activeIndex + 1, LAST_STATE_INDEX);
+    const nextIndex = Math.min(activeIndex + 1, playbackEndIndex);
     const nextState = STATES[nextIndex];
     const timer = window.setTimeout(() => {
       api.openReference({ animationStateId: nextState.id });
       setFurthestIndex((furthest) => Math.max(furthest, nextIndex));
       setAnnouncement(`状态 ${nextIndex + 1}：${nextState.title}`);
-      if (nextIndex >= LAST_STATE_INDEX) setPlaying(false);
+      if (nextIndex >= playbackEndIndex) setPlaying(false);
     }, PLAYBACK_INTERVAL_MS);
     return () => window.clearTimeout(timer);
   }, [playing, activeIndex, api]);
@@ -798,7 +808,7 @@ export function PageGrandAnimation() {
       <div className="p10-board-player" aria-label="Grand Animation 播放控制">
         <div className="p10-board-player__transport">
           <button type="button" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex === 0} aria-label="上一步">|◀</button>
-          <button type="button" className="p10-board-player__play" onClick={() => setPlaying((value) => !value)} disabled={!playing && activeIndex >= LAST_STATE_INDEX} aria-label={playing ? "暂停播放" : "播放完整流程"} title={playing ? "暂停播放" : "从当前状态连续播放，到 State 18 自动暂停；也可随时暂停"}>{playing ? "Ⅱ" : "▶"}</button>
+          <button type="button" className="p10-board-player__play" onClick={() => setPlaying((value) => !value)} disabled={!playing && activeIndex >= LAST_STATE_INDEX} aria-label={playing ? "暂停播放" : "播放至阶段边界"} title={playing ? "暂停播放" : "播放至阶段边界后自动暂停；边界上可再次点击继续，也可随时暂停"}>{playing ? "Ⅱ" : "▶"}</button>
           <button type="button" onClick={() => goTo(activeIndex + 1)} disabled={activeIndex >= LAST_STATE_INDEX} aria-label="下一步">▶|</button>
         </div>
         <input type="range" min="0" max={STATES.length - 1} value={activeIndex} onChange={(event) => goTo(Math.min(Number(event.currentTarget.value), unlockedThrough))} aria-label="动画状态进度" aria-valuetext={`状态 ${activeIndex + 1}：${state.title}`} />
