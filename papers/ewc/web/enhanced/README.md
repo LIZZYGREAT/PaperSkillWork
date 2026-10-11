@@ -2,6 +2,12 @@
 
 This standalone React/TypeScript site contains the complete W8 EWC tutorial implementation through Page 10, including the Grand Animation integration and the searchable Reference Hub. It uses the frozen page, anchor, reference, runtime-object, and animation-state IDs recorded in `design/implementation-plan.md`.
 
+## Upstream release structure
+
+`src/types.ts`, `src/data/tutorial.ts`, `src/modules/registry.tsx`, and `src/styles/{tokens,components,paper}.css` provide the file structure required by PaperSkill's release validator. The tutorial data is a descriptive map of the ten existing pages; it is not read by the EWC app and does not form a second runtime. The site is rendered by `src/App.tsx` and the existing components in `src/pages/`, with styling from the existing `src/styles/` files and `src/shared/foundation/styles/kit.css`.
+
+When a page title or one of its core content blocks changes, update its matching description in `src/data/tutorial.ts` so the release map stays aligned with the site.
+
 ## Web asset provenance
 
 The figure assets below are copied unchanged from the paper source cache for noncommercial educational use; their file paths, source citation, and reuse limits are documented individually.
