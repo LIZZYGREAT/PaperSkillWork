@@ -168,9 +168,11 @@ export function PageLifecycle() {
       <aside className="p07-cycle-note" aria-label="Task C 状态累积">
         <span className="p07-overline">AFTER TASK B</span>
         <div className="p07-cycle-note__content">
-          <p>保存 θ<sub>B</sub>* 并估计 F<sub>B</sub> 后，C 从 θ_B* 开始；固定旧记录提供两项惩罚。边界估计时必须仍能读取刚结束任务的数据，不能先丢弃数据再计算 Fisher。进入新任务后，EWC penalty 本身只读取旧记录。</p>
-          <MathFormula block tex={String.raw`\begin{aligned}L_C(\theta)&+\frac{\lambda_A}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2\\&+\frac{\lambda_B}{2}\sum_iF_{B,i}(\theta_i-\theta_{B,i}^*)^2\end{aligned}`} />
-          <p>这展示分别保留惩罚的实现映射（C07 / M01），并非论文规定的 checkpoint 格式；λ_A、λ_B 表示各约束的权衡。S_A、S_B 是教学记号。</p>
+          <p>保存 θ<sub>B</sub>* 并估计 F<sub>B</sub> 后，C 从 θ<sub>B</sub>* 开始，并读取固定的 S<sub>A</sub>、S<sub>B</sub>。边界估计时必须仍能读取刚结束任务的数据；进入新任务后，惩罚只读取已保存状态。</p>
+          <details className="p07-cycle-detail">
+            <summary>查看 Task C 如何同时读取两项历史惩罚</summary>
+            <div><MathFormula block tex={String.raw`\begin{aligned}L_C(\theta)&+\frac{\lambda_A}{2}\sum_iF_{A,i}(\theta_i-\theta_{A,i}^*)^2\\&+\frac{\lambda_B}{2}\sum_iF_{B,i}(\theta_i-\theta_{B,i}^*)^2\end{aligned}`} /><p>这是分别保留两项惩罚的实现映射（C07 / M01），不是论文规定的 checkpoint 格式；λ<sub>A</sub>、λ<sub>B</sub> 表示各自的权衡，S<sub>A</sub>、S<sub>B</sub> 是教学记号。</p></div>
+          </details>
         </div>
         <button type="button" onClick={() => api.openHub("task_boundary")}>在 Reference Hub 查看 Task Boundary</button>
       </aside>

@@ -72,6 +72,11 @@
 .p07-cycle-note__content p { margin: 0; color: #5c7169; font-size: 14px; line-height: 1.6; }
 .p07-cycle-note__content p + .ewc-math--block { margin-top: 8px; }
 .p07-cycle-note__content .ewc-math--block { margin-bottom: 8px; }
+.p07-cycle-detail { margin-top: 8px; border-top: 1px solid #e0e7e1; }
+.p07-cycle-detail summary { padding: 8px 0 3px; color: #3c7064; font-size: 13px; font-weight: 650; cursor: pointer; }
+.p07-cycle-detail > div { display: grid; gap: 7px; padding-bottom: 8px; }
+.p07-cycle-detail .ewc-math--block { margin: 0; }
+.p07-cycle-detail p { color: #64766e; font-size: 13px; }
 .p07-cycle-note button { flex: 0 0 auto; padding: 8px 10px; border: 1px solid #d5e1da; border-radius: 6px; color: #376d61; background: white; font-size: 13px; cursor: pointer; }
 .p07-handoff { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; padding: 20px 0 23px; border-block: 1px solid #dbe5df; }
 .p07-handoff h2 { max-width: 830px; margin: 7px 0; color: #304e49; font-size: clamp(22px, 2.5vw, 29px); line-height: 1.35; }
