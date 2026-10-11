@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import type { AnchorId, CanonicalReferenceId, GrandAnimationStateId, RuntimeObjectId } from "../contracts/ids";
+import { MathFormula } from "../shared/teaching/Math";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import "../styles/page10.css";
@@ -183,7 +184,7 @@ function LayerBlocks({ focus, selected, onSelect, includeFisher = false, include
         <span>░</span><span>▒</span><span>▓</span><span>▒</span><span>░</span><span>▓</span><span>▒</span><span>░</span><span>▒</span><span>▓</span><span>░</span><span>▒</span>
       </button>
       <div className="p10-layer-card__shape">{layer.param} <span>parameter block</span></div>
-      {includeAnchor && <button type="button" className={`p10-layer-card__anchor ${selected === "task-a-anchor" ? "is-linked" : ""}`} onClick={() => onSelect("task-a-anchor")}>θ<sub>A</sub>* snapshot</button>}
+      {includeAnchor && <button type="button" className={`p10-layer-card__anchor ${selected === "task-a-anchor" ? "is-linked" : ""}`} onClick={() => onSelect("task-a-anchor")} aria-label="Task A 固定 Anchor θ_A^* snapshot"><span><MathFormula tex={String.raw`\theta_{A}^{*}`} /> snapshot</span></button>}
       {includeFisher && <button type="button" className={`p10-layer-card__fisher ${selected === "task-a-fisher" ? "is-linked" : ""}`} onClick={() => onSelect("task-a-fisher")}><span>{layer.fisher}</span><small>aligned Fisher</small></button>}
     </div>)}
   </div>;
