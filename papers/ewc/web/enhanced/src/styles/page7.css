@@ -74,8 +74,8 @@
 .p07-cycle-note__content .ewc-math--block { margin-bottom: 8px; }
 .p07-cycle-detail { margin-top: 8px; border-top: 1px solid #e0e7e1; }
 .p07-cycle-detail summary { padding: 8px 0 3px; color: #3c7064; font-size: 13px; font-weight: 650; cursor: pointer; }
-.p07-cycle-detail > div { display: grid; grid-template-columns: minmax(270px,.9fr) minmax(0,1.1fr); align-items: center; gap: 7px 20px; padding-bottom: 8px; }
-.p07-cycle-detail .ewc-math--block { width: 100%; min-width: 0; margin: 0; padding: 3px 0; }
+.p07-cycle-detail > div { display: grid; grid-template-columns: minmax(0,1fr); gap: 7px; padding-bottom: 8px; }
+.p07-cycle-detail .ewc-math--block { width: 100%; min-width: 0; margin: 0; padding: 3px 0; font-size: clamp(13px,1.1vw,16px); }
 .p07-cycle-detail .katex-display, .p07-cycle-detail .katex-display > .katex { text-align: center; }
 .p07-cycle-detail p { color: #64766e; font-size: 13px; }
 .p07-cycle-note button { grid-column: 2; grid-row: 1; align-self: center; padding: 8px 10px; border: 1px solid #d5e1da; border-radius: 6px; color: #376d61; background: white; font-size: 13px; cursor: pointer; }
