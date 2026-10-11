@@ -104,10 +104,6 @@ function TrainingModeComparison() {
           <div className="p05-mode-outcome"><b>θ stays fixed</b><span>得到 F<sub>A</sub>；不执行参数更新</span></div>
         </article>
       </div>
-      <div className="p05-estimator-boundary" aria-label="此处 Fisher 估计配方的来源边界">
-        <span>TEACHING ESTIMATOR · SOURCE BOUNDARY</span>
-        <p>本页把逐样本观测标签的 Log Probability 梯度平方并求平均，作为一个 <ReferenceTrigger id="empirical_fisher_estimator_background">empirical-Fisher 教学示例</ReferenceTrigger>。EWC 论文没有规定这套逐样本配方；此处固定参数、开启梯度、关闭 optimizer 的运行方式属于教程的 <ReferenceTrigger id="fisher_estimation">实现映射</ReferenceTrigger>。</p>
-      </div>
     </section>
   );
 }
@@ -127,6 +123,12 @@ function ParameterFisherMap() {
 }
 
 function FisherRole() {
+  const baseline = [0.60, 0.30, 0.10];
+  const highFisher = [0.45, 0.40, 0.15];
+  const lowFisher = [0.57, 0.31, 0.12];
+  const renderDistribution = (label: string, probabilities: number[]) => <div className="p05-prediction-row" key={label}>
+    <b>{label}</b>{probabilities.map((probability, index) => <span className="p05-prediction-cell" key={`${label}-${index}`}><small>{["A", "B", "C"][index]}</small><i aria-hidden="true"><em style={{ width: `${probability * 100}%` }} /></i><strong>{probability.toFixed(2)}</strong></span>)}
+  </div>;
   return (
     <section className="p05-section p05-role" id="fisher-role" aria-labelledby="p05-role-title">
       <div className="p05-section-heading">
@@ -135,10 +137,10 @@ function FisherRole() {
       </div>
       <ParameterFisherMap />
       <div className="p05-sensitivity-compare">
-        <article className="p05-sensitivity-card p05-sensitivity-card--high"><span>REPRESENTATIVE PARAMETER 1</span><h3><ReferenceTrigger id="fisher_a_i">F<sub>A,i</sub></ReferenceTrigger> 较大</h3><div className="p05-sensitivity-card__measure"><i style={{ width: "82%" }} /></div><p>在 θ<sub>A</sub>* 附近，Task A 的输出概率对该参数变化更敏感。</p></article>
-        <article className="p05-sensitivity-card p05-sensitivity-card--low"><span>REPRESENTATIVE PARAMETER 2</span><h3><ReferenceTrigger id="fisher_a_i">F<sub>A,j</sub></ReferenceTrigger> 较小</h3><div className="p05-sensitivity-card__measure"><i style={{ width: "28%" }} /></div><p>相同大小的局部参数移动，对旧任务预测的影响相对较小。</p></article>
+        <article className="p05-sensitivity-card p05-sensitivity-card--high"><span>SAME INPUT · SAME SMALL PERTURBATION</span><h3><ReferenceTrigger id="fisher_a_i">F<sub>A,i</sub></ReferenceTrigger> 较大</h3><div className="p05-prediction-matrix" role="img" aria-label="同一输入下，参数发生相同小幅移动前的概率为 A 0.60、B 0.30、C 0.10；高 Fisher 参数移动后为 A 0.45、B 0.40、C 0.15，变化较大">{renderDistribution("Before", baseline)}{renderDistribution("After Δθ", highFisher)}</div><p>预测分布变化更大，表示 Task A 对该局部方向更敏感。</p></article>
+        <article className="p05-sensitivity-card p05-sensitivity-card--low"><span>SAME INPUT · SAME SMALL PERTURBATION</span><h3><ReferenceTrigger id="fisher_a_i">F<sub>A,j</sub></ReferenceTrigger> 较小</h3><div className="p05-prediction-matrix" role="img" aria-label="同一输入下，参数发生相同小幅移动前的概率为 A 0.60、B 0.30、C 0.10；低 Fisher 参数移动后为 A 0.57、B 0.31、C 0.12，变化较小">{renderDistribution("Before", baseline)}{renderDistribution("After Δθ", lowFisher)}</div><p>相同幅度的移动，对旧任务预测的影响较小。</p></article>
       </div>
-      <p className="p05-teaching-note">高 / 低 Fisher 的条形只作相对示意，不是参数排名、模型测量结果或论文实验数值。</p>
+      <p className="p05-teaching-note">概率条共用 0–1 尺度且各行合计为 1；数值是教学示意，不是模型测量结果或论文实验数据。</p>
 
       <div className="p05-laplace-bridge">
         <span>FROM PAGE 4 · LAPLACE</span><b>局部宽度 / 精度</b><i aria-hidden="true">→</i><span>需要一个可计算的近似</span><i aria-hidden="true">→</i><b><ReferenceTrigger id="fisher_information">Fisher Information</ReferenceTrigger></b><small>参数级局部敏感性近似；不等于精确 Hessian。</small>
@@ -174,17 +176,20 @@ export function PageFisher() {
           <div><span className="p05-overline">FROM FULL CURVATURE TO A COMPUTABLE SIGNAL</span><h2 id="p05-definition-title">为什么用 Fisher 近似，而不保存完整 Hessian？</h2></div>
           <p>旧解附近的曲率有用，但完整高维矩阵很难存取；EWC 保留一个可计算的参数级近似。</p>
         </div>
-        <div className="p05-fisher-mechanism">
-          <div><span>THEORETICAL FISHER · SCORE SECOND MOMENT</span><MathFormula block tex={String.raw`\begin{aligned}g&=\nabla_\theta\log p_\theta(y\mid x)\\F(\theta)&=\mathbb{E}_{x\sim\mu_A,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]\end{aligned}`} /><p>score 是 log probability 对参数的局部变化率。这里 μ<sub>A</sub> 是固定的 Task A 输入分布（可用旧输入的经验分布），标签从模型预测分布取期望；外积的对角项 <MathFormula tex={String.raw`F_{ii}=\mathbb E[g_i^2]`} /> 非负。在适当正则条件下，Fisher 等于模型期望下负 log-likelihood 的 Hessian；有限数据的 Posterior Hessian 还含 Prior 曲率。</p></div>
-          <div><span>WHY THE SECOND MOMENT TRACKS LOCAL CHANGE</span><MathFormula block tex={String.raw`\mathbb{E}_{x\sim\mu_A} D_{\mathrm{KL}}(p_\theta(\cdot\mid x)\parallel p_{\theta+\Delta\theta}(\cdot\mid x))\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} /><p>在可微、可交换求导与积分且分布支撑不随参数变化等正则条件下，零偏移处的一阶项消失，二阶项给出这个局部度量。沿方向 v 的代价由 <MathFormula tex={String.raw`v^\mathsf TFv=\mathbb E[(g^\mathsf Tv)^2]`} /> 决定。因此取梯度平方的期望有局部几何依据，不只是为了消除正负号。</p></div>
-        </div>
         <div className="p05-curvature-cost" aria-label="完整 Hessian 和对角 Fisher 存储规模比较">
           <div><span>FULL HESSIAN</span><b>P × P entries</b><small>保留参数间的交叉曲率，存储为 O(P²)。</small></div>
           <i aria-hidden="true">→</i>
           <div><span>DIAGONAL FISHER</span><b>P entries</b><small>只保存逐坐标平方的期望，存储为 O(P)；省略交叉项，也失去参数间的耦合信息。</small></div>
         </div>
-        <p className="p05-curvature-boundary">边界：EWC 用对角 Fisher 近似 Task A Posterior 的局部精度，不等于一般情形的完整后验 Hessian。大幅移动、模型失配、先验曲率与被省略的非对角项都会限制这一近似。</p>
-        <p className="p05-estimator-lead">接下来区分理论期望与可执行的示例估计：本页对旧数据观测到的标签求逐样本 score，再平方、累计并平均；它是 observed-label empirical-Fisher 教学例子，不是论文唯一规定的配方。</p>
+        <details className="p05-theory-detail">
+          <summary>展开数学背景：Fisher 为何能提示局部预测变化？</summary>
+          <div className="p05-fisher-mechanism">
+            <div><span>THEORETICAL FISHER · SCORE SECOND MOMENT</span><MathFormula block tex={String.raw`g=\nabla_\theta\log p_\theta(y\mid x),\qquad F(\theta)=\mathbb{E}_{x\sim\mu_A,\,y\sim p_\theta(\cdot\mid x)}[gg^\mathsf{T}]`} /><p>理论 Fisher 对固定的 Task A 输入分布 μ<sub>A</sub> 与模型标签分布取期望；对角项为 <MathFormula tex={String.raw`F_{ii}=\mathbb E[g_i^2]`} />。在适当正则条件下，它等于模型期望下负 log-likelihood 的 Hessian；Posterior Hessian 还可能包含 Prior 曲率。</p></div>
+            <div><span>LOCAL CHANGE · SECOND-ORDER APPROXIMATION</span><MathFormula block tex={String.raw`\mathbb{E}_{x\sim\mu_A}D_{\mathrm{KL}}(p_\theta(\cdot\mid x)\parallel p_{\theta+\Delta\theta}(\cdot\mid x))\approx\tfrac12\Delta\theta^\mathsf{T}F\Delta\theta`} /><p>在可微、可交换求导与积分、分布支撑不随参数变化等条件下，零偏移的一阶项消失，二阶项近似局部预测分布的变化。有限偏移、模型失配和对角化都会限制这一关系。</p></div>
+            <p className="p05-curvature-boundary">本页工作台采用 observed-label empirical-Fisher 教学配方：对观测标签的逐样本 score 求平方并平均。理论 Fisher 则对模型标签分布取期望；两者不无条件等价，且论文未规定本页这套配方为唯一估计器。</p>
+          </div>
+        </details>
+        <p className="p05-estimator-lead">工作台固定 θ<sub>A</sub>*，对 Task A 观测标签的 log probability 求逐样本梯度、平方并平均，得到一个可执行的敏感性近似；参数保持不变。</p>
       </section>
       <FisherWorkbench />
       <TrainingModeComparison />
