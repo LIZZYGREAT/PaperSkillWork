@@ -17,7 +17,7 @@ function formatProbability(value: number) {
 }
 
 function ParameterStateNotation({ candidate }: { candidate: ParameterState["candidate"] }) {
-  return <>θ<sup>({{ A: 1, B: 2, C: 3 }[candidate]})</sup></>;
+  return <MathFormula tex={String.raw`\theta^{(${{ A: 1, B: 2, C: 3 }[candidate]})}`} />;
 }
 
 function InputSample() {
@@ -116,7 +116,7 @@ export function PageProbability() {
       <header className="ewc-page-header p02-header">
         <div className="ewc-page-header__kicker"><span>02</span> ORDINARY TRAINING · PROBABILITY TO LOSS</div>
         <h1 id="p02-title">从神经网络的输出，走到数据的 Likelihood 与训练 Loss。</h1>
-        <p className="ewc-page-header__dek">给定已观察输入 x 和当前参数，网络先预测标签的条件概率 p<sub>θ</sub>(y|x)；再组合每个样本真实标签的条件概率，得到数据 Likelihood。取负对数后，便回到熟悉的训练损失。</p>
+        <p className="ewc-page-header__dek">P1 要比较参数偏移引起的旧 Loss 变化。本页先建立这个评价量：给定输入与参数，网络预测标签的条件概率；组合真实标签概率得到 Likelihood，再取负对数得到分类 NLL。研究概率，就是在研究同一个旧任务目标。</p>
       </header>
 
       <section className="p02-forward" id="forward-probability" aria-labelledby="p02-forward-title">
@@ -187,7 +187,8 @@ export function PageProbability() {
         <div className="p02-comparison-heading"><div><span className="p02-overline">PARAMETER SWITCH · SAME DATA · DIFFERENT PREDICTIONS</span><h3>选一组参数，看三条样本概率怎样共同改变 Likelihood</h3></div><span>点击一行查看该配置的预设 Forward 输出</span></div>
         <div className="p02-state-row-head" aria-hidden="true"><span>候选参数状态</span><span><i>x₁</i><i>x₂</i><i>x₃</i><b>每个样本真实标签的概率</b></span><span>数据 Likelihood</span><span>负对数损失</span></div>
         <ParameterComparison selectedId={selectedId} onSelect={setSelectedId} />
-        <p className="p02-boundary-note">教学示例，非论文实测。每一行是完整参数配置 θ⁽¹⁾ / θ⁽²⁾ / θ⁽³⁾，θᵢ 才是单个坐标。网络图只示意结构，本例预设每个配置的三条 Forward logits；概率由 Softmax 计算。显示值舍入，Likelihood 与 NLL 使用未舍入值。P3 直接复用这份 D<sub>A</sub> 和这三组 Likelihood。</p>
+        <p>切换一行时，固定的数据没有改变，变化的是完整参数配置及其预测。真实标签概率下降会使 Likelihood 下降、NLL 上升，这正是 P1 所说的旧任务代价。本例只比较三个配置，尚不能据此求出某个坐标的局部敏感性。</p>
+        <p className="p02-boundary-note">教学示例，非论文实测。每一行是完整配置 <MathFormula tex={String.raw`\theta^{(k)}`} />，<MathFormula tex={String.raw`\theta_i`} /> 才是单个坐标。网络图只示意结构，本例预设每个配置的三条 Forward logits；概率由 Softmax 计算。显示值舍入，Likelihood 与 NLL 使用未舍入值。P3 直接复用这份数据与 Likelihood。</p>
       </section>
 
       <section className="p02-loss-update" id="loss-and-update" aria-labelledby="p02-loss-title">
@@ -195,7 +196,7 @@ export function PageProbability() {
         <div className="p02-nll-explanation" aria-label="负对数似然的定义和作用">
           <span>NEGATIVE LOG-LIKELIHOOD · NLL</span>
           <MathFormula block tex={String.raw`L_{\mathrm{NLL}}(\theta)=-\log p(D_A\mid\theta)=-\sum_{n=1}^{N}\log p_\theta(y_n\mid x_n)`} />
-          <p>对每个真实标签的预测概率取 log 再取负；概率越高，NLL 越小。这样就能把乘积形式的 Likelihood 写成可相加、可最小化的训练损失。</p>
+          <p>本页以总 NLL 作为旧目标 <MathFormula tex={String.raw`L_A`} />。若训练使用平均交叉熵，则 <MathFormula tex={String.raw`L_A^{\mathrm{mean}}=L_{\mathrm{NLL}}/N`} />。本例 N = {selected.datasetProbabilities.length}，当前总 NLL 为 {datasetNll.toFixed(4)}，平均值为 {(datasetNll / selected.datasetProbabilities.length).toFixed(4)}；两者最优位置相同，但梯度与后续约束的相对尺度需要一致。</p>
         </div>
         <div className="p02-training-chain" aria-label="Likelihood 变成 Loss，计算梯度后更新参数">
           <div className="p02-training-node"><span>DATA FIT</span><strong>log p(D<sub>A</sub> | θ)</strong><small>越大越好</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
@@ -227,11 +228,11 @@ export function PageProbability() {
       </section>
 
       <section className="p02-handoff" aria-label="通往下一页的问题">
-        <div><span className="p02-overline">NEXT · BAYESIAN PARAMETER VIEW</span><h2>有了拟合分数，怎样保留旧任务对参数的支持？</h2><p>Likelihood 评价指定 θ 对同一份 D<sub>A</sub> 的解释力，却没有在参数空间归一化，也没有表达已有参数知识。下一页用 <ReferenceTrigger id="prior">Prior</ReferenceTrigger> 与 Bayes Rule 把这些分数变成 Posterior，让旧任务信息参与后续更新。</p></div>
+        <div><span className="p02-overline">NEXT · BAYESIAN PARAMETER VIEW</span><h2>能评价旧数据，还缺少怎样的记忆？</h2><p><MathFormula tex={String.raw`p(D_A\mid\theta)\ne p(\theta\mid D_A)`} />：拟合分数并未表达看到数据前的参数知识，也不是参数空间上的归一化分布。只留下最低 Loss 的位置，仍不知道哪些偏移会快速损害旧任务。</p><p>为了让旧信息参与下一任务，我们先用 <ReferenceTrigger id="prior">Prior</ReferenceTrigger> 表达数据到来前对完整配置的分布，再由数据更新成 Posterior。P3 解释这个更新为何成立、如何改变相对支持；之后才研究旧解附近的形状。普通 NLL 不需要 Prior，这里采用 Bayesian 视角是为了顺序保留信息。</p></div>
         <div className="p02-handoff__question"><span>OPEN QUESTION</span><b>p(θ) = ?</b><small>not a network output</small></div>
       </section>
 
-      <div className="p02-review-exit"><span>W8 IMPLEMENTATION · PAGES 01–03</span><button type="button" onClick={() => api.navigatePage("page-03-bayes")}>下一页：参数的 Prior 与 Posterior →</button></div>
+      <div className="p02-review-exit"><span>从拟合分数到参数分布</span><button type="button" onClick={() => api.navigatePage("page-03-bayes")}>下一页：参数的 Prior 与 Posterior →</button></div>
     </article>
   );
 }

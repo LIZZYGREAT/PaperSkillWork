@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { ReferenceTrigger } from "../shared/reference/ReferenceTrigger";
 import { useReferenceApi } from "../shared/reference/ReferenceProvider";
 import { EWCNetworkDiagram } from "../shared/teaching/EWCNetworkDiagram";
+import { MathFormula } from "../shared/teaching/Math";
 
 const SAMPLE_PIXEL_LEVELS: Record<"A" | "B", number[][]> = {
   A: [
@@ -289,12 +290,19 @@ export function PageProblem() {
           <p>问题不是参数“能不能更新”，而是不同参数发生相同幅度的变化时，对旧任务造成的影响可能不同。</p>
         </div>
         <figure className="p01-movement-compare" aria-label="两次相同幅度的参数移动，引起不同大小的 Task A Loss 增加">
-          <figcaption className="p01-movement-compare__equation"><span>两条参数移动的幅度相同</span><b>|Δθ₁| = |Δθ₂|</b></figcaption>
+          <figcaption className="p01-movement-compare__equation"><span>两条参数移动的幅度相同</span><MathFormula tex={String.raw`|\Delta\theta_1|=|\Delta\theta_2|`} /></figcaption>
           <ParameterMovement parameter={1} sensitive />
           <ParameterMovement parameter={2} sensitive={false} />
           <p className="p01-movement-compare__note">两条 Loss 使用同一尺度；长度仅示意相对影响，不代表论文实验测量值。</p>
         </figure>
         <p className="p01-parameters__takeaway"><ReferenceTrigger id="parameter_interference">不同参数对旧任务的敏感程度不同</ReferenceTrigger>。这里的“重要性”是相对于 Task A 的目标而言：同幅偏移对 Task A Loss 的影响不同，因此后续训练需要区分哪些参数应受到更强约束，哪些可以更灵活地更新。</p>
+        <div className="p01-loss-origin" id="sensitivity-to-loss">
+          <h3>图中的旧任务代价，怎样从数据算出来？</h3>
+          <p>上图保持偏移幅度和 Loss 尺度相同，比较的是旧目标的增加量：</p>
+          <MathFormula block tex={String.raw`\Delta L_A=L_A(\theta_A^*+\Delta\theta)-L_A(\theta_A^*)`} />
+          <p>参数偏移 → 旧样本的预测变化 → 旧任务 Loss 变化。我们要保留的是这种偏移代价，而不是按参数数值的大小决定保护谁。在分类任务中，Loss 可以由网络赋给真实标签的概率构造：概率的负对数越大，说明模型越难解释正确答案。P2 将把这条联系算出来。</p>
+          <p>但只有旧 Loss 的定义还不够：当旧数据不再参与 Task B 训练，怎样继续保留它对参数的限制？EWC 采用顺序 Bayesian 更新来推导可保存的近似约束。它并非衡量敏感性的唯一途径；引入 Prior 与 Posterior，是为了说明旧任务信息如何进入下一次学习，而普通分类 Loss 本身并不需要 Prior。</p>
+        </div>
       </section>
 
       <section className="p01-ewc-preview" id="ewc-motivation" aria-labelledby="p01-ewc-title">
@@ -308,7 +316,7 @@ export function PageProblem() {
       </section>
 
       <section className="p01-handoff" aria-label="下一页学习目标">
-        <div><span className="p01-overline">NEXT · PAGE 02</span><h2>先建立能评价参数偏移代价的 Task A 目标</h2><p>同样偏移为什么会造成不同损失，取决于旧样本预测如何随 θ 改变。我们需要从 D_A 得到可比较不同参数配置的分数：分类网络给真实标签的概率，组合成 Likelihood，再转成 Loss。下一页先建立这条链，之后才能解释旧解附近哪些变化代价更高。</p></div>
+        <div><span className="p01-overline">NEXT · PAGE 02</span><h2>先算出旧任务的评价量</h2><p>下一页固定 Task A 的输入与标签，切换完整参数配置，观察真实标签概率、Likelihood 和 Loss 如何一起变化。</p></div>
         <button type="button" className="p01-handoff__button" onClick={() => api.navigatePage("page-02-probability")}><span>打开 Page 2</span><b aria-hidden="true">02 →</b></button>
       </section>
     </article>
