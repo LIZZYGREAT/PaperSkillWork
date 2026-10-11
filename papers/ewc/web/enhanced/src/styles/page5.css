@@ -21,7 +21,7 @@
 .p05-fisher-mechanism .ewc-math--block { width: 100%; min-height: 0; margin: 8px 0 11px; padding: 4px 0; color: #315f53; font-size: 18px; }
 .p05-fisher-mechanism .katex-display, .p05-fisher-mechanism .katex-display > .katex { text-align: center; }
 .p05-fisher-mechanism p { margin: 8px 0 0; color: #5d716a; font-size: 14px; line-height: 1.65; }
-.p05-curvature-boundary { margin: 15px 0 0; padding: 12px 15px; border-left: 3px solid #b98b6c; color: #66594d; background: #fbf5ef; font-size: 14px; line-height: 1.65; }
+.p05-curvature-boundary { grid-column: 1 / -1; margin: 15px 0 0; padding: 12px 15px; border-left: 3px solid #b98b6c; color: #66594d; background: #fbf5ef; font-size: 14px; line-height: 1.65; }
 .p05-theory-detail { margin-top: 14px; border-top: 1px solid #dce6e0; border-bottom: 1px solid #dce6e0; }
 .p05-theory-detail > summary { padding: 13px 2px; color: #386b60; font-size: 14px; font-weight: 650; cursor: pointer; }
 .p05-theory-detail > .p05-fisher-mechanism { padding: 0 2px 16px; }
