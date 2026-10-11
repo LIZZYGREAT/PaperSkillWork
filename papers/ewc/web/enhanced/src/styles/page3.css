@@ -84,9 +84,9 @@
 .p03-view-note { display: flex; align-items: baseline; gap: 12px; margin: 0 0 10px; padding: 10px 12px; color: #4c6661; background: #eef4f0; font-size: 14px; }
 .p03-view-note b { flex: none; color: #315f55; }
 .p03-candidate-table-scroll { width: 100%; overflow-x: auto; }
-.p03-candidate-head, .p03-candidate-row { display: grid; grid-template-columns: minmax(96px,.45fr) minmax(175px,1.15fr) minmax(85px,.55fr) minmax(112px,.75fr) minmax(120px,.8fr) minmax(95px,.65fr); align-items: center; gap: 10px; }
-.p03-candidate-head { min-width: 830px; padding: 8px 12px; color: #687d79; font-size: 13px; font-weight: 650; }
-.p03-candidate-row { width: 100%; min-width: 830px; min-height: 72px; padding: 12px; border: 0; border-top: 1px solid #e2e9e4; color: #41585a; background: transparent; text-align: left; font: inherit; cursor: pointer; }
+.p03-candidate-head, .p03-candidate-row { display: grid; grid-template-columns: minmax(96px,.45fr) minmax(175px,1.15fr) minmax(85px,.55fr) minmax(112px,.75fr) minmax(95px,.65fr); align-items: center; gap: 10px; }
+.p03-candidate-head { min-width: 700px; padding: 8px 12px; color: #687d79; font-size: 13px; font-weight: 650; }
+.p03-candidate-row { width: 100%; min-width: 700px; min-height: 72px; padding: 12px; border: 0; border-top: 1px solid #e2e9e4; color: #41585a; background: transparent; text-align: left; font: inherit; cursor: pointer; }
 .p03-candidate-row:hover, .p03-candidate-row.is-selected { background: #f0f5f1; }
 .p03-candidate-row:focus-visible { outline: 2px solid #4d7191; outline-offset: -2px; }
 .p03-candidate-config { display: grid; gap: 3px; }
@@ -146,7 +146,7 @@
 
 @media (max-width: 1050px) {
   .p03-joint-derivation { gap: 13px 18px; }
-  .p03-candidate-head, .p03-candidate-row { grid-template-columns: minmax(88px,.4fr) minmax(160px,1.1fr) minmax(78px,.52fr) minmax(108px,.72fr) minmax(115px,.78fr) minmax(90px,.62fr); gap: 8px; }
+  .p03-candidate-head, .p03-candidate-row { grid-template-columns: minmax(88px,.4fr) minmax(160px,1.1fr) minmax(78px,.52fr) minmax(108px,.72fr) minmax(90px,.62fr); gap: 8px; }
   .p03-bayes-box { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); row-gap: 18px; padding-bottom: 60px; }
   .p03-bayes-combine { grid-column: 2; grid-row: 2; transform: rotate(90deg); }
   .p03-bayes-node--posterior { grid-column: 3; grid-row: 2; }

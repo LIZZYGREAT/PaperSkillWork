@@ -98,10 +98,13 @@ function BayesBox() {
         <div><span className="p03-overline">PRIOR × LIKELIHOOD · BAYES UPDATE</span><h2 id="p03-bayes-title">Bayes Rule 把数据和参数先验接起来</h2></div>
         <p>从联合概率的两种分解得到更新式；数据、Prior 与 Posterior 的来源各不相同。</p>
       </div>
-      <div className="p03-joint-derivation" aria-label="联合概率 p(theta, D A) 的两种分解">
-        <div><span>同一联合概率，从 Likelihood 与 Prior 分解</span><MathFormula block tex={String.raw`p(\theta,D_A)=p(D_A\mid\theta)p(\theta)`} /></div>
-        <div><span>从 Posterior 与 Evidence 分解</span><MathFormula block tex={String.raw`p(\theta,D_A)=p(\theta\mid D_A)p(D_A)`} /></div>
-      </div>
+      <details className="p03-full-bayes">
+        <summary>展开：从联合概率的两种分解得到 Bayes Rule</summary>
+        <div className="p03-joint-derivation" aria-label="联合概率 p(theta, D A) 的两种分解">
+          <div><span>同一联合概率，从 Likelihood 与 Prior 分解</span><MathFormula block tex={String.raw`p(\theta,D_A)=p(D_A\mid\theta)p(\theta)`} /></div>
+          <div><span>从 Posterior 与 Evidence 分解</span><MathFormula block tex={String.raw`p(\theta,D_A)=p(\theta\mid D_A)p(D_A)`} /></div>
+        </div>
+      </details>
       <div className="p03-bayes-result" role="group" aria-label="由联合概率分解得到 Bayes 更新公式">
         <span>令两种分解相等，整理得到 Bayes Rule</span>
         <MathFormula block tex={String.raw`p(\theta\mid D_A)=\frac{p(D_A\mid\theta)p(\theta)}{p(D_A)}`} />
@@ -164,14 +167,13 @@ function CandidateUpdate() {
       </div>
       <div className="p03-view-note" aria-live="polite"><b>{viewCopy[view].label}</b><span>{viewCopy[view].note} 条形共用 0–1 线性尺度，长度 = 当前数值 × 100%，不会随模式重新归一。</span></div>
       <div className="p03-candidate-table-scroll">
-        <div className="p03-candidate-head" aria-hidden="true"><span>完整参数配置</span><span>当前视图</span><span>Prior</span><span>Likelihood</span><span>Prior × Likelihood</span><span>Posterior</span></div>
-        <div className="p03-candidate-list" role="group" aria-label="点击候选参数配置查看 Prior、Likelihood 乘积与 Posterior">
+        <div className="p03-candidate-head" aria-hidden="true"><span>完整参数配置</span><span>当前视图</span><span>Prior</span><span>Likelihood</span><span>Posterior</span></div>
+        <div className="p03-candidate-list" role="group" aria-label="点击候选参数配置查看 Prior、Likelihood 与 Posterior">
         {CANDIDATES.map((candidate) => {
           const value = score(candidate);
-          const product = candidate.prior * candidate.likelihood;
           const active = selected.id === candidate.id;
           return (
-            <button className={`p03-candidate-row ${active ? "is-selected" : ""}`} key={candidate.id} type="button" aria-pressed={active} aria-label={`参数配置 ${candidate.index}：Prior ${candidate.prior.toFixed(4)}，Likelihood ${candidate.likelihood.toFixed(6)}，未归一化乘积 ${product.toFixed(6)}，Posterior ${candidate.posterior.toFixed(6)}`} onClick={() => setSelectedId(candidate.id)}>
+            <button className={`p03-candidate-row ${active ? "is-selected" : ""}`} key={candidate.id} type="button" aria-pressed={active} aria-label={`参数配置 ${candidate.index}：Prior ${candidate.prior.toFixed(4)}，Likelihood ${candidate.likelihood.toFixed(6)}，Posterior ${candidate.posterior.toFixed(6)}`} onClick={() => setSelectedId(candidate.id)}>
               <span className="p03-candidate-config"><MathFormula tex={String.raw`\theta^{(${candidate.index})}`} /><small>完整配置</small></span>
               <span className="p03-candidate-weight" aria-label={`${viewCopy[view].label} ${value.toFixed(6)}`}>
                 <span className="p03-candidate-weight__label"><span>{viewCopy[view].label}</span><b>{value.toFixed(4)}</b></span>
@@ -179,27 +181,28 @@ function CandidateUpdate() {
               </span>
               <span className="p03-candidate-value" data-label="Prior">{candidate.prior.toFixed(4)}</span>
               <span className="p03-candidate-value" data-label="Likelihood">{candidate.likelihood.toFixed(6)}</span>
-              <span className="p03-candidate-value" data-label="Prior × Likelihood">{product.toFixed(6)}</span>
               <span className="p03-candidate-value p03-candidate-value--posterior" data-label="Posterior">{candidate.posterior.toFixed(6)}</span>
             </button>
           );
         })}
         </div>
       </div>
-      <div className="p03-evidence-check">
-        <div><span>DISCRETE EVIDENCE · WEIGHTED SUM</span><MathFormula block tex={String.raw`p(D_A)=\sum_k p(D_A\mid\theta^{(k)})p(\theta^{(k)})`} /></div>
-        <p><b>本例 p(D<sub>A</sub>) = {EXAMPLE_EVIDENCE.toFixed(6)}</b>。它是由 Prior 加权后的 Likelihood 总和，既提供 Posterior 的共同分母，也使后验质量归一化。</p>
-      </div>
+      <details className="p03-full-bayes p03-evidence-detail">
+        <summary>核对 Evidence 怎样归一化本例的 Posterior</summary>
+        <div className="p03-evidence-check">
+          <div><span>DISCRETE EVIDENCE · WEIGHTED SUM</span><MathFormula block tex={String.raw`p(D_A)=\sum_k p(D_A\mid\theta^{(k)})p(\theta^{(k)})`} /></div>
+          <p><b>本例 p(D<sub>A</sub>) = {EXAMPLE_EVIDENCE.toFixed(6)}</b>。它是 Prior 加权后的 Likelihood 总和，是所有候选共用的归一化分母。</p>
+        </div>
+      </details>
       <div className="p03-selected-explanation" aria-live="polite">
-        <div><span>当前配置 <MathFormula tex={String.raw`\theta^{(${selected.index})}`} /></span><p>P2 的三条真实标签概率：{selected.state.datasetProbabilities.map((probability) => probability.toFixed(4)).join(" × ")} ≈ {selected.likelihood.toFixed(6)}；用未舍入值计算，再乘 Prior {selected.prior.toFixed(2)}、除 Evidence {EXAMPLE_EVIDENCE.toFixed(6)}，得到 Posterior {selected.posterior.toFixed(6)}。</p></div>
+        <div><span>数据如何改变相对支持</span><p>{selected.index === 1 ? "选择配置 2，观察较低的 Prior 如何被更高的旧数据 Likelihood 改写为更高的 Posterior。" : `相对配置 1，配置 ${selected.index} 的 Prior 是 ${relativePrior.toFixed(2)} 倍，Likelihood 是 ${relativeLikelihood.toFixed(2)} 倍，更新后 Posterior 是 ${relativePosterior.toFixed(2)} 倍。它说明完整配置的相对支持如何变化，尚未判定某个单独坐标的敏感性。`}</p></div>
         <details className="p03-ratio-detail">
-          <summary>为什么相对支持度变了？</summary>
+          <summary>展开相对权重的具体计算</summary>
           {selected.id === reference.id ? <p>这是比较基准。请选择配置 2 或配置 3，观察数据如何改变两个不同配置的相对支持。</p> : <>
             <p>以下均为配置 {selected.index} 相对于 <MathFormula tex={String.raw`\theta^{(1)}`} /> 的比值，三条共用 0–5 尺度；1 表示支持度相同。</p>
             <div className="p03-ratio-bars">{[["Prior ratio", relativePrior], ["Likelihood ratio", relativeLikelihood], ["Posterior ratio", relativePosterior]].map(([label, value]) => <div key={String(label)}><span>{label}</span><span className="p03-ratio-track"><i style={{ width: `${Number(value) / 5 * 100}%` }} /></span><b>{Number(value).toFixed(2)}</b></div>)}</div>
             <MathFormula block tex={oddsEquation} />
-            <p>共同 Evidence 抵消。数据提供 {relativeLikelihood.toFixed(2)} 倍的 Likelihood 支持，把原先 {relativePrior.toFixed(2)} 倍的 Prior 权重变成 {relativePosterior.toFixed(2)} 倍的 Posterior 支持。{selected.index === 2 ? "第二组虽有较低 Prior，更新后却比第一组更受支持，并成为本例后验最高的配置。" : "第三组最能解释数据，但较低 Prior 仍影响结果；后验最高的仍是第二组。"}</p>
-            <p>这就是旧数据形成约束的第一层含义：它改变哪些完整配置更合理。它尚未告诉我们哪个单独坐标更重要。</p>
+            <p>共同 Evidence 抵消。数据 Likelihood 按对应倍数重加权 Prior，得到 Posterior 的相对支持。</p>
           </>}
         </details>
       </div>
@@ -265,7 +268,7 @@ function SequentialUpdate() {
         <span>{current.note}</span>
         <MathFormula block tex={current.expression} />
       </div>
-      <div className="p03-sequential-boundary"><MathFormula block tex={String.raw`p(D_A,D_B\mid\theta)=p(D_A\mid\theta)p(D_B\mid\theta)`} /><p>因此，结合 Task B 数据时可用 <ReferenceTrigger id="task_a_posterior">p(θ | D<sub>A</sub>)</ReferenceTrigger> 作为下一步的先验来源。此式只说明 Bayesian 信息如何顺序更新；真实网络如何保存和近似它留给 P4–P6。</p></div>
+      <details className="p03-full-bayes p03-sequential-detail"><summary>查看任务条件独立假设</summary><div className="p03-sequential-boundary"><MathFormula block tex={String.raw`p(D_A,D_B\mid\theta)=p(D_A\mid\theta)p(D_B\mid\theta)`} /><p>给定 θ 后两批任务数据条件独立时，Task A Posterior 可作为 Task B 更新的先验来源。实际网络如何保存和近似它留给 P4–P6。</p></div></details>
     </section>
   );
 }
