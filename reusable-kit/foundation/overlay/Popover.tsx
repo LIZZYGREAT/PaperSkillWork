@@ -32,20 +32,24 @@ export function usePopoverPosition(
       const panel = panelRef.current?.getBoundingClientRect();
       if (!anchor || !panel) return;
 
-      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-      const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+      const viewportLeft = window.visualViewport?.offsetLeft ?? 0;
+      const viewportTop = window.visualViewport?.offsetTop ?? 0;
+      const viewportWidth = window.visualViewport?.width || document.documentElement.clientWidth || window.innerWidth;
+      const viewportHeight = window.visualViewport?.height || document.documentElement.clientHeight || window.innerHeight;
       const width = Math.min(panel.width, Math.max(0, viewportWidth - VIEWPORT_GUTTER * 2));
       const height = Math.min(panel.height, Math.max(0, viewportHeight - VIEWPORT_GUTTER * 2));
-      const maxLeft = Math.max(VIEWPORT_GUTTER, viewportWidth - width - VIEWPORT_GUTTER);
-      const left = Math.min(Math.max(VIEWPORT_GUTTER, anchor.left), maxLeft);
+      const minLeft = viewportLeft + VIEWPORT_GUTTER;
+      const maxLeft = Math.max(minLeft, viewportLeft + viewportWidth - width - VIEWPORT_GUTTER);
+      const left = Math.min(Math.max(minLeft, anchor.left), maxLeft);
       const below = anchor.bottom + ANCHOR_GAP;
       const above = anchor.top - height - ANCHOR_GAP;
-      const maxTop = Math.max(VIEWPORT_GUTTER, viewportHeight - height - VIEWPORT_GUTTER);
-      const top = below + height <= viewportHeight - VIEWPORT_GUTTER
+      const minTop = viewportTop + VIEWPORT_GUTTER;
+      const maxTop = Math.max(minTop, viewportTop + viewportHeight - height - VIEWPORT_GUTTER);
+      const top = below + height <= viewportTop + viewportHeight - VIEWPORT_GUTTER
         ? below
-        : above >= VIEWPORT_GUTTER
+        : above >= minTop
           ? above
-          : Math.min(Math.max(VIEWPORT_GUTTER, below), maxTop);
+          : Math.min(Math.max(minTop, below), maxTop);
 
       setPosition((current) => current.top === top && current.left === left && current.ready
         ? current
@@ -68,12 +72,16 @@ export function usePopoverPosition(
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(place);
     if (anchorRef.current) observer?.observe(anchorRef.current);
     if (panelRef.current) observer?.observe(panelRef.current);
+    window.visualViewport?.addEventListener("resize", place);
+    window.visualViewport?.addEventListener("scroll", place);
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place, true);
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
       observer?.disconnect();
+      window.visualViewport?.removeEventListener("resize", place);
+      window.visualViewport?.removeEventListener("scroll", place);
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
       document.removeEventListener("pointerdown", onPointerDown);

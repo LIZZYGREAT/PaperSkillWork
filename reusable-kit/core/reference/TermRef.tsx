@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import type { FocusEvent, PointerEvent } from "react";
 import { usePopoverPosition } from "../../foundation/overlay/Popover";
 import type { TermDefinition, TermRefLabels } from "./types";
@@ -24,7 +24,7 @@ export function TermRef({ term, children, onOpenReference, labels }: {
   const skipNextFocusOpen = useRef(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const panelId = "rk-term-" + term.id;
+  const panelId = `rk-term-${useId()}`;
   const copy = { ...DEFAULT_LABELS, ...labels };
   const open = !dismissed && (hovered || focused || pinned);
 
@@ -77,8 +77,8 @@ export function TermRef({ term, children, onOpenReference, labels }: {
   };
 
   return (
-    <span className="rk-term-ref-wrap" onPointerEnter={openOnHover} onPointerLeave={closeOnLeave} onFocus={onFocus} onBlur={closeOnBlur}>
-      <button ref={triggerRef} type="button" className="rk-term-ref" aria-haspopup="dialog" aria-expanded={open} aria-controls={panelId} onClick={onTriggerClick}>
+    <span className="rk-term-ref-wrap" onPointerEnter={openOnHover} onPointerOut={closeOnLeave} onFocus={onFocus} onBlur={closeOnBlur}>
+      <button ref={triggerRef} type="button" className="rk-term-ref" data-term-id={term.id} aria-haspopup="dialog" aria-expanded={open} aria-controls={panelId} onClick={onTriggerClick}>
         {children ?? term.label}
       </button>
       {open ? (

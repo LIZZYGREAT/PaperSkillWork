@@ -101,6 +101,7 @@ function Fixtures() {
     <StateMachineExplorer spec={branchingMachine} />
     <ReferenceHub items={[{ id: "term-a", title: "Term A", kind: "term", summary: "Searchable reference." }, { id: "method-b", title: "Method B", kind: "method", summary: "Another reference." }]} />
     <TermRef term={term} onOpenReference={(termId) => { document.body.dataset.reference = termId; }} />
+    <TermRef term={term} onOpenReference={(termId) => { document.body.dataset.reference = termId; }}>Term A repeated</TermRef>
     <ExpandableDetail title="Supporting detail"><p>Expandable content.</p></ExpandableDetail>
     <PaperFigure src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='80'%3E%3Crect width='160' height='80' fill='%23e3f2f6'/%3E%3C/svg%3E" alt="Simple demo illustration" figureLabel="Demo figure" caption="A local illustration." source="Reusable Kit demo" annotations={[{ id: "a", x: 50, y: 50, label: "A", text: "Annotation detail." }]} />
     <CompareView variants={[{ id: "a", title: "A" }, { id: "b", title: "B" }]} />
@@ -239,7 +240,10 @@ async function run() {
     assert(window.location.hash.includes("method-b"), "Selecting a reference did not update the deep link.");
   });
   await check("TermRef opens on click, closes on Escape, and opens its reference", async () => {
-    const button = document.querySelector<HTMLButtonElement>(".rk-term-ref")!;
+    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".rk-term-ref[data-term-id='term-a']"));
+    const controls = buttons.map((button) => button.getAttribute("aria-controls"));
+    assert(buttons.length === 2 && controls.every(Boolean) && new Set(controls).size === controls.length, "Repeated references do not have unique panel IDs.");
+    const button = buttons[0]!;
     button.click(); await wait(); assert(button.getAttribute("aria-expanded") === "true", "Term did not open.");
     button.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); await wait();
     assert(button.getAttribute("aria-expanded") === "false", "Escape did not close the term.");
@@ -259,8 +263,10 @@ async function run() {
   await check("PaperFigure zoom and source render", async () => {
     const figure = document.querySelector<HTMLElement>(".rk-paper-figure")!;
     figure.querySelector<HTMLButtonElement>(".rk-paper-figure__zoom")?.click(); await wait();
-    assert(document.querySelector("[role='dialog'][aria-label='Demo figure']"), "Zoom dialog did not open.");
-    assert(figure.textContent?.includes("Reusable Kit demo"), "Source attribution was missing.");
+    const dialog = document.querySelector<HTMLElement>("[role='dialog'][aria-modal='true']");
+    const titleId = dialog?.getAttribute("aria-labelledby");
+    assert(titleId && document.getElementById(titleId)?.textContent === "Demo figure", "Zoom dialog did not open with its figure title.");
+    assert(dialog?.textContent?.includes("Reusable Kit demo"), "Source attribution was missing from the zoom dialog.");
   });
   await check("Empty compatibility input is not a false pass", () => assert(document.querySelector(".rk-compatibility__result")?.textContent === "NEEDS ADAPTER", "Empty checks reported PASS."));
 

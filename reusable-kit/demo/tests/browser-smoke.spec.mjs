@@ -51,15 +51,25 @@ test("scroll sections synchronize LwF steps, manual choice holds briefly, and EW
 
 test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavior", async ({ page, browser }) => {
   const viewport = { width: 390, height: 844 };
+  const panelFor = async (trigger) => {
+    const panelId = await trigger.getAttribute("aria-controls");
+    expect(panelId).toBeTruthy();
+    return page.locator(`[id="${panelId}"]`);
+  };
   await page.setViewportSize(viewport);
   await page.goto("/tests.html");
   await expect(page.locator("#summary")).toHaveAttribute("data-result", "pass", { timeout: 15_000 });
   await page.getByRole("dialog", { name: "Demo figure" }).getByRole("button", { name: "Close" }).click();
   await expect(page.getByRole("dialog", { name: "Demo figure" })).toBeHidden();
 
+  const repeatedTriggers = page.locator('.rk-term-ref[data-term-id="term-a"]');
+  const repeatedControls = await repeatedTriggers.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-controls")));
+  expect(repeatedControls.length).toBeGreaterThanOrEqual(2);
+  expect(new Set(repeatedControls).size).toBe(repeatedControls.length);
+
   const wrapper = page.locator(".rk-term-ref-wrap").first();
   const trigger = wrapper.locator(".rk-term-ref");
-  const panel = page.locator("#rk-term-term-a");
+  const panel = await panelFor(trigger);
   const moveAnchor = (left, top) => wrapper.evaluate((node, point) => {
     Object.assign(node.style, { position: "fixed", zIndex: "1200", left: `${point.left}px`, top: `${point.top}px` });
   }, { left, top });
@@ -73,6 +83,8 @@ test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavio
     return bounds;
   };
 
+  await trigger.evaluate((node) => node.blur());
+  await page.mouse.move(viewport.width - 1, 1);
   await moveAnchor(0, 190);
   await trigger.hover();
   await expect(panel).toBeVisible();
@@ -105,7 +117,7 @@ test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavio
   await page.getByRole("dialog", { name: "Demo figure" }).getByRole("button", { name: "Close" }).click();
   await expect(page.getByRole("dialog", { name: "Demo figure" })).toBeHidden();
   const keyboardTrigger = page.locator(".rk-term-ref").first();
-  const keyboardPanel = page.locator("#rk-term-term-a");
+  const keyboardPanel = await panelFor(keyboardTrigger);
   await keyboardTrigger.focus();
   await expect(keyboardPanel).toBeVisible();
   await page.keyboard.press("Escape");
@@ -134,7 +146,8 @@ test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavio
     const mobileWrapper = mobilePage.locator(".rk-term-ref-wrap").first();
     await mobileWrapper.evaluate((node) => Object.assign(node.style, { position: "fixed", zIndex: "1200", left: "350px", top: "790px" }));
     const mobileTrigger = mobileWrapper.locator(".rk-term-ref");
-    const mobilePanel = mobilePage.locator("#rk-term-term-a");
+    const mobilePanelId = await mobileTrigger.getAttribute("aria-controls");
+    const mobilePanel = mobilePage.locator(`[id="${mobilePanelId}"]`);
     await mobilePage.tap(".rk-term-ref");
     await expect(mobilePanel).toBeVisible();
     const mobileBounds = await mobilePanel.boundingBox();
