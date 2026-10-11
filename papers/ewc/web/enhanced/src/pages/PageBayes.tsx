@@ -6,7 +6,7 @@ import { PARAMETER_STATES, datasetLikelihood, EXAMPLE_EVIDENCE, type ParameterSt
 import { MathFormula } from "../shared/teaching/Math";
 
 type Candidate = { id: string; index: number; prior: number; likelihood: number; posterior: number; state: ParameterState };
-type DistributionView = "prior" | "likelihood" | "posterior";
+type DistributionView = "before" | "after";
 
 const CANDIDATES: Candidate[] = PARAMETER_STATES.map((state) => {
   const likelihood = datasetLikelihood(state);
@@ -139,102 +139,41 @@ function BayesBox() {
 }
 
 function CandidateUpdate() {
-  const [view, setView] = useState<DistributionView>("prior");
+  const [view, setView] = useState<DistributionView>("before");
   const [selectedId, setSelectedId] = useState(CANDIDATES[1].id);
   const selected = CANDIDATES.find((candidate) => candidate.id === selectedId) ?? CANDIDATES[1];
   const reference = CANDIDATES[0];
-  const score = (candidate: Candidate) => view === "prior" ? candidate.prior : view === "likelihood" ? candidate.likelihood : candidate.posterior;
-  const viewCopy: Record<DistributionView, { label: string; note: string }> = {
-    prior: { label: "Prior mass", note: "Prior 是观察 D_A 前的离散概率质量；本例三项之和为 1。" },
-    likelihood: { label: "Raw Likelihood", note: "固定 D_A 后得到的拟合分数；这些值不在候选 θ 上归一化，也不需要相加为 1。" },
-    posterior: { label: "Posterior mass", note: "Prior × Likelihood 经 Evidence 归一化；本例三项之和为 1。" },
-  };
+  const before = view === "before";
+  const score = (candidate: Candidate) => before ? candidate.prior : candidate.posterior;
   const relativeLikelihood = selected.likelihood / reference.likelihood;
   const relativePrior = selected.prior / reference.prior;
   const relativePosterior = selected.posterior / reference.posterior;
   const oddsEquation = String.raw`\begin{aligned}\frac{p(\theta^{(${selected.index})}\mid D_A)}{p(\theta^{(1)}\mid D_A)}&=\frac{p(D_A\mid\theta^{(${selected.index})})}{p(D_A\mid\theta^{(1)})}\cdot\frac{p(\theta^{(${selected.index})})}{p(\theta^{(1)})}\\&\approx ${relativeLikelihood.toFixed(2)}\times ${relativePrior.toFixed(2)}\approx ${relativePosterior.toFixed(2)}\end{aligned}`;
-
   return (
     <section className="p03-section p03-candidates" id="parameter-belief-update" aria-labelledby="p03-candidates-title">
-      <div className="p03-section-heading">
-        <div><span className="p03-overline">AN ILLUSTRATIVE UPDATE · THREE CANDIDATE CONFIGURATIONS</span><h2 id="p03-candidates-title">看到数据后，参数配置的相对权重会改变</h2></div>
-        <p>三组配置和 D_A 直接复用 Page 2。逐个切换 Prior、Likelihood 与 Posterior，并点选配置核对更新来源。</p>
+      <div className="p03-section-heading"><div><span className="p03-overline">THE SAME THREE CONFIGURATIONS · BEFORE AND AFTER D_A</span><h2 id="p03-candidates-title">Task A 数据怎样改变三组配置的权重？</h2></div><p>沿用 P2 的完整候选参数配置和同一份数据。看 Prior 如何经 Likelihood 重新加权为 Posterior。</p></div>
+      <div className="p03-distribution-controls" role="group" aria-label="切换观察 Task A 数据前后的参数权重">
+        <button type="button" aria-pressed={before} className={before ? "is-active" : ""} onClick={() => setView("before")}>观察数据前 · Prior</button>
+        <button type="button" aria-pressed={!before} className={!before ? "is-active" : ""} onClick={() => setView("after")}>观察数据后 · Posterior</button>
       </div>
-      <div className="p03-distribution-controls" role="group" aria-label="选择参数配置的概率对象">
-        <button type="button" aria-pressed={view === "prior"} className={view === "prior" ? "is-active" : ""} onClick={() => setView("prior")}>Prior · before D_A</button>
-        <button type="button" aria-pressed={view === "likelihood"} className={view === "likelihood" ? "is-active" : ""} onClick={() => setView("likelihood")}>Likelihood · fixed D_A</button>
-        <button type="button" aria-pressed={view === "posterior"} className={view === "posterior" ? "is-active" : ""} onClick={() => setView("posterior")}>Posterior · after D_A</button>
-      </div>
-      <div className="p03-view-note" aria-live="polite"><b>{viewCopy[view].label}</b><span>{viewCopy[view].note} 条形共用 0–1 线性尺度，长度 = 当前数值 × 100%，不会随模式重新归一。</span></div>
-      <div className="p03-candidate-table-scroll">
-        <div className="p03-candidate-head" aria-hidden="true"><span>完整参数配置</span><span>当前视图</span><span>Prior</span><span>Likelihood</span><span>Posterior</span></div>
-        <div className="p03-candidate-list" role="group" aria-label="点击候选参数配置查看 Prior、Likelihood 与 Posterior">
-        {CANDIDATES.map((candidate) => {
+      <div className="p03-view-note" aria-live="polite"><b>{before ? "Prior · 数据到来前" : "Posterior · 数据到来后"}</b><span>{before ? "先验配置权重合计为 1。" : "旧数据 Likelihood 重加权并归一化，后验配置权重合计为 1。"} 所有条形共用 0–1 线性尺度。</span></div>
+      <div className="p03-candidate-list" role="group" aria-label="选择一个完整参数配置查看它的更新">
+        {CANDIDATES.map(candidate => {
           const value = score(candidate);
-          const active = selected.id === candidate.id;
-          return (
-            <button className={`p03-candidate-row ${active ? "is-selected" : ""}`} key={candidate.id} type="button" aria-pressed={active} aria-label={`参数配置 ${candidate.index}：Prior ${candidate.prior.toFixed(4)}，Likelihood ${candidate.likelihood.toFixed(6)}，Posterior ${candidate.posterior.toFixed(6)}`} onClick={() => setSelectedId(candidate.id)}>
-              <span className="p03-candidate-config"><MathFormula tex={String.raw`\theta^{(${candidate.index})}`} /><small>完整配置</small></span>
-              <span className="p03-candidate-weight" aria-label={`${viewCopy[view].label} ${value.toFixed(6)}`}>
-                <span className="p03-candidate-weight__label"><span>{viewCopy[view].label}</span><b>{value.toFixed(4)}</b></span>
-                <span className="p03-candidate-weight__track" aria-hidden="true"><i className={`p03-candidate-weight__bar p03-candidate-weight__bar--${view}`} style={{ width: `${value * 100}%` }} /></span>
-              </span>
-              <span className="p03-candidate-value" data-label="Prior">{candidate.prior.toFixed(4)}</span>
-              <span className="p03-candidate-value" data-label="Likelihood">{candidate.likelihood.toFixed(6)}</span>
-              <span className="p03-candidate-value p03-candidate-value--posterior" data-label="Posterior">{candidate.posterior.toFixed(6)}</span>
-            </button>
-          );
+          const active = candidate.id === selected.id;
+          return <button className={`p03-candidate-row ${active ? "is-selected" : ""}`} key={candidate.id} type="button" aria-pressed={active} aria-label={`完整参数配置 ${candidate.index}，${before ? "Prior" : "Posterior"} ${value.toFixed(4)}`} onClick={() => setSelectedId(candidate.id)}>
+            <span className="p03-candidate-config"><MathFormula tex={String.raw`\theta^{(${candidate.index})}`} /><small>完整参数配置</small></span>
+            <span className="p03-candidate-weight"><span className="p03-candidate-weight__label"><span>{before ? "Prior 权重" : "Posterior 权重"}</span><b>{value.toFixed(4)}</b></span><span className="p03-candidate-weight__track" aria-hidden="true"><i className={before ? "p03-candidate-weight__bar--prior" : "p03-candidate-weight__bar--posterior"} style={{width: `${value * 100}%`}} /></span></span>
+          </button>;
         })}
-        </div>
       </div>
-      <details className="p03-full-bayes p03-evidence-detail">
-        <summary>核对 Evidence 怎样归一化本例的 Posterior</summary>
-        <div className="p03-evidence-check">
-          <div><span>DISCRETE EVIDENCE · WEIGHTED SUM</span><MathFormula block tex={String.raw`p(D_A)=\sum_k p(D_A\mid\theta^{(k)})p(\theta^{(k)})`} /></div>
-          <p><b>本例 p(D<sub>A</sub>) = {EXAMPLE_EVIDENCE.toFixed(6)}</b>。它是 Prior 加权后的 Likelihood 总和，是所有候选共用的归一化分母。</p>
-        </div>
-      </details>
-      <div className="p03-selected-explanation" aria-live="polite">
-        <div><span>数据如何改变相对支持</span><p>{selected.index === 1 ? "选择配置 2，观察较低的 Prior 如何被更高的旧数据 Likelihood 改写为更高的 Posterior。" : `相对配置 1，配置 ${selected.index} 的 Prior 是 ${relativePrior.toFixed(2)} 倍，Likelihood 是 ${relativeLikelihood.toFixed(2)} 倍，更新后 Posterior 是 ${relativePosterior.toFixed(2)} 倍。它说明完整配置的相对支持如何变化，尚未判定某个单独坐标的敏感性。`}</p></div>
-        <details className="p03-ratio-detail">
-          <summary>展开相对权重的具体计算</summary>
-          {selected.id === reference.id ? <p>这是比较基准。请选择配置 2 或配置 3，观察数据如何改变两个不同配置的相对支持。</p> : <>
-            <p>以下均为配置 {selected.index} 相对于 <MathFormula tex={String.raw`\theta^{(1)}`} /> 的比值，三条共用 0–5 尺度；1 表示支持度相同。</p>
-            <div className="p03-ratio-bars">{[["Prior ratio", relativePrior], ["Likelihood ratio", relativeLikelihood], ["Posterior ratio", relativePosterior]].map(([label, value]) => <div key={String(label)}><span>{label}</span><span className="p03-ratio-track"><i style={{ width: `${Number(value) / 5 * 100}%` }} /></span><b>{Number(value).toFixed(2)}</b></div>)}</div>
-            <MathFormula block tex={oddsEquation} />
-            <p>共同 Evidence 抵消。数据 Likelihood 按对应倍数重加权 Prior，得到 Posterior 的相对支持。</p>
-          </>}
-        </details>
+      <div className="p03-selected-explanation" aria-live="polite"><div><span>所选完整配置 {selected.index} · 更新来源</span><p>Prior <b>{selected.prior.toFixed(4)}</b> × Likelihood <b>{selected.likelihood.toFixed(6)}</b>，再除以 Evidence <b>{EXAMPLE_EVIDENCE.toFixed(6)}</b>，得到 Posterior <b>{selected.posterior.toFixed(4)}</b>。<b>权重描述完整配置，不等于单一坐标的重要性。</b></p></div>
+        <details className="p03-ratio-detail"><summary>为什么配置间的相对权重会这样改变？</summary>{selected.id === reference.id ? <p>这是相对比较的基准配置。请选择配置 2 或 3 查看计算。</p> : <><p>以下按完整配置 {selected.index} 相对配置 1 的比值比较；共同 Evidence 在比值中抵消。</p><div className="p03-ratio-bars">{[["Prior 比值", relativePrior], ["Likelihood 比值", relativeLikelihood], ["Posterior 比值", relativePosterior]].map(([label,value]) => <div key={String(label)}><span>{label}</span><span className="p03-ratio-track"><i style={{width:`${Math.min(Number(value)/5*100,100)}%`}} /></span><b>{Number(value).toFixed(2)}</b></div>)}</div><MathFormula block tex={oddsEquation} /></>}</details>
       </div>
-      <p className="p03-teaching-boundary">三组完整配置、D<sub>A</sub> 与 Likelihood 复用 P2。Prior = (0.50, 0.35, 0.15) 是符合归一化规则的教学假设，并非论文报告的网络参数后验。所有显示值来自未舍入计算。</p>
+      <details className="p03-full-bayes p03-evidence-detail"><summary>核对三候选示例的 Evidence</summary><div className="p03-evidence-check"><div><span>离散候选 · Prior 加权求和</span><MathFormula block tex={String.raw`p(D_A)=\sum_k p(D_A\mid\theta^{(k)})p(\theta^{(k)})`} /></div><p><b>本例 p(D<sub>A</sub>) = {EXAMPLE_EVIDENCE.toFixed(6)}</b>，是三项候选共同的归一化分母。Prior (0.50, 0.35, 0.15) 是教学假设。</p></div></details>
+      <p className="p03-teaching-boundary">前后柱高共用 0–1 尺度；Prior 与 Likelihood 数值复用 P2 数据链。这组 Prior 是离散教学假设，并非论文报告的网络参数后验。</p>
     </section>
   );
-}
-
-function LocalSupport() {
-  const [narrow, setNarrow] = useState(true);
-  const density = (x: number, sharp: boolean) => Math.exp(-(sharp ? 5 : 0.8) * x * x);
-  const curve = (sharp: boolean) => Array.from({ length: 101 }, (_, i) => {
-    const x = -1.5 + i * 0.03;
-    return `${i ? "L" : "M"}${250 + x * 130},${195 - density(x, sharp) * 150}`;
-  }).join(" ");
-  return <section className="p03-section p03-local-support" id="posterior-local-support" aria-labelledby="p03-local-title">
-    <div className="p03-section-heading"><div><span className="p03-overline">FROM CONFIGURATION WEIGHTS TO LOCAL SHAPE</span><h2 id="p03-local-title">同一个高支持位置，周围允许怎样的偏移？</h2></div></div>
-    <p>刚才三个离散候选说明了数据怎样重加权 Prior。现在转到一个独立的连续形状示意：保持旧数据和 Prior 固定，从一个局部高支持中心沿不同方向移动。若 Likelihood 与 Prior 的乘积下降更快，Posterior 密度也下降更快，这种偏移就更难与已学信息相容。</p>
-    <figure>
-      <svg viewBox="0 0 500 245" role="img" aria-label="两方向在中心密度相同，沿同样长度偏移，窄方向的相对密度下降更快">
-        <path d="M45 195H460 M250 25V200" fill="none" stroke="#a9bab3" />
-        <path d={curve(false)} fill="none" stroke="#4c7194" strokeWidth={narrow ? 2 : 4} opacity={narrow ? 0.4 : 1} />
-        <path d={curve(true)} fill="none" stroke="#a64d32" strokeWidth={narrow ? 4 : 2} opacity={narrow ? 1 : 0.4} />
-        <path d={`M315 195V${195 - density(0.5, narrow) * 150}`} stroke="#203d40" strokeDasharray="4 4" />
-        <circle cx="315" cy={195 - density(0.5, narrow) * 150} r="6" fill={narrow ? "#a64d32" : "#4c7194"} />
-        <text x="46" y="22">相对中心的密度（中心 = 1）</text><text x="235" y="223">中心</text><text x="302" y="241">相同偏移</text>
-      </svg>
-      <div className="p03-distribution-controls" role="group" aria-label="选择局部偏移方向"><button type="button" aria-pressed={narrow} className={narrow ? "is-active" : ""} onClick={() => setNarrow(true)}>窄方向 · 下降快</button><button type="button" aria-pressed={!narrow} className={!narrow ? "is-active" : ""} onClick={() => setNarrow(false)}>宽方向 · 下降慢</button></div>
-      <figcaption aria-live="polite">同样偏移后，{narrow ? "窄方向密度下降明显，留在高支持区域内的余地较小。" : "宽方向仍保持较高密度，对这种局部偏移的限制较宽松。"}中心相同，允许的偏移却不同：只保存最高点的位置无法区分二者。</figcaption>
-    </figure>
-    <p className="p03-teaching-boundary">曲线为连续参数空间的理论形状示例，不由前三根候选柱推算，也不是论文实测。纵轴是密度比，不是精确参数点的概率质量；邻域概率需要对密度积分。P4 才将这种局部下降写成二次代价。</p>
-  </section>;
 }
 
 function SequentialUpdate() {
@@ -288,15 +227,14 @@ export function PageBayes() {
         <div className="p03-section-heading">
           <div><span className="p03-overline">CONTINUE FROM PAGE 02</span><h2 id="p03-entry-title">旧数据不再参与训练，怎样留下它的影响？</h2></div>
         </div>
-        <p className="p03-entry-question">P2 已能计算每组参数的旧 Loss，但只保存最优配置，不能说明偏离它后还能否解释旧任务。我们先描述数据前后对参数配置的相对支持，再研究高支持区域的局部形状。</p>
-        <p>Bayesian 视角把已有参数知识和新数据证据合并为一个分布，下一任务可继续更新这个分布。下面先说明 Prior 的来源，再从联合概率推导更新规则；EWC 实际保存的是之后构造的近似摘要。</p>
+        <p className="p03-entry-question">P2 能算旧数据对不同参数配置的拟合程度，但 Task B 到来后，我们不希望每次都重新拿完整 Task A 数据计算旧 Loss。怎样让已观察的旧数据先改变对参数配置的支持程度，再把这份信息带进下一任务？</p>
+        <p>Bayesian 更新把已有参数知识与当前数据证据结合，形成新的参数分布；Task B 可接着把它作为先验贡献继续更新。Posterior 描述完整配置的相对支持与局部形状，<strong>还没有直接给出逐参数的重要性。</strong> EWC 实际保存的是后面构造的近似摘要。</p>
         <details className="p03-background-detail"><summary>回顾 P2：类别概率、Likelihood 与参数分布的区别</summary><ProbabilityOriginTable /></details>
       </section>
 
       <ParameterPerspectives />
       <BayesBox />
       <CandidateUpdate />
-      <LocalSupport />
       <SequentialUpdate />
 
       <section className="p03-handoff" aria-labelledby="p03-handoff-title">

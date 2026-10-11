@@ -51,17 +51,6 @@ function TrainingArrow() {
   );
 }
 
-function EwcTraceArrow() {
-  return (
-    <li className="p01-ewc-trace__arrow" aria-hidden="true">
-      <svg viewBox="0 0 44 18" focusable="false">
-        <path d="M1 9h37" />
-        <path d="m31 3 7 6-7 6" />
-      </svg>
-    </li>
-  );
-}
-
 function TrainingSignal({ task }: { task: "A" | "B" }) {
   return (
     <div className={`p01-training-signal p01-training-signal--${task.toLowerCase()}`} aria-label={`Task ${task} 的训练过程` }>
@@ -295,27 +284,24 @@ export function PageProblem() {
           <ParameterMovement parameter={2} sensitive={false} />
           <p className="p01-movement-compare__note">两条 Loss 使用同一尺度；长度仅示意相对影响，不代表论文实验测量值。</p>
         </figure>
-        <p className="p01-parameters__takeaway"><ReferenceTrigger id="parameter_interference">不同参数对旧任务的敏感程度不同</ReferenceTrigger>。这里的“重要性”是相对于 Task A 的目标而言：同幅偏移对 Task A Loss 的影响不同，因此后续训练需要区分哪些参数应受到更强约束，哪些可以更灵活地更新。</p>
         <div className="p01-loss-origin" id="sensitivity-to-loss">
-          <h3>图中的旧任务代价，怎样从数据算出来？</h3>
-          <p>固定 Task A 的评价目标，只改变参数；比较这次偏移带来的旧 Loss 增量：</p>
-          <MathFormula block tex={String.raw`\Delta L_A=L_A(\theta_A^*+\Delta\theta)-L_A(\theta_A^*)`} />
-          <p>分类 Loss 来自旧数据真实标签的预测概率：概率越低，负对数 Loss 越高。P2 会固定同一份 Task A 数据，沿 Forward → Softmax → 真实标签概率 → Likelihood → Loss 拆开这条来源。</p>
+          <span className="p01-overline">从图中的差异，到可以计算的评价</span>
+          <h3>要判断参数的重要性，先说清什么叫“旧任务变差”</h3>
+          <p>两个参数都移动了相同距离，却对 Task A 造成不同影响。某个参数稍微偏移，旧任务表现就明显变差；另一个参数移动相同距离，影响却较小。<ReferenceTrigger id="parameter_interference">重要性应从参数变化对旧任务的影响来评价</ReferenceTrigger>，而不是看参数值的大小。</p>
+          <p>要量化这种差异，首先需要一把评价旧任务表现的尺子。对这里的分类任务，我们用 <strong>Loss</strong> 衡量模型在已有样本上的预测质量：Loss 越小，模型对真实标签的解释越好。接下来要弄清它怎样从数据和网络预测中算出来。</p>
         </div>
       </section>
 
       <section className="p01-ewc-preview" id="ewc-motivation" aria-labelledby="p01-ewc-title">
-        <div className="p01-ewc-preview__intro"><span className="p01-overline">A CONCEPT PREVIEW · NO FORMULA YET</span><h2 id="p01-ewc-title"><ReferenceTrigger id="ewc">EWC</ReferenceTrigger> 要处理的矛盾</h2><p>不是冻结整个模型，而是记下 Task A 依赖参数的位置与敏感程度；学习 Task B 时，对更敏感的部分限制得更强。</p></div>
-        <ol className="p01-ewc-trace" aria-label="EWC 的概念预告">
-          <li><span>01</span><b>训练 Task A</b></li><EwcTraceArrow />
-          <li><span>02</span><b>区分参数的旧任务敏感程度</b></li><EwcTraceArrow />
-          <li><span>03</span><b>保存旧任务参数状态</b></li><EwcTraceArrow />
-          <li><span>04</span><b>继续学 Task B，并区别约束</b></li>
-        </ol>
+        <div className="p01-ewc-preview__intro"><span className="p01-overline">RESEARCH GOAL</span><h2 id="p01-ewc-title"><ReferenceTrigger id="ewc">EWC</ReferenceTrigger> 希望留下什么？</h2><p>让模型继续学习 Task B，同时对旧任务更敏感的参数施加更强约束。</p></div>
+        <div className="p01-memory-goal" aria-label="旧任务需要留下的两类信息">
+          <div><span aria-hidden="true">◎</span><b>旧解的位置</b><p>从哪里开始发生偏移？</p></div>
+          <div><span aria-hidden="true">↗</span><b>变化的影响</b><p>哪些坐标的偏移更需要限制？</p></div>
+        </div>
       </section>
 
       <section className="p01-handoff" aria-label="下一页学习目标">
-        <div><span className="p01-overline">NEXT · PAGE 02</span><h2>先算出旧任务的评价量</h2><p>下一页固定 Task A 的输入与标签，切换完整参数配置，观察真实标签概率、Likelihood 和 Loss 如何一起变化。</p></div>
+        <div><span className="p01-overline">NEXT · PAGE 02</span><h2>先算出旧任务的评价量</h2><p>Task A 已经给出输入和正确答案。下一页从一条预测开始，看怎样把预测质量变成可计算的 Loss。</p></div>
         <button type="button" className="p01-handoff__button" onClick={() => api.navigatePage("page-02-probability")}><span>打开 Page 2</span><b aria-hidden="true">02 →</b></button>
       </section>
     </article>

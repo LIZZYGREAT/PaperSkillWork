@@ -238,3 +238,5 @@
 .p03-local-support figure { margin: 20px 0; padding: 20px; background: #f2f7f3; border-radius: 12px; }
 .p03-local-support svg { display: block; max-width: 560px; width: 100%; margin: auto; font-size: 14px; fill: #203d40; }
 .p03-ratio-detail { min-width: 0; }
+.p03-candidate-list { min-width: 0; }
+.p03-candidate-row { min-width: 0; grid-template-columns: minmax(0,1fr); }
