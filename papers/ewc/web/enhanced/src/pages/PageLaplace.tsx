@@ -54,35 +54,23 @@ function LaplaceEquation() {
         <p>先以 <ReferenceTrigger id="theta_a_star">θ<sub>A</sub>*</ReferenceTrigger> 为近似局部 MAP 中心。我们要计算的不是中心高度，而是偏离中心之后负对数密度增加多少。</p>
       </div>
 
-      <div className="p04-equation-card" role="group" aria-label="Laplace 近似的局部二次展开与 Gaussian 表示">
-        <div className="p04-equation-row" role="math" aria-label="Phi theta 等于负的 Task A 参数 Posterior 对数">
-          <span className="p04-equation-label">先定义要近似的形状</span>
-          <MathFormula block tex={String.raw`\Phi(\theta)=-\log p(\theta\mid D_A)`} />
+      <div className="p04-equation-card" role="group" aria-label="局部曲率将参数偏移转换为负对数 Posterior 代价">
+        <div className="p04-equation-row p04-equation-row--result" role="math" aria-label="相对参数偏移的局部代价约等于二分之一乘偏移转置、曲率矩阵和偏移">
+          <span className="p04-equation-label">相同距离的偏移，沿曲率更大的方向代价更高</span>
+          <MathFormula block tex={String.raw`\Delta\Phi\approx\tfrac12\Delta\theta^\mathsf{T}H_A\Delta\theta`} />
         </div>
-        <div className="p04-equation-row" role="math" aria-label="在局部最大后验点，一阶导数为零，局部 Hessian 是 Phi 的二阶导数">
-          <span className="p04-equation-label">以局部 MAP 为中心：驻点条件与二阶曲率</span>
+      </div>
+      <details className="p04-derivation">
+        <summary>展开 Laplace 数学推导与适用条件</summary>
+        <div>
+          <p>令负对数 Posterior 为 <MathFormula tex={String.raw`\Phi(\theta)=-\log p(\theta\mid D_A)`} />。在局部 MAP 点 θ<sub>A</sub>* 附近，一阶项因驻点条件消失，H<sub>A</sub> 是该点的局部 Hessian：</p>
           <MathFormula block tex={String.raw`\nabla\Phi(\theta_A^*)=0,\qquad H_A=\nabla^2\Phi(\theta_A^*)`} />
+          <MathFormula block tex={String.raw`\Phi(\theta_A^*+\Delta\theta)-\Phi(\theta_A^*)\approx\tfrac12\Delta\theta^\mathsf{T}H_A\Delta\theta`} />
+          <p>取负号并指数化，得到局部密度比；当 H<sub>A</sub> 正定时，对应 Gaussian 的精度是 H<sub>A</sub>、协方差是 H<sub>A</sub><sup>−1</sup>：</p>
+          <MathFormula block tex={String.raw`\frac{q(\theta_A^*+\Delta\theta\mid D_A)}{q(\theta_A^*\mid D_A)}\approx\exp\!\left(-\tfrac12\Delta\theta^\mathsf{T}H_A\Delta\theta\right),\qquad q(\theta\mid D_A)\approx\mathcal{N}(\theta_A^*,H_A^{-1})`} />
+          <p>由 Bayes，<MathFormula tex={String.raw`\Phi=-\log p(D_A\mid\theta)-\log p(\theta)+C`} />，因此局部精度也可能包含 Prior 曲率，不能无条件等同于旧数据 Loss 的 Hessian。实际训练得到的 θ<sub>A</sub>* 只是局部 MAP 的近似；零或负曲率需适当正则化。论文以对角 Fisher 近似局部精度，并未计算或保存这里的完整 Hessian。</p>
         </div>
-        <div className="p04-equation-row" role="math" aria-label="Phi theta 约等于 Phi theta A 星加二分之一乘参数位移转置、局部 Hessian 和参数位移">
-          <span className="p04-equation-label">Taylor 展开的一阶项因驻点条件消失</span>
-          <MathFormula block tex={String.raw`\Delta\theta=\theta-\theta_A^*,\quad\Phi(\theta)-\Phi(\theta_A^*)\approx\tfrac12\Delta\theta^\mathsf{T}H_A\Delta\theta`} />
-          <p>左侧就是偏移的额外代价。右侧把方向差异留在曲率矩阵中：相同长度的偏移，沿较陡方向会付出更大代价。</p>
-        </div>
-        <div className="p04-equation-row p04-equation-row--result" role="math" aria-label="Task A 参数 Posterior 的局部近似是均值 theta A 星、协方差为 H A 逆的 Gaussian 分布">
-          <span className="p04-equation-label">取负号并指数化：代价增加，密度下降</span>
-          <MathFormula block tex={String.raw`\frac{q(\theta_A^*+\Delta\theta\mid D_A)}{q(\theta_A^*\mid D_A)}=\exp\!\left(-\tfrac12\Delta\theta^\mathsf{T}H_A\Delta\theta\right)`} />
-          <p>当曲率正定时，这个可归一化的指数二次式就是 Gaussian。其精度为 <MathFormula tex="H_A" />，协方差为它的逆：</p>
-          <MathFormula block tex={String.raw`q(\theta\mid D_A)=\mathcal{N}(\theta_A^*,H_A^{-1})`} />
-        </div>
-      </div>
-
-      <div className="p04-concept-notes">
-        <div><b>中心 θ<sub>A</sub>*</b><p>理想 Taylor 展开以局部 MAP 驻点为中心，∇Φ = 0，因而一阶项消失。实现中使用训练所得 θ_A* 作为近似中心；普通优化器未必找到精确 MAP。</p></div>
-        <div><b>局部曲率 H<sub>A</sub></b><p>描述负对数 Posterior 在中心附近变陡或变平的程度。曲率越大，Gaussian 对应方向越窄。</p></div>
-      </div>
-
-      <p>由 Bayes，<MathFormula tex={String.raw`\Phi=-\log p(D_A\mid\theta)-\log p(\theta)+C`} />，所以 <ReferenceTrigger id="local_precision">局部精度</ReferenceTrigger> 还可能包含 Prior 曲率，不能无条件等同于旧数据 Loss 的 Hessian。</p>
-      <p className="p04-teaching-note">若局部曲率正定，指数化这个二次型就得到局部 Gaussian；曲率越大，方差越小、等高线越窄。普通优化器得到的 θ_A* 只是局部中心的近似。零或负曲率需要适当正则化；论文以对角 Fisher 近似局部精度，没有精确计算或保存这里的完整 Hessian。</p>
+      </details>
     </section>
   );
 }
@@ -134,14 +122,7 @@ function DirectionalPrecision({ direction, onDirectionChange }: { direction: Dir
         <p className="p04-direction-explanation" aria-live="polite">{explanation}</p>
         <div className="p04-direction-legend"><span className="p04-legend-item p04-legend-item--wide"><i /> 宽方向：局部精度较低</span><span className="p04-legend-item p04-legend-item--narrow"><i /> 窄方向：局部精度较高</span></div>
       </div>
-      <details className="p04-derivation p04-contour-detail">
-        <summary>展开：二维等高线怎样表示局部约束？</summary>
-        <div>
-          <p>把局部 Gaussian 投影到两个参数方向，等高线连接近似密度相同的位置。短轴表示该方向的局部精度相对较高，长轴表示局部精度相对较低。</p>
-          <p>这是解释几何关系的二维教学示例，不是论文中的实测轮廓或真实参数子空间切片。</p>
-        </div>
-      </details>
-      <p className="p04-boundary-note">二维教学示例，非论文实测；每参数单位 136 图像单位，等长箭头为 d = 0.5。先观察方向差异，下面推导并计算同一幅图的局部代价。</p>
+      <p className="p04-boundary-note">二维等高线为概念示意，非实测参数切片；两方向移动距离均为 d=0.5。</p>
     </section>
   );
 }
@@ -174,8 +155,7 @@ export function PageLaplace() {
       <div className="p04-equation-card" aria-live="polite">
         <h3>把推导代回上图：当前选择{direction === "wide" ? "宽" : "窄"}方向</h3>
         <MathFormula block tex={String.raw`d=0.5,\quad h=${precision},\quad\Delta\Phi\approx\tfrac12 h d^2=${cost.toFixed(4)}`} />
-        <MathFormula block tex={String.raw`q(\theta_A^*+\Delta\theta)/q(\theta_A^*)=e^{-${cost.toFixed(4)}}\approx ${Math.exp(-cost).toFixed(3)}`} />
-        <p>上图的方向选择同步决定这里的曲率、代价和相对密度。椭圆短长轴比约为 <MathFormula tex={String.raw`\sqrt{0.5/2.18}`} />；同一中心不变，二次型才区分偏移方向。</p>
+        <p>同一中心与偏移距离不变；方向切换只改变曲率，因此代价随之变化。</p>
       </div>
 
       <section className="p04-handoff" id="fisher-handoff" aria-labelledby="p04-handoff-title">
