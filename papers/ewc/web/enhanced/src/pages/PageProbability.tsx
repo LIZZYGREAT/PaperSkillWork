@@ -193,16 +193,35 @@ export function PageProbability() {
 
       <section className="p02-loss-update" id="loss-and-update" aria-labelledby="p02-loss-title">
         <div className="p02-section-heading"><div><span className="p02-overline">03 · TURN SUPPORT INTO LOSS</span><h2 id="p02-loss-title">最大化 Likelihood，等价于最小化负对数损失</h2></div><p>负号把“概率越大越好”改写成“Loss 越小越好”；对数把样本概率的乘积改写为求和。</p></div>
-        <div className="p02-nll-explanation" aria-label="负对数似然的定义和作用">
-          <span>NEGATIVE LOG-LIKELIHOOD · NLL</span>
-          <MathFormula block tex={String.raw`L_A(\theta)=-\log p(D_A\mid\theta)`} />
-          <div className="p02-current-loss" aria-live="polite"><span>当前配置 {selected.index}</span><strong>−log({likelihood.toFixed(4)}) = {datasetNll.toFixed(4)}</strong><span>总 NLL · 越小越好</span></div>
+        <div className="p02-nll-visual" aria-label="负对数似然计算图">
+          <div className="p02-nll-visual__formula">
+            <span>NEGATIVE LOG-LIKELIHOOD · NLL</span>
+            <MathFormula block tex={String.raw`\begin{aligned}L_A(\theta)&=-\log p(D_A\mid\theta)\\&=-\log\prod_{n=1}^{N}p_\theta(y_n\mid x_n)\\&=-\sum_{n=1}^{N}\log p_\theta(y_n\mid x_n)\end{aligned}`} />
+            <p>在样本标签条件独立的假设下，取负对数把概率乘积改写为逐样本求和。</p>
+          </div>
+          <div className="p02-nll-example">
+            <div className="p02-nll-example__heading">
+              <span>当前完整配置 <ParameterStateNotation candidate={selected.candidate} /></span>
+              <span>固定 Task A · 3 个真实标签</span>
+            </div>
+            <div className="p02-nll-example__calculation" aria-live="polite" aria-label={`配置 ${selected.index} 的 NLL 计算：真实标签概率 ${selected.datasetProbabilities.map((probability) => probability.toFixed(4)).join(" 乘 ")}，Likelihood ${likelihood.toFixed(4)}，总 NLL ${datasetNll.toFixed(4)}`}>
+              {selected.datasetProbabilities.map((probability, index) => <Fragment key={`nll-sample-${index}`}>
+                <span className="p02-nll-example__sample"><small>样本 {index + 1} · y<sub>{index + 1}</sub>={String.fromCharCode(65 + index)}</small><strong>{probability.toFixed(4)}</strong></span>
+                {index < selected.datasetProbabilities.length - 1 ? <span className="p02-nll-example__operator" aria-hidden="true">×</span> : null}
+              </Fragment>)}
+              <span className="p02-nll-example__operator" aria-hidden="true">=</span>
+              <span className="p02-nll-example__likelihood"><small>Likelihood</small><strong>{likelihood.toFixed(4)}</strong></span>
+              <span className="p02-nll-example__arrow" aria-hidden="true">→</span>
+              <span className="p02-nll-example__result"><small>总 NLL · 越小越好</small><strong>−log({likelihood.toFixed(4)}) = {datasetNll.toFixed(4)}</strong></span>
+            </div>
+            <p className="p02-nll-example__note">概率显示为四位小数；Likelihood 与 NLL 使用未舍入数值。切换前面的完整参数配置时，这组计算会同步更新。</p>
+          </div>
         </div>
         <details className="p02-softmax-detail p02-nll-detail">
           <summary>了解总 NLL、平均 Loss 与数值尺度</summary>
           <div className="p02-softmax-detail__body"><MathFormula tex={String.raw`L_{\mathrm{NLL}}(\theta)=-\sum_{n=1}^{N}\log p_\theta(y_n\mid x_n)`} /><p>本页以总 NLL 表示旧目标。若训练使用平均交叉熵，则为总 NLL 除以样本数 N；两者最优位置相同，但梯度及其与 Fisher 惩罚的相对尺度不同。本例 N={selected.datasetProbabilities.length}，总 NLL={datasetNll.toFixed(4)}，平均值={(datasetNll / selected.datasetProbabilities.length).toFixed(4)}。</p></div>
         </details>
-        <details className="p02-softmax-detail"><summary>这个 Loss 怎样进入普通训练？</summary>
+        <details className="p02-softmax-detail" open><summary>这个 Loss 怎样进入普通训练？</summary>
         <div className="p02-training-chain" aria-label="Likelihood 变成 Loss，计算梯度后更新参数">
           <div className="p02-training-node p02-training-node--loss"><span>OLD TASK LOSS</span><strong>L<sub>A</sub>(θ)</strong><small>真实标签概率的负对数</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>
           <div className="p02-gradient-node"><span>BACKWARD</span><strong>∇<sub>θ</sub>L</strong><div aria-hidden="true"><i /><i /><i /><i /></div><small>loss 对参数的梯度</small></div><span className="p02-training-arrow" aria-hidden="true">→</span>

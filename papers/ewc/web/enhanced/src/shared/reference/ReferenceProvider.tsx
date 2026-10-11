@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { CanonicalReferenceId, GrandAnimationStateId, OpenReferenceTarget, PageId, RuntimeObjectId } from "../../contracts/ids";
 import type { ReferenceApi } from "./types";
@@ -11,6 +11,10 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
   const [hubReferenceId, setHubReferenceId] = useState<CanonicalReferenceId>();
   const [activeAnimationStateId, setActiveAnimationStateId] = useState<GrandAnimationStateId>();
   const [activeRuntimeObject, setActiveRuntimeObject] = useState<RuntimeObjectId>();
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [currentPage]);
 
   const navigatePage = useCallback((pageId: PageId) => {
     setCurrentPage(pageId);
