@@ -224,3 +224,17 @@
 @media (prefers-reduced-motion: reduce) {
   .p03-bayes-node, .p03-candidate-weight__track i { transition-duration: .01ms !important; }
 }
+.p03-prior-track { display: flex; align-items: end; height: 80px; border-bottom: 1px solid #ccd9d3; }
+.p03-prior-points > span > .ewc-math, .p03-candidate-config > .ewc-math { font-size: 18px; line-height: 1.4; }
+.p03-ratio-detail summary { padding: 12px 0; cursor: pointer; color: #87472f; font-weight: 600; }
+.p03-ratio-bars { display: grid; gap: 12px; margin: 18px 0; }
+.p03-ratio-bars > div { display: grid; grid-template-columns: minmax(100px, 140px) minmax(50px, 1fr) 44px; gap: 12px; align-items: center; font-size: 14px; }
+.p03-ratio-track { height: 14px; background: #e4ebe7; position: relative; }
+.p03-ratio-track::after { content: ''; position: absolute; left: 20%; top: -3px; bottom: -3px; border-left: 1px dashed #52676a; }
+.p03-ratio-track i { display: block; height: 100%; background: #6d9a8c; }
+.p03-ratio-bars > div:nth-child(2) i { background: #6f91b1; }
+.p03-ratio-bars > div:nth-child(3) i { background: #c47754; }
+.p03-local-support p, .p03-local-support figcaption { font-size: 16px; line-height: 1.75; color: #52676a; }
+.p03-local-support figure { margin: 20px 0; padding: 20px; background: #f2f7f3; border-radius: 12px; }
+.p03-local-support svg { display: block; max-width: 560px; width: 100%; margin: auto; font-size: 14px; fill: #203d40; }
+.p03-ratio-detail { min-width: 0; }
