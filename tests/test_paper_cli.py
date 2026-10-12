@@ -59,6 +59,14 @@ def save_paper(path, config):
     path.write_text(yaml.safe_dump(config, sort_keys=False, allow_unicode=True), encoding="utf-8")
 
 
+def snapshot_files(root):
+    return {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in root.rglob("*")
+        if path.is_file()
+    }
+
+
 def init_git_repo(root):
     subprocess.run(["git", "init", "-q", str(root)], check=True)
 
@@ -286,35 +294,41 @@ def test_scaffold_kit_copies_default_continual_learning_components_once(tmp_path
     root = make_project(tmp_path)
     assert create_paper(root).returncode == 0
     src = root / "papers/demo-paper/web/enhanced/src"
-    assert not src.exists()
+    base_files = snapshot_files(src)
+    assert "App.tsx" in base_files
+    assert "data/tutorial.ts" in base_files
 
     result = invoke(root, "scaffold-kit", "demo-paper", "--preset", "continual-learning")
 
     shared = src / "shared"
     assert result.returncode == 0, result.stdout + result.stderr
     assert src.is_dir()
+    assert all((src / relative).read_bytes() == content for relative, content in base_files.items())
     assert (shared / "KIT_VERSION").read_text(encoding="utf-8").strip() == "1.0.0"
     assert (shared / "foundation/styles/kit.css").is_file()
     assert (shared / "core/process-loop/ProcessLoopExplorer.tsx").is_file()
     assert (shared / "core/reference/ReferenceHub.tsx").is_file()
     assert not (shared / "optional/evidence-viewer/EvidenceViewer.tsx").exists()
+    after_scaffold = snapshot_files(src)
 
     duplicate = invoke(root, "scaffold-kit", "demo-paper")
     assert duplicate.returncode != 0
     assert "destination already exists" in duplicate.stderr
     assert (shared / "KIT_VERSION").is_file()
+    assert snapshot_files(src) == after_scaffold
 
 
 def test_scaffold_kit_adds_only_selected_optional_components(tmp_path):
     root = make_project(tmp_path)
     assert create_paper(root).returncode == 0
     src = root / "papers/demo-paper/web/enhanced/src"
-    assert not src.exists()
+    base_files = snapshot_files(src)
 
     result = invoke(root, "scaffold-kit", "demo-paper", "--add", "EvidenceViewer,BenchmarkExplorer,CompareView")
 
     shared = src / "shared"
     assert result.returncode == 0, result.stdout + result.stderr
+    assert all((src / relative).read_bytes() == content for relative, content in base_files.items())
     assert (shared / "optional/evidence-viewer/EvidenceViewer.tsx").is_file()
     assert (shared / "optional/benchmark-explorer/BenchmarkExplorer.tsx").is_file()
     assert (shared / "optional/compare-view/CompareView.tsx").is_file()
@@ -325,11 +339,11 @@ def test_scaffold_kit_rejects_unknown_or_non_optional_component_without_writing(
     root = make_project(tmp_path)
     assert create_paper(root).returncode == 0
     src = root / "papers/demo-paper/web/enhanced/src"
-    assert not src.exists()
+    base_files = snapshot_files(src)
 
     unknown = invoke(root, "scaffold-kit", "demo-paper", "--add", "ImaginaryExplorer")
     core = invoke(root, "scaffold-kit", "demo-paper", "--add", "ProcessLoopExplorer")
 
     assert unknown.returncode != 0 and "Unknown reusable component" in unknown.stderr
     assert core.returncode != 0 and "P1 components only" in core.stderr
-    assert not src.exists()
+    assert snapshot_files(src) == base_files
