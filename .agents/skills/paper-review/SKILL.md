@@ -17,6 +17,8 @@ Establish what the paper does before planning pages or interactions. Do not summ
 
 ## Preconditions
 
+Read bibliographic and source metadata from `paper.yaml` before asking the user for any such detail. Do not repeat questions for recorded values. If a value is missing or incorrect, update `paper.yaml` and synchronize the relevant source-cache metadata rather than creating another intake form.
+
 - Confirm paper identity, source version, and reader context if supplied.
 - Confirm the source cache covers the entire paper. If incomplete or incorrect, repair the extraction as a whole before modeling; do not accumulate unsystematic fragments.
 - If the source is unavailable, report what is missing instead of filling gaps from memory.

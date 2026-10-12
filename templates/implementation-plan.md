@@ -28,7 +28,7 @@ For substantial motion, record the initial, key intermediate, and final states a
 
 ## Specific Upstream Contract Conflict (only if needed)
 
-Most projects need no entry here. Record only a concrete conflict that prevents the approved design from fitting the current upstream contract, and the decision needed to resolve it. Do not duplicate chapter, module, or component mappings; W8 checks the actual release source with the target checkout's official validator.
+Most projects need no entry here. Record only a concrete conflict that prevents the approved design from fitting the current upstream contract, and the decision needed to resolve it. Do not duplicate chapter, module, or component mappings; the user's W10 preflight checks the actual release source against the current official contract after W9 acceptance.
 
 - Conflict and affected approved design:
 - Evidence from the current official contract/validator:

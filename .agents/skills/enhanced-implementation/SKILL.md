@@ -48,17 +48,9 @@ Before editing, read `AGENTS.md`, `docs/WORKFLOW.md`, `docs/TEACHING_DESIGN_STAN
 3. Copy any reusable source into this paper's project. Do not import a cross-paper runtime package.
 4. Keep paper data separate from teaching toys. Use real calculations for simulations and explain simplifications.
 5. Support keyboard/focus, reduced motion, mobile, touch, and non-drag operation where applicable.
-6. Run declared project build/audit commands when the user requests verification; report their actual outcomes.
+6. Run project tests, the production build, and declared project audits when verification is requested; report their actual outcomes. Check implementation coverage and perform Visual QA against the actual publish source. W8 does not require a PaperSkill checkout or official upstream validator; the official contract is covered by the user's W10 preflight after W9 acceptance.
 
-Update the implementation manifest for every CORE item and for each SUPPORTING/REFERENCE placement. Then build and visually inspect the actual publish source and call the clean target checkout's official validator directly against that source:
-
-```powershell
-node <clean-PaperSkill-checkout>/paper-skill/scripts/validate-output.js <absolute-publish-source>
-```
-
-Require exit code 0 and the official `RESULT: PASS`; the live script and its adjacent `paper-skill/contract.md` are authoritative. Run it against the configured publish source, not a template or copied simulation. If Node/npm, the clean upstream checkout, or its validator are missing, leave W8 blocked and report the concrete limitation. After import, W10's single formal preflight reruns the official checks in isolation.
-
-W8 completes automatically only when every planned CORE is complete, lower-priority placements match the plan, selected asset derivatives/web copies plus README provenance exist, and the actual source build and official validation pass.
+Update the implementation manifest for every CORE item and for each SUPPORTING/REFERENCE placement. W8 completes automatically only when every planned CORE is complete, lower-priority placements match the plan, selected asset derivatives/web copies plus README provenance exist, project tests and the actual source build pass, and Visual QA is complete. The user runs the sole official upstream validation flow as W10 after accepting W9; do not require an upstream checkout during W8.
 
 ## Forbidden Actions
 
@@ -66,8 +58,8 @@ W8 completes automatically only when every planned CORE is complete, lower-prior
 - Do not add controls, animation, or formula labs to satisfy a quota.
 - Do not continue after a failed W7 review.
 - Do not mark W7 complete without human approval. W6/W8 are automatic stages and complete only after their structural coverage checks pass.
-- Do not satisfy the official validator with empty files, placeholder chapters, unrelated modules, or fake registrations.
-- Do not mark official validation as passed based on a build, Visual QA, or a hand-authored report.
+- Do not satisfy structural coverage with empty files, placeholder chapters, unrelated modules, or fake registrations.
+- Do not describe a build or Visual QA result as an official upstream validation result.
 
 ## Completion Criteria
 

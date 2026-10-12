@@ -12,9 +12,9 @@ Decide whether the finished tutorial teaches the approved main line, respects ev
 ## Required Inputs
 
 - Source cache, Paper Model, Evidence Registry, Learning Spine, Asset Plan, and Implementation Plan
-- Full tutorial project, release identifiers in `paper.yaml`, and export under `html_output/<paper-name>/<version>/`
+- Full tutorial project and its metadata in `paper.yaml`; an export under `html_output/<paper-name>/<version>/` is optional until W10
 - `audit/final-check.md`
-- `audit/upstream-preflight.json` after running upstream-check
+- `audit/upstream-preflight.json` if the user has completed W10
 - Declared build and audit commands
 
 ## W9 Procedure
@@ -25,7 +25,7 @@ Use docs/VISUAL_QA.md and record BUILD, GEOMETRY_QA, VISUAL_REVIEW, REGRESSION, 
 2. Review evidence: Trace important facts, formulas, values, dataset/protocol statements, architecture, and limits through registry IDs to source locators.
 3. Review assets: Check full inventory, selection rationale, source/derivative separation, attribution, reuse rights, explanatory placement, accessibility, relative paths, and README provenance.
 4. Review implementation semantics: Check that the page's data/state flow matches the model and that teaching examples are distinct.
-5. Review the real runtime mapping: compare `tutorial.ts` chapter/module metadata and any `componentId` registrations with the rendered pages and interactions. The official validator checks the current upstream contract; it does not prove the runtime mapping or teaching quality.
+5. Review the real runtime mapping: compare `tutorial.ts` chapter/module metadata and any `componentId` registrations with the rendered pages and interactions. W10's official validator checks the current upstream contract; it does not prove the runtime mapping or teaching quality.
 6. Record actual build, accessibility, reduced-motion, mobile, and engineering check outcomes.
 7. Save findings and verdict in `audit/final-check.md`. Complete W9 with `--reviewed-by` and `--note` only after a person accepts the learning and evidence audit.
 
@@ -33,18 +33,17 @@ Do not ask the reviewer to fill repeated upstream PASS rows. Record actual build
 
 ## W10 Procedure
 
-1. Read paper title, authors, URL, venue, and year from `paper.yaml`. Derive the upstream paper name from its English title and the version from the contributor pinyin and submission date. Read shared contributor defaults from global Git config (`paperskillwork.participant`, `paperskillwork.pinyin`, `paperskillwork.github`); explicit CLI values override them. Do not reuse paper-author names as contributor identity.
-2. Run `python tools/paper.py upstream-check <paper-id> --paperskill-repo <path>`. The command prepares release names, imports into an isolated clone, rejects changed paths outside `release.output`, commits only the tutorial on a local-only branch, then runs official validation, build, and preflight against that temporary commit. It does not write into the supplied PaperSkill checkout or its Git configuration.
-3. Inspect `audit/upstream-preflight.json`. W10 requires distinct upstream and temporary commit SHAs, changed paths confined to `release.output`, no unexpected paths, successful exit codes for all commands, and an export SHA-256 matching the copied output.
-4. Auto-generated versions check the target paper directory and select the next free `_2`, `_3`, etc. suffix when needed. An explicitly configured version that already exists fails without overwriting upstream content. `--replace-output` applies only to the local generated export. Do not push, publish, or create a PR from this skill.
+W10 is a user-triggered release gate and may begin only after the user accepts W9. Direct the user to the unique [manual release guide](../../../docs/UPSTREAM_RELEASE.md) for the contributor setup, official preflight, personal Fork commit, final preflight, push, and PR steps. Do not run W10 or perform any push or PR action. If the user explicitly asks for help, explain the actual preflight output or repair the specific defect they identify.
+
+After the user runs W10, inspect `audit/upstream-preflight.json` only when it is available. Completion requires `status: PASS`, all command exit codes equal to zero, paths confined to `release.output`, no unexpected paths, distinct upstream and temporary commit SHAs, and a matching export SHA-256. Automatic version selection must remain retryable after a failed run; an explicitly configured version is preserved and an existing upstream version is never overwritten. `--replace-output` applies only to the local generated export.
 
 ## Forbidden Actions
 
 - Do not infer learning from interaction completeness or build success.
 - Do not claim checks passed when not run.
 - Do not treat a public paper PDF as permission to publish its figures.
-- Do not push, publish, or create a PR. Do not mark W9 complete without a person's review; W10 is automatic only after the machine preflight and export checks pass.
+- Do not run W10, push, publish, or create a PR on the user's behalf. Do not mark W9 complete without a person's review; W10 is recorded only after the user runs the machine preflight and its export checks pass.
 
 ## Completion Criteria
 
-A person records the W9 learning/evidence decision. W10 reads the generated preflight report. Overall status is FAIL if a core learning outcome, evidence boundary, or required asset right fails.
+A person records the W9 learning/evidence decision. The user manually triggers W10 and provides its machine report for review. Overall status is FAIL if a core learning outcome, evidence boundary, or required asset right fails.

@@ -31,7 +31,7 @@ Read docs/TEACHING_DESIGN_STANDARD.md and docs/VISUAL_QA.md. Use the confirmed p
 8. Build and present only this slice. A person judges learning, emphasis, spatial architecture, prose load, unnecessary detail, and whether interactivity adds value.
 9. If the slice fails, revise the information architecture and repeat W6/W7. Do not proceed to the full tutorial until a human records PASS.
 
-Run `python tools/paper.py stage <paper-id> W5 complete` after the plan and cross-references pass. W5 is an automatic gate; it does not need a reviewer field. The project scaffold already contains the upstream source entrypoints. Codex builds and checks the actual slice during W6, then performs the production build, Visual QA, and one direct official source validation during W8. W7 alone records human acceptance with `--reviewed-by` and `--note`.
+Run `python tools/paper.py stage <paper-id> W5 complete` after the plan and cross-references pass. W5 is an automatic gate; it does not need a reviewer field. The project scaffold already contains the upstream source entrypoints. Codex builds and checks the actual slice during W6, then performs implementation coverage checks, project tests, production build, and Visual QA during W8. The user triggers official upstream validation as W10 after W9 acceptance; do not require an upstream checkout or official validator during W8. W7 alone records human acceptance with `--reviewed-by` and `--note`.
 
 ## Forbidden Actions
 

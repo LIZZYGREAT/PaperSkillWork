@@ -29,9 +29,9 @@
 | `implementation-manifest.json` | `web/enhanced/implementation-manifest.json` |
 | `final-check.md` | `audit/final-check.md` |
 
-提供 `--url` 时会创建 `source/paper.url`。原文缓存模板只是待补充的脚手架；W1 应基于完整原文阅读填充缓存，并登记所有图表。`source-cache/figures/` 存放捕获的原文视觉素材。W3 记录原图来源和处理计划，不要求先生成衍生图。W5 记录选用素材的位置和渲染方式，衍生图在实现阶段创建。`web/enhanced/` 从项目创建时就包含可独立构建的 React/TypeScript、Vite 入口、锁文件、章节数据入口、组件注册表和基础样式。`tutorial.ts` 初始没有章节，注册表初始没有组件；W6 只向其中加入基于真实论文主线实现的切片，不预置示例章节或假交互。
+`new` 在 W0 接收已知的标题、作者、公开 URL、venue、年份和来源类型，一次性写入 `paper.yaml` 并同步初始 `source-cache/manifest.json`；后续阶段读取这些文件，不重复录入。提供 `--url` 时会创建 `source/paper.url`。原文缓存模板只是待补充的脚手架；W1 应基于完整原文阅读填充缓存，并登记所有图表。`source-cache/figures/` 存放捕获的原文视觉素材。W3 记录原图来源和处理计划，不要求先生成衍生图。W5 记录选用素材的位置和渲染方式，衍生图在实现阶段创建。`web/enhanced/` 从项目创建时就包含可独立构建的 React/TypeScript、Vite 入口、锁文件、章节数据入口、组件注册表和基础样式。`tutorial.ts` 初始没有章节，注册表初始没有组件；W6 只向其中加入基于真实论文主线实现的切片，不预置示例章节或假交互。
 
-`release.upstream_paper_name`、`release.upstream_version` 和 `release.output` 初始为空。W10 从英文论文标题生成上游论文名，从统一 contributor profile 和当前日期生成版本，并据此填写输出路径 `html_output/<upstream_paper_name>/<upstream_version>`。只有标题或 contributor profile 无法可靠推导时才需要手动补充。内部 `paper_id` 与上游论文名保持独立。
+`release.upstream_paper_name`、`release.upstream_version` 和 `release.output` 初始为空。W9 确认后，用户手动触发 W10；工具从英文论文标题和统一 contributor profile 推导上游论文名及日期版本，并据此填写输出路径 `html_output/<upstream_paper_name>/<upstream_version>`。只有标题或 contributor profile 无法可靠推导时才需要手动补充。内部 `paper_id` 与上游论文名保持独立。W10 操作步骤只见 [docs/UPSTREAM_RELEASE.md](UPSTREAM_RELEASE.md)。
 
 生成模板不会分析原文、分配内容优先级或推进工作流阶段。只有 W2、W4、W7、W9 需要人工评审；W0、W1、W3、W5、W6、W8、W10 在检查通过后记录 `completed_by: automation`。若 W3 的来源/证据冲突、不安全措辞或素材使用权问题尚未解决，就不能完成。
 
