@@ -23,9 +23,13 @@ def make_clean_upstream_repo(path):
     subprocess.run(["git", "-C", str(path), "config", "user.name", "Test User"], check=True)
     subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.org"], check=True)
     subprocess.run(["git", "-C", str(path), "config", "uploadpack.allowFilter", "true"], check=True)
+    (path / ".gitignore").write_text(
+        "**/node_modules/\n**/dist/\n**/dist-ssr/\n**/.vite/\n**/*.tsbuildinfo\n",
+        encoding="utf-8",
+    )
     (path / "package.json").write_text(json.dumps({"scripts": {"import": "node noop.js", "validate": "node noop.js", "build:paper": "node noop.js", "preflight": "node noop.js"}}), encoding="utf-8")
     (path / "noop.js").write_text("process.exit(0);\n", encoding="utf-8")
-    subprocess.run(["git", "-C", str(path), "add", "package.json", "noop.js"], check=True)
+    subprocess.run(["git", "-C", str(path), "add", ".gitignore", "package.json", "noop.js"], check=True)
     subprocess.run(["git", "-C", str(path), "commit", "-q", "-m", "test upstream"], check=True)
     subprocess.run(["git", "-C", str(path), "remote", "add", "upstream", CANONICAL_PAPERSKILL_URL], check=True)
     subprocess.run(["git", "-C", str(path), "remote", "add", "origin", "https://github.com/LIZZYGREAT/PaperSkill.git"], check=True)
@@ -67,6 +71,111 @@ def make_imported_export(cwd, name="sample_paper_name", version="ada0926"):
         target.write_text("## Asset provenance\n" if relative == "README.md" else "{}\n", encoding="utf-8")
     (output / "paper.json").write_text(json.dumps({"paperName": name, "version": version}), encoding="utf-8")
     (output / "package.json").write_text("{}\n", encoding="utf-8")
+    asset = output / "public/images/figure-1.png"
+    asset.parent.mkdir(parents=True, exist_ok=True)
+    asset.write_bytes(b"tutorial-figure")
+
+
+def make_fake_upstream_runner(sibling, fail_command=None, generate_build_artifacts=False):
+    state = {
+        "temp_repo": None,
+        "imported": None,
+        "changed_paths": [],
+        "committed": False,
+        "clean_snapshot_before_build": None,
+    }
+    upstream_commit = "a" * 40
+    temporary_commit = "b" * 40
+
+    def result(command, exit_code=0, stdout="", stderr=""):
+        return subprocess.CompletedProcess(command, exit_code, stdout=stdout, stderr=stderr)
+
+    def status_text(paths):
+        return "".join("?? {}\0".format(path) for path in paths)
+
+    def runner(command, **kwargs):
+        assert kwargs["encoding"] == "utf-8"
+        assert kwargs["errors"] == "replace"
+        if command[0] == "git":
+            if "clone" in command:
+                state["temp_repo"] = Path(command[-1])
+                state["temp_repo"].mkdir(parents=True)
+                return result(command)
+
+            arguments = command[command.index("-C") + 2:]
+            cwd = Path(kwargs["cwd"])
+            if cwd == sibling:
+                if arguments[0] == "status":
+                    return result(command)
+                if arguments[:2] == ["rev-parse", "HEAD"]:
+                    return result(command, stdout=upstream_commit + "\n")
+                if arguments[0] == "remote" and len(arguments) == 1:
+                    return result(command, stdout="upstream\norigin\n")
+                if arguments[:2] == ["remote", "get-url"]:
+                    remote_url = CANONICAL_PAPERSKILL_URL if arguments[2] == "upstream" else "https://github.com/LIZZYGREAT/PaperSkill.git"
+                    return result(command, stdout=remote_url + "\n")
+                if arguments[0:2] == ["rev-parse", "--is-shallow-repository"]:
+                    return result(command, stdout="true\n")
+                if arguments[:2] == ["config", "--get"]:
+                    return result(command, stdout="blob:none\n")
+                if arguments[0:2] == ["sparse-checkout", "list"]:
+                    return result(command, stdout="paper-skill\nscripts\n.github\ndocs\n")
+                return result(command)
+
+            if cwd == state["temp_repo"]:
+                if arguments[0] == "status":
+                    paths = [] if state["committed"] else state["changed_paths"]
+                    return result(command, stdout=status_text(paths))
+                if arguments[:2] == ["rev-parse", "HEAD"]:
+                    commit = temporary_commit if state["committed"] else upstream_commit
+                    return result(command, stdout=commit + "\n")
+                if arguments[:2] == ["rev-parse", "refs/remotes/origin/main"]:
+                    return result(command, stdout=upstream_commit + "\n")
+                if arguments[0] == "add":
+                    return result(command)
+                if arguments[0] == "commit":
+                    state["committed"] = True
+                    return result(command)
+                return result(command)
+            raise AssertionError("unexpected Git working directory: {}".format(cwd))
+
+        stage = command[2]
+        if stage == "import":
+            name = command[5]
+            version = command[command.index("--version") + 1]
+            make_imported_export(Path(kwargs["cwd"]), name=name, version=version)
+            state["imported"] = state["temp_repo"] / "html_output" / name / version
+            state["changed_paths"] = sorted(
+                path.relative_to(state["temp_repo"]).as_posix()
+                for path in state["imported"].rglob("*")
+                if path.is_file()
+            )
+        elif stage == "build:paper":
+            imported = state["imported"]
+            clean_export = state["temp_repo"].parent / "clean-export"
+            state["clean_snapshot_before_build"] = (
+                clean_export.is_dir()
+                and all(not (clean_export / path).exists() for path in (
+                    "node_modules", "dist", ".vite", "tsconfig.app.tsbuildinfo",
+                ))
+            )
+            if generate_build_artifacts:
+                generated = {
+                    "node_modules/vite/index.html": "<script src='/runtime.js'></script>\n",
+                    "dist/index.html": "generated build\n",
+                    ".vite/deps/dep.js": "generated cache\n",
+                    "tsconfig.app.tsbuildinfo": "temporary compiler state\n",
+                }
+                for relative, contents in generated.items():
+                    target = imported / relative
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text(contents, encoding="utf-8")
+
+        if stage == fail_command:
+            return result(command, exit_code=1, stdout="simulated {} failure\n".format(stage))
+        return result(command, stdout="passed\n")
+
+    return runner, state
 
 
 def add_existing_release(canonical, paper_name, version):
@@ -237,6 +346,7 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     clone_snapshots = []
     sparse_snapshots = []
     branch_snapshots = []
+    build_snapshot_states = []
 
     def git_output(repo, *arguments):
         result = subprocess.run(
@@ -284,6 +394,25 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
             source = Path(kwargs["cwd"]) / command[4]
             assert (source / "source-choice.txt").read_text(encoding="utf-8") == "final source\n"
             make_imported_export(Path(kwargs["cwd"]))
+        if command[2] == "build:paper":
+            imported = Path(kwargs["cwd"]) / config["release"]["output"]
+            clean_export = Path(kwargs["cwd"]).parent / "clean-export"
+            build_snapshot_states.append((
+                clean_export.is_dir(),
+                all(not (clean_export / path).exists() for path in (
+                    "node_modules", "dist", ".vite", "tsconfig.app.tsbuildinfo",
+                )),
+            ))
+            generated = {
+                "node_modules/vite/index.html": "<script src='/runtime.js'></script>\n",
+                "dist/index.html": "generated build\n",
+                ".vite/deps/dep.js": "generated cache\n",
+                "tsconfig.app.tsbuildinfo": "temporary compiler state\n",
+            }
+            for relative, contents in generated.items():
+                target = imported / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(contents, encoding="utf-8")
         return subprocess.CompletedProcess(command, 0, stdout="passed\n", stderr="")
 
     monkeypatch.setattr(module, "subprocess", SimpleNamespace(PIPE=subprocess.PIPE, run=runner))
@@ -312,6 +441,14 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert positions == sorted(positions)
     assert all(cwd != upstream for command, cwd, _kwargs in called if command[0].startswith("npm"))
     assert (root / config["release"]["output"] / "paper.json").is_file()
+    export = root / config["release"]["output"]
+    assert build_snapshot_states == [(True, True)]
+    assert (export / "paper.json").is_file()
+    assert (export / "src/App.tsx").is_file()
+    assert (export / "public/images/figure-1.png").read_bytes() == b"tutorial-figure"
+    assert all(not (export / path).exists() for path in (
+        "node_modules", "dist", ".vite", "tsconfig.app.tsbuildinfo",
+    ))
     report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
     assert report["status"] == "PASS"
     assert len(report["upstream_commit"]) == 40
@@ -367,6 +504,7 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert all(path.startswith("html_output/sample_paper_name/ada0926/") for path in report["changed_paths"])
     assert report["unexpected_paths"] == []
     assert len(report["export_sha256"]) == 64
+    assert report["export_sha256"] == module.directory_sha256(export)
     assert npm_order == ["npm run import", "git commit", "npm run validate", "npm run build:paper", "npm run preflight"]
     assert preflight_heads == [report["temporary_commit"]]
     assert [item["command"] for item in report["commands"]] == [
@@ -410,6 +548,73 @@ def test_upstream_check_decodes_utf8_and_replaces_invalid_bytes_without_hiding_f
     assert "\u5b8b\u4f20\u4e2d\u6587" in report["error"]
     assert "�" in report["error"]
     assert not (root / config["release"]["output"]).exists()
+
+
+def test_upstream_check_publishes_clean_import_snapshot_after_build_pollutes_worktree(tmp_path):
+    root, paper, config_path, module = make_project(tmp_path)
+    config = load_config(config_path)
+    config["release"] = {
+        "upstream_paper_name": "sample_paper_name",
+        "upstream_version": "ada0926",
+        "output": "html_output/sample_paper_name/ada0926",
+    }
+    config["paper"]["url"] = "https://example.org/paper"
+    upstream = tmp_path / "PaperSkill"
+    upstream.mkdir()
+    (upstream / ".git").mkdir()
+    runner, state = make_fake_upstream_runner(
+        upstream, generate_build_artifacts=True,
+    )
+
+    result = module.run_upstream_check(paper, config, upstream, "Ada Author", process_runner=runner)
+
+    export = root / config["release"]["output"]
+    report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
+    assert result == 0
+    assert report["status"] == "PASS"
+    assert state["clean_snapshot_before_build"] is True
+    assert (export / "paper.json").is_file()
+    assert (export / "src/App.tsx").is_file()
+    assert (export / "public/images/figure-1.png").read_bytes() == b"tutorial-figure"
+    assert all(not (export / path).exists() for path in (
+        "node_modules", "dist", ".vite", "tsconfig.app.tsbuildinfo",
+    ))
+    assert not any("/node_modules/" in path or "/dist/" in path for path in report["changed_paths"])
+    assert report["export_sha256"] == module.directory_sha256(export)
+
+
+@pytest.mark.parametrize("fail_command", ["validate", "build:paper", "preflight"])
+def test_upstream_check_does_not_publish_snapshot_or_lock_version_before_success(
+    tmp_path, monkeypatch, fail_command,
+):
+    root, paper, config_path, module = make_project(tmp_path)
+    config = load_config(config_path)
+    mark_prior_stages_complete(config, "W10")
+    save_config(config_path, config)
+    upstream = tmp_path / "PaperSkill"
+    upstream.mkdir()
+    (upstream / ".git").mkdir()
+    runner, _state = make_fake_upstream_runner(
+        upstream, fail_command=fail_command, generate_build_artifacts=True,
+    )
+    monkeypatch.setattr(module, "resolve_contributor_profile", lambda *_args: ("Ada Researcher", "ada", ""))
+    actual_run = module.run_upstream_check
+
+    def run_with_fake_processes(*args, **kwargs):
+        return actual_run(*args, process_runner=runner, **kwargs)
+
+    monkeypatch.setattr(module, "run_upstream_check", run_with_fake_processes)
+
+    assert module.cmd_upstream_check(upstream_check_args(upstream)) == 1
+
+    report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
+    assert report["status"] == "FAIL"
+    assert report["commands"][-1]["command"] == "npm run {}".format(fail_command)
+    assert report["commands"][-1]["exit_code"] == 1
+    assert not (root / "html_output" / report["paper_name"] / report["version"]).exists()
+    assert load_config(config_path)["release"] == {
+        "upstream_paper_name": "", "upstream_version": "", "output": "",
+    }
 
 
 def test_upstream_check_records_temporary_branch_failure(tmp_path, capsys):

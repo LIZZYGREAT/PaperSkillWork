@@ -1260,6 +1260,9 @@ def run_upstream_check(
                 raise PaperError("temporary tutorial commit left uncommitted changes")
             pass_stage()
 
+            clean_export = temp_root / "clean-export"
+            shutil.copytree(imported, clean_export)
+
             run_official_command("npm run validate", [npm, "run", "validate"])
             run_official_command("npm run build:paper", [
                 npm, "run", "build:paper", "--", "{}/{}".format(release["upstream_paper_name"], release["upstream_version"]),
@@ -1278,7 +1281,7 @@ def run_upstream_check(
             begin_stage("Writing verified export and preflight report")
             target = ROOT / release["output"]
             try:
-                install_upstream_export(imported, target, replace_output)
+                install_upstream_export(clean_export, target, replace_output)
                 report["export_sha256"] = directory_sha256(target)
                 report["status"] = "PASS"
             except (OSError, PaperError) as exc:
