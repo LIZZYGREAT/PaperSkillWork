@@ -63,24 +63,31 @@ Set-Location $Work
 
 ### 日常同步官方 main
 
-确认 PaperSkill 工作区干净，且没有尚未完成、需要保留的贡献分支后，从 PaperSkillWork 根目录同步。若检出尚未设置 upstream，仅首次补上官方远端：
+确认 PaperSkill 工作区干净，且没有尚未完成、需要保留的贡献分支后，从 PaperSkillWork 根目录同步。先用 `git -C $PaperSkillRepo remote -v` 检查远端；**只有输出中没有名为 `upstream` 的远端时，才首次添加官方远端。** 如果已有 `upstream` 且 URL 正确，跳过下面的添加命令，不要重复执行：
 
 ~~~powershell
+# 仅当 remote -v 中没有 upstream 时执行一次
 git -C $PaperSkillRepo remote add upstream https://github.com/ReductTech/PaperSkill.git
+if ($LASTEXITCODE -ne 0) { throw 'Could not add upstream remote' }
 ~~~
 
-先检查状态；`status --short` 应无输出。然后获取浅层更新、切换到官方 main，并核对提交号：
+先检查状态；`status --short` 应无输出，有任何输出都应先处理而不要继续。然后获取浅层更新、切换到官方 main，并核对提交号：
 
 ~~~powershell
 git -C $PaperSkillRepo status --short
 # 只有工作区干净且可以离开当前分支时才继续
 git -C $PaperSkillRepo fetch --progress --no-tags --depth=50 --filter=blob:none upstream +main:refs/remotes/upstream/main
+if ($LASTEXITCODE -ne 0) { throw 'Upstream fetch failed: do not use a stale upstream/main' }
+
 git -C $PaperSkillRepo switch --detach upstream/main
-git -C $PaperSkillRepo rev-parse HEAD
-git -C $PaperSkillRepo rev-parse upstream/main
+if ($LASTEXITCODE -ne 0) { throw 'Cannot switch to upstream/main' }
+
+$head = git -C $PaperSkillRepo rev-parse HEAD
+$base = git -C $PaperSkillRepo rev-parse upstream/main
+if ($head -ne $base) { throw 'PaperSkill HEAD does not match upstream/main' }
 ~~~
 
-最后两项 SHA 应相同。`--filter=blob:none` 保留按需下载，显式 refspec 确保本地 `upstream/main` 被刷新。`git switch --detach` 不会把尚未确认的贡献分支重置掉；不要改用无条件 `git reset --hard` 或 `git push origin main:main`。不需要另建 W10 克隆或拉取全部历史。如果本地检出以前已下载了全部数据，不必为此删除或重建。
+最后两项 SHA 必须相同。`--filter=blob:none` 保留按需下载，显式 refspec 确保本地 `upstream/main` 被刷新。`git switch --detach` 不会把尚未确认的贡献分支重置掉；不要改用无条件 `git reset --hard` 或 `git push origin main:main`。不需要另建 W10 克隆或拉取全部历史。如果本地检出以前已下载了全部数据，不必为此删除或重建。
 
 以下只读命令可用于诊断轻量检出状态：
 
@@ -126,9 +133,14 @@ python tools/paper.py stage <paper-id> W10 complete
 ~~~powershell
 $branch = "paper/<paper-id>-$($report.version)"
 git -C $PaperSkillRepo switch --no-track -c $branch upstream/main
+if ($LASTEXITCODE -ne 0) { throw 'Cannot create contribution branch' }
 
-# 只展开本次投稿论文的既有版本和目标位置，不展开其他论文
-git -C $PaperSkillRepo sparse-checkout add "html_output/$($report.paper_name)"
+# 仅已启用 Sparse Checkout 时展开本次投稿论文；完整检出保持原样
+$isSparse = git -C $PaperSkillRepo config --bool core.sparseCheckout
+if ($isSparse -eq 'true') {
+  git -C $PaperSkillRepo sparse-checkout add "html_output/$($report.paper_name)"
+  if ($LASTEXITCODE -ne 0) { throw 'Failed to expand sparse checkout' }
+}
 
 $parent = Join-Path $PaperSkillRepo "html_output/$($report.paper_name)"
 New-Item -ItemType Directory -Path $parent -Force | Out-Null
@@ -145,6 +157,7 @@ if ($staged.Count -eq 0 -or $outside.Count -ne 0) {
 }
 git -C $PaperSkillRepo diff --cached --check
 git -C $PaperSkillRepo commit -m "Add <paper-id> interactive tutorial"
+if ($LASTEXITCODE -ne 0) { throw 'Commit failed; do not proceed to preflight or push' }
 ~~~
 
 核对暂存与提交内容仅包含 `html_output/<paper-name>/<version>/`。不要提交 catalog/papers.json、PaperSkillWork 的 `paper.yaml` 或审计文档、PDF、node_modules、dist 等文件。
