@@ -111,7 +111,9 @@ python tools/paper.py upstream-check $PaperId --paperskill-repo $PaperSkillRepo
 
 该命令从 `paper.yaml` 读取论文信息，从全局 Git 配置读取贡献者资料，在隔离检出中依次执行官方导入、验证、构建和 preflight。它会生成/更新本地导出和 `papers/$PaperId/audit/upstream-preflight.json`，但不会修改提供的 PaperSkill 检出、推送或创建 PR。预检成功前，自动推导的发布字段不会写回 `paper.yaml`；失败可重试。
 
-运行时会立即显示当前 W10 阶段；官方 partial clone、Sparse Checkout 后首次 Checkout 可能触发的 lazy fetch 会显示 Git 原生传输进度。若停在 `Checking out sparse upstream baseline`，表示正在检出上游基线或按需获取对象；观察 Git 的实际下载进度。最终判定仍以机器报告中的命令结果和退出码为准。
+隔离预检使用轻量命令 `git clone --progress --filter=blob:none --sparse --depth=1 --single-branch --branch main --no-tags`。Clone 先检出根级文件，并核对临时 HEAD、`origin/main` 与已验证的 PaperSkill 检出提交一致；随后只运行一次 Sparse Checkout，展开本次预检所需的 `paper-skill`、`scripts`、`.github`、`docs` 和当前论文目录。此流程不使用 `--no-checkout` 或 `--reference-if-able`，也不在 Sparse Checkout 后隐藏地执行首次 `git checkout -b <sha>`。
+
+`PASS Expanding sparse paths for this release` 后会显示 `Preparing temporary contribution branch`，接着准备源码快照并进入 `Official Import`。这些步骤应有阶段提示；若长时间没有新输出，先检查当前 Git/SSH 子进程及其实际操作，不要盲目删除或重建已有仓库。Clone 与 Sparse Checkout 的实时进度及最终判定仍以控制台、机器报告中的命令结果和退出码为准。
 
 只有命令退出码为 0、报告 status 为 PASS、unexpected_paths 为空、commands 全部为退出码 0，且报告列出成功的 import、validate、build:paper、preflight 后，才继续。报告同时记录导出 SHA-256。核对报告并记录 W10：
 
@@ -193,5 +195,6 @@ git -C $PaperSkillRepo sparse-checkout set catalog docs paper-skill schemas scri
 - **PaperSkill HEAD 与最新上游 main 不一致：** 确认工作区干净，按 C 节 fetch `upstream/main`，切换到 `upstream/main` 后重跑 W10。
 - **上游结构或构建失败：** 回到 PaperSkillWork 修复真实网页源，再重跑 `upstream-check`。不要手改报告；若本地导出目录已存在，先确认是否需要 `--replace-output`，该选项只影响本地生成目录。
 - **版本已存在：** 不覆盖上游内容。自动版本在下一次预检时重新选择可用后缀；如需手动指定新版本，只修改 `paper.yaml` 中的发布字段。失败的自动推导不会锁定版本。
-- **Checkout 阶段停顿或出现 `Could not add alternate ... is shallow`：** 若后面紧接完整的 `Receiving objects: 100%`，该提示只表示备用对象库未能复用浅克隆对象，不单独代表失败。停在 `Checking out sparse upstream baseline` 时，正在执行 Checkout 或 lazy fetch；观察 Git 的实际下载，不要因此重新 clone。
+- **旧日志出现 `Could not add alternate ... is shallow`：** 这是旧版 `--reference-if-able` 尝试复用浅克隆对象时的提示；若后面紧接完整的 `Receiving objects: 100%`，不单独代表 Clone 失败。当前隔离预检不再使用 `--reference-if-able`。
+- **W10 阶段长时间没有新输出：** 检查实际 Git/SSH 子进程停在哪一步。Clone 和 Sparse Checkout 应显示 Git 原生进度；Sparse 路径完成后应显示临时分支准备、源码快照和 Official Import 阶段。先诊断具体进程和网络状态，不要盲目删除或重建已有仓库。
 - **网络不稳定：** 可选择 HTTPS 或 SSH 远端。若使用 SSH，可先测试 `ssh -T -p 443 git@ssh.github.com`，并按需使用 SSH 443 地址；不要因此强制更改全局代理、全局 Git 配置或本机其他仓库的协议。
