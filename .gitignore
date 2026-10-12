@@ -7,6 +7,7 @@ papers/*/source/*.pdf
 **/dist-ssr/
 **/.vite/
 .visual-qa/
+/html_output/
 
 # Environment
 .env

@@ -29,14 +29,15 @@ python tools/paper.py stage <paper-id> W4 complete --reviewed-by "评审者姓�
 python tools/paper.py release-check <paper-id>
 python tools/paper.py paths <paper-id>
 python tools/paper.py open <paper-id>
-python tools/paper.py upstream-check <paper-id> --paperskill-repo ..\PaperSkill
+python tools/paper.py release-info <paper-id> --json
+python tools/paper.py stage <paper-id> W10 complete
 ```
 
-`new` 在 W0 一次性记录已知论文信息，并同步初始源缓存元数据；后续阶段从 `paper.yaml` 读取，不重复录入。W6/W8 检查真实网页源。W9 经使用者确认后，W10 由使用者手动触发。贡献者默认值通过用户的全局 Git 配置在不同论文间复用；完整投稿步骤见唯一的[人工投稿操作手册](docs/UPSTREAM_RELEASE.md)。
+`new` 在 W0 一次性记录已知论文信息，并同步初始源缓存元数据；后续阶段从 `paper.yaml` 读取，不重复录入。W6/W8 检查真实网页源。进入 W10 时，先运行只读的 `release-info` 获取论文源码路径和导入参数，再按唯一的[人工投稿操作手册](docs/UPSTREAM_RELEASE.md)在现有 PaperSkill 检出中运行官方 Import、validate 和 preflight；官方 preflight 通过后，用 `stage <paper-id> W10 complete` 记录进度。贡献者默认值通过用户全局 Git 配置在不同论文间复用。
 
 `new` 会登记论文信息并创建 v3 工作区。若来源是用户提供的 PDF，可用 `--source-location "user-provided PDF"`，此时 `--url` 可以省略；请填写 `--source-type`，用多个 `--author` 提供全部作者，并在已知时填写 `--venue` 和 `--year`。工具不会根据 URL 推断论文内容。
 
-只有 W2、W4、W7、W9 需要 `--reviewed-by` 和 `--note`。W0、W1、W3、W5、W6、W8、W10 在机器检查通过后由工具记录 `completed_by: automation`。若 W3 仍有未解决的来源或证据冲突、不安全的表述，或素材权利不明确，就不能完成。`check` 会校验结构、路径、引用和实现覆盖情况，但不会判断教学质量。
+只有 W2、W4、W7、W9 需要 `--reviewed-by` 和 `--note`。W0、W1、W3、W5、W6、W8 在机器检查通过后由工具记录 `completed_by: automation`；W10 在使用者完成官方预检后由工具记录进度，不依赖本仓库导出或旧审计报告。若 W3 仍有未解决的来源或证据冲突、不安全的表述，或素材权利不明确，就不能完成。`check` 会校验结构、路径、引用和实现覆盖情况，但不会判断教学质量。
 
 PaperSkillWork current tooling supports Workflow v3 only. Historical workflow versions remain available through Git history but are not runtime compatibility targets.
 
@@ -63,4 +64,4 @@ PaperSkill 建议作为 PaperSkillWork 的 sibling 检出：
 └── PaperSkillWork/
 ```
 
-唯一的人工投稿流程见[上游发布操作手册](docs/UPSTREAM_RELEASE.md)。工作流阶段与评审边界仍以 [docs/WORKFLOW.md](docs/WORKFLOW.md) 为准。
+首次克隆和轻量 Sparse Checkout 初始化见[PaperSkill 初始化指南](docs/PAPERSKILL_SETUP.md)；日常投稿只遵循[唯一的 W10 投稿手册](docs/UPSTREAM_RELEASE.md)。工作流阶段与评审边界仍以 [docs/WORKFLOW.md](docs/WORKFLOW.md) 为准。

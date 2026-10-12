@@ -4,7 +4,7 @@
 
 > 先确定论文的学习主线，再筛选内容优先级；先明确优先级，再设计交互；两者都明确后再开始实现。
 
-W 阶段描述的是制作流程，不是固定的章节提纲。只有 W6 才开始编写教程页面代码。W2、W4、W7、W9 需要人工进行语义评审；W0、W1、W3、W5、W6、W8、W10 在结构检查通过后自动完成。结构检查不能证明教程具备良好的教学效果。
+W 阶段描述的是制作流程，不是固定的章节提纲。只有 W6 才开始编写教程页面代码。W2、W4、W7、W9 需要人工进行语义评审；W0、W1、W3、W5、W6、W8 通过结构检查后自动完成。W10 由使用者在 PaperSkill 中完成官方发布流程后记录。结构检查不能证明教程具备良好的教学效果。
 
 W4/W5 的叙事与表达规则见通用教学设计规范（TEACHING_DESIGN_STANDARD.md）；实际页面的浏览器验收见 Visual QA 规范（VISUAL_QA.md）。以下 W0–W10 阶段和机器可读 schema 保持不变。
 
@@ -46,7 +46,7 @@ W10 上游打包与预检
 | W7 | 看过切片后，初次阅读者是否能更准确地解释论文？评审主线清晰度、重点、架构、流程、文字负担及交互是否有用。 | **人工评审：** 记录 PASS/REVISE 和理由。REVISE 时修改并重复 W6/W7。 |
 | W8 | 如何一致地完成已认可的教学模型？实现全部 CORE；紧凑呈现 SUPPORTING；将 REFERENCE 放在主线之外；省略 DELETE。 | 实现覆盖检查、项目测试、生产构建和 Visual QA 通过后自动完成。官方契约由 W10 的正式预检把关。 |
 | W9 | 学习者能否重建论文方法？重要主张是否都能追溯来源？由人审阅实际网页、学习结果、证据、视觉表现、无障碍体验、移动端行为和教学示例边界。 | 人工评审：用户预览成品并确认；在 audit/final-check.md 记录真实的教学、证据、视觉和验收结论。 |
-| W10 | 教程能否作为独立上游项目导入和验证？ | W9 经使用者确认后，由使用者手动触发一次官方导入、验证、构建与预检；通过后才完成。操作步骤见唯一的[人工投稿操作手册](UPSTREAM_RELEASE.md)。 |
+| W10 | 教程能否作为独立上游项目导入和验证？ | W9 经使用者确认后，使用者在现有 PaperSkill 检出中运行官方 Import、validate 和 preflight；通过后再记录 W10。操作步骤见唯一的[人工投稿操作手册](UPSTREAM_RELEASE.md)。 |
 
 ## W1：原文缓存与视觉素材清单
 
@@ -70,7 +70,7 @@ source-cache/
 
 证据登记表回答“哪些内容可以安全地表述？”。每条重要主张都要记录证据 ID、主张、来源定位、类型、适用条件和允许使用的措辞。类型包括 `PAPER_FACT`、`PAPER_RESULT`、`AUTHOR_INTERPRETATION`、`OUR_INTERPRETATION`、`IMPLEMENTATION_MAPPING`、`GENERAL_BACKGROUND` 和 `TEACHING_EXAMPLE`。数值结果应关联对应的数据集、模型、数据划分、指标和实验协议。
 
-对于选作教学用途的素材，W3 记录来源论文/版本、图表编号和页码、来源定位/路径、原始图注、教学作用、处理计划、证据链接、署名信息及已批准的使用权依据。原图必须存在于 `source-cache/figures/`；W3 不要求生成衍生图。W5 在 `design/implementation-plan.md` 中增加机器可读的素材映射，将每项选用的公开素材分配到一个学习主线阶段或 `Reference Hub`，并选择 `original`、`crop`、`redraw` 或 `overlay`。W6/W8 期间生成 `assets/figures/web/` 下的衍生图和对应网页副本；W8 检查网页文件与 README 来源说明，W10 检查导出副本。对于重要但未使用的素材，应说明原因。能访问论文 PDF 并不代表获得了图片使用权。
+对于选作教学用途的素材，W3 记录来源论文/版本、图表编号和页码、来源定位/路径、原始图注、教学作用、处理计划、证据链接、署名信息及已批准的使用权依据。原图必须存在于 `source-cache/figures/`；W3 不要求生成衍生图。W5 在 `design/implementation-plan.md` 中增加机器可读的素材映射，将每项选用的公开素材分配到一个学习主线阶段或 `Reference Hub`，并选择 `original`、`crop`、`redraw` 或 `overlay`。W6/W8 期间生成 `assets/figures/web/` 下的衍生图和对应网页副本；W8 检查网页文件与 README 来源说明。W10 由 PaperSkill 官方 Import 直接生成正式版本，并由官方 validate 和 preflight 检查。对于重要但未使用的素材，应说明原因。能访问论文 PDF 并不代表获得了图片使用权。
 
 ## W4：信息优先级与学习主线
 
@@ -132,7 +132,7 @@ W9 保留真实人工判断。用户预览最终网页并确认学习、证据�
 
 ## W10：一次正式上游预检
 
-W9 经使用者确认后，由使用者手动触发 W10。`tools/paper.py upstream-check` 会读取 `paper.yaml` 中的一次性论文元数据和用户全局 Git 配置中的贡献者资料，在隔离检出中完成官方导入、验证、构建和 preflight，并写入机器报告。Codex 不主动运行 W10、不推送、不创建 PR；用户可明确要求 Codex 解释预检错误或修复具体缺陷。完整 PowerShell 操作步骤只维护在[人工投稿操作手册](UPSTREAM_RELEASE.md)。
+W9 经使用者确认后，使用者按[人工投稿操作手册](UPSTREAM_RELEASE.md)在现有 PaperSkill 检出中同步官方主线、新建贡献分支，并用官方 Import 将 PaperSkillWork 的实际网页源码直接导入 PaperSkill。随后在该仓库运行官方 validate、仅提交当前论文版本并运行 preflight。所有命令成功、贡献差异仅含当前版本且 PaperSkill 工作区干净后，使用者执行 `python tools/paper.py stage <paper-id> W10 complete` 记录进度。该命令不验证旧报告或本仓库的 html_output，也不产生机器 PASS。可在现有 audit/final-check.md 记录实际命令、结果和 PaperSkill 目标路径。Push 和 PR 由使用者自行决定；Codex 不会操作个人 Fork。
 
 ## 设计文档与工作区
 
@@ -163,13 +163,13 @@ papers/<paper-id>/
 ```
 
 ```text
-html_output/<paper-name>/<version>/
+PaperSkill/html_output/<paper-name>/<version>/
 ```
 
 术语和参考内容按需放入应用的知识/参考数据中；不要另建设计文档重复记录相同内容。
 
 ## 工具行为与历史工作区
 
-Workflow v3 is the only active workflow contract. `tools/paper.py` validates metadata, source caches, evidence and asset plans, implementation coverage, paths, and export structure. W2/W4/W7/W9 require `--reviewed-by` and `--note`; W0/W1/W3/W5/W6/W8/W10 record `completed_by: automation` after their checks pass. The tooling does not judge teaching quality.
+Workflow v3 is the only active workflow contract. `tools/paper.py` validates metadata, source caches, evidence and asset plans, implementation coverage, and workspace paths. W2/W4/W7/W9 require `--reviewed-by` and `--note`; W0/W1/W3/W5/W6/W8 record `completed_by: automation` after their checks pass. W10 records the user's successful official PaperSkill preflight and does not check a PaperSkillWork export or machine report. The tooling does not judge teaching quality.
 
 Historical v1/v2 artifacts are preserved by Git history and are not supported by the current CLI or tests. Inspect historical work through Git history or migrate it manually into a new Workflow v3 workspace.

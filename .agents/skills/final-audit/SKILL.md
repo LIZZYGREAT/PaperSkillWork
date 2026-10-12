@@ -12,9 +12,9 @@ Decide whether the finished tutorial teaches the approved main line, respects ev
 ## Required Inputs
 
 - Source cache, Paper Model, Evidence Registry, Learning Spine, Asset Plan, and Implementation Plan
-- Full tutorial project and its metadata in `paper.yaml`; an export under `html_output/<paper-name>/<version>/` is optional until W10
+- Full tutorial project and its metadata in `paper.yaml`
 - `audit/final-check.md`
-- `audit/upstream-preflight.json` if the user has completed W10
+- A user-confirmed result from the official PaperSkill preflight, if W10 has been completed
 - Declared build and audit commands
 
 ## W9 Procedure
@@ -25,7 +25,7 @@ Use docs/VISUAL_QA.md and record BUILD, GEOMETRY_QA, VISUAL_REVIEW, REGRESSION, 
 2. Review evidence: Trace important facts, formulas, values, dataset/protocol statements, architecture, and limits through registry IDs to source locators.
 3. Review assets: Check full inventory, selection rationale, source/derivative separation, attribution, reuse rights, explanatory placement, accessibility, relative paths, and README provenance.
 4. Review implementation semantics: Check that the page's data/state flow matches the model and that teaching examples are distinct.
-5. Review the real runtime mapping: compare `tutorial.ts` chapter/module metadata and any `componentId` registrations with the rendered pages and interactions. W10's official validator checks the current upstream contract; it does not prove the runtime mapping or teaching quality.
+5. Review the real runtime mapping: compare `tutorial.ts` chapter/module metadata and any `componentId` registrations with the rendered pages and interactions. The official W10 validator checks the current upstream contract; it does not prove the runtime mapping or teaching quality.
 6. Record actual build, accessibility, reduced-motion, mobile, and engineering check outcomes.
 7. Save findings and verdict in `audit/final-check.md`. Complete W9 with `--reviewed-by` and `--note` only after a person accepts the learning and evidence audit.
 
@@ -33,17 +33,17 @@ Do not ask the reviewer to fill repeated upstream PASS rows. Record actual build
 
 ## W10 Procedure
 
-W10 is a user-triggered release gate and may begin only after the user accepts W9. Direct the user to the unique [manual release guide](../../../docs/UPSTREAM_RELEASE.md) for the contributor setup, official preflight, personal Fork commit, final preflight, push, and PR steps. Do not run W10 or perform any push or PR action. If the user explicitly asks for help, explain the actual preflight output or repair the specific defect they identify.
+W10 is a user-triggered release gate and may begin only after the user accepts W9. Direct the user to the unique [W10 release guide](../../../docs/UPSTREAM_RELEASE.md), which uses the existing PaperSkill checkout for the official Import, validate, version commit, and preflight. Do not run PaperSkill release commands or perform push or PR actions. If the user explicitly asks for help, explain actual preflight output or repair the specific defect they identify.
 
-After the user runs W10, inspect `audit/upstream-preflight.json` only when it is available. Completion requires `status: PASS`, all command exit codes equal to zero, paths confined to `release.output`, no unexpected paths, distinct upstream and temporary commit SHAs, and a matching export SHA-256. Automatic version selection must remain retryable after a failed run; an explicitly configured version is preserved and an existing upstream version is never overwritten. `--replace-output` applies only to the local generated export.
+After the user confirms that the official preflight passed, record W10 with `python tools/paper.py stage <paper-id> W10 complete`. The command only records progress; it does not read a machine report or inspect a PaperSkillWork export. If the result is recorded, add a short note to the existing `audit/final-check.md` with the actual official command, outcome, and PaperSkill target path. Do not create a parallel report.
 
 ## Forbidden Actions
 
 - Do not infer learning from interaction completeness or build success.
 - Do not claim checks passed when not run.
 - Do not treat a public paper PDF as permission to publish its figures.
-- Do not run W10, push, publish, or create a PR on the user's behalf. Do not mark W9 complete without a person's review; W10 is recorded only after the user runs the machine preflight and its export checks pass.
+- Do not run PaperSkill release commands, push, publish, or create a PR on the user's behalf. Do not mark W9 complete without a person's review; W10 is recorded only after the user confirms the official preflight passed.
 
 ## Completion Criteria
 
-A person records the W9 learning/evidence decision. The user manually triggers W10 and provides its machine report for review. Overall status is FAIL if a core learning outcome, evidence boundary, or required asset right fails.
+A person records the W9 learning/evidence decision. The user performs the official PaperSkill release flow and records W10 after preflight passes. Overall status is FAIL if a core learning outcome, evidence boundary, or required asset right fails.
