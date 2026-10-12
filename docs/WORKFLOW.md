@@ -44,9 +44,9 @@ W10 上游打包与预检
 | W5 | 哪些关系仅靠文字不容易讲清？只规划确有帮助的视觉表达/交互、证据、可复用模式、素材和纵向切片。 | 机器可读的实现计划覆盖所有优先级并通过校验后自动完成；只有真实的教学设计与目标上游契约冲突时，才在现有计划中记录该冲突。此时还不写页面代码。 |
 | W6 | 真实切片能否讲清计划中的内容？只实现学习主线中首批 2–3 个阶段；项目模板从创建时就包含上游所需入口。 | implementation-manifest.json 中切片 CORE 均为 complete，并由 Codex 构建和最小浏览器检查后自动完成。 |
 | W7 | 看过切片后，初次阅读者是否能更准确地解释论文？评审主线清晰度、重点、架构、流程、文字负担及交互是否有用。 | **人工评审：** 记录 PASS/REVISE 和理由。REVISE 时修改并重复 W6/W7。 |
-| W8 | 如何一致地完成已认可的教学模型？实现全部 CORE；紧凑呈现 SUPPORTING；将 REFERENCE 放在主线之外；省略 DELETE。 | 实现清单及素材就绪；Codex 完成生产构建、Visual QA，并对真实发布源运行目标 PaperSkill 的官方 validate-output.js 后自动完成。 |
+| W8 | 如何一致地完成已认可的教学模型？实现全部 CORE；紧凑呈现 SUPPORTING；将 REFERENCE 放在主线之外；省略 DELETE。 | 实现覆盖检查、项目测试、生产构建和 Visual QA 通过后自动完成。官方契约由 W10 的正式预检把关。 |
 | W9 | 学习者能否重建论文方法？重要主张是否都能追溯来源？由人审阅实际网页、学习结果、证据、视觉表现、无障碍体验、移动端行为和教学示例边界。 | 人工评审：用户预览成品并确认；在 audit/final-check.md 记录真实的教学、证据、视觉和验收结论。 |
-| W10 | 教程能否作为独立上游项目导入和验证？运行官方导入、校验、构建与预检。 | 只有导出项目通过检查，且 `audit/upstream-preflight.json` 记录上游提交、临时教程提交、限定范围的变更路径、匹配的导出哈希及成功的命令结果后，才自动完成。 |
+| W10 | 教程能否作为独立上游项目导入和验证？ | W9 经使用者确认后，由使用者手动触发一次官方导入、验证、构建与预检；通过后才完成。操作步骤见唯一的[人工投稿操作手册](UPSTREAM_RELEASE.md)。 |
 
 ## W1：原文缓存与视觉素材清单
 
@@ -126,101 +126,13 @@ W6 从实际切片开始。首次创建网页时，上游所需的入口、基�
 
 W7 是学习效果评审，不是按钮或动画评审。如果评审者体验切片后仍无法解释问题、核心机制、系统架构和一条完整流程，应先修正教学设计，再继续编写剩余内容。W7 通过后再完成 W8。
 
-W8 完成所有计划中的 CORE，紧凑呈现 SUPPORTING，将 REFERENCE 放在主线之外并省略 DELETE。Codex 对配置的真实发布源执行生产构建和 Visual QA，并直接调用干净目标 PaperSkill 检出的官方 paper-skill/scripts/validate-output.js 一次。校验目标必须是实际发布源；失败时自动修复并重测。该步骤不生成 audit/upstream-source-check.json，也不要求 W6/W8/W9 重复填写结构与官方校验状态。W10 导入后的官方验证属于正式预检，可因导入前/后各运行一次。
+W8 完成所有计划中的 CORE，紧凑呈现 SUPPORTING，将 REFERENCE 放在主线之外并省略 DELETE。Codex 检查现有实现覆盖，运行项目测试和生产构建，并对真实发布源完成 Visual QA。W8 不要求准备 PaperSkill 检出或运行官方发布校验器；当前上游契约由 W10 的一次全量正式预检把关。不要重复填写工程检查 PASS。
 
 W9 保留真实人工判断。用户预览最终网页并确认学习、证据和视觉审阅；Codex 将构建、Visual QA、回归范围、教学与证据发现以及用户验收记录在现有 audit/final-check.md。不要要求用户为工程校验结果手填四行 PASS；不要由 Agent 代替用户确认成品。
 
 ## W10：一次正式上游预检
 
-教学设计与上游发布契约彼此独立：不设固定章节数、交互配额、统一比喻或每章动画要求。导出章节只是对已批准学习主线的自然分组，不得为了数量凭空添加内容。官方校验失败时，Codex 先修复源文件；若必须改变已确认的教学语义，再请用户决定。
-
-论文标题、作者、URL、venue 和年份以 paper.yaml 为唯一元数据源。发布名从英文标题自动生成 snake_case；版本由本次贡献者拼音和投稿日期 MMDD 自动生成，输出路径由这两个标识推导。不能推导的标题名或身份信息才询问一次。已有上游版本冲突时按上游命名规则选择可用版本，不得静默覆盖。
-
-首次投稿时，贡献者公开显示名、拼音和可选 GitHub 用户名与论文作者分开记录。默认从当前用户的全局 Git 配置读取 paperskillwork.participant、paperskillwork.pinyin 和 paperskillwork.github；个人信息不提交 Git。只需设置一次：
-
-```powershell
-git config --global paperskillwork.participant "公开显示名"
-git config --global paperskillwork.pinyin "namepinyin"
-git config --global paperskillwork.github "github-username"
-```
-
-拼音仅在显示名和 GitHub 用户名都无法生成上游版本前缀时必需；GitHub 用户名可省略。upstream-check 的 --participant、--pinyin 和 --github 参数可单次覆盖默认值。没有保存的信息只在真正发布时一次性询问，不重复索取 paper.yaml 中已有的论文信息。
-
-项目从初始化起包含当前上游要求的独立 React + TypeScript 源结构。正式预检调用 python tools/paper.py upstream-check <paper-id> --paperskill-repo <PaperSkill 路径>。它导入真实发布源，在隔离的 PaperSkill 工作树中运行官方 validate、build 和 preflight，检查 PR 变更范围，并生成 audit/upstream-preflight.json。它不推送分支、不创建 PR，也不保证维护者合并。
-
-自动生成的版本会先检查上游同名论文目录，并按官方规则选取基础版本或下一个 `_2`、`_3` 后缀；明确指定且已占用的版本会停止，不覆盖上游内容。若本机导出目录已存在，只有传入 --replace-output 才会替换该生成目录。成功的 W10 报告是正式发布预检的单一机器权威记录。普通 check <paper-id> 只检查仓库内可重复验证的数据和结构，不要求本机 PaperSkill 路径；W10 尚 pending 时可给出 WARN，但不能因此 FAIL。
-
-### Windows PowerShell 本机执行步骤
-
-用户选择自行执行 W10 时，从 PaperSkillWork 仓库根目录运行以下步骤。只需运行一次 `upstream-check`；它会在隔离的临时检出中依次完成官方导入、校验、构建和 preflight，不需要分别手动运行 npm 命令。此流程不会推送分支或创建 PR。
-
-需要可用的 Python、Git、Node.js 20 或更高版本和 npm；所有命令都从 PaperSkillWork 根目录运行。
-
-```powershell
-python --version
-git --version
-node --version
-npm --version
-```
-
-1. 确认全局贡献者资料已经设置。当前资料可用以下命令查看；缺少时只需设置一次，值会供后续论文复用：
-
-   ```powershell
-   git config --global --get paperskillwork.participant
-   git config --global --get paperskillwork.pinyin
-   git config --global --get paperskillwork.github
-   ```
-
-   GitHub 用户名是可选项；拼音在显示名和 GitHub 名都无法生成有效英文前缀时才是必填项。
-
-2. 在 PaperSkillWork 根目录旁创建一个新的、干净的官方 `main` 浅克隆。使用 HTTPS 地址可避免本机没有 GitHub SSH 密钥时的认证失败；不要拿有未提交改动的 PaperSkill 工作目录做基线。
-
-   ```powershell
-   $PaperSkillRepo = Join-Path (Split-Path (Get-Location).Path) 'PaperSkill-W10'
-   git clone --depth=1 --single-branch --branch main https://github.com/ReductTech/PaperSkill.git $PaperSkillRepo
-   ```
-
-   如果该目录已存在，选择一个新的空目录名，或先确认现有目录没有改动再更新。克隆成功后检查状态、远端和提交号：
-
-   ```powershell
-   git -C $PaperSkillRepo status --short
-   git -C $PaperSkillRepo remote get-url origin
-   git -C $PaperSkillRepo rev-parse HEAD
-   git -C $PaperSkillRepo ls-remote origin refs/heads/main
-   ```
-
-   `status --short` 应无输出；远端应指向 `ReductTech/PaperSkill`；`rev-parse HEAD` 的 SHA 必须与 `ls-remote` 输出的 `refs/heads/main` SHA 相同。复用已有干净克隆时，先运行 `git -C $PaperSkillRepo fetch origin main --depth=1`，再运行 `git -C $PaperSkillRepo checkout --detach FETCH_HEAD` 并重复上述检查。不要用 `reset --hard` 清理有改动的目录。
-
-3. 本次发布演练使用 `ewc`。处理其他论文时，将下面所有示例命令和路径中的 `ewc` 替换为对应 `paper_id`。只运行正式门禁：
-
-   ```powershell
-   python tools/paper.py upstream-check ewc --paperskill-repo $PaperSkillRepo
-   ```
-
-   命令从 `paper.yaml` 读取论文信息，从全局 Git 配置读取贡献者资料，并生成 `html_output/<paper-name>/<version>/`、更新论文发布字段及 `papers/<paper-id>/audit/upstream-preflight.json`。它不会修改作为基线的 PaperSkill 克隆；每次运行都会刷新预检报告，因此不要把运行前已有的报告当作本次结果。
-
-4. 只把报告中的 `status: PASS` 视为 W10 通过。检查报告的 `commands` 全部为 exit code 0，`changed_paths` 均位于报告所示的 `html_output/<paper-name>/<version>/`。确认通过后，显式记录 W10 自动阶段完成并查看状态：
-
-   ```powershell
-   Get-Content papers/ewc/audit/upstream-preflight.json -Raw
-   # 先确认 status 为 PASS，commands 全部 exit code 0，且 changed_paths 仅在报告指定的导出目录内
-   python tools/paper.py stage ewc W10 complete
-   python tools/paper.py status ewc
-   git status --short
-   ```
-
-   只有 PASS 后才能运行 `stage ... W10 complete`；该命令也会重新核验 W10 报告。提交时把下方占位符替换为通过报告里的实际 `paper-name` 和 `version`，然后提交发布字段、机器报告和且仅和该报告对应的导出目录；不要把整个 `html_output/` 一并暂存：
-
-   ```powershell
-   git add papers/ewc/paper.yaml papers/ewc/audit/upstream-preflight.json html_output/<paper-name>/<version>
-   git commit -m "Complete EWC W10 upstream preflight"
-   ```
-
-常见失败处理：
-
-- 报告提示 PaperSkill `HEAD` 与 canonical `main` 不一致：重新创建上述 HTTPS 干净克隆，或在确认工作区干净后 fetch 并 checkout 到最新 `FETCH_HEAD`，直到两个 SHA 一致。
-- 提示 SSH 权限、无法解析主机名或连接重置：先确认本机可访问 `https://github.com/ReductTech/PaperSkill.git`，网络恢复后重试。失败报告会写入 `audit/upstream-preflight.json`；修复连接问题后重新运行同一条 `upstream-check` 即可，不要手工改报告内容。
-- 提示上游版本已存在：确认不是要替换的发布后，将 `paper.yaml` 中 `release.upstream_version` 和 `release.output` 清空，再重跑，让工具选择下一个可用后缀。不要为了解决上游冲突使用 `--replace-output`；该参数只用于明确替换本机已生成的导出目录。
+W9 经使用者确认后，由使用者手动触发 W10。`tools/paper.py upstream-check` 会读取 `paper.yaml` 中的一次性论文元数据和用户全局 Git 配置中的贡献者资料，在隔离检出中完成官方导入、验证、构建和 preflight，并写入机器报告。Codex 不主动运行 W10、不推送、不创建 PR；用户可明确要求 Codex 解释预检错误或修复具体缺陷。完整 PowerShell 操作步骤只维护在[人工投稿操作手册](UPSTREAM_RELEASE.md)。
 
 ## 设计文档与工作区
 

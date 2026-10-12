@@ -29,10 +29,10 @@ python tools/paper.py stage <paper-id> W4 complete --reviewed-by "评审者姓�
 python tools/paper.py release-check <paper-id>
 python tools/paper.py paths <paper-id>
 python tools/paper.py open <paper-id>
-python tools/paper.py upstream-check <paper-id> --paperskill-repo ..\PaperSkill-W10
+python tools/paper.py upstream-check <paper-id> --paperskill-repo ..\PaperSkill
 ```
 
-W6/W8 checks use the real source directly; only the formal W10 preflight requires a clean PaperSkill checkout. See [the W10 steps in the workflow guide](docs/WORKFLOW.md) for creating and checking that clone, running the preflight, and reviewing its report. Contributor defaults are shared across papers through the user's global Git config.
+`new` 在 W0 一次性记录已知论文信息，并同步初始源缓存元数据；后续阶段从 `paper.yaml` 读取，不重复录入。W6/W8 检查真实网页源。W9 经使用者确认后，W10 由使用者手动触发。贡献者默认值通过用户的全局 Git 配置在不同论文间复用；完整投稿步骤见唯一的[人工投稿操作手册](docs/UPSTREAM_RELEASE.md)。
 
 `new` 会登记论文信息并创建 v3 工作区。若来源是用户提供的 PDF，可用 `--source-location "user-provided PDF"`，此时 `--url` 可以省略；请填写 `--source-type`，用多个 `--author` 提供全部作者，并在已知时填写 `--venue` 和 `--year`。工具不会根据 URL 推断论文内容。
 
@@ -63,4 +63,4 @@ PaperSkill 建议作为 PaperSkillWork 的 sibling 检出：
 └── PaperSkillWork/
 ```
 
-唯一的发布流程说明见 [docs/WORKFLOW.md](docs/WORKFLOW.md) 的 W10。`docs/UPSTREAM_RELEASE.md` 保留仓库边界和操作约定，不复制工作流门禁。
+唯一的人工投稿流程见[上游发布操作手册](docs/UPSTREAM_RELEASE.md)。工作流阶段与评审边界仍以 [docs/WORKFLOW.md](docs/WORKFLOW.md) 为准。

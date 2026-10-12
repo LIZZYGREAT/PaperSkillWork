@@ -1,31 +1,133 @@
-# PaperSkill 上游发布边界
+# PaperSkill 上游发布：人工操作手册
 
-## 唯一流程说明
+本文是 W10 投稿操作的唯一完整指南。工作流定义和评审边界见 [docs/WORKFLOW.md](WORKFLOW.md)。教程贡献只提交到 PaperSkill 的个人 Fork；PaperSkillWork 的研究、工具和工作流变更使用独立仓库与提交。
 
-W0–W10 的阶段、人工评审和一次正式发布预检统一见 [docs/WORKFLOW.md](WORKFLOW.md)。本文只记录两个仓库的边界和贡献者默认值，不复制命令清单、校验门禁或章节映射表。
+## A. 新建论文时填写一次元数据
 
-## 仓库边界
+仅新建论文工作区时运行 `new`。参数按论文真实信息填写；作者有几位就重复几个 `--author`：
 
-- `PaperSkillWork` 保存研究、教学设计、页面源码和审计记录。
-- `PaperSkill` 是独立的上游检出，提供官方 Import、校验器、构建和 preflight。
-- 不合并两个仓库的提交历史，也不把 PaperSkillWork 的提交 cherry-pick 到 PaperSkill。
-- `tools/paper.py upstream-check` 在隔离工作树中准备真实上游改动和 `audit/upstream-preflight.json`；它不会推送、发布或创建 PR。
-- 工作流、工具或 Skill 的修改属于 PaperSkillWork，应与论文教程导出分开提交。
+```powershell
+# 在 PaperSkillWork 根目录
+python tools/paper.py new <paper-id> --title "完整英文论文标题" `
+  --url "https://..." --source-type "arXiv" `
+  --author "作者 A" --author "作者 B" --venue "会议/期刊" --year 2026
+```
 
-PaperSkill 可以位于 PaperSkillWork 的同级目录，但普通 `check <paper-id>` 和 CI 不依赖该本机路径。只有 W10 正式预检需要提供一个干净的 PaperSkill Git 检出。
+W0 一次性填写 `paper_id`、英文标题、作者、公开论文 URL、年份、venue、来源类型等已知信息。该命令将元数据写入 `papers/<paper-id>/paper.yaml`，并同步初始源缓存元数据。W1–W10 直接读取 `paper.yaml`；不得要求再填一次。若信息缺失或错误，只修正 `paper.yaml` 并同步对应缓存，不新增另一张元数据表。投稿所需的 `--paper-url` 必须是 HTTPS 公开链接，计划投稿时尽量在 W0 提供。
 
-## 统一贡献者默认值
+## B. 首次投稿前设置一次贡献者资料
 
-贡献者是本次投稿人，与 `paper.yaml` 中的论文作者身份不同。一次性保存以下全局 Git 配置后，所有论文工作区都会自动读取；这些个人设置不会进入仓库：
+贡献者是投稿人，不等于论文作者。以下全局 Git 配置由同一用户的后续论文复用，不会写入每篇论文的 `paper.yaml`：
 
-- `paperskillwork.participant`：公开显示名。
-- `paperskillwork.pinyin`：拼音，用于生成投稿版本名。
-- `paperskillwork.github`：可选 GitHub 用户名。
+```powershell
+git config --global paperskillwork.participant "公开展示名"
+git config --global paperskillwork.pinyin "拼音或英文标识"
+# 可选
+git config --global paperskillwork.github "GitHub用户名"
+```
 
-`upstream-check` 的显式参数可临时覆盖全局默认值。论文标题、作者、URL、venue、年份始终从对应项目的 `paper.yaml` 读取。
+版本名前缀优先使用拼音；若没有拼音，可从 ASCII 展示名或 GitHub 用户名推导。只有无法推导时才需要补充拼音。
 
-发布目录名从英文论文标题生成；版本名以贡献者拼音和投稿日期生成。自动版本遇到冲突时按上游规则顺延 `_2`、`_3`；明确指定且占用的版本会停止，不覆盖上游内容。
+## C. W9 确认后，由使用者手动运行 W10
 
-## 发布边界
+复用已有的个人 PaperSkill Fork 本地检出。该检出应配置 `origin` 指向个人 Fork、`upstream` 指向 `https://github.com/ReductTech/PaperSkill.git`。首次配置 `upstream` 远端后可长期复用。不要对有改动的工作区运行 `reset --hard`；有未提交修改时先保存，或改用单独的干净检出。
 
-在用户完成 W9 网页预览和真实验收后，Codex 才运行 W10 正式预检。预检成功仅表示导入、官方验证、构建、变更范围和导出文件通过；维护者仍独立决定是否合并。没有用户授权时，不推送、不发布、不创建 PR。
+```powershell
+# 从 PaperSkillWork 根目录运行；需要时改成个人 Fork 检出路径
+$Work = (Get-Location).Path
+$PaperSkillRepo = (Resolve-Path ..\PaperSkill).Path
+
+git -C $PaperSkillRepo remote -v
+git -C $PaperSkillRepo status --short
+```
+
+如果检出尚无 `upstream` 远端，仅首次运行：
+
+```powershell
+git -C $PaperSkillRepo remote add upstream https://github.com/ReductTech/PaperSkill.git
+```
+
+确保检出干净并对齐最新 `upstream/main`：
+
+```powershell
+git -C $PaperSkillRepo fetch upstream main --depth=1
+git -C $PaperSkillRepo switch --detach upstream/main
+git -C $PaperSkillRepo status --short
+git -C $PaperSkillRepo rev-parse HEAD
+git -C $PaperSkillRepo rev-parse upstream/main
+```
+
+状态应无未提交改动，两个提交号应相同。若使用 sparse checkout，确认 `html_output/<paper-name>/` 在 sparse 范围内；不要为一次投稿克隆所有历史论文版本。
+
+W9 确认后，使用者手动触发唯一的正式预检：
+
+```powershell
+python tools/paper.py upstream-check <paper-id> --paperskill-repo $PaperSkillRepo
+```
+
+该命令从 `paper.yaml` 读取论文信息，从全局 Git 配置读取贡献者资料，在隔离检出中依次执行官方导入、验证、构建和 preflight。它会生成/更新本地导出和 `papers/<paper-id>/audit/upstream-preflight.json`，但不会修改提供的 PaperSkill 检出、推送或创建 PR。预检成功前，自动推导的发布字段不会写回 `paper.yaml`；失败可重试。
+
+只有命令退出码为 0、报告 `status` 为 `PASS`、`unexpected_paths` 为空、`commands` 全部为退出码 0，且报告列出成功的 `import`、`validate`、`build:paper`、`preflight` 后，才继续。报告同时记录导出 SHA-256。核对报告并记录 W10：
+
+```powershell
+$reportPath = "papers/<paper-id>/audit/upstream-preflight.json"
+$report = Get-Content $reportPath -Raw | ConvertFrom-Json
+if ($report.status -ne 'PASS') { throw 'W10 preflight failed; do not submit' }
+if ($report.unexpected_paths.Count -ne 0) { throw 'Unexpected upstream paths; do not submit' }
+if (@($report.commands | Where-Object { $_.exit_code -ne 0 }).Count -ne 0) { throw 'A preflight command failed; do not submit' }
+$relative = "html_output/$($report.paper_name)/$($report.version)"
+$source = Join-Path $Work $relative
+if (-not (Test-Path $source)) { throw "Export missing: $source" }
+python tools/paper.py stage <paper-id> W10 complete
+```
+
+`stage` 会再次核验机器报告。无需手填重复的 PASS 行。
+
+## D. 将已验证导出提交到个人 Fork
+
+仍使用上面的个人 Fork 检出。只复制报告对应的导出目录，不合并 PaperSkillWork 的提交历史：
+
+```powershell
+$branch = "paper/<paper-id>-$($report.version)"
+git -C $PaperSkillRepo switch --no-track -c $branch upstream/main
+$parent = Join-Path $PaperSkillRepo "html_output/$($report.paper_name)"
+New-Item -ItemType Directory -Path $parent -Force | Out-Null
+$target = Join-Path $parent $report.version
+if (Test-Path $target) { throw "Version already exists: $target" }
+Copy-Item -LiteralPath $source -Destination $target -Recurse
+
+git -C $PaperSkillRepo add -- $relative
+$staged = @(git -C $PaperSkillRepo diff --cached --name-only)
+$prefix = "$relative/"
+$outside = @($staged | Where-Object { -not $_.StartsWith($prefix) })
+if ($staged.Count -eq 0 -or $outside.Count -ne 0) {
+  throw 'Staged changes must contain only the reported tutorial export directory'
+}
+git -C $PaperSkillRepo diff --cached --check
+git -C $PaperSkillRepo commit -m "Add <paper-id> interactive tutorial"
+```
+
+核对暂存与提交内容仅包含 `html_output/<paper-name>/<version>/`。不要提交 `catalog/papers.json`、PaperSkillWork 的 `paper.yaml` 或审计文档、PDF、`node_modules`、`dist` 等文件。若检出使用 sparse checkout，先把目标目录加入 sparse 规则，再复制和暂存。
+
+## E. 对真实 Fork 提交做最终预检，再手动推送和创建 PR
+
+最后一次 preflight 验证的是 Fork 上的真实提交。它不是重新逐条运行导入、验证和构建命令：
+
+```powershell
+Push-Location $PaperSkillRepo
+try {
+  npm run preflight -- --base upstream/main
+  if ($LASTEXITCODE -ne 0) { throw 'PR preflight failed; fix and rerun before pushing' }
+  git push -u origin $branch
+  if ($LASTEXITCODE -ne 0) { throw 'Push failed' }
+}
+finally { Pop-Location }
+```
+
+推送成功后，使用者在 GitHub 页面手动创建指向 `ReductTech/PaperSkill:main` 的 PR，head 选择个人 Fork 的 `$branch`。核对 diff 后填写 PR 标题、论文简介和网页预览/交互说明，并等待上游 CI 与维护者审核。维护者决定是否批准和合并。
+
+## F. 常见问题
+
+- **PaperSkill HEAD 与最新上游 main 不一致：** 确认工作区干净，fetch `upstream/main`，切换到 `upstream/main` 后重跑 W10。
+- **上游结构或构建失败：** 回到 PaperSkillWork 修复真实网页源，再重跑 `upstream-check`。不要手改报告；若本地导出目录已存在，先确认是否需要 `--replace-output`，该选项只影响本地生成目录。
+- **版本已存在：** 不覆盖上游内容。自动版本在下一次预检时重新选择可用后缀；如需手动指定新版本，只修改 `paper.yaml` 中的发布字段。失败的自动推导不会锁定版本。
