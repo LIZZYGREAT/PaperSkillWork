@@ -2,18 +2,29 @@
 
 本文是 W10 投稿操作的唯一完整指南。工作流定义和评审边界见 [docs/WORKFLOW.md](WORKFLOW.md)。教程贡献只提交到 PaperSkill 的个人 Fork；PaperSkillWork 的研究、工具和工作流变更使用独立仓库与提交。
 
+## PowerShell 操作入口
+
+所有 `tools/paper.py` 命令都从 PaperSkillWork 仓库根目录执行。每个 PowerShell 会话开始时运行一次以下变量块；新开终端后需要重新定义，当前会话内无需重复。处理其他论文时，只需把 `$PaperId` 改为对应标识：
+
+~~~powershell
+# 示例路径请按本机实际位置调整
+Set-Location 'C:\path\to\PaperWork\PaperSkillWork'
+$PaperId = 'ewc'  # 每篇论文、每个新 PowerShell 会话设置一次
+$Work = (Get-Location).Path
+$PaperSkillRepo = (Resolve-Path '..\PaperSkill').Path
+~~~
+
 ## A. 新建论文时填写一次元数据
 
-仅新建论文工作区时运行 `new`。参数按论文真实信息填写；作者有几位就重复几个 `--author`：
+仅新建论文工作区时运行 `new`。已有 EWC 工作区不要重新运行 `new`，直接从 C 节继续。新建其他论文时，先在上方变量块中设置对应的 `$PaperId`。参数按论文真实信息填写；作者有几位就重复几个 `--author`：
 
 ```powershell
-# 在 PaperSkillWork 根目录
-python tools/paper.py new <paper-id> --title "完整英文论文标题" `
+python tools/paper.py new $PaperId --title "完整英文论文标题" `
   --url "https://..." --source-type "arXiv" `
   --author "作者 A" --author "作者 B" --venue "会议/期刊" --year 2026
 ```
 
-W0 一次性填写 `paper_id`、英文标题、作者、公开论文 URL、年份、venue、来源类型等已知信息。该命令将元数据写入 `papers/<paper-id>/paper.yaml`，并同步初始源缓存元数据。W1–W10 直接读取 `paper.yaml`；不得要求再填一次。若信息缺失或错误，只修正 `paper.yaml` 并同步对应缓存，不新增另一张元数据表。投稿所需的 `--paper-url` 必须是 HTTPS 公开链接，计划投稿时尽量在 W0 提供。
+W0 一次性填写 `paper_id`、英文标题、作者、公开论文 URL、年份、venue、来源类型等已知信息。该命令将元数据写入 `papers/$PaperId/paper.yaml`，并同步初始源缓存元数据。W1–W10 直接读取 `paper.yaml`；不得要求再填一次。若信息缺失或错误，只修正 `paper.yaml` 并同步对应缓存，不新增另一张元数据表。投稿所需的 `--paper-url` 必须是 HTTPS 公开链接，计划投稿时尽量在 W0 提供。
 
 ## B. 首次投稿前设置一次贡献者资料
 
@@ -33,13 +44,6 @@ git config --global paperskillwork.github "GitHub用户名"
 **工作目录约定：** 凡运行 `tools/paper.py` 的命令，先进入 PaperSkillWork 仓库根目录；凡运行 `git -C $PaperSkillRepo` 的命令，`$PaperSkillRepo` 指向旁边独立的 PaperSkill 仓库，不是当前工作目录。
 
 已配置的个人检出应让 `origin` 指向个人 Fork、`upstream` 指向官方 PaperSkill；可用 `git -C $PaperSkillRepo remote -v` 核对。
-
-~~~powershell
-# 示例路径请按本机实际位置调整
-Set-Location 'C:\path\to\PaperWork\PaperSkillWork'
-$Work = (Get-Location).Path
-$PaperSkillRepo = (Resolve-Path '..\PaperSkill').Path
-~~~
 
 ### 首次建立轻量 PaperSkill 检出（仅在尚不存在时）
 
@@ -102,18 +106,17 @@ git -C $PaperSkillRepo sparse-checkout list
 W9 确认后，使用者手动触发唯一的正式预检：
 
 ~~~powershell
-# 在 PaperSkillWork 仓库根目录运行
-python tools/paper.py upstream-check <paper-id> --paperskill-repo $PaperSkillRepo
+python tools/paper.py upstream-check $PaperId --paperskill-repo $PaperSkillRepo
 ~~~
 
-该命令从 `paper.yaml` 读取论文信息，从全局 Git 配置读取贡献者资料，在隔离检出中依次执行官方导入、验证、构建和 preflight。它会生成/更新本地导出和 `papers/<paper-id>/audit/upstream-preflight.json`，但不会修改提供的 PaperSkill 检出、推送或创建 PR。预检成功前，自动推导的发布字段不会写回 `paper.yaml`；失败可重试。
+该命令从 `paper.yaml` 读取论文信息，从全局 Git 配置读取贡献者资料，在隔离检出中依次执行官方导入、验证、构建和 preflight。它会生成/更新本地导出和 `papers/$PaperId/audit/upstream-preflight.json`，但不会修改提供的 PaperSkill 检出、推送或创建 PR。预检成功前，自动推导的发布字段不会写回 `paper.yaml`；失败可重试。
 
-运行时会立即显示当前 W10 阶段；官方 partial clone 会显示 Git 原生传输进度。最终判定仍以机器报告中的命令结果和退出码为准。
+运行时会立即显示当前 W10 阶段；官方 partial clone、Sparse Checkout 后首次 Checkout 可能触发的 lazy fetch 会显示 Git 原生传输进度。若停在 `Checking out sparse upstream baseline`，表示正在检出上游基线或按需获取对象；观察 Git 的实际下载进度。最终判定仍以机器报告中的命令结果和退出码为准。
 
 只有命令退出码为 0、报告 status 为 PASS、unexpected_paths 为空、commands 全部为退出码 0，且报告列出成功的 import、validate、build:paper、preflight 后，才继续。报告同时记录导出 SHA-256。核对报告并记录 W10：
 
 ~~~powershell
-$reportPath = "papers/<paper-id>/audit/upstream-preflight.json"
+$reportPath = "papers/$PaperId/audit/upstream-preflight.json"
 $report = Get-Content $reportPath -Raw | ConvertFrom-Json
 if ($report.status -ne 'PASS') { throw 'W10 preflight failed; do not submit' }
 if ($report.unexpected_paths.Count -ne 0) { throw 'Unexpected upstream paths; do not submit' }
@@ -121,7 +124,7 @@ if (@($report.commands | Where-Object { $_.exit_code -ne 0 }).Count -ne 0) { thr
 $relative = "html_output/$($report.paper_name)/$($report.version)"
 $source = Join-Path $Work $relative
 if (-not (Test-Path $source)) { throw "Export missing: $source" }
-python tools/paper.py stage <paper-id> W10 complete
+python tools/paper.py stage $PaperId W10 complete
 ~~~
 
 `stage` 会再次核验机器报告。无需手填重复的 PASS 行。
@@ -131,7 +134,7 @@ python tools/paper.py stage <paper-id> W10 complete
 仍使用上面的个人 Fork 检出。只复制报告对应的导出目录，不合并 PaperSkillWork 的提交历史：
 
 ~~~powershell
-$branch = "paper/<paper-id>-$($report.version)"
+$branch = "paper/$PaperId-$($report.version)"
 git -C $PaperSkillRepo switch --no-track -c $branch upstream/main
 if ($LASTEXITCODE -ne 0) { throw 'Cannot create contribution branch' }
 
@@ -156,7 +159,7 @@ if ($staged.Count -eq 0 -or $outside.Count -ne 0) {
   throw 'Staged changes must contain only the reported tutorial export directory'
 }
 git -C $PaperSkillRepo diff --cached --check
-git -C $PaperSkillRepo commit -m "Add <paper-id> interactive tutorial"
+git -C $PaperSkillRepo commit -m "Add $PaperId interactive tutorial"
 if ($LASTEXITCODE -ne 0) { throw 'Commit failed; do not proceed to preflight or push' }
 ~~~
 
@@ -190,4 +193,5 @@ git -C $PaperSkillRepo sparse-checkout set catalog docs paper-skill schemas scri
 - **PaperSkill HEAD 与最新上游 main 不一致：** 确认工作区干净，按 C 节 fetch `upstream/main`，切换到 `upstream/main` 后重跑 W10。
 - **上游结构或构建失败：** 回到 PaperSkillWork 修复真实网页源，再重跑 `upstream-check`。不要手改报告；若本地导出目录已存在，先确认是否需要 `--replace-output`，该选项只影响本地生成目录。
 - **版本已存在：** 不覆盖上游内容。自动版本在下一次预检时重新选择可用后缀；如需手动指定新版本，只修改 `paper.yaml` 中的发布字段。失败的自动推导不会锁定版本。
+- **Checkout 阶段停顿或出现 `Could not add alternate ... is shallow`：** 若后面紧接完整的 `Receiving objects: 100%`，该提示只表示备用对象库未能复用浅克隆对象，不单独代表失败。停在 `Checking out sparse upstream baseline` 时，正在执行 Checkout 或 lazy fetch；观察 Git 的实际下载，不要因此重新 clone。
 - **网络不稳定：** 可选择 HTTPS 或 SSH 远端。若使用 SSH，可先测试 `ssh -T -p 443 git@ssh.github.com`，并按需使用 SSH 443 地址；不要因此强制更改全局代理、全局 Git 配置或本机其他仓库的协议。
