@@ -126,11 +126,14 @@ def test_v3_artifact_map_must_be_complete_and_exact():
     assert any("artifacts has unknown keys: scenes_dir" in error for error in errors)
 
 
-def test_release_identifiers_and_output_must_be_configured_together():
+def test_partial_release_identifiers_are_allowed_before_upstream_preflight():
     config = valid_config()
     config["release"]["upstream_paper_name"] = "demo_paper"
+    assert validate_config(config, "demo-paper") == []
+
+    config["release"]["output"] = "html_output/demo_paper/ada1012"
     errors = validate_config(config, "demo-paper")
-    assert any("must be configured together" in error for error in errors)
+    assert any("release.output requires upstream_paper_name and upstream_version" in error for error in errors)
 
 
 def test_release_output_must_match_upstream_identifiers():

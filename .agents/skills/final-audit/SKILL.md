@@ -36,7 +36,7 @@ Do not ask the reviewer to fill repeated upstream PASS rows. Record actual build
 1. Read paper title, authors, URL, venue, and year from `paper.yaml`. Derive the upstream paper name from its English title and the version from the contributor pinyin and submission date. Read shared contributor defaults from global Git config (`paperskillwork.participant`, `paperskillwork.pinyin`, `paperskillwork.github`); explicit CLI values override them. Do not reuse paper-author names as contributor identity.
 2. Run `python tools/paper.py upstream-check <paper-id> --paperskill-repo <path>`. The command prepares release names, imports into an isolated clone, rejects changed paths outside `release.output`, commits only the tutorial on a local-only branch, then runs official validation, build, and preflight against that temporary commit. It does not write into the supplied PaperSkill checkout or its Git configuration.
 3. Inspect `audit/upstream-preflight.json`. W10 requires distinct upstream and temporary commit SHAs, changed paths confined to `release.output`, no unexpected paths, successful exit codes for all commands, and an export SHA-256 matching the copied output.
-4. If the target version already exists, do not silently replace it. Use the next available upstream version or obtain an explicit override for a deliberate replacement. Do not push, publish, or create a PR from this skill.
+4. Auto-generated versions check the target paper directory and select the next free `_2`, `_3`, etc. suffix when needed. An explicitly configured version that already exists fails without overwriting upstream content. `--replace-output` applies only to the local generated export. Do not push, publish, or create a PR from this skill.
 
 ## Forbidden Actions
 

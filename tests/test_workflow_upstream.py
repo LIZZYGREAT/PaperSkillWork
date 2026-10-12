@@ -73,6 +73,56 @@ def test_canonical_paperskill_remote_supports_https_and_ssh_urls(tmp_path, remot
     assert not module.is_canonical_paperskill_remote("https://github.com/LIZZYGREAT/PaperSkill.git")
 
 
+def test_contributor_profile_uses_global_git_defaults_with_per_run_overrides(tmp_path, monkeypatch):
+    _root, _paper, _config_path, module = make_project(tmp_path)
+    global_config = tmp_path / "global.gitconfig"
+    global_config.write_text(
+        '[paperskillwork]\n\tparticipant = Ada Researcher\n\tpinyin = adaresearcher\n\tgithub = ada-r\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(global_config))
+
+    assert module.resolve_contributor_profile() == ("Ada Researcher", "adaresearcher", "ada-r")
+    assert module.resolve_contributor_profile("Temporary Name", None, "temp-user") == (
+        "Temporary Name", "adaresearcher", "temp-user",
+    )
+
+
+def test_contributor_profile_reports_one_time_setup_when_display_name_is_missing(tmp_path, monkeypatch):
+    _root, _paper, _config_path, module = make_project(tmp_path)
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(tmp_path / "empty.gitconfig"))
+
+    with pytest.raises(module.PaperError, match="git config --global paperskillwork.participant"):
+        module.resolve_contributor_profile()
+
+
+def test_release_identifiers_are_derived_and_version_uses_official_suffix_rule(tmp_path):
+    _root, _paper, _config_path, module = make_project(tmp_path)
+    config = load_config(_config_path)
+    config["title"] = "Learning Without Forgetting"
+    automatic, stamp = module.prepare_release_identifiers(
+        config, "王丹", "Wang Dan", "wangd", module.datetime(2026, 10, 12),
+    )
+
+    assert automatic is True
+    assert stamp == "1012"
+    assert config["release"] == {
+        "upstream_paper_name": "learning_without_forgetting",
+        "upstream_version": "wangdan1012",
+        "output": "html_output/learning_without_forgetting/wangdan1012",
+    }
+    assert module.validate_config(config, "demo-paper") == []
+
+
+def test_available_upstream_version_uses_next_open_suffix(tmp_path):
+    _root, _paper, _config_path, module = make_project(tmp_path)
+    paper_output = tmp_path / "PaperSkill/html_output/demo_paper"
+    (paper_output / "ada1012").mkdir(parents=True)
+    (paper_output / "ada1012_2").mkdir()
+
+    assert module.available_upstream_version(tmp_path / "PaperSkill", "demo_paper", "ada1012") == "ada1012_3"
+
+
 def test_upstream_source_prefers_configured_final_directory(tmp_path):
     _root, paper, _config_path, module = make_project(tmp_path)
     final = paper / "web/final"

@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
@@ -252,19 +253,20 @@ def validate_config(config: Dict[str, Any], expected_id: str) -> List[str]:
         if any(not isinstance(release.get(key), str) for key in release_fields):
             errors.append("release.upstream_paper_name, release.upstream_version, and release.output must be strings")
         else:
-            values = [release[key].strip() for key in release_fields]
-            if any(values) and not all(values):
-                errors.append("release upstream identifiers and output must be configured together")
-            elif all(values):
-                paper_name, version, output = values
-                if not UPSTREAM_PAPER_NAME_RE.fullmatch(paper_name):
-                    errors.append("release.upstream_paper_name must be a lowercase underscore identifier")
-                if not UPSTREAM_VERSION_RE.fullmatch(version):
-                    errors.append("release.upstream_version must match the upstream version naming rule")
+            paper_name = release["upstream_paper_name"].strip()
+            version = release["upstream_version"].strip()
+            output = release["output"].strip()
+            if paper_name and not UPSTREAM_PAPER_NAME_RE.fullmatch(paper_name):
+                errors.append("release.upstream_paper_name must be a lowercase underscore identifier")
+            if version and not UPSTREAM_VERSION_RE.fullmatch(version):
+                errors.append("release.upstream_version must match the upstream version naming rule")
+            if output:
+                if not paper_name or not version:
+                    errors.append("release.output requires upstream_paper_name and upstream_version")
                 problem = path_problem(output)
                 if problem:
                     errors.append("release.output {}".format(problem))
-                elif output.replace("\\", "/") != "html_output/{}/{}".format(paper_name, version):
+                elif paper_name and version and output.replace("\\", "/") != "html_output/{}/{}".format(paper_name, version):
                     errors.append("release.output must equal html_output/<upstream_paper_name>/<upstream_version>")
 
     if isinstance(paper, dict):
@@ -301,6 +303,107 @@ def validate_or_raise(config: Dict[str, Any], paper_id: str) -> None:
     errors = validate_config(config, paper_id)
     if errors:
         raise PaperError("Invalid paper.yaml:\n- " + "\n- ".join(errors))
+
+
+def git_global_value(key: str) -> str:
+    try:
+        result = subprocess.run(
+            ["git", "config", "--global", "--get", key],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False,
+        )
+    except OSError as exc:
+        raise PaperError("Could not read the shared contributor profile from Git config: {}".format(exc))
+    if result.returncode == 1:
+        return ""
+    if result.returncode != 0:
+        detail = (result.stderr or "").strip()
+        raise PaperError("Could not read global Git setting {}{}".format(key, ": " + detail if detail else ""))
+    value = (result.stdout or "").strip()
+    if "\n" in value or "\r" in value:
+        raise PaperError("Global Git setting {} must be a single line".format(key))
+    return value
+
+
+def resolve_contributor_profile(
+    participant_override: Optional[str] = None,
+    pinyin_override: Optional[str] = None,
+    github_override: Optional[str] = None,
+) -> Tuple[str, str, str]:
+    values = []
+    for key, override in (
+        ("participant", participant_override),
+        ("pinyin", pinyin_override),
+        ("github", github_override),
+    ):
+        value = git_global_value("paperskillwork." + key) if override is None else override
+        value = value.strip()
+        if "\n" in value or "\r" in value:
+            raise PaperError("Contributor profile field {} must be a single line".format(key))
+        values.append(value)
+    participant, pinyin, github = values
+    if not participant:
+        raise PaperError(
+            "Contributor display name is missing. Set it once with `git config --global "
+            "paperskillwork.participant \"Your public name\"`, or pass --participant for this run. "
+            "Optional shared defaults: paperskillwork.pinyin and paperskillwork.github."
+        )
+    return participant, pinyin, github
+
+
+def contributor_version_slug(participant: str, pinyin: str = "", github: str = "") -> str:
+    if pinyin.strip():
+        slug = re.sub(r"[^a-z0-9]", "", pinyin.lower())
+    else:
+        slug = re.sub(r"[^a-z0-9]", "", participant.lower())
+        if not slug or not re.match(r"^[a-z]", slug):
+            github_name = github[1:] if github.startswith("@") else github
+            slug = re.sub(r"[^a-z0-9]", "", github_name.lower())
+    if not slug or not re.match(r"^[a-z]", slug):
+        raise PaperError(
+            "Cannot derive the upstream version prefix from contributor identity. "
+            "Set `git config --global paperskillwork.pinyin \"yourpinyin\"` once, or pass --pinyin."
+        )
+    return slug
+
+
+def upstream_paper_name_from_title(title: str) -> str:
+    ascii_title = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii")
+    paper_name = re.sub(r"[^a-z0-9]+", "_", ascii_title.lower()).strip("_")
+    if not paper_name or not UPSTREAM_PAPER_NAME_RE.fullmatch(paper_name):
+        raise PaperError(
+            "Could not derive an upstream paper name from the English title. "
+            "Set release.upstream_paper_name in paper.yaml once and retry."
+        )
+    return paper_name
+
+
+def prepare_release_identifiers(
+    config: Dict[str, Any], participant: str, pinyin: str = "", github: str = "",
+    now: Optional[datetime] = None,
+) -> Tuple[bool, str]:
+    release = config["release"]
+    paper_name = release.get("upstream_paper_name", "").strip() or upstream_paper_name_from_title(config["title"])
+    automatic_version = not release.get("upstream_version", "").strip()
+    date_stamp = (now or datetime.now()).strftime("%m%d")
+    version = release.get("upstream_version", "").strip()
+    if automatic_version:
+        version = contributor_version_slug(participant, pinyin, github) + date_stamp
+    release["upstream_paper_name"] = paper_name
+    release["upstream_version"] = version
+    if not release.get("output", "").strip():
+        release["output"] = "html_output/{}/{}".format(paper_name, version)
+    errors = validate_config(config, config.get("id", ""))
+    if errors:
+        raise PaperError("Cannot prepare release identifiers:\n- " + "\n- ".join(errors))
+    return automatic_version, date_stamp
+
+
+def write_paper_config(folder: Path, config: Dict[str, Any]) -> None:
+    require_yaml()
+    paper_id = config.get("id", "")
+    validate_or_raise(config, paper_id)
+    output = yaml.safe_dump(config, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    (folder / "paper.yaml").write_text(output, encoding="utf-8")
 
 
 def marker_present(path: Path, marker: str) -> bool:
@@ -732,6 +835,17 @@ def save_upstream_report(folder: Path, report: Dict[str, Any]) -> None:
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def available_upstream_version(temp_repo: Path, paper_name: str, base_version: str) -> str:
+    paper_output = temp_repo / "html_output" / paper_name
+    if not (paper_output / base_version).exists():
+        return base_version
+    for index in range(2, 1000):
+        candidate = "{}_{}".format(base_version, index)
+        if not (paper_output / candidate).exists():
+            return candidate
+    raise PaperError("No free upstream version remains for {}".format(base_version))
+
+
 def install_upstream_export(source: Path, target: Path, replace_output: bool) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.is_symlink():
@@ -826,6 +940,8 @@ def run_upstream_check(
     github: str = "",
     replace_output: bool = False,
     process_runner: Optional[Callable[..., Any]] = None,
+    auto_version: bool = False,
+    date_stamp: str = "",
 ) -> int:
     runner = process_runner or subprocess.run
     release = config.get("release", {})
@@ -908,8 +1024,8 @@ def run_upstream_check(
             raise PaperError("paper.url must be an https:// URL for the official PaperSkill import")
         if not participant.strip() or "\n" in participant or "\r" in participant:
             raise PaperError("--participant must be a non-empty single line")
-        if any(ord(character) > 127 for character in participant) and not pinyin.strip():
-            raise PaperError("--pinyin is required for a non-ASCII --participant")
+        if any(ord(character) > 127 for character in participant) and not pinyin.strip() and not github.strip():
+            raise PaperError("--pinyin or --github is required to derive an upstream version for a non-ASCII --participant")
 
         source = resolve_upstream_source(folder, config)
 
@@ -960,6 +1076,21 @@ def run_upstream_check(
                 if configured.returncode != 0:
                     raise PaperError("could not set temporary Git identity: {}".format(summarize_process(configured, temp_root)))
 
+            if auto_version:
+                release["upstream_version"] = available_upstream_version(
+                    temp_repo, release["upstream_paper_name"], release["upstream_version"],
+                )
+                release["output"] = "html_output/{}/{}".format(
+                    release["upstream_paper_name"], release["upstream_version"],
+                )
+                report["version"] = release["upstream_version"]
+                write_paper_config(folder, config)
+            elif (temp_repo / release["output"]).exists():
+                raise PaperError(
+                    "upstream version already exists: {}. Clear release.upstream_version to choose the next available suffix automatically."
+                    .format(release["output"])
+                )
+
             source_copy = temp_repo / ".paperskillwork-source"
             shutil.copytree(source, source_copy, ignore=shutil.ignore_patterns("node_modules", "dist", "dist-ssr", ".vite"))
 
@@ -969,6 +1100,7 @@ def run_upstream_check(
                 "--title", config["title"], "--paper-url", paper_url,
                 "--participant", participant, "--version", release["upstream_version"],
             ]
+            import_command.extend(["--date", date_stamp or datetime.now().strftime("%m%d")])
             if pinyin.strip():
                 import_command.extend(["--pinyin", pinyin.strip()])
             if github.strip():
@@ -1090,14 +1222,21 @@ def cmd_upstream_check(args: argparse.Namespace) -> int:
     problems = stage_order_problems(config, "W10")
     if problems:
         raise PaperError("Cannot run upstream-check:\n- {}".format("\n- ".join(problems)))
+    participant, pinyin, github = resolve_contributor_profile(
+        args.participant, args.pinyin, args.github,
+    )
+    auto_version, date_stamp = prepare_release_identifiers(config, participant, pinyin, github)
+    write_paper_config(folder, config)
     return run_upstream_check(
         folder,
         config,
         Path(args.paperskill_repo),
-        args.participant,
-        args.pinyin or "",
-        args.github or "",
+        participant,
+        pinyin,
+        github,
         args.replace_output,
+        auto_version=auto_version,
+        date_stamp=date_stamp,
     )
 
 
@@ -2127,9 +2266,9 @@ def build_parser() -> argparse.ArgumentParser:
     upstream = subparsers.add_parser("upstream-check", help="run the official PaperSkill import, validation, build, and preflight in an isolated checkout")
     upstream.add_argument("paper_id")
     upstream.add_argument("--paperskill-repo", required=True, help="path to a clean PaperSkill Git checkout")
-    upstream.add_argument("--participant", required=True, help="public participant name for the official import")
-    upstream.add_argument("--pinyin", help="required by PaperSkill when participant contains non-ASCII characters")
-    upstream.add_argument("--github", help="optional public GitHub username")
+    upstream.add_argument("--participant", help="override the shared public contributor display name for this run")
+    upstream.add_argument("--pinyin", help="override the shared contributor pinyin for this run")
+    upstream.add_argument("--github", help="override the shared GitHub username for this run")
     upstream.add_argument("--replace-output", action="store_true", help="replace the configured generated export if it already exists")
     upstream.set_defaults(func=cmd_upstream_check)
 

@@ -136,11 +136,19 @@ W9 保留真实人工判断。用户预览最终网页并确认学习、证据�
 
 论文标题、作者、URL、venue 和年份以 paper.yaml 为唯一元数据源。发布名从英文标题自动生成 snake_case；版本由本次贡献者拼音和投稿日期 MMDD 自动生成，输出路径由这两个标识推导。不能推导的标题名或身份信息才询问一次。已有上游版本冲突时按上游命名规则选择可用版本，不得静默覆盖。
 
-首次投稿时，贡献者公开显示名、拼音和可选 GitHub 用户名与论文作者分开记录。默认从当前用户的全局 Git 配置读取 paperskillwork.participant、paperskillwork.pinyin 和 paperskillwork.github；个人信息不提交 Git。upstream-check 接受显式参数覆盖这些默认值。没有保存的信息只在真正发布时一次性询问，不重复索取 paper.yaml 中已有的论文信息。
+首次投稿时，贡献者公开显示名、拼音和可选 GitHub 用户名与论文作者分开记录。默认从当前用户的全局 Git 配置读取 paperskillwork.participant、paperskillwork.pinyin 和 paperskillwork.github；个人信息不提交 Git。只需设置一次：
+
+```powershell
+git config --global paperskillwork.participant "公开显示名"
+git config --global paperskillwork.pinyin "namepinyin"
+git config --global paperskillwork.github "github-username"
+```
+
+拼音仅在显示名和 GitHub 用户名都无法生成上游版本前缀时必需；GitHub 用户名可省略。upstream-check 的 --participant、--pinyin 和 --github 参数可单次覆盖默认值。没有保存的信息只在真正发布时一次性询问，不重复索取 paper.yaml 中已有的论文信息。
 
 项目从初始化起包含当前上游要求的独立 React + TypeScript 源结构。正式预检调用 python tools/paper.py upstream-check <paper-id> --paperskill-repo <PaperSkill 路径>。它导入真实发布源，在隔离的 PaperSkill 工作树中运行官方 validate、build 和 preflight，检查 PR 变更范围，并生成 audit/upstream-preflight.json。它不推送分支、不创建 PR，也不保证维护者合并。
 
---participant、--pinyin 和 --github 可覆盖全局默认值。若同名版本已存在，命令拒绝覆盖并提示可用的上游版本处理方式；覆盖已有版本必须显式确认。成功的 W10 报告是正式发布预检的单一机器权威记录。普通 check <paper-id> 只检查仓库内可重复验证的数据和结构，不要求本机 PaperSkill 路径；W10 尚 pending 时可给出 WARN，但不能因此 FAIL。
+自动生成的版本会先检查上游同名论文目录，并按官方规则选取基础版本或下一个 `_2`、`_3` 后缀；明确指定且已占用的版本会停止，不覆盖上游内容。若本机导出目录已存在，只有传入 --replace-output 才会替换该生成目录。成功的 W10 报告是正式发布预检的单一机器权威记录。普通 check <paper-id> 只检查仓库内可重复验证的数据和结构，不要求本机 PaperSkill 路径；W10 尚 pending 时可给出 WARN，但不能因此 FAIL。
 
 ## 设计文档与工作区
 
