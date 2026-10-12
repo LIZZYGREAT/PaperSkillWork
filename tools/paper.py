@@ -2,6 +2,7 @@
 """Mechanical workspace and workflow checks for PaperSkillWork."""
 
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -1088,7 +1089,6 @@ def run_upstream_check(
                     release["upstream_paper_name"], release["upstream_version"],
                 )
                 report["version"] = release["upstream_version"]
-                write_paper_config(folder, config)
             elif (temp_repo / release["output"]).exists():
                 raise PaperError(
                     "upstream version already exists: {}. Clear release.upstream_version to choose the next available suffix automatically."
@@ -1229,11 +1229,11 @@ def cmd_upstream_check(args: argparse.Namespace) -> int:
     participant, pinyin, github = resolve_contributor_profile(
         args.participant, args.pinyin, args.github,
     )
-    auto_version, date_stamp = prepare_release_identifiers(config, participant, pinyin, github)
-    write_paper_config(folder, config)
-    return run_upstream_check(
+    run_config = copy.deepcopy(config)
+    auto_version, date_stamp = prepare_release_identifiers(run_config, participant, pinyin, github)
+    result = run_upstream_check(
         folder,
-        config,
+        run_config,
         Path(args.paperskill_repo),
         participant,
         pinyin,
@@ -1242,6 +1242,9 @@ def cmd_upstream_check(args: argparse.Namespace) -> int:
         auto_version=auto_version,
         date_stamp=date_stamp,
     )
+    if result == 0:
+        write_paper_config(folder, run_config)
+    return result
 
 
 def tracked_workspace_paths(paper_id: str) -> List[str]:

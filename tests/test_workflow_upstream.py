@@ -1,10 +1,15 @@
+import argparse
 import json
 import subprocess
+from datetime import datetime
 from pathlib import Path
 
 import pytest
 
-from workflow_helpers import load_config, make_project, write_export, write_upstream_report
+from workflow_helpers import (
+    load_config, make_project, mark_prior_stages_complete, save_config,
+    write_export, write_upstream_report,
+)
 
 
 CANONICAL_PAPERSKILL_URL = "https://github.com/ReductTech/PaperSkill.git"
@@ -59,6 +64,38 @@ def make_imported_export(cwd, name="sample_paper_name", version="ada0926"):
         target.write_text("## Asset provenance\n" if relative == "README.md" else "{}\n", encoding="utf-8")
     (output / "paper.json").write_text(json.dumps({"paperName": name, "version": version}), encoding="utf-8")
     (output / "package.json").write_text("{}\n", encoding="utf-8")
+
+
+def add_existing_release(canonical, paper_name, version):
+    output = canonical / "html_output" / paper_name / version
+    output.mkdir(parents=True)
+    (output / "README.md").write_text("Existing release\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(canonical), "add", "--", "html_output"], check=True)
+    subprocess.run([
+        "git", "-C", str(canonical), "commit", "-q", "-m", "reserve {}/{}".format(paper_name, version),
+    ], check=True)
+
+
+def refresh_sibling(sibling, canonical):
+    subprocess.run([
+        "git", "-C", str(sibling), "remote", "set-url", "upstream", canonical.resolve().as_uri(),
+    ], check=True)
+    subprocess.run(["git", "-C", str(sibling), "fetch", "upstream", "main", "--depth=1"], check=True)
+    subprocess.run(["git", "-C", str(sibling), "switch", "--detach", "upstream/main"], check=True)
+    subprocess.run([
+        "git", "-C", str(sibling), "remote", "set-url", "upstream", CANONICAL_PAPERSKILL_URL,
+    ], check=True)
+
+
+def upstream_check_args(repo, paper_id="demo-paper"):
+    return argparse.Namespace(
+        paper_id=paper_id,
+        participant=None,
+        pinyin=None,
+        github=None,
+        paperskill_repo=str(repo),
+        replace_output=False,
+    )
 
 
 @pytest.mark.parametrize("remote_url", [
@@ -234,6 +271,119 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert status.stdout == ""
     identity = subprocess.run(["git", "-C", str(upstream), "config", "user.name"], capture_output=True, text=True, check=True)
     assert identity.stdout.strip() == "Test User"
+
+
+def test_automatic_release_version_is_persisted_only_after_success_and_retry_uses_open_suffixes(tmp_path, monkeypatch):
+    root, paper, config_path, module = make_project(tmp_path)
+    config = load_config(config_path)
+    mark_prior_stages_complete(config, "W10")
+    save_config(config_path, config)
+
+    paper_name = "a_sample_paper"
+    base_version = "ada1012"
+    canonical = make_clean_upstream_repo(tmp_path / "canonical")
+    add_existing_release(canonical, paper_name, base_version)
+    sibling = make_shallow_sparse_sibling(tmp_path / "PaperSkill", canonical)
+
+    class FixedDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 10, 12, tzinfo=tz)
+
+    monkeypatch.setattr(module, "datetime", FixedDateTime)
+    monkeypatch.setattr(module, "resolve_contributor_profile", lambda *_args: ("Ada Researcher", "ada", ""))
+    actual_run = module.run_upstream_check
+    preflight_calls = []
+
+    def process_runner(command, **kwargs):
+        if command[0] == "git":
+            return run_git_with_local_canonical_remote(command, kwargs, canonical)
+        if command[2] == "import":
+            version = command[command.index("--version") + 1]
+            make_imported_export(Path(kwargs["cwd"]), name=command[5], version=version)
+        if command[2] == "preflight":
+            preflight_calls.append(command)
+            if len(preflight_calls) == 1:
+                return subprocess.CompletedProcess(command, 1, stdout="", stderr="temporary failure")
+        return subprocess.CompletedProcess(command, 0, stdout="passed\n", stderr="")
+
+    attempts = []
+
+    def run_with_fake_processes(*args, **kwargs):
+        assert kwargs["auto_version"] is True
+        result = actual_run(*args, process_runner=process_runner, **kwargs)
+        attempts.append(args[1]["release"]["upstream_version"])
+        return result
+
+    monkeypatch.setattr(module, "run_upstream_check", run_with_fake_processes)
+    args = upstream_check_args(sibling)
+
+    assert module.cmd_upstream_check(args) == 1
+    assert load_config(config_path)["release"] == {
+        "upstream_paper_name": "", "upstream_version": "", "output": "",
+    }
+    assert attempts == ["ada1012_2"]
+    assert not (root / "html_output" / paper_name / "ada1012_2").exists()
+
+    add_existing_release(canonical, paper_name, "ada1012_2")
+    refresh_sibling(sibling, canonical)
+    assert module.cmd_upstream_check(args) == 0
+
+    assert attempts == ["ada1012_2", "ada1012_3"]
+    assert load_config(config_path)["release"] == {
+        "upstream_paper_name": paper_name,
+        "upstream_version": "ada1012_3",
+        "output": "html_output/{}/ada1012_3".format(paper_name),
+    }
+    report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
+    assert report["status"] == "PASS"
+    assert report["version"] == "ada1012_3"
+    assert (root / "html_output" / paper_name / "ada1012_3" / "paper.json").is_file()
+
+
+def test_explicit_release_failure_preserves_version_config_and_existing_export(tmp_path, monkeypatch):
+    root, paper, config_path, module = make_project(tmp_path)
+    config = load_config(config_path)
+    release = {
+        "upstream_paper_name": "a_sample_paper",
+        "upstream_version": "ada1012",
+        "output": "html_output/a_sample_paper/ada1012",
+    }
+    config["release"] = dict(release)
+    mark_prior_stages_complete(config, "W10")
+    save_config(config_path, config)
+
+    canonical = make_clean_upstream_repo(tmp_path / "canonical")
+    add_existing_release(canonical, release["upstream_paper_name"], release["upstream_version"])
+    sibling = make_shallow_sparse_sibling(tmp_path / "PaperSkill", canonical)
+
+    existing_export = root / release["output"]
+    existing_export.mkdir(parents=True)
+    sentinel = existing_export / "validated-export.txt"
+    sentinel.write_text("keep this verified export\n", encoding="utf-8")
+    monkeypatch.setattr(module, "resolve_contributor_profile", lambda *_args: ("Ada Researcher", "ada", ""))
+    actual_run = module.run_upstream_check
+    npm_commands = []
+
+    def process_runner(command, **kwargs):
+        if command[0] == "git":
+            return run_git_with_local_canonical_remote(command, kwargs, canonical)
+        npm_commands.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="passed\n", stderr="")
+
+    def run_with_fake_processes(*args, **kwargs):
+        assert kwargs["auto_version"] is False
+        return actual_run(*args, process_runner=process_runner, **kwargs)
+
+    monkeypatch.setattr(module, "run_upstream_check", run_with_fake_processes)
+    assert module.cmd_upstream_check(upstream_check_args(sibling)) == 1
+
+    assert load_config(config_path)["release"] == release
+    assert sentinel.read_text(encoding="utf-8") == "keep this verified export\n"
+    assert npm_commands == []
+    report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
+    assert report["status"] == "FAIL"
+    assert "version already exists" in report["error"]
 
 
 def test_upstream_check_rejects_import_changes_outside_tutorial_scope(tmp_path):
