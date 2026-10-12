@@ -29,11 +29,10 @@ python tools/paper.py stage <paper-id> W4 complete --reviewed-by "评审者姓�
 python tools/paper.py release-check <paper-id>
 python tools/paper.py paths <paper-id>
 python tools/paper.py open <paper-id>
-python tools/paper.py upstream-source-check <paper-id> --paperskill-repo ..\PaperSkill --level structure
-python tools/paper.py upstream-source-check <paper-id> --paperskill-repo ..\PaperSkill --level full
+python tools/paper.py upstream-check <paper-id> --paperskill-repo ..\PaperSkill
 ```
 
-Run the `structure` check for the first slice and `full` after W8. They inspect the configured publish source (Final when configured, otherwise Enhanced); `full` calls the official validator in the supplied PaperSkill checkout.
+W6/W8 checks use the real source directly; only the formal W10 preflight requires a PaperSkill checkout. Contributor defaults are shared across papers through the user's global Git config.
 
 `new` 会登记论文信息并创建 v3 工作区。若来源是用户提供的 PDF，可用 `--source-location "user-provided PDF"`，此时 `--url` 可以省略；请填写 `--source-type`，用多个 `--author` 提供全部作者，并在已知时填写 `--venue` 和 `--year`。工具不会根据 URL 推断论文内容。
 
@@ -56,7 +55,7 @@ $final-audit              # W9–W10
 
 ## 上游发布
 
-PaperSkill 建议作为 PaperSkillWork 的 sibling 轻量检出：
+PaperSkill 建议作为 PaperSkillWork 的 sibling 检出：
 
 ```text
 <workspace-parent>/
@@ -64,4 +63,4 @@ PaperSkill 建议作为 PaperSkillWork 的 sibling 轻量检出：
 └── PaperSkillWork/
 ```
 
-完整的 partial clone、sparse checkout、W10 检查和 PR 流程见[docs/UPSTREAM_RELEASE.md](docs/UPSTREAM_RELEASE.md)。
+唯一的发布流程说明见 [docs/WORKFLOW.md](docs/WORKFLOW.md) 的 W10。`docs/UPSTREAM_RELEASE.md` 保留仓库边界和操作约定，不复制工作流门禁。

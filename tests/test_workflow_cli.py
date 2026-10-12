@@ -2,7 +2,7 @@ import pytest
 
 from workflow_helpers import (
     HUMAN_STAGES, STAGE_KEYS, invoke, load_config, make_project, mark_prior_stages_complete,
-    run_source_check, save_config, write_export, write_manifest, write_upstream_report,
+    save_config, write_export, write_manifest, write_upstream_report,
 )
 
 
@@ -39,7 +39,6 @@ def test_automatic_stages_complete_without_fake_reviewer(tmp_path, stage):
                 "C02": ("S2", "ArchitectureExplorer", "complete"),
                 "C03": ("S2", "ArchitectureExplorer", "complete"),
             })
-            assert run_source_check(_module, paper, config, root / "PaperSkill", "full") == 0
         save_config(config_path, config)
     result = invoke(root, "stage", "demo-paper", stage, "complete")
     assert result.returncode == 0, result.stderr
@@ -49,6 +48,20 @@ def test_automatic_stages_complete_without_fake_reviewer(tmp_path, stage):
     assert entry["completed_by"] == "automation"
     assert "reviewed_by" not in entry
     assert "note" not in entry
+
+
+def test_check_passes_when_w10_is_pending_without_local_paperskill_path(tmp_path):
+    root, paper, config_path, _module = make_project(tmp_path)
+    config = load_config(config_path)
+    config["workflow"]["current_stage"] = "W10"
+    save_config(config_path, config)
+
+    result = invoke(root, "check", "demo-paper")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "[WARN] W10:" in result.stdout
+    assert "CHECK PASS" in result.stdout
+    assert not (paper / "audit/upstream-source-check.json").exists()
 
 
 def test_w10_is_automatic_when_machine_preflight_and_export_pass(tmp_path):

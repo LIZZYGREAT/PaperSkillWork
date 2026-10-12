@@ -26,26 +26,13 @@ For each confirmed page/state, record the approved effect or screenshot referenc
 
 For substantial motion, record the initial, key intermediate, and final states and the required object connections. Do not duplicate the same page contract in a new document.
 
-## Upstream Release Compatibility
+## Specific Upstream Contract Conflict (only if needed)
 
-Complete this section in W5 from the approved learning spine. It plans how the actual release source satisfies the target PaperSkill contract; it does not authorize changing confirmed teaching content to meet a count.
+Most projects need no entry here. Record only a concrete conflict that prevents the approved design from fitting the current upstream contract, and the decision needed to resolve it. Do not duplicate chapter, module, or component mappings; W8 checks the actual release source with the target checkout's official validator.
 
-- Publish source: `web/enhanced` / explicitly configured `web/final`
-- Runtime: template-driven `tutorial + registry` / custom standalone React
-- Target upstream PaperSkill checkout and intended revision:
-- Source of truth for chapter metadata, titles, and navigation:
-- Upstream contract authority: official `paper-skill/scripts/validate-output.js` and `paper-skill/contract.md`
-
-| Approved spine stage/page | Upstream chapter grouping | Real module or interaction | Runtime component |
-| --- | --- | --- | --- |
-|  |  |  |  |
-
-- Registration strategy for `componentId` (or why custom interactions need none):
-- Risks or conflicts requiring a human decision:
-
-Write “none identified” for risks when applicable.
-
-Use the current target checkout's official validator and `paper-skill/contract.md` as the release authority. Do not copy numeric thresholds into this plan. Keep approved chapter order and learning goals intact; raise any conflict for a decision before implementation.
+- Conflict and affected approved design:
+- Evidence from the current official contract/validator:
+- Decision needed:
 
 ## Visual QA State Plan
 

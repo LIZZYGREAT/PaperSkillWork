@@ -4,9 +4,7 @@ import json
 import shutil
 import subprocess
 import sys
-from types import SimpleNamespace
 from pathlib import Path
-from unittest.mock import patch
 
 import yaml
 
@@ -154,27 +152,13 @@ def make_project(tmp_path, selected_asset=False):
     with (paper / "design/implementation-plan.md").open("a", encoding="utf-8") as handle:
         handle.write(
             "\n## Primary Spine Mapping\n\n## Reusable Pattern Library\n"
-            "\n## Upstream Release Compatibility\n"
-            "\n- Publish source: `web/enhanced`"
-            "\n- Runtime: custom standalone React with App and pages"
-            "\n- Target upstream PaperSkill checkout and intended revision: sibling checkout at current main"
-            "\n- Source of truth for chapter metadata, titles, and navigation: src/data/tutorial.ts"
-            "\n- Upstream contract authority: official `paper-skill/scripts/validate-output.js` and `paper-skill/contract.md`"
-            "\n\n| Approved spine stage/page | Upstream chapter grouping | Real module or interaction | Runtime component |"
-            "\n| --- | --- | --- | --- |"
-            "\n| S1 Problem | Problem chapter | Opening explanation | App |"
-            "\n- Registration strategy for `componentId` (or why custom interactions need none): none; custom App renders directly"
-            "\n- Risks or conflicts requiring a human decision: none identified"
-            "\n\n## Vertical Slice (W6)\n\n### Vertical Slice Review (W7)\n\nVertical Slice Review: PASS\n"
+            "\n## Vertical Slice (W6)\n\n### Vertical Slice Review (W7)\n\nVertical Slice Review: PASS\n"
         )
     write_manifest(paper, complete_core={"C01": ("S1", "Problem", "complete"), "C02": ("S2", "ArchitectureExplorer", "complete"), "C03": ("S2", "ArchitectureExplorer", "planned")})
     write_source_project(paper / "web/enhanced")
 
     save_config(config_path, config)
     module = load_paper_module(root)
-    paperskill_repo = make_paperskill_checkout(root)
-    run_source_check(module, paper, config, paperskill_repo, "structure")
-    run_source_check(module, paper, config, paperskill_repo, "full")
     return root, paper, config_path, module
 
 
@@ -203,47 +187,6 @@ def write_source_project(source):
         target = source / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content + ("" if content.endswith("\n") else "\n"), encoding="utf-8")
-
-
-def make_paperskill_checkout(root):
-    repo = root / "PaperSkill"
-    validator = repo / "paper-skill/scripts/validate-output.js"
-    contract = repo / "paper-skill/contract.md"
-    validator.parent.mkdir(parents=True, exist_ok=True)
-    contract.parent.mkdir(parents=True, exist_ok=True)
-    validator.write_text("// Fixture validator. The command runner supplies its result.\n", encoding="utf-8")
-    contract.write_text("# Fixture contract\n", encoding="utf-8")
-    subprocess.run(["git", "init", str(repo)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-    subprocess.run(["git", "-C", str(repo), "add", "paper-skill"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-    subprocess.run(
-        ["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-m", "fixture upstream"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True,
-    )
-    return repo
-
-
-def run_source_check(
-    module, paper, config, paperskill_repo, level, validator_output="RESULT: PASS\n",
-    node_available=True, npm_available=True,
-):
-    available = {"git": "git"}
-    if node_available:
-        available["node"] = "node"
-    if npm_available:
-        available["npm"] = "npm"
-
-    def fake_which(name):
-        return available.get(name)
-
-    def runner(command, **kwargs):
-        if command[0] == "git":
-            return subprocess.run(command, **kwargs)
-        if command[0] == "node":
-            return SimpleNamespace(returncode=0 if "RESULT: PASS" in validator_output else 1, stdout=validator_output, stderr="")
-        return SimpleNamespace(returncode=0, stdout="fixture command passed", stderr="")
-
-    with patch("shutil.which", side_effect=fake_which):
-        return module.run_upstream_source_check(paper, config, level, paperskill_repo, process_runner=runner)
 
 
 def write_fenced_yaml(path, title, data):
