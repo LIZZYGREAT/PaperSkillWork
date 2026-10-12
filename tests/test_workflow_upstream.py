@@ -197,7 +197,7 @@ def test_w10_requires_machine_report_and_rejects_a_failed_upstream_command(tmp_p
     assert any("failed with exit code 1" in problem for problem in problems)
 
 
-def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_path):
+def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_path, capsys):
     root, paper, config_path, module = make_project(tmp_path)
     config = load_config(config_path)
     final = paper / "web/final"
@@ -237,6 +237,22 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
 
     result = module.run_upstream_check(paper, config, upstream, "Ada Author", process_runner=runner)
     assert result == 0
+    output = capsys.readouterr().out
+    expected_progress = [
+        "[W10] Checking upstream HEAD and checkout state...",
+        "[W10] Checking local release inputs...",
+        "[W10] Connecting to official PaperSkill main (partial clone)...",
+        "[W10] PASS Connecting to official PaperSkill main (partial clone)",
+        "[W10] Expanding sparse paths for this release...",
+        "[W10] Official Import...",
+        "[W10] Official Validate...",
+        "[W10] Official Build:paper...",
+        "[W10] Official Preflight...",
+        "[W10] Writing verified export and preflight report...",
+        "[W10] PASS Writing verified export and preflight report",
+    ]
+    positions = [output.index(progress) for progress in expected_progress]
+    assert positions == sorted(positions)
     assert all(cwd != upstream for command, cwd in called if command[0].startswith("npm"))
     assert (root / config["release"]["output"] / "paper.json").is_file()
     report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
@@ -251,6 +267,7 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert "scripts" in report["sibling_baseline"]["sparse_checkout"]
     clone_call = next(command for command, _cwd in called if command[0] == "git" and "clone" in command)
     assert "--filter=blob:none" in clone_call
+    assert "--progress" in clone_call
     assert "--no-checkout" in clone_call
     assert "--shared" not in clone_call
     assert "--reference-if-able" in clone_call
@@ -386,6 +403,24 @@ def test_explicit_release_failure_preserves_version_config_and_existing_export(t
     assert "version already exists" in report["error"]
 
 
+
+def test_upstream_check_does_not_report_embedded_remote_credentials(tmp_path, capsys):
+    _root, paper, _config_path, module = make_project(tmp_path)
+    upstream = make_clean_upstream_repo(tmp_path / "PaperSkill")
+    secret_remote = "https://private-token@github.com/ReductTech/PaperSkill.git"
+    subprocess.run([
+        "git", "-C", str(upstream), "remote", "set-url", "upstream", secret_remote,
+    ], check=True)
+
+    result = module.run_upstream_check(paper, load_config(_config_path), upstream, "Ada Author")
+    output = capsys.readouterr().out
+    report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
+
+    assert result == 1
+    assert "must not embed credentials" in report["error"]
+    assert "private-token" not in output
+    assert "private-token" not in json.dumps(report)
+
 def test_upstream_check_rejects_import_changes_outside_tutorial_scope(tmp_path):
     root, paper, config_path, module = make_project(tmp_path)
     config = load_config(config_path)
@@ -482,7 +517,7 @@ def test_w10_requires_commit_scope_and_matching_export_hash(tmp_path):
     assert any("SHA-256 does not match" in problem for problem in problems)
 
 
-def test_upstream_check_command_failure_is_reported_and_does_not_copy_export(tmp_path):
+def test_upstream_check_command_failure_is_reported_and_does_not_copy_export(tmp_path, capsys):
     root, paper, config_path, module = make_project(tmp_path)
     config = load_config(config_path)
     config["release"] = {
@@ -504,6 +539,11 @@ def test_upstream_check_command_failure_is_reported_and_does_not_copy_export(tmp
 
     result = module.run_upstream_check(paper, config, upstream, "Ada Author", process_runner=runner)
     assert result == 1
+    output = capsys.readouterr().out
+    assert "[W10] Official Preflight..." in output
+    assert "[W10] FAIL Official Preflight: mock result" in output
+    assert "[W10] Writing failure preflight report..." in output
+    assert "[W10] PASS Writing failure preflight report" in output
     assert not (root / config["release"]["output"]).exists()
     report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
     assert report["status"] == "FAIL"

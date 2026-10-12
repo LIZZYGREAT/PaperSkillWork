@@ -101,6 +101,8 @@ python tools/paper.py upstream-check <paper-id> --paperskill-repo $PaperSkillRep
 
 该命令从 `paper.yaml` 读取论文信息，从全局 Git 配置读取贡献者资料，在隔离检出中依次执行官方导入、验证、构建和 preflight。它会生成/更新本地导出和 `papers/<paper-id>/audit/upstream-preflight.json`，但不会修改提供的 PaperSkill 检出、推送或创建 PR。预检成功前，自动推导的发布字段不会写回 `paper.yaml`；失败可重试。
 
+运行时会立即显示当前 W10 阶段；官方 partial clone 会显示 Git 原生传输进度。最终判定仍以机器报告中的命令结果和退出码为准。
+
 只有命令退出码为 0、报告 status 为 PASS、unexpected_paths 为空、commands 全部为退出码 0，且报告列出成功的 import、validate、build:paper、preflight 后，才继续。报告同时记录导出 SHA-256。核对报告并记录 W10：
 
 ~~~powershell
