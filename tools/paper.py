@@ -1083,8 +1083,8 @@ def run_upstream_check(
             begin_stage("Connecting to official PaperSkill main (partial clone)")
             clone = invoke([
                 "git", "-c", "safe.directory={}".format(paperskill_repo), "clone", "--progress",
-                "--filter=blob:none", "--no-checkout", "--reference-if-able", str(paperskill_repo),
-                "--depth=1", "--single-branch", "--branch", "main", canonical_remote_url, str(temp_repo),
+                "--filter=blob:none", "--sparse", "--depth=1", "--single-branch", "--branch", "main",
+                "--no-tags", canonical_remote_url, str(temp_repo),
             ], temp_root, temp_root, live_git_progress=True)
             if clone.returncode != 0:
                 raise PaperError("could not create a partial clone of canonical PaperSkill main: {}".format(summarize_process(clone, temp_root)))
@@ -1097,6 +1097,13 @@ def run_upstream_check(
                     live_git_progress=live_git_progress,
                 )
 
+            cloned_head = isolated_git(["rev-parse", "HEAD"])
+            if cloned_head.returncode != 0:
+                raise PaperError("could not read the temporary PaperSkill HEAD after the lightweight clone: {}".format(summarize_process(cloned_head, temp_root)))
+            cloned_head_commit = str(getattr(cloned_head, "stdout", "") or "").strip()
+            if not re.fullmatch(r"[0-9a-fA-F]{40,64}", cloned_head_commit):
+                raise PaperError("temporary PaperSkill HEAD did not return a valid commit SHA")
+
             canonical_main = isolated_git(["rev-parse", "refs/remotes/origin/main"])
             if canonical_main.returncode != 0:
                 raise PaperError("could not read canonical PaperSkill main after the lightweight clone: {}".format(summarize_process(canonical_main, temp_root)))
@@ -1104,6 +1111,8 @@ def run_upstream_check(
             if not re.fullmatch(r"[0-9a-fA-F]{40,64}", canonical_main_commit):
                 raise PaperError("canonical PaperSkill main did not return a valid commit SHA")
             report["canonical_main_commit"] = canonical_main_commit
+            if cloned_head_commit != canonical_main_commit:
+                raise PaperError("temporary PaperSkill HEAD does not match refs/remotes/origin/main")
             if canonical_main_commit != upstream_commit:
                 raise PaperError(
                     "PaperSkill sibling HEAD does not match canonical {}/main; refresh the sibling with "
@@ -1114,9 +1123,6 @@ def run_upstream_check(
 
             pass_stage()
             begin_stage("Expanding sparse paths for this release")
-            sparse_init = isolated_git(["sparse-checkout", "init", "--cone"])
-            if sparse_init.returncode != 0:
-                raise PaperError("could not initialize sparse checkout for the isolated PaperSkill clone: {}".format(summarize_process(sparse_init, temp_root)))
             sparse_set = isolated_git([
                 "sparse-checkout", "set", "--skip-checks", "paper-skill", "scripts", ".github", "docs",
                 "html_output/{}".format(release["upstream_paper_name"]),
@@ -1125,11 +1131,8 @@ def run_upstream_check(
                 raise PaperError("could not set sparse paths for the isolated PaperSkill clone: {}".format(summarize_process(sparse_set, temp_root)))
             pass_stage()
 
-            begin_stage("Checking out sparse upstream baseline")
-            branch = isolated_git(
-                ["checkout", "--progress", "-b", "paperskillwork-preflight", upstream_commit],
-                live_git_progress=True,
-            )
+            begin_stage("Preparing temporary contribution branch")
+            branch = isolated_git(["switch", "-c", "paperskillwork-preflight"])
             if branch.returncode != 0:
                 raise PaperError("could not create a temporary upstream test branch: {}".format(summarize_process(branch, temp_root)))
             for key, value in (("user.name", "PaperSkillWork Preflight"), ("user.email", "paperskillwork-preflight@example.invalid")):

@@ -21,6 +21,7 @@ def make_clean_upstream_repo(path):
     subprocess.run(["git", "init", "-q", "-b", "main", str(path)], check=True)
     subprocess.run(["git", "-C", str(path), "config", "user.name", "Test User"], check=True)
     subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.org"], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "uploadpack.allowFilter", "true"], check=True)
     (path / "package.json").write_text(json.dumps({"scripts": {"import": "node noop.js", "validate": "node noop.js", "build:paper": "node noop.js", "preflight": "node noop.js"}}), encoding="utf-8")
     (path / "noop.js").write_text("process.exit(0);\n", encoding="utf-8")
     subprocess.run(["git", "-C", str(path), "add", "package.json", "noop.js"], check=True)
@@ -33,7 +34,7 @@ def make_clean_upstream_repo(path):
 def run_git_with_local_canonical_remote(command, kwargs, canonical_source):
     local_command = list(command)
     if local_command[0] == "git" and "clone" in local_command:
-        local_command[local_command.index(CANONICAL_PAPERSKILL_URL)] = str(canonical_source)
+        local_command[local_command.index(CANONICAL_PAPERSKILL_URL)] = canonical_source.resolve().as_uri()
     return subprocess.run(local_command, **kwargs)
 
 
@@ -43,13 +44,13 @@ def make_shallow_sparse_sibling(path, canonical_source):
         "git", "clone", "--filter=blob:none", "--depth=1", "--sparse", remote_url, str(path),
     ], check=True, capture_output=True, text=True)
     subprocess.run(["git", "-C", str(path), "remote", "rename", "origin", "upstream"], check=True)
-    subprocess.run(["git", "-C", str(path), "remote", "set-url", "upstream", CANONICAL_PAPERSKILL_URL], check=True)
     subprocess.run(["git", "-C", str(path), "config", "user.name", "Test User"], check=True)
     subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.org"], check=True)
     subprocess.run([
         "git", "-C", str(path), "sparse-checkout", "set", "--cone", "--skip-checks",
         "paper-skill", "scripts", ".github", "docs",
     ], check=True)
+    subprocess.run(["git", "-C", str(path), "remote", "set-url", "upstream", CANONICAL_PAPERSKILL_URL], check=True)
     return path
 
 
@@ -214,15 +215,61 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     config["paper"]["url"] = "https://example.org/paper"
     config_path.write_text(module.yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
     canonical = make_clean_upstream_repo(tmp_path / "canonical")
+    sparse_fixture_files = {
+        "paper-skill/README.md": "PaperSkill source\n",
+        "scripts/validate.js": "process.exit(0);\n",
+        ".github/workflows/ci.yml": "name: test\n",
+        "docs/upstream.md": "Upstream docs\n",
+        "html_output/sample_paper_name/README.md": "Existing paper directory\n",
+        "html_output/unrelated_paper/README.md": "Keep this sparse\n",
+    }
+    for relative, contents in sparse_fixture_files.items():
+        target = canonical / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(contents, encoding="utf-8")
+    subprocess.run(["git", "-C", str(canonical), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(canonical), "commit", "-q", "-m", "add sparse checkout fixtures"], check=True)
     upstream = make_shallow_sparse_sibling(tmp_path / "PaperSkill", canonical)
     called = []
     npm_order = []
     preflight_heads = []
+    clone_snapshots = []
+    sparse_snapshots = []
+    branch_snapshots = []
+
+    def git_output(repo, *arguments):
+        result = subprocess.run(
+            ["git", "-C", str(repo)] + list(arguments), capture_output=True, text=True, check=True,
+        )
+        return result.stdout.strip()
+
+    def visible_files(repo):
+        return {
+            path.relative_to(repo).as_posix()
+            for path in repo.rglob("*")
+            if path.is_file() and ".git" not in path.relative_to(repo).parts
+        }
 
     def runner(command, **kwargs):
         called.append((command, Path(kwargs["cwd"]), dict(kwargs)))
         if command[0] == "git":
             result = run_git_with_local_canonical_remote(command, kwargs, canonical)
+            if result.returncode == 0 and "clone" in command:
+                cloned_repo = Path(command[-1])
+                clone_snapshots.append((
+                    git_output(cloned_repo, "rev-parse", "HEAD"),
+                    git_output(cloned_repo, "rev-parse", "refs/remotes/origin/main"),
+                    visible_files(cloned_repo),
+                ))
+            elif result.returncode == 0 and "sparse-checkout" in command and "set" in command:
+                repo = Path(kwargs["cwd"])
+                sparse_snapshots.append(visible_files(repo))
+            elif result.returncode == 0 and "switch" in command and "-c" in command:
+                repo = Path(kwargs["cwd"])
+                branch_snapshots.append((
+                    git_output(repo, "branch", "--show-current"),
+                    git_output(repo, "rev-parse", "HEAD"),
+                ))
             if "commit" in command:
                 npm_order.append("git commit")
             return result
@@ -247,8 +294,8 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
         "[W10] PASS Connecting to official PaperSkill main (partial clone)",
         "[W10] Expanding sparse paths for this release...",
         "[W10] PASS Expanding sparse paths for this release",
-        "[W10] Checking out sparse upstream baseline...",
-        "[W10] PASS Checking out sparse upstream baseline",
+        "[W10] Preparing temporary contribution branch...",
+        "[W10] PASS Preparing temporary contribution branch",
         "[W10] Preparing release source snapshot...",
         "[W10] PASS Preparing release source snapshot",
         "[W10] Official Import...",
@@ -274,21 +321,45 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert "scripts" in report["sibling_baseline"]["sparse_checkout"]
     clone_call = next(command for command, _cwd, _kwargs in called if command[0] == "git" and "clone" in command)
     assert "--filter=blob:none" in clone_call
+    assert "--sparse" in clone_call
+    assert "--depth=1" in clone_call
+    assert "--no-tags" in clone_call
     assert "--progress" in clone_call
-    assert "--no-checkout" in clone_call
+    assert "--no-checkout" not in clone_call
     assert "--shared" not in clone_call
-    assert "--reference-if-able" in clone_call
-    checkout_call, _checkout_cwd, checkout_kwargs = next(
-        (command, cwd, kwargs)
-        for command, cwd, kwargs in called
-        if command[0] == "git" and "checkout" in command
-    )
-    assert "--progress" in checkout_call
-    assert checkout_kwargs["stderr"] is None
-    assert checkout_kwargs["stdout"] == subprocess.PIPE
+    assert "--reference-if-able" not in clone_call
+    assert len(clone_snapshots) == 1
+    clone_head, clone_origin_main, initial_files = clone_snapshots[0]
+    assert clone_head == clone_origin_main == report["upstream_commit"]
+    assert initial_files == {"noop.js", "package.json"}
     sparse_paths_call = next(command for command, _cwd, _kwargs in called if "sparse-checkout" in command and "set" in command)
+    assert sum(1 for command, _cwd, _kwargs in called if "sparse-checkout" in command and "set" in command) == 1
+    assert not any("sparse-checkout" in command and "init" in command for command, _cwd, _kwargs in called)
     assert "--skip-checks" in sparse_paths_call
     assert "html_output/sample_paper_name" in sparse_paths_call
+    assert len(sparse_snapshots) == 1
+    assert sparse_snapshots[0] == {
+        "noop.js", "package.json", "paper-skill/README.md", "scripts/validate.js",
+        ".github/workflows/ci.yml", "docs/upstream.md", "html_output/sample_paper_name/README.md",
+    }
+    branch_call = next(
+        command for command, _cwd, _kwargs in called
+        if "switch" in command and "-c" in command
+    )
+    assert branch_call[branch_call.index("switch") + 1:] == ["-c", "paperskillwork-preflight"]
+    assert not any(command[0] == "git" and "checkout" in command for command, _cwd, _kwargs in called)
+    assert branch_snapshots == [("paperskillwork-preflight", report["upstream_commit"])]
+    ordered_calls = [
+        next(index for index, (command, _cwd, _kwargs) in enumerate(called) if "clone" in command),
+        next(index for index, (command, _cwd, _kwargs) in enumerate(called) if "sparse-checkout" in command and "set" in command),
+        next(index for index, (command, _cwd, _kwargs) in enumerate(called) if "switch" in command and "-c" in command),
+        next(index for index, (command, _cwd, _kwargs) in enumerate(called) if command[0] != "git" and command[2] == "import"),
+        next(index for index, (command, _cwd, _kwargs) in enumerate(called) if "commit" in command),
+        next(index for index, (command, _cwd, _kwargs) in enumerate(called) if command[0] != "git" and command[2] == "validate"),
+        next(index for index, (command, _cwd, _kwargs) in enumerate(called) if command[0] != "git" and command[2] == "build:paper"),
+        next(index for index, (command, _cwd, _kwargs) in enumerate(called) if command[0] != "git" and command[2] == "preflight"),
+    ]
+    assert ordered_calls == sorted(ordered_calls)
     assert report["changed_paths"]
     assert all(path.startswith("html_output/sample_paper_name/ada0926/") for path in report["changed_paths"])
     assert report["unexpected_paths"] == []
@@ -303,6 +374,41 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert status.stdout == ""
     identity = subprocess.run(["git", "-C", str(upstream), "config", "user.name"], capture_output=True, text=True, check=True)
     assert identity.stdout.strip() == "Test User"
+
+
+def test_upstream_check_records_temporary_branch_failure(tmp_path, capsys):
+    _root, paper, config_path, module = make_project(tmp_path)
+    config = load_config(config_path)
+    config["release"] = {
+        "upstream_paper_name": "sample_paper_name",
+        "upstream_version": "ada0926",
+        "output": "html_output/sample_paper_name/ada0926",
+    }
+    config["paper"]["url"] = "https://example.org/paper"
+    config_path.write_text(module.yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    canonical = make_clean_upstream_repo(tmp_path / "canonical")
+    sibling = make_shallow_sparse_sibling(tmp_path / "PaperSkill", canonical)
+    official_commands = []
+
+    def runner(command, **kwargs):
+        if command[0] == "git" and "switch" in command and "-c" in command:
+            return subprocess.CompletedProcess(command, 1, stdout="", stderr="branch creation failed")
+        if command[0] == "git":
+            return run_git_with_local_canonical_remote(command, kwargs, canonical)
+        official_commands.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="unexpected\n", stderr="")
+
+    result = module.run_upstream_check(paper, config, sibling, "Ada Author", process_runner=runner)
+    output = capsys.readouterr().out
+    report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
+
+    assert result == 1
+    assert "[W10] FAIL Preparing temporary contribution branch" in output
+    assert report["status"] == "FAIL"
+    assert "Preparing temporary contribution branch" in report["error"]
+    assert "branch creation failed" in report["error"]
+    assert official_commands == []
+    assert report["commands"] == []
 
 
 def test_automatic_release_version_is_persisted_only_after_success_and_retry_uses_open_suffixes(tmp_path, monkeypatch):
