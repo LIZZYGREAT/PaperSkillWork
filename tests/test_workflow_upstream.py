@@ -1,6 +1,7 @@
 import argparse
 import json
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -251,6 +252,8 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
         }
 
     def runner(command, **kwargs):
+        assert kwargs["encoding"] == "utf-8"
+        assert kwargs["errors"] == "replace"
         called.append((command, Path(kwargs["cwd"]), dict(kwargs)))
         if command[0] == "git":
             result = run_git_with_local_canonical_remote(command, kwargs, canonical)
@@ -374,6 +377,39 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert status.stdout == ""
     identity = subprocess.run(["git", "-C", str(upstream), "config", "user.name"], capture_output=True, text=True, check=True)
     assert identity.stdout.strip() == "Test User"
+
+
+def test_upstream_check_decodes_utf8_and_replaces_invalid_bytes_without_hiding_failure(tmp_path):
+    root, paper, config_path, module = make_project(tmp_path)
+    config = load_config(config_path)
+    config["release"] = {
+        "upstream_paper_name": "sample_paper_name",
+        "upstream_version": "ada0926",
+        "output": "html_output/sample_paper_name/ada0926",
+    }
+    config["paper"]["url"] = "https://example.org/paper"
+    save_config(config_path, config)
+    upstream = make_clean_upstream_repo(tmp_path / "PaperSkill")
+    output_script = "import sys; sys.stdout.buffer.write('\\u5b8b\\u4f20\\u4e2d\\u6587'.encode('utf-8')); sys.stderr.buffer.write(b'\\xff')"
+
+    def runner(command, **kwargs):
+        assert kwargs["encoding"] == "utf-8"
+        assert kwargs["errors"] == "replace"
+        if command[0] == "git" and "clone" in command:
+            decoded = subprocess.run([sys.executable, "-c", output_script], **kwargs)
+            return subprocess.CompletedProcess(command, 9, stdout=decoded.stdout, stderr=decoded.stderr)
+        if command[0] == "git":
+            return run_git_with_local_canonical_remote(command, kwargs, upstream)
+        raise AssertionError("official command should not run after the simulated clone failure")
+
+    result = module.run_upstream_check(paper, config, upstream, "Ada Author", process_runner=runner)
+
+    report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
+    assert result == 1
+    assert report["status"] == "FAIL"
+    assert "\u5b8b\u4f20\u4e2d\u6587" in report["error"]
+    assert "�" in report["error"]
+    assert not (root / config["release"]["output"]).exists()
 
 
 def test_upstream_check_records_temporary_branch_failure(tmp_path, capsys):

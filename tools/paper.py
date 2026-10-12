@@ -992,7 +992,16 @@ def run_upstream_check(
         live_git_progress: bool = False,
     ) -> Any:
         stderr = None if live_git_progress and use_default_runner else subprocess.PIPE
-        return runner(command, cwd=str(cwd), stdout=subprocess.PIPE, stderr=stderr, text=True, check=False)
+        return runner(
+            command,
+            cwd=str(cwd),
+            stdout=subprocess.PIPE,
+            stderr=stderr,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
 
     def sibling_git(arguments: List[str]) -> Any:
         return invoke([
