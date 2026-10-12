@@ -322,8 +322,10 @@ def test_open_final_requires_web_final_configuration(tmp_path):
 def test_cli_help_exposes_only_current_commands():
     result = invoke(REPO_ROOT, "--help")
     assert result.returncode == 0
-    for command in ("new", "status", "check", "stage", "scaffold-kit", "release-check", "upstream-check", "paths", "open"):
+    for command in ("new", "status", "check", "stage", "scaffold-kit", "release-check", "release-info", "paths", "open"):
         assert command in result.stdout
+    assert "upstream-check" not in result.stdout
+    assert "--replace-output" not in result.stdout
     assert "Workflow v3" in result.stdout
 
 

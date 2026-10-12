@@ -1,4 +1,4 @@
-from workflow_helpers import load_config, make_project, write_export, write_upstream_report, write_fenced_yaml, write_manifest
+from workflow_helpers import load_config, make_project, write_fenced_yaml, write_manifest
 
 
 def test_w3_requires_original_source_and_approved_rights_but_not_derivative(tmp_path):
@@ -43,26 +43,12 @@ def test_w8_requires_asset_derivative_web_copy_and_provenance(tmp_path):
     assert module.v3_stage_completion_problems(paper, "W8", config) == []
 
 
-def test_w10_requires_exported_asset_and_readme_provenance(tmp_path):
-    root, paper, config_path, module = make_project(tmp_path, selected_asset=True)
+def test_w10_does_not_require_a_local_export_or_rescan_source_paths(tmp_path):
+    _root, paper, config_path, module = make_project(tmp_path, selected_asset=True)
     config = load_config(config_path)
-    output = write_export(root, config, paper, with_asset=False)
-    (paper / "assets/figures/web/F01.png").parent.mkdir(parents=True, exist_ok=True)
-    (paper / "assets/figures/web/F01.png").write_bytes(b"web-derivative")
-    (paper / "web/enhanced/public/images/F01.png").parent.mkdir(parents=True, exist_ok=True)
-    (paper / "web/enhanced/public/images/F01.png").write_bytes(b"web-asset")
-    (paper / "web/enhanced/README.md").write_text("## Asset provenance\n", encoding="utf-8")
-    write_upstream_report(paper, config)
+    (paper / "web/enhanced/index.html").write_text(
+        '<script type="module" src="/src/main.tsx"></script>\n', encoding="utf-8",
+    )
 
-    problems = module.v3_stage_completion_problems(paper, "W10", config)
-    assert any("export is missing selected asset" in problem for problem in problems)
-
-    (output / "README.md").write_text("Project overview only.\n", encoding="utf-8")
-    (output / "public/images").mkdir(parents=True, exist_ok=True)
-    (output / "public/images/F01.png").write_bytes(b"exported-figure")
-    problems = module.v3_stage_completion_problems(paper, "W10", config)
-    assert any("export README.md must document asset provenance" in problem for problem in problems)
-
-    (output / "README.md").write_text("## Asset provenance\n", encoding="utf-8")
-    write_upstream_report(paper, config)
     assert module.v3_stage_completion_problems(paper, "W10", config) == []
+    assert not (_root / "html_output").exists()

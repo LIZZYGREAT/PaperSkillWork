@@ -2,8 +2,6 @@
 """Mechanical workspace and workflow checks for PaperSkillWork."""
 
 import argparse
-import copy
-import hashlib
 import json
 import os
 import re
@@ -12,10 +10,8 @@ import subprocess
 import sys
 import tempfile
 import unicodedata
-from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
-from urllib.parse import urlparse
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 try:
     import yaml
@@ -101,7 +97,6 @@ V3_STAGE_ARTIFACTS = {
     "W7": ("file", "design/implementation-plan.md"),
     "W8": ("file", "web/enhanced/package.json"),
     "W9": ("file", "audit/final-check.md"),
-    "W10": ("dir", "html_output"),
 }
 ABSOLUTE_LOCAL_PATH_RE = re.compile(
     r"(?:[A-Za-z]:\\Users\\[^\s\"'<>]+|/Users/[^/\s]+/[^\s\"'<>]+)"
@@ -352,22 +347,6 @@ def resolve_contributor_profile(
     return participant, pinyin, github
 
 
-def contributor_version_slug(participant: str, pinyin: str = "", github: str = "") -> str:
-    if pinyin.strip():
-        slug = re.sub(r"[^a-z0-9]", "", pinyin.lower())
-    else:
-        slug = re.sub(r"[^a-z0-9]", "", participant.lower())
-        if not slug or not re.match(r"^[a-z]", slug):
-            github_name = github[1:] if github.startswith("@") else github
-            slug = re.sub(r"[^a-z0-9]", "", github_name.lower())
-    if not slug or not re.match(r"^[a-z]", slug):
-        raise PaperError(
-            "Cannot derive the upstream version prefix from contributor identity. "
-            "Set `git config --global paperskillwork.pinyin \"yourpinyin\"` once, or pass --pinyin."
-        )
-    return slug
-
-
 def upstream_paper_name_from_title(title: str) -> str:
     ascii_title = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii")
     paper_name = re.sub(r"[^a-z0-9]+", "_", ascii_title.lower()).strip("_")
@@ -377,27 +356,6 @@ def upstream_paper_name_from_title(title: str) -> str:
             "Set release.upstream_paper_name in paper.yaml once and retry."
         )
     return paper_name
-
-
-def prepare_release_identifiers(
-    config: Dict[str, Any], participant: str, pinyin: str = "", github: str = "",
-    now: Optional[datetime] = None,
-) -> Tuple[bool, str]:
-    release = config["release"]
-    paper_name = release.get("upstream_paper_name", "").strip() or upstream_paper_name_from_title(config["title"])
-    automatic_version = not release.get("upstream_version", "").strip()
-    date_stamp = (now or datetime.now()).strftime("%m%d")
-    version = release.get("upstream_version", "").strip()
-    if automatic_version:
-        version = contributor_version_slug(participant, pinyin, github) + date_stamp
-    release["upstream_paper_name"] = paper_name
-    release["upstream_version"] = version
-    if not release.get("output", "").strip():
-        release["output"] = "html_output/{}/{}".format(paper_name, version)
-    errors = validate_config(config, config.get("id", ""))
-    if errors:
-        raise PaperError("Cannot prepare release identifiers:\n- " + "\n- ".join(errors))
-    return automatic_version, date_stamp
 
 
 def write_paper_config(folder: Path, config: Dict[str, Any]) -> None:
@@ -666,13 +624,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         print("{} {:<36} {}".format(stage_id, label, states[stage_id].upper()))
     print("\nArtifacts")
     for stage_id, (_kind, relative) in V3_STAGE_ARTIFACTS.items():
-        if stage_id == "W10":
-            relative = config["release"]["output"]
-            if not relative:
-                continue
-            target = ROOT / relative
-        else:
-            target = folder / relative
+        target = folder / relative
         exists = target.is_dir() and any(target.iterdir()) if target.is_dir() else target.is_file()
         print("[{}] {}".format("PRESENT" if exists else "MISSING", relative))
     print("Next Recommended Stage: {}".format(recommended_stage(states)))
@@ -814,102 +766,6 @@ def stage_order_problems(config: Dict[str, Any], stage_id: str) -> List[str]:
     ]
 
 
-def directory_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    for item in sorted(candidate for candidate in path.rglob("*") if candidate.is_file()):
-        digest.update(item.relative_to(path).as_posix().encode("utf-8"))
-        digest.update(b"\0")
-        with item.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                digest.update(chunk)
-    return digest.hexdigest()
-
-
-def summarize_process(result: Any, temp_root: Optional[Path] = None) -> str:
-    output = "\n".join(str(getattr(result, key, "") or "") for key in ("stdout", "stderr")).strip()
-    if temp_root is not None:
-        output = output.replace(str(temp_root), "<temporary-upstream>")
-    output = ABSOLUTE_LOCAL_PATH_RE.sub("<local-path>", output)
-    lines = [line.strip() for line in output.splitlines() if line.strip()]
-    return " | ".join(lines[-3:])[-600:]
-
-
-def save_upstream_report(folder: Path, report: Dict[str, Any]) -> None:
-    path = folder / "audit/upstream-preflight.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
-
-def available_upstream_version(temp_repo: Path, paper_name: str, base_version: str) -> str:
-    paper_output = temp_repo / "html_output" / paper_name
-    if not (paper_output / base_version).exists():
-        return base_version
-    for index in range(2, 1000):
-        candidate = "{}_{}".format(base_version, index)
-        if not (paper_output / candidate).exists():
-            return candidate
-    raise PaperError("No free upstream version remains for {}".format(base_version))
-
-
-def install_upstream_export(source: Path, target: Path, replace_output: bool) -> None:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if target.is_symlink():
-        raise PaperError("release output must not be a symbolic link")
-    if target.exists() and not replace_output:
-        raise PaperError("release output already exists; rerun with --replace-output to replace this generated export")
-    with tempfile.TemporaryDirectory(prefix="paper-export-stage-", dir=str(target.parent)) as staging_dir:
-        staging = Path(staging_dir) / "export"
-        shutil.copytree(source, staging)
-        backup = Path(staging_dir) / "previous-export"
-        if target.exists():
-            os.replace(str(target), str(backup))
-        try:
-            os.replace(str(staging), str(target))
-        except OSError:
-            if backup.exists() and not target.exists():
-                os.replace(str(backup), str(target))
-            raise
-
-
-def porcelain_changed_paths(output: str) -> List[str]:
-    fields = output.split("\0")
-    paths: List[str] = []
-    index = 0
-    while index < len(fields):
-        entry = fields[index]
-        index += 1
-        if not entry:
-            continue
-        if len(entry) < 4:
-            raise PaperError("could not parse isolated Git status")
-        status, path = entry[:2], entry[3:]
-        paths.append(path.replace("\\", "/"))
-        if "R" in status or "C" in status:
-            if index >= len(fields) or not fields[index]:
-                raise PaperError("could not parse isolated Git rename status")
-            paths.append(fields[index].replace("\\", "/"))
-            index += 1
-    return sorted(set(paths))
-
-
-def is_canonical_paperskill_remote(remote_url: str) -> bool:
-    """Return whether a Git remote URL points at ReductTech/PaperSkill on GitHub."""
-    value = remote_url.strip()
-    if "://" in value:
-        parsed = urlparse(value)
-        host = (parsed.hostname or "").lower()
-        path = parsed.path
-    else:
-        match = re.match(r"^(?:[^@/]+@)?([^:/]+):/?(.+)$", value)
-        if not match:
-            return False
-        host, path = match.group(1).lower(), match.group(2)
-    normalized_path = path.strip("/").lower()
-    if normalized_path.endswith(".git"):
-        normalized_path = normalized_path[:-4]
-    return host in ("github.com", "ssh.github.com") and normalized_path == "reducttech/paperskill"
-
-
 def resolve_upstream_source(folder: Path, config: Dict[str, Any]) -> Path:
     """Use Final when configured; use Enhanced while Final has not been created."""
     web = config.get("web", {})
@@ -950,6 +806,10 @@ def cmd_release_info(args: argparse.Namespace) -> int:
     release = config.get("release", {})
     paper_name = release.get("upstream_paper_name", "").strip() or upstream_paper_name_from_title(title)
     participant, pinyin, github = resolve_contributor_profile()
+    if any(ord(character) > 127 for character in participant) and not pinyin and not github:
+        raise PaperError(
+            "Contributor pinyin or GitHub username is required to derive an upstream version for a non-ASCII participant"
+        )
     year = paper.get("year")
     venue = paper.get("venue", "")
 
@@ -966,417 +826,6 @@ def cmd_release_info(args: argparse.Namespace) -> int:
         "venue": venue,
     }, ensure_ascii=False, indent=2))
     return 0
-
-
-def run_upstream_check(
-    folder: Path,
-    config: Dict[str, Any],
-    paperskill_repo: Path,
-    participant: str,
-    pinyin: str = "",
-    github: str = "",
-    replace_output: bool = False,
-    process_runner: Optional[Callable[..., Any]] = None,
-    auto_version: bool = False,
-    date_stamp: str = "",
-) -> int:
-    runner = process_runner or subprocess.run
-    use_default_runner = process_runner is None
-    current_stage = ""
-    failed_stage_label: Optional[str] = None
-    release = config.get("release", {})
-    paper = config.get("paper", {})
-    report: Dict[str, Any] = {
-        "upstream_commit": "",
-        "canonical_main_commit": "",
-        "temporary_commit": "",
-        "upstream_remote": "",
-        "upstream_remote_url": "",
-        "sibling_baseline": {},
-        "paper_name": release.get("upstream_paper_name", ""),
-        "version": release.get("upstream_version", ""),
-        "changed_paths": [],
-        "unexpected_paths": [],
-        "commands": [],
-        "status": "FAIL",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-    paperskill_repo = paperskill_repo.expanduser().resolve()
-
-    def begin_stage(label: str) -> None:
-        nonlocal current_stage, failed_stage_label
-        current_stage = label
-        failed_stage_label = None
-        print("[W10] {}...".format(label), flush=True)
-
-    def pass_stage() -> None:
-        print("[W10] PASS {}".format(current_stage), flush=True)
-
-    def fail_stage(detail: str) -> None:
-        nonlocal failed_stage_label
-        failed_stage_label = current_stage
-        print("[W10] FAIL {}: {}".format(current_stage, detail), flush=True)
-
-    def invoke(
-        command: List[str],
-        cwd: Path,
-        temp_root: Optional[Path] = None,
-        live_git_progress: bool = False,
-    ) -> Any:
-        stderr = None if live_git_progress and use_default_runner else subprocess.PIPE
-        return runner(
-            command,
-            cwd=str(cwd),
-            stdout=subprocess.PIPE,
-            stderr=stderr,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=False,
-        )
-
-    def sibling_git(arguments: List[str]) -> Any:
-        return invoke([
-            "git", "-c", "safe.directory={}".format(paperskill_repo), "-C", str(paperskill_repo),
-        ] + arguments, paperskill_repo)
-
-    try:
-        begin_stage("Checking upstream HEAD and checkout state")
-        if not paperskill_repo.is_dir() or not (paperskill_repo / ".git").exists():
-            raise PaperError("--paperskill-repo must point to a Git checkout")
-        status = sibling_git(["status", "--porcelain", "--untracked-files=all"])
-        if status.returncode != 0:
-            raise PaperError("cannot read the PaperSkill working-tree status: {}".format(summarize_process(status)))
-        if str(getattr(status, "stdout", "") or "").strip():
-            raise PaperError("PaperSkill checkout has uncommitted changes; upstream-check requires a clean upstream commit")
-        head = sibling_git(["rev-parse", "HEAD"])
-        if head.returncode != 0:
-            raise PaperError("cannot read the PaperSkill commit: {}".format(summarize_process(head)))
-        upstream_commit = str(getattr(head, "stdout", "") or "").strip()
-        if not re.fullmatch(r"[0-9a-fA-F]{40,64}", upstream_commit):
-            raise PaperError("PaperSkill did not return a valid commit SHA")
-        report["upstream_commit"] = upstream_commit
-
-        remote_list = sibling_git(["remote"])
-        if remote_list.returncode != 0:
-            raise PaperError("cannot list PaperSkill remotes: {}".format(summarize_process(remote_list)))
-        canonical_remotes = []
-        for remote_name in str(getattr(remote_list, "stdout", "") or "").splitlines():
-            remote_name = remote_name.strip()
-            if not remote_name:
-                continue
-            remote_url = sibling_git(["remote", "get-url", remote_name])
-            if remote_url.returncode != 0:
-                continue
-            candidate_url = str(getattr(remote_url, "stdout", "") or "").strip()
-            if is_canonical_paperskill_remote(candidate_url):
-                canonical_remotes.append((remote_name, candidate_url))
-        if not canonical_remotes:
-            raise PaperError("PaperSkill checkout has no remote for canonical ReductTech/PaperSkill")
-        canonical_remotes.sort(key=lambda remote: (remote[0] != "upstream", remote[0] != "origin", remote[0]))
-        canonical_remote_name, canonical_remote_url = canonical_remotes[0]
-        parsed_remote_url = urlparse(canonical_remote_url)
-        if parsed_remote_url.query or parsed_remote_url.fragment:
-            raise PaperError("canonical PaperSkill remote URL must not contain query or fragment data")
-        if parsed_remote_url.scheme in ("http", "https") and (
-            parsed_remote_url.username or parsed_remote_url.password
-        ):
-            raise PaperError(
-                "canonical PaperSkill HTTP remote URL must not embed credentials; use a Git credential helper"
-            )
-        if parsed_remote_url.scheme in ("ssh", "git") and (
-            parsed_remote_url.password or parsed_remote_url.username not in (None, "", "git")
-        ):
-            raise PaperError("canonical PaperSkill SSH remote must use the standard git user without a password")
-        scp_user = re.match(r"^([^@/]+)@[^:/]+:", canonical_remote_url)
-        if scp_user and scp_user.group(1) != "git":
-            raise PaperError("canonical PaperSkill SSH remote must use the standard git user")
-        report["upstream_remote"] = canonical_remote_name
-        report["upstream_remote_url"] = canonical_remote_url
-
-        shallow = sibling_git(["rev-parse", "--is-shallow-repository"])
-        if shallow.returncode != 0:
-            raise PaperError("cannot inspect whether PaperSkill is a shallow checkout: {}".format(summarize_process(shallow)))
-        partial_filter = sibling_git(["config", "--get", "remote.{}.partialclonefilter".format(canonical_remote_name)])
-        sparse = sibling_git(["sparse-checkout", "list"])
-        report["sibling_baseline"] = {
-            "is_shallow": str(getattr(shallow, "stdout", "") or "").strip().lower() == "true",
-            "partial_clone_filter": str(getattr(partial_filter, "stdout", "") or "").strip(),
-            "sparse_checkout": [line.strip() for line in str(getattr(sparse, "stdout", "") or "").splitlines() if line.strip()],
-        }
-        pass_stage()
-
-        begin_stage("Checking local release inputs")
-        paper_url = paper.get("url", "")
-        if not isinstance(paper_url, str) or not paper_url.startswith("https://"):
-            raise PaperError("paper.url must be an https:// URL for the official PaperSkill import")
-        if not participant.strip() or "\n" in participant or "\r" in participant:
-            raise PaperError("--participant must be a non-empty single line")
-        if any(ord(character) > 127 for character in participant) and not pinyin.strip() and not github.strip():
-            raise PaperError("--pinyin or --github is required to derive an upstream version for a non-ASCII --participant")
-
-        source = resolve_upstream_source(folder, config)
-        pass_stage()
-
-        with tempfile.TemporaryDirectory(prefix="paperskill-workflow-") as temp_dir:
-            temp_root = Path(temp_dir)
-            temp_repo = temp_root / "PaperSkill"
-            begin_stage("Connecting to official PaperSkill main (partial clone)")
-            clone = invoke([
-                "git", "-c", "safe.directory={}".format(paperskill_repo), "clone", "--progress",
-                "--filter=blob:none", "--sparse", "--depth=1", "--single-branch", "--branch", "main",
-                "--no-tags", canonical_remote_url, str(temp_repo),
-            ], temp_root, temp_root, live_git_progress=True)
-            if clone.returncode != 0:
-                raise PaperError("could not create a partial clone of canonical PaperSkill main: {}".format(summarize_process(clone, temp_root)))
-
-            def isolated_git(arguments: List[str], live_git_progress: bool = False) -> Any:
-                return invoke(
-                    ["git", "-C", str(temp_repo)] + arguments,
-                    temp_repo,
-                    temp_root,
-                    live_git_progress=live_git_progress,
-                )
-
-            cloned_head = isolated_git(["rev-parse", "HEAD"])
-            if cloned_head.returncode != 0:
-                raise PaperError("could not read the temporary PaperSkill HEAD after the lightweight clone: {}".format(summarize_process(cloned_head, temp_root)))
-            cloned_head_commit = str(getattr(cloned_head, "stdout", "") or "").strip()
-            if not re.fullmatch(r"[0-9a-fA-F]{40,64}", cloned_head_commit):
-                raise PaperError("temporary PaperSkill HEAD did not return a valid commit SHA")
-
-            canonical_main = isolated_git(["rev-parse", "refs/remotes/origin/main"])
-            if canonical_main.returncode != 0:
-                raise PaperError("could not read canonical PaperSkill main after the lightweight clone: {}".format(summarize_process(canonical_main, temp_root)))
-            canonical_main_commit = str(getattr(canonical_main, "stdout", "") or "").strip()
-            if not re.fullmatch(r"[0-9a-fA-F]{40,64}", canonical_main_commit):
-                raise PaperError("canonical PaperSkill main did not return a valid commit SHA")
-            report["canonical_main_commit"] = canonical_main_commit
-            if cloned_head_commit != canonical_main_commit:
-                raise PaperError("temporary PaperSkill HEAD does not match refs/remotes/origin/main")
-            if canonical_main_commit != upstream_commit:
-                raise PaperError(
-                    "PaperSkill sibling HEAD does not match canonical {}/main; refresh the sibling with "
-                    "`git fetch {} main --depth=1 --filter=tree:0` and confirm its HEAD before retrying".format(
-                        canonical_remote_name, canonical_remote_name,
-                    )
-                )
-
-            pass_stage()
-            begin_stage("Expanding sparse paths for this release")
-            sparse_set = isolated_git([
-                "sparse-checkout", "set", "--skip-checks", "paper-skill", "scripts", ".github", "docs",
-                "html_output/{}".format(release["upstream_paper_name"]),
-            ], live_git_progress=True)
-            if sparse_set.returncode != 0:
-                raise PaperError("could not set sparse paths for the isolated PaperSkill clone: {}".format(summarize_process(sparse_set, temp_root)))
-            pass_stage()
-
-            begin_stage("Preparing temporary contribution branch")
-            branch = isolated_git(["switch", "-c", "paperskillwork-preflight"])
-            if branch.returncode != 0:
-                raise PaperError("could not create a temporary upstream test branch: {}".format(summarize_process(branch, temp_root)))
-            for key, value in (("user.name", "PaperSkillWork Preflight"), ("user.email", "paperskillwork-preflight@example.invalid")):
-                configured = isolated_git(["config", key, value])
-                if configured.returncode != 0:
-                    raise PaperError("could not set temporary Git identity: {}".format(summarize_process(configured, temp_root)))
-            pass_stage()
-
-            begin_stage("Preparing release source snapshot")
-            if auto_version:
-                release["upstream_version"] = available_upstream_version(
-                    temp_repo, release["upstream_paper_name"], release["upstream_version"],
-                )
-                release["output"] = "html_output/{}/{}".format(
-                    release["upstream_paper_name"], release["upstream_version"],
-                )
-                report["version"] = release["upstream_version"]
-            elif (temp_repo / release["output"]).exists():
-                raise PaperError(
-                    "upstream version already exists: {}. Clear release.upstream_version to choose the next available suffix automatically."
-                    .format(release["output"])
-                )
-
-            source_copy = temp_repo / ".paperskillwork-source"
-            shutil.copytree(source, source_copy, ignore=shutil.ignore_patterns("node_modules", "dist", "dist-ssr", ".vite"))
-            pass_stage()
-
-            npm = "npm.cmd" if os.name == "nt" else "npm"
-            import_command = [
-                npm, "run", "import", "--", source_copy.name, release["upstream_paper_name"],
-                "--title", config["title"], "--paper-url", paper_url,
-                "--participant", participant, "--version", release["upstream_version"],
-            ]
-            import_command.extend(["--date", date_stamp or datetime.now().strftime("%m%d")])
-            if pinyin.strip():
-                import_command.extend(["--pinyin", pinyin.strip()])
-            if github.strip():
-                import_command.extend(["--github", github.strip()])
-            if isinstance(paper.get("year"), int) and not isinstance(paper.get("year"), bool):
-                import_command.extend(["--year", str(paper["year"])])
-            if isinstance(paper.get("venue"), str) and paper["venue"].strip():
-                import_command.extend(["--venue", paper["venue"].strip()])
-
-            def run_official_command(label: str, command: List[str]) -> None:
-                stage_label = {
-                    "npm run import": "Official Import",
-                    "npm run validate": "Official Validate",
-                    "npm run build:paper": "Official Build:paper",
-                    "npm run preflight": "Official Preflight",
-                }.get(label, label)
-                begin_stage(stage_label)
-                try:
-                    result = invoke(command, temp_repo, temp_root)
-                    exit_code = result.returncode
-                    summary = summarize_process(result, temp_root)
-                except OSError as exc:
-                    exit_code = 127
-                    summary = str(exc)
-                report["commands"].append({"command": label, "exit_code": exit_code, "summary": summary})
-                if exit_code != 0:
-                    fail_stage(summary or "exit code {}".format(exit_code))
-                    raise PaperError("{} failed: {}".format(label, summary or "exit code {}".format(exit_code)))
-                pass_stage()
-
-            run_official_command("npm run import", import_command)
-            shutil.rmtree(source_copy, ignore_errors=True)
-
-            imported = temp_repo / release["output"]
-            if not imported.is_dir():
-                raise PaperError("official import did not create the configured output directory")
-
-            begin_stage("Preparing the isolated tutorial commit")
-            status = isolated_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
-            if status.returncode != 0:
-                raise PaperError("cannot inspect isolated import changes: {}".format(summarize_process(status, temp_root)))
-            changed_paths = porcelain_changed_paths(str(getattr(status, "stdout", "") or ""))
-            report["changed_paths"] = changed_paths
-            expected_prefix = release["output"].replace("\\", "/").strip("/") + "/"
-            report["unexpected_paths"] = [path for path in changed_paths if not path.startswith(expected_prefix)]
-            if report["unexpected_paths"]:
-                raise PaperError("official import changed paths outside {}: {}".format(
-                    expected_prefix.rstrip("/"), ", ".join(report["unexpected_paths"]),
-                ))
-            if not changed_paths:
-                raise PaperError("official import produced no changed tutorial files to commit")
-
-            added = isolated_git(["add", "-A", "--", release["output"]])
-            if added.returncode != 0:
-                raise PaperError("could not stage the imported tutorial: {}".format(summarize_process(added, temp_root)))
-            staged_status = isolated_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
-            if staged_status.returncode != 0:
-                raise PaperError("cannot inspect staged tutorial changes: {}".format(summarize_process(staged_status, temp_root)))
-            staged_paths = porcelain_changed_paths(str(getattr(staged_status, "stdout", "") or ""))
-            staged_unexpected = [path for path in staged_paths if not path.startswith(expected_prefix)]
-            if staged_unexpected or not staged_paths:
-                raise PaperError("temporary commit scope is invalid{}".format(
-                    ": " + ", ".join(staged_unexpected) if staged_unexpected else " (no staged tutorial changes)",
-                ))
-            commit = isolated_git(["commit", "-m", "Preflight tutorial {}/{}".format(
-                release["upstream_paper_name"], release["upstream_version"],
-            )])
-            if commit.returncode != 0:
-                raise PaperError("could not create a temporary tutorial commit: {}".format(summarize_process(commit, temp_root)))
-            temporary_head = isolated_git(["rev-parse", "HEAD"])
-            if temporary_head.returncode != 0:
-                raise PaperError("cannot read the temporary tutorial commit: {}".format(summarize_process(temporary_head, temp_root)))
-            temporary_commit = str(getattr(temporary_head, "stdout", "") or "").strip()
-            if not re.fullmatch(r"[0-9a-fA-F]{40,64}", temporary_commit) or temporary_commit == upstream_commit:
-                raise PaperError("temporary tutorial commit is invalid or matches upstream HEAD")
-            report["temporary_commit"] = temporary_commit
-
-            after_commit = isolated_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
-            if after_commit.returncode != 0:
-                raise PaperError("cannot verify the temporary checkout after commit: {}".format(summarize_process(after_commit, temp_root)))
-            if porcelain_changed_paths(str(getattr(after_commit, "stdout", "") or "")):
-                raise PaperError("temporary tutorial commit left uncommitted changes")
-            pass_stage()
-
-            clean_export = temp_root / "clean-export"
-            shutil.copytree(imported, clean_export)
-
-            run_official_command("npm run validate", [npm, "run", "validate"])
-            run_official_command("npm run build:paper", [
-                npm, "run", "build:paper", "--", "{}/{}".format(release["upstream_paper_name"], release["upstream_version"]),
-            ])
-            before_preflight_status = isolated_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"])
-            if before_preflight_status.returncode != 0:
-                raise PaperError("cannot verify the isolated checkout before preflight: {}".format(summarize_process(before_preflight_status, temp_root)))
-            build_changes = porcelain_changed_paths(str(getattr(before_preflight_status, "stdout", "") or ""))
-            if build_changes:
-                raise PaperError("validation/build left uncommitted changes before preflight: {}".format(", ".join(build_changes)))
-            preflight_head = isolated_git(["rev-parse", "HEAD"])
-            if preflight_head.returncode != 0 or str(getattr(preflight_head, "stdout", "") or "").strip() != temporary_commit:
-                raise PaperError("upstream preflight is not positioned at the temporary tutorial commit")
-            run_official_command("npm run preflight", [npm, "run", "preflight"])
-
-            begin_stage("Writing verified export and preflight report")
-            target = ROOT / release["output"]
-            try:
-                install_upstream_export(clean_export, target, replace_output)
-                report["export_sha256"] = directory_sha256(target)
-                report["status"] = "PASS"
-            except (OSError, PaperError) as exc:
-                report["status"] = "FAIL"
-                report["error"] = str(exc)
-                fail_stage(str(exc))
-        if report["status"] == "PASS":
-            save_upstream_report(folder, report)
-            completion_problems = v3_stage_completion_problems(folder, "W10", config)
-            if completion_problems:
-                report["status"] = "FAIL"
-                report["error"] = "; ".join(completion_problems)
-                fail_stage(report["error"])
-            else:
-                pass_stage()
-    except (OSError, PaperError) as exc:
-        report["status"] = "FAIL"
-        report["error"] = "{}: {}".format(current_stage or "Upstream preflight", exc)
-        if failed_stage_label != current_stage:
-            fail_stage(str(exc))
-
-    if report["status"] != "PASS":
-        begin_stage("Writing failure preflight report")
-        try:
-            save_upstream_report(folder, report)
-            pass_stage()
-        except OSError as exc:
-            fail_stage("could not save audit/upstream-preflight.json: {}".format(exc))
-    print("Upstream preflight {}.".format(report["status"]))
-    if report.get("error"):
-        print("[FAIL] {}".format(report["error"]))
-    for command in report["commands"]:
-        print("[{}] {} (exit {})".format("PASS" if command["exit_code"] == 0 else "FAIL", command["command"], command["exit_code"]))
-        if command.get("summary"):
-            print("  {}".format(command["summary"]))
-    return 0 if report["status"] == "PASS" else 1
-
-
-def cmd_upstream_check(args: argparse.Namespace) -> int:
-    folder, config = read_paper(args.paper_id)
-    validate_or_raise(config, args.paper_id)
-    problems = stage_order_problems(config, "W10")
-    if problems:
-        raise PaperError("Cannot run upstream-check:\n- {}".format("\n- ".join(problems)))
-    participant, pinyin, github = resolve_contributor_profile(
-        args.participant, args.pinyin, args.github,
-    )
-    run_config = copy.deepcopy(config)
-    auto_version, date_stamp = prepare_release_identifiers(run_config, participant, pinyin, github)
-    result = run_upstream_check(
-        folder,
-        run_config,
-        Path(args.paperskill_repo),
-        participant,
-        pinyin,
-        github,
-        args.replace_output,
-        auto_version=auto_version,
-        date_stamp=date_stamp,
-    )
-    if result == 0:
-        write_paper_config(folder, run_config)
-    return result
 
 
 def tracked_workspace_paths(paper_id: str) -> List[str]:
@@ -1992,7 +1441,6 @@ def validate_asset_materialization(
     folder: Path,
     manifest: Optional[Dict[str, Any]],
     evidence_ids: set,
-    export_root: Optional[Path] = None,
     source_root: Optional[Path] = None,
 ) -> Tuple[Optional[Dict[str, Any]], List[str]]:
     data, problems = validate_asset_plan(folder, manifest, evidence_ids)
@@ -2012,13 +1460,9 @@ def validate_asset_materialization(
             local_web_asset = (source_root or folder / "web/enhanced") / web_path
             if not local_web_asset.is_file():
                 problems.append("selected asset '{}' is missing from the configured release source: {}".format(item_id, web_path))
-            if export_root is not None and not (export_root / web_path).is_file():
-                problems.append("export is missing selected asset: {}".format(web_path))
     if selected:
-        readme = (export_root or source_root or (folder / "web/enhanced")) / "README.md"
-        source_label = "export" if export_root else (
-            source_root.relative_to(folder).as_posix() if source_root else "web/enhanced"
-        )
+        readme = (source_root or (folder / "web/enhanced")) / "README.md"
+        source_label = source_root.relative_to(folder).as_posix() if source_root else "web/enhanced"
         if not readme.is_file():
             problems.append("{} is missing asset provenance README.md".format(source_label))
         else:
@@ -2026,76 +1470,6 @@ def validate_asset_materialization(
             if not re.search(r"asset\s+(provenance|sources)|image\s+(provenance|sources)", readme_text, re.IGNORECASE):
                 problems.append("{} README.md must document asset provenance".format(source_label))
     return data, problems
-
-
-def upstream_preflight_problems(folder: Path, config: Dict[str, Any]) -> List[str]:
-    report, problems = read_json_object(folder / "audit/upstream-preflight.json", "audit/upstream-preflight.json")
-    if report is None:
-        return problems
-    if report.get("status") != "PASS":
-        problems.append("audit/upstream-preflight.json status must be PASS")
-    commit = report.get("upstream_commit")
-    if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
-        problems.append("upstream preflight report needs the upstream commit SHA")
-    temporary_commit = report.get("temporary_commit")
-    if not isinstance(temporary_commit, str) or not re.fullmatch(r"[0-9a-fA-F]{40,64}", temporary_commit):
-        problems.append("upstream preflight report needs the temporary tutorial commit SHA")
-    elif isinstance(commit, str) and temporary_commit == commit:
-        problems.append("temporary tutorial commit must differ from the upstream commit")
-    release = config.get("release", {})
-    if report.get("paper_name") != release.get("upstream_paper_name"):
-        problems.append("upstream preflight paper_name does not match paper.yaml")
-    if report.get("version") != release.get("upstream_version"):
-        problems.append("upstream preflight version does not match paper.yaml")
-    changed_paths = report.get("changed_paths")
-    if not isinstance(changed_paths, list) or not changed_paths:
-        problems.append("upstream preflight changed_paths must list the committed tutorial files")
-    else:
-        output = release.get("output")
-        expected_prefix = output.replace("\\", "/").strip("/") + "/" if isinstance(output, str) else ""
-        if any(not isinstance(path, str) or not path.replace("\\", "/").startswith(expected_prefix) for path in changed_paths):
-            problems.append("upstream preflight changed_paths must stay within release.output")
-        normalized_paths = [path.replace("\\", "/") for path in changed_paths if isinstance(path, str)]
-        if len(normalized_paths) != len(set(normalized_paths)):
-            problems.append("upstream preflight changed_paths must not contain duplicates")
-    unexpected_paths = report.get("unexpected_paths")
-    if not isinstance(unexpected_paths, list) or unexpected_paths:
-        problems.append("upstream preflight unexpected_paths must be an empty list")
-    export_hash = report.get("export_sha256")
-    if not isinstance(export_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", export_hash):
-        problems.append("upstream preflight report needs the exported tutorial SHA-256")
-    else:
-        output = release.get("output")
-        export_path = ROOT / output if isinstance(output, str) else None
-        if export_path is None or not export_path.is_dir():
-            problems.append("upstream preflight export hash cannot be verified because release.output is missing")
-        elif directory_sha256(export_path).lower() != export_hash.lower():
-            problems.append("upstream preflight export SHA-256 does not match release.output")
-    commands = report.get("commands")
-    if not isinstance(commands, list):
-        problems.append("upstream preflight commands must be a list")
-        return problems
-    expected = {"npm run import", "npm run validate", "npm run build:paper", "npm run preflight"}
-    successful = set()
-    seen = set()
-    for index, command in enumerate(commands):
-        if not isinstance(command, dict) or not isinstance(command.get("command"), str):
-            problems.append("upstream preflight command {} needs a command name".format(index + 1))
-            continue
-        name = command["command"]
-        if name in seen:
-            problems.append("upstream preflight '{}' must appear only once".format(name))
-        seen.add(name)
-        exit_code = command.get("exit_code")
-        if type(exit_code) is not int:
-            problems.append("upstream preflight '{}' needs an integer exit_code".format(name))
-        elif exit_code != 0:
-            problems.append("upstream preflight '{}' failed with exit code {}".format(name, exit_code))
-        elif name in expected:
-            successful.add(name)
-    for name in sorted(expected - successful):
-        problems.append("upstream preflight report is missing successful '{}'".format(name))
-    return problems
 
 
 def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, Any]) -> List[str]:
@@ -2214,38 +1588,8 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
             problems.append("audit/final-check.md must contain Overall: PASS")
         return problems
     if stage_id == "W10":
-        release = config.get("release", {})
-        if not all(release.get(key) for key in ("upstream_paper_name", "upstream_version", "output")):
-            problems.append("release.upstream_paper_name, release.upstream_version, and output must be set before W10")
-            problems.extend(upstream_preflight_problems(folder, config))
-            return problems
-        output = ROOT / release["output"]
-        required = ("paper.json", "README.md", "package.json", "package-lock.json", "index.html", "vite.config.ts", "tsconfig.json", "src/App.tsx", "src/data/tutorial.ts", "src/modules/registry.tsx", "src/styles/paper.css")
-        problems.extend("upstream export is missing {}".format(path) for path in required if not (output / path).is_file())
-        for name in ("paper.json", "package.json"):
-            value, json_problems = read_json_object(output / name, name)
-            problems.extend(json_problems)
-            if name == "paper.json" and isinstance(value, dict):
-                if value.get("paperName") != release["upstream_paper_name"]:
-                    problems.append("export paper.json paperName does not match release.upstream_paper_name")
-                if value.get("version") != release["upstream_version"]:
-                    problems.append("export paper.json version does not match release.upstream_version")
-        readme = output / "README.md"
-        if readme.is_file():
-            readme_text = readme.read_text(encoding="utf-8")
-            for image_path in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", readme_text):
-                path_issue = path_problem(image_path.strip())
-                if path_issue:
-                    problems.append("export README image path '{}' {}".format(image_path, path_issue))
-        if output.is_dir() and any(path.suffix.lower() == ".pdf" for path in output.rglob("*")):
-            problems.append("upstream export must not include a PDF")
-        asset_manifest, source_problems = v3_cache_data(folder)
-        problems.extend(source_problems)
-        evidence_ids, _entries, evidence_problems = evidence_registry_ids_v3(folder)
-        problems.extend(evidence_problems)
-        _assets, materialization_problems = validate_asset_materialization(folder, asset_manifest, evidence_ids, output)
-        problems.extend(materialization_problems)
-        problems.extend(upstream_preflight_problems(folder, config))
+        # The official PaperSkill import and preflight run in the PaperSkill checkout.
+        # This stage records the user's completed release action; it has no local artifact gate.
         return problems
     return problems
 
@@ -2274,6 +1618,9 @@ def cmd_check_v3(folder: Path, config: Dict[str, Any], paper_id: str) -> int:
     warnings: List[str] = []
     for stage_id, _key, label in STAGES:
         print("[STAGE] {} {}: {}".format(stage_id, label, states[stage_id].upper()))
+        if stage_id == "W10":
+            print("[MANUAL] Official PaperSkill preflight is recorded by the user after it passes.")
+            continue
         kind, relative = V3_STAGE_ARTIFACTS[stage_id]
         artifact_label = relative
         if stage_id in ("W6", "W8"):
@@ -2285,18 +1632,6 @@ def cmd_check_v3(folder: Path, config: Dict[str, Any], paper_id: str) -> int:
             except PaperError:
                 target = folder / relative
                 artifact_label = "configured release source ({})".format(relative)
-        elif stage_id == "W10":
-            relative = config["release"]["output"]
-            artifact_label = relative
-            if not relative:
-                print("[UNCONFIGURED] W10 artifact: release.output")
-                issues = v3_stage_completion_problems(folder, stage_id, config)
-                if states[stage_id] == "complete":
-                    failures.extend("{}: {}".format(stage_id, issue) for issue in issues)
-                elif stage_id == config["workflow"]["current_stage"]:
-                    warnings.extend("{}: {}".format(stage_id, issue) for issue in issues)
-                continue
-            target = ROOT / relative
         elif stage_id not in ("W6", "W8"):
             target = folder / relative
         exists = target.is_dir() and any(target.iterdir()) if target.is_dir() else target.is_file()
@@ -2396,15 +1731,6 @@ def build_parser() -> argparse.ArgumentParser:
     release_info.add_argument("paper_id")
     release_info.add_argument("--json", action="store_true", required=True, help="emit the release metadata as JSON")
     release_info.set_defaults(func=cmd_release_info)
-
-    upstream = subparsers.add_parser("upstream-check", help="run the official PaperSkill import, validation, build, and preflight in an isolated checkout")
-    upstream.add_argument("paper_id")
-    upstream.add_argument("--paperskill-repo", required=True, help="path to a clean PaperSkill Git checkout")
-    upstream.add_argument("--participant", help="override the shared public contributor display name for this run")
-    upstream.add_argument("--pinyin", help="override the shared contributor pinyin for this run")
-    upstream.add_argument("--github", help="override the shared GitHub username for this run")
-    upstream.add_argument("--replace-output", action="store_true", help="replace the configured generated export if it already exists")
-    upstream.set_defaults(func=cmd_upstream_check)
 
     paths = subparsers.add_parser("paths", help="show standard workspace paths")
     paths.add_argument("paper_id")
