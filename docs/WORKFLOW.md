@@ -150,6 +150,78 @@ git config --global paperskillwork.github "github-username"
 
 自动生成的版本会先检查上游同名论文目录，并按官方规则选取基础版本或下一个 `_2`、`_3` 后缀；明确指定且已占用的版本会停止，不覆盖上游内容。若本机导出目录已存在，只有传入 --replace-output 才会替换该生成目录。成功的 W10 报告是正式发布预检的单一机器权威记录。普通 check <paper-id> 只检查仓库内可重复验证的数据和结构，不要求本机 PaperSkill 路径；W10 尚 pending 时可给出 WARN，但不能因此 FAIL。
 
+### Windows PowerShell 本机执行步骤
+
+用户选择自行执行 W10 时，从 PaperSkillWork 仓库根目录运行以下步骤。只需运行一次 `upstream-check`；它会在隔离的临时检出中依次完成官方导入、校验、构建和 preflight，不需要分别手动运行 npm 命令。此流程不会推送分支或创建 PR。
+
+需要可用的 Python、Git、Node.js 20 或更高版本和 npm；所有命令都从 PaperSkillWork 根目录运行。
+
+```powershell
+python --version
+git --version
+node --version
+npm --version
+```
+
+1. 确认全局贡献者资料已经设置。当前资料可用以下命令查看；缺少时只需设置一次，值会供后续论文复用：
+
+   ```powershell
+   git config --global --get paperskillwork.participant
+   git config --global --get paperskillwork.pinyin
+   git config --global --get paperskillwork.github
+   ```
+
+   GitHub 用户名是可选项；拼音在显示名和 GitHub 名都无法生成有效英文前缀时才是必填项。
+
+2. 在 PaperSkillWork 根目录旁创建一个新的、干净的官方 `main` 浅克隆。使用 HTTPS 地址可避免本机没有 GitHub SSH 密钥时的认证失败；不要拿有未提交改动的 PaperSkill 工作目录做基线。
+
+   ```powershell
+   $PaperSkillRepo = Join-Path (Split-Path (Get-Location).Path) 'PaperSkill-W10'
+   git clone --depth=1 --single-branch --branch main https://github.com/ReductTech/PaperSkill.git $PaperSkillRepo
+   ```
+
+   如果该目录已存在，选择一个新的空目录名，或先确认现有目录没有改动再更新。克隆成功后检查状态、远端和提交号：
+
+   ```powershell
+   git -C $PaperSkillRepo status --short
+   git -C $PaperSkillRepo remote get-url origin
+   git -C $PaperSkillRepo rev-parse HEAD
+   git -C $PaperSkillRepo ls-remote origin refs/heads/main
+   ```
+
+   `status --short` 应无输出；远端应指向 `ReductTech/PaperSkill`；`rev-parse HEAD` 的 SHA 必须与 `ls-remote` 输出的 `refs/heads/main` SHA 相同。复用已有干净克隆时，先运行 `git -C $PaperSkillRepo fetch origin main --depth=1`，再运行 `git -C $PaperSkillRepo checkout --detach FETCH_HEAD` 并重复上述检查。不要用 `reset --hard` 清理有改动的目录。
+
+3. 本次发布演练使用 `ewc`。处理其他论文时，将下面所有示例命令和路径中的 `ewc` 替换为对应 `paper_id`。只运行正式门禁：
+
+   ```powershell
+   python tools/paper.py upstream-check ewc --paperskill-repo $PaperSkillRepo
+   ```
+
+   命令从 `paper.yaml` 读取论文信息，从全局 Git 配置读取贡献者资料，并生成 `html_output/<paper-name>/<version>/`、更新论文发布字段及 `papers/<paper-id>/audit/upstream-preflight.json`。它不会修改作为基线的 PaperSkill 克隆；每次运行都会刷新预检报告，因此不要把运行前已有的报告当作本次结果。
+
+4. 只把报告中的 `status: PASS` 视为 W10 通过。检查报告的 `commands` 全部为 exit code 0，`changed_paths` 均位于报告所示的 `html_output/<paper-name>/<version>/`。确认通过后，显式记录 W10 自动阶段完成并查看状态：
+
+   ```powershell
+   Get-Content papers/ewc/audit/upstream-preflight.json -Raw
+   # 先确认 status 为 PASS，commands 全部 exit code 0，且 changed_paths 仅在报告指定的导出目录内
+   python tools/paper.py stage ewc W10 complete
+   python tools/paper.py status ewc
+   git status --short
+   ```
+
+   只有 PASS 后才能运行 `stage ... W10 complete`；该命令也会重新核验 W10 报告。提交时把下方占位符替换为通过报告里的实际 `paper-name` 和 `version`，然后提交发布字段、机器报告和且仅和该报告对应的导出目录；不要把整个 `html_output/` 一并暂存：
+
+   ```powershell
+   git add papers/ewc/paper.yaml papers/ewc/audit/upstream-preflight.json html_output/<paper-name>/<version>
+   git commit -m "Complete EWC W10 upstream preflight"
+   ```
+
+常见失败处理：
+
+- 报告提示 PaperSkill `HEAD` 与 canonical `main` 不一致：重新创建上述 HTTPS 干净克隆，或在确认工作区干净后 fetch 并 checkout 到最新 `FETCH_HEAD`，直到两个 SHA 一致。
+- 提示 SSH 权限、无法解析主机名或连接重置：先确认本机可访问 `https://github.com/ReductTech/PaperSkill.git`，网络恢复后重试。失败报告会写入 `audit/upstream-preflight.json`；修复连接问题后重新运行同一条 `upstream-check` 即可，不要手工改报告内容。
+- 提示上游版本已存在：确认不是要替换的发布后，将 `paper.yaml` 中 `release.upstream_version` 和 `release.output` 清空，再重跑，让工具选择下一个可用后缀。不要为了解决上游冲突使用 `--replace-output`；该参数只用于明确替换本机已生成的导出目录。
+
 ## 设计文档与工作区
 
 每个设计决策只保留一份规范文档；不要创建重复的说明文件：

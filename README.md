@@ -29,10 +29,10 @@ python tools/paper.py stage <paper-id> W4 complete --reviewed-by "评审者姓�
 python tools/paper.py release-check <paper-id>
 python tools/paper.py paths <paper-id>
 python tools/paper.py open <paper-id>
-python tools/paper.py upstream-check <paper-id> --paperskill-repo ..\PaperSkill
+python tools/paper.py upstream-check <paper-id> --paperskill-repo ..\PaperSkill-W10
 ```
 
-W6/W8 checks use the real source directly; only the formal W10 preflight requires a PaperSkill checkout. Contributor defaults are shared across papers through the user's global Git config.
+W6/W8 checks use the real source directly; only the formal W10 preflight requires a clean PaperSkill checkout. See [the W10 steps in the workflow guide](docs/WORKFLOW.md) for creating and checking that clone, running the preflight, and reviewing its report. Contributor defaults are shared across papers through the user's global Git config.
 
 `new` 会登记论文信息并创建 v3 工作区。若来源是用户提供的 PDF，可用 `--source-location "user-provided PDF"`，此时 `--url` 可以省略；请填写 `--source-type`，用多个 `--author` 提供全部作者，并在已知时填写 `--venue` 和 `--year`。工具不会根据 URL 推断论文内容。
 
