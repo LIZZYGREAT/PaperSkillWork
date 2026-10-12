@@ -492,7 +492,7 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert "html_output/sample_paper_name" in sparse_paths_call
     assert len(sparse_snapshots) == 1
     assert sparse_snapshots[0] == {
-        "noop.js", "package.json", "paper-skill/README.md", "scripts/validate.js",
+        ".gitignore", "noop.js", "package.json", "paper-skill/README.md", "scripts/validate.js",
         ".github/workflows/ci.yml", "docs/upstream.md", "html_output/sample_paper_name/README.md",
     }
     branch_call = next(
