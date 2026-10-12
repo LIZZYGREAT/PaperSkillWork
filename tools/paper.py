@@ -1125,14 +1125,20 @@ def run_upstream_check(
                 raise PaperError("could not set sparse paths for the isolated PaperSkill clone: {}".format(summarize_process(sparse_set, temp_root)))
             pass_stage()
 
-            branch = isolated_git(["checkout", "-b", "paperskillwork-preflight", upstream_commit])
+            begin_stage("Checking out sparse upstream baseline")
+            branch = isolated_git(
+                ["checkout", "--progress", "-b", "paperskillwork-preflight", upstream_commit],
+                live_git_progress=True,
+            )
             if branch.returncode != 0:
                 raise PaperError("could not create a temporary upstream test branch: {}".format(summarize_process(branch, temp_root)))
             for key, value in (("user.name", "PaperSkillWork Preflight"), ("user.email", "paperskillwork-preflight@example.invalid")):
                 configured = isolated_git(["config", key, value])
                 if configured.returncode != 0:
                     raise PaperError("could not set temporary Git identity: {}".format(summarize_process(configured, temp_root)))
+            pass_stage()
 
+            begin_stage("Preparing release source snapshot")
             if auto_version:
                 release["upstream_version"] = available_upstream_version(
                     temp_repo, release["upstream_paper_name"], release["upstream_version"],
@@ -1149,6 +1155,7 @@ def run_upstream_check(
 
             source_copy = temp_repo / ".paperskillwork-source"
             shutil.copytree(source, source_copy, ignore=shutil.ignore_patterns("node_modules", "dist", "dist-ssr", ".vite"))
+            pass_stage()
 
             npm = "npm.cmd" if os.name == "nt" else "npm"
             import_command = [

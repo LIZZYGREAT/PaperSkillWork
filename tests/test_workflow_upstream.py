@@ -3,6 +3,7 @@ import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -197,7 +198,7 @@ def test_w10_requires_machine_report_and_rejects_a_failed_upstream_command(tmp_p
     assert any("failed with exit code 1" in problem for problem in problems)
 
 
-def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_path, capsys):
+def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_path, capsys, monkeypatch):
     root, paper, config_path, module = make_project(tmp_path)
     config = load_config(config_path)
     final = paper / "web/final"
@@ -219,7 +220,7 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     preflight_heads = []
 
     def runner(command, **kwargs):
-        called.append((command, Path(kwargs["cwd"])))
+        called.append((command, Path(kwargs["cwd"]), dict(kwargs)))
         if command[0] == "git":
             result = run_git_with_local_canonical_remote(command, kwargs, canonical)
             if "commit" in command:
@@ -235,7 +236,8 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
             make_imported_export(Path(kwargs["cwd"]))
         return subprocess.CompletedProcess(command, 0, stdout="passed\n", stderr="")
 
-    result = module.run_upstream_check(paper, config, upstream, "Ada Author", process_runner=runner)
+    monkeypatch.setattr(module, "subprocess", SimpleNamespace(PIPE=subprocess.PIPE, run=runner))
+    result = module.run_upstream_check(paper, config, upstream, "Ada Author")
     assert result == 0
     output = capsys.readouterr().out
     expected_progress = [
@@ -244,6 +246,11 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
         "[W10] Connecting to official PaperSkill main (partial clone)...",
         "[W10] PASS Connecting to official PaperSkill main (partial clone)",
         "[W10] Expanding sparse paths for this release...",
+        "[W10] PASS Expanding sparse paths for this release",
+        "[W10] Checking out sparse upstream baseline...",
+        "[W10] PASS Checking out sparse upstream baseline",
+        "[W10] Preparing release source snapshot...",
+        "[W10] PASS Preparing release source snapshot",
         "[W10] Official Import...",
         "[W10] Official Validate...",
         "[W10] Official Build:paper...",
@@ -253,7 +260,7 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     ]
     positions = [output.index(progress) for progress in expected_progress]
     assert positions == sorted(positions)
-    assert all(cwd != upstream for command, cwd in called if command[0].startswith("npm"))
+    assert all(cwd != upstream for command, cwd, _kwargs in called if command[0].startswith("npm"))
     assert (root / config["release"]["output"] / "paper.json").is_file()
     report = json.loads((paper / "audit/upstream-preflight.json").read_text(encoding="utf-8"))
     assert report["status"] == "PASS"
@@ -265,13 +272,21 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert report["sibling_baseline"]["is_shallow"] is True
     assert report["sibling_baseline"]["partial_clone_filter"] == "blob:none"
     assert "scripts" in report["sibling_baseline"]["sparse_checkout"]
-    clone_call = next(command for command, _cwd in called if command[0] == "git" and "clone" in command)
+    clone_call = next(command for command, _cwd, _kwargs in called if command[0] == "git" and "clone" in command)
     assert "--filter=blob:none" in clone_call
     assert "--progress" in clone_call
     assert "--no-checkout" in clone_call
     assert "--shared" not in clone_call
     assert "--reference-if-able" in clone_call
-    sparse_paths_call = next(command for command, _cwd in called if "sparse-checkout" in command and "set" in command)
+    checkout_call, _checkout_cwd, checkout_kwargs = next(
+        (command, cwd, kwargs)
+        for command, cwd, kwargs in called
+        if command[0] == "git" and "checkout" in command
+    )
+    assert "--progress" in checkout_call
+    assert checkout_kwargs["stderr"] is None
+    assert checkout_kwargs["stdout"] == subprocess.PIPE
+    sparse_paths_call = next(command for command, _cwd, _kwargs in called if "sparse-checkout" in command and "set" in command)
     assert "--skip-checks" in sparse_paths_call
     assert "html_output/sample_paper_name" in sparse_paths_call
     assert report["changed_paths"]
