@@ -936,6 +936,38 @@ def resolve_upstream_source(folder: Path, config: Dict[str, Any]) -> Path:
     return source
 
 
+def cmd_release_info(args: argparse.Namespace) -> int:
+    folder, config = read_paper(args.paper_id)
+    validate_or_raise(config, args.paper_id)
+
+    title = config["title"].strip()
+    paper = config.get("paper", {})
+    paper_url = paper.get("url", "") if isinstance(paper, dict) else ""
+    if not isinstance(paper_url, str) or not paper_url.startswith("https://"):
+        raise PaperError("paper.url must be an https:// URL before release-info can be used")
+
+    source = resolve_upstream_source(folder, config).resolve()
+    release = config.get("release", {})
+    paper_name = release.get("upstream_paper_name", "").strip() or upstream_paper_name_from_title(title)
+    participant, pinyin, github = resolve_contributor_profile()
+    year = paper.get("year")
+    venue = paper.get("venue", "")
+
+    print(json.dumps({
+        "paper_id": args.paper_id,
+        "paper_name": paper_name,
+        "title": title,
+        "paper_url": paper_url.strip(),
+        "source": str(source),
+        "participant": participant,
+        "pinyin": pinyin,
+        "github": github,
+        "year": year,
+        "venue": venue,
+    }, ensure_ascii=False, indent=2))
+    return 0
+
+
 def run_upstream_check(
     folder: Path,
     config: Dict[str, Any],
@@ -2359,6 +2391,11 @@ def build_parser() -> argparse.ArgumentParser:
     stage.add_argument("--reviewed-by", help="human reviewer name, required only for W2, W4, W7, and W9 completion")
     stage.add_argument("--note", help="human review note, required only for W2, W4, W7, and W9 completion")
     stage.set_defaults(func=cmd_stage)
+
+    release_info = subparsers.add_parser("release-info", help="print read-only release metadata as JSON")
+    release_info.add_argument("paper_id")
+    release_info.add_argument("--json", action="store_true", required=True, help="emit the release metadata as JSON")
+    release_info.set_defaults(func=cmd_release_info)
 
     upstream = subparsers.add_parser("upstream-check", help="run the official PaperSkill import, validation, build, and preflight in an isolated checkout")
     upstream.add_argument("paper_id")

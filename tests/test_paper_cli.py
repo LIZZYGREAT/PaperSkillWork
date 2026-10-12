@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -25,13 +26,14 @@ def make_project(tmp_path):
     return tmp_path
 
 
-def invoke(root, *args):
+def invoke(root, *args, env=None):
     return subprocess.run(
         [sys.executable, str(root / "tools" / "paper.py"), *args],
         cwd=Path(__file__).resolve().parent,
         text=True,
         capture_output=True,
         check=False,
+        env=env,
     )
 
 
@@ -238,6 +240,75 @@ def test_paths_adds_configured_final_and_release_output(tmp_path):
     values = json.loads(result.stdout)
     assert values["final"] == "papers/demo-paper/web/final"
     assert values["release_output"] == "html_output/demo_paper/ada0926"
+
+
+def test_release_info_reads_metadata_and_contributor_profile_without_side_effects(tmp_path):
+    root = make_project(tmp_path / "project")
+    assert create_paper(root, title="A Dynamic Paper Title").returncode == 0
+    config_path, config = load_paper(root)
+    final_source = root / "papers/demo-paper/web/final"
+    final_source.mkdir(parents=True)
+    config["web"]["final"] = "web/final"
+    config["release"]["upstream_paper_name"] = "configured_paper_name"
+    config["release"]["upstream_version"] = "ada1012"
+    config["release"]["output"] = "html_output/configured_paper_name/ada1012"
+    save_paper(config_path, config)
+
+    global_config = tmp_path / "isolated.gitconfig"
+    for key, value in (
+        ("paperskillwork.participant", "Ada Example"),
+        ("paperskillwork.pinyin", "adaexample"),
+        ("paperskillwork.github", "ada-gh"),
+    ):
+        subprocess.run(["git", "config", "--file", str(global_config), key, value], check=True)
+    env = dict(os.environ)
+    env.update({"GIT_CONFIG_GLOBAL": str(global_config), "GIT_CONFIG_NOSYSTEM": "1"})
+
+    before_status = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "status", "--short"],
+        text=True, capture_output=True, check=True,
+    ).stdout
+    before_files = snapshot_files(root / "papers/demo-paper")
+
+    result = invoke(root, "release-info", "demo-paper", "--json", env=env)
+
+    assert result.returncode == 0, result.stderr
+    assert result.stderr == ""
+    values = json.loads(result.stdout)
+    assert values == {
+        "paper_id": "demo-paper",
+        "paper_name": "configured_paper_name",
+        "title": "A Dynamic Paper Title",
+        "paper_url": "https://example.org/paper",
+        "source": str(final_source.resolve()),
+        "participant": "Ada Example",
+        "pinyin": "adaexample",
+        "github": "ada-gh",
+        "year": 2026,
+        "venue": "Example Conference",
+    }
+    assert snapshot_files(root / "papers/demo-paper") == before_files
+    after_status = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "status", "--short"],
+        text=True, capture_output=True, check=True,
+    ).stdout
+    assert after_status == before_status
+    assert not (root / "html_output").exists()
+
+
+def test_release_info_derives_paper_name_and_reports_missing_paper_url(tmp_path):
+    root = make_project(tmp_path / "project")
+    assert create_paper(root, title="A Dynamic Paper Title").returncode == 0
+    config_path, config = load_paper(root)
+    config["release"]["upstream_paper_name"] = ""
+    config["paper"]["url"] = ""
+    save_paper(config_path, config)
+
+    result = invoke(root, "release-info", "demo-paper", "--json")
+
+    assert result.returncode != 0
+    assert result.stdout == ""
+    assert "paper.url must be an https:// URL" in result.stderr
 
 
 def test_open_final_requires_web_final_configuration(tmp_path):
