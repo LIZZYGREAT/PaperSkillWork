@@ -309,6 +309,19 @@ def test_w10_requires_machine_report_and_rejects_a_failed_upstream_command(tmp_p
     assert any("failed with exit code 1" in problem for problem in problems)
 
 
+def test_w10_allows_root_relative_vite_module_entry(tmp_path):
+    root, paper, config_path, module = make_project(tmp_path)
+    config = load_config(config_path)
+    export = write_export(root, config, paper)
+    (export / "index.html").write_text(
+        '<script type="module" src="/src/main.tsx"></script>\n',
+        encoding="utf-8",
+    )
+    write_upstream_report(paper, config)
+
+    assert module.v3_stage_completion_problems(paper, "W10", config) == []
+
+
 def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_path, capsys, monkeypatch):
     root, paper, config_path, module = make_project(tmp_path)
     config = load_config(config_path)

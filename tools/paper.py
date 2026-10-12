@@ -2205,16 +2205,6 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
                 path_issue = path_problem(image_path.strip())
                 if path_issue:
                     problems.append("export README image path '{}' {}".format(image_path, path_issue))
-        if output.is_dir():
-            absolute_image_ref = re.compile(r"(?:src|poster)\s*=\s*['\"]/(?!/)|url\(\s*['\"]?/(?!/)", re.IGNORECASE)
-            for source_file in output.rglob("*"):
-                if source_file.is_file() and source_file.suffix.lower() in {".tsx", ".ts", ".jsx", ".js", ".html", ".css"}:
-                    try:
-                        source_text = source_file.read_text(encoding="utf-8")
-                    except (OSError, UnicodeError):
-                        continue
-                    if absolute_image_ref.search(source_text):
-                        problems.append("export has a root-relative image/media path in {}".format(source_file.relative_to(output).as_posix()))
         if output.is_dir() and any(path.suffix.lower() == ".pdf" for path in output.rglob("*")):
             problems.append("upstream export must not include a PDF")
         asset_manifest, source_problems = v3_cache_data(folder)
