@@ -484,7 +484,7 @@ def test_upstream_check_runs_in_temporary_checkout_and_writes_pass_report(tmp_pa
     assert len(clone_snapshots) == 1
     clone_head, clone_origin_main, initial_files = clone_snapshots[0]
     assert clone_head == clone_origin_main == report["upstream_commit"]
-    assert initial_files == {"noop.js", "package.json"}
+    assert initial_files == {".gitignore", "noop.js", "package.json"}
     sparse_paths_call = next(command for command, _cwd, _kwargs in called if "sparse-checkout" in command and "set" in command)
     assert sum(1 for command, _cwd, _kwargs in called if "sparse-checkout" in command and "set" in command) == 1
     assert not any("sparse-checkout" in command and "init" in command for command, _cwd, _kwargs in called)
