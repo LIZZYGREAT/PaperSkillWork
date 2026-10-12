@@ -63,7 +63,8 @@ workflow:
       reviewed_by: 甘文杰
       note: 用户于 2026-10-01 在当前对话明确确认 W9 通过；审计文件记录评审结论及本次实际项目检查和构建结果。
     W10_upstream_preflight:
-      status: pending
+      status: complete
+      completed_by: automation
 artifacts:
   source_cache: source-cache
   paper_model: research/paper-model.md
@@ -76,9 +77,9 @@ artifacts:
 web:
   enhanced: web/enhanced
 release:
-  upstream_paper_name: ''
-  upstream_version: ''
-  output: ''
+  upstream_paper_name: overcoming_catastrophic_forgetting_in_neural_networks
+  upstream_version: ganwenjie1012
+  output: html_output/overcoming_catastrophic_forgetting_in_neural_networks/ganwenjie1012
 paperskill:
   tutorial_pr:
     number: null
