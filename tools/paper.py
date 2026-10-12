@@ -44,6 +44,7 @@ if yaml is not None:
 ROOT = Path(__file__).resolve().parents[1]
 PAPERS = ROOT / "papers"
 REUSABLE_KIT = ROOT / "reusable-kit"
+WEB_PROJECT_TEMPLATE = ROOT / "templates" / "web-project"
 PAPER_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 UPSTREAM_PAPER_NAME_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 UPSTREAM_VERSION_RE = re.compile(r"^[a-z][a-z0-9]*[0-9]{4}(?:_[0-9]+)?$")
@@ -619,12 +620,15 @@ def cmd_new(args: argparse.Namespace) -> int:
     rendered["source/paper.url"] = (url + "\n") if url else ""
 
     try:
+        if not WEB_PROJECT_TEMPLATE.is_dir():
+            raise PaperError("Required web project template is missing: templates/web-project")
         folder.mkdir(parents=False)
         for directory in (
             "source", "source-cache/figures", "research", "design", "audit",
-            "assets/figures/original", "assets/figures/web", "web/enhanced",
+            "assets/figures/original", "assets/figures/web",
         ):
             (folder / directory).mkdir(parents=True, exist_ok=True)
+        shutil.copytree(WEB_PROJECT_TEMPLATE, folder / "web/enhanced")
         for relative, content in rendered.items():
             target = folder / relative
             target.parent.mkdir(parents=True, exist_ok=True)

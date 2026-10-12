@@ -85,7 +85,20 @@ def test_new_creates_v3_workspace_without_legacy_scaffolds(tmp_path):
         "audit/final-check.md",
     ):
         assert (paper / relative).is_file(), relative
-    assert (paper / "web/enhanced").is_dir()
+    web_source = paper / "web/enhanced"
+    for relative in (
+        "package.json", "package-lock.json", "README.md", "index.html", "vite.config.ts", "tsconfig.json",
+        "src/App.tsx", "src/main.tsx", "src/types.ts", "src/data/tutorial.ts",
+        "src/modules/registry.tsx", "src/styles/tokens.css", "src/styles/components.css", "src/styles/paper.css",
+    ):
+        assert (web_source / relative).is_file(), relative
+    tutorial = (web_source / "src/data/tutorial.ts").read_text(encoding="utf-8")
+    assert "chapters: []" in tutorial
+    assert 'kind: "chapter"' not in tutorial
+    assert "widgetRegistry: Record<string, ComponentType<WidgetProps>> = {}" in (
+        web_source / "src/modules/registry.tsx"
+    ).read_text(encoding="utf-8")
+    assert not (web_source / "src/modules/exampleSlider.tsx").exists()
     assert not (paper / "design/scenes").exists()
     assert not (paper / "research/01_paper_model.md").exists()
     assert '"Quoted"' in config["title"]
