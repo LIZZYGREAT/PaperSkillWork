@@ -194,3 +194,37 @@
   .p2-head-equation { gap: 6px; padding-inline: 8px; font-size: 16px; }
   .p2-output-nodes span { min-height: 27px; font-size: 12px; }
 }
+
+/* Output expansion keeps the input, backbone and original nodes mounted. */
+.p2-expansion-status { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin: 15px 0 12px; padding: 10px 12px; border: 1px solid #d6e4db; border-radius: 8px; color: #3d655b; background: #f0f7f2; font-size: 13px; }
+.p2-expansion-status strong { font-variant-numeric: tabular-nums; }
+.p2-network { display: grid; grid-template-columns: minmax(125px, .95fr) 24px minmax(155px, 1.1fr); align-items: center; gap: 8px; padding: 14px 10px; border: 1px solid #dce5e0; border-radius: 10px; background: #fcfdfa; }
+.p2-network__shared { display: grid; justify-items: stretch; gap: 5px; }
+.p2-network__input { display: grid; justify-items: center; gap: 6px; }
+.p2-network__input > span { color: #526c6d; font-size: 12px; }
+.p2-network__down { color: #89a098; font-size: 18px; text-align: center; }
+.p2-network__backbone { display: grid; gap: 4px; padding: 12px 8px; border: 1px solid #aecbbb; border-radius: 9px; color: #356354; background: #eef6ef; text-align: center; }
+.p2-network__backbone svg { display: block; width: min(100%, 180px); margin: auto; }
+.p2-network__backbone line { stroke: #bdcfc4; stroke-width: 1; }
+.p2-network__backbone circle { fill: #fffefa; stroke: #598771; stroke-width: 2; }
+.p2-network__backbone strong { font-size: 13px; }
+.p2-network__backbone small { color: #526e63; font-size: 12px; line-height: 1.5; }
+.p2-network__representation { display: grid; justify-items: center; gap: 4px; padding: 9px 5px; border: 1px solid #cddfd4; border-radius: 7px; background: white; }
+.p2-network__representation b { color: #375e55; font: 15px Georgia, serif; }
+.p2-network__representation small { color: #587173; font-size: 12px; }
+.p2-network__arrow { color: #779389; font-size: 24px; text-align: center; }
+.p2-network__head { display: grid; align-content: center; gap: 12px; min-width: 0; }
+.p2-network__head > .p2-eyebrow { text-align: center; }
+.p2-output-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 219px; }
+.p2-output-column { position: relative; display: grid; align-content: start; gap: 9px; }
+.p2-output-column > b { min-height: 32px; color: #3f6c5b; font-size: 12px; line-height: 1.4; text-align: center; }
+.p2-network .p2-output-nodes { grid-template-columns: 1fr; gap: 7px; }
+.p2-network .p2-output-nodes span { display: flex; min-height: 30px; justify-content: center; align-items: baseline; padding-top: 6px; font-size: 16px; }
+.p2-network .p2-output-nodes sub { font-size: 11px; }
+.p2-output-column--new > b { color: #98573d; }
+.p2-output-placeholder { margin: 60px 0 0; color: #617675; font-size: 12px; line-height: 1.6; text-align: center; }
+.p2-network__head > small { color: #526c6d; font-size: 12px; text-align: center; }
+.p2-output-column--new.is-added .p2-output-nodes span { animation: p2-output-enter .5s both; animation-delay: var(--node-delay); }
+@keyframes p2-output-enter { from { opacity: .15; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+@media (max-width: 440px) { .p2-network { grid-template-columns: 1fr; gap: 12px; } .p2-network__arrow { transform: rotate(90deg); } .p2-output-columns { max-width: 260px; width: 100%; margin: auto; } }
+@media (prefers-reduced-motion: reduce) { .p2-output-column--new.is-added .p2-output-nodes span { animation: none; } }

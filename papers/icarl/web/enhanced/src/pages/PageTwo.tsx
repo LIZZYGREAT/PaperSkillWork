@@ -1,3 +1,4 @@
+import { SharedTrainingHead } from "../components/SharedTrainingHead";
 import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
 import { PaperTerm } from "../components/PaperTerm";
@@ -20,7 +21,6 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
   const [stage, setStage] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [featureState, setFeatureState] = useState<"before" | "after">("before");
-  const [classBatchExpanded, setClassBatchExpanded] = useState(false);
   const reducedMotion = useReducedMotion();
 
   const points = useMemo(() => projectionIds.map((id) => {
@@ -151,17 +151,8 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
               <div className="p2-projection-note"><span className="p2-note-mark">i</span><p>实际 representation 通常位于高维 R<sup>d</sup>。这里用二维投影表达样本间的位置关系；同一编号样本在更新前后保持不变。</p></div>
             </section>
 
-            <section className="p2-head-panel panel">
-              <div className="p2-panel-heading"><div><span className="p2-eyebrow">逐类训练输出层</span><h2>一个表示，逐类产生训练输出</h2></div><button className="p2-quiet-action" type="button" aria-expanded={classBatchExpanded} onClick={() => setClassBatchExpanded((value) => !value)}>{classBatchExpanded ? "收起下一批" : "加入下一批"}</button></div>
-              <div className="p2-head-equation"><span>z</span><i>→</i><span>w<sub>y</sub><sup>⊤</sup>z</span><i>→</i><span>sigmoid</span><i>→</i><strong>g<sub>y</sub>(x)</strong></div>
-              <p className="p2-head-copy">对每个已见类别 y，训练输出层都有一个对应的权重向量 w<sub>y</sub> 与 sigmoid 响应。</p>
-              <div className="p2-class-expansion" aria-live="polite">
-                <div className="p2-class-expansion__label"><span>第 1 批</span><b>10 个输出节点</b></div>
-                <div className="p2-output-nodes">{Array.from({ length: 10 }, (_, index) => <span key={index}>g<sub>{index + 1}</sub></span>)}</div>
-                {classBatchExpanded ? <><div className="p2-class-expansion__label p2-class-expansion__label--new"><span>第 2 批 · 追加</span><b>同一输出层 · 新增 10 个节点</b></div><div className="p2-output-nodes p2-output-nodes--new">{Array.from({ length: 10 }, (_, index) => <span key={index}>g<sub>{index + 11}</sub></span>)}</div></> : <div className="p2-head-addition"><span>+</span><p>新类别会追加对应的权重；特征提取器仍是同一个共享组件。</p></div>}
-              </div>
-              <div className="p2-head-boundary"><strong>训练输出 ≠ 最终预测</strong><p>iCaRL 最终根据样本到 exemplar 类均值的距离进行分类，不取 sigmoid 输出中最大的类别。</p></div>
-            </section>
+            <SharedTrainingHead />
+
           </section>
 
           <section className="p2-handoff"><span className="p2-eyebrow">接下来的问题</span><p>现在已经认识 z。保存下来的样本怎样代表各个类别，并支持最终预测？</p><button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>继续了解类别表示机制 <b aria-hidden="true">→</b></button></section>
