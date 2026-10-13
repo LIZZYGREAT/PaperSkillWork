@@ -1,4 +1,5 @@
 import { SharedTrainingHead } from "../components/SharedTrainingHead";
+import { TrainingUpdateBridge } from "../components/TrainingUpdateBridge";
 import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import { PaperTerm } from "../components/PaperTerm";
 import { ProjectionClusterChart } from "../components/ProjectionClusterChart";
@@ -122,6 +123,8 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
             <p className="p2-carrier-note"><strong>教学示意。</strong> 图中表达 iCaRL 所需的组件与数据流，不代表论文实验所用 ResNet 的精确拓扑。</p>
           </section>
 
+          <TrainingUpdateBridge onRepresentationUpdated={() => setFeatureState("after")} />
+
           <section className="p2-representation-layout" aria-label="特征表示与特征空间">
             <section className="p2-feature-panel panel">
               <div className="p2-panel-heading"><div><span className="p2-eyebrow">同一批样本 · 两种模型状态</span><h2>更新 Θ 后，表示空间会改变</h2></div>
@@ -134,6 +137,11 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
               <div className="p2-projection-note"><span className="p2-note-mark">i</span><p>实际 representation 通常位于高维 R<sup>d</sup>。这里用二维教学投影展示相对位置和类簇变化；点的颜色表示类别，同一编号样本在更新前后保持身份不变。</p></div>
             </section>
 
+          </section>
+
+          <section className="p2-next-task panel" aria-label="第一轮训练结束，下一批类别到来">
+            <div><span className="p2-eyebrow">ROUND 1 COMPLETE</span><strong>第一批训练结束，模型已完成一次参数更新</strong><p>接下来到达的是包含新类别的第 2 批任务；输入会换成新类样本，训练输出层也要追加对应的类别节点。</p></div>
+            <div className="p2-next-task__flow" aria-hidden="true"><span>Θ′</span><i>→</i><span>新类 image x<sub>new</sub></span><i>→</i><span>C6–C10</span></div>
           </section>
 
           <SharedTrainingHead />

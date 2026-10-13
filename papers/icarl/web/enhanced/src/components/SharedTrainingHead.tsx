@@ -3,7 +3,8 @@ import { sampleById } from "../data/icarl-runtime";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import { SampleToken } from "./SampleToken";
 
-const outputStrengths = [82, 61, 74, 52, 68, 58, 77, 48, 71, 56];
+const firstBatchResponses = [91, 11, 6, 4, 8, 0, 0, 0, 0, 0];
+const nextBatchResponses = [4, 2, 6, 3, 1, 22, 36, 96, 28, 15];
 
 function FeatureExtractorDiagram() {
   return <div className="p2-network__extractor" data-shared-backbone>
@@ -40,6 +41,8 @@ export function SharedTrainingHead() {
   const [expanded, setExpanded] = useState(false);
   const [visibleCount, setVisibleCount] = useState(5);
   const reducedMotion = useReducedMotion();
+  const responses = expanded ? nextBatchResponses : firstBatchResponses;
+  const targetNode = expanded ? 8 : 1;
 
   useEffect(() => {
     const target = expanded ? 10 : 5;
@@ -55,7 +58,7 @@ export function SharedTrainingHead() {
 
   return <section className="p2-head-panel panel">
     <div className="p2-panel-heading">
-      <div><span className="p2-eyebrow">共享骨架 + 一个可扩展输出层</span><h2>新类别到来，扩展的是逐类训练输出</h2></div>
+      <div><span className="p2-eyebrow">新的类别任务到达</span><h2>换入新类样本，并扩展逐类训练输出</h2></div>
       <button className="p2-quiet-action" type="button" aria-expanded={expanded} aria-controls="p2-training-network" onClick={() => setExpanded(value => !value)}>{expanded ? "重置为第一批" : "加入下一批"}</button>
     </div>
 
@@ -64,7 +67,7 @@ export function SharedTrainingHead() {
     </div>
 
     <div className={`p2-network${expanded ? " is-expanded" : ""}`} id="p2-training-network" aria-label={`同一个共享特征提取器连接一个覆盖 C1 到 C${visibleCount} 的训练输出层`}>
-      <div className="p2-network__input"><span className="p2-eyebrow">INPUT</span><SampleToken sample={sampleById("x_7")} role="raw" /><small>同一张 image x</small></div>
+      <div className="p2-network__input"><span className="p2-eyebrow">INPUT</span>{expanded ? <div className="p2-new-input-token" aria-label="第 2 批中属于类别 C8 的新样本"><span>◇</span><b>C8</b><code>x<sub>new,8</sub></code></div> : <SampleToken sample={sampleById("x_7")} role="raw" />}<small>{expanded ? "第 2 批 · 新类别样本" : "第 1 批 · 已见类别样本"}</small></div>
       <span className="p2-network__flow-arrow" aria-hidden="true">→</span>
       <FeatureExtractorDiagram />
       <span className="p2-network__flow-arrow" aria-hidden="true">→</span>
@@ -75,25 +78,26 @@ export function SharedTrainingHead() {
       </div>
       <span className="p2-network__flow-arrow p2-network__flow-arrow--output" aria-hidden="true">→</span>
       <div className="p2-output-layer" aria-label={`训练输出层当前包含 ${visibleCount} 个类别节点`}>
-        <div className="p2-output-layer__heading"><span className="p2-eyebrow">ONE TRAINING OUTPUT LAYER</span><strong>C1–C{visibleCount}</strong></div>
+        <div className="p2-output-layer__heading"><span className="p2-eyebrow">ONE TRAINING OUTPUT LAYER</span><strong>C1–C{visibleCount} · target C{targetNode}</strong></div>
         <div className="p2-output-layer__bus" aria-hidden="true"><i /></div>
         {Array.from({ length: 10 }, (_, index) => {
           const number = index + 1;
           const initialTop = number <= 5 ? 78 + number * 66 : 408;
           const expandedTop = 78 + number * 34;
           const isNew = number > 5;
-          return <div key={number} className={`p2-output-row${isNew ? " is-new" : ""}`} style={{ "--initial-top": `${initialTop}px`, "--expanded-top": `${expandedTop}px`, "--node-delay": `${(number - 6) * 75}ms` } as CSSProperties} aria-hidden={number > visibleCount}>
+          const response = responses[index];
+          return <div key={number} className={`p2-output-row${isNew ? " is-new" : ""}${number === targetNode ? " is-target" : ""}`} style={{ "--initial-top": `${initialTop}px`, "--expanded-top": `${expandedTop}px`, "--node-delay": `${(number - 6) * 75}ms` } as CSSProperties} aria-hidden={number > visibleCount}>
             <i className="p2-output-row__branch" aria-hidden="true" />
             <span className="p2-output-row__weight">w<sub>{number}</sub></span>
-            <span className="p2-output-row__response"><b>g<sub>{number}</sub>(x)</b><i style={{ "--response": `${outputStrengths[index]}%` } as CSSProperties} /><em>σ</em></span>
+            <span className="p2-output-row__response"><b>g<sub>{number}</sub>(x)</b><i style={{ "--response": `${response}%` } as CSSProperties} /><small>{(response / 100).toFixed(2)}</small><em>σ</em></span>
           </div>;
         })}
       </div>
     </div>
 
     <div className="p2-network-notes">
-      <p><strong>保持不变：</strong>image x、共享 φ<sub>Θ</sub> 与表示 z 沿同一条路径流动。</p>
-      <p><strong>发生变化：</strong>输出层从 w<sub>1</sub>…w<sub>5</sub> 扩展到 w<sub>1</sub>…w<sub>10</sub>，每个权重产生对应的 g<sub>y</sub>(x)。</p>
+      <p><strong>任务切换：</strong>{expanded ? "输入已换成第 2 批的新类样本 xnew,8。" : "当前仍是第 1 批中的已见类别样本 x_7。"}</p>
+      <p><strong>响应含义：</strong>{expanded ? "旧节点 C1–C5 接近 0；新增节点整体更高，其中正确类别 C8 明显最高。" : "第 1 批样本属于 C1，因此 g1(x) 明显最高。"}</p>
     </div>
     <div className="p2-head-boundary"><strong>训练输出 ≠ 最终预测</strong><p>这些 sigmoid 响应用于学习表示；iCaRL 最终根据样本到 exemplar 类均值的距离分类。</p></div>
   </section>;
