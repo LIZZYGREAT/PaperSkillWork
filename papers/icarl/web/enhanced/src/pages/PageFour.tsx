@@ -25,6 +25,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const firstExemplar = examplesByClass.get("A")![0];
   const perClassBudget = Math.floor(MEMORY_BUDGET / classCount);
   const representativeSamples = classIds.slice(0, 3).map((classId) => examplesByClass.get(classId)![0]);
+  const retainedSampleIds = classIds.slice(0, 3).flatMap((classId) => examplesByClass.get(classId)!.map(sample => sample.id));
 
   function changeStage(nextStage: number) {
     setStage(nextStage);
@@ -80,13 +81,14 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
             <div className="p4-reencode-arrow" aria-label={`图像送入 ${modelState === "before" ? "旧" : "新"}特征映射`}><span>φ<sub>Θ {modelState === "before" ? "old" : "new"}</sub></span><i aria-hidden="true" /></div>
             <ProjectionClusterChart
               state={modelState}
-              title="同一批样本由当前 φ 重新编码"
-              description="三类共 18 个样本保持相同编号与类别；切换 φ 时，点与近旁标签一起移动，不用引线连接。"
+              sampleIds={retainedSampleIds}
+              title="记忆 P 中的样本由当前 φ 重新编码"
+              description="图中 12 个点与左侧 P 一一对应：三类、每类 4 个；切换 φ 时，样本身份与类别保持不变。"
               titleId="p4-reencode-chart-title"
               compact
             />
-            <div className="p4-feature-result"><span className="p4-feature-dot" /><div><b>{modelState === "before" ? "zᵢ = φold(xᵢ)" : "z′ᵢ = φnew(xᵢ)"}</b><small>{modelState === "before" ? "18 个样本在旧参数下的表示" : "样本身份不变，18 个表示按当前参数重新计算"}</small></div></div>
-            <div className="p4-reencode-context"><b>为什么图中是 18 个点？</b><span>这里沿用前页同一组三类、每类 6 个样本，统一展示表示变化；左侧 P 仍受 K=12 限制，只长期保存每类 4 个 exemplars。</span></div>
+            <div className="p4-feature-result"><span className="p4-feature-dot" /><div><b>{modelState === "before" ? "zᵢ = φold(xᵢ)" : "z′ᵢ = φnew(xᵢ)"}</b><small>{modelState === "before" ? "P 中 12 个 exemplars 在旧参数下的表示" : "样本身份不变，12 个表示按当前参数重新计算"}</small></div></div>
+            <div className="p4-reencode-context"><b>图与左侧记忆严格对应</b><span>K=12、当前 3 个类别，因此 P 每类保留 4 个 exemplars；图中只画这 12 个被保存的样本。</span></div>
             <div className="p4-stale-vector"><span>×</span><p><b>旧 embedding 不是保存对象</b><small>旧 zᵢ 不会自动变成 φnew(xᵢ)；保存的原始图像必须经过当前 φ 再编码。</small></p></div>
           </div> : null}
 

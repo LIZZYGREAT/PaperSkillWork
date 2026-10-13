@@ -33,6 +33,7 @@ function plotPoint(id: string, state: FeatureState) {
 
 type ProjectionClusterChartProps = {
   state: FeatureState;
+  sampleIds?: readonly string[];
   title?: string;
   description?: string;
   titleId?: string;
@@ -41,12 +42,13 @@ type ProjectionClusterChartProps = {
 
 export function ProjectionClusterChart({
   state,
+  sampleIds = projectionSampleIds,
   title = "同类样本在表示空间中形成局部类簇",
   description = "三种颜色对应三个类别，编号表示样本身份；切换模型状态时，每个编号沿新的特征映射移动。",
   titleId = "p2-cluster-title",
   compact = false,
 }: ProjectionClusterChartProps) {
-  const points = projectionSampleIds.map(id => plotPoint(id, state));
+  const points = sampleIds.map(id => plotPoint(id, state));
   const clusters = shownClasses.map(classId => {
     const members = points.filter(point => point.classId === classId);
     return {
@@ -60,13 +62,13 @@ export function ProjectionClusterChart({
 
   return <figure className={`p2-cluster-chart${compact ? " p2-cluster-chart--compact" : ""}`} aria-labelledby={titleId}>
     <figcaption className="p2-cluster-chart__header">
-      <div><span className="p2-eyebrow">FEATURE SPACE · 3 类 · 18 个样本</span><h3 id={titleId}>{title}</h3><p>{description}</p></div>
+      <div><span className="p2-eyebrow">FEATURE SPACE · 3 类 · {points.length} 个样本</span><h3 id={titleId}>{title}</h3><p>{description}</p></div>
       <span className="p2-cluster-chart__state">{state === "before" ? "Θ 更新前" : "Θ 更新后"}</span>
     </figcaption>
     <div className="p2-cluster-chart__viewport">
-      <svg viewBox="0 0 640 400" role="img" aria-label={`三个类别共十八个样本在参数 ${state === "before" ? "更新前" : "更新后"} 的二维教学投影`}>
+      <svg viewBox="0 0 640 400" role="img" aria-label={`三个类别共 ${points.length} 个样本在参数 ${state === "before" ? "更新前" : "更新后"} 的二维教学投影`}>
         <title>三类样本的特征表示</title>
-        <desc>蓝色为 Class 1，绿色为 Class 2，橙色为 Class 3。每类六个样本位于各自的虚线类簇范围中，切换状态时点和标签一起移动。</desc>
+        <desc>蓝色为 Class 1，绿色为 Class 2，橙色为 Class 3。样本位于各自的虚线类簇范围中，切换状态时点和标签一起移动。</desc>
         <g className="p2-cluster-chart__grid" aria-hidden="true">
           {[80, 200, 320, 440, 560].map(x => <line key={`x-${x}`} x1={x} x2={x} y1="28" y2="372" />)}
           {[60, 140, 220, 300].map(y => <line key={`y-${y}`} x1="28" x2="612" y1={y} y2={y} />)}
@@ -92,7 +94,7 @@ export function ProjectionClusterChart({
     </div>
     <div className="p2-cluster-chart__footer">
       <div className="p2-cluster-chart__legend" aria-label="类别颜色图例">
-        {shownClasses.map(classId => <span key={classId}><i style={{ backgroundColor: CLASS_VISUALS[classId].color }} />{CLASS_VISUALS[classId].displayLabel} · 6 个样本</span>)}
+        {shownClasses.map(classId => <span key={classId}><i style={{ backgroundColor: CLASS_VISUALS[classId].color }} />{CLASS_VISUALS[classId].displayLabel} · {points.filter(point => point.classId === classId).length} 个样本</span>)}
         <span><i className="p2-cluster-chart__ring" />虚线范围 · 同类样本区域</span>
       </div>
       <p><span aria-hidden="true">↗</span>{state === "before" ? "点击“更新后”，观察同一批样本如何移动" : "位置已随 Θ 改变；样本编号与类别颜色保持不变"}</p>
