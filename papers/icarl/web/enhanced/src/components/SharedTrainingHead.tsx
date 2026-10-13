@@ -14,23 +14,23 @@ function FeatureExtractorDiagram() {
       <desc>图像经过连续的卷积特征块与聚合，得到高维表示。图形只表达共享的数据路径，不对应论文实验网络的精确层数。</desc>
       <defs><marker id="p2-backbone-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8" /></marker></defs>
       <g className="p2-backbone-stage p2-backbone-stage--image">
-        <rect x="12" y="48" width="62" height="84" rx="6" /><path d="M22 112l14-19 11 10 13-22 8 13" /><circle cx="31" cy="70" r="6" /><text x="43" y="151" textAnchor="middle">image x</text>
+        <rect x="12" y="48" width="62" height="84" rx="6" /><path d="M22 112l14-19 11 10 13-22 8 13" /><circle cx="31" cy="70" r="6" /><text x="43" y="159" textAnchor="middle">image x</text>
       </g>
       <path className="p2-backbone-flow" d="M82 90H113" markerEnd="url(#p2-backbone-arrow)" />
       <g className="p2-backbone-stage p2-backbone-stage--maps">
         {[0, 1, 2, 3].map(index => <rect key={index} x={116 + index * 7} y={39 + index * 7} width="58" height="82" rx="4" />)}
-        <text x="148" y="151" textAnchor="middle">卷积特征块</text>
+        <text x="148" y="159" textAnchor="middle">卷积特征块</text>
       </g>
       <path className="p2-backbone-flow" d="M202 90H233" markerEnd="url(#p2-backbone-arrow)" />
       <g className="p2-backbone-stage p2-backbone-stage--deep">
         {[0, 1, 2].map(index => <rect key={index} x={236 + index * 7} y={54 + index * 7} width="43" height="60" rx="4" />)}
-        <text x="260" y="151" textAnchor="middle">深层表示</text>
+        <text x="260" y="159" textAnchor="middle">深层表示</text>
       </g>
       <path className="p2-backbone-flow" d="M301 90H330" markerEnd="url(#p2-backbone-arrow)" />
       <g className="p2-backbone-stage p2-backbone-stage--pool">
         <rect x="334" y="57" width="80" height="66" rx="8" />
         {[0, 1, 2, 3, 4, 5].map(index => <line key={index} x1={348 + index * 10} y1={106 - (index % 3) * 13} x2={348 + index * 10} y2="112" />)}
-        <text x="374" y="151" textAnchor="middle">聚合为向量</text>
+        <text x="374" y="159" textAnchor="middle">聚合为向量</text>
       </g>
     </svg>
     <p>共享骨架持续更新 Θ；新类别到来时不会复制第二个特征提取器。</p>
