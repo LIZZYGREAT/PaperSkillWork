@@ -30,6 +30,66 @@
         { "selector": ":root", "property": "--nav", "equals": "#183236" },
         { "selector": ".ewc-rail", "property": "background-color", "equals": "rgb(24, 50, 54)" }
       ]
+    },
+    {
+      "id": "icarl-p3-prototype-prediction",
+      "path": "/",
+      "states": [
+        {
+          "id": "01-exemplar-features",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
+            { "type": "waitFor", "selector": ".p3-map--stage-0", "state": "visible" }
+          ]
+        },
+        {
+          "id": "02-class-prototypes",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(2)" },
+            { "type": "waitFor", "selector": ".p3-map--stage-1", "state": "visible" }
+          ]
+        },
+        {
+          "id": "03-query-feature",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
+            { "type": "waitFor", "selector": ".p3-map--stage-2", "state": "visible" }
+          ]
+        },
+        {
+          "id": "04-nearest-prototype",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
+            { "type": "waitFor", "selector": ".p3-map--stage-3", "state": "visible" }
+          ]
+        },
+        {
+          "id": "05-direct-return",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(2)" },
+            { "type": "waitFor", "selector": ".p3-map--stage-1", "state": "visible" }
+          ]
+        },
+        {
+          "id": "06-next-and-back",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
+            { "type": "click", "selector": ".icarl-guided__controls .icarl-button--primary" },
+            { "type": "click", "selector": ".icarl-guided__controls .icarl-button--primary" },
+            { "type": "click", "selector": ".icarl-guided__controls .icarl-button--quiet" },
+            { "type": "waitFor", "selector": ".p3-map--stage-1", "state": "visible" }
+          ]
+        }
+      ]
     }
-  ]
+  ],
+  "geometry": {
+    "checkPageHorizontalOverflow": true,
+    "minSemanticFontSizePx": 11
+  }
 }
