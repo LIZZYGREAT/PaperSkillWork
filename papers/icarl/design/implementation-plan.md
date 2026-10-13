@@ -58,9 +58,9 @@ implementation:
       page: "Pages 6–7 · Training Signals and Prediction"
       core_items: [L12, L13, L14, L15]
       evidence_refs: [C03, C05, C06, C10, C11, C12, OI01]
-      primary_vehicle: "Paired old/new target lanes followed by a distinct prototype-inference path"
+      primary_vehicle: "One persistent six-node training graph for old/new targets and BCE, followed by a distinct six-class prototype-inference path"
       reusable_pattern: FlowStepper
-      reason: "The two output-node ages get different targets, while the final prediction visibly bypasses the sigmoid-head argmax and uses current exemplar means."
+      reason: "The fixed graph keeps node positions and object identity stable while one sample's Q/label targets, six independent BCE terms, aggregate loss, and backward signal change in sequence; final prediction visibly bypasses the sigmoid-head argmax and uses current exemplar means."
     - id: S07
       page: "Page 8 · Evidence and Boundaries"
       core_items: [L16, L17, L18, L19, L20, L21, L22]
@@ -72,9 +72,9 @@ implementation:
       page: "Page 9 · iCaRL Runtime"
       core_items: [L23]
       evidence_refs: [OI01, C09, C10, C13, C05]
-      primary_vehicle: "Fixed runtime workbench driven by one ten-step state trace, with persistent, temporary, and derived objects separated"
+      primary_vehicle: "Fixed runtime workbench driven by one 19-step state trace and 13 semantic timeline phases, with persistent, temporary, and derived objects separated"
       reusable_pattern: FlowStepper
-      reason: "A controlled step sequence integrates the established objects while the workbench keeps Θ/P, X_new, D/Q, and derived prototypes visible in their own lifetimes."
+      reason: "A controlled six-class update integrates the established objects: Θ/P persist, D/Q are created and released, old memory is prefix-truncated, each incoming class is herded independently, and six derived prototypes feed nearest-mean prediction."
   assets:
     - {asset: A-FIG02, stage: S07, rendering: crop}
     - {asset: A-FIG03, stage: S07, rendering: crop}
@@ -170,3 +170,15 @@ P4 独立教学集采用固定非对称方向 `[-12.3, -73.2, -173.7, -143.7, 70
 代表性截图已检查，包括 P3 最近原型预测、P4 k=2 中点/单位化/评分、k=2 前缀回看；浏览器 runner 的 `VISUAL_REVIEW` 字段仍为 `NOT_RUN`，因为 runner 不做视觉判断。键盘阶段切换、前进/回退、自动播放/暂停/续播/重播、减少动态效果下关闭自动播放均通过；P3/P4 在 390×844 下无横向溢出。P5 D 与 P9 runtime 页面冒烟检查通过；P9 宽屏捕获各有一个低于 11px 的语义文字警告。
 
 `python tools/paper.py check icarl` 返回 `CHECK PASS`；唯一 warning 是 W9 审计仍待人工通过，这是当前待审状态的预期提示。没有已批准截图基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`，W9/W10 状态未更改。
+
+### P5/P6 增量训练与连续动画修订（2026-10-14）
+
+P5 现在把旧记忆中的 12 张 exemplar 与新到达三类的 18 张完整样本合入同一 `D`，并在参数更新前为全部 30 个 ID 记录对三个旧输出节点的冻结响应 `Q`。六节点 Student 在快照后出现。合成 Q 来自固定演示权重，只用于可核对的教学计算，不是论文 checkpoint、真实训练记录或实验结果。
+
+P6 改为一张持续存在的六节点图：同一条样本路径依次显示共享表示、六个独立 sigmoid 输出、旧类 Q 与新类 one-hot 标签、逐节点 BCE、六项损失聚合及回到共享参数的反向信号。可切换 C2、C4、C5、C6 样本；局部 BCE 输出滑杆只改变曲线算例，不改变模型输出或总损失。播放、暂停、逐段选择、重播和 reduced-motion 行为均保留。动画中的模型输出和梯度是明确标注的合成教学演示，不表示实际优化器运行轨迹。
+
+P7 的运行状态与预测视图覆盖 A–F 六类；最近原型预测使用与 P9 相同的 `P_after`、prototype 和 query 数据。P9 的当前增量更新扩为 19 个详细步骤和 13 个语义阶段：D/E/F 各自进行两轮 Herding；K=12 时六类配额均为 2；旧类截短保持原列表前缀；新类分别使用完整六样本候选集；提交后的 `P_after` 恰为六类各两张。后续预测比较全部六类原型；下一类批次只作为交接提示。
+
+保护不变量：P4 的八样本独立 Herding 教学集、`P_BEFORE` 的身份/顺序/坐标、Page 3 已有预测结果、共享类别色与六节点身份、Q 在模型更新前生成、P 仅在记忆管理阶段变化、最终预测按归一化 exemplar 均值而非 sigmoid argmax；所有合成示例均不表述为论文训练或实验数据。检查范围：P5 各流程阶段和展开的 30×3 Q 明细；P6 旧类软目标、C4/C5/C6 hard target、BCE、损失聚合与反传；P7 六类原型及 query 最近均值；P9 初态、D/Q 构造、旧类截短、D/E/F 各类第二个 Herding 样本、记忆提交、预测与交接；Chromium 视口为 1440×900 和 1920×1080。HUMAN_ACCEPTANCE 仍由 W9 人工审查决定，W10 不属于本次实施。
+
+验证记录：`npm.cmd run build` 通过（TypeScript + Vite，72 modules）。Chromium 在 1440×900 与 1920×1080 共采集 90 个状态截图；GEOMETRY_QA=PASS、配置范围内 STYLE_QA=PASS、BROWSER_ERRORS=PASS（0 条），报告为 `web/enhanced/.visual-qa/p5-p6-p9-incremental/final/run-2026-10-13T18-46-59-378Z/report.md`。Agent 已实际查看 P5 的 D/Q 全明细与六节点 Student、P6 的 C2 Q 软目标与 C4/C6 标签/BCE/反传、P7 六类原型和最近原型对照、P9 六类记忆提交与预测状态；`VISUAL_REVIEW=PASS` 是本次截图人工检查结论，runner 报告中的 `VISUAL_REVIEW=NOT_RUN` 保持原样。另在 390×844 触屏视口、减少动态效果偏好下访问 P5/P6/P7/P9 的代表状态；四页 document width 均为 390px，未发现页面整体横向溢出或 pageerror。没有已批准截图基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`，W9/W10 阶段状态未更改。
