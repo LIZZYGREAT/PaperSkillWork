@@ -37,12 +37,12 @@ See `design/implementation-plan.md` for the first-slice review and any revision 
 | PROJECT_CHECK | PASS | `python tools/paper.py check icarl` passed. The remaining W9 warning is expected because human acceptance is still pending. |
 | GEOMETRY_QA | PASS | The configured P1–P5 handoffs, all four P3 stages, direct stage return, and next/back navigation passed at 1440×900 and 1920×1080. |
 | STYLE_QA | PASS (scoped) | The configured root token and navigation-rail assertions passed. No page-specific computed-style contract is claimed for P3. |
-| VISUAL_REVIEW | PASS (changed P3 states) | The four P3 teaching states were inspected at 1440×900, with the final state also inspected at 1920×1080. Unit-circle meaning, prototype-square meaning, radial guides, persistent exemplar points, direct labels, and distance-line hierarchy are legible without label leaders or clipped content. |
+| VISUAL_REVIEW | PASS (previous P3 revision) | The four P3 teaching states were inspected at 1440×900, with the final state also inspected at 1920×1080. Unit-circle meaning, prototype-square meaning, radial guides, persistent exemplar points, direct labels, and distance-line hierarchy were legible. The angle arcs were restored after that screenshot review and have not yet been visually rechecked. |
 | BROWSER_ERRORS | PASS | The visual-QA run reported zero console or page errors in all 28 captures. |
 | REGRESSION | NOT_RUN | No approved screenshot baseline exists; P10 and upstream export were not changed. |
 | HUMAN_ACCEPTANCE | PENDING | A human reviewer still needs to confirm the teaching effect and final layout. W9 must remain pending until that review is recorded. |
 
-Latest local report: `.visual-qa/icarl-p3-clarity-final/run-2026-10-13T11-21-43-542Z/report.md`.
+Latest local report before the angle-arc restoration: `.visual-qa/icarl-p3-clarity-final/run-2026-10-13T11-21-43-542Z/report.md`.
 
 ## W10 Upstream Preflight
 

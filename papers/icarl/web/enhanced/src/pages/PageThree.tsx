@@ -50,6 +50,18 @@ function chartPoint(vector: Vector2) {
   return { x: chartOrigin.x + vector[0] * chartScale, y: chartOrigin.y - vector[1] * chartScale };
 }
 
+function shortestAngleArc(from: Vector2, to: Vector2, radius: number) {
+  const start = Math.atan2(from[1], from[0]);
+  const end = Math.atan2(to[1], to[0]);
+  let delta = end - start;
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
+  const arcEnd = start + delta;
+  const startPoint = { x: chartOrigin.x + Math.cos(start) * radius, y: chartOrigin.y - Math.sin(start) * radius };
+  const endPoint = { x: chartOrigin.x + Math.cos(arcEnd) * radius, y: chartOrigin.y - Math.sin(arcEnd) * radius };
+  return `M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 0 ${delta >= 0 ? 0 : 1} ${endPoint.x} ${endPoint.y}`;
+}
+
 const prototypeLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }> = {
   A: { dx: 18, dy: -10, anchor: "start" },
   B: { dx: 0, dy: -19, anchor: "middle" },
@@ -79,7 +91,7 @@ const stageFigureGuides = [
   },
   {
     action: "比较 Query 到三个 Prototype 的欧氏距离，选择最短的一条。",
-    reading: "粗实线是最短距离；夹角数值移到右侧表格，避免图内线条拥挤。",
+    reading: "圆弧表示 zq 与各 μy 的方向夹角；右表列出角度和距离，粗实线标出最近原型。",
   },
 ] as const;
 
@@ -117,7 +129,7 @@ function FeatureMap({
       </div>
       <svg viewBox="0 0 640 520" role="img" aria-label="十二张已保留图片的单位化特征、三类原型和查询特征构成的固定二维教学空间">
         <title>Exemplar prototype prediction</title>
-        <desc>十二张 Exemplar 图片经过同一个固定特征提取器。第二步同时显示圆内均值和归一化后的原型；第三步加入独立 Query；第四步显示 Query 到三个原型的距离，夹角数值列在右侧表格中。</desc>
+        <desc>十二张 Exemplar 图片经过同一个固定特征提取器。第二步同时显示圆内均值和归一化后的原型；第三步加入独立 Query；第四步用圆弧展示 Query 与三个原型的方向夹角，并显示 Query 到原型的距离。</desc>
         <circle className="p3-map__unit-circle" cx={chartOrigin.x} cy={chartOrigin.y} r={chartScale} />
         <line className="p3-map__axis" x1="24" y1={chartOrigin.y} x2="616" y2={chartOrigin.y} />
         <line className="p3-map__axis" x1={chartOrigin.x} y1="14" x2={chartOrigin.x} y2="506" />
@@ -156,6 +168,7 @@ function FeatureMap({
           const prototypePosition = chartPoint(prototypeByClass.get(classId)!);
           return <g key={`comparison-${classId}`} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
             <line className={`p3-map__distance${index === 0 ? " is-nearest" : ""}`} x1={queryPosition.x} y1={queryPosition.y} x2={prototypePosition.x} y2={prototypePosition.y} />
+            <path className={`p3-map__angle${index === 0 ? " is-nearest" : ""}`} d={shortestAngleArc(queryFeature, prototypeByClass.get(classId)!, 38 + index * 17)} />
           </g>;
         }) : null}
 
@@ -222,6 +235,7 @@ function FeatureMap({
         {stage >= 1 ? <span><i className="p3-map__legend-ray" />圆心径向虚线：单位向量方向</span> : null}
         {stage === 2 ? <span><i className="p3-map__legend-query-raw" />空心点：归一化前的 Query 特征 f<sub>Θ</sub>(x<sub>q</sub>)</span> : null}
         {showQuery ? <span><i className="p3-map__legend-query" />菱形：单位化 Query 特征 z<sub>q</sub></span> : null}
+        {showDecision ? <span><i className="p3-map__legend-angle" />彩色圆弧：z<sub>q</sub> 与 μ<sub>y</sub> 的夹角 θ<sub>y</sub></span> : null}
         {showDecision ? <span><i className="p3-map__legend-distance" />Query 到 Prototype 的距离</span> : null}
       </div>
     </div>

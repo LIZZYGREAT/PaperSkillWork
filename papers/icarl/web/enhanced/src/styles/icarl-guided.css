@@ -98,6 +98,8 @@
 .p3-map__query { fill: #fffefa; stroke: #263f43; stroke-width: 2.4; }
 .p3-map__distance { stroke: var(--p3-point-color); stroke-width: 1.3; stroke-dasharray: 4 4; opacity: .62; }
 .p3-map__distance.is-nearest { stroke-width: 2.8; stroke-dasharray: none; opacity: 1; }
+.p3-map__angle { fill: none; stroke: var(--p3-point-color); stroke-width: 1.2; opacity: .48; }
+.p3-map__angle.is-nearest { stroke-width: 1.8; opacity: .82; }
 .p3-map__direct-label { fill: #29484b; font: 650 18px Georgia, serif; paint-order: stroke; stroke: #fcfdfa; stroke-linejoin: round; stroke-width: 5px; }
 .p3-map__direct-label--mean { fill: #6c5d51; font-size: 16px; }
 .p3-map__direct-label--query { fill: #263f43; }
@@ -114,6 +116,7 @@
 .p3-map__legend-unit-circle { width: 13px !important; height: 13px !important; border: 1px dashed #86a894; border-radius: 50%; }
 .p3-map__legend-ray { width: 15px !important; height: 0 !important; border-top: 1.5px dashed #5b7f72; }
 .p3-map__legend-distance { width: 15px !important; height: 0 !important; border-top: 2px solid #315f55; }
+.p3-map__legend-angle { width: 13px !important; height: 9px !important; border-top: 1.5px solid #b46a2d; border-radius: 50%; }
 .p3-current-caption { min-height: 46px; padding: 10px 2px 0; color: #3f5a5c; font-size: 13px; line-height: 1.55; }
 .p3-rule-stack { display: grid; gap: 8px; }
 .p3-rule-card { display: grid; gap: 6px; padding: 10px; border: 1px solid #e1e8e3; border-radius: 7px; background: #fcfdfa; }
