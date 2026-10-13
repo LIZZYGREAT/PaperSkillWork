@@ -37,9 +37,9 @@ implementation:
       page: "Pages 3–4 · Prototype and Exemplar Memory"
       core_items: [L05, L06, L07]
       evidence_refs: [C04, C05, C09, C13]
-      primary_vehicle: "Shared SampleToken and FeatureSpaceWorkbench showing current-feature exemplar means and the memory's rehearsal/inference roles"
+      primary_vehicle: "Four-stage prototype-prediction workbench over P_BEFORE, followed by the shared SampleToken memory view for raw-image persistence, dual roles, and budget"
       reusable_pattern: ArchitectureExplorer
-      reason: "The linked image-to-feature-to-class-mean path explains why raw exemplar images can be re-encoded after representation changes and reused for learning and prediction."
+      reason: "Page 3 holds Θ and P fixed while twelve saved images become normalized features, inside-circle means, normalized prototypes, and a nearest-prototype query decision; Page 4 then explains why those same raw images persist and can be re-encoded for learning and prediction."
     - id: S04
       page: "Page 5 · Ordered Exemplar Selection"
       core_items: [L08, L09]
@@ -137,7 +137,9 @@ W7 passed based on the user's explicit acceptance of the current iCaRL implement
 
 保护不变量：论文公式、共享 runtime 的样本身份与坐标、Herding 计算和排序、类别色、训练与预测边界、P10 的现有画布和图元、原有键盘及 reduced-motion 行为。允许调整图框尺度、标签偏移、图元样式及 P1 的已授权叙事顺序；不改 CI、发布流程或人工验收状态。
 
-检查范围：Chromium 1440×900 与 1920×1080；P1 初态与阅读焦点，P2 更新前/后及输出扩展/重置，P3 六阶段与表示移动/均值重算，P4 重编码的两种映射，P5 目标与 prefix 各阶段，P8 共享图状态，P10 修改前后对照。截图与临时检查保存在 `.visual-qa/icarl-revision/`。每块完成后只提交本轮修改的 iCaRL 文件；HUMAN_ACCEPTANCE 保持 PENDING。
+检查范围：Chromium 1440×900 与 1920×1080；P1 初态与阅读焦点，P2 更新前/后及输出扩展/重置，P3 四阶段与直接跳转/前进/回退，P4 重编码的两种映射，P5 目标与 prefix 各阶段，P8 共享图状态，P10 修改前后对照。截图与临时检查保存在 `.visual-qa/`。每块完成后只提交本轮修改的 iCaRL 文件；HUMAN_ACCEPTANCE 保持 PENDING。
+
+P3 的 W9 修订固定使用 P4 同一批 `P_BEFORE[A/B/C]`，每类四张，共十二张；默认选中项从该集合派生。四阶段依次为：图片与单位化 Exemplar Feature、圆内均值与单位化 Prototype、同一固定 Feature Extractor 下的独立 Query、最近 Prototype 距离/夹角与预测。P3 不再包含参数更新、完整旧类数据不可用、内存重分配或 Herding；这些职责分别留在 P4–P8。二维坐标、距离和角度来自同一套固定合成计算，并明确不代表论文实验轨迹。
 
 阶段检查：P1 构建通过，两个宽屏视口无整体横向溢出和浏览器错误；Agent 已查看默认叙事截图。特征图统一后检查 48 个页面/状态/视口组合，未发现整体横向溢出、SVG 标签出框或浏览器错误；Agent 已查看 P2 更新后、P3 最近原型、P4 旧映射、P5 目标与二步 prefix、P8 当前原型与预测的代表性截图。P10 通过显式 legacy 外观保留旧画布与图元，其初态在两个视口与本轮调整前截图逐像素相同；未以此声称所有 P10 动态阶段均经过回归。专门计算样式断言尚未配置，STYLE_QA=NOT_RUN；HUMAN_ACCEPTANCE=PENDING。
 

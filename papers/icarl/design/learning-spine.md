@@ -30,9 +30,9 @@ stages:
     pages: "Page 2"
     purpose: "Open the network only far enough to distinguish the shared feature extractor from the class-output training head."
   - id: S03
-    question: "How can a prototype classifier cover old classes when their full datasets are gone?"
+    question: "Given a fixed feature extractor and selected exemplars, how does one complete a prototype prediction and why must that image memory persist?"
     pages: "Pages 3–4"
-    purpose: "Introduce the current-feature class mean, then motivate retained raw exemplars as the data that can be re-encoded and used for both rehearsal and prototypes."
+    purpose: "First trace twelve retained images through normalized exemplar features, class prototypes, a query feature, and the nearest-prototype decision; then explain the raw-image memory, its dual roles, and its fixed budget."
   - id: S04
     question: "Which retained examples should survive when the per-class memory quota shrinks?"
     pages: "Page 5"
@@ -110,7 +110,7 @@ items:
 
 Start with the setting, not with iCaRL's solution: new classes arrive over time, old classes remain in the decision space, and full history cannot stay in memory. That makes both naive choices understandable and shows why the problem has several simultaneous constraints. Page 2 then opens the model just enough to establish the shared feature extractor and training head without prematurely teaching the final classifier.
 
-Pages 3–4 turn the all-class prediction requirement into a concrete rule: compare a query feature with class means. The need to recompute those means after representation changes exposes the missing-data problem, which motivates keeping raw exemplars. Their two jobs—rehearsal and prototype construction—explain why the memory is persistent state. Page 5 answers the next question: how to order examples so later budget reductions preserve a representative prefix.
+Page 3 first makes one prediction self-contained: it assumes the trained feature extractor and twelve already selected `P_BEFORE` images are ready, then computes normalized exemplar features, an inside-the-unit-circle mean, a normalized prototype, the query feature, and the nearest-prototype decision without changing Θ or P. Page 4 then identifies those same twelve images as persistent raw-image memory and explains its rehearsal/prototype roles plus fixed budget. Page 5 answers the next question: how a newly arrived class uses its temporarily available full data to build an ordered list whose later prefixes remain representative.
 
 Page 6 prepares the update before any parameters change: combine incoming full data with old exemplars, then obtain old-node responses from the pre-update model on that whole set. Page 7 assigns targets by output-node age and updates the shared representation. Page 8 closes the structure: the head remains part of the training network, but final prediction recomputes exemplar prototypes and does not read the head argmax or temporary Q.
 
@@ -120,7 +120,7 @@ Page 9 tests the mechanism against the paper's actual protocols, including the h
 
 - Page 1 establishes the constraints and failure modes but does not reveal the complete iCaRL mechanism.
 - Page 2 introduces the network roles; prototype inference is established on Page 3.
-- Page 3 motivates retained examples; Page 4 defines their storage and dual roles; Page 5 alone explains herding order and reduction.
+- Page 3 uses an explicit teaching assumption—fixed trained feature extractor plus already selected `P_BEFORE`—to complete inference only. Page 4 defines those same images' persistent storage, raw-image identity, dual roles, and budget. Page 5 alone explains Herding order and reduction with the newly arrived Class 4 data; it does not reselect Page 3's old exemplars.
 - Page 6 creates the combined update set and snapshots old responses before training. Page 7 then explains target assignment and loss.
 - Page 8 distinguishes the current network's training and prediction paths without deleting the head or treating them as two models.
 - Page 9 uses reported evidence and protocol-qualified claims. The exact Table 1 values may support newly authored plots; no unreported Figure 2/4 curve values may be inferred.

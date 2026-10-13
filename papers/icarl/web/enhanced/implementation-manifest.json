@@ -5,7 +5,7 @@
     "L03": { "stage": "S01", "component": "PageOne", "status": "complete" },
     "L04": { "stage": "S02", "component": "PageTwo", "status": "complete" },
     "L05": { "stage": "S03", "component": "PageThree", "status": "complete" },
-    "L06": { "stage": "S03", "component": "PageThree", "status": "complete" },
+    "L06": { "stage": "S03", "component": "PageFour", "status": "complete" },
     "L07": { "stage": "S03", "component": "PageFour", "status": "complete" },
     "L08": { "stage": "S04", "component": "PageFive", "status": "complete" },
     "L09": { "stage": "S04", "component": "PageFive", "status": "complete" },
