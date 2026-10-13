@@ -151,9 +151,9 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
               <div className="p2-projection-note"><span className="p2-note-mark">i</span><p>实际 representation 通常位于高维 R<sup>d</sup>。这里用二维投影表达样本间的位置关系；同一编号样本在更新前后保持不变。</p></div>
             </section>
 
-            <SharedTrainingHead />
-
           </section>
+
+          <SharedTrainingHead />
 
           <section className="p2-handoff"><span className="p2-eyebrow">接下来的问题</span><p>现在已经认识 z。保存下来的样本怎样代表各个类别，并支持最终预测？</p><button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>继续了解类别表示机制 <b aria-hidden="true">→</b></button></section>
         </>
