@@ -1,4 +1,3 @@
-import { ChartLabels, type ChartLabel } from "../components/FeatureChart";
 import { useState, type CSSProperties, type KeyboardEvent } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
@@ -19,7 +18,7 @@ const queryInput: Vector2 = [1.732, -1.0];
 const queryRawFeature = encodeRawVector(queryInput, "before");
 const queryFeature = normalize(queryRawFeature);
 const chartOrigin = { x: 320, y: 260 };
-const chartScale = 160;
+const chartScale = 180;
 
 type PrototypeCalculation = {
   classId: ClassId;
@@ -51,17 +50,38 @@ function chartPoint(vector: Vector2) {
   return { x: chartOrigin.x + vector[0] * chartScale, y: chartOrigin.y - vector[1] * chartScale };
 }
 
-function shortestAngleArc(from: Vector2, to: Vector2, radius: number) {
-  const start = Math.atan2(from[1], from[0]);
-  const end = Math.atan2(to[1], to[0]);
-  let delta = end - start;
-  while (delta > Math.PI) delta -= Math.PI * 2;
-  while (delta < -Math.PI) delta += Math.PI * 2;
-  const arcEnd = start + delta;
-  const startPoint = { x: chartOrigin.x + Math.cos(start) * radius, y: chartOrigin.y - Math.sin(start) * radius };
-  const endPoint = { x: chartOrigin.x + Math.cos(arcEnd) * radius, y: chartOrigin.y - Math.sin(arcEnd) * radius };
-  return `M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 0 ${delta >= 0 ? 0 : 1} ${endPoint.x} ${endPoint.y}`;
-}
+const prototypeLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }> = {
+  A: { dx: 18, dy: -10, anchor: "start" },
+  B: { dx: 0, dy: -19, anchor: "middle" },
+  C: { dx: -18, dy: -9, anchor: "end" },
+  D: { dx: 18, dy: 18, anchor: "start" },
+};
+
+const meanLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }> = {
+  A: { dx: -13, dy: 22, anchor: "end" },
+  B: { dx: -14, dy: 23, anchor: "end" },
+  C: { dx: 13, dy: 23, anchor: "start" },
+  D: { dx: 13, dy: -15, anchor: "start" },
+};
+
+const stageFigureGuides = [
+  {
+    action: "每张保留图片先提取特征，再各自做 L2 归一化。",
+    reading: "空心点是归一化前；外圈彩色点是归一化后的 12 个 Exemplar 特征。",
+  },
+  {
+    action: "每类 4 个外圈特征先求均值，再沿同一方向重新单位化。",
+    reading: "圆内大圆是均值 z̄y；方框是单位圆上的类别 Prototype μy。",
+  },
+  {
+    action: "只把新的 Query 编码到同一空间，已算好的三个 Prototype 不变。",
+    reading: "棕色空心点是归一化前的 fΘ(xq)，深色菱形是 zq；圆心虚线表示方向不变。",
+  },
+  {
+    action: "比较 Query 到三个 Prototype 的欧氏距离，选择最短的一条。",
+    reading: "粗实线是最短距离；夹角数值移到右侧表格，避免图内线条拥挤。",
+  },
+] as const;
 
 function FeatureMap({
   stage,
@@ -73,36 +93,10 @@ function FeatureMap({
   onSelectSample: (id: string) => void;
 }) {
   const selectedSample = exemplars.find((sample) => sample.id === selectedSampleId) ?? exemplars[0];
-  const selectedClassId = selectedSample.classId;
   const showPrototypes = stage >= 1;
   const showQuery = stage >= 2;
   const showDecision = stage === 3;
   const normalizedPoints = exemplars.map((sample) => ({ sample, position: chartPoint(normalize(encode2D(sample, "before"))) }));
-  const labels: ChartLabel[] = [];
-  const obstacles = normalizedPoints.map(({ position }) => position);
-
-  if (stage === 0) {
-    const selectedPoint = normalizedPoints.find(({ sample }) => sample.id === selectedSampleId)!.position;
-    labels.push({ ...selectedPoint, id: selectedSample.id, text: selectedSample.id });
-  }
-  if (showPrototypes) {
-    prototypeCalculations.forEach(({ classId, rawMean, prototype }) => {
-      const prototypePosition = chartPoint(prototype);
-      obstacles.push(prototypePosition);
-      labels.push({ ...prototypePosition, id: `prototype-${classId}`, text: `μ${CLASS_VISUALS[classId].index}` });
-      if (stage === 1) {
-        const meanPosition = chartPoint(rawMean);
-        obstacles.push(meanPosition);
-        labels.push({ ...meanPosition, id: `mean-${classId}`, text: `z̄${CLASS_VISUALS[classId].index}` });
-      }
-    });
-  }
-  if (showQuery) {
-    const queryPosition = chartPoint(queryFeature);
-    obstacles.push(queryPosition);
-    labels.push({ ...queryPosition, id: "query", text: "z_q" });
-  }
-
   function activatePoint(event: KeyboardEvent<SVGGElement>, sampleId: string) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -117,9 +111,13 @@ function FeatureMap({
         <span>固定特征提取器 · φ<sub>Θ fixed</sub></span>
         <span>所选 Exemplar · {selectedSampleId}</span>
       </div>
+      <div className="p3-map__guide" aria-live="polite">
+        <b>本步动作</b><span>{stageFigureGuides[stage].action}</span>
+        <b>读图方法</b><span>{stageFigureGuides[stage].reading}</span>
+      </div>
       <svg viewBox="0 0 640 520" role="img" aria-label="十二张已保留图片的单位化特征、三类原型和查询特征构成的固定二维教学空间">
         <title>Exemplar prototype prediction</title>
-        <desc>十二张 Exemplar 图片经过同一个固定特征提取器。第二步同时显示圆内均值和归一化后的原型；第三步加入独立 Query；第四步显示 Query 到三个原型的距离和夹角。</desc>
+        <desc>十二张 Exemplar 图片经过同一个固定特征提取器。第二步同时显示圆内均值和归一化后的原型；第三步加入独立 Query；第四步显示 Query 到三个原型的距离，夹角数值列在右侧表格中。</desc>
         <circle className="p3-map__unit-circle" cx={chartOrigin.x} cy={chartOrigin.y} r={chartScale} />
         <line className="p3-map__axis" x1="24" y1={chartOrigin.y} x2="616" y2={chartOrigin.y} />
         <line className="p3-map__axis" x1={chartOrigin.x} y1="14" x2={chartOrigin.x} y2="506" />
@@ -129,7 +127,7 @@ function FeatureMap({
           const normalizedPosition = chartPoint(normalize(encode2D(sample, "before")));
           const isSelected = sample.id === selectedSampleId;
           return <g key={`raw-${sample.id}`} className={`p3-map__normalization${isSelected ? " is-selected" : ""}`} style={{ "--p3-point-color": CLASS_VISUALS[sample.classId].color } as CSSProperties}>
-            {isSelected ? <line className="p3-map__normalization-ray" x1={rawPosition.x} y1={rawPosition.y} x2={normalizedPosition.x} y2={normalizedPosition.y} /> : null}
+            {isSelected ? <line className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={normalizedPosition.x} y2={normalizedPosition.y} /> : null}
             <circle className="p3-map__raw-point" cx={rawPosition.x} cy={rawPosition.y} r={isSelected ? 4 : 2.8} />
           </g>;
         }) : null}
@@ -137,20 +135,27 @@ function FeatureMap({
         {stage === 1 ? prototypeCalculations.map(({ classId, rawMean, prototype }) => {
           const meanPosition = chartPoint(rawMean);
           const prototypePosition = chartPoint(prototype);
-          const classSamples = normalizedPoints.filter(({ sample }) => sample.classId === classId);
           return <g key={`calculation-${classId}`} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-            {classId === selectedClassId ? classSamples.map(({ sample, position }) => <line key={`mean-link-${sample.id}`} className="p3-map__mean-link" x1={position.x} y1={position.y} x2={meanPosition.x} y2={meanPosition.y} />) : null}
-            <line className="p3-map__prototype-normalization" x1={meanPosition.x} y1={meanPosition.y} x2={prototypePosition.x} y2={prototypePosition.y} />
+            <line className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={prototypePosition.x} y2={prototypePosition.y} />
             <circle className="p3-map__raw-mean" cx={meanPosition.x} cy={meanPosition.y} r="10" />
           </g>;
         }) : null}
+
+        {showPrototypes && stage !== 1 ? prototypeCalculations.map(({ classId, prototype }) => {
+          const position = chartPoint(prototype);
+          return <line key={`prototype-ray-${classId}`} className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={position.x} y2={position.y} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties} />;
+        }) : null}
+
+        {showQuery ? (() => {
+          const position = chartPoint(queryFeature);
+          return <line className="p3-map__radial-ray p3-map__radial-ray--query" x1={chartOrigin.x} y1={chartOrigin.y} x2={position.x} y2={position.y} />;
+        })() : null}
 
         {showDecision ? queryComparisons.map(({ classId }, index) => {
           const queryPosition = chartPoint(queryFeature);
           const prototypePosition = chartPoint(prototypeByClass.get(classId)!);
           return <g key={`comparison-${classId}`} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
             <line className={`p3-map__distance${index === 0 ? " is-nearest" : ""}`} x1={queryPosition.x} y1={queryPosition.y} x2={prototypePosition.x} y2={prototypePosition.y} />
-            <path className={`p3-map__angle${index === 0 ? " is-nearest" : ""}`} d={shortestAngleArc(queryFeature, prototypeByClass.get(classId)!, 38 + index * 17)} />
           </g>;
         }) : null}
 
@@ -159,7 +164,7 @@ function FeatureMap({
           const color = CLASS_VISUALS[sample.classId].color;
           return <g
             key={sample.id}
-            className={`p3-map__point${isSelected ? " is-selected" : ""}${stage >= 2 ? " is-context" : ""}`}
+            className={`p3-map__point${isSelected ? " is-selected" : ""}`}
             tabIndex={0}
             role="button"
             aria-label={`${CLASS_VISUALS[sample.classId].displayLabel} 已保留样本 ${sample.id}；选择以联动左栏身份`}
@@ -173,33 +178,51 @@ function FeatureMap({
 
         {showPrototypes ? prototypeCalculations.map(({ classId, prototype }) => {
           const position = chartPoint(prototype);
-          return <path key={`prototype-${classId}`} className={`p3-map__prototype p3-map__prototype--${classId}`} d={`M ${position.x - 7} ${position.y - 7} h 14 v 14 h -14 Z`} />;
+          const label = prototypeLabelPlacement[classId];
+          return <g key={`prototype-${classId}`}>
+            <path className={`p3-map__prototype p3-map__prototype--${classId}`} d={`M ${position.x - 7} ${position.y - 7} h 14 v 14 h -14 Z`} />
+            <text className="p3-map__direct-label" x={position.x + label.dx} y={position.y + label.dy} textAnchor={label.anchor}>μ{CLASS_VISUALS[classId].index}</text>
+          </g>;
+        }) : null}
+
+        {stage === 1 ? prototypeCalculations.map(({ classId, rawMean }) => {
+          const position = chartPoint(rawMean);
+          const label = meanLabelPlacement[classId];
+          return <text key={`mean-label-${classId}`} className="p3-map__direct-label p3-map__direct-label--mean" x={position.x + label.dx} y={position.y + label.dy} textAnchor={label.anchor}>z̄{CLASS_VISUALS[classId].index}</text>;
         }) : null}
 
         {stage === 2 ? (() => {
           const rawPosition = chartPoint(queryRawFeature);
-          const normalizedPosition = chartPoint(queryFeature);
           return <g className="p3-map__query-normalization">
-            <line x1={rawPosition.x} y1={rawPosition.y} x2={normalizedPosition.x} y2={normalizedPosition.y} />
             <circle cx={rawPosition.x} cy={rawPosition.y} r="4" />
           </g>;
         })() : null}
 
         {showQuery ? (() => {
           const position = chartPoint(queryFeature);
-          return <path className="p3-map__query" d={`M ${position.x} ${position.y - 9} l 9 9 l -9 9 l -9 -9 Z`} />;
+          return <g>
+            <path className="p3-map__query" d={`M ${position.x} ${position.y - 9} l 9 9 l -9 9 l -9 -9 Z`} />
+            <text className="p3-map__direct-label p3-map__direct-label--query" x={position.x + 17} y={position.y - 12}>zq</text>
+          </g>;
+        })() : null}
+
+        {stage === 0 ? (() => {
+          const position = normalizedPoints.find(({ sample }) => sample.id === selectedSampleId)!.position;
+          return <text className="p3-map__direct-label p3-map__direct-label--sample" x={position.x + 12} y={position.y - 10}>{selectedSample.id}</text>;
         })() : null}
 
         <circle className="p3-map__origin" cx={chartOrigin.x} cy={chartOrigin.y} r="3.2" />
-        <ChartLabels labels={labels} obstacles={obstacles} />
       </svg>
       <div className="p3-map__legend">
+        <span><i className="p3-map__legend-unit-circle" />虚线圆：单位圆（‖z‖₂=1）</span>
         {stage === 0 ? <span><i className="p3-map__legend-raw" />未单位化特征 f<sub>Θ</sub>(p)</span> : null}
-        <span><i className="p3-map__legend-dot" />单位化 Exemplar 特征 z<sub>p</sub></span>
+        <span><i className="p3-map__legend-dot" />外圈彩色点：12 个单位化 Exemplar 特征 z<sub>p</sub></span>
         {stage === 1 ? <span><i className="p3-map__legend-raw-mean" />圆内均值 z̄<sub>y</sub></span> : null}
-        {showPrototypes ? <span><i className="p3-map__legend-prototype" />单位化 Prototype μ<sub>y</sub></span> : null}
-        {showQuery ? <span><i className="p3-map__legend-query" />单位化 Query 特征 z<sub>q</sub></span> : null}
-        {showDecision ? <span><i className="p3-map__legend-angle" />方向夹角 θ<sub>y</sub></span> : null}
+        {showPrototypes ? <span><i className="p3-map__legend-prototype" />方框：类别 Prototype μ<sub>y</sub></span> : null}
+        {stage >= 1 ? <span><i className="p3-map__legend-ray" />圆心径向虚线：单位向量方向</span> : null}
+        {stage === 2 ? <span><i className="p3-map__legend-query-raw" />空心点：归一化前的 Query 特征 f<sub>Θ</sub>(x<sub>q</sub>)</span> : null}
+        {showQuery ? <span><i className="p3-map__legend-query" />菱形：单位化 Query 特征 z<sub>q</sub></span> : null}
+        {showDecision ? <span><i className="p3-map__legend-distance" />Query 到 Prototype 的距离</span> : null}
       </div>
     </div>
   );

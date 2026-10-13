@@ -74,34 +74,34 @@
 .p3-map { display: grid; min-width: 0; flex: 0 0 auto; grid-template-rows: auto auto auto; align-content: start; gap: 8px; padding: 10px 11px 8px; border: 1px solid #e0e8e3; border-radius: 9px; background: #fcfdfa; }
 .p3-map__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 12px; color: #617678; font-size: 12px; }
 .p3-map__meta span:first-child { color: #817055; font: 650 12px var(--mono); letter-spacing: .07em; }
+.p3-map__guide { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; padding: 8px 10px; border-left: 3px solid #719b89; border-radius: 0 7px 7px 0; color: #52696b; background: #f2f6f2; font-size: 11px; line-height: 1.45; }
+.p3-map__guide b { color: #315d52; font: 700 10px var(--mono); letter-spacing: .05em; }
 .p3-map svg { display: block; width: 100%; height: auto; max-height: none; align-self: center; overflow: visible; }
 .p3-map__unit-circle { fill: none; stroke: #b8c9bf; stroke-dasharray: 4 4; stroke-width: 1.2; }
 .p3-map__axis { stroke: #e0e7e3; stroke-width: 1; }
 .p3-map__origin { fill: #355b54; stroke: #fffefa; stroke-width: 1.4; }
 .p3-map__normalization { pointer-events: none; }
-.p3-map__normalization-ray { stroke: var(--p3-point-color); stroke-dasharray: 3 4; stroke-linecap: round; stroke-opacity: .75; stroke-width: 1.5; }
+.p3-map__radial-ray { stroke: var(--p3-point-color); stroke-dasharray: 4 5; stroke-linecap: round; stroke-opacity: .62; stroke-width: 1.25; }
+.p3-map__radial-ray--query { stroke: #455f62; stroke-opacity: .74; }
 .p3-map__raw-point { fill: #fcfdfa; stroke: var(--p3-point-color); stroke-width: 1.4; }
 .p3-map__normalization.is-selected .p3-map__raw-point { stroke-width: 2.2; }
 .p3-map__point { cursor: pointer; outline: none; }
 .p3-map__normalized-point { stroke: white; stroke-width: 1.2; transition: r .2s ease, fill-opacity .2s ease; }
 .p3-map__point.is-selected .p3-map__normalized-point { stroke: #203e40; stroke-width: 2.2; }
-.p3-map__point.is-context .p3-map__normalized-point { fill-opacity: .42; }
-.p3-map__point.is-context.is-selected .p3-map__normalized-point { fill-opacity: .7; }
 .p3-map__point:focus-visible .p3-map__normalized-point { stroke: #cc793f; stroke-width: 3; }
-.p3-map__mean-link { stroke: #aebcb6; stroke-width: 1; stroke-dasharray: 2 3; }
-.p3-map__prototype-normalization { stroke: var(--p3-point-color); stroke-width: 1.6; stroke-dasharray: 4 3; }
 .p3-map__raw-mean { fill: color-mix(in srgb, var(--p3-point-color) 8%, white); stroke: var(--p3-point-color); stroke-dasharray: 2 2; stroke-width: 1.8; }
 .p3-map__prototype { fill: #fffefa; stroke-width: 2.6; }
 .p3-map__prototype--A { stroke: #28659a; }
 .p3-map__prototype--B { stroke: #31775f; }
 .p3-map__prototype--C { stroke: #b46a2d; }
-.p3-map__query-normalization line { stroke: #715744; stroke-width: 1.5; stroke-dasharray: 4 3; }
 .p3-map__query-normalization circle { fill: #fffefa; stroke: #715744; stroke-width: 1.8; }
 .p3-map__query { fill: #fffefa; stroke: #263f43; stroke-width: 2.4; }
 .p3-map__distance { stroke: var(--p3-point-color); stroke-width: 1.3; stroke-dasharray: 4 4; opacity: .62; }
 .p3-map__distance.is-nearest { stroke-width: 2.8; stroke-dasharray: none; opacity: 1; }
-.p3-map__angle { fill: none; stroke: var(--p3-point-color); stroke-width: 1.3; opacity: .58; }
-.p3-map__angle.is-nearest { stroke-width: 2.4; opacity: .95; }
+.p3-map__direct-label { fill: #29484b; font: 650 18px Georgia, serif; paint-order: stroke; stroke: #fcfdfa; stroke-linejoin: round; stroke-width: 5px; }
+.p3-map__direct-label--mean { fill: #6c5d51; font-size: 16px; }
+.p3-map__direct-label--query { fill: #263f43; }
+.p3-map__direct-label--sample { fill: #375f57; font: 650 13px var(--mono); }
 .p3-map__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 13px; color: #596f70; font-size: 12px; }
 .p3-map__legend span { display: inline-flex; align-items: center; gap: 5px; }
 .p3-map__legend i { display: inline-block; width: 10px; height: 10px; }
@@ -109,8 +109,11 @@
 .p3-map__legend-raw { border: 1px solid #43816f; border-radius: 50%; background: #fffefa; }
 .p3-map__legend-raw-mean { border: 2px solid #8c755f; border-radius: 50%; background: white; }
 .p3-map__legend-prototype { border: 2px solid #43816f; background: white; }
+.p3-map__legend-query-raw { border: 1.5px solid #715744; border-radius: 50%; background: #fffefa; }
 .p3-map__legend-query { width: 9px !important; height: 9px !important; background: #263f43; transform: rotate(45deg); }
-.p3-map__legend-angle { width: 12px !important; height: 7px !important; border-top: 2px solid #b46a2d; border-radius: 50%; }
+.p3-map__legend-unit-circle { width: 13px !important; height: 13px !important; border: 1px dashed #86a894; border-radius: 50%; }
+.p3-map__legend-ray { width: 15px !important; height: 0 !important; border-top: 1.5px dashed #5b7f72; }
+.p3-map__legend-distance { width: 15px !important; height: 0 !important; border-top: 2px solid #315f55; }
 .p3-current-caption { min-height: 46px; padding: 10px 2px 0; color: #3f5a5c; font-size: 13px; line-height: 1.55; }
 .p3-rule-stack { display: grid; gap: 8px; }
 .p3-rule-card { display: grid; gap: 6px; padding: 10px; border: 1px solid #e1e8e3; border-radius: 7px; background: #fcfdfa; }
