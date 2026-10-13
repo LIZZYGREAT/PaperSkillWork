@@ -475,13 +475,13 @@ export function PageTen({ onExit }: { onExit: () => void }) {
         <section className="panel p10-feature-panel" id="unit_circle" data-canonical-id="unit_circle" aria-labelledby="p10-feature-heading">
           <div className="p10-panel-heading"><div><span className="p10-eyebrow">{continueStream ? "继续类别流" : "共享特征空间"}</span><h2 id="p10-feature-heading">{featureTitle}</h2></div><span className={`p10-mode-badge p10-mode-badge--${featureMode}`} data-canonical-id={continueStream ? "next_increment_mode" : stepIndex === 12 ? "inference_mode" : stepIndex === 11 ? "prototype_mode" : stepIndex >= 6 ? "herding_mode" : "representation_mode"}>{continueStream ? "下一轮入口" : featureMode === "projection" ? "表示变化" : featureMode === "herding" ? "Herding 选样" : featureMode === "prototypes" ? "类别均值" : "预测"}</span></div>
           {continueStream ? <div className="p10-stream-stage">
-            <div className="p10-stream-stage__exiting" aria-hidden="true"><FeatureSpaceWorkbench mode="inference" title="查询样本到各类别均值的距离" description="查询向量和各类别均值均经过 L2 normalization；距离最小的类别给出预测。" points={exemplarPoints} unitCircle prototypes={PROTOTYPES} query={QUERY_FEATURE} focusableSamples={false} asideContent={<div className="p10-prediction-result"><span>最小距离 · 最近类别均值</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 对全部已见类别比较</small></div>} /></div>
+            <div className="p10-stream-stage__exiting" aria-hidden="true"><FeatureSpaceWorkbench legacy mode="inference" title="查询样本到各类别均值的距离" description="查询向量和各类别均值均经过 L2 normalization；距离最小的类别给出预测。" points={exemplarPoints} unitCircle prototypes={PROTOTYPES} query={QUERY_FEATURE} focusableSamples={false} asideContent={<div className="p10-prediction-result"><span>最小距离 · 最近类别均值</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 对全部已见类别比较</small></div>} /></div>
             <div className="p10-stream-continuation">
               <div className="p10-stream-state"><span>CURRENT STATE FOR NEXT INCREMENT</span><strong>Θ_after + P_after</strong><small>本轮已提交的模型与 exemplar 记忆</small></div>
               <i aria-hidden="true">→</i>
               <div className="p10-stream-next"><span>下一批输入 · 教学提示</span><strong>X_next</strong><small>下一类别的完整数据将从这里进入</small></div>
             </div>
-          </div> : <FeatureSpaceWorkbench
+          </div> : <FeatureSpaceWorkbench legacy
             mode={featureMode}
             title={featureTitle}
             description={featureDescription}

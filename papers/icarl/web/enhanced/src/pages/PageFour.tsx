@@ -1,3 +1,4 @@
+import { ChartLabels } from "../components/FeatureChart";
 import { useState } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
@@ -23,7 +24,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const [classCount, setClassCount] = useState(3);
   const firstExemplar = examplesByClass.get("A")![0];
   const perClassBudget = Math.floor(MEMORY_BUDGET / classCount);
-  const reencodePoint = (vector: Vector2) => ({ x: 34 + vector[0] * 90, y: 87 - vector[1] * 100 });
+  const reencodePoint = (vector: Vector2) => ({ x: 320 + vector[0] * 160, y: 260 - vector[1] * 160 });
   const oldFeaturePoint = reencodePoint(encode2D(firstExemplar, "before"));
   const currentFeaturePoint = reencodePoint(encode2D(firstExemplar, modelState));
 
@@ -76,17 +77,17 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
             </div>
             <div className="p4-saved-image"><SampleToken sample={firstExemplar} role="exemplar" /><span className="p4-persistent-tag">原始图像 · 长期保存</span></div>
             <div className="p4-reencode-arrow" aria-label={`图像送入 ${modelState === "before" ? "旧" : "新"}特征映射`}><span>φ<sub>Θ {modelState === "before" ? "old" : "new"}</sub></span><i aria-hidden="true" /></div>
-            <svg className="p4-reencode-map" viewBox="0 0 320 126" role="img" aria-label="同一 exemplar 在旧特征映射和当前映射下的位置">
+            <svg className="p4-reencode-map" viewBox="0 0 640 520" role="img" aria-label="同一 exemplar 在旧特征映射和当前映射下的位置">
               <title>同一原始图像在两个表示空间的位置</title>
               <desc>φold 下的空心点与当前 φ 下的实心点由方向箭头连接，位置来自固定合成坐标。</desc>
-              <line x1="20" y1="87" x2="300" y2="87" />
-              <line x1="34" y1="18" x2="34" y2="104" />
+              <line x1="24" y1="260" x2="616" y2="260" />
+              <line x1="320" y1="24" x2="320" y2="496" />
+              <circle className="feature-chart-origin" cx="320" cy="260" r="3" />
               <line className="p4-reencode-drift" x1={oldFeaturePoint.x} y1={oldFeaturePoint.y} x2={currentFeaturePoint.x} y2={currentFeaturePoint.y} markerEnd="url(#p4-reencode-arrow)" />
               <defs><marker id="p4-reencode-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 8 4 L 0 8" /></marker></defs>
               <circle className="p4-reencode-old" cx={oldFeaturePoint.x} cy={oldFeaturePoint.y} r="6" />
               <circle className="p4-reencode-current" cx={currentFeaturePoint.x} cy={currentFeaturePoint.y} r="6" />
-              <text x={oldFeaturePoint.x + 9} y={oldFeaturePoint.y - 7}>z_old</text>
-              <text x={currentFeaturePoint.x + 9} y={currentFeaturePoint.y + 16}>{modelState === "before" ? "same position" : "φcurrent(p₁)"}</text>
+              <ChartLabels labels={modelState === "before" ? [{ ...currentFeaturePoint, id: "same", text: "z_old · 同一位置" }] : [{ ...oldFeaturePoint, id: "old", text: "z_old" }, { ...currentFeaturePoint, id: "new", text: "φcurrent(p₁)" }]} obstacles={[oldFeaturePoint, currentFeaturePoint]} />
             </svg>
             <div className="p4-feature-result"><span className="p4-feature-dot" /><div><b>{modelState === "before" ? "z_old" : "z_new"} = φ(p₁)</b><small>{modelState === "before" ? "旧表示空间中的结果" : "同一原始图像在当前空间的新表示"}</small></div></div>
             <div className="p4-stale-vector"><span>×</span><p><b>旧 embedding 不是保存对象</b><small>z_old 不会自动变成 φnew(p₁)。</small></p></div>

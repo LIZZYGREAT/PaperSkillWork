@@ -1,3 +1,4 @@
+import { ChartLabels, type ChartLabel } from "../components/FeatureChart";
 import { useMemo, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
@@ -50,14 +51,6 @@ const predictedClass = queryDistances[0].classId;
 
 type FormulaFocus = "feature" | "mean" | "distance" | "decision";
 
-function starPath(x: number, y: number) {
-  return Array.from({ length: 10 }, (_, index) => {
-    const radius = index % 2 === 0 ? 6.5 : 3.2;
-    const angle = -Math.PI / 2 + (index * Math.PI) / 5;
-    return `${index === 0 ? "M" : "L"}${x + Math.cos(angle) * radius},${y + Math.sin(angle) * radius}`;
-  }).join(" ") + " Z";
-}
-
 function FeatureMap({
   stage,
   phase,
@@ -91,6 +84,13 @@ function FeatureMap({
     old: classMean(classId, "before"),
   }));
 
+  const labels: ChartLabel[] = [];
+  const obstacles = points.flatMap(sample => [chartPoint(normalize(encode2D(sample, currentState))), chartPoint(encode2D(sample, currentState))]);
+  if (showQuery) labels.push({ ...chartPoint(normalizedQuery), id: "query", text: "query q" });
+  if (showMeans && !historicalOnly) means.forEach(({ classId, current }) => { const p = chartPoint(current); obstacles.push(p); labels.push({ ...p, id: classId, text: `μ${CLASS_VISUALS[classId].index} · 类别原型` }); });
+  const selected = points.find(sample => sample.id === selectedSampleId);
+  if (selected && !historicalOnly) labels.push({ ...chartPoint(normalize(encode2D(selected, currentState))), id: selected.id, text: selected.id });
+
   function activatePoint(event: KeyboardEvent<SVGGElement>, sampleId: string) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -103,7 +103,7 @@ function FeatureMap({
       <div className="p3-map__meta"><span>FIXED SYNTHETIC · RAW → L2-NORMALIZED</span><span>{historicalOnly ? "历史分布 · 当前不可访问" : `当前映射 · φ${currentState === "before" ? "old" : "new"}`}</span><span>所选身份 · {historicalOnly ? "—" : selectedSampleId}</span></div>
       <svg viewBox="0 0 640 520" role="img" aria-label="原始特征点沿虚线经过原点映射到 L2 单位圆；填充点、类别均值与 query 展示当前分类关系">
         <title>Feature space workbench</title>
-        <desc>空心点是未归一化的 φΘ(x)，径向虚线经过原点，填充点是落在单位圆上的 L2 归一化特征 z。星形代表由样本计算出的类均值。</desc>
+        <desc>空心点是未归一化的 φΘ(x)，径向虚线经过原点，填充点是落在单位圆上的 L2 归一化特征 z。空心方框代表由样本计算出的类别原型。</desc>
         <circle className="p3-map__unit-circle" cx={chartOrigin.x} cy={chartOrigin.y} r={chartScale} />
         <defs><marker id="p3-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 8 4 L 0 8" fill="none" stroke="#b88050" strokeWidth="1.2" /></marker></defs>
         <line className="p3-map__axis" x1="24" y1={chartOrigin.y} x2="616" y2={chartOrigin.y} />
@@ -129,7 +129,7 @@ function FeatureMap({
               <path className="p3-map__mean-ghost" d={`M ${oldPosition.x} ${oldPosition.y - 8} L ${oldPosition.x + 8} ${oldPosition.y} L ${oldPosition.x} ${oldPosition.y + 8} L ${oldPosition.x - 8} ${oldPosition.y} Z`} />
               <line className="p3-map__mean-drift" x1={oldPosition.x} y1={oldPosition.y} x2={currentPosition.x} y2={currentPosition.y} />
             </> : null}
-            <path className={`p3-map__mean p3-map__mean--${classId}${focus === "mean" || focus === "decision" ? " is-focused" : ""}`} d={starPath(currentPosition.x, currentPosition.y)} />
+            <path className={`p3-map__mean p3-map__mean--${classId}${focus === "mean" || focus === "decision" ? " is-focused" : ""}`} d={`M ${currentPosition.x - 7} ${currentPosition.y - 7} h 14 v 14 h -14 Z`} />
           </g>;
         }) : null}
         {stage === 3 && phase === 1 ? means.map(({ classId, old }) => {
@@ -147,9 +147,7 @@ function FeatureMap({
               const m = chartPoint(prototypeBefore.get(classId)!);
               return <line key={`q-${classId}`} className={`p3-map__distance${classId === predictedClass || focus === "distance" ? " is-nearest" : ""}`} x1={q.x} y1={q.y} x2={m.x} y2={m.y} />;
             })}
-            <circle className={`p3-map__query${focus === "feature" ? " is-focused" : ""}`} cx={q.x} cy={q.y} r="3.2" />
-            <path className="p3-map__query-cross" d={`M ${q.x - 3.5} ${q.y} H ${q.x + 3.5} M ${q.x} ${q.y - 3.5} V ${q.y + 3.5}`} />
-            <text className="p3-map__query-label" x={q.x + 13} y={q.y + 18}>query q</text>
+            <path className={`p3-map__query${focus === "feature" ? " is-focused" : ""}`} d={`M ${q.x} ${q.y - 8} l 8 8 l -8 8 l -8 -8 Z`} />
           </g>;
         })() : null}
         {points.map((sample) => {
@@ -177,6 +175,7 @@ function FeatureMap({
             <title>{`${sample.id} ↔ 原始图像身份 ↔ φ(x)`}</title>
           </g>;
         })}
+        <ChartLabels labels={labels} obstacles={obstacles} />
       </svg>
       <div className="p3-map__legend">
         <span><i className="p3-map__legend-raw" />原始特征 φ<sub>Θ</sub>(x)</span>
@@ -253,7 +252,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
 
         <aside className="panel p3-rule-panel">
           <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE</span><h2>运算与图形联动</h2></div></div>
-          {stage >= 4 ? <div className="p3-unavailable-card"><span className="p3-rule-symbol">{stage === 4 ? <>μ<sub>1</sub> = ?</> : <>μ<sub>1</sub> ≈ μ<sub>1,subset</sub></>}</span><b>{stage === 4 ? "完整 X₁ 不可访问" : "保留子集的近似中心已计算"}</b><p>{stage === 4 ? "不是均值定义失效，而是求和所需的全部旧样本已经不在训练者可访问的数据中。" : "图中的星形是这 3 个保留样本在当前 φ 下重新编码后得到的均值估计。"}</p></div> : <>
+          {stage >= 4 ? <div className="p3-unavailable-card"><span className="p3-rule-symbol">{stage === 4 ? <>μ<sub>1</sub> = ?</> : <>μ<sub>1</sub> ≈ μ<sub>1,subset</sub></>}</span><b>{stage === 4 ? "完整 X₁ 不可访问" : "保留子集的近似中心已计算"}</b><p>{stage === 4 ? "不是均值定义失效，而是求和所需的全部旧样本已经不在训练者可访问的数据中。" : "图中的空心方框是这 3 个保留样本在当前 φ 下重新编码后得到的均值估计。"}</p></div> : <>
             <div className="p3-formula-list">
               <button type="button" className={focus === "mean" ? "is-active" : ""} onClick={() => setFocus("mean")} aria-pressed={focus === "mean"}><span>归一化类原型</span><strong>μ<sub>y</sub> = normalize(mean&#123; ẑ<sub>x</sub> &#125;)</strong></button>
               <button type="button" className={focus === "feature" ? "is-active" : ""} onClick={() => setFocus("feature")} aria-pressed={focus === "feature"}><span>当前表示</span><strong>ẑ<sub>x</sub> = normalize(φ<sub>Θ</sub>(x))</strong></button>

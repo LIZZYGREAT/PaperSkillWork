@@ -1,3 +1,4 @@
+import { ChartLabels, FEATURE_FRAME, featureStar, type ChartLabel } from "../components/FeatureChart";
 import { useState } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
@@ -13,7 +14,7 @@ const steps: readonly GuidedStep[] = [
 ];
 
 type Point2D = { x: number; y: number };
-const CHART = { centerX: 210, centerY: 180, radius: 126 };
+const CHART = { centerX: FEATURE_FRAME.x, centerY: FEATURE_FRAME.y, radius: FEATURE_FRAME.radius };
 
 type HerdingTeachingPoint = { id: string; feature: Vector2 };
 type HerdingTeachingCandidate = {
@@ -114,12 +115,18 @@ function UnitCircle({
   const normalizedComparisonPoint = comparisonPrefix ? toChartPoint(comparisonPrefix.normalizedMean) : null;
   const selectedIds = new Set(selected.map((point) => point.id));
 
+  const labels: ChartLabel[] = [{ ...rawTargetPoint, id: "raw", text: "原始均值 μ̄y" }, { ...targetPoint, id: "target", text: "归一化类均值 μy" }];
+  if (rawPrefixPoint && normalizedPrefixPoint) labels.push({ ...rawPrefixPoint, id: "prefix-raw", text: "原始前缀均值" }, { ...normalizedPrefixPoint, id: "prefix", text: "归一化前缀均值" });
+  selected.forEach((point, index) => labels.push({ ...toChartPoint(point.feature), id: point.id, text: `p${index+1} · ${point.id}` }));
+  if (candidateId && !selectedIds.has(candidateId)) labels.push({ ...toChartPoint(HERDING_TEACHING_POINT_BY_ID.get(candidateId)!.feature), id: candidateId, text: `候选 ${candidateId}` });
+  const obstacles = [...HERDING_TEACHING_POINTS.map(p => toChartPoint(p.feature)), ...[targetPoint, rawTargetPoint, rawPrefixPoint, normalizedPrefixPoint].filter((p): p is Point2D => p !== null)];
+
   return (
-    <svg className="p5-unit-circle" viewBox="0 0 420 360" role="img" aria-label={`共享 runtime 中 Class 4 的完整新类示例。${referenceOnly ? "点位和完整类别均值来自首次构造时的历史参考；后续阶段完整数据不可用。" : `${HERDING_TEACHING_POINTS.length} 个归一化特征点，完整类别目标 μy 位于单位圆上。`}${selected.length ? `当前 prefix 长度 ${selected.length}，` : ""}${candidateId ? `当前候选 ${candidateId}。` : ""}`}>
+    <svg className="p5-unit-circle" viewBox="0 0 640 520" role="img" aria-label={`共享 runtime 中 Class 4 的完整新类示例。${referenceOnly ? "点位和完整类别均值来自首次构造时的历史参考；后续阶段完整数据不可用。" : `${HERDING_TEACHING_POINTS.length} 个归一化特征点，完整类别目标 μy 位于单位圆上。`}${selected.length ? `当前 prefix 长度 ${selected.length}，` : ""}${candidateId ? `当前候选 ${candidateId}。` : ""}`}>
       <title>归一化特征空间中的 Herding 计算</title>
       <desc>所有输入特征先经 L2 normalization 位于单位圆上。完整类别均值在圆内，归一化后得到目标 μy。当前 prefix 均值也由输入特征计算，再归一化到单位圆。</desc>
-      <line className="p5-axis" x1="34" y1={CHART.centerY} x2="386" y2={CHART.centerY} />
-      <line className="p5-axis" x1={CHART.centerX} y1="7" x2={CHART.centerX} y2="353" />
+      <line className="p5-axis" x1="24" y1={CHART.centerY} x2="616" y2={CHART.centerY} />
+      <line className="p5-axis" x1={CHART.centerX} y1="24" x2={CHART.centerX} y2="496" />
       <circle className="p5-circle-boundary" cx={CHART.centerX} cy={CHART.centerY} r={CHART.radius} />
       <line className={`p5-mean-ray p5-mean-ray--target${referenceOnly ? " is-reference" : ""}`} x1={CHART.centerX} y1={CHART.centerY} x2={rawTargetPoint.x} y2={rawTargetPoint.y} />
       <line className={`p5-normalize-ray p5-normalize-ray--target${referenceOnly ? " is-reference" : ""}`} x1={rawTargetPoint.x} y1={rawTargetPoint.y} x2={targetPoint.x} y2={targetPoint.y} />
@@ -134,24 +141,27 @@ function UnitCircle({
       {HERDING_TEACHING_POINTS.map((point) => {
         const { x, y } = toChartPoint(point.feature);
         const selectedPoint = selectedIds.has(point.id);
-        return <g key={point.id} aria-hidden="true">
+        return <g key={point.id} className="p5-sample-point" tabIndex={0} role="img" aria-label={`Class 4 · ${point.id}`}>{!selectedPoint && candidateId !== point.id ? <text className="p5-hover-label" x={x + 12} y={y - 12}>{point.id}</text> : null}
           {selectedPoint ? <circle className="p5-selected-ring" cx={x} cy={y} r="9" /> : null}
           {candidateId === point.id ? <circle className="p5-candidate-ring" cx={x} cy={y} r="13" /> : null}
           {comparisonId === point.id ? <circle className="p5-comparison-ring" cx={x} cy={y} r="16" /> : null}
-          <polygon className={`p5-data-point${selectedPoint ? " is-selected" : ""}${referenceOnly && !selectedPoint ? " is-reference" : ""}`} points={`${x},${y - (selectedPoint ? 6 : 4.5)} ${x + (selectedPoint ? 6 : 4.5)},${y} ${x},${y + (selectedPoint ? 6 : 4.5)} ${x - (selectedPoint ? 6 : 4.5)},${y}`} />
+          <circle className={`p5-data-point${selectedPoint ? " is-selected" : ""}${referenceOnly && !selectedPoint ? " is-reference" : ""}`} cx={x} cy={y} r={selectedPoint ? 6 : 4.5} />
+          <title>{point.id}</title>
+
         </g>;
       })}
       <polygon className={`p5-marker p5-marker--target${referenceOnly ? " is-reference" : ""}`} points={starPoints(targetPoint.x, targetPoint.y)} />
       <polygon className={`p5-marker p5-marker--raw-target${referenceOnly ? " is-reference" : ""}`} points={`${rawTargetPoint.x},${rawTargetPoint.y - 6} ${rawTargetPoint.x + 6},${rawTargetPoint.y} ${rawTargetPoint.x},${rawTargetPoint.y + 6} ${rawTargetPoint.x - 6},${rawTargetPoint.y}`} />
       {rawPrefixPoint && normalizedPrefixPoint ? <>
         <polygon className={`p5-marker p5-marker--raw-prefix${referenceOnly ? " is-reference" : ""}`} points={`${rawPrefixPoint.x},${rawPrefixPoint.y - 6} ${rawPrefixPoint.x + 6},${rawPrefixPoint.y} ${rawPrefixPoint.x},${rawPrefixPoint.y + 6} ${rawPrefixPoint.x - 6},${rawPrefixPoint.y}`} />
-        <circle className={`p5-marker p5-marker--prefix${referenceOnly ? " is-reference" : ""}`} cx={normalizedPrefixPoint.x} cy={normalizedPrefixPoint.y} r="6.5" />
+        <path className={`p5-marker p5-marker--prefix${referenceOnly ? " is-reference" : ""}`} d={featureStar(normalizedPrefixPoint.x, normalizedPrefixPoint.y)} />
       </> : null}
       {rawComparisonPoint && normalizedComparisonPoint ? <>
-        <rect className="p5-marker p5-marker--comparison-raw" x={rawComparisonPoint.x - 5} y={rawComparisonPoint.y - 5} width="10" height="10" />
-        <circle className="p5-marker p5-marker--comparison-prefix" cx={normalizedComparisonPoint.x} cy={normalizedComparisonPoint.y} r="5" />
+        <path className="p5-marker p5-marker--comparison-raw" d={`M ${rawComparisonPoint.x} ${rawComparisonPoint.y-6} l 6 6 l -6 6 l -6 -6 Z`} />
+        <path className="p5-marker p5-marker--comparison-prefix" d={featureStar(normalizedComparisonPoint.x, normalizedComparisonPoint.y)} />
       </> : null}
       <circle className="p5-origin" cx={CHART.centerX} cy={CHART.centerY} r="2.3" />
+      <ChartLabels labels={labels} obstacles={obstacles} />
     </svg>
   );
 }
@@ -237,7 +247,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
 
       <section className="p5-workbench" aria-label="Herding normalized feature space 和优先列表">
         <section className="panel p5-space-panel">
-          <div className="panel-heading"><div><span className="eyebrow">NORMALIZED FEATURE SPACE</span><h2>特征和均值都要归一化</h2></div><span className="p5-unit-badge">‖φ(x)‖₂ = 1</span></div>
+          <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>特征和均值都要归一化</h2></div><span className="p5-unit-badge">‖φ(x)‖₂ = 1</span></div>
           <p className="p5-panel-intro">{stage === 5 && timelineMode === "later" ? "淡色点位与 ★ μᵧ 是首次构造时的历史参照；后续缩减时不再读取完整类数据。" : <>完整类均值先落在圆内，再沿原点方向 normalize 到单位圆，作为 ★ μ<sub>y</sub>。</>}</p>
           <UnitCircle
             selected={activePrefix}
@@ -251,17 +261,17 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
             <span><i className={`p5-legend__point${stage === 5 && timelineMode === "later" ? " is-reference" : ""}`} />{stage === 5 && timelineMode === "later" ? "构造时 full-class features（当前不可用）" : "输入 feature"}</span>
             <span><i className="p5-legend__raw-target" />◇ {stage === 5 && timelineMode === "later" ? "构造时 raw mean 参考" : "完整类 raw mean"}</span>
             <span><i className="p5-legend__target">★</i>{stage === 5 && timelineMode === "later" ? "构造时 μᵧ 参考" : <>μ<sub>y</sub></>}</span>
-            {activePrefixStats ? <><span><i className="p5-legend__raw-prefix" />◇ 当前 raw prefix mean</span><span><i className="p5-legend__prefix" />◆ μ<sub>P(k)</sub></span></> : null}
+            {activePrefixStats ? <><span><i className="p5-legend__raw-prefix" />◇ 当前 raw prefix mean</span><span><i className="p5-legend__prefix" />归一化前缀均值 μ<sub>P(k)</sub></span></> : null}
             {compareNearest && stage === 2 ? <span><i className="p5-legend__comparison" />□ nearest-point prefix</span> : null}
           </div>
           {stage === 1 ? <div className="p5-space-caption"><b>k = 1</b><span>prefix 只有一个点；第一个选择使 normalized prefix mean 最接近 μ<sub>y</sub>。</span></div> : null}
           {stage === 2 ? <div className="p5-space-caption"><b>k = 2</b><span>图中展示 p₁ 加入每个候选后实际形成的两点 prefix mean，再进行 L2 normalization。</span></div> : null}
-          {stage >= 3 ? <div className="p5-space-caption"><b>k = {activePrefix.length}</b><span>{stage === 5 && timelineMode === "later" ? "◆ 以初次构造时的特征坐标回看已保留 prefix；后续运行不会用完整旧类数据重跑 Herding。" : "◆ 是当前实际 prefix 均值的 normalized vector；它会随 prefix 长度重新计算。"}</span></div> : null}
+          {stage >= 3 ? <div className="p5-space-caption"><b>k = {activePrefix.length}</b><span>{stage === 5 && timelineMode === "later" ? "星形以初次构造时的特征坐标回看已保留 prefix；后续运行不会用完整旧类数据重跑 Herding。" : "星形是当前实际 prefix 均值的 normalized vector；它会随 prefix 长度重新计算。"}</span></div> : null}
         </section>
 
         <section className="panel p5-decision-panel">
           {stage === 0 ? <>
-            <div className="panel-heading"><div><span className="eyebrow">FULL-CLASS TARGET</span><h2>先建立比较目标</h2></div></div>
+            <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE · FULL-CLASS TARGET</span><h2>先建立比较目标</h2></div></div>
             <div className="p5-target-equation"><span>所有 φ(xᵢ)</span><i aria-hidden="true">→</i><b>mean</b><i aria-hidden="true">→</i><strong>normalize</strong><i aria-hidden="true">→</i><em>μ<sub>y</sub></em></div>
             <p className="p5-explain">★ μ<sub>y</sub> 是完整类别归一化均值。每个输入 feature 本身也已归一化，因此所有输入点都落在单位圆上。</p>
             <div className="p5-target-distinction"><div><i className="p5-legend__raw-target" /><b>μ̄<sub>y</sub></b><span>raw full-class mean · 圆内</span></div><i aria-hidden="true">normalize</i><div><i className="p5-legend__target">★</i><b>μ<sub>y</sub></b><span>normalized target · 圆上</span></div></div>
@@ -270,7 +280,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
           </> : null}
 
           {stage === 1 || stage === 2 ? <>
-            <div className="panel-heading"><div><span className="eyebrow">GREEDY PREFIX SELECTION</span><h2>{stage === 1 ? "挑出 p₁" : "挑出 p₂"}</h2></div><span className="p5-k-badge">k = {stage}</span></div>
+            <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE · GREEDY PREFIX SELECTION</span><h2>{stage === 1 ? "挑出 p₁" : "挑出 p₂"}</h2></div><span className="p5-k-badge">k = {stage}</span></div>
             <div className="p5-selected-sequence"><span>已选择</span>{stage === 1 ? <b>empty prefix</b> : HERDING_TEACHING_RESULT.ordered.slice(0, stage - 1).map((point, index) => <b key={point.id}>p<sub>{index + 1}</sub> · {point.id}</b>)}<i aria-hidden="true">→</i><strong>candidate</strong></div>
             <p className="p5-explain">每个 candidate 都生成一个当前长度的 prefix；选择使归一化 prefix mean 到 μ<sub>y</sub> 距离最小的 candidate。</p>
             <ol className="p5-candidate-rank" aria-label={`第 ${stage} 步候选排名`}>
