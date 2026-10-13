@@ -40,6 +40,7 @@
 .p4-legend__target { color: #bd7449; font: 700 14px/1 var(--mono); }
 .p4-legend__candidate { border: 2px solid #bd7449; border-radius: 50%; }
 .p4-legend__score { width: 16px !important; height: 0 !important; border-top: 2px dashed #bd7449; }
+.p4-legend__track { width: 16px !important; height: 0 !important; border-top: 2px dashed #4a816c; }
 .p4-candidate-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 8px 10px; border-radius: 7px; background: #f2f6f2; }
 .p4-candidate-controls > div { display: flex; gap: 6px; }
 .p4-candidate-controls button { padding: 6px 9px; border: 1px solid #cfddd5; border-radius: 5px; color: #40665a; background: white; font-size: 12px; cursor: pointer; }
@@ -75,6 +76,29 @@
 .p4-winner span { flex: 1; color: #607471; font-size: 12px; }
 .p4-winner b, .p4-winner strong { color: #347159; font: 650 12px var(--mono); }
 .p4-key-insight { margin: 9px 0 0; padding: 9px 10px; border-radius: 7px; color: #5b6e6e; background: #fbf6ef; font-size: 12px; line-height: 1.55; }
+.p4-prefix-track { fill: none; stroke: #4a816c; stroke-dasharray: 5 4; stroke-width: 1.7; }
+.p4-data-point.is-muted { opacity: .2; }
+.p4-prefix-node { fill: #fff; stroke: #4a816c; stroke-width: 1.5; }
+.p4-prefix-node.is-active { fill: #4a816c; stroke: #fff; stroke-width: 2; }
+.p4-prefix-node-label { fill: #386450; font: 650 11px var(--mono); paint-order: stroke; stroke: #fbfcfa; stroke-width: 4px; }
+.p4-prefix-switch { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin-top: 10px; padding: 4px; border: 1px solid #dce5df; border-radius: 7px; background: #f3f7f3; }
+.p4-prefix-switch button { padding: 7px; border: 1px solid transparent; border-radius: 5px; color: #607471; background: transparent; font-size: 12px; cursor: pointer; }
+.p4-prefix-switch button[aria-pressed="true"] { border-color: #bad3c3; color: #315f4e; background: white; }
+.p4-prefix-list { display: grid; gap: 6px; margin: 11px 0 0; padding: 0; list-style: none; }
+.p4-prefix-list li { display: grid; grid-template-columns: 34px 44px minmax(0, 1fr) auto; align-items: center; gap: 7px; padding: 8px 9px; border: 1px solid #e0e7e2; border-radius: 6px; color: #627674; background: #fafbf9; }
+.p4-prefix-list li.is-kept { border-color: #d0e1d5; background: #eff6f0; }
+.p4-prefix-list li.is-tail { border-style: dashed; opacity: .7; }
+.p4-prefix-list span, .p4-prefix-list b { color: #3d6d59; font: 650 12px var(--mono); }
+.p4-prefix-list small { font: 11px var(--mono); }
+.p4-prefix-list em { color: #a96846; font-size: 11px; font-style: normal; font-weight: 700; }
+.p4-prefix-result { display: grid; gap: 6px; margin-top: 10px; padding: 10px; border-left: 3px solid #4c8b71; border-radius: 0 7px 7px 0; background: #f1f7f1; }
+.p4-prefix-result span { color: #607471; font-size: 12px; }
+.p4-prefix-result b, .p4-prefix-result strong { color: #356a55; font: 650 12px/1.5 var(--mono); }
+.p4-greedy-note { margin: 10px 0 0; padding: 9px 10px; color: #5e706e; background: #fbf7f2; font-size: 12px; line-height: 1.55; }
+.p4-budget-equation { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; padding: 11px; border: 1px solid #dfe7e1; border-radius: 8px; background: #f9fbf8; }
+.p4-budget-equation span { display: grid; gap: 5px; color: #607471; font-size: 12px; text-align: center; }
+.p4-budget-equation b { color: #356a55; font: 650 12px var(--mono); }
+.p4-budget-equation i { color: #9a7252; font-size: 12px; font-style: normal; }
 .p4-order-panel { display: grid; grid-template-columns: minmax(180px, .45fr) minmax(0, 1fr); align-items: center; gap: 16px; padding: 16px 18px; }
 .p4-order-panel h2 { margin: 4px 0 0; color: #29484b; font-size: 17px; }
 .p4-slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
@@ -101,6 +125,9 @@
   .p4-candidate-controls { align-items: flex-start; flex-direction: column; }
   .p4-active-values { grid-template-columns: minmax(0, 1fr); }
   .p4-candidate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .p4-prefix-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .p4-budget-equation { grid-template-columns: minmax(0, 1fr); }
+  .p4-budget-equation i { text-align: center; }
   .p4-order-panel { grid-template-columns: minmax(0, 1fr); }
   .p4-slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .p4-title-break { display: initial; }
