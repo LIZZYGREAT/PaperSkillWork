@@ -9,7 +9,9 @@ import {
 } from "./icarl-runtime";
 
 export const HERDING_DEMO_QUOTA = 4;
-export const HERDING_DEMO_ANGLES = [-125, -85, -45, -12, 12, 45, 85, 125] as const;
+// Fixed, asymmetric unit-feature directions. The spread keeps a visible class
+// direction while avoiding mirrored samples and exact zero-distance prefixes.
+export const HERDING_DEMO_ANGLES = [21, 56, 115, -175, -111, -80, -47, -7] as const;
 
 export const HERDING_DEMO_SAMPLES: readonly Sample[] = HERDING_DEMO_ANGLES.map((angle, index) => {
   const radians = angle * Math.PI / 180;
