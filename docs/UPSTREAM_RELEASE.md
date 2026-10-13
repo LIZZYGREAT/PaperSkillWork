@@ -200,3 +200,132 @@ Push 和 PR 由使用者自行决定并执行：
 ```
 
 任何 Git 或 npm 命令返回非零状态都应立即停止并检查输出。不要继续提交、Push 或用重置命令掩盖错误。
+
+## E. 已发布版本的补丁修复（Patch PR）
+
+适用于教程已合并到 `ReductTech/PaperSkill:main`、只需修复自己现有版本中的代码、样式或资源的情况。原版本目录和在线 URL 不变。
+```text
+PaperSkillWork 中修好源文件
+→ PaperSkill 从最新 upstream/main 创建 fix/* 分支
+→ 仅替换对应文件 → Git 差异检查
+→ Commit → 官方 Preflight → Push → 创建修复 PR
+→ PR 合并、Pages 部署成功后原 URL 自动更新
+```
+本流程不运行 `npm run import`、不创建 `<version>_2`、不修改 `paper.json`、不重复记录 W10 完成状态，也不重新克隆仓库。以下操作由使用者在已有的相邻仓库中执行。
+
+### 1. 设置本次修补范围
+
+在 `PaperSkillWork` 根目录打开 PowerShell，修改开头三个变量即可。`$Files` 仅列出本次要同步的、相对于网页项目根目录的文件；多文件修复时继续添加数组元素。
+```powershell
+Set-Location 'C:\path\to\PaperWork\PaperSkillWork'
+
+$PaperId = 'ewc'                            # PaperSkillWork 论文 ID
+$Version = 'ganwenjie1012'                 # 已经正式发布的原版本，不能换名
+$Files = @('src/styles/page10.css')        # 本次确实修改过的文件
+$Branch = "fix/$PaperId-$(Get-Date -Format yyyyMMddHHmmss)"
+
+$Work = (Get-Location).Path
+$Repo = (Resolve-Path '..\PaperSkill').Path
+$InfoJson = python tools/paper.py release-info $PaperId --json
+if ($LASTEXITCODE -ne 0 -or -not $InfoJson) { throw 'release-info failed' }
+$Info = $InfoJson | ConvertFrom-Json
+$Relative = "html_output/$($Info.paper_name)/$Version"
+$Expected = @($Files | ForEach-Object { "$Relative/$_" })
+
+# 两个仓库及版本必须已经存在；保留任何未提交的修改，禁止自动清理。
+if (@(git -C $Repo status --porcelain).Count -ne 0) {
+  throw 'PaperSkill worktree is not clean; inspect before continuing'
+}
+```
+
+### 2. 新建修复分支，仅复制修改文件
+
+```powershell
+git -C $Repo fetch --progress --no-tags --depth=50 --filter=blob:none upstream +main:refs/remotes/upstream/main
+if ($LASTEXITCODE -ne 0) { throw 'Fetch upstream/main failed' }
+
+git -c core.longpaths=true -C $Repo switch --no-track -c $Branch upstream/main
+if ($LASTEXITCODE -ne 0) { throw 'Cannot create fix branch; inspect existing branches' }
+
+git -c core.longpaths=true -C $Repo sparse-checkout set --cone catalog docs paper-skill schemas scripts "html_output/$($Info.paper_name)"
+if ($LASTEXITCODE -ne 0) { throw 'Sparse checkout failed' }
+
+foreach ($File in $Files) {
+  $Source = Join-Path $Info.source $File
+  $Target = Join-Path $Repo "$Relative/$File"
+  if (-not (Test-Path -LiteralPath $Source -PathType Leaf)) { throw "Missing source: $Source" }
+  if (-not (Test-Path -LiteralPath $Target -PathType Leaf)) { throw "Existing version file not found: $Target" }
+  Copy-Item -LiteralPath $Source -Destination $Target -Force
+}
+
+Push-Location $Repo
+try {
+  $Changed = @(git diff --name-only)
+  if ($LASTEXITCODE -ne 0 -or $Changed.Count -eq 0 -or
+      $Changed.Count -ne $Expected.Count -or
+      @($Changed | Where-Object { $_ -notin $Expected }).Count -ne 0) {
+    throw "Unexpected or empty diff: $($Changed -join ', ')"
+  }
+  git diff --check
+  if ($LASTEXITCODE -ne 0) { throw 'Whitespace check failed; fix the source and copy again' }
+
+  foreach ($Path in $Expected) {
+    git add -- $Path
+    if ($LASTEXITCODE -ne 0) { throw "git add failed: $Path" }
+  }
+  git diff --cached --check
+  if ($LASTEXITCODE -ne 0) { throw 'Staged whitespace check failed' }
+  git commit -m "fix($PaperId): patch existing tutorial version"
+  if ($LASTEXITCODE -ne 0) { throw 'Commit failed' }
+
+  if (-not (Test-Path 'node_modules/pinyin-pro')) {
+    npm ci --no-audit --no-fund
+    if ($LASTEXITCODE -ne 0) { throw 'npm ci failed' }
+  }
+  npm run preflight -- --base upstream/main --no-fetch
+  if ($LASTEXITCODE -ne 0) { throw 'Official preflight failed; do not push' }
+
+  $PrFiles = @(git diff --name-only upstream/main...HEAD)
+  if ($LASTEXITCODE -ne 0 -or $PrFiles.Count -ne $Expected.Count -or
+      @($PrFiles | Where-Object { $_ -notin $Expected }).Count -ne 0) {
+    throw "PR includes unexpected files: $($PrFiles -join ', ')"
+  }
+  if (@(git status --porcelain).Count -ne 0) {
+    throw 'PaperSkill worktree is not clean; inspect before push'
+  }
+
+  Write-Host "Preflight PASS; patch branch: $Branch"
+  # 确认本次修复正确后，由使用者执行：
+  # git push -u origin $Branch
+}
+finally { Pop-Location }
+```
+成功标准： 仅预期文件发生变化；`git diff --check` 无输出；官方 `preflight` 全部通过；提交后的工作区干净。若中途报错，停止并修正当前分支，不要重复运行整段分支创建脚本，也不要 `reset --hard`。
+
+### 3. CSS 补丁的额外验收（有样式问题时）
+
+官方 Preflight 会构建被修改的教程。对样式问题还应检查构建后 `index.html` 实际引用的 CSS，而不是扫描整个 `assets/`：后者可能残留旧的带哈希文件，造成假失败。
+```powershell
+$Output = Join-Path $Repo "site/papers/$($Info.paper_name)/$Version"
+$Html = Get-Content (Join-Path $Output 'index.html') -Raw
+$CssRef = [regex]::Match($Html, '(?:\./)?assets/[^"''\s>]+\.css').Value
+if (-not $CssRef) { throw 'No CSS referenced by built index.html' }
+$CssPath = Join-Path $Output ($CssRef -replace '^\./', '')
+$CssText = Get-Content $CssPath -Raw
+if ($CssText.Contains('rn:root')) { throw "Broken CSS root selector: $CssPath" }
+if ($PaperId -eq 'ewc' -and $CssText -notmatch '--nav\s*:\s*#183236') {
+  throw 'EWC root color variable missing'
+}
+Write-Host "Production CSS OK: $CssPath"
+```
+以上 `rn:root` 和 `--nav` 检查是 EWC 本次故障的针对性示例；其他论文按其实际问题指定相应的产物断言，不要求每次执行。
+
+
+### 4. Push、PR、线上核验
+
+```powershell
+git -C $Repo push -u origin $Branch
+if ($LASTEXITCODE -ne 0) { throw 'Push failed' }
+```
+在 GitHub 创建 PR：个人 Fork 的 `$Branch` → `ReductTech/PaperSkill:main`。标题使用 `fix(<paper-id>): <具体问题>`，正文简述根因、修改文件与 Preflight 结果。PR 合并后等待一次包含修复提交的 Pages 部署成功，再检查原 URL 的实际页面和交互。
+URL 与版本目录对应：`https://reducttech.github.io/PaperSkill/papers/<paper-name>/<version>/`。只要是修补原目录而非新增版本，链接保持不变；无需为这次补丁重新提交一个教程地址。
