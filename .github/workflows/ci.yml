@@ -6,16 +6,24 @@ permissions:
   contents: read
 
 jobs:
-  checks:
-    name: Project checks
+  detect-and-core:
+    name: Detect changes and run core checks
     runs-on: ubuntu-latest
+    outputs:
+      changed_papers: ${{ steps.select.outputs.changed_papers }}
+      deleted_papers: ${{ steps.select.outputs.deleted_papers }}
+      changed_web_projects: ${{ steps.select.outputs.changed_web_projects }}
+      deleted_web_projects: ${{ steps.select.outputs.deleted_web_projects }}
+      kit_changed: ${{ steps.select.outputs.kit_changed }}
+      shared_qa_changed: ${{ steps.select.outputs.shared_qa_changed }}
+      diff_base: ${{ steps.select.outputs.diff_base }}
     steps:
-      - name: Check out repository
+      - name: Check out repository history
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Set up Python
+      - name: Set up Python 3.12
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -25,32 +33,198 @@ jobs:
       - name: Install Python dependencies
         run: python -m pip install -r requirements-dev.txt
 
-      - name: Check pushed changes for whitespace errors
-        shell: bash
+      - name: Select changed papers and web projects
+        id: select
         env:
           BEFORE: ${{ github.event.before }}
           SHA: ${{ github.sha }}
+          TARGET_BRANCH: ${{ github.event.repository.default_branch }}
+        run: >-
+          python tools/ci/select-changed-papers.py
+          --base "$BEFORE"
+          --head "$SHA"
+          --fallback-ref "refs/remotes/origin/$TARGET_BRANCH"
+          --github-output "$GITHUB_OUTPUT"
+
+      - name: Summarize selected checks
+        env:
+          CHANGED_PAPERS: ${{ steps.select.outputs.changed_papers }}
+          CHANGED_WEB_PROJECTS: ${{ steps.select.outputs.changed_web_projects }}
+          DELETED_PAPERS: ${{ steps.select.outputs.deleted_papers }}
+          DELETED_WEB_PROJECTS: ${{ steps.select.outputs.deleted_web_projects }}
+          KIT_CHANGED: ${{ steps.select.outputs.kit_changed }}
+          SHARED_QA_CHANGED: ${{ steps.select.outputs.shared_qa_changed }}
         run: |
-          if [[ "$BEFORE" =~ ^0+$ ]]; then
-            git diff-tree --check --root --no-commit-id -r "$SHA"
-          else
-            git diff --check "$BEFORE" "$SHA"
-          fi
+          python - <<'PY'
+          import json
+          import os
+
+          papers = json.loads(os.environ["CHANGED_PAPERS"])
+          web_projects = json.loads(os.environ["CHANGED_WEB_PROJECTS"])
+          deleted_papers = json.loads(os.environ["DELETED_PAPERS"])
+          deleted_web = json.loads(os.environ["DELETED_WEB_PROJECTS"])
+          kit_selected = os.environ["KIT_CHANGED"] == "true" or os.environ["SHARED_QA_CHANGED"] == "true"
+          selected_ids = {project["paper_id"] for project in web_projects}
+
+          lines = ["## Targeted CI selection", ""]
+          lines.append("- Changed papers: " + (", ".join(f"`{paper}`" for paper in papers) if papers else "none"))
+          lines.append("- Changed web projects: " + (", ".join(f"`{project['dir']}`" for project in web_projects) if web_projects else "none"))
+          if deleted_papers:
+              lines.append("- Deleted paper workspaces (reported, not checked): " + ", ".join(f"`{paper}`" for paper in deleted_papers))
+          if deleted_web:
+              lines.append("- Deleted web projects (reported, not built): " + ", ".join(f"`{project['dir']}`" for project in deleted_web))
+          for paper_id, label in (("ewc", "EWC"), ("icarl", "iCaRL"), ("lwf", "LwF")):
+              state = "scheduled" if paper_id in selected_ids else "SKIPPED (unchanged)"
+              lines.append(f"- {label}: {state}")
+          lines.append("- KIT: " + ("scheduled" if kit_selected else "SKIPPED (unchanged)"))
+          lines.append("- Paper browser checks: " + ("scheduled in the changed-paper matrix" if web_projects else "SKIPPED (no web changes)"))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("\n".join(lines) + "\n")
+          PY
+
+      - name: Check pushed changes for whitespace errors
+        env:
+          BASE: ${{ steps.select.outputs.diff_base }}
+          SHA: ${{ github.sha }}
+        run: git diff --check "$BASE" "$SHA"
 
       - name: Run PaperSkillWork tests
+        id: pytest
         run: python -m pytest -q -o "cache_dir=${{ runner.temp }}/pytest-cache" --basetemp="${{ runner.temp }}/pytest-tmp"
 
-      - name: Check Workflow v3 workspace
-        run: python tools/paper.py check lwf
+      - name: Check changed paper workspaces
+        env:
+          CHANGED_PAPERS: ${{ steps.select.outputs.changed_papers }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
 
-      - name: Set up Node.js
+          papers = json.loads(os.environ["CHANGED_PAPERS"])
+          rows = ["", "## Paper workspace checks", "", "| Paper | Result |", "| --- | --- |"]
+          failures = []
+          for paper_id in papers:
+              metadata = Path("papers") / paper_id / "paper.yaml"
+              if not metadata.is_file():
+                  result = "DELETED (no paper.yaml)"
+                  print(f"{paper_id}: {result}")
+              else:
+                  completed = subprocess.run([sys.executable, "tools/paper.py", "check", paper_id], check=False)
+                  result = "PASS" if completed.returncode == 0 else "FAIL"
+                  print(f"{paper_id}: {result}")
+                  if completed.returncode:
+                      failures.append(paper_id)
+              rows.append(f"| `{paper_id}` | {result} |")
+          if not papers:
+              rows.append("| — | No paper workspace checks were selected. |")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("\n".join(rows) + "\n")
+          if failures:
+              raise SystemExit(f"Paper workspace checks failed: {', '.join(failures)}")
+          PY
+
+      - name: Record core test result
+        if: always()
+        env:
+          PYTEST_RESULT: ${{ steps.pytest.outcome }}
+        run: echo "CORE_PYTEST ${PYTEST_RESULT:-NOT_RUN}" >> "$GITHUB_STEP_SUMMARY"
+
+  changed-paper:
+    name: ${{ matrix.paper_id }} web build and production smoke
+    needs: detect-and-core
+    if: needs.detect-and-core.outputs.changed_web_projects != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.detect-and-core.outputs.changed_web_projects) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
         uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: |
-            reusable-kit/demo/package-lock.json
-            papers/lwf/web/final/package-lock.json
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+
+      - name: Install changed web project dependencies
+        working-directory: ${{ matrix.dir }}
+        run: npm ci
+
+      - name: Build changed web project
+        working-directory: ${{ matrix.dir }}
+        run: npm run build
+
+      - name: Run configured unit tests
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
+            npm test
+          else
+            echo "UNIT_TEST NOT_CONFIGURED"
+            echo "UNIT_TEST NOT_CONFIGURED" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Install shared Visual QA dependencies
+        working-directory: reusable-kit/demo
+        run: npm ci
+
+      - name: Install headless Chromium
+        working-directory: reusable-kit/demo
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production preview browser smoke
+        id: smoke
+        env:
+          PAPER_ID: ${{ matrix.paper_id }}
+          PROJECT_DIR: ${{ matrix.dir }}
+        run: |
+          VARIANT="${PROJECT_DIR##*/}"
+          OUTPUT=".visual-qa/ci-${PAPER_ID}-${VARIANT}"
+          echo "variant=$VARIANT" >> "$GITHUB_OUTPUT"
+          echo "output=$OUTPUT" >> "$GITHUB_OUTPUT"
+          node tools/visual-qa/cli.mjs --config "$PROJECT_DIR/visual-qa.json" --output "$OUTPUT"
+
+      - name: Run project's native browser tests
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.['test:browser'] ? 0 : 1)"; then
+            npm run test:browser
+          else
+            echo "NATIVE_BROWSER_TEST NOT_CONFIGURED"
+            echo "NATIVE_BROWSER_TEST NOT_CONFIGURED" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload this project's Visual QA report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-qa-${{ matrix.paper_id }}-${{ steps.smoke.outputs.variant || 'smoke' }}
+          path: ${{ steps.smoke.outputs.output || format('.visual-qa/ci-{0}-*', matrix.paper_id) }}/**
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 7
+
+  reusable-kit:
+    name: Reusable Kit demo and shared QA checks
+    needs: detect-and-core
+    if: needs.detect-and-core.outputs.kit_changed == 'true' || needs.detect-and-core.outputs.shared_qa_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: reusable-kit/demo/package-lock.json
 
       - name: Install Reusable Kit demo dependencies
         working-directory: reusable-kit/demo
@@ -68,36 +242,20 @@ jobs:
         run: node tools/visual-qa/self-check.mjs
 
       - name: Run Visual QA on Reusable Kit demo
-        run: node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json --output .visual-qa/ci-demo
-
-      - name: Upload Visual QA reports and screenshots
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: visual-qa
-          path: |
-            .visual-qa/ci-demo/**
-            .visual-qa/runner-self-check-*/**
-          if-no-files-found: warn
-          include-hidden-files: true
-          retention-days: 7
+        run: node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json --output .visual-qa/ci-kit
 
       - name: Run Reusable Kit browser smoke tests
         working-directory: reusable-kit/demo
         run: npm run test:browser
 
-      - name: Install LwF Final dependencies
-        working-directory: papers/lwf/web/final
-        run: npm ci
-
-      - name: Build LwF Final
-        working-directory: papers/lwf/web/final
-        run: npm run build
-
-      - name: Test LwF Final
-        working-directory: papers/lwf/web/final
-        run: npm test
-
-      - name: Run LwF Final browser acceptance
-        working-directory: papers/lwf/web/final
-        run: npm run test:browser
+      - name: Upload Kit Visual QA reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-qa-kit
+          path: |
+            .visual-qa/ci-kit/**
+            .visual-qa/runner-self-check-*/**
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 7
