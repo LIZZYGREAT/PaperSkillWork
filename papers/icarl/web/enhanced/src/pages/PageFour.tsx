@@ -3,7 +3,7 @@ import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepCon
 import { PaperTerm } from "../components/PaperTerm";
 import { ProjectionClusterChart } from "../components/ProjectionClusterChart";
 import { SampleToken } from "../components/SampleToken";
-import { CLASS_VISUALS, MEMORY_BUDGET, samplesForClass, type ClassId, type FeatureState } from "../data/icarl-runtime";
+import { CLASS_VISUALS, MEMORY_BUDGET, P_BEFORE, samplesForClass, type ClassId, type FeatureState } from "../data/icarl-runtime";
 
 const steps: readonly GuidedStep[] = [
   { title: "被保留的真实样本叫什么？", short: "定义 exemplar" },
@@ -15,7 +15,7 @@ const steps: readonly GuidedStep[] = [
 ];
 
 const classIds: readonly ClassId[] = ["A", "B", "C", "D"];
-const examplesByClass = new Map(classIds.map((classId) => [classId, samplesForClass(classId).slice(0, 4)]));
+const examplesByClass = new Map(classIds.map((classId) => [classId, classId === "D" ? samplesForClass(classId).slice(0, 4) : P_BEFORE[classId]]));
 
 export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const [stage, setStage] = useState(0);

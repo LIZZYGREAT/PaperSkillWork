@@ -2,7 +2,6 @@ import { ChartLabels, type ChartLabel } from "../components/FeatureChart";
 import { useMemo, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
-import { SampleToken } from "../components/SampleToken";
 import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
 import { CLASS_VISUALS, encode2D, encodeRawVector, mean, normalize, P_BEFORE, samplesForClass, type ClassId, type FeatureState, type Sample, type Vector2 } from "../data/icarl-runtime";
 
@@ -25,7 +24,8 @@ function p3SamplesForClass(classId: ClassId): Sample[] {
 }
 
 const allSamples = classIds.flatMap((classId) => p3SamplesForClass(classId));
-const retainedSubset = P_BEFORE.A.slice(0, 3);
+const retainedByClass = new Map(classIds.map((classId) => [classId, P_BEFORE[classId]]));
+const retainedSubset = classIds.flatMap((classId) => retainedByClass.get(classId)!);
 const normalizedQuery = normalize(encodeRawVector(query, "before"));
 const oldMeanLabelOffsets: Record<ClassId, Vector2> = {
   A: [-96, -18],
@@ -65,11 +65,7 @@ function FeatureMap({
   onSelectSample: (id: string) => void;
 }) {
   const points = useMemo(() => {
-    if (stage === 0 || stage === 1) return p3SamplesForClass("A");
-    if (stage === 2) return allSamples;
-    if (stage === 3) return allSamples;
-    if (stage === 4) return p3SamplesForClass("A");
-    return retainedSubset;
+    return stage === 5 ? retainedSubset : allSamples;
   }, [stage]);
 
   const currentState: FeatureState = stage === 3 && phase > 0 || stage === 5 ? "after" : "before";
@@ -77,10 +73,10 @@ function FeatureMap({
   const historicalOnly = stage === 4;
   const showQuery = stage === 2;
   const showMeans = stage === 1 || stage === 2 || stage === 3 && (phase === 0 || phase === 2) || stage === 5;
-  const visibleClasses = stage <= 1 || stage >= 4 ? ["A"] as const : classIds;
+  const visibleClasses = classIds;
   const means = visibleClasses.map((classId) => ({
     classId,
-    current: stage === 5 ? classMean(classId, "after", retainedSubset) : classMean(classId, currentState),
+    current: stage === 5 ? classMean(classId, "after", retainedByClass.get(classId)!) : classMean(classId, currentState),
     old: classMean(classId, "before"),
   }));
 
@@ -121,7 +117,7 @@ function FeatureMap({
           const currentPosition = chartPoint(current);
           const oldPosition = chartPoint(old);
           return <g key={`mean-links-${classId}`}>
-            {stage === 1 && classId === "A" ? points.map((sample) => {
+            {stage === 1 ? points.filter(sample => sample.classId === classId).map((sample) => {
               const pos = chartPoint(normalize(encode2D(sample, currentState)));
               return <line key={`${sample.id}-mean-line`} className="p3-map__mean-link" x1={pos.x} y1={pos.y} x2={currentPosition.x} y2={currentPosition.y} />;
             }) : null}
@@ -199,21 +195,22 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   function changeStage(nextStage: number) {
     setStage(nextStage);
     if (nextStage === 3) setPhase(0);
+    if (nextStage === 5 && !retainedSubset.some(sample => sample.id === selectedSampleId)) setSelectedSampleId(retainedSubset[0].id);
   }
 
   const currentDescription = stage === 0
-    ? "每个 feature point 都对应一张样本图像；点选同一编号，追踪 image ↔ φΘ ↔ representation。"
+    ? "三类共 18 个 feature point，每个点都对应一张样本图像；点选同一编号，追踪 image ↔ φΘ ↔ representation。"
     : stage === 1
-      ? "所有 Class 1 特征共同参与一次均值计算。连线表示纳入聚合，不表示样本被中心吸引。"
+      ? "三类各自用 6 个特征计算均值。连线表示纳入本类聚合，不表示样本被中心吸引。"
       : stage === 2
         ? "query 先进入同一表示空间，再比较到各类均值的欧氏距离；最短距离给出预测。"
         : stage === 3
           ? phase === 0 ? "先更新共享参数 Θ；此刻样本与均值仍在旧映射下。" : phase === 1 ? "固定的样本身份经过新映射后移动；旧均值暂时保留，等待重算。" : "所有样本移动后，才用当前表示重新计算各类均值。" 
           : stage === 4
-            ? "问题不是不知道均值怎么算，而是完整旧类样本已不可访问，无法按原式重算真实 μ₁。"
-            : "若长期只保留少量真实旧样本，就能在当前 φ 下重新编码它们；下一页会正式定义这些 exemplar。";
+            ? "问题不是不知道均值怎么算，而是三个旧类的完整样本都不可访问，无法按原式重算真实 μ₁、μ₂、μ₃。"
+            : "K=12 时，三类各保留 4 个真实旧样本；这 12 个 exemplar 可在当前 φ 下重新编码并近似各类均值。";
 
-  const shownSourceSamples = stage <= 1 ? p3SamplesForClass("A") : stage === 4 ? [] : stage === 5 ? retainedSubset : [selectedSample];
+  const shownSourceSamples = stage === 4 ? [] : stage === 5 ? retainedSubset : allSamples;
 
   return (
     <article className="tutorial-page icarl-page icarl-page--p3">
@@ -229,15 +226,21 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         <section className="panel p3-source">
           <div className="panel-heading"><div><span className="eyebrow">SOURCE</span><h2>样本身份</h2></div><span className="p3-mini-count">{shownSourceSamples.length} 张</span></div>
           <p className="p3-source__intro">点选样本，可在图中定位对应的 feature point。</p>
-          <div className="p3-source__samples">
-            {shownSourceSamples.map((sample) => (
-              <button key={sample.id} type="button" className={`p3-source__sample${selectedSampleId === sample.id ? " is-selected" : ""}`} onClick={() => setSelectedSampleId(sample.id)} aria-pressed={selectedSampleId === sample.id}>
-                <SampleToken sample={sample} role="raw" compact />
-                <span><small>{CLASS_VISUALS[sample.classId].displayLabel} · 合成样本</small></span>
-              </button>
-            ))}
+          <div className="p3-source__samples p3-source__samples--grouped">
+            {classIds.map(classId => {
+              const classSamples = shownSourceSamples.filter(sample => sample.classId === classId);
+              if (classSamples.length === 0) return null;
+              return <section className="p3-source__group" key={classId} style={{ "--p3-group-color": CLASS_VISUALS[classId].color } as CSSProperties}>
+                <div><b>{CLASS_VISUALS[classId].displayLabel}</b><span>{classSamples.length} 张</span></div>
+                <div>{classSamples.map((sample) => (
+                  <button key={sample.id} type="button" className={`p3-source__sample${selectedSampleId === sample.id ? " is-selected" : ""}`} onClick={() => setSelectedSampleId(sample.id)} aria-pressed={selectedSampleId === sample.id} title={`${CLASS_VISUALS[sample.classId].displayLabel} · ${sample.id}`}>
+                    <i aria-hidden="true" style={{ color: CLASS_VISUALS[sample.classId].color }}>{CLASS_VISUALS[sample.classId].glyph}</i><b>{sample.id}</b>
+                  </button>
+                ))}</div>
+              </section>;
+            })}
           </div>
-          {stage === 4 ? <div className="p3-source__unavailable"><b>X<sub>A</sub></b><span>完整旧类样本不可访问</span></div> : <div className="p3-source__mapping" aria-label={`样本 ${selectedSample.id} 从图像映射为特征表示`}><span>IMAGE</span><b>φ<sub>Θ</sub></b><span className="p3-source__mapping-line" aria-hidden="true" /><strong>{selectedSample.id}</strong><small>同一身份，两个表示</small></div>}
+          {stage === 4 ? <div className="p3-source__unavailable"><b>X<sub>1</sub>, X<sub>2</sub>, X<sub>3</sub></b><span>三个旧类的完整样本都不可访问</span></div> : <div className="p3-source__mapping" aria-label={`样本 ${selectedSample.id} 从图像映射为特征表示`}><span>IMAGE</span><b>φ<sub>Θ</sub></b><span className="p3-source__mapping-line" aria-hidden="true" /><strong>{selectedSample.id}</strong><small>同一身份，两个表示</small></div>}
         </section>
 
         <section className="panel p3-space-panel">
@@ -252,7 +255,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
 
         <aside className="panel p3-rule-panel">
           <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE</span><h2>运算与图形联动</h2></div></div>
-          {stage >= 4 ? <div className="p3-unavailable-card"><span className="p3-rule-symbol">{stage === 4 ? <>μ<sub>1</sub> = ?</> : <>μ<sub>1</sub> ≈ μ<sub>1,subset</sub></>}</span><b>{stage === 4 ? "完整 X₁ 不可访问" : "保留子集的近似中心已计算"}</b><p>{stage === 4 ? "不是均值定义失效，而是求和所需的全部旧样本已经不在训练者可访问的数据中。" : "图中的空心方框是这 3 个保留样本在当前 φ 下重新编码后得到的均值估计。"}</p></div> : <>
+          {stage >= 4 ? <div className="p3-unavailable-card"><span className="p3-rule-symbol">{stage === 4 ? <>μ<sub>1</sub>, μ<sub>2</sub>, μ<sub>3</sub> = ?</> : <>μ<sub>y</sub> ≈ μ<sub>y,subset</sub></>}</span><b>{stage === 4 ? "完整 X₁、X₂、X₃ 不可访问" : "三类保留子集的近似中心已计算"}</b><p>{stage === 4 ? "不是均值定义失效，而是求和所需的三个旧类完整样本已经不在训练者可访问的数据中。" : "图中三个空心方框分别由本类 4 个保留样本在当前 φ 下重新编码后得到。"}</p></div> : <>
             <div className="p3-formula-list">
               <button type="button" className={focus === "mean" ? "is-active" : ""} onClick={() => setFocus("mean")} aria-pressed={focus === "mean"}><span>归一化类原型</span><strong>μ<sub>y</sub> = normalize(mean&#123; ẑ<sub>x</sub> &#125;)</strong></button>
               <button type="button" className={focus === "feature" ? "is-active" : ""} onClick={() => setFocus("feature")} aria-pressed={focus === "feature"}><span>当前表示</span><strong>ẑ<sub>x</sub> = normalize(φ<sub>Θ</sub>(x))</strong></button>
@@ -261,7 +264,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
             </div>
             {stage === 2 ? <div className="p3-distance-list"><span className="eyebrow">QUERY 距离 · 固定合成值</span>{queryDistances.map(({ classId, distance: value }, index) => <div key={classId} className={index === 0 ? "is-nearest" : ""}><span>μ<sub>{CLASS_VISUALS[classId].index}</sub></span><b>{value.toFixed(2)}</b><small>{index === 0 ? "最近" : ""}</small></div>)}<strong className="p3-prediction">预测：{CLASS_VISUALS[predictedClass].displayLabel}</strong></div> : null}
           </>}
-          {stage === 5 ? <div className="p3-approx-formula">μ<sub>1</sub> ≈ mean&#123;φ<sub>Θ new</sub>(p)&#125;<small>少量保留样本 · Page 4 正式定义</small></div> : null}
+          {stage === 5 ? <div className="p3-approx-formula">μ<sub>y</sub> ≈ mean&#123;φ<sub>Θ new</sub>(p), p ∈ P<sub>y</sub>&#125;<small>K=12 · 三类各保留 4 个样本</small></div> : null}
           <div className="p3-rule-note"><span>i</span><p><b>Prototype ≠ 权重向量 w<sub>y</sub></b><br />Prototype 从当前样本表示计算；它不是独立通过梯度训练的分类权重。</p></div>
           {stage === 2 ? <details className="p3-normalized-note"><summary>为什么最近距离等价于最大内积？</summary><div><p>当特征 z 与类别原型 μ<sub>y</sub> 都经过 L2 归一化时：</p><code>‖z − μ<sub>y</sub>‖₂² = 2 − 2 zᵀμ<sub>y</sub></code><p>因此，距离最小的类别也就是内积最大的类别。此等价依赖两者都为单位向量。</p></div></details> : null}
         </aside>
@@ -269,7 +272,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
 
       <section className="p3-concept-note" aria-live="polite">
         <span className="p3-concept-note__index">0{stage + 1}</span>
-        <div><span className="eyebrow">这一幕要看懂</span><p>{stage === 0 ? "Feature point 不是凭空出现的数据；每一个点都保留了与输入图像的身份对应。" : stage === 1 ? "所有同类特征一次聚合成 class mean。prototype 是这个中心在分类中的角色。" : stage === 2 ? `iCaRL 比较 query 与各类当前均值的距离；本固定示例中最近的是 ${CLASS_VISUALS[predictedClass].displayLabel}。` : stage === 3 ? "Θ 先更新，样本表示随后移动，类均值最后才按新表示重算。" : stage === 4 ? "重算旧类真实均值需要完整 X₁；有界记忆使该数据不能被假定一直保留。" : "少量旧样本仍可重新编码，因而有机会近似旧类均值；接下来先定义记忆对象。"}</p></div>
+        <div><span className="eyebrow">这一幕要看懂</span><p>{stage === 0 ? "三类共 18 个 feature point 都来自具体输入图像；每个编号在各步骤中保持一致。" : stage === 1 ? "每个类别的 6 个特征分别聚合成自己的 class mean；prototype 是这个中心在分类中的角色。" : stage === 2 ? `iCaRL 比较 query 与三类当前均值的距离；本固定示例中最近的是 ${CLASS_VISUALS[predictedClass].displayLabel}。` : stage === 3 ? "Θ 先更新，三类共 18 个样本表示随后移动，三个类均值最后才按新表示重算。" : stage === 4 ? "重算三个旧类真实均值需要完整 X₁、X₂、X₃；有界记忆使这些数据不能被假定一直保留。" : "总预算 K=12，因此三个旧类各保留 4 个样本；这 12 个 exemplar 可重新编码以近似各类均值。"}</p></div>
       </section>
 
       <footer className="icarl-handoff">
