@@ -85,6 +85,7 @@ export function TermRef({ term, children, onOpenReference }: { term: TermDefinit
           <span className="icarl-term-popover__eyebrow">术语 · {term.sourceKind ?? "教学参考"}</span>
           <h3>{term.fullName ?? term.label}</h3>
           <p>{term.definition}</p>
+          {term.formula ? <div className="icarl-reference-formula" role="math" aria-label={`${term.label} formula`}>{term.formula}</div> : null}
           {term.paperRole ? <p><b>在本文中的作用</b> {term.paperRole}</p> : null}
           {term.confusion ? <p className="icarl-term-popover__note"><b>容易混淆</b> {term.confusion}</p> : null}
           {onOpenReference ? <button type="button" className="rk-term-popover__link" onClick={openReference}>打开 Reference Hub →</button> : null}

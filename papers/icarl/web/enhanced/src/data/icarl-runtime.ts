@@ -1,4 +1,6 @@
-export type ClassId = "A" | "B" | "C" | "D";
+export type ClassId = "A" | "B" | "C" | "D" | "E" | "F";
+export type OldClassId = "A" | "B" | "C";
+export type IncomingClassId = "D" | "E" | "F";
 export type FeatureState = "before" | "after";
 export type Vector2 = readonly [number, number];
 
@@ -20,6 +22,8 @@ export const CLASS_VISUALS: Record<ClassId, { displayLabel: string; outputNodeLa
   B: { displayLabel: "Class 2", outputNodeLabel: "g₂", index: 2, glyph: "○", color: "#31775f" },
   C: { displayLabel: "Class 3", outputNodeLabel: "g₃", index: 3, glyph: "□", color: "#b46a2d" },
   D: { displayLabel: "Class 4", outputNodeLabel: "g₄", index: 4, glyph: "◇", color: "#76559a" },
+  E: { displayLabel: "Class 5", outputNodeLabel: "g₅", index: 5, glyph: "⬟", color: "#a64f68" },
+  F: { displayLabel: "Class 6", outputNodeLabel: "g₆", index: 6, glyph: "⬢", color: "#287f86" },
 };
 
 /** Fixed synthetic coordinates shared by all pages; old classes use spaced angles so L2-normalized teaching points remain individually visible. */
@@ -42,16 +46,28 @@ export const SAMPLES: readonly Sample[] = [
   { id: "x_16", classId: "C", raw: [-1.293, 0.136] },
   { id: "x_19", classId: "C", raw: [-1.449, -0.051] },
   { id: "x_22", classId: "C", raw: [-1.329, -0.234] },
-  { id: "x_20", classId: "D", raw: [1.606, -2.044] },
-  { id: "x_23", classId: "D", raw: [2.337, -0.988] },
-  { id: "x_24", classId: "D", raw: [2.327, 0.771] },
-  { id: "x_25", classId: "D", raw: [-0.013, 2.572] },
-  { id: "x_26", classId: "D", raw: [-1.606, 2.045] },
-  { id: "x_27", classId: "D", raw: [-2.443, -0.333] },
+  { id: "x_20", classId: "D", raw: [-1.862, -1.598] },
+  { id: "x_23", classId: "D", raw: [-2.101, -1.530] },
+  { id: "x_24", classId: "D", raw: [-1.640, -1.377] },
+  { id: "x_25", classId: "D", raw: [-1.421, -1.257] },
+  { id: "x_26", classId: "D", raw: [-1.807, -1.823] },
+  { id: "x_27", classId: "D", raw: [-2.147, -1.040] },
+  { id: "x_28", classId: "E", raw: [0.291, -1.646] },
+  { id: "x_29", classId: "E", raw: [0.470, -1.708] },
+  { id: "x_30", classId: "E", raw: [0.812, -1.559] },
+  { id: "x_31", classId: "E", raw: [0.194, -1.386] },
+  { id: "x_32", classId: "E", raw: [0.672, -1.337] },
+  { id: "x_33", classId: "E", raw: [1.042, -1.195] },
+  { id: "x_34", classId: "F", raw: [1.715, -1.107] },
+  { id: "x_35", classId: "F", raw: [1.849, -0.711] },
+  { id: "x_36", classId: "F", raw: [1.659, -0.601] },
+  { id: "x_37", classId: "F", raw: [1.957, -0.424] },
+  { id: "x_38", classId: "F", raw: [1.423, -0.455] },
+  { id: "x_39", classId: "F", raw: [1.967, -0.158] },
 ];
 
 const SAMPLE_MODIFIERS = ["•", "╱", ":", "+", "*", "·"] as const;
-const modifierCounts: Record<ClassId, number> = { A: 0, B: 0, C: 0, D: 0 };
+const modifierCounts: Record<ClassId, number> = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
 export const SAMPLE_MODIFIER_BY_ID: Readonly<Record<string, string>> = Object.fromEntries(SAMPLES.map((sample) => {
   const modifier = SAMPLE_MODIFIERS[modifierCounts[sample.classId] % SAMPLE_MODIFIERS.length];
   modifierCounts[sample.classId] += 1;
@@ -150,12 +166,13 @@ export function herd(samples: readonly Sample[], quota: number, state: FeatureSt
 }
 
 export const MEMORY_BUDGET = 12;
-export const OLD_CLASS_IDS: readonly ClassId[] = ["A", "B", "C"];
-export const INCOMING_CLASS_ID: ClassId = "D";
+export const OLD_CLASS_IDS: readonly OldClassId[] = ["A", "B", "C"];
+export const INCOMING_CLASS_IDS: readonly IncomingClassId[] = ["D", "E", "F"];
+export const ALL_CLASS_IDS: readonly ClassId[] = [...OLD_CLASS_IDS, ...INCOMING_CLASS_IDS];
 export const OLD_QUOTA = Math.floor(MEMORY_BUDGET / OLD_CLASS_IDS.length);
-export const NEXT_CLASS_COUNT = OLD_CLASS_IDS.length + 1;
+export const NEXT_CLASS_COUNT = ALL_CLASS_IDS.length;
 export const NEXT_QUOTA = Math.floor(MEMORY_BUDGET / NEXT_CLASS_COUNT);
-export const INCOMING_SAMPLES = samplesForClass(INCOMING_CLASS_ID);
+export const INCOMING_SAMPLES: Sample[] = INCOMING_CLASS_IDS.flatMap((classId) => samplesForClass(classId));
 
 // Synthetic inherited P_before fixture. The current increment consumes these saved samples only;
 // it does not access omitted old-class data or rerun Herding. This calculation creates fixture data.
@@ -164,35 +181,38 @@ export const P_BEFORE: Record<ClassId, Sample[]> = {
   B: herd(samplesForClass("B"), OLD_QUOTA, "before").ordered,
   C: herd(samplesForClass("C"), OLD_QUOTA, "before").ordered,
   D: [],
+  E: [],
+  F: [],
 };
 
-// Shared ordered source: Page 4 teaches the four-item list and truncation; Page 9 commits its first three.
-export const NEW_CLASS_HERDING = herd(INCOMING_SAMPLES, OLD_QUOTA, "after");
+// Each incoming class gets its own complete ordered list. P9 reveals only the first NEXT_QUOTA items.
+export const NEW_CLASS_HERDING: Record<IncomingClassId, HerdingResult> = Object.fromEntries(
+  INCOMING_CLASS_IDS.map((classId) => [classId, herd(samplesForClass(classId), samplesForClass(classId).length, "after")]),
+) as Record<IncomingClassId, HerdingResult>;
 
-export const P_AFTER: Record<ClassId, Sample[]> = {
-  A: P_BEFORE.A.slice(0, NEXT_QUOTA),
-  B: P_BEFORE.B.slice(0, NEXT_QUOTA),
-  C: P_BEFORE.C.slice(0, NEXT_QUOTA),
-  D: NEW_CLASS_HERDING.ordered.slice(0, NEXT_QUOTA),
-};
+export const P_AFTER: Record<ClassId, Sample[]> = Object.fromEntries(ALL_CLASS_IDS.map((classId) => [
+  classId,
+  OLD_CLASS_IDS.includes(classId as OldClassId)
+    ? P_BEFORE[classId].slice(0, NEXT_QUOTA)
+    : NEW_CLASS_HERDING[classId as IncomingClassId].ordered.slice(0, NEXT_QUOTA),
+])) as Record<ClassId, Sample[]>;
 
-export const P_BEFORE_REMOVED: Record<ClassId, Sample[]> = {
-  A: P_BEFORE.A.slice(NEXT_QUOTA),
-  B: P_BEFORE.B.slice(NEXT_QUOTA),
-  C: P_BEFORE.C.slice(NEXT_QUOTA),
-  D: [],
-};
-export const CURRENT_EXEMPLARS: Sample[] = OLD_CLASS_IDS.concat(INCOMING_CLASS_ID).flatMap((classId) => P_AFTER[classId]);
+export const P_BEFORE_REMOVED: Record<ClassId, Sample[]> = Object.fromEntries(ALL_CLASS_IDS.map((classId) => [
+  classId,
+  OLD_CLASS_IDS.includes(classId as OldClassId) ? P_BEFORE[classId].slice(NEXT_QUOTA) : [],
+])) as Record<ClassId, Sample[]>;
+export const CURRENT_EXEMPLARS: Sample[] = ALL_CLASS_IDS.flatMap((classId) => P_AFTER[classId]);
 export const OLD_MEMORY_SIZE = OLD_CLASS_IDS.reduce((count, classId) => count + P_BEFORE[classId].length, 0);
 export const REDUCED_MEMORY_SIZE = OLD_CLASS_IDS.reduce((count, classId) => count + P_AFTER[classId].length, 0);
 export const COMMITTED_MEMORY_SIZE = CURRENT_EXEMPLARS.length;
 
 export const TRAINING_SET_SIZE = OLD_MEMORY_SIZE + INCOMING_SAMPLES.length;
 export const OLD_NODE_COUNT = OLD_CLASS_IDS.length;
+export const OUTPUT_NODE_COUNT = ALL_CLASS_IDS.length;
 
 export type Prototype = { classId: ClassId; rawMean: [number, number]; point: [number, number] };
 
-export const PROTOTYPES: Prototype[] = OLD_CLASS_IDS.concat(INCOMING_CLASS_ID).map((classId) => {
+export const PROTOTYPES: Prototype[] = ALL_CLASS_IDS.map((classId) => {
   const features = P_AFTER[classId].map((sample) => normalize(encode2D(sample, "after")));
   const rawMean = mean(features);
   return { classId, rawMean, point: normalize(rawMean) };

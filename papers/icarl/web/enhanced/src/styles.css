@@ -119,6 +119,11 @@ body:has(.icarl-reference-overlay) { overflow: hidden; }
 .rk-term-popover h3 { margin: 9px 0 7px; color: #243d41; font-size: 18px; line-height: 1.35; }
 .rk-term-popover p { margin: 9px 0; color: #465d60; font-size: 15px; line-height: 1.7; }
 .rk-term-popover p b { color: #385154; }
+.icarl-reference-formula { max-width: 100%; margin: 9px 0; padding: 10px 12px; overflow-x: auto; border: 1px solid #dce5df; border-radius: 8px; color: #29494a; background: #f6f9f6; font: 600 16px/1.55 "Times New Roman", Georgia, serif; text-align: center; white-space: nowrap; }
+.icarl-reference-formula sub,.icarl-reference-formula sup { font-size: .72em; }
+.icarl-reference-extra { display: grid; gap: 5px; }
+.icarl-reference-callout { padding: 10px 12px; border-left: 3px solid #82a994; border-radius: 0 7px 7px 0; background: #f1f7f1; }
+.rk-term-popover .icarl-reference-formula { font-size: 14px; }
 .rk-term-popover__note { padding: 10px 12px; border-left: 2px solid #d6a15a; background: #faf5e8; }
 .rk-term-popover__link { padding: 8px 0 0; color: #245e59; font-size: 14px; text-decoration: none; }
 

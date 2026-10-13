@@ -68,6 +68,8 @@ const prototypeLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor:
   B: { dx: 0, dy: -19, anchor: "middle" },
   C: { dx: -18, dy: -9, anchor: "end" },
   D: { dx: 18, dy: 18, anchor: "start" },
+  E: { dx: -18, dy: 17, anchor: "end" },
+  F: { dx: 18, dy: -16, anchor: "start" },
 };
 
 const meanLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }> = {
@@ -75,6 +77,8 @@ const meanLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "sta
   B: { dx: -14, dy: 23, anchor: "end" },
   C: { dx: 13, dy: 23, anchor: "start" },
   D: { dx: 13, dy: -15, anchor: "start" },
+  E: { dx: -14, dy: -16, anchor: "end" },
+  F: { dx: 15, dy: 17, anchor: "start" },
 };
 
 function FeatureMap({

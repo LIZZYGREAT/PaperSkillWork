@@ -10,6 +10,7 @@ export type TermDefinition = {
   paperRole?: string;
   confusion?: string;
   sourceKind?: string;
+  formula?: ReactNode;
 };
 
 export type ReferenceItem = {

@@ -3,6 +3,7 @@ import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
 import { PaperTerm } from "../components/PaperTerm";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import {
+  ALL_CLASS_IDS,
   CLASS_VISUALS,
   CURRENT_EXEMPLARS,
   P_AFTER,
@@ -23,7 +24,7 @@ const steps: readonly GuidedStep[] = [
 ];
 
 type RuntimeMode = "train" | "predict";
-const classOrder: readonly ClassId[] = ["A", "B", "C", "D"];
+const classOrder: readonly ClassId[] = ALL_CLASS_IDS;
 const currentPoints = projectSampleFeatures(CURRENT_EXEMPLARS, "after", true);
 
 function ModeSwitch({ mode, onChange }: { mode: RuntimeMode; onChange: (mode: RuntimeMode) => void }) {
@@ -70,16 +71,16 @@ function PredictionPath({ stage, mode }: { stage: number; mode: RuntimeMode }) {
       <div className="p7-path-heading"><span className="eyebrow">PREDICT · exemplar 均值最近邻</span><b>{showQuery ? "最终决策读取最近原型" : "先用当前 exemplars 重建 prototypes"}</b></div>
       <div className="p7-exemplar-buckets" aria-label="当前记忆 P_after 中各类别的 exemplar 身份">{classOrder.map((classId) => <section key={classId} style={{ "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties}><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}<small>{P_AFTER[classId].length} 个 exemplar</small></b><div>{P_AFTER[classId].map((sample) => <span key={sample.id} title={`样本 ${sample.id}`}>{sample.id}</span>)}</div></section>)}</div>
       <div className="p7-predict-flow">
-        <section><b>P<sub>1</sub> · P<sub>2</sub> · P<sub>3</sub> · P<sub>4</sub></b><span>当前保留的原始 exemplars</span></section><i aria-hidden="true">→</i>
+        <section><b>P<sub>1</sub> … P<sub>6</sub></b><span>六类当前保留的原始 exemplars</span></section><i aria-hidden="true">→</i>
         <section className="p7-flow-feature"><b>当前 φ<sub>Θ</sub></b><span>由同一模型重新编码</span></section><i aria-hidden="true">→</i>
-        <section className="p7-flow-prototype"><b>μ<sub>1</sub> … μ<sub>4</sub></b><span>归一化 exemplar 均值</span></section>
+        <section className="p7-flow-prototype"><b>μ<sub>1</sub> … μ<sub>6</sub></b><span>归一化 exemplar 均值</span></section>
       </div>
       {showQuery ? <div className="p7-head-note"><span>Training Head</span><b>仍保留在网络中</b><small>本次最终决策不读取它的 sigmoid argmax</small></div> : null}
     </div>
     <FeatureSpaceWorkbench
       mode={showQuery ? "inference" : "prototypes"}
-      title={showQuery ? "查询表示与当前 exemplar 原型" : "当前 P 的四个类别原型"}
-      description={showQuery ? "复用第 9 页的 P_after、归一化原型与 query；最近距离给出当前教学轨迹的预测。" : "复用本教程的 P_after：样本身份、φ_after 投影和四类原型均来自同一组运行数据。"}
+      title={showQuery ? "查询表示与当前 exemplar 原型" : "当前 P 的六个类别原型"}
+      description={showQuery ? "复用第 9 页的 P_after、归一化原型与 query；最近距离给出当前教学轨迹的预测。" : "复用本教程的 P_after：样本身份、φ_after 投影和六类原型均来自同一组运行数据。"}
       points={currentPoints}
       prototypes={PROTOTYPES}
       query={showQuery ? QUERY_FEATURE : undefined}
@@ -102,7 +103,7 @@ function PrototypeKey({ showQuery = false }: { showQuery?: boolean }) {
 function PredictionSummary() {
   return <section className="p7-split-predict" data-canonical-id="inference_path">
     <div className="p7-path-heading"><span className="eyebrow">PREDICT · 最终分类器</span><b>原型路径</b></div>
-    <div className="p7-predict-summary-flow"><span>P</span><i aria-hidden="true">→</i><span>当前 φ<sub>Θ</sub></span><i aria-hidden="true">→</i><span>μ<sub>1</sub>…μ<sub>4</sub></span><i aria-hidden="true">→</i><strong>最近类均值</strong></div>
+    <div className="p7-predict-summary-flow"><span>P</span><i aria-hidden="true">→</i><span>当前 φ<sub>Θ</sub></span><i aria-hidden="true">→</i><span>μ<sub>1</sub>…μ<sub>6</sub></span><i aria-hidden="true">→</i><strong>最近类均值</strong></div>
     <p>从当前 exemplar memory 重新计算各类均值，再比较 query 与全部已见类别 prototype 的距离。</p>
   </section>;
 }
