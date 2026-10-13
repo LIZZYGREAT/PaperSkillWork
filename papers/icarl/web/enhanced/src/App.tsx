@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { PageOne } from "./pages/PageOne";
 import { PageTwo } from "./pages/PageTwo";
 import { PageThree } from "./pages/PageThree";
@@ -30,10 +30,20 @@ const pages: { id: PageId; number: string; title: string; subtitle: string }[] =
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>("page-1");
+  const [pageInstanceKey, setPageInstanceKey] = useState(0);
   const [referenceOpen, setReferenceOpen] = useState(false);
   const activePageInfo = pages.find((page) => page.id === activePage)!;
   const closeReference = useCallback(() => setReferenceOpen(false), []);
   const referenceDialogRef = useFocusTrap<HTMLElement>(referenceOpen, closeReference);
+
+  function navigateToPage(pageId: PageId) {
+    setActivePage(pageId);
+    setPageInstanceKey((key) => key + 1);
+  }
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pageInstanceKey]);
 
   useEffect(() => {
     const handleReferenceOpen = (event: Event) => {
@@ -51,14 +61,14 @@ export default function App() {
     <div className={`paper-app ewc-app ${activePage === "page-10" ? "ewc-app--runtime" : ""}`} id="icarL_runtime" data-canonical-id="icarL_runtime">
       <a className="ewc-skip-link" href="#top">跳到当前页面</a>
       <aside className="ewc-rail" aria-label="Tutorial navigation">
-        <a className="ewc-brand" href="#top" onClick={(event) => { event.preventDefault(); setActivePage("page-1"); }} aria-label="iCaRL tutorial home">
+        <a className="ewc-brand" href="#top" onClick={(event) => { event.preventDefault(); navigateToPage("page-1"); }} aria-label="iCaRL tutorial home">
           <span className="ewc-brand__mark">i</span>
           <span><b>iCaRL</b><small>INCREMENTAL LEARNING</small></span>
         </a>
         <p className="ewc-rail__section-label">学习路径</p>
         <nav className="ewc-slice-nav" aria-label="Tutorial pages">
           {pages.map((page) => (
-            <button key={page.id} type="button" className={`ewc-slice-nav__item ${activePage === page.id ? "is-active" : ""}`} aria-current={activePage === page.id ? "page" : undefined} onClick={() => setActivePage(page.id)}>
+            <button key={page.id} type="button" className={`ewc-slice-nav__item ${activePage === page.id ? "is-active" : ""}`} aria-current={activePage === page.id ? "page" : undefined} onClick={() => navigateToPage(page.id)}>
               <span className="ewc-slice-nav__number">{page.number}</span>
               <span className="ewc-slice-nav__copy"><b>{page.title}</b><small>{page.subtitle}</small></span>
             </button>
@@ -73,17 +83,17 @@ export default function App() {
           <div className="ewc-topbar__path"><span>ICARL</span><span className="ewc-slash">/</span><strong>{activePageInfo.number} · {activePageInfo.title}</strong></div>
           <div className="icarl-topbar__actions"><button type="button" className="icarl-hub-launch" aria-haspopup="dialog" aria-expanded={referenceOpen} onClick={() => setReferenceOpen(true)}><span aria-hidden="true">⌕</span> Reference Hub</button><span className="ewc-topbar__edition"><i /> W8 · 交互式教程</span></div>
         </header>
-        <main className="tutorial-main ewc-main" id="top">
-          {activePage === "page-1" ? <PageOne onOpenPageTwo={() => setActivePage("page-2")} /> : null}
-          {activePage === "page-2" ? <PageTwo onOpenPageThree={() => setActivePage("page-3")} /> : null}
-          {activePage === "page-3" ? <PageThree onContinue={() => setActivePage("page-4")} /> : null}
-          {activePage === "page-4" ? <PageFour onContinue={() => setActivePage("page-5")} /> : null}
-          {activePage === "page-5" ? <PageFive onContinue={() => setActivePage("page-6")} /> : null}
-          {activePage === "page-6" ? <PageSix onContinue={() => setActivePage("page-7")} /> : null}
-          {activePage === "page-7" ? <PageSeven onContinue={() => setActivePage("page-8")} /> : null}
-          {activePage === "page-8" ? <PageEight onContinue={() => setActivePage("page-9")} /> : null}
-          {activePage === "page-9" ? <PageNine onContinue={() => setActivePage("page-10")} /> : null}
-          {activePage === "page-10" ? <PageTen onExit={() => setActivePage("page-9")} /> : null}
+        <main className="tutorial-main ewc-main" id="top" key={pageInstanceKey}>
+          {activePage === "page-1" ? <PageOne onOpenPageTwo={() => navigateToPage("page-2")} /> : null}
+          {activePage === "page-2" ? <PageTwo onOpenPageThree={() => navigateToPage("page-3")} /> : null}
+          {activePage === "page-3" ? <PageThree onContinue={() => navigateToPage("page-4")} /> : null}
+          {activePage === "page-4" ? <PageFour onContinue={() => navigateToPage("page-5")} /> : null}
+          {activePage === "page-5" ? <PageFive onContinue={() => navigateToPage("page-6")} /> : null}
+          {activePage === "page-6" ? <PageSix onContinue={() => navigateToPage("page-7")} /> : null}
+          {activePage === "page-7" ? <PageSeven onContinue={() => navigateToPage("page-8")} /> : null}
+          {activePage === "page-8" ? <PageEight onContinue={() => navigateToPage("page-9")} /> : null}
+          {activePage === "page-9" ? <PageNine onContinue={() => navigateToPage("page-10")} /> : null}
+          {activePage === "page-10" ? <PageTen onExit={() => navigateToPage("page-9")} /> : null}
         </main>
         <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 03 · 04 · 05 · 06 · 07 · 08 · 09 · 10 页</span></footer>
       </div>

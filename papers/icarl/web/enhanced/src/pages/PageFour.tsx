@@ -19,7 +19,7 @@ const examplesByClass = new Map(classIds.map((classId) => [classId, classId === 
 
 export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const [stage, setStage] = useState(0);
-  const [modelState, setModelState] = useState<FeatureState>("after");
+  const [modelState, setModelState] = useState<FeatureState>("before");
   const [role, setRole] = useState<"training" | "inference">("training");
   const [classCount, setClassCount] = useState(3);
   const firstExemplar = examplesByClass.get("A")![0];
