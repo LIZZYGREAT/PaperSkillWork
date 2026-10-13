@@ -144,6 +144,7 @@ export function PageOne({ onOpenPageTwo }: PageOneProps) {
         <div className="p1-problem__lead"><span className="p1-eyebrow">类别增量学习问题</span><h2 id="p1-problem-title">系统需要同时做到</h2><p>iCaRL 围绕以下四项要求展开。</p></div>
         <ol><li>学习新到来的类别</li><li>继续识别以前见过的类别</li><li>在统一标签空间中预测</li><li>遵守有界图像记忆</li></ol>
         <button type="button" className="p1-open-model" onClick={onOpenPageTwo}>打开模型 <span aria-hidden="true">→</span></button>
+        <p className="p1-problem__handoff">接下来，我们先打开模型，沿着一张图像从输入到输出的路径，看看它在模型内部经历了哪些处理。</p>
       </section>
     </article>
   );

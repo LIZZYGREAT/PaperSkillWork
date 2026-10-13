@@ -144,3 +144,9 @@ P3 的 W9 修订固定使用 P4 同一批 `P_BEFORE[A/B/C]`，每类四张，共
 阶段检查：P1 构建通过，两个宽屏视口无整体横向溢出和浏览器错误；Agent 已查看默认叙事截图。特征图统一后检查 48 个页面/状态/视口组合，未发现整体横向溢出、SVG 标签出框或浏览器错误；Agent 已查看 P2 更新后、P3 最近原型、P4 旧映射、P5 目标与二步 prefix、P8 当前原型与预测的代表性截图。P10 通过显式 legacy 外观保留旧画布与图元，其初态在两个视口与本轮调整前截图逐像素相同；未以此声称所有 P10 动态阶段均经过回归。专门计算样式断言尚未配置，STYLE_QA=NOT_RUN；HUMAN_ACCEPTANCE=PENDING。
 
 最终检查：`npm run build` 通过；Chromium 在 1440×900 与 1920×1080 共采集 50 个状态截图（`.visual-qa/icarl-revision/final/`），GEOMETRY_QA=PASS：无整体横向溢出、SVG 标签出框或浏览器错误。VISUAL_REVIEW=PASS：已实际查看各类图代表性截图及 P2 的 5 节点、10 节点画面。P2 使用键盘 Enter 扩展，正常动画和 reduced-motion 下均验证 5→10→5、计数同步、共享 backbone 与原有节点 DOM 保持、backbone 的文档坐标和大小保持，新增节点结束后全部可见；reduced-motion 下动画为 none。P1 四个阅读焦点下方法卡片 opacity 均为 1，四项要求常显。针对交互的计算样式检查通过，但未建立全页 STYLE_QA 契约；HUMAN_ACCEPTANCE 仍为 PENDING。P10 两个宽屏初态与修订前对照仍逐像素一致。
+
+### P1/P2 文案与图示字号修订（2026-10-13）
+
+P1 末尾增加从图片输入到模型输出的过渡引导。P2 的结尾使用用户指定原文：“现在我们知道，模型能把图片映射为可比较的特征向量，训练输出层也会随新类别扩展。也就是具备了可以让根据输入的图片，直接在所有类型任务中判断属于哪个类别的能力呢。但我们回到一开始的问题，我们需要在这个学习过程中，保留过去模型学到的知识，就需要留存一些代表图片。那我们先假设，每类已经保留了少量代表图片，那么它究竟怎样利用这些图片判断一张新输入属于哪一类？”P2 `SHARED FEATURE EXTRACTOR` 中“image x / 卷积特征块 / 深层表示 / 聚合为向量”标签调整为 16px。
+
+复查范围：P1 末尾阅读焦点、P2 模型展开状态，Chromium 1440×900 与 1920×1080。`tsc --noEmit` 通过；Vite 生产构建通过（72 个模块）。标准 `npm run build` 的 TypeScript 阶段通过，但本环境的默认 Vite runner 配置加载失败，随后使用 bundle loader 的临时配置完成构建。视觉 QA 报告位于 `web/enhanced/.visual-qa/p1-p2-copy-font-exact/run-2026-10-13T12-22-06-043Z/`：GEOMETRY_QA=PASS、STYLE_QA=PASS（16px 断言）、BROWSER_ERRORS=PASS（0 条）；实际查看四张截图，VISUAL_REVIEW=PASS，P1 引导与 P2 结尾均完整显示。REGRESSION=NOT_RUN；HUMAN_ACCEPTANCE=PENDING。

@@ -150,6 +150,7 @@
 .p1-problem__lead p { margin: 0; color: #557070; font-size: 12px; line-height: 1.5; }
 .p1-problem ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 20px; margin: 0; padding-left: 24px; color: #385457; font-size: 13px; line-height: 1.4; }
 .p1-problem li::marker { color: #397f78; font-weight: 700; }
+.p1-problem__handoff { grid-column: 1 / -1; max-width: 900px; margin: -2px 0 0; color: #4d6868; font-size: 14px; line-height: 1.6; }
 .p1-open-model { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 15px; padding: 0 14px; border: 1px solid #397f78; border-radius: 7px; color: white; background: #397f78; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background .16s ease; }
 .p1-open-model:hover { background: #285f5a; }
 .p1-open-model span { font-size: 17px; }

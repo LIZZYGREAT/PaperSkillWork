@@ -319,7 +319,7 @@
 .p2-backbone-stage--maps rect:nth-child(4) { fill: #f8fcf8; }
 .p2-backbone-stage--pool rect { fill: #f7fbf7; }
 .p2-backbone-stage--pool line { stroke: #5d8d79; stroke-width: 4; stroke-linecap: round; }
-.p2-backbone-stage text { fill: #4d6966; font: 14px "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+.p2-backbone-stage text { fill: #4d6966; font: 16px "Segoe UI", "Microsoft YaHei UI", sans-serif; }
 .p2-backbone-flow { fill: none; stroke: #678d82; stroke-width: 1.5; }
 #p2-backbone-arrow path { fill: #678d82; }
 

@@ -149,7 +149,7 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
           <section className="p2-handoff">
             <span className="p2-eyebrow">接下来的问题</span>
             <div>
-              <p>现在我们知道，模型能把图片映射为可比较的特征向量，训练输出层也会随新类别扩展。不过，iCaRL 的<strong>最终预测不是直接取 sigmoid 输出最大的类别</strong>。如果每类已经保留了少量代表图片，它究竟怎样利用这些图片判断一张新输入属于哪一类？</p>
+              <p>现在我们知道，模型能把图片映射为可比较的特征向量，训练输出层也会随新类别扩展。也就是具备了可以让根据输入的图片，直接在所有类型任务中判断属于哪个类别的能力呢。但我们回到一开始的问题，我们需要在这个学习过程中，保留过去模型学到的知识，就需要留存一些代表图片。那我们先假设，每类已经保留了少量代表图片，那么它究竟怎样利用这些图片判断一张新输入属于哪一类？</p>
               <small>下一页用三类精简教学示例完整演算；它与本页 5→10 个输出节点的架构扩展示意不是同一实际轮次。</small>
             </div>
             <button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>看代表样本怎样参与预测 <b aria-hidden="true">→</b></button>
