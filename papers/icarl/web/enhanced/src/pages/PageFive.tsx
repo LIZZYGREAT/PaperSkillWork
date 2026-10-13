@@ -238,12 +238,12 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 05</span><i /> EXEMPLAR SELECTION</div>
         <h1><PaperTerm termId="herding">Herding</PaperTerm> 为记忆建立优先顺序</h1>
-        <p>用当前更新后的特征映射，把完整新类的 normalized features 汇成目标；逐个加入候选，让每个<PaperTerm termId="prefix-mean">prefix 均值</PaperTerm>尽量贴近这个目标。</p>
+        <p>P3 直接使用了已经保存的旧类 Exemplars；这些旧类的完整数据现在不能假定仍可访问。为了说明样本当初怎样被选中，本页切换到新到达的 Class 4：其完整训练数据暂时可用，Herding 用当前更新后的特征映射，让每个<PaperTerm termId="prefix-mean">已选前缀的均值</PaperTerm>尽量逼近完整类别均值。</p>
       </header>
 
       <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 5 Herding 教学步骤" />
 
-      <div className="p5-example-note"><span>FIXED SYNTHETIC TEACHING EXAMPLE</span><b>{stage === 5 && timelineMode === "later" ? "construction snapshot φ" : "current post-update φ"}</b><small>{stage === 5 && timelineMode === "later" ? "完整旧类数据已不可用；图中几何只回看首次构造顺序时的固定示例。" : `${INCOMING_SAMPLES.length} 个共享 runtime 样本身份 · 特征与 Page 10 使用同一 Herding 结果`}</small></div>
+      <div className="p5-example-note"><span>FIXED SYNTHETIC TEACHING EXAMPLE · CLASS 4</span><b>{stage === 5 && timelineMode === "later" ? "construction snapshot φ" : "current post-update φ"}</b><small>{stage === 5 && timelineMode === "later" ? "完整旧类数据已不可用；图中几何只回看首次构造顺序时的固定示例。" : `${INCOMING_SAMPLES.length} 张新类候选图片 · 演示与旧类首次出现时相同的选择原则，不是在重选 P3 的十二张旧 Exemplar`}</small></div>
 
       <section className="p5-workbench" aria-label="Herding normalized feature space 和优先列表">
         <section className="panel p5-space-panel">
@@ -342,7 +342,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
       <section className="icarl-concept-note"><span className="icarl-concept-note__index">0{stage + 1}</span><div><span className="eyebrow">这一幕要看懂</span><p>{stage === 0 ? "单位圆中的 ★ μᵧ 来自完整类别归一化均值；候选 feature 和当前 prefix 均值也经过 L2 normalization。" : stage === 1 ? "p₁ 是单点 prefix，因此选择 feature direction 最接近完整类目标的样本。" : stage === 2 ? "p₂ 按加入已有 p₁ 后的新 prefix mean 决定；Herding 优化 prefix，不是只挑到目标最近的单点。" : stage === 3 ? "Herding 真正计算每个 prefix 并生成按优先级排列的 Pᵧ。" : stage === 4 ? "容量下降只截断列表尾部，前三个保留样本形成的均值由当前数据重新计算。" : timelineMode === "construct" ? "类别首次到来时用完整 Xᵧ 和当前 post-update φ 构造优先列表。" : "旧类完整数据不可用后，保留已有列表并按新 quota 截断，不再重跑完整 Herding。"}</p></div></section>
 
       <footer className="icarl-handoff">
-        <div><span className="eyebrow">NEXT · PAGE 06</span><p>新类样本与旧 exemplars 怎样进入一次增量更新？</p></div>
+        <div><span className="eyebrow">NEXT · PAGE 06</span><p>现在已经知道少量 Exemplars 怎样构造、保存并帮助预测；共享特征提取器怎样在新类别到达时继续学习，又怎样尽量避免损害旧类能力？</p></div>
         {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入更新前准备 <b aria-hidden="true">→</b></button> : <span className="icarl-handoff__upcoming">下一页</span>}
       </footer>
     </article>

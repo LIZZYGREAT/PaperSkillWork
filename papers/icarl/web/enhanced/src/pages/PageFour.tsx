@@ -37,7 +37,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 04</span><i /> EXEMPLAR MEMORY</div>
         <h1>一份有界记忆，<br className="p4-title-break" />两种运行职责</h1>
-        <p>iCaRL 将少量真实训练图像作为<PaperTerm termId="exemplar" />长期保存，并受<PaperTerm termId="memory-budget">固定总预算 K</PaperTerm>约束。后续模型更新可以重读它们，最终预测也会重新编码它们并计算当前 prototype。</p>
+        <p>上一页用三类、每类四张已经选好的 <PaperTerm termId="exemplar" /> 完成了最近原型预测。这里的 P 就是同一批 12 张原始图片，且 <PaperTerm termId="memory-budget">K=12</PaperTerm>。现在追问：它们为什么必须长期保存，又怎样同时服务预测与后续训练？</p>
       </header>
 
       <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 4 exemplar memory 教学步骤" />
@@ -123,7 +123,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
       <section className="icarl-concept-note"><span className="icarl-concept-note__index">0{stage + 1}</span><div><span className="eyebrow">这一幕要看懂</span><p>{stage === 0 ? "Exemplar 是有持久身份的真实图像；它既不同于该图像的特征表示，也不同于用来分类的 prototype。" : stage === 1 ? "pₖ 组成某类 Pᵧ，所有类别的集合组成 P。此处只定义分组，不给样本排序。" : stage === 2 ? "表示空间改变后，保存的原始 image 可重新经过当前 φ；存下来的旧 embedding 仍属于旧空间。" : stage === 3 ? "同一份 exemplar memory 分别被后续训练和 prototype inference 读取；它不因一次读取而被消费。" : stage === 4 ? "总预算 K 固定，类别数 t 增加时每类 quota m=floor(K/t) 会减少。" : "记忆缩小但每类均值仍要尽量有代表性，因此需要一开始就考虑 exemplar 的选择次序。"}</p></div></section>
 
       <footer className="icarl-handoff">
-        <div><span className="eyebrow">NEXT · PAGE 05</span><p>如何从完整新类数据中选出有优先顺序的 exemplars？</p></div>
+        <div><span className="eyebrow">NEXT · PAGE 05</span><p>固定容量意味着以后可能把每类四张缩到三张。为什么留下的这些图片能代表整个类别，而且截去尾部后仍尽量有代表性？</p></div>
         {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入 Herding <b aria-hidden="true">→</b></button> : <span className="icarl-handoff__upcoming">下一页</span>}
       </footer>
     </article>
