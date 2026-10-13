@@ -1,9 +1,9 @@
-import { ChartLabels } from "../components/FeatureChart";
 import { useState } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
+import { ProjectionClusterChart } from "../components/ProjectionClusterChart";
 import { SampleToken } from "../components/SampleToken";
-import { CLASS_VISUALS, encode2D, MEMORY_BUDGET, samplesForClass, type ClassId, type FeatureState, type Vector2 } from "../data/icarl-runtime";
+import { CLASS_VISUALS, MEMORY_BUDGET, samplesForClass, type ClassId, type FeatureState } from "../data/icarl-runtime";
 
 const steps: readonly GuidedStep[] = [
   { title: "被保留的真实样本叫什么？", short: "定义 exemplar" },
@@ -24,9 +24,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const [classCount, setClassCount] = useState(3);
   const firstExemplar = examplesByClass.get("A")![0];
   const perClassBudget = Math.floor(MEMORY_BUDGET / classCount);
-  const reencodePoint = (vector: Vector2) => ({ x: 320 + vector[0] * 160, y: 260 - vector[1] * 160 });
-  const oldFeaturePoint = reencodePoint(encode2D(firstExemplar, "before"));
-  const currentFeaturePoint = reencodePoint(encode2D(firstExemplar, modelState));
+  const representativeSamples = classIds.slice(0, 3).map((classId) => examplesByClass.get(classId)![0]);
 
   function changeStage(nextStage: number) {
     setStage(nextStage);
@@ -75,22 +73,21 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
               <button type="button" aria-pressed={modelState === "before"} onClick={() => setModelState("before")}>φold</button>
               <button type="button" aria-pressed={modelState === "after"} onClick={() => setModelState("after")}>φnew</button>
             </div>
-            <div className="p4-saved-image"><SampleToken sample={firstExemplar} role="exemplar" /><span className="p4-persistent-tag">原始图像 · 长期保存</span></div>
+            <div className="p4-saved-image">
+              <div className="p4-saved-image__samples">{representativeSamples.map(sample => <SampleToken key={sample.id} sample={sample} role="exemplar" compact />)}</div>
+              <span className="p4-persistent-tag">三类原始图像 · 身份保持</span>
+            </div>
             <div className="p4-reencode-arrow" aria-label={`图像送入 ${modelState === "before" ? "旧" : "新"}特征映射`}><span>φ<sub>Θ {modelState === "before" ? "old" : "new"}</sub></span><i aria-hidden="true" /></div>
-            <svg className="p4-reencode-map" viewBox="0 0 640 520" role="img" aria-label="同一 exemplar 在旧特征映射和当前映射下的位置">
-              <title>同一原始图像在两个表示空间的位置</title>
-              <desc>φold 下的空心点与当前 φ 下的实心点由方向箭头连接，位置来自固定合成坐标。</desc>
-              <line x1="24" y1="260" x2="616" y2="260" />
-              <line x1="320" y1="24" x2="320" y2="496" />
-              <circle className="feature-chart-origin" cx="320" cy="260" r="3" />
-              <line className="p4-reencode-drift" x1={oldFeaturePoint.x} y1={oldFeaturePoint.y} x2={currentFeaturePoint.x} y2={currentFeaturePoint.y} markerEnd="url(#p4-reencode-arrow)" />
-              <defs><marker id="p4-reencode-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 8 4 L 0 8" /></marker></defs>
-              <circle className="p4-reencode-old" cx={oldFeaturePoint.x} cy={oldFeaturePoint.y} r="6" />
-              <circle className="p4-reencode-current" cx={currentFeaturePoint.x} cy={currentFeaturePoint.y} r="6" />
-              <ChartLabels labels={modelState === "before" ? [{ ...currentFeaturePoint, id: "same", text: "z_old · 同一位置" }] : [{ ...oldFeaturePoint, id: "old", text: "z_old" }, { ...currentFeaturePoint, id: "new", text: "φcurrent(p₁)" }]} obstacles={[oldFeaturePoint, currentFeaturePoint]} />
-            </svg>
-            <div className="p4-feature-result"><span className="p4-feature-dot" /><div><b>{modelState === "before" ? "z_old" : "z_new"} = φ(p₁)</b><small>{modelState === "before" ? "旧表示空间中的结果" : "同一原始图像在当前空间的新表示"}</small></div></div>
-            <div className="p4-stale-vector"><span>×</span><p><b>旧 embedding 不是保存对象</b><small>z_old 不会自动变成 φnew(p₁)。</small></p></div>
+            <ProjectionClusterChart
+              state={modelState}
+              title="同一批样本由当前 φ 重新编码"
+              description="三类共 18 个样本保持相同编号与类别；切换 φ 时，点与近旁标签一起移动，不用引线连接。"
+              titleId="p4-reencode-chart-title"
+              compact
+            />
+            <div className="p4-feature-result"><span className="p4-feature-dot" /><div><b>{modelState === "before" ? "zᵢ = φold(xᵢ)" : "z′ᵢ = φnew(xᵢ)"}</b><small>{modelState === "before" ? "18 个样本在旧参数下的表示" : "样本身份不变，18 个表示按当前参数重新计算"}</small></div></div>
+            <div className="p4-reencode-context"><b>为什么图中是 18 个点？</b><span>这里沿用前页同一组三类、每类 6 个样本，统一展示表示变化；左侧 P 仍受 K=12 限制，只长期保存每类 4 个 exemplars。</span></div>
+            <div className="p4-stale-vector"><span>×</span><p><b>旧 embedding 不是保存对象</b><small>旧 zᵢ 不会自动变成 φnew(xᵢ)；保存的原始图像必须经过当前 φ 再编码。</small></p></div>
           </div> : null}
 
           {stage === 3 ? <div className="p4-roles">

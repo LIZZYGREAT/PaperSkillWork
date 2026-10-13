@@ -31,7 +31,21 @@ function plotPoint(id: string, state: FeatureState) {
   return { id, classId: sample.classId, x: frame.x + x * frame.scaleX, y: frame.y - y * frame.scaleY };
 }
 
-export function ProjectionClusterChart({ state }: { state: FeatureState }) {
+type ProjectionClusterChartProps = {
+  state: FeatureState;
+  title?: string;
+  description?: string;
+  titleId?: string;
+  compact?: boolean;
+};
+
+export function ProjectionClusterChart({
+  state,
+  title = "同类样本在表示空间中形成局部类簇",
+  description = "三种颜色对应三个类别，编号表示样本身份；切换模型状态时，每个编号沿新的特征映射移动。",
+  titleId = "p2-cluster-title",
+  compact = false,
+}: ProjectionClusterChartProps) {
   const points = projectionSampleIds.map(id => plotPoint(id, state));
   const clusters = shownClasses.map(classId => {
     const members = points.filter(point => point.classId === classId);
@@ -44,9 +58,9 @@ export function ProjectionClusterChart({ state }: { state: FeatureState }) {
     };
   });
 
-  return <figure className="p2-cluster-chart" aria-labelledby="p2-cluster-title">
+  return <figure className={`p2-cluster-chart${compact ? " p2-cluster-chart--compact" : ""}`} aria-labelledby={titleId}>
     <figcaption className="p2-cluster-chart__header">
-      <div><span className="p2-eyebrow">FEATURE SPACE · 18 个样本</span><h3 id="p2-cluster-title">同类样本在表示空间中形成局部类簇</h3><p>三种颜色对应三个类别，编号表示样本身份；切换模型状态时，每个编号沿新的特征映射移动。</p></div>
+      <div><span className="p2-eyebrow">FEATURE SPACE · 3 类 · 18 个样本</span><h3 id={titleId}>{title}</h3><p>{description}</p></div>
       <span className="p2-cluster-chart__state">{state === "before" ? "Θ 更新前" : "Θ 更新后"}</span>
     </figcaption>
     <div className="p2-cluster-chart__viewport">
