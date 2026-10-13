@@ -1,9 +1,9 @@
 import { SharedTrainingHead } from "../components/SharedTrainingHead";
-import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
+import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import { PaperTerm } from "../components/PaperTerm";
+import { ProjectionClusterChart } from "../components/ProjectionClusterChart";
 import { SampleToken } from "../components/SampleToken";
-import { encode2D, sampleById } from "../data/icarl-runtime";
+import { sampleById } from "../data/icarl-runtime";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 
 const flowStages = [
@@ -14,8 +14,6 @@ const flowStages = [
   { title: "网络响应", description: "每个节点产生一个 sigmoid 响应 gᵧ(x)。这些输出用于学习表示，不是 iCaRL 的最终类别决定。", tag: "逐类响应" },
 ];
 
-const projectionIds = ["x_7", "x_3", "x_2", "x_8"];
-
 export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
   const [modelOpen, setModelOpen] = useState(false);
   const [stage, setStage] = useState(0);
@@ -23,14 +21,6 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
   const [featureState, setFeatureState] = useState<"before" | "after">("before");
   const reducedMotion = useReducedMotion();
 
-  const points = useMemo(() => projectionIds.map((id) => {
-    const sample = sampleById(id);
-    return { id, classId: sample.classId, point: encode2D(sample, featureState) };
-  }), [featureState]);
-  const previousPoints = useMemo(() => featureState === "after" ? projectionIds.map((id) => {
-    const sample = sampleById(id);
-    return { id, classId: sample.classId, point: encode2D(sample, "before") };
-  }) : [], [featureState]);
   const progressStyle = { "--p2-progress": `${(stage / (flowStages.length - 1)) * 100}%` } as CSSProperties;
 
   useEffect(() => {
@@ -140,15 +130,8 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
                   <button type="button" aria-pressed={featureState === "after"} onClick={() => setFeatureState("after")}>更新后</button>
                 </div>
               </div>
-              <FeatureSpaceWorkbench
-                mode="projection"
-                title="当前特征映射下的样本位置"
-                description="二维教学投影：固定的合成坐标会随所选模型状态作确定性移动，并非论文测得的特征。"
-                points={points}
-                previousPoints={previousPoints}
-                projectionScale={64}
-              />
-              <div className="p2-projection-note"><span className="p2-note-mark">i</span><p>实际 representation 通常位于高维 R<sup>d</sup>。这里用二维投影表达样本间的位置关系；同一编号样本在更新前后保持不变。</p></div>
+              <ProjectionClusterChart state={featureState} />
+              <div className="p2-projection-note"><span className="p2-note-mark">i</span><p>实际 representation 通常位于高维 R<sup>d</sup>。这里用二维教学投影展示相对位置和类簇变化；点的颜色表示类别，同一编号样本在更新前后保持身份不变。</p></div>
             </section>
 
           </section>
