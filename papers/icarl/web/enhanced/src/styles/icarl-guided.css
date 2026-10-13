@@ -35,11 +35,15 @@
 .icarl-concept-note p { margin: 3px 0 0; color: #385457; font-size: 15px; line-height: 1.65; }
 
 /* Page 3: one stable source → feature-space → rule workbench. */
-.p3-assumption-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid #dce5e0; border-radius: 11px; background: #dce5e0; }
+.p3-assumption-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid #dce5e0; border-radius: 11px; background: #dce5e0; }
 .p3-assumption-strip > div { padding: 13px 15px; background: #f8faf7; }
 .p3-assumption-strip span { color: #8a6548; font: 700 10px var(--mono); letter-spacing: .08em; }
 .p3-assumption-strip p { margin: 5px 0 0; color: #50696b; font-size: 12px; line-height: 1.55; }
 .p3-assumption-strip b { color: #315f55; }
+.p3-reasoning { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 15px; padding: 15px 18px; border-left: 3px solid #b67b4a; border-radius: 0 10px 10px 0; background: #fbf7ef; }
+.p3-reasoning__index { color: #9a6842; font: 650 18px var(--mono); }
+.p3-reasoning p { max-width: 940px; margin: 4px 0 0; color: #435d5f; font-size: 14px; line-height: 1.65; }
+.p3-reasoning p + p { margin-top: 7px; }
 .p3-workbench { display: grid; grid-template-columns: minmax(225px, .95fr) minmax(390px, 2.1fr) minmax(235px, 1fr); align-items: stretch; gap: 14px; }
 .p3-workbench > .panel { padding: 17px; }
 .p3-source, .p3-space-panel, .p3-rule-panel { min-width: 0; }

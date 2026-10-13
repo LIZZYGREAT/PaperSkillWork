@@ -244,16 +244,36 @@ function FeatureMap({
 
 const stageDescriptions = [
   "P_BEFORE 中三类各有 4 张已保留图片。每张图片经同一个固定 Feature Extractor 得到 fΘ(p)，再各自做 L2 归一化得到 z_p。",
-  "每类先对 4 个 z_p 求算术均值 z̄_y（圆内小圆），再把 z̄_y 归一化为单位圆上的 Prototype μ_y（方框）。",
+  "每类先对 4 个 z_p 求算术均值 z̄_y（圆内小圆），让一组样本共同形成类别代表；再把 z̄_y 归一化为单位圆上的 Prototype μ_y（方框）。",
   "新的 Query x_q 不是十二张 Exemplar 之一。它经过同一个固定 Feature Extractor，并归一化为 z_q；三个 Prototype 保持不变。",
   "分别计算 z_q 到三个 μ_y 的欧氏距离；最小项、最小夹角、图中高亮连线与最终预测来自同一组实际二维向量。",
 ] as const;
 
+const stageNarratives = [
+  [
+    "代表图片现在仍是图像；要和之后到来的 Query 比较，先要让它们经过 P2 认识过的同一个特征提取器。",
+    "每张图得到特征后再做 L2 归一化，于是不同图片进入同一个可比较的单位特征空间。",
+  ],
+  [
+    "现在，每个类别都有了一组特征点。但单张图片只反映这个类别中的一个样本，直接依据某个样本与 Query 的相似程度分类，容易受到个体差异的影响。",
+    "我们希望比较的是 Query 与整个类别哪个更相似，因此自然想到：先求同类 Exemplars 特征的均值，再将均值归一化，形成类别 Prototype。",
+    "这样，后面只需比较 Query 与各类别原型的相似程度。",
+  ],
+  [
+    "三个类别代表已经形成。现在把新的 Query 交给同一个特征提取器，并进行同样的 L2 归一化。",
+    "相同的表示与归一化规则，让 Query 和三个 Prototype 可以在同一空间里直接比较。",
+  ],
+  [
+    "Query 与三个类别代表都已就位。最后比较它到各 Prototype 的距离，最近者给出预测类别。",
+    "因为这些向量都在单位圆上，也可以借助夹角理解距离；这次推断只读取当前模型与 Exemplars，不改变它们。",
+  ],
+] as const;
+
 const stageTakeaways = [
   "十二张原始图片已变成三组可比较的单位特征；还没有计算 Prototype，也没有输入 Query。",
-  "十二张图片形成三个 Prototype；Prototype 是计算结果，不是某张 Exemplar，也不是训练 Head 的权重 w_y。",
-  "三个 Prototype 加一个 Query 特征已经满足比较条件；Θ_fixed 和 Exemplar Memory 均未改变。",
-  `本次推断预测为 ${CLASS_VISUALS[predictedClass].displayLabel}；没有反向传播、参数更新或 Exemplar 列表修改。`,
+  "同类样本不再各自承担分类判断：它们的均值共同形成一个类别 Prototype。",
+  "三个 Prototype 和一个经过相同处理的 Query 已经满足比较条件。",
+  `本次 Query 最近的类别原型属于 ${CLASS_VISUALS[predictedClass].displayLabel}，因此输出这一预测。`,
 ] as const;
 
 export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
@@ -266,21 +286,25 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
         <h1>已选代表图片怎样<br className="p3-title-break" />完成一次预测？</h1>
-        <p>前面提出：与其保存全部旧数据，不如只保留少量有代表性的图片。但保留图片本身还不能分类。现在沿着输入到输出，完整走一次<PaperTerm termId="nearest-mean-of-exemplars">最近 Exemplar 均值预测</PaperTerm>。</p>
+        <p>面对旧类完整数据不能一直保留，我们先想到只保存少量代表图片；P2 又看到了图像怎样经特征提取器成为向量。现在先假定代表图片已经选好，检验它们能否帮助我们识别一个新的 Query。</p>
       </header>
 
-      <aside className="p3-assumption-strip" aria-label="本页教学假设与评估边界">
-        <div><span>本页已有状态</span><p>假定三类 Exemplars 已筛选好，训练完成的 Feature Extractor <b>φ<sub>Θ fixed</sub></b> 已就绪；本页不解释怎样筛选或训练。</p></div>
-        <div><span>本页新增输入</span><p>只加入一张新的 Query 图片 <b>x<sub>q</sub></b>，计算特征、Prototype、距离与预测；不执行 Backprop 或内存重分配。</p></div>
-        <div><span>评估边界</span><p>单张 Query 只演示预测怎样产生。模型效果要在带标签测试集上统计准确率，不能由这一张示例宣称。</p></div>
+      <aside className="p3-assumption-strip" aria-label="本页已有条件与当前问题">
+        <div><span>已经具备</span><p>三类已选好的 Exemplars，以及训练完成、当前固定的 Feature Extractor <b>φ<sub>Θ fixed</sub></b>。</p></div>
+        <div><span>现在要回答</span><p>当一张新的 Query 图片 <b>x<sub>q</sub></b> 到来，怎样从这些代表图片得到一次类别预测？</p></div>
       </aside>
 
       <GuidedStepControls steps={steps} current={stage} onChange={setStage} label="Page 3 最近原型预测教学步骤" />
 
+      <section className="p3-reasoning" aria-live="polite" aria-label={`第 ${stage + 1} 步的推理引导`}>
+        <span className="p3-reasoning__index">0{stage + 1}</span>
+        <div><span className="eyebrow">为什么进行这一步</span>{stageNarratives[stage].map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
+      </section>
+
       <section className="p3-workbench" aria-label="已保留图片、特征空间和当前预测规则">
         <section className="panel p3-source">
           <div className="panel-heading"><div><span className="eyebrow">SOURCE</span><h2>已保留的 Exemplars</h2></div><span className="p3-mini-count">{exemplars.length} 张</span></div>
-          <p className="p3-source__intro">这就是 P4 将继续解释的同一批 P_BEFORE：三类各 4 张。点选图片编号，可在图中追踪对应特征。</p>
+          <p className="p3-source__intro">这里读取共享运行时的 P_BEFORE：三类各 4 张。点选图片编号，可在图中追踪对应特征；下一页将用独立的单类示例解释代表怎样选出。</p>
           <div className="p3-source__samples p3-source__samples--grouped">
             {classIds.map((classId) => {
               const classSamples = exemplarByClass.get(classId)!;
@@ -333,7 +357,6 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
             <div className="p3-distance-list"><span className="eyebrow">实际二维教学向量</span>{queryComparisons.map(({ classId, distance, angle }, index) => <div key={classId} className={index === 0 ? "is-nearest" : ""}><span>μ<sub>{CLASS_VISUALS[classId].index}</sub></span><b>d={distance.toFixed(3)}</b><em>θ={angle.toFixed(1)}°</em><small>{index === 0 ? "最近" : ""}</small></div>)}<strong className="p3-prediction">预测 ŷ：{CLASS_VISUALS[predictedClass].displayLabel}</strong></div>
             <details className="p3-normalized-note"><summary>为什么最近距离也对应最小夹角？</summary><div><p>因为 z<sub>q</sub> 与 μ<sub>y</sub> 都是单位向量：</p><code>d<sub>y</sub><sup>2</sup> = 2 − 2z<sub>q</sub><sup>T</sup>μ<sub>y</sub> = 2 − 2cos θ<sub>y</sub></code><p>论文的正式规则是最近 Prototype；夹角只是单位化条件下的等价几何解释。</p></div></details>
           </> : null}
-          <div className="p3-rule-note"><span>i</span><p><b>Prototype μ<sub>y</sub> ≠ 训练权重 w<sub>y</sub></b><br />前者由当前 Exemplar Features 计算；后者属于训练输出层。</p></div>
         </aside>
       </section>
 
@@ -343,8 +366,8 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
       </section>
 
       <footer className="icarl-handoff">
-        <div><span className="eyebrow">NEXT · PAGE 04</span><p>我们已经能用当前特征提取器和已选 Exemplars 完成预测，但刚才暂时假定它们已经存在。为什么要保存原始图片，它们怎样在有限内存中长期存在，又如何同时帮助预测与后续训练？</p></div>
-        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>认识 Exemplar Memory <b aria-hidden="true">→</b></button> : null}
+        <div><span className="eyebrow">NEXT · PAGE 04</span><p>我们已经能用当前特征提取器和已选 Exemplars 完成预测，但刚才暂时假定它们已经存在。那么我们要怎么找到最典型的代表呢？找到之后又要怎么管理这些代表呢？</p></div>
+        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>筛选与管理代表样本 <b aria-hidden="true">→</b></button> : null}
       </footer>
     </article>
   );
