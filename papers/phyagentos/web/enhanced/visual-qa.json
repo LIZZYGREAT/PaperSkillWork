@@ -28,7 +28,7 @@
       ],
       "computedStyles": [
         { "selector": ":root", "property": "--ui-accent", "equals": "#27446e" },
-        { "selector": ".hero-cta", "property": "background-color", "equals": "rgb(39, 68, 110)" }
+        { "selector": ".slide-sidebar", "property": "background-color", "equals": "rgb(255, 255, 255)" }
       ]
     }
   ]
