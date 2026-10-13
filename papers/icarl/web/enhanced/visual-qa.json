@@ -88,7 +88,7 @@
       ]
     },
     {
-      "id": "icarl-p1-to-p5-handoffs",
+      "id": "icarl-p1-p2-handoffs",
       "path": "/",
       "states": [
         {
@@ -105,35 +105,164 @@
             { "type": "click", "selector": ".p2-action" },
             { "type": "waitFor", "selector": ".p2-handoff", "state": "visible" }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "id": "icarl-p4-herding-and-memory",
+      "path": "/",
+      "states": [
         {
-          "id": "p4-memory-continuity",
+          "id": "00-target",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "waitFor", "selector": ".icarl-page--p4", "state": "visible" }
+            { "type": "waitFor", "selector": ".p4-target-values", "state": "visible" }
           ]
         },
         {
-          "id": "p4-budget-to-herding",
+          "id": "01-round-k1",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(2)" },
+            { "type": "waitFor", "selector": ".p4-candidate-grid", "state": "visible" }
+          ]
+        },
+        {
+          "id": "02-round-k2",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
+            { "type": "waitFor", "selector": ".p4-key-insight", "state": "visible" }
+          ]
+        },
+        {
+          "id": "02a-k2-combine-by-keyboard",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
+            { "type": "press", "selector": ".p4-calculation-sequence__steps button:nth-child(2)", "key": "Enter" },
+            { "type": "press", "selector": "body", "key": "Control+Home" },
+            { "type": "waitFor", "selector": ".p4-combine-line", "state": "visible" }
+          ]
+        },
+        {
+          "id": "02b-k2-raw-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
+            { "type": "click", "selector": ".p4-calculation-sequence__steps button:nth-child(3)" },
+            { "type": "press", "selector": "body", "key": "Control+Home" },
+            { "type": "waitFor", "selector": ".p4-raw-prefix", "state": "visible" }
+          ]
+        },
+        {
+          "id": "02c-k2-normalized-mean",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
+            { "type": "click", "selector": ".p4-calculation-sequence__steps button:nth-child(4)" },
+            { "type": "press", "selector": "body", "key": "Control+Home" },
+            { "type": "waitFor", "selector": ".p4-prefix", "state": "visible" }
+          ]
+        },
+        {
+          "id": "02d-k2-score",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
+            { "type": "click", "selector": ".p4-calculation-sequence__steps button:nth-child(5)" },
+            { "type": "press", "selector": "body", "key": "Control+Home" },
+            { "type": "waitFor", "selector": ".p4-score-line", "state": "visible" }
+          ]
+        },
+        {
+          "id": "03-round-k3-centroid",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
+            { "type": "waitFor", "selector": ".p4-key-insight", "state": "visible" }
+          ]
+        },
+        {
+          "id": "04-round-k4",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(5)" },
+            { "type": "waitFor", "selector": ".p4-winner", "state": "visible" }
+          ]
+        },
+        {
+          "id": "05-prefix-review",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
             { "type": "click", "selector": ".icarl-guided__step:nth-child(6)" },
-            { "type": "waitFor", "selector": ".p4-mean-question", "state": "visible" }
+            { "type": "waitFor", "selector": ".p4-prefix-result", "state": "visible" }
           ]
         },
         {
-          "id": "p5-class4-herding",
+          "id": "06-budget-truncation",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(7)" },
+            { "type": "waitFor", "selector": ".p4-budget-equation", "state": "visible" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "icarl-p5-replay-d-q",
+      "path": "/",
+      "states": [
+        {
+          "id": "00-exemplar-roles",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
-            { "type": "waitFor", "selector": ".p5-example-note", "state": "visible" }
+            { "type": "waitFor", "selector": ".p5-reasoning", "state": "visible" }
           ]
         },
         {
-          "id": "p5-prefix-to-training",
+          "id": "01-replay-training-set-d",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(6)" },
-            { "type": "waitFor", "selector": ".p5-runtime-order", "state": "visible" }
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(2)" },
+            { "type": "waitFor", "selector": ".p5-dataset-panel", "state": "visible" }
+          ]
+        },
+        {
+          "id": "02-pre-update-q-snapshot",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
+            { "type": "waitFor", "selector": ".p5-snapshot-pipeline", "state": "visible" }
+          ]
+        },
+        {
+          "id": "03-q-coverage",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
+            { "type": "waitFor", "selector": ".p5-matrix-panel", "state": "visible" }
+          ]
+        },
+        {
+          "id": "04-ready-for-training",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(5)" },
+            { "type": "waitFor", "selector": ".p5-ready", "state": "visible" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "icarl-p9-runtime",
+      "path": "/",
+      "states": [
+        {
+          "id": "initial-runtime-board",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(9)" },
+            { "type": "waitFor", "selector": ".p9-board", "state": "visible" }
           ]
         }
       ]

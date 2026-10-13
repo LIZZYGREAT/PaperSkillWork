@@ -29,20 +29,22 @@ See `design/implementation-plan.md` for the first-slice review and any revision 
 - [ ] Keyboard/focus, touch/non-drag alternatives, reduced-motion, and mobile behavior were reviewed where applicable.
 - [ ] Export is self-contained and has no external shared runtime dependency or local machine path.
 
-## Verification Record — 2026-10-13 iCaRL Revision
+## Verification Record — 2026-10-13 P3–P5 Teaching Restructure
 
 | Check | Status | Evidence |
 | --- | --- | --- |
-| BUILD | PASS | `npm.cmd run build` completed TypeScript checking and the Vite production build (72 modules). |
-| PROJECT_CHECK | PASS | `python tools/paper.py check icarl` passed. The remaining W9 warning is expected because human acceptance is still pending. |
-| GEOMETRY_QA | PASS | The configured P1–P5 handoffs, all four P3 stages, direct stage return, and next/back navigation passed at 1440×900 and 1920×1080. |
-| STYLE_QA | PASS (scoped) | The configured root token and navigation-rail assertions passed. No page-specific computed-style contract is claimed for P3. |
-| VISUAL_REVIEW | PASS (previous P3 revision) | The four P3 teaching states were inspected at 1440×900, with the final state also inspected at 1920×1080. Unit-circle meaning, prototype-square meaning, radial guides, persistent exemplar points, direct labels, and distance-line hierarchy were legible. The angle arcs were restored after that screenshot review and have not yet been visually rechecked. |
-| BROWSER_ERRORS | PASS | The visual-QA run reported zero console or page errors in all 28 captures. |
-| REGRESSION | NOT_RUN | No approved screenshot baseline exists; P10 and upstream export were not changed. |
+| BUILD | PASS | `npm.cmd run build` passed TypeScript checking and the Vite production build (71 modules). |
+| PROJECT_CHECK | PASS (W9 gate pending) | `python tools/paper.py status icarl` reports W9 and W10 pending. `python tools/paper.py check icarl` returns `CHECK PASS`; its sole warning is that W9's `Overall: PENDING` is not `PASS`, intentionally unchanged pending human review. |
+| GEOMETRY_QA | PASS | The configured Chromium run passed 54 captures at 1440×900 and 1920×1080, including P3 states, all seven new P4 stages and k=2 substeps, P5 D/Q states, and P9 runtime. No horizontal overflow or browser errors were found. |
+| STYLE_QA | PASS (scoped) | The runner's configured style assertions passed. Most page-state captures do not define page-specific computed-style assertions; no broader style contract is claimed. |
+| VISUAL_REVIEW | PASS (agent sample) | Representative P3 prediction, P4 target/rounds/prefix/budget, P5 D/Q, and P9 runtime screenshots were inspected. The k=2 normalized-mean state is legible and its full-page capture starts at the top. This is not human acceptance and does not claim that every capture was inspected. |
+| MOBILE_GEOMETRY | PASS (390×844) | A local Chromium check traversed all nine pages with reduced motion enabled; each page's document and body widths stayed at 390 px. P4 k=2 manual stage navigation and P5/P9 loading worked. This was a DOM/overflow check, not a mobile visual review. |
+| BROWSER_ERRORS | PASS | The latest visual-QA run reported zero console or page errors in all 54 captures. |
+| REGRESSION | NOT_RUN | No approved screenshot baseline exists; this task did not change upstream export. |
+| DIAGNOSTIC | WARNING | P9 has one visible semantic text element below the configured 11 px threshold in each desktop viewport; leave for human review. |
 | HUMAN_ACCEPTANCE | PENDING | A human reviewer still needs to confirm the teaching effect and final layout. W9 must remain pending until that review is recorded. |
 
-Latest local report before the angle-arc restoration: `.visual-qa/icarl-p3-clarity-final/run-2026-10-13T11-21-43-542Z/report.md`.
+Latest local report: `.visual-qa/run-2026-10-13T15-37-34-814Z/report.md`. Computer-use browser inspection was unavailable because the Windows URL-confidence policy stopped that tool; the local Playwright checks above were used instead. HUMAN_ACCEPTANCE remains PENDING.
 
 ## W10 Upstream Preflight
 

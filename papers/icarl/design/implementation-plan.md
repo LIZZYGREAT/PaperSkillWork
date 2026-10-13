@@ -4,13 +4,13 @@ Paper ID: `icarl`
 
 ## Learning Goal and Non-goals
 
-The tutorial should let a first-time reader explain the class-incremental constraint, distinguish iCaRL's trainable feature extractor from its per-class training head, and trace one update from the persistent state through prototype-based prediction. The complete spine has eight stages; W6 is deliberately limited to S01, S02, and S08 (Pages 1, 2, and 10) as requested.
+The tutorial should let a first-time reader explain the class-incremental constraint, distinguish iCaRL's trainable feature extractor from its per-class training head, and trace one update from the persistent state through prototype-based prediction. The complete learning spine has eight stages across the current nine-page tutorial. The initial W6 vertical slice covered S01, S02, and S08 under the then-current ten-page numbering (Pages 1, 2, and 10); W9 later merged the former Pages 4–5 and renumbered the remaining pages.
 
-Page 1 defines the problem without revealing the solution. Page 2 opens the model only far enough to explain image-to-representation flow and why the training head is not the final predictor. Page 10 integrates previously taught objects without reteaching their derivations. Figure 2–4 are assigned to Page 9/S07 and prepared as attributed source crops, but Page 9 is outside this W6 slice.
+Page 1 defines the problem without revealing the solution. Page 2 opens the model only far enough to explain image-to-representation flow and why the training head is not the final predictor. Page 3 completes one prototype prediction from twelve existing exemplars. Page 4 then teaches representative selection and budget management with a separate eight-point example; Page 5 returns to shared runtime data to prepare D and Q. Pages 6–8 cover training signals, prediction roles, and paper evidence. Page 9 integrates previously taught objects without reteaching their derivations. Figures 2–4 are assigned to Page 8/S07 and remain attributed source crops.
 
-Every computational visual reads from one deterministic data/calculation layer. Page 2 and Page 10 synthetic geometry is labeled `Synthetic teaching example`; the feature projection is an illustrative carrier, not a paper measurement or a trained iCaRL checkpoint. Page 10 shows the update as the symbolic `Θ_before → Θ_after` transition, snapshots Q before that transition, leaves P unchanged until the later memory phase, and computes quota, prefix truncation, new-class Herding, normalized prototypes, distances, and nearest-prototype prediction from the visible fixed data. The UI renders these results and does not maintain a second copy of the algorithm.
+Every computational visual reads from deterministic data and calculations. Page 2 and the independent Page 4 fixture use illustrative feature geometry, not paper measurements or a trained iCaRL checkpoint. Page 4's eight candidates are local to its 8→4 Herding lesson and do not change P3 or the runtime samples. Page 9 shows the shared runtime update as the symbolic `Θ_before → Θ_after` transition, snapshots Q before that transition, preserves P until the memory phase, and computes quota, prefix truncation, new-class Herding, normalized prototypes, distances, and nearest-prototype prediction from the shared fixed data. The UI renders these results rather than maintaining a second algorithm copy.
 
-Do not add a new loss lesson, a second feature-space implementation, fabricated training metrics, invented Figure 2/4 curve values, or paper-page content outside the approved vertical slice. Keep equations and exact numeric details in expandable/reference placements.
+Do not add a second feature-space implementation, fabricated training metrics, or invented Figure 2/4 curve values. Keep detailed equations and reference-only numeric details in compact or expandable placements.
 
 ## Primary Spine Mapping
 
@@ -34,42 +34,42 @@ implementation:
       reusable_pattern: ArchitectureExplorer
       reason: "Selecting network components reveals ownership and data flow; the same sample identity stays fixed while its illustrative representation moves between symbolic parameter states."
     - id: S03
-      page: "Pages 3–4 · Prototype and Exemplar Memory"
-      core_items: [L05, L06, L07]
-      evidence_refs: [C04, C05, C09, C13]
-      primary_vehicle: "Four-stage prototype-prediction workbench over P_BEFORE, followed by the shared SampleToken memory view for raw-image persistence, dual roles, and budget"
+      page: "Page 3 · Prototype Prediction"
+      core_items: [L05]
+      evidence_refs: [C04, C05]
+      primary_vehicle: "Four-stage prototype-prediction workbench over the twelve shared P_BEFORE exemplars"
       reusable_pattern: ArchitectureExplorer
-      reason: "Page 3 holds Θ and P fixed while twelve saved images become normalized features, inside-circle means, normalized prototypes, and a nearest-prototype query decision; Page 4 then explains why those same raw images persist and can be re-encoded for learning and prediction."
+      reason: "Page 3 holds Θ and P fixed while twelve saved images become normalized features, inside-circle means, normalized prototypes, and a nearest-prototype query decision."
     - id: S04
-      page: "Page 5 · Ordered Exemplar Selection"
-      core_items: [L08, L09]
+      page: "Page 4 · Representative Selection and Management"
+      core_items: [L06, L07, L08, L09]
       evidence_refs: [C07, C08, T01]
-      primary_vehicle: "Algorithm-computed Herding sequence and ordered exemplar buckets with prefix truncation"
-      reusable_pattern: ProcessLoopExplorer
-      reason: "Herding is sequential: every selected prefix is compared with the computed full-class mean, and later reduction retains that order's prefix."
+      primary_vehicle: "Independent eight-point teaching fixture, four calculated Herding rounds, prefix review, and fixed-budget tail truncation"
+      reusable_pattern: null
+      reason: "A complete-class target and every candidate score share the existing Herding calculation; the same ordered result supports both prefix inspection and budget reduction."
     - id: S05
-      page: "Page 6 · Prepare the Update"
+      page: "Page 5 · Prepare the Update"
       core_items: [L10, L11]
       evidence_refs: [C09, C10]
       primary_vehicle: "Object-flow stepper that combines incoming full data and old exemplars, then snapshots old-node responses before training"
       reusable_pattern: FlowStepper
       reason: "A short ordered flow makes D's two sources and Q's pre-update lifetime explicit."
     - id: S06
-      page: "Pages 7–8 · Training Signals and Prediction"
+      page: "Pages 6–7 · Training Signals and Prediction"
       core_items: [L12, L13, L14, L15]
       evidence_refs: [C03, C05, C06, C10, C11, C12, OI01]
       primary_vehicle: "Paired old/new target lanes followed by a distinct prototype-inference path"
       reusable_pattern: FlowStepper
       reason: "The two output-node ages get different targets, while the final prediction visibly bypasses the sigmoid-head argmax and uses current exemplar means."
     - id: S07
-      page: "Page 9 · Evidence and Boundaries"
+      page: "Page 8 · Evidence and Boundaries"
       core_items: [L16, L17, L18, L19, L20, L21, L22]
       evidence_refs: [R01, R02, R03, R04, R05, R06, R07, R08, A01, A02, A03, C14, OI02, OI03]
       primary_vehicle: "Protocol-first evidence workbench with original PaperFigure panels for Figures 2–4 and source-linked result boundaries"
       reusable_pattern: PaperFigure
       reason: "The original plots and confusion matrices are the evidence being interpreted; captions, dataset protocols, exceptions, and memory boundaries stay adjacent."
     - id: S08
-      page: "Page 10 · iCaRL Runtime"
+      page: "Page 9 · iCaRL Runtime"
       core_items: [L23]
       evidence_refs: [OI01, C09, C10, C13, C05]
       primary_vehicle: "Fixed runtime workbench driven by one ten-step state trace, with persistent, temporary, and derived objects separated"
@@ -81,7 +81,7 @@ implementation:
     - {asset: A-FIG04, stage: S07, rendering: crop}
   supporting:
     - {item: SUP01, placement: expandable}
-    - {item: SUP02, placement: hover}
+    - {item: SUP02, placement: compact-inline}
     - {item: SUP03, placement: expandable}
     - {item: SUP04, placement: expandable}
     - {item: SUP05, placement: hover}
@@ -98,13 +98,13 @@ implementation:
 
 ## Reusable Pattern Library
 
-The registered P0 patterns fit the planned teaching tasks, so the continual-learning kit will be copied into `web/enhanced/src/shared/` before page implementation. W6 adapts `FlowStepper` for Page 1 and Page 10 guided states, and `ArchitectureExplorer` for Page 2's openable network path. Page 10 also reuses the same paper-owned `FeatureSpaceWorkbench` and `SampleToken` as the earlier feature-space pages; its runtime state stays in the calculation layer. `PaperFigure` is copied for S07 and will display the three selected source crops when Page 9 is implemented. No optional P1 component is selected: it would add controls without helping the requested slice.
+The continual-learning kit is copied into `web/enhanced/src/shared/` for stages that use registered reusable patterns. The initial W6 slice adapted `FlowStepper` for Page 1 and the then Page 10 runtime, and `ArchitectureExplorer` for Page 2. The runtime also reuses the paper-owned `FeatureSpaceWorkbench` and `SampleToken`; its state stays in the calculation layer. `PaperFigure` displays the three selected source crops on the current Page 8. Page 4 combines its page-specific `GuidedStepControls` and `FeatureChart` with the Herding calculation instead of claiming a registered reusable-kit component. No optional P1 component is selected.
 
-The Page 10 reference image is used only to understand the relationships and fixed workbench regions (incoming data, current model, memory, active workspace, feature space, object lifetime, and state transition). Its visual style is not a target.
+The original Page 10 reference image was used only to understand the relationships and fixed workbench regions (incoming data, current model, memory, active workspace, feature space, object lifetime, and state transition). Its visual style is not a target; the corresponding implementation is now Page 9.
 
 ## Vertical Slice (W6)
 
-Implement exactly three Learning Spine stages: S01/Page 1, S02/Page 2, and S08/Page 10. The review task is to move through the problem constraints, open the model and inspect one stable sample's representation, then trace a new batch through D/Q, the symbolic model update, memory reallocation, computed Herding, prototype construction, nearest-prototype prediction, and the next-stage boundary.
+The initial W6 slice implemented exactly three Learning Spine stages: S01/Page 1, S02/Page 2, and S08/Page 10 (now Page 9). The review task was to move through the problem constraints, open the model and inspect one stable sample's representation, then trace a new batch through D/Q, the symbolic model update, memory reallocation, computed Herding, prototype construction, nearest-prototype prediction, and the next-stage boundary.
 
 Page 10 uses a fixed deterministic `Synthetic teaching example`: K=12, three old classes with four ordered exemplars each, and one incoming class with its full six-sample batch. The new class count sets t=4 and m=⌊K/t⌋=3; the old buckets keep their first three items, and the new bucket is generated from the full incoming data by the same Herding calculation shown in the feature-space component. `Θ_before → Θ_after` is a symbolic state change, not a fabricated training trace. Q contains symbolic old-node responses, is generated before the model update, and is released after training. The sample `x_7` keeps its Class A identity from Page 2 into Page 10.
 
@@ -123,15 +123,15 @@ Vertical Slice Review: PASS
 - Were any formulas, toys, or interactions unnecessary?
 - Required information-architecture changes: none requested in this review.
 
-## Full Implementation (W8)
+## Full Implementation (W8 · Historical Plan)
 
-After W7 PASS, implement remaining CORE items L05–L22 in S03–S07, including Page 9's original Figure 2–4 `PaperFigure` panels. Keep SUPPORTING items in their planned compact or expandable placements, REFERENCE items outside the mainline, and all DELETE items omitted. Do not mark W7 PASS or begin W8 before the user reviews the slice.
+At the time of the W8 plan, the remaining CORE items L05–L22 were assigned to S03–S07, with original Figure 2–4 `PaperFigure` panels planned for the then-numbered Page 9. That implementation is complete; W9 subsequently moved the evidence page to Page 8 and merged the exemplar-selection teaching flow into Page 4. SUPPORTING items remain in compact or expandable placements, REFERENCE items remain outside the mainline, and DELETE items remain omitted.
 
 ## Human Acceptance Record
 
 W7 passed based on the user's explicit acceptance of the current iCaRL implementation. W4 approval and the request to display original Figures 2–4 are recorded in `paper.yaml` and the W3 asset plan.
 
-## 页面修订 · 2026-10-13
+## 页面修订（W8 历史记录）· 2026-10-13
 
 依据用户指定的《Icarl页面优化方案》，本轮只修订 `web/enhanced` 的页面。CORE 的任务背景、两种直接做法、约束与四项要求默认可读；步骤只切换焦点。非 P10 特征图复用 P3 的 SOURCE / FEATURE SPACE / CURRENT RULE 视觉语言，保留各页必要的裁剪布局。P2 使用同一 backbone，以 5→10 输出节点说明训练输出层的扩展。
 
@@ -139,7 +139,7 @@ W7 passed based on the user's explicit acceptance of the current iCaRL implement
 
 检查范围：Chromium 1440×900 与 1920×1080；P1 初态与阅读焦点，P2 更新前/后及输出扩展/重置，P3 四阶段与直接跳转/前进/回退，P4 重编码的两种映射，P5 目标与 prefix 各阶段，P8 共享图状态，P10 修改前后对照。截图与临时检查保存在 `.visual-qa/`。每块完成后只提交本轮修改的 iCaRL 文件；HUMAN_ACCEPTANCE 保持 PENDING。
 
-P3 的 W9 修订固定使用 P4 同一批 `P_BEFORE[A/B/C]`，每类四张，共十二张；默认选中项从该集合派生。四阶段依次为：图片与单位化 Exemplar Feature、圆内均值与单位化 Prototype、同一固定 Feature Extractor 下的独立 Query、最近 Prototype 距离/夹角与预测。P3 不再包含参数更新、完整旧类数据不可用、内存重分配或 Herding；这些职责分别留在 P4–P8。二维坐标、距离和角度来自同一套固定合成计算，并明确不代表论文实验轨迹。
+P3 的 W8 修订固定使用 `P_BEFORE[A/B/C]`，每类四张，共十二张；默认选中项从该集合派生。四阶段依次为：图片与单位化 Exemplar Feature、圆内均值与单位化 Prototype、同一固定 Feature Extractor 下的独立 Query、最近 Prototype 距离/夹角与预测。P3 不包含参数更新、完整旧类数据不可用、内存重分配或 Herding；这些职责留给后续相应页面。二维坐标、距离和角度来自固定合成计算，并明确不代表论文实验轨迹。
 
 阶段检查：P1 构建通过，两个宽屏视口无整体横向溢出和浏览器错误；Agent 已查看默认叙事截图。特征图统一后检查 48 个页面/状态/视口组合，未发现整体横向溢出、SVG 标签出框或浏览器错误；Agent 已查看 P2 更新后、P3 最近原型、P4 旧映射、P5 目标与二步 prefix、P8 当前原型与预测的代表性截图。P10 通过显式 legacy 外观保留旧画布与图元，其初态在两个视口与本轮调整前截图逐像素相同；未以此声称所有 P10 动态阶段均经过回归。专门计算样式断言尚未配置，STYLE_QA=NOT_RUN；HUMAN_ACCEPTANCE=PENDING。
 
@@ -150,3 +150,11 @@ P3 的 W9 修订固定使用 P4 同一批 `P_BEFORE[A/B/C]`，每类四张，共
 P1 末尾增加从图片输入到模型输出的过渡引导。P2 的结尾使用用户指定原文：“现在我们知道，模型能把图片映射为可比较的特征向量，训练输出层也会随新类别扩展。也就是具备了可以让根据输入的图片，直接在所有类型任务中判断属于哪个类别的能力呢。但我们回到一开始的问题，我们需要在这个学习过程中，保留过去模型学到的知识，就需要留存一些代表图片。那我们先假设，每类已经保留了少量代表图片，那么它究竟怎样利用这些图片判断一张新输入属于哪一类？”P2 `SHARED FEATURE EXTRACTOR` 中“image x / 卷积特征块 / 深层表示 / 聚合为向量”标签调整为 16px。
 
 复查范围：P1 末尾阅读焦点、P2 模型展开状态，Chromium 1440×900 与 1920×1080。`tsc --noEmit` 通过；Vite 生产构建通过（72 个模块）。标准 `npm run build` 的 TypeScript 阶段通过，但本环境的默认 Vite runner 配置加载失败，随后使用 bundle loader 的临时配置完成构建。视觉 QA 报告位于 `web/enhanced/.visual-qa/p1-p2-copy-font-exact/run-2026-10-13T12-22-06-043Z/`：GEOMETRY_QA=PASS、STYLE_QA=PASS（16px 断言）、BROWSER_ERRORS=PASS（0 条）；实际查看四张截图，VISUAL_REVIEW=PASS，P1 引导与 P2 结尾均完整显示。REGRESSION=NOT_RUN；HUMAN_ACCEPTANCE=PENDING。
+
+### P3–P5 教学重构与 Herding 动画（2026-10-13）
+
+本节记录实施与工程验证结果，不代表 W9 学习/证据审查完成，也不构成新的人工验收。最终教程为九页：P3 保持共享运行时 12 张 `P_BEFORE` 的预测流程；新 P4 将代表样本筛选、Herding、前缀回看和预算截断合并为一个连续页面，使用独立单类 8→4 教学集；新 P5 由原 D/Q 页面迁移而来，承接 Exemplars 从预测到训练的第二项职责。后续页面及原完整运行页仅按新编号迁移。共享运行时中的 `P_BEFORE`、`D/Q`、`P_AFTER` 和实验数据未因新 P4 示例而更改。
+
+P4 的 k=2 首个候选现可分阶段呈现输入、组合、原始中点、单位化均值和距离评分，并提供播放/暂停/重播和键盘可达的阶段按钮。动画图元与数值来自同一 Herding 候选结果；减少动态效果时自动播放被禁用，手动阶段仍可使用。前缀与预算阶段沿用已算出的同一有序列表。
+
+验证记录：`npm.cmd run build` 通过（TypeScript + Vite，71 modules）；`python tools/paper.py status icarl` 显示 W9/W10 均待处理；`python tools/paper.py check icarl` 返回 `CHECK PASS`，唯一警告是 W9 `Overall: PENDING` 尚未变成 `PASS`，这是人工审查未完成时的预期状态。Chromium 视觉 QA 在 1440×900、1920×1080 共通过 54 个捕获，GEOMETRY_QA、配置范围内的 STYLE_QA 和 BROWSER_ERRORS 均通过；报告指出 P9 每种桌面视口各有一处语义小字低于 11 px。代表性截图已由 agent 检视，但 runner 自身将 VISUAL_REVIEW 保持为 NOT_RUN。另在 390×844、减少动态效果偏好下逐页访问九页，页面宽度均未超过视口，P4 手动阶段与 P5/P9 页面可访问；这项是 DOM/溢出检查，不替代窄屏视觉审查。没有已批准截图基线，REGRESSION 未运行；HUMAN_ACCEPTANCE 保持 PENDING。

@@ -17,7 +17,7 @@ Classes arrive in batches, but every seen class must remain in one prediction sp
 
 ## Priority Matrix
 
-The eight stages follow the Page 1–10 design plans, grouping Page 3–4 around the prototype-to-memory transition and Page 7–8 around the training-to-prediction distinction. The final runtime stage integrates earlier mechanisms; it should not reteach them.
+The eight stages now map to nine pages. Page 3 completes one prototype prediction; Page 4 develops exemplar selection and management; Page 5 prepares the next update. Pages 6–7 cover training signals and prediction roles, Page 8 presents evidence, and Page 9 integrates the full runtime.
 
 ```yaml
 stages:
@@ -30,28 +30,28 @@ stages:
     pages: "Page 2"
     purpose: "Open the network only far enough to distinguish the shared feature extractor from the class-output training head."
   - id: S03
-    question: "Given a fixed feature extractor and selected exemplars, how does one complete a prototype prediction and why must that image memory persist?"
-    pages: "Pages 3–4"
-    purpose: "First trace twelve retained images through normalized exemplar features, class prototypes, a query feature, and the nearest-prototype decision; then explain the raw-image memory, its dual roles, and its fixed budget."
+    question: "Given a fixed feature extractor and selected exemplars, how does one complete a prototype prediction?"
+    pages: "Page 3"
+    purpose: "Trace twelve retained images through normalized exemplar features, class prototypes, a query feature, and the nearest-prototype decision while keeping the current model fixed."
   - id: S04
-    question: "Which retained examples should survive when the per-class memory quota shrinks?"
-    pages: "Page 5"
-    purpose: "Explain herding as ordered prefix-mean approximation, then connect that order to later truncation."
+    question: "When and how should a small set of representative images be selected and managed?"
+    pages: "Page 4"
+    purpose: "Build a class target from all current features, run four actual Herding rounds, inspect the resulting ordered prefixes, and show fixed-budget tail truncation."
   - id: S05
     question: "What must be prepared before the representation changes?"
-    pages: "Page 6"
+    pages: "Page 5"
     purpose: "Form the update set from incoming full data and old exemplars, then snapshot old-node responses using the pre-update model."
   - id: S06
     question: "How do old and new output nodes learn, and how does that differ from final prediction?"
-    pages: "Pages 7–8"
+    pages: "Pages 6–7"
     purpose: "Assign soft and hard targets by output-node age, train through the shared representation, and close the loop with prototype inference."
   - id: S07
     question: "What do the experiments support, and where do their conclusions stop?"
-    pages: "Page 9"
+    pages: "Page 8"
     purpose: "Interpret benchmark, confusion, ablation, and memory evidence only within each stated dataset and protocol; preserve exceptions and resource caveats."
   - id: S08
     question: "Can one complete an update and the next prediction from the current saved state?"
-    pages: "Page 10"
+    pages: "Page 9"
     purpose: "Run the already learned objects through one ordered state transition; keep the trace compact and distinguish persistent state from update-local objects."
 
 items:
@@ -60,8 +60,8 @@ items:
   - {id: L03, title: "Show why storing all history or training only on new classes fails the setting", priority: CORE, stage: S01, placement: mainline, evidence_refs: [C01, C15]}
   - {id: L04, title: "Separate the shared feature extractor from the per-class sigmoid training head", priority: CORE, stage: S02, placement: mainline, evidence_refs: [C03]}
   - {id: L05, title: "Classify by current-feature exemplar means across all seen classes", priority: CORE, stage: S03, placement: mainline, evidence_refs: [C04, C05]}
-  - {id: L06, title: "Retain raw exemplar images because the same memory supports rehearsal and prototype inference", priority: CORE, stage: S03, placement: mainline, evidence_refs: [C04, C09]}
-  - {id: L07, title: "Use the fixed exemplar-image budget K across the seen classes", priority: CORE, stage: S03, placement: mainline, evidence_refs: [C13]}
+  - {id: L06, title: "Retain raw exemplar images because the same memory supports rehearsal and prototype inference", priority: CORE, stage: S04, placement: mainline, evidence_refs: [C04, C09]}
+  - {id: L07, title: "Use the fixed exemplar-image budget K across the seen classes", priority: CORE, stage: S04, placement: mainline, evidence_refs: [C13]}
   - {id: L08, title: "Use herding to order examples by how each prefix approaches the full-class mean", priority: CORE, stage: S04, placement: mainline, evidence_refs: [C07, T01]}
   - {id: L09, title: "Reduce old exemplar lists by retaining their ordered prefixes", priority: CORE, stage: S04, placement: mainline, evidence_refs: [C08, C13]}
   - {id: L10, title: "Build the update set from all incoming images and retained old exemplars", priority: CORE, stage: S05, placement: mainline, evidence_refs: [C09]}
@@ -80,7 +80,7 @@ items:
   - {id: L23, title: "Trace one update from the saved state to the next prototype prediction", priority: CORE, stage: S08, placement: mainline, evidence_refs: [OI01, C09, C10, C13, C05]}
 
   - {id: SUP01, title: "Explain why normalized nearest-distance and maximum inner product agree", priority: SUPPORTING, stage: S03, placement: expandable, evidence_refs: [B02]}
-  - {id: SUP02, title: "Show the integer quota formula and small class-count calculations", priority: SUPPORTING, stage: S03, placement: hover, evidence_refs: [C13]}
+  - {id: SUP02, title: "Show the integer quota formula and small class-count calculations", priority: SUPPORTING, stage: S04, placement: compact-inline, evidence_refs: [C13]}
   - {id: SUP03, title: "Expose exact class-batch, backbone, exemplar-budget, and training-schedule details", priority: SUPPORTING, stage: S07, placement: expandable, evidence_refs: [R01, R02]}
   - {id: SUP04, title: "Reveal exact Table 1 values behind any newly authored comparison plot", priority: SUPPORTING, stage: S07, placement: expandable, evidence_refs: [R04, R05]}
   - {id: SUP05, title: "Explain the log(1+x) display transformation in Figure 3", priority: SUPPORTING, stage: S07, placement: hover, evidence_refs: [R06]}
@@ -110,21 +110,20 @@ items:
 
 Start with the setting, not with iCaRL's solution: new classes arrive over time, old classes remain in the decision space, and full history cannot stay in memory. That makes both naive choices understandable and shows why the problem has several simultaneous constraints. Page 2 then opens the model just enough to establish the shared feature extractor and training head without prematurely teaching the final classifier.
 
-Page 3 first makes one prediction self-contained: it assumes the trained feature extractor and twelve already selected `P_BEFORE` images are ready, then computes normalized exemplar features, an inside-the-unit-circle mean, a normalized prototype, the query feature, and the nearest-prototype decision without changing Θ or P. Page 4 then identifies those same twelve images as persistent raw-image memory and explains its rehearsal/prototype roles plus fixed budget. Page 5 answers the next question: how a newly arrived class uses its temporarily available full data to build an ordered list whose later prefixes remain representative.
+Page 3 first makes one prediction self-contained: it assumes the trained feature extractor and twelve already selected `P_BEFORE` images are ready, then computes normalized exemplar features, an inside-the-unit-circle mean, a normalized prototype, the query feature, and the nearest-prototype decision without changing Θ or P. It ends by asking how representative images are found and managed. Page 4 answers with an independent single-class 8→4 teaching example: it explains when the full class data is available, computes the complete-class target, shows all four Herding rounds, reviews each ordered prefix, and demonstrates fixed-budget tail truncation. The eight synthetic points are independent of `P_BEFORE` and the runtime example. Page 5 then returns to the shared runtime data and asks how retained images join the next update, first forming D and then snapshotting Q.
 
-Page 6 prepares the update before any parameters change: combine incoming full data with old exemplars, then obtain old-node responses from the pre-update model on that whole set. Page 7 assigns targets by output-node age and updates the shared representation. Page 8 closes the structure: the head remains part of the training network, but final prediction recomputes exemplar prototypes and does not read the head argmax or temporary Q.
+Page 5 prepares the update before any parameters change: combine incoming full data with old exemplars, then obtain old-node responses from the pre-update model on that whole set. Page 6 assigns targets by output-node age and updates the shared representation. Page 7 closes the structure: the head remains part of the training network, but final prediction recomputes exemplar prototypes and does not read the head argmax or temporary Q.
 
-Page 9 tests the mechanism against the paper's actual protocols, including the hybrid2 exception, the qualitative confusion patterns, memory trends, and the full-data NCM boundary. It displays original Figures 2–4 as `PaperFigure` evidence, as directed by the user and the global visual specification; the tutorial must not imply that exact curve values were reconstructed from the images. Page 10 then runs one compact end-to-end trace using the already established objects and their lifetimes. It is an integration check, not another full explanation of herding, loss, or prototype geometry.
+Page 8 tests the mechanism against the paper's actual protocols, including the hybrid2 exception, the qualitative confusion patterns, memory trends, and the full-data NCM boundary. It displays original Figures 2–4 as `PaperFigure` evidence; the tutorial must not imply that exact curve values were reconstructed from the images. Page 9 then runs one compact end-to-end trace using the already established objects and their lifetimes. It is an integration check, not another full explanation of herding, loss, or prototype geometry.
 
 ## Ordering and Content Boundaries
 
 - Page 1 establishes the constraints and failure modes but does not reveal the complete iCaRL mechanism.
 - Page 2 introduces the network roles; prototype inference is established on Page 3.
-- Page 3 uses an explicit teaching assumption—fixed trained feature extractor plus already selected `P_BEFORE`—to complete inference only. Page 4 defines those same images' persistent storage, raw-image identity, dual roles, and budget. Page 5 alone explains Herding order and reduction with the newly arrived Class 4 data; it does not reselect Page 3's old exemplars.
-- Page 6 creates the combined update set and snapshots old responses before training. Page 7 then explains target assignment and loss.
-- Page 8 distinguishes the current network's training and prediction paths without deleting the head or treating them as two models.
-- Page 9 uses reported evidence and protocol-qualified claims. The exact Table 1 values may support newly authored plots; no unreported Figure 2/4 curve values may be inferred.
-- Page 10 follows the source update order: build D, snapshot Q, update Θ, compute the per-class quota, reduce old lists, construct new lists, then recompute prototypes for inference. Teaching-state motion must be identified as illustrative unless it is calculated from the tutorial's explicit toy model.
+- Page 3 uses an explicit teaching assumption—fixed trained feature extractor plus already selected `P_BEFORE`—to complete inference only. Page 4 teaches Herding and exemplar management with an independent 8→4 example; it does not reselect Page 3's twelve exemplars or alter runtime data. Page 5 returns to shared runtime data to build D and snapshot Q.
+- Page 6 creates node-specific targets and loss from D/Q; Page 7 distinguishes the current network's training and prediction paths without deleting the head or treating them as two models.
+- Page 8 uses reported evidence and protocol-qualified claims. The exact Table 1 values may support newly authored plots; no unreported Figure 2/4 curve values may be inferred.
+- Page 9 follows the source update order: build D, snapshot Q, update Θ, compute the per-class quota, reduce old lists, construct new lists, then recompute prototypes for inference. Teaching-state motion must be identified as illustrative unless it is calculated from the tutorial's explicit toy model.
 - Detailed CNN blocks, optimizer schedules, full equations, supplementary 1,000-class confusion matrices, and source figure locators stay in compact details or the Reference Hub.
 
 ## Human Review
