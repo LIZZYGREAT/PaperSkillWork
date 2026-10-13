@@ -37,6 +37,14 @@ const phaseNarratives = [
   ["类别继续增加时，总记忆 K 不变，每个类别能保留的名额会减少。", "已有的前三项本来就是三轮 Herding 的结果，因此只需保留列表前缀、删除尾部 p₄，不必重新访问该类别的全部旧图片。"],
 ] as const;
 
+const secondRoundStages = [
+  "输入：固定已选 p₁ 与当前候选 x。",
+  "把 p₁ 和 x 组成一对；组合均值落在线段中点。",
+  "计算原始前缀均值 ν̄₂(x) = [z(p₁) + z(x)] / 2。",
+  "将 ν̄₂(x) 做 L2 归一化，得到用于评分的 ν₂(x)。",
+  "计算 ‖μᵧ − ν₂(x)‖₂，再与其他未选候选比较。",
+] as const;
+
 type Point2D = { x: number; y: number };
 const CHART = { centerX: FEATURE_FRAME.x, centerY: FEATURE_FRAME.y, radius: FEATURE_FRAME.radius };
 
@@ -52,9 +60,14 @@ function format(value: number) {
   return value.toFixed(3);
 }
 
-function FeatureSpace({ roundIndex, candidate }: { roundIndex: number | null; candidate: HerdingDemoCandidate | null }) {
+function FeatureSpace({ roundIndex, candidate, detailStep }: { roundIndex: number | null; candidate: HerdingDemoCandidate | null; detailStep: number }) {
   const targetRaw = toChartPoint(HERDING_DEMO_TARGET_RAW);
   const target = toChartPoint(HERDING_DEMO_TARGET);
+  const detailedSecondRound = roundIndex === 1 && candidate !== null;
+  const showCombination = !detailedSecondRound || detailStep >= 1;
+  const showRawMean = !detailedSecondRound || detailStep >= 2;
+  const showNormalizedMean = !detailedSecondRound || detailStep >= 3;
+  const showScore = !detailedSecondRound || detailStep >= 4;
   const selectedBefore = roundIndex === null ? [] : HERDING_DEMO_ORDER.slice(0, roundIndex);
   const selectedIds = new Set(selectedBefore.map((point) => point.id));
   const candidatePoint = candidate ? toChartPoint(candidate.point.feature) : null;
@@ -64,11 +77,13 @@ function FeatureSpace({ roundIndex, candidate }: { roundIndex: number | null; ca
   const labels: ChartLabel[] = [{ ...targetRaw, id: "target-raw", text: "完整类原始均值 μ̄ᵧ" }, { ...target, id: "target", text: "目标 μᵧ" }];
   selectedBefore.forEach((point, index) => labels.push({ ...toChartPoint(point.feature), id: point.id, text: `p${index + 1} · ${point.id}` }));
   if (candidate && candidatePoint) labels.push({ ...candidatePoint, id: `candidate-${candidate.point.id}`, text: `候选 ${candidate.point.id}` });
-  if (rawCandidateMean && normalizedCandidateMean && roundIndex !== null && roundIndex > 0) {
+  if (showRawMean && rawCandidateMean && roundIndex !== null && roundIndex > 0) {
     labels.push({ ...rawCandidateMean, id: "candidate-raw-mean", text: `ν̄${roundIndex + 1}(x)` });
+  }
+  if (showNormalizedMean && normalizedCandidateMean && roundIndex !== null && roundIndex > 0) {
     labels.push({ ...normalizedCandidateMean, id: "candidate-mean", text: `ν${roundIndex + 1}(x)` });
   }
-  const obstacles = [...HERDING_DEMO_POINTS.map((point) => toChartPoint(point.feature)), targetRaw, target, ...(rawCandidateMean ? [rawCandidateMean] : []), ...(normalizedCandidateMean ? [normalizedCandidateMean] : [])];
+  const obstacles = [...HERDING_DEMO_POINTS.map((point) => toChartPoint(point.feature)), targetRaw, target, ...(showRawMean && rawCandidateMean ? [rawCandidateMean] : []), ...(showNormalizedMean && normalizedCandidateMean ? [normalizedCandidateMean] : [])];
 
   return <svg className="p4-herding-chart" viewBox="0 0 640 520" role="img" aria-label={`单类八个单位特征的 Herding 教学空间。${roundIndex === null ? "当前建立完整类别均值目标。" : `当前第 ${roundIndex + 1} 轮，候选 ${candidate?.point.id ?? "未选择"}。`}`}>
     <title>Herding 候选前缀均值计算</title>
@@ -79,10 +94,11 @@ function FeatureSpace({ roundIndex, candidate }: { roundIndex: number | null; ca
     <line className="p4-target-ray" x1={CHART.centerX} y1={CHART.centerY} x2={targetRaw.x} y2={targetRaw.y} />
     <line className="p4-normalize-ray p4-normalize-ray--target" x1={targetRaw.x} y1={targetRaw.y} x2={target.x} y2={target.y} />
     {candidate && candidatePoint && rawCandidateMean && normalizedCandidateMean ? <>
-      {selectedBefore.map((point) => { const position = toChartPoint(point.feature); return <line key={`combine-${point.id}`} className="p4-combine-line" x1={position.x} y1={position.y} x2={candidatePoint.x} y2={candidatePoint.y} />; })}
+      {showCombination ? selectedBefore.map((point) => { const position = toChartPoint(point.feature); return <line key={`combine-${point.id}`} className="p4-combine-line" x1={position.x} y1={position.y} x2={candidatePoint.x} y2={candidatePoint.y} />; }) : null}
       {previousRawMean && roundIndex !== null && roundIndex >= 2 ? <line className="p4-weighted-line" x1={previousRawMean.x} y1={previousRawMean.y} x2={candidatePoint.x} y2={candidatePoint.y} /> : null}
-      {roundIndex !== null && roundIndex > 0 ? <><line className="p4-prefix-ray" x1={CHART.centerX} y1={CHART.centerY} x2={rawCandidateMean.x} y2={rawCandidateMean.y} /><line className="p4-normalize-ray" x1={rawCandidateMean.x} y1={rawCandidateMean.y} x2={normalizedCandidateMean.x} y2={normalizedCandidateMean.y} /></> : null}
-      <line className="p4-score-line" x1={normalizedCandidateMean.x} y1={normalizedCandidateMean.y} x2={target.x} y2={target.y} />
+      {roundIndex !== null && roundIndex > 0 && showRawMean ? <line className="p4-prefix-ray" x1={CHART.centerX} y1={CHART.centerY} x2={rawCandidateMean.x} y2={rawCandidateMean.y} /> : null}
+      {roundIndex !== null && roundIndex > 0 && showNormalizedMean ? <line className="p4-normalize-ray" x1={rawCandidateMean.x} y1={rawCandidateMean.y} x2={normalizedCandidateMean.x} y2={normalizedCandidateMean.y} /> : null}
+      {showScore ? <line className="p4-score-line" x1={normalizedCandidateMean.x} y1={normalizedCandidateMean.y} x2={target.x} y2={target.y} /> : null}
     </> : null}
     {HERDING_DEMO_POINTS.map((point) => {
       const position = toChartPoint(point.feature);
@@ -92,7 +108,8 @@ function FeatureSpace({ roundIndex, candidate }: { roundIndex: number | null; ca
     })}
     <polygon className="p4-raw-target" points={diamondPoints(targetRaw)} />
     <path className="p4-target" d={featureStar(target.x, target.y)} />
-    {rawCandidateMean && normalizedCandidateMean && roundIndex !== null && roundIndex > 0 ? <><polygon className="p4-raw-prefix" points={diamondPoints(rawCandidateMean)} /><path className="p4-prefix" d={featureStar(normalizedCandidateMean.x, normalizedCandidateMean.y)} /></> : null}
+    {showRawMean && rawCandidateMean && roundIndex !== null && roundIndex > 0 ? <polygon className="p4-raw-prefix" points={diamondPoints(rawCandidateMean)} /> : null}
+    {showNormalizedMean && normalizedCandidateMean && roundIndex !== null && roundIndex > 0 ? <path className="p4-prefix" d={featureStar(normalizedCandidateMean.x, normalizedCandidateMean.y)} /> : null}
     <circle className="p4-origin" cx={CHART.centerX} cy={CHART.centerY} r="2.5" />
     <ChartLabels labels={labels} obstacles={obstacles} />
   </svg>;
@@ -156,6 +173,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const [stage, setStage] = useState(0);
   const [candidateIndex, setCandidateIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [detailStep, setDetailStep] = useState(4);
+  const [detailPlaying, setDetailPlaying] = useState(false);
   const [prefixCount, setPrefixCount] = useState(HERDING_DEMO_QUOTA);
   const reducedMotion = useReducedMotion();
   const roundIndex = stage >= 1 && stage <= 4 ? stage - 1 : null;
@@ -163,14 +182,27 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const candidates = useMemo(() => round ? [...round.candidates].sort((a, b) => a.point.id.localeCompare(b.point.id)) : [], [round]);
   const activeCandidate = candidates[candidateIndex] ?? null;
 
-  useEffect(() => { setCandidateIndex(0); setPlaying(false); }, [stage]);
+  useEffect(() => { setCandidateIndex(0); setPlaying(false); setDetailStep(4); setDetailPlaying(false); }, [stage]);
+  useEffect(() => {
+    if (!detailPlaying) return;
+    if (detailStep >= secondRoundStages.length - 1) { setDetailPlaying(false); return; }
+    const timer = window.setTimeout(() => setDetailStep((current) => Math.min(secondRoundStages.length - 1, current + 1)), 850);
+    return () => window.clearTimeout(timer);
+  }, [detailPlaying, detailStep]);
   useEffect(() => {
     if (!playing || reducedMotion || candidates.length < 2) return;
     const timer = window.setInterval(() => setCandidateIndex((current) => { if (current >= candidates.length - 1) { setPlaying(false); return current; } return current + 1; }), stage === 2 ? 1200 : stage === 3 ? 800 : 550);
     return () => window.clearInterval(timer);
   }, [candidates.length, playing, reducedMotion, stage]);
 
-  function replayCandidates() { setCandidateIndex(0); if (!reducedMotion) setPlaying(true); }
+  function replayCandidates() { setCandidateIndex(0); setDetailStep(4); setDetailPlaying(false); if (!reducedMotion) setPlaying(true); }
+
+  function playSecondRoundCalculation(restart = false) {
+    setCandidateIndex(0);
+    setPlaying(false);
+    if (restart || detailStep >= secondRoundStages.length - 1) setDetailStep(0);
+    setDetailPlaying(true);
+  }
 
   function changeStage(nextStage: number) {
     setStage(nextStage);
@@ -190,7 +222,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
     <section className="p4-workbench" aria-label="Herding 逐轮候选均值计算">
       <section className="panel p4-space-panel">
         <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>完整类别目标与候选前缀均值</h2></div><span className="p4-unit-badge">‖z(x)‖₂ = 1</span></div>
-        {stage <= 4 ? <FeatureSpace roundIndex={roundIndex} candidate={activeCandidate} /> : <PrefixReviewSpace prefixCount={prefixCount} />}
+        {stage <= 4 ? <FeatureSpace roundIndex={roundIndex} candidate={activeCandidate} detailStep={detailStep} /> : <PrefixReviewSpace prefixCount={prefixCount} />}
         <div className="p4-legend"><span><i className="p4-legend__point" />8 个单位候选特征</span>{stage <= 4 ? <span><i className="p4-legend__raw" />完整类原始均值 μ̄<sub>y</sub></span> : null}<span><i className="p4-legend__target">★</i>归一化目标 μ<sub>y</sub></span>{round ? <><span><i className="p4-legend__candidate" />当前候选</span><span><i className="p4-legend__score" />候选均值到目标的距离</span></> : null}{stage >= 5 ? <span><i className="p4-legend__track" />ν₁…ν₄ 均值轨迹</span> : null}</div>
         {round ? <div className="p4-candidate-controls"><div><button type="button" onClick={() => setPlaying(!playing)} disabled={reducedMotion}>{playing ? "暂停扫描" : "播放扫描"}</button><button type="button" onClick={replayCandidates}>重新播放</button></div><span aria-live="polite">候选 {candidateIndex + 1} / {candidates.length} · {activeCandidate?.point.id}</span></div> : null}
         {stage === 5 ? <div className="p4-prefix-switch" role="group" aria-label="选择要回看的前缀长度">{HERDING_DEMO_ROUNDS.map((item) => <button type="button" key={item.k} aria-pressed={prefixCount === item.k} onClick={() => setPrefixCount(item.k)}>前 {item.k} 个</button>)}</div> : null}
@@ -202,8 +234,16 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
           <div className="p4-main-formula"><b>p<sub>k</sub> = arg min<sub>x∈Xᵧ</sub></b><span>‖ μ<sub>y</sub> − (1/k)[z(x)+Σ<sub>j=1</sub><sup>k−1</sup>z(p<sub>j</sub>)] ‖₂</span><small>公式沿用论文省略均值归一化记号的约定；图与分数先 normalize 括号内均值，再和单位目标 μ<sub>y</sub> 比较。</small></div>
           <RoundFormula k={round.k} />
           <div className="p4-selected-prefix"><span>已选前缀</span><b>{round.k === 1 ? "∅" : HERDING_DEMO_ORDER.slice(0, round.k - 1).map((point, index) => `p${index + 1}=${point.id}`).join(" · ")}</b></div>
-          {activeCandidate ? <div className="p4-active-values"><span>当前候选<b>x = {activeCandidate.point.id}</b></span><span>原始均值<b>({format(activeCandidate.rawPrefixMean[0])}, {format(activeCandidate.rawPrefixMean[1])})</b></span><span>归一化均值<b>({format(activeCandidate.normalizedPrefixMean[0])}, {format(activeCandidate.normalizedPrefixMean[1])})</b></span><span>距离分数<b>{format(activeCandidate.score)}</b></span></div> : null}
-          <div className="p4-candidate-grid" role="group" aria-label={`第 ${round.k} 轮未选候选`}>{candidates.map((candidate, index) => <button key={candidate.point.id} type="button" className={`${index === candidateIndex ? "is-active" : ""}${candidate.point.id === round.chosen.id ? " is-winner" : ""}`} aria-pressed={index === candidateIndex} onClick={() => { setCandidateIndex(index); setPlaying(false); }}><span>{candidate.point.id}</span><b>{format(candidate.score)}</b></button>)}</div>
+          {activeCandidate ? <div className="p4-active-values"><span>当前候选<b>x = {activeCandidate.point.id}</b></span>{round.k !== 2 || detailStep >= 2 ? <span>原始均值<b>({format(activeCandidate.rawPrefixMean[0])}, {format(activeCandidate.rawPrefixMean[1])})</b></span> : null}{round.k !== 2 || detailStep >= 3 ? <span>归一化均值<b>({format(activeCandidate.normalizedPrefixMean[0])}, {format(activeCandidate.normalizedPrefixMean[1])})</b></span> : null}{round.k !== 2 || detailStep >= 4 ? <span>距离分数<b>{format(activeCandidate.score)}</b></span> : null}</div> : null}
+          {round.k === 2 && candidateIndex === 0 ? <div className="p4-calculation-sequence" aria-label="第二轮首个候选的逐步计算">
+            <div className="p4-calculation-sequence__heading"><b>首个候选 · 逐步演算</b><span aria-live="polite">{secondRoundStages[detailStep]}</span></div>
+            <div className="p4-calculation-sequence__controls">
+              <div className="p4-calculation-sequence__actions"><button type="button" onClick={() => detailPlaying ? setDetailPlaying(false) : playSecondRoundCalculation()} disabled={reducedMotion}>{detailPlaying ? "暂停演示" : "播放计算"}</button><button type="button" onClick={() => playSecondRoundCalculation(true)} disabled={reducedMotion}>重新演示</button></div>
+              <div className="p4-calculation-sequence__steps" role="group" aria-label="选择 k=2 候选的计算阶段">{secondRoundStages.map((label, index) => <button type="button" key={label} className={detailStep === index ? "is-active" : ""} aria-pressed={detailStep === index} aria-label={label} onClick={() => { setDetailPlaying(false); setDetailStep(index); }}><span>{index === 0 ? "输入" : label.startsWith("把 ") ? "组合" : label.startsWith("计算 ") ? "中点" : label.startsWith("将 ") ? "单位化" : "评分"}</span></button>)}</div>
+            </div>
+            {reducedMotion ? <small>已启用减少动态效果；可用阶段按钮直接查看每一步。</small> : null}
+          </div> : null}
+          <div className="p4-candidate-grid" role="group" aria-label={`第 ${round.k} 轮未选候选`}>{candidates.map((candidate, index) => <button key={candidate.point.id} type="button" className={`${index === candidateIndex ? "is-active" : ""}${candidate.point.id === round.chosen.id ? " is-winner" : ""}`} aria-pressed={index === candidateIndex} onClick={() => { setCandidateIndex(index); setPlaying(false); setDetailPlaying(false); setDetailStep(4); }}><span>{candidate.point.id}</span><b>{format(candidate.score)}</b></button>)}</div>
           <div className="p4-winner"><span>本轮最小分数</span><b>p<sub>{round.k}</sub> = {round.chosen.id}</b><strong>d = {format(round.score)}</strong></div>
           {round.k === 2 ? <p className="p4-key-insight">p₂ 的好坏取决于它和 p₁ 组成的均值，而不是它单独离 μ<sub>y</sub> 多近。图中的线段中点是 ν̄₂(x)，再沿原点方向投到圆上得到实际评分的 ν₂(x)。</p> : null}
           {round.k === 3 ? <p className="p4-key-insight">ν̄₃(x) 是三个点的重心；等价地可由 (2ν̄₂ + z(x))/3 更新，但不能把已经单位化的 ν₂ 当作原始均值。</p> : null}
