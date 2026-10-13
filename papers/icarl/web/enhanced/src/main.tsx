@@ -6,7 +6,6 @@ import "./styles.css";
 import "./styles/shell.css";
 import "./styles/page-one.css";
 import "./styles/page-two.css";
-import "./styles/page-ten.css";
 import "./styles/icarl-guided.css";
 import "./styles/page-four.css";
 import "./styles/page-five.css";

@@ -1,349 +1,212 @@
-import { ChartLabels, FEATURE_FRAME, featureStar, type ChartLabel } from "../components/FeatureChart";
 import { useState } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
-import { euclideanDistance, mean, normalize, INCOMING_SAMPLES, NEW_CLASS_HERDING, OLD_QUOTA, projectSampleFeatures, type Vector2 } from "../data/icarl-runtime";
+import { CLASS_VISUALS, INCOMING_CLASS_ID, INCOMING_SAMPLES, OLD_CLASS_IDS, OLD_MEMORY_SIZE, P_BEFORE, TRAINING_SET_SIZE, type Sample } from "../data/icarl-runtime";
 
 const steps: readonly GuidedStep[] = [
-  { title: "完整类别均值怎样成为目标？", short: "完整目标" },
-  { title: "第一个 exemplar 怎样选？", short: "选出 p₁" },
-  { title: "为什么 p₂ 不是最近的点？", short: "prefix 补偿" },
-  { title: "怎样构造有优先级的列表？", short: "ordered list" },
-  { title: "预算从 4 缩到 3 时怎么办？", short: "截断 tail" },
-  { title: "首次构造与后续缩减怎样衔接？", short: "先构造，后缩减" },
+  { title: "保存的 Exemplars 怎样参与下一轮学习？", short: "接续预测与训练" },
+  { title: "哪些图像共同进入训练集 D？", short: "Replay · 构造 D" },
+  { title: "为什么先记录更新前响应 Q？", short: "快照 Q" },
+  { title: "Q 覆盖 D 中哪些图片和输出？", short: "检查覆盖范围" },
+  { title: "开始更新前，D 和 Q 如何就绪？", short: "准备训练" },
 ];
 
-type Point2D = { x: number; y: number };
-const CHART = { centerX: FEATURE_FRAME.x, centerY: FEATURE_FRAME.y, radius: FEATURE_FRAME.radius };
+const stageNarratives = [
+  [
+    "到这里，我们已经知道怎样挑选有代表性的 Exemplars，并在记忆有限时维护它们。P3 还展示了它们的一项作用：构造类别 Prototype，帮助未来的 Query 完成预测。",
+    "但类别学习还要继续。下一批新类别到来时，特征提取器需要更新参数；如果只用新类别图片训练，旧类别能力就可能退化。保存下来的 Exemplars 能不能也参与训练，让模型继续接触旧类信息？",
+    "自然的做法是把新类别的完整训练图片和已保存的旧类 Exemplars 放在一起。接下来先看这组训练输入怎样形成，再看参数更新前还要记录什么。",
+  ],
+  ["把旧类图片再次作为本轮训练输入，称为 Replay 或 Rehearsal。旧 Exemplars 与新类完整数据一起组成 D；读取样本不会让持久记忆 P 消失。"],
+  ["D 已包含新旧两类图片。如果现在直接更新网络，旧类别节点原先对这些图片的响应可能改变。",
+    "因此先用尚未更新的当前模型，记录 D 中每张图片在所有旧类输出节点上的 sigmoid 响应，形成这轮训练使用的 Q。"],
+  ["Q 的行覆盖 D 中每张图片：既包含旧 Exemplars，也包含新类完整数据。",
+    "Q 的列覆盖所有旧类输出节点；新类节点尚无旧响应，不为它构造 Q。"],
+  ["现在 D、更新前冻结的 Q 和可训练的当前网络已经就绪。",
+    "下一步才会把新类别标签与旧类别响应分别变成训练目标，让同一个模型学习新类并尽量保留旧类能力。"],
+] as const;
 
-type HerdingTeachingPoint = { id: string; feature: Vector2 };
-type HerdingTeachingCandidate = {
-  point: HerdingTeachingPoint;
-  rawPrefixMean: [number, number];
-  prefixMean: Vector2;
-  distanceToTarget: number;
-  individualDistanceToTarget: number;
-};
-type HerdingTeachingStep = {
-  chosen: HerdingTeachingPoint;
-  rawPrefixMean: [number, number];
-  prefixMean: Vector2;
-  distanceToTarget: number;
-  candidates: HerdingTeachingCandidate[];
-};
+const timelineSteps = [
+  "新类别到达",
+  "构造训练集 D",
+  "快照旧类响应 Q",
+  "更新 representation",
+  "构造节点目标与损失",
+] as const;
 
-const HERDING_TEACHING_QUOTA = OLD_QUOTA;
-const HERDING_TEACHING_POINTS: HerdingTeachingPoint[] = projectSampleFeatures(INCOMING_SAMPLES, "after", true)
-  .map(({ id, point }) => ({ id, feature: point }));
-const HERDING_TEACHING_POINT_BY_ID = new Map(HERDING_TEACHING_POINTS.map((point) => [point.id, point]));
-const HERDING_TEACHING_RESULT = (() => {
-  const selected: HerdingTeachingPoint[] = [];
-  const steps: HerdingTeachingStep[] = NEW_CLASS_HERDING.steps.map((step) => {
-    const selectedFeatures = selected.map((point) => point.feature);
-    const candidates = step.candidateScores.map((candidate): HerdingTeachingCandidate => {
-      const point = HERDING_TEACHING_POINT_BY_ID.get(candidate.sample.id)!;
-      const rawPrefixMean = mean([...selectedFeatures, point.feature]);
-      return {
-        point,
-        rawPrefixMean,
-        prefixMean: candidate.prefixMean,
-        distanceToTarget: candidate.distanceToTarget,
-        individualDistanceToTarget: euclideanDistance(point.feature, NEW_CLASS_HERDING.target),
-      };
-    });
-    const chosen = HERDING_TEACHING_POINT_BY_ID.get(step.chosen.id)!;
-    selected.push(chosen);
-    return {
-      chosen,
-      rawPrefixMean: mean([...selectedFeatures, chosen.feature]),
-      prefixMean: step.prefixMean,
-      distanceToTarget: step.distanceToTarget,
-      candidates,
-    };
-  });
-  return {
-    points: HERDING_TEACHING_POINTS,
-    targetRawMean: NEW_CLASS_HERDING.rawTargetMean,
-    target: NEW_CLASS_HERDING.target,
-    ordered: selected,
-    steps,
-  };
-})();
+const OLD_EXEMPLARS: Sample[] = OLD_CLASS_IDS.flatMap((classId) => P_BEFORE[classId]);
+const TRAINING_ITEMS: Sample[] = [...OLD_EXEMPLARS, ...INCOMING_SAMPLES];
 
-function toChartPoint(vector: Vector2): Point2D {
-  return { x: CHART.centerX + vector[0] * CHART.radius, y: CHART.centerY - vector[1] * CHART.radius };
+function sampleStyle(sample: Sample) {
+  return { "--sample-accent": CLASS_VISUALS[sample.classId].color } as React.CSSProperties;
 }
 
-function starPoints(x: number, y: number, outer = 9, inner = 4) {
-  return Array.from({ length: 10 }, (_, index) => {
-    const radius = index % 2 === 0 ? outer : inner;
-    const angle = -Math.PI / 2 + (Math.PI * index) / 5;
-    return `${x + Math.cos(angle) * radius},${y + Math.sin(angle) * radius}`;
-  }).join(" ");
+function SampleChip({ sample, origin }: { sample: Sample; origin: "old" | "new" }) {
+  return <span className={`p5-sample-chip p5-sample-chip--${origin}`} style={sampleStyle(sample)}>
+    <b>{CLASS_VISUALS[sample.classId].glyph} {CLASS_VISUALS[sample.classId].displayLabel}</b><span>{sample.id}</span><small>{origin === "old" ? "old exemplar" : "new full data"}</small>
+  </span>;
 }
 
-function format(value: number) {
-  return value.toFixed(3);
+function MemoryBuckets() {
+  return <div className="p5-memory-buckets">
+    {OLD_CLASS_IDS.map((classId) => <section className="p5-memory-bucket" key={classId} style={{ "--bucket-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}>
+      <div><b>{CLASS_VISUALS[classId].displayLabel}</b><small>P<sub>{CLASS_VISUALS[classId].index}</sub> · {P_BEFORE[classId].length}</small></div>
+      <div className="p5-memory-bucket__samples">{P_BEFORE[classId].map((sample) => <SampleChip key={sample.id} sample={sample} origin="old" />)}</div>
+    </section>)}
+  </div>;
 }
 
-function prefixMean(points: readonly HerdingTeachingPoint[]) {
-  if (points.length === 0) return null;
-  const rawMean = mean(points.map((point) => point.feature));
-  return { rawMean, normalizedMean: normalize(rawMean) };
+function OutputNodes({ compact = false }: { compact?: boolean }) {
+  return <div className={`p5-output-nodes${compact ? " p5-output-nodes--compact" : ""}`} aria-label="本轮扩展后的旧类与新类输出节点">
+    {OLD_CLASS_IDS.map((classId) => <span key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}><i />{CLASS_VISUALS[classId].outputNodeLabel}</span>)}
+    <span className="p5-output-nodes__new" style={{ "--node-accent": CLASS_VISUALS[INCOMING_CLASS_ID].color } as React.CSSProperties}><i />{CLASS_VISUALS[INCOMING_CLASS_ID].outputNodeLabel}</span>
+    {compact ? null : <small>新增 g₄ 已在本轮训练前加入；Q 只快照旧节点响应。</small>}
+  </div>;
 }
 
-function UnitCircle({
-  selected,
-  candidateId,
-  prefix,
-  comparisonId,
-  comparisonPrefix,
-  referenceOnly,
-}: {
-  selected: readonly HerdingTeachingPoint[];
-  candidateId?: string;
-  prefix: ReturnType<typeof prefixMean>;
-  comparisonId?: string;
-  comparisonPrefix?: { rawMean: Vector2; normalizedMean: Vector2 } | null;
-  referenceOnly: boolean;
-}) {
-  const targetPoint = toChartPoint(HERDING_TEACHING_RESULT.target);
-  const rawTargetPoint = toChartPoint(HERDING_TEACHING_RESULT.targetRawMean);
-  const rawPrefixPoint = prefix ? toChartPoint(prefix.rawMean) : null;
-  const normalizedPrefixPoint = prefix ? toChartPoint(prefix.normalizedMean) : null;
-  const rawComparisonPoint = comparisonPrefix ? toChartPoint(comparisonPrefix.rawMean) : null;
-  const normalizedComparisonPoint = comparisonPrefix ? toChartPoint(comparisonPrefix.normalizedMean) : null;
-  const selectedIds = new Set(selected.map((point) => point.id));
-
-  const labels: ChartLabel[] = [{ ...rawTargetPoint, id: "raw", text: "原始均值 μ̄y" }, { ...targetPoint, id: "target", text: "归一化类均值 μy" }];
-  if (rawPrefixPoint && normalizedPrefixPoint) labels.push({ ...rawPrefixPoint, id: "prefix-raw", text: "原始前缀均值" }, { ...normalizedPrefixPoint, id: "prefix", text: "归一化前缀均值" });
-  selected.forEach((point, index) => labels.push({ ...toChartPoint(point.feature), id: point.id, text: `p${index+1} · ${point.id}` }));
-  if (candidateId && !selectedIds.has(candidateId)) labels.push({ ...toChartPoint(HERDING_TEACHING_POINT_BY_ID.get(candidateId)!.feature), id: candidateId, text: `候选 ${candidateId}` });
-  const obstacles = [...HERDING_TEACHING_POINTS.map(p => toChartPoint(p.feature)), ...[targetPoint, rawTargetPoint, rawPrefixPoint, normalizedPrefixPoint].filter((p): p is Point2D => p !== null)];
-
-  return (
-    <svg className="p5-unit-circle" viewBox="0 0 640 520" role="img" aria-label={`共享 runtime 中 Class 4 的完整新类示例。${referenceOnly ? "点位和完整类别均值来自首次构造时的历史参考；后续阶段完整数据不可用。" : `${HERDING_TEACHING_POINTS.length} 个归一化特征点，完整类别目标 μy 位于单位圆上。`}${selected.length ? `当前 prefix 长度 ${selected.length}，` : ""}${candidateId ? `当前候选 ${candidateId}。` : ""}`}>
-      <title>归一化特征空间中的 Herding 计算</title>
-      <desc>所有输入特征先经 L2 normalization 位于单位圆上。完整类别均值在圆内，归一化后得到目标 μy。当前 prefix 均值也由输入特征计算，再归一化到单位圆。</desc>
-      <line className="p5-axis" x1="24" y1={CHART.centerY} x2="616" y2={CHART.centerY} />
-      <line className="p5-axis" x1={CHART.centerX} y1="24" x2={CHART.centerX} y2="496" />
-      <circle className="p5-circle-boundary" cx={CHART.centerX} cy={CHART.centerY} r={CHART.radius} />
-      <line className={`p5-mean-ray p5-mean-ray--target${referenceOnly ? " is-reference" : ""}`} x1={CHART.centerX} y1={CHART.centerY} x2={rawTargetPoint.x} y2={rawTargetPoint.y} />
-      <line className={`p5-normalize-ray p5-normalize-ray--target${referenceOnly ? " is-reference" : ""}`} x1={rawTargetPoint.x} y1={rawTargetPoint.y} x2={targetPoint.x} y2={targetPoint.y} />
-      {rawPrefixPoint && normalizedPrefixPoint ? <>
-        <line className={`p5-mean-ray p5-mean-ray--prefix${referenceOnly ? " is-reference" : ""}`} x1={CHART.centerX} y1={CHART.centerY} x2={rawPrefixPoint.x} y2={rawPrefixPoint.y} />
-        <line className={`p5-normalize-ray p5-normalize-ray--prefix${referenceOnly ? " is-reference" : ""}`} x1={rawPrefixPoint.x} y1={rawPrefixPoint.y} x2={normalizedPrefixPoint.x} y2={normalizedPrefixPoint.y} />
-      </> : null}
-      {rawComparisonPoint && normalizedComparisonPoint ? <>
-        <line className="p5-mean-ray p5-mean-ray--comparison" x1={CHART.centerX} y1={CHART.centerY} x2={rawComparisonPoint.x} y2={rawComparisonPoint.y} />
-        <line className="p5-normalize-ray p5-normalize-ray--comparison" x1={rawComparisonPoint.x} y1={rawComparisonPoint.y} x2={normalizedComparisonPoint.x} y2={normalizedComparisonPoint.y} />
-      </> : null}
-      {HERDING_TEACHING_POINTS.map((point) => {
-        const { x, y } = toChartPoint(point.feature);
-        const selectedPoint = selectedIds.has(point.id);
-        return <g key={point.id} className="p5-sample-point" tabIndex={0} role="img" aria-label={`Class 4 · ${point.id}`}>{!selectedPoint && candidateId !== point.id ? <text className="p5-hover-label" x={x + 12} y={y - 12}>{point.id}</text> : null}
-          {selectedPoint ? <circle className="p5-selected-ring" cx={x} cy={y} r="9" /> : null}
-          {candidateId === point.id ? <circle className="p5-candidate-ring" cx={x} cy={y} r="13" /> : null}
-          {comparisonId === point.id ? <circle className="p5-comparison-ring" cx={x} cy={y} r="16" /> : null}
-          <circle className={`p5-data-point${selectedPoint ? " is-selected" : ""}${referenceOnly && !selectedPoint ? " is-reference" : ""}`} cx={x} cy={y} r={selectedPoint ? 6 : 4.5} />
-          <title>{point.id}</title>
-
-        </g>;
-      })}
-      <polygon className={`p5-marker p5-marker--target${referenceOnly ? " is-reference" : ""}`} points={starPoints(targetPoint.x, targetPoint.y)} />
-      <polygon className={`p5-marker p5-marker--raw-target${referenceOnly ? " is-reference" : ""}`} points={`${rawTargetPoint.x},${rawTargetPoint.y - 6} ${rawTargetPoint.x + 6},${rawTargetPoint.y} ${rawTargetPoint.x},${rawTargetPoint.y + 6} ${rawTargetPoint.x - 6},${rawTargetPoint.y}`} />
-      {rawPrefixPoint && normalizedPrefixPoint ? <>
-        <polygon className={`p5-marker p5-marker--raw-prefix${referenceOnly ? " is-reference" : ""}`} points={`${rawPrefixPoint.x},${rawPrefixPoint.y - 6} ${rawPrefixPoint.x + 6},${rawPrefixPoint.y} ${rawPrefixPoint.x},${rawPrefixPoint.y + 6} ${rawPrefixPoint.x - 6},${rawPrefixPoint.y}`} />
-        <path className={`p5-marker p5-marker--prefix${referenceOnly ? " is-reference" : ""}`} d={featureStar(normalizedPrefixPoint.x, normalizedPrefixPoint.y)} />
-      </> : null}
-      {rawComparisonPoint && normalizedComparisonPoint ? <>
-        <path className="p5-marker p5-marker--comparison-raw" d={`M ${rawComparisonPoint.x} ${rawComparisonPoint.y-6} l 6 6 l -6 6 l -6 -6 Z`} />
-        <path className="p5-marker p5-marker--comparison-prefix" d={featureStar(normalizedComparisonPoint.x, normalizedComparisonPoint.y)} />
-      </> : null}
-      <circle className="p5-origin" cx={CHART.centerX} cy={CHART.centerY} r="2.3" />
-      <ChartLabels labels={labels} obstacles={obstacles} />
-    </svg>
-  );
+function UpdateTimeline({ stage }: { stage: number }) {
+  const currentStep = stage === 0 ? 0 : stage === 1 ? 1 : 2;
+  return <section className="p5-timeline" aria-label="一次增量更新时间线">
+    <div className="p5-timeline__heading"><div><span className="eyebrow">ONE INCREMENTAL UPDATE</span><b>更新顺序</b></div><span>本页聚焦 ①–③</span></div>
+    <ol>
+      {timelineSteps.map((label, index) => <li key={label} className={`${index <= 2 ? "is-in-scope" : "is-later"}${index === currentStep && stage <= 2 ? " is-current" : index < currentStep || (stage > 2 && index <= currentStep) ? " is-done" : ""}`}>
+        <span className="p5-timeline__number">{String(index + 1).padStart(2, "0")}</span><b>{label}</b>
+        {index < timelineSteps.length - 1 ? <i aria-hidden="true">→</i> : null}
+      </li>)}
+    </ol>
+    <p>本页建立 D 与更新前的 Q；下一页再用两者构造训练目标并更新参数。</p>
+  </section>;
 }
 
-function OrderedList({
-  visibleCount,
-  prefixCount,
-  showRemoved,
-}: {
-  visibleCount: number;
-  prefixCount: number;
-  showRemoved: boolean;
-}) {
-  const list = HERDING_TEACHING_RESULT.ordered.slice(0, visibleCount);
-  return <ol className="p5-ordered-list" aria-label="按 Herding 得分优先排序的 exemplar list">
-    {list.map((point, index) => {
-      const kept = index < prefixCount;
-      return <li className={`${kept ? "is-kept" : "is-tail"}${!showRemoved && !kept ? " is-muted" : ""}`} key={point.id}>
-        <span className="p5-order-number">p<sub>{index + 1}</sub></span>
-        <b>{point.id}</b>
-        <small>{index === 0 ? "highest priority" : kept ? "prefix retained" : "tail"}</small>
-        {showRemoved && !kept ? <span className="p5-removal-arrow" aria-label="从列表尾部移除">↑</span> : null}
-      </li>;
+function ResponseMatrix({ items = TRAINING_ITEMS }: { items?: readonly Sample[] }) {
+  return <div className="p5-response-matrix" role="table" aria-label={`D 中全部 ${items.length} 个样本，对应 ${OLD_CLASS_IDS.length} 个旧类别 response targets`}>
+    <div className="p5-response-row p5-response-row--head" role="row">
+      <span role="columnheader">D 中样本</span>
+      {OLD_CLASS_IDS.map((classId) => <span role="columnheader" key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}>{CLASS_VISUALS[classId].outputNodeLabel}</span>)}
+    </div>
+    {items.map((sample) => {
+      const origin = sample.classId === INCOMING_CLASS_ID ? "new" : "old";
+      return <div className={`p5-response-row p5-response-row--${origin}`} role="row" key={sample.id}>
+        <span className="p5-response-row__sample" role="rowheader" style={sampleStyle(sample)}><b>{CLASS_VISUALS[sample.classId].index}</b><span>{sample.id}</span><small>{origin === "old" ? "P" : "X"}</small></span>
+        {OLD_CLASS_IDS.map((classId) => <span className="p5-q-cell" role="cell" key={classId} aria-label={`q_${sample.id}^${CLASS_VISUALS[classId].index} 已记录`} title={`q_${sample.id}^${CLASS_VISUALS[classId].index} · 更新前旧类 response`}><i aria-hidden="true">●</i><small className="p5-sr-only">qᵢ^{CLASS_VISUALS[classId].index} response 已记录并锁定</small></span>)}
+      </div>;
     })}
-  </ol>;
+  </div>;
 }
 
-function InspectTarget() {
-  const { points, targetRawMean, target } = HERDING_TEACHING_RESULT;
-  const norm = Math.hypot(...targetRawMean);
-  return <details className="p5-inspector">
-    <summary>Inspect target calculation</summary>
-    <div className="p5-inspector__body">
-      <p>每个 feature 已先 L2-normalize。先对 {points.length} 个 unit feature 求 mean，再把完整类均值归一化到单位圆。</p>
-      <code>μ̄<sub>y</sub> = mean({points.map((point) => `φ(${point.id})`).join(", ")}) = ({format(targetRawMean[0])}, {format(targetRawMean[1])})</code>
-      <code>‖μ̄<sub>y</sub>‖₂ = {format(norm)} → μ<sub>y</sub> = normalize(μ̄<sub>y</sub>) = ({format(target[0])}, {format(target[1])})</code>
-      <small>归一化没有使用接近零的退化均值；所有数值由页面中的固定点实时计算。</small>
+function ObjectLifetime() {
+  return <details className="p5-lifetime">
+    <summary>Inspect object lifetime</summary>
+    <div className="p5-lifetime__table" role="table" aria-label="一次增量更新中对象的生命周期">
+      <div role="row"><b role="columnheader">对象</b><b role="columnheader">生命周期</b></div>
+      <div role="row"><span role="cell">Θ</span><span role="cell">跨增量阶段持续存在，并在更新中改变</span></div>
+      <div role="row"><span role="cell">P</span><span role="cell">跨阶段保留；memory 本身不因读取而消失</span></div>
+      <div role="row"><span role="cell">X<sub>new</sub></span><span role="cell">本次新类别阶段提供的完整图像</span></div>
+      <div role="row"><span role="cell">D</span><span role="cell">本次 representation update 使用的训练集</span></div>
+      <div role="row"><span role="cell">Q</span><span role="cell">只在本次 update 内固定使用的 response snapshot</span></div>
     </div>
   </details>;
 }
 
 export function PageFive({ onContinue }: { onContinue?: () => void }) {
   const [stage, setStage] = useState(0);
-  const [prefixCount, setPrefixCount] = useState(HERDING_TEACHING_QUOTA);
-  const [compareNearest, setCompareNearest] = useState(false);
-  const [timelineMode, setTimelineMode] = useState<"construct" | "later">("construct");
-
-  function changeStage(nextStage: number) {
-    setStage(nextStage);
-    if (nextStage === 4) setPrefixCount(3);
-    if (nextStage === 5) setPrefixCount(timelineMode === "construct" ? HERDING_TEACHING_QUOTA : 3);
-  }
-
-  function changeTimelineMode(mode: "construct" | "later") {
-    setTimelineMode(mode);
-    setPrefixCount(mode === "construct" ? HERDING_TEACHING_QUOTA : 3);
-  }
-
-  let activePrefix: HerdingTeachingPoint[] = [];
-  if (stage === 1) activePrefix = HERDING_TEACHING_RESULT.ordered.slice(0, 1);
-  else if (stage === 2) activePrefix = HERDING_TEACHING_RESULT.ordered.slice(0, 2);
-  else if (stage === 3 || stage === 4) activePrefix = HERDING_TEACHING_RESULT.ordered.slice(0, prefixCount);
-  else if (stage === 5) activePrefix = HERDING_TEACHING_RESULT.ordered.slice(0, timelineMode === "construct" ? HERDING_TEACHING_QUOTA : 3);
-
-  const activePrefixStats = prefixMean(activePrefix);
-  const activeCandidateStep = stage === 1 ? HERDING_TEACHING_RESULT.steps[0] : stage === 2 ? HERDING_TEACHING_RESULT.steps[1] : null;
-  const activeCandidate = activeCandidateStep?.chosen;
-  const nearestIndividual = HERDING_TEACHING_RESULT.steps[1].candidates.reduce((best, candidate) => candidate.individualDistanceToTarget < best.individualDistanceToTarget ? candidate : best);
-  const selectedSecondStep = HERDING_TEACHING_RESULT.steps[1].candidates.find((candidate) => candidate.point.id === HERDING_TEACHING_RESULT.steps[1].chosen.id)!;
-  const nearestSecondStep = HERDING_TEACHING_RESULT.steps[1].candidates.find((candidate) => candidate.point.id === nearestIndividual.point.id)!;
 
   return (
     <article className="tutorial-page icarl-page icarl-page--p5">
       <header className="page-heading icarl-page__heading">
-        <div className="icarl-page__eyebrow"><span>PAGE 05</span><i /> EXEMPLAR SELECTION</div>
-        <h1><PaperTerm termId="herding">Herding</PaperTerm> 为记忆建立优先顺序</h1>
-        <p>P3 直接使用了已经保存的旧类 Exemplars；这些旧类的完整数据现在不能假定仍可访问。为了说明样本当初怎样被选中，本页切换到新到达的 Class 4：其完整训练数据暂时可用，Herding 用当前更新后的特征映射，让每个<PaperTerm termId="prefix-mean">已选前缀的均值</PaperTerm>尽量逼近完整类别均值。</p>
+        <div className="icarl-page__eyebrow"><span>PAGE 05</span><i /> EXEMPLARS JOIN THE NEXT UPDATE</div>
+        <h1>这些代表图片怎样继续参与学习？</h1>
+        <p>刚才看到，Exemplars 能帮助未来的 Query 完成预测。下一批类别到来时，它们还可以重新作为训练输入，让模型在学习新类时继续接触旧类信息。</p>
       </header>
 
-      <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 5 Herding 教学步骤" />
-
-      <div className="p5-example-note"><span>FIXED SYNTHETIC TEACHING EXAMPLE · CLASS 4</span><b>{stage === 5 && timelineMode === "later" ? "construction snapshot φ" : "current post-update φ"}</b><small>{stage === 5 && timelineMode === "later" ? "完整旧类数据已不可用；图中几何只回看首次构造顺序时的固定示例。" : `${INCOMING_SAMPLES.length} 张新类候选图片 · 演示与旧类首次出现时相同的选择原则，不是在重选 P3 的十二张旧 Exemplar`}</small></div>
-
-      <section className="p5-workbench" aria-label="Herding normalized feature space 和优先列表">
-        <section className="panel p5-space-panel">
-          <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>特征和均值都要归一化</h2></div><span className="p5-unit-badge">‖φ(x)‖₂ = 1</span></div>
-          <p className="p5-panel-intro">{stage === 5 && timelineMode === "later" ? "淡色点位与 ★ μᵧ 是首次构造时的历史参照；后续缩减时不再读取完整类数据。" : <>完整类均值先落在圆内，再沿原点方向 normalize 到单位圆，作为 ★ μ<sub>y</sub>。</>}</p>
-          <UnitCircle
-            selected={activePrefix}
-            candidateId={activeCandidate?.id}
-            prefix={activePrefixStats}
-            comparisonId={compareNearest && stage === 2 ? nearestIndividual.point.id : undefined}
-            comparisonPrefix={compareNearest && stage === 2 ? { rawMean: nearestSecondStep.rawPrefixMean, normalizedMean: nearestSecondStep.prefixMean } : null}
-            referenceOnly={stage === 5 && timelineMode === "later"}
-          />
-          <div className="p5-legend" aria-label="Feature space 图例">
-            <span><i className={`p5-legend__point${stage === 5 && timelineMode === "later" ? " is-reference" : ""}`} />{stage === 5 && timelineMode === "later" ? "构造时 full-class features（当前不可用）" : "输入 feature"}</span>
-            <span><i className="p5-legend__raw-target" />◇ {stage === 5 && timelineMode === "later" ? "构造时 raw mean 参考" : "完整类 raw mean"}</span>
-            <span><i className="p5-legend__target">★</i>{stage === 5 && timelineMode === "later" ? "构造时 μᵧ 参考" : <>μ<sub>y</sub></>}</span>
-            {activePrefixStats ? <><span><i className="p5-legend__raw-prefix" />◇ 当前 raw prefix mean</span><span><i className="p5-legend__prefix" />归一化前缀均值 μ<sub>P(k)</sub></span></> : null}
-            {compareNearest && stage === 2 ? <span><i className="p5-legend__comparison" />□ nearest-point prefix</span> : null}
-          </div>
-          {stage === 1 ? <div className="p5-space-caption"><b>k = 1</b><span>prefix 只有一个点；第一个选择使 normalized prefix mean 最接近 μ<sub>y</sub>。</span></div> : null}
-          {stage === 2 ? <div className="p5-space-caption"><b>k = 2</b><span>图中展示 p₁ 加入每个候选后实际形成的两点 prefix mean，再进行 L2 normalization。</span></div> : null}
-          {stage >= 3 ? <div className="p5-space-caption"><b>k = {activePrefix.length}</b><span>{stage === 5 && timelineMode === "later" ? "星形以初次构造时的特征坐标回看已保留 prefix；后续运行不会用完整旧类数据重跑 Herding。" : "星形是当前实际 prefix 均值的 normalized vector；它会随 prefix 长度重新计算。"}</span></div> : null}
-        </section>
-
-        <section className="panel p5-decision-panel">
-          {stage === 0 ? <>
-            <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE · FULL-CLASS TARGET</span><h2>先建立比较目标</h2></div></div>
-            <div className="p5-target-equation"><span>所有 φ(xᵢ)</span><i aria-hidden="true">→</i><b>mean</b><i aria-hidden="true">→</i><strong>normalize</strong><i aria-hidden="true">→</i><em>μ<sub>y</sub></em></div>
-            <p className="p5-explain">★ μ<sub>y</sub> 是完整类别归一化均值。每个输入 feature 本身也已归一化，因此所有输入点都落在单位圆上。</p>
-            <div className="p5-target-distinction"><div><i className="p5-legend__raw-target" /><b>μ̄<sub>y</sub></b><span>raw full-class mean · 圆内</span></div><i aria-hidden="true">normalize</i><div><i className="p5-legend__target">★</i><b>μ<sub>y</sub></b><span>normalized target · 圆上</span></div></div>
-            <div className="p5-target-stats"><span>输入 features<strong>{HERDING_TEACHING_POINTS.length} 个</strong></span><span>输入总长<strong>每个 ‖φ(x)‖₂ = 1</strong></span></div>
-            <InspectTarget />
-          </> : null}
-
-          {stage === 1 || stage === 2 ? <>
-            <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE · GREEDY PREFIX SELECTION</span><h2>{stage === 1 ? "挑出 p₁" : "挑出 p₂"}</h2></div><span className="p5-k-badge">k = {stage}</span></div>
-            <div className="p5-selected-sequence"><span>已选择</span>{stage === 1 ? <b>empty prefix</b> : HERDING_TEACHING_RESULT.ordered.slice(0, stage - 1).map((point, index) => <b key={point.id}>p<sub>{index + 1}</sub> · {point.id}</b>)}<i aria-hidden="true">→</i><strong>candidate</strong></div>
-            <p className="p5-explain">每个 candidate 都生成一个当前长度的 prefix；选择使归一化 prefix mean 到 μ<sub>y</sub> 距离最小的 candidate。</p>
-            <ol className="p5-candidate-rank" aria-label={`第 ${stage} 步候选排名`}>
-              {activeCandidateStep?.candidates.slice(0, 4).map((score, index) => <li key={score.point.id} className={score.point.id === activeCandidate?.id ? "is-winner" : ""}>
-                <span className="p5-rank-index">{index + 1}</span><b>{score.point.id}</b><small>{stage === 1 ? "1 点 prefix" : `p₁ + ${score.point.id}`}</small><strong>{format(score.distanceToTarget)}</strong>
-                {score.point.id === activeCandidate?.id ? <em>选择</em> : null}
-              </li>)}
-            </ol>
-            <div className="p5-winner-callout"><b>p<sub>{stage}</sub> = {activeCandidate?.id}</b><span>normalized prefix mean 距离 μ<sub>y</sub> 最近</span><strong>d = {format(activeCandidateStep?.distanceToTarget ?? 0)}</strong></div>
-            {stage === 2 ? <>
-              <button type="button" className="p5-compare-button" aria-expanded={compareNearest} onClick={() => setCompareNearest(!compareNearest)}>{compareNearest ? "收起最近单点对照" : "Why not choose the nearest point?"}</button>
-              {compareNearest ? <div className="p5-nearest-compare"><div><span>单点到目标最近的候选</span><b>{nearestIndividual.point.id}</b><small>individual distance：{format(nearestIndividual.individualDistanceToTarget)}</small><small>加入 p₁ 后的 prefix score：{format(nearestSecondStep.distanceToTarget)}</small></div><i aria-hidden="true">vs</i><div><span>Herding 选择</span><b>{selectedSecondStep.point.id}</b><small>individual distance：{format(selectedSecondStep.individualDistanceToTarget)}</small><small>加入 p₁ 后的 prefix score：{format(selectedSecondStep.distanceToTarget)}</small></div><p>本例第 2 步，{nearestIndividual.point.id} 单独看更接近 μᵧ；但与 p₁ 合成 prefix 后，{selectedSecondStep.point.id} 的 normalized mean 更接近 μᵧ。算法比较的是当前 prefix score，不是单点距离。</p></div> : null}
-            </> : null}
-            <details key={`candidate-${stage}`} className="p5-inspector">
-              <summary>Inspect candidate calculations</summary>
-              <div className="p5-inspector__body">
-                <code>μ<sub>P(k)</sub> = normalize(mean(φ(p₁), …, φ(pₖ₋₁), φ(candidate)))</code>
-                <code>score = ‖μ<sub>P(k)</sub> − μ<sub>y</sub>‖₂</code>
-                <div className="p5-score-table"><div><b>candidate</b><b>raw prefix mean</b><b>normalized mean</b><b>distance</b></div>{activeCandidateStep?.candidates.map((score) => <div key={score.point.id}><span>{score.point.id}</span><span>({format(score.rawPrefixMean[0])}, {format(score.rawPrefixMean[1])})</span><span>({format(score.prefixMean[0])}, {format(score.prefixMean[1])})</span><span>{format(score.distanceToTarget)}</span></div>)}</div>
-              </div>
-            </details>
-          </> : null}
-
-          {stage === 3 ? <>
-            <div className="panel-heading"><div><span className="eyebrow">ORDERED EXEMPLAR LIST</span><h2>算法构造顺序就是优先级</h2></div></div>
-            <p className="p5-explain">继续对每个 prefix 实际运行同一选择规则，得到 P<sub>y</sub> = (p₁, p₂, …, pₘ)。它是有序列表，不是任意集合。</p>
-            <div className="p5-budget-switch" role="group" aria-label="查看不同 prefix 长度">
-              <button type="button" aria-pressed={prefixCount === HERDING_TEACHING_QUOTA} onClick={() => setPrefixCount(HERDING_TEACHING_QUOTA)}>m = {HERDING_TEACHING_QUOTA} · 完整列表</button>
-              <button type="button" aria-pressed={prefixCount === 3} onClick={() => setPrefixCount(3)}>m = 3 · 当前 prefix</button>
-            </div>
-            <OrderedList visibleCount={HERDING_TEACHING_QUOTA} prefixCount={prefixCount} showRemoved={false} />
-            <p className="p5-list-caption">Highlighted prefix length k = {prefixCount}; its mean marker is computed from the selected points.</p>
-            <details className="p5-inspector"><summary>Inspect full prioritized sequence</summary><div className="p5-inspector__body"><div className="p5-order-details">{HERDING_TEACHING_RESULT.steps.map((step, index) => <p key={step.chosen.id}><b>p<sub>{index + 1}</sub> = {step.chosen.id}</b><span>prefix mean distance {format(step.distanceToTarget)}</span></p>)}</div></div></details>
-          </> : null}
-
-          {stage === 4 ? <>
-            <div className="panel-heading"><div><span className="eyebrow">PREFIX TRUNCATION</span><h2>从 m = 4 缩到 m = 3</h2></div><span className="p5-k-badge">K fixed</span></div>
-            <p className="p5-explain">预算下降时保留列表前缀，截断 tail。Herding 构造时已按 prefix 顺序设计代表性，因此本例只保留前三个。</p>
-            <div className="p5-truncate-label"><span>保留 P′<sub>y</sub> = (p₁, p₂, p₃)</span><b>truncate list tail ↑</b></div>
-            <OrderedList visibleCount={HERDING_TEACHING_QUOTA} prefixCount={3} showRemoved />
-            <div className="p5-prefix-result"><span>computed μ<sub>P(3)</sub></span><strong>d to μ<sub>y</sub> = {format(activePrefixStats ? euclideanDistance(activePrefixStats.normalizedMean, HERDING_TEACHING_RESULT.target) : 0)}</strong><small>normalized prefix mean is recalculated from φ(p₁), φ(p₂), φ(p₃).</small></div>
-          </> : null}
-
-          {stage === 5 ? <>
-            <div className="panel-heading"><div><span className="eyebrow">CONSTRUCT ONCE · REDUCE LATER</span><h2>{timelineMode === "construct" ? "首次出现时完整数据可用" : "完整旧数据不再可用"}</h2></div></div>
-            <div className="p5-time-switch" role="group" aria-label="类别 exemplar 的生命周期阶段">
-              <button type="button" aria-pressed={timelineMode === "construct"} onClick={() => changeTimelineMode("construct")}>Class y 首次出现</button>
-              <button type="button" aria-pressed={timelineMode === "later"} onClick={() => changeTimelineMode("later")}>后续增量阶段</button>
-            </div>
-            {timelineMode === "construct" ? <div className="p5-lifecycle-flow"><span>FULL X<sub>y</sub> available</span><i>↓</i><span>current post-update φ</span><i>↓</i><span>compute μ<sub>y</sub> → run Herding</span><i>↓</i><b>P<sub>y</sub> = (p₁, …, p₄)</b></div> : <div className="p5-lifecycle-flow p5-lifecycle-flow--later"><span>FULL X<sub>y</sub> unavailable</span><i>↓</i><span>existing ordered P<sub>y</sub> retained</span><i>↓</i><span>m decreases → truncate tail</span><i>↓</i><b>P′<sub>y</sub> = (p₁, p₂, p₃)</b></div>}
-            <p className="p5-lifecycle-note">{timelineMode === "construct" ? "Herding 使用 representation update 后的当前特征映射；不是先选 exemplar 再训练表示。" : "旧类完整 Xᵧ 已不可用，因此之后不重跑完整 Herding；已有列表只按新预算截去尾部。图中的均值和点位仅回看首次构造时的几何参照。"}</p>
-            <OrderedList visibleCount={HERDING_TEACHING_QUOTA} prefixCount={timelineMode === "construct" ? HERDING_TEACHING_QUOTA : 3} showRemoved={timelineMode === "later"} />
-          </> : null}
-        </section>
+      <section className="p5-reasoning" aria-live="polite" aria-label={`第 ${stage + 1} 步推理引导`}>
+        <span>0{stage + 1}</span><div><b>从已有作用继续追问</b>{stageNarratives[stage].map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
       </section>
 
-      {stage === 5 ? <section className="p5-runtime-order" aria-label="增量更新中的 Exemplar 操作顺序"><span className="eyebrow">RUNTIME ORDER</span><div><span>Update representation</span><i>→</i><b>current post-update φ</b><i>→</i><span>reduce old P</span><i>→</i><strong>construct new P</strong></div><p>旧 exemplar 集按新 quota 缩减；新类 exemplar 使用同一轮 representation update 之后的 φ 构造。</p></section> : null}
+      {stage > 0 ? <UpdateTimeline stage={stage} /> : null}
+      <GuidedStepControls steps={steps} current={stage} onChange={setStage} label="Page 5 Replay、D 与 Q 教学步骤" />
 
-      <section className="icarl-concept-note"><span className="icarl-concept-note__index">0{stage + 1}</span><div><span className="eyebrow">这一幕要看懂</span><p>{stage === 0 ? "单位圆中的 ★ μᵧ 来自完整类别归一化均值；候选 feature 和当前 prefix 均值也经过 L2 normalization。" : stage === 1 ? "p₁ 是单点 prefix，因此选择 feature direction 最接近完整类目标的样本。" : stage === 2 ? "p₂ 按加入已有 p₁ 后的新 prefix mean 决定；Herding 优化 prefix，不是只挑到目标最近的单点。" : stage === 3 ? "Herding 真正计算每个 prefix 并生成按优先级排列的 Pᵧ。" : stage === 4 ? "容量下降只截断列表尾部，前三个保留样本形成的均值由当前数据重新计算。" : timelineMode === "construct" ? "类别首次到来时用完整 Xᵧ 和当前 post-update φ 构造优先列表。" : "旧类完整数据不可用后，保留已有列表并按新 quota 截断，不再重跑完整 Herding。"}</p></div></section>
+      {stage === 0 ? <section className="p5-start-grid" aria-label="更新前已有状态与到达的新类别">
+        <section className="panel p5-persistent-state">
+          <div className="panel-heading"><div><span className="eyebrow">CURRENT PERSISTENT STATE</span><h2>网络 Θ 与旧记忆 P</h2></div><span className="p5-persistent-badge">跨阶段保留</span></div>
+          <div className="p5-theta-card"><div><b>Θ</b><span>current network parameters</span></div><i aria-hidden="true">→</i><div className="p5-feature-head"><b>φ</b><span>feature extractor</span></div><i aria-hidden="true">+</i><div><b>g₁, g₂, g₃, g₄</b><span>expanded output layer · before training</span></div></div>
+          <OutputNodes />
+          <div className="p5-memory-heading"><b>P = (P<sub>1</sub>, P<sub>2</sub>, P<sub>3</sub>)</b><span>persistent exemplar memory · {OLD_MEMORY_SIZE} images</span></div>
+          <MemoryBuckets />
+          <p className="p5-persistent-note">这些旧 exemplars 会被读取并放入 D；P 仍留在持久 memory 中。</p>
+        </section>
+        <section className="panel p5-incoming-state">
+          <div className="panel-heading"><div><span className="eyebrow">INCOMING STAGE DATA</span><h2>Class 4 的完整训练图像</h2></div><span className="p5-new-count">{INCOMING_SAMPLES.length} images</span></div>
+          <p className="p5-panel-intro">新类到达时，当前阶段可以访问 X<sub>D</sub> 中的全部样本。</p>
+          <div className="p5-incoming-list">{INCOMING_SAMPLES.map((sample) => <SampleChip key={sample.id} sample={sample} origin="new" />)}</div>
+          <div className="p5-state-separation" aria-label="持久模型、持久记忆和新阶段数据共同组成当前更新状态">
+            <div className="p5-state-item"><span>网络参数</span><b>Θ</b></div>
+            <i aria-hidden="true">+</i>
+            <div className="p5-state-item"><span>旧类记忆</span><b>P</b></div>
+            <i aria-hidden="true">+</i>
+            <div className="p5-state-item"><span>新类数据</span><strong>X<sub>D</sub></strong></div>
+          </div>
+        </section>
+      </section> : null}
+
+      {stage === 1 ? <section className="p5-build-set" aria-label="构造 training set D">
+        <div className="p5-source-panels">
+          <section className="panel p5-source-card p5-source-card--old"><div className="panel-heading"><div><span className="eyebrow">PERSISTENT MEMORY</span><h2>旧类 exemplars</h2></div><span>{OLD_EXEMPLARS.length}</span></div><p>P 中样本被读取进 D，来源 memory 仍然保留。</p><div className="p5-source-card__samples">{OLD_EXEMPLARS.map((sample) => <SampleChip key={sample.id} sample={sample} origin="old" />)}</div><b className="p5-source-stays">P remains stored</b></section>
+          <span className="p5-set-plus" aria-hidden="true">+</span>
+          <section className="panel p5-source-card p5-source-card--new"><div className="panel-heading"><div><span className="eyebrow">INCOMING FULL DATA</span><h2>新类 X<sub>D</sub></h2></div><span>{INCOMING_SAMPLES.length}</span></div><p>本阶段所有新类图像都进入训练集合。</p><div className="p5-source-card__samples">{INCOMING_SAMPLES.map((sample) => <SampleChip key={sample.id} sample={sample} origin="new" />)}</div><b className="p5-source-stays">all new images available</b></section>
+          <span className="p5-set-arrow" aria-hidden="true">→</span>
+        </div>
+        <section className="panel p5-dataset-panel">
+          <div className="panel-heading"><div><span className="eyebrow">REPLAY / REHEARSAL · TRAINING SET D</span><h2>两类来源汇入同一训练集</h2></div><strong>|D| = {TRAINING_SET_SIZE}</strong></div>
+          <div className="p5-dataset-equation"><span>∪ old exemplars from P</span><i aria-hidden="true">+</i><span>∪ full new-class data X<sub>D</sub></span><i aria-hidden="true">=</i><b>D</b></div>
+          <div className="p5-dataset-groups"><section><b>OLD · {OLD_EXEMPLARS.length}</b><div>{OLD_EXEMPLARS.map((sample) => <SampleChip key={sample.id} sample={sample} origin="old" />)}</div></section><section><b>NEW · {INCOMING_SAMPLES.length}</b><div>{INCOMING_SAMPLES.map((sample) => <SampleChip key={sample.id} sample={sample} origin="new" />)}</div></section></div>
+          <p className="p5-dataset-note">D 中训练样本统一送入本轮更新；旧 exemplar 在 D 中作为样本参与训练，P 则继续作为持久记忆保留。</p>
+        </section>
+      </section> : null}
+
+      {stage === 2 ? <section className="p5-snapshot-grid" aria-label="更新前网络为 D 中样本记录 Q">
+        <section className="panel p5-snapshot-input"><div className="panel-heading"><div><span className="eyebrow">READY TRAINING SET</span><h2>D 已准备好</h2></div><strong>{TRAINING_SET_SIZE} samples</strong></div>
+          <div className="p5-count-breakdown"><span>old exemplars<strong>{OLD_EXEMPLARS.length}</strong></span><i>+</i><span>new full data<strong>{INCOMING_SAMPLES.length}</strong></span><i>=</i><b>D · {TRAINING_SET_SIZE}</b></div>
+          <div className="p5-representative-rows"><div><span className="p5-origin-tag p5-origin-tag--old">OLD</span><b>old exemplar</b><small>每个旧记忆图像</small></div><div><span className="p5-origin-tag p5-origin-tag--new">NEW</span><b>new-class image</b><small>每个新类完整数据样本</small></div></div>
+          <p>D 中的每个样本都要由当前网络记录 old-class responses。</p>
+        </section>
+        <section className="panel p5-snapshot-pipeline"><div className="panel-heading"><div><span className="eyebrow">BEFORE ANY PARAMETER UPDATE</span><h2>先快照旧节点响应</h2></div><span className="p5-snapshot-badge">pre-update</span></div>
+          <div className="p5-snapshot-flow"><div className="p5-flow-node p5-flow-node--d"><b>D</b><span>all {TRAINING_SET_SIZE} samples</span></div><i aria-hidden="true">→</i><div className="p5-flow-network"><span className="eyebrow">CURRENT MODEL · Θ<sub>before</sub></span><b>φ + old output head</b><OutputNodes compact /><small>此刻还是本轮唯一的 current network</small></div><i aria-hidden="true">→</i><div className="p5-flow-node p5-flow-node--q"><b>Q</b><span>update-local response snapshot</span></div></div>
+          <div className="p5-response-formula"><b>q<sub>i</sub><sup>y</sup> = g<sub>y</sub>(x<sub>i</sub>)</b><span>y ∈ {"{"}{OLD_CLASS_IDS.map((classId) => CLASS_VISUALS[classId].index).join(", ")}{"}"}</span></div>
+          <p className="p5-snapshot-note">只有先记录 Q，后续改变 Θ 时才不会丢掉此次更新开始前的旧类 response。Q 完成后固定于本轮 update；它不是永久维护的第二个模型。</p>
+        </section>
+      </section> : null}
+
+      {stage === 3 ? <section className="panel p5-matrix-panel" aria-label="D 中所有样本的旧类别响应矩阵">
+        <div className="panel-heading"><div><span className="eyebrow">ALL TRAINING SAMPLES RECEIVE OLD-CLASS RESPONSES</span><h2>D 中每一行都快照所有旧输出节点</h2></div><span className="p5-matrix-count">{TRAINING_SET_SIZE} × {OLD_CLASS_IDS.length}</span></div>
+        <p className="p5-matrix-intro">行是 D 中的实际样本；列是更新开始前已存在的旧类输出节点。每个 ● 表示对应的 q<sub>i</sub><sup>y</sup> 已记录，不显示虚构数值。</p>
+        <div className="p5-matrix-legend"><span><i className="p5-origin-tag p5-origin-tag--old">P</i>旧 exemplar</span><span><i className="p5-origin-tag p5-origin-tag--new">X</i>新类完整数据</span><span><i className="p5-q-dot" />response snapshot present</span></div>
+        <div className="p5-matrix-groups">
+          <section><div className="p5-matrix-group-heading"><b>OLD EXEMPLARS FROM P</b><span>{OLD_EXEMPLARS.length} rows</span></div><ResponseMatrix items={OLD_EXEMPLARS} /></section>
+          <section><div className="p5-matrix-group-heading"><b>NEW FULL DATA X<sub>D</sub></b><span>{INCOMING_SAMPLES.length} rows</span></div><ResponseMatrix items={INCOMING_SAMPLES} /></section>
+        </div>
+        <div className="p5-all-samples-takeaway"><b>all |D| = {TRAINING_SET_SIZE}</b><span>old exemplars and new-class images are treated alike for the pre-update old-node snapshot.</span></div>
+        <div className="p5-q-locked"><span>Q</span><b>LOCKED DURING THIS UPDATE</b><small>Θ changes later; these pre-update responses do not.</small></div>
+          <p className="p5-new-nodes-note">All four output nodes are present before training. Q snapshots only g₁–g₃; the new node g₄ receives its hard target from the label.</p>
+      </section> : null}
+
+      {stage === 4 ? <section className="p5-ready" aria-label="更新前准备完成">
+        <div className="p5-ready-flow">
+          <section className="p5-ready-card p5-ready-card--d"><span className="eyebrow">TRAINING SET</span><b>D</b><div><span>{OLD_EXEMPLARS.length} old exemplars</span><i>+</i><span>{INCOMING_SAMPLES.length} new images</span></div><strong>{TRAINING_SET_SIZE} samples total</strong></section>
+          <i className="p5-ready-arrow" aria-hidden="true">→</i>
+          <section className="p5-ready-card p5-ready-card--q"><span className="eyebrow">FROZEN TARGET INFORMATION</span><b>Q <small>LOCKED</small></b><div><span>{TRAINING_SET_SIZE} sample rows</span><i>×</i><span>{OLD_CLASS_IDS.length} old nodes</span></div><strong>update-local · fixed</strong></section>
+          <i className="p5-ready-arrow" aria-hidden="true">→</i>
+          <section className="p5-ready-card p5-ready-card--theta"><span className="eyebrow">CURRENT NETWORK</span><b>Θ</b><div><OutputNodes compact /></div><strong>ready for representation update</strong></section>
+        </div>
+        <div className="p5-ready-note"><b>P persists alongside Θ.</b><span>旧 exemplars 被读取进 D，但没有被消耗。Q 保存完成后，不需要把 pre-update 状态长期保留为第二套网络；同一个 current Θ 继续进入更新。</span></div>
+        <ObjectLifetime />
+      </section> : null}
+
+      <section className="icarl-concept-note"><span className="icarl-concept-note__index">0{stage + 1}</span><div><span className="eyebrow">这一幕要看懂</span><p>{stage === 0 ? "Exemplars 先支持预测；下一轮中它们作为旧类训练图片，与新类完整数据一起参加学习。" : stage === 1 ? "D 由所有新类完整数据和旧类 Exemplars 合成；旧记忆作为训练来源被读取，但 P 不会消失。" : stage === 2 ? "参数更新之前，pre-update current network 对整个 D 保存旧输出节点 response，形成本轮使用的 Q。" : stage === 3 ? "qᵢʸ 覆盖 D 中全部样本：旧 Exemplars 和新类图像都经过同一个 pre-update model；列只对应旧类节点。" : "保留本轮 D、冻结的 Q 和可训练的 current Θ；完成准备后才进入训练目标构造。"}</p></div></section>
 
       <footer className="icarl-handoff">
-        <div><span className="eyebrow">NEXT · PAGE 06</span><p>现在已经知道少量 Exemplars 怎样构造、保存并帮助预测；共享特征提取器怎样在新类别到达时继续学习，又怎样尽量避免损害旧类能力？</p></div>
-        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入更新前准备 <b aria-hidden="true">→</b></button> : <span className="icarl-handoff__upcoming">下一页</span>}
+        <div><span className="eyebrow">NEXT · PAGE 06</span><p>现在 D 已由新类完整数据和旧类 Exemplars 组成，更新前的旧类响应也已固定为 Q。接下来怎样用新类标签与旧类响应构造目标，使模型学到新类并尽量保留旧类能力？</p></div>
+        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入第 6 页 · 蒸馏与损失 <b aria-hidden="true">→</b></button> : <span className="icarl-handoff__upcoming">下一页</span>}
       </footer>
     </article>
   );

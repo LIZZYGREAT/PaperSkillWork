@@ -166,7 +166,7 @@ export const P_BEFORE: Record<ClassId, Sample[]> = {
   D: [],
 };
 
-// Shared ordered source: Page 5 shows the four-item list and truncation; Page 10 commits its first three.
+// Shared ordered source: Page 4 teaches the four-item list and truncation; Page 9 commits its first three.
 export const NEW_CLASS_HERDING = herd(INCOMING_SAMPLES, OLD_QUOTA, "after");
 
 export const P_AFTER: Record<ClassId, Sample[]> = {

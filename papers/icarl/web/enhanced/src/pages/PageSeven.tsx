@@ -1,186 +1,203 @@
-import { useState, type ReactNode } from "react";
-import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
+import { useState, type CSSProperties } from "react";
+import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
 import { PaperTerm } from "../components/PaperTerm";
-import { SampleToken } from "../components/SampleToken";
-import { P_BEFORE } from "../data/icarl-runtime";
-
-const OLD_EXAMPLE = P_BEFORE.A[0]!;
+import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
+import {
+  CLASS_VISUALS,
+  CURRENT_EXEMPLARS,
+  P_AFTER,
+  PROTOTYPES,
+  QUERY_DISTANCES,
+  QUERY_FEATURE,
+  QUERY_PREDICTION,
+  projectSampleFeatures,
+  type ClassId,
+} from "../data/icarl-runtime";
 
 const steps: readonly GuidedStep[] = [
-  { title: "先按输出节点的年龄分组", short: "旧节点 / 新节点" },
-  { title: "新类图像同时面对两类目标", short: "新图像" },
-  { title: "旧 exemplar 也经过全部节点", short: "旧 exemplar" },
-  { title: "把 D 的目标读成一张矩阵", short: "目标矩阵" },
-  { title: "同一个 sigmoid + BCE 接收两类目标", short: "单节点 BCE" },
-  { title: "汇总旧节点与新节点损失", short: "总损失" },
-  { title: "两类损失共同更新共享表示", short: "反向传播" },
+  { title: "回看训练路径", short: "训练路径" },
+  { title: "切换到预测模式", short: "切换模式" },
+  { title: "从当前 P 重建原型", short: "当前原型" },
+  { title: "把 query 分给最近原型", short: "最终预测" },
+  { title: "并排读出两个运行路径", short: "职责对照" },
 ];
 
-type TargetKind = "soft" | "one" | "zero";
-const SOFT_EXAMPLE_TARGET = 0.72;
+type RuntimeMode = "train" | "predict";
+const classOrder: readonly ClassId[] = ["A", "B", "C", "D"];
+const currentPoints = projectSampleFeatures(CURRENT_EXEMPLARS, "after", true);
 
-function TargetPill({ kind, children }: { kind: TargetKind; children: ReactNode }) {
-  return <span className={`p7-target-pill p7-target-pill--${kind}`}>{children}</span>;
-}
-
-function OutputNodes({ old = ["1", "2", "3"], fresh = ["4"] }: { old?: string[]; fresh?: string[] }) {
-  return <div className="p7-node-groups" aria-label="旧类与新类输出节点">
-    <section className="p7-node-group p7-node-group--old" data-canonical-id="old_output_nodes">
-      <div><b>旧类输出节点</b><span>保留更新前的响应</span></div>
-      <div className="p7-node-group__nodes">{old.map((name) => <span key={name}>g<sub>{name}</sub></span>)}</div>
-    </section>
-    <section className="p7-node-group p7-node-group--new" data-canonical-id="new_output_nodes">
-      <div><b>新类输出节点</b><span>学习新到类别的指示目标</span></div>
-      <div className="p7-node-group__nodes">{fresh.map((name) => <span key={name}>g<sub>{name}</sub></span>)}</div>
-    </section>
+function ModeSwitch({ mode, onChange }: { mode: RuntimeMode; onChange: (mode: RuntimeMode) => void }) {
+  return <div className="p7-mode-switch" role="group" aria-label="选择当前运行路径">
+    <button type="button" className={mode === "train" ? "is-active" : ""} aria-pressed={mode === "train"} onClick={() => onChange("train")}>TRAIN <small>targets → 更新 Θ</small></button>
+    <button type="button" className={mode === "predict" ? "is-active" : ""} aria-pressed={mode === "predict"} onClick={() => onChange("predict")}>PREDICT <small>query → 最近原型</small></button>
   </div>;
 }
 
-function TargetRow({ oldSample, active = false }: { oldSample?: boolean; active?: boolean }) {
-  const classes = ["p7-target-row", oldSample ? "p7-target-row--old" : "p7-target-row--new", active ? "is-active" : ""];
-  return <div className={classes.join(" ")} role="row">
-    <span className="p7-target-row__sample" role="rowheader">
-      <b>{oldSample ? `${OLD_EXAMPLE.id} ∈ P₁` : "D-01"}</b>
-      <small>{oldSample ? "P₁ 中的具体 exemplar · 真实类别 Class 1" : "新到图像 · 真实类别 Class 4"}</small>
-    </span>
-    {(["1", "2", "3"] as const).map((node) => <span className="p7-target-cell p7-target-cell--soft" role="cell" key={node}>
-      <small>g<sub>{node}</sub></small><TargetPill kind="soft">q<sub>i</sub><sup>{node}</sup></TargetPill>
-    </span>)}
-    <span className="p7-target-cell p7-target-cell--hard" role="cell">
-      <small>g<sub>4</sub></small><TargetPill kind={oldSample ? "zero" : "one"}>{oldSample ? "hard 0" : "hard 1"}</TargetPill>
-    </span>
-  </div>;
+function PersistentState() {
+  return <section className="p7-persistent-state" aria-label="训练和预测之间保留的状态" data-canonical-id="persistent_state">
+    <div><span>持久网络状态</span><b>Θ</b><small>当前特征提取器 φ<sub>Θ</sub> 在两条路径间共享</small></div>
+    <i aria-hidden="true">+</i>
+    <div><span>持久 exemplar 记忆</span><b>P</b><small>保留原始 exemplars，用于 replay 与计算原型</small></div>
+  </section>;
 }
 
-function TargetMatrix({ compact = false }: { compact?: boolean }) {
-  return <div className="p7-matrix-scroll" role="region" aria-label="训练样本与所有输出节点目标，可横向滚动" tabIndex={0}>
-    <div className={`p7-target-matrix${compact ? " p7-target-matrix--compact" : ""}`} role="table" aria-label="训练样本与输出节点目标矩阵" data-canonical-id="target_matrix">
-      <div className="p7-target-row p7-target-row--head" role="row">
-        <span role="columnheader">训练集 D 中的样本</span>
-        <span className="p7-target-band p7-target-band--old" role="columnheader" aria-label="旧节点 1、2、3">旧节点 <small>1 · 2 · 3</small></span>
-        <span className="p7-target-band p7-target-band--new" role="columnheader" aria-label="新节点 4">新节点 <small>4</small></span>
+function TrainingObjects({ mode }: { mode: RuntimeMode }) {
+  const trainingVisible = mode === "train";
+  return <section className={`p7-training-objects${trainingVisible ? " is-active" : " is-inactive"}`} aria-label="训练阶段的临时对象" data-canonical-id="training_only_state">
+    <div className="p7-object-heading"><div><span className="eyebrow">本轮更新中的临时对象</span><h3>参数更新结束后，这些对象不再参与预测</h3></div><span>{trainingVisible ? "训练中" : "预测时无需"}</span></div>
+    <div className="p7-object-list">{[["D", "训练集"], ["Q", "冻结的旧响应"], ["yᵢ", "真实标签"], ["L", "损失"]].map(([symbol, label]) => <div key={symbol}><b>{symbol}</b><span>{label}</span></div>)}</div>
+  </section>;
+}
+
+function TrainingRecap({ mode }: { mode: RuntimeMode }) {
+  return <section className="p7-path-card p7-path-card--train" data-canonical-id="training_path" aria-label="训练路径回顾">
+    <div className="p7-path-heading"><span className="eyebrow">TRAIN · 表示学习</span><b>训练路径</b></div>
+    <div className="p7-train-flow">
+      <div><b>D</b><span>训练样本</span></div><i aria-hidden="true">→</i>
+      <div className="p7-flow-feature"><b>φ<sub>Θ</sub></b><span>共享表示</span></div><i aria-hidden="true">→</i>
+      <div className={`p7-flow-head${mode === "predict" ? " is-inactive" : ""}`}><b>Training Head</b><span>独立 sigmoid 节点</span></div><i aria-hidden="true">→</i>
+      <div><b>Hard / soft</b><span>targets → BCE</span></div><i aria-hidden="true">→</i>
+      <div className="p7-flow-update"><b>反向传播</b><span>更新 Θ</span></div>
+    </div>
+    <p>训练头提供可微的学习信号；它的输出不是最终分类规则。</p>
+  </section>;
+}
+
+function PredictionPath({ stage, mode }: { stage: number; mode: RuntimeMode }) {
+  const showQuery = stage >= 3;
+  return <section className={`p7-prediction-workbench${mode === "predict" ? " is-active" : ""}`} data-canonical-id="inference_path" aria-label="原型预测路径工作台">
+    <div className="p7-prediction-copy">
+      <div className="p7-path-heading"><span className="eyebrow">PREDICT · exemplar 均值最近邻</span><b>{showQuery ? "最终决策读取最近原型" : "先用当前 exemplars 重建 prototypes"}</b></div>
+      <div className="p7-exemplar-buckets" aria-label="当前记忆 P_after 中各类别的 exemplar 身份">{classOrder.map((classId) => <section key={classId} style={{ "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties}><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}<small>{P_AFTER[classId].length} 个 exemplar</small></b><div>{P_AFTER[classId].map((sample) => <span key={sample.id} title={`样本 ${sample.id}`}>{sample.id}</span>)}</div></section>)}</div>
+      <div className="p7-predict-flow">
+        <section><b>P<sub>1</sub> · P<sub>2</sub> · P<sub>3</sub> · P<sub>4</sub></b><span>当前保留的原始 exemplars</span></section><i aria-hidden="true">→</i>
+        <section className="p7-flow-feature"><b>当前 φ<sub>Θ</sub></b><span>由同一模型重新编码</span></section><i aria-hidden="true">→</i>
+        <section className="p7-flow-prototype"><b>μ<sub>1</sub> … μ<sub>4</sub></b><span>归一化 exemplar 均值</span></section>
       </div>
-      <TargetRow />
-      <TargetRow oldSample active={compact} />
+      {showQuery ? <div className="p7-head-note"><span>Training Head</span><b>仍保留在网络中</b><small>本次最终决策不读取它的 sigmoid argmax</small></div> : null}
     </div>
+    <FeatureSpaceWorkbench
+      mode={showQuery ? "inference" : "prototypes"}
+      title={showQuery ? "查询表示与当前 exemplar 原型" : "当前 P 的四个类别原型"}
+      description={showQuery ? "复用第 9 页的 P_after、归一化原型与 query；最近距离给出当前教学轨迹的预测。" : "复用本教程的 P_after：样本身份、φ_after 投影和四类原型均来自同一组运行数据。"}
+      points={currentPoints}
+      prototypes={PROTOTYPES}
+      query={showQuery ? QUERY_FEATURE : undefined}
+      unitCircle
+      markerScale={0.82}
+      showSampleLabels={false}
+      asideContent={<><PrototypeKey showQuery={showQuery} />{showQuery ? <div className="p7-result" aria-live="polite"><span>最近原型距离</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i> {CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 与第 9 页使用同一 query 和结果</small></div> : <p className="p7-feature-note">P<sub>after</sub> 与各类原型都由当前 φ<sub>Θ</sub> 表示；训练时的 Q 不参与原型计算。</p>}</>}
+    />
+    {showQuery ? <p className="p7-source-note">教学示例复用自第 9 页 · 坐标为固定合成数据，不是训练得到的 checkpoint，也不是论文结果。</p> : null}
+  </section>;
+}
+
+function PrototypeKey({ showQuery = false }: { showQuery?: boolean }) {
+  return <div className="p7-visual-key" aria-label="特征图类别标记">
+    {classOrder.map((classId) => <span key={classId}><i style={{ "--key-color": CLASS_VISUALS[classId].color } as CSSProperties} />{CLASS_VISUALS[classId].displayLabel} 原型</span>)}
+    {showQuery ? <span><i className="p7-visual-key__query" />待分类 query</span> : null}
   </div>;
 }
 
-function ResponseAxis({ target, current }: { target: number; current: number }) {
-  const targetKind: TargetKind = target === 1 ? "one" : target === 0 ? "zero" : "soft";
-  return <div className="p7-response-axis" aria-label="target 与当前 sigmoid 响应的相对位置">
-    <div className="p7-response-axis__ends"><span>0</span><span>独立 sigmoid 输出</span><span>1</span></div>
-    <div className="p7-response-axis__rail">
-      <span className={`p7-response-axis__target p7-response-axis__target--${targetKind}`} style={{ left: `${target * 100}%` }} aria-label="target position"><i /></span>
-      <span className="p7-response-axis__current" style={{ left: `${current * 100}%` }} aria-label="当前响应位置"><i /><b>当前 g</b></span>
-    </div>
-    <div className="p7-response-axis__legend"><span><i className={`p7-marker p7-marker--${targetKind}`} /> 目标 r</span><span><i className="p7-marker p7-marker--current" /> 当前 g</span></div>
-  </div>;
+function PredictionSummary() {
+  return <section className="p7-split-predict" data-canonical-id="inference_path">
+    <div className="p7-path-heading"><span className="eyebrow">PREDICT · 最终分类器</span><b>原型路径</b></div>
+    <div className="p7-predict-summary-flow"><span>P</span><i aria-hidden="true">→</i><span>当前 φ<sub>Θ</sub></span><i aria-hidden="true">→</i><span>μ<sub>1</sub>…μ<sub>4</sub></span><i aria-hidden="true">→</i><strong>最近类均值</strong></div>
+    <p>从当前 exemplar memory 重新计算各类均值，再比较 query 与全部已见类别 prototype 的距离。</p>
+  </section>;
 }
 
-function TargetSample({ oldSample }: { oldSample?: boolean }) {
-  return <div className={`p7-sample-card${oldSample ? " p7-sample-card--old" : " p7-sample-card--new"}`}>
-    {oldSample ? <SampleToken sample={OLD_EXAMPLE} role="exemplar" compact /> : <span className="p7-sample-card__image" aria-hidden="true">X</span>}
-    <div><span className="eyebrow">{oldSample ? "来自 exemplar 记忆" : "来自新到数据"}</span><b>{oldSample ? `${OLD_EXAMPLE.id} ∈ P₁` : "新图像 D-01"}</b><small>{oldSample ? "P₁ 是有序 exemplar 列表；此处展示其中一个样本" : "真实类别：Class 4"}</small></div>
-  </div>;
+function PredictionFeatureSpace() {
+  return <section className="p7-final-feature-space" aria-label="Page 9 运行样本上的 prototype 分类">
+    <FeatureSpaceWorkbench
+      mode="inference"
+      title="同一组 P_after、query 与最近原型"
+      description="与第 9 页复用相同的 exemplar 身份、归一化原型和 query 特征；连接线长度来自同一距离计算。"
+      points={currentPoints}
+      prototypes={PROTOTYPES}
+      query={QUERY_FEATURE}
+      unitCircle
+      markerScale={0.82}
+      showSampleLabels={false}
+      asideContent={<><PrototypeKey showQuery /><div className="p7-result" aria-live="polite"><span>最近原型距离</span><strong><i style={{ color: CLASS_VISUALS[QUERY_PREDICTION].color }}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i> {CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</strong><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 与第 9 页使用同一 query 和结果</small></div></>}
+    />
+    <p className="p7-source-note">教学示例复用自第 9 页 · 坐标为固定合成数据，不是训练得到的 checkpoint，也不是论文结果。</p>
+  </section>;
+}
+
+function ResponsibilityMap({ mode }: { mode: RuntimeMode }) {
+  return <section className="p7-responsibility" aria-label="运行时对象责任对照">
+    <div className="panel-heading"><div><span className="eyebrow">对象分工</span><h2>同一个当前模型，两条运行路径</h2></div><span className="p7-mini-tag">当前聚焦：{mode === "train" ? "训练" : "预测"}</span></div>
+    <div className="p7-responsibility-table" role="table" aria-label="iCaRL 对象生命周期和用途">
+      <div role="row"><b role="columnheader">对象</b><b role="columnheader">训练</b><b role="columnheader">预测</b><b role="columnheader">生命周期</b></div>
+      <div role="row"><b role="rowheader">Θ · φ<sub>Θ</sub></b><span role="cell">更新表示</span><span role="cell">编码 query 与 exemplars</span><span role="cell">持久共享</span></div>
+      <div role="row"><b role="rowheader">Training Head</b><span role="cell">生成 sigmoid 输出并计算损失</span><span role="cell">不用于最终决策</span><span role="cell">保留在网络中</span></div>
+      <div role="row"><b role="rowheader">P · 原始 exemplars</b><span role="cell">作为 D 中的 replay 输入</span><span role="cell">重新计算类别原型</span><span role="cell">持久记忆</span></div>
+      <div role="row"><b role="rowheader">D、Q、L</b><span role="cell">准备数据并更新模型</span><span role="cell">预测时无需</span><span role="cell">仅本轮更新使用</span></div>
+    </div>
+    <div className="p7-inference-rule"><span>最终分类器</span><b>当前 exemplar 原型的最近邻</b><small>不是 sigmoid head 的 argmax · 预测过程不读取 Q</small></div>
+  </section>;
+}
+
+function MemoryUpdateBridge() {
+  return <section className="p7-memory-bridge" aria-label="训练结束后更新 exemplar 记忆">
+    <div className="p7-memory-bridge__step"><span>训练结束</span><b>Θ_after + P_before</b><small>Θ 已更新；P 仍是旧列表</small></div>
+    <i aria-hidden="true">→</i>
+    <div className="p7-memory-bridge__step p7-memory-bridge__step--memory"><span>Memory Management</span><b>截短旧列表 + Herding 新类</b><small>分别处理旧记忆与新类 exemplars</small></div>
+    <i aria-hidden="true">→</i>
+    <div className="p7-memory-bridge__step p7-memory-bridge__step--ready"><span>下一轮就绪</span><b>Θ_after + P_after</b><small>模型与更新后的记忆共同保留</small></div>
+  </section>;
+}
+
+function CycleMiniMap() {
+  return <section className="p7-cycle" aria-label="从持久状态到下一次预测的完整闭环">
+    <span className="eyebrow">一次增量学习循环</span>
+    <div><b>Θ + P</b><i>→</i><span>D + Q</span><i>→</i><span>更新 Θ</span><i>→</i><span>更新 P</span><i>→</i><b>当前原型</b><i>→</i><strong>最近类别预测</strong></div>
+  </section>;
 }
 
 export function PageSeven({ onContinue }: { onContinue?: () => void }) {
   const [stage, setStage] = useState(0);
-  const [targetKind, setTargetKind] = useState<TargetKind>("soft");
-  const [current, setCurrent] = useState(0.42);
-  const [showCalculation, setShowCalculation] = useState(false);
-  const [showObjective, setShowObjective] = useState(false);
-  const target = targetKind === "one" ? 1 : targetKind === "zero" ? 0 : SOFT_EXAMPLE_TARGET;
-  const safeCurrent = Math.min(0.999, Math.max(0.001, current));
-  const bce = -(target * Math.log(safeCurrent) + (1 - target) * Math.log(1 - safeCurrent));
-  const gradient = safeCurrent - target;
+  const [mode, setMode] = useState<RuntimeMode>("train");
 
-  return <article className="tutorial-page icarl-page icarl-page--p7">
+  function changeStage(nextStage: number) {
+    setStage(nextStage);
+    if (nextStage === 0) setMode("train");
+    else if (nextStage === 1) setMode("train");
+    else setMode("predict");
+  }
+
+  return <article className="tutorial-page icarl-page icarl-page--p8">
     <header className="page-heading icarl-page__heading">
-      <div className="icarl-page__eyebrow"><span>PAGE 07</span><i /> 蒸馏与损失</div>
-      <h1>每张图像都在旧节点与新节点上学习</h1>
-      <p>从第 6 页准备好的训练集 D 与<PaperTerm termId="response-snapshot-q" />出发：旧节点用<PaperTerm termId="soft-target" />保留更新前响应，这一机制称为<PaperTerm termId="distillation" />；新节点学习当前标签。两部分都使用<PaperTerm termId="binary-cross-entropy">逐节点二元交叉熵（BCE）</PaperTerm>，随后共同更新表示。</p>
+      <div className="icarl-page__eyebrow"><span>PAGE 07</span><i /> TRAIN ≠ PREDICT</div>
+      <h1>同一表示网络，连接两条不同的运行路径</h1>
+      <p>Training Head 为共享表示提供可微学习信号；最终预测则用同一 φ<sub>Θ</sub> 重新编码当前 exemplars，并按<PaperTerm termId="nearest-mean-of-exemplars">最近 exemplar 均值分类</PaperTerm>作出决定。</p>
     </header>
 
-    <GuidedStepControls steps={steps} current={stage} onChange={setStage} label="Page 7 目标分配与损失教学步骤" />
+    <div className="p7-controls-row"><GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 7 训练与预测路径教学步骤" /><ModeSwitch mode={mode} onChange={setMode} /></div>
 
-    {stage === 0 ? <section className="p7-node-overview panel" aria-label="按输出节点区分训练责任">
-      <div className="panel-heading"><div><span className="eyebrow">同一训练集 · D</span><h2>先按节点所属阶段分组</h2></div><span className="p7-mini-badge">target 由节点新旧决定</span></div>
-      <div className="p7-origin-flow"><div><b>D</b><span>旧 exemplars + 新到图像</span></div><i aria-hidden="true">→</i><div className="p7-shared-network"><b>当前共享网络</b><span>共享特征提取器 φ<sub>Θ</sub></span></div><i aria-hidden="true">→</i><div className="p7-output-box"><span>sigmoid 输出</span><OutputNodes /></div></div>
-      <div className="p7-node-principle"><span>关键判断</span><b>Hard / soft 由输出节点的新旧决定，与输入图像是旧样本还是新样本无关。</b></div>
-      <p className="p7-evidence-note"><b>承接第 6 页</b> · D 中每个样本都进入当前网络；Q 保存它在所有旧节点上的更新前响应。</p>
+    <section className="p7-shared-model" aria-label="训练和预测共享同一个 current model">
+      <div className="p7-shared-model__core"><span className="eyebrow">一个当前模型 · 两条后续路径</span><b>φ<sub>Θ</sub></b><span>TRAIN 与 PREDICT 使用同一个当前特征提取器</span></div>
+      <TrainingObjects mode={mode} />
+      <PersistentState />
+    </section>
+
+    {stage === 0 ? <TrainingRecap mode={mode} /> : null}
+    {stage === 1 ? <section className="p7-mode-transition panel" aria-label="从训练模式切换到预测模式">
+      <div className="panel-heading"><div><span className="eyebrow">切换运行模式</span><h2>{mode === "predict" ? "训练对象退出，先完成记忆更新" : "选择 PREDICT 查看推理阶段"}</h2></div><span className={`p7-mini-tag${mode === "predict" ? " is-predict" : ""}`}>{mode === "predict" ? "预测" : "训练"}</span></div>
+      <div className="p7-transition-grid"><div className={mode === "predict" ? "is-muted" : ""}><span>本轮更新对象 · 当前不活跃</span><b>D + Q + labels + loss</b><small>{mode === "predict" ? "这些对象不参与最终决策" : "更新期间会用到这些对象"}</small></div><div><span>训练结束时的持久状态</span><b>Θ_after + P_before</b><small>训练更新 Θ；旧 exemplar 记忆尚待整理</small></div></div>
+      <MemoryUpdateBridge />
+      <TrainingRecap mode={mode} />
+    </section> : null}
+    {stage === 2 || stage === 3 ? <PredictionPath stage={stage} mode={mode} /> : null}
+    {stage === 4 ? <section className="p7-split-view" aria-label="训练与预测路径并排比较">
+      <div className={`p7-split-view__path p7-split-view__path--train${mode === "train" ? " is-focused" : ""}`}><TrainingRecap mode="train" /><div className="p7-split-conclusion"><b>作用</b><span>更新 Θ，让表示同时从旧目标与新目标中学习</span></div></div>
+      <div className={`p7-split-view__path p7-split-view__path--predict${mode === "predict" ? " is-focused" : ""}`}><PredictionSummary /><div className="p7-split-conclusion"><b>作用</b><span>将 query 分配给当前最近的 exemplar 均值</span></div></div>
+      <PredictionFeatureSpace />
     </section> : null}
 
-    {stage === 1 ? <section className="p7-sample-target panel" aria-label="新类图像上的 soft 与 hard targets">
-      <div className="panel-heading"><div><span className="eyebrow">新类图像 · yᵢ = Class 4</span><h2>同一张新图像具有两组 target</h2></div><span className="p7-mini-badge p7-mini-badge--new">D-01</span></div>
-      <div className="p7-sample-target__layout"><TargetSample />
-        <div className="p7-target-strip">
-          <section><b className="p7-target-strip__heading">旧节点 · 保持响应</b><div>{["1", "2", "3"].map((node) => <div className="p7-strip-node" key={node}><span>g<sub>{node}</sub></span><TargetPill kind="soft">q<sub>i</sub><sup>{node}</sup></TargetPill></div>)}</div><p>从训练前的 Q 读取各旧节点的响应。</p></section>
-          <section><b className="p7-target-strip__heading">新节点 · 学习类别</b><div className="p7-strip-node"><span>g<sub>4</sub></span><TargetPill kind="one">hard 1</TargetPill></div><p>样本真实类别是 Class 4，因此 g₄ 节点的 target 为 1。</p></section>
-        </div>
-      </div>
-      <div className="p7-callout"><b>Soft target ≠ 模糊 ground truth</b><span>qᵢʸ 是训练前模型对这张输入在旧类别节点上的连续 response。不同旧节点的 q 值彼此独立，不要求加总为 1。</span></div>
-    </section> : null}
-
-    {stage === 2 ? <section className="p7-sample-target panel" aria-label="旧 exemplar 在所有输出节点上的 targets">
-      <div className="panel-heading"><div><span className="eyebrow">OLD EXEMPLAR · yᵢ = Class 1</span><h2>旧图像也经过新节点</h2></div><span className="p7-mini-badge p7-mini-badge--old">P₁</span></div>
-      <div className="p7-sample-target__layout"><TargetSample oldSample />
-        <div className="p7-target-strip">
-          <section><b className="p7-target-strip__heading">旧节点 · 保持响应</b><div>{["1", "2", "3"].map((node) => <div className="p7-strip-node" key={node}><span>g<sub>{node}</sub></span><TargetPill kind="soft">q<sub>i</sub><sup>{node}</sup></TargetPill></div>)}</div><p>仍使用 Q 中这张 exemplar 对应的旧节点响应。</p></section>
-          <section><b className="p7-target-strip__heading">新节点 · 学习类别</b><div className="p7-strip-node"><span>g<sub>4</sub></span><TargetPill kind="zero">hard 0</TargetPill></div><p>类别 1 不等于新类别 4，因此 g₄ 节点的 target 为 0。</p></section>
-        </div>
-      </div>
-      <div className="p7-node-principle"><span>为什么两种目标都需要？</span><b>Exemplars 提供真实旧类输入；distillation 指定旧输出节点在这些输入上应保留的响应。</b></div>
-    </section> : null}
-
-    {stage === 3 ? <section className="p7-matrix-workbench panel" aria-label="D 中样本与输出节点目标矩阵">
-      <div className="panel-heading"><div><span className="eyebrow">样本 × 输出节点目标</span><h2>目标按列区分，每个样本都覆盖所有节点</h2></div><span className="p7-mini-badge">所有行 → 所有节点</span></div>
-      <TargetMatrix />
-      <div className="p7-matrix-foot"><span><i className="p7-marker p7-marker--soft" /> 旧节点 target 来自 Q</span><span><i className="p7-marker p7-marker--one" /> 新类真实标签</span><span><i className="p7-marker p7-marker--zero" /> 其他新类</span></div>
-      <p className="p7-evidence-note">类别 1–4 只标出输出节点对应的类别；表内不伪造论文未报告的 q 数值。输入属于新类或 exemplar，都有旧节点 soft targets。</p>
-    </section> : null}
-
-    {stage === 4 ? <section className="p7-bce-workbench panel" aria-label="交互式单节点二元交叉熵示意">
-      <div className="panel-heading"><div><span className="eyebrow">单个 sigmoid 节点 · 单个 BCE</span><h2>hard 与 soft target 共用同一损失</h2></div><span className="p7-mini-badge">单节点查看器</span></div>
-      <div className="p7-bce-layout">
-        <section className="p7-bce-select"><div className="p7-target-choice" role="group" aria-label="选择单节点 target 类型">
-          <button type="button" className={targetKind === "soft" ? "is-selected" : ""} aria-pressed={targetKind === "soft"} onClick={() => setTargetKind("soft")}>旧节点 · soft q</button>
-          <button type="button" className={targetKind === "one" ? "is-selected" : ""} aria-pressed={targetKind === "one"} onClick={() => setTargetKind("one")}>新节点 · hard 1</button>
-          <button type="button" className={targetKind === "zero" ? "is-selected" : ""} aria-pressed={targetKind === "zero"} onClick={() => setTargetKind("zero")}>新节点 · hard 0</button>
-        </div>
-          <ResponseAxis target={target} current={current} />
-          <label className="p7-slider"><span>调整示意中的当前响应 <b>g = {showCalculation ? current.toFixed(2) : "···"}</b></span><input type="range" min="0.05" max="0.95" step="0.01" value={current} onChange={(event) => setCurrent(Number(event.target.value))} aria-label="调整示意中的当前 sigmoid 响应" /><span className="p7-slider__ends"><i>趋近 0</i><i>趋近 1</i></span></label>
-          <p className="p7-teaching-label">教学计算 · 滑块数值仅用于演示，并非论文报告的训练输出。</p>
-        </section>
-        <section className="p7-bce-formula"><span className="eyebrow">相同的 binary cross-entropy</span><div className="p7-equation">ℓ(r,g) = −[r log g + (1 − r) log(1 − g)]</div><p><b>hard</b> r ∈ {'{0, 1}'} &nbsp;·&nbsp; <b>soft</b> r = q ∈ [0, 1]</p>
-          <button type="button" className="icarl-button icarl-button--quiet" aria-expanded={showCalculation} onClick={() => setShowCalculation((value) => !value)}>{showCalculation ? "收起计算" : "查看计算"}</button>
-          {showCalculation ? <dl className="p7-calculation" aria-live="polite"><div><dt>目标 r</dt><dd>{target.toFixed(2)}{targetKind === "soft" ? " · 教学示例 q" : " · hard target"}</dd></div><div><dt>当前 g</dt><dd>{current.toFixed(2)} · sigmoid 输出</dd></div><div><dt>BCE ℓ(r,g)</dt><dd>{bce.toFixed(3)} · 根据显示的 r、g 计算</dd></div><div><dt>∂ℓ / ∂a = g − r</dt><dd>{gradient >= 0 ? "+" : ""}{gradient.toFixed(2)} · logit a</dd></div></dl> : null}
-        </section>
-      </div>
-      <details className="p7-gradient-note"><summary>sigmoid + BCE 如何影响 logit 更新？</summary><p>令 sigmoid 前的 logit 为 a，则 ∂ℓ/∂a = g − r。若 g 高于目标，梯度下降会倾向于降低该响应；若 g 低于目标，则会倾向于提高它。</p></details>
-    </section> : null}
-
-    {stage === 5 ? <section className="p7-loss-aggregation panel" aria-label="旧节点与新节点损失共同求和">
-      <div className="panel-heading"><div><span className="eyebrow">汇总各节点损失</span><h2>保持旧响应与监督新类别共同进入同一目标函数</h2></div><span className="p7-mini-badge">不额外添加 loss weight</span></div>
-      <div className="p7-loss-flow"><section className="p7-loss-branch p7-loss-branch--old"><span>旧类输出节点</span><b>L<sub>old</sub></b><small>Q 中的 soft target ↔ 当前 g₁, g₂, g₃</small></section><span className="p7-loss-plus" aria-hidden="true">+</span><section className="p7-loss-branch p7-loss-branch--new"><span>新类输出节点</span><b>L<sub>new</sub></b><small>真实标签 hard target ↔ 当前 g₄</small></section><i aria-hidden="true">→</i><section className="p7-loss-total"><span>总损失</span><b>L(Θ) = L<sub>old</sub> + L<sub>new</sub></b></section></div>
-      <button type="button" className="icarl-button icarl-button--quiet" aria-expanded={showObjective} onClick={() => setShowObjective((value) => !value)}>{showObjective ? "收起完整目标函数" : "展开完整目标函数"}</button>
-      {showObjective ? <div className="p7-objective" data-canonical-id="total_loss"><p><b>L<sub>old</sub></b> = − ∑<sub>(xᵢ,yᵢ)∈D</sub> ∑<sub>y∈old</sub> [qᵢʸ log gʸ(xᵢ) + (1−qᵢʸ) log(1−gʸ(xᵢ))]</p><p><b>L<sub>new</sub></b> = − ∑<sub>(xᵢ,yᵢ)∈D</sub> ∑<sub>y∈new</sub> [1[y=yᵢ] log gʸ(xᵢ) + 1[y≠yᵢ] log(1−gʸ(xᵢ))]</p><p><b>L(Θ) = L<sub>old</sub> + L<sub>new</sub></b></p><small>同一 BCE 项覆盖全部训练样本与对应节点；目标来源随节点类别而变。</small></div> : null}
-      <div className="p7-loss-note">论文算法将这两组 BCE 项直接相加；页面没有添加 λ 或可调 loss weight 控件。</div>
-    </section> : null}
-
-    {stage === 6 ? <section className="p7-backprop panel" aria-label="两类节点损失反向传播至共享网络">
-      <div className="panel-heading"><div><span className="eyebrow">更新共享表示</span><h2>输出节点分工不同，底层表示由两者共同更新</h2></div><span className="p7-mini-badge">反向传播</span></div>
-      <div className="p7-backprop-network">
-        <section className="p7-network-input"><b>D</b><span>旧 exemplars<br />+ 新到图像</span></section><i aria-hidden="true">→</i>
-        <section className="p7-network-feature" data-canonical-id="feature_extractor"><b>φ<sub>Θ</sub></b><span>共享特征提取器</span><small>Θ 同时受两项损失更新</small></section><i aria-hidden="true">→</i>
-        <section className="p7-network-head"><span>Training Head · sigmoid 节点</span><OutputNodes /></section><i aria-hidden="true">→</i>
-        <section className="p7-network-losses"><b>L<sub>old</sub></b><b>+</b><b>L<sub>new</sub></b><span>合为总损失</span></section>
-      </div>
-      <div className="p7-shared-branch"><i aria-hidden="true" /><span>两组梯度都经过各自输出节点，回传至共享特征提取器。</span></div>
-      <div className="p7-complement"><div><span>Q + DISTILLATION</span><b>告诉旧节点应保留怎样的响应。</b></div><i aria-hidden="true">+</i><div><span>D 中的旧 exemplars</span><b>提供真实旧类图像，让这项约束作用于具体输入。</b></div></div>
-      <p className="p7-handoff">Training Head 完成 targets → loss → gradient → 表示更新。训练结束后，最终预测走哪条路径？</p>
-      <button type="button" className="icarl-button icarl-button--primary p7-continue" onClick={onContinue} disabled={!onContinue}>继续到第 8 页 · Train ≠ Predict <span aria-hidden="true">→</span></button>
-    </section> : null}
+    {stage === 4 ? <><ResponsibilityMap mode={mode} /><CycleMiniMap />
+      <section className="p7-handoff panel"><div><span className="eyebrow">机制与证据相连</span><h2>这些设计由什么实验支持？</h2><p>下一页将通过 benchmark、组件对照与记忆边界，查看论文证据及其适用范围。</p></div><button type="button" className="icarl-button icarl-button--primary" onClick={onContinue} disabled={!onContinue}>继续到第 8 页 · 实验与边界 <span aria-hidden="true">→</span></button></section>
+    </> : null}
   </article>;
 }

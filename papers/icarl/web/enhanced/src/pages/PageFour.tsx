@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChartLabels, FEATURE_FRAME, featureStar, type ChartLabel } from "../components/FeatureChart";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
-import { PaperTerm } from "../components/PaperTerm";
 import {
   HERDING_DEMO_ORDER,
   HERDING_DEMO_POINTS,
@@ -89,7 +88,7 @@ function FeatureSpace({ roundIndex, candidate }: { roundIndex: number | null; ca
       const position = toChartPoint(point.feature);
       const isSelected = selectedIds.has(point.id);
       const isCandidate = candidate?.point.id === point.id;
-      return <g key={point.id}>{isSelected ? <circle className="p4-selected-ring" cx={position.x} cy={position.y} r="10" /> : null}{isCandidate ? <circle className="p4-candidate-ring" cx={position.x} cy={position.y} r="14" /> : null}<circle className={`p4-data-point${isSelected ? " is-selected" : ""}${isCandidate ? " is-candidate" : ""}`} cx={position.x} cy={position.y} r={isSelected || isCandidate ? 6 : 4.5} />{!isSelected && !isCandidate ? <text className="p4-point-id" x={position.x + 9} y={position.y - 9}>{point.id}</text> : null}</g>;
+    return <g key={point.id}>{isSelected ? <circle className="p4-selected-ring" cx={position.x} cy={position.y} r="10" /> : null}{isCandidate ? <circle className="p4-candidate-ring" cx={position.x} cy={position.y} r="14" /> : null}<circle className={`p4-data-point${isSelected ? " is-selected" : ""}${isCandidate ? " is-candidate" : ""}`} cx={position.x} cy={position.y} r={isSelected || isCandidate ? 6 : 4.5} />{isSelected || isCandidate ? <text className="p4-point-id" x={position.x + 9} y={position.y - 9}>{point.id}</text> : null}</g>;
     })}
     <polygon className="p4-raw-target" points={diamondPoints(targetRaw)} />
     <path className="p4-target" d={featureStar(target.x, target.y)} />
@@ -183,7 +182,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
     <header className="page-heading icarl-page__heading">
       <div className="icarl-page__eyebrow"><span>PAGE 04</span><i /> EXEMPLAR SELECTION &amp; MANAGEMENT</div>
       <h1>怎样找到少量代表，<br className="p4-title-break" />并让它们共同代表整个类别？</h1>
-      <p>P3 已经说明拿到少量代表图片后怎样预测，却暂时假定它们已经存在。现在从一个独立的单类 8→4 教学示例出发，沿着实际计算看懂 <PaperTerm termId="herding">Herding</PaperTerm> 怎样逐轮构造有序 Exemplars。</p>
+      <p>P3 已经说明拿到少量代表图片后怎样预测，却暂时假定它们已经存在。现在先想清楚应该什么时候筛选、又怎样让少量图片共同代表整个类别，再沿着一个独立的单类 8→4 教学示例逐步观察实际计算。</p>
     </header>
     <GuidedStepControls steps={steps} current={stage} onChange={changeStage} label="Page 4 Herding 筛选与管理教学步骤" />
     <section className="p4-reasoning" aria-live="polite"><span>0{stage + 1}</span><div><b>为什么进行这一步</b>{phaseNarratives[stage].map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div></section>
@@ -223,7 +222,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
         </> : null}
       </aside>
     </section>
-    <section className="p4-order-panel panel"><div><span className="eyebrow">ORDERED OUTPUT</span><h2>{stage < 5 ? "每轮只追加一个未选样本" : stage === 5 ? "前缀来自同一条选择顺序" : "容量缩小时只删除尾部"}</h2></div><OrderedSlots count={Math.min(stage, HERDING_DEMO_QUOTA)} /></section>
+    <section className="p4-order-panel panel"><div><span className="eyebrow">ORDERED OUTPUT</span><h2>{stage < 5 ? "每轮只追加一个未选样本" : stage === 5 ? "前缀来自同一条选择顺序" : "容量缩小时只删除尾部"}</h2></div><OrderedSlots count={stage < 5 ? stage : stage === 5 ? HERDING_DEMO_QUOTA : 3} /></section>
     <details className="p4-pseudocode"><summary>查看与当前动画同步的短伪代码</summary><div><code>输入：完整图片 X_y、已完成本轮训练的特征提取器 φ、名额 m=4</code><code className={stage === 0 ? "is-active" : ""}>μ ← normalize(mean({`{ normalize(φ(x)) | x ∈ X_y }`}))</code><code>P ← []</code><code className={stage > 0 ? "is-active" : ""}>for k = 1..m:</code><code className={stage > 0 ? "is-active" : ""}>　对每个未选候选 x：candidate_mean ← normalize(mean(P 中特征 + z(x)))</code><code className={stage > 0 ? "is-active" : ""}>　score(x) ← ‖ μ − candidate_mean ‖₂</code><code className={stage > 0 ? "is-active" : ""}>　p_k ← score 最小的候选；P.append(p_k)</code></div></details>
     <footer className="icarl-handoff"><div><span className="eyebrow">NEXT · PAGE 05</span><p>现在我们得到了一组有限、有序、可随预算维护的代表图片。P3 已看到它们帮助预测；下一页继续看它们怎样参与后续表示更新。</p></div>{onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入第 5 页 · 让 Exemplars 参与更新 <b aria-hidden="true">→</b></button> : null}</footer>
   </article>;

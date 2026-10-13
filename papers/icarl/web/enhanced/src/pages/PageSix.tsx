@@ -1,196 +1,186 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
-import { CLASS_VISUALS, INCOMING_CLASS_ID, INCOMING_SAMPLES, OLD_CLASS_IDS, OLD_MEMORY_SIZE, P_BEFORE, TRAINING_SET_SIZE, type Sample } from "../data/icarl-runtime";
+import { SampleToken } from "../components/SampleToken";
+import { P_BEFORE } from "../data/icarl-runtime";
+
+const OLD_EXAMPLE = P_BEFORE.A[0]!;
 
 const steps: readonly GuidedStep[] = [
-  { title: "当前网络、旧记忆和新类数据分别是什么？", short: "当前状态 + 新类" },
-  { title: "哪些图像合成训练集 D？", short: "准备 D" },
-  { title: "为什么先记录更新前响应？", short: "保存 Q" },
-  { title: "D 中每张图像都获得旧类响应吗？", short: "覆盖所有样本" },
-  { title: "更新 representation 前要准备好什么？", short: "ready to train" },
+  { title: "先按输出节点的年龄分组", short: "旧节点 / 新节点" },
+  { title: "新类图像同时面对两类目标", short: "新图像" },
+  { title: "旧 exemplar 也经过全部节点", short: "旧 exemplar" },
+  { title: "把 D 的目标读成一张矩阵", short: "目标矩阵" },
+  { title: "同一个 sigmoid + BCE 接收两类目标", short: "单节点 BCE" },
+  { title: "汇总旧节点与新节点损失", short: "总损失" },
+  { title: "两类损失共同更新共享表示", short: "反向传播" },
 ];
 
-const timelineSteps = [
-  "新类别到达",
-  "构造训练集 D",
-  "快照旧类响应 Q",
-  "更新 representation",
-  "计算新 quota",
-  "缩减旧 P",
-  "构造新 P",
-] as const;
+type TargetKind = "soft" | "one" | "zero";
+const SOFT_EXAMPLE_TARGET = 0.72;
 
-const OLD_EXEMPLARS: Sample[] = OLD_CLASS_IDS.flatMap((classId) => P_BEFORE[classId]);
-const TRAINING_ITEMS: Sample[] = [...OLD_EXEMPLARS, ...INCOMING_SAMPLES];
-
-function sampleStyle(sample: Sample) {
-  return { "--sample-accent": CLASS_VISUALS[sample.classId].color } as React.CSSProperties;
+function TargetPill({ kind, children }: { kind: TargetKind; children: ReactNode }) {
+  return <span className={`p6-target-pill p6-target-pill--${kind}`}>{children}</span>;
 }
 
-function SampleChip({ sample, origin }: { sample: Sample; origin: "old" | "new" }) {
-  return <span className={`p6-sample-chip p6-sample-chip--${origin}`} style={sampleStyle(sample)}>
-    <b>{CLASS_VISUALS[sample.classId].glyph} {CLASS_VISUALS[sample.classId].displayLabel}</b><span>{sample.id}</span><small>{origin === "old" ? "old exemplar" : "new full data"}</small>
-  </span>;
-}
-
-function MemoryBuckets() {
-  return <div className="p6-memory-buckets">
-    {OLD_CLASS_IDS.map((classId) => <section className="p6-memory-bucket" key={classId} style={{ "--bucket-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}>
-      <div><b>{CLASS_VISUALS[classId].displayLabel}</b><small>P<sub>{CLASS_VISUALS[classId].index}</sub> · {P_BEFORE[classId].length}</small></div>
-      <div className="p6-memory-bucket__samples">{P_BEFORE[classId].map((sample) => <SampleChip key={sample.id} sample={sample} origin="old" />)}</div>
-    </section>)}
+function OutputNodes({ old = ["1", "2", "3"], fresh = ["4"] }: { old?: string[]; fresh?: string[] }) {
+  return <div className="p6-node-groups" aria-label="旧类与新类输出节点">
+    <section className="p6-node-group p6-node-group--old" data-canonical-id="old_output_nodes">
+      <div><b>旧类输出节点</b><span>保留更新前的响应</span></div>
+      <div className="p6-node-group__nodes">{old.map((name) => <span key={name}>g<sub>{name}</sub></span>)}</div>
+    </section>
+    <section className="p6-node-group p6-node-group--new" data-canonical-id="new_output_nodes">
+      <div><b>新类输出节点</b><span>学习新到类别的指示目标</span></div>
+      <div className="p6-node-group__nodes">{fresh.map((name) => <span key={name}>g<sub>{name}</sub></span>)}</div>
+    </section>
   </div>;
 }
 
-function OutputNodes({ compact = false }: { compact?: boolean }) {
-  return <div className={`p6-output-nodes${compact ? " p6-output-nodes--compact" : ""}`} aria-label="本轮扩展后的旧类与新类输出节点">
-    {OLD_CLASS_IDS.map((classId) => <span key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}><i />{CLASS_VISUALS[classId].outputNodeLabel}</span>)}
-    <span className="p6-output-nodes__new" style={{ "--node-accent": CLASS_VISUALS[INCOMING_CLASS_ID].color } as React.CSSProperties}><i />{CLASS_VISUALS[INCOMING_CLASS_ID].outputNodeLabel}</span>
-    {compact ? null : <small>新增 g₄ 已在本轮训练前加入；Q 只快照旧节点响应。</small>}
+function TargetRow({ oldSample, active = false }: { oldSample?: boolean; active?: boolean }) {
+  const classes = ["p6-target-row", oldSample ? "p6-target-row--old" : "p6-target-row--new", active ? "is-active" : ""];
+  return <div className={classes.join(" ")} role="row">
+    <span className="p6-target-row__sample" role="rowheader">
+      <b>{oldSample ? `${OLD_EXAMPLE.id} ∈ P₁` : "D-01"}</b>
+      <small>{oldSample ? "P₁ 中的具体 exemplar · 真实类别 Class 1" : "新到图像 · 真实类别 Class 4"}</small>
+    </span>
+    {(["1", "2", "3"] as const).map((node) => <span className="p6-target-cell p6-target-cell--soft" role="cell" key={node}>
+      <small>g<sub>{node}</sub></small><TargetPill kind="soft">q<sub>i</sub><sup>{node}</sup></TargetPill>
+    </span>)}
+    <span className="p6-target-cell p6-target-cell--hard" role="cell">
+      <small>g<sub>4</sub></small><TargetPill kind={oldSample ? "zero" : "one"}>{oldSample ? "hard 0" : "hard 1"}</TargetPill>
+    </span>
   </div>;
 }
 
-function UpdateTimeline({ stage }: { stage: number }) {
-  const currentStep = stage === 0 ? 0 : stage === 1 ? 1 : 2;
-  return <section className="p6-timeline" aria-label="一次增量更新时间线">
-    <div className="p6-timeline__heading"><div><span className="eyebrow">ONE INCREMENTAL UPDATE</span><b>更新顺序</b></div><span>本页聚焦 ①–③</span></div>
-    <ol>
-      {timelineSteps.map((label, index) => <li key={label} className={`${index <= 2 ? "is-in-scope" : "is-later"}${index === currentStep && stage <= 2 ? " is-current" : index < currentStep || (stage > 2 && index <= currentStep) ? " is-done" : ""}`}>
-        <span className="p6-timeline__number">{String(index + 1).padStart(2, "0")}</span><b>{label}</b>
-        {index < timelineSteps.length - 1 ? <i aria-hidden="true">→</i> : null}
-      </li>)}
-    </ol>
-    <p>下一步 ④ 才开始参数更新；⑤–⑦ 进入记忆 quota 与 exemplar 操作。</p>
-  </section>;
-}
-
-function ResponseMatrix({ items = TRAINING_ITEMS }: { items?: readonly Sample[] }) {
-  return <div className="p6-response-matrix" role="table" aria-label={`D 中全部 ${items.length} 个样本，对应 ${OLD_CLASS_IDS.length} 个旧类别 response targets`}>
-    <div className="p6-response-row p6-response-row--head" role="row">
-      <span role="columnheader">D 中样本</span>
-      {OLD_CLASS_IDS.map((classId) => <span role="columnheader" key={classId} style={{ "--node-accent": CLASS_VISUALS[classId].color } as React.CSSProperties}>{CLASS_VISUALS[classId].outputNodeLabel}</span>)}
+function TargetMatrix({ compact = false }: { compact?: boolean }) {
+  return <div className="p6-matrix-scroll" role="region" aria-label="训练样本与所有输出节点目标，可横向滚动" tabIndex={0}>
+    <div className={`p6-target-matrix${compact ? " p6-target-matrix--compact" : ""}`} role="table" aria-label="训练样本与输出节点目标矩阵" data-canonical-id="target_matrix">
+      <div className="p6-target-row p6-target-row--head" role="row">
+        <span role="columnheader">训练集 D 中的样本</span>
+        <span className="p6-target-band p6-target-band--old" role="columnheader" aria-label="旧节点 1、2、3">旧节点 <small>1 · 2 · 3</small></span>
+        <span className="p6-target-band p6-target-band--new" role="columnheader" aria-label="新节点 4">新节点 <small>4</small></span>
+      </div>
+      <TargetRow />
+      <TargetRow oldSample active={compact} />
     </div>
-    {items.map((sample) => {
-      const origin = sample.classId === INCOMING_CLASS_ID ? "new" : "old";
-      return <div className={`p6-response-row p6-response-row--${origin}`} role="row" key={sample.id}>
-        <span className="p6-response-row__sample" role="rowheader" style={sampleStyle(sample)}><b>{CLASS_VISUALS[sample.classId].index}</b><span>{sample.id}</span><small>{origin === "old" ? "P" : "X"}</small></span>
-        {OLD_CLASS_IDS.map((classId) => <span className="p6-q-cell" role="cell" key={classId} aria-label={`q_${sample.id}^${CLASS_VISUALS[classId].index} 已记录`} title={`q_${sample.id}^${CLASS_VISUALS[classId].index} · 更新前旧类 response`}><i aria-hidden="true">●</i><small className="p6-sr-only">qᵢ^{CLASS_VISUALS[classId].index} response 已记录并锁定</small></span>)}
-      </div>;
-    })}
   </div>;
 }
 
-function ObjectLifetime() {
-  return <details className="p6-lifetime">
-    <summary>Inspect object lifetime</summary>
-    <div className="p6-lifetime__table" role="table" aria-label="一次增量更新中对象的生命周期">
-      <div role="row"><b role="columnheader">对象</b><b role="columnheader">生命周期</b></div>
-      <div role="row"><span role="cell">Θ</span><span role="cell">跨增量阶段持续存在，并在更新中改变</span></div>
-      <div role="row"><span role="cell">P</span><span role="cell">跨阶段保留；memory 本身不因读取而消失</span></div>
-      <div role="row"><span role="cell">X<sub>new</sub></span><span role="cell">本次新类别阶段提供的完整图像</span></div>
-      <div role="row"><span role="cell">D</span><span role="cell">本次 representation update 使用的训练集</span></div>
-      <div role="row"><span role="cell">Q</span><span role="cell">只在本次 update 内固定使用的 response snapshot</span></div>
+function ResponseAxis({ target, current }: { target: number; current: number }) {
+  const targetKind: TargetKind = target === 1 ? "one" : target === 0 ? "zero" : "soft";
+  return <div className="p6-response-axis" aria-label="target 与当前 sigmoid 响应的相对位置">
+    <div className="p6-response-axis__ends"><span>0</span><span>独立 sigmoid 输出</span><span>1</span></div>
+    <div className="p6-response-axis__rail">
+      <span className={`p6-response-axis__target p6-response-axis__target--${targetKind}`} style={{ left: `${target * 100}%` }} aria-label="target position"><i /></span>
+      <span className="p6-response-axis__current" style={{ left: `${current * 100}%` }} aria-label="当前响应位置"><i /><b>当前 g</b></span>
     </div>
-  </details>;
+    <div className="p6-response-axis__legend"><span><i className={`p6-marker p6-marker--${targetKind}`} /> 目标 r</span><span><i className="p6-marker p6-marker--current" /> 当前 g</span></div>
+  </div>;
+}
+
+function TargetSample({ oldSample }: { oldSample?: boolean }) {
+  return <div className={`p6-sample-card${oldSample ? " p6-sample-card--old" : " p6-sample-card--new"}`}>
+    {oldSample ? <SampleToken sample={OLD_EXAMPLE} role="exemplar" compact /> : <span className="p6-sample-card__image" aria-hidden="true">X</span>}
+    <div><span className="eyebrow">{oldSample ? "来自 exemplar 记忆" : "来自新到数据"}</span><b>{oldSample ? `${OLD_EXAMPLE.id} ∈ P₁` : "新图像 D-01"}</b><small>{oldSample ? "P₁ 是有序 exemplar 列表；此处展示其中一个样本" : "真实类别：Class 4"}</small></div>
+  </div>;
 }
 
 export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const [stage, setStage] = useState(0);
+  const [targetKind, setTargetKind] = useState<TargetKind>("soft");
+  const [current, setCurrent] = useState(0.42);
+  const [showCalculation, setShowCalculation] = useState(false);
+  const [showObjective, setShowObjective] = useState(false);
+  const target = targetKind === "one" ? 1 : targetKind === "zero" ? 0 : SOFT_EXAMPLE_TARGET;
+  const safeCurrent = Math.min(0.999, Math.max(0.001, current));
+  const bce = -(target * Math.log(safeCurrent) + (1 - target) * Math.log(1 - safeCurrent));
+  const gradient = safeCurrent - target;
 
-  return (
-    <article className="tutorial-page icarl-page icarl-page--p6">
-      <header className="page-heading icarl-page__heading">
-        <div className="icarl-page__eyebrow"><span>PAGE 06</span><i /> BEFORE UPDATE</div>
-        <h1>更新开始前，先准备样本与旧类响应</h1>
-        <p>新类数据和旧 exemplars 先组成训练集 D。任何参数变化发生之前，当前网络对 D 中每个样本记录旧类别<PaperTerm termId="response-snapshot-q" />。</p>
-      </header>
+  return <article className="tutorial-page icarl-page icarl-page--p7">
+    <header className="page-heading icarl-page__heading">
+      <div className="icarl-page__eyebrow"><span>PAGE 06</span><i /> 蒸馏与损失</div>
+      <h1>每张图像都在旧节点与新节点上学习</h1>
+      <p>从第 5 页准备好的训练集 D 与<PaperTerm termId="response-snapshot-q" />出发：旧节点用<PaperTerm termId="soft-target" />保留更新前响应，这一机制称为<PaperTerm termId="distillation" />；新节点学习当前标签。两部分都使用<PaperTerm termId="binary-cross-entropy">逐节点二元交叉熵（BCE）</PaperTerm>，随后共同更新表示。</p>
+    </header>
 
-      <UpdateTimeline stage={stage} />
-      <GuidedStepControls steps={steps} current={stage} onChange={setStage} label="Page 6 更新前状态教学步骤" />
+    <GuidedStepControls steps={steps} current={stage} onChange={setStage} label="Page 6 目标分配与损失教学步骤" />
 
-      {stage === 0 ? <section className="p6-start-grid" aria-label="更新前已有状态与到达的新类别">
-        <section className="panel p6-persistent-state">
-          <div className="panel-heading"><div><span className="eyebrow">CURRENT PERSISTENT STATE</span><h2>网络 Θ 与旧记忆 P</h2></div><span className="p6-persistent-badge">跨阶段保留</span></div>
-          <div className="p6-theta-card"><div><b>Θ</b><span>current network parameters</span></div><i aria-hidden="true">→</i><div className="p6-feature-head"><b>φ</b><span>feature extractor</span></div><i aria-hidden="true">+</i><div><b>g₁, g₂, g₃, g₄</b><span>expanded output layer · before training</span></div></div>
-          <OutputNodes />
-          <div className="p6-memory-heading"><b>P = (P<sub>1</sub>, P<sub>2</sub>, P<sub>3</sub>)</b><span>persistent exemplar memory · {OLD_MEMORY_SIZE} images</span></div>
-          <MemoryBuckets />
-          <p className="p6-persistent-note">这些旧 exemplars 会被读取并放入 D；P 仍留在持久 memory 中。</p>
-        </section>
-        <section className="panel p6-incoming-state">
-          <div className="panel-heading"><div><span className="eyebrow">INCOMING STAGE DATA</span><h2>Class 4 的完整训练图像</h2></div><span className="p6-new-count">{INCOMING_SAMPLES.length} images</span></div>
-          <p className="p6-panel-intro">新类到达时，当前阶段可以访问 X<sub>D</sub> 中的全部样本。</p>
-          <div className="p6-incoming-list">{INCOMING_SAMPLES.map((sample) => <SampleChip key={sample.id} sample={sample} origin="new" />)}</div>
-          <div className="p6-state-separation" aria-label="持久模型、持久记忆和新阶段数据共同组成当前更新状态">
-            <div className="p6-state-item"><span>网络参数</span><b>Θ</b></div>
-            <i aria-hidden="true">+</i>
-            <div className="p6-state-item"><span>旧类记忆</span><b>P</b></div>
-            <i aria-hidden="true">+</i>
-            <div className="p6-state-item"><span>新类数据</span><strong>X<sub>D</sub></strong></div>
-          </div>
-        </section>
-      </section> : null}
+    {stage === 0 ? <section className="p6-node-overview panel" aria-label="按输出节点区分训练责任">
+      <div className="panel-heading"><div><span className="eyebrow">同一训练集 · D</span><h2>先按节点所属阶段分组</h2></div><span className="p6-mini-badge">target 由节点新旧决定</span></div>
+      <div className="p6-origin-flow"><div><b>D</b><span>旧 exemplars + 新到图像</span></div><i aria-hidden="true">→</i><div className="p6-shared-network"><b>当前共享网络</b><span>共享特征提取器 φ<sub>Θ</sub></span></div><i aria-hidden="true">→</i><div className="p6-output-box"><span>sigmoid 输出</span><OutputNodes /></div></div>
+      <div className="p6-node-principle"><span>关键判断</span><b>Hard / soft 由输出节点的新旧决定，与输入图像是旧样本还是新样本无关。</b></div>
+      <p className="p6-evidence-note"><b>承接第 5 页</b> · D 中每个样本都进入当前网络；Q 保存它在所有旧节点上的更新前响应。</p>
+    </section> : null}
 
-      {stage === 1 ? <section className="p6-build-set" aria-label="构造 training set D">
-        <div className="p6-source-panels">
-          <section className="panel p6-source-card p6-source-card--old"><div className="panel-heading"><div><span className="eyebrow">PERSISTENT MEMORY</span><h2>旧类 exemplars</h2></div><span>{OLD_EXEMPLARS.length}</span></div><p>P 中样本被读取进 D，来源 memory 仍然保留。</p><div className="p6-source-card__samples">{OLD_EXEMPLARS.map((sample) => <SampleChip key={sample.id} sample={sample} origin="old" />)}</div><b className="p6-source-stays">P remains stored</b></section>
-          <span className="p6-set-plus" aria-hidden="true">+</span>
-          <section className="panel p6-source-card p6-source-card--new"><div className="panel-heading"><div><span className="eyebrow">INCOMING FULL DATA</span><h2>新类 X<sub>D</sub></h2></div><span>{INCOMING_SAMPLES.length}</span></div><p>本阶段所有新类图像都进入训练集合。</p><div className="p6-source-card__samples">{INCOMING_SAMPLES.map((sample) => <SampleChip key={sample.id} sample={sample} origin="new" />)}</div><b className="p6-source-stays">all new images available</b></section>
-          <span className="p6-set-arrow" aria-hidden="true">→</span>
+    {stage === 1 ? <section className="p6-sample-target panel" aria-label="新类图像上的 soft 与 hard targets">
+      <div className="panel-heading"><div><span className="eyebrow">新类图像 · yᵢ = Class 4</span><h2>同一张新图像具有两组 target</h2></div><span className="p6-mini-badge p6-mini-badge--new">D-01</span></div>
+      <div className="p6-sample-target__layout"><TargetSample />
+        <div className="p6-target-strip">
+          <section><b className="p6-target-strip__heading">旧节点 · 保持响应</b><div>{["1", "2", "3"].map((node) => <div className="p6-strip-node" key={node}><span>g<sub>{node}</sub></span><TargetPill kind="soft">q<sub>i</sub><sup>{node}</sup></TargetPill></div>)}</div><p>从训练前的 Q 读取各旧节点的响应。</p></section>
+          <section><b className="p6-target-strip__heading">新节点 · 学习类别</b><div className="p6-strip-node"><span>g<sub>4</sub></span><TargetPill kind="one">hard 1</TargetPill></div><p>样本真实类别是 Class 4，因此 g₄ 节点的 target 为 1。</p></section>
         </div>
-        <section className="panel p6-dataset-panel">
-          <div className="panel-heading"><div><span className="eyebrow">TRAINING SET · D</span><h2>两类来源汇入同一训练集</h2></div><strong>|D| = {TRAINING_SET_SIZE}</strong></div>
-          <div className="p6-dataset-equation"><span>∪ old exemplars from P</span><i aria-hidden="true">+</i><span>∪ full new-class data X<sub>D</sub></span><i aria-hidden="true">=</i><b>D</b></div>
-          <div className="p6-dataset-groups"><section><b>OLD · {OLD_EXEMPLARS.length}</b><div>{OLD_EXEMPLARS.map((sample) => <SampleChip key={sample.id} sample={sample} origin="old" />)}</div></section><section><b>NEW · {INCOMING_SAMPLES.length}</b><div>{INCOMING_SAMPLES.map((sample) => <SampleChip key={sample.id} sample={sample} origin="new" />)}</div></section></div>
-          <p className="p6-dataset-note">D 中训练样本统一送入本轮更新；旧 exemplar 在 D 中作为样本参与训练，P 则继续作为持久记忆保留。</p>
-        </section>
-      </section> : null}
+      </div>
+      <div className="p6-callout"><b>Soft target ≠ 模糊 ground truth</b><span>qᵢʸ 是训练前模型对这张输入在旧类别节点上的连续 response。不同旧节点的 q 值彼此独立，不要求加总为 1。</span></div>
+    </section> : null}
 
-      {stage === 2 ? <section className="p6-snapshot-grid" aria-label="更新前网络为 D 中样本记录 Q">
-        <section className="panel p6-snapshot-input"><div className="panel-heading"><div><span className="eyebrow">READY TRAINING SET</span><h2>D 已准备好</h2></div><strong>{TRAINING_SET_SIZE} samples</strong></div>
-          <div className="p6-count-breakdown"><span>old exemplars<strong>{OLD_EXEMPLARS.length}</strong></span><i>+</i><span>new full data<strong>{INCOMING_SAMPLES.length}</strong></span><i>=</i><b>D · {TRAINING_SET_SIZE}</b></div>
-          <div className="p6-representative-rows"><div><span className="p6-origin-tag p6-origin-tag--old">OLD</span><b>old exemplar</b><small>每个旧记忆图像</small></div><div><span className="p6-origin-tag p6-origin-tag--new">NEW</span><b>new-class image</b><small>每个新类完整数据样本</small></div></div>
-          <p>D 中的每个样本都要由当前网络记录 old-class responses。</p>
-        </section>
-        <section className="panel p6-snapshot-pipeline"><div className="panel-heading"><div><span className="eyebrow">BEFORE ANY PARAMETER UPDATE</span><h2>先快照旧节点响应</h2></div><span className="p6-snapshot-badge">pre-update</span></div>
-          <div className="p6-snapshot-flow"><div className="p6-flow-node p6-flow-node--d"><b>D</b><span>all {TRAINING_SET_SIZE} samples</span></div><i aria-hidden="true">→</i><div className="p6-flow-network"><span className="eyebrow">CURRENT MODEL · Θ<sub>before</sub></span><b>φ + old output head</b><OutputNodes compact /><small>此刻还是本轮唯一的 current network</small></div><i aria-hidden="true">→</i><div className="p6-flow-node p6-flow-node--q"><b>Q</b><span>update-local response snapshot</span></div></div>
-          <div className="p6-response-formula"><b>q<sub>i</sub><sup>y</sup> = g<sub>y</sub>(x<sub>i</sub>)</b><span>y ∈ {"{"}{OLD_CLASS_IDS.map((classId) => CLASS_VISUALS[classId].index).join(", ")}{"}"}</span></div>
-          <p className="p6-snapshot-note">只有先记录 Q，后续改变 Θ 时才不会丢掉此次更新开始前的旧类 response。Q 完成后固定于本轮 update；它不是永久维护的第二个模型。</p>
-        </section>
-      </section> : null}
-
-      {stage === 3 ? <section className="panel p6-matrix-panel" aria-label="D 中所有样本的旧类别响应矩阵">
-        <div className="panel-heading"><div><span className="eyebrow">ALL TRAINING SAMPLES RECEIVE OLD-CLASS RESPONSES</span><h2>D 中每一行都快照所有旧输出节点</h2></div><span className="p6-matrix-count">{TRAINING_SET_SIZE} × {OLD_CLASS_IDS.length}</span></div>
-        <p className="p6-matrix-intro">行是 D 中的实际样本；列是更新开始前已存在的旧类输出节点。每个 ● 表示对应的 q<sub>i</sub><sup>y</sup> 已记录，不显示虚构数值。</p>
-        <div className="p6-matrix-legend"><span><i className="p6-origin-tag p6-origin-tag--old">P</i>旧 exemplar</span><span><i className="p6-origin-tag p6-origin-tag--new">X</i>新类完整数据</span><span><i className="p6-q-dot" />response snapshot present</span></div>
-        <div className="p6-matrix-groups">
-          <section><div className="p6-matrix-group-heading"><b>OLD EXEMPLARS FROM P</b><span>{OLD_EXEMPLARS.length} rows</span></div><ResponseMatrix items={OLD_EXEMPLARS} /></section>
-          <section><div className="p6-matrix-group-heading"><b>NEW FULL DATA X<sub>D</sub></b><span>{INCOMING_SAMPLES.length} rows</span></div><ResponseMatrix items={INCOMING_SAMPLES} /></section>
+    {stage === 2 ? <section className="p6-sample-target panel" aria-label="旧 exemplar 在所有输出节点上的 targets">
+      <div className="panel-heading"><div><span className="eyebrow">OLD EXEMPLAR · yᵢ = Class 1</span><h2>旧图像也经过新节点</h2></div><span className="p6-mini-badge p6-mini-badge--old">P₁</span></div>
+      <div className="p6-sample-target__layout"><TargetSample oldSample />
+        <div className="p6-target-strip">
+          <section><b className="p6-target-strip__heading">旧节点 · 保持响应</b><div>{["1", "2", "3"].map((node) => <div className="p6-strip-node" key={node}><span>g<sub>{node}</sub></span><TargetPill kind="soft">q<sub>i</sub><sup>{node}</sup></TargetPill></div>)}</div><p>仍使用 Q 中这张 exemplar 对应的旧节点响应。</p></section>
+          <section><b className="p6-target-strip__heading">新节点 · 学习类别</b><div className="p6-strip-node"><span>g<sub>4</sub></span><TargetPill kind="zero">hard 0</TargetPill></div><p>类别 1 不等于新类别 4，因此 g₄ 节点的 target 为 0。</p></section>
         </div>
-        <div className="p6-all-samples-takeaway"><b>all |D| = {TRAINING_SET_SIZE}</b><span>old exemplars and new-class images are treated alike for the pre-update old-node snapshot.</span></div>
-        <div className="p6-q-locked"><span>Q</span><b>LOCKED DURING THIS UPDATE</b><small>Θ changes later; these pre-update responses do not.</small></div>
-          <p className="p6-new-nodes-note">All four output nodes are present before training. Q snapshots only g₁–g₃; the new node g₄ receives its hard target from the label.</p>
-      </section> : null}
+      </div>
+      <div className="p6-node-principle"><span>为什么两种目标都需要？</span><b>Exemplars 提供真实旧类输入；distillation 指定旧输出节点在这些输入上应保留的响应。</b></div>
+    </section> : null}
 
-      {stage === 4 ? <section className="p6-ready" aria-label="更新前准备完成">
-        <div className="p6-ready-flow">
-          <section className="p6-ready-card p6-ready-card--d"><span className="eyebrow">TRAINING SET</span><b>D</b><div><span>{OLD_EXEMPLARS.length} old exemplars</span><i>+</i><span>{INCOMING_SAMPLES.length} new images</span></div><strong>{TRAINING_SET_SIZE} samples total</strong></section>
-          <i className="p6-ready-arrow" aria-hidden="true">→</i>
-          <section className="p6-ready-card p6-ready-card--q"><span className="eyebrow">FROZEN TARGET INFORMATION</span><b>Q <small>LOCKED</small></b><div><span>{TRAINING_SET_SIZE} sample rows</span><i>×</i><span>{OLD_CLASS_IDS.length} old nodes</span></div><strong>update-local · fixed</strong></section>
-          <i className="p6-ready-arrow" aria-hidden="true">→</i>
-          <section className="p6-ready-card p6-ready-card--theta"><span className="eyebrow">CURRENT NETWORK</span><b>Θ</b><div><OutputNodes compact /></div><strong>ready for representation update</strong></section>
+    {stage === 3 ? <section className="p6-matrix-workbench panel" aria-label="D 中样本与输出节点目标矩阵">
+      <div className="panel-heading"><div><span className="eyebrow">样本 × 输出节点目标</span><h2>目标按列区分，每个样本都覆盖所有节点</h2></div><span className="p6-mini-badge">所有行 → 所有节点</span></div>
+      <TargetMatrix />
+      <div className="p6-matrix-foot"><span><i className="p6-marker p6-marker--soft" /> 旧节点 target 来自 Q</span><span><i className="p6-marker p6-marker--one" /> 新类真实标签</span><span><i className="p6-marker p6-marker--zero" /> 其他新类</span></div>
+      <p className="p6-evidence-note">类别 1–4 只标出输出节点对应的类别；表内不伪造论文未报告的 q 数值。输入属于新类或 exemplar，都有旧节点 soft targets。</p>
+    </section> : null}
+
+    {stage === 4 ? <section className="p6-bce-workbench panel" aria-label="交互式单节点二元交叉熵示意">
+      <div className="panel-heading"><div><span className="eyebrow">单个 sigmoid 节点 · 单个 BCE</span><h2>hard 与 soft target 共用同一损失</h2></div><span className="p6-mini-badge">单节点查看器</span></div>
+      <div className="p6-bce-layout">
+        <section className="p6-bce-select"><div className="p6-target-choice" role="group" aria-label="选择单节点 target 类型">
+          <button type="button" className={targetKind === "soft" ? "is-selected" : ""} aria-pressed={targetKind === "soft"} onClick={() => setTargetKind("soft")}>旧节点 · soft q</button>
+          <button type="button" className={targetKind === "one" ? "is-selected" : ""} aria-pressed={targetKind === "one"} onClick={() => setTargetKind("one")}>新节点 · hard 1</button>
+          <button type="button" className={targetKind === "zero" ? "is-selected" : ""} aria-pressed={targetKind === "zero"} onClick={() => setTargetKind("zero")}>新节点 · hard 0</button>
         </div>
-        <div className="p6-ready-note"><b>P persists alongside Θ.</b><span>旧 exemplars 被读取进 D，但没有被消耗。Q 保存完成后，不需要把 pre-update 状态长期保留为第二套网络；同一个 current Θ 继续进入更新。</span></div>
-        <ObjectLifetime />
-      </section> : null}
+          <ResponseAxis target={target} current={current} />
+          <label className="p6-slider"><span>调整示意中的当前响应 <b>g = {showCalculation ? current.toFixed(2) : "···"}</b></span><input type="range" min="0.05" max="0.95" step="0.01" value={current} onChange={(event) => setCurrent(Number(event.target.value))} aria-label="调整示意中的当前 sigmoid 响应" /><span className="p6-slider__ends"><i>趋近 0</i><i>趋近 1</i></span></label>
+          <p className="p6-teaching-label">教学计算 · 滑块数值仅用于演示，并非论文报告的训练输出。</p>
+        </section>
+        <section className="p6-bce-formula"><span className="eyebrow">相同的 binary cross-entropy</span><div className="p6-equation">ℓ(r,g) = −[r log g + (1 − r) log(1 − g)]</div><p><b>hard</b> r ∈ {'{0, 1}'} &nbsp;·&nbsp; <b>soft</b> r = q ∈ [0, 1]</p>
+          <button type="button" className="icarl-button icarl-button--quiet" aria-expanded={showCalculation} onClick={() => setShowCalculation((value) => !value)}>{showCalculation ? "收起计算" : "查看计算"}</button>
+          {showCalculation ? <dl className="p6-calculation" aria-live="polite"><div><dt>目标 r</dt><dd>{target.toFixed(2)}{targetKind === "soft" ? " · 教学示例 q" : " · hard target"}</dd></div><div><dt>当前 g</dt><dd>{current.toFixed(2)} · sigmoid 输出</dd></div><div><dt>BCE ℓ(r,g)</dt><dd>{bce.toFixed(3)} · 根据显示的 r、g 计算</dd></div><div><dt>∂ℓ / ∂a = g − r</dt><dd>{gradient >= 0 ? "+" : ""}{gradient.toFixed(2)} · logit a</dd></div></dl> : null}
+        </section>
+      </div>
+      <details className="p6-gradient-note"><summary>sigmoid + BCE 如何影响 logit 更新？</summary><p>令 sigmoid 前的 logit 为 a，则 ∂ℓ/∂a = g − r。若 g 高于目标，梯度下降会倾向于降低该响应；若 g 低于目标，则会倾向于提高它。</p></details>
+    </section> : null}
 
-      <section className="icarl-concept-note"><span className="icarl-concept-note__index">0{stage + 1}</span><div><span className="eyebrow">这一幕要看懂</span><p>{stage === 0 ? "开始更新时，Θ 和旧 exemplar memory P 已持久存在；新类完整图像 Xᴅ 刚刚到达。" : stage === 1 ? "D 由所有新类完整数据和旧类 exemplars 合成；旧记忆作为训练来源被读取，但 P 不会消失。" : stage === 2 ? "参数更新之前，pre-update current network 对整个 D 保存旧输出节点 response，形成本轮使用的 Q。" : stage === 3 ? "qᵢʸ 覆盖 D 中全部样本：旧 exemplar 和新类图像都经过同一个 pre-update model。" : "保留本轮 D、冻结的 Q 和可训练的 current Θ；完成准备后才进入训练目标构造。"}</p></div></section>
+    {stage === 5 ? <section className="p6-loss-aggregation panel" aria-label="旧节点与新节点损失共同求和">
+      <div className="panel-heading"><div><span className="eyebrow">汇总各节点损失</span><h2>保持旧响应与监督新类别共同进入同一目标函数</h2></div><span className="p6-mini-badge">不额外添加 loss weight</span></div>
+      <div className="p6-loss-flow"><section className="p6-loss-branch p6-loss-branch--old"><span>旧类输出节点</span><b>L<sub>old</sub></b><small>Q 中的 soft target ↔ 当前 g₁, g₂, g₃</small></section><span className="p6-loss-plus" aria-hidden="true">+</span><section className="p6-loss-branch p6-loss-branch--new"><span>新类输出节点</span><b>L<sub>new</sub></b><small>真实标签 hard target ↔ 当前 g₄</small></section><i aria-hidden="true">→</i><section className="p6-loss-total"><span>总损失</span><b>L(Θ) = L<sub>old</sub> + L<sub>new</sub></b></section></div>
+      <button type="button" className="icarl-button icarl-button--quiet" aria-expanded={showObjective} onClick={() => setShowObjective((value) => !value)}>{showObjective ? "收起完整目标函数" : "展开完整目标函数"}</button>
+      {showObjective ? <div className="p6-objective" data-canonical-id="total_loss"><p><b>L<sub>old</sub></b> = − ∑<sub>(xᵢ,yᵢ)∈D</sub> ∑<sub>y∈old</sub> [qᵢʸ log gʸ(xᵢ) + (1−qᵢʸ) log(1−gʸ(xᵢ))]</p><p><b>L<sub>new</sub></b> = − ∑<sub>(xᵢ,yᵢ)∈D</sub> ∑<sub>y∈new</sub> [1[y=yᵢ] log gʸ(xᵢ) + 1[y≠yᵢ] log(1−gʸ(xᵢ))]</p><p><b>L(Θ) = L<sub>old</sub> + L<sub>new</sub></b></p><small>同一 BCE 项覆盖全部训练样本与对应节点；目标来源随节点类别而变。</small></div> : null}
+      <div className="p6-loss-note">论文算法将这两组 BCE 项直接相加；页面没有添加 λ 或可调 loss weight 控件。</div>
+    </section> : null}
 
-      <footer className="icarl-handoff">
-        <div><span className="eyebrow">NEXT · PAGE 07</span><p>怎样把旧类 response 与新类 label 变成不同输出节点的训练目标？</p></div>
-        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入第 7 页 · 目标与损失 <b aria-hidden="true">→</b></button> : <span className="icarl-handoff__upcoming">下一页</span>}
-      </footer>
-    </article>
-  );
+    {stage === 6 ? <section className="p6-backprop panel" aria-label="两类节点损失反向传播至共享网络">
+      <div className="panel-heading"><div><span className="eyebrow">更新共享表示</span><h2>输出节点分工不同，底层表示由两者共同更新</h2></div><span className="p6-mini-badge">反向传播</span></div>
+      <div className="p6-backprop-network">
+        <section className="p6-network-input"><b>D</b><span>旧 exemplars<br />+ 新到图像</span></section><i aria-hidden="true">→</i>
+        <section className="p6-network-feature" data-canonical-id="feature_extractor"><b>φ<sub>Θ</sub></b><span>共享特征提取器</span><small>Θ 同时受两项损失更新</small></section><i aria-hidden="true">→</i>
+        <section className="p6-network-head"><span>Training Head · sigmoid 节点</span><OutputNodes /></section><i aria-hidden="true">→</i>
+        <section className="p6-network-losses"><b>L<sub>old</sub></b><b>+</b><b>L<sub>new</sub></b><span>合为总损失</span></section>
+      </div>
+      <div className="p6-shared-branch"><i aria-hidden="true" /><span>两组梯度都经过各自输出节点，回传至共享特征提取器。</span></div>
+      <div className="p6-complement"><div><span>Q + DISTILLATION</span><b>告诉旧节点应保留怎样的响应。</b></div><i aria-hidden="true">+</i><div><span>D 中的旧 exemplars</span><b>提供真实旧类图像，让这项约束作用于具体输入。</b></div></div>
+      <p className="p6-handoff">Training Head 完成 targets → loss → gradient → 表示更新。训练结束后，最终预测走哪条路径？</p>
+      <button type="button" className="icarl-button icarl-button--primary p6-continue" onClick={onContinue} disabled={!onContinue}>继续到第 7 页 · Train ≠ Predict <span aria-hidden="true">→</span></button>
+    </section> : null}
+  </article>;
 }
