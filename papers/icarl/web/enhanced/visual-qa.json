@@ -86,6 +86,57 @@
           ]
         }
       ]
+    },
+    {
+      "id": "icarl-p1-to-p5-handoffs",
+      "path": "/",
+      "states": [
+        {
+          "id": "p1-problem-to-model",
+          "actions": [
+            { "type": "click", "selector": ".p1-step-nav__item:nth-child(6)" },
+            { "type": "waitFor", "selector": ".p1-problem.is-active", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p2-model-to-prototype",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(2)" },
+            { "type": "click", "selector": ".p2-action" },
+            { "type": "waitFor", "selector": ".p2-handoff", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p4-memory-continuity",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "waitFor", "selector": ".icarl-page--p4", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p4-budget-to-herding",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(6)" },
+            { "type": "waitFor", "selector": ".p4-mean-question", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p5-class4-herding",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
+            { "type": "waitFor", "selector": ".p5-example-note", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p5-prefix-to-training",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
+            { "type": "click", "selector": ".icarl-guided__step:nth-child(6)" },
+            { "type": "waitFor", "selector": ".p5-runtime-order", "state": "visible" }
+          ]
+        }
+      ]
     }
   ],
   "geometry": {
