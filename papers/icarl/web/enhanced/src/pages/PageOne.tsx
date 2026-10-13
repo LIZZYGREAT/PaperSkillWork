@@ -56,6 +56,10 @@ export function PageOne({ onOpenPageTwo }: PageOneProps) {
             <div className="p1-verdict"><i>×</i><span>旧类别能力可能退化</span></div>
           </article>
         </div>
+        <aside className="p1-next-thought" aria-label="下一步思考">
+          <span>下一步思考</span>
+          <p>保留全部旧数据会不断增加存储成本；完全不保留旧数据，又容易在学习新类别时忘记旧类别。那么，能否只留下<strong>少量足够有代表性的旧样本</strong>，让系统在有限记忆内继续利用历史信息？</p>
+        </aside>
       </section>
 
       <section className="p1-guided panel" aria-labelledby="p1-guided-title">

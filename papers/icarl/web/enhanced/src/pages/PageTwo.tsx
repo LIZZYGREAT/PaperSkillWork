@@ -146,7 +146,14 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
 
           <SharedTrainingHead />
 
-          <section className="p2-handoff"><span className="p2-eyebrow">接下来的问题</span><p>现在已经认识 z。保存下来的样本怎样代表各个类别，并支持最终预测？</p><button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>继续了解类别表示机制 <b aria-hidden="true">→</b></button></section>
+          <section className="p2-handoff">
+            <span className="p2-eyebrow">接下来的问题</span>
+            <div>
+              <p>现在我们知道，模型能把图片映射为可比较的特征向量，训练输出层也会随新类别扩展。不过，iCaRL 的<strong>最终预测不是直接取 sigmoid 输出最大的类别</strong>。如果每类已经保留了少量代表图片，它究竟怎样利用这些图片判断一张新输入属于哪一类？</p>
+              <small>下一页用三类精简教学示例完整演算；它与本页 5→10 个输出节点的架构扩展示意不是同一实际轮次。</small>
+            </div>
+            <button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>看代表样本怎样参与预测 <b aria-hidden="true">→</b></button>
+          </section>
         </>
       )}
     </article>

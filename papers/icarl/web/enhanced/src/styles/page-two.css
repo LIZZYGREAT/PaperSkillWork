@@ -176,6 +176,8 @@
 .p2-head-boundary p { margin: 5px 0 0; color: #675d57; font-size: 12px; line-height: 1.5; }
 .p2-handoff { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; align-items: center; gap: 13px; padding: 17px 20px; border: 1px solid #d9e3de; border-radius: 11px; background: #edf3ef; }
 .p2-handoff p { margin: 0; color: #3c5b5d; font-size: 14px; line-height: 1.5; }
+.p2-handoff p strong { color: #285f5a; }
+.p2-handoff small { display: block; margin-top: 6px; color: #6b7e7e; font-size: 11px; line-height: 1.45; }
 .p2-handoff > span:last-child { color: #46766b; font-size: 11px; font-weight: 650; letter-spacing: .04em; text-align: right; }
 .p2-handoff b { margin-left: 5px; font-size: 16px; }
 
