@@ -2,7 +2,15 @@
   "baseUrl": "http://127.0.0.1:4173",
   "server": {
     "command": "node",
-    "args": ["node_modules/vite/bin/vite.js", "preview", "--host", "127.0.0.1", "--port", "4173", "--strictPort"],
+    "args": [
+      "node_modules/vite/bin/vite.js",
+      "preview",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "4173",
+      "--strictPort"
+    ],
     "cwd": ".",
     "readyPath": "/"
   },
@@ -14,21 +22,44 @@
         {
           "id": "initial",
           "actions": [
-            { "type": "waitFor", "selector": ".ewc-rail", "state": "visible" },
-            { "type": "waitFor", "selector": "#page-one-title", "state": "visible" }
+            {
+              "type": "waitFor",
+              "selector": ".ewc-rail",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": "#page-one-title",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "next-page",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(2)" },
-            { "type": "waitFor", "selector": "#page-two-title", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "#page-two-title",
+              "state": "visible"
+            }
           ]
         }
       ],
       "computedStyles": [
-        { "selector": ":root", "property": "--nav", "equals": "#183236" },
-        { "selector": ".ewc-rail", "property": "background-color", "equals": "rgb(24, 50, 54)" }
+        {
+          "selector": ":root",
+          "property": "--nav",
+          "equals": "#183236"
+        },
+        {
+          "selector": ".ewc-rail",
+          "property": "background-color",
+          "equals": "rgb(24, 50, 54)"
+        }
       ]
     },
     {
@@ -38,51 +69,141 @@
         {
           "id": "01-exemplar-features",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p3-map--stage-0", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-start-button"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p3-workbench[data-stage='0']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "02-class-prototypes",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p3-map--stage-1", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p3-workbench[data-stage='1']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "03-query-feature",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p3-map--stage-2", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p3-workbench[data-stage='2']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "04-nearest-prototype",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
-            { "type": "waitFor", "selector": ".p3-map--stage-3", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(4)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p3-workbench[data-stage='3']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "05-direct-return",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p3-map--stage-1", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p3-workbench[data-stage='1']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "06-next-and-back",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
-            { "type": "click", "selector": ".icarl-guided__controls .icarl-button--primary" },
-            { "type": "click", "selector": ".icarl-guided__controls .icarl-button--primary" },
-            { "type": "click", "selector": ".icarl-guided__controls .icarl-button--quiet" },
-            { "type": "waitFor", "selector": ".p3-map--stage-1", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-start-button"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-workbench__controls .icarl-button--primary"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-workbench__controls .icarl-button--primary"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-workbench__controls .icarl-button:first-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p3-workbench[data-stage='1']",
+              "state": "visible"
+            }
           ]
         }
       ]
@@ -94,16 +215,33 @@
         {
           "id": "p1-problem-to-model",
           "actions": [
-            { "type": "click", "selector": ".p1-step-nav__item:nth-child(6)" },
-            { "type": "waitFor", "selector": ".p1-problem.is-active", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".p1-step-nav__item:nth-child(6)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p1-problem.is-active",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p2-model-to-prototype",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(2)" },
-            { "type": "click", "selector": ".p2-action" },
-            { "type": "waitFor", "selector": ".p2-handoff", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p2-action"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p2-handoff",
+              "state": "visible"
+            }
           ]
         }
       ]
@@ -113,98 +251,354 @@
       "path": "/",
       "states": [
         {
-          "id": "00-target",
+          "id": "00-target-normalization",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "waitFor", "selector": ".p4-target-values", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-start-button"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='0'][data-micro-step='2']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "01-round-k1",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p4-candidate-grid", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='1']",
+              "state": "visible"
+            }
           ]
         },
         {
-          "id": "02-round-k2",
+          "id": "02-round-k2-first-candidate",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p4-key-insight", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='2'][data-micro-step='0']",
+              "state": "visible"
+            }
           ]
         },
         {
-          "id": "02a-k2-combine-by-keyboard",
+          "id": "02a-k2-pair-combination",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
-            { "type": "press", "selector": ".p4-calculation-sequence__steps button:nth-child(2)", "key": "Enter" },
-            { "type": "press", "selector": "body", "key": "Control+Home" },
-            { "type": "waitFor", "selector": ".p4-combine-line", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-combine-line",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='2'][data-micro-step='1']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "02b-k2-raw-midpoint",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
-            { "type": "click", "selector": ".p4-calculation-sequence__steps button:nth-child(3)" },
-            { "type": "press", "selector": "body", "key": "Control+Home" },
-            { "type": "waitFor", "selector": ".p4-raw-prefix", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-moving-mean.is-raw",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='2'][data-micro-step='2']",
+              "state": "visible"
+            }
           ]
         },
         {
-          "id": "02c-k2-normalized-mean",
+          "id": "02c-k2-normalized-movement",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
-            { "type": "click", "selector": ".p4-calculation-sequence__steps button:nth-child(4)" },
-            { "type": "press", "selector": "body", "key": "Control+Home" },
-            { "type": "waitFor", "selector": ".p4-prefix", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-moving-mean:not(.is-raw)",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='2'][data-micro-step='3']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "02d-k2-score",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
-            { "type": "click", "selector": ".p4-calculation-sequence__steps button:nth-child(5)" },
-            { "type": "press", "selector": "body", "key": "Control+Home" },
-            { "type": "waitFor", "selector": ".p4-score-line", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-score-line",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='2'][data-micro-step='4']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "03-round-k3-centroid",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
-            { "type": "waitFor", "selector": ".p4-key-insight", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-weighted-line",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='3'][data-micro-step='2']",
+              "state": "visible"
+            }
           ]
         },
         {
-          "id": "04-round-k4",
+          "id": "04-round-k4-winner-after-scan",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(5)" },
-            { "type": "waitFor", "selector": ".p4-winner", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='4'][data-committed='true']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "05-prefix-review",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(6)" },
-            { "type": "waitFor", "selector": ".p4-prefix-result", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-prefix-picker button:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-stage='5']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "06-budget-truncation",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(7)" },
-            { "type": "waitFor", "selector": ".p4-budget-equation", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-slots > span:nth-child(4).is-removed",
+              "state": "visible"
+            }
           ]
         }
       ]
@@ -216,40 +610,87 @@
         {
           "id": "00-exemplar-roles",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
-            { "type": "waitFor", "selector": ".p5-reasoning", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p5-reasoning",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "01-replay-training-set-d",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p5-dataset-panel", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p5-dataset-panel",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "02-pre-update-q-snapshot",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p5-snapshot-pipeline", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p5-snapshot-pipeline",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "03-q-coverage",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
-            { "type": "waitFor", "selector": ".p5-matrix-panel", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".icarl-guided__step:nth-child(4)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p5-matrix-panel",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "04-ready-for-training",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(5)" },
-            { "type": "waitFor", "selector": ".p5-ready", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".icarl-guided__step:nth-child(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p5-ready",
+              "state": "visible"
+            }
           ]
         }
       ]
@@ -261,8 +702,15 @@
         {
           "id": "initial-runtime-board",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(9)" },
-            { "type": "waitFor", "selector": ".p9-board", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-board",
+              "state": "visible"
+            }
           ]
         }
       ]

@@ -1,8 +1,9 @@
-import { useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
 import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
 import { CLASS_VISUALS, encode2D, encodeRawVector, euclideanDistance, mean, normalize, P_BEFORE, type ClassId, type Vector2 } from "../data/icarl-runtime";
+import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 
 const steps: readonly GuidedStep[] = [
   { title: "已保留图片怎样变成可比较的特征？", short: "图片变特征" },
@@ -76,25 +77,6 @@ const meanLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "sta
   D: { dx: 13, dy: -15, anchor: "start" },
 };
 
-const stageFigureGuides = [
-  {
-    action: "每张保留图片先提取特征，再各自做 L2 归一化。",
-    reading: "空心点是归一化前；外圈彩色点是归一化后的 12 个 Exemplar 特征。",
-  },
-  {
-    action: "每类 4 个外圈特征先求均值，再沿同一方向重新单位化。",
-    reading: "圆内大圆是均值 z̄y；方框是单位圆上的类别 Prototype μy。",
-  },
-  {
-    action: "只把新的 Query 编码到同一空间，已算好的三个 Prototype 不变。",
-    reading: "棕色空心点是归一化前的 fΘ(xq)，深色菱形是 zq；圆心虚线表示方向不变。",
-  },
-  {
-    action: "比较 Query 到三个 Prototype 的欧氏距离，选择最短的一条。",
-    reading: "圆弧表示 zq 与各 μy 的方向夹角；右表列出角度和距离，粗实线标出最近原型。",
-  },
-] as const;
-
 function FeatureMap({
   stage,
   selectedSampleId,
@@ -120,12 +102,7 @@ function FeatureMap({
     <div className={`p3-map p3-map--stage-${stage}`}>
       <div className="p3-map__meta">
         <span>FIXED SYNTHETIC · 2D TEACHING SPACE</span>
-        <span>固定特征提取器 · φ<sub>Θ fixed</sub></span>
-        <span>所选 Exemplar · {selectedSampleId}</span>
-      </div>
-      <div className="p3-map__guide" aria-live="polite">
-        <b>本步动作</b><span>{stageFigureGuides[stage].action}</span>
-        <b>读图方法</b><span>{stageFigureGuides[stage].reading}</span>
+        <span>所选 {selectedSampleId} · φ<sub>Θ fixed</sub></span>
       </div>
       <svg viewBox="0 0 640 520" role="img" aria-label="十二张已保留图片的单位化特征、三类原型和查询特征构成的固定二维教学空间">
         <title>Exemplar prototype prediction</title>
@@ -242,43 +219,18 @@ function FeatureMap({
   );
 }
 
-const stageDescriptions = [
-  "P_BEFORE 中三类各有 4 张已保留图片。每张图片经同一个固定 Feature Extractor 得到 fΘ(p)，再各自做 L2 归一化得到 z_p。",
-  "每类先对 4 个 z_p 求算术均值 z̄_y（圆内小圆），让一组样本共同形成类别代表；再把 z̄_y 归一化为单位圆上的 Prototype μ_y（方框）。",
-  "新的 Query x_q 不是十二张 Exemplar 之一。它经过同一个固定 Feature Extractor，并归一化为 z_q；三个 Prototype 保持不变。",
-  "分别计算 z_q 到三个 μ_y 的欧氏距离；最小项、最小夹角、图中高亮连线与最终预测来自同一组实际二维向量。",
-] as const;
-
 const stageNarratives = [
-  [
-    "代表图片现在仍是图像；要和之后到来的 Query 比较，先要让它们经过 P2 认识过的同一个特征提取器。",
-    "每张图得到特征后再做 L2 归一化，于是不同图片进入同一个可比较的单位特征空间。",
-  ],
-  [
-    "现在，每个类别都有了一组特征点。但单张图片只反映这个类别中的一个样本，直接依据某个样本与 Query 的相似程度分类，容易受到个体差异的影响。",
-    "我们希望比较的是 Query 与整个类别哪个更相似，因此自然想到：先求同类 Exemplars 特征的均值，再将均值归一化，形成类别 Prototype。",
-    "这样，后面只需比较 Query 与各类别原型的相似程度。",
-  ],
-  [
-    "三个类别代表已经形成。现在把新的 Query 交给同一个特征提取器，并进行同样的 L2 归一化。",
-    "相同的表示与归一化规则，让 Query 和三个 Prototype 可以在同一空间里直接比较。",
-  ],
-  [
-    "Query 与三个类别代表都已就位。最后比较它到各 Prototype 的距离，最近者给出预测类别。",
-    "因为这些向量都在单位圆上，也可以借助夹角理解距离；这次推断只读取当前模型与 Exemplars，不改变它们。",
-  ],
-] as const;
-
-const stageTakeaways = [
-  "十二张原始图片已变成三组可比较的单位特征；还没有计算 Prototype，也没有输入 Query。",
-  "同类样本不再各自承担分类判断：它们的均值共同形成一个类别 Prototype。",
-  "三个 Prototype 和一个经过相同处理的 Query 已经满足比较条件。",
-  `本次 Query 最近的类别原型属于 ${CLASS_VISUALS[predictedClass].displayLabel}，因此输出这一预测。`,
+  "P_BEFORE 中三类各有四张原始图片。先用当前固定的 Feature Extractor 编码，并将每张特征单位化；这一步只形成可比较的 Exemplar Features。",
+  "单张图容易受个体差异影响，所以对每类四个单位特征先求均值、再 L2 归一化，得到该类用于预测的 Prototype。",
+  "新的 Query 不属于这十二张 Exemplar；它经过同一个固定特征提取器并单位化，三个 Prototype 在此步保持不变。",
+  "分别比较 Query 与三个 Prototype 的欧氏距离，最近者给出预测；这次推断只读取当前模型与 Exemplar Memory，不更新它们。",
 ] as const;
 
 export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   const [stage, setStage] = useState(0);
   const [selectedSampleId, setSelectedSampleId] = useState(P_BEFORE.A[0].id);
+  const reducedMotion = useReducedMotion();
+  const workbenchRef = useRef<HTMLElement | null>(null);
   const selectedSample = exemplars.find((sample) => sample.id === selectedSampleId) ?? exemplars[0];
 
   return (
@@ -286,87 +238,71 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
         <h1>已选代表图片怎样<br className="p3-title-break" />完成一次预测？</h1>
-        <p>面对旧类完整数据不能一直保留，我们先想到只保存少量代表图片；P2 又看到了图像怎样经特征提取器成为向量。现在先假定代表图片已经选好，检验它们能否帮助我们识别一个新的 Query。</p>
+        <p>先假定三类代表图片已经选好，并且 Feature Extractor 训练完成、暂时固定。让这些 Exemplars 和一张新 Query 进入同一特征空间，看看 iCaRL 怎样用它们完成预测。</p>
+        <button type="button" className="icarl-button icarl-button--primary p3-start-button" onClick={() => workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" })}>开始演示 <b aria-hidden="true">↓</b></button>
       </header>
 
-      <aside className="p3-assumption-strip" aria-label="本页已有条件与当前问题">
-        <div><span>已经具备</span><p>三类已选好的 Exemplars，以及训练完成、当前固定的 Feature Extractor <b>φ<sub>Θ fixed</sub></b>。</p></div>
-        <div><span>现在要回答</span><p>当一张新的 Query 图片 <b>x<sub>q</sub></b> 到来，怎样从这些代表图片得到一次类别预测？</p></div>
-      </aside>
+      <details className="p3-chapter-jumps">
+        <summary>章节快速定位 · 4 个阶段</summary>
+        <GuidedStepControls steps={steps} current={stage} onChange={(nextStage) => {
+          setStage(nextStage);
+          requestAnimationFrame(() => workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }));
+        }} label="Page 3 最近原型预测阶段快速定位" />
+      </details>
 
-      <GuidedStepControls steps={steps} current={stage} onChange={setStage} label="Page 3 最近原型预测教学步骤" />
+      <section className="p3-workbench" aria-label="已保留图片、特征空间和当前预测规则" data-stage={stage} ref={workbenchRef}>
+        <header className="p3-workbench__heading">
+          <div><span className="eyebrow">STEP {stage + 1} / 4 · {steps[stage].short}</span><h2>{steps[stage].title}</h2><p aria-live="polite">{stageNarratives[stage]}</p></div>
+          <span className="p3-phase-badge">{String(stage + 1).padStart(2, "0")} / 04</span>
+        </header>
 
-      <section className="p3-reasoning" aria-live="polite" aria-label={`第 ${stage + 1} 步的推理引导`}>
-        <span className="p3-reasoning__index">0{stage + 1}</span>
-        <div><span className="eyebrow">为什么进行这一步</span>{stageNarratives[stage].map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
-      </section>
-
-      <section className="p3-workbench" aria-label="已保留图片、特征空间和当前预测规则">
-        <section className="panel p3-source">
-          <div className="panel-heading"><div><span className="eyebrow">SOURCE</span><h2>已保留的 Exemplars</h2></div><span className="p3-mini-count">{exemplars.length} 张</span></div>
-          <p className="p3-source__intro">这里读取共享运行时的 P_BEFORE：三类各 4 张。点选图片编号，可在图中追踪对应特征；下一页将用独立的单类示例解释代表怎样选出。</p>
-          <div className="p3-source__samples p3-source__samples--grouped">
-            {classIds.map((classId) => {
-              const classSamples = exemplarByClass.get(classId)!;
-              return <section className="p3-source__group" key={classId} style={{ "--p3-group-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-                <div><b>{CLASS_VISUALS[classId].displayLabel}</b><span>P<sub>{CLASS_VISUALS[classId].index}</sub> · {classSamples.length} 张</span></div>
-                <div>{classSamples.map((sample) => (
-                  <button key={sample.id} type="button" className={`p3-source__sample${selectedSampleId === sample.id ? " is-selected" : ""}`} onClick={() => setSelectedSampleId(sample.id)} aria-pressed={selectedSampleId === sample.id} title={`${CLASS_VISUALS[sample.classId].displayLabel} · ${sample.id}`}>
-                    <i aria-hidden="true" style={{ color: CLASS_VISUALS[sample.classId].color }}>{CLASS_VISUALS[sample.classId].glyph}</i><b>{sample.id}</b>
-                  </button>
-                ))}</div>
-              </section>;
-            })}
-          </div>
-          <div className="p3-source__mapping" aria-label={`已保留图片 ${selectedSample.id} 经固定特征提取器得到单位化特征`}>
-            <span>IMAGE · {selectedSample.id}</span><b>φ<sub>Θ fixed</sub></b><span className="p3-source__mapping-line" aria-hidden="true" /><strong>f<sub>Θ</sub>(p) → z<sub>p</sub></strong><small>同一图片身份；只计算表示，不更新 Θ</small>
-          </div>
-          {stage >= 2 ? <div className="p3-query-source"><span>本页新增 · QUERY</span><b>x<sub>q</sub></b><p>新的待分类图片，不属于上面十二张 Exemplar。</p></div> : null}
-        </section>
-
-        <section className="panel p3-space-panel">
-          <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>单位特征、Prototype 与 Query</h2></div><span className="p3-phase-badge">STEP {stage + 1} / 4</span></div>
-          <FeatureMap stage={stage} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
-          <div className="p3-current-caption" aria-live="polite">{stageDescriptions[stage]}</div>
-        </section>
-
-        <aside className="panel p3-rule-panel">
-          <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE</span><h2>本步实际计算</h2></div></div>
-          {stage === 0 ? <div className="p3-rule-stack">
-            <div className="p3-rule-card is-active"><span>01 · 提取特征</span><strong>f<sub>Θ</sub>(p) = φ<sub>Θ fixed</sub>(p)</strong></div>
-            <div className="p3-rule-card is-active"><span>02 · 每张图各自单位化</span><strong>z<sub>p</sub> = f<sub>Θ</sub>(p) / ‖f<sub>Θ</sub>(p)‖<sub>2</sub></strong></div>
-            <p className="p3-state-boundary">输出：三组单位化 Exemplar Features。<br />尚无 Prototype，尚无 Query。</p>
-          </div> : null}
-          {stage === 1 ? <div className="p3-rule-stack">
-            <div className="p3-rule-card is-active"><span>01 · 四个单位特征求均值</span><strong>z̄<sub>y</sub> = (1 / |P<sub>y</sub>|) Σ z<sub>p</sub></strong></div>
-            <div className="p3-rule-card is-active"><span>02 · 均值重新单位化</span><strong>μ<sub>y</sub> = z̄<sub>y</sub> / ‖z̄<sub>y</sub>‖<sub>2</sub></strong></div>
-            <div className="p3-mean-norm-list" aria-label="三类均值重新单位化的实际范数">
-              {prototypeCalculations.map(({ classId, rawMean }) => <span key={classId}>Class {CLASS_VISUALS[classId].index}<b>‖z̄<sub>{CLASS_VISUALS[classId].index}</sub>‖={Math.hypot(rawMean[0], rawMean[1]).toFixed(3)} → ‖μ<sub>{CLASS_VISUALS[classId].index}</sub>‖=1</b></span>)}
+        <div className="p3-workbench__layout">
+          <section className="panel p3-source">
+            <div className="panel-heading"><div><span className="eyebrow">SOURCE</span><h2>已保留 Exemplars</h2></div><span className="p3-mini-count">12 张</span></div>
+            <div className="p3-source__samples p3-source__samples--grouped">
+              {classIds.map((classId) => {
+                const classSamples = exemplarByClass.get(classId)!;
+                return <section className="p3-source__group" key={classId} style={{ "--p3-group-color": CLASS_VISUALS[classId].color } as CSSProperties}>
+                  <div><b>{CLASS_VISUALS[classId].displayLabel}</b><span>P<sub>{CLASS_VISUALS[classId].index}</sub> · {classSamples.length} 张</span></div>
+                  <div>{classSamples.map((sample) => (
+                    <button key={sample.id} type="button" className={`p3-source__sample${selectedSampleId === sample.id ? " is-selected" : ""}`} onClick={() => setSelectedSampleId(sample.id)} aria-pressed={selectedSampleId === sample.id} title={`${CLASS_VISUALS[sample.classId].displayLabel} · ${sample.id}`}>
+                      <i aria-hidden="true" style={{ color: CLASS_VISUALS[sample.classId].color }}>{CLASS_VISUALS[sample.classId].glyph}</i><b>{sample.id}</b>
+                    </button>
+                  ))}</div>
+                </section>;
+              })}
             </div>
-            <p className="p3-state-boundary">圆内小圆是 z̄<sub>y</sub>，径向线终点的方框才是用于分类的 μ<sub>y</sub>。</p>
-          </div> : null}
-          {stage === 2 ? <div className="p3-rule-stack">
-            <div className="p3-rule-card is-active"><span>01 · 使用同一个固定模型</span><strong>f<sub>Θ</sub>(x<sub>q</sub>) = φ<sub>Θ fixed</sub>(x<sub>q</sub>)</strong></div>
-            <div className="p3-rule-card is-active"><span>02 · Query 单位化</span><strong>z<sub>q</sub> = f<sub>Θ</sub>(x<sub>q</sub>) / ‖f<sub>Θ</sub>(x<sub>q</sub>)‖<sub>2</sub></strong></div>
-            <p className="p3-state-boundary">三个 μ<sub>y</sub> 保持不变；此处不会把 Query 加入 Memory。</p>
-          </div> : null}
-          {stage === 3 ? <>
-            <div className="p3-rule-stack">
-              <div className="p3-rule-card is-active"><span>最近 Prototype 规则</span><strong>d<sub>y</sub> = ‖z<sub>q</sub> − μ<sub>y</sub>‖<sub>2</sub></strong><strong>ŷ = arg min<sub>y</sub> d<sub>y</sub></strong></div>
-            </div>
-            <div className="p3-distance-list"><span className="eyebrow">实际二维教学向量</span>{queryComparisons.map(({ classId, distance, angle }, index) => <div key={classId} className={index === 0 ? "is-nearest" : ""}><span>μ<sub>{CLASS_VISUALS[classId].index}</sub></span><b>d={distance.toFixed(3)}</b><em>θ={angle.toFixed(1)}°</em><small>{index === 0 ? "最近" : ""}</small></div>)}<strong className="p3-prediction">预测 ŷ：{CLASS_VISUALS[predictedClass].displayLabel}</strong></div>
-            <details className="p3-normalized-note"><summary>为什么最近距离也对应最小夹角？</summary><div><p>因为 z<sub>q</sub> 与 μ<sub>y</sub> 都是单位向量：</p><code>d<sub>y</sub><sup>2</sup> = 2 − 2z<sub>q</sub><sup>T</sup>μ<sub>y</sub> = 2 − 2cos θ<sub>y</sub></code><p>论文的正式规则是最近 Prototype；夹角只是单位化条件下的等价几何解释。</p></div></details>
-          </> : null}
-        </aside>
-      </section>
+            <div className="p3-source__mapping" aria-label={`已保留图片 ${selectedSample.id} 经固定特征提取器得到单位化特征`}><span>当前图片</span><strong>{selectedSample.id} → φ<sub>Θ fixed</sub> → z<sub>p</sub></strong></div>
+            {stage >= 2 ? <div className="p3-query-source"><span>独立的新输入</span><b>x<sub>q</sub></b><p>Query 不属于上面的十二张 Exemplar。</p></div> : null}
+          </section>
 
-      <section className="p3-concept-note" aria-live="polite">
-        <span className="p3-concept-note__index">0{stage + 1}</span>
-        <div><span className="eyebrow">阶段终态</span><p>{stageTakeaways[stage]}</p></div>
+          <section className="panel p3-space-panel">
+            <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>单位特征、Prototype 与 Query</h2></div></div>
+            <FeatureMap stage={stage} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
+          </section>
+
+          <aside className="panel p3-rule-panel" aria-live="polite">
+            <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE</span><h2>本步的计算与结果</h2></div></div>
+            {stage === 0 ? <div className="p3-rule-stack"><div className="p3-rule-card is-active"><span>图像进入单位特征空间</span><strong>z<sub>p</sub> = normalize(φ<sub>Θ</sub>(p))</strong></div><p className="p3-state-boundary">得到三组单位化特征；尚未计算 Prototype，也尚未输入 Query。</p></div> : null}
+            {stage === 1 ? <div className="p3-rule-stack"><div className="p3-rule-card is-active"><span>每类四个 Exemplar Features</span><strong>z̄<sub>y</sub> = ¼ Σ z<sub>p</sub>　→　μ<sub>y</sub> = normalize(z̄<sub>y</sub>)</strong></div><p className="p3-state-boundary">圆内标记是均值 z̄<sub>y</sub>；单位圆上的方框 Prototype μ<sub>y</sub> 才用于分类。</p></div> : null}
+            {stage === 2 ? <div className="p3-rule-stack"><div className="p3-rule-card is-active"><span>Query 使用同一个固定模型</span><strong>z<sub>q</sub> = normalize(φ<sub>Θ fixed</sub>(x<sub>q</sub>))</strong></div><p className="p3-state-boundary">三个 Prototype 保持不变；Query 只进入预测，不加入 Exemplar Memory。</p></div> : null}
+            {stage === 3 ? <>
+              <div className="p3-rule-stack"><div className="p3-rule-card is-active"><span>最近原型分类</span><strong>ŷ = arg min<sub>y</sub> ‖z<sub>q</sub> − μ<sub>y</sub>‖<sub>2</sub></strong></div><p className="p3-prediction">预测类别：{CLASS_VISUALS[predictedClass].displayLabel}</p><p className="p3-state-boundary">推断读取当前模型与 Exemplar Memory，不改变 Θ 或 P。</p></div>
+              <details className="p3-distance-details"><summary>查看三个类别的距离与夹角</summary><div className="p3-distance-list"><span className="eyebrow">Synthetic 2D teaching example</span>{queryComparisons.map(({ classId, distance, angle }, index) => <div key={classId} className={index === 0 ? "is-nearest" : ""}><span>μ<sub>{CLASS_VISUALS[classId].index}</sub></span><b>d = {distance.toFixed(3)}</b><em>θ = {angle.toFixed(1)}°</em><small>{index === 0 ? "最近" : ""}</small></div>)}</div></details>
+              <details className="p3-normalized-note"><summary>为什么最近距离也对应最小夹角？</summary><div><p>因为 z<sub>q</sub> 与 μ<sub>y</sub> 都是单位向量：</p><code>d<sub>y</sub><sup>2</sup> = 2 − 2z<sub>q</sub><sup>T</sup>μ<sub>y</sub> = 2 − 2cos θ<sub>y</sub></code><p>论文的规则是最近 Prototype；夹角是单位化条件下的等价几何解释。</p></div></details>
+            </> : null}
+          </aside>
+        </div>
+
+        <div className="p3-workbench__controls" aria-label="Page 3 教学步骤控制">
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => setStage((current) => Math.max(0, current - 1))} disabled={stage === 0}>上一步</button>
+          <span aria-live="polite">{String(stage + 1).padStart(2, "0")} / 04 · {steps[stage].short}</span>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={() => stage < 3 ? setStage(stage + 1) : onContinue?.()} disabled={stage === 3 && !onContinue}>{stage === 3 ? "进入第 4 页" : "下一步"} <b aria-hidden="true">→</b></button>
+        </div>
       </section>
 
       <footer className="icarl-handoff">
-        <div><span className="eyebrow">NEXT · PAGE 04</span><p>我们已经能用当前特征提取器和已选 Exemplars 完成预测，但刚才暂时假定它们已经存在。那么我们要怎么找到最典型的代表呢？找到之后又要怎么管理这些代表呢？</p></div>
+        <div><span className="eyebrow">NEXT · PAGE 04</span><p>这次预测依赖已经选好的 Exemplars；刚才我们暂时假定这些代表已经存在。下一页追问它们从哪里来，以及预算变紧时怎样管理。</p></div>
         {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>筛选与管理代表样本 <b aria-hidden="true">→</b></button> : null}
       </footer>
     </article>

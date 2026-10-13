@@ -116,7 +116,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 05</span><i /> EXEMPLARS JOIN THE NEXT UPDATE</div>
         <h1>这些代表图片怎样继续参与学习？</h1>
-        <p>刚才看到，Exemplars 能帮助未来的 Query 完成预测。下一批类别到来时，它们还可以重新作为训练输入，让模型在学习新类时继续接触旧类信息。</p>
+        <p>前面，我们用 Exemplars 维护了可供未来预测的类别代表，也建立了筛选和管理记忆的办法。接下来，新类别数据到来，模型要继续学习；我们怎样把旧类 Exemplars 用到这次参数更新中？先从本轮已有的模型、旧记忆和新类数据出发，看看训练集如何形成，以及为什么更新前要记录旧类响应。</p>
       </header>
 
       <section className="p5-reasoning" aria-live="polite" aria-label={`第 ${stage + 1} 步推理引导`}>
