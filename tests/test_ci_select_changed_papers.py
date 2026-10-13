@@ -113,6 +113,17 @@ class ChangedPaperSelectorTests(unittest.TestCase):
         result = self.payload(self.select(base, head=head))
         self.assertEqual(result["changed_web_projects"], [{"paper_id": "icarl", "dir": "papers/icarl/web/enhanced"}])
 
+    def test_phyagentos_implementation_is_excluded_from_ci(self) -> None:
+        self.repo.paper("phyagentos", web_variant="enhanced")
+        base = self.repo.commit("add excluded legacy paper")
+        self.repo.write("papers/phyagentos/web/enhanced/src/main.ts", "export const changed = true;\n")
+        head = self.repo.commit("edit excluded paper implementation")
+        result = self.payload(self.select(base, head=head))
+        self.assertEqual(result["changed_papers"], [])
+        self.assertEqual(result["changed_web_projects"], [])
+        self.assertEqual(result["deleted_papers"], [])
+        self.assertEqual(result["deleted_web_projects"], [])
+
     def test_new_paper_and_web_project_are_selected_on_first_add(self) -> None:
         self.repo.paper("new-study", web_variant="enhanced")
         head = self.repo.commit("add new paper")

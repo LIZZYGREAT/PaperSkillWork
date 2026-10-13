@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import Any
 
 
+CI_EXCLUDED_PAPERS = frozenset({"phyagentos"})
+
+
 def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         ["git", "-C", str(repo), *args],
@@ -95,6 +98,8 @@ def changed_targets(repo: Path, paths: list[str], base: str, head: str, base_sou
         parts = Path(git_path.replace("\\", "/")).parts
         if len(parts) >= 2 and parts[0] == "papers":
             paper_id = parts[1]
+            if paper_id in CI_EXCLUDED_PAPERS:
+                continue
             changed_papers.add(paper_id)
             if len(parts) >= 5 and parts[2] == "web":
                 directory = "/".join(parts[:4])
