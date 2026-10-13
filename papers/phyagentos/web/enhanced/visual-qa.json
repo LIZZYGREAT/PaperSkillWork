@@ -1,0 +1,35 @@
+{
+  "baseUrl": "http://127.0.0.1:4173",
+  "server": {
+    "command": "node",
+    "args": ["node_modules/vite/bin/vite.js", "preview", "--host", "127.0.0.1", "--port", "4173", "--strictPort"],
+    "cwd": ".",
+    "readyPath": "/"
+  },
+  "pages": [
+    {
+      "id": "phyagentos-home",
+      "path": "/",
+      "states": [
+        {
+          "id": "initial",
+          "actions": [
+            { "type": "waitFor", "selector": ".hero", "state": "visible" },
+            { "type": "waitFor", "selector": ".hero h1", "state": "visible" }
+          ]
+        },
+        {
+          "id": "first-chapter",
+          "actions": [
+            { "type": "click", "selector": ".hero-cta" },
+            { "type": "waitFor", "selector": ".slide-chap .chap-title", "state": "visible" }
+          ]
+        }
+      ],
+      "computedStyles": [
+        { "selector": ":root", "property": "--ui-accent", "equals": "#27446e" },
+        { "selector": ".hero-cta", "property": "background-color", "equals": "rgb(39, 68, 110)" }
+      ]
+    }
+  ]
+}

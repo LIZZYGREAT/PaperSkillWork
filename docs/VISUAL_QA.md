@@ -55,6 +55,7 @@
 | --- | --- |
 | BUILD | 实际执行的构建命令及结果；未执行时写 NOT_RUN |
 | GEOMETRY_QA | 检查的页面、视口、状态、客观问题及结果 |
+| STYLE_QA | 已配置计算样式断言的页面与状态；未配置时写 NOT_RUN |
 | VISUAL_REVIEW | Agent 是否实际查看截图，以及发现和处理的问题 |
 | REGRESSION | 对照的批准基准、前后截图及保护区域的检查结论 |
 | HUMAN_ACCEPTANCE | 用户尚未审阅时保持 PENDING；不得由 Agent 代填 W7/W9 PASS |
@@ -63,7 +64,7 @@
 
 ## 7. 通用 Chromium 工具
 
-仓库的公共 runner 位于 [`tools/visual-qa/`](../tools/visual-qa/README.md)。它按项目 JSON 配置启动或连接本地服务、执行声明的页面状态操作，在 1440×900 和 1920×1080 采集截图，并记录浏览器 console/pageerror 与配置过的几何诊断。公共引擎不包含具体论文页面选择器；页面和状态由对应项目的配置声明。
+仓库的公共 runner 位于 [`tools/visual-qa/`](../tools/visual-qa/README.md)。它按项目 JSON 配置启动或连接本地服务、执行声明的页面状态操作，在 1440×900 和 1920×1080 采集截图，并记录浏览器 console/pageerror、资源加载错误与配置过的几何诊断。公共引擎不包含具体论文页面选择器；页面、状态和论文样式契约由对应项目的配置声明。
 
 从仓库根目录运行示例：
 
@@ -73,4 +74,17 @@ node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo
 
 首次运行前，按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 安装 Kit demo 锁定的 Playwright 依赖和 Chromium，并先执行目标项目自己的构建命令。默认产物写入忽略目录 `.visual-qa/`。工具会生成 JSON 和 Markdown 报告，但不会替代对截图的实际查看，也不会自动更新已批准基准图。
 
-维护 runner 时，从仓库根目录运行 `node tools/visual-qa/self-check.mjs`。它在两个宽屏视口验证正常报告、截图产物，以及横向溢出、浏览器 `pageerror` 和跨状态稳定布局违例的失败报告。该自检验证机器行为，不会把 `VISUAL_REVIEW` 或 `HUMAN_ACCEPTANCE` 标成通过。
+项目可在 `pages[]` 中声明 `computedStyles`，对生产预览里的真实计算样式作精确断言：
+
+```json
+"computedStyles": [
+  { "selector": ":root", "property": "--nav", "equals": "#183236" },
+  { "selector": ".ewc-rail", "property": "background-color", "equals": "rgb(24, 50, 54)" }
+]
+```
+
+断言在状态操作、字体加载和页面稳定后执行，只接受选择器、CSS 属性名和期望字符串，不执行配置中的脚本。缺失选择器、空变量、实际值不符、CSS/JS 资源加载失败都会使状态与 CI 失败；诊断和 `report.json` 记录 `selector`、`property`、`expected`、`actual`。报告单独显示 `STYLE_QA`，不会改变 `VISUAL_REVIEW=NOT_RUN` 或 `HUMAN_ACCEPTANCE=PENDING`。
+
+现有网页项目与新建项目模板都在各自目录保存 `visual-qa.json`。Push CI 使用事件 `before → sha` 的完整 Git 差异选择论文工作区和实际网页目录；首次 Push 或缺失基线用默认目标分支的 merge-base，无法确定基线时失败。网页修改会分别执行 `npm ci`、生产构建和 `vite preview` Chromium Smoke；纯论文资料变更只校验 workspace。公共 QA 或选择器改动会额外检查 EWC 与 iCaRL 代表性页面。
+
+维护 runner 时，从仓库根目录运行 `node tools/visual-qa/self-check.mjs`。它在两个宽屏视口验证正常报告、截图产物，以及横向溢出、浏览器 `pageerror`、跨状态稳定布局违例和 `rn:root` 计算样式错误的失败报告。该自检验证机器行为，不会把 `VISUAL_REVIEW` 或 `HUMAN_ACCEPTANCE` 标成通过。

@@ -1,0 +1,35 @@
+{
+  "baseUrl": "http://127.0.0.1:4173",
+  "server": {
+    "command": "node",
+    "args": ["node_modules/vite/bin/vite.js", "preview", "--host", "127.0.0.1", "--port", "4173", "--strictPort"],
+    "cwd": ".",
+    "readyPath": "/"
+  },
+  "pages": [
+    {
+      "id": "lwf-canonical-home",
+      "path": "/",
+      "states": [
+        {
+          "id": "initial",
+          "actions": [
+            { "type": "waitFor", "selector": ".slide-sidebar", "state": "visible" },
+            { "type": "waitFor", "selector": "h1", "state": "visible" }
+          ]
+        },
+        {
+          "id": "next-chapter",
+          "actions": [
+            { "type": "click", "selector": ".slide-nav .slide-nav-btn-primary" },
+            { "type": "waitFor", "selector": ".slide-chap .chap-title", "state": "visible" }
+          ]
+        }
+      ],
+      "computedStyles": [
+        { "selector": ":root", "property": "--ui-accent", "equals": "#27446e" },
+        { "selector": ".slide-sidebar", "property": "background-color", "equals": "rgb(255, 255, 255)" }
+      ]
+    }
+  ]
+}

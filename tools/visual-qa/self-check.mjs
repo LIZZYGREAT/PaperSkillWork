@@ -13,8 +13,8 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-function fixtureHtml(content) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Visual QA self-check</title><style>body{margin:24px;font:16px sans-serif;color:#182b3a}main{max-width:720px} [data-vqa-stable-frame]{box-sizing:border-box;background:#e6f4f7;border:1px solid #247c97}</style></head><body><main>${content}</main></body></html>`;
+function fixtureHtml(content, additionalCss = "") {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Visual QA self-check</title><style>body{margin:24px;font:16px sans-serif;color:#182b3a}main{max-width:720px}[data-vqa-stable-frame]{box-sizing:border-box;background:#e6f4f7;border:1px solid #247c97}${additionalCss}</style></head><body><main>${content}</main></body></html>`;
 }
 
 function fixtureFor(pathname) {
@@ -26,6 +26,12 @@ function fixtureFor(pathname) {
   }
   if (pathname === "/stable") {
     return fixtureHtml('<h1>Stable layout check</h1><div data-vqa-stable-frame style="width:240px;height:120px">Frame</div><button id="resize-frame" type="button" onclick="document.querySelector(\'[data-vqa-stable-frame]\').style.width=\'360px\'">Resize frame</button>');
+  }
+  if (pathname === "/styles-pass") {
+    return fixtureHtml('<h1>Production style check</h1><aside class="ewc-rail">Navigation</aside>', ':root{--nav:#183236}.ewc-rail{background:var(--nav)}');
+  }
+  if (pathname === "/styles-broken") {
+    return fixtureHtml('<h1>Production style check</h1><aside class="ewc-rail">Navigation</aside>', 'rn:root{--nav:#183236}.ewc-rail{background:var(--nav)}');
   }
   return fixtureHtml('<h1>Normal page</h1><p>The visual QA runner should capture both viewports and keep human review pending.</p><button type="button">Example control</button>');
 }
@@ -57,11 +63,19 @@ function configFor(baseUrl, scenario) {
     overflow: "/overflow",
     pageerror: "/pageerror",
     "stable-layout": "/stable",
+    "styles-pass": "/styles-pass",
+    "styles-broken": "/styles-broken",
   };
+  const computedStyles = scenario.startsWith("styles-")
+    ? [
+      { selector: ":root", property: "--nav", equals: "#183236" },
+      { selector: ".ewc-rail", property: "background-color", equals: "rgb(24, 50, 54)" },
+    ]
+    : [];
   return {
     baseUrl,
     settleMs: 200,
-    pages: [{ id: scenario, path: pathByScenario[scenario], states }],
+    pages: [{ id: scenario, path: pathByScenario[scenario], states, computedStyles }],
     geometry: {
       checkPageHorizontalOverflow: true,
       stableAcrossStates: scenario === "stable-layout"
@@ -147,6 +161,7 @@ async function main() {
     assert(normal.command.code === 0, `Normal scenario should exit 0.\n${normal.command.stdout}\n${normal.command.stderr}`);
     assert(normal.report.outcome === "PASS", "Normal scenario should report overall PASS.");
     assert(normal.report.statuses.GEOMETRY_QA === "PASS", "Normal scenario should report GEOMETRY_QA=PASS.");
+    assert(normal.report.statuses.STYLE_QA === "NOT_RUN", "Style checks without configured assertions must remain NOT_RUN.");
     assert(normal.report.statuses.BROWSER_ERRORS === "PASS", "Normal scenario should report BROWSER_ERRORS=PASS.");
     assert(normal.report.statuses.VISUAL_REVIEW === "NOT_RUN", "Visual review must remain NOT_RUN.");
     assert(normal.report.statuses.REGRESSION === "NOT_RUN", "Regression must remain NOT_RUN without a baseline.");
@@ -185,7 +200,29 @@ async function main() {
     assert(stable.report.statuses.GEOMETRY_QA === "FAIL", "Stable-layout scenario should report GEOMETRY_QA=FAIL.");
     assert(stable.report.results.filter((result) => result.stateId === "resized").every((result) => result.diagnostics.some((item) => item.code === "stable-layout-changed")), "Stable-layout violation was not recorded for every viewport.");
 
-    process.stdout.write(`Visual QA runner self-check PASS. Screenshots and reports: ${outputRoot}\n`);
+    const stylesPass = await runScenario({
+      baseUrl,
+      configDirectory,
+      outputDirectory: path.join(outputRoot, "styles-pass"),
+      scenario: "styles-pass",
+    });
+    assert(stylesPass.command.code === 0, `Computed-style positive fixture should exit 0.\n${stylesPass.command.stdout}\n${stylesPass.command.stderr}`);
+    assert(stylesPass.report.statuses.STYLE_QA === "PASS", "Valid :root and rail styles should report STYLE_QA=PASS.");
+    assert(stylesPass.report.results.every((result) => result.styleOutcome === "PASS"), "Valid computed styles did not pass in every viewport.");
+
+    const stylesBroken = await runScenario({
+      baseUrl,
+      configDirectory,
+      outputDirectory: path.join(outputRoot, "styles-broken"),
+      scenario: "styles-broken",
+    });
+    assert(stylesBroken.command.code === 1, `rn:root fixture should exit 1.\n${stylesBroken.command.stdout}\n${stylesBroken.command.stderr}`);
+    assert(stylesBroken.report.statuses.STYLE_QA === "FAIL", "The rn:root fixture must report STYLE_QA=FAIL.");
+    assert(stylesBroken.report.results.every((result) => result.styleOutcome === "FAIL"), "The broken computed style did not fail in every viewport.");
+    assert(stylesBroken.report.results.every((result) => result.diagnostics.some((item) => item.code === "computed-style-mismatch" && item.selector === ":root" && item.property === "--nav" && item.expected === "#183236" && item.actual === "")), "The missing :root variable diagnostic must record selector, property, expected value, and actual value.");
+    assert(stylesBroken.report.results.every((result) => result.diagnostics.some((item) => item.code === "computed-style-mismatch" && item.selector === ".ewc-rail" && item.property === "background-color" && item.actual === "rgba(0, 0, 0, 0)")), "The rail background diagnostic must identify the transparent actual style.");
+
+    process.stdout.write(`Visual QA runner self-check PASS (including computed-style positive and rn:root negative fixtures). Screenshots and reports: ${outputRoot}\n`);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

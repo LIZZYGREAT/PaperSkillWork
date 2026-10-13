@@ -58,6 +58,25 @@ function normalizeStableSelectors(value = []) {
   });
 }
 
+function normalizeComputedStyles(value = [], pageId) {
+  if (!Array.isArray(value)) throw new Error(`Page ${pageId} computedStyles must be an array.`);
+  return value.map((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      throw new Error(`Each computedStyles entry on ${pageId} must be an object.`);
+    }
+    if (typeof entry.selector !== "string" || !entry.selector.trim()) {
+      throw new Error(`Each computedStyles entry on ${pageId} needs a selector.`);
+    }
+    if (typeof entry.property !== "string" || !/^(--[A-Za-z0-9_-]+|[A-Za-z][A-Za-z0-9-]*)$/.test(entry.property)) {
+      throw new Error(`Each computedStyles entry on ${pageId} needs a CSS property name.`);
+    }
+    if (typeof entry.equals !== "string" || !entry.equals.trim()) {
+      throw new Error(`Each computedStyles entry on ${pageId} needs a non-empty equals value.`);
+    }
+    return { selector: entry.selector.trim(), property: entry.property, equals: entry.equals };
+  });
+}
+
 function validateConfig(config) {
   if (!config || typeof config !== "object" || Array.isArray(config)) throw new Error("The config root must be a JSON object.");
   if (typeof config.baseUrl !== "string") throw new Error("Config needs a baseUrl.");
@@ -75,9 +94,10 @@ function validateConfig(config) {
     pageIds.add(id);
     if (typeof page.path !== "string") throw new Error(`Page ${id} needs a path.`);
     if (page.states !== undefined && !Array.isArray(page.states)) throw new Error(`Page ${id} states must be an array.`);
+    const computedStyles = normalizeComputedStyles(page.computedStyles, id);
     const states = page.states?.length ? page.states : [{ id: "default" }];
     const stateIds = new Set();
-    return { ...page, id, states: states.map((state) => {
+    return { ...page, id, computedStyles, states: states.map((state) => {
       const stateId = sanitizePathPart(state.id ?? "default", `state id on ${id}`);
       if (stateIds.has(stateId)) throw new Error(`Duplicate state id ${stateId} on page ${id}.`);
       stateIds.add(stateId);
@@ -318,6 +338,54 @@ function geometryDiagnostics(metrics) {
   return diagnostics;
 }
 
+async function computedStyleDiagnostics(page, assertions) {
+  const diagnostics = [];
+  for (const assertion of assertions) {
+    const context = {
+      selector: assertion.selector,
+      property: assertion.property,
+      expected: assertion.equals,
+    };
+    try {
+      const locator = page.locator(assertion.selector);
+      const count = await locator.count();
+      if (count === 0) {
+        diagnostics.push({
+          severity: "error",
+          code: "computed-style-selector-missing",
+          message: `No element matches ${assertion.selector}; ${assertion.property} expected ${JSON.stringify(assertion.equals)}, actual <missing>.`,
+          ...context,
+          actual: null,
+        });
+        continue;
+      }
+      for (let index = 0; index < count; index += 1) {
+        const actual = await locator.nth(index).evaluate((element, property) => getComputedStyle(element).getPropertyValue(property).trim(), assertion.property);
+        if (actual !== assertion.equals) {
+          diagnostics.push({
+            severity: "error",
+            code: "computed-style-mismatch",
+            message: `${assertion.selector}${count > 1 ? `[${index}]` : ""} ${assertion.property} expected ${JSON.stringify(assertion.equals)}, actual ${JSON.stringify(actual)}.`,
+            ...context,
+            ...(count > 1 ? { elementIndex: index } : {}),
+            actual,
+          });
+        }
+      }
+    } catch (error) {
+      const actual = error instanceof Error ? `ERROR: ${error.message}` : `ERROR: ${String(error)}`;
+      diagnostics.push({
+        severity: "error",
+        code: "computed-style-check-error",
+        message: `${assertion.selector} ${assertion.property} could not be checked; expected ${JSON.stringify(assertion.equals)}, actual ${JSON.stringify(actual)}.`,
+        ...context,
+        actual,
+      });
+    }
+  }
+  return diagnostics;
+}
+
 function compareStableMeasurements(previousMetrics, currentMetrics) {
   const diagnostics = [];
   if (!previousMetrics || !currentMetrics) return diagnostics;
@@ -426,10 +494,22 @@ async function runState({ browser, config, configDirectory, outputDirectory, pag
   const diagnostics = [];
   let metrics = null;
   let geometryOutcome = "FAIL";
+  let styleOutcome = pageSpec.computedStyles.length ? "FAIL" : "NOT_RUN";
   let stateError = null;
   page.setDefaultTimeout(config.actionTimeoutMs ?? 10_000);
   page.on("console", (message) => consoleMessages.push({ type: message.type(), text: message.text(), location: message.location() }));
   page.on("pageerror", (error) => consoleMessages.push({ type: "pageerror", text: error.message }));
+  page.on("response", (response) => {
+    const request = response.request();
+    if (response.status() >= 400 && ["stylesheet", "script"].includes(request.resourceType())) {
+      consoleMessages.push({ type: "asset-error", text: `${request.resourceType()} returned HTTP ${response.status()}: ${response.url()}` });
+    }
+  });
+  page.on("requestfailed", (request) => {
+    if (["stylesheet", "script"].includes(request.resourceType())) {
+      consoleMessages.push({ type: "asset-error", text: `${request.resourceType()} failed to load: ${request.url()} (${request.failure()?.errorText ?? "unknown network error"})` });
+    }
+  });
 
   const result = {
     pageId: pageSpec.id,
@@ -442,6 +522,7 @@ async function runState({ browser, config, configDirectory, outputDirectory, pag
     baseline: null,
     outcome: "FAIL",
     geometryOutcome,
+    styleOutcome,
   };
 
   try {
@@ -453,13 +534,19 @@ async function runState({ browser, config, configDirectory, outputDirectory, pag
     if (!Number.isFinite(settleMs) || settleMs < 0 || settleMs > 60_000) throw new Error("settleMs must be between 0 and 60000.");
     if (settleMs) await page.waitForTimeout(settleMs);
 
+    const styleDiagnostics = await computedStyleDiagnostics(page, pageSpec.computedStyles);
+    diagnostics.push(...styleDiagnostics);
+    styleOutcome = styleDiagnostics.length ? "FAIL" : pageSpec.computedStyles.length ? "PASS" : "NOT_RUN";
+    result.styleOutcome = styleOutcome;
+
     metrics = await collectGeometry(page, config.geometry);
     result.geometry = metrics;
-    diagnostics.push(...geometryDiagnostics(metrics));
+    const currentGeometryDiagnostics = geometryDiagnostics(metrics);
     if (firstStateMetrics && config.geometry.stableAcrossStates.length) {
-      diagnostics.push(...compareStableMeasurements(firstStateMetrics, metrics));
+      currentGeometryDiagnostics.push(...compareStableMeasurements(firstStateMetrics, metrics));
     }
-    geometryOutcome = diagnostics.some((item) => item.severity === "error") ? "FAIL" : "PASS";
+    diagnostics.push(...currentGeometryDiagnostics);
+    geometryOutcome = currentGeometryDiagnostics.some((item) => item.severity === "error") ? "FAIL" : "PASS";
     result.geometryOutcome = geometryOutcome;
 
     const screenshotDirectory = path.join(outputDirectory, "screenshots", sanitizePathPart(pageSpec.id, "page.id"), viewport.id);
@@ -507,9 +594,13 @@ async function runState({ browser, config, configDirectory, outputDirectory, pag
     diagnostics.push({ severity: "error", code: "state-execution-failed", message: stateError });
     result.error = stateError;
     result.geometryOutcome = "FAIL";
+    if (pageSpec.computedStyles.length && styleOutcome === "FAIL") {
+      result.styleOutcome = "FAIL";
+    }
   } finally {
-    const hasBrowserErrors = consoleMessages.some((message) => message.type === "error" || message.type === "pageerror");
-    result.browserErrors = consoleMessages.filter((message) => message.type === "error" || message.type === "pageerror").length;
+    const isBrowserError = (message) => ["error", "pageerror", "asset-error"].includes(message.type);
+    const hasBrowserErrors = consoleMessages.some(isBrowserError);
+    result.browserErrors = consoleMessages.filter(isBrowserError).length;
     result.outcome = stateError || diagnostics.some((item) => item.severity === "error") || hasBrowserErrors ? "FAIL" : "PASS";
     await page.close();
   }
@@ -527,16 +618,24 @@ function summarizeStatuses(report, config) {
     if (report.regression.failed > 0) regressionStatus = "FAIL";
     else if (report.regression.compared > 0 && report.regression.missing === 0) regressionStatus = "PASS";
   }
+  const configuredStylePages = config?.pages.filter((page) => page.computedStyles.length) ?? [];
+  const styleResults = results.filter((result) => configuredStylePages.some((page) => page.id === result.pageId));
+  const styleStatus = configuredStylePages.length === 0
+    ? "NOT_RUN"
+    : !styleResults.length || styleResults.some((result) => result.styleOutcome !== "PASS")
+      ? "FAIL"
+      : "PASS";
   report.statuses = {
     BUILD: "NOT_RUN",
     GEOMETRY_QA: !hasResults ? "NOT_RUN" : geometryPassed ? "PASS" : "FAIL",
+    STYLE_QA: styleStatus,
     VISUAL_REVIEW: "NOT_RUN",
     REGRESSION: regressionStatus,
     BROWSER_ERRORS: browserErrors ? "FAIL" : hasResults ? "PASS" : "NOT_RUN",
     HUMAN_ACCEPTANCE: "PENDING",
   };
   const fatalError = report.errors.length > 0;
-  report.outcome = fatalError || report.statuses.GEOMETRY_QA === "FAIL" || report.statuses.REGRESSION === "FAIL" || report.statuses.BROWSER_ERRORS === "FAIL" ? "FAIL" : "PASS";
+  report.outcome = fatalError || report.statuses.GEOMETRY_QA === "FAIL" || report.statuses.STYLE_QA === "FAIL" || report.statuses.REGRESSION === "FAIL" || report.statuses.BROWSER_ERRORS === "FAIL" ? "FAIL" : "PASS";
 }
 
 function markdownReport(report) {
@@ -557,9 +656,9 @@ function markdownReport(report) {
     "",
     "## Captures",
     "",
-    "| Page | Viewport | State | Result | Geometry | Browser errors | Screenshot |",
-    "| --- | --- | --- | --- | --- | ---: | --- |",
-    ...report.results.map((result) => `| ${result.pageId} | ${result.viewport} | ${result.stateId} | ${result.outcome} | ${result.geometryOutcome} | ${result.browserErrors} | ${result.screenshot ?? "not captured"} |`),
+    "| Page | Viewport | State | Result | Geometry | Styles | Browser errors | Screenshot |",
+    "| --- | --- | --- | --- | --- | --- | ---: | --- |",
+    ...report.results.map((result) => `| ${result.pageId} | ${result.viewport} | ${result.stateId} | ${result.outcome} | ${result.geometryOutcome} | ${result.styleOutcome} | ${result.browserErrors} | ${result.screenshot ?? "not captured"} |`),
     "",
     "## Diagnostics",
     "",
