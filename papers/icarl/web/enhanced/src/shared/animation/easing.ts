@@ -109,3 +109,41 @@ export function clockwiseOffset(startDeg: number, degrees: number): number {
 export function formatFixed(value: number, digits = 3): string {
   return value.toFixed(digits);
 }
+
+/**
+ * Places a label for a mark without letting the text leave the canvas.
+ *
+ * A label may move; the mark it describes may not. Widths are estimated in text units from the
+ * font size, so the result stays correct at every rendered scale, and the anchor flips when the
+ * preferred side has no room.
+ */
+export function placeLabel(
+  point: Point,
+  text: string,
+  options: {
+    dx: number;
+    dy: number;
+    anchor?: "start" | "middle" | "end";
+    fontSize?: number;
+    bounds: { width: number; height: number };
+    pad?: number;
+  },
+): { x: number; y: number; anchor: "start" | "middle" | "end" } {
+  const fontSize = options.fontSize ?? 17;
+  const pad = options.pad ?? 8;
+  const textUnits =
+    [...text].reduce((sum, char) => sum + (/[\u2e80-\u9fff\uff00-\uffef]/.test(char) ? 1 : 0.62), 0) * fontSize;
+  const lineHalf = fontSize * 0.62;
+  let anchor = options.anchor ?? "start";
+  let x = point.x + options.dx;
+  let y = point.y + options.dy;
+  const rightExtent = (candidate: "start" | "middle" | "end") =>
+    x + (candidate === "start" ? textUnits : candidate === "middle" ? textUnits / 2 : 0);
+  const leftExtent = (candidate: "start" | "middle" | "end") =>
+    x - (candidate === "end" ? textUnits : candidate === "middle" ? textUnits / 2 : 0);
+  if (rightExtent(anchor) > options.bounds.width - pad && leftExtent("end") >= pad) anchor = "end";
+  if (rightExtent(anchor) > options.bounds.width - pad) x -= rightExtent(anchor) - (options.bounds.width - pad);
+  if (leftExtent(anchor) < pad) x += pad - leftExtent(anchor);
+  y = Math.min(Math.max(y, pad + lineHalf), options.bounds.height - pad);
+  return { x, y, anchor };
+}
