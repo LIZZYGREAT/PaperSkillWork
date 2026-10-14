@@ -344,8 +344,16 @@
               "selector": ".p4-workbench__controls > .icarl-button:last-child"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__control-center > button:first-child"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 650
+            },
+            {
               "type": "waitFor",
-              "selector": ".p4-combine-line",
+              "selector": ".p4-live-calculation circle.p4-contribution-dot:nth-of-type(1)",
               "state": "visible"
             },
             {
@@ -418,8 +426,16 @@
               "selector": ".p4-workbench__controls > .icarl-button:last-child"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__control-center > button:first-child"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 800
+            },
+            {
               "type": "waitFor",
-              "selector": ".p4-moving-mean:not(.is-raw)",
+              "selector": ".p4-normalize-ray:not(.p4-normalize-ray--target)",
               "state": "visible"
             },
             {
@@ -461,8 +477,16 @@
               "selector": ".p4-workbench__controls > .icarl-button:last-child"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__control-center > button:first-child"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 800
+            },
+            {
               "type": "waitFor",
-              "selector": ".p4-score-line",
+              "selector": ".p4-score-line--growing",
               "state": "visible"
             },
             {
@@ -497,12 +521,46 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p4-weighted-line",
+              "selector": ".p4-moving-mean.is-raw",
               "state": "visible"
             },
             {
               "type": "waitFor",
               "selector": ".p4-workbench[data-stage='3'][data-micro-step='2']",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "03a-round-k3-centroid-gather",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__control-center > button:first-child"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 650
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-live-calculation circle.p4-contribution-dot:nth-of-type(1)",
               "state": "visible"
             }
           ]

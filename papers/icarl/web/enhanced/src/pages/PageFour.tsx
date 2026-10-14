@@ -41,16 +41,16 @@ const targetMicrocopy = [
 
 const secondRoundMicrocopy = [
   "先固定已经选出的 p₁，再观察一个尚未选择的候选 x。",
-  "连接 z(p₁) 与 z(x)；两点平均落在线段的几何中点。",
-  "中点就是原始前缀均值 ν̄₂(x)。",
+  "z(p₁) 与 z(x) 各复制出一个贡献点，两个贡献点同时向共同中点移动。",
+  "两个贡献点在中点汇合；这个位置就是原始前缀均值 ν̄₂(x)。",
   "将 ν̄₂(x) 沿原点方向单位化，得到用于比较的 ν₂(x)。",
   "用 ν₂(x) 到 μ_full 的距离评分；此时还没有检查完所有候选。",
 ] as const;
 
 const thirdRoundMicrocopy = [
   "固定前两项，并取一个尚未选择的候选 x。",
-  "先连接前两项的原始均值 ν̄₂ 与候选 z(x)。",
-  "新均值沿这条线移动三分之一：ν̄₃(x) = [2ν̄₂ + z(x)] / 3。",
+  "z(p₁)、z(p₂) 与 z(x) 各复制出一个贡献点，同时向共同重心移动。",
+  "三个贡献点在重心汇合；这个位置就是 ν̄₃(x) = [z(p₁)+z(p₂)+z(x)]/3。",
   "将新均值单位化，得到本轮用于评分的 ν₃(x)。",
   "用 ν₃(x) 到 μ_full 的距离评分；本轮仍需检查其他候选。",
 ] as const;
@@ -75,12 +75,6 @@ function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
 function ease(value: number) { const t = clamp(value); return t * t * (3 - 2 * t); }
 function lerp(a: number, b: number, progress: number) { return a + (b - a) * ease(progress); }
 function lerpVector(a: Vector2, b: Vector2, progress: number): [number, number] { return [lerp(a[0], b[0], progress), lerp(a[1], b[1], progress)]; }
-function clockwisePoint(fromAngle: number, toAngle: number, progress: number): Point2D {
-  const delta = (fromAngle - toAngle + 360) % 360;
-  const radians = (fromAngle - delta * ease(progress)) * Math.PI / 180;
-  return { x: CHART.centerX + Math.cos(radians) * CHART.radius, y: CHART.centerY - Math.sin(radians) * CHART.radius };
-}
-
 function toChartPoint(vector: Vector2): Point2D {
   return { x: CHART.centerX + vector[0] * CHART.radius, y: CHART.centerY - vector[1] * CHART.radius };
 }
@@ -167,34 +161,38 @@ function currentPrompt(flow: FlowState, candidate: HerdingDemoCandidate | null) 
 }
 
 function currentFormula(flow: FlowState, candidate: HerdingDemoCandidate | null) {
+  const candidateId = candidate?.point.id ?? "x";
+  const score = candidate ? format(candidate.score) : "—";
+  const round = flow.stage >= 1 && flow.stage <= 4 ? HERDING_DEMO_ROUNDS[flow.stage - 1] : null;
   if (flow.stage === 0) {
-    if (flow.microStep === 0) return <>z(x) = normalize(φ(x))</>;
-    if (flow.microStep === 1) return <>μ̄<sub>full</sub> = mean(z(x) : x ∈ X<sub>y</sub>)</>;
-    return <>μ<sub>full</sub> = normalize(μ̄<sub>full</sub>)</>;
+    if (flow.microStep === 0) return <span>z(x) = normalize(φ(x))</span>;
+    if (flow.microStep === 1) return <span>μ̄<sub>full</sub> = (1 / |X<sub>y</sub>|) Σ<sub>x∈Xy</sub> z(x)</span>;
+    return <span>μ<sub>full</sub> = normalize(μ̄<sub>full</sub>)</span>;
   }
   if (flow.stage === 5) {
-    return <>ν<sub>{flow.prefixCount}</sub> = normalize(mean(z(p<sub>1</sub>), …, z(p<sub>{flow.prefixCount}</sub>)))</>;
+    return <span>ν<sub>{flow.prefixCount}</sub> = normalize((1/{flow.prefixCount}) Σ<sub>i=1…{flow.prefixCount}</sub> z(p<sub>i</sub>))</span>;
   }
   if (flow.stage === 6) {
-    return <>m = ⌊K / t⌋ · K = 12 · 4 类 → m = 3</>;
+    return <div className="p4-formula-stack"><span>m = ⌊K / t⌋</span><span>K = 12，t = 4 → m = 3</span></div>;
   }
-  if (flow.stage === 1) return <>ν<sub>1</sub>(x) = z(x) · p<sub>1</sub> = arg min<sub>x</sub> ‖μ<sub>full</sub> − ν<sub>1</sub>(x)‖₂</>;
+  if (flow.committed && round) return <div className="p4-formula-stack"><span>p<sub>{flow.stage}</sub> = {round.chosen.id}</span><span>{round.chosen.id} = arg min<sub>x∉P</sub> d<sub>{flow.stage}</sub>(x)</span></div>;
+  if (flow.stage === 1) return <div className="p4-formula-stack"><span>ν<sub>1</sub>({candidateId}) = z({candidateId})</span><span>d<sub>1</sub>({candidateId}) = ‖μ<sub>full</sub> − ν<sub>1</sub>({candidateId})‖₂ = {score}</span></div>;
   if (flow.stage === 2) {
-    if (flow.microStep < 2) return <>ν̄<sub>2</sub>(x) = [z(p<sub>1</sub>) + z(x)] / 2</>;
-    if (flow.microStep === 2) return <>ν̄<sub>2</sub>(x) = [z(p<sub>1</sub>) + z(x)] / 2</>;
-    if (flow.microStep === 3) return <>ν<sub>2</sub>(x) = normalize(ν̄<sub>2</sub>(x))</>;
-    return <>d<sub>2</sub>(x) = ‖μ<sub>full</sub> − ν<sub>2</sub>(x)‖₂</>;
+    if (flow.microStep === 0) return <span>S<sub>2</sub>({candidateId}) = {`{z(p₁), z(${candidateId})}`}</span>;
+    if (flow.microStep <= 2) return <span>ν̄<sub>2</sub>({candidateId}) = [z(p<sub>1</sub>) + z({candidateId})] / 2</span>;
+    if (flow.microStep === 3) return <span>ν<sub>2</sub>({candidateId}) = normalize(ν̄<sub>2</sub>({candidateId}))</span>;
+    return <span>d<sub>2</sub>({candidateId}) = ‖μ<sub>full</sub> − ν<sub>2</sub>({candidateId})‖₂ = {score}</span>;
   }
   if (flow.stage === 3) {
-    if (flow.microStep < 2) return <>ν̄<sub>3</sub>(x) = [2ν̄<sub>2</sub> + z(x)] / 3</>;
-    if (flow.microStep === 2) return <>ν̄<sub>3</sub>(x) = [2ν̄<sub>2</sub> + z(x)] / 3</>;
-    if (flow.microStep === 3) return <>ν<sub>3</sub>(x) = normalize(ν̄<sub>3</sub>(x))</>;
-    return <>d<sub>3</sub>(x) = ‖μ<sub>full</sub> − ν<sub>3</sub>(x)‖₂</>;
+    if (flow.microStep === 0) return <span>S<sub>3</sub>({candidateId}) = {`{z(p₁), z(p₂), z(${candidateId})}`}</span>;
+    if (flow.microStep <= 2) return <span>ν̄<sub>3</sub>({candidateId}) = [z(p<sub>1</sub>) + z(p<sub>2</sub>) + z({candidateId})] / 3</span>;
+    if (flow.microStep === 3) return <span>ν<sub>3</sub>({candidateId}) = normalize(ν̄<sub>3</sub>({candidateId}))</span>;
+    return <span>d<sub>3</sub>({candidateId}) = ‖μ<sub>full</sub> − ν<sub>3</sub>({candidateId})‖₂ = {score}</span>;
   }
   if (flow.stage === 4) {
-    return <>ν<sub>4</sub>(x) = normalize(mean(z(p<sub>1</sub>), z(p<sub>2</sub>), z(p<sub>3</sub>), z(x)))</>;
+    return <div className="p4-formula-stack"><span>ν̄<sub>4</sub>({candidateId}) = [z(p<sub>1</sub>) + z(p<sub>2</sub>) + z(p<sub>3</sub>) + z({candidateId})] / 4</span><span>ν<sub>4</sub>({candidateId}) = normalize(ν̄<sub>4</sub>({candidateId}))</span><span>d<sub>4</sub>({candidateId}) = {score}</span></div>;
   }
-  return candidate ? <>d<sub>{flow.stage}</sub>({candidate.point.id}) = ‖μ<sub>full</sub> − ν<sub>{flow.stage}</sub>({candidate.point.id})‖₂</> : null;
+  return null;
 }
 
 function HerdingFeatureSpace({ flow, candidate, motionProgress }: { flow: FlowState; candidate: HerdingDemoCandidate | null; motionProgress: number }) {
@@ -210,29 +208,31 @@ function HerdingFeatureSpace({ flow, candidate, motionProgress }: { flow: FlowSt
   const selectedIds = new Set(selected.map((point) => point.id));
   const targetRawVisible = flow.stage !== 0 || flow.microStep >= 1;
   const targetVisible = flow.stage !== 0 || flow.microStep >= 2;
-  const isDetailedRound = roundIndex === 1 || roundIndex === 2;
-  const showCombination = activeCandidate !== null && (flow.stage === 2 || flow.stage === 3)
-    && (flow.microStep >= 1 || flow.candidateIndex > 0);
-  const showWeightedLine = flow.stage === 3 && showCombination;
+  const isDetailedCandidate = (roundIndex === 1 || roundIndex === 2) && flow.candidateIndex === 0;
+  const gatherProgress = isDetailedCandidate
+    ? flow.microStep > 1 ? 1 : flow.microStep === 1 ? clamp(motionProgress) : 0
+    : clamp((motionProgress - .08) / .42);
+  const normalizeProgress = isDetailedCandidate
+    ? flow.microStep > 3 ? 1 : flow.microStep === 3 ? clamp(motionProgress) : 0
+    : clamp((motionProgress - .52) / .24);
+  const scoreProgress = flow.stage === 1
+    ? clamp(motionProgress)
+    : isDetailedCandidate
+      ? flow.microStep > 4 ? 1 : flow.microStep === 4 ? clamp(motionProgress) : 0
+      : clamp((motionProgress - .76) / .24);
+  const showCombination = activeCandidate !== null && roundIndex !== null && roundIndex > 0
+    && (isDetailedCandidate ? flow.microStep === 1 : true);
   const showMean = activeCandidate !== null && roundIndex !== null && roundIndex > 0
-    && (isDetailedRound ? flow.microStep >= 2 : flow.microStep >= 4 || flow.candidateIndex > 0);
+    && (isDetailedCandidate ? flow.microStep >= 2 : gatherProgress >= .92);
   const showNormalized = activeCandidate !== null && roundIndex !== null && roundIndex > 0
-    && (isDetailedRound ? flow.microStep >= 3 : flow.microStep >= 4 || flow.candidateIndex > 0);
-  const scoreCandidate = activeCandidate !== null && (roundIndex === 0 || roundIndex === 3
-    || isDetailedRound && flow.microStep >= 4 || flow.candidateIndex > 0);
+    && (isDetailedCandidate ? flow.microStep >= 3 : normalizeProgress > 0);
+  const scoreCandidate = activeCandidate !== null && scoreProgress > 0;
   const reviewRound = flow.stage === 5 || flow.stage === 6 ? HERDING_DEMO_ROUNDS[flow.prefixCount - 1] : null;
   const rawMean = activeCandidate ? toChartPoint(activeCandidate.rawPrefixMean) : null;
   const normalizedMean = activeCandidate ? toChartPoint(activeCandidate.normalizedPrefixMean) : null;
   const activeReviewMean = reviewRound ? toChartPoint(reviewRound.normalizedPrefixMean) : null;
   const committedMean = flow.committed && activeRound ? toChartPoint(activeRound.normalizedPrefixMean) : null;
   const candidatePoint = activeCandidate ? toChartPoint(activeCandidate.point.feature) : null;
-  const scanProgress = clamp(motionProgress / .24);
-  const gatherProgress = clamp((motionProgress - .22) / .34);
-  const normalizeProgress = clamp((motionProgress - .54) / .23);
-  const scoreProgress = clamp((motionProgress - .75) / .25);
-  const previousCandidate = roundIndex === null || flow.candidateIndex === 0 ? null : CANDIDATES_BY_ROUND[roundIndex][flow.candidateIndex - 1];
-  const scanFromAngle = previousCandidate?.point.angle ?? CLOCKWISE_START_ANGLE;
-  const scanPoint = activeCandidate ? clockwisePoint(scanFromAngle, activeCandidate.point.angle, scanProgress) : null;
   const contributionPoints = activeCandidate && roundIndex !== null
     ? [...HERDING_DEMO_ORDER.slice(0, roundIndex), activeCandidate.point]
     : [];
@@ -241,9 +241,6 @@ function HerdingFeatureSpace({ flow, candidate, motionProgress }: { flow: FlowSt
   const animatedMean = animatedRawMean && animatedNormalizedMean
     ? toChartPoint(lerpVector(animatedRawMean, animatedNormalizedMean, normalizeProgress))
     : null;
-  const previousRawMean = roundIndex !== null && roundIndex > 1
-    ? toChartPoint(HERDING_DEMO_ROUNDS[roundIndex - 1].rawPrefixMean)
-    : null;
   const candidateForLabels = candidatePoint && activeCandidate
     ? { ...candidatePoint, id: `candidate-${activeCandidate.point.id}`, text: `候选 ${activeCandidate.point.id}` }
     : null;
@@ -251,16 +248,17 @@ function HerdingFeatureSpace({ flow, candidate, motionProgress }: { flow: FlowSt
     ? activeReviewMean
     : flow.committed ? committedMean
     : !activeCandidate || roundIndex === 0 || !showMean ? null
-    : showNormalized ? normalizedMean : rawMean;
+    : isDetailedCandidate
+      ? flow.microStep === 2 ? rawMean : animatedMean
+      : animatedMean;
+  const plottedMeanIsRaw = Boolean(activeCandidate && !flow.committed && flow.stage < 5 && normalizeProgress < .96);
+  const plottedMeanIsNormalized = Boolean(flow.committed || flow.stage >= 5 || normalizeProgress >= .96);
   const labels: ChartLabel[] = [];
   if (targetRawVisible) labels.push({ ...targetRaw, id: "target-raw", text: "μ̄_full" });
   if (targetVisible) labels.push({ ...target, id: "target", text: "目标 μ_full" });
   if (candidateForLabels) labels.push(candidateForLabels);
-  if (flow.stage === 3 && flow.microStep === 1 && previousRawMean) {
-    labels.push({ ...previousRawMean, id: "previous-raw-mean", text: "已有均值 ν̄₂" });
-  }
   if (plottedMean && (showMean || showNormalized || flow.committed || flow.stage >= 5)) {
-    labels.push({ ...plottedMean, id: "active-mean", text: showNormalized || flow.committed || flow.stage >= 5 ? `ν${flow.stage >= 5 ? flow.prefixCount : flow.stage}` : `ν̄${flow.stage}(x)` });
+    labels.push({ ...plottedMean, id: "active-mean", text: plottedMeanIsNormalized ? `ν${flow.stage >= 5 ? flow.prefixCount : flow.stage}` : `ν̄${flow.stage}(x)` });
   }
   const obstacles = [
     ...HERDING_DEMO_POINTS.map((point) => toChartPoint(point.feature)),
@@ -289,15 +287,12 @@ function HerdingFeatureSpace({ flow, candidate, motionProgress }: { flow: FlowSt
     {targetRawVisible ? <line className="p4-target-ray" x1={CHART.centerX} y1={CHART.centerY} x2={targetRaw.x} y2={targetRaw.y} /> : null}
     {targetVisible && flow.stage === 0 ? <line className="p4-normalize-ray p4-normalize-ray--target" x1={targetRaw.x} y1={targetRaw.y} x2={target.x} y2={target.y} /> : null}
     {flow.stage === 5 ? <polyline className="p4-prefix-track" points={HERDING_DEMO_ROUNDS.map((round) => { const point = toChartPoint(round.normalizedPrefixMean); return `${point.x},${point.y}`; }).join(" ")} /> : null}
-    {showCombination && candidatePoint ? HERDING_DEMO_ORDER.slice(0, roundIndex ?? 0).map((point) => {
+    {showCombination && rawMean ? contributionPoints.map((point) => {
       const position = toChartPoint(point.feature);
-      return <line key={`combine-${point.id}`} className="p4-combine-line" x1={position.x} y1={position.y} x2={candidatePoint.x} y2={candidatePoint.y} />;
+      return <line key={`combine-${point.id}`} className="p4-combine-line" x1={position.x} y1={position.y} x2={rawMean.x} y2={rawMean.y} />;
     }) : null}
-    {showWeightedLine && previousRawMean && candidatePoint ? <line className="p4-weighted-line" x1={previousRawMean.x} y1={previousRawMean.y} x2={candidatePoint.x} y2={candidatePoint.y} /> : null}
-    {flow.stage === 3 && flow.microStep === 1 && previousRawMean ? <polygon className="p4-prior-mean" points={diamondPoints(previousRawMean)} /> : null}
     {showMean && rawMean ? <line className="p4-prefix-ray" x1={CHART.centerX} y1={CHART.centerY} x2={rawMean.x} y2={rawMean.y} /> : null}
-    {showNormalized && rawMean && normalizedMean ? <line className="p4-normalize-ray" x1={rawMean.x} y1={rawMean.y} x2={normalizedMean.x} y2={normalizedMean.y} /> : null}
-    {scoreCandidate && normalizedMean ? <line className="p4-score-line" x1={normalizedMean.x} y1={normalizedMean.y} x2={target.x} y2={target.y} /> : null}
+    {showNormalized && rawMean && animatedMean ? <line className="p4-normalize-ray" x1={rawMean.x} y1={rawMean.y} x2={animatedMean.x} y2={animatedMean.y} /> : null}
     {flow.committed && committedMean ? <line className="p4-score-line" x1={committedMean.x} y1={committedMean.y} x2={target.x} y2={target.y} /> : null}
     {flow.stage >= 5 && activeReviewMean ? <line className="p4-score-line" x1={activeReviewMean.x} y1={activeReviewMean.y} x2={target.x} y2={target.y} /> : null}
     {HERDING_DEMO_POINTS.map((point) => {
@@ -307,27 +302,24 @@ function HerdingFeatureSpace({ flow, candidate, motionProgress }: { flow: FlowSt
       return <g key={point.id} className="p4-point" aria-label={`${point.id}${isSelected ? `，有序样本 p${selected.findIndex((item) => item.id === point.id) + 1}` : "，未选候选"}`}>
         <title>{`${point.id} · 单位化合成特征${isSelected ? ` · p${selected.findIndex((item) => item.id === point.id) + 1}` : ""}`}</title>
         {isSelected ? <circle className="p4-selected-ring" cx={position.x} cy={position.y} r="11" /> : null}
-        {isCandidate && !scanPoint ? <circle className="p4-candidate-ring" cx={position.x} cy={position.y} r="14" /> : null}
+        {isCandidate ? <circle className="p4-candidate-ring" cx={position.x} cy={position.y} r="14" /> : null}
         <circle className={`p4-data-point${isSelected ? " is-selected" : ""}${isCandidate ? " is-candidate" : ""}`} cx={position.x} cy={position.y} r={isSelected || isCandidate ? 6.3 : 5} />
       </g>;
     })}
     {activeCandidate && candidatePoint && rawMean && normalizedMean ? <g className="p4-live-calculation">
-      {contributionPoints.length >= 2 ? <polygon className={`p4-contributor-shape p4-contributor-shape--${contributionPoints.length}`} points={contributionPoints.map((point) => { const p = toChartPoint(point.feature); return `${p.x},${p.y}`; }).join(" ")} /> : null}
-      {contributionPoints.map((point) => {
+      {showCombination ? contributionPoints.map((point) => {
         const source = toChartPoint(point.feature);
         return <circle key={`contribution-${point.id}`} className="p4-contribution-dot" cx={lerp(source.x, rawMean.x, gatherProgress)} cy={lerp(source.y, rawMean.y, gatherProgress)} r="5.5" />;
-      })}
-      {animatedMean ? <circle className="p4-animated-mean" cx={animatedMean.x} cy={animatedMean.y} r="8" style={{ opacity: clamp((motionProgress - .42) / .12) }} /> : null}
-      {scoreProgress > 0 ? <line className="p4-score-line p4-score-line--growing" x1={normalizedMean.x} y1={normalizedMean.y} x2={lerp(normalizedMean.x, target.x, scoreProgress)} y2={lerp(normalizedMean.y, target.y, scoreProgress)} /> : null}
+      }) : null}
+      {scoreCandidate ? <line className="p4-score-line p4-score-line--growing" x1={normalizedMean.x} y1={normalizedMean.y} x2={lerp(normalizedMean.x, target.x, scoreProgress)} y2={lerp(normalizedMean.y, target.y, scoreProgress)} /> : null}
     </g> : null}
-    {scanPoint ? <circle className="p4-candidate-ring p4-candidate-ring--moving" cx={scanPoint.x} cy={scanPoint.y} r="14" /> : null}
     {flow.stage === 5 ? HERDING_DEMO_ROUNDS.map((item, index) => {
       const position = toChartPoint(item.normalizedPrefixMean);
       return <circle key={`prefix-${item.k}`} className={`p4-prefix-node${item.k === flow.prefixCount ? " is-active" : ""}`} cx={position.x} cy={position.y} r={item.k === flow.prefixCount ? 7 : 4.5} />;
     }) : null}
     {targetRawVisible ? <polygon className="p4-raw-target" points={diamondPoints(targetRaw)} /> : null}
     {targetVisible ? <path className="p4-target" d={featureStar(target.x, target.y)} /> : null}
-    <circle className={`p4-moving-mean${showMean && !showNormalized && !flow.committed && flow.stage < 5 ? " is-raw" : ""}`} cx={plottedMean?.x ?? 0} cy={plottedMean?.y ?? 0} r="8" visibility={plottedMean && (showMean || showNormalized || flow.committed || flow.stage >= 5) ? "visible" : "hidden"} />
+    <circle className={`p4-moving-mean${plottedMeanIsRaw ? " is-raw" : ""}`} cx={plottedMean?.x ?? 0} cy={plottedMean?.y ?? 0} r="8" visibility={plottedMean && (showMean || showNormalized || flow.committed || flow.stage >= 5) ? "visible" : "hidden"} />
     <circle className="p4-origin" cx={CHART.centerX} cy={CHART.centerY} r="3" />
     <ChartLabels labels={labels} obstacles={obstacles} />
   </svg>;
@@ -524,8 +516,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
           <div className="p4-memory-heading"><b>有序 Exemplars</b><span>{slotCount} / 4</span></div>
           <OrderedSlots count={slotCount} tailVisible={flow.stage !== 6 || flow.prefixCount === 4} />
           <DistanceRuler flow={flow} candidates={candidates} motionProgress={reducedMotion ? 1 : motionProgress} />
-          {flow.stage === 2 && flow.candidateIndex === 0 && !flow.committed ? <div className="p4-microstep-status"><span>{["输入", "组合", "中点", "单位化", "比较"][flow.microStep]}</span><b>微步 {flow.microStep + 1} / 5</b></div> : null}
-          {flow.stage === 3 && flow.candidateIndex === 0 && !flow.committed ? <div className="p4-microstep-status"><span>{["输入", "连接前缀均值与候选", "移动到三点重心", "单位化", "比较"][flow.microStep]}</span><b>微步 {flow.microStep + 1} / 5</b></div> : null}
+          {flow.stage === 2 && flow.candidateIndex === 0 && !flow.committed ? <div className="p4-microstep-status"><span>{["标出两个端点", "贡献点从端点出发", "汇聚为中点", "单位化", "比较"][flow.microStep]}</span><b>微步 {flow.microStep + 1} / 5</b></div> : null}
+          {flow.stage === 3 && flow.candidateIndex === 0 && !flow.committed ? <div className="p4-microstep-status"><span>{["标出三个端点", "贡献点从端点出发", "汇聚为三点重心", "单位化", "比较"][flow.microStep]}</span><b>微步 {flow.microStep + 1} / 5</b></div> : null}
         </aside>
       </div>
 
