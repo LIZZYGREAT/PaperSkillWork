@@ -815,6 +815,33 @@
           ]
         },
         {
+          "id": "p6-target-arrival-50-percent",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
+            { "type": "wait", "milliseconds": 2500 }
+          ]
+        },
+        {
+          "id": "p6-target-arrival-75-percent",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
+            { "type": "wait", "milliseconds": 3750 }
+          ]
+        },
+        {
+          "id": "p6-target-arrival-complete",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
+            { "type": "waitFor", "selector": ".p6-network-layout[data-progress='1.00']", "state": "visible" }
+          ]
+        },
+        {
           "id": "p6-old-soft-target",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
@@ -866,12 +893,70 @@
           ]
         },
         {
+          "id": "p6-bce-curve-50-percent",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
+            { "type": "wait", "milliseconds": 3100 }
+          ]
+        },
+        {
+          "id": "p6-bce-curve-75-percent",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
+            { "type": "wait", "milliseconds": 4650 }
+          ]
+        },
+        {
+          "id": "p6-bce-curve-complete",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
+            { "type": "waitFor", "selector": ".p6-network-layout[data-progress='1.00']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p6-hard-one-keeps-old-sample",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-sample-chooser button:nth-child(1)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
+            { "type": "waitFor", "selector": ".p6-bce-cases button:first-child", "state": "visible" },
+            { "type": "click", "selector": ".p6-bce-cases button:first-child" },
+            { "type": "waitFor", "selector": ".p6-case-notice[role='status']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p6-mini-batch-loss",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(4)" },
+            { "type": "wait", "milliseconds": 3000 },
+            { "type": "waitFor", "selector": ".p6-batch-assembly strong", "state": "visible" }
+          ]
+        },
+        {
           "id": "p6-backprop-to-shared-parameters",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
             { "type": "click", "selector": ".p6-phase-rail > summary" },
             { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)" },
             { "type": "waitFor", "selector": ".p6-feature-object.is-updating", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p6-update-complete-handoff",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)" },
+            { "type": "waitFor", "selector": ".p6-handoff[role='status']", "state": "visible" }
           ]
         }
       ]

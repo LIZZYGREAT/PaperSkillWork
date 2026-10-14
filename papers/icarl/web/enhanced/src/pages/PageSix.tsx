@@ -8,12 +8,12 @@ type PhaseId = "input" | "targets" | "bce" | "aggregate" | "backprop";
 type PlaybackStatus = "idle" | "playing" | "paused" | "complete";
 type BceCase = "hard-one" | "hard-zero" | "soft";
 
-const phases: readonly (GuidedStep & { id: PhaseId; guidance: string })[] = [
-  { id: "input", short: "样本进入", title: "同一张图经过共享表示", guidance: "我们已经把旧 Exemplars 与新类图片放入训练集 D，并提前保存了旧节点响应 Q。现在取出 D 中的一张图片，看看怎样让同一个网络继续学习。" },
-  { id: "targets", short: "构造 Target", title: "旧节点读取 Q，新节点读取真实标签", guidance: "既要保留旧节点原来的响应，又要学会新增类别。旧节点参考这张图片对应的 Q，新节点参考真实标签，合成完整六维 Target。" },
-  { id: "bce", short: "计算 BCE", title: "目标与输出不一致时怎样度量？", guidance: "Target r 已经确定，而当前输出 g 未必符合目标。我们用同一 BCE 衡量差异，再从 g−r 看单节点 logit 的更新方向。" },
-  { id: "aggregate", short: "汇总损失", title: "六个节点共同形成样本损失", guidance: "单节点损失已经会算了，但每张图片经过六个独立节点。把三项旧节点 Soft BCE 与三项新节点 Hard BCE 汇合，才得到这张图片的训练损失。" },
-  { id: "backprop", short: "反向传播", title: "损失梯度回到共享参数 Θ", guidance: "误差已经汇合，接下来沿计算图反向传播，更新训练头和共享表示。Q 与 Target 保持固定，网络同时接收保持旧响应与学习新类别的信号。" },
+const phases: readonly (GuidedStep & { id: PhaseId; guidance: string; durationMs: number })[] = [
+  { id: "input", short: "样本进入", title: "同一张图经过共享表示", guidance: "先看这张图片怎样从 D 进入共享特征提取器，再把前向信号送到六个固定输出节点。", durationMs: 3400 },
+  { id: "targets", short: "构造 Target", title: "旧节点读取 Q，新节点读取真实标签", guidance: "旧节点使用这张图对应的 Q 行，新节点使用真实标签；两类来源共同构成六维 Target。", durationMs: 5000 },
+  { id: "bce", short: "计算 BCE", title: "目标与当前输出怎样比较？", guidance: "先选定一个节点，比较它的目标 r 与当前输出 g；同一个 BCE 同时适用于旧节点的 soft target 和新节点的 hard target。", durationMs: 6200 },
+  { id: "aggregate", short: "汇总损失", title: "六个节点先汇成样本损失", guidance: "三项旧节点 BCE 与三项新节点 BCE 汇成 ℓᵢ；再把一个 mini-batch 的样本损失合并，供本轮更新使用。", durationMs: 3700 },
+  { id: "backprop", short: "反向传播", title: "损失梯度返回可训练参数", guidance: "L_batch 沿刚才的计算路径反向传到训练头与共享特征提取器。Q 和本轮 Target 在更新期间保持固定。", durationMs: 3900 },
 ];
 
 const oldSample = P_BEFORE.B[0];
@@ -25,8 +25,6 @@ const sampleChoices: readonly { sample: Sample; label: string }[] = [
   { sample: sampleById("x_34"), label: "新类 · C6" },
 ];
 const DEFAULT_SAMPLE = sampleChoices[2].sample;
-const PHASE_DURATION_MS = 3500;
-
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
@@ -93,8 +91,8 @@ function BceCaseButtons({ sample, selectedNodeIndex, onSelect }: {
 }
 
 function OperationFocus({
-  sample, phase, phaseProgress, playbackStatus, targets, outputs, selectedNodeIndex, localOutput, localLoss, modelLoss, curveTarget,
-  onChooseCase, onLocalOutput,
+  sample, phase, phaseProgress, playbackStatus, targets, outputs, selectedNodeIndex, exploreOutput, exploreLoss, modelLoss, curveTarget, caseNotice,
+  onChooseCase, onExploreOutput,
 }: {
   sample: Sample;
   phase: PhaseId;
@@ -103,12 +101,13 @@ function OperationFocus({
   targets: SixOutputs;
   outputs: SixOutputs;
   selectedNodeIndex: number;
-  localOutput: number;
-  localLoss: number;
+  exploreOutput: number;
+  exploreLoss: number;
   modelLoss: number;
   curveTarget: number;
+  caseNotice: string;
   onChooseCase: (kind: BceCase) => void;
-  onLocalOutput: (output: number) => void;
+  onExploreOutput: (output: number) => void;
 }) {
   const selectedClass = ALL_CLASS_IDS[selectedNodeIndex];
   const selectedTarget = targets[selectedNodeIndex];
@@ -160,16 +159,18 @@ function OperationFocus({
       <span className="p6-focus-kicker">单节点公式探索</span>
       <h4>{CLASS_VISUALS[selectedClass].outputNodeLabel} · {selectedKind === "soft" ? "来自 Q 的 Soft Target" : "来自标签的 Hard Target"}</h4>
       <BceCaseButtons sample={sample} selectedNodeIndex={selectedNodeIndex} onSelect={onChooseCase} />
+      {caseNotice ? <p className="p6-case-notice" role="status">{caseNotice}</p> : null}
+      <p className="p6-bce-why">先把目标 r 与当前输出 g 放在一起，BCE 衡量当前输出偏离目标的代价。</p>
       <Formula label="二元交叉熵公式" progress={clamp01((phaseProgress + 0.12) / 0.34)}>ℓ<sub>BCE</sub>(r,g) = −[r log g + (1−r) log(1−g)]</Formula>
       <p className="p6-bce-substitution" style={{ "--substitution-progress": clamp01((phaseProgress - 0.12) / 0.28), "--substitution-opacity": 0.5 + clamp01((phaseProgress - 0.12) / 0.28) * 0.5 } as CSSProperties}>{selectedCase === "hard-one"
         ? "Hard 1：r=1，因此 ℓ=−log g；曲线在 g 接近 1 时最低。"
         : selectedCase === "hard-zero"
           ? "Hard 0：r=0，因此 ℓ=−log(1−g)；曲线在 g 接近 0 时最低。"
           : `Soft q：r=q=${curveTarget.toFixed(3)}，两项都保留；最低点在 g=q，最小损失一般不为 0。`}</p>
-      <LossCurve target={curveTarget} output={localOutput} reveal={curveProgress} />
-      <div className="p6-model-vs-explore" style={{ "--probe-progress": clamp01((phaseProgress - 0.62) / 0.24), "--probe-opacity": 0.3 + clamp01((phaseProgress - 0.62) / 0.24) * 0.7 } as CSSProperties}><span>网络示例输出 <b>g_model={outputs[selectedNodeIndex].toFixed(3)}</b></span><span>局部探索输出 <b>g_explore={localOutput.toFixed(2)}</b></span><strong>ℓ_explore={localLoss.toFixed(3)}</strong></div>
+      <LossCurve target={curveTarget} output={exploreOutput} reveal={curveProgress} />
+      <div className="p6-model-vs-explore" style={{ "--probe-progress": clamp01((phaseProgress - 0.62) / 0.24), "--probe-opacity": 0.3 + clamp01((phaseProgress - 0.62) / 0.24) * 0.7 } as CSSProperties}><span>固定网络示例 <b>g_model={outputs[selectedNodeIndex].toFixed(3)}</b></span><span>局部公式探索 <b>g_explore={exploreOutput.toFixed(2)}</b></span><strong>ℓ_explore={exploreLoss.toFixed(3)}</strong></div>
       <label className="p6-bce-slider">拖动只观察局部曲线
-        <input type="range" min="0.01" max="0.99" step="0.01" value={localOutput} aria-label="单节点公式探索输出 g explore" aria-valuetext={`局部探索 g ${localOutput.toFixed(2)}，损失 ${localLoss.toFixed(3)}`} onChange={(event) => onLocalOutput(Number(event.currentTarget.value))} />
+        <input type="range" min="0.01" max="0.99" step="0.01" value={exploreOutput} aria-label="单节点公式探索输出 g explore" aria-valuetext={`局部探索 g ${exploreOutput.toFixed(2)}，损失 ${exploreLoss.toFixed(3)}`} onChange={(event) => onExploreOutput(Number(event.currentTarget.value))} />
         <span><i>0</i><i>1</i></span>
       </label>
       <small className="p6-focus-note">模型当前的单节点方向是 g_model−r = {modelGradient >= 0 ? "+" : ""}{modelGradient.toFixed(3)}；滑杆不改网络输出或样本 Loss。</small>
@@ -185,7 +186,12 @@ function OperationFocus({
       </div>
       <Formula label="当前样本损失是三个旧节点 BCE 和三个新节点 BCE 的总和" progress={clamp01((phaseProgress - 0.48) / 0.22)}>ℓᵢ = Σ<sub>j=1</sub><sup>3</sup> BCE(qᵢʲ,gᵢʲ) + Σ<sub>j=4</sub><sup>6</sup> BCE(1[yᵢ=Cⱼ],gᵢʲ)</Formula>
       <div className={`p6-sample-loss ${sampleLossProgress > 0 ? "is-arriving" : ""}`} style={{ "--total-progress": sampleLossProgress, "--total-opacity": 0.3 + sampleLossProgress * 0.7, "--total-offset": `${(1 - sampleLossProgress) * 8}px` } as CSSProperties}><span>本样本六项之和</span><b>{(modelLoss * sampleLossProgress).toFixed(3)}</b></div>
-      <small>批次示意：L<sub>batch</sub> = (1/B) Σ<sub>i</sub> ℓᵢ。这里只核对单张样本的固定演示值，没有运行一轮训练。</small>
+      <div className="p6-batch-assembly" style={{ "--batch-opacity": 0.3 + clamp01((phaseProgress - 0.7) / 0.25) * 0.7 } as CSSProperties} aria-label="从当前样本损失扩展到 mini-batch 平均损失">
+        <span className="p6-batch-assembly__current"><small>当前样本</small><b>{sample.id} → ℓᵢ</b></span><i aria-hidden="true">+</i>
+        <span className="p6-batch-assembly__rest"><small>同批其它样本</small><b>B−1 项 ℓⱼ</b></span><i aria-hidden="true">→</i>
+        <strong>L<sub>batch</sub> = (1/B) Σ<sub>j</sub> ℓⱼ</strong>
+      </div>
+      <small>这里只核对当前样本的固定教学值；其它样本以符号表示，没有运行一轮训练。</small>
     </> : null}
 
     {phase === "backprop" ? <>
@@ -194,15 +200,17 @@ function OperationFocus({
       <div className={`p6-gradient-route ${headGradientProgress > 0 ? "has-head-gradient" : ""} ${featureGradientProgress > 0 ? "has-feature-gradient" : ""}`}><span className={featureGradientProgress > 0 ? "is-receiving" : ""}>共享 φ<sub>Θ</sub></span><i aria-hidden="true">←</i><span className={headGradientProgress > 0 ? "is-receiving" : ""}>六节点训练头</span><i aria-hidden="true">←</i><span className={sampleLossProgress > 0 ? "is-emitting" : ""}>样本损失 ℓᵢ</span></div>
       <Formula label="参数沿负梯度方向更新" progress={clamp01((phaseProgress - 0.72) / 0.2)}>Θ ← Θ − η ∇<sub>Θ</sub>L<sub>batch</sub></Formula>
       <div className="p6-frozen-state"><span>Q 与 r <b>固定</b></span><span>训练参数 Θ <b>{featureGradientProgress >= 1 ? "更新方向已示意" : "等待梯度"}</b></span></div>
+      <div className="p6-parameter-transition" style={{ "--parameter-opacity": 0.42 + featureGradientProgress * 0.58 } as CSSProperties} aria-label="符号化参数状态由更新前交接至更新后"><b>Θ<sub>before</sub></b><i aria-hidden="true">→</i><b className="p6-parameter-transition__after">Θ<sub>after</sub></b><small>符号化状态提示，不展示训练所得数值</small></div>
       <p>训练 head 的 argmax 不是最终预测；训练后 iCaRL 仍按保留 Exemplars 的类别均值作最近均值预测。</p>
-      <small>图中数值不随反传改变；动画只标明梯度流向。</small>
+      <small>固定教学网络只说明更新路径；图中数值不随反传改变，也不是优化器训练轨迹。</small>
+      {phaseProgress >= 0.82 ? <div className="p6-handoff" role="status"><b>本轮参数更新完成</b><span>接下来转到第 7 页：整理 Exemplar 记忆，并用当前表示重新计算原型。</span></div> : null}
     </> : null}
   </section>;
 }
 
 function NetworkCanvas({
-  sample, targets, outputs, phase, phaseProgress, playbackStatus, selectedNodeIndex, onSelectNode, localOutput, localLoss, modelLoss, curveTarget,
-  targetReady, onChooseCase, onLocalOutput,
+  sample, targets, outputs, phase, phaseProgress, playbackStatus, selectedNodeIndex, onSelectNode, exploreOutput, exploreLoss, modelLoss, curveTarget, caseNotice,
+  targetReady, onChooseCase, onExploreOutput,
 }: {
   sample: Sample;
   targets: SixOutputs;
@@ -212,13 +220,14 @@ function NetworkCanvas({
   playbackStatus: PlaybackStatus;
   selectedNodeIndex: number;
   onSelectNode: (index: number) => void;
-  localOutput: number;
-  localLoss: number;
+  exploreOutput: number;
+  exploreLoss: number;
   modelLoss: number;
   curveTarget: number;
+  caseNotice: string;
   targetReady: boolean;
   onChooseCase: (kind: BceCase) => void;
-  onLocalOutput: (output: number) => void;
+  onExploreOutput: (output: number) => void;
 }) {
   const sampleIsOld = OLD_CLASS_IDS.includes(sample.classId as (typeof OLD_CLASS_IDS)[number]);
   const inputTravelProgress = phase === "input" ? clamp01(phaseProgress / 0.34) : 1;
@@ -265,7 +274,7 @@ function NetworkCanvas({
 
       <span className={`p6-flow-link p6-flow-link--loss ${phase === "backprop" || phase === "targets" ? "is-reverse" : ""} ${phase === "targets" ? "is-target-inbound" : ""} ${(phase === "backprop" ? headGradient : targetSignal) > 0 ? "has-signal" : ""}`} style={{ "--signal-x": `${phase === "backprop" || phase === "targets" ? 12 - (phase === "backprop" ? headGradient : targetSignal) * 24 : -12}px`, "--signal-progress": phase === "backprop" ? headGradient : targetSignal, "--loss-pulse-ring": `${lossSignal * 5}px` } as CSSProperties} aria-label={phase === "backprop" ? "损失信号返回输出头" : phase === "targets" ? "Q 与真实标签流向目标槽" : "输出节点进入当前运算"}><i aria-hidden="true">{phase === "backprop" || phase === "targets" ? "←" : "→"}</i><b aria-hidden="true">●</b></span>
 
-      <OperationFocus sample={sample} phase={phase} phaseProgress={phaseProgress} playbackStatus={playbackStatus} targets={targets} outputs={outputs} selectedNodeIndex={selectedNodeIndex} localOutput={localOutput} localLoss={localLoss} modelLoss={modelLoss} curveTarget={curveTarget} onChooseCase={onChooseCase} onLocalOutput={onLocalOutput} />
+      <OperationFocus sample={sample} phase={phase} phaseProgress={phaseProgress} playbackStatus={playbackStatus} targets={targets} outputs={outputs} selectedNodeIndex={selectedNodeIndex} exploreOutput={exploreOutput} exploreLoss={exploreLoss} modelLoss={modelLoss} curveTarget={curveTarget} caseNotice={caseNotice} onChooseCase={onChooseCase} onExploreOutput={onExploreOutput} />
     </div>
 
     <div className="p6-network-key"><span><i className="p6-key-dot p6-key-dot--old" />旧节点：Q Soft Target</span><span><i className="p6-key-dot p6-key-dot--new" />新节点：类别 Hard Target</span><span>六个输出均为独立 sigmoid</span></div>
@@ -309,35 +318,59 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const progressRef = useRef(0);
   const [status, setStatus] = useState<PlaybackStatus>("idle");
   const [animationRevision, setAnimationRevision] = useState(0);
-  const [localOutput, setLocalOutput] = useState(studentOutputFor(DEFAULT_SAMPLE)[initialFocusIndex]);
+  const [exploreOutput, setExploreOutput] = useState(studentOutputFor(DEFAULT_SAMPLE)[initialFocusIndex]);
+  const exploreOutputRef = useRef(studentOutputFor(DEFAULT_SAMPLE)[initialFocusIndex]);
   const [curveTarget, setCurveTarget] = useState(initialFocusTarget);
   const curveTargetRef = useRef(initialFocusTarget);
+  const curveFrameRef = useRef<number | null>(null);
+  const [caseNotice, setCaseNotice] = useState("");
   const reducedMotion = useReducedMotion();
   const sample = sampleChoices.find((choice) => choice.sample.id === sampleId)?.sample ?? DEFAULT_SAMPLE;
   const targets = useMemo(() => buildTargets(sample), [sample]);
   const outputs = useMemo(() => studentOutputFor(sample), [sample]);
   const phase = phases[phaseIndex];
-  const localLoss = binaryCrossEntropy(curveTarget, localOutput);
+  const exploreLoss = binaryCrossEntropy(curveTarget, exploreOutput);
   const modelLoss = ALL_CLASS_IDS.reduce((sum, _, index) => sum + binaryCrossEntropy(targets[index], outputs[index]), 0);
   const targetReady = phaseIndex >= 1;
 
   useEffect(() => {
-    const from = curveTargetRef.current;
-    const to = targets[selectedNodeIndex];
-    if (from === to) return;
+    const fromTarget = curveTargetRef.current;
+    const fromOutput = exploreOutputRef.current;
+    const toTarget = targets[selectedNodeIndex];
+    const toOutput = outputs[selectedNodeIndex];
+    if (fromTarget === toTarget && fromOutput === toOutput) return;
+    if (reducedMotion) {
+      curveTargetRef.current = toTarget;
+      exploreOutputRef.current = toOutput;
+      setCurveTarget(toTarget);
+      setExploreOutput(toOutput);
+      return;
+    }
     const startedAt = performance.now();
-    const duration = 360;
+    const duration = 460;
     let frame = 0;
     const morph = (now: number) => {
       const progress = clamp01((now - startedAt) / duration);
-      const next = from + (to - from) * progress;
-      curveTargetRef.current = next;
-      setCurveTarget(next);
-      if (progress < 1) frame = window.requestAnimationFrame(morph);
+      const nextTarget = fromTarget + (toTarget - fromTarget) * progress;
+      const nextOutput = fromOutput + (toOutput - fromOutput) * progress;
+      curveTargetRef.current = nextTarget;
+      exploreOutputRef.current = nextOutput;
+      setCurveTarget(nextTarget);
+      setExploreOutput(nextOutput);
+      if (progress < 1) {
+        frame = window.requestAnimationFrame(morph);
+        curveFrameRef.current = frame;
+      } else {
+        curveFrameRef.current = null;
+      }
     };
     frame = window.requestAnimationFrame(morph);
-    return () => window.cancelAnimationFrame(frame);
-  }, [sampleId, selectedNodeIndex]);
+    curveFrameRef.current = frame;
+    return () => {
+      window.cancelAnimationFrame(frame);
+      curveFrameRef.current = null;
+    };
+  }, [outputs, reducedMotion, sampleId, selectedNodeIndex, targets]);
 
   useEffect(() => {
     if (status !== "playing") return;
@@ -347,10 +380,10 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
       setStatus("complete");
       return;
     }
-    const start = performance.now() - progressRef.current * PHASE_DURATION_MS;
+    const start = performance.now() - progressRef.current * phase.durationMs;
     let frame = 0;
     const tick = (now: number) => {
-      const next = Math.min(1, (now - start) / PHASE_DURATION_MS);
+      const next = Math.min(1, (now - start) / phase.durationMs);
       progressRef.current = next;
       setPhaseProgress(next);
       if (next >= 1) {
@@ -361,7 +394,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [animationRevision, phaseIndex, reducedMotion, status]);
+  }, [animationRevision, phase.durationMs, phaseIndex, reducedMotion, status]);
 
   function changePhase(next: number) {
     const bounded = Math.max(0, Math.min(phases.length - 1, next));
@@ -394,7 +427,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     const nextNode = activeNodeIndex(next);
     setSampleId(next.id);
     setSelectedNodeIndex(nextNode);
-    setLocalOutput(studentOutputFor(next)[nextNode]);
+    setCaseNotice("");
     setStatus("paused");
     progressRef.current = 0;
     setPhaseProgress(0);
@@ -402,32 +435,40 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
 
   function chooseNode(index: number) {
     setSelectedNodeIndex(index);
-    setLocalOutput(outputs[index]);
+    setCaseNotice("");
   }
 
   function chooseCase(kind: BceCase) {
-    if (kind === "hard-one" && !INCOMING_CLASS_IDS.includes(sample.classId as (typeof INCOMING_CLASS_IDS)[number])) {
-      chooseSample(DEFAULT_SAMPLE);
+    const matchesCase = (index: number) => {
+      const nodeKind = targetKind(index);
+      if (kind === "soft") return nodeKind === "soft";
+      if (nodeKind !== "hard") return false;
+      return targets[index] === (kind === "hard-one" ? 1 : 0);
+    };
+    if (matchesCase(selectedNodeIndex)) {
+      setCaseNotice("");
       return;
     }
-    if (kind === "soft") {
-      chooseNode(0);
+    const matchingIndex = ALL_CLASS_IDS.findIndex((_, index) => matchesCase(index));
+    if (matchingIndex < 0) {
+      setCaseNotice("Hard 1 需要新类样本；当前图片保持不变，请显式选择 C4、C5 或 C6 样本后再看这个情形。");
       return;
     }
-    if (kind === "hard-one") {
-      chooseNode(ALL_CLASS_IDS.indexOf(sample.classId));
-      return;
-    }
-    const firstNewNode = OLD_CLASS_IDS.length;
-    const sampleNewNode = ALL_CLASS_IDS.indexOf(sample.classId);
-    chooseNode(sampleNewNode >= firstNewNode ? (sampleNewNode === firstNewNode ? firstNewNode + 1 : firstNewNode) : firstNewNode);
+    chooseNode(matchingIndex);
+  }
+
+  function setExploreOutputFromSlider(value: number) {
+    if (curveFrameRef.current !== null) window.cancelAnimationFrame(curveFrameRef.current);
+    curveFrameRef.current = null;
+    exploreOutputRef.current = value;
+    setExploreOutput(value);
   }
 
   return <article className="tutorial-page icarl-page icarl-page--p6" data-phase={phase.id} data-sample={sample.id}>
     <header className="page-heading icarl-page__heading p6-heading">
       <div className="icarl-page__eyebrow"><span>PAGE 06</span><i /> INCREMENTAL TRAINING · CONTINUOUS VIEW</div>
       <h1>旧知识与新类别怎样一起更新网络？</h1>
-      <p>沿着同一张样本，追踪 Q 与标签如何成为 Target、六项 BCE 如何汇成损失，再看梯度怎样返回共享表示。</p>
+      <p>上一页，我们把旧 Exemplars 与新类完整数据合成训练集 D，并在更新前记录了旧模型的响应快照 Q。现在，同一张图片怎样同时提供“保留旧类别响应”和“学会新类别”的信号？先为六个输出节点构造目标，再比较当前输出，最后让损失梯度返回网络。</p>
     </header>
 
     <section className="p6-workbench" aria-label="连续增量训练交互工作台">
@@ -442,7 +483,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
         {sampleChoices.map(({ sample: choice, label }) => <button key={choice.id} type="button" className={sample.id === choice.id ? "is-selected" : ""} aria-pressed={sample.id === choice.id} style={accent(choice.classId)} onClick={() => chooseSample(choice)}><i>{CLASS_VISUALS[choice.classId].glyph}</i>{label}<small>{choice.id}</small></button>)}
       </div></div>
 
-      <NetworkCanvas sample={sample} targets={targets} outputs={outputs} phase={phase.id} phaseProgress={phaseProgress} playbackStatus={status} selectedNodeIndex={selectedNodeIndex} onSelectNode={chooseNode} localOutput={localOutput} localLoss={localLoss} modelLoss={modelLoss} curveTarget={curveTarget} targetReady={targetReady} onChooseCase={chooseCase} onLocalOutput={setLocalOutput} />
+      <NetworkCanvas sample={sample} targets={targets} outputs={outputs} phase={phase.id} phaseProgress={phaseProgress} playbackStatus={status} selectedNodeIndex={selectedNodeIndex} onSelectNode={chooseNode} exploreOutput={exploreOutput} exploreLoss={exploreLoss} modelLoss={modelLoss} curveTarget={curveTarget} caseNotice={caseNotice} targetReady={targetReady} onChooseCase={chooseCase} onExploreOutput={setExploreOutputFromSlider} />
 
       <details className="p6-check-details">
         <summary>按需核对当前样本的 Q、g、r 与各节点 BCE</summary>

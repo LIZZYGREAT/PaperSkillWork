@@ -198,3 +198,9 @@ P7 的运行状态与预测视图覆盖 A–F 六类；最近原型预测使用�
 分段交付与提交边界：A 语义对齐/本计划；B P6 单样本纵向切片；C P7 参数更新后状态交接；D P8 四个证据问题；E 相邻页一致性、构建、项目已有检查及浏览器 QA。每段完成、检查变更范围后独立提交，仅包含该段 iCaRL 文件；不 amend 既有提交、不 push、不创建 PR。
 
 本轮浏览器审查目标为 Chromium 1440×900 与 1920×1080、100% 缩放；覆盖 P6 五段动画中间态及旧/新样本和 BCE 情形，P7 训练后但未提交记忆、旧列表截断、新类选择、同 ID 前后特征、六类原型和 Query，P8 四个证据问题、Figure 2 子图聚焦、Table 1a/1b 与 Figure 4。必要时复查窄屏、键盘/触控和 reduced-motion。临时产物写入忽略的 `.visual-qa/`。基线差异审查：完成；本阶段 UI 尚未实施，`BUILD=NOT_RUN`、`GEOMETRY_QA=NOT_RUN`、`STYLE_QA=NOT_RUN`、`VISUAL_REVIEW=NOT_RUN`、`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。W7/W9/W10 状态保持原样。
+
+#### 阶段 B｜P6 单样本纵向切片（2026-10-15）
+
+P6 保留单张持续存在的六节点计算图，并将输入、目标到达、逐节点 BCE、样本/mini-batch 损失汇总、梯度回传拆成独立时长的五段。旧类样本继续使用同一 `sample.id` 对应的冻结 Q；新类 Hard1 需要新类样本，选择旧类样本时会给出提示而不暗中换图。独立 BCE 曲线使用 `exploreOutput` 状态，与当前网络的 `g_model` 和固定示例损失分开。终段以符号状态显示 `Θ_before → Θ_after` 并交给 P7；图中数值仍是确定性教学计算，不是实际训练轨迹。
+
+验证：`tsc --noEmit`、项目现有 `npm.cmd test` 通过；Vite bundle-loader 生产构建通过（75 modules）。Chromium 在 1440×900 与 1920×1080 共捕获 34 个 P6 状态，GEOMETRY_QA=PASS、BROWSER_ERRORS=PASS（0）；报告位于 `web/enhanced/.visual-qa/p6-revision/run-2026-10-14T17-10-34-560Z/report.md`。已查看两个视口的 mini-batch 汇总和参数更新交接，以及 1440×900 下的目标动画中间态和旧类 Hard1 提示，VISUAL_REVIEW=PASS。STYLE_QA=NOT_RUN，REGRESSION=NOT_RUN（没有已批准基线）；HUMAN_ACCEPTANCE=PENDING。W7/W9/W10 状态未更改。
