@@ -572,7 +572,12 @@
             },
             {
               "type": "wait",
-              "milliseconds": 800
+              "milliseconds": 2950
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p5-old-sample\"][data-active-sample-id=\"x_6\"] .p5-q-sample-row[data-sample-id=\"x_6\"]"
             }
           ],
           "id": "p5-old-sample-q-row"
@@ -594,7 +599,12 @@
             },
             {
               "type": "wait",
-              "milliseconds": 800
+              "milliseconds": 2950
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p5-new-sample\"][data-active-sample-id=\"x_28\"] .p5-q-sample-row[data-sample-id=\"x_28\"]"
             }
           ],
           "id": "p5-new-sample-q-row"

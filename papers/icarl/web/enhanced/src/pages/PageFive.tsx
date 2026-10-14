@@ -9,6 +9,7 @@ import {
   type Sample,
 } from "../data/icarl-runtime";
 import { INCREMENTAL_DATA_VALIDATION, INCREMENTAL_STAGE_DATA, teacherSnapshotFor } from "../data/incremental-training";
+import { snapshotWriteProgress } from "../data/incremental-snapshot-progress";
 import {
   activeNarrationIndex,
   useAnimationTimeline,
@@ -24,6 +25,10 @@ const incomingSamples = INCREMENTAL_STAGE_DATA.incomingSamples;
 const trainingSamples = INCREMENTAL_STAGE_DATA.trainingSamples;
 const OLD_COUNT = oldExemplars.length;
 const NEW_COUNT = incomingSamples.length;
+const demoOld = oldExemplars.find((sample) => sample.classId === "B") ?? oldExemplars[0];
+const demoNew = incomingSamples.find((sample) => sample.classId === "E") ?? incomingSamples[0];
+const demoSampleIds = new Set([demoOld.id, demoNew.id]);
+const remainingSamples = trainingSamples.filter((sample) => !demoSampleIds.has(sample.id));
 
 function accent(classId: ClassId) {
   return { "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties;
@@ -67,10 +72,10 @@ const clips: readonly FlowClip[] = [
   { id: "p5-merge", kind: "merge", durationMs: 7400, holdMs: 1400, narrative: "读取旧副本并与新图片合成 D" },
   { id: "p5-old-sample", kind: "sample-to-teacher", durationMs: 4200, holdMs: 900, narrative: "一张旧类图片：D → 更新前旧模型 → Q 行" },
   { id: "p5-new-sample", kind: "sample-to-teacher", durationMs: 4200, holdMs: 900, narrative: "一张新类图片：同样产生三个旧节点响应" },
-  { id: "p5-batch-1", kind: "batch", batchStart: 2, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "批量生成 Q：先到旧模型，再出响应，再写入 Q 行" },
-  { id: "p5-batch-2", kind: "batch", batchStart: 9, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "Q 逐行累积，当前写入行与三个旧节点同步可见" },
-  { id: "p5-batch-3", kind: "batch", batchStart: 16, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "Q 继续按 D 的稳定顺序累积" },
-  { id: "p5-batch-4", kind: "batch", batchStart: 23, batchCount: 7, durationMs: 3000, holdMs: 900, narrative: "写满 30 行" },
+  { id: "p5-batch-1", kind: "batch", batchStart: 0, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "批量生成 Q：先到旧模型，再出响应，再写入 Q 行" },
+  { id: "p5-batch-2", kind: "batch", batchStart: 7, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "Q 逐行累积，当前写入行与三个旧节点同步可见" },
+  { id: "p5-batch-3", kind: "batch", batchStart: 14, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "Q 继续按 D 的稳定顺序累积" },
+  { id: "p5-batch-4", kind: "batch", batchStart: 21, batchCount: 7, durationMs: 3000, holdMs: 900, narrative: "写满 30 行" },
   { id: "p5-lock", kind: "lock", durationMs: 2600, holdMs: 2000, narrative: "Q 生成完毕并固定，训练中不再改变" },
   { id: "p5-handoff", kind: "handoff", durationMs: 2600, holdMs: 2200, narrative: "D、Q 与六节点 Student 等待下一步" },
 ];
@@ -92,18 +97,6 @@ const MERGE_TRAVEL = 900;
 
 const BATCH_TRAVEL = 260;
 const BATCH_HOLD = 120;
-
-function writtenRowsAt(clip: FlowClip, elapsedMs: number): number {
-  if (clip.kind === "recall" || clip.kind === "merge") return 0;
-  if (clip.kind === "sample-to-teacher") return clip.id === "p5-old-sample" ? 0 : 1;
-  if (clip.kind === "batch") {
-    const start = clip.batchStart ?? 0;
-    const count = clip.batchCount ?? 0;
-    const done = Math.floor(progressWithin(elapsedMs, 0, Math.max(1, count * (BATCH_TRAVEL + BATCH_HOLD))) * count);
-    return Math.min(TRAINING_SET_SIZE, start + done);
-  }
-  return TRAINING_SET_SIZE;
-}
 
 /* ---------------------------------------------------------------- subviews --- */
 
@@ -231,16 +224,13 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
   const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
   const clip = clips[state.clipIndex];
   const [selectedId, setSelectedId] = useState<string>(incomingSamples.find((sample) => sample.classId === "E")?.id ?? incomingSamples[0].id);
-  const workbenchRef = useRef<HTMLElement | null>(null);
+  const [inspectedSampleId, setInspectedSampleId] = useState<string | null>(null);
   const flowBoardRef = useRef<HTMLDivElement | null>(null);
 
   const guidanceIndex = clip.kind === "recall" ? activeNarrationIndex(guidance[0], state.progress)
     : clip.kind === "merge" ? activeNarrationIndex(guidance[1], state.progress)
     : clip.kind === "sample-to-teacher" || clip.kind === "batch" ? activeNarrationIndex(guidance[2], state.progress)
     : activeNarrationIndex(guidance[3], state.progress);
-
-  const demoOld = oldExemplars.find((sample) => sample.classId === "B") ?? oldExemplars[0];
-  const demoNew = incomingSamples.find((sample) => sample.classId === "E") ?? incomingSamples[0];
 
   const scene = useMemo(() => {
     const elapsed = state.elapsedMs;
@@ -255,92 +245,102 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
     const arrived = clip.kind === "merge"
       ? tokens.filter((token) => token.progress > 0.99).length
       : clip.kind === "recall" ? 0 : TRAINING_SET_SIZE;
-
-    // Outside the merge phase the Q writer drives the count; during the merge the arrivals do,
-    // so the number on the D card and the number of tokens that reached it always agree.
-    const writtenRows = clip.kind === "merge" ? arrived : writtenRowsAt(clip, elapsed);
+    const dArrivedCount = clip.kind === "merge" ? arrived : clip.kind === "recall" ? 0 : TRAINING_SET_SIZE;
     const progressByToken = new Map(tokens.map((token) => [token.id, token.progress]));
 
     // The demonstrated sample travels from D to the teacher, then its responses fill one Q row.
     const demoSample = clip.id === "p5-old-sample" ? demoOld : clip.id === "p5-new-sample" ? demoNew : null;
-    const demoTravelled = demoSample ? smoothstep(progressWithin(elapsed, 200, 1100)) : 0;
     const demoResponseCount = demoSample ? Math.min(3, Math.floor(progressWithin(elapsed, 1200, 2500) * 4)) : 0;
     const demoActiveNode = demoSample ? Math.min(2, demoResponseCount - 1) : -1;
-    const demoRowProgress = demoSample ? smoothstep(progressWithin(elapsed, 2500, 3400)) : 0;
+    const scheduledSamples = clip.kind === "sample-to-teacher"
+      ? demoSample ? [demoSample] : []
+      : clip.kind === "batch"
+        ? remainingSamples.slice(clip.batchStart ?? 0, (clip.batchStart ?? 0) + (clip.batchCount ?? 0))
+        : [];
+    const writeSchedule = clip.kind === "sample-to-teacher"
+      ? snapshotWriteProgress(scheduledSamples, elapsed, { startMs: 2500, rowTravelMs: 900 })
+      : clip.kind === "batch"
+        ? snapshotWriteProgress(scheduledSamples, elapsed, { rowTravelMs: BATCH_TRAVEL, rowHoldMs: BATCH_HOLD })
+        : null;
 
-    const batchCursor = clip.kind === "batch"
-      ? Math.max(0, Math.min(TRAINING_SET_SIZE - 1, writtenRows - 1))
-      : clip.kind === "lock" || clip.kind === "handoff"
-        ? TRAINING_SET_SIZE - 1
-        : demoSample
-          ? Math.max(0, trainingSamples.findIndex((sample) => sample.id === demoSample.id))
-          : Math.max(0, writtenRows - 1);
-    const cursorSample = trainingSamples[batchCursor];
-    const cursorSnapshot = teacherSnapshotFor(cursorSample);
+    const writtenIds = new Set<string>();
+    if (clip.kind === "sample-to-teacher" && clip.id === "p5-new-sample") writtenIds.add(demoOld.id);
+    if (clip.kind === "batch") {
+      writtenIds.add(demoOld.id);
+      writtenIds.add(demoNew.id);
+      remainingSamples.slice(0, clip.batchStart ?? 0).forEach((sample) => writtenIds.add(sample.id));
+    }
+    if (clip.kind === "lock" || clip.kind === "handoff") trainingSamples.forEach((sample) => writtenIds.add(sample.id));
+    writeSchedule?.completedIds.forEach((sampleId) => writtenIds.add(sampleId));
 
-    /** How far the cell currently being written has filled. */
-    const cursorCellProgress = (index: number) => {
-      if (clip.kind === "batch") {
-        const rowIndex = writtenRows - 1;
-        const rowElapsed = elapsed - rowIndex * (BATCH_TRAVEL + BATCH_HOLD);
-        const rowProgress = clamp(rowElapsed / BATCH_TRAVEL);
-        return clamp((rowProgress - index * 0.26) / 0.74);
-      }
-      if (demoSample) return demoRowProgress;
-      return 1;
+    const completedIds = writeSchedule?.completedIds ?? [];
+    const lastCompletedId = completedIds[completedIds.length - 1] ?? null;
+    const batchSampleId = writeSchedule?.activeSampleId ?? lastCompletedId;
+    const batchSample = batchSampleId ? trainingSamples.find((sample) => sample.id === batchSampleId) ?? null : null;
+    const settledSample = clip.kind === "lock" || clip.kind === "handoff" ? trainingSamples[TRAINING_SET_SIZE - 1] : null;
+    const defaultSample = trainingSamples.find((sample) => sample.id === selectedId) ?? demoNew;
+    const inspectedSample = inspectedSampleId ? trainingSamples.find((sample) => sample.id === inspectedSampleId) ?? null : null;
+    const shown = inspectedSample ?? demoSample ?? batchSample ?? settledSample ?? defaultSample;
+    const shownWritten = writtenIds.has(shown.id);
+    const shownWriting = writeSchedule?.activeSampleId === shown.id && !shownWritten;
+    const focusedSnapshot = teacherSnapshotFor(shown);
+    const cellProgressForSample = (sampleId: string, index: number) => {
+      if (writtenIds.has(sampleId)) return 1;
+      if (writeSchedule?.activeSampleId === sampleId) return writeSchedule.activeCellProgress[index] ?? 0;
+      return 0;
     };
 
-    const focused = selectedId
-      ? trainingSamples.find((sample) => sample.id === selectedId) ?? cursorSample
-      : cursorSample;
-    const shown = demoSample ?? focused;
-    const focusedSnapshot = teacherSnapshotFor(shown);
-    const focusedIndex = trainingSamples.findIndex((sample) => sample.id === shown.id);
-    const focusedFilled = focusedIndex < writtenRows || (Boolean(demoSample) && demoRowProgress > 0.4);
-    const focusedWriting = !demoSample && clip.kind === "batch" && focusedIndex === writtenRows - 1;
-
-    const teacherActive = clip.kind === "sample-to-teacher"
-      ? demoActiveNode
-      : clip.kind === "batch" || clip.kind === "lock"
-        ? 2
-        : -1;
-    const teacherResponses = clip.kind === "sample-to-teacher" && demoResponseCount >= 3 && demoSample
-      ? teacherSnapshotFor(demoSample)
-      : clip.kind === "batch" || clip.kind === "lock"
-        ? cursorSnapshot
-        : undefined;
+    const teacherActive = inspectedSample
+      ? -1
+      : clip.kind === "sample-to-teacher"
+        ? demoActiveNode
+        : clip.kind === "batch" || clip.kind === "lock" || clip.kind === "handoff"
+          ? 2
+          : -1;
+    const teacherResponsesVisible = Boolean(inspectedSample)
+      || clip.kind === "batch" || clip.kind === "lock" || clip.kind === "handoff"
+      || Boolean(demoSample && demoResponseCount >= 3);
+    const teacherResponses = teacherResponsesVisible ? teacherSnapshotFor(shown) : undefined;
 
     return {
-      writtenRows,
+      writtenIds,
+      writtenCount: writtenIds.size,
+      activeSampleId: writeSchedule?.activeSampleId ?? null,
+      cellProgressForSample,
+      dArrivedCount,
       tokens,
       arrived,
       progressByToken,
       demoSample,
-      demoTravelled,
-      demoRowProgress,
-      cursorSample,
-      cursorSnapshot,
-      cursorCellProgress,
       shown,
       focusedSnapshot,
-      focusedFilled,
-      focusedWriting,
+      shownWritten,
+      shownWriting,
+      inspecting: Boolean(inspectedSample),
       teacherActive,
       teacherResponses,
       mergeComplete: clip.kind === "merge" ? progressWithin(elapsed, 5400, 7000) : clip.kind === "recall" ? 0 : 1,
     };
-  }, [clip, state.elapsedMs, selectedId, demoOld, demoNew]);
+  }, [clip, state.elapsedMs, selectedId, inspectedSampleId]);
 
   const showReadout = clip.kind === "merge";
   const resolvedReadout = scene.mergeComplete >= 1;
-  const phaseLabel = clip.kind === "lock" || clip.kind === "handoff" ? "Q 已固定"
-    : clip.kind === "batch" ? `正在写入 Q · ${scene.writtenRows} / ${TRAINING_SET_SIZE}`
+  const phaseLabel = scene.inspecting ? "查阅样本 · 已暂停"
+    : clip.kind === "lock" || clip.kind === "handoff" ? "Q 已固定"
+    : clip.kind === "batch" ? `正在写入 Q · ${scene.writtenCount} / ${TRAINING_SET_SIZE}`
     : clip.kind === "sample-to-teacher" ? "演示单张样本"
     : clip.kind === "merge" ? "读取副本 → D"
     : "Replay → D";
 
-  function focusWorkbench() {
-    workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  function inspectSample(sampleId: string) {
+    if (state.status === "playing") controls.pause();
+    setSelectedId(sampleId);
+    setInspectedSampleId(sampleId);
+  }
+
+  function leaveInspection(action: () => void) {
+    setInspectedSampleId(null);
+    action();
   }
 
   return (
@@ -358,8 +358,10 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         data-kind={clip.kind}
         data-progress={state.progress.toFixed(3)}
         data-status={state.status}
+        data-current-sample-id={scene.shown.id}
+        data-active-sample-id={scene.activeSampleId ?? ""}
+        data-q-written-ids={trainingSamples.filter((sample) => scene.writtenIds.has(sample.id)).map((sample) => sample.id).join(",")}
         data-clip-ids={clips.map((item) => item.id).join(",")}
-        ref={workbenchRef}
       >
         <header className="p5-workbench__guide">
           <div>
@@ -410,19 +412,19 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
           <section className="p5-object p5-object--dataset" aria-label="训练集 D">
             <span className="eyebrow">本轮训练集</span>
             <b className="p5-object-symbol">D</b>
-            <div className="p5-d-bar" aria-label={`${scene.writtenRows} 个训练样本已合入 D`}><i style={{ width: `${(scene.writtenRows / TRAINING_SET_SIZE) * 100}%` }} /></div>
-            <strong>{scene.writtenRows} / {TRAINING_SET_SIZE} 张已合入</strong>
-            <small>{clip.kind === "merge" && scene.writtenRows < TRAINING_SET_SIZE ? "旧记忆只送出读取副本；原槽位保持不动" : "所有样本逐一读取；训练结束后 D 释放，持久记忆不受影响"}</small>
+            <div className="p5-d-bar" aria-label={`${scene.dArrivedCount} 个训练样本已合入 D`}><i style={{ width: `${(scene.dArrivedCount / TRAINING_SET_SIZE) * 100}%` }} /></div>
+            <strong>{scene.dArrivedCount} / {TRAINING_SET_SIZE} 张已合入</strong>
+            <small>{clip.kind === "merge" && scene.dArrivedCount < TRAINING_SET_SIZE ? "旧记忆只送出读取副本；原槽位保持不动" : "D 已准备好；训练结束后释放，持久记忆不受影响"}</small>
           </section>
 
           <section className="p5-model-stack" aria-label="生成 Q 的更新前旧模型与待更新 Student">
             <div className={`p5-model-card p5-model-card--teacher${clip.kind === "lock" || clip.kind === "handoff" ? " is-frozen" : ""}`}>
               <span className="eyebrow">{clip.kind === "lock" || clip.kind === "handoff" ? "更新前 Teacher · 已固定参考" : "更新前的旧模型 · Q 的来源"}</span>
               <b>共享特征 + 三个旧节点</b>
-              <div className="p5-model-input">
+              <div className="p5-model-input" data-sample-id={scene.shown.id}>
                 <span className="p5-selected-glyph" style={accent(scene.shown.classId)}>{CLASS_VISUALS[scene.shown.classId].glyph}</span>
                 <span>
-                  <small>{isOldClass(scene.shown.classId) ? "P 中旧 exemplar 的读取副本" : "X_new 中的新类图片"}</small>
+                  <small>{scene.inspecting ? scene.shownWritten ? "查阅 · Q 行已记录" : "查阅预览 · Q 行尚未写入" : isOldClass(scene.shown.classId) ? "P 中旧 exemplar 的读取副本" : "X_new 中的新类图片"}</small>
                   <strong>{scene.shown.id} · {CLASS_VISUALS[scene.shown.classId].displayLabel}</strong>
                 </span>
               </div>
@@ -441,32 +443,32 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
             <header>
               <div><span className="eyebrow">更新前旧节点响应</span><b className="p5-object-symbol">Q</b></div>
               <span className={`p5-lock${clip.kind === "lock" || clip.kind === "handoff" ? " is-locked" : ""}`}>
-                {clip.kind === "lock" || clip.kind === "handoff" ? "已固定" : clip.kind === "batch" ? "记录中" : "等待记录"}
+                {clip.kind === "lock" || clip.kind === "handoff" ? "已固定" : scene.inspecting ? scene.shownWritten ? "已记录 · 查阅中" : "未记录 · 查阅中" : clip.kind === "batch" || clip.kind === "sample-to-teacher" ? "记录中" : "等待记录"}
               </span>
             </header>
-            <strong>{scene.writtenRows} × 3</strong>
+            <strong>{scene.writtenCount} × 3</strong>
             <small>一行一张 D 样本 · 三列旧节点 g₁ g₂ g₃ · 共 {TRAINING_SET_SIZE} 行</small>
-            <div className="p5-q-preview" aria-label={`${scene.writtenRows} 行已记录，共 ${TRAINING_SET_SIZE} 行`}>
-              {trainingSamples.map((sample, index) => (
+            <div className="p5-q-preview" aria-label={`${scene.writtenCount} 行已记录，共 ${TRAINING_SET_SIZE} 行`}>
+              {trainingSamples.map((sample) => (
                 <span
                   key={sample.id}
-                  title={`${sample.id} · Q 第 ${index + 1} 行`}
+                  title={`${sample.id} · Q 行${scene.writtenIds.has(sample.id) ? "已记录" : scene.activeSampleId === sample.id ? "正在写入" : "待写入"}`}
                   className={[
-                    index < scene.writtenRows ? "is-filled" : "",
+                    scene.writtenIds.has(sample.id) ? "is-filled" : "",
                     sample.id === scene.shown.id ? "is-selected" : "",
-                    index === scene.writtenRows - 1 && clip.kind === "batch" ? "is-writing" : "",
+                    scene.activeSampleId === sample.id && !scene.writtenIds.has(sample.id) ? "is-writing" : "",
                   ].filter(Boolean).join(" ")}
                 >
-                  <i /><i /><i />
+                  {[0, 1, 2].map((index) => <i key={index} style={{ "--cell-progress": `${scene.cellProgressForSample(sample.id, index) * 100}%` } as CSSProperties} />)}
                 </span>
               ))}
             </div>
             <div className="p5-q-column-labels"><span>图片 / Q 行</span>{OLD_CLASS_IDS.map((classId) => <b key={classId}>{CLASS_VISUALS[classId].outputNodeLabel}</b>)}</div>
-            <div className={`p5-q-sample-row${scene.focusedFilled ? " is-filled" : ""}${scene.focusedWriting ? " is-writing" : ""}`} aria-label={`${scene.shown.id} 的 Q 行${scene.focusedFilled ? "已记录" : scene.focusedWriting ? "正在写入" : "尚未写入"}`}>
-              <span>{scene.shown.id}{scene.focusedWriting ? " · 写入中" : clip.kind === "sample-to-teacher" ? " · 演示读取" : ""}</span>
+            <div className={`p5-q-sample-row${scene.shownWritten ? " is-filled" : ""}${scene.shownWriting ? " is-writing" : ""}`} data-sample-id={scene.shown.id} aria-label={`${scene.shown.id} 的 Q 行${scene.shownWritten ? "已记录" : scene.shownWriting ? "正在写入" : "尚未写入"}`}>
+              <span>{scene.shown.id}{scene.inspecting ? " · 查阅" : scene.shownWriting ? " · 写入中" : clip.kind === "sample-to-teacher" ? " · 演示读取" : ""}</span>
               {scene.focusedSnapshot.map((value, index) => (
-                <b key={`${scene.shown.id}-${index}`} style={{ "--cell-progress": `${(scene.focusedFilled ? 1 : scene.cursorCellProgress(index)) * 100}%` } as CSSProperties}>
-                  {scene.focusedFilled || scene.cursorCellProgress(index) >= 0.65 ? value.toFixed(2) : "·"}
+                <b key={`${scene.shown.id}-${index}`} style={{ "--cell-progress": `${scene.cellProgressForSample(scene.shown.id, index) * 100}%` } as CSSProperties}>
+                  {scene.shownWritten || scene.cellProgressForSample(scene.shown.id, index) >= 0.65 ? value.toFixed(2) : "·"}
                 </b>
               ))}
             </div>
@@ -478,13 +480,12 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
                   <tbody>
                     {trainingSamples.map((sample) => {
                       const row = teacherSnapshotFor(sample);
-                      const rowIndex = trainingSamples.findIndex((item) => item.id === sample.id);
                       return (
-                        <tr key={sample.id} className={[sample.id === scene.shown.id ? "is-selected" : "", rowIndex >= scene.writtenRows ? "is-pending" : ""].filter(Boolean).join(" ")}>
-                          <th><button type="button" onClick={() => setSelectedId(sample.id)} aria-label={`在 Q 中定位 ${sample.id} 的对应行`}>{sample.id}</button></th>
+                        <tr key={sample.id} data-sample-id={sample.id} data-q-state={scene.writtenIds.has(sample.id) ? "written" : scene.activeSampleId === sample.id ? "writing" : "pending"} className={[sample.id === scene.shown.id ? "is-selected" : "", scene.writtenIds.has(sample.id) ? "" : "is-pending", scene.activeSampleId === sample.id && !scene.writtenIds.has(sample.id) ? "is-writing" : ""].filter(Boolean).join(" ")}>
+                          <th><button type="button" onClick={() => inspectSample(sample.id)} aria-label={`暂停并查阅 ${sample.id} 的对应 Q 行`}>{sample.id}</button></th>
                           <td>{CLASS_VISUALS[sample.classId].displayLabel}</td>
                           <td>{isOldClass(sample.classId) ? "P_old" : "X_new"}</td>
-                          {row.map((value, index) => <td key={`${sample.id}-${index}`}>{rowIndex < scene.writtenRows ? value.toFixed(3) : "—"}</td>)}
+                          {row.map((value, index) => <td key={`${sample.id}-${index}`}>{scene.writtenIds.has(sample.id) ? value.toFixed(3) : "—"}</td>)}
                         </tr>
                       );
                     })}
@@ -505,13 +506,13 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
 
         <footer className="p5-controls" aria-label="P5 动画控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={!state.hasPrevious}>← 上一步</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.stepBack)} disabled={!state.hasPrevious}>← 上一步</button>
           <div className="p5-control-main">
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.toggle}>{state.status === "playing" ? "Ⅱ 暂停" : "▶ 继续"}</button>
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本片段</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.toggle)}>{state.status === "playing" ? "Ⅱ 暂停" : "▶ 继续"}</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.replayClip)}>↺ 重播本片段</button>
             <span aria-live="polite">{state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward} disabled={!state.hasNext}>下一步 →</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={() => leaveInspection(controls.stepForward)} disabled={!state.hasNext}>下一步 →</button>
         </footer>
 
         <div className="p5-clip-rail" role="group" aria-label="片段定位">
@@ -521,7 +522,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
               type="button"
               className={index === state.clipIndex ? "is-current" : index < state.clipIndex ? "is-complete" : ""}
               aria-pressed={index === state.clipIndex}
-              onClick={() => controls.goToClip(clipIndexById.get(item.id) ?? 0)}
+              onClick={() => leaveInspection(() => controls.goToClip(clipIndexById.get(item.id) ?? 0))}
             >
               <b>{String(index + 1).padStart(2, "0")}</b>{item.narrative}
             </button>

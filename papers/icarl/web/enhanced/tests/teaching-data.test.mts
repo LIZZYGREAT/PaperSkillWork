@@ -36,6 +36,7 @@ import {
   buildTargets,
   teacherSnapshotFor,
 } from "../src/data/incremental-training.ts";
+import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
 
 const OLD_CLASS_IDS = ["A", "B", "C"] as const;
 const near = (a: number, b: number, tolerance = 1e-9) => Math.abs(a - b) <= tolerance;
@@ -204,10 +205,39 @@ for (const sample of INCREMENTAL_STAGE_DATA.trainingSamples) {
 }
 
 // Both an old exemplar and a new-class image must be traceable to a real Q row.
-const oldExample = INCREMENTAL_STAGE_DATA.oldExemplars[0];
-const newExample = INCREMENTAL_STAGE_DATA.incomingSamples[0];
+const oldExample = INCREMENTAL_STAGE_DATA.oldExemplars.find((sample) => sample.classId === "B");
+const newExample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sample.classId === "E");
+assert.ok(oldExample && newExample, "P5 must find the planned old B and incoming E demonstrations.");
 assert.ok(trainingIds.has(oldExample.id) && trainingIds.has(newExample.id),
   "The demonstrated old and new samples must both belong to D.");
+
+const firstDemoWrite = snapshotWriteProgress([oldExample], 2950, { startMs: 2500, rowTravelMs: 900 });
+assert.equal(firstDemoWrite.activeSampleId, oldExample.id, "The old-image demo must write the Q row for that exact old sample.");
+assert.deepEqual(firstDemoWrite.activeCellProgress, [1, 0.5, 0], "The old demo's cells must fill in order on its local row clock.");
+const secondDemoWrite = snapshotWriteProgress([newExample], 2950, { startMs: 2500, rowTravelMs: 900 });
+assert.equal(secondDemoWrite.activeSampleId, newExample.id, "The new-image demo must write the Q row for that exact new sample.");
+assert.deepEqual(secondDemoWrite.activeCellProgress, [1, 0.5, 0], "The new demo must use the same row-local cell progression.");
+assert.deepEqual(
+  snapshotWriteProgress([oldExample], 3400, { startMs: 2500, rowTravelMs: 900 }).completedIds,
+  [oldExample.id],
+  "A demonstrated row becomes recorded only after its own row animation completes.",
+);
+
+const demoIds = new Set([oldExample.id, newExample.id]);
+assert.deepEqual([...demoIds], [oldExample.id, newExample.id], "The two teaching examples must be distinct D rows.");
+const remainingSamples = INCREMENTAL_STAGE_DATA.trainingSamples.filter((sample) => !demoIds.has(sample.id));
+assert.equal(remainingSamples.length, 28, "The four batches must cover the 28 rows not written by the two demonstrations.");
+const batchAtStart = snapshotWriteProgress(remainingSamples.slice(0, 3), 0, { rowTravelMs: 260, rowHoldMs: 120 });
+assert.equal(batchAtStart.activeSampleId, remainingSamples[0].id, "A batch must begin with its first remaining D sample.");
+const batchAtSecondRow = snapshotWriteProgress(remainingSamples.slice(0, 3), 510, { rowTravelMs: 260, rowHoldMs: 120 });
+assert.deepEqual(batchAtSecondRow.completedIds, [remainingSamples[0].id], "Batch completion must use IDs in its local ordered slice.");
+assert.equal(batchAtSecondRow.activeSampleId, remainingSamples[1].id, "The active batch sample must advance to the second remaining ID.");
+assert.deepEqual(batchAtSecondRow.activeCellProgress, [1, 0.5, 0], "Cell progress must reset to the active batch row's local clock.");
+const completedBatch = snapshotWriteProgress(remainingSamples.slice(0, 3), 1140, { rowTravelMs: 260, rowHoldMs: 120 });
+assert.deepEqual(completedBatch.completedIds, remainingSamples.slice(0, 3).map((sample) => sample.id), "A completed batch must contain each scheduled ID once.");
+assert.equal(completedBatch.activeSampleId, null, "A completed batch must not point at an unrelated D row.");
+const scheduledIds = [...demoIds, ...remainingSamples.map((sample) => sample.id)];
+assert.equal(new Set(scheduledIds).size, INCREMENTAL_STAGE_DATA.trainingSamples.length, "The two demos and remaining batches must cover D exactly once by stable ID.");
 
 /* ---------------------------------------------------------------- report --- */
 

@@ -107,7 +107,7 @@
 .p5-lock.is-locked { border-color: #bfd8c5; color: #356247; background: #edf6ed; }
 .p5-q-preview { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; }
 .p5-q-preview > span { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: 2px; min-width: 0; height: 15px; padding: 2px 3px; border: 1px solid #dfe6e0; border-radius: 3px; background: #f6f9f5; }
-.p5-q-preview > span > i { display: block; height: 3px; border-radius: 1px; background: #d7e1da; }
+.p5-q-preview > span > i { display: block; height: 3px; border-radius: 1px; background: linear-gradient(90deg, #55896a var(--cell-progress), #d7e1da var(--cell-progress)); }
 .p5-q-preview > span.is-filled { border-color: #a9c9b4; background: #e9f4ea; }
 .p5-q-preview > span.is-filled > i { background: #55896a; }
 .p5-q-preview > span.is-selected { outline: 2px solid #c68c56; outline-offset: 1px; }
@@ -129,6 +129,7 @@
 .p5-q-table thead { position: sticky; z-index: 1; top: 0; color: #36574b; background: #edf4ee; }
 .p5-q-table tbody tr.is-selected { background: #fdf3e7; }
 .p5-q-table tbody tr.is-pending td { color: #a9b3ae; }
+.p5-q-table tbody tr.is-writing { outline: 1px solid #bf855d; outline-offset: -1px; background: #fff7ef; }
 .p5-q-table th > button { padding: 0; border: 0; color: #2c5a47; background: transparent; font: 700 11px var(--mono); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .p5-q-table th > button:focus-visible { outline: 2px solid #bf784a; outline-offset: 2px; }
 .p5-q-details > p { margin: 7px 0 0; color: #55695f; font-size: 11px; line-height: 1.45; }
