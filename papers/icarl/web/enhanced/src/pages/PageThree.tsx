@@ -21,6 +21,7 @@ import {
   clamp,
   lerpPoint,
   lineRevealPath,
+  placeLabel,
   progressWithin,
   smoothstep,
   type Point,
@@ -77,8 +78,6 @@ const comparisonOrder: ClassId[] = ["A", "B", "C"];
  * roughly square, and a non-square viewBox would letterbox the geometry and shrink the circle.
  */
 const VIEW = { width: 600, height: 600 };
-const ORIGIN: Point = { x: 300, y: 300 };
-const SAFE = { left: 22, right: VIEW.width - 22, top: 22, bottom: VIEW.height - 22 };
 
 const projectedVectors: { id: string; vector: Vector2 }[] = [
   ...exemplars.flatMap((sample) => [
@@ -93,15 +92,65 @@ const projectedVectors: { id: string; vector: Vector2 }[] = [
   { id: "query:unit", vector: queryUnitFeature },
 ];
 
-const chartScale = (() => {
-  const extent = projectedVectors.reduce(
-    (max, item) => Math.max(max, Math.abs(item.vector[0]), Math.abs(item.vector[1])),
-    0,
-  );
-  const horizontal = Math.min(ORIGIN.x - SAFE.left, SAFE.right - ORIGIN.x);
-  const vertical = Math.min(ORIGIN.y - SAFE.top, SAFE.bottom - ORIGIN.y);
-  return Math.min(horizontal, vertical) / (extent + 0.62);
+const LABEL_FALLBACK = { dx: 15, dy: -13, anchor: "start" as const };
+
+/** Extra space each label needs beyond its mark, per side, in feature units. */
+const prototypeLabel: Partial<Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }>> = {
+  A: { dx: 15, dy: -13, anchor: "start" },
+  B: { dx: 0, dy: -23, anchor: "middle" },
+  C: { dx: -15, dy: -11, anchor: "end" },
+};
+
+const meanLabel: Partial<Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }>> = {
+  A: { dx: -13, dy: 22, anchor: "end" },
+  B: { dx: -13, dy: 20, anchor: "end" },
+  C: { dx: 15, dy: 21, anchor: "start" },
+};
+
+/** z_q drops below its marker: that corner is free of other marks and of the comparison chords. */
+const queryLabel = { dx: 16, dy: 34, anchor: "start" as const };
+
+/**
+ * Fit every plotted object plus the space its label needs. Solving this as one padded box is what
+ * lets the diagram be as large as its slot allows while guaranteeing that nothing is clipped.
+ */
+const chartFrame = (() => {
+  const boxes: { min: [number, number]; max: [number, number] }[] = projectedVectors.map((item) => ({
+    min: [item.vector[0] - 0.13, item.vector[1] - 0.11],
+    max: [item.vector[0] + 0.13, item.vector[1] + 0.11],
+  }));
+  prototypeCalculations.forEach((item) => {
+    const placement = prototypeLabel[item.classId] ?? LABEL_FALLBACK;
+    const extraTop = placement.dy < 0 ? 0.28 : 0.1;
+    const extraSide = Math.abs(placement.dx) > 20 ? 0.3 : 0.22;
+    const side = placement.anchor === "end" ? -extraSide : placement.anchor === "start" ? extraSide : 0;
+    boxes.push({
+      min: [item.prototype[0] + Math.min(0, side), item.prototype[1] - 0.1],
+      max: [item.prototype[0] + Math.max(0, side), item.prototype[1] + extraTop],
+    });
+    boxes.push({ min: [item.rawMean[0] - 0.24, item.rawMean[1] - 0.24], max: [item.rawMean[0] + 0.24, item.rawMean[1] + 0.24] });
+  });
+  // The Query is entered at a low y; its marker and the z_q label extend right and downward.
+  boxes.push({ min: [queryUnitFeature[0] - 0.12, queryUnitFeature[1] - 0.12], max: [queryUnitFeature[0] + 0.62, queryUnitFeature[1] + 0.4] });
+  boxes.push({ min: [queryRawFeature[0] - 0.2, queryRawFeature[1] - 0.4], max: [queryRawFeature[0] + 0.2, queryRawFeature[1] + 0.12] });
+
+  const minX = Math.min(...boxes.map((box) => box.min[0]));
+  const maxX = Math.max(...boxes.map((box) => box.max[0]));
+  const minY = Math.min(...boxes.map((box) => box.min[1]));
+  const maxY = Math.max(...boxes.map((box) => box.max[1]));
+  const MARGIN = 22;
+  const usable = Math.min(VIEW.width, VIEW.height) - MARGIN * 2;
+  const scale = usable / Math.max(maxX - minX, maxY - minY);
+  const origin = {
+    x: MARGIN + (0 - minX) * scale + (usable - (maxX - minX) * scale) / 2,
+    y: MARGIN + (maxY - 0) * scale + (usable - (maxY - minY) * scale) / 2,
+  };
+  return { scale, origin };
 })();
+
+const chartScale = chartFrame.scale;
+const ORIGIN = chartFrame.origin;
+const SAFE = { left: 18, right: VIEW.width - 18, top: 18, bottom: VIEW.height - 34 };
 
 function project(vector: Vector2): Point {
   return { x: ORIGIN.x + vector[0] * chartScale, y: ORIGIN.y - vector[1] * chartScale };
@@ -115,7 +164,7 @@ const samplePointById = new Map(
   }),
 );
 
-// Fail loudly if any plotted object leaves the safe frame; the fit above must include every vector.
+// The fit above must include every plotted vector; a regression here would crop the diagram.
 projectedVectors.forEach(({ id, vector }) => {
   const point = project(vector);
   if (
@@ -127,27 +176,6 @@ projectedVectors.forEach(({ id, vector }) => {
     throw new Error(`P3 plot point ${id} is outside the safe viewport.`);
   }
 });
-
-/**
- * Labels sit on the outward side of each mark with a short leader so they never cover a data
- * point, a chord or an angle arc. Labels may move; data points never do.
- */
-const LABEL_FALLBACK = { dx: 16, dy: -14, anchor: "start" as const };
-
-const prototypeLabel: Partial<Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }>> = {
-  A: { dx: 14, dy: -12, anchor: "start" },
-  B: { dx: 0, dy: -22, anchor: "middle" },
-  C: { dx: -14, dy: -10, anchor: "end" },
-};
-
-const meanLabel: Partial<Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }>> = {
-  A: { dx: -13, dy: 21, anchor: "end" },
-  B: { dx: -13, dy: 19, anchor: "end" },
-  C: { dx: 14, dy: 20, anchor: "start" },
-};
-
-/** z_q sits low and right of its marker: that corridor is free of other marks and chords. */
-const queryLabel = { dx: -34, dy: 40, anchor: "end" as const };
 
 /* --------------------------------------------------------------- timeline --- */
 
@@ -482,32 +510,22 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
               opacity={scene.showPrototypes ? clamp(move * 1.6) : 0}
             />
             {scene.showPrototypes && move > 0.6 ? (
-              <g className="p3-scene__label">
-                <line
-                  className="p3-scene__label-leader"
-                  x1={prototypePoint.x}
-                  y1={prototypePoint.y}
-                  x2={prototypePoint.x + label.dx * 0.5}
-                  y2={prototypePoint.y + label.dy * 0.5}
-                />
-                <text x={prototypePoint.x + label.dx} y={prototypePoint.y + label.dy} textAnchor={label.anchor}>
-                  μ{CLASS_VISUALS[calculation.classId].index}
-                </text>
-              </g>
+              <PlacedLabel
+                point={prototypePoint}
+                text={`μ${CLASS_VISUALS[calculation.classId].index}`}
+                placement={label}
+                fontSize={17}
+                className="p3-scene__label"
+              />
             ) : null}
             {(scene.meanOpacityByClass[classIndex] ?? 0) > 0.05 ? (
-              <g className="p3-scene__label p3-scene__label--mean">
-                <line
-                  className="p3-scene__label-leader"
-                  x1={meanPoint.x}
-                  y1={meanPoint.y}
-                  x2={meanPoint.x + meanPlacement.dx * 0.55}
-                  y2={meanPoint.y + meanPlacement.dy * 0.55}
-                />
-                <text x={meanPoint.x + meanPlacement.dx} y={meanPoint.y + meanPlacement.dy} textAnchor={meanPlacement.anchor}>
-                  z̄{CLASS_VISUALS[calculation.classId].index}
-                </text>
-              </g>
+              <PlacedLabel
+                point={meanPoint}
+                text={`z̄${CLASS_VISUALS[calculation.classId].index}`}
+                placement={meanPlacement}
+                fontSize={15}
+                className="p3-scene__label p3-scene__label--mean"
+              />
             ) : null}
           </g>
         );
@@ -540,9 +558,13 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
           />
         ) : null}
         {scene.clipIndex === 2 && scene.queryRawOpacity > 0.4 ? (
-          <g className="p3-scene__label p3-scene__label--query">
-            <text x={project(queryRawFeature).x + 14} y={project(queryRawFeature).y - 12}>φ(x_q)</text>
-          </g>
+          <PlacedLabel
+            point={project(queryRawFeature)}
+            text="φ(x_q)"
+            placement={{ dx: 12, dy: -14, anchor: "start" }}
+            fontSize={14}
+            className="p3-scene__label p3-scene__label--query"
+          />
         ) : null}
       </g>
 
@@ -583,18 +605,15 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
       {scene.queryOpacity > 0.05 ? (
         <g className="p3-scene__query p3-scene__query--marker" opacity={scene.queryOpacity}>
           <QueryMarker point={lerpPoint(project(queryRawFeature), project(queryUnitFeature), scene.queryUnitizeProgress)} />
-          {scene.queryUnitizeProgress > 0.5 ? (
-            <g className="p3-scene__label p3-scene__label--query">
-              <line
-                className="p3-scene__label-leader"
-                x1={project(queryUnitFeature).x}
-                y1={project(queryUnitFeature).y}
-                x2={project(queryUnitFeature).x + queryLabel.dx * 0.5}
-                y2={project(queryUnitFeature).y + queryLabel.dy * 0.5}
-              />
-              <text x={project(queryUnitFeature).x + queryLabel.dx} y={project(queryUnitFeature).y + queryLabel.dy} textAnchor={queryLabel.anchor}>z_q</text>
-            </g>
-          ) : null}
+        {scene.queryUnitizeProgress > 0.5 ? (
+          <PlacedLabel
+            point={project(queryUnitFeature)}
+            text="z_q"
+            placement={queryLabel}
+            fontSize={17}
+            className="p3-scene__label p3-scene__label--query"
+          />
+        ) : null}
         </g>
       ) : null}
 
@@ -655,6 +674,29 @@ function QueryMarker({ point }: { point: Point }) {
       className="p3-scene__query-marker"
       d={`M ${point.x} ${point.y - radius} L ${point.x + radius} ${point.y} L ${point.x} ${point.y + radius} L ${point.x - radius} ${point.y} Z`}
     />
+  );
+}
+
+/** Draws a label with a short leader, keeping the text inside the canvas at any scale. */
+function PlacedLabel({ point, text, placement, fontSize, className }: {
+  point: Point;
+  text: string;
+  placement: { dx: number; dy: number; anchor?: "start" | "middle" | "end" };
+  fontSize: number;
+  className: string;
+}) {
+  const placed = placeLabel(point, text, {
+    dx: placement.dx,
+    dy: placement.dy,
+    anchor: placement.anchor,
+    fontSize,
+    bounds: { width: VIEW.width, height: VIEW.height },
+  });
+  return (
+    <g className={className}>
+      <line className="p3-scene__label-leader" x1={point.x} y1={point.y} x2={placed.x} y2={placed.y - fontSize * 0.34} />
+      <text x={placed.x} y={placed.y} textAnchor={placed.anchor}>{text}</text>
+    </g>
   );
 }
 
@@ -780,13 +822,13 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
             <FeatureScene scene={scene} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
             <div className="p3-scene__legend" aria-label="图形标记说明">
               <span><i className="p3-legend-unit" />单位圆 ‖z‖₂=1</span>
-              <span><i className="p3-legend-raw" />原始特征 f<sub>Θ</sub>(p)</span>
-              <span><i className="p3-legend-unit-point" />单位特征 z<sub>p</sub></span>
-              <span><i className="p3-legend-mean" />类别均值 z̄<sub>y</sub></span>
-              <span><i className="p3-legend-prototype" />类别原型 μ<sub>y</sub></span>
-              <span><i className="p3-legend-query" />查询特征 z<sub>q</sub></span>
-              <span><i className="p3-legend-distance" />到原型的距离</span>
-              <span><i className="p3-legend-angle" />圆心处的方向夹角</span>
+              <span><i className="p3-legend-raw" />f<sub>Θ</sub>(p)</span>
+              <span><i className="p3-legend-unit-point" />z<sub>p</sub></span>
+              <span><i className="p3-legend-mean" />z̄<sub>y</sub></span>
+              <span><i className="p3-legend-prototype" />μ<sub>y</sub></span>
+              <span><i className="p3-legend-query" />z<sub>q</sub></span>
+              <span><i className="p3-legend-distance" />距离</span>
+              <span><i className="p3-legend-angle" />圆心夹角</span>
             </div>
           </section>
 
