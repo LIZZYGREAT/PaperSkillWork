@@ -697,7 +697,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
 
         <div className="p4-workbench__controls" aria-label="Page 4 动画控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={state.atStart}>← 上一步</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack}>← 上一步</button>
           <div className="p4-workbench__control-center">
             <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.toggle} disabled={!stepCanPlay}>
               {state.status === "playing" ? "Ⅱ 暂停" : state.atEnd ? "▶ 重新播放" : "▶ 继续"}
@@ -705,7 +705,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
             <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本片段</button>
             <span aria-live="polite">{detailLabel}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward} disabled={state.atEnd}>下一步 →</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward}>下一步 →</button>
         </div>
 
         <div className="p4-phase-rail" role="group" aria-label="片段定位">

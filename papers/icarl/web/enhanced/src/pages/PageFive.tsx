@@ -505,13 +505,13 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
 
         <footer className="p5-controls" aria-label="P5 动画控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={state.atStart}>← 上一步</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack}>← 上一步</button>
           <div className="p5-control-main">
             <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.toggle}>{state.status === "playing" ? "Ⅱ 暂停" : "▶ 继续"}</button>
             <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本片段</button>
             <span aria-live="polite">{state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward} disabled={state.atEnd}>下一步 →</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward}>下一步 →</button>
         </footer>
 
         <div className="p5-clip-rail" role="group" aria-label="片段定位">

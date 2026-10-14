@@ -100,12 +100,16 @@ export function useAnimationTimeline({
     (delta: number) => {
       setClipIndex((current) => {
         const next = Math.max(0, Math.min(clips.length - 1, current + delta));
-        elapsedRef.current = 0;
-        setElapsedMs(0);
+        // Reduced motion jumps between completed clips; every other mode starts at time 0.
+        // Setting the time here (not in an effect) keeps the two state updates in one commit,
+        // so a whole clip can never be observed at a partial time.
+        const target = reducedMotion && next !== current ? totalMs(clips[next]) : 0;
+        elapsedRef.current = target;
+        setElapsedMs(target);
         return next;
       });
     },
-    [clips.length],
+    [clips, reducedMotion],
   );
 
   useEffect(() => {
@@ -140,13 +144,14 @@ export function useAnimationTimeline({
     return () => cancelAnimationFrame(frame);
   }, [status, clipIndex, clipTotal, clips.length]);
 
-  // Reduced motion: hold each clip at its completed state so the reader controls the pace.
+  // Reduced motion holds each clip at its completed state so the reader controls the pace.
+  // Asking for the end of the clip is idempotent, so re-running it is always safe.
   useEffect(() => {
     if (!reducedMotion || freeze) return;
     elapsedRef.current = clipTotal;
     setElapsedMs(clipTotal);
     setStatus("paused");
-  }, [reducedMotion, freeze, clipTotal, clipIndex]);
+  }, [reducedMotion, freeze, clipTotal]);
 
   useEffect(() => {
     if (clipIndex > clips.length - 1) setClipIndex(Math.max(0, clips.length - 1));
@@ -184,33 +189,46 @@ export function useAnimationTimeline({
   }, [reducedMotion]);
 
   const stepBack = useCallback(() => {
-    if (elapsedRef.current > 40) {
+    if (clipIndex === 0) {
       elapsedRef.current = 0;
       setElapsedMs(0);
+      setStatus("paused");
       return;
     }
-    advanceClip(-1);
+    const previous = clipIndex - 1;
+    // Reduced motion renders whole clips, so landing on the previous one must not show time 0.
+    const target = reducedMotion ? totalMs(clips[previous]) : 0;
+    setClipIndex(previous);
+    elapsedRef.current = target;
+    setElapsedMs(target);
     setStatus("paused");
-  }, [advanceClip]);
+  }, [clipIndex, clips, reducedMotion]);
 
   const stepForward = useCallback(() => {
-    advanceClip(1);
-    setStatus("paused");
-    if (reducedMotion) {
-      // Reduced motion renders each clip at its end state; nothing else to do.
+    if (clipIndex >= clips.length - 1) {
+      elapsedRef.current = 0;
+      setElapsedMs(0);
+      setStatus(reducedMotion ? "paused" : "playing");
       return;
     }
-  }, [advanceClip, reducedMotion]);
+    const next = clipIndex + 1;
+    const target = reducedMotion ? totalMs(clips[next]) : 0;
+    setClipIndex(next);
+    elapsedRef.current = target;
+    setElapsedMs(target);
+    setStatus("paused");
+  }, [clipIndex, clips, reducedMotion]);
 
   const goToClip = useCallback(
     (index: number, options?: { autoPlay?: boolean }) => {
       const next = Math.max(0, Math.min(clips.length - 1, index));
+      const target = reducedMotion ? totalMs(clips[next]) : 0;
       setClipIndex(next);
-      elapsedRef.current = 0;
-      setElapsedMs(0);
+      elapsedRef.current = target;
+      setElapsedMs(target);
       setStatus(options?.autoPlay === false || reducedMotion ? "paused" : "playing");
     },
-    [clips.length, reducedMotion],
+    [clips, reducedMotion],
   );
 
   const state = useMemo<TimelineState>(() => {
