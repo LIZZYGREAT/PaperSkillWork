@@ -636,11 +636,15 @@
               "type": "waitFor",
               "selector": ".p5-workbench[data-stage='1']",
               "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 650
             }
           ]
         },
         {
-          "id": "p5-frozen-q-30x3",
+          "id": "p5-q-recording-30x3",
           "actions": [
             {
               "type": "click",
@@ -658,6 +662,10 @@
               "type": "waitFor",
               "selector": ".p5-workbench[data-stage='2']",
               "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 750
             }
           ]
         },
@@ -670,7 +678,23 @@
             },
             {
               "type": "click",
+              "selector": ".p5-controls > .icarl-button--primary"
+            },
+            {
+              "type": "click",
+              "selector": ".p5-controls > .icarl-button--primary"
+            },
+            {
+              "type": "click",
+              "selector": ".p5-controls > .icarl-button--primary"
+            },
+            {
+              "type": "click",
               "selector": ".p5-q-details > summary"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".p5-q-table tbody tr:nth-child(30)"
             },
             {
               "type": "waitFor",
@@ -716,6 +740,23 @@
       "path": "/",
       "states": [
         {
+          "id": "p6-forward-animation-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-controls > div button[aria-label='继续当前动画']" },
+            { "type": "waitFor", "selector": ".p6-flow-link--forward.has-signal", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p6-target-animation-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-phase-rail > summary" },
+            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
+            { "type": "waitFor", "selector": ".p6-node-row[data-node-id='g1'] .p6-node-row__target.is-revealed", "state": "visible" }
+          ]
+        },
+        {
           "id": "p6-old-soft-target",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
@@ -732,7 +773,7 @@
             { "type": "click", "selector": ".p6-sample-chooser button:nth-child(2)" },
             { "type": "click", "selector": ".p6-phase-rail > summary" },
             { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-node-row--one .p6-node-row__target.is-revealed", "state": "visible" }
+            { "type": "waitFor", "selector": ".p6-node-row[data-node-id='g4'] .p6-node-row__target.is-revealed", "state": "visible" }
           ]
         },
         {
@@ -742,7 +783,7 @@
             { "type": "click", "selector": ".p6-sample-chooser button:nth-child(3)" },
             { "type": "click", "selector": ".p6-phase-rail > summary" },
             { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-node-row--one .p6-node-row__target.is-revealed", "state": "visible" }
+            { "type": "waitFor", "selector": ".p6-node-row[data-node-id='g5'] .p6-node-row__target.is-revealed", "state": "visible" }
           ]
         },
         {
@@ -752,7 +793,7 @@
             { "type": "click", "selector": ".p6-sample-chooser button:nth-child(4)" },
             { "type": "click", "selector": ".p6-phase-rail > summary" },
             { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-node-row--one .p6-node-row__target.is-revealed", "state": "visible" }
+            { "type": "waitFor", "selector": ".p6-node-row[data-node-id='g6'] .p6-node-row__target.is-revealed", "state": "visible" }
           ]
         },
         {
@@ -762,7 +803,8 @@
             { "type": "click", "selector": ".p6-sample-chooser button:nth-child(4)" },
             { "type": "click", "selector": ".p6-phase-rail > summary" },
             { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p6-network-board[data-phase='bce'] .p6-node-row.has-bce", "state": "visible" }
+            { "type": "waitFor", "selector": ".p6-network-board[data-phase='bce'] .p6-focus-panel--bce .p6-loss-curve", "state": "visible" },
+            { "type": "wait", "milliseconds": 1400 }
           ]
         },
         {
@@ -771,7 +813,7 @@
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
             { "type": "click", "selector": ".p6-phase-rail > summary" },
             { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)" },
-            { "type": "waitFor", "selector": ".p6-gradient-object.is-active", "state": "visible" }
+            { "type": "waitFor", "selector": ".p6-feature-object.is-updating", "state": "visible" }
           ]
         }
       ]
