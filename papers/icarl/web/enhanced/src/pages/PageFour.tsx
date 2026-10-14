@@ -83,7 +83,7 @@ function buildClips(): DemoClip[] {
     const selectedBefore = new Set(round.prefix.slice(0, round.k - 1).map((point) => point.id));
     // The first candidate of every round is demonstrated at full length; later candidates reuse the
     // same computation at a shorter pace so the reader still sees the geometry but not the wait.
-    const laterCandidateScale = round.k === 2 ? 0.5 : round.k === 3 ? 0.38 : 1;
+    const laterCandidateScale = round.k === 2 ? 0.42 : round.k === 3 ? 0.3 : 1;
     const detailed = round.k === 2 || round.k === 3;
     let sweep = 0;
     let firstCandidateSeen = false;
@@ -108,8 +108,8 @@ function buildClips(): DemoClip[] {
           candidateIndex,
           sweepStart: sweep,
           move: 620,
-          durationMs: isFirst ? 620 : 480,
-          holdMs: isFirst ? 180 : 90,
+          durationMs: isFirst ? 620 : 440,
+          holdMs: isFirst ? 180 : 70,
           narrative: isFirst
             ? `扫描环从当前圆周位置继续顺时针到达候选 ${candidate.point.id}`
             : `扫描环沿圆周继续顺时针到达候选 ${candidate.point.id}，不跳跃`,
@@ -697,7 +697,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
 
         <div className="p4-workbench__controls" aria-label="Page 4 动画控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack}>← 上一步</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={!state.hasPrevious}>← 上一步</button>
           <div className="p4-workbench__control-center">
             <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.toggle} disabled={!stepCanPlay}>
               {state.status === "playing" ? "Ⅱ 暂停" : state.atEnd ? "▶ 重新播放" : "▶ 继续"}
@@ -705,7 +705,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
             <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本片段</button>
             <span aria-live="polite">{detailLabel}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward}>下一步 →</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward} disabled={!state.hasNext}>下一步 →</button>
         </div>
 
         <div className="p4-phase-rail" role="group" aria-label="片段定位">

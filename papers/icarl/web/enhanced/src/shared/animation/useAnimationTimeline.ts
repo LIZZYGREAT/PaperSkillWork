@@ -28,6 +28,9 @@ export type TimelineState = {
   isHolding: boolean;
   atStart: boolean;
   atEnd: boolean;
+  /** Whether a previous/next clip exists. Stepping is bounded by the clip list, not by time. */
+  hasPrevious: boolean;
+  hasNext: boolean;
   totalClips: number;
 };
 
@@ -242,6 +245,8 @@ export function useAnimationTimeline({
       isHolding: elapsedMs >= clip.durationMs,
       atStart: clipIndex === 0 && elapsedMs <= 0,
       atEnd: clipIndex >= clips.length - 1 && elapsedMs >= clipTotal,
+      hasPrevious: clipIndex > 0,
+      hasNext: clipIndex < clips.length - 1,
       totalClips: clips.length,
     };
   }, [clip, clipIndex, clipTotal, elapsedMs, status, clips.length]);
