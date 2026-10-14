@@ -1,58 +1,86 @@
-import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
-import { PaperTerm } from "../components/PaperTerm";
+import { useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
-import { CLASS_VISUALS, encode2D, encodeRawVector, euclideanDistance, mean, normalize, P_BEFORE, type ClassId, type Vector2 } from "../data/icarl-runtime";
+import {
+  CLASS_VISUALS,
+  encode2D,
+  encodeRawVector,
+  euclideanDistance,
+  mean,
+  normalize,
+  P_BEFORE,
+  type ClassId,
+  type Vector2,
+} from "../data/icarl-runtime";
+import {
+  activeNarrationIndex,
+  useAnimationTimeline,
+  type AnimationClip,
+} from "../shared/animation/useAnimationTimeline";
+import {
+  arcSegmentPath,
+  clamp,
+  lerpPoint,
+  lineRevealPath,
+  progressWithin,
+  smoothstep,
+  type Point,
+} from "../shared/animation/easing";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 
-const steps: readonly GuidedStep[] = [
-  { title: "已保留图片怎样变成可比较的特征？", short: "图片变特征" },
-  { title: "同类特征怎样形成类别原型？", short: "计算类别原型" },
-  { title: "新的 Query 怎样进入同一空间？", short: "输入 Query" },
-  { title: "怎样依据最近原型输出预测？", short: "最近原型预测" },
-];
+/* ------------------------------------------------------------------ data --- */
 
 const classIds: readonly ClassId[] = ["A", "B", "C"];
 const exemplarByClass = new Map(classIds.map((classId) => [classId, P_BEFORE[classId]]));
 const exemplars = classIds.flatMap((classId) => exemplarByClass.get(classId)!);
+
 const queryInput: Vector2 = [1.732, -1.0];
 const queryRawFeature = encodeRawVector(queryInput, "before");
-const queryFeature = normalize(queryRawFeature);
-const chartOrigin = { x: 320, y: 280 };
-const chartScale = 175;
-const stageDurations = [5200, 5600, 2400, 5600] as const;
+const queryUnitFeature = normalize(queryRawFeature);
 
 type PrototypeCalculation = {
   classId: ClassId;
   features: [number, number][];
   rawMean: [number, number];
   prototype: [number, number];
+  meanDistanceToRaw: number;
 };
 
 const prototypeCalculations: PrototypeCalculation[] = classIds.map((classId) => {
   const features = exemplarByClass.get(classId)!.map((sample) => normalize(encode2D(sample, "before")));
   const rawMean = mean(features);
-  return { classId, features, rawMean, prototype: normalize(rawMean) };
+  return {
+    classId,
+    features,
+    rawMean,
+    prototype: normalize(rawMean),
+    meanDistanceToRaw: euclideanDistance(rawMean, features[0]),
+  };
 });
 
-const prototypeByClass = new Map(prototypeCalculations.map((item) => [item.classId, item.prototype]));
+/**
+ * Displayed distances. Values below the unit circle's own resolution are surfaced verbatim in the
+ * checkpoint view instead of being nudged, so the geometry never contradicts the formula.
+ */
 const queryComparisons = prototypeCalculations
-  .map(({ classId, prototype }) => {
-    const cosine = Math.max(-1, Math.min(1, queryFeature[0] * prototype[0] + queryFeature[1] * prototype[1]));
-    return {
-      classId,
-      distance: euclideanDistance(queryFeature, prototype),
-      angle: Math.acos(cosine) * 180 / Math.PI,
-    };
-  })
+  .map(({ classId, prototype }) => ({
+    classId,
+    distance: euclideanDistance(queryUnitFeature, prototype),
+  }))
   .sort((a, b) => a.distance - b.distance || a.classId.localeCompare(b.classId));
 const predictedClass = queryComparisons[0].classId;
+const comparisonOrder: ClassId[] = ["A", "B", "C"];
 
-function chartPoint(vector: Vector2) {
-  return { x: chartOrigin.x + vector[0] * chartScale, y: chartOrigin.y - vector[1] * chartScale };
-}
+/* ------------------------------------------------------------- projection --- */
 
-const plottedVectors: { id: string; vector: Vector2 }[] = [
+/**
+ * The teaching space is a square viewBox so the scene always fills its slot: the container is
+ * roughly square, and a non-square viewBox would letterbox the geometry and shrink the circle.
+ */
+const VIEW = { width: 600, height: 600 };
+const ORIGIN: Point = { x: 300, y: 300 };
+const SAFE = { left: 22, right: VIEW.width - 22, top: 22, bottom: VIEW.height - 22 };
+
+const projectedVectors: { id: string; vector: Vector2 }[] = [
   ...exemplars.flatMap((sample) => [
     { id: `${sample.id}:raw`, vector: encode2D(sample, "before") },
     { id: `${sample.id}:unit`, vector: normalize(encode2D(sample, "before")) },
@@ -61,73 +89,236 @@ const plottedVectors: { id: string; vector: Vector2 }[] = [
     { id: `${item.classId}:mean`, vector: item.rawMean },
     { id: `${item.classId}:prototype`, vector: item.prototype },
   ]),
-  { id: "query:unit", vector: queryFeature },
+  { id: "query:raw", vector: queryRawFeature },
+  { id: "query:unit", vector: queryUnitFeature },
 ];
-plottedVectors.forEach(({ id, vector }) => {
-  const point = chartPoint(vector);
-  if (point.x < 12 || point.x > 628 || point.y < 12 || point.y > 548) throw new Error(`P3 plot point ${id} is outside the safe viewport.`);
+
+const chartScale = (() => {
+  const extent = projectedVectors.reduce(
+    (max, item) => Math.max(max, Math.abs(item.vector[0]), Math.abs(item.vector[1])),
+    0,
+  );
+  const horizontal = Math.min(ORIGIN.x - SAFE.left, SAFE.right - ORIGIN.x);
+  const vertical = Math.min(ORIGIN.y - SAFE.top, SAFE.bottom - ORIGIN.y);
+  return Math.min(horizontal, vertical) / (extent + 0.62);
+})();
+
+function project(vector: Vector2): Point {
+  return { x: ORIGIN.x + vector[0] * chartScale, y: ORIGIN.y - vector[1] * chartScale };
+}
+
+const samplePointById = new Map(
+  exemplars.map((sample) => {
+    const raw = encode2D(sample, "before");
+    const unit = normalize(raw);
+    return [sample.id, { sample, raw, unit, rawPoint: project(raw), unitPoint: project(unit) }];
+  }),
+);
+
+// Fail loudly if any plotted object leaves the safe frame; the fit above must include every vector.
+projectedVectors.forEach(({ id, vector }) => {
+  const point = project(vector);
+  if (
+    point.x < SAFE.left - 4 ||
+    point.x > SAFE.right + 4 ||
+    point.y < SAFE.top - 4 ||
+    point.y > SAFE.bottom + 4
+  ) {
+    throw new Error(`P3 plot point ${id} is outside the safe viewport.`);
+  }
 });
 
-function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
-function ease(value: number) { const t = clamp(value); return t * t * (3 - 2 * t); }
-function lerp(a: number, b: number, progress: number) { return a + (b - a) * ease(progress); }
-function lerpVector(a: Vector2, b: Vector2, progress: number): [number, number] {
-  return [lerp(a[0], b[0], progress), lerp(a[1], b[1], progress)];
-}
+/**
+ * Labels sit on the outward side of each mark with a short leader so they never cover a data
+ * point, a chord or an angle arc. Labels may move; data points never do.
+ */
+const LABEL_FALLBACK = { dx: 16, dy: -14, anchor: "start" as const };
 
-function shortestAngleArc(from: Vector2, to: Vector2, radius: number, progress = 1) {
-  const start = Math.atan2(from[1], from[0]);
-  const end = Math.atan2(to[1], to[0]);
-  let delta = end - start;
-  while (delta > Math.PI) delta -= Math.PI * 2;
-  while (delta < -Math.PI) delta += Math.PI * 2;
-  const arcEnd = start + delta * ease(progress);
-  const startPoint = { x: chartOrigin.x + Math.cos(start) * radius, y: chartOrigin.y - Math.sin(start) * radius };
-  const endPoint = { x: chartOrigin.x + Math.cos(arcEnd) * radius, y: chartOrigin.y - Math.sin(arcEnd) * radius };
-  return `M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 0 ${delta >= 0 ? 0 : 1} ${endPoint.x} ${endPoint.y}`;
-}
-
-const prototypeLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }> = {
-  A: { dx: 18, dy: -10, anchor: "start" },
-  B: { dx: 0, dy: -19, anchor: "middle" },
-  C: { dx: -18, dy: -9, anchor: "end" },
-  D: { dx: 18, dy: 18, anchor: "start" },
-  E: { dx: -18, dy: 17, anchor: "end" },
-  F: { dx: 18, dy: -16, anchor: "start" },
+const prototypeLabel: Partial<Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }>> = {
+  A: { dx: 14, dy: -12, anchor: "start" },
+  B: { dx: 0, dy: -22, anchor: "middle" },
+  C: { dx: -14, dy: -10, anchor: "end" },
 };
 
-const meanLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }> = {
-  A: { dx: -13, dy: 22, anchor: "end" },
-  B: { dx: -14, dy: 23, anchor: "end" },
-  C: { dx: 13, dy: 23, anchor: "start" },
-  D: { dx: 13, dy: -15, anchor: "start" },
-  E: { dx: -14, dy: -16, anchor: "end" },
-  F: { dx: 15, dy: 17, anchor: "start" },
+const meanLabel: Partial<Record<ClassId, { dx: number; dy: number; anchor: "start" | "middle" | "end" }>> = {
+  A: { dx: -13, dy: 21, anchor: "end" },
+  B: { dx: -13, dy: 19, anchor: "end" },
+  C: { dx: 14, dy: 20, anchor: "start" },
 };
 
-function FeatureMap({
-  stage,
-  progress,
-  selectedSampleId,
-  onSelectSample,
-}: {
-  stage: number;
+/** z_q sits low and right of its marker: that corridor is free of other marks and chords. */
+const queryLabel = { dx: -34, dy: 40, anchor: "end" as const };
+
+/* --------------------------------------------------------------- timeline --- */
+
+const clips: readonly AnimationClip[] = [
+  { id: "p3-a-normalize", durationMs: 6600, holdMs: 900, narrative: "十二张代表图片的单位化" },
+  { id: "p3-b-aggregate", durationMs: 8600, holdMs: 1100, narrative: "贡献点聚合成类别均值，再单位化为原型" },
+  { id: "p3-c-query", durationMs: 5000, holdMs: 900, narrative: "Query 先落入原始特征位置，再单位化" },
+  { id: "p3-d-decide", durationMs: 7800, holdMs: 1200, narrative: "逐条比较距离与夹角，argmin 给出预测" },
+];
+
+const clipNarratives: readonly (readonly string[])[] = [
+  [
+    "前面已经知道：网络能把一张图片变成特征向量。",
+    "现在让这十二张已选代表图片进入同一个特征空间，按类别逐批把特征缩放到单位长度。",
+    "图中细虚线是从圆心出发的方向，点只沿自己的方向移动到单位圆上，方向不会改变。",
+    "十二个点都完成后，我们才有了一组可以直接互相比较的单位特征。",
+  ],
+  [
+    "单张图片只代表类别中的一个具体样本，个体差异很大。",
+    "我们要判断的是 Query 属于哪个类别，所以把同一类的四个单位特征汇总成一个类别代表。",
+    "四个原始点保持不动，各自复制出一个小贡献点，一起向它们的算术平均位置移动。",
+    "四个贡献点汇合处就是类别均值 z̄_y；原始特征点仍在原处。",
+    "从均值沿着圆心方向把它单位化，就得到落在单位圆上的原型 μ_y，它是之后用来比较的类别方向。",
+  ],
+  [
+    "图中出现一张不属于那十二张 Exemplars 的新图片 Query。",
+    "它先由同一个固定特征提取器落到自己的原始特征位置。",
+    "再沿圆心方向单位化：z_q = normalize(φ(x_q))。",
+    "Query 只用于这次推断，它不会进入 Exemplar Memory，也不修改模型参数。",
+  ],
+  [
+    "现在只比较单位圆上的 z_q 与三个原型 μ_y。",
+    "依次画出 Query 到每个原型的比较线，每条线对应一个真实距离。",
+    "再以圆心为顶点画出方向夹角：单位化以后，距离越小，夹角也越小。",
+    "三条都比较完，最近的那条加深，对应原型就是预测类别。",
+  ],
+];
+
+const clipTitles: readonly string[] = [
+  "代表图片变成单位特征",
+  "四张同类样本形成一个 Prototype",
+  "新 Query 进入同一空间",
+  "几何比较与决策",
+];
+
+/* ------------------------------------------------------------------ types --- */
+
+type SceneState = {
+  clipIndex: number;
   progress: number;
+  rawPointOpacity: number;
+  /** null while raw features are hidden; 1 when fully faded out. */
+  rawGhostOpacity: number;
+  unitizeProgressByClass: number[];
+  contributionByClass: (number | null)[];
+  meanRevealByClass: number[];
+  prototypeProgressByClass: number[];
+  contributionOpacityByClass: number[];
+  meanOpacityByClass: number[];
+  queryRawOpacity: number;
+  queryRawGhostOpacity: number;
+  queryUnitizeProgress: number;
+  queryOpacity: number;
+  comparisonProgress: number[];
+  arcProgress: number[];
+  decisionProgress: number;
+  predictedOpacity: number;
+  showPrototypes: boolean;
+};
+
+function sceneAt(clipIndex: number, progress: number): SceneState {
+  const p = clamp(progress);
+  const perClassWindow = 0.78 / classIds.length;
+
+  const unitizeProgressByClass = classIds.map((_, index) => {
+    if (clipIndex === 0) {
+      const start = 0.14 + index * perClassWindow;
+      return smoothstep(progressWithin(p, start, start + perClassWindow * 0.86));
+    }
+    return 1;
+  });
+
+  const contributionByClass = classIds.map((_, index) => {
+    if (clipIndex !== 1) return null;
+    const start = 0.04 + index * 0.3;
+    return smoothstep(progressWithin(p, start, start + 0.17));
+  });
+
+  const meanRevealByClass = classIds.map((_, index) => {
+    if (clipIndex === 0) return 0;
+    if (clipIndex > 1) return 1;
+    const start = 0.04 + index * 0.3;
+    return clamp(progressWithin(p, start + 0.15, start + 0.22));
+  });
+
+  const prototypeProgressByClass = classIds.map((_, index) => {
+    if (clipIndex === 0) return 0;
+    if (clipIndex > 1) return 1;
+    const start = 0.04 + index * 0.3;
+    return smoothstep(progressWithin(p, start + 0.21, start + 0.3));
+  });
+
+  const contributionOpacityByClass = classIds.map((_, index) => {
+    if (clipIndex !== 1) return 0;
+    const start = 0.04 + index * 0.3;
+    return clamp(progressWithin(p, start + 0.16, start + 0.2)) * (1 - clamp(progressWithin(p, start + 0.2, start + 0.25)));
+  });
+
+  const meanOpacityByClass = classIds.map((_, index) => {
+    if (clipIndex === 0) return 0;
+    if (clipIndex > 1) return 0;
+    const start = 0.04 + index * 0.3;
+    return clamp(progressWithin(p, start + 0.15, start + 0.2)) * (1 - clamp(progressWithin(p, start + 0.27, start + 0.31)));
+  });
+
+  const queryRawOpacity = clipIndex < 2 ? 0 : clipIndex > 2 ? 1 : clamp(progressWithin(p, 0.03, 0.16));
+  const queryUnitizeProgress = clipIndex < 2 ? 0 : clipIndex > 2 ? 1 : smoothstep(progressWithin(p, 0.26, 0.66));
+  const queryOpacity = clipIndex < 2 ? 0 : clipIndex > 2 ? 1 : clamp(progressWithin(p, 0.1, 0.26));
+  const queryRawGhostOpacity =
+    clipIndex > 2 ? 0 : clipIndex === 2 ? clamp(progressWithin(p, 0.46, 0.7)) * 0.65 : 0;
+
+  const comparisonProgress = comparisonOrder.map((_, index) => {
+    if (clipIndex < 3) return 0;
+    const start = 0.04 + index * 0.17;
+    return smoothstep(progressWithin(p, start, start + 0.14));
+  });
+  const arcProgress = comparisonOrder.map((_, index) => {
+    if (clipIndex < 3) return 0;
+    const start = 0.26 + index * 0.17;
+    return smoothstep(progressWithin(p, start, start + 0.14));
+  });
+  const decisionProgress = clipIndex < 3 ? 0 : smoothstep(progressWithin(p, 0.8, 0.93));
+  const predictedOpacity = clipIndex < 3 ? 0 : clamp(progressWithin(p, 0.88, 0.96));
+
+  return {
+    clipIndex,
+    progress: p,
+    rawPointOpacity: clipIndex > 0 ? 0 : 1 - clamp(progressWithin(p, 0.62, 0.92)),
+    rawGhostOpacity: clipIndex === 0 ? clamp(progressWithin(p, 0.68, 0.96)) * 0.5 : 1,
+    unitizeProgressByClass,
+    contributionByClass,
+    meanRevealByClass,
+    prototypeProgressByClass,
+    contributionOpacityByClass,
+    meanOpacityByClass,
+    queryRawOpacity,
+    queryRawGhostOpacity,
+    queryUnitizeProgress,
+    queryOpacity,
+    comparisonProgress,
+    arcProgress,
+    decisionProgress,
+    predictedOpacity,
+    showPrototypes: clipIndex >= 1,
+  };
+}
+
+/* ---------------------------------------------------------------- subviews --- */
+
+const ARC_RADIUS = [46, 62, 78] as const;
+
+function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
+  scene: SceneState;
   selectedSampleId: string;
   onSelectSample: (id: string) => void;
 }) {
-  const selectedSample = exemplars.find((sample) => sample.id === selectedSampleId) ?? exemplars[0];
-  const showPrototypes = stage >= 1;
-  const showQuery = stage >= 2;
-  const showDecision = stage === 3;
-  const sampleOrder = [selectedSampleId, ...exemplars.filter((sample) => sample.id !== selectedSampleId).map((sample) => sample.id)];
-  const normalizedPoints = exemplars.map((sample) => {
-    const raw = encode2D(sample, "before");
-    const normalized = normalize(raw);
-    const sampleProgress = stage > 0 ? 1 : clamp(progress * 1.65 - sampleOrder.indexOf(sample.id) * .06);
-    return { sample, raw, normalized, sampleProgress, position: chartPoint(lerpVector(raw, normalized, sampleProgress)) };
-  });
-  function activatePoint(event: KeyboardEvent<SVGGElement>, sampleId: string) {
+  const origin = ORIGIN;
+  const comparisonIndexByClass = new Map(comparisonOrder.map((classId, index) => [classId, index]));
+  const predictedIndex = comparisonIndexByClass.get(predictedClass) ?? 0;
+
+  function activate(event: KeyboardEvent<SVGGElement>, sampleId: string) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onSelectSample(sampleId);
@@ -135,200 +326,369 @@ function FeatureMap({
   }
 
   return (
-    <div className={`p3-map p3-map--stage-${stage}`}>
-      <div className="p3-map__meta">
-        <span>FIXED SYNTHETIC · 2D TEACHING SPACE</span>
-        <span>所选 {selectedSampleId} · φ<sub>Θ fixed</sub></span>
-      </div>
-      <svg viewBox="0 0 640 560" role="img" aria-label="十二张已保留图片的单位化特征、三类原型和查询特征构成的固定二维教学空间">
-        <title>Exemplar prototype prediction</title>
-        <desc>十二张 Exemplar 图片经过同一个固定特征提取器。第二步同时显示圆内均值和归一化后的原型；第三步加入独立 Query；第四步用圆弧展示 Query 与三个原型的方向夹角，并显示 Query 到原型的距离。</desc>
-        <circle className="p3-map__unit-circle" cx={chartOrigin.x} cy={chartOrigin.y} r={chartScale} />
-        <line className="p3-map__axis" x1="24" y1={chartOrigin.y} x2="616" y2={chartOrigin.y} />
-        <line className="p3-map__axis" x1={chartOrigin.x} y1="14" x2={chartOrigin.x} y2="546" />
+    <div className="p3-canvas">
+      <svg
+        className="p3-scene"
+        viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="十二张已保留图片的单位化特征、三类原型与查询特征构成的固定二维教学空间"
+      >
+      <title>Exemplar 原型分类</title>
+      <desc>十二张 Exemplar 依次单位化；同类四个单位特征通过贡献点聚合成均值，再单位化为原型；独立 Query 先落到原始特征位置再单位化；最后逐条绘制距离线与圆心角弧，由 argmin 给出预测。</desc>
 
-        {stage === 0 ? normalizedPoints.map(({ sample, raw, normalized, sampleProgress }) => {
-          const rawPosition = chartPoint(raw);
-          const normalizedPosition = chartPoint(normalized);
-          const isSelected = sample.id === selectedSampleId;
-          return <g key={`raw-${sample.id}`} className={`p3-map__normalization${isSelected ? " is-selected" : ""}`} style={{ "--p3-point-color": CLASS_VISUALS[sample.classId].color } as CSSProperties}>
-            <line className="p3-map__normalization-line" x1={rawPosition.x} y1={rawPosition.y} x2={lerp(rawPosition.x, normalizedPosition.x, sampleProgress)} y2={lerp(rawPosition.y, normalizedPosition.y, sampleProgress)} />
-            {isSelected ? <line className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={lerp(chartOrigin.x, normalizedPosition.x, sampleProgress)} y2={lerp(chartOrigin.y, normalizedPosition.y, sampleProgress)} /> : null}
-            <circle className="p3-map__raw-point" cx={rawPosition.x} cy={rawPosition.y} r={isSelected ? 4 : 2.8} />
-          </g>;
-        }) : null}
+      <circle className="p3-scene__unit-circle" cx={origin.x} cy={origin.y} r={chartScale} />
+      <line className="p3-scene__axis" x1="14" y1={origin.y} x2={VIEW.width - 14} y2={origin.y} />
+      <line className="p3-scene__axis" x1={origin.x} y1="14" x2={origin.x} y2={VIEW.height - 14} />
 
-        {stage === 1 ? prototypeCalculations.map(({ classId, features, rawMean, prototype }, classIndex) => {
-          const local = clamp(progress * 3.05 - classIndex);
-          const gatherProgress = clamp(local / .62);
-          const projectProgress = clamp((local - .58) / .42);
-          const meanPosition = chartPoint(rawMean);
-          const prototypePosition = chartPoint(prototype);
-          const resultPosition = chartPoint(lerpVector(rawMean, prototype, projectProgress));
-          return <g key={`calculation-${classId}`} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-            {features.map((feature, index) => {
-              const source = chartPoint(feature);
-              return <circle key={index} className="p3-map__contribution" cx={lerp(source.x, meanPosition.x, gatherProgress)} cy={lerp(source.y, meanPosition.y, gatherProgress)} r="5" style={{ opacity: local < .02 || projectProgress > .78 ? 0 : 1 }} />;
+      {/* Persistent normalization layer: rays and moving points keep their identity across clips. */}
+      {exemplars.map((sample) => {
+        const entry = samplePointById.get(sample.id)!;
+        const classIndex = classIds.indexOf(sample.classId);
+        const classProgress = scene.unitizeProgressByClass[classIndex] ?? 0;
+        const moving = lerpPoint(entry.rawPoint, entry.unitPoint, classProgress);
+        const isSelected = sample.id === selectedSampleId;
+        const color = CLASS_VISUALS[sample.classId].color;
+        const style = { "--p3-point-color": color } as CSSProperties;
+        return (
+          <g key={`unitize-${sample.id}`} className="p3-scene__unitize" style={style}>
+            {classProgress > 0 ? (
+              <line
+                className="p3-scene__radial-ray"
+                x1={origin.x}
+                y1={origin.y}
+                x2={moving.x}
+                y2={moving.y}
+                opacity={isSelected ? 0.85 : 0.4}
+              />
+            ) : null}
+            {scene.rawGhostOpacity > 0 && classProgress > 0.02 ? (
+              <circle
+                className="p3-scene__raw-ghost"
+                cx={entry.rawPoint.x}
+                cy={entry.rawPoint.y}
+                r="4"
+                opacity={scene.rawGhostOpacity}
+              />
+            ) : null}
+            {scene.rawPointOpacity > 0 ? (
+              <circle
+                className="p3-scene__raw-point"
+                cx={entry.rawPoint.x}
+                cy={entry.rawPoint.y}
+                r={isSelected ? 5 : 3.6}
+                opacity={scene.rawPointOpacity}
+              />
+            ) : null}
+          </g>
+        );
+      })}
+
+      {/* Aggregation layer for the currently computed class. */}
+      {classIds.map((classId) => {
+        const calculation = prototypeCalculations.find((item) => item.classId === classId)!;
+        const classIndex = classIds.indexOf(classId);
+        const gather = scene.contributionByClass[classIndex];
+        const meanPoint = project(calculation.rawMean);
+        if (gather === null || gather === undefined) return null;
+        return (
+          <g key={`aggregate-${classId}`} className="p3-scene__aggregate" style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
+            <line className="p3-scene__radial-ray" x1={origin.x} y1={origin.y} x2={meanPoint.x} y2={meanPoint.y} opacity={0.5} />
+            {calculation.features.map((feature, index) => {
+              const source = project(feature);
+              const position = lerpPoint(source, meanPoint, gather);
+              return (
+                <g key={`contribution-${classId}-${index}`}>
+                  <line
+                    className="p3-scene__contribution-line"
+                    x1={source.x}
+                    y1={source.y}
+                    x2={meanPoint.x}
+                    y2={meanPoint.y}
+                    opacity={0.5}
+                  />
+                  <circle
+                    className="p3-scene__contribution"
+                    cx={position.x}
+                    cy={position.y}
+                    r="6"
+                    opacity={scene.contributionOpacityByClass[classIndex] ?? 0}
+                  />
+                </g>
+              );
             })}
-            <line className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={lerp(chartOrigin.x, prototypePosition.x, projectProgress)} y2={lerp(chartOrigin.y, prototypePosition.y, projectProgress)} style={{ opacity: projectProgress }} />
-            <circle className="p3-map__raw-mean" cx={meanPosition.x} cy={meanPosition.y} r="10" style={{ opacity: clamp((local - .44) / .18) }} />
-            <path className={`p3-map__prototype p3-map__prototype--${classId}`} d={`M ${resultPosition.x - 7} ${resultPosition.y - 7} h 14 v 14 h -14 Z`} style={{ opacity: clamp((local - .54) / .18) }} />
-            {projectProgress > .94 ? <text className="p3-map__direct-label" x={prototypePosition.x + prototypeLabelPlacement[classId].dx} y={prototypePosition.y + prototypeLabelPlacement[classId].dy} textAnchor={prototypeLabelPlacement[classId].anchor}>μ{CLASS_VISUALS[classId].index}</text> : null}
-          </g>;
-        }) : null}
+          </g>
+        );
+      })}
 
-        {showPrototypes && stage !== 1 ? prototypeCalculations.map(({ classId, prototype }) => {
-          const position = chartPoint(prototype);
-          return <line key={`prototype-ray-${classId}`} className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={position.x} y2={position.y} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties} />;
-        }) : null}
-
-        {showDecision ? queryComparisons.map(({ classId }, index) => {
-          const local = clamp(progress * 3.15 - index);
-          const queryPosition = chartPoint(queryFeature);
-          const prototypePosition = chartPoint(prototypeByClass.get(classId)!);
-          const lineEnd = { x: lerp(queryPosition.x, prototypePosition.x, local), y: lerp(queryPosition.y, prototypePosition.y, local) };
-          return <g key={`comparison-${classId}`} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-            <line className={`p3-map__distance${index === 0 && progress > .9 ? " is-nearest" : ""}`} x1={queryPosition.x} y1={queryPosition.y} x2={lineEnd.x} y2={lineEnd.y} />
-            {local > .38 ? <path className={`p3-map__angle${index === 0 && progress > .9 ? " is-nearest" : ""}`} d={shortestAngleArc(queryFeature, prototypeByClass.get(classId)!, 38 + index * 17, (local - .38) / .62)} /> : null}
-          </g>;
-        }) : null}
-
-        {normalizedPoints.map(({ sample, position }) => {
-          const isSelected = sample.id === selectedSampleId;
-          const color = CLASS_VISUALS[sample.classId].color;
-          return <g
-            key={sample.id}
-            className={`p3-map__point${isSelected ? " is-selected" : ""}`}
+      {/* Normalized feature points: one stable node per exemplar, never remounted between clips. */}
+      {exemplars.map((sample) => {
+        const entry = samplePointById.get(sample.id)!;
+        const classIndex = classIds.indexOf(sample.classId);
+        const isSelected = sample.id === selectedSampleId;
+        const color = CLASS_VISUALS[sample.classId].color;
+        return (
+          <g
+            key={`unit-${sample.id}`}
+            className={`p3-scene__point${isSelected ? " is-selected" : ""}`}
             tabIndex={0}
             role="button"
             aria-label={`${CLASS_VISUALS[sample.classId].displayLabel} 已保留样本 ${sample.id}；选择以联动左栏身份`}
             onClick={() => onSelectSample(sample.id)}
-            onKeyDown={(event) => activatePoint(event, sample.id)}
+            onKeyDown={(event) => activate(event, sample.id)}
           >
-            <ClassFeatureMarker className="p3-map__normalized-point" classId={sample.classId} x={position.x} y={position.y} radius={isSelected ? 4.4 : 3.3} selected={false} fillOverride={color} />
-            <title>{`${sample.id} · P_BEFORE[${sample.classId}] · z_p`}</title>
-          </g>;
-        })}
+            <ClassFeatureMarker
+              className="p3-scene__unit-point"
+              classId={sample.classId}
+              x={entry.unitPoint.x}
+              y={entry.unitPoint.y}
+              radius={isSelected ? 5 : 3.8}
+              selected={false}
+              fillOverride={color}
+            />
+            <title>{`${sample.id} · P_BEFORE[${sample.classId}] · 单位化特征 z_p`}</title>
+          </g>
+        );
+      })}
 
-        {showPrototypes && stage !== 1 ? prototypeCalculations.map(({ classId, prototype }) => {
-          const position = chartPoint(prototype);
-          const label = prototypeLabelPlacement[classId];
-          return <g key={`prototype-${classId}`}>
-            <path className={`p3-map__prototype p3-map__prototype--${classId}`} d={`M ${position.x - 7} ${position.y - 7} h 14 v 14 h -14 Z`} />
-            <text className="p3-map__direct-label" x={position.x + label.dx} y={position.y + label.dy} textAnchor={label.anchor}>μ{CLASS_VISUALS[classId].index}</text>
-          </g>;
-        }) : null}
+      {/* Category means (inside the circle) and prototypes (on the circle). */}
+      {prototypeCalculations.map((calculation) => {
+        const classIndex = classIds.indexOf(calculation.classId);
+        const meanPoint = project(calculation.rawMean);
+        const prototypePoint = project(calculation.prototype);
+        const move = scene.prototypeProgressByClass[classIndex] ?? 0;
+        const markerPoint = lerpPoint(meanPoint, prototypePoint, move);
+        const label = prototypeLabel[calculation.classId] ?? LABEL_FALLBACK;
+        const meanPlacement = meanLabel[calculation.classId] ?? LABEL_FALLBACK;
+        return (
+          <g key={`prototype-${calculation.classId}`} style={{ "--p3-point-color": CLASS_VISUALS[calculation.classId].color } as CSSProperties}>
+            {move > 0.01 && move < 0.99 ? (
+              <path
+                className="p3-scene__normalize-path"
+                d={lineRevealPath(meanPoint, prototypePoint, move)}
+                opacity={0.9}
+              />
+            ) : null}
+            <circle
+              className="p3-scene__raw-mean"
+              cx={meanPoint.x}
+              cy={meanPoint.y}
+              r="9"
+              opacity={scene.meanOpacityByClass[classIndex] ?? 0}
+            />
+            <path
+              className="p3-scene__prototype"
+              d={`M ${markerPoint.x - 7.5} ${markerPoint.y - 7.5} h 15 v 15 h -15 Z`}
+              opacity={scene.showPrototypes ? clamp(move * 1.6) : 0}
+            />
+            {scene.showPrototypes && move > 0.6 ? (
+              <g className="p3-scene__label">
+                <line
+                  className="p3-scene__label-leader"
+                  x1={prototypePoint.x}
+                  y1={prototypePoint.y}
+                  x2={prototypePoint.x + label.dx * 0.5}
+                  y2={prototypePoint.y + label.dy * 0.5}
+                />
+                <text x={prototypePoint.x + label.dx} y={prototypePoint.y + label.dy} textAnchor={label.anchor}>
+                  μ{CLASS_VISUALS[calculation.classId].index}
+                </text>
+              </g>
+            ) : null}
+            {(scene.meanOpacityByClass[classIndex] ?? 0) > 0.05 ? (
+              <g className="p3-scene__label p3-scene__label--mean">
+                <line
+                  className="p3-scene__label-leader"
+                  x1={meanPoint.x}
+                  y1={meanPoint.y}
+                  x2={meanPoint.x + meanPlacement.dx * 0.55}
+                  y2={meanPoint.y + meanPlacement.dy * 0.55}
+                />
+                <text x={meanPoint.x + meanPlacement.dx} y={meanPoint.y + meanPlacement.dy} textAnchor={meanPlacement.anchor}>
+                  z̄{CLASS_VISUALS[calculation.classId].index}
+                </text>
+              </g>
+            ) : null}
+          </g>
+        );
+      })}
 
-        {stage === 1 ? prototypeCalculations.map(({ classId, rawMean }, classIndex) => {
-          const reveal = clamp(progress * 3.05 - classIndex - .44);
-          const position = chartPoint(rawMean);
-          const label = meanLabelPlacement[classId];
-          return <text key={`mean-label-${classId}`} className="p3-map__direct-label p3-map__direct-label--mean" x={position.x + label.dx} y={position.y + label.dy} textAnchor={label.anchor} style={{ opacity: reveal }}>z̄{CLASS_VISUALS[classId].index}</text>;
-        }) : null}
+      {/* Query: enters at its raw feature position, then normalizes along a radial path. */}
+      <g className="p3-scene__query" opacity={scene.queryOpacity}>
+        {scene.queryRawOpacity > 0.02 ? (
+          <circle
+            className="p3-scene__query-raw"
+            cx={project(queryRawFeature).x}
+            cy={project(queryRawFeature).y}
+            r="5"
+            opacity={scene.queryRawOpacity}
+          />
+        ) : null}
+        {scene.queryRawGhostOpacity > 0.02 ? (
+          <circle
+            className="p3-scene__raw-ghost"
+            cx={project(queryRawFeature).x}
+            cy={project(queryRawFeature).y}
+            r="5"
+            opacity={scene.queryRawGhostOpacity}
+          />
+        ) : null}
+        {scene.queryUnitizeProgress > 0.01 && scene.queryUnitizeProgress < 0.99 ? (
+          <path
+            className="p3-scene__normalize-path p3-scene__normalize-path--query"
+            d={lineRevealPath(project(queryRawFeature), project(queryUnitFeature), scene.queryUnitizeProgress)}
+          />
+        ) : null}
+        {scene.clipIndex === 2 && scene.queryRawOpacity > 0.4 ? (
+          <g className="p3-scene__label p3-scene__label--query">
+            <text x={project(queryRawFeature).x + 14} y={project(queryRawFeature).y - 12}>φ(x_q)</text>
+          </g>
+        ) : null}
+      </g>
 
-        {showQuery ? (() => {
-          const unitPosition = chartPoint(queryFeature);
-          const reveal = stage > 2 ? 1 : clamp(progress / .34);
-          const markerRadius = 4 + 5 * ease(reveal);
-          return <g className="p3-map__query-appearance" style={{ opacity: reveal }}>
-            {stage === 2 && reveal < 1 ? <circle className="p3-map__query-halo" cx={unitPosition.x} cy={unitPosition.y} r={12 + 15 * reveal} style={{ opacity: 1 - reveal }} /> : null}
-            <path className="p3-map__query" d={`M ${unitPosition.x} ${unitPosition.y - markerRadius} l ${markerRadius} ${markerRadius} l -${markerRadius} ${markerRadius} l -${markerRadius} -${markerRadius} Z`} />
-            {reveal > .55 ? <text className="p3-map__direct-label p3-map__direct-label--query" x={unitPosition.x + 17} y={unitPosition.y - 12}>zq</text> : null}
-          </g>;
-        })() : null}
+      {/* Comparison lines, then angle arcs with the vertex at the origin. */}
+      {comparisonOrder.map((classId, index) => {
+        const prototype = prototypeCalculations.find((item) => item.classId === classId)!.prototype;
+        const prototypePoint = project(prototype);
+        const queryPoint = project(queryUnitFeature);
+        const lineProgress = scene.comparisonProgress[index] ?? 0;
+        const reveal = scene.arcProgress[index] ?? 0;
+        const isNearest = classId === predictedClass;
+        const emphasized = scene.decisionProgress > 0 && isNearest;
+        const faded = scene.decisionProgress > 0 && !isNearest;
+        const className = [
+          "p3-scene__comparison",
+          emphasized ? "is-nearest" : "",
+          faded ? "is-faded" : "",
+        ].filter(Boolean).join(" ");
+        return (
+          <g key={`comparison-${classId}`} className={className} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
+            {lineProgress > 0.01 ? (
+              <path className="p3-scene__distance-line" d={lineRevealPath(queryPoint, prototypePoint, lineProgress)} />
+            ) : null}
+            {reveal > 0.01 ? (
+              <AngleArc
+                center={origin}
+                radius={ARC_RADIUS[index]}
+                from={queryUnitFeature}
+                to={prototype}
+                progress={reveal}
+              />
+            ) : null}
+          </g>
+        );
+      })}
 
-        {stage === 0 ? (() => {
-          const position = normalizedPoints.find(({ sample }) => sample.id === selectedSampleId)!.position;
-          return <text className="p3-map__direct-label p3-map__direct-label--sample" x={position.x + 12} y={position.y - 10}>{selectedSample.id}</text>;
-        })() : null}
+      {/* Query marker sits above the comparison lines so it stays visible at every checkpoint. */}
+      {scene.queryOpacity > 0.05 ? (
+        <g className="p3-scene__query p3-scene__query--marker" opacity={scene.queryOpacity}>
+          <QueryMarker point={lerpPoint(project(queryRawFeature), project(queryUnitFeature), scene.queryUnitizeProgress)} />
+          {scene.queryUnitizeProgress > 0.5 ? (
+            <g className="p3-scene__label p3-scene__label--query">
+              <line
+                className="p3-scene__label-leader"
+                x1={project(queryUnitFeature).x}
+                y1={project(queryUnitFeature).y}
+                x2={project(queryUnitFeature).x + queryLabel.dx * 0.5}
+                y2={project(queryUnitFeature).y + queryLabel.dy * 0.5}
+              />
+              <text x={project(queryUnitFeature).x + queryLabel.dx} y={project(queryUnitFeature).y + queryLabel.dy} textAnchor={queryLabel.anchor}>z_q</text>
+            </g>
+          ) : null}
+        </g>
+      ) : null}
 
-        <circle className="p3-map__origin" cx={chartOrigin.x} cy={chartOrigin.y} r="3.2" />
+      {/* Prediction is revealed once, after all three comparisons, and comes from the real argmin. */}
+      {scene.predictedOpacity > 0.02 ? (
+        <g className="p3-scene__decision" opacity={scene.predictedOpacity}>
+          <line
+            className="p3-scene__decision-leader"
+            x1={project(prototypeCalculations.find((item) => item.classId === predictedClass)!.prototype).x}
+            y1={project(prototypeCalculations.find((item) => item.classId === predictedClass)!.prototype).y}
+            x2={project(prototypeCalculations.find((item) => item.classId === predictedClass)!.prototype).x + 40}
+            y2={project(prototypeCalculations.find((item) => item.classId === predictedClass)!.prototype).y + 40}
+          />
+          <text
+            x={project(prototypeCalculations.find((item) => item.classId === predictedClass)!.prototype).x + 46}
+            y={project(prototypeCalculations.find((item) => item.classId === predictedClass)!.prototype).y + 46}
+          >
+            ŷ = {CLASS_VISUALS[predictedClass].displayLabel}
+          </text>
+        </g>
+      ) : null}
+
+      <circle className="p3-scene__origin" cx={origin.x} cy={origin.y} r="3.4" />
+      <text className="p3-scene__scale-note" x="14" y="22">
+        固定合成二维教学特征空间 · 单位圆 ‖z‖₂ = 1 · 全部图形共用同一坐标系
+      </text>
       </svg>
-      <div className="p3-map__legend">
-        <span><i className="p3-map__legend-unit-circle" />虚线圆：单位圆（‖z‖₂=1）</span>
-        {stage === 0 ? <span><i className="p3-map__legend-raw" />未单位化特征 f<sub>Θ</sub>(p)</span> : null}
-        <span><i className="p3-map__legend-dot" />外圈彩色点：12 个单位化 Exemplar 特征 z<sub>p</sub></span>
-        {stage === 1 ? <span><i className="p3-map__legend-raw-mean" />圆内均值 z̄<sub>y</sub></span> : null}
-        {showPrototypes ? <span><i className="p3-map__legend-prototype" />方框：类别 Prototype μ<sub>y</sub></span> : null}
-        {stage === 1 ? <span><i className="p3-map__legend-ray" />圆心径向虚线：Prototype 的单位化方向</span> : null}
-        {showQuery ? <span><i className="p3-map__legend-query" />菱形：单位化 Query 特征 z<sub>q</sub></span> : null}
-        {showDecision ? <span><i className="p3-map__legend-angle" />彩色圆弧：z<sub>q</sub> 与 μ<sub>y</sub> 的夹角 θ<sub>y</sub></span> : null}
-        {showDecision ? <span><i className="p3-map__legend-distance" />Query 到 Prototype 的距离</span> : null}
-      </div>
     </div>
   );
 }
 
-const stageNarratives = [
-  "P_BEFORE 中三类各有四张原始图片。先用当前固定的 Feature Extractor 编码，并将每张特征单位化；这一步只形成可比较的 Exemplar Features。",
-  "单张图容易受个体差异影响，所以对每类四个单位特征先求均值、再 L2 归一化，得到该类用于预测的 Prototype。",
-  "新的 Query 不属于这十二张 Exemplar；同一个固定特征提取器直接给出它的单位特征 zq。此步只标出结果位置，三个 Prototype 保持不变。",
-  "分别比较 Query 与三个 Prototype 的欧氏距离，最近者给出预测；这次推断只读取当前模型与 Exemplar Memory，不更新它们。",
-] as const;
+function AngleArc({ center, radius, from, to, progress }: {
+  center: Point;
+  radius: number;
+  from: Vector2;
+  to: Vector2;
+  progress: number;
+}) {
+  const startDeg = (Math.atan2(from[1], from[0]) * 180) / Math.PI;
+  const endDeg = (Math.atan2(to[1], to[0]) * 180) / Math.PI;
+  // Screen y grows downward, so the feature angle must be negated to draw in SVG space.
+  const startScreen = -startDeg;
+  let delta = -endDeg - startScreen;
+  while (delta > 180) delta -= 360;
+  while (delta < -180) delta += 360;
+  return (
+    <path
+      className="p3-scene__angle"
+      d={arcSegmentPath(center, radius, startScreen, delta * clamp(progress))}
+    />
+  );
+}
+
+function QueryMarker({ point }: { point: Point }) {
+  const radius = 6.5;
+  return (
+    <path
+      className="p3-scene__query-marker"
+      d={`M ${point.x} ${point.y - radius} L ${point.x + radius} ${point.y} L ${point.x} ${point.y + radius} L ${point.x - radius} ${point.y} Z`}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------- page --- */
 
 export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
-  const [stage, setStage] = useState(0);
-  const [selectedSampleId, setSelectedSampleId] = useState(P_BEFORE.A[0].id);
   const reducedMotion = useReducedMotion();
-  const [progress, setProgress] = useState(reducedMotion ? 1 : 0);
-  const [isPlaying, setIsPlaying] = useState(!reducedMotion);
-  const progressRef = useRef(progress);
-  const startedAtRef = useRef<number | null>(null);
+  const { state, controls } = useAnimationTimeline({ clips, reducedMotion });
+  const scene = useMemo(() => sceneAt(state.clipIndex, state.progress), [state.clipIndex, state.progress]);
+  const [selectedSampleId, setSelectedSampleId] = useState<string>(P_BEFORE.A[0].id);
   const workbenchRef = useRef<HTMLElement | null>(null);
   const chapterJumpsRef = useRef<HTMLDetailsElement | null>(null);
+
   const selectedSample = exemplars.find((sample) => sample.id === selectedSampleId) ?? exemplars[0];
+  const selectedEntry = samplePointById.get(selectedSample.id)!;
+  const selectedClassIndex = classIds.indexOf(selectedSample.classId);
+  const selectedUnitized = (scene.unitizeProgressByClass[selectedClassIndex] ?? 0) > 0.999;
+  const selectedRaw = encode2D(selectedSample, "before");
+  const selectedUnit = normalize(selectedRaw);
 
-  useEffect(() => { progressRef.current = progress; }, [progress]);
-  useEffect(() => {
-    const next = reducedMotion ? 1 : 0;
-    progressRef.current = next;
-    setProgress(next);
-    setIsPlaying(!reducedMotion);
-    startedAtRef.current = null;
-  }, [stage, reducedMotion]);
+  const narrationIndex = activeNarrationIndex(clipNarratives[state.clipIndex], state.progress);
+  const predictedVisible = scene.predictedOpacity > 0.4;
+  const comparisonLabel = state.clipIndex < 3
+    ? "尚未开始比较"
+    : scene.comparisonProgress.filter((value) => value > 0.999).length + " / 3 条比较线";
 
-  useEffect(() => {
-    if (!isPlaying || reducedMotion || progressRef.current >= 1) return;
-    let frame = 0;
-    const duration = stageDurations[stage];
-    const tick = (time: number) => {
-      if (startedAtRef.current === null) startedAtRef.current = time - progressRef.current * duration;
-      const next = clamp((time - startedAtRef.current) / duration);
-      progressRef.current = next;
-      setProgress(next);
-      if (next < 1) frame = requestAnimationFrame(tick);
-      else setIsPlaying(false);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [isPlaying, reducedMotion, stage]);
-
-  function selectStage(nextStage: number) {
-    setStage(Math.max(0, Math.min(3, nextStage)));
+  function focusWorkbench() {
+    workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
   }
 
-  function togglePlayback() {
-    if (reducedMotion) return;
-    if (progressRef.current >= 1) {
-      progressRef.current = 0;
-      setProgress(0);
-      startedAtRef.current = null;
-      setIsPlaying(true);
-    } else if (isPlaying) {
-      setIsPlaying(false);
-      startedAtRef.current = null;
-    } else {
-      startedAtRef.current = null;
-      setIsPlaying(true);
-    }
-  }
-
-  function replayStage() {
-    const next = reducedMotion ? 1 : 0;
-    progressRef.current = next;
-    setProgress(next);
-    startedAtRef.current = null;
-    setIsPlaying(!reducedMotion);
+  function jumpToClip(index: number) {
+    controls.goToClip(index);
+    if (chapterJumpsRef.current) chapterJumpsRef.current.open = false;
+    requestAnimationFrame(focusWorkbench);
   }
 
   return (
@@ -337,79 +697,227 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
         <h1>已选代表图片怎样<br className="p3-title-break" />完成一次预测？</h1>
         <p>先假定三类代表图片已经选好，并且 Feature Extractor 训练完成、暂时固定。让这些 Exemplars 和一张新 Query 进入同一特征空间，看看 iCaRL 怎样用它们完成预测。</p>
-        <button type="button" className="icarl-button icarl-button--primary p3-start-button" onClick={() => workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" })}>开始演示 <b aria-hidden="true">↓</b></button>
+        <button type="button" className="icarl-button icarl-button--primary p3-start-button" onClick={focusWorkbench}>开始演示 <b aria-hidden="true">↓</b></button>
       </header>
 
-      <details className="p3-chapter-jumps" ref={chapterJumpsRef}>
-        <summary>章节快速定位 · 4 个阶段</summary>
-        <GuidedStepControls steps={steps} current={stage} onChange={(nextStage) => {
-          selectStage(nextStage);
-          if (chapterJumpsRef.current) chapterJumpsRef.current.open = false;
-          requestAnimationFrame(() => workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }));
-        }} label="Page 3 最近原型预测阶段快速定位" />
-      </details>
-
-      <section className="p3-workbench" aria-label="已保留图片、特征空间和当前预测规则" data-stage={stage} ref={workbenchRef}>
+      <section
+        className="p3-workbench"
+        aria-label="已保留图片、特征空间与当前预测规则"
+        data-clip={state.clip.id}
+        data-progress={state.progress.toFixed(3)}
+        data-status={state.status}
+        ref={workbenchRef}
+      >
         <header className="p3-workbench__heading">
-          <div><span className="eyebrow">STEP {stage + 1} / 4 · {steps[stage].short}</span><h2>{steps[stage].title}</h2><p aria-live="polite">{stageNarratives[stage]}</p></div>
-          <span className="p3-phase-badge">{Math.round(progress * 100)}%</span>
+          <div>
+            <span className="eyebrow">片段 {state.clipIndex + 1} / {clips.length} · {clipTitles[state.clipIndex]}</span>
+            <h2>{state.clip.narrative}</h2>
+            <p aria-live="polite">{clipNarratives[state.clipIndex][narrationIndex]}</p>
+          </div>
+          <span className="p3-workbench__phase">{state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
         </header>
 
         <div className="p3-workbench__layout">
-          <section className="panel p3-source">
-            <div className="panel-heading"><div><span className="eyebrow">SOURCE</span><h2>已保留 Exemplars</h2></div><span className="p3-mini-count">12 张</span></div>
-            <div className="p3-source__samples p3-source__samples--grouped">
+          <section className="panel p3-source" aria-label="已保留 Exemplars 来源">
+            <div className="panel-heading">
+              <div><span className="eyebrow">SOURCE</span><h2>已保留 Exemplars</h2></div>
+              <span className="p3-mini-count">12 张</span>
+            </div>
+            <div className="p3-source__samples">
               {classIds.map((classId) => {
                 const classSamples = exemplarByClass.get(classId)!;
-                return <section className="p3-source__group" key={classId} style={{ "--p3-group-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-                  <div><b>{CLASS_VISUALS[classId].displayLabel}</b><span>P<sub>{CLASS_VISUALS[classId].index}</sub> · {classSamples.length} 张</span></div>
-                  <div>{classSamples.map((sample) => (
-                    <button key={sample.id} type="button" className={`p3-source__sample${selectedSampleId === sample.id ? " is-selected" : ""}`} onClick={() => setSelectedSampleId(sample.id)} aria-pressed={selectedSampleId === sample.id} title={`${CLASS_VISUALS[sample.classId].displayLabel} · ${sample.id}`}>
-                      <i aria-hidden="true" style={{ color: CLASS_VISUALS[sample.classId].color }}>{CLASS_VISUALS[sample.classId].glyph}</i><b>{sample.id}</b>
-                    </button>
-                  ))}</div>
-                </section>;
+                const classProgress = scene.unitizeProgressByClass[classIds.indexOf(classId)] ?? 0;
+                const done = classProgress > 0.999;
+                const active = classProgress > 0.001 && !done;
+                return (
+                  <section
+                    className={`p3-source__group${done ? " is-done" : ""}${active ? " is-active" : ""}`}
+                    key={classId}
+                    style={{ "--p3-group-color": CLASS_VISUALS[classId].color } as CSSProperties}
+                  >
+                    <div>
+                      <b>{CLASS_VISUALS[classId].displayLabel}</b>
+                      <span>P<sub>{CLASS_VISUALS[classId].index}</sub> · {classSamples.length} 张 · {done ? "已进入特征空间" : active ? "单位化中" : "待单位化"}</span>
+                    </div>
+                    <div className="p3-source__grid">
+                      {classSamples.map((sample) => (
+                        <button
+                          key={sample.id}
+                          type="button"
+                          className={`p3-source__sample${selectedSampleId === sample.id ? " is-selected" : ""}`}
+                          onClick={() => setSelectedSampleId(sample.id)}
+                          aria-pressed={selectedSampleId === sample.id}
+                          title={`${CLASS_VISUALS[sample.classId].displayLabel} · ${sample.id}`}
+                        >
+                          <i aria-hidden="true">{CLASS_VISUALS[sample.classId].glyph}</i>
+                          <b>{sample.id}</b>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                );
               })}
             </div>
-            <div className="p3-source__mapping" aria-label={`已保留图片 ${selectedSample.id} 经固定特征提取器得到单位化特征`}><span>当前图片</span><strong>{selectedSample.id} → φ<sub>Θ fixed</sub> → z<sub>p</sub></strong></div>
-            {stage >= 2 ? <div className="p3-query-source"><span>独立的新输入</span><b>x<sub>q</sub></b><p>Query 不属于上面的十二张 Exemplar。</p></div> : null}
+            <div className="p3-source__mapping" aria-label={`当前图片 ${selectedSample.id} 的特征与单位化结果`}>
+              <span>当前图片 · {CLASS_VISUALS[selectedSample.classId].displayLabel}</span>
+              <strong>{selectedSample.id} → f<sub>Θ</sub>(p) = ({selectedRaw[0].toFixed(2)}, {selectedRaw[1].toFixed(2)})</strong>
+              <strong>‖f‖₂ = {Math.hypot(selectedRaw[0], selectedRaw[1]).toFixed(2)} → {selectedUnitized ? "z" : "…"}<sub>p</sub> = ({selectedUnit[0].toFixed(2)}, {selectedUnit[1].toFixed(2)})</strong>
+            </div>
+            {state.clipIndex >= 2 ? (
+              <div className="p3-query-source">
+                <span>独立的新输入 · 不属于上面十二张</span>
+                <b>x<sub>q</sub></b>
+                <p>{state.clipIndex === 2 && scene.queryUnitizeProgress < 0.99 ? "先落到原始特征位置，再沿圆心方向单位化。" : "已得到单位化查询特征 z_q；它不进入 Exemplar Memory。"}</p>
+              </div>
+            ) : null}
           </section>
 
           <section className="panel p3-space-panel">
-            <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>单位特征、Prototype 与 Query</h2></div></div>
-            <FeatureMap stage={stage} progress={progress} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
+            <div className="panel-heading">
+              <div><span className="eyebrow">ONE FIXED FEATURE SPACE</span><h2>单位特征、Prototype 与 Query</h2></div>
+              <span className="p3-mini-count">{comparisonLabel}</span>
+            </div>
+            <FeatureScene scene={scene} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
+            <div className="p3-scene__legend" aria-label="图形标记说明">
+              <span><i className="p3-legend-unit" />单位圆 ‖z‖₂=1</span>
+              <span><i className="p3-legend-raw" />原始特征 f<sub>Θ</sub>(p)</span>
+              <span><i className="p3-legend-unit-point" />单位特征 z<sub>p</sub></span>
+              <span><i className="p3-legend-mean" />类别均值 z̄<sub>y</sub></span>
+              <span><i className="p3-legend-prototype" />类别原型 μ<sub>y</sub></span>
+              <span><i className="p3-legend-query" />查询特征 z<sub>q</sub></span>
+              <span><i className="p3-legend-distance" />到原型的距离</span>
+              <span><i className="p3-legend-angle" />圆心处的方向夹角</span>
+            </div>
           </section>
 
           <aside className="panel p3-rule-panel" aria-live="polite">
-            <div className="panel-heading"><div><span className="eyebrow">正在观察</span><h2>{steps[stage].short}</h2></div></div>
-            <p className="p3-current-observation">{stageNarratives[stage]}</p>
-            {stage === 3 && progress > .92 ? <p className="p3-prediction">预测类别：{CLASS_VISUALS[predictedClass].displayLabel}</p> : null}
-            <details className="p3-calculation-details"><summary>查看完整计算依据</summary><div>
-              <p><b>单位特征</b> z<sub>p</sub> = normalize(φ<sub>Θ</sub>(p))</p>
-              <p><b>类别原型</b> z̄<sub>y</sub> = ¼Σz<sub>p</sub>，μ<sub>y</sub> = normalize(z̄<sub>y</sub>)</p>
-              <p><b>Query</b> z<sub>q</sub> = normalize(φ<sub>Θ fixed</sub>(x<sub>q</sub>))</p>
-              <p><b>预测</b> ŷ = arg min<sub>y</sub> ‖z<sub>q</sub> − μ<sub>y</sub>‖₂</p>
-            </div></details>
-            {stage === 3 ? <details className="p3-distance-details"><summary>核对距离与夹角</summary><div className="p3-distance-list">{queryComparisons.map(({ classId, distance, angle }, index) => <div key={classId} className={index === 0 ? "is-nearest" : ""}><span>μ<sub>{CLASS_VISUALS[classId].index}</sub></span><b>{distance.toFixed(3)}</b><em>{angle.toFixed(1)}°</em><small>{index === 0 ? "最近" : ""}</small></div>)}</div></details> : null}
-            <p className="p3-state-boundary">{stage < 3 ? "先看清当前对象如何得到，再进入下一步。" : "单位向量间距离越小，夹角也越小；推断不更新模型参数。"}</p>
+            <div className="panel-heading"><div><span className="eyebrow">正在观察</span><h2>{clipTitles[state.clipIndex]}</h2></div></div>
+            <p className="p3-current-observation">{clipNarratives[state.clipIndex][narrationIndex]}</p>
+            <ul className="p3-progress-list">
+              {clips.map((clip, index) => (
+                <li key={clip.id} className={index === state.clipIndex ? "is-current" : index < state.clipIndex ? "is-complete" : ""}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>{clipTitles[index]}
+                </li>
+              ))}
+            </ul>
+            {state.clipIndex >= 1 ? (
+              <div className="p3-mean-readout">
+                {prototypeCalculations.map((calculation) => {
+                  const classIndex = classIds.indexOf(calculation.classId);
+                  const meanOpacity = scene.meanOpacityByClass[classIndex] ?? 0;
+                  const prototypeProgress = scene.prototypeProgressByClass[classIndex] ?? 0;
+                  return (
+                    <span key={calculation.classId} style={{ "--p3-group-color": CLASS_VISUALS[calculation.classId].color } as CSSProperties}>
+                      <b>μ{CLASS_VISUALS[calculation.classId].index}</b>
+                      <em>
+                        {meanOpacity > 0.1
+                          ? `z̄=(${calculation.rawMean[0].toFixed(3)}, ${calculation.rawMean[1].toFixed(3)})`
+                          : "—"}
+                      </em>
+                      <i>
+                        {prototypeProgress > 0.99
+                          ? `→ (${calculation.prototype[0].toFixed(3)}, ${calculation.prototype[1].toFixed(3)})`
+                          : prototypeProgress > 0.01
+                            ? "单位化中"
+                            : "待计算"}
+                      </i>
+                    </span>
+                  );
+                })}
+              </div>
+            ) : null}
+            {state.clipIndex >= 3 ? (
+              <div className="p3-comparison-readout">
+                {queryComparisons.map(({ classId, distance }, index) => (
+                  <span key={classId} className={classId === predictedClass && predictedVisible ? "is-nearest" : ""}>
+                    <b>‖z_q − μ{CLASS_VISUALS[classId].index}‖₂</b>
+                    <em>{(scene.comparisonProgress[comparisonOrder.indexOf(classId)] ?? 0) > 0.99 ? distance.toFixed(3) : "…"}</em>
+                    <small>{index === 0 ? "最短" : ""}</small>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            {predictedVisible ? (
+              <p className="p3-prediction">
+                ŷ = arg min<sub>y</sub> ‖z_q − μ<sub>y</sub>‖₂ = {CLASS_VISUALS[predictedClass].displayLabel}
+              </p>
+            ) : null}
+            <details className="p3-calculation-details">
+              <summary>查看完整计算依据</summary>
+              <div>
+                <p><b>单位特征</b> z<sub>p</sub> = f<sub>Θ</sub>(p) / ‖f<sub>Θ</sub>(p)‖₂</p>
+                <p><b>类别均值</b> z̄<sub>y</sub> = (1/|P<sub>y</sub>|) Σ<sub>p∈P<sub>y</sub></sub> z<sub>p</sub>（本页每类四张，即 ¼Σz<sub>p</sub>）</p>
+                <p><b>类别原型</b> μ<sub>y</sub> = z̄<sub>y</sub> / ‖z̄<sub>y</sub>‖₂</p>
+                <p><b>查询特征</b> z<sub>q</sub> = φ<sub>Θ fixed</sub>(x<sub>q</sub>) / ‖φ<sub>Θ fixed</sub>(x<sub>q</sub>)‖₂</p>
+                <p><b>预测</b> ŷ = arg min<sub>y</sub> ‖z<sub>q</sub> − μ<sub>y</sub>‖₂</p>
+              </div>
+            </details>
+            <details className="p3-calculation-details">
+              <summary>核对单位化前后的坐标</summary>
+              <div className="p3-coordinate-table">
+                {exemplars.map((sample) => {
+                  const raw = encode2D(sample, "before");
+                  const unit = normalize(raw);
+                  return (
+                    <p key={sample.id}>
+                      <b>{sample.id}</b>
+                      f = ({raw[0].toFixed(2)}, {raw[1].toFixed(2)}) · ‖f‖₂ = {Math.hypot(raw[0], raw[1]).toFixed(2)} · z = ({unit[0].toFixed(2)}, {unit[1].toFixed(2)}) · ‖z‖₂ = 1.00
+                    </p>
+                  );
+                })}
+                {prototypeCalculations.map((calculation) => (
+                  <p key={`mean-${calculation.classId}`}>
+                    <b>z̄{CLASS_VISUALS[calculation.classId].index}</b>
+                    ({calculation.rawMean[0].toFixed(3)}, {calculation.rawMean[1].toFixed(3)}) → μ{CLASS_VISUALS[calculation.classId].index} ({calculation.prototype[0].toFixed(3)}, {calculation.prototype[1].toFixed(3)})
+                  </p>
+                ))}
+                <p><b>z_q</b>({queryUnitFeature[0].toFixed(3)}, {queryUnitFeature[1].toFixed(3)}) · ‖z_q‖₂ = 1.000</p>
+                {queryComparisons.map(({ classId, distance }) => (
+                  <p key={`distance-${classId}`}><b>d(μ{CLASS_VISUALS[classId].index})</b>{distance.toFixed(4)}{classId === predictedClass ? " · 最近 → 预测" : ""}</p>
+                ))}
+              </div>
+            </details>
+            <p className="p3-state-boundary">
+              当前片段只读取已固定的特征提取器与 Exemplar Memory：不训练、不写入记忆、不展开 Herding。
+            </p>
           </aside>
         </div>
 
-        <div className="p3-workbench__controls" aria-label="Page 3 教学步骤控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => selectStage(stage - 1)} disabled={stage === 0}>← 上一步</button>
+        <div className="p3-workbench__controls" aria-label="Page 3 动画控制">
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={state.atStart}>← 上一步</button>
           <div className="p3-playback-controls">
-            <button type="button" className="icarl-button icarl-button--primary" onClick={togglePlayback} disabled={reducedMotion}>{isPlaying ? "暂停" : progress >= 1 ? "再次播放" : "继续"}</button>
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={replayStage}>重播本步</button>
-            <span aria-live="polite">{String(stage + 1).padStart(2, "0")} / 04 · {steps[stage].short}</span>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.toggle}>
+              {state.status === "playing" ? "Ⅱ 暂停" : reducedMotion ? "▶ 下一片段" : state.atEnd ? "▶ 重新播放" : "▶ 继续"}
+            </button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本片段</button>
+            <span aria-live="polite">{String(state.clipIndex + 1).padStart(2, "0")} / 0{clips.length} · {state.clip.narrative} · {state.isHolding ? "停留" : `${Math.round(state.progress * 100)}%`}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={() => stage < 3 ? selectStage(stage + 1) : onContinue?.()} disabled={stage === 3 && !onContinue}>{stage === 3 ? "进入第 4 页" : "下一步"} <b aria-hidden="true">→</b></button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward} disabled={state.atEnd}>下一步 →</button>
+        </div>
+
+        <div className="p3-clip-rail" role="group" aria-label="片段定位">
+          {clips.map((clip, index) => (
+            <button
+              key={clip.id}
+              type="button"
+              className={index === state.clipIndex ? "is-current" : index < state.clipIndex ? "is-complete" : ""}
+              aria-pressed={index === state.clipIndex}
+              onClick={() => jumpToClip(index)}
+            >
+              <b>{String(index + 1).padStart(2, "0")}</b>{clipTitles[index]}
+            </button>
+          ))}
         </div>
       </section>
 
       <footer className="icarl-handoff">
-        <div><span className="eyebrow">NEXT · PAGE 04</span><p>我们已经能用当前特征提取器和已选 Exemplars 完成预测，但刚才暂时假定它们已经存在。那么，我们该怎么找到最典型的代表，又怎样管理这些代表？</p></div>
+        <div>
+          <span className="eyebrow">NEXT · PAGE 04</span>
+          <p>我们已经能用当前特征提取器和已选 Exemplars 完成预测，但刚才暂时假定它们已经存在。那么，我们该怎么找到最典型的代表，又怎样管理这些代表？</p>
+        </div>
         {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>筛选与管理代表样本 <b aria-hidden="true">→</b></button> : null}
       </footer>
     </article>
   );
 }
+
