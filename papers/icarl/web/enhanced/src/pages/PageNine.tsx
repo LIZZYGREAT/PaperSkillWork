@@ -34,7 +34,7 @@ import {
 
 const runtimeSteps = [
   { title: "当前状态", description: "本轮开始时只有上一轮持久对象 Θ_before 与有序 exemplar 记忆 P_before；下一批数据尚未到达。" },
-  { title: "三类完整到达", description: "Class 4、5、6 的完整图像组成 X_new；训练输出层在原有三个节点后扩展为六节点。" },
+  { title: "三类完整到达", description: "Class 4、5、6 的完整图像组成 X_new；本轮 Student 将使用六个输出节点，Q 仍先由更新前的旧三节点网络计算。" },
   { title: "构造训练集 D", description: "把 12 个旧记忆 exemplar 与 D/E/F 的 18 张完整图片合入 D，共 30 个样本。" },
   { title: "保存响应快照 Q", description: "在参数更新前，记录 D 中 30 个样本对三个旧类别节点的响应；Q 为 30×3。" },
   { title: "只更新模型参数 Θ", description: "旧节点使用 Q 软目标，新节点使用 D/E/F 标签；本阶段更新 Θ，P 仍保持原样。" },
