@@ -20,7 +20,7 @@ const queryRawFeature = encodeRawVector(queryInput, "before");
 const queryFeature = normalize(queryRawFeature);
 const chartOrigin = { x: 320, y: 280 };
 const chartScale = 175;
-const stageDurations = [5200, 5600, 3600, 5600] as const;
+const stageDurations = [5200, 5600, 2400, 5600] as const;
 
 type PrototypeCalculation = {
   classId: ClassId;
@@ -61,7 +61,6 @@ const plottedVectors: { id: string; vector: Vector2 }[] = [
     { id: `${item.classId}:mean`, vector: item.rawMean },
     { id: `${item.classId}:prototype`, vector: item.prototype },
   ]),
-  { id: "query:raw", vector: queryRawFeature },
   { id: "query:unit", vector: queryFeature },
 ];
 plottedVectors.forEach(({ id, vector }) => {
@@ -183,12 +182,6 @@ function FeatureMap({
           return <line key={`prototype-ray-${classId}`} className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={position.x} y2={position.y} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties} />;
         }) : null}
 
-        {showQuery ? (() => {
-          const queryMotion = stage > 2 ? 1 : clamp((progress - .48) / .52);
-          const position = chartPoint(queryFeature);
-          return <line className="p3-map__radial-ray p3-map__radial-ray--query" x1={chartOrigin.x} y1={chartOrigin.y} x2={lerp(chartOrigin.x, position.x, queryMotion)} y2={lerp(chartOrigin.y, position.y, queryMotion)} style={{ opacity: queryMotion }} />;
-        })() : null}
-
         {showDecision ? queryComparisons.map(({ classId }, index) => {
           const local = clamp(progress * 3.15 - index);
           const queryPosition = chartPoint(queryFeature);
@@ -233,24 +226,14 @@ function FeatureMap({
           return <text key={`mean-label-${classId}`} className="p3-map__direct-label p3-map__direct-label--mean" x={position.x + label.dx} y={position.y + label.dy} textAnchor={label.anchor} style={{ opacity: reveal }}>z̄{CLASS_VISUALS[classId].index}</text>;
         }) : null}
 
-        {stage === 2 ? (() => {
-          const rawPosition = chartPoint(queryRawFeature);
-          const incoming = clamp(progress / .42);
-          return <g className="p3-map__query-normalization">
-            <path className="p3-map__query-entry" d={`M 34 505 H 112 L ${rawPosition.x} ${rawPosition.y}`} style={{ strokeDashoffset: 520 * (1 - incoming) }} />
-            <rect x="72" y="480" width="78" height="38" rx="7" /><text x="111" y="504" textAnchor="middle">φΘ fixed</text>
-            <circle cx={lerp(34, rawPosition.x, incoming)} cy={lerp(505, rawPosition.y, incoming)} r="5" />
-          </g>;
-        })() : null}
-
         {showQuery ? (() => {
-          const rawPosition = chartPoint(queryRawFeature);
           const unitPosition = chartPoint(queryFeature);
-          const queryMotion = stage > 2 ? 1 : clamp((progress - .48) / .52);
-          const position = { x: lerp(rawPosition.x, unitPosition.x, queryMotion), y: lerp(rawPosition.y, unitPosition.y, queryMotion) };
-          return <g>
-            <path className="p3-map__query" d={`M ${position.x} ${position.y - 9} l 9 9 l -9 9 l -9 -9 Z`} />
-            {queryMotion > .86 ? <text className="p3-map__direct-label p3-map__direct-label--query" x={unitPosition.x + 17} y={unitPosition.y - 12}>zq</text> : null}
+          const reveal = stage > 2 ? 1 : clamp(progress / .34);
+          const markerRadius = 4 + 5 * ease(reveal);
+          return <g className="p3-map__query-appearance" style={{ opacity: reveal }}>
+            {stage === 2 && reveal < 1 ? <circle className="p3-map__query-halo" cx={unitPosition.x} cy={unitPosition.y} r={12 + 15 * reveal} style={{ opacity: 1 - reveal }} /> : null}
+            <path className="p3-map__query" d={`M ${unitPosition.x} ${unitPosition.y - markerRadius} l ${markerRadius} ${markerRadius} l -${markerRadius} ${markerRadius} l -${markerRadius} -${markerRadius} Z`} />
+            {reveal > .55 ? <text className="p3-map__direct-label p3-map__direct-label--query" x={unitPosition.x + 17} y={unitPosition.y - 12}>zq</text> : null}
           </g>;
         })() : null}
 
@@ -267,8 +250,7 @@ function FeatureMap({
         <span><i className="p3-map__legend-dot" />外圈彩色点：12 个单位化 Exemplar 特征 z<sub>p</sub></span>
         {stage === 1 ? <span><i className="p3-map__legend-raw-mean" />圆内均值 z̄<sub>y</sub></span> : null}
         {showPrototypes ? <span><i className="p3-map__legend-prototype" />方框：类别 Prototype μ<sub>y</sub></span> : null}
-        {stage >= 1 ? <span><i className="p3-map__legend-ray" />圆心径向虚线：单位向量方向</span> : null}
-        {stage === 2 ? <span><i className="p3-map__legend-query-raw" />空心点：归一化前的 Query 特征 f<sub>Θ</sub>(x<sub>q</sub>)</span> : null}
+        {stage === 1 ? <span><i className="p3-map__legend-ray" />圆心径向虚线：Prototype 的单位化方向</span> : null}
         {showQuery ? <span><i className="p3-map__legend-query" />菱形：单位化 Query 特征 z<sub>q</sub></span> : null}
         {showDecision ? <span><i className="p3-map__legend-angle" />彩色圆弧：z<sub>q</sub> 与 μ<sub>y</sub> 的夹角 θ<sub>y</sub></span> : null}
         {showDecision ? <span><i className="p3-map__legend-distance" />Query 到 Prototype 的距离</span> : null}
@@ -280,7 +262,7 @@ function FeatureMap({
 const stageNarratives = [
   "P_BEFORE 中三类各有四张原始图片。先用当前固定的 Feature Extractor 编码，并将每张特征单位化；这一步只形成可比较的 Exemplar Features。",
   "单张图容易受个体差异影响，所以对每类四个单位特征先求均值、再 L2 归一化，得到该类用于预测的 Prototype。",
-  "新的 Query 不属于这十二张 Exemplar；它经过同一个固定特征提取器并单位化，三个 Prototype 在此步保持不变。",
+  "新的 Query 不属于这十二张 Exemplar；同一个固定特征提取器直接给出它的单位特征 zq。此步只标出结果位置，三个 Prototype 保持不变。",
   "分别比较 Query 与三个 Prototype 的欧氏距离，最近者给出预测；这次推断只读取当前模型与 Exemplar Memory，不更新它们。",
 ] as const;
 
