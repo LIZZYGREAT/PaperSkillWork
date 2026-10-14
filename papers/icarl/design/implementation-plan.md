@@ -55,12 +55,12 @@ implementation:
       reusable_pattern: FlowStepper
       reason: "A short ordered flow makes D's two sources and Q's pre-update lifetime explicit."
     - id: S06
-      page: "Pages 6–7 · Training Signals and Prediction"
-      core_items: [L12, L13, L14, L15]
-      evidence_refs: [C03, C05, C06, C10, C11, C12, OI01]
-      primary_vehicle: "One persistent six-node training graph for old/new targets and BCE, followed by a distinct six-class prototype-inference path"
+      page: "Pages 6–7 · Training Update and Post-Update State Handoff"
+      core_items: [L12, L13, L14, L15, L24]
+      evidence_refs: [C03, C05, C06, C08, C10, C11, C12, C13, OI01]
+      primary_vehicle: "Page 6 traces one sample on a persistent six-node training graph; Page 7 continues from Θ_after through ordered exemplar maintenance, current-feature prototype reconstruction, and a nearest-prototype query."
       reusable_pattern: FlowStepper
-      reason: "The fixed graph keeps node positions and object identity stable while one sample's Q/label targets, six independent BCE terms, aggregate loss, and backward signal change in sequence; final prediction visibly bypasses the sigmoid-head argmax and uses current exemplar means."
+      reason: "Stable node identities expose Q/label targets, six independent BCE terms, batch aggregation, and the update path; the next page explains why saved raw images must be re-encoded after the update, then distinguishes memory maintenance from final prototype inference."
     - id: S07
       page: "Page 8 · Evidence and Boundaries"
       core_items: [L16, L17, L18, L19, L20, L21, L22]
@@ -182,3 +182,19 @@ P7 的运行状态与预测视图覆盖 A–F 六类；最近原型预测使用�
 保护不变量：P4 的八样本独立 Herding 教学集、`P_BEFORE` 的身份/顺序/坐标、Page 3 已有预测结果、共享类别色与六节点身份、Q 在模型更新前生成、P 仅在记忆管理阶段变化、最终预测按归一化 exemplar 均值而非 sigmoid argmax；所有合成示例均不表述为论文训练或实验数据。检查范围：P5 各流程阶段和展开的 30×3 Q 明细；P6 旧类软目标、C4/C5/C6 hard target、BCE、损失聚合与反传；P7 六类原型及 query 最近均值；P9 初态、D/Q 构造、旧类截短、D/E/F 各类第二个 Herding 样本、记忆提交、预测与交接；Chromium 视口为 1440×900 和 1920×1080。HUMAN_ACCEPTANCE 仍由 W9 人工审查决定，W10 不属于本次实施。
 
 验证记录：`npm.cmd run build` 通过（TypeScript + Vite，72 modules）。Chromium 在 1440×900 与 1920×1080 共采集 90 个状态截图；GEOMETRY_QA=PASS、配置范围内 STYLE_QA=PASS、BROWSER_ERRORS=PASS（0 条），报告为 `web/enhanced/.visual-qa/p5-p6-p9-incremental/final/run-2026-10-13T18-46-59-378Z/report.md`。Agent 已实际查看 P5 的 D/Q 全明细与六节点 Student、P6 的 C2 Q 软目标与 C4/C6 标签/BCE/反传、P7 六类原型和最近原型对照、P9 六类记忆提交与预测状态；`VISUAL_REVIEW=PASS` 是本次截图人工检查结论，runner 报告中的 `VISUAL_REVIEW=NOT_RUN` 保持原样。另在 390×844 触屏视口、减少动态效果偏好下访问 P5/P6/P7/P9 的代表状态；四页 document width 均为 390px，未发现页面整体横向溢出或 pageerror。没有已批准截图基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`，W9/W10 阶段状态未更改。
+
+### P6–P8 教学逻辑与交互修订（2026-10-15）
+
+本轮基线为指定审查提交 `c9922ef12ce6b37ff1a03b5bbbd47f648d10e573`；执行前 HEAD 为 `b2612aca05d42dbaf48871ae2dd314a1a4737184`，位于 `dev` 且工作区干净。基线之后的十个提交主要调整 P3–P5 与共享动画工具，没有改动 P6–P8；实施以当前 `dev` 为准，不覆盖这些已有改动。本轮仅限 P6、P7、P8 及其局部样式、必要的导航文字与本计划/主线记录；P1–P5 算法、P9 完整运行图、共享计算数据、CI、发布和 PR 均在范围之外。
+
+主线按“单样本训练计算 → 参数更新后的记忆交接 → 原论文证据阅读”组织：
+
+- **P6｜入口 `D + Q`；出口 `Θ_after`。** 保留 CORE：一张图的旧节点目标来自匹配 `sample.id` 的冻结 Q 行，新节点目标来自标签；六个独立 sigmoid 使用同一 BCE；节点损失汇成样本/mini-batch 损失，更新路径返回训练头和共享特征提取器。工作台固定六节点的身份与位置，Q 和目标在本轮更新期间不刷新。动画说明确定性教学网络的计算路径，不呈现虚构的优化器轨迹。独立 BCE 探索与真实示例值分开命名、分开取值，切换目标情形不隐式替换样本。
+- **P7｜入口 `Θ_after + P_before + 新类完整数据`；出口 `Θ_after + P_after + 当前原型/Query 结果`。** 保留 CORE：先截断旧类有序列表前缀，再从本轮仍可用的新类完整数据按当前表示选择 exemplars；预算 `K=12` 时六类各 2 张；保存原图以便当前特征提取器重新编码，并在当前表示下重算原型；最终 Query 按最近原型判定，训练 head 留在模型中但不读其 argmax。参数表示前后对照与记忆成员变化分别呈现，避免混为一次跳变。
+- **P8｜入口为已理解的训练与预测链；出口为受实验协议限定的结论。** 保留 CORE：Figure 2 的任务与指标、Figure 3 的类别位置偏置、Table 1a 的组件比较及 Hybrid 2 两类批次例外、Table 1b 的准确率差值与全数据 NCM 参照限制、Figure 4 的预算趋势、原图表来源及论文结论边界。Table 1 精确值仍从现有数据模块读取，曲线不从像素反推。
+
+受保护状态与证据来源：P5 的 `D` 是 12 张旧类 exemplar 加 18 张新类完整图片，共 30 张；更新前快照 `Q` 为按 `sample.id` 索引的 30×3 旧节点响应。六节点 target、BCE 与输出沿用 `incremental-training.ts`；P7 的 before/after 特征、Herding 顺序、`P_AFTER`、prototype、Query 和预测只读现有 `icarl-runtime.ts`；Table 1 值只读 `table1-results.ts`。P4 独立 8→4 示例、P9 运行语义、九页导航数量、W7/W9 人工验收状态均保持不变。论文机制与实验配置按 `source-cache/content.md`、`source-cache/evidence.json`、`research/evidence-registry.yaml` 和当前 Learning Spine 核对；W1 的 source-cache inventory 不单独充当复用许可。
+
+分段交付与提交边界：A 语义对齐/本计划；B P6 单样本纵向切片；C P7 参数更新后状态交接；D P8 四个证据问题；E 相邻页一致性、构建、项目已有检查及浏览器 QA。每段完成、检查变更范围后独立提交，仅包含该段 iCaRL 文件；不 amend 既有提交、不 push、不创建 PR。
+
+本轮浏览器审查目标为 Chromium 1440×900 与 1920×1080、100% 缩放；覆盖 P6 五段动画中间态及旧/新样本和 BCE 情形，P7 训练后但未提交记忆、旧列表截断、新类选择、同 ID 前后特征、六类原型和 Query，P8 四个证据问题、Figure 2 子图聚焦、Table 1a/1b 与 Figure 4。必要时复查窄屏、键盘/触控和 reduced-motion。临时产物写入忽略的 `.visual-qa/`。基线差异审查：完成；本阶段 UI 尚未实施，`BUILD=NOT_RUN`、`GEOMETRY_QA=NOT_RUN`、`STYLE_QA=NOT_RUN`、`VISUAL_REVIEW=NOT_RUN`、`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。W7/W9/W10 状态保持原样。

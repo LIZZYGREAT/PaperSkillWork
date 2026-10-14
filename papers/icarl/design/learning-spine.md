@@ -42,9 +42,9 @@ stages:
     pages: "Page 5"
     purpose: "Form the update set from incoming full data and old exemplars, then snapshot old-node responses using the pre-update model."
   - id: S06
-    question: "How do old and new output nodes learn, and how does that differ from final prediction?"
+    question: "How does one sample's old response and new label become an update, and what must be rebuilt after it?"
     pages: "Pages 6–7"
-    purpose: "Assign soft and hard targets by output-node age, train through the shared representation, and close the loop with prototype inference."
+    purpose: "Page 6 traces one sample from Q and its label through six independent sigmoid BCE terms, batch loss, and the parameter-update path; Page 7 continues from Θ_after through ordered memory maintenance, current-feature prototype reconstruction, and nearest-prototype prediction."
   - id: S07
     question: "What do the experiments support, and where do their conclusions stop?"
     pages: "Page 8"
@@ -70,6 +70,7 @@ items:
   - {id: L13, title: "Train independent sigmoid nodes with the same binary cross-entropy mechanism", priority: CORE, stage: S06, placement: mainline, evidence_refs: [C03, C12]}
   - {id: L14, title: "Keep the training head in the network but use current prototypes for final decisions", priority: CORE, stage: S06, placement: mainline, evidence_refs: [C05, C06]}
   - {id: L15, title: "Separate persistent network and exemplar state from update-local targets and losses", priority: CORE, stage: S06, placement: mainline, evidence_refs: [OI01, C09, C10]}
+  - {id: L24, title: "After the representation update, truncate old exemplar prefixes, select new exemplars, and rebuild prototypes under the current feature extractor", priority: CORE, stage: S06, placement: mainline, evidence_refs: [C05, C08, C13]}
   - {id: L16, title: "Read iCIFAR-100 and iILSVRC results with their distinct protocols and metrics", priority: CORE, stage: S07, placement: mainline, evidence_refs: [R01, R02]}
   - {id: L17, title: "State the Figure 2 comparison within those tested settings and mark the all-data reference", priority: CORE, stage: S07, placement: mainline, evidence_refs: [R03, R08]}
   - {id: L18, title: "Explain component contributions with the two-class-batch hybrid2 exception", priority: CORE, stage: S07, placement: mainline, evidence_refs: [R04, A01]}
