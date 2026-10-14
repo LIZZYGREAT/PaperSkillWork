@@ -167,6 +167,10 @@
             },
             {
               "type": "click",
+              "selector": ".p3-chapter-jumps > summary"
+            },
+            {
+              "type": "click",
               "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(2)"
             },
             {
@@ -189,15 +193,15 @@
             },
             {
               "type": "click",
-              "selector": ".p3-workbench__controls .icarl-button--primary"
+              "selector": ".p3-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "click",
-              "selector": ".p3-workbench__controls .icarl-button--primary"
+              "selector": ".p3-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "click",
-              "selector": ".p3-workbench__controls .icarl-button:first-child"
+              "selector": ".p3-workbench__controls > button:first-child"
             },
             {
               "type": "waitFor",
@@ -723,12 +727,8 @@
               "selector": ".p5-controls > .icarl-button--primary"
             },
             {
-              "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
-            },
-            {
               "type": "waitFor",
-              "selector": ".p5-workbench[data-stage='4'] .p5-nodes--student",
+              "selector": ".p5-workbench[data-stage='3'] .p5-nodes--student",
               "state": "visible"
             }
           ]

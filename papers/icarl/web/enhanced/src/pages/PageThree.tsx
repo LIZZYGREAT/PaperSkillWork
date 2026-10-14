@@ -293,6 +293,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   const progressRef = useRef(progress);
   const startedAtRef = useRef<number | null>(null);
   const workbenchRef = useRef<HTMLElement | null>(null);
+  const chapterJumpsRef = useRef<HTMLDetailsElement | null>(null);
   const selectedSample = exemplars.find((sample) => sample.id === selectedSampleId) ?? exemplars[0];
 
   useEffect(() => { progressRef.current = progress; }, [progress]);
@@ -357,10 +358,11 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         <button type="button" className="icarl-button icarl-button--primary p3-start-button" onClick={() => workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" })}>开始演示 <b aria-hidden="true">↓</b></button>
       </header>
 
-      <details className="p3-chapter-jumps">
+      <details className="p3-chapter-jumps" ref={chapterJumpsRef}>
         <summary>章节快速定位 · 4 个阶段</summary>
         <GuidedStepControls steps={steps} current={stage} onChange={(nextStage) => {
           selectStage(nextStage);
+          if (chapterJumpsRef.current) chapterJumpsRef.current.open = false;
           requestAnimationFrame(() => workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }));
         }} label="Page 3 最近原型预测阶段快速定位" />
       </details>

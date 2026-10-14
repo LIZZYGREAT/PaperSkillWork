@@ -392,6 +392,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
   const startedAtRef = useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
   const workbenchRef = useRef<HTMLElement | null>(null);
+  const chapterJumpsRef = useRef<HTMLDetailsElement | null>(null);
   const roundIndex = flow.stage >= 1 && flow.stage <= 4 ? flow.stage - 1 : null;
   const round = roundIndex === null ? null : HERDING_DEMO_ROUNDS[roundIndex];
   const candidates = roundIndex === null ? [] : CANDIDATES_BY_ROUND[roundIndex];
@@ -434,6 +435,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
     setPlaying(false);
     resetMotion();
     setFlow(initialFlow(stage));
+    if (chapterJumpsRef.current) chapterJumpsRef.current.open = false;
     requestAnimationFrame(() => workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }));
   }
 
@@ -489,7 +491,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void }) {
       <button type="button" className="icarl-button icarl-button--primary p4-start-button" onClick={focusWorkbench}>开始演示 <b aria-hidden="true">↓</b></button>
     </header>
 
-    <details className="p4-chapter-jumps">
+    <details className="p4-chapter-jumps" ref={chapterJumpsRef}>
       <summary>章节快速定位 · 7 个阶段</summary>
       <GuidedStepControls steps={steps} current={flow.stage} onChange={changeStage} label="Page 4 Herding 阶段快速定位" />
     </details>

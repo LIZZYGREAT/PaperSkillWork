@@ -22,16 +22,28 @@ const steps: readonly GuidedStep[] = [
   { title: "Exemplars 怎样从预测走进下一轮训练？", short: "预测 → Replay" },
   { title: "旧记忆和新类数据怎样合成 D？", short: "构造 D" },
   { title: "为什么在改参数前生成 Q？", short: "记录 Q" },
-  { title: "Q 为 D 中哪些样本保存响应？", short: "检查快照" },
-  { title: "D、Q 与六节点 Student 怎样就绪？", short: "准备训练" },
+  { title: "Q 记录了什么，又怎样交给下一轮？", short: "理解并固定 Q" },
 ];
 
-const guidance = [
-  "Exemplars 已经帮助我们构造类别 Prototype、支持未来预测。但新类别到来后，我们还要继续更新特征提取器。既然保存了旧类真实图片，能不能让它们参与这一轮训练，帮助模型保留旧类知识？这就是 Replay。",
-  "本轮一次到来三个新类。把旧记忆中的 12 张图与新类的 18 张完整数据合入 D；读取旧图不会消耗持久记忆 P。",
-  "参数更新会改变网络响应。先让更新前的三节点旧模型读取 D，并把每张图在 g₁–g₃ 上的输出记入同一行 Q。这个 Q 行以后保持固定。",
-  "Q 有 30 行，每行对应 D 中一个真实样本；三列对应三个旧节点。表格默认收起，只在需要核验时展开具体响应值。",
-  "训练图片 D 和旧节点响应 Q 都准备好了。下一页，我们会把每张图自己的 Q 行与真实类别标签合成六维 Target，再看这些目标如何推动参数更新。",
+const guidanceSegments = [
+  [
+    "前面我们已经用 Exemplars 构造类别 Prototype，让模型能预测新图片。",
+    "新类别还会继续到来，特征提取器也需要更新；如果只看新图片，旧类能力可能逐渐退化。",
+    "既然保存了旧类真实代表图片，能不能让它们也参与这一轮训练？这就是 Replay。",
+  ],
+  [
+    "从持久记忆 P 读取 12 张旧类 Exemplars 的训练副本，再加入 18 张新类完整图片。",
+    "两路样本汇合成 D = P_old ∪ X_new，共 30 张；读取副本不会减少仍保存在 Memory 中的 P。",
+  ],
+  [
+    "现在 D 已准备好。参数一旦更新，网络对旧类别的响应也可能改变；能否先记下旧模型原来的判断？",
+    "更新前的旧模型逐张读取 D，只记录三个旧节点 g₁–g₃ 的 Sigmoid 响应；每张图片写入自己对应的 Q 行，记录后保持固定。",
+  ],
+  [
+    "Q 的一行对应 D 中一张图片，三列对应旧类别节点 g₁、g₂、g₃；Q 的尺寸是 30 × 3。",
+    "新类图片也会有三个旧节点响应，它们记录的是旧模型的行为，不是这张图片的真实类别标签。",
+    "冻结 Q 后，下一页会把每张图的 Q 行与真实类别标签合成六维 Target，再据此更新 Student。",
+  ],
 ] as const;
 
 const oldExemplars = INCREMENTAL_STAGE_DATA.oldExemplars;
@@ -44,6 +56,8 @@ function accent(classId: ClassId) {
   return { "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties;
 }
 
+function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
+
 function ClassBucket({ classId, samples, origin }: { classId: ClassId; samples: readonly Sample[]; origin: "old" | "new" }) {
   const visual = CLASS_VISUALS[classId];
   return <section className={`p5-class-bucket p5-class-bucket--${origin}`} style={accent(classId)}>
@@ -54,15 +68,15 @@ function ClassBucket({ classId, samples, origin }: { classId: ClassId; samples: 
   </section>;
 }
 
-function Nodes({ classIds, kind }: { classIds: readonly ClassId[]; kind: "old" | "student" }) {
+function Nodes({ classIds, kind, responses }: { classIds: readonly ClassId[]; kind: "old" | "student"; responses?: readonly number[] }) {
   return <div className={`p5-nodes p5-nodes--${kind}`} aria-label={kind === "old" ? "生成 Q 的旧模型三个输出节点" : "扩展后的六节点 Student 输出层"}>
-    {classIds.map((classId) => <span key={classId} style={accent(classId)} data-node-id={`g${CLASS_VISUALS[classId].index}`}>
-      <i aria-hidden="true">{CLASS_VISUALS[classId].glyph}</i><b>{CLASS_VISUALS[classId].outputNodeLabel}</b>
+    {classIds.map((classId, index) => <span key={classId} className={responses ? "is-reading" : ""} style={{ ...accent(classId), "--response-fill": `${(responses?.[index] ?? 0) * 100}%` } as CSSProperties} data-node-id={`g${CLASS_VISUALS[classId].index}`}>
+      <i aria-hidden="true">{CLASS_VISUALS[classId].glyph}</i><b>{CLASS_VISUALS[classId].outputNodeLabel}</b>{responses ? <small>{responses[index].toFixed(2)}</small> : null}
     </span>)}
   </div>;
 }
 
-function SnapshotDetails({ selectedSample }: { selectedSample: Sample }) {
+function SnapshotDetails({ selectedSample, onSelectSample }: { selectedSample: Sample; onSelectSample: (sample: Sample) => void }) {
   return <details className="p5-q-details">
     <summary>查看快照明细 · 30 行 × 3 列</summary>
     <div className="p5-q-table-scroll" role="region" aria-label="D 中每张图片对应的旧节点快照 Q" tabIndex={0}>
@@ -71,7 +85,7 @@ function SnapshotDetails({ selectedSample }: { selectedSample: Sample }) {
         <tbody>{trainingSamples.map((sample) => {
           const row = teacherSnapshotFor(sample);
           return <tr key={sample.id} className={sample.id === selectedSample.id ? "is-selected" : ""}>
-            <th>{sample.id}</th><td>{CLASS_VISUALS[sample.classId].displayLabel}</td>{row.map((value, index) => <td key={`${sample.id}-${index}`}>{value.toFixed(3)}</td>)}
+            <th><button type="button" onClick={() => onSelectSample(sample)} aria-label={`在 Q 中定位 ${sample.id} 的对应行`}>{sample.id}</button></th><td>{CLASS_VISUALS[sample.classId].displayLabel}</td>{row.map((value, index) => <td key={`${sample.id}-${index}`}>{value.toFixed(3)}</td>)}
           </tr>;
         })}</tbody>
       </table>
@@ -89,11 +103,22 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
   const [stageRailOpen, setStageRailOpen] = useState(false);
   const reducedMotion = useReducedMotion();
   const selectedSample = trainingSamples.find((sample) => sample.id === sampleId) ?? initialNewSample;
-  const selectedIsOld = OLD_CLASS_IDS.includes(selectedSample.classId as (typeof OLD_CLASS_IDS)[number]);
-  const selectedSnapshot = teacherSnapshotFor(selectedSample);
-  const selectedRowIndex = trainingSamples.findIndex((sample) => sample.id === selectedSample.id);
-  const filledRows = stage > 2 ? TRAINING_SET_SIZE : stage === 2 ? Math.round(progress * TRAINING_SET_SIZE) : 0;
-  const selectedRowFilled = stage > 2 || (stage === 2 && filledRows > selectedRowIndex);
+  const recordingProgress = stage > 2 ? 1 : stage === 2 ? clamp((progress - .24) / .76) : 0;
+  const filledRows = stage > 2 ? TRAINING_SET_SIZE : Math.min(TRAINING_SET_SIZE, Math.floor(recordingProgress * TRAINING_SET_SIZE));
+  const demoSample = stage === 2 ? progress < .12 ? initialOldSample : progress < .24 ? initialNewSample : null : null;
+  const writingIndex = Math.min(TRAINING_SET_SIZE - 1, filledRows);
+  const writingSample = stage === 2 ? demoSample ?? trainingSamples[writingIndex] : selectedSample;
+  const rowWriteProgress = demoSample || stage !== 2 ? 0 : clamp(recordingProgress * TRAINING_SET_SIZE - filledRows);
+  const focusedSample = stage === 2 && status === "playing" ? writingSample : selectedSample;
+  const focusedSnapshot = teacherSnapshotFor(focusedSample);
+  const focusedRowIndex = trainingSamples.findIndex((sample) => sample.id === focusedSample.id);
+  const focusedRowFilled = stage > 2 || stage === 2 && focusedRowIndex < filledRows;
+  const focusedRowWriting = stage === 2 && !demoSample && focusedRowIndex === filledRows && filledRows < TRAINING_SET_SIZE;
+  const focusedCellProgress = (index: number) => focusedRowFilled ? 1 : focusedRowWriting ? clamp((rowWriteProgress - index * .24) / .76) : 0;
+  const guidanceFocus = stage === 0 ? Math.min(2, Math.floor(progress * 3))
+    : stage === 1 ? Math.min(1, Math.floor(progress * 2))
+    : stage === 2 ? progress < .12 ? 0 : 1
+    : -1;
   const flowStyle = { "--p5-travel": `${progress * 88}px`, "--p5-fill": `${stage > 1 ? 100 : progress * 100}%` } as CSSProperties;
 
   useEffect(() => {
@@ -104,7 +129,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
       setStatus("complete");
       return;
     }
-    const duration = stage === 2 ? 2100 : 1450;
+    const duration = stage === 2 ? 5000 : stage === 1 ? 1900 : 1700;
     const start = performance.now() - progressRef.current * duration;
     let frame = 0;
     const tick = (now: number) => {
@@ -148,9 +173,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
   }
 
   function selectSample(sample: Sample) {
-    setStatus("paused");
-    progressRef.current = 1;
-    setProgress(1);
+    if (stage === 2 && status === "playing") setStatus("paused");
     setSampleId(sample.id);
   }
 
@@ -163,7 +186,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
 
     <section className="p5-workbench" data-stage={stage} data-playing={status === "playing"} style={flowStyle} aria-label="Replay、训练集 D 与旧响应快照 Q 连续工作台">
       <header className="p5-workbench__guide">
-        <div><span className="eyebrow">STAGE {stage + 1} / {steps.length}</span><h2>{steps[stage].title}</h2><p aria-live="polite">{guidance[stage]}</p></div>
+        <div><span className="eyebrow">STAGE {stage + 1} / {steps.length}</span><h2>{steps[stage].title}</h2><div className="p5-guidance-copy" aria-live="polite">{guidanceSegments[stage].map((line, index) => <p key={line} className={`${index === guidanceFocus ? "is-current" : ""} ${index < guidanceFocus ? "is-read" : ""}`}>{line}</p>)}</div></div>
         <span className={`p5-guide-status ${stage >= 3 ? "is-locked" : ""}`}>{stage >= 3 ? "Q 已固定" : stage === 2 ? status === "complete" ? "Q 已记录" : "正在记录 Q" : "Replay → D"}</span>
       </header>
 
@@ -188,47 +211,48 @@ export function PageFive({ onContinue }: { onContinue?: () => void }) {
 
         <section className={`p5-object p5-object--dataset ${stage >= 1 ? "is-ready" : ""} ${stage >= 2 ? "is-compact" : ""}`} aria-label="训练集 D">
           <span className="eyebrow">本轮训练集</span><b className="p5-object-symbol">D</b>
-          <div className="p5-d-equation"><span>12 张旧记忆</span><i>+</i><span>18 张新图</span></div>
+          <div className="p5-d-equation" aria-label="12 张旧类代表图片副本加 18 张新类图片"><span><b>12</b><small>旧副本</small></span><i>+</i><span><b>18</b><small>新图片</small></span></div>
           <strong>{stage >= 2 || (stage === 1 && progress >= 1) ? `${TRAINING_SET_SIZE} 张已合入` : stage === 1 ? `${Math.round(progress * TRAINING_SET_SIZE)} / ${TRAINING_SET_SIZE} 张` : "等待合入"}</strong>
           <div className="p5-d-bar" aria-label={`${stage >= 1 ? TRAINING_SET_SIZE : 0} 个训练样本已就绪`}><i style={{ width: stage >= 2 ? "100%" : stage === 1 ? `${progress * 100}%` : "0%" }} /></div>
           <small>所有样本逐一读取；训练后 D 释放</small>
         </section>
 
         <section className="p5-model-stack" aria-label="生成 Q 的旧模型和待更新 Student">
-          <div className="p5-model-card p5-model-card--teacher">
-            <span className="eyebrow">更新前的旧模型 · Q 来源</span><b>共享特征 + 三个旧节点</b>
-            <div className="p5-model-input"><span className="p5-selected-glyph" style={accent(selectedSample.classId)}>{CLASS_VISUALS[selectedSample.classId].glyph}</span><span><small>{selectedIsOld ? "P 中旧 exemplar" : "X_new 中新类图片"}</small><strong>{selectedSample.id} · {CLASS_VISUALS[selectedSample.classId].displayLabel}</strong></span></div>
+          <div className={`p5-model-card p5-model-card--teacher ${stage >= 3 ? "is-frozen" : ""}`}>
+            <span className="eyebrow">{stage >= 3 ? "更新前 Teacher · 固定参考" : "更新前的旧模型 · Q 来源"}</span><b>共享特征 + 三个旧节点</b>
+            <div className="p5-model-input"><span className="p5-selected-glyph" style={accent(focusedSample.classId)}>{CLASS_VISUALS[focusedSample.classId].glyph}</span><span><small>{OLD_CLASS_IDS.includes(focusedSample.classId as (typeof OLD_CLASS_IDS)[number]) ? "P 中旧 exemplar" : "X_new 中新类图片"}{stage === 2 && status === "playing" ? demoSample ? " · 示例读取" : " · 正在读取 D" : ""}</small><strong>{focusedSample.id} · {CLASS_VISUALS[focusedSample.classId].displayLabel}</strong></span></div>
             <div className="p5-sample-picker" role="group" aria-label="选择示范快照样本">
-              <button type="button" className={selectedIsOld ? "is-selected" : ""} aria-pressed={selectedIsOld} onClick={() => selectSample(initialOldSample)}>旧图 · {initialOldSample.id}</button>
-              <button type="button" className={!selectedIsOld ? "is-selected" : ""} aria-pressed={!selectedIsOld} onClick={() => selectSample(initialNewSample)}>新图 · {initialNewSample.id}</button>
+              <button type="button" className={OLD_CLASS_IDS.includes(selectedSample.classId as (typeof OLD_CLASS_IDS)[number]) ? "is-selected" : ""} aria-pressed={OLD_CLASS_IDS.includes(selectedSample.classId as (typeof OLD_CLASS_IDS)[number])} onClick={() => selectSample(initialOldSample)}>旧图 · {initialOldSample.id}</button>
+              <button type="button" className={!OLD_CLASS_IDS.includes(selectedSample.classId as (typeof OLD_CLASS_IDS)[number]) ? "is-selected" : ""} aria-pressed={!OLD_CLASS_IDS.includes(selectedSample.classId as (typeof OLD_CLASS_IDS)[number])} onClick={() => selectSample(initialNewSample)}>新图 · {initialNewSample.id}</button>
             </div>
-            <Nodes classIds={OLD_CLASS_IDS} kind="old" />
+            <Nodes classIds={OLD_CLASS_IDS} kind="old" responses={stage === 2 ? focusedSnapshot : undefined} />
+            <div className="p5-teacher-q-link"><span>{focusedSample.id}</span><i aria-hidden="true">→</i><b>同一行写入 Q</b></div>
             <small className="p5-model-caption">更新前旧模型的三个响应会写入右侧 Q 的对应行。</small>
           </div>
-          <div className={`p5-model-card p5-model-card--student ${stage >= 4 ? "is-expanded" : ""}`} aria-label="本轮待训练六节点 Student">
-            <span className="eyebrow">Q 记录后 · 本轮训练模型</span><b>同一共享网络 · 六节点输出头</b>
+          <div className={`p5-model-card p5-model-card--student ${stage >= 3 ? "is-expanded" : ""}`} aria-label="本轮待训练六节点 Student">
+            <span className="eyebrow">Q 固定后 · 本轮 Student 框架</span><b>同一共享网络 · 六节点输出头</b>
             <Nodes classIds={ALL_CLASS_IDS} kind="student" />
             <small>g₄–g₆ 在快照 Q 后加入；它们不生成 Q。</small>
           </div>
         </section>
 
         <section className={`p5-object p5-object--snapshot ${stage >= 2 ? "is-filling" : ""}`} aria-label="更新前响应快照 Q">
-          <header><div><span className="eyebrow">更新前旧节点响应</span><b className="p5-object-symbol">Q</b></div><span className={`p5-lock ${stage >= 3 ? "is-locked" : ""}`}>{stage >= 3 ? "已固定" : stage === 2 ? "记录中" : "等待记录"}</span></header>
+          <header><div><span className="eyebrow">更新前旧节点响应</span><b className="p5-object-symbol">Q</b></div><span className={`p5-lock ${stage >= 3 ? "is-locked" : ""}`}>{stage >= 3 ? "已固定" : stage === 2 ? status === "complete" ? "记录完成" : "记录中" : "等待记录"}</span></header>
           <strong>{stage >= 3 ? "30 × 3" : stage === 2 ? `${filledRows} / 30 行` : "—"}</strong>
           <small>每行一张 D 样本 · 三列旧节点</small>
           <div className="p5-q-preview" aria-label={`${filledRows} 行已记录，共 ${TRAINING_SET_SIZE} 行；每行三列旧节点响应`}>
-            {trainingSamples.map((sample, index) => <span key={sample.id} title={`${sample.id} · Q 第 ${index + 1} 行`} className={`${index < filledRows ? "is-filled" : ""} ${sample.id === selectedSample.id ? "is-selected" : ""}`} style={{ "--row-delay": `${index * 16}ms` } as CSSProperties}>
+            {trainingSamples.map((sample, index) => <span key={sample.id} title={`${sample.id} · Q 第 ${index + 1} 行`} className={`${index < filledRows ? "is-filled" : ""} ${sample.id === focusedSample.id ? "is-selected" : ""} ${stage === 2 && !demoSample && index === filledRows ? "is-writing" : ""}`} style={{ "--row-delay": `${index * 16}ms` } as CSSProperties}>
               <i /><i /><i />
             </span>)}
           </div>
-          <div className="p5-q-column-labels"><span>样本行</span><b>q₁</b><b>q₂</b><b>q₃</b></div>
-          <div className={`p5-q-sample-row ${selectedRowFilled ? "is-filled" : ""}`} aria-label={`${selectedSample.id} 的 Q 行${selectedRowFilled ? "已记录" : "尚未写入"}`}><span>{selectedSample.id}</span>{selectedSnapshot.map((value, index) => <b key={`${selectedSample.id}-${index}`}>{selectedRowFilled ? value.toFixed(2) : "·"}</b>)}</div>
-          <SnapshotDetails selectedSample={selectedSample} />
+          <div className="p5-q-column-labels"><span>图片 / Q 行</span>{OLD_CLASS_IDS.map((classId) => <b key={classId}>{CLASS_VISUALS[classId].outputNodeLabel}</b>)}</div>
+          <div className={`p5-q-sample-row ${focusedRowFilled ? "is-filled" : ""} ${focusedRowWriting ? "is-writing" : ""}`} aria-label={`${focusedSample.id} 的 Q 行${focusedRowFilled ? "已记录" : focusedRowWriting ? "正在写入" : "尚未写入"}`}><span>{focusedSample.id}{focusedRowWriting ? " · 写入中" : demoSample && stage === 2 ? " · 读取示例" : ""}</span>{focusedSnapshot.map((value, index) => <b key={`${focusedSample.id}-${index}`} style={{ "--cell-progress": `${focusedCellProgress(index) * 100}%` } as CSSProperties}>{focusedCellProgress(index) >= .65 ? value.toFixed(2) : "·"}</b>)}</div>
+          <SnapshotDetails selectedSample={focusedSample} onSelectSample={selectSample} />
         </section>
       </div>
 
       <div className="p5-order-strip" aria-label="增量更新对象顺序">
-        <span className={stage === 0 ? "is-current" : stage > 0 ? "is-complete" : ""}>P + X<sub>new</sub></span><i>→</i><span className={stage === 1 ? "is-current" : stage > 1 ? "is-complete" : ""}>D · 30</span><i>→</i><span className={stage === 2 ? "is-current" : stage > 2 ? "is-complete" : ""}>Q · 30×3</span><i>→</i><span className={stage === 4 ? "is-current" : stage > 4 ? "is-complete" : ""}>Student · 6</span>
+        <span className={stage === 0 ? "is-current" : stage > 0 ? "is-complete" : ""}>P + X<sub>new</sub></span><i>→</i><span className={stage === 1 ? "is-current" : stage > 1 ? "is-complete" : ""}>D · 30</span><i>→</i><span className={stage === 2 ? "is-current" : stage > 2 ? "is-complete" : ""}>Q · 30×3</span><i>→</i><span className={stage === 3 ? "is-current" : ""}>Student · 6</span>
         <small>旧类每个 qᵢ 与图片身份一一对应；Q 不随 Student 改变。</small>
       </div>
 

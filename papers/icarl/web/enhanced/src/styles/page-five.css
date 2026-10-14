@@ -133,7 +133,7 @@
 .p5-order-strip > span.is-current { border-color: #80a993; color: #315e4a; background: #eaf4ec; }
 .p5-order-strip > i { color: #a56b49; font-style: normal; }
 .p5-order-strip > small { margin-left: auto; color: #586d64; font-size: 12px; }
-.p5-controls { position: sticky; z-index: 4; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 9px; margin: 0 -4px -4px; padding: 10px 4px 5px; border-top: 1px solid #dfe6e0; background: #f8fbf8f2; backdrop-filter: blur(8px); }
+.p5-controls { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 9px; margin: 0 -4px -4px; padding: 10px 4px 5px; border-top: 1px solid #dfe6e0; background: #f8fbf8f2; }
 .p5-control-main { display: flex; align-items: center; gap: 7px; }
 .p5-control-main > span { min-width: 70px; color: #60736b; font: 11px var(--mono); text-align: center; }
 .p5-controls button { min-height: 40px; }
@@ -171,4 +171,48 @@
 
 @media (prefers-reduced-motion: reduce) {
   .p5-workbench *, .p5-workbench *::before, .p5-workbench *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Four teaching stages: replay, D, pre-update Q capture, then Q meaning and freeze. */
+.p5-guidance-copy { display: grid; max-width: 960px; gap: 4px; }
+.p5-guidance-copy p { position: relative; padding: 3px 8px; border-left: 2px solid transparent; border-radius: 0 5px 5px 0; font-size: 14px !important; line-height: 1.55 !important; transition: color .18s ease, background-color .18s ease, border-color .18s ease; }
+.p5-guidance-copy p.is-current { border-left-color: #4b8a72; color: #294e43; background: #edf5ef; }
+.p5-guidance-copy p.is-read { color: #526d65; }
+.p5-class-bucket { border-color: color-mix(in srgb, var(--class-accent) 40%, white); background: color-mix(in srgb, var(--class-accent) 8%, white); }
+.p5-image-token { width: 11px; height: 11px; border: 1.5px solid color-mix(in srgb, var(--class-accent) 76%, #243b35); background: color-mix(in srgb, var(--class-accent) 58%, white); }
+.p5-d-equation { gap: 9px; }
+.p5-d-equation > span { display: inline-flex; align-items: baseline; gap: 5px; }
+.p5-d-equation > span > b { color: #315c4a; font: 750 17px var(--mono); }
+.p5-d-equation > span > small { color: #536b61; font-size: 12px; }
+.p5-workbench[data-stage="3"] .p5-model-card--student { display: grid; }
+.p5-nodes--old > span.is-reading { border-color: color-mix(in srgb, var(--class-accent) 54%, white); background: linear-gradient(90deg, color-mix(in srgb, var(--class-accent) 22%, white) var(--response-fill), color-mix(in srgb, var(--class-accent) 6%, white) var(--response-fill)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--class-accent) 14%, transparent); }
+.p5-nodes--old > span > small { color: #304f43; font: 700 11px var(--mono); }
+.p5-teacher-q-link { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 9px; border: 1px solid #cddfd2; border-radius: 7px; color: #345e4d; background: #edf6ef; font-size: 12px; }
+.p5-teacher-q-link > span { color: #294f43; font: 700 12px var(--mono); }
+.p5-teacher-q-link > i { flex: 1; border-top: 1.5px solid #66917c; color: #47745f; font-style: normal; text-align: right; }
+.p5-teacher-q-link > b { color: #315f4c; font-size: 12px; }
+.p5-model-card--teacher.is-frozen { border-color: #a9c6b2; background: #f0f6ef; box-shadow: inset 0 0 0 1px #dceade; }
+.p5-model-card--teacher.is-frozen .p5-nodes--old > span { opacity: .86; }
+.p5-q-preview > span { height: 19px; border-color: #ccd9d0; background: #f1f5f1; }
+.p5-q-preview > span > i { height: 6px; background: #c5d2c8; }
+.p5-q-preview > span.is-filled { border-color: #8eaf97; background: #e5f0e6; }
+.p5-q-preview > span.is-filled > i { background: #548567; }
+.p5-q-preview > span.is-selected { outline-color: #bd784a; }
+.p5-q-preview > span.is-writing { border-color: #c2804e; background: #fff4e8; box-shadow: 0 0 0 2px #f2dcc8; }
+.p5-q-column-labels { color: #526c60; }
+.p5-q-sample-row { border-color: #d3dfd5; background: #f0f5ef; }
+.p5-q-sample-row.is-writing { border-color: #bf855d; background: #fff7ef; }
+.p5-q-sample-row > span { color: #3f5f52; font-weight: 700; }
+.p5-q-sample-row > b { background: linear-gradient(90deg, #b7d4bd var(--cell-progress), #e6f0e7 var(--cell-progress)); }
+.p5-q-table th > button { padding: 0; border: 0; color: #315e4c; background: transparent; font: 700 11px var(--mono); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.p5-q-table th > button:focus-visible { outline: 2px solid #bf784a; outline-offset: 2px; }
+
+@media (max-width: 720px) {
+  .p5-workbench[data-stage="2"] .p5-flow-board, .p5-workbench[data-stage="3"] .p5-flow-board { grid-template-columns: minmax(0,1fr); }
+  .p5-workbench[data-stage="2"] .p5-model-stack, .p5-workbench[data-stage="3"] .p5-model-stack { grid-column: 1; }
+  .p5-workbench[data-stage="2"] .p5-object--snapshot, .p5-workbench[data-stage="3"] .p5-object--snapshot { grid-column: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p5-guidance-copy p, .p5-q-preview > span { transition: none; }
 }
