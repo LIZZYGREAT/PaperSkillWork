@@ -79,9 +79,15 @@ export function useAnimationTimeline({
    */
   const freeze = useRef(readFreezeRequest()).current;
   const initialClip = freeze ? Math.max(0, Math.min(clips.length - 1, freeze.clip ?? 0)) : 0;
+  /**
+   * Reduced motion renders whole clips, so the very first render is already at the end of its clip.
+   * Initialising here (not only in an effect) avoids one frame of a half-played first clip.
+   */
   const initialElapsed = freeze
     ? clips[initialClip].durationMs * Math.max(0, Math.min(0.999, freeze.pct ?? 0))
-    : 0;
+    : reducedMotion
+      ? totalMs(clips[initialClip])
+      : 0;
 
   const [clipIndex, setClipIndex] = useState(initialClip);
   const [elapsedMs, setElapsedMs] = useState(initialElapsed);
@@ -89,18 +95,25 @@ export function useAnimationTimeline({
     reducedMotion || freeze ? "paused" : autoPlay ? "playing" : "paused",
   );
   const elapsedRef = useRef(initialElapsed);
-  const lastFrameRef = useRef<number | null>(null);
+  /**
+   * Every control call bumps the generation, and an in-flight animation frame only writes while
+   * its generation is still current. Without this, a frame scheduled before a replay could land
+   * after it and overwrite the reset, which makes replay look broken.
+   */
+  const generationRef = useRef(0);
+  /**
+   * Timestamp of the frame that owns the current `playing` run. Using it to compute the elapsed
+   * time makes the clock absolute instead of incremental, so a re-render mid-run cannot skip or
+   * repeat any milliseconds.
+   */
+  const runStartRef = useRef<number | null>(null);
   const clip = clips[Math.min(clipIndex, clips.length - 1)];
   const clipTotal = totalMs(clip);
 
-  const seek = useCallback((next: number) => {
-    const bounded = Math.max(0, next);
-    elapsedRef.current = bounded;
-    setElapsedMs(bounded);
-  }, []);
-
   const advanceClip = useCallback(
     (delta: number) => {
+      generationRef.current += 1;
+      runStartRef.current = null;
       setClipIndex((current) => {
         const next = Math.max(0, Math.min(clips.length - 1, current + delta));
         // Reduced motion jumps between completed clips; every other mode starts at time 0.
@@ -117,19 +130,22 @@ export function useAnimationTimeline({
 
   useEffect(() => {
     if (status !== "playing") {
-      lastFrameRef.current = null;
+      runStartRef.current = null;
       return;
     }
+    const generation = generationRef.current;
     let frame = 0;
-    const tick = (time: number) => {
-      const last = lastFrameRef.current;
-      lastFrameRef.current = time;
-      const delta = last === null ? 0 : time - last;
-      const next = elapsedRef.current + delta;
+    const tick = (now: number) => {
+      if (generationRef.current !== generation) return;
+      if (runStartRef.current === null) runStartRef.current = now - elapsedRef.current;
+      const start = runStartRef.current;
+      const next = now - start;
       if (next >= clipTotal) {
         elapsedRef.current = clipTotal;
         setElapsedMs(clipTotal);
         if (clipIndex < clips.length - 1) {
+          generationRef.current += 1;
+          runStartRef.current = null;
           setClipIndex(clipIndex + 1);
           elapsedRef.current = 0;
           setElapsedMs(0);
@@ -161,6 +177,8 @@ export function useAnimationTimeline({
   }, [clipIndex, clips.length]);
 
   const play = useCallback(() => {
+    generationRef.current += 1;
+    runStartRef.current = null;
     if (elapsedRef.current >= clipTotal && clipIndex >= clips.length - 1) {
       elapsedRef.current = 0;
       setElapsedMs(0);
@@ -168,30 +186,37 @@ export function useAnimationTimeline({
     setStatus("playing");
   }, [clipIndex, clipTotal, clips.length]);
 
-  const pause = useCallback(() => setStatus("paused"), []);
+  const pause = useCallback(() => {
+    generationRef.current += 1;
+    runStartRef.current = null;
+    setStatus("paused");
+  }, []);
 
   const toggle = useCallback(() => {
+    generationRef.current += 1;
+    runStartRef.current = null;
     setStatus((current) => {
       if (current === "playing") return "paused";
-      if (current === "finished" && clipIndex >= clips.length - 1 && elapsedRef.current >= clipTotal) {
+      if (clipIndex >= clips.length - 1 && elapsedRef.current >= clipTotal) {
         elapsedRef.current = 0;
         setElapsedMs(0);
       }
       return "playing";
     });
-    if (reducedMotion) {
-      // Stepping through clips is the reduced-motion playback model.
-      if (clipIndex < clips.length - 1) advanceClip(1);
-    }
+    if (reducedMotion && clipIndex < clips.length - 1) advanceClip(1);
   }, [advanceClip, clipIndex, clipTotal, clips.length, reducedMotion]);
 
   const replayClip = useCallback(() => {
+    generationRef.current += 1;
+    runStartRef.current = null;
     elapsedRef.current = 0;
     setElapsedMs(0);
     setStatus(reducedMotion ? "paused" : "playing");
   }, [reducedMotion]);
 
   const stepBack = useCallback(() => {
+    generationRef.current += 1;
+    runStartRef.current = null;
     if (clipIndex === 0) {
       elapsedRef.current = 0;
       setElapsedMs(0);
@@ -208,6 +233,8 @@ export function useAnimationTimeline({
   }, [clipIndex, clips, reducedMotion]);
 
   const stepForward = useCallback(() => {
+    generationRef.current += 1;
+    runStartRef.current = null;
     if (clipIndex >= clips.length - 1) {
       elapsedRef.current = 0;
       setElapsedMs(0);
@@ -224,6 +251,8 @@ export function useAnimationTimeline({
 
   const goToClip = useCallback(
     (index: number, options?: { autoPlay?: boolean }) => {
+      generationRef.current += 1;
+      runStartRef.current = null;
       const next = Math.max(0, Math.min(clips.length - 1, index));
       const target = reducedMotion ? totalMs(clips[next]) : 0;
       setClipIndex(next);

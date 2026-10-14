@@ -1,11 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 
-/** Tracks the user's system-level reduced-motion preference. */
+const QUERY = "(prefers-reduced-motion: reduce)";
+
+/**
+ * Tracks the user's system-level reduced-motion preference.
+ *
+ * The first render already returns the true value: animation timelines read this flag while they
+ * compute their initial state, and a value that only arrives in an effect would let the first frame
+ * of a reduced-motion visit render at time zero.
+ */
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
+  const [reduced, setReduced] = useState(() =>
+    typeof window === "undefined" ? false : window.matchMedia(QUERY).matches,
+  );
 
   useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const query = window.matchMedia(QUERY);
     const update = () => setReduced(query.matches);
     update();
     if (query.addEventListener) {

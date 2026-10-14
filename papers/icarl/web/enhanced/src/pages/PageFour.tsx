@@ -54,6 +54,12 @@ const SCAN_ORDER = [...HERDING_DEMO_POINTS]
   .sort((a, b) => a.offset - b.offset);
 const SCAN_OFFSET_BY_ID = new Map(SCAN_ORDER.map((item) => [item.point.id, item.offset]));
 const TOTAL_SWEEP = SCAN_ORDER[SCAN_ORDER.length - 1].offset;
+/**
+ * Travel time for one candidate step. The last clip of every candidate spends its tail on this, so
+ * the ring keeps moving clockwise onto the next candidate while the current distance is still being
+ * drawn: the sweep is one continuous scan rather than a stop-start series.
+ */
+const SWEEP_STEP_MS = Math.round((TOTAL_SWEEP / Math.max(1, SCAN_ORDER.length - 1)) * 4.2);
 
 /* ----------------------------------------------------------------- clips --- */
 
@@ -65,6 +71,8 @@ type DemoClip = AnimationClip & {
   candidateIndex: number;
   /** Cumulative clockwise sweep (in candidate steps) at the start of this clip. */
   sweepStart: number;
+  /** Sweep when the clip ends; differs from `sweepStart` when the ring travels during the clip. */
+  sweepEnd: number;
   /** Millisecond length of the movement part; the renderer derives sub-windows from it. */
   move: number;
 };
@@ -76,8 +84,8 @@ function buildClips(): DemoClip[] {
   const clips: DemoClip[] = [];
   const push = (clip: Omit<DemoClip, "id"> & { id: string }) => clips.push(clip);
 
-  push({ id: "target-contribute", kind: "target-contribute", round: 0, candidateIndex: 0, sweepStart: 0, move: 1500, durationMs: 1500, holdMs: 650, narrative: "八个样本共同决定完整类别的原始均值" });
-  push({ id: "target-normalize", kind: "target-normalize", round: 0, candidateIndex: 0, sweepStart: 0, move: 1300, durationMs: 1300, holdMs: 900, narrative: "原始均值单位化为比较目标 μ_full" });
+  push({ id: "target-contribute", kind: "target-contribute", round: 0, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1500, durationMs: 1500, holdMs: 650, narrative: "八个样本共同决定完整类别的原始均值" });
+  push({ id: "target-normalize", kind: "target-normalize", round: 0, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1300, durationMs: 1300, holdMs: 900, narrative: "原始均值单位化为比较目标 μ_full" });
 
   for (const round of ROUNDS) {
     const selectedBefore = new Set(round.prefix.slice(0, round.k - 1).map((point) => point.id));
@@ -85,77 +93,98 @@ function buildClips(): DemoClip[] {
     // same computation at a shorter pace so the reader still sees the geometry but not the wait.
     const laterCandidateScale = round.k === 2 ? 0.42 : round.k === 3 ? 0.3 : 1;
     const detailed = round.k === 2 || round.k === 3;
+
+    // Scored candidates in scan order. Selected points are passed over, and the ring must still
+    // travel across them, so they take part in the sweep ranges without producing a score.
+    const scored: { id: string; sweep: number; candidateIndex: number }[] = [];
+    const passed: { id: string; sweep: number }[] = [];
+    for (const candidate of round.candidates) {
+      const sweepAt = (SCAN_OFFSET_BY_ID.get(candidate.point.id) ?? 0) / TOTAL_SWEEP;
+      if (selectedBefore.has(candidate.point.id)) passed.push({ id: candidate.point.id, sweep: sweepAt });
+      else scored.push({ id: candidate.point.id, sweep: sweepAt, candidateIndex: round.candidates.indexOf(candidate) });
+    }
+    // The ring waits at the top of the circle before the round starts and returns there afterwards.
     let sweep = 0;
     let firstCandidateSeen = false;
-    for (const candidate of round.candidates) {
-      const isSelected = selectedBefore.has(candidate.point.id);
-      if (isSelected) {
-        if (!detailed) continue;
-        const offset = SCAN_OFFSET_BY_ID.get(candidate.point.id) ?? 0;
-        sweep = offset / TOTAL_SWEEP;
-        push({ id: `r${round.k}-skip-${candidate.point.id}`, kind: "scan", round: round.k, candidateIndex: -1, sweepStart: sweep, move: 320, durationMs: 320, holdMs: 0, narrative: `${candidate.point.id} 已在有序前缀中，扫描环沿圆周越过，不重复评分` });
-        continue;
-      }
-      const offset = SCAN_OFFSET_BY_ID.get(candidate.point.id) ?? 0;
-      const sweepEnd = offset / TOTAL_SWEEP;
+    for (const [order, candidate] of scored.entries()) {
+      const sweepAt = candidate.sweep;
+      const nextSweep = scored[order + 1]?.sweep ?? 1;
       const isFirst = !firstCandidateSeen;
-      const candidateIndex = round.candidates.indexOf(candidate);
+      const isLast = order === scored.length - 1;
+      const scale = firstCandidateSeen ? laterCandidateScale : 1;
+      firstCandidateSeen = true;
+
+      // The first leg of a round starts at the top of the circle, which is what makes the very first
+      // scan read as "start here".
+      const legStart = isFirst ? 0 : sweep;
+      const candidateIndex = candidate.candidateIndex;
+
       if (detailed || isFirst) {
         push({
-          id: `r${round.k}-scan-${candidate.point.id}`,
+          id: `r${round.k}-scan-${candidate.id}`,
           kind: "scan",
           round: round.k,
           candidateIndex,
-          sweepStart: sweep,
-          move: 620,
+          sweepStart: legStart,
+          sweepEnd: sweepAt,
+          move: isFirst ? 620 : 440,
           durationMs: isFirst ? 620 : 440,
-          holdMs: isFirst ? 180 : 70,
+          holdMs: isFirst ? 150 : 60,
           narrative: isFirst
-            ? `扫描环从当前圆周位置继续顺时针到达候选 ${candidate.point.id}`
-            : `扫描环沿圆周继续顺时针到达候选 ${candidate.point.id}，不跳跃`,
+            ? `扫描环从圆周顶部开始，顺时针逐个检查候选`
+            : `扫描环沿圆周继续顺时针到达候选 ${candidate.id}，不跳跃`,
         });
       }
-      sweep = sweepEnd;
-      const scale = firstCandidateSeen ? laterCandidateScale : 1;
-      firstCandidateSeen = true;
-      // Every later clip of this candidate holds the ring at the candidate it just reached.
-      const base = { round: round.k, candidateIndex, sweepStart: sweepEnd };
+
+      /** The clip that ends this candidate's inspection also carries the ring onto the next one. */
+      const travel = isLast ? 0 : SWEEP_STEP_MS;
+      const rest = { round: round.k, candidateIndex, sweepStart: sweepAt };
+
       if (round.k === 1) {
         // k = 1 has no prefix to average: the candidate's own unit feature is the prefix mean.
-        push({ id: `r1-hull-${candidate.point.id}`, kind: "hover", ...base, move: Math.round(stepDurations.hover * scale), durationMs: Math.round(stepDurations.hover * scale), holdMs: 120, narrative: `只有一个名额：直接比较候选 ${candidate.point.id} 自己的单位特征到 μ_full 的距离` });
-        push({ id: `r1-norm-${candidate.point.id}`, kind: "norm", ...base, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 140, narrative: "ν₁(x) = z(x)：单个样本的前缀均值就是它自己的单位特征" });
-        push({ id: `r1-score-${candidate.point.id}`, kind: "score", ...base, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 200, narrative: `画出 ${candidate.point.id} 到 μ_full 的距离线，右侧距离尺同步增长` });
+        push({ id: `r1-hull-${candidate.id}`, kind: "hover", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.hover * scale), durationMs: Math.round(stepDurations.hover * scale), holdMs: 100, narrative: `只有一个名额：直接比较候选 ${candidate.id} 自己的单位特征到 μ_full 的距离` });
+        push({ id: `r1-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 120, narrative: "ν₁(x) = z(x)：单个样本的前缀均值就是它自己的单位特征" });
+        push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: nextSweep, move: Math.round(stepDurations.score * scale) + travel, durationMs: Math.round(stepDurations.score * scale) + travel, holdMs: 140, narrative: `画出 ${candidate.id} 到 μ_full 的距离线；距离刚画完，扫描环已经顺时针走向下一个候选` });
+        sweep = nextSweep;
         continue;
       }
+
       if (!detailed) {
-        push({ id: `r${round.k}-hull-${candidate.point.id}`, kind: "hull", ...base, move: 460, durationMs: 460, holdMs: 80, narrative: `固定前 ${round.k - 1} 项，用线段连出本次参与平均的 ${round.k} 个特征点` });
-        push({ id: `r${round.k}-gather-${candidate.point.id}`, kind: "gather", ...base, move: 760, durationMs: 760, holdMs: 120, narrative: `${round.k} 个真实端点各复制一个贡献点，聚合成前缀原始均值` });
-        push({ id: `r${round.k}-norm-${candidate.point.id}`, kind: "norm", ...base, move: 560, durationMs: 560, holdMs: 120, narrative: "单位化后与 μ_full 比较距离" });
-        push({ id: `r${round.k}-score-${candidate.point.id}`, kind: "score", ...base, move: 480, durationMs: 480, holdMs: 140, narrative: `${candidate.point.id} 的距离进入同尺度距离尺` });
+        push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: 420, durationMs: 420, holdMs: 70, narrative: `固定前 ${round.k - 1} 项，用线段连出本次参与平均的 ${round.k} 个特征点` });
+        push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: 700, durationMs: 700, holdMs: 100, narrative: `${round.k} 个真实端点各复制一个贡献点，聚合成前缀原始均值` });
+        push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: 500, durationMs: 500, holdMs: 100, narrative: "单位化后与 μ_full 比较距离" });
+        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: nextSweep, move: 460 + travel, durationMs: 460 + travel, holdMs: 120, narrative: `${candidate.id} 的距离进入同尺度距离尺，扫描环继续前进` });
+        sweep = nextSweep;
         continue;
       }
-      push({ id: `r${round.k}-hull-${candidate.point.id}`, kind: "hull", ...base, move: Math.round(stepDurations.hull * scale), durationMs: Math.round(stepDurations.hull * scale), holdMs: 110, narrative: `先固定已有前缀，用线段连接 ${round.k} 个参与平均的特征点` });
-      push({ id: `r${round.k}-split-${candidate.point.id}`, kind: "split", ...base, move: Math.round(stepDurations.split * scale), durationMs: Math.round(stepDurations.split * scale), holdMs: 90, narrative: `每个端点复制一个贡献点；原始候选与前缀点保持原位` });
-      push({ id: `r${round.k}-gather-${candidate.point.id}`, kind: "gather", ...base, move: Math.round(stepDurations.gather * scale), durationMs: Math.round(stepDurations.gather * scale), holdMs: 220, narrative: round.k === 2 ? "两个贡献点沿连线移动到真实中点" : "三个贡献点同时移动到真实算术重心" });
-      push({ id: `r${round.k}-mean-${candidate.point.id}`, kind: "mean", ...base, move: Math.round(stepDurations.mean * scale), durationMs: Math.round(stepDurations.mean * scale), holdMs: 190, narrative: round.k === 2 ? "中点就是两张图片前缀的原始均值 ν̄₂(x)" : "重心就是三张图片前缀的原始均值 ν̄₃(x)" });
-      push({ id: `r${round.k}-norm-${candidate.point.id}`, kind: "norm", ...base, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 160, narrative: "沿径向把原始前缀均值单位化，得到用于比较的 νk(x)" });
-      push({ id: `r${round.k}-score-${candidate.point.id}`, kind: "score", ...base, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 180, narrative: `从 νk(x) 到 μ_full 画出距离线，右侧距离尺同步增长` });
+
+      push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.hull * scale), durationMs: Math.round(stepDurations.hull * scale), holdMs: 100, narrative: `先固定已有前缀，用线段连接 ${round.k} 个参与平均的特征点` });
+      push({ id: `r${round.k}-split-${candidate.id}`, kind: "split", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.split * scale), durationMs: Math.round(stepDurations.split * scale), holdMs: 80, narrative: `每个端点复制一个贡献点；原始候选与前缀点保持原位` });
+      push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.gather * scale), durationMs: Math.round(stepDurations.gather * scale), holdMs: 200, narrative: round.k === 2 ? "两个贡献点沿连线移动到真实中点" : "三个贡献点同时移动到真实算术重心" });
+      push({ id: `r${round.k}-mean-${candidate.id}`, kind: "mean", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.mean * scale), durationMs: Math.round(stepDurations.mean * scale), holdMs: 170, narrative: round.k === 2 ? "中点就是两张图片前缀的原始均值 ν̄₂(x)" : "重心就是三张图片前缀的原始均值 ν̄₃(x)" });
+      push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 150, narrative: "沿径向把原始前缀均值单位化，得到用于比较的 νk(x)" });
+      push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: nextSweep, move: Math.round(stepDurations.score * scale) + travel, durationMs: Math.round(stepDurations.score * scale) + travel, holdMs: 160, narrative: `从 νk(x) 到 μ_full 画出距离线；距离画完的同时，扫描环顺时针走向下一个候选` });
+      sweep = nextSweep;
     }
+
+    // Committing the winner: the ring finishes its sweep back to the top of the circle.
     push({
       id: `r${round.k}-commit`,
       kind: "commit",
       round: round.k,
       candidateIndex: round.candidates.findIndex((candidate) => candidate.point.id === round.chosen.id),
       sweepStart: sweep,
+      sweepEnd: 1,
       move: stepDurations.commit,
       durationMs: stepDurations.commit,
       holdMs: 700,
       narrative: `全部候选比较完毕：${round.chosen.id} 的前缀均值离 μ_full 最近，成为 p${round.k}`,
     });
+    void passed;
   }
 
-  push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, move: 900, durationMs: 900, holdMs: 2000, narrative: "同一张图上回看不同长度的有序前缀均值" });
-  push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, move: 1200, durationMs: 1200, holdMs: 1600, narrative: "总预算不变、类别变多时，只保留有序列表的前缀" });
+  push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 900, durationMs: 900, holdMs: 2000, narrative: "同一张图上回看不同长度的有序前缀均值" });
+  push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1200, durationMs: 1200, holdMs: 1600, narrative: "总预算不变、类别变多时，只保留有序列表的前缀" });
   return clips;
 }
 
@@ -215,10 +244,14 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   const prefixPoints = round ? round.prefix.slice(0, round.k - 1) : [];
   const participantPoints = round && candidate ? [...prefixPoints, candidate.point] : [];
 
+  // One continuous clockwise sweep. A scan clip draws the movement from `sweepStart` to `sweepEnd`;
+  // every other clip of a candidate starts where its scan ended and may carry the ring further, which
+  // is what keeps the ring advancing onto the next candidate while the distance is being drawn.
   let scanSweep: number | null = null;
-  if (clip.kind === "scan") scanSweep = (clip.sweepStart + p) * TOTAL_SWEEP;
-  else if (clip.kind !== "target-contribute" && clip.kind !== "target-normalize" && clip.kind !== "review" && clip.kind !== "budget") {
-    scanSweep = clip.sweepStart * TOTAL_SWEEP;
+  if (clip.kind === "scan") {
+    scanSweep = (clip.sweepStart + (clip.sweepEnd - clip.sweepStart) * p) * TOTAL_SWEEP;
+  } else if (clip.kind !== "target-contribute" && clip.kind !== "target-normalize" && clip.kind !== "review" && clip.kind !== "budget") {
+    scanSweep = (clip.sweepStart + (clip.sweepEnd - clip.sweepStart) * p) * TOTAL_SWEEP;
   }
 
   const scannedIds = new Set<string>();
@@ -268,8 +301,12 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
       normalizedPoint = { x: rawMean.x + (normalized.x - rawMean.x) * normalizeProgress, y: rawMean.y + (normalized.y - rawMean.y) * normalizeProgress };
     }
 
-    if (clip.kind === "score") scoreReveal = p;
-    else if (clip.kind === "commit") scoreReveal = 1;
+    if (clip.kind === "score") {
+      // The clip spends its head drawing the distance and its tail carrying the ring onward.
+      const travel = clip.durationMs - clip.move;
+      const detailShare = clip.move <= 0 ? 1 : (clip.move - travel) / clip.move;
+      scoreReveal = clamp(p / Math.max(0.15, detailShare));
+    } else if (clip.kind === "commit") scoreReveal = 1;
     if (clip.kind === "commit") decisionReveal = smoothstep(progressWithin(p, 0.35, 0.85));
   }
 
@@ -586,17 +623,10 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   }, [clip.kind]);
 
   const slotCount = Math.round(scene.slotCount);
-  const detailLabel = clip.kind === "commit"
-    ? `第 ${clip.round} 轮已完成 · p${clip.round} = ${round?.chosen.id}`
-    : clip.kind === "scan"
-      ? `扫描 · ${candidate ? candidate.point.id : "越过已选点"}`
-      : `${phaseTitles[clip.kind]}${candidate ? ` · ${candidate.point.id}` : ""}`;
 
   function focusWorkbench() {
     workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
   }
-
-  const stepCanPlay = state.status !== "finished";
 
   return (
     <article className="tutorial-page icarl-page icarl-page--p4">
@@ -699,11 +729,15 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="p4-workbench__controls" aria-label="Page 4 动画控制">
           <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={!state.hasPrevious}>← 上一步</button>
           <div className="p4-workbench__control-center">
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.toggle} disabled={!stepCanPlay}>
-              {state.status === "playing" ? "Ⅱ 暂停" : state.atEnd ? "▶ 重新播放" : "▶ 继续"}
+            <button
+              type="button"
+              className="icarl-button icarl-button--quiet"
+              onClick={state.status === "finished" ? (state.hasNext ? controls.stepForward : controls.replayClip) : controls.toggle}
+            >
+              {state.status === "playing" ? "Ⅱ 暂停" : state.status === "finished" ? (state.hasNext ? "▶ 下一片段" : "↺ 重新播放") : "▶ 继续"}
             </button>
             <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本片段</button>
-            <span aria-live="polite">{detailLabel}</span>
+            <span aria-live="polite">{state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
           </div>
           <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward} disabled={!state.hasNext}>下一步 →</button>
         </div>
@@ -711,10 +745,10 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="p4-phase-rail" role="group" aria-label="片段定位">
           {[
             { id: "target-contribute", label: "建立目标" },
-            { id: "r1-scan-a6", label: "第 1 轮" },
+            { id: "r1-scan-a8", label: "第 1 轮" },
             { id: "r2-scan-a2", label: "第 2 轮" },
-            { id: "r3-hull-a3", label: "第 3 轮" },
-            { id: "r4-scan-a3", label: "第 4 轮" },
+            { id: "r3-scan-a4", label: "第 3 轮" },
+            { id: "r4-scan-a5", label: "第 4 轮" },
             { id: "review-prefix", label: "回看前缀" },
             { id: "budget-shrink", label: "预算截断" },
           ].map((entry) => {

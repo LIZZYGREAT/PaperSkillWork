@@ -43,6 +43,8 @@
 .p4-scene__scan-mark circle { fill: #c58a52; stroke: #fff; stroke-width: 2.4; }
 .p4-scene__hull-line { stroke: #7f9a8d; stroke-width: 1.7; stroke-dasharray: 6 4; }
 .p4-scene__prefix-ray { stroke: #a8b9b1; stroke-width: 1.1; stroke-dasharray: 4 5; }
+/* No CSS transitions on animated geometry: the path and coordinates are rewritten every frame, and
+   a transition would make the rendered shape lag behind the timeline state. */
 .p4-scene__score-line { fill: none; stroke: #bd7449; stroke-width: 2.6; stroke-dasharray: 7 4; }
 .p4-scene__dot { fill: #91a19b; stroke: #fff; stroke-width: 2; }
 .p4-scene__point.is-scanned .p4-scene__dot { fill: #a9b6b0; }
