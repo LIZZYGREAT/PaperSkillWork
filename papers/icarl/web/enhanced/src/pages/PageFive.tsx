@@ -228,7 +228,7 @@ function Nodes({ classIds, kind, responses, activeIndex }: { classIds: readonly 
 
 export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
   const reducedMotion = useReducedMotion();
-  const { state, controls } = useAnimationTimeline({ clips, reducedMotion });
+  const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
   const clip = clips[state.clipIndex];
   const [selectedId, setSelectedId] = useState<string>(incomingSamples.find((sample) => sample.classId === "E")?.id ?? incomingSamples[0].id);
   const workbenchRef = useRef<HTMLElement | null>(null);

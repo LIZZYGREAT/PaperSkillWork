@@ -94,29 +94,31 @@ function buildClips(): DemoClip[] {
     const laterCandidateScale = round.k === 2 ? 0.42 : round.k === 3 ? 0.3 : 1;
     const detailed = round.k === 2 || round.k === 3;
 
-    // Scored candidates in scan order. Selected points are passed over, and the ring must still
-    // travel across them, so they take part in the sweep ranges without producing a score.
-    const scored: { id: string; sweep: number; candidateIndex: number }[] = [];
-    const passed: { id: string; sweep: number }[] = [];
-    for (const candidate of round.candidates) {
-      const sweepAt = (SCAN_OFFSET_BY_ID.get(candidate.point.id) ?? 0) / TOTAL_SWEEP;
-      if (selectedBefore.has(candidate.point.id)) passed.push({ id: candidate.point.id, sweep: sweepAt });
-      else scored.push({ id: candidate.point.id, sweep: sweepAt, candidateIndex: round.candidates.indexOf(candidate) });
-    }
-    // The ring waits at the top of the circle before the round starts and returns there afterwards.
+    /**
+     * One maintained clockwise array, exactly as the reader would write it down: start at a8, walk
+     * clockwise past every candidate, and delete an entry the moment it gets selected. The walk order
+     * therefore comes from the circle, never from the scores.
+     */
+    const waypoints: { id: string; sweep: number; scored: boolean; candidateIndex: number }[] =
+      SCAN_ORDER.map((entry) => ({
+        id: entry.point.id,
+        sweep: entry.offset / TOTAL_SWEEP,
+        scored: !selectedBefore.has(entry.point.id),
+        candidateIndex: round.candidates.findIndex((candidate) => candidate.point.id === entry.point.id),
+      }));
+    const scored = waypoints.filter((entry) => entry.scored);
+    /** Milliseconds for a leg that covers `span` of the circle, proportional to the real arc. */
+    const legDuration = (span: number) => Math.max(240, Math.round(SWEEP_STEP_MS * Math.max(span, 0.12)));
+
     let sweep = 0;
-    let firstCandidateSeen = false;
     for (const [order, candidate] of scored.entries()) {
       const sweepAt = candidate.sweep;
-      const nextSweep = scored[order + 1]?.sweep ?? 1;
-      const isFirst = !firstCandidateSeen;
+      const nextWaypoint = waypoints[waypoints.findIndex((entry) => entry.id === candidate.id) + 1];
+      const isFirst = order === 0;
       const isLast = order === scored.length - 1;
-      const scale = firstCandidateSeen ? laterCandidateScale : 1;
-      firstCandidateSeen = true;
-
-      // The first leg of a round starts at the top of the circle, which is what makes the very first
-      // scan read as "start here".
+      const scale = isFirst ? 1 : laterCandidateScale;
       const legStart = isFirst ? 0 : sweep;
+      const travel = nextWaypoint ? legDuration(nextWaypoint.sweep - sweepAt) : 0;
       const candidateIndex = candidate.candidateIndex;
 
       if (detailed || isFirst) {
@@ -127,17 +129,17 @@ function buildClips(): DemoClip[] {
           candidateIndex,
           sweepStart: legStart,
           sweepEnd: sweepAt,
-          move: isFirst ? 620 : 440,
-          durationMs: isFirst ? 620 : 440,
+          move: legDuration(sweepAt - legStart),
+          durationMs: legDuration(sweepAt - legStart),
           holdMs: isFirst ? 150 : 60,
           narrative: isFirst
-            ? `扫描环从圆周顶部开始，顺时针逐个检查候选`
-            : `扫描环沿圆周继续顺时针到达候选 ${candidate.id}，不跳跃`,
+            ? `扫描环从圆周顶部出发，按顺时针顺序逐个检查候选`
+            : `扫描环沿圆周继续顺时针到达候选 ${candidate.id}`,
         });
       }
 
-      /** The clip that ends this candidate's inspection also carries the ring onto the next one. */
-      const travel = isLast ? 0 : SWEEP_STEP_MS;
+      /** The clip that ends this candidate's inspection also carries the ring onto the next entry. */
+      const nextSweep = nextWaypoint ? nextWaypoint.sweep : 1;
       const rest = { round: round.k, candidateIndex, sweepStart: sweepAt };
 
       if (round.k === 1) {
@@ -180,7 +182,6 @@ function buildClips(): DemoClip[] {
       holdMs: 700,
       narrative: `全部候选比较完毕：${round.chosen.id} 的前缀均值离 μ_full 最近，成为 p${round.k}`,
     });
-    void passed;
   }
 
   push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 900, durationMs: 900, holdMs: 2000, narrative: "同一张图上回看不同长度的有序前缀均值" });
@@ -395,9 +396,10 @@ function HerdingScene({ scene }: { scene: Scene }) {
     >
       <title>同一特征空间中的 Herding 计算与有序前缀</title>
       <desc>坐标轴、八个单位候选特征与完整类别目标贯穿所有片段；扫描环沿圆周顺时针移动，前缀均值由真实端点的贡献点聚合得到，距离线与右侧距离尺使用同一尺度。</desc>
+      {/* Circle first, axes on top: the circle's fill must not hide the parts of the axes inside it. */}
+      <circle className="p4-scene__circle" cx={CENTER.x} cy={CENTER.y} r={RADIUS} />
       <line className="p4-scene__axis" x1="16" y1={CENTER.y} x2={VIEW.width - 16} y2={CENTER.y} />
       <line className="p4-scene__axis" x1={CENTER.x} y1="16" x2={CENTER.x} y2={VIEW.height - 16} />
-      <circle className="p4-scene__circle" cx={CENTER.x} cy={CENTER.y} r={RADIUS} />
 
       {/* Complete-class target: contribution copies then the radial normalization. */}
       {scene.clip.kind === "target-contribute"
@@ -607,7 +609,7 @@ function CurrentFormula({ scene }: { scene: Scene }) {
 
 export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   const reducedMotion = useReducedMotion();
-  const { state, controls } = useAnimationTimeline({ clips, reducedMotion });
+  const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
   const [reviewIndex, setReviewIndex] = useState(4);
   const workbenchRef = useRef<HTMLElement | null>(null);
   const clip = clips[state.clipIndex];
@@ -745,9 +747,9 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="p4-phase-rail" role="group" aria-label="片段定位">
           {[
             { id: "target-contribute", label: "建立目标" },
-            { id: "r1-scan-a8", label: "第 1 轮" },
+            { id: "r1-scan-a2", label: "第 1 轮" },
             { id: "r2-scan-a2", label: "第 2 轮" },
-            { id: "r3-scan-a4", label: "第 3 轮" },
+            { id: "r3-scan-a7", label: "第 3 轮" },
             { id: "r4-scan-a5", label: "第 4 轮" },
             { id: "review-prefix", label: "回看前缀" },
             { id: "budget-shrink", label: "预算截断" },

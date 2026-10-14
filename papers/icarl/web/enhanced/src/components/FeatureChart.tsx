@@ -49,9 +49,16 @@ export function ChartLabels({ labels, obstacles = [], width = FEATURE_FRAME.widt
     }));
     const best = options.sort((a, b) => a.score - b.score)[0];
     boxes.push(best.box);
-    const leaderEnd = best.anchor === "end" ? best.x + 2 : best.x - 2;
     return <g key={label.id}>
-      <line className="feature-chart-labels__leader" x1={label.x} y1={label.y} x2={leaderEnd} y2={best.y - fontSize * 0.36} />
+      {/* A small tick instead of a leader line: a line from the mark to its label reads as a ray
+          belonging to the algorithm, which is exactly what it must not be mistaken for. */}
+      <line
+        className="feature-chart-labels__tick"
+        x1={best.anchor === "end" ? best.x + 2 : best.x - 2}
+        y1={best.y - fontSize * 0.34}
+        x2={best.anchor === "end" ? best.x + 7 : best.x - 7}
+        y2={best.y - fontSize * 0.34}
+      />
       <text x={best.x} y={best.y} textAnchor={best.anchor}>{label.text}</text>
     </g>;
   })}</g>;

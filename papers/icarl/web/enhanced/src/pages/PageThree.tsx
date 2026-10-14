@@ -412,16 +412,18 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         );
       })}
 
-      {/* Aggregation layer for the currently computed class. */}
+      {/* Aggregation layer for the class being computed. The contribution lines only exist while the
+          copies are travelling; once the mean is known they disappear, so the picture afterwards
+          shows just the unit points, the mean and the prototypes. */}
       {classIds.map((classId) => {
         const calculation = prototypeCalculations.find((item) => item.classId === classId)!;
         const classIndex = classIds.indexOf(classId);
         const gather = scene.contributionByClass[classIndex];
         const meanPoint = project(calculation.rawMean);
         if (gather === null || gather === undefined) return null;
+        const contributionOpacity = scene.contributionOpacityByClass[classIndex] ?? 0;
         return (
           <g key={`aggregate-${classId}`} className="p3-scene__aggregate" style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-            <line className="p3-scene__radial-ray" x1={origin.x} y1={origin.y} x2={meanPoint.x} y2={meanPoint.y} opacity={0.5} />
             {calculation.features.map((feature, index) => {
               const source = project(feature);
               const position = lerpPoint(source, meanPoint, gather);
@@ -433,14 +435,14 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
                     y1={source.y}
                     x2={meanPoint.x}
                     y2={meanPoint.y}
-                    opacity={0.5}
+                    opacity={contributionOpacity * 0.6}
                   />
                   <circle
                     className="p3-scene__contribution"
                     cx={position.x}
                     cy={position.y}
                     r="6"
-                    opacity={scene.contributionOpacityByClass[classIndex] ?? 0}
+                    opacity={contributionOpacity}
                   />
                 </g>
               );
@@ -490,11 +492,23 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         const meanPlacement = meanLabel[calculation.classId] ?? LABEL_FALLBACK;
         return (
           <g key={`prototype-${calculation.classId}`} style={{ "--p3-point-color": CLASS_VISUALS[calculation.classId].color } as CSSProperties}>
+            {/* The normalization path is only the movement between mean and prototype. Once the
+                prototype has landed, a stable radial ray from the origin takes over and stays for the
+                rest of the page, so the prototype's direction is readable at every later moment. */}
             {move > 0.01 && move < 0.99 ? (
               <path
                 className="p3-scene__normalize-path"
                 d={lineRevealPath(meanPoint, prototypePoint, move)}
                 opacity={0.9}
+              />
+            ) : null}
+            {move > 0.99 ? (
+              <line
+                className="p3-scene__prototype-ray"
+                x1={origin.x}
+                y1={origin.y}
+                x2={prototypePoint.x}
+                y2={prototypePoint.y}
               />
             ) : null}
             <circle
@@ -704,7 +718,7 @@ function PlacedLabel({ point, text, placement, fontSize, className }: {
 
 export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   const reducedMotion = useReducedMotion();
-  const { state, controls } = useAnimationTimeline({ clips, reducedMotion });
+  const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
   const scene = useMemo(() => sceneAt(state.clipIndex, state.progress), [state.clipIndex, state.progress]);
   const [selectedSampleId, setSelectedSampleId] = useState<string>(P_BEFORE.A[0].id);
   const workbenchRef = useRef<HTMLElement | null>(null);
@@ -835,13 +849,6 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
           <aside className="panel p3-rule-panel" aria-live="polite">
             <div className="panel-heading"><div><span className="eyebrow">正在观察</span><h2>{clipTitles[state.clipIndex]}</h2></div></div>
             <p className="p3-current-observation">{clipNarratives[state.clipIndex][narrationIndex]}</p>
-            <ul className="p3-progress-list">
-              {clips.map((clip, index) => (
-                <li key={clip.id} className={index === state.clipIndex ? "is-current" : index < state.clipIndex ? "is-complete" : ""}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>{clipTitles[index]}
-                </li>
-              ))}
-            </ul>
             {state.clipIndex >= 1 ? (
               <div className="p3-mean-readout">
                 {prototypeCalculations.map((calculation) => {

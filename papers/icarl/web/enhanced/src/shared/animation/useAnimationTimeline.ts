@@ -107,6 +107,11 @@ export function useAnimationTimeline({
    * repeat any milliseconds.
    */
   const runStartRef = useRef<number | null>(null);
+  /**
+   * Bumped whenever a control asks for a fresh run. Replaying a clip that is already "playing" does
+   * not change `status`, so the animation effect needs this to be re-established from time 0.
+   */
+  const [runNonce, setRunNonce] = useState(0);
   const clip = clips[Math.min(clipIndex, clips.length - 1)];
   const clipTotal = totalMs(clip);
 
@@ -161,7 +166,7 @@ export function useAnimationTimeline({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [status, clipIndex, clipTotal, clips.length]);
+  }, [status, clipIndex, clipTotal, clips.length, runNonce]);
 
   // Reduced motion holds each clip at its completed state so the reader controls the pace.
   // Asking for the end of the clip is idempotent, so re-running it is always safe.
@@ -183,6 +188,7 @@ export function useAnimationTimeline({
       elapsedRef.current = 0;
       setElapsedMs(0);
     }
+    setRunNonce((value) => value + 1);
     setStatus("playing");
   }, [clipIndex, clipTotal, clips.length]);
 
@@ -211,6 +217,7 @@ export function useAnimationTimeline({
     runStartRef.current = null;
     elapsedRef.current = 0;
     setElapsedMs(0);
+    setRunNonce((value) => value + 1);
     setStatus(reducedMotion ? "paused" : "playing");
   }, [reducedMotion]);
 
