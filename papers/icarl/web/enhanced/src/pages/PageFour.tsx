@@ -14,12 +14,10 @@ import {
   projectHerdingFeature,
 } from "../data/herding-teaching-geometry";
 import {
-  activeNarrationIndex,
   useAnimationTimeline,
   type AnimationClip,
 } from "../shared/animation/useAnimationTimeline";
 import {
-  angleDeg,
   arcSegmentPath,
   clamp,
   progressWithin,
@@ -85,7 +83,7 @@ function buildClips(): DemoClip[] {
     const selectedBefore = new Set(round.prefix.slice(0, round.k - 1).map((point) => point.id));
     // The first candidate of every round is demonstrated at full length; later candidates reuse the
     // same computation at a shorter pace so the reader still sees the geometry but not the wait.
-    const laterCandidateScale = round.k === 2 ? 0.42 : round.k === 3 ? 0.3 : 1;
+    const laterCandidateScale = round.k === 2 ? 0.42 : round.k === 3 ? 0.3 : round.k === 4 ? 0.55 : 1;
     const detailed = round.k === 2 || round.k === 3;
 
     /**
@@ -146,10 +144,14 @@ function buildClips(): DemoClip[] {
       }
 
       if (!detailed) {
-        push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: 420, durationMs: 420, holdMs: 70, narrative: `固定前 ${round.k - 1} 项，用线段连出本次参与平均的 ${round.k} 个特征点` });
-        push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: 700, durationMs: 700, holdMs: 100, narrative: `${round.k} 个真实端点各复制一个贡献点，聚合成前缀原始均值` });
-        push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: 500, durationMs: 500, holdMs: 100, narrative: "单位化后与 μ_full 比较距离" });
-        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: nextSweep, move: 460 + travel, durationMs: 460 + travel, holdMs: 120, narrative: `${candidate.id} 的距离进入同尺度距离尺，扫描环继续前进` });
+        const hullMs = Math.round(420 * scale);
+        const gatherMs = Math.round(700 * scale);
+        const normalizeMs = Math.round(500 * scale);
+        const scoreMs = Math.round(460 * scale) + travel;
+        push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: hullMs, durationMs: hullMs, holdMs: 70, narrative: `固定前 ${round.k - 1} 项，用线段连出本次参与平均的 ${round.k} 个特征点` });
+        push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: gatherMs, durationMs: gatherMs, holdMs: 100, narrative: `${round.k} 个真实端点各复制一个贡献点，聚合成前缀原始均值` });
+        push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: normalizeMs, durationMs: normalizeMs, holdMs: 100, narrative: "单位化后与 μ_full 比较距离" });
+        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: nextSweep, move: scoreMs, durationMs: scoreMs, holdMs: 120, narrative: `${candidate.id} 的距离进入同尺度距离尺，扫描环继续前进` });
         sweep = nextSweep;
         continue;
       }
@@ -196,6 +198,15 @@ const phaseRailEntries = [
   { id: "review-prefix", label: "回看前缀", group: 5 },
   { id: "budget-shrink", label: "预算截断", group: 6 },
 ];
+const phaseRanges = phaseRailEntries.map((entry, index) => {
+  const startIndex = clipIndexById.get(entry.id) ?? 0;
+  const endIndex = index === phaseRailEntries.length - 1
+    ? clips.length - 1
+    : (clipIndexById.get(phaseRailEntries[index + 1].id) ?? clips.length) - 1;
+  const durationMs = clips.slice(startIndex, endIndex + 1)
+    .reduce((total, clip) => total + clip.durationMs + (clip.holdMs ?? 0), 0);
+  return { ...entry, startIndex, endIndex, durationMs };
+});
 
 const phaseTitles: Record<ClipKind, string> = {
   "target-contribute": "先确定要逼近的完整类别目标",
@@ -326,18 +337,25 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     normalizedPoint = { x: TARGET_RAW_POINT.x + (TARGET_POINT.x - TARGET_RAW_POINT.x) * move, y: TARGET_RAW_POINT.y + (TARGET_POINT.y - TARGET_RAW_POINT.y) * move };
   }
 
+  const currentClipIndex = clipIndexById.get(clip.id) ?? 0;
+  const scoredIds = new Set<string>();
+  if (round) {
+    round.candidates.forEach((item) => {
+      const scoreIndex = clipIndexById.get(`r${round.k}-score-${item.point.id}`);
+      if (scoreIndex !== undefined && currentClipIndex > scoreIndex) scoredIds.add(item.point.id);
+    });
+  }
   const barProgress = (candidateId: string) => {
     if (!round) return 0;
-    const offset = SCAN_OFFSET_BY_ID.get(candidateId) ?? Number.POSITIVE_INFINITY;
-    if (scanSweep === null || offset > scanSweep - 0.4) return 0;
-    return clamp((scanSweep - offset) / 1.4);
+    if (scoredIds.has(candidateId)) return 1;
+    return clip.kind === "score" && candidate?.point.id === candidateId ? scoreReveal : 0;
   };
 
   let slotCount = 0;
   if (clip.kind === "commit") slotCount = clip.round - 1 + clamp(progressWithin(p, 0.25, 0.9));
   else if (clip.round >= 2 && clip.round <= 5) slotCount = clip.round - 1;
   else if (clip.kind === "review" || clip.kind === "budget") slotCount = reviewIndex;
-  if (clip.kind === "scan" || clip.kind === "target-contribute" || clip.kind === "target-normalize") slotCount = 0;
+  if (clip.kind === "target-contribute" || clip.kind === "target-normalize") slotCount = 0;
 
   return {
     clip,
@@ -369,6 +387,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
     ? HERDING_DEMO_ORDER.slice(0, scene.reviewIndex ?? 0)
     : round ? round.prefix.slice(0, scene.clip.kind === "commit" ? scene.clip.round : scene.clip.round - 1) : [];
   const selectedIds = new Set(selectedOrdered.map((point) => point.id));
+  const showCandidateLabels = scene.clip.kind !== "review" && scene.clip.kind !== "budget";
   const scanRadians = scene.scanSweep === null ? null : ((SCAN_TOP_DEG + scene.scanSweep) * Math.PI) / 180;
   const scanPoint = scanRadians === null ? null : { x: CENTER.x + Math.cos(scanRadians) * RADIUS, y: CENTER.y + Math.sin(scanRadians) * RADIUS };
   const sweptFrom = scene.scanSweep === null ? null : ((SCAN_TOP_DEG + Math.max(scene.scanSweep, 0.001)) * Math.PI) / 180;
@@ -380,7 +399,9 @@ function HerdingScene({ scene }: { scene: Scene }) {
   for (const point of HERDING_DEMO_POINTS) {
     const at = toChartPoint(point.feature);
     obstacles.push(at);
-    if (selectedIds.has(point.id) || point.id === candidate?.point.id) labels.push({ ...at, id: point.id, text: point.id });
+    if (showCandidateLabels && (selectedIds.has(point.id) || point.id === candidate?.point.id)) {
+      labels.push({ ...at, id: point.id, text: point.id });
+    }
   }
   if (scene.rawMeanPoint && scene.clip.round !== 1) {
     obstacles.push(scene.rawMeanPoint);
@@ -389,6 +410,13 @@ function HerdingScene({ scene }: { scene: Scene }) {
   if (scene.normalizedPoint && scene.clip.round !== 1) {
     obstacles.push(scene.normalizedPoint);
     labels.push({ ...scene.normalizedPoint, id: "unit-mean", text: round ? `ν${round.k}(x)` : "μ_full" });
+  }
+  if (scene.reviewIndex !== null) {
+    for (const item of ROUNDS.slice(0, 4)) {
+      const point = toChartPoint(item.normalizedPrefixMean);
+      obstacles.push(point);
+      labels.push({ ...point, id: `prefix-${item.k}`, text: `ν${item.k}` });
+    }
   }
 
   return (
@@ -501,21 +529,12 @@ function HerdingScene({ scene }: { scene: Scene }) {
         ? ROUNDS.slice(0, 4).map((item) => {
             const data = roundOf(item.k);
             const point = toChartPoint(data.normalizedPrefixMean);
-            const angle = angleDeg(CENTER, point);
             const active = item.k === scene.reviewIndex;
             return (
               <g key={`prefix-${item.k}`} className={`p4-scene__prefix-node${active ? " is-active" : ""}`}>
                 <circle cx={point.x} cy={point.y} r={active ? 9 : 5} />
                 <title>{`ν${item.k} = normalize(mean(z(p₁), …, z(p${item.k})))，由真实前缀计算`}</title>
                 <line x1={CENTER.x} y1={CENTER.y} x2={point.x} y2={point.y} opacity={active ? 0.6 : 0.2} />
-                <text
-                  className="p4-scene__prefix-label"
-                  x={CENTER.x + Math.cos((angle * Math.PI) / 180) * (RADIUS + 21)}
-                  y={CENTER.y + Math.sin((angle * Math.PI) / 180) * (RADIUS + 21) + 5}
-                  textAnchor={Math.abs(Math.cos((angle * Math.PI) / 180)) < 0.3 ? "middle" : Math.cos((angle * Math.PI) / 180) > 0 ? "start" : "end"}
-                >
-                  ν{item.k}
-                </text>
               </g>
             );
           })
@@ -541,13 +560,13 @@ function DistanceRuler({ scene }: { scene: Scene }) {
   const maximum = Math.max(...round.candidates.map((item) => item.score), 0.0001);
   return (
     <div className="p4-ruler" aria-label="本轮候选到完整类别目标的同尺度距离比较">
-      <div className="p4-ruler__head"><b>同尺度距离尺</b><span>最大值 {maximum.toFixed(3)}</span></div>
+      <div className="p4-ruler__head"><b>同尺度距离尺</b><span>评分后显示</span></div>
       <div className="p4-ruler__rows">
         {round.candidates.map((item) => {
           const revealed = scene.barProgress(item.point.id);
           const chosen = item.point.id === round.chosen.id && scene.clip.kind === "commit";
           return (
-            <span key={item.point.id} className={chosen ? "is-chosen" : ""}>
+            <span key={item.point.id} data-candidate-id={item.point.id} data-score-progress={revealed.toFixed(3)} data-score-revealed={(revealed > 0.98).toString()} className={chosen ? "is-chosen" : ""}>
               <code>{item.point.id}</code>
               <i style={{ width: `${(item.score / maximum) * revealed * 100}%` }} />
               <small>{revealed > 0.98 ? item.score.toFixed(3) : "…"}</small>
@@ -601,11 +620,19 @@ function CurrentFormula({ scene }: { scene: Scene }) {
       </div>
     );
   }
+  if (k === 1) {
+    return (
+      <div className="p4-formula-stack">
+        <span>ν₁({x}) = z({x})</span>
+        <span>d₁({x}) = ‖μ<sub>full</sub> − z({x})‖₂ = {scene.scoreReveal > 0.98 ? candidate.score.toFixed(3) : "…"}</span>
+      </div>
+    );
+  }
   return (
     <div className="p4-formula-stack">
       <span>ν̄<sub>{k}</sub>({x}) = (1/{k}) [ {round.prefix.slice(0, k - 1).map((point) => `z(${point.id})`).join(" + ")} + z({x}) ]</span>
       <span>ν<sub>{k}</sub>({x}) = normalize(ν̄<sub>{k}</sub>({x}))</span>
-      <span>d<sub>{k}</sub>({x}) = ‖μ<sub>full</sub> − ν<sub>{k}</sub>({x})‖₂ = {candidate.score.toFixed(3)}</span>
+      <span>d<sub>{k}</sub>({x}) = ‖μ<sub>full</sub> − ν<sub>{k}</sub>({x})‖₂ = {scene.scoreReveal > 0.98 ? candidate.score.toFixed(3) : "…"}</span>
     </div>
   );
 }
@@ -621,18 +648,43 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   const scene = useMemo(() => sceneAt(clip, state.progress, reviewIndex), [clip, state.progress, reviewIndex]);
   const round = clip.round >= 1 && clip.round <= 4 ? roundOf(clip.round) : null;
   const candidate = candidateOf(clip);
-  const narration = useMemo(() => [clip.narrative], [clip.narrative]);
-  void activeNarrationIndex(narration, state.progress);
+  const activePhaseIndex = Math.max(0, phaseRanges.findIndex((phase) => state.clipIndex >= phase.startIndex && state.clipIndex <= phase.endIndex));
+  const activePhase = phaseRanges[activePhaseIndex];
+  const phaseComplete = state.clipIndex === activePhase.endIndex && state.isHolding && state.status !== "playing";
+  const completedPhaseMs = clips.slice(activePhase.startIndex, state.clipIndex)
+    .reduce((total, item) => total + item.durationMs + (item.holdMs ?? 0), 0);
+  const phaseProgress = clamp((completedPhaseMs + state.elapsedMs) / activePhase.durationMs);
 
   // Entering the review phase defaults to the full ordered list.
   useEffect(() => {
     if (clip.kind === "review") setReviewIndex((current) => (current < 1 ? 4 : current));
   }, [clip.kind]);
 
+  useEffect(() => {
+    if (state.status === "playing" && state.clipIndex === activePhase.endIndex && state.isHolding) controls.pause();
+  }, [state.status, state.clipIndex, state.isHolding, activePhase.endIndex, controls.pause]);
+
   const slotCount = Math.round(scene.slotCount);
 
   function focusWorkbench() {
     workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  }
+
+  function jumpToPhase(index: number) {
+    const phase = phaseRanges[index];
+    if (phase) controls.goToClip(phase.startIndex);
+  }
+
+  function togglePhasePlayback() {
+    if (state.status === "playing") {
+      controls.pause();
+      return;
+    }
+    if (phaseComplete || state.status === "finished") {
+      jumpToPhase(activePhaseIndex < phaseRanges.length - 1 ? activePhaseIndex + 1 : 0);
+      return;
+    }
+    controls.play();
   }
 
   return (
@@ -652,6 +704,12 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         data-kind={clip.kind}
         data-round={clip.round}
         data-progress={state.progress.toFixed(3)}
+        data-phase-group={activePhaseIndex + 1}
+        data-phase-progress={phaseProgress.toFixed(3)}
+        data-phase-complete={phaseComplete.toString()}
+        data-current-candidate-id={candidate?.point.id ?? ""}
+        data-scored-candidate-ids={round?.candidates.filter((item) => scene.barProgress(item.point.id) > 0.98).map((item) => item.point.id).join(",") ?? ""}
+        data-memory-slot-count={slotCount}
         data-status={state.status}
         data-clip-ids={clips.map((item) => item.id).join(",")}
         ref={workbenchRef}
@@ -659,18 +717,18 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <header className="p4-workbench__heading">
           <div>
             <span className="eyebrow">
-              {clip.kind === "target-contribute" || clip.kind === "target-normalize"
+              {activePhaseIndex === 0
                 ? "BUILD THE CLASS TARGET"
-                : clip.round <= 4
-                  ? `HERDING · ROUND ${clip.round}`
+                : activePhaseIndex <= 4
+                  ? `HERDING · ROUND ${activePhaseIndex}`
                   : "REVIEW THE ORDERED MEMORY"}
-              {" · 片段 "}{state.clipIndex + 1} / {clips.length}
+              {" · 阶段 "}{activePhaseIndex + 1} / {phaseRanges.length}
             </span>
             <h2>{phaseTitles[clip.kind]}</h2>
             <p aria-live="polite">{clip.narrative}</p>
           </div>
           <span className="p4-workbench__phase">
-            {state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}
+            {phaseComplete ? "阶段完成" : `${Math.round(phaseProgress * 100)}%`}
           </span>
         </header>
 
@@ -724,43 +782,41 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
                 <small>{scene.tailRemoved ? "只移除列表尾部的 p₄；p₁、p₂、p₃ 保持不变。" : "类别从三个变成四个，每类名额由四个缩到三个。"}</small>
               </div>
             ) : null}
-            {clip.kind === "commit" ? (
+            {clip.kind === "commit" && clip.round === 4 ? (
               <p className="p4-commit-note">
-                胜出项来自全部未选候选的实际分数：{round?.chosen.id} 的 ν<sub>{clip.round}</sub> 离 μ<sub>full</sub> 最近。
-                贪心选择不保证逐轮距离变小，也不保证固定长度下的全局最优。
+                胜出项来自全部未选候选的实际分数：{round?.chosen.id} 的 ν<sub>{clip.round}</sub> 离 μ<sub>full</sub> 最近。贪心选择不保证固定长度下的全局最优。
               </p>
             ) : null}
           </aside>
         </div>
 
         <div className="p4-workbench__controls" aria-label="Page 4 动画控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={!state.hasPrevious}>← 上一步</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex - 1)} disabled={activePhaseIndex === 0}>← 上一阶段</button>
           <div className="p4-workbench__control-center">
             <button
               type="button"
               className="icarl-button icarl-button--quiet"
-              onClick={state.status === "finished" ? (state.hasNext ? controls.stepForward : controls.replayClip) : controls.toggle}
+              onClick={togglePhasePlayback}
             >
-              {state.status === "playing" ? "Ⅱ 暂停" : state.status === "finished" ? (state.hasNext ? "▶ 下一片段" : "↺ 重新播放") : "▶ 继续"}
+              {state.status === "playing" ? "Ⅱ 暂停" : phaseComplete ? activePhaseIndex < phaseRanges.length - 1 ? "▶ 下一阶段" : "↺ 重新播放" : "▶ 继续本阶段"}
             </button>
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本片段</button>
-            <span aria-live="polite">{state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex)}>↺ 重播本阶段</button>
+            <span aria-live="polite">阶段 {activePhaseIndex + 1} / {phaseRanges.length}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward} disabled={!state.hasNext}>下一步 →</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={() => jumpToPhase(activePhaseIndex + 1)} disabled={activePhaseIndex >= phaseRanges.length - 1}>下一阶段 →</button>
         </div>
 
-        <div className="p4-phase-rail" role="group" aria-label="片段定位">
-          {phaseRailEntries.map((entry) => {
-            const target = clipIndexById.get(entry.id) ?? 0;
+        <div className="p4-phase-rail" role="group" aria-label="七个教学阶段">
+          {phaseRanges.map((entry, index) => {
             const currentGroup = entry.group;
-            const activeGroup = clip.round;
+            const activeGroup = phaseRanges[activePhaseIndex].group;
             return (
               <button
                 key={entry.id}
                 type="button"
                 className={currentGroup === activeGroup ? "is-current" : currentGroup < activeGroup ? "is-complete" : ""}
                 aria-pressed={currentGroup === activeGroup}
-                onClick={() => controls.goToClip(target)}
+                onClick={() => jumpToPhase(index)}
               >
                 <b>{String(currentGroup + 1).padStart(2, "0")}</b>{entry.label}
               </button>
@@ -774,7 +830,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <p>
           完整类别原始均值：({HERDING_DEMO_TARGET_RAW[0].toFixed(3)}, {HERDING_DEMO_TARGET_RAW[1].toFixed(3)})；
           单位目标 μ<sub>full</sub>：({HERDING_DEMO_TARGET[0].toFixed(3)}, {HERDING_DEMO_TARGET[1].toFixed(3)})。
-          图中 μ<sub>full</sub> 画在正下方：示例候选集中在左上，按真实角度显示会让弦与标签越出安全边界；圆的构造位置不影响任何距离数值。
+          图中全部向量共用等距线性投影，因此两点间的显示长度与同尺度距离尺对应；每轮均值由真实有序前缀计算，再按公式单位化。
         </p>
         {ROUNDS.map((item) => (
           <details key={item.k}>
