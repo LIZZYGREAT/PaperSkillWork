@@ -218,3 +218,11 @@ P7 已重构为训练完成、旧类有序前缀截断、新类当前 Herding ex
 P8 已按四个问题组织：整体结果与实验协议、组件作用及对照限制、Exemplar 均值近似的准确率代价、记忆预算与适用边界。Figure 2 可切换 iCIFAR-100、iILSVRC-small、iILSVRC-full 与每批类别数，焦点框依据原图像素坐标定位；Figure 3 保留类别预测偏置的可展开原图。Table 1a/1b 使用论文结果数据，突出 Hybrid 2 两类批次例外，并说明 Hybrid 3 与 LwF.MC 同时改变回放和蒸馏、不能单独归因于回放。Table 1b 比较分类准确率百分点，不将其解释为原型向量距离；全数据 NCM 仅作为诊断参照。Figure 4 聚焦记忆预算趋势，并保留原图与任务范围说明，接入 P9 完整运行链。
 
 验证：`tsc --noEmit` 与 Vite bundle-loader 生产构建通过（75 modules）；项目既有 `npm.cmd test` 通过。P8 在 1440×900、1920×1080 共捕获 20 个状态，GEOMETRY_QA=PASS、BROWSER_ERRORS=PASS（0），主报告位于 `web/enhanced/.visual-qa/p8-revision-final/run-2026-10-14T17-49-59-081Z/report.md`。已实际查看总体结果与 Figure 2 三个焦点、Figure 3 展开状态、Table 1a 的组件/两类批次例外、Table 1b 准确率差值和 Figure 4 两种焦点；Figure 3 另补一张滚回页首后的干净长截图，以避开 sticky 导航在长页截图中的重复。人工视觉复核通过；STYLE_QA=NOT_RUN，REGRESSION=NOT_RUN（没有已批准基线），HUMAN_ACCEPTANCE=PENDING；W7/W9/W10 状态未更改。
+
+#### 阶段 E｜P3–P8 相邻页一致性与截图验收（2026-10-15）
+
+依据根目录 `README.md` 的教学原则，复核 P3–P8 是否形成“原型判别 → Herding 与预算 → 训练样本/冻结 Q → BCE 参数更新 → 更新后记忆与预测 → 论文证据及边界”的因果链；检查样本身份与坐标、实验数据/合成教学状态区分、单舞台可读性以及交互是否解释实际算法步骤。审查发现并修复 P4 第四轮导航指向错误候选的问题：阶段入口现在从实际 Herding 轮次生成，并显式携带分组编号，第四轮定位到实际首个未选候选 `a7`，不再回退到初始片段或显示 NaN。截图配置中 P3–P5 已改用当前工作台的片段导航和真实状态选择器；P5 展开 Q 明细后定位至页首，避免长页截图起始位置造成固定导航重复。
+
+最终 Chromium 截图覆盖 1440×900 与 1920×1080，共 112 个 P3–P8 页面状态；报告 `web/enhanced/.visual-qa/p3-p8-full-review/run-2026-10-14T18-40-38-850Z/report.md` 中截图采集、几何检查均通过，浏览器错误为 0。人工复核代表截图覆盖 P3 原型聚合与最近原型判别、P4 第四轮候选与前缀预算、P5 的 D/Q 明细、P6 损失汇总与参数交接、P7 更新后 Query/六类原型、P8 原图焦点与论文表格例外。另以 P5 页首定位动作补拍 1440×900 与 1920×1080 两种视口，确认展开 Q 明细时导航未重复且状态清晰。截图工具提示 P5 展开的 Q 数值明细中有 10 个语义文字元素低于其字号阈值；它们属于按需展开的精确数据，人工截图中仍可辨认，未因此更改字号；全局 `STYLE_QA` 仍标记为 `NOT_RUN`。跨页检查未发现样本或类别身份断裂、训练与预测混淆、论文结果与合成状态混标或关键因果转折缺失。
+
+`tsc --noEmit` 与 Vite bundle-loader 生产构建通过（75 modules）。`VISUAL_REVIEW=PASS`；`GEOMETRY_QA=PASS`、`BROWSER_ERRORS=PASS`（0）；`STYLE_QA=NOT_RUN`，`REGRESSION=NOT_RUN`（无已批准基线），`HUMAN_ACCEPTANCE=PENDING`。W7/W9/W10 状态保持原样。本阶段仅调整 P4 导航生成逻辑、P3–P5 截图状态配置及本计划记录；截图和临时检查仍保存在被忽略的 `.visual-qa/` 下。

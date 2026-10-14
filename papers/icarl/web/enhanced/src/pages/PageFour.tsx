@@ -191,6 +191,17 @@ function buildClips(): DemoClip[] {
 
 const clips = buildClips();
 const clipIndexById = new Map(clips.map((clip, index) => [clip.id, index]));
+const phaseRailEntries = [
+  { id: "target-contribute", label: "建立目标", group: 0 },
+  ...ROUNDS.map((round) => {
+    const firstCandidate = SCAN_ORDER.find((entry) =>
+      round.candidates.some((candidate) => candidate.point.id === entry.point.id),
+    )!;
+    return { id: `r${round.k}-scan-${firstCandidate.point.id}`, label: `第 ${round.k} 轮`, group: round.k };
+  }),
+  { id: "review-prefix", label: "回看前缀", group: 5 },
+  { id: "budget-shrink", label: "预算截断", group: 6 },
+];
 
 const phaseTitles: Record<ClipKind, string> = {
   "target-contribute": "先确定要逼近的完整类别目标",
@@ -745,17 +756,9 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
 
         <div className="p4-phase-rail" role="group" aria-label="片段定位">
-          {[
-            { id: "target-contribute", label: "建立目标" },
-            { id: "r1-scan-a2", label: "第 1 轮" },
-            { id: "r2-scan-a2", label: "第 2 轮" },
-            { id: "r3-scan-a7", label: "第 3 轮" },
-            { id: "r4-scan-a5", label: "第 4 轮" },
-            { id: "review-prefix", label: "回看前缀" },
-            { id: "budget-shrink", label: "预算截断" },
-          ].map((entry) => {
+          {phaseRailEntries.map((entry) => {
             const target = clipIndexById.get(entry.id) ?? 0;
-            const currentGroup = entry.id.startsWith("r") ? Number(entry.id[1]) : entry.id === "target-contribute" ? 0 : entry.id === "review-prefix" ? 5 : 6;
+            const currentGroup = entry.group;
             const activeGroup = clip.round;
             return (
               <button

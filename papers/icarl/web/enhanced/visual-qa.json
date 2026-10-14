@@ -67,7 +67,6 @@
       "path": "/",
       "states": [
         {
-          "id": "01-exemplar-features",
           "actions": [
             {
               "type": "click",
@@ -78,137 +77,112 @@
               "selector": ".p3-start-button"
             },
             {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p3-workbench[data-stage='0']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "02-class-prototypes",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(2)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p3-workbench[data-stage='1']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "03-query-feature",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(3)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p3-workbench[data-stage='2']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "04-nearest-prototype",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(4)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p3-workbench[data-stage='3']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "05-direct-return",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-chapter-jumps .icarl-guided__step:nth-child(2)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p3-workbench[data-stage='1']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "06-next-and-back",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-start-button"
+              "selector": "[data-clip=\"p3-a-normalize\"]"
             },
             {
               "type": "click",
               "selector": ".p3-workbench__controls > button.icarl-button--primary"
             },
             {
-              "type": "click",
-              "selector": ".p3-workbench__controls > button.icarl-button--primary"
-            },
-            {
-              "type": "click",
-              "selector": ".p3-workbench__controls > button:first-child"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p3-workbench[data-stage='1']",
-              "state": "visible"
+              "type": "wait",
+              "milliseconds": 1800
             }
-          ]
+          ],
+          "id": "01-exemplar-features"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-clip-rail button:nth-child(2)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p3-b-aggregate\"]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3500
+            }
+          ],
+          "id": "02-class-prototypes"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-clip-rail button:nth-child(3)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p3-c-query\"]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2000
+            }
+          ],
+          "id": "03-query-feature"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-clip-rail button:nth-child(4)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p3-d-decide\"]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 9300
+            }
+          ],
+          "id": "04-nearest-prototype"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-clip-rail button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-clip-rail button:nth-child(2)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p3-b-aggregate\"]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3500
+            }
+          ],
+          "id": "05-return-to-prototype"
         }
       ]
     },
@@ -255,7 +229,6 @@
       "path": "/",
       "states": [
         {
-          "id": "00-target-normalization",
           "actions": [
             {
               "type": "click",
@@ -263,108 +236,21 @@
             },
             {
               "type": "click",
-              "selector": ".p4-start-button"
+              "selector": ".p4-phase-rail button:nth-child(1)"
             },
             {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='0'][data-micro-step='2']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "01-round-k1",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(2)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='1']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "02-round-k2-first-candidate",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='2'][data-micro-step='0']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "02a-k2-pair-combination",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__control-center > button:first-child"
+              "selector": "[data-clip=\"target-contribute\"]"
             },
             {
               "type": "wait",
-              "milliseconds": 650
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-live-calculation circle.p4-contribution-dot:nth-of-type(1)",
-              "state": "visible"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='2'][data-micro-step='1']",
-              "state": "visible"
+              "milliseconds": 600
             }
-          ]
+          ],
+          "id": "01-target-contribution"
         },
         {
-          "id": "02b-k2-raw-midpoint",
           "actions": [
             {
               "type": "click",
@@ -372,81 +258,25 @@
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
+              "selector": ".p4-phase-rail button:nth-child(1)"
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p4-moving-mean.is-raw",
-              "state": "visible"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='2'][data-micro-step='2']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "02c-k2-normalized-movement",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__control-center > button:first-child"
+              "selector": "[data-clip=\"target-normalize\"]"
             },
             {
               "type": "wait",
-              "milliseconds": 800
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-normalize-ray:not(.p4-normalize-ray--target)",
-              "state": "visible"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='2'][data-micro-step='3']",
-              "state": "visible"
+              "milliseconds": 600
             }
-          ]
+          ],
+          "id": "02-target-normalization"
         },
         {
-          "id": "02d-k2-score",
           "actions": [
             {
               "type": "click",
@@ -454,50 +284,21 @@
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
+              "selector": ".p4-phase-rail button:nth-child(2)"
             },
             {
-              "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__control-center > button:first-child"
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"r1-scan-a2\"]"
             },
             {
               "type": "wait",
-              "milliseconds": 800
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-score-line--growing",
-              "state": "visible"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='2'][data-micro-step='4']",
-              "state": "visible"
+              "milliseconds": 600
             }
-          ]
+          ],
+          "id": "03-round-one-candidate-scan"
         },
         {
-          "id": "03-round-k3-centroid",
           "actions": [
             {
               "type": "click",
@@ -505,68 +306,41 @@
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
+              "selector": ".p4-phase-rail button:nth-child(3)"
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(4)"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p4-moving-mean.is-raw",
-              "state": "visible"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='3'][data-micro-step='2']",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "03a-round-k3-centroid-gather",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(4)"
+              "selector": "[data-clip=\"r2-mean-a2\"]"
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__control-center > button:first-child"
+              "selector": ".p4-workbench__control-center button:first-child"
             },
             {
               "type": "wait",
-              "milliseconds": 650
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p4-live-calculation circle.p4-contribution-dot:nth-of-type(1)",
-              "state": "visible"
+              "milliseconds": 1000
             }
-          ]
+          ],
+          "id": "04-round-two-raw-midpoint"
         },
         {
-          "id": "04-round-k4-winner-after-scan",
           "actions": [
             {
               "type": "click",
@@ -574,41 +348,45 @@
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
+              "selector": ".p4-phase-rail button:nth-child(3)"
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(5)"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='4'][data-committed='true']",
-              "state": "visible"
+              "selector": "[data-clip=\"r2-norm-a2\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__control-center button:first-child"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 700
             }
-          ]
+          ],
+          "id": "05-round-two-normalized-mean"
         },
         {
-          "id": "05-prefix-review",
           "actions": [
             {
               "type": "click",
@@ -616,25 +394,90 @@
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
+              "selector": ".p4-phase-rail button:nth-child(4)"
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(6)"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"r3-mean-a7\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__control-center button:first-child"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 900
+            }
+          ],
+          "id": "06-round-three-centroid"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(5)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"r4-scan-a7\"]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 0
+            }
+          ],
+          "id": "07-round-four-scan"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(6)"
             },
             {
               "type": "click",
               "selector": ".p4-prefix-picker button:nth-child(2)"
             },
             {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p4-workbench[data-stage='5']",
-              "state": "visible"
+              "selector": "[data-clip=\"review-prefix\"]"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": ".p4-prefix-picker button:nth-child(2)[aria-pressed=\"true\"]"
             }
-          ]
+          ],
+          "id": "08-prefix-review"
         },
         {
-          "id": "06-budget-truncation",
           "actions": [
             {
               "type": "click",
@@ -642,26 +485,33 @@
             },
             {
               "type": "click",
-              "selector": ".p4-chapter-jumps > summary"
+              "selector": ".p4-phase-rail button:nth-child(7)"
             },
             {
-              "type": "click",
-              "selector": ".p4-chapter-jumps .icarl-guided__step:nth-child(6)"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p4-workbench__controls > .icarl-button:last-child"
-            },
-            {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p4-slots > span:nth-child(4).is-removed",
-              "state": "visible"
+              "selector": "[data-clip=\"budget-shrink\"]"
             }
-          ]
+          ],
+          "id": "09-budget-truncation"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-calculation-details > summary"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": ".p4-calculation-details[open]"
+            }
+          ],
+          "id": "10-exact-calculation-details"
         }
       ]
     },
@@ -670,21 +520,20 @@
       "path": "/",
       "states": [
         {
-          "id": "p5-replay-sources",
           "actions": [
             {
               "type": "click",
               "selector": ".ewc-slice-nav__item:nth-child(5)"
             },
             {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p5-workbench[data-stage='0']",
-              "state": "visible"
+              "selector": "[data-clip=\"p5-recall\"]"
             }
-          ]
+          ],
+          "id": "p5-replay-sources"
         },
         {
-          "id": "p5-merged-d",
           "actions": [
             {
               "type": "click",
@@ -692,21 +541,21 @@
             },
             {
               "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
+              "selector": ".p5-clip-rail button:nth-child(2)"
             },
             {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p5-workbench[data-stage='1']",
-              "state": "visible"
+              "selector": "[data-clip=\"p5-merge\"]"
             },
             {
               "type": "wait",
-              "milliseconds": 650
+              "milliseconds": 1000
             }
-          ]
+          ],
+          "id": "p5-merged-d"
         },
         {
-          "id": "p5-q-recording-30x3",
           "actions": [
             {
               "type": "click",
@@ -714,25 +563,21 @@
             },
             {
               "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
+              "selector": ".p5-clip-rail button:nth-child(3)"
             },
             {
-              "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
-            },
-            {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p5-workbench[data-stage='2']",
-              "state": "visible"
+              "selector": "[data-clip=\"p5-old-sample\"]"
             },
             {
               "type": "wait",
-              "milliseconds": 750
+              "milliseconds": 800
             }
-          ]
+          ],
+          "id": "p5-old-sample-q-row"
         },
         {
-          "id": "p5-q-details",
           "actions": [
             {
               "type": "click",
@@ -740,56 +585,108 @@
             },
             {
               "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
+              "selector": ".p5-clip-rail button:nth-child(4)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p5-new-sample\"]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 800
+            }
+          ],
+          "id": "p5-new-sample-q-row"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
             },
             {
               "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
+              "selector": ".p5-clip-rail button:nth-child(8)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p5-batch-4\"]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1200
+            }
+          ],
+          "id": "p5-batch-q-fill"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
             },
             {
               "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
+              "selector": ".p5-clip-rail button:nth-child(9)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p5-lock\"]"
+            }
+          ],
+          "id": "p5-q-lock"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p5-clip-rail button:nth-child(10)"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p5-handoff\"]"
+            }
+          ],
+          "id": "p5-six-node-handoff"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p5-clip-rail button:nth-child(10)"
             },
             {
               "type": "click",
               "selector": ".p5-q-details > summary"
             },
             {
-              "type": "scrollIntoView",
-              "selector": ".p5-q-table tbody tr:nth-child(30)"
-            },
-            {
+              "state": "visible",
               "type": "waitFor",
-              "selector": ".p5-q-table tbody tr:nth-child(30)",
-              "state": "visible"
+              "selector": ".p5-q-details[open] .p5-q-table tbody tr:nth-child(30)"
+            },
+            {
+              "selector": ".p5-heading h1",
+              "type": "scrollIntoView"
+            },
+            {
+              "type": "press",
+              "selector": "html",
+              "key": "Home"
             }
-          ]
-        },
-        {
-          "id": "p5-six-node-student",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(5)"
-            },
-            {
-              "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
-            },
-            {
-              "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
-            },
-            {
-              "type": "click",
-              "selector": ".p5-controls > .icarl-button--primary"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p5-workbench[data-stage='3'] .p5-nodes--student",
-              "state": "visible"
-            }
-          ]
+          ],
+          "id": "p5-q-details"
         }
       ]
     },
@@ -800,163 +697,408 @@
         {
           "id": "p6-forward-animation-midpoint",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-controls > div button[aria-label='继续当前动画']" },
-            { "type": "waitFor", "selector": ".p6-flow-link--forward.has-signal", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-flow-link--forward.has-signal",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-target-animation-midpoint",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-node-row[data-node-id='g1'] .p6-node-row__target.is-revealed", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-node-row[data-node-id='g1'] .p6-node-row__target.is-revealed",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-target-arrival-50-percent",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "wait", "milliseconds": 2500 }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2500
+            }
           ]
         },
         {
           "id": "p6-target-arrival-75-percent",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "wait", "milliseconds": 3750 }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3750
+            }
           ]
         },
         {
           "id": "p6-target-arrival-complete",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-network-layout[data-progress='1.00']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-network-layout[data-progress='1.00']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-old-soft-target",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-sample-chooser button:nth-child(1)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-node-row--soft.is-focused .p6-node-row__target.is-revealed", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-sample-chooser button:nth-child(1)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-node-row--soft.is-focused .p6-node-row__target.is-revealed",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-new-c4-hard-target",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-sample-chooser button:nth-child(2)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-node-row[data-node-id='g4'] .p6-node-row__target.is-revealed", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-sample-chooser button:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-node-row[data-node-id='g4'] .p6-node-row__target.is-revealed",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-new-c5-hard-target",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-sample-chooser button:nth-child(3)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-node-row[data-node-id='g5'] .p6-node-row__target.is-revealed", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-sample-chooser button:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-node-row[data-node-id='g5'] .p6-node-row__target.is-revealed",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-new-c6-hard-target",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-sample-chooser button:nth-child(4)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)" },
-            { "type": "waitFor", "selector": ".p6-node-row[data-node-id='g6'] .p6-node-row__target.is-revealed", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-sample-chooser button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-node-row[data-node-id='g6'] .p6-node-row__target.is-revealed",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-c6-local-bce",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-sample-chooser button:nth-child(4)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p6-network-board[data-phase='bce'] .p6-focus-panel--bce .p6-loss-curve", "state": "visible" },
-            { "type": "wait", "milliseconds": 1400 }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-sample-chooser button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-network-board[data-phase='bce'] .p6-focus-panel--bce .p6-loss-curve",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1400
+            }
           ]
         },
         {
           "id": "p6-bce-curve-50-percent",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
-            { "type": "wait", "milliseconds": 3100 }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3100
+            }
           ]
         },
         {
           "id": "p6-bce-curve-75-percent",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
-            { "type": "wait", "milliseconds": 4650 }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 4650
+            }
           ]
         },
         {
           "id": "p6-bce-curve-complete",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p6-network-layout[data-progress='1.00']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-network-layout[data-progress='1.00']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-hard-one-keeps-old-sample",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-sample-chooser button:nth-child(1)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p6-bce-cases button:first-child", "state": "visible" },
-            { "type": "click", "selector": ".p6-bce-cases button:first-child" },
-            { "type": "waitFor", "selector": ".p6-case-notice[role='status']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-sample-chooser button:nth-child(1)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-bce-cases button:first-child",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-bce-cases button:first-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-case-notice[role='status']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-mini-batch-loss",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(4)" },
-            { "type": "wait", "milliseconds": 3000 },
-            { "type": "waitFor", "selector": ".p6-batch-assembly strong", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(4)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3000
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-batch-assembly strong",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-backprop-to-shared-parameters",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)" },
-            { "type": "waitFor", "selector": ".p6-feature-object.is-updating", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-feature-object.is-updating",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p6-update-complete-handoff",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
-            { "type": "click", "selector": ".p6-phase-rail > summary" },
-            { "type": "click", "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)" },
-            { "type": "waitFor", "selector": ".p6-handoff[role='status']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail > summary"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p6-handoff[role='status']",
+              "state": "visible"
+            }
           ]
         }
       ]
@@ -968,58 +1110,147 @@
         {
           "id": "p7-training-finished-pbefore",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "waitFor", "selector": ".p7-model-symbol", "state": "visible" },
-            { "type": "waitFor", "selector": "[data-stage='training-complete']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p7-model-symbol",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-stage='training-complete']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p7-old-prefix-truncation-midpoint",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(2)" },
-            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
-            { "type": "wait", "milliseconds": 1300 },
-            { "type": "waitFor", "selector": "[data-stage='truncate-old']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button:nth-of-type(2)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1300
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-stage='truncate-old']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p7-new-herding-selection-midpoint",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(3)" },
-            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
-            { "type": "wait", "milliseconds": 1800 },
-            { "type": "waitFor", "selector": "[data-stage='select-new']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button:nth-of-type(2)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1800
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-stage='select-new']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p7-feature-reencoding-midpoint",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(4)" },
-            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
-            { "type": "wait", "milliseconds": 1100 },
-            { "type": "waitFor", "selector": "[data-stage='rebuild-prototypes']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button:nth-of-type(2)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1100
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-stage='rebuild-prototypes']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p7-prototypes-after-reencoding",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(4)" },
-            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
-            { "type": "wait", "milliseconds": 4300 },
-            { "type": "waitFor", "selector": "[data-stage='rebuild-prototypes']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button:nth-of-type(2)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 4300
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-stage='rebuild-prototypes']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p7-query-nearest-prototype",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
-            { "type": "waitFor", "selector": ".p7-query-result", "state": "visible" },
-            { "type": "waitFor", "selector": ".p7-responsibility__grid", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p7-query-result",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p7-responsibility__grid",
+              "state": "visible"
+            }
           ]
         }
       ]
@@ -1031,87 +1262,207 @@
         {
           "id": "p8-overall-icifar-100-batch10",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "waitFor", "selector": "[data-question='overall'] .p8-figure-focus img", "state": "visible" },
-            { "type": "waitFor", "selector": "[data-focus='cifar-10']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-question='overall'] .p8-figure-focus img",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-focus='cifar-10']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-overall-ilsvrc-small",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-setting-controls button:nth-of-type(2)" },
-            { "type": "waitFor", "selector": "[data-focus='ilsvrc-small']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-setting-controls button:nth-of-type(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-focus='ilsvrc-small']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-overall-ilsvrc-full",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-setting-controls button:nth-of-type(3)" },
-            { "type": "waitFor", "selector": "[data-focus='ilsvrc-full']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-setting-controls button:nth-of-type(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-focus='ilsvrc-full']",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-figure3-class-prediction-bias",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-figure3-details > summary" },
-            { "type": "waitFor", "selector": ".p8-figure3-details[open] .rk-paper-figure__image-wrap img", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-figure3-details > summary"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-figure3-details[open] .rk-paper-figure__image-wrap img",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-components-prototype-comparison",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-tabs button:nth-of-type(2)" },
-            { "type": "waitFor", "selector": ".p8-selected-values", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-tabs button:nth-of-type(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-selected-values",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-components-replay-attribution-limit",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-tabs button:nth-of-type(2)" },
-            { "type": "click", "selector": ".p8-mechanism-select button:nth-of-type(2)" },
-            { "type": "waitFor", "selector": ".p8-caution", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-tabs button:nth-of-type(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-mechanism-select button:nth-of-type(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-caution",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-components-distillation-two-class-exception",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-tabs button:nth-of-type(2)" },
-            { "type": "click", "selector": ".p8-mechanism-select button:nth-of-type(3)" },
-            { "type": "click", "selector": ".p8-batch-selector button:nth-of-type(1)" },
-            { "type": "waitFor", "selector": ".p8-exception", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-tabs button:nth-of-type(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-mechanism-select button:nth-of-type(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-batch-selector button:nth-of-type(1)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-exception",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-approximation-two-class-accuracy-gap",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-tabs button:nth-of-type(3)" },
-            { "type": "click", "selector": ".p8-batch-selector button:nth-of-type(1)" },
-            { "type": "waitFor", "selector": ".p8-gap-plot", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-tabs button:nth-of-type(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-batch-selector button:nth-of-type(1)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-gap-plot",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-memory-budget-original-figure4",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-tabs button:nth-of-type(4)" },
-            { "type": "waitFor", "selector": "[data-focus='trend'] .rk-paper-figure__image-wrap img", "state": "visible" },
-            { "type": "waitFor", "selector": ".p8-qualified-summary", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-tabs button:nth-of-type(4)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-focus='trend'] .rk-paper-figure__image-wrap img",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-qualified-summary",
+              "state": "visible"
+            }
           ]
         },
         {
           "id": "p8-memory-high-budget-prototype-focus",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
-            { "type": "click", "selector": ".p8-tabs button:nth-of-type(4)" },
-            { "type": "click", "selector": ".p8-memory-focus button:nth-of-type(2)" },
-            { "type": "waitFor", "selector": "[data-focus='prototype']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-tabs button:nth-of-type(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-memory-focus button:nth-of-type(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-focus='prototype']",
+              "state": "visible"
+            }
           ]
         }
       ]
