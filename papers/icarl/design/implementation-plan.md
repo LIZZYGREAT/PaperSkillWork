@@ -204,3 +204,11 @@ P7 的运行状态与预测视图覆盖 A–F 六类；最近原型预测使用�
 P6 保留单张持续存在的六节点计算图，并将输入、目标到达、逐节点 BCE、样本/mini-batch 损失汇总、梯度回传拆成独立时长的五段。旧类样本继续使用同一 `sample.id` 对应的冻结 Q；新类 Hard1 需要新类样本，选择旧类样本时会给出提示而不暗中换图。独立 BCE 曲线使用 `exploreOutput` 状态，与当前网络的 `g_model` 和固定示例损失分开。终段以符号状态显示 `Θ_before → Θ_after` 并交给 P7；图中数值仍是确定性教学计算，不是实际训练轨迹。
 
 验证：`tsc --noEmit`、项目现有 `npm.cmd test` 通过；Vite bundle-loader 生产构建通过（75 modules）。Chromium 在 1440×900 与 1920×1080 共捕获 34 个 P6 状态，GEOMETRY_QA=PASS、BROWSER_ERRORS=PASS（0）；报告位于 `web/enhanced/.visual-qa/p6-revision/run-2026-10-14T17-10-34-560Z/report.md`。已查看两个视口的 mini-batch 汇总和参数更新交接，以及 1440×900 下的目标动画中间态和旧类 Hard1 提示，VISUAL_REVIEW=PASS。STYLE_QA=NOT_RUN，REGRESSION=NOT_RUN（没有已批准基线）；HUMAN_ACCEPTANCE=PENDING。W7/W9/W10 状态未更改。
+
+#### 阶段 C｜P7 参数更新后的记忆交接（2026-10-15）
+
+P7 已重构为训练完成、旧类有序前缀截断、新类当前 Herding exemplar 补入、同一旧图 before/after 特征重编码与原型重算、Query 最近原型决策五段。旧类记忆由每类 4 张减为前 2 张；D/E/F 各从本轮运行时的 6 个候选中补入 Herding 前 2，身份直接读取 `NEW_CLASS_HERDING`。K=12 的空槽补齐后仍为六类各 2 张。保留的原图以同一 ID 显示在更新前/当前表示对照中，固定端点和连线明确标为教学状态对照，不表示连续训练轨迹。Query 读取与 P9 相同的运行时特征、六类原型和预测结果；训练 head 留在模型中，但不参与最终 argmax。训练/预测职责只在结尾做一次紧凑对照，删除了重复的 P8 入口按钮。
+
+`FeatureSpaceWorkbench` 新增可选的 `motionProgress` 插值能力，只供 P7 的同 ID before/after 动画使用；P3/P4/P9 未传此属性时仍显示原有静态图形。P7 根节点和局部 CSS 统一使用 `p7` 作用域，导航文字同步调整。视觉 QA 状态现从 P7 工作台真实播放中段捕获，而非停留在逐段跳转的初始帧。
+
+验证：`tsc --noEmit`、项目现有 `npm.cmd test` 与 Vite bundle-loader 生产构建通过（75 modules）；测试数据核对显示 P3 的 12 个特征/3 个原型/最近类结果、P4 的 8 个候选及排序、P5 的 D=30 与冻结 Q=30×3 均通过。Chromium 在 1440×900 与 1920×1080 共捕获 12 个 P7 状态，GEOMETRY_QA=PASS、BROWSER_ERRORS=PASS（0），报告位于 `web/enhanced/.visual-qa/p7-revision-final/run-2026-10-14T17-35-06-060Z/report.md`。已查看 1440×900 下旧记忆截断、新类入选、特征重编码、原型重建和 Query 结果截图，VISUAL_REVIEW=PASS；STYLE_QA=NOT_RUN，REGRESSION=NOT_RUN（没有已批准基线）；HUMAN_ACCEPTANCE=PENDING。W7/W9/W10 状态未更改。

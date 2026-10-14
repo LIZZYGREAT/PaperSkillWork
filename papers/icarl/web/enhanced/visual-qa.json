@@ -966,34 +966,60 @@
       "path": "/",
       "states": [
         {
-          "id": "p7-training-recap",
+          "id": "p7-training-finished-pbefore",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "waitFor", "selector": ".p7-training-objects", "state": "visible" }
+            { "type": "waitFor", "selector": ".p7-model-symbol", "state": "visible" },
+            { "type": "waitFor", "selector": "[data-stage='training-complete']", "state": "visible" }
           ]
         },
         {
-          "id": "p7-six-class-exemplar-prototypes",
+          "id": "p7-old-prefix-truncation-midpoint",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(3)" },
-            { "type": "waitFor", "selector": ".p7-exemplar-buckets section:nth-child(6)", "state": "visible" }
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(2)" },
+            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
+            { "type": "wait", "milliseconds": 1300 },
+            { "type": "waitFor", "selector": "[data-stage='truncate-old']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p7-new-herding-selection-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(3)" },
+            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
+            { "type": "wait", "milliseconds": 1800 },
+            { "type": "waitFor", "selector": "[data-stage='select-new']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p7-feature-reencoding-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(4)" },
+            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
+            { "type": "wait", "milliseconds": 1100 },
+            { "type": "waitFor", "selector": "[data-stage='rebuild-prototypes']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p7-prototypes-after-reencoding",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(4)" },
+            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
+            { "type": "wait", "milliseconds": 4300 },
+            { "type": "waitFor", "selector": "[data-stage='rebuild-prototypes']", "state": "visible" }
           ]
         },
         {
           "id": "p7-query-nearest-prototype",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(4)" },
-            { "type": "waitFor", "selector": ".p7-result", "state": "visible" }
-          ]
-        },
-        {
-          "id": "p7-training-prediction-comparison",
-          "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".icarl-guided__step:nth-child(5)" },
-            { "type": "waitFor", "selector": ".p7-responsibility-table", "state": "visible" }
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
+            { "type": "waitFor", "selector": ".p7-query-result", "state": "visible" },
+            { "type": "waitFor", "selector": ".p7-responsibility__grid", "state": "visible" }
           ]
         }
       ]

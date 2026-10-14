@@ -62,6 +62,7 @@ export function FeatureSpaceWorkbench({
   normalizationSources = [],
   markerScale = 1,
   projectionScale = PROJECTION_SCALE,
+  motionProgress,
   showSampleLabels = true,
   herdingRevealCount,
   focusableSamples = true,
@@ -82,6 +83,8 @@ export function FeatureSpaceWorkbench({
   normalizationSources?: FeaturePoint[];
   markerScale?: number;
   projectionScale?: number;
+  /** Interpolate current marks from matching previousPoints; omitted preserves the static endpoint view. */
+  motionProgress?: number;
   showSampleLabels?: boolean;
   herdingRevealCount?: number;
   focusableSamples?: boolean;
@@ -99,6 +102,18 @@ export function FeatureSpaceWorkbench({
     return { x: origin.x + point[0] * scale, y: origin.y - point[1] * scale };
   };
   const pointById = new Map(points.map((item) => [item.id, item]));
+  const motionPositions = new Map<string, { x: number; y: number }>();
+  const boundedMotionProgress = Math.max(0, Math.min(1, motionProgress ?? 1));
+  if (motionProgress !== undefined) previousPoints.forEach((oldPoint) => {
+    const current = pointById.get(oldPoint.id);
+    if (!current) return;
+    const from = xy(oldPoint.point, unitCircle);
+    const to = xy(current.point, unitCircle);
+    motionPositions.set(oldPoint.id, {
+      x: from.x + (to.x - from.x) * boundedMotionProgress,
+      y: from.y + (to.y - from.y) * boundedMotionProgress,
+    });
+  });
   const rawMeanXY = rawMean ? xy(rawMean, unitCircle) : null;
   const targetXY = target ? xy(target, unitCircle) : null;
   const prefixXY = prefixMean ? xy(prefixMean, unitCircle) : null;
@@ -157,12 +172,13 @@ export function FeatureSpaceWorkbench({
             const current = pointById.get(oldPoint.id);
             if (!current) return null;
             const from = xy(oldPoint.point, unitCircle);
-            const to = xy(current.point, unitCircle);
+            const to = motionPositions.get(oldPoint.id) ?? xy(current.point, unitCircle);
             return <g key={`drift-${oldPoint.id}`}><line className="feature-space__drift" x1={from.x} y1={from.y} x2={to.x} y2={to.y} /><circle className="feature-space__ghost" cx={from.x} cy={from.y} r="4" /><title>{`样本 ${oldPoint.id}：更新前的位置`}</title></g>;
           })}
 
           {points.map((item) => {
-            const position = xy(item.point, unitCircle);
+            const position = motionPositions.get(item.id) ?? xy(item.point, unitCircle);
+            const motionTracked = motionProgress !== undefined && previousPoints.some((oldPoint) => oldPoint.id === item.id);
             const visibleOrder = item.order !== undefined && (herdingRevealCount === undefined || item.order <= herdingRevealCount) ? item.order : undefined;
             const sampleLabel = visibleOrder === 1
               ? { x: position.x - 8, y: position.y - 8, textAnchor: "end" as const }
@@ -172,7 +188,7 @@ export function FeatureSpaceWorkbench({
                   ? { x: position.x + 9, y: position.y + 13, textAnchor: "start" as const }
                   : { x: position.x + 8, y: position.y - 7, textAnchor: "start" as const };
             return (
-              <g key={item.id} className={`feature-space__sample${item.id === selectedId ? " is-selected" : ""}`} onMouseEnter={() => setSelectedId(item.id)} onFocus={() => setSelectedId(item.id)} onClick={() => setSelectedId(item.id)} tabIndex={focusableSamples ? 0 : -1} role="img" aria-label={`${CLASS_VISUALS[item.classId].displayLabel}，样本 ${item.id}${visibleOrder ? `，Herding 顺序 p${visibleOrder}` : ""}`} data-herding-selected={visibleOrder ? "true" : undefined}>
+              <g key={item.id} className={`feature-space__sample${item.id === selectedId ? " is-selected" : ""}`} onMouseEnter={() => setSelectedId(item.id)} onFocus={() => setSelectedId(item.id)} onClick={() => setSelectedId(item.id)} tabIndex={focusableSamples ? 0 : -1} role="img" aria-label={`${CLASS_VISUALS[item.classId].displayLabel}，样本 ${item.id}${visibleOrder ? `，Herding 顺序 p${visibleOrder}` : ""}`} data-herding-selected={visibleOrder ? "true" : undefined} data-motion-tracked={motionTracked ? "true" : undefined}>
                 <ClassFeatureMarker legacyShape={legacy} classId={item.classId} x={position.x} y={position.y} radius={(visibleOrder ? 7 : 5.5) * markerScale} selected={visibleOrder !== undefined} selectedClassName="is-herding-selected" />
                 <title>{`${CLASS_VISUALS[item.classId].displayLabel} · 样本 ${item.id}${visibleOrder ? ` · Herding 顺序 p${visibleOrder}` : ""}`}</title>
                 {legacy && showSampleLabels ? <text {...sampleLabel}>{visibleOrder ? `p${visibleOrder}` : item.id}</text> : null}
