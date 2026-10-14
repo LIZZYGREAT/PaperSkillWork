@@ -8,10 +8,7 @@
   display: grid;
   gap: 9px;
   min-width: 0;
-  /* The stage is as tall as its content, but it never exceeds the viewport: on shorter screens the
-     flow board scrolls inside the workbench so the controls and the clip rail stay on screen. */
-  max-height: calc(100svh - 84px);
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto auto auto;
   padding: 13px;
   scroll-margin-top: 76px;
   border: 1px solid #d2ded8;
@@ -26,12 +23,12 @@
 .p5-guide-status { flex: 0 0 auto; padding: 6px 10px; border: 1px solid #d2e2d8; border-radius: 999px; color: #356555; background: #eaf4ed; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .p5-guide-status.is-locked { color: #356247; border-color: #bfd8c5; background: #edf6ed; }
 .p5-guidance-copy { display: grid; max-width: 1040px; gap: 2px; margin-top: 3px; }
-/* Only the current deduction line stays expanded; earlier ones shrink to one line so the stage keeps its height. */
-.p5-guidance-copy p { position: relative; margin: 0; padding: 2px 8px; border-left: 2px solid transparent; border-radius: 0 5px 5px 0; color: #6b7d78; font-size: 12px; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.p5-guidance-copy p.is-current { border-left-color: #4b8a72; color: #294e43; background: #edf5ef; font-size: 13px; white-space: normal; }
+/* Keep each synchronized reasoning line fully visible; the page scrolls with its content. */
+.p5-guidance-copy p { position: relative; margin: 0; padding: 3px 8px; border-left: 2px solid transparent; border-radius: 0 5px 5px 0; color: #536b64; font-size: 12px; line-height: 1.45; }
+.p5-guidance-copy p.is-current { border-left-color: #4b8a72; color: #294e43; background: #edf5ef; font-size: 13px; }
 .p5-guidance-copy p.is-read { color: #4f6a63; }
 
-.p5-flow-board { position: relative; display: grid; grid-template-columns: minmax(300px, .82fr) minmax(360px, 1.05fr) minmax(330px, .96fr); align-items: start; gap: 11px; min-width: 0; min-height: 0; overflow: auto; padding-right: 2px; }
+.p5-flow-board { position: relative; display: grid; grid-template-columns: minmax(300px, .82fr) minmax(360px, 1.05fr) minmax(330px, .96fr); align-items: start; gap: 11px; min-width: 0; padding-right: 2px; }
 .p5-flight { position: absolute; z-index: 3; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .p5-flight__token circle { stroke: #fff; stroke-width: 2; }
 .p5-flight__token--old circle { fill: #4b8a6e; }
@@ -65,7 +62,7 @@
 .p5-merge-readout.is-resolved { border-color: #a9c9b4; background: #e8f4ea; }
 
 .p5-object--dataset { display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 140px; text-align: center; color: #4f6b5f; background: #f2f7f3; }
-.p5-object > .eyebrow { color: #5d736a; font-size: 11px; }
+.p5-object > .eyebrow { color: #5d736a; font-size: 12px; }
 .p5-object-symbol { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #c9dad0; border-radius: 12px; color: #356450; background: #e6f1e9; font: 750 22px var(--mono); }
 .p5-object--dataset > strong { color: #2f5947; font: 750 15px var(--mono); }
 .p5-object--dataset > small { max-width: 250px; color: #53695f; font-size: 11px; line-height: 1.4; }
@@ -81,7 +78,7 @@
 .p5-model-input { display: flex; align-items: center; gap: 8px; padding: 6px 7px; border: 1px solid #dde7e0; border-radius: 8px; background: #fffefa; }
 .p5-selected-glyph { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 7px; color: var(--class-accent); background: color-mix(in srgb, var(--class-accent) 12%, white); font-size: 16px; }
 .p5-model-input > span:last-child { display: grid; min-width: 0; gap: 1px; text-align: left; }
-.p5-model-input small { color: #5f746b; font-size: 11px; }
+.p5-model-input small { color: #5f746b; font-size: 12px; }
 .p5-model-input strong { overflow: hidden; color: #36504a; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .p5-nodes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .p5-nodes > span { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; min-height: 32px; padding: 5px 4px; border: 1px solid color-mix(in srgb, var(--class-accent) 26%, white); border-radius: 6px; color: color-mix(in srgb, var(--class-accent) 84%, #1f3a33); background: color-mix(in srgb, var(--class-accent) 8%, white); font-size: 12px; }
@@ -130,7 +127,7 @@
 .p5-q-table tbody tr.is-selected { background: #fdf3e7; }
 .p5-q-table tbody tr.is-pending td { color: #a9b3ae; }
 .p5-q-table tbody tr.is-writing { outline: 1px solid #bf855d; outline-offset: -1px; background: #fff7ef; }
-.p5-q-table th > button { padding: 0; border: 0; color: #2c5a47; background: transparent; font: 700 11px var(--mono); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.p5-q-table th > button { padding: 0; border: 0; color: #2c5a47; background: transparent; font: 700 12px var(--mono); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .p5-q-table th > button:focus-visible { outline: 2px solid #bf784a; outline-offset: 2px; }
 .p5-q-details > p { margin: 7px 0 0; color: #55695f; font-size: 11px; line-height: 1.45; }
 
@@ -143,11 +140,11 @@
 
 .p5-controls { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid #dfe6e0; }
 .p5-control-main { display: flex; align-items: center; justify-content: center; gap: 7px; }
-.p5-control-main > span { min-width: 74px; color: #5a6f67; font: 11px var(--mono); text-align: center; }
+.p5-control-main > span { min-width: 74px; color: #5a6f67; font: 12px var(--mono); text-align: center; }
 .p5-controls button { min-height: 36px; }
 .p5-clip-rail { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
-.p5-clip-rail button { display: flex; min-width: 0; align-items: center; gap: 4px; padding: 6px 5px; border: 1px solid #e0e7e1; border-radius: 6px; color: #64766f; background: #fffefa; font-size: 10px; text-align: left; cursor: pointer; }
-.p5-clip-rail button b { color: #a27356; font: 650 10px var(--mono); }
+.p5-clip-rail button { display: flex; min-width: 0; align-items: center; gap: 4px; padding: 6px 5px; border: 1px solid #e0e7e1; border-radius: 6px; color: #526a61; background: #fffefa; font-size: 11px; text-align: left; cursor: pointer; }
+.p5-clip-rail button b { color: #a27356; font: 650 11px var(--mono); }
 .p5-clip-rail button.is-complete { border-color: #cbddd0; color: #4e6e5c; background: #f2f7f1; }
 .p5-clip-rail button.is-current { border-color: #7fa891; color: #284f42; background: #eaf4ee; box-shadow: inset 0 0 0 1px #d6e7dd; }
 .p5-handoff { margin-top: 13px; }
