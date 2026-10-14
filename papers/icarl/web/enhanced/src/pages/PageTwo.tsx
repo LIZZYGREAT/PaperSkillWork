@@ -147,12 +147,24 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
           <SharedTrainingHead />
 
           <section className="p2-handoff">
-            <span className="p2-eyebrow">接下来的问题</span>
-            <div>
-              <p>现在我们知道，模型能把图片映射为可比较的特征向量，训练输出层也会随新类别扩展。也就是具备了可以让根据输入的图片，直接在所有类型任务中判断属于哪个类别的能力呢。但我们回到一开始的问题，我们需要在这个学习过程中，保留过去模型学到的知识，就需要留存一些代表图片。那我们先假设，每类已经保留了少量代表图片，那么它究竟怎样利用这些图片判断一张新输入属于哪一类？</p>
-              <small>下一页用三类精简教学示例完整演算；它与本页 5→10 个输出节点的架构扩展示意不是同一实际轮次。</small>
+            <span className="p2-eyebrow">沿着问题继续想</span>
+            <div className="p2-handoff__path">
+              <div className="p2-handoff__step p2-handoff__step--known">
+                <span>01 · 已经知道</span>
+                <p>图片可以经过特征提取器变成可比较的<strong>特征向量</strong>，训练输出层也能随着新类别到来继续扩展。</p>
+              </div>
+              <div className="p2-handoff__connector" aria-hidden="true" />
+              <div className="p2-handoff__step p2-handoff__step--constraint">
+                <span>02 · 回到限制</span>
+                <p>但学习要不断继续，旧类别的全部图片却不能一直保存。我们希望只用<strong>少量有代表性的图片</strong>，帮助模型保留对旧类别的认识。</p>
+              </div>
+              <div className="p2-handoff__connector" aria-hidden="true" />
+              <div className="p2-handoff__step p2-handoff__step--question">
+                <span>03 · 下一问</span>
+                <p>那么，<strong>假设每个类别的代表图片已经选好了</strong>，一张新图片到来时，我们究竟怎样利用这些代表，判断它属于哪一类？</p>
+                <button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>用代表图片完成一次预测 <b aria-hidden="true">→</b></button>
+              </div>
             </div>
-            <button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>看代表样本怎样参与预测 <b aria-hidden="true">→</b></button>
           </section>
         </>
       )}
