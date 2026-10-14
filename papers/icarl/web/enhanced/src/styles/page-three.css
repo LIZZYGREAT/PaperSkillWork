@@ -4,7 +4,7 @@
   display: grid;
   /* The diagram, not the chrome, decides the stage height: keep the frame tight so the square
      canvas can use almost all of it. */
-  height: min(880px, calc(100svh - 60px));
+  height: min(900px, calc(100svh - 46px));
   min-height: 680px;
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   gap: 9px;
@@ -22,7 +22,7 @@
 .p3-workbench__phase { flex: 0 0 auto; padding: 5px 8px; border: 1px solid #ecd1c1; border-radius: 99px; color: #9a5a39; background: #fff6ef; font: 650 12px var(--mono); }
 
 /* Left column ~18%, canvas ~64%, explanation ~18%: the scene keeps the widest slot. */
-.p3-workbench__layout { display: grid; min-height: 0; grid-template-columns: minmax(186px, .6fr) minmax(540px, 2.7fr) minmax(206px, .68fr); gap: 10px; }
+.p3-workbench__layout { display: grid; min-height: 0; grid-template-columns: minmax(176px, .5fr) minmax(600px, 3.4fr) minmax(196px, .58fr); gap: 10px; }
 .p3-workbench__layout > .panel { min-width: 0; min-height: 0; padding: 10px; }
 .p3-source, .p3-space-panel, .p3-rule-panel { min-width: 0; }
 .p3-source { display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
@@ -75,6 +75,8 @@
 .p3-scene__label--query text { fill: #263f43; font-size: 16px; }
 .p3-scene__label-leader { stroke: #8fa39c; stroke-width: 1; }
 .p3-scene__query-raw { fill: #fffefa; stroke: #8a6448; stroke-width: 1.8; }
+/* The query normalization ray: dashed, drawn from the origin outwards. */
+.p3-scene__query-ray { stroke: #8a6448; stroke-dasharray: 4 6; stroke-linecap: round; stroke-width: 1.5; }
 .p3-scene__query-marker { fill: #fffefa; stroke: #263f43; stroke-width: 2.6; }
 /* Persistent prototype direction: thin, solid, dimmer than the query chords. */
 .p3-scene__prototype-ray { stroke: var(--p3-point-color); stroke-opacity: .42; stroke-width: 1.2; }

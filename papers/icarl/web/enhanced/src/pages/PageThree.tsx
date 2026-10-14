@@ -230,6 +230,7 @@ type SceneState = {
   /** null while raw features are hidden; 1 when fully faded out. */
   rawGhostOpacity: number;
   unitizeProgressByClass: number[];
+  unitizationRayOpacity: number;
   contributionByClass: (number | null)[];
   meanRevealByClass: number[];
   prototypeProgressByClass: number[];
@@ -257,6 +258,11 @@ function sceneAt(clipIndex: number, progress: number): SceneState {
     }
     return 1;
   });
+  /**
+   * Original-to-circle rays belong to the unitisation stage only. Keeping them afterwards would
+   * collide with the aggregation rays, which also start at the origin.
+   */
+  const unitizationRayOpacity = clipIndex === 0 ? 1 : 1 - clamp(progressWithin(p, 0.02, 0.16));
 
   const contributionByClass = classIds.map((_, index) => {
     if (clipIndex !== 1) return null;
@@ -281,7 +287,7 @@ function sceneAt(clipIndex: number, progress: number): SceneState {
   const contributionOpacityByClass = classIds.map((_, index) => {
     if (clipIndex !== 1) return 0;
     const start = 0.04 + index * 0.3;
-    return clamp(progressWithin(p, start + 0.16, start + 0.2)) * (1 - clamp(progressWithin(p, start + 0.2, start + 0.25)));
+    return clamp(progressWithin(p, start + 0.1, start + 0.18)) * (1 - clamp(progressWithin(p, start + 0.19, start + 0.24)));
   });
 
   const meanOpacityByClass = classIds.map((_, index) => {
@@ -316,6 +322,7 @@ function sceneAt(clipIndex: number, progress: number): SceneState {
     rawPointOpacity: clipIndex > 0 ? 0 : 1 - clamp(progressWithin(p, 0.62, 0.92)),
     rawGhostOpacity: clipIndex === 0 ? clamp(progressWithin(p, 0.68, 0.96)) * 0.5 : 1,
     unitizeProgressByClass,
+    unitizationRayOpacity,
     contributionByClass,
     meanRevealByClass,
     prototypeProgressByClass,
@@ -353,6 +360,12 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
     }
   }
 
+  const rawQueryPoint = project(queryRawFeature);
+  const unitQueryPoint = project(queryUnitFeature);
+  const queryMarkerPoint = lerpPoint(rawQueryPoint, unitQueryPoint, scene.queryUnitizeProgress);
+  /** The dashed ray grows out of the origin to the query's raw position before the marker moves. */
+  const queryRayReveal = scene.clipIndex < 2 ? 0 : scene.clipIndex > 2 ? 1 : smoothstep(progressWithin(scene.progress, 0.03, 0.24));
+
   return (
     <div className="p3-canvas">
       <svg
@@ -380,14 +393,14 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         const style = { "--p3-point-color": color } as CSSProperties;
         return (
           <g key={`unitize-${sample.id}`} className="p3-scene__unitize" style={style}>
-            {classProgress > 0 ? (
+            {classProgress > 0 && scene.unitizationRayOpacity > 0.02 ? (
               <line
                 className="p3-scene__radial-ray"
                 x1={origin.x}
                 y1={origin.y}
                 x2={moving.x}
                 y2={moving.y}
-                opacity={isSelected ? 0.85 : 0.4}
+                opacity={(isSelected ? 0.85 : 0.4) * scene.unitizationRayOpacity}
               />
             ) : null}
             {scene.rawGhostOpacity > 0 && classProgress > 0.02 ? (
@@ -412,9 +425,10 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         );
       })}
 
-      {/* Aggregation layer for the class being computed. The contribution lines only exist while the
-          copies are travelling; once the mean is known they disappear, so the picture afterwards
-          shows just the unit points, the mean and the prototypes. */}
+      {/* Aggregation layer for the class being computed. Each ray grows out of the origin until it
+          reaches its own sample, then that sample's copy travels back along the ray to the mean.
+          Rays and copies exist only while the mean is being formed: once it is known they are gone,
+          so the picture afterwards is just the unit points, the mean and the prototypes. */}
       {classIds.map((classId) => {
         const calculation = prototypeCalculations.find((item) => item.classId === classId)!;
         const classIndex = classIds.indexOf(classId);
@@ -426,16 +440,19 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
           <g key={`aggregate-${classId}`} className="p3-scene__aggregate" style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
             {calculation.features.map((feature, index) => {
               const source = project(feature);
+              // The origin-to-sample leg is drawn first, so the dash appears as a growing line.
+              const rayReveal = smoothstep(progressWithin(gather, index * 0.06, index * 0.06 + 0.5));
               const position = lerpPoint(source, meanPoint, gather);
+              const rayEnd = lerpPoint(origin, source, rayReveal);
               return (
                 <g key={`contribution-${classId}-${index}`}>
                   <line
                     className="p3-scene__contribution-line"
-                    x1={source.x}
-                    y1={source.y}
-                    x2={meanPoint.x}
-                    y2={meanPoint.y}
-                    opacity={contributionOpacity * 0.6}
+                    x1={origin.x}
+                    y1={origin.y}
+                    x2={rayEnd.x}
+                    y2={rayEnd.y}
+                    opacity={contributionOpacity * 0.75}
                   />
                   <circle
                     className="p3-scene__contribution"
@@ -545,13 +562,23 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         );
       })}
 
-      {/* Query: enters at its raw feature position, then normalizes along a radial path. */}
+      {/* Query: a dashed radial ray grows out of the origin, the query feature lands on it at its raw
+          position, and the marker then travels along that same ray onto the unit circle. */}
       <g className="p3-scene__query" opacity={scene.queryOpacity}>
+        {queryRayReveal > 0.01 ? (
+          <line
+            className="p3-scene__query-ray"
+            x1={origin.x}
+            y1={origin.y}
+            x2={lerpPoint(origin, rawQueryPoint, queryRayReveal).x}
+            y2={lerpPoint(origin, rawQueryPoint, queryRayReveal).y}
+          />
+        ) : null}
         {scene.queryRawOpacity > 0.02 ? (
           <circle
             className="p3-scene__query-raw"
-            cx={project(queryRawFeature).x}
-            cy={project(queryRawFeature).y}
+            cx={rawQueryPoint.x}
+            cy={rawQueryPoint.y}
             r="5"
             opacity={scene.queryRawOpacity}
           />
@@ -559,8 +586,8 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         {scene.queryRawGhostOpacity > 0.02 ? (
           <circle
             className="p3-scene__raw-ghost"
-            cx={project(queryRawFeature).x}
-            cy={project(queryRawFeature).y}
+            cx={rawQueryPoint.x}
+            cy={rawQueryPoint.y}
             r="5"
             opacity={scene.queryRawGhostOpacity}
           />
@@ -568,16 +595,7 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         {scene.queryUnitizeProgress > 0.01 && scene.queryUnitizeProgress < 0.99 ? (
           <path
             className="p3-scene__normalize-path p3-scene__normalize-path--query"
-            d={lineRevealPath(project(queryRawFeature), project(queryUnitFeature), scene.queryUnitizeProgress)}
-          />
-        ) : null}
-        {scene.clipIndex === 2 && scene.queryRawOpacity > 0.4 ? (
-          <PlacedLabel
-            point={project(queryRawFeature)}
-            text="φ(x_q)"
-            placement={{ dx: 12, dy: -14, anchor: "start" }}
-            fontSize={14}
-            className="p3-scene__label p3-scene__label--query"
+            d={lineRevealPath(rawQueryPoint, unitQueryPoint, scene.queryUnitizeProgress)}
           />
         ) : null}
       </g>
@@ -615,19 +633,18 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         );
       })}
 
-      {/* Query marker sits above the comparison lines so it stays visible at every checkpoint. */}
+      {/* Query marker sits above the comparison lines so it stays visible at every checkpoint. The
+          label follows the marker and renames itself once normalisation completes. */}
       {scene.queryOpacity > 0.05 ? (
         <g className="p3-scene__query p3-scene__query--marker" opacity={scene.queryOpacity}>
-          <QueryMarker point={lerpPoint(project(queryRawFeature), project(queryUnitFeature), scene.queryUnitizeProgress)} />
-        {scene.queryUnitizeProgress > 0.5 ? (
+          <QueryMarker point={queryMarkerPoint} />
           <PlacedLabel
-            point={project(queryUnitFeature)}
-            text="z_q"
+            point={scene.queryUnitizeProgress > 0.6 ? unitQueryPoint : rawQueryPoint}
+            text={scene.queryUnitizeProgress > 0.6 ? "z_q" : "f(x_q)"}
             placement={queryLabel}
-            fontSize={17}
+            fontSize={scene.queryUnitizeProgress > 0.6 ? 17 : 14}
             className="p3-scene__label p3-scene__label--query"
           />
-        ) : null}
         </g>
       ) : null}
 
@@ -737,6 +754,31 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
     ? "尚未开始比较"
     : scene.comparisonProgress.filter((value) => value > 0.999).length + " / 3 条比较线";
 
+  /**
+   * The stage button never jumps to a finished state. Its first press plays the current stage from
+   * its beginning; afterwards it continues the journey one stage at a time.
+   */
+  const stageFinished = state.isHolding || state.progress >= 0.999;
+  const stageActionLabel = state.clipIndex >= clips.length - 1 && stageFinished
+    ? "重新播放"
+    : stageFinished
+      ? "继续播放"
+      : "开始播放";
+
+  function startStage() {
+    if (state.status === "playing") {
+      controls.pause();
+      return;
+    }
+    if (stageFinished) {
+      // Move on to the next stage and play it; on the last stage, start the journey over.
+      if (state.hasNext) controls.stepForward();
+      else controls.goToClip(0);
+      return;
+    }
+    controls.play();
+  }
+
   function focusWorkbench() {
     workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
   }
@@ -753,7 +795,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
         <h1>已选代表图片怎样<br className="p3-title-break" />完成一次预测？</h1>
         <p>先假定三类代表图片已经选好，并且 Feature Extractor 训练完成、暂时固定。让这些 Exemplars 和一张新 Query 进入同一特征空间，看看 iCaRL 怎样用它们完成预测。</p>
-        <button type="button" className="icarl-button icarl-button--primary p3-start-button" onClick={focusWorkbench}>开始演示 <b aria-hidden="true">↓</b></button>
+        <button type="button" className="icarl-button icarl-button--primary p3-start-button" onClick={focusWorkbench}>进入演示 <b aria-hidden="true">↓</b></button>
       </header>
 
       <section
@@ -935,13 +977,12 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="p3-workbench__controls" aria-label="Page 3 动画控制">
           <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={!state.hasPrevious}>← 上一步</button>
           <div className="p3-playback-controls">
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.toggle}>
-              {state.status === "playing" ? "Ⅱ 暂停" : reducedMotion ? "▶ 下一片段" : state.atEnd ? "▶ 重新播放" : "▶ 继续"}
-            </button>
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本片段</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本阶段</button>
             <span aria-live="polite">{String(state.clipIndex + 1).padStart(2, "0")} / 0{clips.length} · {state.clip.narrative} · {state.isHolding ? "停留" : `${Math.round(state.progress * 100)}%`}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward} disabled={!state.hasNext}>下一步 →</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={startStage}>
+            {state.status === "playing" ? "Ⅱ 暂停" : stageActionLabel} <b aria-hidden="true">{state.status === "playing" ? "" : "▶"}</b>
+          </button>
         </div>
 
         <div className="p3-clip-rail" role="group" aria-label="片段定位">
