@@ -119,6 +119,17 @@ export function validateIncrementalStageData(): true {
   if (INCREMENTAL_STAGE_DATA.trainingSamples.length !== 30 || ids.size !== 30) throw new Error("D must contain 30 unique samples.");
   if (INCREMENTAL_STAGE_DATA.snapshotBySampleId.size !== 30) throw new Error("Q must contain one row for each of the 30 samples in D.");
 
+  // The page animates D in the order of `trainingSamples`; a duplicate would hide a real sample
+  // and desynchronise the Q rows it writes.
+  const seen = new Set<string>();
+  for (const sample of INCREMENTAL_STAGE_DATA.trainingSamples) {
+    if (seen.has(sample.id)) throw new Error(`D repeats ${sample.id}; its Q row would be written twice.`);
+    seen.add(sample.id);
+    if (!INCREMENTAL_STAGE_DATA.snapshotBySampleId.has(sample.id)) {
+      throw new Error(`D contains ${sample.id} but Q has no row for it.`);
+    }
+  }
+
   for (const sample of INCREMENTAL_STAGE_DATA.trainingSamples) {
     const q = teacherSnapshotFor(sample);
     const target = buildTargets(sample, q);
