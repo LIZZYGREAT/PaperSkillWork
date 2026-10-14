@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { PaperTerm } from "../components/PaperTerm";
 import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
@@ -18,8 +18,9 @@ const exemplars = classIds.flatMap((classId) => exemplarByClass.get(classId)!);
 const queryInput: Vector2 = [1.732, -1.0];
 const queryRawFeature = encodeRawVector(queryInput, "before");
 const queryFeature = normalize(queryRawFeature);
-const chartOrigin = { x: 320, y: 260 };
-const chartScale = 180;
+const chartOrigin = { x: 320, y: 280 };
+const chartScale = 175;
+const stageDurations = [5200, 5600, 3600, 5600] as const;
 
 type PrototypeCalculation = {
   classId: ClassId;
@@ -51,13 +52,37 @@ function chartPoint(vector: Vector2) {
   return { x: chartOrigin.x + vector[0] * chartScale, y: chartOrigin.y - vector[1] * chartScale };
 }
 
-function shortestAngleArc(from: Vector2, to: Vector2, radius: number) {
+const plottedVectors: { id: string; vector: Vector2 }[] = [
+  ...exemplars.flatMap((sample) => [
+    { id: `${sample.id}:raw`, vector: encode2D(sample, "before") },
+    { id: `${sample.id}:unit`, vector: normalize(encode2D(sample, "before")) },
+  ]),
+  ...prototypeCalculations.flatMap((item) => [
+    { id: `${item.classId}:mean`, vector: item.rawMean },
+    { id: `${item.classId}:prototype`, vector: item.prototype },
+  ]),
+  { id: "query:raw", vector: queryRawFeature },
+  { id: "query:unit", vector: queryFeature },
+];
+plottedVectors.forEach(({ id, vector }) => {
+  const point = chartPoint(vector);
+  if (point.x < 12 || point.x > 628 || point.y < 12 || point.y > 548) throw new Error(`P3 plot point ${id} is outside the safe viewport.`);
+});
+
+function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
+function ease(value: number) { const t = clamp(value); return t * t * (3 - 2 * t); }
+function lerp(a: number, b: number, progress: number) { return a + (b - a) * ease(progress); }
+function lerpVector(a: Vector2, b: Vector2, progress: number): [number, number] {
+  return [lerp(a[0], b[0], progress), lerp(a[1], b[1], progress)];
+}
+
+function shortestAngleArc(from: Vector2, to: Vector2, radius: number, progress = 1) {
   const start = Math.atan2(from[1], from[0]);
   const end = Math.atan2(to[1], to[0]);
   let delta = end - start;
   while (delta > Math.PI) delta -= Math.PI * 2;
   while (delta < -Math.PI) delta += Math.PI * 2;
-  const arcEnd = start + delta;
+  const arcEnd = start + delta * ease(progress);
   const startPoint = { x: chartOrigin.x + Math.cos(start) * radius, y: chartOrigin.y - Math.sin(start) * radius };
   const endPoint = { x: chartOrigin.x + Math.cos(arcEnd) * radius, y: chartOrigin.y - Math.sin(arcEnd) * radius };
   return `M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 0 ${delta >= 0 ? 0 : 1} ${endPoint.x} ${endPoint.y}`;
@@ -83,10 +108,12 @@ const meanLabelPlacement: Record<ClassId, { dx: number; dy: number; anchor: "sta
 
 function FeatureMap({
   stage,
+  progress,
   selectedSampleId,
   onSelectSample,
 }: {
   stage: number;
+  progress: number;
   selectedSampleId: string;
   onSelectSample: (id: string) => void;
 }) {
@@ -94,7 +121,13 @@ function FeatureMap({
   const showPrototypes = stage >= 1;
   const showQuery = stage >= 2;
   const showDecision = stage === 3;
-  const normalizedPoints = exemplars.map((sample) => ({ sample, position: chartPoint(normalize(encode2D(sample, "before"))) }));
+  const sampleOrder = [selectedSampleId, ...exemplars.filter((sample) => sample.id !== selectedSampleId).map((sample) => sample.id)];
+  const normalizedPoints = exemplars.map((sample) => {
+    const raw = encode2D(sample, "before");
+    const normalized = normalize(raw);
+    const sampleProgress = stage > 0 ? 1 : clamp(progress * 1.65 - sampleOrder.indexOf(sample.id) * .06);
+    return { sample, raw, normalized, sampleProgress, position: chartPoint(lerpVector(raw, normalized, sampleProgress)) };
+  });
   function activatePoint(event: KeyboardEvent<SVGGElement>, sampleId: string) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -108,29 +141,40 @@ function FeatureMap({
         <span>FIXED SYNTHETIC · 2D TEACHING SPACE</span>
         <span>所选 {selectedSampleId} · φ<sub>Θ fixed</sub></span>
       </div>
-      <svg viewBox="0 0 640 520" role="img" aria-label="十二张已保留图片的单位化特征、三类原型和查询特征构成的固定二维教学空间">
+      <svg viewBox="0 0 640 560" role="img" aria-label="十二张已保留图片的单位化特征、三类原型和查询特征构成的固定二维教学空间">
         <title>Exemplar prototype prediction</title>
         <desc>十二张 Exemplar 图片经过同一个固定特征提取器。第二步同时显示圆内均值和归一化后的原型；第三步加入独立 Query；第四步用圆弧展示 Query 与三个原型的方向夹角，并显示 Query 到原型的距离。</desc>
         <circle className="p3-map__unit-circle" cx={chartOrigin.x} cy={chartOrigin.y} r={chartScale} />
         <line className="p3-map__axis" x1="24" y1={chartOrigin.y} x2="616" y2={chartOrigin.y} />
-        <line className="p3-map__axis" x1={chartOrigin.x} y1="14" x2={chartOrigin.x} y2="506" />
+        <line className="p3-map__axis" x1={chartOrigin.x} y1="14" x2={chartOrigin.x} y2="546" />
 
-        {stage === 0 ? exemplars.map((sample) => {
-          const rawPosition = chartPoint(encode2D(sample, "before"));
-          const normalizedPosition = chartPoint(normalize(encode2D(sample, "before")));
+        {stage === 0 ? normalizedPoints.map(({ sample, raw, normalized, sampleProgress }) => {
+          const rawPosition = chartPoint(raw);
+          const normalizedPosition = chartPoint(normalized);
           const isSelected = sample.id === selectedSampleId;
           return <g key={`raw-${sample.id}`} className={`p3-map__normalization${isSelected ? " is-selected" : ""}`} style={{ "--p3-point-color": CLASS_VISUALS[sample.classId].color } as CSSProperties}>
-            {isSelected ? <line className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={normalizedPosition.x} y2={normalizedPosition.y} /> : null}
+            <line className="p3-map__normalization-line" x1={rawPosition.x} y1={rawPosition.y} x2={lerp(rawPosition.x, normalizedPosition.x, sampleProgress)} y2={lerp(rawPosition.y, normalizedPosition.y, sampleProgress)} />
+            {isSelected ? <line className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={lerp(chartOrigin.x, normalizedPosition.x, sampleProgress)} y2={lerp(chartOrigin.y, normalizedPosition.y, sampleProgress)} /> : null}
             <circle className="p3-map__raw-point" cx={rawPosition.x} cy={rawPosition.y} r={isSelected ? 4 : 2.8} />
           </g>;
         }) : null}
 
-        {stage === 1 ? prototypeCalculations.map(({ classId, rawMean, prototype }) => {
+        {stage === 1 ? prototypeCalculations.map(({ classId, features, rawMean, prototype }, classIndex) => {
+          const local = clamp(progress * 3.05 - classIndex);
+          const gatherProgress = clamp(local / .62);
+          const projectProgress = clamp((local - .58) / .42);
           const meanPosition = chartPoint(rawMean);
           const prototypePosition = chartPoint(prototype);
+          const resultPosition = chartPoint(lerpVector(rawMean, prototype, projectProgress));
           return <g key={`calculation-${classId}`} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-            <line className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={prototypePosition.x} y2={prototypePosition.y} />
-            <circle className="p3-map__raw-mean" cx={meanPosition.x} cy={meanPosition.y} r="10" />
+            {features.map((feature, index) => {
+              const source = chartPoint(feature);
+              return <circle key={index} className="p3-map__contribution" cx={lerp(source.x, meanPosition.x, gatherProgress)} cy={lerp(source.y, meanPosition.y, gatherProgress)} r="5" style={{ opacity: local < .02 || projectProgress > .78 ? 0 : 1 }} />;
+            })}
+            <line className="p3-map__radial-ray" x1={chartOrigin.x} y1={chartOrigin.y} x2={lerp(chartOrigin.x, prototypePosition.x, projectProgress)} y2={lerp(chartOrigin.y, prototypePosition.y, projectProgress)} style={{ opacity: projectProgress }} />
+            <circle className="p3-map__raw-mean" cx={meanPosition.x} cy={meanPosition.y} r="10" style={{ opacity: clamp((local - .44) / .18) }} />
+            <path className={`p3-map__prototype p3-map__prototype--${classId}`} d={`M ${resultPosition.x - 7} ${resultPosition.y - 7} h 14 v 14 h -14 Z`} style={{ opacity: clamp((local - .54) / .18) }} />
+            {projectProgress > .94 ? <text className="p3-map__direct-label" x={prototypePosition.x + prototypeLabelPlacement[classId].dx} y={prototypePosition.y + prototypeLabelPlacement[classId].dy} textAnchor={prototypeLabelPlacement[classId].anchor}>μ{CLASS_VISUALS[classId].index}</text> : null}
           </g>;
         }) : null}
 
@@ -140,16 +184,19 @@ function FeatureMap({
         }) : null}
 
         {showQuery ? (() => {
+          const queryMotion = stage > 2 ? 1 : clamp((progress - .48) / .52);
           const position = chartPoint(queryFeature);
-          return <line className="p3-map__radial-ray p3-map__radial-ray--query" x1={chartOrigin.x} y1={chartOrigin.y} x2={position.x} y2={position.y} />;
+          return <line className="p3-map__radial-ray p3-map__radial-ray--query" x1={chartOrigin.x} y1={chartOrigin.y} x2={lerp(chartOrigin.x, position.x, queryMotion)} y2={lerp(chartOrigin.y, position.y, queryMotion)} style={{ opacity: queryMotion }} />;
         })() : null}
 
         {showDecision ? queryComparisons.map(({ classId }, index) => {
+          const local = clamp(progress * 3.15 - index);
           const queryPosition = chartPoint(queryFeature);
           const prototypePosition = chartPoint(prototypeByClass.get(classId)!);
+          const lineEnd = { x: lerp(queryPosition.x, prototypePosition.x, local), y: lerp(queryPosition.y, prototypePosition.y, local) };
           return <g key={`comparison-${classId}`} style={{ "--p3-point-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-            <line className={`p3-map__distance${index === 0 ? " is-nearest" : ""}`} x1={queryPosition.x} y1={queryPosition.y} x2={prototypePosition.x} y2={prototypePosition.y} />
-            <path className={`p3-map__angle${index === 0 ? " is-nearest" : ""}`} d={shortestAngleArc(queryFeature, prototypeByClass.get(classId)!, 38 + index * 17)} />
+            <line className={`p3-map__distance${index === 0 && progress > .9 ? " is-nearest" : ""}`} x1={queryPosition.x} y1={queryPosition.y} x2={lineEnd.x} y2={lineEnd.y} />
+            {local > .38 ? <path className={`p3-map__angle${index === 0 && progress > .9 ? " is-nearest" : ""}`} d={shortestAngleArc(queryFeature, prototypeByClass.get(classId)!, 38 + index * 17, (local - .38) / .62)} /> : null}
           </g>;
         }) : null}
 
@@ -170,7 +217,7 @@ function FeatureMap({
           </g>;
         })}
 
-        {showPrototypes ? prototypeCalculations.map(({ classId, prototype }) => {
+        {showPrototypes && stage !== 1 ? prototypeCalculations.map(({ classId, prototype }) => {
           const position = chartPoint(prototype);
           const label = prototypeLabelPlacement[classId];
           return <g key={`prototype-${classId}`}>
@@ -179,24 +226,31 @@ function FeatureMap({
           </g>;
         }) : null}
 
-        {stage === 1 ? prototypeCalculations.map(({ classId, rawMean }) => {
+        {stage === 1 ? prototypeCalculations.map(({ classId, rawMean }, classIndex) => {
+          const reveal = clamp(progress * 3.05 - classIndex - .44);
           const position = chartPoint(rawMean);
           const label = meanLabelPlacement[classId];
-          return <text key={`mean-label-${classId}`} className="p3-map__direct-label p3-map__direct-label--mean" x={position.x + label.dx} y={position.y + label.dy} textAnchor={label.anchor}>z̄{CLASS_VISUALS[classId].index}</text>;
+          return <text key={`mean-label-${classId}`} className="p3-map__direct-label p3-map__direct-label--mean" x={position.x + label.dx} y={position.y + label.dy} textAnchor={label.anchor} style={{ opacity: reveal }}>z̄{CLASS_VISUALS[classId].index}</text>;
         }) : null}
 
         {stage === 2 ? (() => {
           const rawPosition = chartPoint(queryRawFeature);
+          const incoming = clamp(progress / .42);
           return <g className="p3-map__query-normalization">
-            <circle cx={rawPosition.x} cy={rawPosition.y} r="4" />
+            <path className="p3-map__query-entry" d={`M 34 505 H 112 L ${rawPosition.x} ${rawPosition.y}`} style={{ strokeDashoffset: 520 * (1 - incoming) }} />
+            <rect x="72" y="480" width="78" height="38" rx="7" /><text x="111" y="504" textAnchor="middle">φΘ fixed</text>
+            <circle cx={lerp(34, rawPosition.x, incoming)} cy={lerp(505, rawPosition.y, incoming)} r="5" />
           </g>;
         })() : null}
 
         {showQuery ? (() => {
-          const position = chartPoint(queryFeature);
+          const rawPosition = chartPoint(queryRawFeature);
+          const unitPosition = chartPoint(queryFeature);
+          const queryMotion = stage > 2 ? 1 : clamp((progress - .48) / .52);
+          const position = { x: lerp(rawPosition.x, unitPosition.x, queryMotion), y: lerp(rawPosition.y, unitPosition.y, queryMotion) };
           return <g>
             <path className="p3-map__query" d={`M ${position.x} ${position.y - 9} l 9 9 l -9 9 l -9 -9 Z`} />
-            <text className="p3-map__direct-label p3-map__direct-label--query" x={position.x + 17} y={position.y - 12}>zq</text>
+            {queryMotion > .86 ? <text className="p3-map__direct-label p3-map__direct-label--query" x={unitPosition.x + 17} y={unitPosition.y - 12}>zq</text> : null}
           </g>;
         })() : null}
 
@@ -234,8 +288,65 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   const [stage, setStage] = useState(0);
   const [selectedSampleId, setSelectedSampleId] = useState(P_BEFORE.A[0].id);
   const reducedMotion = useReducedMotion();
+  const [progress, setProgress] = useState(reducedMotion ? 1 : 0);
+  const [isPlaying, setIsPlaying] = useState(!reducedMotion);
+  const progressRef = useRef(progress);
+  const startedAtRef = useRef<number | null>(null);
   const workbenchRef = useRef<HTMLElement | null>(null);
   const selectedSample = exemplars.find((sample) => sample.id === selectedSampleId) ?? exemplars[0];
+
+  useEffect(() => { progressRef.current = progress; }, [progress]);
+  useEffect(() => {
+    const next = reducedMotion ? 1 : 0;
+    progressRef.current = next;
+    setProgress(next);
+    setIsPlaying(!reducedMotion);
+    startedAtRef.current = null;
+  }, [stage, reducedMotion]);
+
+  useEffect(() => {
+    if (!isPlaying || reducedMotion || progressRef.current >= 1) return;
+    let frame = 0;
+    const duration = stageDurations[stage];
+    const tick = (time: number) => {
+      if (startedAtRef.current === null) startedAtRef.current = time - progressRef.current * duration;
+      const next = clamp((time - startedAtRef.current) / duration);
+      progressRef.current = next;
+      setProgress(next);
+      if (next < 1) frame = requestAnimationFrame(tick);
+      else setIsPlaying(false);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [isPlaying, reducedMotion, stage]);
+
+  function selectStage(nextStage: number) {
+    setStage(Math.max(0, Math.min(3, nextStage)));
+  }
+
+  function togglePlayback() {
+    if (reducedMotion) return;
+    if (progressRef.current >= 1) {
+      progressRef.current = 0;
+      setProgress(0);
+      startedAtRef.current = null;
+      setIsPlaying(true);
+    } else if (isPlaying) {
+      setIsPlaying(false);
+      startedAtRef.current = null;
+    } else {
+      startedAtRef.current = null;
+      setIsPlaying(true);
+    }
+  }
+
+  function replayStage() {
+    const next = reducedMotion ? 1 : 0;
+    progressRef.current = next;
+    setProgress(next);
+    startedAtRef.current = null;
+    setIsPlaying(!reducedMotion);
+  }
 
   return (
     <article className="tutorial-page icarl-page icarl-page--p3">
@@ -249,7 +360,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
       <details className="p3-chapter-jumps">
         <summary>章节快速定位 · 4 个阶段</summary>
         <GuidedStepControls steps={steps} current={stage} onChange={(nextStage) => {
-          setStage(nextStage);
+          selectStage(nextStage);
           requestAnimationFrame(() => workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }));
         }} label="Page 3 最近原型预测阶段快速定位" />
       </details>
@@ -257,7 +368,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
       <section className="p3-workbench" aria-label="已保留图片、特征空间和当前预测规则" data-stage={stage} ref={workbenchRef}>
         <header className="p3-workbench__heading">
           <div><span className="eyebrow">STEP {stage + 1} / 4 · {steps[stage].short}</span><h2>{steps[stage].title}</h2><p aria-live="polite">{stageNarratives[stage]}</p></div>
-          <span className="p3-phase-badge">{String(stage + 1).padStart(2, "0")} / 04</span>
+          <span className="p3-phase-badge">{Math.round(progress * 100)}%</span>
         </header>
 
         <div className="p3-workbench__layout">
@@ -282,31 +393,37 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
 
           <section className="panel p3-space-panel">
             <div className="panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h2>单位特征、Prototype 与 Query</h2></div></div>
-            <FeatureMap stage={stage} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
+            <FeatureMap stage={stage} progress={progress} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
           </section>
 
           <aside className="panel p3-rule-panel" aria-live="polite">
-            <div className="panel-heading"><div><span className="eyebrow">CURRENT RULE</span><h2>本步的计算与结果</h2></div></div>
-            {stage === 0 ? <div className="p3-rule-stack"><div className="p3-rule-card is-active"><span>图像进入单位特征空间</span><strong>z<sub>p</sub> = normalize(φ<sub>Θ</sub>(p))</strong></div><p className="p3-state-boundary">得到三组单位化特征；尚未计算 Prototype，也尚未输入 Query。</p></div> : null}
-            {stage === 1 ? <div className="p3-rule-stack"><div className="p3-rule-card is-active"><span>每类四个 Exemplar Features</span><strong>z̄<sub>y</sub> = ¼ Σ z<sub>p</sub>　→　μ<sub>y</sub> = normalize(z̄<sub>y</sub>)</strong></div><p className="p3-state-boundary">圆内标记是均值 z̄<sub>y</sub>；单位圆上的方框 Prototype μ<sub>y</sub> 才用于分类。</p></div> : null}
-            {stage === 2 ? <div className="p3-rule-stack"><div className="p3-rule-card is-active"><span>Query 使用同一个固定模型</span><strong>z<sub>q</sub> = normalize(φ<sub>Θ fixed</sub>(x<sub>q</sub>))</strong></div><p className="p3-state-boundary">三个 Prototype 保持不变；Query 只进入预测，不加入 Exemplar Memory。</p></div> : null}
-            {stage === 3 ? <>
-              <div className="p3-rule-stack"><div className="p3-rule-card is-active"><span>最近原型分类</span><strong>ŷ = arg min<sub>y</sub> ‖z<sub>q</sub> − μ<sub>y</sub>‖<sub>2</sub></strong></div><p className="p3-prediction">预测类别：{CLASS_VISUALS[predictedClass].displayLabel}</p><p className="p3-state-boundary">推断读取当前模型与 Exemplar Memory，不改变 Θ 或 P。</p></div>
-              <details className="p3-distance-details"><summary>查看三个类别的距离与夹角</summary><div className="p3-distance-list"><span className="eyebrow">Synthetic 2D teaching example</span>{queryComparisons.map(({ classId, distance, angle }, index) => <div key={classId} className={index === 0 ? "is-nearest" : ""}><span>μ<sub>{CLASS_VISUALS[classId].index}</sub></span><b>d = {distance.toFixed(3)}</b><em>θ = {angle.toFixed(1)}°</em><small>{index === 0 ? "最近" : ""}</small></div>)}</div></details>
-              <details className="p3-normalized-note"><summary>为什么最近距离也对应最小夹角？</summary><div><p>因为 z<sub>q</sub> 与 μ<sub>y</sub> 都是单位向量：</p><code>d<sub>y</sub><sup>2</sup> = 2 − 2z<sub>q</sub><sup>T</sup>μ<sub>y</sub> = 2 − 2cos θ<sub>y</sub></code><p>论文的规则是最近 Prototype；夹角是单位化条件下的等价几何解释。</p></div></details>
-            </> : null}
+            <div className="panel-heading"><div><span className="eyebrow">正在观察</span><h2>{steps[stage].short}</h2></div></div>
+            <p className="p3-current-observation">{stageNarratives[stage]}</p>
+            {stage === 3 && progress > .92 ? <p className="p3-prediction">预测类别：{CLASS_VISUALS[predictedClass].displayLabel}</p> : null}
+            <details className="p3-calculation-details"><summary>查看完整计算依据</summary><div>
+              <p><b>单位特征</b> z<sub>p</sub> = normalize(φ<sub>Θ</sub>(p))</p>
+              <p><b>类别原型</b> z̄<sub>y</sub> = ¼Σz<sub>p</sub>，μ<sub>y</sub> = normalize(z̄<sub>y</sub>)</p>
+              <p><b>Query</b> z<sub>q</sub> = normalize(φ<sub>Θ fixed</sub>(x<sub>q</sub>))</p>
+              <p><b>预测</b> ŷ = arg min<sub>y</sub> ‖z<sub>q</sub> − μ<sub>y</sub>‖₂</p>
+            </div></details>
+            {stage === 3 ? <details className="p3-distance-details"><summary>核对距离与夹角</summary><div className="p3-distance-list">{queryComparisons.map(({ classId, distance, angle }, index) => <div key={classId} className={index === 0 ? "is-nearest" : ""}><span>μ<sub>{CLASS_VISUALS[classId].index}</sub></span><b>{distance.toFixed(3)}</b><em>{angle.toFixed(1)}°</em><small>{index === 0 ? "最近" : ""}</small></div>)}</div></details> : null}
+            <p className="p3-state-boundary">{stage < 3 ? "先看清当前对象如何得到，再进入下一步。" : "单位向量间距离越小，夹角也越小；推断不更新模型参数。"}</p>
           </aside>
         </div>
 
         <div className="p3-workbench__controls" aria-label="Page 3 教学步骤控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => setStage((current) => Math.max(0, current - 1))} disabled={stage === 0}>上一步</button>
-          <span aria-live="polite">{String(stage + 1).padStart(2, "0")} / 04 · {steps[stage].short}</span>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={() => stage < 3 ? setStage(stage + 1) : onContinue?.()} disabled={stage === 3 && !onContinue}>{stage === 3 ? "进入第 4 页" : "下一步"} <b aria-hidden="true">→</b></button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => selectStage(stage - 1)} disabled={stage === 0}>← 上一步</button>
+          <div className="p3-playback-controls">
+            <button type="button" className="icarl-button icarl-button--primary" onClick={togglePlayback} disabled={reducedMotion}>{isPlaying ? "暂停" : progress >= 1 ? "再次播放" : "继续"}</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={replayStage}>重播本步</button>
+            <span aria-live="polite">{String(stage + 1).padStart(2, "0")} / 04 · {steps[stage].short}</span>
+          </div>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={() => stage < 3 ? selectStage(stage + 1) : onContinue?.()} disabled={stage === 3 && !onContinue}>{stage === 3 ? "进入第 4 页" : "下一步"} <b aria-hidden="true">→</b></button>
         </div>
       </section>
 
       <footer className="icarl-handoff">
-        <div><span className="eyebrow">NEXT · PAGE 04</span><p>这次预测依赖已经选好的 Exemplars；刚才我们暂时假定这些代表已经存在。下一页追问它们从哪里来，以及预算变紧时怎样管理。</p></div>
+        <div><span className="eyebrow">NEXT · PAGE 04</span><p>我们已经能用当前特征提取器和已选 Exemplars 完成预测，但刚才暂时假定它们已经存在。那么，我们该怎么找到最典型的代表，又怎样管理这些代表？</p></div>
         {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>筛选与管理代表样本 <b aria-hidden="true">→</b></button> : null}
       </footer>
     </article>
