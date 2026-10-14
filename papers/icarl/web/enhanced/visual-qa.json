@@ -1025,6 +1025,98 @@
       ]
     },
     {
+      "id": "icarl-p8-evidence-questions",
+      "path": "/",
+      "states": [
+        {
+          "id": "p8-overall-icifar-100-batch10",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "waitFor", "selector": "[data-question='overall'] .p8-figure-focus img", "state": "visible" },
+            { "type": "waitFor", "selector": "[data-focus='cifar-10']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-overall-ilsvrc-small",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-setting-controls button:nth-of-type(2)" },
+            { "type": "waitFor", "selector": "[data-focus='ilsvrc-small']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-overall-ilsvrc-full",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-setting-controls button:nth-of-type(3)" },
+            { "type": "waitFor", "selector": "[data-focus='ilsvrc-full']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-figure3-class-prediction-bias",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-figure3-details > summary" },
+            { "type": "waitFor", "selector": ".p8-figure3-details[open] .rk-paper-figure__image-wrap img", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-components-prototype-comparison",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-tabs button:nth-of-type(2)" },
+            { "type": "waitFor", "selector": ".p8-selected-values", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-components-replay-attribution-limit",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-tabs button:nth-of-type(2)" },
+            { "type": "click", "selector": ".p8-mechanism-select button:nth-of-type(2)" },
+            { "type": "waitFor", "selector": ".p8-caution", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-components-distillation-two-class-exception",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-tabs button:nth-of-type(2)" },
+            { "type": "click", "selector": ".p8-mechanism-select button:nth-of-type(3)" },
+            { "type": "click", "selector": ".p8-batch-selector button:nth-of-type(1)" },
+            { "type": "waitFor", "selector": ".p8-exception", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-approximation-two-class-accuracy-gap",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-tabs button:nth-of-type(3)" },
+            { "type": "click", "selector": ".p8-batch-selector button:nth-of-type(1)" },
+            { "type": "waitFor", "selector": ".p8-gap-plot", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-memory-budget-original-figure4",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-tabs button:nth-of-type(4)" },
+            { "type": "waitFor", "selector": "[data-focus='trend'] .rk-paper-figure__image-wrap img", "state": "visible" },
+            { "type": "waitFor", "selector": ".p8-qualified-summary", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p8-memory-high-budget-prototype-focus",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(8)" },
+            { "type": "click", "selector": ".p8-tabs button:nth-of-type(4)" },
+            { "type": "click", "selector": ".p8-memory-focus button:nth-of-type(2)" },
+            { "type": "waitFor", "selector": "[data-focus='prototype']", "state": "visible" }
+          ]
+        }
+      ]
+    },
+    {
       "id": "icarl-p9-runtime",
       "path": "/",
       "states": [

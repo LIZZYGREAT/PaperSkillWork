@@ -212,3 +212,9 @@ P7 已重构为训练完成、旧类有序前缀截断、新类当前 Herding ex
 `FeatureSpaceWorkbench` 新增可选的 `motionProgress` 插值能力，只供 P7 的同 ID before/after 动画使用；P3/P4/P9 未传此属性时仍显示原有静态图形。P7 根节点和局部 CSS 统一使用 `p7` 作用域，导航文字同步调整。视觉 QA 状态现从 P7 工作台真实播放中段捕获，而非停留在逐段跳转的初始帧。
 
 验证：`tsc --noEmit`、项目现有 `npm.cmd test` 与 Vite bundle-loader 生产构建通过（75 modules）；测试数据核对显示 P3 的 12 个特征/3 个原型/最近类结果、P4 的 8 个候选及排序、P5 的 D=30 与冻结 Q=30×3 均通过。Chromium 在 1440×900 与 1920×1080 共捕获 12 个 P7 状态，GEOMETRY_QA=PASS、BROWSER_ERRORS=PASS（0），报告位于 `web/enhanced/.visual-qa/p7-revision-final/run-2026-10-14T17-35-06-060Z/report.md`。已查看 1440×900 下旧记忆截断、新类入选、特征重编码、原型重建和 Query 结果截图，VISUAL_REVIEW=PASS；STYLE_QA=NOT_RUN，REGRESSION=NOT_RUN（没有已批准基线）；HUMAN_ACCEPTANCE=PENDING。W7/W9/W10 状态未更改。
+
+#### 阶段 D｜P8 论文证据阅读（2026-10-15）
+
+P8 已按四个问题组织：整体结果与实验协议、组件作用及对照限制、Exemplar 均值近似的准确率代价、记忆预算与适用边界。Figure 2 可切换 iCIFAR-100、iILSVRC-small、iILSVRC-full 与每批类别数，焦点框依据原图像素坐标定位；Figure 3 保留类别预测偏置的可展开原图。Table 1a/1b 使用论文结果数据，突出 Hybrid 2 两类批次例外，并说明 Hybrid 3 与 LwF.MC 同时改变回放和蒸馏、不能单独归因于回放。Table 1b 比较分类准确率百分点，不将其解释为原型向量距离；全数据 NCM 仅作为诊断参照。Figure 4 聚焦记忆预算趋势，并保留原图与任务范围说明，接入 P9 完整运行链。
+
+验证：`tsc --noEmit` 与 Vite bundle-loader 生产构建通过（75 modules）；项目既有 `npm.cmd test` 通过。P8 在 1440×900、1920×1080 共捕获 20 个状态，GEOMETRY_QA=PASS、BROWSER_ERRORS=PASS（0），主报告位于 `web/enhanced/.visual-qa/p8-revision-final/run-2026-10-14T17-49-59-081Z/report.md`。已实际查看总体结果与 Figure 2 三个焦点、Figure 3 展开状态、Table 1a 的组件/两类批次例外、Table 1b 准确率差值和 Figure 4 两种焦点；Figure 3 另补一张滚回页首后的干净长截图，以避开 sticky 导航在长页截图中的重复。人工视觉复核通过；STYLE_QA=NOT_RUN，REGRESSION=NOT_RUN（没有已批准基线），HUMAN_ACCEPTANCE=PENDING；W7/W9/W10 状态未更改。

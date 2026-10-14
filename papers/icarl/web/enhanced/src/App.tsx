@@ -22,7 +22,7 @@ const pages: { id: PageId; number: string; title: string; subtitle: string }[] =
   { id: "page-5", number: "05", title: "让 Exemplars 参与后续更新", subtitle: "训练集 D 与 response Q" },
   { id: "page-6", number: "06", title: "训练信号与参数更新", subtitle: "六节点 BCE 与梯度路径" },
   { id: "page-7", number: "07", title: "训练后记忆与预测", subtitle: "P_after 与当前原型" },
-  { id: "page-8", number: "08", title: "实验与边界", subtitle: "论文结果、机制对照与限制" },
+  { id: "page-8", number: "08", title: "实验与边界", subtitle: "整体效果·机制证据·记忆边界" },
   { id: "page-9", number: "09", title: "一次完整更新", subtitle: "跟踪运行时状态" },
 ];
 

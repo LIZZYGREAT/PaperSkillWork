@@ -3,31 +3,79 @@ import { PaperFigure } from "../shared/core/paper-figure";
 import { PaperTerm } from "../components/PaperTerm";
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B, type AblationResult } from "../data/table1-results";
 
-type EvidenceTab = "setup" | "overall" | "components" | "approximation" | "memory" | "boundaries";
+const figure2Src = new URL("../../assets/figures/figure-2.png", import.meta.url).href;
+const figure3Src = new URL("../../assets/figures/figure-3.png", import.meta.url).href;
+const figure4Src = new URL("../../assets/figures/figure-4.png", import.meta.url).href;
+
+type EvidenceTab = "overall" | "components" | "approximation" | "memory";
 type Benchmark = "cifar" | "small" | "full";
 type Mechanism = "prototype" | "rehearsal" | "distillation";
 type MethodKey = "icarL" | "hybrid1" | "hybrid2" | "hybrid3" | "lwfMC";
+type FocusRect = { x: number; y: number; width: number; height: number };
+type SourceFrame = { width: number; height: number };
 
-const tabs: { id: EvidenceTab; label: string }[] = [
-  { id: "setup", label: "实验设置" }, { id: "overall", label: "整体表现" }, { id: "components", label: "组件对照" },
-  { id: "approximation", label: "均值近似" }, { id: "memory", label: "记忆预算" }, { id: "boundaries", label: "适用边界" },
+const tabs: { id: EvidenceTab; label: string; question: string }[] = [
+  { id: "overall", label: "整体结果", question: "面对连续加入的类别，iCaRL 的准确率会怎样变化？" },
+  { id: "components", label: "哪些机制起作用", question: "如果整体结果较好，是哪些设计在发挥作用？" },
+  { id: "approximation", label: "Exemplar 的分类代价", question: "少量 exemplars 构造原型，会损失多少分类准确率？" },
+  { id: "memory", label: "预算与适用边界", question: "记忆预算影响什么，又留下哪些资源限制？" },
 ];
+
 const methods: { id: MethodKey; label: string; color: string }[] = [
   { id: "icarL", label: "iCaRL", color: "#39748f" }, { id: "hybrid1", label: "Hybrid 1", color: "#967242" },
   { id: "hybrid2", label: "Hybrid 2", color: "#58845c" }, { id: "hybrid3", label: "Hybrid 3", color: "#a36b56" },
   { id: "lwfMC", label: "LwF.MC", color: "#68747a" },
 ];
+
 const mechanismComparisons: Record<Mechanism, { title: string; comparisonKind: string; pair: string[]; explanation: string; question: string; nuance: string }> = {
-  prototype: { title: "原型分类器", comparisonKind: "CLEANER CONTROLLED COMPARISON", pair: ["iCaRL", "Hybrid 1"], explanation: "两者都使用相同的表示学习与 exemplar；区别在最终分类器：iCaRL 使用 exemplar 均值，Hybrid 1 使用网络输出。", question: "按 exemplar 均值最近邻分类是否有帮助？", nuance: "iCaRL 与 Hybrid 1 在较小类别批次下差距尤其明显；这些设置经历了更多轮表示更新。" },
-  rehearsal: { title: "Exemplar 回放", comparisonKind: "CONTRAST PAIR", pair: ["Hybrid 3", "LwF.MC"], explanation: "Hybrid 3 用 exemplars 参与表示学习、不使用蒸馏，最终用网络输出分类；LwF.MC 不使用 exemplars、使用蒸馏，最终同样用网络输出分类。因此两者同时改变了 exemplar 回放和 distillation，并非只改变回放的单变量对照。", question: "加入 exemplar 回放的配置呈现出什么差异？", nuance: "论文作者据此讨论 exemplar rehearsal 的重要性；但该对照不是纯单变量消融，不能把差异只归因于 exemplar。它是 iCIFAR-100 上的对照性证据，也不能推广为所有持续学习任务的普遍结论。" },
-  distillation: { title: "知识蒸馏", comparisonKind: "CLEANER CONTROLLED COMPARISON", pair: ["iCaRL", "Hybrid 2"], explanation: "两者都使用原型分类与 exemplar；Hybrid 2 移除了 distillation loss。", question: "保持旧节点响应带来了什么？", nuance: "效果取决于每批类别数。每批 2 类时，Hybrid 2 为 57.6%，iCaRL 为 57.0%。" },
+  prototype: {
+    title: "原型分类器", comparisonKind: "单组件对照", pair: ["iCaRL", "Hybrid 1"],
+    explanation: "两者都使用相同的表示学习与 exemplar 回放；区别在最终分类器：iCaRL 使用 exemplar 均值，Hybrid 1 使用网络输出。",
+    question: "原型分类器带来了什么差异？",
+    nuance: "作者指出，较小类别批次下两者差距尤其明显；这类设置包含更多轮表示更新。",
+  },
+  rehearsal: {
+    title: "Exemplar 回放", comparisonKind: "对照性证据", pair: ["Hybrid 3", "LwF.MC"],
+    explanation: "Hybrid 3 用 exemplars 参与表示学习、不使用蒸馏；LwF.MC 不使用 exemplars、使用蒸馏。两者同时改变了回放与蒸馏，并非只改变回放的单变量对照。",
+    question: "包含 exemplar 回放的配置呈现出什么差异？",
+    nuance: "论文用这组对照讨论 exemplar rehearsal 对抗遗忘的作用；差异不能只归因于回放，也不能推广为所有任务的普遍结论。",
+  },
+  distillation: {
+    title: "知识蒸馏", comparisonKind: "单组件对照", pair: ["iCaRL", "Hybrid 2"],
+    explanation: "两者都使用 exemplar 回放与原型分类；Hybrid 2 移除了蒸馏损失。",
+    question: "保持旧类别响应带来了什么差异？",
+    nuance: "蒸馏的效果取决于类别批次大小：批次较大时更有优势，最小的两类批次出现反例。",
+  },
 };
-const focusLabels: Record<Benchmark, string> = { cifar: "iCIFAR-100", small: "iILSVRC-small", full: "iILSVRC-full" };
-const focusDetails: Record<Benchmark, string> = {
-  cifar: "iCIFAR-100 · 100 类 · 多类准确率 · 10 个类别顺序 · ResNet-32 · K ≤ 2,000",
-  small: "iILSVRC-small · 100 个 ImageNet 类别，每批 10 类 · 验证集 Top-5 准确率 · ResNet-18 · K ≤ 20,000",
-  full: "iILSVRC-full · 1,000 个 ImageNet 类别，每批 100 类 · 验证集 Top-5 准确率 · ResNet-18 · K ≤ 20,000",
+
+const benchmarkLabels: Record<Benchmark, string> = { cifar: "iCIFAR-100", small: "iILSVRC-small", full: "iILSVRC-full" };
+const figure2Frame: SourceFrame = { width: 2134, height: 2183 };
+const figure4Frame: SourceFrame = { width: 1017, height: 666 };
+
+// Rectangles are stored in the original PNG's pixel coordinates, so responsive resizing keeps focus attached to the source panels.
+const figure2Focus: Record<string, FocusRect> = {
+  "cifar-2": { x: 209, y: 41, width: 522, height: 397 },
+  "cifar-5": { x: 891, y: 41, width: 506, height: 397 },
+  "cifar-10": { x: 1532, y: 41, width: 525, height: 397 },
+  "cifar-20": { x: 371, y: 574, width: 529, height: 386 },
+  "cifar-50": { x: 1032, y: 574, width: 544, height: 386 },
+  "ilsvrc-small": { x: 235, y: 1244, width: 600, height: 441 },
+  "ilsvrc-full": { x: 1378, y: 1244, width: 600, height: 441 },
 };
+
+type MemoryFocus = "trend" | "prototype" | "classifier";
+const memoryFocusRects: Record<MemoryFocus, FocusRect> = {
+  trend: { x: 71, y: 20, width: 881, height: 392 },
+  prototype: { x: 250, y: 20, width: 700, height: 392 },
+  classifier: { x: 71, y: 140, width: 881, height: 270 },
+};
+const memoryInterpretations: Record<MemoryFocus, { label: string; heading: string; copy: string }> = {
+  trend: { label: "观察整体趋势", heading: "较大的 K 在本组实验中伴随更高准确率", copy: "Figure 4 在 iCIFAR-100、每批 10 类的设置下比较不同 K。原图显示三种分类配置都受益于更大的记忆预算；这不是对所有实验条件的单调性定理。" },
+  prototype: { label: "iCaRL 与 NCM", heading: "K ≥ 1,000 时两种原型分类表现接近", copy: "论文讨论指出，在这组预算下，exemplar 均值分类器与全数据 NCM 的结果接近。NCM 仍需访问全部历史图像，不受同样的 exemplar 预算限制。" },
+  classifier: { label: "网络输出分类器", heading: "原图中的 Hybrid 1 低于原型分类配置", copy: "Hybrid 1 使用相同表示，但以网络输出分类。这里观察原始 Figure 4 的定性曲线，不从像素读取或补造精确数值。" },
+};
+
+const figure2FocusId = (benchmark: Benchmark, batch: number) => benchmark === "cifar" ? `cifar-${batch}` : benchmark === "small" ? "ilsvrc-small" : "ilsvrc-full";
 
 function EvidenceTag({ kind }: { kind: "PAPER RESULT" | "PAPER INTERPRETATION" | "PAPER LIMITATION" | "TEACHING EXPLANATION" | "GENERAL BACKGROUND" }) {
   return <span className={`p8-tag p8-tag--${kind.toLowerCase().replace(/ /g, "-")}`}>[{kind}]</span>;
@@ -37,12 +85,12 @@ function PageEvidenceHeader() {
   return <header className="page-heading icarl-page__heading">
     <div className="icarl-page__eyebrow"><span>PAGE 08</span><i /> 论文证据与适用边界</div>
     <h1>这些机制由什么证据支持？结论止于哪里？</h1>
-    <p>把基准实验、组件对照和记忆边界连回第 1–8 页介绍的机制，逐项区分论文结果、作者解释与教学推导。</p>
+    <p>沿着刚完成的训练与预测链，先核对整体结果，再比较组件、近似代价和记忆边界。</p>
   </header>;
 }
 
 function EvidenceTabs({ value, onChange }: { value: EvidenceTab; onChange: (tab: EvidenceTab) => void }) {
-  return <nav className="p8-tabs" role="tablist" aria-label="第 8 页证据工作台分区">{tabs.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={value === tab.id} aria-current={value === tab.id ? "step" : undefined} className={value === tab.id ? "is-active" : ""} onClick={() => onChange(tab.id)}>{tab.label}</button>)}</nav>;
+  return <nav className="p8-tabs" role="tablist" aria-label="四个连续实验问题">{tabs.map((tab, index) => <button key={tab.id} id={`p8-tab-${tab.id}`} type="button" role="tab" aria-controls={`p8-panel-${tab.id}`} aria-selected={value === tab.id} aria-current={value === tab.id ? "step" : undefined} className={value === tab.id ? "is-active" : ""} onClick={() => onChange(tab.id)}><span>{String(index + 1).padStart(2, "0")}</span>{tab.label}</button>)}</nav>;
 }
 
 function BatchSelector({ value, onChange, label = "每批新类别数" }: { value: number; onChange: (value: (typeof CLASSES_PER_BATCH)[number]) => void; label?: string }) {
@@ -50,236 +98,216 @@ function BatchSelector({ value, onChange, label = "每批新类别数" }: { valu
 }
 
 function DatasetCard({ title, strap, classes, batches, metric, backbone, memory, background, sourceHref, sourceLabel }: { title: string; strap: string; classes: string; batches: string; metric: string; backbone: string; memory: string; background: string; sourceHref: string; sourceLabel: string }) {
-  return <section className="p8-dataset-card"><div className="p8-dataset-card__top"><div><span className="eyebrow">{strap}</span><h2>{title}</h2></div><span className="p8-image-icon" aria-hidden="true">▧</span></div><div className="p8-dataset-card__background"><EvidenceTag kind="GENERAL BACKGROUND" /><p>{background}</p><a href={sourceHref} target="_blank" rel="noreferrer">{sourceLabel}</a></div><div className="p8-dataset-card__scale"><span>类别数</span><b>{classes}</b></div><div className="p8-dataset-card__batches"><span>每批类别数</span><b>{batches}</b></div><dl><div><dt>指标</dt><dd>{metric}</dd></div><div><dt>骨干网络</dt><dd>{backbone}</dd></div><div><dt>Exemplar 预算</dt><dd>{memory}</dd></div></dl></section>;
+  return <section className="p8-dataset-card"><div className="p8-dataset-card__top"><div><span className="eyebrow">{strap}</span><h3>{title}</h3></div></div><div className="p8-dataset-card__background"><EvidenceTag kind="GENERAL BACKGROUND" /><p>{background}</p><a href={sourceHref} target="_blank" rel="noreferrer">{sourceLabel}</a></div><dl><div><dt>类别数 / 批次</dt><dd>{classes} · {batches}</dd></div><div><dt>指标 / 骨干</dt><dd>{metric} · {backbone}</dd></div><div><dt>图像预算</dt><dd>{memory}</dd></div></dl></section>;
 }
 
-function SetupPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)[number]; setBatch: (value: (typeof CLASSES_PER_BATCH)[number]) => void }) {
-  const stages = 100 / batch;
-  const shownTicks = Math.min(stages, 10);
-  const firstSeen = batch;
-  const finalSeen = 100;
-  return <section className="p8-workbench" role="tabpanel" aria-label="数据集与评估设置">
-    <div className="p8-workbench__evidence">
-      <div className="panel-heading"><div><span className="eyebrow">数据集概览</span><h2>类别按批次到达，评估范围逐步扩大</h2></div></div>
-      <div className="p8-dataset-grid">
-        <DatasetCard title="iCIFAR-100" strap="小图像分类" classes="100 个视觉类别" batches="2 / 5 / 10 / 20 / 50" metric="多类准确率" backbone="ResNet-32" memory="K ≤ 2,000" background="CIFAR-100 是自然图像物体分类数据集，含 100 个细类，并组织为 20 个超类。" sourceHref="https://www.cs.toronto.edu/~kriz/cifar.html" sourceLabel="来源：University of Toronto" />
-        <DatasetCard title="iILSVRC" strap="ImageNet ILSVRC 2012" classes="100 或 1,000 类" batches="10 或 100" metric="验证集 Top-5 准确率" backbone="ResNet-18" memory="K ≤ 20,000" background="ILSVRC 2012 是面向自然照片中物体识别的大规模 benchmark；官方设置包含 1,000 个对象类别。" sourceHref="https://www.image-net.org/challenges/LSVRC/2012/" sourceLabel="来源：ImageNet ILSVRC 2012" />
-      </div>
-      <div className="p8-protocol-foot"><span>iILSVRC-small</span><b>100 类 · 每批 10 类</b><i aria-hidden="true">↔</i><span>iILSVRC-full</span><b>1,000 类 · 每批 100 类</b></div>
-    </div>
-    <aside className="p8-workbench__interpretation">
-      <span className="eyebrow">增量评估</span><h2>评估截至当前阶段的全部已见类别</h2>
-      <BatchSelector value={batch} onChange={setBatch} />
-      <div className="p8-stage-count"><b>{stages}</b><span>训练与评估阶段<br />每批 {batch} 个新类别</span></div>
-      <div className="p8-stage-visual" aria-label={`${shownTicks} 个前置评估阶段的示意，总计 ${stages} 个阶段`}>
-        {Array.from({ length: shownTicks }, (_, index) => <div key={index} className={index === shownTicks - 1 ? "is-last" : ""}><span>{String(index + 1).padStart(2, "0")}</span><i /></div>)}
-        {stages > shownTicks ? <b>另有 {stages - shownTicks} 阶段</b> : null}
-      </div>
-      <p className="p8-stage-copy">每一步先训练新到达的 {batch} 个类别，再在已见类别 1–{Math.min(firstSeen * shownTicks, finalSeen)} 上评估；最后一步覆盖 1–100。</p>
-      <div className="p8-average-note"><EvidenceTag kind="TEACHING EXPLANATION" /><span><PaperTerm termId="average-incremental-accuracy" /> 是各增量阶段多类准确率的汇总；Figure 2 横轴表示截至该阶段已学习的类别总数。</span></div>
-      <details className="p8-details"><summary>查看实验训练设置</summary><div><p><b>iCIFAR-100</b> · 10 种类别顺序；每批训练 70 epochs；batch size 128；K ≤ 2,000。</p><p><b>iILSVRC</b> · 每批训练 60 epochs；batch size 128；K ≤ 20,000。</p><small>更完整的学习率与 weight decay 配置见来源证据记录。</small></div></details>
-    </aside>
-  </section>;
+function DatasetDetails() {
+  return <details className="p8-details p8-dataset-details"><summary>展开数据集背景与完整设置</summary><div className="p8-dataset-grid">
+    <DatasetCard title="iCIFAR-100" strap="小图像分类" classes="100" batches="2 / 5 / 10 / 20 / 50" metric="多类准确率" backbone="ResNet-32" memory="K ≤ 2,000" background="CIFAR-100 包含 100 个细类，并组织为 20 个超类。" sourceHref="https://www.cs.toronto.edu/~kriz/cifar.html" sourceLabel="University of Toronto · CIFAR-100" />
+    <DatasetCard title="iILSVRC 2012" strap="大规模自然图像" classes="100 或 1,000" batches="10 或 100" metric="验证集 Top-5" backbone="ResNet-18" memory="K ≤ 20,000" background="iILSVRC-small 使用 100 类，iILSVRC-full 使用 1,000 类；每个设置按批次增量学习。" sourceHref="https://www.image-net.org/challenges/LSVRC/2012/" sourceLabel="ImageNet · ILSVRC 2012" />
+    <div className="p8-dataset-extra"><p><b>iCIFAR-100</b> · 10 种类别顺序；每批训练 70 epochs；batch size 128。</p><p><b>iILSVRC</b> · 每批训练 60 epochs；batch size 128。</p><small>完整学习率与 weight decay 配置见证据记录。</small></div>
+  </div></details>;
 }
 
-function overallFocus(benchmark: Benchmark, batch: number): string {
-  if (benchmark === "cifar") return `cifar-${batch}`;
-  return benchmark === "small" ? "ilsvrc-small" : "ilsvrc-full";
+function SourceFocusOverlay({ frame, rect, tone }: { frame: SourceFrame; rect?: FocusRect; tone: "overall" | "prototype" | "classifier" | "trend" }) {
+  if (!rect) return null;
+  return <svg className={`p8-source-focus p8-source-focus--${tone}`} width={frame.width} height={frame.height} viewBox={`0 0 ${frame.width} ${frame.height}`} preserveAspectRatio="none" aria-hidden="true">
+    <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} rx="8" vectorEffect="non-scaling-stroke" />
+  </svg>;
 }
 
 function Figure2Evidence({ benchmark, batch }: { benchmark: Benchmark; batch: number }) {
-  const focus = overallFocus(benchmark, batch);
-  return <div className={`p8-figure-focus p8-figure-focus--${focus}`} data-focus={focus}>
-    <PaperFigure src="/assets/figures/figure-2.png" mode="crop" figureLabel="Figure 2" alt="论文原始 Figure 2：比较 iCIFAR-100 与 iILSVRC 设置下的增量准确率。" caption="iCIFAR-100 与 iILSVRC 类别增量训练结果；曲线报告每个阶段对已见类别的准确率。iCIFAR-100 的全数据单批训练参照值为 68.6%。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 2, pp. 7–8." />
+  const focus = figure2FocusId(benchmark, batch);
+  return <div className="p8-figure-focus" data-focus={focus}>
+    <PaperFigure src={figure2Src} mode="crop" figureLabel="Figure 2" alt="论文原始 Figure 2：iCIFAR-100 与 iILSVRC 的类别增量实验准确率曲线。" caption="原图报告各阶段对截至该时点所有已见类别的准确率；iCIFAR-100 使用多类准确率，iILSVRC 使用 Top-5 准确率。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 2, pp. 7–8." />
+    <SourceFocusOverlay frame={figure2Frame} rect={figure2Focus[focus]} tone="overall" />
+  </div>;
+}
+
+function Figure3Details() {
+  return <div className="p8-figure3-evidence">
+    <div><span className="eyebrow">补充观察 · Figure 3</span><p>混淆矩阵显示不同方法偏向不同类别时段：iCaRL 的预测分布较均匀；LwF.MC 偏向最近批次；固定表示偏向早期批次；微调偏向最后批次。</p></div>
+    <details className="p8-figure3-details"><summary>打开原始混淆矩阵与图注</summary><div className="p8-figure3-layout"><PaperFigure src={figure3Src} mode="crop" figureLabel="Figure 3" alt="论文原始 Figure 3：iCaRL、LwF.MC、固定表示与微调的混淆矩阵。" caption="iCIFAR-100、每批 10 类；矩阵条目经 log(1+x) 变换以提高可见度。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 3, p. 8." /><p>这里比较预测分布的整体偏置，不逐格解释经过变换的混淆矩阵数值。</p></div></details>
   </div>;
 }
 
 function OverallPanel({ benchmark, setBenchmark, batch, setBatch }: { benchmark: Benchmark; setBenchmark: (value: Benchmark) => void; batch: (typeof CLASSES_PER_BATCH)[number]; setBatch: (value: (typeof CLASSES_PER_BATCH)[number]) => void }) {
-  return <section className="p8-workbench p8-workbench--overall" role="tabpanel" aria-label="整体增量实验结果">
+  const metric = benchmark === "cifar" ? "所有已见类别上的多类准确率" : "所有已见类别上的 Top-5 准确率";
+  const protocol = benchmark === "cifar"
+    ? `100 类 · 每批 ${batch} 类 · ${100 / batch} 个增量阶段 · ResNet-32 · K ≤ 2,000`
+    : benchmark === "small" ? "100 类 · 每批 10 类 · 验证集 Top-5 · ResNet-18 · K ≤ 20,000" : "1,000 类 · 每批 100 类 · 验证集 Top-5 · ResNet-18 · K ≤ 20,000";
+  return <section className="p8-workbench p8-workbench--overall" role="tabpanel" id="p8-panel-overall" aria-labelledby="p8-tab-overall" aria-label="问题一：整体系统有效吗？">
     <div className="p8-workbench__evidence">
-      <div className="panel-heading"><div><span className="eyebrow">论文图表 · 增量准确率</span><h2>Figure 2 · 观察完整系统随已见类别增长的表现</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
-      <div className="p8-setting-controls" role="group" aria-label="选择 Figure 2 中的实验设置">{(["cifar", "small", "full"] as const).map((choice) => <button key={choice} type="button" className={benchmark === choice ? "is-active" : ""} aria-pressed={benchmark === choice} onClick={() => setBenchmark(choice)}>{focusLabels[choice]}</button>)}</div>
+      <div className="p8-panel-heading"><div><span className="eyebrow">问题 1 · 论文整体结果</span><h2>准确率怎样随已见类别增加而变化？</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
+      <p className="p8-question-lead">前面建立了一套完整的训练与预测流程，但设计得自洽，不代表表现一定更好。先确定实验如何逐批加入类别，再读原图。</p>
+      <div className="p8-setting-controls" role="group" aria-label="选择 Figure 2 的实验设置">{(["cifar", "small", "full"] as const).map((choice) => <button key={choice} type="button" className={benchmark === choice ? "is-active" : ""} aria-pressed={benchmark === choice} onClick={() => setBenchmark(choice)}>{benchmarkLabels[choice]}</button>)}</div>
       {benchmark === "cifar" ? <BatchSelector value={batch} onChange={setBatch} /> : null}
+      <div className="p8-figure2-reading"><div><span>当前协议</span><b>{protocol}</b></div><div><span>读坐标</span><b>横轴：累计已见类别数　·　纵轴：{metric}</b></div></div>
       <Figure2Evidence benchmark={benchmark} batch={batch} />
-      <details className="p8-figure3-details"><summary title="矩阵显示值经过 log(1+x) 变换；原始计数未在此重新计算。">查看预测偏置 · 原始 Figure 3</summary><div className="p8-figure3-layout"><PaperFigure src="/assets/figures/figure-3.png" mode="crop" figureLabel="Figure 3" alt="论文原始 Figure 3：iCaRL、LwF.MC、固定表示与微调的混淆矩阵。" caption="iCIFAR-100 上按每批 10 类训练后的混淆矩阵。为便于观察，矩阵数值经过 log(1+x) 变换。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 3, p. 8." /><div className="p8-bias-notes"><div><b>iCaRL</b><span>对已见类别的预测分布相对均匀</span></div><div><b>LwF.MC</b><span>预测更集中于最近加入的类别</span></div><div><b>固定表示</b><span>偏向较早加入的类别</span></div><div><b>微调</b><span>强烈偏向最后一个批次</span></div><p>图中数值经过变换以增强可见度；这里解读的是整体模式，不逐格解释矩阵数值。</p></div></div></details>
+      <Figure3Details />
     </div>
-    <aside className="p8-workbench__interpretation p8-claim-panel">
-      <span className="eyebrow">当前实验设置</span><h2>{focusLabels[benchmark]}{benchmark === "cifar" ? ` · 每批 ${batch} 类` : ""}</h2>
-      <div className="p8-selected-protocol">{focusDetails[benchmark]}{benchmark === "cifar" ? ` · ${100 / batch} 个增量阶段` : ""}</div>
-      <div className="p8-claim-block"><span>问题</span><b>类别不断加入时，几种增量方法的表现如何变化？</b></div>
-      <div className="p8-claim-block"><span>观察</span><p>在论文报告的这些设置中，随着已见类别增加，iCaRL 曲线保持在所比较的其他增量方法之上。</p></div>
-      <div className="p8-claim-block p8-claim-block--supported"><span>证据支持的结论</span><p>在这些图像分类数据集与实验协议下，完整 iCaRL 系统面对连续类别加入时表现较强。</p></div>
-      <div className="p8-claim-block p8-claim-block--boundary"><span>证据边界</span><p>这些曲线支持关于所测数据集、指标与实现的判断，不能证明 iCaRL 在所有持续学习任务中都普遍占优。</p></div>
-      <div className="p8-context-note"><EvidenceTag kind="PAPER INTERPRETATION" /><span>iILSVRC-full 是一个例外：固定表示与 LwF.MC 的通常排序在该图中有所不同。</span></div>
-      <div className="p8-context-note"><EvidenceTag kind="PAPER RESULT" /><span>Figure 2 图注还报告了全数据单批训练网络的 68.6%；这是另一种批量训练参照。</span></div>
+    <aside className="p8-workbench__interpretation">
+      <span className="eyebrow">当前聚焦 · {benchmarkLabels[benchmark]}</span>
+      <h2>{benchmark === "cifar" ? `iCIFAR-100 · 每批 ${batch} 类` : benchmarkLabels[benchmark]}</h2>
+      <p>每批新类别到达后，在截至该阶段已见的全部类别上评估；Figure 2 的各数据集与指标分别呈现，不共用一条数轴。</p>
+      <div className="p8-result-note"><span>原图中的观察</span><b>论文报告的设置中，iCaRL 整体高于所比较的增量方法。</b><small>iILSVRC-full 中 fixed representation 与 LwF.MC 的排序是例外；全数据单批训练的 68.6% 是另一个参照。</small></div>
+      <DatasetDetails />
     </aside>
   </section>;
 }
 
-function ComponentMatrix() {
+function ComponentMatrix({ highlighted }: { highlighted: string[] }) {
   const rows = [
     { name: "iCaRL", values: [1, 1, 1] }, { name: "Hybrid 1", values: [0, 1, 1] },
     { name: "Hybrid 2", values: [1, 1, 0] }, { name: "Hybrid 3", values: [0, 1, 0] }, { name: "LwF.MC", values: [0, 0, 1] },
   ];
-  return <div className="p8-component-matrix" role="table" aria-label="iCaRL 与 Hybrid 消融方法的组件配置">
-    <div role="row"><b role="columnheader">方法</b><b role="columnheader">原型分类</b><b role="columnheader">样本回放</b><b role="columnheader">知识蒸馏</b></div>
-    {rows.map((row) => <div role="row" key={row.name}><b role="rowheader">{row.name}</b>{row.values.map((enabled, index) => <span role="cell" className={enabled ? "is-enabled" : "is-disabled"} aria-label={`${["原型分类器", "exemplar 回放", "知识蒸馏"][index]}：${enabled ? "启用" : "未启用"}`} key={index}>{enabled ? "●" : "○"}</span>)}</div>)}
+  return <div className="p8-component-matrix" role="table" aria-label="iCaRL 与 Hybrid 方法的组件配置；当前比较方法已高亮">
+    <div className="p8-component-matrix__row p8-component-matrix__head" role="row"><b role="columnheader">方法</b><b role="columnheader">原型分类</b><b role="columnheader">样本回放</b><b role="columnheader">知识蒸馏</b></div>
+    {rows.map((row) => <div role="row" key={row.name} className={`p8-component-matrix__row${highlighted.includes(row.name) ? " is-focused" : " is-muted"}`}><b role="rowheader">{row.name}</b>{row.values.map((enabled, index) => <span role="cell" className={enabled ? "is-enabled" : "is-disabled"} aria-label={`${["原型分类器", "exemplar 回放", "知识蒸馏"][index]}：${enabled ? "启用" : "未启用"}`} key={index}>{enabled ? "●" : "○"}</span>)}</div>)}
   </div>;
 }
 
-function DotPlot({ data, batch, highlighted, onInspect }: { data: AblationResult; batch: number; highlighted: string[]; onInspect: (method: string, value: number) => void }) {
-  return <div className="p8-dotplot" role="group" aria-label={`Table 1a 点图：每批 ${batch} 个新类别`}>
-    <div className="p8-dotplot__axis"><span>0%</span><span>20%</span><span>40%</span><span>60%</span><span>70%</span></div>
+function DotPlot({ data, batch, highlighted }: { data: AblationResult; batch: number; highlighted: string[] }) {
+  return <div className="p8-dotplot" role="group" aria-label={`Table 1a：iCIFAR-100 每批 ${batch} 类时的平均增量准确率`}>
+    <div className="p8-dotplot__axis" aria-hidden="true"><span>方法</span><div>{[0, 20, 40, 60, 70].map((tick) => <i key={tick}>{tick}</i>)}</div><span>%</span></div>
     {methods.map((method) => {
       const value = data[method.id];
       const emphasized = highlighted.includes(method.label);
-      return <button key={method.id} type="button" className={`p8-dotplot__row${emphasized ? " is-emphasized" : ""}`} aria-label={`${method.label}：每批 ${batch} 类时准确率 ${value.toFixed(1)}%。点击查看该结果。`} title={`${method.label} · ${value.toFixed(1)}%`} onClick={() => onInspect(method.label, value)}>
-        <span className="p8-dotplot__label">{method.label}</span><span className="p8-dotplot__track"><i style={{ left: `${(value / 70) * 100}%`, backgroundColor: method.color }} /></span>
-      </button>;
+      return <div key={method.id} className={`p8-dotplot__row${emphasized ? " is-emphasized" : " is-muted"}`} aria-label={`${method.label}：${value.toFixed(1)}%`}>
+        <span className="p8-dotplot__label">{method.label}</span><span className="p8-dotplot__track"><i style={{ left: `${(value / 70) * 100}%`, backgroundColor: method.color }} /></span><b>{value.toFixed(1)}%</b>
+      </div>;
     })}
   </div>;
 }
 
 function Table1aDetails() {
-  return <details className="p8-details p8-table-details"><summary>查看 Table 1a 精确数值</summary><div className="p8-table-wrap"><table><caption>平均增量多类准确率（%）· iCIFAR-100</caption><thead><tr><th>每批新类别数</th>{methods.map((method) => <th key={method.id}>{method.label}</th>)}</tr></thead><tbody>{TABLE1A.map((row) => <tr key={row.batchSize}><th>{row.batchSize}</th>{methods.map((method) => <td key={method.id}>{row[method.id].toFixed(1)}</td>)}</tr>)}</tbody></table></div></details>;
+  return <details className="p8-details p8-table-details"><summary>查看 Table 1a 全部准确率</summary><div className="p8-table-wrap"><table><caption>iCIFAR-100 · 各增量阶段多类准确率的平均值（%）</caption><thead><tr><th>每批新类别数</th>{methods.map((method) => <th key={method.id}>{method.label}</th>)}</tr></thead><tbody>{TABLE1A.map((row) => <tr key={row.batchSize}><th>{row.batchSize}</th>{methods.map((method) => <td key={method.id}>{row[method.id].toFixed(1)}</td>)}</tr>)}</tbody></table></div></details>;
 }
 
 function ComponentPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)[number]; setBatch: (value: (typeof CLASSES_PER_BATCH)[number]) => void }) {
   const [mechanism, setMechanism] = useState<Mechanism>("prototype");
-  const [inspected, setInspected] = useState<{ method: string; value: number } | null>(null);
-  const data = TABLE1A.find((row) => row.batchSize === batch)!;
+  const data = TABLE1A.find((row) => row.batchSize === batch) ?? TABLE1A[0];
   const comparison = mechanismComparisons[mechanism];
-  return <section className="p8-workbench p8-workbench--components" role="tabpanel" aria-label="组件对照分析">
-      <div className="p8-workbench__evidence">
-      <div className="panel-heading"><div><span className="eyebrow">Component Differential Analysis · 组件差异分析</span><h2>先选择机制，再查看对应实验</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
-      <div className="p8-mechanism-select" role="group" aria-label="选择要检查的 iCaRL 机制">{(["prototype", "rehearsal", "distillation"] as const).map((item) => <button key={item} type="button" className={mechanism === item ? "is-active" : ""} aria-pressed={mechanism === item} onClick={() => { setMechanism(item); setInspected(null); }}>{mechanismComparisons[item].title}</button>)}</div>
-      <ComponentMatrix />
-      <div className="p8-ablation-meta"><span><i className="is-enabled">●</i> 启用</span><span><i className="is-disabled">○</i> 未启用</span><span>Hybrid 行表示消融配置</span></div>
-      <BatchSelector value={batch} onChange={(next) => { setBatch(next); setInspected(null); }} />
-      <div className="p8-plot-heading"><b>{comparison.question}</b><span>Table 1a · 各增量阶段的平均准确率</span></div>
-      <DotPlot data={data} batch={batch} highlighted={comparison.pair} onInspect={(method, value) => setInspected({ method, value })} />
-      {inspected ? <div className="p8-inspected-value" aria-live="polite"><b>{inspected.method}</b><span>{inspected.value.toFixed(1)}% · 每批 {batch} 类 · PAPER RESULT</span></div> : <p className="p8-plot-hint">点击图中的方法名称，查看对应精确数值。</p>}
+  const selectedMethods = methods.filter((method) => comparison.pair.includes(method.label));
+  return <section className="p8-workbench p8-workbench--components" role="tabpanel" id="p8-panel-components" aria-labelledby="p8-tab-components" aria-label="问题二：哪些机制起作用？">
+    <div className="p8-workbench__evidence">
+      <div className="p8-panel-heading"><div><span className="eyebrow">问题 2 · Table 1a 组件对照</span><h2>选一个设计差异，在同一数据设置下比较</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
+      <p className="p8-question-lead">只看完整系统还不能判断哪些机制有所贡献。选择一项 iCaRL 设计，图中同步突出相关方法、组件差异与真实准确率。</p>
+      <div className="p8-mechanism-select" role="group" aria-label="选择要检查的 iCaRL 机制">{(["prototype", "rehearsal", "distillation"] as const).map((item) => <button key={item} type="button" className={mechanism === item ? "is-active" : ""} aria-pressed={mechanism === item} onClick={() => setMechanism(item)}>{mechanismComparisons[item].title}</button>)}</div>
+      <ComponentMatrix highlighted={comparison.pair} />
+      <div className="p8-ablation-meta"><span><i className="is-enabled">●</i> 启用</span><span><i className="is-disabled">○</i> 未启用</span><span>高亮行是当前对照</span></div>
+      <BatchSelector value={batch} onChange={setBatch} />
+      <div className="p8-plot-heading"><b>{comparison.question}</b><span>Table 1a · iCIFAR-100 · 平均增量多类准确率</span></div>
+      <DotPlot data={data} batch={batch} highlighted={comparison.pair} />
+      <div className="p8-selected-values" aria-live="polite">{selectedMethods.map((method) => <span key={method.id}><b>{method.label}</b><strong>{data[method.id].toFixed(1)}%</strong><small>每批 {batch} 类</small></span>)}</div>
       <Table1aDetails />
     </div>
-    <aside className="p8-workbench__interpretation p8-claim-panel">
-      <span className="eyebrow">{comparison.comparisonKind} · {comparison.title} · {comparison.pair.join(" vs ")}</span><h2>{comparison.question}</h2>
-      <div className="p8-claim-block"><span>对照问题</span><p>{comparison.explanation}</p></div>
-      <div className="p8-claim-block p8-claim-block--supported"><span>{mechanism === "rehearsal" ? "对照性证据" : "单因素对照"}</span><p>在所选 iCIFAR-100 每批类别设置下，对照 {comparison.pair.join(" vs ")}。</p></div>
-      <div className="p8-claim-block p8-claim-block--boundary"><span>补充说明</span><p>{comparison.nuance}</p></div>
-      <div className="p8-claim-block"><span>适用边界</span><p>这些平均值来自论文对 iCIFAR-100 的组件分析，不能说明每个组件在所有设置下都严格提升性能。</p></div>
-      {mechanism === "distillation" ? <div className="p8-exception"><b>每种设置下各组件都有帮助吗？</b><strong>并非如此</strong><span>每批 2 类 · iCaRL 57.0% · Hybrid 2 57.6%</span><p>Table 1a 支持蒸馏总体上有贡献，但效果受实验条件影响；作者指出，类别批次最小时蒸馏也可能降低准确率。</p></div> : null}
-      <EvidenceTag kind="PAPER INTERPRETATION" />
+    <aside className="p8-workbench__interpretation">
+      <span className="eyebrow">{comparison.comparisonKind} · {comparison.title}</span>
+      <h2>{comparison.pair.join(" vs ")}</h2>
+      <div className="p8-result-note"><span>这组方法改变了什么</span><b>{comparison.explanation}</b></div>
+      <p>{comparison.nuance}</p>
+      {mechanism === "rehearsal" ? <div className="p8-caution"><b>归因边界</b><span>Hybrid 3 与 LwF.MC 同时改变了 exemplar 回放和蒸馏，不能把两者差异解释为回放的独立因果效应。</span></div> : null}
+      {mechanism === "distillation" ? <div className="p8-exception"><b>两类批次的反例</b><strong>Hybrid 2 高于 iCaRL</strong><span>iCaRL 57.0%　·　Hybrid 2 57.6%</span><small>Table 1a，iCIFAR-100 每批 2 类。</small></div> : null}
+      <p className="p8-scope-note">这些消融数据来自论文的 iCIFAR-100 协议；批次大小会影响各组件的相对收益。</p>
     </aside>
   </section>;
 }
 
 function GapPlot({ batch, values }: { batch: number; values: { icarL: number; ncm: number } }) {
   const gap = values.ncm - values.icarL;
-  return <div className="p8-gap-plot" role="img" aria-label={`每批 ${batch} 类时，iCaRL 准确率为 ${values.icarL.toFixed(1)}%，NCM 为 ${values.ncm.toFixed(1)}%；相差 ${gap.toFixed(1)} 个百分点。`}>
-    <div className="p8-gap-axis"><span>0</span><span>20</span><span>40</span><span>60</span><span>70</span></div>
+  return <div className="p8-gap-plot" aria-label={`Table 1b：每批 ${batch} 类时，iCaRL ${values.icarL.toFixed(1)}%，NCM ${values.ncm.toFixed(1)}%，相差 ${gap.toFixed(1)} 个百分点。`}>
+    <div className="p8-gap-readouts"><span><i className="p8-gap-key p8-gap-key--icarL" />iCaRL <b>{values.icarL.toFixed(1)}%</b></span><span><i className="p8-gap-key p8-gap-key--ncm" />NCM <b>{values.ncm.toFixed(1)}%</b></span><strong>差 {gap.toFixed(1)} 个百分点</strong></div>
+    <div className="p8-gap-axis"><span>0%</span><span>20%</span><span>40%</span><span>60%</span><span>70%</span></div>
     <div className="p8-gap-track"><span className="p8-gap-line" style={{ left: `${(values.icarL / 70) * 100}%`, width: `${(gap / 70) * 100}%` }} /><i className="p8-gap-dot p8-gap-dot--icarL" style={{ left: `${(values.icarL / 70) * 100}%` }} /><i className="p8-gap-dot p8-gap-dot--ncm" style={{ left: `${(values.ncm / 70) * 100}%` }} /></div>
-    <div className="p8-gap-legend"><span><i className="p8-gap-dot--icarL" /> iCaRL · exemplar 均值</span><span><i className="p8-gap-dot--ncm" /> NCM · 全数据均值</span></div>
-    <div className="p8-gap-summary"><b>相差 {gap.toFixed(1)} 个百分点</b><span>当前 iCIFAR-100 每批类别数：{batch}</span></div>
   </div>;
 }
 
 function Table1bDetails() {
-  return <details className="p8-details p8-table-details"><summary>查看 Table 1b 精确数值</summary><div className="p8-table-wrap"><table><caption>平均增量多类准确率（%）· 全数据 NCM 诊断参照</caption><thead><tr><th>每批新类别数</th><th>iCaRL</th><th>NCM</th><th>差值 · 百分点</th></tr></thead><tbody>{TABLE1B.map((row) => <tr key={row.batchSize}><th>{row.batchSize}</th><td>{row.icarL.toFixed(1)}</td><td>{row.ncm.toFixed(1)}</td><td>{(row.ncm - row.icarL).toFixed(1)}</td></tr>)}</tbody></table></div></details>;
+  return <details className="p8-details p8-table-details"><summary>查看 Table 1b 全部准确率</summary><div className="p8-table-wrap"><table><caption>iCIFAR-100 · 平均增量多类准确率（%）与百分点差值</caption><thead><tr><th>每批新类别数</th><th>iCaRL</th><th>全数据 NCM</th><th>差值</th></tr></thead><tbody>{TABLE1B.map((row) => <tr key={row.batchSize}><th>{row.batchSize}</th><td>{row.icarL.toFixed(1)}</td><td>{row.ncm.toFixed(1)}</td><td>{(row.ncm - row.icarL).toFixed(1)} pp</td></tr>)}</tbody></table></div></details>;
 }
 
 function ApproximationPanel({ batch, setBatch }: { batch: (typeof CLASSES_PER_BATCH)[number]; setBatch: (value: (typeof CLASSES_PER_BATCH)[number]) => void }) {
-  const data = TABLE1B.find((row) => row.batchSize === batch)!;
-  return <section className="p8-workbench p8-workbench--approximation" role="tabpanel" aria-label="Exemplar 均值与全类别均值比较">
+  const data = TABLE1B.find((row) => row.batchSize === batch) ?? TABLE1B[0];
+  return <section className="p8-workbench p8-workbench--approximation" role="tabpanel" id="p8-panel-approximation" aria-labelledby="p8-tab-approximation" aria-label="问题三：Exemplar 近似的分类代价">
     <div className="p8-workbench__evidence">
-      <div className="panel-heading"><div><span className="eyebrow">TABLE 1b · 原型近似</span><h2>少量 exemplar 的均值接近全数据类别均值吗？</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
+      <div className="p8-panel-heading"><div><span className="eyebrow">问题 3 · Table 1b 近似代价</span><h2>使用少量 Exemplars 构造原型，会损失多少分类准确率？</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
+      <p className="p8-question-lead">Herding 让我们用少量图片构造类别原型；Table 1b 把它与可访问全部历史图像的均值参照放在同一表示下比较。</p>
       <div className="p8-mean-compare">
-        <section><span className="p8-mean-label">iCaRL · 受限图像记忆</span><div className="p8-mean-flow"><b>仅当前 P<sub>y</sub></b><i>↓</i><b>当前 φ<sub>Θ</sub></b><i>↓</i><strong>exemplar 均值</strong></div></section>
-        <section className="p8-mean-compare__ncm"><span className="p8-mean-label"><PaperTerm termId="ncm" /> · 全数据诊断参照</span><div className="p8-mean-flow"><b>全部历史 X<sub>y</sub></b><i>↓</i><b>当前 φ<sub>Θ</sub></b><i>↓</i><strong>全类别均值</strong></div></section>
+        <section><span className="p8-mean-label">iCaRL · 受限 exemplar 记忆</span><div className="p8-mean-flow"><b>保留图片 P<sub>y</sub></b><i>↓</i><b>当前特征提取器 φ<sub>Θ</sub></b><i>↓</i><strong>exemplar 均值原型</strong></div></section>
+        <section className="p8-mean-compare__ncm"><span className="p8-mean-label"><PaperTerm termId="ncm" /> · 全数据诊断参照</span><div className="p8-mean-flow"><b>全部历史图像 X<sub>y</sub></b><i>↓</i><b>同一当前特征提取器 φ<sub>Θ</sub></b><i>↓</i><strong>全数据类别均值</strong></div></section>
       </div>
-      <div className="p8-feature-recall"><span className="eyebrow">特征空间回顾 · 教学解释</span><div className="p8-feature-recall__picture"><div><span>全部历史类别图像</span><i>• • • • • • •</i><b>★ 全数据均值</b></div><i className="p8-recall-arrow">↔</i><div><span>Exemplar 子集</span><i>■　■　■</i><b>◆ exemplar 均值</b></div></div><p>这项实验衡量：使用 exemplar 均值时，分类准确率会下降多少。</p></div>
       <BatchSelector value={batch} onChange={setBatch} />
       <GapPlot batch={batch} values={data} />
+      <p className="p8-accuracy-note"><EvidenceTag kind="TEACHING EXPLANATION" /><span>这组差值衡量的是分类准确率（百分点），不是两个均值向量的 L2 距离。</span></p>
+      <div className="p8-full-data-note"><b>读 NCM 时保留这个条件</b><span>它每轮都能用全部历史训练图像重算均值，因此是近似质量的诊断参照，不是与 iCaRL 具有相同存储预算的增量方法。</span></div>
       <Table1bDetails />
-      <div className="p8-important-context"><EvidenceTag kind="TEACHING EXPLANATION" /><b>关键背景</b><p>这个 NCM 参照使用全部历史训练数据重新计算类别均值，用来诊断近似质量；它不是记忆预算受限的增量方法。</p></div>
     </div>
-    <aside className="p8-workbench__interpretation p8-claim-panel">
-      <span className="eyebrow">差值衡量什么？</span><h2>exemplar 均值 ↔ 全类别均值</h2>
-      <div className="p8-claim-block"><span>问题</span><p>如果用保留的 exemplar 子集替代所有历史图像，分类准确率会损失多少？</p></div>
-      <div className="p8-claim-block p8-claim-block--supported"><span>结果</span><p>每批 {batch} 类时，论文报告的差距为 { (data.ncm - data.icarL).toFixed(1) } 个百分点。</p></div>
-      <div className="p8-claim-block"><span>解释</span><p>在测试的 iCIFAR-100 设置中，较小的差距支持 exemplar 均值作为一种近似。</p></div>
-      <div className="p8-claim-block p8-claim-block--boundary"><span>边界</span><p>NCM 可以访问全部历史训练数据，因此它的准确率没有受到与 iCaRL 相同的记忆预算约束。</p></div>
-      <EvidenceTag kind="PAPER INTERPRETATION" />
+    <aside className="p8-workbench__interpretation">
+      <span className="eyebrow">当前协议 · iCIFAR-100</span>
+      <h2>每批 {batch} 类</h2>
+      <div className="p8-result-note"><span>Table 1b 的当前结果</span><b>iCaRL {data.icarL.toFixed(1)}%　·　全数据 NCM {data.ncm.toFixed(1)}%</b><small>相差 {(data.ncm - data.icarL).toFixed(1)} 个百分点。</small></div>
+      <p>较小的准确率差支持 exemplar 均值在该实验协议下作为一种近似；不能据此推导均值向量之间的几何距离。</p>
+      <div className="p8-caution"><b>预算不相同</b><span>NCM 参照读取全部历史训练图像；它的准确率没有受到与 iCaRL 相同的图片记忆预算约束。</span></div>
     </aside>
   </section>;
 }
-
-type MemoryFocus = "budget" | "prototype" | "head";
-const memoryInterpretations: Record<MemoryFocus, { label: string; heading: string; copy: string }> = {
-  budget: { label: "增大 K", heading: "K 增大意味着保留更多原始 exemplar", copy: "更多旧类图像可以用于 rehearsal，也能提供更大的 exemplar 集合来近似全类别均值。" },
-  prototype: { label: "iCaRL 与 NCM", heading: "更多 exemplar 可缩小均值近似差距", copy: "在这项实验中，K ≥ 1,000 时，iCaRL 的 exemplar 均值分类器与 NCM 表现接近。NCM 仍能访问全部历史训练图像。" },
-  head: { label: "网络输出分类器", heading: "仅使用网络输出的表现较弱", copy: "Figure 4 中的 Hybrid 1 使用与 iCaRL 相同的表示，但改用网络输出分类器。原图支持定性趋势；页面不重建精确曲线数值。" },
-};
 
 function MemoryPanel() {
-  const [focus, setFocus] = useState<MemoryFocus>("budget");
+  const [focus, setFocus] = useState<MemoryFocus>("trend");
   const selected = memoryInterpretations[focus];
-  return <section className="p8-workbench p8-workbench--memory" role="tabpanel" aria-label="记忆预算实验结果">
-    <div className="p8-workbench__evidence">
-      <div className="panel-heading"><div><span className="eyebrow">论文图表 · 记忆预算 K</span><h2>Figure 4 · 阅读原图呈现的定性趋势</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
-      <div className="p8-k-direction"><b>记忆预算 K</b><span>较少</span><i aria-hidden="true" /><span>较多</span></div>
-      <div className="p8-memory-focus" role="group" aria-label="选择 Figure 4 的证据观察角度">{(Object.keys(memoryInterpretations) as MemoryFocus[]).map((key) => <button key={key} type="button" className={focus === key ? "is-active" : ""} aria-pressed={focus === key} onClick={() => setFocus(key)}>{memoryInterpretations[key].label}</button>)}</div>
-      <div className={`p8-figure-focus p8-figure-focus--memory-${focus}`}><PaperFigure src="/assets/figures/figure-4.png" mode="crop" figureLabel="Figure 4" alt="论文原始 Figure 4：每批 10 类的 iCIFAR-100 实验中，不同记忆预算 K 对平均增量准确率的影响。" caption="iCIFAR-100、每批 10 类设置下，不同记忆预算 K 对平均增量准确率的影响。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 4, p. 9." /></div>
-      <div className="p8-memory-chain"><span>K ↑</span><i>→</i><span>保留更多 exemplars</span><i>→</i><span>增加 replay 样本，并增强原型近似能力</span></div>
-      <p className="p8-no-digitize"><EvidenceTag kind="TEACHING EXPLANATION" /><span>这里展示的是 Figure 4 原图；没有从曲线提取或伪造精确数值。</span></p>
+  const tone = focus === "prototype" ? "prototype" : focus === "classifier" ? "classifier" : "trend";
+  return <section className="p8-memory-question" role="tabpanel" id="p8-panel-memory" aria-labelledby="p8-tab-memory" aria-label="问题四：记忆成本与适用边界">
+    <div className="p8-memory-workbench">
+      <div className="p8-workbench__evidence">
+        <div className="p8-panel-heading"><div><span className="eyebrow">问题 4 · Figure 4 记忆预算</span><h2>增大 K 会改变什么？</h2></div><EvidenceTag kind="PAPER RESULT" /></div>
+        <p className="p8-question-lead">K 决定能留下多少 exemplars。先沿原图观察预算变化，再把性能趋势和资源成本一起读。</p>
+        <div className="p8-k-direction"><b>Exemplar 图像预算 K</b><span>较少</span><i aria-hidden="true" /><span>较多</span></div>
+        <div className="p8-memory-focus" role="group" aria-label="选择 Figure 4 的观察角度">{(Object.keys(memoryInterpretations) as MemoryFocus[]).map((key) => <button key={key} type="button" className={focus === key ? "is-active" : ""} aria-pressed={focus === key} onClick={() => setFocus(key)}>{memoryInterpretations[key].label}</button>)}</div>
+        <div className="p8-figure-focus p8-figure-focus--memory" data-focus={focus}>
+          <PaperFigure src={figure4Src} mode="crop" figureLabel="Figure 4" alt="论文原始 Figure 4：每批 10 类的 iCIFAR-100 设置下，不同 exemplar 记忆预算 K 的平均增量准确率曲线。" caption="iCIFAR-100、每批 10 类；图中比较 iCaRL、全数据 NCM 和 Hybrid 1。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 4, p. 9." />
+          <SourceFocusOverlay frame={figure4Frame} rect={memoryFocusRects[focus]} tone={tone} />
+        </div>
+        <p className="p8-memory-observation"><b>{selected.heading}</b><span>{selected.copy}</span></p>
+        <p className="p8-no-digitize"><EvidenceTag kind="TEACHING EXPLANATION" /><span>保留原始曲线；未从图像像素推算新数值。Figure 4 只报告 iCIFAR-100、每批 10 类的设置。</span></p>
+      </div>
+      <aside className="p8-memory-boundaries">
+        <div className="p8-panel-heading"><div><span className="eyebrow">收益与成本</span><h2>预算只覆盖图片数量</h2></div><EvidenceTag kind="PAPER LIMITATION" /></div>
+        <div className="p8-boundary-list">
+          <div><b>原图像要能留存</b><p>训练与预测需保留原始 exemplar；隐私或数据保管规则可能限制这种做法。</p></div>
+          <div><b>模型总记忆并非恒定</b><p>K 限制图片数；输出层权重仍随已见类别增加，不能说整个模型记忆保持常数。</p></div>
+          <div><b>结果受协议约束</b><p>Figure 4 的趋势来自 iCIFAR-100、每批 10 类；不代表所有任务或设置下都必然单调改善。</p></div>
+        </div>
+        <p className="p8-author-limit"><EvidenceTag kind="PAPER INTERPRETATION" /><span>作者将批量训练与增量训练的性能差距，以及不能保存原始图像的场景，留作后续研究问题。</span></p>
+        <div className="p8-qualified-summary"><span>结论边界</span><b>论文结果支持的是所测数据与协议中的趋势</b><p>它不证明 iCaRL 对所有持续学习任务普遍占优，也不证明总模型开销与类别数无关。</p></div>
+        <section className="p8-end-card"><div><span className="eyebrow">回到完整运行</span><h2>把这些证据放回系统流程</h2><p>P9 将再次追踪输入、快照、参数更新、记忆维护与最近原型预测。</p></div></section>
+      </aside>
     </div>
-    <aside className="p8-workbench__interpretation p8-claim-panel">
-      <span className="eyebrow">当前观察角度</span><h2>{selected.heading}</h2>
-      <div className="p8-claim-block"><span>观察</span><p>{selected.copy}</p></div>
-      <div className="p8-claim-block p8-claim-block--supported"><span>证据支持的结论</span><p>记忆预算会影响论文在 iCIFAR-100、每批 10 类设置中比较的几种方法。</p></div>
-      <div className="p8-claim-block p8-claim-block--boundary"><span>边界</span><p>该图提供趋势和论文讨论，没有给出完整的曲线数值表。</p></div>
-      <EvidenceTag kind="PAPER INTERPRETATION" />
-    </aside>
-  </section>;
-}
-
-function BoundaryCard({ id, mechanism, benefit, cost, note }: { id: string; mechanism: string; benefit: string; cost: string; note: string }) {
-  return <article className="p8-boundary-card"><div className="p8-boundary-card__step">{id}</div><div><span>机制</span><b>{mechanism}</b></div><i aria-hidden="true">↔</i><div><span>收益</span><b>{benefit}</b></div><i aria-hidden="true">↔</i><div className="p8-boundary-card__cost"><span>代价 / 边界</span><b>{cost}</b><small>{note}</small></div></article>;
-}
-
-function BoundariesPanel({ onContinue }: { onContinue?: () => void }) {
-  return <section className="p8-boundaries" role="tabpanel" aria-label="机制收益与资源边界">
-    <div className="panel-heading"><div><span className="eyebrow">机制 ↔ 收益 ↔ 代价 / 边界</span><h2>保留方法有效的前提，也看清资源边界</h2></div><EvidenceTag kind="PAPER LIMITATION" /></div>
-    <div className="p8-boundary-stack">
-      <BoundaryCard id="A" mechanism="限制历史数据访问的增量训练" benefit="加入新类别时，无需保留全部旧训练图像。" cost="论文分析中，增量训练与全数据单批训练参照之间仍存在差距。" note="这不表示所有增量设置的差距相同，也不表示 Table 1a 的每一行都低于 68.6%。" />
-      <BoundaryCard id="B" mechanism="在 P 中保留原始 exemplar 图像" benefit="用当前 φΘ 重新编码、回放旧输入，并构建当前类别原型。" cost="仍需保留历史原始样本。" note="隐私要求或原始数据留存限制可能使这种设计不适用。" />
-      <BoundaryCard id="C" mechanism="用 K 限制 exemplar 图像数量" benefit="图像预算不会随已见类别数量增长。" cost="模型总记忆并非严格恒定。" note="特征提取器大小固定，但每个类别的输出权重会随已见类别增加。" />
-    </div>
-    <div className="p8-boundary-tags"><EvidenceTag kind="PAPER INTERPRETATION" /><span>作者将与批量训练的差距，以及涉及隐私的原始图像存储，列为后续研究方向。</span><EvidenceTag kind="PAPER RESULT" /><span>每类输出权重增加时，资源占用也会增长。</span></div>
-    <div className="p8-qualified-summary"><span>有限定的总结</span><b>机制 → 受控证据 → 支持的结论 → 明确边界</b><p>iCaRL 在论文报告的协议内有较强证据，但这不能证明它普遍占优、NCM 满足相同记忆预算，或类别无限增加时总记忆仍保持不变。</p></div>
-    <section className="p8-end-card"><div><span className="eyebrow">证据回到完整流程</span><h2>把这些对象放回一次完整运行</h2><p>第 9 页追踪 Θ、P、训练对象与最终 prototype prediction 的运行时生命周期。</p></div><button type="button" className="icarl-button icarl-button--primary" onClick={onContinue} disabled={!onContinue}>进入第 9 页 · 完整 iCaRL 循环 <span aria-hidden="true">→</span></button></section>
   </section>;
 }
 
 export function PageEight({ onContinue }: { onContinue?: () => void }) {
-  const [tab, setTab] = useState<EvidenceTab>("setup");
+  const [tab, setTab] = useState<EvidenceTab>("overall");
   const [batch, setBatch] = useState<(typeof CLASSES_PER_BATCH)[number]>(10);
   const [benchmark, setBenchmark] = useState<Benchmark>("cifar");
   const currentIndex = tabs.findIndex((item) => item.id === tab);
+  const isLast = currentIndex === tabs.length - 1;
 
   function navigateTab(offset: number) {
     const next = Math.max(0, Math.min(tabs.length - 1, currentIndex + offset));
     setTab(tabs[next].id);
   }
 
-  return <article className="tutorial-page icarl-page icarl-page--p9">
+  return <article className="tutorial-page icarl-page icarl-page--p8" data-question={tab}>
     <PageEvidenceHeader />
     <EvidenceTabs value={tab} onChange={setTab} />
-    {tab === "setup" ? <SetupPanel batch={batch} setBatch={setBatch} /> : null}
     {tab === "overall" ? <OverallPanel benchmark={benchmark} setBenchmark={setBenchmark} batch={batch} setBatch={setBatch} /> : null}
     {tab === "components" ? <ComponentPanel batch={batch} setBatch={setBatch} /> : null}
     {tab === "approximation" ? <ApproximationPanel batch={batch} setBatch={setBatch} /> : null}
     {tab === "memory" ? <MemoryPanel /> : null}
-    {tab === "boundaries" ? <BoundariesPanel onContinue={onContinue} /> : null}
-    {tab !== "boundaries" ? <div className="p8-step-controls"><span>{String(currentIndex + 1).padStart(2, "0")} / {String(tabs.length).padStart(2, "0")} · 论文证据工作台</span><div><button type="button" className="icarl-button icarl-button--quiet" disabled={currentIndex === 0} onClick={() => navigateTab(-1)}>上一部分</button><button type="button" className="icarl-button icarl-button--primary" disabled={currentIndex === tabs.length - 1} onClick={() => navigateTab(1)}>下一部分 <span aria-hidden="true">→</span></button></div></div> : null}
+    <div className="p8-step-controls"><span>问题 {String(currentIndex + 1).padStart(2, "0")} / 04 · 论文证据</span><div>
+      <button type="button" className="icarl-button icarl-button--quiet" disabled={currentIndex === 0} onClick={() => navigateTab(-1)}>上一个问题</button>
+      <button type="button" className="icarl-button icarl-button--primary" disabled={isLast && !onContinue} onClick={() => isLast ? onContinue?.() : navigateTab(1)}>{isLast ? "进入第 9 页 · 完整运行" : "下一个问题"}<span aria-hidden="true"> →</span></button>
+    </div></div>
   </article>;
 }
