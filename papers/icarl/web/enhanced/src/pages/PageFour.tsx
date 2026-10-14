@@ -8,7 +8,11 @@ import {
   HERDING_DEMO_TARGET,
   HERDING_DEMO_TARGET_RAW,
 } from "../data/herding-teaching-demo";
-import type { Vector2 } from "../data/icarl-runtime";
+import {
+  HERDING_CHART,
+  clockwiseOffsetFromTop,
+  projectHerdingFeature,
+} from "../data/herding-teaching-geometry";
 import {
   activeNarrationIndex,
   useAnimationTimeline,
@@ -18,7 +22,6 @@ import {
   angleDeg,
   arcSegmentPath,
   clamp,
-  pointAtAngle,
   progressWithin,
   smoothstep,
   type Point,
@@ -27,22 +30,13 @@ import { useReducedMotion } from "../shared/foundation/accessibility/useReducedM
 
 /* ------------------------------------------------------------- geometry --- */
 
-const VIEW = { width: 620, height: 620 };
-const CENTER: Point = { x: 310, y: 310 };
-/**
- * The demo features are unit vectors, so one scale serves the circle and every derived mean.
- * The target is mirrored onto the vertical axis for display only: showing it at its literal angle
- * would push the chord fan and its label out of the safe frame. The circle is a teaching construct
- * here, not an experimental measurement, and every length that carries a distance stays exact.
- */
-const RADIUS = 232;
-const SCAN_START_ANGLE = 90;
-
-function toChartPoint(vector: Vector2): Point {
-  return { x: CENTER.x + vector[0] * RADIUS, y: CENTER.y - vector[1] * RADIUS };
-}
-const TARGET_POINT = pointAtAngle(CENTER, RADIUS, 90);
-const TARGET_RAW_POINT = { x: CENTER.x, y: CENTER.y + Math.hypot(HERDING_DEMO_TARGET_RAW[0], HERDING_DEMO_TARGET_RAW[1]) * RADIUS };
+const VIEW = { width: HERDING_CHART.width, height: HERDING_CHART.height };
+const CENTER: Point = HERDING_CHART.center;
+const RADIUS = HERDING_CHART.radius;
+const SCAN_TOP_DEG = HERDING_CHART.topAngleDeg;
+const toChartPoint = projectHerdingFeature;
+const TARGET_POINT = toChartPoint(HERDING_DEMO_TARGET);
+const TARGET_RAW_POINT = toChartPoint(HERDING_DEMO_TARGET_RAW);
 
 function diamond(point: Point, radius = 7) {
   return `${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`;
@@ -50,7 +44,7 @@ function diamond(point: Point, radius = 7) {
 
 /** Scan order: clockwise from the top, crossing the 0/360 boundary without jumping back. */
 const SCAN_ORDER = [...HERDING_DEMO_POINTS]
-  .map((point) => ({ point, offset: ((SCAN_START_ANGLE - angleDeg(CENTER, toChartPoint(point.feature))) % 360 + 360) % 360 }))
+  .map((point) => ({ point, offset: clockwiseOffsetFromTop(toChartPoint(point.feature)) }))
   .sort((a, b) => a.offset - b.offset);
 const SCAN_OFFSET_BY_ID = new Map(SCAN_ORDER.map((item) => [item.point.id, item.offset]));
 const TOTAL_SWEEP = SCAN_ORDER[SCAN_ORDER.length - 1].offset;
@@ -282,7 +276,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     const sourcePoints = participantPoints.map((point) => toChartPoint(point.feature));
     // For k = 1 the "prefix mean" of one sample is that sample's own unit feature, measured from
     // the origin: ν₁(x) = normalize(z(x) / 1). Its length is not a distance to the target.
-    const rawMean = round.k === 1 ? CENTER : toChartPoint(candidate.rawPrefixMean);
+    const rawMean = toChartPoint(candidate.rawPrefixMean);
     const normalized = toChartPoint(candidate.normalizedPrefixMean);
     const full = clip.kind === "scan" || clip.kind === "hull";
     const gathered = clamp(progressWithin(p, 0.08, 0.86));
@@ -300,7 +294,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
       });
     }
     const meanVisible = round.k === 1
-      ? ["norm", "score", "commit"].includes(clip.kind)
+      ? false
       : ["gather", "mean", "norm", "score", "commit"].includes(clip.kind) && (clip.kind !== "gather" || gathered > 0.9);
     const meanOpacity = meanVisible ? (clip.kind === "gather" ? clamp(progressWithin(p, 0.86, 0.98)) : 1) : 0;
     if (meanOpacity > 0.01) rawMeanPoint = rawMean;
@@ -375,9 +369,9 @@ function HerdingScene({ scene }: { scene: Scene }) {
     ? HERDING_DEMO_ORDER.slice(0, scene.reviewIndex ?? 0)
     : round ? round.prefix.slice(0, scene.clip.kind === "commit" ? scene.clip.round : scene.clip.round - 1) : [];
   const selectedIds = new Set(selectedOrdered.map((point) => point.id));
-  const scanRadians = scene.scanSweep === null ? null : ((SCAN_START_ANGLE - scene.scanSweep) * Math.PI) / 180;
+  const scanRadians = scene.scanSweep === null ? null : ((SCAN_TOP_DEG + scene.scanSweep) * Math.PI) / 180;
   const scanPoint = scanRadians === null ? null : { x: CENTER.x + Math.cos(scanRadians) * RADIUS, y: CENTER.y + Math.sin(scanRadians) * RADIUS };
-  const sweptFrom = scene.scanSweep === null ? null : ((SCAN_START_ANGLE - Math.max(scene.scanSweep, 0.001)) * Math.PI) / 180;
+  const sweptFrom = scene.scanSweep === null ? null : ((SCAN_TOP_DEG + Math.max(scene.scanSweep, 0.001)) * Math.PI) / 180;
 
   const labels: ChartLabel[] = [];
   const obstacles: Point[] = [];
@@ -388,11 +382,11 @@ function HerdingScene({ scene }: { scene: Scene }) {
     obstacles.push(at);
     if (selectedIds.has(point.id) || point.id === candidate?.point.id) labels.push({ ...at, id: point.id, text: point.id });
   }
-  if (scene.rawMeanPoint) {
+  if (scene.rawMeanPoint && scene.clip.round !== 1) {
     obstacles.push(scene.rawMeanPoint);
     labels.push({ ...scene.rawMeanPoint, id: "raw-mean", text: round && round.k >= 2 ? `ν̄${round.k}(x)` : "μ̄_full" });
   }
-  if (scene.normalizedPoint) {
+  if (scene.normalizedPoint && scene.clip.round !== 1) {
     obstacles.push(scene.normalizedPoint);
     labels.push({ ...scene.normalizedPoint, id: "unit-mean", text: round ? `ν${round.k}(x)` : "μ_full" });
   }
@@ -432,7 +426,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
 
       {/* Scan ring: a continuous clockwise indicator that never teleports between candidates. */}
       {scene.scanSweep !== null && sweptFrom !== null ? (
-        <path className="p4-scene__scan-track" d={arcSegmentPath(CENTER, RADIUS, SCAN_START_ANGLE, -scene.scanSweep)} />
+        <path className="p4-scene__scan-track" d={arcSegmentPath(CENTER, RADIUS, SCAN_TOP_DEG, scene.scanSweep)} />
       ) : null}
       {scanPoint ? (
         <g className="p4-scene__scan-mark">
@@ -499,20 +493,20 @@ function HerdingScene({ scene }: { scene: Scene }) {
       ))}
 
       {/* Means: raw diamond inside the circle, normalized marker on it. */}
-      {scene.rawMeanPoint ? <polygon className="p4-scene__raw-mean" points={diamond(scene.rawMeanPoint)} /> : null}
-      {scene.normalizedPoint ? <circle className="p4-scene__unit-mean" cx={scene.normalizedPoint.x} cy={scene.normalizedPoint.y} r="8.5" /> : null}
+      {scene.rawMeanPoint && scene.clip.round !== 1 ? <polygon className="p4-scene__raw-mean" points={diamond(scene.rawMeanPoint)} /> : null}
+      {scene.normalizedPoint && scene.clip.round !== 1 ? <circle className="p4-scene__unit-mean" cx={scene.normalizedPoint.x} cy={scene.normalizedPoint.y} r="8.5" /> : null}
 
       {/* Ordered prefix nodes while reviewing. */}
       {scene.reviewIndex !== null
         ? ROUNDS.slice(0, 4).map((item) => {
-            const offset = SCAN_OFFSET_BY_ID.get(roundOf(item.k).chosen.id) ?? 0;
-            const angle = SCAN_START_ANGLE - offset;
-            const point = pointAtAngle(CENTER, RADIUS, angle);
+            const data = roundOf(item.k);
+            const point = toChartPoint(data.normalizedPrefixMean);
+            const angle = angleDeg(CENTER, point);
             const active = item.k === scene.reviewIndex;
             return (
               <g key={`prefix-${item.k}`} className={`p4-scene__prefix-node${active ? " is-active" : ""}`}>
                 <circle cx={point.x} cy={point.y} r={active ? 9 : 5} />
-                <title>{`ν${item.k} 位于 ${roundOf(item.k).chosen.id} 的方向上`}</title>
+                <title>{`ν${item.k} = normalize(mean(z(p₁), …, z(p${item.k})))，由真实前缀计算`}</title>
                 <line x1={CENTER.x} y1={CENTER.y} x2={point.x} y2={point.y} opacity={active ? 0.6 : 0.2} />
                 <text
                   className="p4-scene__prefix-label"

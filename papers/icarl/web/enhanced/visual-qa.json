@@ -441,7 +441,7 @@
             {
               "state": "visible",
               "type": "waitFor",
-              "selector": "[data-clip=\"r4-scan-a7\"]"
+              "selector": "[data-clip=\"r4-scan-a5\"]"
             },
             {
               "type": "wait",

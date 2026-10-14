@@ -27,6 +27,11 @@ import {
   HERDING_DEMO_TARGET_RAW,
 } from "../src/data/herding-teaching-demo.ts";
 import {
+  HERDING_CHART,
+  clockwiseOffsetFromTop,
+  projectHerdingFeature,
+} from "../src/data/herding-teaching-geometry.ts";
+import {
   INCREMENTAL_STAGE_DATA,
   buildTargets,
   teacherSnapshotFor,
@@ -88,6 +93,43 @@ assert.ok(
   "The full-class raw mean must be the mean of all eight unit features.",
 );
 
+const projectedOrigin = projectHerdingFeature([0, 0]);
+const projectedTop = projectHerdingFeature([0, 1]);
+const projectedRight = projectHerdingFeature([1, 0]);
+const projectedBottom = projectHerdingFeature([0, -1]);
+const projectedLeft = projectHerdingFeature([-1, 0]);
+assert.deepEqual(projectedOrigin, HERDING_CHART.center, "The chart projection must preserve the feature-space origin.");
+assert.ok(near(clockwiseOffsetFromTop(projectedTop), 0), "The scan must begin at the top of the circle.");
+assert.ok(near(clockwiseOffsetFromTop(projectedRight), 90), "Increasing scan angle must move clockwise from top to right.");
+assert.ok(near(clockwiseOffsetFromTop(projectedBottom), 180), "The bottom follows the right in clockwise order.");
+assert.ok(near(clockwiseOffsetFromTop(projectedLeft), 270), "The left follows the bottom in clockwise order.");
+
+const scanOrder = HERDING_DEMO_POINTS
+  .map((point) => ({ id: point.id, offset: clockwiseOffsetFromTop(projectHerdingFeature(point.feature)) }))
+  .sort((a, b) => a.offset - b.offset);
+assert.deepEqual(
+  scanOrder.map((item) => item.id),
+  ["a5", "a1", "a7", "a2", "a8", "a4", "a3", "a6"],
+  "Herding candidates must be visited in clockwise order from the circle top.",
+);
+
+const projectedRawTarget = projectHerdingFeature(HERDING_DEMO_TARGET_RAW);
+const projectedTarget = projectHerdingFeature(HERDING_DEMO_TARGET);
+const rawTargetFromOrigin = [projectedRawTarget.x - projectedOrigin.x, projectedRawTarget.y - projectedOrigin.y];
+const targetFromOrigin = [projectedTarget.x - projectedOrigin.x, projectedTarget.y - projectedOrigin.y];
+assert.ok(
+  near(Math.hypot(...rawTargetFromOrigin) / HERDING_CHART.radius, unit(HERDING_DEMO_TARGET_RAW)),
+  "The raw full-class mean must keep its true length under projection.",
+);
+assert.ok(
+  near(rawTargetFromOrigin[0] * targetFromOrigin[1] - rawTargetFromOrigin[1] * targetFromOrigin[0], 0),
+  "The raw and normalized full-class targets must remain on the same radial line.",
+);
+assert.ok(
+  near(Math.hypot(...targetFromOrigin), HERDING_CHART.radius),
+  "The normalized full-class target must lie on the displayed unit circle.",
+);
+
 for (const round of HERDING_DEMO_ROUNDS) {
   const prefix = HERDING_DEMO_ORDER.slice(0, round.k - 1).map((point) => point.feature);
   assert.equal(round.chosen.id, HERDING_DEMO_ORDER[round.k - 1].id, `Round ${round.k} winner must equal the recorded order.`);
@@ -104,8 +146,23 @@ for (const round of HERDING_DEMO_ROUNDS) {
       near(prefixUnit[0], candidate.normalizedPrefixMean[0]) && near(prefixUnit[1], candidate.normalizedPrefixMean[1]),
       `Round ${round.k} candidate ${candidate.point.id} unit prefix mean must be normalized.`,
     );
+    const projectedPrefix = projectHerdingFeature(candidate.normalizedPrefixMean);
+    const projectedExpectedPrefix = projectHerdingFeature(prefixUnit);
+    assert.ok(
+      near(projectedPrefix.x, projectedExpectedPrefix.x) && near(projectedPrefix.y, projectedExpectedPrefix.y),
+      `Round ${round.k} candidate ${candidate.point.id} must be drawn at its actual normalized prefix mean.`,
+    );
     const distance = euclideanDistance(prefixUnit, HERDING_DEMO_TARGET);
     assert.ok(near(distance, candidate.score, 1e-9), `Round ${round.k} candidate ${candidate.point.id} score must equal the drawn distance.`);
+    const projectedTargetForDistance = projectHerdingFeature(HERDING_DEMO_TARGET);
+    const displayedDistance = Math.hypot(
+      projectedPrefix.x - projectedTargetForDistance.x,
+      projectedPrefix.y - projectedTargetForDistance.y,
+    ) / HERDING_CHART.radius;
+    assert.ok(
+      near(displayedDistance, candidate.score, 1e-9),
+      `Round ${round.k} candidate ${candidate.point.id} projected distance must match its distance-ruler score.`,
+    );
     if (!best || distance < best.distance) best = { id: candidate.point.id, distance };
   }
   assert.equal(best?.id, round.chosen.id, `Round ${round.k} winner must be the greedy argmin, not a display choice.`);
