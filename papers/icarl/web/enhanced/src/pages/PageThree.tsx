@@ -226,17 +226,12 @@ const clipTitles: readonly string[] = [
 type SceneState = {
   clipIndex: number;
   progress: number;
-  rawPointOpacity: number;
-  /** null while raw features are hidden; 1 when fully faded out. */
-  rawGhostOpacity: number;
   unitizeProgressByClass: number[];
   unitizationRayOpacity: number;
   contributionByClass: (number | null)[];
-  meanRevealByClass: number[];
   prototypeProgressByClass: number[];
   contributionOpacityByClass: number[];
   meanOpacityByClass: number[];
-  queryRawOpacity: number;
   queryRawGhostOpacity: number;
   queryUnitizeProgress: number;
   queryOpacity: number;
@@ -270,13 +265,6 @@ function sceneAt(clipIndex: number, progress: number): SceneState {
     return smoothstep(progressWithin(p, start, start + 0.17));
   });
 
-  const meanRevealByClass = classIds.map((_, index) => {
-    if (clipIndex === 0) return 0;
-    if (clipIndex > 1) return 1;
-    const start = 0.04 + index * 0.3;
-    return clamp(progressWithin(p, start + 0.15, start + 0.22));
-  });
-
   const prototypeProgressByClass = classIds.map((_, index) => {
     if (clipIndex === 0) return 0;
     if (clipIndex > 1) return 1;
@@ -297,7 +285,6 @@ function sceneAt(clipIndex: number, progress: number): SceneState {
     return clamp(progressWithin(p, start + 0.15, start + 0.2)) * (1 - clamp(progressWithin(p, start + 0.27, start + 0.31)));
   });
 
-  const queryRawOpacity = clipIndex < 2 ? 0 : clipIndex > 2 ? 1 : clamp(progressWithin(p, 0.03, 0.16));
   const queryUnitizeProgress = clipIndex < 2 ? 0 : clipIndex > 2 ? 1 : smoothstep(progressWithin(p, 0.26, 0.66));
   const queryOpacity = clipIndex < 2 ? 0 : clipIndex > 2 ? 1 : clamp(progressWithin(p, 0.1, 0.26));
   const queryRawGhostOpacity =
@@ -319,16 +306,12 @@ function sceneAt(clipIndex: number, progress: number): SceneState {
   return {
     clipIndex,
     progress: p,
-    rawPointOpacity: clipIndex > 0 ? 0 : 1 - clamp(progressWithin(p, 0.62, 0.92)),
-    rawGhostOpacity: clipIndex === 0 ? clamp(progressWithin(p, 0.68, 0.96)) * 0.5 : 1,
     unitizeProgressByClass,
     unitizationRayOpacity,
     contributionByClass,
-    meanRevealByClass,
     prototypeProgressByClass,
     contributionOpacityByClass,
     meanOpacityByClass,
-    queryRawOpacity,
     queryRawGhostOpacity,
     queryUnitizeProgress,
     queryOpacity,
@@ -391,8 +374,23 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
         const isSelected = sample.id === selectedSampleId;
         const color = CLASS_VISUALS[sample.classId].color;
         const style = { "--p3-point-color": color } as CSSProperties;
+        const ghostProgress = clamp((classProgress - 0.02) / 0.38) * (1 - clamp((classProgress - 0.42) / 0.48));
+        const ghostOpacity = scene.clipIndex === 0 ? ghostProgress * 0.3 : 0;
         return (
-          <g key={`unitize-${sample.id}`} className="p3-scene__unitize" style={style}>
+          <g
+            key={`feature-${sample.id}`}
+            className={`p3-scene__point${isSelected ? " is-selected" : ""}`}
+            style={style}
+            data-sample-id={sample.id}
+            data-unit-progress={classProgress.toFixed(3)}
+            data-marker-x={moving.x.toFixed(2)}
+            data-marker-y={moving.y.toFixed(2)}
+            tabIndex={0}
+            role="button"
+            aria-label={`${CLASS_VISUALS[sample.classId].displayLabel} 已保留样本 ${sample.id}；选择以联动左栏身份`}
+            onClick={() => onSelectSample(sample.id)}
+            onKeyDown={(event) => activate(event, sample.id)}
+          >
             {classProgress > 0 && scene.unitizationRayOpacity > 0.02 ? (
               <line
                 className="p3-scene__radial-ray"
@@ -403,24 +401,25 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
                 opacity={(isSelected ? 0.85 : 0.4) * scene.unitizationRayOpacity}
               />
             ) : null}
-            {scene.rawGhostOpacity > 0 && classProgress > 0.02 ? (
+            {ghostOpacity > 0.02 ? (
               <circle
                 className="p3-scene__raw-ghost"
                 cx={entry.rawPoint.x}
                 cy={entry.rawPoint.y}
                 r="4"
-                opacity={scene.rawGhostOpacity}
+                opacity={ghostOpacity}
               />
             ) : null}
-            {scene.rawPointOpacity > 0 ? (
-              <circle
-                className="p3-scene__raw-point"
-                cx={entry.rawPoint.x}
-                cy={entry.rawPoint.y}
-                r={isSelected ? 5 : 3.6}
-                opacity={scene.rawPointOpacity}
-              />
-            ) : null}
+            <ClassFeatureMarker
+              className="p3-scene__unit-point"
+              classId={sample.classId}
+              x={moving.x}
+              y={moving.y}
+              radius={isSelected ? 5 : 3.8}
+              selected={false}
+              fillOverride={color}
+            />
+            <title>{`${sample.id} · fΘ(p) → z_p`}</title>
           </g>
         );
       })}
@@ -464,36 +463,6 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
                 </g>
               );
             })}
-          </g>
-        );
-      })}
-
-      {/* Normalized feature points: one stable node per exemplar, never remounted between clips. */}
-      {exemplars.map((sample) => {
-        const entry = samplePointById.get(sample.id)!;
-        const classIndex = classIds.indexOf(sample.classId);
-        const isSelected = sample.id === selectedSampleId;
-        const color = CLASS_VISUALS[sample.classId].color;
-        return (
-          <g
-            key={`unit-${sample.id}`}
-            className={`p3-scene__point${isSelected ? " is-selected" : ""}`}
-            tabIndex={0}
-            role="button"
-            aria-label={`${CLASS_VISUALS[sample.classId].displayLabel} 已保留样本 ${sample.id}；选择以联动左栏身份`}
-            onClick={() => onSelectSample(sample.id)}
-            onKeyDown={(event) => activate(event, sample.id)}
-          >
-            <ClassFeatureMarker
-              className="p3-scene__unit-point"
-              classId={sample.classId}
-              x={entry.unitPoint.x}
-              y={entry.unitPoint.y}
-              radius={isSelected ? 5 : 3.8}
-              selected={false}
-              fillOverride={color}
-            />
-            <title>{`${sample.id} · P_BEFORE[${sample.classId}] · 单位化特征 z_p`}</title>
           </g>
         );
       })}
@@ -574,15 +543,6 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
             y2={lerpPoint(origin, rawQueryPoint, queryRayReveal).y}
           />
         ) : null}
-        {scene.queryRawOpacity > 0.02 ? (
-          <circle
-            className="p3-scene__query-raw"
-            cx={rawQueryPoint.x}
-            cy={rawQueryPoint.y}
-            r="5"
-            opacity={scene.queryRawOpacity}
-          />
-        ) : null}
         {scene.queryRawGhostOpacity > 0.02 ? (
           <circle
             className="p3-scene__raw-ghost"
@@ -637,7 +597,7 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
           label follows the marker and renames itself once normalisation completes. */}
       {scene.queryOpacity > 0.05 ? (
         <g className="p3-scene__query p3-scene__query--marker" opacity={scene.queryOpacity}>
-          <QueryMarker point={queryMarkerPoint} />
+          <QueryMarker point={queryMarkerPoint} progress={scene.queryUnitizeProgress} />
           <PlacedLabel
             point={scene.queryUnitizeProgress > 0.6 ? unitQueryPoint : rawQueryPoint}
             text={scene.queryUnitizeProgress > 0.6 ? "z_q" : "f(x_q)"}
@@ -698,11 +658,14 @@ function AngleArc({ center, radius, from, to, progress }: {
   );
 }
 
-function QueryMarker({ point }: { point: Point }) {
+function QueryMarker({ point, progress }: { point: Point; progress: number }) {
   const radius = 6.5;
   return (
     <path
       className="p3-scene__query-marker"
+      data-query-progress={progress.toFixed(3)}
+      data-marker-x={point.x.toFixed(2)}
+      data-marker-y={point.y.toFixed(2)}
       d={`M ${point.x} ${point.y - radius} L ${point.x + radius} ${point.y} L ${point.x} ${point.y + radius} L ${point.x - radius} ${point.y} Z`}
     />
   );
@@ -742,11 +705,9 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   const chapterJumpsRef = useRef<HTMLDetailsElement | null>(null);
 
   const selectedSample = exemplars.find((sample) => sample.id === selectedSampleId) ?? exemplars[0];
-  const selectedEntry = samplePointById.get(selectedSample.id)!;
   const selectedClassIndex = classIds.indexOf(selectedSample.classId);
-  const selectedUnitized = (scene.unitizeProgressByClass[selectedClassIndex] ?? 0) > 0.999;
-  const selectedRaw = encode2D(selectedSample, "before");
-  const selectedUnit = normalize(selectedRaw);
+  const selectedUnitProgress = scene.unitizeProgressByClass[selectedClassIndex] ?? 0;
+  const selectedUnitized = selectedUnitProgress > 0.999;
 
   const narrationIndex = activeNarrationIndex(clipNarratives[state.clipIndex], state.progress);
   const predictedVisible = scene.predictedOpacity > 0.4;
@@ -856,10 +817,10 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
                 );
               })}
             </div>
-            <div className="p3-source__mapping" aria-label={`当前图片 ${selectedSample.id} 的特征与单位化结果`}>
+            <div className="p3-source__mapping" aria-label={`当前图片 ${selectedSample.id} 的单位化状态`}>
               <span>当前图片 · {CLASS_VISUALS[selectedSample.classId].displayLabel}</span>
-              <strong>{selectedSample.id} → f<sub>Θ</sub>(p) = ({selectedRaw[0].toFixed(2)}, {selectedRaw[1].toFixed(2)})</strong>
-              <strong>‖f‖₂ = {Math.hypot(selectedRaw[0], selectedRaw[1]).toFixed(2)} → {selectedUnitized ? "z" : "…"}<sub>p</sub> = ({selectedUnit[0].toFixed(2)}, {selectedUnit[1].toFixed(2)})</strong>
+              <strong>{selectedSample.id}</strong>
+              <small>{selectedUnitized ? "zₚ 已落在单位圆上" : selectedUnitProgress > 0.01 ? "沿径向移动，方向保持" : "保留原始特征长度"}</small>
             </div>
             {state.clipIndex >= 2 ? (
               <div className="p3-query-source">
@@ -878,60 +839,19 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
             <FeatureScene scene={scene} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
             <div className="p3-scene__legend" aria-label="图形标记说明">
               <span><i className="p3-legend-unit" />单位圆 ‖z‖₂=1</span>
-              <span><i className="p3-legend-raw" />f<sub>Θ</sub>(p)</span>
-              <span><i className="p3-legend-unit-point" />z<sub>p</sub></span>
+              <span><i className="p3-legend-unit-point" />Exemplar 特征</span>
               <span><i className="p3-legend-mean" />z̄<sub>y</sub></span>
               <span><i className="p3-legend-prototype" />μ<sub>y</sub></span>
-              <span><i className="p3-legend-query" />z<sub>q</sub></span>
+              <span><i className="p3-legend-query" />Query 特征</span>
               <span><i className="p3-legend-distance" />距离</span>
               <span><i className="p3-legend-angle" />圆心夹角</span>
             </div>
           </section>
 
           <aside className="panel p3-rule-panel" aria-live="polite">
-            <div className="panel-heading"><div><span className="eyebrow">正在观察</span><h2>{clipTitles[state.clipIndex]}</h2></div></div>
-            <p className="p3-current-observation">{clipNarratives[state.clipIndex][narrationIndex]}</p>
-            {state.clipIndex >= 1 ? (
-              <div className="p3-mean-readout">
-                {prototypeCalculations.map((calculation) => {
-                  const classIndex = classIds.indexOf(calculation.classId);
-                  const meanOpacity = scene.meanOpacityByClass[classIndex] ?? 0;
-                  const prototypeProgress = scene.prototypeProgressByClass[classIndex] ?? 0;
-                  return (
-                    <span key={calculation.classId} style={{ "--p3-group-color": CLASS_VISUALS[calculation.classId].color } as CSSProperties}>
-                      <b>μ{CLASS_VISUALS[calculation.classId].index}</b>
-                      <em>
-                        {meanOpacity > 0.1
-                          ? `z̄=(${calculation.rawMean[0].toFixed(3)}, ${calculation.rawMean[1].toFixed(3)})`
-                          : "—"}
-                      </em>
-                      <i>
-                        {prototypeProgress > 0.99
-                          ? `→ (${calculation.prototype[0].toFixed(3)}, ${calculation.prototype[1].toFixed(3)})`
-                          : prototypeProgress > 0.01
-                            ? "单位化中"
-                            : "待计算"}
-                      </i>
-                    </span>
-                  );
-                })}
-              </div>
-            ) : null}
-            {state.clipIndex >= 3 ? (
-              <div className="p3-comparison-readout">
-                {queryComparisons.map(({ classId, distance }, index) => (
-                  <span key={classId} className={classId === predictedClass && predictedVisible ? "is-nearest" : ""}>
-                    <b>‖z_q − μ{CLASS_VISUALS[classId].index}‖₂</b>
-                    <em>{(scene.comparisonProgress[comparisonOrder.indexOf(classId)] ?? 0) > 0.99 ? distance.toFixed(3) : "…"}</em>
-                    <small>{index === 0 ? "最短" : ""}</small>
-                  </span>
-                ))}
-              </div>
-            ) : null}
+            <div className="panel-heading"><div><span className="eyebrow">分类规则</span><h2>判定依据</h2></div></div>
             {predictedVisible ? (
-              <p className="p3-prediction">
-                ŷ = arg min<sub>y</sub> ‖z_q − μ<sub>y</sub>‖₂ = {CLASS_VISUALS[predictedClass].displayLabel}
-              </p>
+              <p className="p3-prediction">预测类别：{CLASS_VISUALS[predictedClass].displayLabel}</p>
             ) : null}
             <details className="p3-calculation-details">
               <summary>查看完整计算依据</summary>

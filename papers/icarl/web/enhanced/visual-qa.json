@@ -73,6 +73,29 @@
               "selector": ".ewc-slice-nav__item:nth-child(3)"
             },
             {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": "[data-clip=\"p3-a-normalize\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-start-button"
+            },
+            {
+              "state": "visible",
+              "type": "waitFor",
+              "selector": ".p3-scene__point[data-sample-id=\"x_12\"][data-unit-progress=\"0.000\"]"
+            }
+          ],
+          "id": "00-raw-exemplar-markers"
+        },
+        {
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(3)"
+            },
+            {
               "type": "click",
               "selector": ".p3-start-button"
             },
