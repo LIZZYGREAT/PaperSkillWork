@@ -74,14 +74,14 @@
 .p3-map__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 9px; color: #617678; font-size: 11px; }
 .p3-map__meta span:first-child { color: #817055; font: 650 11px var(--mono); letter-spacing: .04em; }
 .p3-map svg { display: block; width: 100%; height: 100%; min-height: 0; align-self: center; overflow: hidden; }
-.p3-map__unit-circle { fill: none; stroke: #b8c9bf; stroke-dasharray: 4 4; stroke-width: 1.2; }
-.p3-map__axis { stroke: #e0e7e3; stroke-width: 1; }
+.p3-map__unit-circle { fill: none; stroke: #8da99a; stroke-dasharray: 4 4; stroke-width: 1.45; }
+.p3-map__axis { stroke: #cbd8d1; stroke-width: 1.1; }
 .p3-map__origin { fill: #355b54; stroke: #fffefa; stroke-width: 1.4; }
 .p3-map__normalization { pointer-events: none; }
-.p3-map__radial-ray { stroke: var(--p3-point-color); stroke-dasharray: 4 5; stroke-linecap: round; stroke-opacity: .62; stroke-width: 1.25; }
+.p3-map__radial-ray { stroke: var(--p3-point-color); stroke-dasharray: 4 5; stroke-linecap: round; stroke-opacity: .78; stroke-width: 1.45; }
 .p3-map__raw-point { fill: #fcfdfa; stroke: var(--p3-point-color); stroke-width: 1.4; }
 .p3-map__normalization.is-selected .p3-map__raw-point { stroke-width: 2.2; }
-.p3-map__normalization-line { fill: none; stroke: var(--p3-point-color); stroke-dasharray: 3 4; stroke-linecap: round; stroke-opacity: .55; stroke-width: 1.25; }
+.p3-map__normalization-line { fill: none; stroke: var(--p3-point-color); stroke-dasharray: 3 4; stroke-linecap: round; stroke-opacity: .72; stroke-width: 1.45; }
 .p3-map__contribution { fill: color-mix(in srgb, var(--p3-point-color) 68%, white); stroke: #fff; stroke-width: 1.5; transition: opacity .12s linear; }
 .p3-map__point { cursor: pointer; outline: none; }
 .p3-map__normalized-point { stroke: white; stroke-width: 1.2; transition: r .2s ease, fill-opacity .2s ease; }
@@ -95,10 +95,10 @@
 .p3-map__query { fill: #fffefa; stroke: #263f43; stroke-width: 2.4; }
 .p3-map__query-halo { fill: none; stroke: #8a6b55; stroke-width: 1.6; }
 .p3-map__query-appearance { transform-box: fill-box; transform-origin: center; }
-.p3-map__distance { stroke: var(--p3-point-color); stroke-width: 1.3; stroke-dasharray: 4 4; opacity: .62; }
+.p3-map__distance { stroke: var(--p3-point-color); stroke-width: 1.55; stroke-dasharray: 4 4; opacity: .78; }
 .p3-map__distance.is-nearest { stroke-width: 2.8; stroke-dasharray: none; opacity: 1; }
-.p3-map__angle { fill: none; stroke: var(--p3-point-color); stroke-width: 1.2; opacity: .48; }
-.p3-map__angle.is-nearest { stroke-width: 1.8; opacity: .82; }
+.p3-map__angle { fill: none; stroke: var(--p3-point-color); stroke-width: 1.45; opacity: .66; }
+.p3-map__angle.is-nearest { stroke-width: 1.9; opacity: .9; }
 .p3-map__direct-label { fill: #29484b; font: 650 18px Georgia, serif; paint-order: stroke; stroke: #fcfdfa; stroke-linejoin: round; stroke-width: 5px; }
 .p3-map__direct-label--mean { fill: #6c5d51; font-size: 16px; }
 .p3-map__direct-label--query { fill: #263f43; }
