@@ -63,6 +63,7 @@
 .p4-scene__prefix-node text { fill: #35604f; font: 700 13px var(--mono); paint-order: stroke; stroke: #fbfcfa; stroke-width: 4px; }
 .p4-scene .feature-chart-labels text { fill: #355254; font: 650 18px var(--mono); paint-order: stroke; stroke: #fbfcfa; stroke-linejoin: round; stroke-width: 5px; }
 .p4-scene .feature-chart-labels__tick { stroke: #7e9389; stroke-width: 1.4; }
+.p4-scene__fixed-mean-label { fill: #355254; font: 650 18px var(--mono); paint-order: stroke; stroke: #fbfcfa; stroke-linejoin: round; stroke-width: 5px; }
 
 .p4-legend { display: flex; min-height: 22px; flex-wrap: wrap; align-items: center; justify-content: center; gap: 5px 14px; color: #596f6d; font-size: 11px; line-height: 1.3; }
 .p4-legend span { display: inline-flex; align-items: center; gap: 5px; }

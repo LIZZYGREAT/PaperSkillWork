@@ -35,6 +35,15 @@ const RADIUS = HERDING_CHART.radius;
 const toChartPoint = projectHerdingFeature;
 const TARGET_POINT = toChartPoint(HERDING_DEMO_TARGET);
 const TARGET_RAW_POINT = toChartPoint(HERDING_DEMO_TARGET_RAW);
+const TARGET_NORMALIZATION_DIRECTION = {
+  x: TARGET_POINT.x - TARGET_RAW_POINT.x,
+  y: TARGET_POINT.y - TARGET_RAW_POINT.y,
+};
+const TARGET_NORMALIZATION_LENGTH = Math.hypot(TARGET_NORMALIZATION_DIRECTION.x, TARGET_NORMALIZATION_DIRECTION.y) || 1;
+const TARGET_NORMALIZATION_LABEL_OFFSET = {
+  x: (TARGET_NORMALIZATION_DIRECTION.y / TARGET_NORMALIZATION_LENGTH) * 24,
+  y: (-TARGET_NORMALIZATION_DIRECTION.x / TARGET_NORMALIZATION_LENGTH) * 24,
+};
 const SCAN_START_ID = "a8";
 const SCAN_START_POINT = HERDING_DEMO_POINTS.find((point) => point.id === SCAN_START_ID)!;
 const SCAN_START_CHART_POINT = toChartPoint(SCAN_START_POINT.feature);
@@ -58,7 +67,7 @@ const SWEEP_STEP_MS = 360;
 
 /* ----------------------------------------------------------------- clips --- */
 
-type ClipKind = "target-contribute" | "target-normalize" | "target-normalize-fade" | "scan" | "hull" | "hover" | "split" | "gather" | "mean" | "score" | "norm" | "commit" | "review" | "budget";
+type ClipKind = "target-contribute" | "target-normalize" | "target-normalize-fade" | "scan" | "hull" | "hover" | "split" | "gather" | "mean" | "score" | "score-fade" | "norm" | "commit" | "review" | "budget";
 
 type DemoClip = AnimationClip & {
   kind: ClipKind;
@@ -131,7 +140,8 @@ function buildClips(): DemoClip[] {
         // k = 1 has no prefix to average: the candidate's own unit feature is the prefix mean.
         push({ id: `r1-hull-${candidate.id}`, kind: "hover", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.hover * scale), durationMs: Math.round(stepDurations.hover * scale), holdMs: 100, narrative: `只有一个名额：直接比较候选 ${candidate.id} 自己的单位特征到 μ_full 的距离` });
         push({ id: `r1-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 120, narrative: "ν₁(x) = z(x)：单个样本的前缀均值就是它自己的单位特征" });
-        push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 140, narrative: `画出 ${candidate.id} 到 μ_full 的距离线，并记录本轮距离；完成后再转向下一个候选` });
+        push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 650, narrative: `画出 ${candidate.id} 到 μ_full 的距离线，并记录本轮距离` });
+        push({ id: `r1-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: Math.max(520, Math.round(650 * scale)), durationMs: Math.max(520, Math.round(650 * scale)), holdMs: 0, narrative: "距离线停留后淡出；完全消失后才移动到下一候选" });
         sweep = sweepAt;
         continue;
       }
@@ -144,7 +154,8 @@ function buildClips(): DemoClip[] {
         push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: hullMs, durationMs: hullMs, holdMs: 70, narrative: `固定前 ${round.k - 1} 项，用线段连出本次参与平均的 ${round.k} 个特征点` });
         push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: gatherMs, durationMs: gatherMs, holdMs: 100, narrative: `${round.k} 个真实端点各复制一个贡献点，聚合成前缀原始均值` });
         push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: normalizeMs, durationMs: normalizeMs, holdMs: 100, narrative: "单位化后与 μ_full 比较距离" });
-        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: scoreMs, durationMs: scoreMs, holdMs: 120, narrative: `${candidate.id} 的距离进入本轮记录；完成后扫描环再继续前进` });
+        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: scoreMs, durationMs: scoreMs, holdMs: 650, narrative: `${candidate.id} 的距离进入本轮记录` });
+        push({ id: `r${round.k}-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: Math.max(520, Math.round(650 * scale)), durationMs: Math.max(520, Math.round(650 * scale)), holdMs: 0, narrative: "距离线停留后淡出；完全消失后才移动到下一候选" });
         sweep = sweepAt;
         continue;
       }
@@ -154,7 +165,8 @@ function buildClips(): DemoClip[] {
       push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.gather * scale), durationMs: Math.round(stepDurations.gather * scale), holdMs: 200, narrative: round.k === 2 ? "两个贡献点沿连线移动到真实中点" : "三个贡献点同时移动到真实算术重心" });
       push({ id: `r${round.k}-mean-${candidate.id}`, kind: "mean", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.mean * scale), durationMs: Math.round(stepDurations.mean * scale), holdMs: 170, narrative: round.k === 2 ? "中点就是两张图片前缀的原始均值 ν̄₂(x)" : "重心就是三张图片前缀的原始均值 ν̄₃(x)" });
       push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 150, narrative: "沿径向把原始前缀均值单位化，得到用于比较的 νk(x)" });
-      push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 160, narrative: `从 νk(x) 到 μ_full 画出距离线并记录；完成后扫描环再顺时针前往下一个候选` });
+      push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 650, narrative: `从 νk(x) 到 μ_full 画出距离线并记录` });
+      push({ id: `r${round.k}-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: Math.max(520, Math.round(650 * scale)), durationMs: Math.max(520, Math.round(650 * scale)), holdMs: 0, narrative: "距离线停留后淡出；完全消失后才移动到下一候选" });
       sweep = sweepAt;
     }
 
@@ -212,6 +224,7 @@ const phaseTitles: Record<ClipKind, string> = {
   gather: "贡献点沿连线聚合成原始前缀均值",
   mean: "原始前缀均值停留在计算位置",
   score: "用单位化前缀均值比较到目标的距离",
+  "score-fade": "距离线停留后淡出，再检查下一候选",
   norm: "把原始前缀均值单位化",
   commit: "本轮比较结束，胜出项进入记忆槽",
   review: "回看同一选择顺序的不同长度",
@@ -233,6 +246,7 @@ type Scene = {
   rawMeanPoint: Point | null;
   normalizedPoint: Point | null;
   scoreReveal: number;
+  scoreLineOpacity: number;
   decisionReveal: number;
   reviewIndex: number | null;
   slotCount: number;
@@ -280,6 +294,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   let normalizedPoint: Point | null = null;
   let hullReveal = 0;
   let scoreReveal = 0;
+  let scoreLineOpacity = 0;
   let decisionReveal = 0;
 
   if (candidate && round) {
@@ -294,7 +309,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     if (clip.kind === "hull") hullReveal = smoothstep(p);
     if (clip.kind === "split") hullReveal = 1;
     if (clip.kind === "hover") hullReveal = 1;
-    if (["split", "hover", "gather", "mean", "norm", "score", "commit"].includes(clip.kind) && round.k > 1) {
+    if (["split", "hover", "gather", "mean", "norm", "score", "score-fade", "commit"].includes(clip.kind) && round.k > 1) {
       const gather = clip.kind === "split" ? 0 : clip.kind === "hover" ? 0 : clip.kind === "gather" ? gathered : 1;
       sourcePoints.forEach((source, index) => {
         const at = { x: source.x + (rawMean.x - source.x) * gather, y: source.y + (rawMean.y - source.y) * gather };
@@ -305,20 +320,24 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     }
     const meanVisible = round.k === 1
       ? false
-      : ["gather", "mean", "norm", "score", "commit"].includes(clip.kind) && (clip.kind !== "gather" || gathered > 0.9);
+      : ["gather", "mean", "norm", "score", "score-fade", "commit"].includes(clip.kind) && (clip.kind !== "gather" || gathered > 0.9);
     const meanOpacity = meanVisible ? (clip.kind === "gather" ? clamp(progressWithin(p, 0.86, 0.98)) : 1) : 0;
     if (meanOpacity > 0.01) rawMeanPoint = rawMean;
 
     const normalizeProgress = clip.kind === "norm" ? smoothstep(p)
-      : ["score", "commit"].includes(clip.kind) ? 1
+      : ["score", "score-fade", "commit"].includes(clip.kind) ? 1
       : 0;
-    if (clip.kind === "score" || clip.kind === "commit") normalizedPoint = normalized;
+    if (clip.kind === "score" || clip.kind === "score-fade" || clip.kind === "commit") normalizedPoint = normalized;
     else if (clip.kind === "norm") {
       normalizedPoint = { x: rawMean.x + (normalized.x - rawMean.x) * normalizeProgress, y: rawMean.y + (normalized.y - rawMean.y) * normalizeProgress };
     }
 
     if (clip.kind === "score") {
       scoreReveal = clamp(p);
+      scoreLineOpacity = 1;
+    } else if (clip.kind === "score-fade") {
+      scoreReveal = 1;
+      scoreLineOpacity = 1 - smoothstep(p);
     } else if (clip.kind === "commit") scoreReveal = 1;
     if (clip.kind === "commit") decisionReveal = smoothstep(progressWithin(p, 0.35, 0.85));
   }
@@ -344,7 +363,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   const barProgress = (candidateId: string) => {
     if (!round) return 0;
     if (scoredIds.has(candidateId)) return 1;
-    return clip.kind === "score" && candidate?.point.id === candidateId ? scoreReveal : 0;
+    return (clip.kind === "score" || clip.kind === "score-fade") && candidate?.point.id === candidateId ? scoreReveal : 0;
   };
 
   let slotCount = 0;
@@ -366,6 +385,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     rawMeanPoint,
     normalizedPoint,
     scoreReveal,
+    scoreLineOpacity,
     decisionReveal,
     reviewIndex: clip.kind === "review" || clip.kind === "budget" ? reviewIndex : null,
     slotCount,
@@ -391,8 +411,12 @@ function HerdingScene({ scene }: { scene: Scene }) {
   const labels: ChartLabel[] = [];
   const obstacles: Point[] = [];
   const isTargetNormalization = scene.clip.kind === "target-normalize" || scene.clip.kind === "target-normalize-fade";
+  const targetLabelPoint = isTargetNormalization && scene.normalizedPoint
+    ? scene.normalizedPoint
+    : scene.targetNormalize > 0.5 && scene.clip.kind !== "target-contribute"
+      ? TARGET_POINT
+      : null;
   if (scene.targetContribute < 0.02 && scene.clip.kind !== "target-contribute" && !isTargetNormalization) labels.push({ ...TARGET_RAW_POINT, id: "target-raw", text: "μ̄_full" });
-  if (scene.targetNormalize > 0.5 && !isTargetNormalization) labels.push({ ...TARGET_POINT, id: "target", text: "μ_full" });
   for (const point of HERDING_DEMO_POINTS) {
     const at = toChartPoint(point.feature);
     obstacles.push(at);
@@ -406,7 +430,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
   }
   if (scene.normalizedPoint && scene.clip.round !== 1) {
     obstacles.push(scene.normalizedPoint);
-    labels.push({ ...scene.normalizedPoint, id: "unit-mean", text: round ? `ν${round.k}(x)` : "μ_full" });
+    if (!isTargetNormalization) labels.push({ ...scene.normalizedPoint, id: "unit-mean", text: round ? `ν${round.k}(x)` : "μ_full" });
   }
   if (scene.reviewIndex !== null) {
     for (const item of ROUNDS.slice(0, 4)) {
@@ -500,6 +524,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
         <path
           className="p4-scene__score-line"
           d={`M ${scene.normalizedPoint.x} ${scene.normalizedPoint.y} L ${scene.normalizedPoint.x + (TARGET_POINT.x - scene.normalizedPoint.x) * scene.scoreReveal} ${scene.normalizedPoint.y + (TARGET_POINT.y - scene.normalizedPoint.y) * scene.scoreReveal}`}
+          opacity={scene.scoreLineOpacity}
         />
       ) : null}
 
@@ -550,6 +575,14 @@ function HerdingScene({ scene }: { scene: Scene }) {
       <path className="p4-scene__target" d={featureStar(TARGET_POINT.x, TARGET_POINT.y)} opacity={scene.targetNormalize} />
       <circle className="p4-scene__origin" cx={CENTER.x} cy={CENTER.y} r="3.4" />
       <ChartLabels labels={labels} obstacles={obstacles} width={VIEW.width} height={VIEW.height} fontSize={18} />
+      {targetLabelPoint ? (
+        <text
+          className="p4-scene__fixed-mean-label"
+          x={targetLabelPoint.x + TARGET_NORMALIZATION_LABEL_OFFSET.x}
+          y={targetLabelPoint.y + TARGET_NORMALIZATION_LABEL_OFFSET.y}
+          textAnchor={TARGET_NORMALIZATION_LABEL_OFFSET.x < 0 ? "end" : "start"}
+        >μ_full</text>
+      ) : null}
       <text className="p4-scene__note" x="14" y="20">
         固定合成示例 · 八个单位特征 ‖z‖₂ = 1 · 距离尺与图中线段同尺度
       </text>
@@ -706,9 +739,9 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
     }
     if (phaseComplete || state.status === "finished") {
       if (activePhaseIndex < phaseRanges.length - 1) {
-        jumpToPhase(activePhaseIndex + 1, { autoPlay: false });
+        jumpToPhase(activePhaseIndex + 1, { autoPlay: true });
       } else {
-        jumpToPhase(0);
+        jumpToPhase(0, { autoPlay: true });
       }
       return;
     }
