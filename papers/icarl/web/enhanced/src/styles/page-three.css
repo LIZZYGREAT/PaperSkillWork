@@ -41,10 +41,10 @@
 .p3-source__sample i { color: inherit; font-size: 12px; font-style: normal; }
 .p3-source__sample b { overflow: hidden; color: #415e60; font: 650 12px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
 .p3-source__group.is-done .p3-source__sample { border-color: color-mix(in srgb, var(--p3-group-color) 34%, white); background: color-mix(in srgb, var(--p3-group-color) 7%, white); }
-.p3-source__mapping { display: grid; gap: 3px; margin-top: auto; padding: 8px; border: 1px solid #e2e9e4; border-radius: 7px; color: #50686a; background: #fbfcfa; }
-.p3-source__mapping > span { color: #657a7b; font-size: 12px; }
-.p3-source__mapping > strong { color: #345256; font: 650 12px var(--mono); }
-.p3-source__mapping > small { color: #50686a; font-size: 12px; line-height: 1.4; }
+.p3-source__mapping { margin-top: auto; padding: 8px; border: 1px solid #e2e9e4; border-radius: 7px; color: #50686a; background: #fbfcfa; }
+.p3-source__mapping summary { color: #345256; font-size: 12px; font-weight: 650; cursor: pointer; }
+.p3-source__mapping > div { display: grid; gap: 3px; margin-top: 7px; }
+.p3-source__mapping small { color: #50686a; font-size: 12px; line-height: 1.4; }
 .p3-query-source { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 8px; padding: 8px; border: 1px solid #ddcdbf; border-radius: 7px; background: #fff8f1; }
 .p3-query-source span { color: #9c633f; font-size: 12px; font-weight: 650; }
 .p3-query-source b { grid-row: 1 / 3; grid-column: 2; align-self: center; color: #7e5239; font: 650 19px Georgia, serif; }
@@ -87,7 +87,7 @@
 .p3-scene__decision-leader { stroke: #2f5a4d; stroke-width: 1.4; }
 .p3-scene__decision text { fill: #24503f; font: 700 15px "Segoe UI", sans-serif; paint-order: stroke; stroke: #fcfdfa; stroke-width: 5px; }
 
-.p3-scene__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 11px; color: #556d6d; font-size: 12px; line-height: 1.3; }
+.p3-scene__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 11px; color: #556d6d; font-size: 13px; line-height: 1.3; }
 .p3-scene__legend span { display: inline-flex; align-items: center; gap: 5px; }
 .p3-scene__legend i { display: inline-block; width: 10px; height: 10px; flex: 0 0 auto; }
 .p3-legend-unit { width: 13px !important; height: 13px !important; border: 1px dashed #86a894; border-radius: 50%; }

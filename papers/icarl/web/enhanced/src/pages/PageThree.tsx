@@ -188,29 +188,24 @@ const clips: readonly AnimationClip[] = [
 
 const clipNarratives: readonly (readonly string[])[] = [
   [
-    "前面已经知道：网络能把一张图片变成特征向量。",
-    "现在让这十二张已选代表图片进入同一个特征空间，按类别逐批把特征缩放到单位长度。",
-    "图中细虚线是从圆心出发的方向，点只沿自己的方向移动到单位圆上，方向不会改变。",
-    "十二个点都完成后，我们才有了一组可以直接互相比较的单位特征。",
+    "十二张已保存的代表图片由同一个固定网络映射为特征。",
+    "每个特征沿自身径向缩放到单位圆上，方向保持不变。",
+    "得到的十二个单位特征将用于构造各自类别的原型。",
   ],
   [
-    "单张图片只代表类别中的一个具体样本，个体差异很大。",
-    "我们要判断的是 Query 属于哪个类别，所以把同一类的四个单位特征汇总成一个类别代表。",
-    "四个原始点保持不动，各自复制出一个小贡献点，一起向它们的算术平均位置移动。",
-    "四个贡献点汇合处就是类别均值 z̄_y；原始特征点仍在原处。",
-    "从均值沿着圆心方向把它单位化，就得到落在单位圆上的原型 μ_y，它是之后用来比较的类别方向。",
+    "把同一类别的四个单位特征取算术平均，形成类别均值。",
+    "贡献副本移动到均值位置；原始特征点保持不动。",
+    "再将类别均值单位化，得到用于比较的原型 μ_y。",
   ],
   [
-    "图中出现一张不属于那十二张 Exemplars 的新图片 Query。",
-    "它先由同一个固定特征提取器落到自己的原始特征位置。",
-    "再沿圆心方向单位化：z_q = normalize(φ(x_q))。",
-    "Query 只用于这次推断，它不会进入 Exemplar Memory，也不修改模型参数。",
+    "新图片 Query 通过同一个固定特征提取器，得到原始特征 φ_Θ(x_q)。",
+    "将其沿径向单位化，得到 z_q = φ_Θ(x_q) / ‖φ_Θ(x_q)‖₂。",
+    "Query 只参与这次预测，不写入记忆，也不更新模型参数。",
   ],
   [
-    "现在只比较单位圆上的 z_q 与三个原型 μ_y。",
-    "依次画出 Query 到每个原型的比较线，每条线对应一个真实距离。",
-    "再以圆心为顶点画出方向夹角：单位化以后，距离越小，夹角也越小。",
-    "三条都比较完，最近的那条加深，对应原型就是预测类别。",
+    "逐一比较单位查询 z_q 与三个类别原型 μ_y。",
+    "图中的线段和圆心夹角都由真实向量计算；最近原型对应最小距离。",
+    "对单位向量而言，最小距离也对应最小夹角，argmin 给出预测类别。",
   ],
 ];
 
@@ -700,6 +695,8 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   const chapterJumpsRef = useRef<HTMLDetailsElement | null>(null);
 
   const selectedSample = exemplars.find((sample) => sample.id === selectedSampleId) ?? exemplars[0];
+  const selectedRaw = encode2D(selectedSample, "before");
+  const selectedUnit = normalize(selectedRaw);
   const selectedClassIndex = classIds.indexOf(selectedSample.classId);
   const selectedUnitProgress = scene.unitizeProgressByClass[selectedClassIndex] ?? 0;
   const selectedUnitized = selectedUnitProgress > 0.999;
@@ -812,11 +809,14 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
                 );
               })}
             </div>
-            <div className="p3-source__mapping" aria-label={`当前图片 ${selectedSample.id} 的单位化状态`}>
-              <span>当前图片 · {CLASS_VISUALS[selectedSample.classId].displayLabel}</span>
-              <strong>{selectedSample.id}</strong>
-              <small>{selectedUnitized ? "zₚ 已落在单位圆上" : selectedUnitProgress > 0.01 ? "沿径向移动，方向保持" : "保留原始特征长度"}</small>
-            </div>
+            <details className="p3-source__mapping" data-sample-id={selectedSample.id}>
+              <summary>核对当前图片 · {selectedSample.id} · {CLASS_VISUALS[selectedSample.classId].displayLabel}</summary>
+              <div>
+                <small>{selectedUnitized ? "zₚ 已落在单位圆上" : selectedUnitProgress > 0.01 ? "沿径向移动，方向保持" : "保留原始特征长度"}</small>
+                <small>f<sub>Θ</sub>(x) = ({selectedRaw[0].toFixed(3)}, {selectedRaw[1].toFixed(3)}) · ‖f‖₂ = {Math.hypot(...selectedRaw).toFixed(3)}</small>
+                <small>z = ({selectedUnit[0].toFixed(3)}, {selectedUnit[1].toFixed(3)}) · ‖z‖₂ = 1.000</small>
+              </div>
+            </details>
             {state.clipIndex >= 2 ? (
               <div className="p3-query-source">
                 <span>独立的新输入 · 不属于上面十二张</span>
@@ -832,14 +832,18 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
               <span className="p3-mini-count">{comparisonLabel}</span>
             </div>
             <FeatureScene scene={scene} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId} />
-            <div className="p3-scene__legend" aria-label="图形标记说明">
+            <div className="p3-scene__legend" aria-label="当前片段可见图形标记说明">
               <span><i className="p3-legend-unit" />单位圆 ‖z‖₂=1</span>
               <span><i className="p3-legend-unit-point" />Exemplar 特征</span>
-              <span><i className="p3-legend-mean" />z̄<sub>y</sub></span>
-              <span><i className="p3-legend-prototype" />μ<sub>y</sub></span>
-              <span><i className="p3-legend-query" />Query 特征</span>
-              <span><i className="p3-legend-distance" />距离</span>
-              <span><i className="p3-legend-angle" />圆心夹角</span>
+              {state.clipIndex >= 1 ? <>
+                <span><i className="p3-legend-mean" />类别均值 z̄<sub>y</sub></span>
+                <span><i className="p3-legend-prototype" />Prototype μ<sub>y</sub></span>
+              </> : null}
+              {state.clipIndex >= 2 ? <span><i className="p3-legend-query" />Query 特征</span> : null}
+              {state.clipIndex >= 3 ? <>
+                <span><i className="p3-legend-distance" />距离</span>
+                <span><i className="p3-legend-angle" />圆心夹角</span>
+              </> : null}
             </div>
           </section>
 

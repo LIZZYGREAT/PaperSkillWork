@@ -45,12 +45,52 @@ import {
 } from "../src/data/incremental-training.ts";
 import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
 import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
+import { PageThree } from "../src/pages/PageThree.tsx";
 import { PageFour } from "../src/pages/PageFour.tsx";
 import { PageSeven } from "../src/pages/PageSeven.tsx";
 
 const OLD_CLASS_IDS = ["A", "B", "C"] as const;
 const near = (a: number, b: number, tolerance = 1e-9) => Math.abs(a - b) <= tolerance;
 const unit = (vector: Vector2) => Math.hypot(vector[0], vector[1]);
+
+function renderPageThreeAt(clip: number, pct = 0): string {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { __ICARL_FREEZE__: { clip, pct }, matchMedia: () => ({ matches: false }) },
+  });
+  try {
+    return renderToStaticMarkup(createElement(PageThree));
+  } finally {
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+}
+
+function p3VisibleLegend(clip: number): string {
+  const markup = renderPageThreeAt(clip);
+  const legend = markup.match(/<div class="p3-scene__legend"[^>]*>(.*?)<\/div>/)?.[1];
+  assert.ok(legend, `P3 clip ${clip} must render its stage legend.`);
+  return legend!;
+}
+
+const p3NormalizeLegend = p3VisibleLegend(0);
+assert.match(p3NormalizeLegend, /单位圆/);
+assert.match(p3NormalizeLegend, /Exemplar 特征/);
+assert.doesNotMatch(p3NormalizeLegend, /类别均值|Prototype|Query|距离|圆心夹角/);
+const p3AggregateLegend = p3VisibleLegend(1);
+assert.match(p3AggregateLegend, /类别均值/);
+assert.match(p3AggregateLegend, /Prototype/);
+assert.doesNotMatch(p3AggregateLegend, /Query|距离|圆心夹角/);
+const p3QueryLegend = p3VisibleLegend(2);
+assert.match(p3QueryLegend, /Query 特征/);
+assert.doesNotMatch(p3QueryLegend, /距离|圆心夹角/);
+const p3DecisionLegend = p3VisibleLegend(3);
+assert.match(p3DecisionLegend, /距离/);
+assert.match(p3DecisionLegend, /圆心夹角/);
+const p3MappingDetails = renderPageThreeAt(0).match(/<details class="p3-source__mapping"[^>]*>/)?.[0];
+assert.ok(p3MappingDetails && !/\sopen(?:="")?(?:\s|>)/.test(p3MappingDetails),
+  "P3 sample coordinates and normalization status must stay inside a collapsed verification area.");
 
 /* ------------------------------------------------------------------ P3 --- */
 
