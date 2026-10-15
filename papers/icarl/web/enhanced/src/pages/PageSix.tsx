@@ -203,7 +203,7 @@ function OperationFocus({
       <div className="p6-parameter-transition" style={{ "--parameter-opacity": 0.42 + featureGradientProgress * 0.58 } as CSSProperties} aria-label="符号化参数状态由更新前交接至更新后"><b>Θ<sub>before</sub></b><i aria-hidden="true">→</i><b className="p6-parameter-transition__after">Θ<sub>after</sub></b><small>符号化状态提示，不展示训练所得数值</small></div>
       <p>训练 head 的 argmax 不是最终预测；训练后 iCaRL 仍按保留 Exemplars 的类别均值作最近均值预测。</p>
       <small>固定教学网络只说明更新路径；图中数值不随反传改变，也不是优化器训练轨迹。</small>
-      {phaseProgress >= 0.82 ? <div className="p6-handoff" role="status"><b>本轮参数更新完成</b><span>接下来转到第 7 页：整理 Exemplar 记忆，并用当前表示重新计算原型。</span></div> : null}
+      {phaseProgress >= 0.82 ? <div className="p6-handoff" role="status"><b>参数更新路径演示完成</b><span>真实训练完成后会得到更新的 Θ_after。下一页用预设的 before/after 教学状态说明记忆维护与原型重建。</span></div> : null}
     </> : null}
   </section>;
 }

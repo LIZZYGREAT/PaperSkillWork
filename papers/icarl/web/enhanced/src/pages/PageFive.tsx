@@ -57,8 +57,8 @@ const guidance: readonly (readonly string[])[] = [
   [
     "D 已经准备好了。可是参数一旦更新，网络对旧类别的响应也会跟着改变。",
     "能不能在改动参数之前，先把旧模型原来的判断记下来？",
-    "更新前的旧模型逐张读取 D，只记录三个旧节点 g₁、g₂、g₃ 的响应。",
-    "一张旧类图片和一张新类图片都要走同一过程：新图片同样有三个旧节点响应。",
+    "为便于看清对应关系，先演示一张旧类图和一张新类图；每张图都由更新前的旧模型产生三个旧节点响应。",
+    "之后按 D 中其余样本的原有顺序补齐；无论展示先后，每张图始终写入自己的 Q 行。",
   ],
   [
     "Q 的一行对应 D 中一张图片，三列对应旧节点 g₁、g₂、g₃，所以 Q 是 30 × 3。",
@@ -74,7 +74,7 @@ const clips: readonly FlowClip[] = [
   { id: "p5-new-sample", kind: "sample-to-teacher", durationMs: 4200, holdMs: 900, narrative: "一张新类图片：同样产生三个旧节点响应" },
   { id: "p5-batch-1", kind: "batch", batchStart: 0, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "批量生成 Q：先到旧模型，再出响应，再写入 Q 行" },
   { id: "p5-batch-2", kind: "batch", batchStart: 7, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "Q 逐行累积，当前写入行与三个旧节点同步可见" },
-  { id: "p5-batch-3", kind: "batch", batchStart: 14, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "Q 继续按 D 的稳定顺序累积" },
+  { id: "p5-batch-3", kind: "batch", batchStart: 14, batchCount: 7, durationMs: 3000, holdMs: 400, narrative: "先演示旧 B 与新 E，再按 D 中其余样本的顺序补齐各自的 Q 行" },
   { id: "p5-batch-4", kind: "batch", batchStart: 21, batchCount: 7, durationMs: 3000, holdMs: 900, narrative: "写满 30 行" },
   { id: "p5-lock", kind: "lock", durationMs: 2600, holdMs: 2000, narrative: "Q 生成完毕并固定，训练中不再改变" },
   { id: "p5-handoff", kind: "handoff", durationMs: 2600, holdMs: 2200, narrative: "D、Q 与六节点 Student 等待下一步" },

@@ -29,9 +29,9 @@ type P7Step = { id: string; title: string; short: string; narrative: string; dur
 const steps: readonly P7Step[] = [
   {
     id: "training-complete",
-    title: "训练结束，旧记忆仍完整",
+    title: "假定训练结束，旧记忆仍完整",
     short: "训练完成",
-    narrative: "Θ 已更新为当前状态，P_before 的 12 张旧 exemplar 仍在；D、Q、targets 与 loss 退出本页后续预测的焦点。",
+    narrative: "先假定真实训练已得到 Θ_after。本页用固定教学状态演示后续交接；P_before 的 12 张旧 exemplar 仍在，D、Q、targets 与 loss 不再是预测焦点。",
     durationMs: 1600,
   },
   {
@@ -271,7 +271,7 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
     <header className="page-heading icarl-page__heading p7-heading">
       <div className="icarl-page__eyebrow"><span>PAGE 07</span><i /> POST-UPDATE MEMORY · CURRENT PROTOTYPES</div>
       <h1>更新后的模型怎样整理记忆并完成预测？</h1>
-      <p>P6 已说明旧响应 Q 与新类别标签怎样共同更新共享网络。参数更新后，同一张图片的特征表示也可能变化：<b>旧 Prototype 还能直接沿用吗？</b> 我们保存原始 Exemplar 图片，再用当前特征提取器重新编码，构造当前类别原型。</p>
+      <p>P6 已说明旧响应 Q 与新类别标签怎样共同更新共享网络。假定真实训练完成后得到 Θ_after；本页用固定的 before/after 教学状态演示后续交接，并非 P6 实时算出的优化轨迹。参数变化后，同一张图片的特征表示也可能变化：<b>旧 Prototype 还能直接沿用吗？</b> 我们保存原始 Exemplar 图片，再用当前特征提取器重新编码，构造当前类别原型。</p>
     </header>
 
     <section className="p7-workbench" aria-label="参数更新后的记忆交接与预测工作台">
