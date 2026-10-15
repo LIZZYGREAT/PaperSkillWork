@@ -359,6 +359,8 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         data-status={state.status}
         data-current-sample-id={scene.shown.id}
         data-active-sample-id={scene.activeSampleId ?? ""}
+        data-d-arrived-count={scene.dArrivedCount}
+        data-q-written-count={scene.writtenCount}
         data-q-written-ids={trainingSamples.filter((sample) => scene.writtenIds.has(sample.id)).map((sample) => sample.id).join(",")}
         data-clip-ids={clips.map((item) => item.id).join(",")}
       >
@@ -439,6 +441,8 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
               {trainingSamples.map((sample) => (
                 <span
                   key={sample.id}
+                  data-sample-id={sample.id}
+                  data-q-state={scene.writtenIds.has(sample.id) ? "written" : scene.activeSampleId === sample.id ? "writing" : "pending"}
                   title={`${sample.id} · Q 行${scene.writtenIds.has(sample.id) ? "已记录" : scene.activeSampleId === sample.id ? "正在写入" : "待写入"}`}
                   className={[
                     scene.writtenIds.has(sample.id) ? "is-filled" : "",

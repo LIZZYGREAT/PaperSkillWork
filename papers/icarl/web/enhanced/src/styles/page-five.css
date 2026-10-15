@@ -31,7 +31,7 @@
 .p5-flow-board {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(360px, 1.12fr) minmax(310px, .96fr) minmax(330px, 1fr);
+  grid-template-columns: minmax(260px, 1.05fr) minmax(220px, .82fr) minmax(280px, 1fr);
   grid-template-rows: auto auto;
   grid-template-areas: "source dataset teacher" "source snapshot student";
   align-items: stretch;
@@ -161,7 +161,7 @@
 .p5-handoff { margin-top: 13px; }
 .p5-handoff p { font-size: 14px; line-height: 1.55; }
 
-@media (max-width: 1400px) {
+@media (max-width: 1180px) {
   .p5-flow-board {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: auto auto auto;

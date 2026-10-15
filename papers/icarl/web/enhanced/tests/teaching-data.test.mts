@@ -47,6 +47,7 @@ import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress
 import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
 import { PageThree } from "../src/pages/PageThree.tsx";
 import { PageFour } from "../src/pages/PageFour.tsx";
+import { PageFive } from "../src/pages/PageFive.tsx";
 import { PageSeven } from "../src/pages/PageSeven.tsx";
 
 const OLD_CLASS_IDS = ["A", "B", "C"] as const;
@@ -382,6 +383,76 @@ assert.deepEqual(completedBatch.completedIds, remainingSamples.slice(0, 3).map((
 assert.equal(completedBatch.activeSampleId, null, "A completed batch must not point at an unrelated D row.");
 const scheduledIds = [...demoIds, ...remainingSamples.map((sample) => sample.id)];
 assert.equal(new Set(scheduledIds).size, INCREMENTAL_STAGE_DATA.trainingSamples.length, "The two demos and remaining batches must cover D exactly once by stable ID.");
+
+function renderPageFiveAt(clipId: string, pct = 0): string {
+  const initial = renderToStaticMarkup(createElement(PageFive));
+  const clipIds = attr(initial.match(/<section class="p5-workbench"[^>]*>/)?.[0] ?? "", "data-clip-ids").split(",");
+  const clipIndex = clipIds.indexOf(clipId);
+  assert.notEqual(clipIndex, -1, `P5 timeline must include ${clipId}.`);
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { __ICARL_FREEZE__: { clip: clipIndex, pct }, matchMedia: () => ({ matches: false }) },
+  });
+  try {
+    return renderToStaticMarkup(createElement(PageFive));
+  } finally {
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+}
+
+function p5WorkbenchTag(markup: string): string {
+  const tag = markup.match(/<section class="p5-workbench"[^>]*>/)?.[0];
+  assert.ok(tag, "P5 must render its flow workbench.");
+  return tag!;
+}
+
+function p5PreviewStates(markup: string): Map<string, string> {
+  const preview = markup.match(/<div class="p5-q-preview"[^>]*>([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(preview, "P5 must render the 30-row Q preview.");
+  return new Map([...preview!.matchAll(/<span(?=[^>]*data-sample-id="([^"]+)")(?=[^>]*data-q-state="([^"]+)")[^>]*>/g)]
+    .map((match) => [match[1], match[2]]));
+}
+
+const p5MergeComplete = renderPageFiveAt("p5-merge", 1);
+assert.equal(attr(p5WorkbenchTag(p5MergeComplete), "data-d-arrived-count"), "30", "D must reach all 30 rows at the end of the merge clip.");
+assert.equal(attr(p5WorkbenchTag(p5MergeComplete), "data-q-written-count"), "0", "Samples arriving in D must not be counted as Q rows written.");
+assert.ok([...p5PreviewStates(p5MergeComplete).values()].every((state) => state === "pending"), "A complete D must still have 30 pending Q rows before response capture begins.");
+
+const p5OldWriting = renderPageFiveAt("p5-old-sample", 0.75);
+assert.equal(attr(p5WorkbenchTag(p5OldWriting), "data-current-sample-id"), oldExample.id);
+assert.equal(attr(p5WorkbenchTag(p5OldWriting), "data-active-sample-id"), oldExample.id, "The first demonstrated write must target old B's own row.");
+assert.equal(p5PreviewStates(p5OldWriting).get(oldExample.id), "writing");
+const p5OldWritten = renderPageFiveAt("p5-old-sample", 1);
+assert.equal(attr(p5WorkbenchTag(p5OldWritten), "data-q-written-count"), "1");
+assert.equal(p5PreviewStates(p5OldWritten).get(oldExample.id), "written");
+
+const p5NewStart = renderPageFiveAt("p5-new-sample", 0);
+assert.equal(attr(p5WorkbenchTag(p5NewStart), "data-q-written-ids"), oldExample.id, "The old B demonstration must be written before the new E demonstration starts.");
+assert.equal(attr(p5WorkbenchTag(p5NewStart), "data-current-sample-id"), newExample.id);
+const p5TeacherSample = p5NewStart.match(/<div class="p5-model-input"[^>]*>/)?.[0];
+const p5SnapshotSample = p5NewStart.match(/<div class="p5-q-sample-row[^>]*>/)?.[0];
+assert.equal(attr(p5TeacherSample ?? "", "data-sample-id"), newExample.id, "The new E image must feed its matching Teacher output.");
+assert.equal(attr(p5SnapshotSample ?? "", "data-sample-id"), newExample.id, "The three new E responses must be written to E's Q row.");
+const p5NewWritten = renderPageFiveAt("p5-new-sample", 1);
+assert.equal(attr(p5WorkbenchTag(p5NewWritten), "data-q-written-ids"), [oldExample.id, newExample.id].join(","), "The old B and new E rows must be the first two Q writes.");
+
+for (let batchIndex = 0; batchIndex < 4; batchIndex += 1) {
+  const batchMarkup = renderPageFiveAt(`p5-batch-${batchIndex + 1}`, 1);
+  const batchBoard = p5WorkbenchTag(batchMarkup);
+  const writtenCount = 2 + (batchIndex + 1) * 7;
+  const expectedIds = INCREMENTAL_STAGE_DATA.trainingSamples
+    .filter((sample) => demoIds.has(sample.id) || remainingSamples.slice(0, (batchIndex + 1) * 7).some((remaining) => remaining.id === sample.id))
+    .map((sample) => sample.id);
+  assert.equal(attr(batchBoard, "data-d-arrived-count"), "30", "All batch captures must read from the already-complete D.");
+  assert.equal(Number(attr(batchBoard, "data-q-written-count")), writtenCount, `Batch ${batchIndex + 1} must add its seven Q rows in sequence.`);
+  assert.deepEqual(attr(batchBoard, "data-q-written-ids").split(","), expectedIds, `Batch ${batchIndex + 1} must preserve D's original sample-ID order.`);
+  const states = p5PreviewStates(batchMarkup);
+  assert.equal(states.size, 30, "The Q overview must expose one stable cell per D sample ID.");
+  assert.equal([...states.values()].filter((state) => state === "written").length, writtenCount);
+  assert.equal([...states.values()].filter((state) => state === "pending").length, 30 - writtenCount);
+}
 
 /* ------------------------------------------------------------------ P7 --- */
 
