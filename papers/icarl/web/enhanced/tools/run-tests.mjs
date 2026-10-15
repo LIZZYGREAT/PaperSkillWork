@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const outDir = mkdtempSync(path.join(tmpdir(), "icarl-tests-"));
-const outfile = path.join(outDir, "teaching-data.test.mjs");
+const outfile = path.join(outDir, "teaching-data.test.cjs");
 
 try {
   await build({
@@ -21,7 +21,7 @@ try {
     outfile,
     bundle: true,
     platform: "node",
-    format: "esm",
+    format: "cjs",
     target: "node20",
     logLevel: "warning",
   });

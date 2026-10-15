@@ -1767,6 +1767,59 @@
           ]
         },
         {
+          "id": "p7-query-00",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
+            { "type": "waitFor", "selector": ".p7-feature-panel--chart.is-querying .p7-query-pending", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "p7-query-25",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
+            { "type": "wait", "milliseconds": 1550 },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='暂停动画']" }
+          ]
+        },
+        {
+          "id": "p7-query-50",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
+            { "type": "wait", "milliseconds": 3100 },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='暂停动画']" }
+          ]
+        },
+        {
+          "id": "p7-query-75",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
+            { "type": "wait", "milliseconds": 4650 },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='暂停动画']" }
+          ]
+        },
+        {
+          "id": "p7-query-return-replay-resume",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(4)" },
+            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
+            { "type": "waitFor", "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']", "state": "visible" },
+            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
+            { "type": "waitFor", "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']", "state": "visible" },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
+            { "type": "wait", "milliseconds": 1300 },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='暂停动画']" }
+          ]
+        },
+        {
           "id": "p7-query-nearest-prototype",
           "actions": [
             {
@@ -1776,6 +1829,21 @@
             {
               "type": "click",
               "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".tutorial-page[data-stage='query'][data-progress='1.00']",
+              "state": "visible",
+              "timeoutMs": 10000
             },
             {
               "type": "waitFor",

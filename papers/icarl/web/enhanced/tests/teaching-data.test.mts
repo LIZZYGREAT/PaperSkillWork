@@ -9,10 +9,17 @@
  * Run with `npm test`.
  */
 import assert from "node:assert/strict";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 import {
   CLASS_VISUALS,
+  ALL_CLASS_IDS,
   P_BEFORE,
+  PROTOTYPES,
+  QUERY_DISTANCES,
+  QUERY_FEATURE,
+  QUERY_PREDICTION,
   encode2D,
   euclideanDistance,
   mean,
@@ -37,6 +44,8 @@ import {
   teacherSnapshotFor,
 } from "../src/data/incremental-training.ts";
 import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
+import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
+import { PageSeven } from "../src/pages/PageSeven.tsx";
 
 const OLD_CLASS_IDS = ["A", "B", "C"] as const;
 const near = (a: number, b: number, tolerance = 1e-9) => Math.abs(a - b) <= tolerance;
@@ -239,6 +248,108 @@ assert.equal(completedBatch.activeSampleId, null, "A completed batch must not po
 const scheduledIds = [...demoIds, ...remainingSamples.map((sample) => sample.id)];
 assert.equal(new Set(scheduledIds).size, INCREMENTAL_STAGE_DATA.trainingSamples.length, "The two demos and remaining batches must cover D exactly once by stable ID.");
 
+/* ------------------------------------------------------------------ P7 --- */
+
+assert.equal(PROTOTYPES.length, 6, "P7 must compare all six current prototypes.");
+assert.deepEqual(QUERY_PREDICTION, QUERY_DISTANCES[0].classId, "The P7 prediction must be the true minimum-distance class.");
+assert.deepEqual(QUERY_DISTANCES.map((entry) => entry.classId), [...QUERY_DISTANCES]
+  .sort((a, b) => a.distance - b.distance || a.classId.localeCompare(b.classId))
+  .map((entry) => entry.classId), "The P7 comparison order must follow the real distances.");
+
+function renderPageSevenAt(progress: number, clip = 4): string {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: {
+      __ICARL_FREEZE__: { clip, pct: progress },
+      matchMedia: () => ({ matches: false }),
+    },
+  });
+  try {
+    return renderToStaticMarkup(createElement(PageSeven));
+  } finally {
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+}
+
+function distanceLines(markup: string): string[] {
+  return markup.match(/<line\b[^>]*class="feature-space__distance[^"]*"[^>]*>/g) ?? [];
+}
+
+function attr(markup: string, name: string): string {
+  const value = markup.match(new RegExp(`\\b${name}="([^"]+)"`))?.[1];
+  assert.ok(value, `Expected ${name} in SVG markup: ${markup}`);
+  return value;
+}
+
+function lineLength(markup: string): number {
+  return Math.hypot(Number(attr(markup, "x2")) - Number(attr(markup, "x1")), Number(attr(markup, "y2")) - Number(attr(markup, "y1")));
+}
+
+function queryMarkerStartX(markup: string): number {
+  const marker = markup.match(/class="feature-space__query"[^>]*><path d="M ([\d.-]+) ([\d.-]+)/);
+  assert.ok(marker, "P7 must render the persistent Query marker during the final stage.");
+  return Number(marker[1]);
+}
+
+function prototypeMarks(markup: string): string[] {
+  return markup.match(/<g class="feature-space__prototype"[^>]*><rect[^>]*><\/g>/g) ?? [];
+}
+
+const p7AtZero = renderPageSevenAt(0);
+const p7RebuildEnd = renderPageSevenAt(1, 3);
+assert.deepEqual(prototypeMarks(p7AtZero), prototypeMarks(p7RebuildEnd), "P7 must keep all prototype coordinates fixed across the rebuild-to-query stage boundary.");
+assert.equal(distanceLines(p7AtZero).length, 0, "P7 at 0% must not show comparison distances.");
+assert.ok(!p7AtZero.includes("p7-query-result"), "P7 at 0% must not reveal the prediction.");
+const queryFinalX = 320 + QUERY_FEATURE[0] * 160;
+const queryEntryX = queryFinalX >= 320 ? 612 : 28;
+assert.ok(near(queryMarkerStartX(p7AtZero), queryEntryX), "P7 at 0% must show Query at the chart edge.");
+
+const p7At25 = renderPageSevenAt(0.25);
+const p7LinesAt25 = distanceLines(p7At25);
+assert.equal(p7LinesAt25.length, 1, "P7 at 25% must be drawing only the first distance.");
+assert.ok(p7LinesAt25[0].includes("is-active"), "The in-progress distance must be highlighted.");
+assert.ok(near(queryMarkerStartX(p7At25), queryFinalX), "Query must reach its fixed feature coordinate before comparisons begin.");
+const firstDistancePx = QUERY_DISTANCES[0].distance * 160;
+const firstLineProgressAt25 = (0.25 - 0.2) / 0.55 * PROTOTYPES.length;
+assert.ok(near(lineLength(p7LinesAt25[0]), firstDistancePx * firstLineProgressAt25, 1e-6),
+  "The active P7 line length must track the true query-to-prototype distance and its displayed progress.");
+
+const p7At50 = renderPageSevenAt(0.5);
+const p7LinesAt50 = distanceLines(p7At50);
+assert.equal(p7LinesAt50.length, 4, "P7 at 50% must retain three completed comparisons and draw the fourth.");
+assert.ok(p7LinesAt50[3].includes("is-active"), "P7 must highlight the currently drawn comparison.");
+assert.equal(attr(p7LinesAt50[0], "data-comparison-rank"), "1", "P7 must draw the nearest true distance first.");
+
+const p7At75 = renderPageSevenAt(0.75);
+assert.equal(distanceLines(p7At75).length, 6, "P7 at 75% must have completed all six true comparisons.");
+assert.ok(!distanceLines(p7At75).some((line) => line.includes("is-nearest")), "P7 must wait until the separate nearest-highlight phase.");
+assert.ok(!p7At75.includes("p7-query-result"), "P7 must keep the predicted class hidden before 90%.");
+
+const p7At100 = renderPageSevenAt(1);
+const p7LinesAt100 = distanceLines(p7At100);
+assert.equal(p7LinesAt100.length, 6, "P7 at 100% must retain all six comparison lines.");
+assert.equal(p7LinesAt100.filter((line) => line.includes("is-nearest")).length, 1, "P7 must highlight exactly one nearest prototype at the end.");
+assert.ok(p7At100.includes("p7-query-result"), "P7 must reveal the prediction at the end.");
+assert.ok(p7At100.includes(CLASS_VISUALS[QUERY_PREDICTION].displayLabel), "The revealed result must match the real argmin.");
+assert.ok(p7LinesAt100.every((line) => near(lineLength(line),
+  QUERY_DISTANCES[Number(attr(line, "data-comparison-rank")) - 1].distance * 160, 1e-6)),
+"Every completed P7 distance line must have the true feature-space length.");
+
+const p9StaticInference = renderToStaticMarkup(createElement(FeatureSpaceWorkbench, {
+  legacy: true,
+  mode: "inference",
+  title: "Query 与原型",
+  description: "固定推断图",
+  prototypes: PROTOTYPES,
+  query: QUERY_FEATURE,
+  unitCircle: true,
+  focusableSamples: false,
+}));
+assert.equal(distanceLines(p9StaticInference).length, ALL_CLASS_IDS.length, "P9's existing inference mode must continue to show all full distances by default.");
+assert.ok(!p9StaticInference.includes("is-active") && !p9StaticInference.includes("is-complete"), "Optional P7 timeline props must not alter P9's static inference rendering.");
+
 /* ---------------------------------------------------------------- report --- */
 
 console.log(
@@ -247,5 +358,6 @@ console.log(
     `  P3  12 unit features, ${prototypes.length} prototypes from their own exemplars, argmin -> ${CLASS_VISUALS[distances[0].classId].displayLabel}`,
     `  P4  8 candidates, order ${HERDING_DEMO_ORDER.map((point) => point.id).join(" -> ")}, round distances ${roundDistances.map((value) => value.toFixed(3)).join(", ")}`,
     `  P5  P_old 12 + X_new 18 = D 30, Q 30x3 fixed before the update`,
+    `  P7  ${QUERY_DISTANCES.length} displayed distances match the fixed query and prototype endpoints; argmin -> ${CLASS_VISUALS[QUERY_PREDICTION].displayLabel}`,
   ].join("\n"),
 );

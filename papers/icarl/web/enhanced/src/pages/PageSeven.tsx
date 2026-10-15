@@ -59,8 +59,8 @@ const steps: readonly P7Step[] = [
     id: "query",
     title: "Query 比较六个当前原型",
     short: "最近原型",
-    narrative: "Query 通过同一个当前特征提取器编码，比较六个 P_after 原型并选择最近者。训练 head 保留在网络里，但最终预测不读取它的 argmax。",
-    durationMs: 1800,
+    narrative: "固定教学坐标的 Query 进入当前特征图，随后逐个比较六个 P_after 原型；距离最短者决定预测。入场只表示进入比较流程，不模拟编码轨迹。训练 head 保留，但最终预测不读取它的 argmax。",
+    durationMs: 6200,
   },
 ];
 
@@ -211,32 +211,41 @@ function FeatureStage({ stage, progress }: { stage: number; progress: number }) 
   const easedMotion = normalizedProgress * normalizedProgress * (3 - 2 * normalizedProgress);
   const otherSamplesOpacity = stage === 3 ? clamp01((progress - 0.42) / 0.16) : 1;
   const prototypesOpacity = stage === 3 ? clamp01((progress - 0.62) / 0.16) : 1;
+  const queryRevealProgress = stage === 4 ? clamp01(progress / 0.2) : undefined;
+  const comparisonProgress = stage === 4 ? clamp01((progress - 0.2) / 0.55) : undefined;
+  const nearestHighlightProgress = stage === 4 ? clamp01((progress - 0.75) / 0.15) : undefined;
+  const predictionRevealProgress = stage === 4 ? clamp01((progress - 0.9) / 0.1) : 0;
   const motionStyle = {
     "--p7-other-samples-opacity": otherSamplesOpacity,
     "--p7-prototypes-opacity": prototypesOpacity,
   } as CSSProperties;
   const showQuery = stage === 4;
 
-  return <section className={`p7-feature-panel p7-feature-panel--chart${stage === 3 ? " is-rebuilding" : ""}`} style={motionStyle} aria-label={showQuery ? "六类当前 prototype 与最近原型 query" : "同一 exemplar 在更新前后特征表示中的位置与当前 prototype"}>
+  return <section className={`p7-feature-panel p7-feature-panel--chart${stage === 3 ? " is-rebuilding" : ""}${showQuery ? " is-querying" : ""}`} style={motionStyle} aria-label={showQuery ? "六类当前 prototype 与最近原型 query" : "同一 exemplar 在更新前后特征表示中的位置与当前 prototype"}>
     <FeatureSpaceWorkbench
       mode={showQuery ? "inference" : "prototypes"}
       title={showQuery ? "Query 与六类当前 prototype" : "同一 exemplar 在 φ_before / φ_after 中的位置"}
       description={showQuery
-        ? "使用当前 φ_Θ_after 编码 query，并与 P_after 构造的六类原型比较；最近距离决定预测。"
+        ? "固定教学坐标的 Query 进入图中，随后按真实距离逐个比较当前 P_after 原型；入场移动表示进入比较流程，不是编码轨迹。"
         : "同一张旧类 exemplar 的原始图片不动；只有特征位置从固定 before 端点对照到当前 after 端点。"}
       points={currentPoints}
       previousPoints={stage === 3 ? trackedBeforePoints : []}
       motionProgress={stage === 3 ? easedMotion : undefined}
       prototypes={PROTOTYPES}
       query={showQuery ? QUERY_FEATURE : undefined}
+      queryRevealProgress={queryRevealProgress}
+      comparisonProgress={comparisonProgress}
+      nearestHighlightProgress={nearestHighlightProgress}
       unitCircle
       markerScale={stage === 3 ? 0.92 : 0.82}
       showSampleLabels={false}
       focusableSamples={false}
       asideContent={showQuery ? <>
         <PrototypeKey />
-        <div className="p7-query-result" aria-live="polite"><span>最近原型 · 与 P9 共享同一 Query</span><b><i style={classAccent(QUERY_PREDICTION)}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 比较全部 6 类</small></div>
-        <p className="p7-feature-note">最终分类依据是最近 exemplar 均值；Training Head 保留在网络中，但不读取其 argmax。</p>
+        {predictionRevealProgress > 0
+          ? <div className="p7-query-result" aria-live="polite" style={{ opacity: predictionRevealProgress }}><span>最近原型 · 与 P9 共享同一 Query</span><b><i style={classAccent(QUERY_PREDICTION)}>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 比较全部 6 类</small></div>
+          : <div className="p7-query-pending" aria-live="polite"><b>{progress < 0.2 ? "Query 正在进入当前特征空间" : progress < 0.75 ? `已比较 ${Math.min(6, Math.floor(comparisonProgress! * 6))} / 6 个原型` : "六类距离已比较，突出最近距离后揭示类别"}</b><small>Query 采用固定教学坐标；入场只表示进入比较流程。</small></div>}
+        {predictionRevealProgress > 0 ? <p className="p7-feature-note">最终分类依据是最近 exemplar 均值；Training Head 保留在网络中，但不读取其 argmax。</p> : null}
       </> : <>
         <div className="p7-tracked-key"><span>本段追踪的同一批旧图</span><b>{trackedSamples.map((sample) => sample.id).join(" · ")}</b><small>空心点与虚线为 φ_before 参照；实心点使用当前 φ_after 坐标。</small></div>
         <PrototypeKey />

@@ -68,6 +68,9 @@ export function FeatureSpaceWorkbench({
   focusableSamples = true,
   asideContent,
   legacy = false,
+  queryRevealProgress,
+  comparisonProgress,
+  nearestHighlightProgress,
 }: {
   mode: FeatureSpaceMode;
   title: string;
@@ -90,6 +93,12 @@ export function FeatureSpaceWorkbench({
   focusableSamples?: boolean;
   asideContent?: ReactNode;
   legacy?: boolean;
+  /** Reveal a query from the chart edge to its fixed feature coordinate. */
+  queryRevealProgress?: number;
+  /** Draw prototype distances in ascending true-distance order. */
+  comparisonProgress?: number;
+  /** Emphasize the nearest true prototype after all comparisons are complete. */
+  nearestHighlightProgress?: number;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const showNormalization = unitCircle && normalizationSources.length > 0;
@@ -118,18 +127,36 @@ export function FeatureSpaceWorkbench({
   const targetXY = target ? xy(target, unitCircle) : null;
   const prefixXY = prefixMean ? xy(prefixMean, unitCircle) : null;
   const queryXY = query ? xy(query, unitCircle) : null;
+  const boundedQueryReveal = Math.max(0, Math.min(1, queryRevealProgress ?? 1));
+  const easedQueryReveal = boundedQueryReveal * boundedQueryReveal * (3 - 2 * boundedQueryReveal);
+  const queryEdgeXY = queryXY ? {
+    x: queryXY.x >= origin.x ? FEATURE_FRAME.width - 28 : 28,
+    y: Math.max(30, Math.min(FEATURE_FRAME.height - 30, queryXY.y)),
+  } : null;
+  const visibleQueryXY = queryXY && queryEdgeXY && queryRevealProgress !== undefined ? {
+    x: queryEdgeXY.x + (queryXY.x - queryEdgeXY.x) * easedQueryReveal,
+    y: queryEdgeXY.y + (queryXY.y - queryEdgeXY.y) * easedQueryReveal,
+  } : queryXY;
   const prototypeRows = prototypes.map((prototype) => ({ prototype, point: xy(prototype.point, unitCircle) }));
+  const comparisonRows = [...prototypeRows].sort((a, b) => {
+    const distanceA = query ? Math.hypot(a.prototype.point[0] - query[0], a.prototype.point[1] - query[1]) : 0;
+    const distanceB = query ? Math.hypot(b.prototype.point[0] - query[0], b.prototype.point[1] - query[1]) : 0;
+    return distanceA - distanceB || a.prototype.classId.localeCompare(b.prototype.classId);
+  });
+  const boundedComparisonProgress = Math.max(0, Math.min(1, comparisonProgress ?? 1));
+  const comparisonCount = boundedComparisonProgress * comparisonRows.length;
+  const boundedNearestHighlight = Math.max(0, Math.min(1, nearestHighlightProgress ?? (comparisonProgress === undefined ? 1 : 0)));
   const modeLabel = mode === "projection" ? "二维投影" : mode === "herding" ? "Herding 选择" : mode === "prototypes" ? "类别均值向量" : "最近均值分类";
 
-  const obstacles = [...points.map(item => xy(item.point, unitCircle)), ...prototypeRows.map(item => item.point), ...[rawMeanXY, targetXY, prefixXY, queryXY].filter((p): p is { x: number; y: number } => p !== null)];
+  const obstacles = [...points.map(item => xy(item.point, unitCircle)), ...prototypeRows.map(item => item.point), ...[rawMeanXY, targetXY, prefixXY, visibleQueryXY].filter((p): p is { x: number; y: number } => p !== null)];
   const labels: ChartLabel[] = [];
-  if (queryXY) labels.push({ ...queryXY, id: "query", text: "query q" });
+  if (visibleQueryXY) labels.push({ ...visibleQueryXY, id: "query", text: "query q" });
   prototypeRows.forEach(({ prototype, point }) => labels.push({ ...point, id: `mean-${prototype.classId}`, text: `μ${CLASS_VISUALS[prototype.classId].index} · exemplar 原型` }));
   if (rawMeanXY) labels.push({ ...rawMeanXY, id: "raw", text: "原始均值 μ̄y" });
   if (targetXY) labels.push({ ...targetXY, id: "target", text: "归一化类均值 μy" });
   if (prefixXY) labels.push({ ...prefixXY, id: "prefix", text: "当前前缀均值" });
   points.filter(item => showSampleLabels && (item.id === selectedId || points.length <= 4 || item.order !== undefined && (herdingRevealCount === undefined || item.order <= herdingRevealCount))).forEach(item => labels.push({ ...xy(item.point, unitCircle), id: item.id, text: item.order ? `p${item.order} · ${item.id}` : item.id }));
-  const nearestClass = query ? [...prototypes].sort((a, b) => Math.hypot(a.point[0] - query[0], a.point[1] - query[1]) - Math.hypot(b.point[0] - query[0], b.point[1] - query[1]))[0]?.classId : undefined;
+  const nearestClass = comparisonRows[0]?.prototype.classId;
 
   return (
     <figure className={`feature-space feature-space--${mode} ${legacy ? "feature-space--legacy" : "feature-chart"}`} data-canonical-id="unit_circle">
@@ -166,7 +193,27 @@ export function FeatureSpaceWorkbench({
           <circle className="feature-space__origin" cx={origin.x} cy={origin.y} r="3" />
 
           {targetXY ? <line className="feature-space__target-ray" x1={origin.x} y1={origin.y} x2={targetXY.x} y2={targetXY.y} /> : null}
-          {queryXY ? prototypeRows.map(({ prototype, point }) => <line key={`distance-${prototype.classId}`} className={`feature-space__distance${!legacy && prototype.classId === nearestClass ? " is-nearest" : ""}`} x1={queryXY.x} y1={queryXY.y} x2={point.x} y2={point.y} style={{ "--class-accent": CLASS_VISUALS[prototype.classId].color } as CSSProperties} />) : null}
+          {queryXY ? comparisonRows.map(({ prototype, point }, rank) => {
+            const revealAmount = comparisonProgress === undefined ? 1 : Math.max(0, Math.min(1, comparisonCount - rank));
+            if (revealAmount <= 0) return null;
+            const active = comparisonProgress !== undefined && revealAmount < 1;
+            const nearest = !legacy && prototype.classId === nearestClass;
+            const nearestVisible = nearest && boundedNearestHighlight > 0;
+            const lineEnd = visibleQueryXY ? {
+              x: visibleQueryXY.x + (point.x - visibleQueryXY.x) * revealAmount,
+              y: visibleQueryXY.y + (point.y - visibleQueryXY.y) * revealAmount,
+            } : point;
+            const x1 = visibleQueryXY?.x ?? queryXY.x;
+            const y1 = visibleQueryXY?.y ?? queryXY.y;
+            const lineOpacity = nearestVisible ? 0.38 + boundedNearestHighlight * 0.62 : active ? 1 : comparisonProgress === undefined ? 1 : 0.28;
+            return <line
+              key={`distance-${prototype.classId}`}
+              className={`feature-space__distance${active ? " is-active" : ""}${!active && comparisonProgress !== undefined ? " is-complete" : ""}${nearestVisible ? " is-nearest" : ""}`}
+              x1={x1} y1={y1} x2={lineEnd.x} y2={lineEnd.y}
+              data-comparison-rank={rank + 1}
+              style={{ "--class-accent": CLASS_VISUALS[prototype.classId].color, opacity: lineOpacity } as CSSProperties}
+            />;
+          }) : null}
 
           {previousPoints.map((oldPoint) => {
             const current = pointById.get(oldPoint.id);
@@ -207,7 +254,7 @@ export function FeatureSpaceWorkbench({
             </g>
           ))}
 
-          {queryXY ? <g className="feature-space__query"><path d={`M ${queryXY.x} ${queryXY.y - 8} L ${queryXY.x + 8} ${queryXY.y} L ${queryXY.x} ${queryXY.y + 8} L ${queryXY.x - 8} ${queryXY.y} Z`} />{legacy ? <text x={queryXY.x + 10} y={queryXY.y - 10}>待分类样本</text> : null}</g> : null}
+          {visibleQueryXY ? <g className="feature-space__query" style={{ opacity: queryRevealProgress === undefined ? 1 : 0.68 + boundedQueryReveal * 0.32 }}><path d={`M ${visibleQueryXY.x} ${visibleQueryXY.y - 8} L ${visibleQueryXY.x + 8} ${visibleQueryXY.y} L ${visibleQueryXY.x} ${visibleQueryXY.y + 8} L ${visibleQueryXY.x - 8} ${visibleQueryXY.y} Z`} />{legacy ? <text x={visibleQueryXY.x + 10} y={visibleQueryXY.y - 10}>待分类样本</text> : null}</g> : null}
           {!legacy ? <ChartLabels labels={labels} obstacles={obstacles} /> : null}
         </svg>
       </div>
