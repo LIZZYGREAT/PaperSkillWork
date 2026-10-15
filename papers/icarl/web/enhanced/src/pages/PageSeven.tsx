@@ -241,6 +241,7 @@ function FeatureStage({ stage, progress }: { stage: number; progress: number }) 
       query={showQuery ? QUERY_FEATURE : undefined}
       queryRevealProgress={queryRevealProgress}
       comparisonProgress={comparisonProgress}
+      completedComparisonOpacity={0.68}
       nearestHighlightProgress={nearestHighlightProgress}
       unitCircle
       markerScale={stage === 3 ? 0.92 : 0.82}

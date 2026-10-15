@@ -91,7 +91,7 @@
 .p7-feature-panel--chart.is-rebuilding .feature-space__sample:not([data-motion-tracked="true"]) { opacity: var(--p7-other-samples-opacity, 0); }
 .p7-feature-panel--chart.is-rebuilding .feature-space__prototype,
 .p7-feature-panel--chart.is-rebuilding .feature-chart-labels { opacity: var(--p7-prototypes-opacity, 0); }
-.p7-feature-panel--chart.is-querying .feature-space__distance.is-complete { stroke-dasharray: 2 4; }
+.p7-feature-panel--chart.is-querying .feature-space__distance.is-complete { stroke-width: 1.8; stroke-dasharray: none; stroke-opacity: 1; }
 .p7-feature-panel--chart.is-querying .feature-space__distance.is-active { stroke-width: 2.5; stroke-dasharray: none; stroke-opacity: 1; }
 .p7-feature-panel--chart.is-querying .feature-space__distance.is-nearest { stroke: #2b785d; stroke-width: 3.2; stroke-dasharray: none; stroke-opacity: 1; }
 .p7-tracked-key, .p7-query-result { display: grid; gap: 4px; padding: 9px 10px; border: 1px solid #d6e1d9; border-radius: 7px; color: #456553; background: #f1f7f2; }

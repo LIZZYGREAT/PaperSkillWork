@@ -615,7 +615,7 @@ assert.equal(new Set(CURRENT_EXEMPLARS.map((sample) => sample.id)).size, 12, "P7
 assert.deepEqual(QUERY_PREDICTION, QUERY_DISTANCES[0].classId, "The P7 prediction must be the true minimum-distance class.");
 assert.deepEqual(QUERY_DISTANCES.map((entry) => entry.classId), [...QUERY_DISTANCES]
   .sort((a, b) => a.distance - b.distance || a.classId.localeCompare(b.classId))
-  .map((entry) => entry.classId), "The P7 comparison order must follow the real distances.");
+  .map((entry) => entry.classId), "The P7 distance reference must retain its true nearest-to-farthest ordering.");
 
 function renderPageSevenAt(progress: number, clip = 4, onContinue?: () => void): string {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
@@ -719,20 +719,36 @@ const p7At25 = renderPageSevenAt(0.25);
 const p7LinesAt25 = distanceLines(p7At25);
 assert.equal(p7LinesAt25.length, 1, "P7 at 25% must be drawing only the first distance.");
 assert.ok(p7LinesAt25[0].includes("is-active"), "The in-progress distance must be highlighted.");
+assert.equal(attr(p7LinesAt25[0], "data-prototype-class-id"), ALL_CLASS_IDS[0], "P7 must begin drawing Class 1 without revealing the nearest class by sorting.");
 assert.ok(near(queryMarkerStartX(p7At25), queryFinalX), "Query must reach its fixed feature coordinate before comparisons begin.");
-const firstDistancePx = QUERY_DISTANCES[0].distance * 160;
+const firstDistancePx = QUERY_DISTANCES.find((entry) => entry.classId === ALL_CLASS_IDS[0])!.distance * 160;
 const firstLineProgressAt25 = (0.25 - 0.2) / 0.55 * PROTOTYPES.length;
 assert.ok(near(lineLength(p7LinesAt25[0]), firstDistancePx * firstLineProgressAt25, 1e-6),
   "The active P7 line length must track the true query-to-prototype distance and its displayed progress.");
+
+const p7AtOneComplete = renderPageSevenAt(0.2 + 0.55 / 6);
+const p7LinesAtOneComplete = distanceLines(p7AtOneComplete);
+assert.equal(p7LinesAtOneComplete.length, 1, "P7 must expose exactly one complete line at the first comparison checkpoint.");
+assert.ok(p7LinesAtOneComplete[0].includes("is-complete") && p7LinesAtOneComplete[0].includes("opacity:0.68"), "The first completed P7 line must remain clearly visible.");
+
+const p7AtThreeComplete = renderPageSevenAt(0.475);
+const p7LinesAtThreeComplete = distanceLines(p7AtThreeComplete);
+assert.equal(p7LinesAtThreeComplete.length, 3, "P7 must expose exactly three complete lines at the middle comparison checkpoint.");
+assert.deepEqual(p7LinesAtThreeComplete.map((line) => attr(line, "data-prototype-class-id")), ALL_CLASS_IDS.slice(0, 3), "P7 must reveal Classes 1–3 in class order.");
+assert.ok(p7LinesAtThreeComplete.every((line) => line.includes("is-complete") && line.includes("opacity:0.68")), "P7 must retain all three completed lines at readable opacity.");
 
 const p7At50 = renderPageSevenAt(0.5);
 const p7LinesAt50 = distanceLines(p7At50);
 assert.equal(p7LinesAt50.length, 4, "P7 at 50% must retain three completed comparisons and draw the fourth.");
 assert.ok(p7LinesAt50[3].includes("is-active"), "P7 must highlight the currently drawn comparison.");
-assert.equal(attr(p7LinesAt50[0], "data-comparison-rank"), "1", "P7 must draw the nearest true distance first.");
+assert.deepEqual(p7LinesAt50.map((line) => attr(line, "data-prototype-class-id")), ALL_CLASS_IDS.slice(0, 4), "P7 must reveal comparisons in Class 1-to-6 order.");
+assert.ok(p7LinesAt50.slice(0, 3).every((line) => line.includes("is-complete") && line.includes("opacity:0.68")), "P7 must keep completed lines visible while the next line is drawn.");
+assert.equal(attr(p7LinesAt50[0], "data-comparison-rank"), "1", "P7 comparison ranks must follow the class drawing order.");
 
 const p7At75 = renderPageSevenAt(0.75);
-assert.equal(distanceLines(p7At75).length, 6, "P7 at 75% must have completed all six true comparisons.");
+const p7LinesAt75 = distanceLines(p7At75);
+assert.equal(p7LinesAt75.length, 6, "P7 at 75% must have completed all six true comparisons.");
+assert.ok(p7LinesAt75.every((line) => line.includes("is-complete") && line.includes("opacity:0.68")), "P7 must keep all six completed lines visible before highlighting the argmin.");
 assert.ok(!distanceLines(p7At75).some((line) => line.includes("is-nearest")), "P7 must wait until the separate nearest-highlight phase.");
 assert.ok(!p7At75.includes("p7-query-result"), "P7 must keep the predicted class hidden before 90%.");
 
@@ -740,11 +756,13 @@ const p7At100 = renderPageSevenAt(1);
 const p7LinesAt100 = distanceLines(p7At100);
 assert.equal(p7LinesAt100.length, 6, "P7 at 100% must retain all six comparison lines.");
 assert.equal(p7LinesAt100.filter((line) => line.includes("is-nearest")).length, 1, "P7 must highlight exactly one nearest prototype at the end.");
+assert.equal(attr(p7LinesAt100.find((line) => line.includes("is-nearest"))!, "data-prototype-class-id"), QUERY_PREDICTION, "The highlighted P7 line must belong to the actual minimum-distance class.");
 assert.ok(p7At100.includes("p7-query-result"), "P7 must reveal the prediction at the end.");
 assert.ok(p7At100.includes(CLASS_VISUALS[QUERY_PREDICTION].displayLabel), "The revealed result must match the real argmin.");
+assert.deepEqual(p7LinesAt100.map((line) => attr(line, "data-prototype-class-id")), ALL_CLASS_IDS, "P7's final display must retain all six lines in class order.");
 assert.ok(p7LinesAt100.every((line) => near(lineLength(line),
-  QUERY_DISTANCES[Number(attr(line, "data-comparison-rank")) - 1].distance * 160, 1e-6)),
-"Every completed P7 distance line must have the true feature-space length.");
+  QUERY_DISTANCES.find((entry) => entry.classId === attr(line, "data-prototype-class-id"))!.distance * 160, 1e-6)),
+"Every completed P7 distance line must have the true feature-space length for its class.");
 
 const p9StaticInference = renderToStaticMarkup(createElement(FeatureSpaceWorkbench, {
   legacy: true,
