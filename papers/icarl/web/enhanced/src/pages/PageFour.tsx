@@ -73,7 +73,6 @@ type DemoClip = AnimationClip & {
   kind: ClipKind;
   round: number;
   candidateIndex: number;
-  candidatePace?: "slow" | "fast";
   /** Cumulative clockwise sweep (in candidate steps) at the start of this clip. */
   sweepStart: number;
   /** Sweep when the clip ends; it changes only in explicit scan and round-commit clips. */
@@ -84,27 +83,10 @@ type DemoClip = AnimationClip & {
 
 const ROUNDS = HERDING_DEMO_ROUNDS;
 const stepDurations: Record<string, number> = { hull: 700, hover: 500, split: 560, gather: 1100, mean: 620, score: 820, norm: 760, commit: 900 };
-const PRE_SCORE_KINDS: ReadonlySet<ClipKind> = new Set(["hull", "hover", "split", "gather", "mean", "norm"]);
-const SLOW_CANDIDATE_PRE_SCORE_TIMING_SCALE = 0.5;
 
 function buildClips(): DemoClip[] {
   const clips: DemoClip[] = [];
   const push = (clip: Omit<DemoClip, "id"> & { id: string }) => {
-    if (clip.candidatePace === "slow" && clip.kind === "scan") {
-      // Keep the travel time so the ring visibly reaches the candidate; shorten only its arrival pause.
-      clips.push({ ...clip, holdMs: Math.round((clip.holdMs ?? 0) * SLOW_CANDIDATE_PRE_SCORE_TIMING_SCALE) });
-      return;
-    }
-    if (clip.candidatePace === "slow" && PRE_SCORE_KINDS.has(clip.kind)) {
-      const shorten = (durationMs: number) => Math.round(durationMs * SLOW_CANDIDATE_PRE_SCORE_TIMING_SCALE);
-      clips.push({
-        ...clip,
-        move: shorten(clip.move),
-        durationMs: shorten(clip.durationMs),
-        holdMs: Math.round((clip.holdMs ?? 0) * SLOW_CANDIDATE_PRE_SCORE_TIMING_SCALE),
-      });
-      return;
-    }
     clips.push(clip);
   };
 
@@ -114,10 +96,6 @@ function buildClips(): DemoClip[] {
 
   for (const round of ROUNDS) {
     const selectedBefore = new Set(round.prefix.slice(0, round.k - 1).map((point) => point.id));
-    // The first candidate of every round is demonstrated at full length; later candidates reuse the
-    // same computation at a shorter pace so the reader still sees the geometry but not the wait.
-    const laterCandidateScale = round.k === 2 ? 0.42 : round.k === 3 ? 0.3 : round.k === 4 ? 0.55 : 1;
-    const detailed = round.k === 2 || round.k === 3;
 
     /** Walk the fixed geometry clockwise from a8, skipping entries already in the prefix. */
     const waypoints: { id: string; sweep: number; scored: boolean; candidateIndex: number }[] =
@@ -135,17 +113,14 @@ function buildClips(): DemoClip[] {
     for (const [order, candidate] of scored.entries()) {
       const sweepAt = candidate.sweep;
       const isFirst = order === 0;
-      const scale = isFirst ? 1 : laterCandidateScale;
       const legStart = sweep;
       const candidateIndex = candidate.candidateIndex;
-      const candidatePace: "slow" | "fast" = isFirst ? "slow" : "fast";
 
       push({
         id: `r${round.k}-scan-${candidate.id}`,
         kind: "scan",
         round: round.k,
         candidateIndex,
-        candidatePace,
         sweepStart: legStart,
         sweepEnd: sweepAt,
         move: legDuration(sweepAt - legStart),
@@ -156,39 +131,49 @@ function buildClips(): DemoClip[] {
           : `上一候选已完成均值与距离比较；扫描环再顺时针到达候选 ${candidate.id}`,
       });
 
-      const rest = { round: round.k, candidateIndex, candidatePace, sweepStart: sweepAt };
+      const rest = { round: round.k, candidateIndex, sweepStart: sweepAt };
+
+      // The first candidate in each round gets the full teaching sequence. Later candidates keep
+      // the same real endpoints and scores, but use a compact, continuous comparison.
+      if (!isFirst) {
+        if (round.k === 1) {
+          push({ id: `r1-hover-${candidate.id}`, kind: "hover", ...rest, sweepEnd: sweepAt, move: 180, durationMs: 180, holdMs: 80, narrative: `ν₁(${candidate.id}) = z(${candidate.id})：不需要额外平均，直接比较它到 μ_full 的距离` });
+          push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: 420, durationMs: 420, holdMs: 500, narrative: `画出 ${candidate.id} 到 μ_full 的真实距离，并写入距离尺` });
+          push({ id: `r1-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: 520, durationMs: 520, holdMs: 0, narrative: "先清除刚完成的比较，再继续顺时针扫描" });
+          sweep = sweepAt;
+          continue;
+        }
+
+        const hullMs = 240;
+        const gatherMs = 520;
+        const normalizeMs = 420;
+        const scoreMs = 420;
+        push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: hullMs, durationMs: hullMs, holdMs: 45, narrative: `固定本轮前缀，并连出参与候选 ${candidate.id} 的真实特征点` });
+        push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: gatherMs, durationMs: gatherMs, holdMs: 55, narrative: `${round.k} 个真实贡献点汇入本次前缀的算术均值` });
+        push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: normalizeMs, durationMs: normalizeMs, holdMs: 55, narrative: "将本次前缀均值单位化，再与 μ_full 比较" });
+        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: scoreMs, durationMs: scoreMs, holdMs: 450, narrative: `${candidate.id} 的真实距离写入本轮距离尺` });
+        push({ id: `r${round.k}-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: 520, durationMs: 520, holdMs: 0, narrative: "清除距离线、均值标记与候选强调，再继续顺时针扫描" });
+        sweep = sweepAt;
+        continue;
+      }
 
       if (round.k === 1) {
         // k = 1 has no prefix to average: the candidate's own unit feature is the prefix mean.
-        push({ id: `r1-hull-${candidate.id}`, kind: "hover", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.hover * scale), durationMs: Math.round(stepDurations.hover * scale), holdMs: 100, narrative: `只有一个名额：直接比较候选 ${candidate.id} 自己的单位特征到 μ_full 的距离` });
-        push({ id: `r1-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 120, narrative: "ν₁(x) = z(x)：单个样本的前缀均值就是它自己的单位特征" });
-        push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 650, narrative: `画出 ${candidate.id} 到 μ_full 的距离线，并记录本轮距离` });
-        push({ id: `r1-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: Math.max(520, Math.round(650 * scale)), durationMs: Math.max(520, Math.round(650 * scale)), holdMs: 0, narrative: "距离线停留后淡出；完全消失后才移动到下一候选" });
+        push({ id: `r1-hull-${candidate.id}`, kind: "hover", ...rest, sweepEnd: sweepAt, move: stepDurations.hover, durationMs: stepDurations.hover, holdMs: 100, narrative: `只有一个名额：直接比较候选 ${candidate.id} 自己的单位特征到 μ_full 的距离` });
+        push({ id: `r1-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: stepDurations.norm, durationMs: stepDurations.norm, holdMs: 120, narrative: "ν₁(x) = z(x)：单个样本的前缀均值就是它自己的单位特征" });
+        push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: stepDurations.score, durationMs: stepDurations.score, holdMs: 650, narrative: `画出 ${candidate.id} 到 μ_full 的距离线，并记录本轮距离` });
+        push({ id: `r1-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: 650, durationMs: 650, holdMs: 0, narrative: "距离线停留后淡出；完全消失后才移动到下一候选" });
         sweep = sweepAt;
         continue;
       }
 
-      if (!detailed) {
-        const hullMs = Math.round(420 * scale);
-        const gatherMs = Math.round(700 * scale);
-        const normalizeMs = Math.round(500 * scale);
-        const scoreMs = Math.round(460 * scale);
-        push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: hullMs, durationMs: hullMs, holdMs: 70, narrative: `固定前 ${round.k - 1} 项，用线段连出本次参与平均的 ${round.k} 个特征点` });
-        push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: gatherMs, durationMs: gatherMs, holdMs: 100, narrative: `${round.k} 个真实端点各复制一个贡献点，聚合成前缀原始均值` });
-        push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: normalizeMs, durationMs: normalizeMs, holdMs: 100, narrative: "单位化后与 μ_full 比较距离" });
-        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: scoreMs, durationMs: scoreMs, holdMs: 650, narrative: `${candidate.id} 的距离进入本轮记录` });
-        push({ id: `r${round.k}-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: Math.max(520, Math.round(650 * scale)), durationMs: Math.max(520, Math.round(650 * scale)), holdMs: 0, narrative: "距离线停留后淡出；完全消失后才移动到下一候选" });
-        sweep = sweepAt;
-        continue;
-      }
-
-      push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.hull * scale), durationMs: Math.round(stepDurations.hull * scale), holdMs: 100, narrative: `先固定已有前缀，用线段连接 ${round.k} 个参与平均的特征点` });
-      push({ id: `r${round.k}-split-${candidate.id}`, kind: "split", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.split * scale), durationMs: Math.round(stepDurations.split * scale), holdMs: 80, narrative: `每个端点复制一个贡献点；原始候选与前缀点保持原位` });
-      push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.gather * scale), durationMs: Math.round(stepDurations.gather * scale), holdMs: 200, narrative: round.k === 2 ? "两个贡献点沿连线移动到真实中点" : "三个贡献点同时移动到真实算术重心" });
-      push({ id: `r${round.k}-mean-${candidate.id}`, kind: "mean", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.mean * scale), durationMs: Math.round(stepDurations.mean * scale), holdMs: 170, narrative: round.k === 2 ? "中点就是两张图片前缀的原始均值 ν̄₂(x)" : "重心就是三张图片前缀的原始均值 ν̄₃(x)" });
-      push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 150, narrative: "沿径向把原始前缀均值单位化，得到用于比较的 νk(x)" });
-      push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 650, narrative: `从 νk(x) 到 μ_full 画出距离线并记录` });
-      push({ id: `r${round.k}-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: Math.max(520, Math.round(650 * scale)), durationMs: Math.max(520, Math.round(650 * scale)), holdMs: 0, narrative: "距离线停留后淡出；完全消失后才移动到下一候选" });
+      push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: stepDurations.hull, durationMs: stepDurations.hull, holdMs: 100, narrative: `先固定已有前缀，用线段连接 ${round.k} 个参与平均的特征点` });
+      push({ id: `r${round.k}-split-${candidate.id}`, kind: "split", ...rest, sweepEnd: sweepAt, move: stepDurations.split, durationMs: stepDurations.split, holdMs: 80, narrative: `每个端点复制一个贡献点；原始候选与前缀点保持原位` });
+      push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: stepDurations.gather, durationMs: stepDurations.gather, holdMs: 200, narrative: round.k === 2 ? "两个贡献点沿连线移动到真实中点" : `所有贡献点同时移动到 ${round.k} 个单位特征的真实算术均值` });
+      push({ id: `r${round.k}-mean-${candidate.id}`, kind: "mean", ...rest, sweepEnd: sweepAt, move: stepDurations.mean, durationMs: stepDurations.mean, holdMs: 170, narrative: round.k === 2 ? "中点就是两张图片前缀的原始均值 ν̄₂(x)" : `重心就是 ${round.k} 张图片前缀的原始均值 ν̄${round.k}(x)` });
+      push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: stepDurations.norm, durationMs: stepDurations.norm, holdMs: 150, narrative: `沿径向把原始前缀均值单位化，得到用于比较的 ν${round.k}(x)` });
+      push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: stepDurations.score, durationMs: stepDurations.score, holdMs: 650, narrative: `从 ν${round.k}(x) 到 μ_full 画出真实距离线并记录` });
+      push({ id: `r${round.k}-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: 650, durationMs: 650, holdMs: 0, narrative: "距离线、均值标记和候选强调依次清除，再移动到下一候选" });
       sweep = sweepAt;
     }
 
@@ -241,7 +226,7 @@ const phaseTitles: Record<ClipKind, string> = {
   "target-normalize-fade": "虚线淡出，完整类别目标保留",
   scan: "顺时针逐个检查尚未选择的候选",
   hull: "固定已有前缀并连出参与者",
-  hover: "候选与已有前缀一起参与这次平均",
+  hover: "确认候选单位特征直接参与比较",
   split: "从每个真实端点复制贡献点",
   gather: "贡献点沿连线聚合成原始前缀均值",
   mean: "原始前缀均值停留在计算位置",
@@ -264,6 +249,9 @@ type Scene = {
   scannedIds: Set<string>;
   barProgress: (candidateId: string) => number;
   hullReveal: number;
+  rawMeanOpacity: number;
+  normalizedOpacity: number;
+  candidateHighlightOpacity: number;
   contributions: { at: Point; opacity: number }[];
   rawMeanPoint: Point | null;
   normalizedPoint: Point | null;
@@ -288,6 +276,13 @@ function candidatesInScanOrder(candidates: readonly HerdingDemoCandidate[]) {
   return [...candidates].sort(
     (a, b) => (SCAN_OFFSET_BY_ID.get(a.point.id) ?? 0) - (SCAN_OFFSET_BY_ID.get(b.point.id) ?? 0),
   );
+}
+
+function blendHex(from: string, to: string, progress: number) {
+  const a = [1, 3, 5].map((index) => Number.parseInt(from.slice(index, index + 2), 16));
+  const b = [1, 3, 5].map((index) => Number.parseInt(to.slice(index, index + 2), 16));
+  const t = clamp(progress);
+  return `rgb(${a.map((value, index) => Math.round(value + (b[index] - value) * t)).join(" ")})`;
 }
 
 function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
@@ -317,6 +312,9 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   let hullReveal = 0;
   let scoreReveal = 0;
   let scoreLineOpacity = 0;
+  let rawMeanOpacity = 1;
+  let normalizedOpacity = 1;
+  let candidateHighlightOpacity = 1;
   let decisionReveal = 0;
 
   if (candidate && round) {
@@ -325,7 +323,6 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     // the origin: ν₁(x) = normalize(z(x) / 1). Its length is not a distance to the target.
     const rawMean = toChartPoint(candidate.rawPrefixMean);
     const normalized = toChartPoint(candidate.normalizedPrefixMean);
-    const full = clip.kind === "scan" || clip.kind === "hull";
     const gathered = clamp(progressWithin(p, 0.08, 0.86));
 
     if (clip.kind === "hull") hullReveal = smoothstep(p);
@@ -359,7 +356,10 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
       scoreLineOpacity = 1;
     } else if (clip.kind === "score-fade") {
       scoreReveal = 1;
-      scoreLineOpacity = 1 - smoothstep(p);
+      scoreLineOpacity = 1 - smoothstep(progressWithin(p, 0, 0.25));
+      rawMeanOpacity = 1 - smoothstep(progressWithin(p, 0.25, 0.5));
+      normalizedOpacity = 1 - smoothstep(progressWithin(p, 0.5, 0.75));
+      candidateHighlightOpacity = 1 - smoothstep(progressWithin(p, 0.75, 0.99));
     } else if (clip.kind === "commit") scoreReveal = 1;
     if (clip.kind === "commit") decisionReveal = smoothstep(progressWithin(p, 0.35, 0.85));
   }
@@ -403,6 +403,9 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     scannedIds,
     barProgress,
     hullReveal,
+    rawMeanOpacity,
+    normalizedOpacity,
+    candidateHighlightOpacity,
     contributions,
     rawMeanPoint,
     normalizedPoint,
@@ -443,16 +446,16 @@ function HerdingScene({ scene }: { scene: Scene }) {
     const at = toChartPoint(point.feature);
     obstacles.push(at);
     if (showCandidateLabels && (selectedIds.has(point.id) || (point.id === candidate?.point.id && scene.clip.kind !== "scan"))) {
-      labels.push({ ...at, id: point.id, text: point.id });
+      labels.push({ ...at, id: point.id, text: point.id, opacity: point.id === candidate?.point.id ? scene.candidateHighlightOpacity : 1 });
     }
   }
   if (scene.rawMeanPoint && scene.clip.round !== 1) {
-    obstacles.push(scene.rawMeanPoint);
-    labels.push({ ...scene.rawMeanPoint, id: "raw-mean", text: round && round.k >= 2 ? `ν̄${round.k}(x)` : "μ̄_full" });
+    if (scene.rawMeanOpacity > 0.01) obstacles.push(scene.rawMeanPoint);
+    labels.push({ ...scene.rawMeanPoint, id: "raw-mean", text: round && round.k >= 2 ? `ν̄${round.k}(x)` : "μ̄_full", opacity: scene.rawMeanOpacity });
   }
   if (scene.normalizedPoint && scene.clip.round !== 1) {
-    obstacles.push(scene.normalizedPoint);
-    if (!isTargetNormalization) labels.push({ ...scene.normalizedPoint, id: "unit-mean", text: round ? `ν${round.k}(x)` : "μ_full" });
+    if (scene.normalizedOpacity > 0.01) obstacles.push(scene.normalizedPoint);
+    if (!isTargetNormalization) labels.push({ ...scene.normalizedPoint, id: "unit-mean", text: round ? `ν${round.k}(x)` : "μ_full", opacity: scene.normalizedOpacity });
   }
   if (scene.reviewIndex !== null) {
     for (const item of ROUNDS.slice(0, 4)) {
@@ -528,7 +531,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
               const local = clamp(scene.hullReveal * edgeCount - index);
               const grown = { x: edge.from.x + (edge.to.x - edge.from.x) * local, y: edge.from.y + (edge.to.y - edge.from.y) * local };
               if (local <= 0.01) return null;
-              return <line key={`hull-${edge.key}`} className="p4-scene__hull-line" x1={edge.from.x} y1={edge.from.y} x2={grown.x} y2={grown.y} />;
+              return <line key={`hull-${edge.key}`} className="p4-scene__hull-line" x1={edge.from.x} y1={edge.from.y} x2={grown.x} y2={grown.y} opacity={scene.rawMeanOpacity} />;
             });
           })()
         : null}
@@ -537,7 +540,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
       {candidate && scene.rawMeanPoint && scene.clip.kind !== "scan"
         ? [...prefixPoints, candidate.point].map((point) => {
             const from = toChartPoint(point.feature);
-            return <line key={`ray-${candidate.point.id}-${point.id}`} className="p4-scene__prefix-ray" x1={from.x} y1={from.y} x2={scene.rawMeanPoint!.x} y2={scene.rawMeanPoint!.y} opacity={0.55} />;
+            return <line key={`ray-${candidate.point.id}-${point.id}`} className="p4-scene__prefix-ray" x1={from.x} y1={from.y} x2={scene.rawMeanPoint!.x} y2={scene.rawMeanPoint!.y} opacity={0.55 * scene.rawMeanOpacity} />;
           })
         : null}
 
@@ -561,8 +564,14 @@ function HerdingScene({ scene }: { scene: Scene }) {
           <g key={point.id} className={classes}>
             <title>{`${point.id}${isSelected ? ` · 有序样本 p${selectedOrdered.findIndex((item) => item.id === point.id) + 1}` : " · 未选候选"}`}</title>
             {isSelected ? <circle className="p4-scene__selected-ring" cx={at.x} cy={at.y} r="12" /> : null}
-            {isCandidate ? <circle className="p4-scene__candidate-ring" cx={at.x} cy={at.y} r="16" /> : null}
-            <circle className="p4-scene__dot" cx={at.x} cy={at.y} r={isCandidate ? 7 : isSelected ? 6.4 : 5.2} />
+            {isCandidate ? <circle className="p4-scene__candidate-ring" cx={at.x} cy={at.y} r="16" opacity={scene.candidateHighlightOpacity} /> : null}
+            <circle
+              className="p4-scene__dot"
+              cx={at.x}
+              cy={at.y}
+              r={isCandidate ? 7 : isSelected ? 6.4 : 5.2}
+              style={isCandidate ? { fill: blendHex("#91a19b", "#c2703f", scene.candidateHighlightOpacity) } : undefined}
+            />
           </g>
         );
       })}
@@ -573,8 +582,8 @@ function HerdingScene({ scene }: { scene: Scene }) {
       ))}
 
       {/* Means: raw diamond inside the circle, normalized marker on it. */}
-      {scene.rawMeanPoint && scene.clip.round !== 1 ? <polygon className="p4-scene__raw-mean" points={diamond(scene.rawMeanPoint)} /> : null}
-      {scene.normalizedPoint && scene.clip.round !== 1 ? <circle className="p4-scene__unit-mean" cx={scene.normalizedPoint.x} cy={scene.normalizedPoint.y} r="8.5" /> : null}
+      {scene.rawMeanPoint && scene.clip.round !== 1 ? <polygon className="p4-scene__raw-mean" points={diamond(scene.rawMeanPoint)} opacity={scene.rawMeanOpacity} /> : null}
+      {scene.normalizedPoint && scene.clip.round !== 1 ? <circle className="p4-scene__unit-mean" cx={scene.normalizedPoint.x} cy={scene.normalizedPoint.y} r="8.5" opacity={scene.normalizedOpacity} /> : null}
 
       {/* Ordered prefix nodes while reviewing. */}
       {scene.reviewIndex !== null

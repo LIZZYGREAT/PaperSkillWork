@@ -3,7 +3,7 @@ import { placeLabel } from "../shared/animation/easing";
 
 export const FEATURE_FRAME = { width: 640, height: 520, x: 320, y: 260, radius: 160 };
 export type ChartPosition = { x: number; y: number };
-export type ChartLabel = ChartPosition & { id: string; text: string };
+export type ChartLabel = ChartPosition & { id: string; text: string; opacity?: number };
 
 export function featureStar(x: number, y: number, outer = 9, inner = 4) {
   return Array.from({ length: 10 }, (_, index) => {
@@ -49,7 +49,7 @@ export function ChartLabels({ labels, obstacles = [], width = FEATURE_FRAME.widt
     }));
     const best = options.sort((a, b) => a.score - b.score)[0];
     boxes.push(best.box);
-    return <g key={label.id}>
+    return <g key={label.id} opacity={label.opacity ?? 1}>
       {/* A small tick instead of a leader line: a line from the mark to its label reads as a ray
           belonging to the algorithm, which is exactly what it must not be mistaken for. */}
       <line

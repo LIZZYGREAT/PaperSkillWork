@@ -45,6 +45,7 @@ import {
 } from "../src/data/incremental-training.ts";
 import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
 import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
+import { PageFour } from "../src/pages/PageFour.tsx";
 import { PageSeven } from "../src/pages/PageSeven.tsx";
 
 const OLD_CLASS_IDS = ["A", "B", "C"] as const;
@@ -184,6 +185,93 @@ for (const round of HERDING_DEMO_ROUNDS) {
 
 // Greedy Herding does not promise a monotonically shrinking distance; the animation must not either.
 const roundDistances = HERDING_DEMO_ROUNDS.map((round) => round.score);
+
+function renderPageFourAt(clip: number, pct = 0): string {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: {
+      __ICARL_FREEZE__: { clip, pct },
+      matchMedia: () => ({ matches: false }),
+    },
+  });
+  try {
+    return renderToStaticMarkup(createElement(PageFour));
+  } finally {
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+}
+
+const p4ClipIds = attr(renderPageFourAt(0), "data-clip-ids").split(",");
+const p4ClipIndex = new Map(p4ClipIds.map((id, index) => [id, index]));
+const p4At = (id: string, pct = 0) => {
+  const index = p4ClipIndex.get(id);
+  assert.notEqual(index, undefined, `P4 timeline must include ${id}.`);
+  return renderPageFourAt(index!, pct);
+};
+const scanOrderFromStart = [...scanOrder.slice(scanOrder.findIndex((item) => item.id === "a8")), ...scanOrder.slice(0, scanOrder.findIndex((item) => item.id === "a8"))];
+
+for (const round of HERDING_DEMO_ROUNDS) {
+  const candidateIds = new Set(round.candidates.map((item) => item.point.id));
+  const orderedCandidates = scanOrderFromStart.filter((item) => candidateIds.has(item.id));
+  const firstId = orderedCandidates[0].id;
+  const nextId = orderedCandidates[1].id;
+  const fullSequenceIds = round.k === 1
+    ? [`r1-hull-${firstId}`, `r1-norm-${firstId}`, `r1-score-${firstId}`]
+    : [`r${round.k}-split-${firstId}`, `r${round.k}-mean-${firstId}`, `r${round.k}-norm-${firstId}`, `r${round.k}-score-${firstId}`];
+  for (const id of fullSequenceIds) assert.ok(p4ClipIndex.has(id), `Round ${round.k}'s first candidate must keep the complete teaching step ${id}.`);
+  assert.ok(p4ClipIndex.has(`r${round.k}-score-${nextId}`), `Round ${round.k}'s later candidate must retain a real score.`);
+  if (round.k === 1) {
+    assert.ok(!p4ClipIndex.has(`r1-norm-${nextId}`), "Later k=1 candidates must use ν₁(x) = z(x) without a redundant normalization animation.");
+  } else {
+    assert.ok(!p4ClipIndex.has(`r${round.k}-split-${nextId}`), "Later candidates must not repeat the detailed endpoint-copy sequence.");
+    assert.ok(!p4ClipIndex.has(`r${round.k}-mean-${nextId}`), "Later candidates must not pause on a separate mean clip.");
+  }
+}
+
+const p4RoundTwoFirst = HERDING_DEMO_ROUNDS[1];
+const p4RoundTwoCandidateIds = new Set(p4RoundTwoFirst.candidates.map((item) => item.point.id));
+const p4RoundTwoOrdered = scanOrderFromStart.filter((item) => p4RoundTwoCandidateIds.has(item.id));
+const p4RoundTwoFirstId = p4RoundTwoOrdered[0].id;
+const p4RoundTwoNextId = p4RoundTwoOrdered[1].id;
+const p4Score = p4RoundTwoFirst.candidates.find((item) => item.point.id === p4RoundTwoFirstId)!.score;
+
+function p4ScorePath(markup: string): { start: [number, number]; end: [number, number]; opacity: number } | null {
+  const match = markup.match(/<path class="p4-scene__score-line" d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" opacity="([\d.]+)"/);
+  if (!match) return null;
+  return { start: [Number(match[1]), Number(match[2])], end: [Number(match[3]), Number(match[4])], opacity: Number(match[5]) };
+}
+
+const p4ScoreAtZero = p4At(`r2-score-${p4RoundTwoFirstId}`, 0);
+assert.equal(p4ScorePath(p4ScoreAtZero), null, "P4 must not draw a distance line before the comparison begins.");
+const p4ScoreAtHalf = p4ScorePath(p4At(`r2-score-${p4RoundTwoFirstId}`, 0.5));
+assert.ok(p4ScoreAtHalf, "P4 must draw its active comparison line halfway through the score clip.");
+assert.ok(near(Math.hypot(p4ScoreAtHalf!.end[0] - p4ScoreAtHalf!.start[0], p4ScoreAtHalf!.end[1] - p4ScoreAtHalf!.start[1]), p4Score * HERDING_CHART.radius * 0.5, 1e-5),
+  "The active P4 line must reveal half of the true candidate-to-target distance at 50%.");
+const p4ScoreAtEnd = p4At(`r2-score-${p4RoundTwoFirstId}`, 1);
+const p4CompletedPath = p4ScorePath(p4ScoreAtEnd);
+assert.ok(p4CompletedPath, "P4 must retain the completed distance line for the observation hold.");
+assert.ok(near(Math.hypot(p4CompletedPath!.end[0] - p4CompletedPath!.start[0], p4CompletedPath!.end[1] - p4CompletedPath!.start[1]), p4Score * HERDING_CHART.radius * 0.999, 1e-5),
+  "The completed P4 line must equal the true distance used by the score ruler.");
+assert.ok(p4ScoreAtEnd.includes(`data-scored-candidate-ids="${p4RoundTwoFirstId}"`), "A completed comparison must record the active real candidate ID in the ruler.");
+
+const p4FadeAt25 = p4At(`r2-score-fade-${p4RoundTwoFirstId}`, 0.25);
+const p4FadeAt50 = p4At(`r2-score-fade-${p4RoundTwoFirstId}`, 0.5);
+const p4FadeAt75 = p4At(`r2-score-fade-${p4RoundTwoFirstId}`, 0.75);
+const p4FadeAtEnd = p4At(`r2-score-fade-${p4RoundTwoFirstId}`, 1);
+assert.ok((p4ScorePath(p4FadeAt25)?.opacity ?? 0) < 1, "P4 must clear the completed distance line first.");
+assert.ok(p4FadeAt50.includes('class="p4-scene__raw-mean"') && attr(p4FadeAt50.match(/<polygon class="p4-scene__raw-mean"[^>]*>/)![0], "opacity") === "0",
+  "P4 must clear the raw mean marker after the line fades.");
+assert.ok(p4FadeAt75.includes('class="p4-scene__unit-mean"') && attr(p4FadeAt75.match(/<circle class="p4-scene__unit-mean"[^>]*>/)![0], "opacity") === "0",
+  "P4 must clear the normalized mean after the raw mean.");
+assert.equal(p4ScorePath(p4FadeAtEnd)?.opacity, 0, "The previous comparison line must be invisible before scanning onward.");
+assert.ok(attr(p4FadeAtEnd.match(/<circle class="p4-scene__candidate-ring"[^>]*>/)![0], "opacity") === "0",
+  "The candidate emphasis ring must clear before the next candidate scan.");
+const p4NextScan = p4At(`r2-scan-${p4RoundTwoNextId}`, 0);
+assert.equal(p4ScorePath(p4NextScan), null, "The next candidate scan must start with no previous distance geometry.");
+assert.ok(!p4NextScan.includes('class="p4-scene__raw-mean"') && !p4NextScan.includes('class="p4-scene__unit-mean"'),
+  "The next candidate scan must begin after the previous mean markers have been removed.");
 
 /* ------------------------------------------------------------------ P5 --- */
 

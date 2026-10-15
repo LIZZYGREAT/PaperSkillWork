@@ -83,20 +83,20 @@
 .p4-formula-stack { display: grid; gap: 3px; }
 .p4-formula-stack > span + span { padding-top: 3px; border-top: 1px solid rgb(83 137 119 / 15%); }
 .p4-ruler { display: grid; min-height: 0; align-content: start; gap: 7px; padding: 9px; overflow-y: auto; border: 1px solid #dfe7e2; border-radius: 7px; background: #fafcfa; }
-.p4-ruler__head { display: grid; gap: 3px; color: #58706c; font-size: 11px; line-height: 1.35; }
+.p4-ruler__head { display: grid; gap: 3px; color: #58706c; font-size: 12px; line-height: 1.35; }
 .p4-ruler__head b { color: #3e6258; }
-.p4-ruler__head span { color: #71837d; font-size: 10px; }
+.p4-ruler__head span { color: #71837d; font-size: 11px; }
 .p4-ruler__rows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; }
-.p4-ruler__rows > span { display: grid; min-width: 0; grid-template-columns: 18px 27px minmax(0, 1fr) 40px; align-items: center; gap: 4px; padding: 3px 2px; border-radius: 4px; color: #6b7d78; font-size: 11px; }
+.p4-ruler__rows > span { display: grid; min-width: 0; grid-template-columns: 20px 28px minmax(0, 1fr) 44px; align-items: center; gap: 4px; padding: 4px 2px; border-radius: 4px; color: #6b7d78; font-size: 12px; }
 .p4-ruler__rows > span.is-active { color: #8b5b39; background: #fff4e9; }
 .p4-ruler__rows > span.is-chosen { color: #286451; background: #eaf4ed; font-weight: 700; }
-.p4-ruler__rows em { color: #8a9992; font: 9px var(--mono); font-style: normal; text-align: center; }
-.p4-ruler__rows code { color: #4f6864; font: 10px var(--mono); }
-.p4-ruler__bar { display: block; min-width: 0; height: 5px; overflow: hidden; border-radius: 4px; background: #e8eee9; }
+.p4-ruler__rows em { color: #8a9992; font: 10px var(--mono); font-style: normal; text-align: center; }
+.p4-ruler__rows code { color: #4f6864; font: 11px var(--mono); }
+.p4-ruler__bar { display: block; min-width: 0; height: 6px; overflow: hidden; border-radius: 4px; background: #e8eee9; }
 .p4-ruler__bar > i { display: block; min-width: 0; height: 100%; border-radius: inherit; background: #c0805e; }
 .p4-ruler__rows > span.is-active .p4-ruler__bar > i { background: #d18b5d; }
 .p4-ruler__rows > span.is-chosen .p4-ruler__bar > i { height: 100%; background: #39765f; }
-.p4-ruler__rows small { color: inherit; font: 10px var(--mono); text-align: right; }
+.p4-ruler__rows small { color: inherit; font: 11px var(--mono); text-align: right; }
 .p4-ruler--empty { align-content: start; color: #71837d; }
 .p4-ruler--empty p { margin: 2px 0 0; font-size: 11px; line-height: 1.5; }
 .p4-memory-heading { display: flex; justify-content: space-between; gap: 8px; margin-top: auto; color: #43645a; font-size: 12px; font-weight: 650; }
