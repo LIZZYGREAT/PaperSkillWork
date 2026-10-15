@@ -2851,6 +2851,168 @@
               "timeoutMs": 10000
             }
           ]
+        },
+        {
+          "id": "p9-training-targets-and-loss",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(4)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-training-scene[data-clip=\"build-targets-and-loss\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-symbolic-theta-update",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-theta-transition[data-theta-state=\"training\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-old-prefix-memory-truncation",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-scene[data-clip=\"truncate-old-prefix\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-herding-new-class-d",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-scene[data-clip=\"herd-class-d\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-herding-new-classes-e-f",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-scene[data-clip=\"herd-classes-e-f\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-submit-memory-before-reencoding",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-prototype-scene[data-clip=\"reencode-p-after\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-rebuild-six-prototypes",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-prototype-scene[data-clip=\"form-prototypes\"]",
+              "state": "visible"
+            }
+          ]
         }
       ],
       "computedStyles": [
