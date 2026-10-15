@@ -44,7 +44,7 @@
 .p8-source-focus--prototype { color: #557f9b; }
 .p8-source-focus--classifier { color: #9b7847; }
 .p8-source-focus--trend { color: #64896d; }
-.p8-source-focus rect { fill: currentColor; fill-opacity: .035; stroke: currentColor; stroke-width: 8; }
+.p8-source-focus rect { fill: currentColor; fill-opacity: .035; stroke: currentColor; stroke-width: 3; }
 .p8-figure3-evidence { display: grid; gap: 8px; padding: 11px 12px; border: 1px solid #dfe7e2; border-left: 3px solid #628b72; border-radius: 8px; background: #f8faf6; }
 .p8-figure3-evidence > div:first-child { display: grid; gap: 4px; }
 .p8-figure3-evidence .eyebrow { color: #577160; font: 700 11px var(--mono); letter-spacing: .04em; }
