@@ -4,9 +4,11 @@ import type { Vector2 } from "./icarl-runtime";
 export type PrefixReviewState = {
   visiblePrefixCount: number;
   activePrefixIndex: number;
+  introducedPrefixIndex: number;
   fromPrefixIndex: number;
   targetPrefixIndex: number;
   markerProgress: number;
+  arrivalProgress: number;
   currentPrefixPoint: Vector2;
   lineOpacity: number;
 };
@@ -19,7 +21,8 @@ export type BudgetState = PrefixReviewState & {
   tailState: BudgetTailState;
 };
 
-const REVIEW_WINDOWS = [0.2, 0.45, 0.7, 0.95] as const;
+const REVIEW_ENTRY_STARTS = [0.16, 0.36, 0.56] as const;
+const REVIEW_ENTRY_DURATION = 0.1;
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 const ease = (value: number) => {
   const t = clamp01(value);
@@ -30,17 +33,19 @@ function prefixPoint(index: number): Vector2 {
   return HERDING_DEMO_ROUNDS[index - 1].normalizedPrefixMean;
 }
 
-function makePrefixState(fromPrefixIndex: number, targetPrefixIndex: number, markerProgress: number, visiblePrefixCount: number): PrefixReviewState {
+function makePrefixState(fromPrefixIndex: number, targetPrefixIndex: number, markerProgress: number, visiblePrefixCount: number, arrivalProgress = 1): PrefixReviewState {
   const progress = clamp01(markerProgress);
   const activePrefixIndex = targetPrefixIndex;
   return {
     visiblePrefixCount,
     activePrefixIndex,
+    introducedPrefixIndex: targetPrefixIndex,
     fromPrefixIndex,
     targetPrefixIndex,
     markerProgress: progress,
+    arrivalProgress: clamp01(arrivalProgress),
     currentPrefixPoint: prefixPoint(activePrefixIndex),
-    lineOpacity: 0.22 + progress * 0.42,
+    lineOpacity: 0.24 + progress * 0.7,
   };
 }
 
@@ -52,10 +57,15 @@ export function reviewAt(progress: number, manualReviewIndex: number | null = nu
   }
 
   const p = clamp01(progress);
-  if (p < REVIEW_WINDOWS[0]) return makePrefixState(1, 1, 1, 1);
-  if (p < REVIEW_WINDOWS[1]) return makePrefixState(1, 2, ease((p - REVIEW_WINDOWS[0]) / (REVIEW_WINDOWS[1] - REVIEW_WINDOWS[0])), 2);
-  if (p < REVIEW_WINDOWS[2]) return makePrefixState(2, 3, ease((p - REVIEW_WINDOWS[1]) / (REVIEW_WINDOWS[2] - REVIEW_WINDOWS[1])), 3);
-  if (p < REVIEW_WINDOWS[3]) return makePrefixState(3, 4, ease((p - REVIEW_WINDOWS[2]) / (REVIEW_WINDOWS[3] - REVIEW_WINDOWS[2])), 4);
+  if (p < REVIEW_ENTRY_STARTS[0]) return makePrefixState(1, 1, 1, 1);
+  for (let target = 2; target <= HERDING_DEMO_ROUNDS.length; target += 1) {
+    const start = REVIEW_ENTRY_STARTS[target - 2];
+    const nextStart = REVIEW_ENTRY_STARTS[target - 1] ?? 0.76;
+    if (p < nextStart) {
+      const arrival = ease((p - start) / REVIEW_ENTRY_DURATION);
+      return makePrefixState(target - 1, target, arrival, target, arrival);
+    }
+  }
   return makePrefixState(4, 4, 1, 4);
 }
 

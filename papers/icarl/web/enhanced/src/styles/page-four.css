@@ -52,6 +52,8 @@
 .p4-scene__point.is-candidate .p4-scene__dot { fill: #c2703f; }
 .p4-scene__selected-ring { fill: none; stroke: #5b9b7b; stroke-width: 1.6; }
 .p4-scene__candidate-ring { fill: none; stroke: #bd7449; stroke-width: 2.2; }
+.p4-scene__review-link { stroke: #739c86; stroke-width: 1.35; stroke-dasharray: 4 4; }
+.p4-scene__point.is-added-prefix .p4-scene__selected-ring { stroke: #bd7449; stroke-width: 2.4; }
 .p4-scene__contribution { fill: #d18357; stroke: #fff; stroke-width: 1.8; }
 .p4-scene__raw-mean { fill: #fffefa; stroke: #c57d43; stroke-width: 2.2; }
 .p4-scene__unit-mean { fill: #40806b; stroke: #fff; stroke-width: 2.4; }
@@ -106,6 +108,7 @@
 .p4-slots > span { display: grid; min-width: 0; min-height: 50px; align-content: center; justify-items: center; gap: 3px; padding: 4px 2px; border: 1px dashed #d6dfda; border-radius: 6px; color: #84928e; background: #fafbf9; }
 .p4-slots > span.is-filled { border-style: solid; border-color: #c8ddcf; color: #386e59; background: #eef6ef; }
 .p4-slots > span.is-arriving { border-color: #c68c56; background: #fff4e8; box-shadow: 0 0 0 2px #f2dcc8; }
+.p4-slots > span.is-review-arriving { border-color: #c68c56; color: #835b37; background: #fff4e8; box-shadow: 0 0 0 2px #f2dcc8; }
 .p4-slots > span.is-tail-highlight { border-color: #c68c56; color: #835b37; background: #fff4e8; box-shadow: 0 0 0 2px #f2dcc8; }
 .p4-slots > span.is-tail-removing, .p4-slots > span.is-vacated { border-style: dashed; border-color: #cbb9a6; color: #96867a; background: #faf7f3; }
 .p4-slot-tail { display: grid; justify-items: center; gap: 3px; opacity: var(--tail-opacity, 1); transform: translateY(var(--tail-displacement, 0)); }

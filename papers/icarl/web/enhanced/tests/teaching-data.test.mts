@@ -268,6 +268,10 @@ const p4At = (id: string, pct = 0) => {
 
 const reviewCheckpoints = [
   { progress: 0, count: 1, active: 1 },
+  { progress: 0.2, count: 2, active: 2 },
+  { progress: 0.4, count: 3, active: 3 },
+  { progress: 0.6, count: 4, active: 4 },
+  { progress: 0.8, count: 4, active: 4 },
   { progress: 0.25, count: 2, active: 2 },
   { progress: 0.5, count: 3, active: 3 },
   { progress: 0.75, count: 4, active: 4 },
@@ -285,8 +289,23 @@ for (const checkpoint of reviewCheckpoints) {
   assert.equal(attr(workbench!, "data-memory-slot-count"), String(checkpoint.count), `P4 review markup at ${checkpoint.progress} must keep the visible prefix count synchronized.`);
   assert.equal(attr(workbench!, "data-prefix-count"), String(checkpoint.count), `P4 review markup at ${checkpoint.progress} must expose the same prefix count to the figure and list.`);
 }
+const p4ReviewAt20 = reviewAt(0.2);
+assert.equal(p4ReviewAt20.fromPrefixIndex, 1, "P4's second prefix must enter from the previously complete first prefix.");
+assert.equal(p4ReviewAt20.introducedPrefixIndex, 2, "P4 must identify p₂ as the newly added sample during its entry.");
+assert.ok(p4ReviewAt20.arrivalProgress > 0 && p4ReviewAt20.arrivalProgress < 1, "P4 must animate p₂ into the prefix rather than jump directly to a static list.");
+assert.deepEqual(p4ReviewAt20.currentPrefixPoint, HERDING_DEMO_ROUNDS[1].normalizedPrefixMean, "The visible ν₂ endpoint must be the actual computed prefix mean throughout its entrance.");
+const p4ReviewMarkupAt20 = p4At("review-prefix", 0.2);
+assert.ok(p4ReviewMarkupAt20.includes("加入 p2 = a2"), "P4 must name the newly added exemplar and explain that it joins the entire prefix.");
+assert.ok(p4ReviewMarkupAt20.includes('data-clip-duration-ms="5600"'), "P4's automatic prefix review must last about six seconds.");
+assert.equal((p4ReviewMarkupAt20.match(/class="p4-scene__review-link"/g) ?? []).length, 2, "P4 must connect both real participating samples to the ν₂ result.");
+for (const id of ["a8", "a2"]) assert.ok(p4ReviewMarkupAt20.includes(`data-prefix-source="${id}" data-prefix-result="ν2"`), `P4 must show ${id} as a source for the true ν₂ result.`);
+assert.ok(p4ReviewMarkupAt20.includes("is-review-arriving"), "The newly added sample must be highlighted in the ordered memory list.");
 assert.equal(reviewAt(0.4, 2).visiblePrefixCount, 2, "Manual P4 review selection must pin exactly the chosen prefix.");
 assert.equal(reviewAt(0.4, 2).activePrefixIndex, 2, "Manual P4 review selection must keep its own selected endpoint.");
+assert.equal(reviewAt(0.2).activePrefixIndex, 2, "A direct manual review must not leak into the automatic 1→2→3→4 replay state.");
+const p4Source = readFileSync(path.join(process.cwd(), "src/pages/PageFour.tsx"), "utf8");
+assert.match(p4Source, /function jumpToPhase\(index: number, options\?: \{ autoPlay\?: boolean \}\)[\s\S]*?setManualReviewIndex\(null\);[\s\S]*?controls\.goToClip\(phase\.startIndex, options\)/,
+  "P4 replay and phase navigation must clear a manually pinned review before automatic playback.");
 
 const budgetCheckpoints = [
   { progress: 0, count: 4, active: 4, tail: "steady", opacity: 1 },

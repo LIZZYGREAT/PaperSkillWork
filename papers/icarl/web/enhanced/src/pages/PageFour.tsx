@@ -15,7 +15,7 @@ import {
   clockwiseOffsetFromTop,
   projectHerdingFeature,
 } from "../data/herding-teaching-geometry";
-import { budgetAt, reviewAt, type BudgetState } from "../data/herding-phase-state";
+import { budgetAt, reviewAt, type BudgetState, type PrefixReviewState } from "../data/herding-phase-state";
 import {
   useAnimationTimeline,
   type AnimationClip,
@@ -204,7 +204,7 @@ function buildClips(): DemoClip[] {
     });
   }
 
-  push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 900, durationMs: 900, holdMs: 2000, narrative: "同一张图上回看不同长度的有序前缀均值" });
+  push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 5600, durationMs: 5600, holdMs: 700, narrative: "逐项加入已选样本，并查看对应的真实前缀均值" });
   push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1200, durationMs: 1200, holdMs: 1600, narrative: "总预算不变、类别变多时，只保留有序列表的前缀" });
   return clips;
 }
@@ -277,6 +277,7 @@ type Scene = {
   markerProgress: number;
   lineOpacity: number;
   slotCount: number;
+  review: PrefixReviewState | null;
   budget: BudgetState | null;
 };
 
@@ -439,6 +440,7 @@ function sceneAt(clip: DemoClip, progress: number, manualReviewIndex: number | n
     markerProgress: prefixState?.markerProgress ?? 0,
     lineOpacity: prefixState?.lineOpacity ?? 0,
     slotCount,
+    review: reviewState,
     budget: budgetState,
   };
 }
@@ -542,6 +544,28 @@ function HerdingScene({ scene }: { scene: Scene }) {
         />
       ) : null}
 
+      {/* The light connectors mark which fixed samples participate in the real νk result. */}
+      {scene.clip.kind === "review" && scene.review && scene.review.activePrefixIndex > 1
+        ? HERDING_DEMO_ORDER.slice(0, scene.visiblePrefixCount).map((point, index) => {
+            const from = toChartPoint(point.feature);
+            const result = toChartPoint(ROUNDS[scene.review!.activePrefixIndex - 1].normalizedPrefixMean);
+            const isNew = index + 1 === scene.review!.introducedPrefixIndex
+              && scene.review!.fromPrefixIndex !== scene.review!.targetPrefixIndex;
+            const opacity = isNew ? 0.1 + 0.58 * scene.review!.arrivalProgress : 0.28;
+            return <line
+              key={`review-link-${point.id}`}
+              className="p4-scene__review-link"
+              x1={from.x}
+              y1={from.y}
+              x2={result.x}
+              y2={result.y}
+              opacity={opacity}
+              data-prefix-source={point.id}
+              data-prefix-result={`ν${scene.review!.activePrefixIndex}`}
+            />;
+          })
+        : null}
+
       {/* Prefix hull: connects exactly the points that take part in this comparison. */}
       {scene.hullReveal > 0.01 && candidate && round
         ? (() => {
@@ -584,13 +608,17 @@ function HerdingScene({ scene }: { scene: Scene }) {
         const at = toChartPoint(point.feature);
         const isSelected = selectedIds.has(point.id);
         const isBudgetTail = scene.clip.kind === "budget" && point.id === HERDING_DEMO_ORDER[3].id;
+        const isReviewAddition = scene.clip.kind === "review"
+          && scene.review !== null
+          && scene.review.fromPrefixIndex !== scene.review.targetPrefixIndex
+          && HERDING_DEMO_ORDER[scene.review.introducedPrefixIndex - 1]?.id === point.id;
         const isCandidate = point.id === candidate?.point.id && scene.clip.kind !== "scan";
         const isScanned = scene.scannedIds.has(point.id);
-        const classes = ["p4-scene__point", isSelected ? "is-selected" : "", isCandidate ? "is-candidate" : "", isScanned ? "is-scanned" : ""].filter(Boolean).join(" ");
+        const classes = ["p4-scene__point", isSelected ? "is-selected" : "", isReviewAddition ? "is-added-prefix" : "", isCandidate ? "is-candidate" : "", isScanned ? "is-scanned" : ""].filter(Boolean).join(" ");
         return (
           <g key={point.id} className={classes}>
             <title>{`${point.id}${isSelected ? ` · 有序样本 p${selectedOrdered.findIndex((item) => item.id === point.id) + 1}` : " · 未选候选"}`}</title>
-            {isSelected ? <circle className="p4-scene__selected-ring" cx={at.x} cy={at.y} r="12" opacity={isBudgetTail ? scene.budget?.tailOpacity ?? 1 : 1} /> : null}
+            {isSelected ? <circle className="p4-scene__selected-ring" cx={at.x} cy={at.y} r="12" opacity={isBudgetTail ? scene.budget?.tailOpacity ?? 1 : isReviewAddition ? 0.32 + 0.68 * (scene.review?.arrivalProgress ?? 0) : 1} /> : null}
             {isCandidate ? <circle className="p4-scene__candidate-ring" cx={at.x} cy={at.y} r="16" opacity={scene.candidateHighlightOpacity} /> : null}
             <circle
               className="p4-scene__dot"
@@ -601,6 +629,8 @@ function HerdingScene({ scene }: { scene: Scene }) {
                 ? { fill: blendHex("#91a19b", "#c2703f", scene.candidateHighlightOpacity) }
                 : isBudgetTail
                   ? { fill: blendHex("#91a19b", "#35775f", scene.budget?.tailOpacity ?? 1) }
+                  : isReviewAddition
+                    ? { fill: blendHex("#35775f", "#c2703f", scene.review?.arrivalProgress ?? 0) }
                   : undefined}
             />
           </g>
@@ -624,9 +654,9 @@ function HerdingScene({ scene }: { scene: Scene }) {
             const transitioningFrom = scene.fromPrefixIndex === item.k && scene.targetPrefixIndex !== item.k;
             const transitioningTo = scene.targetPrefixIndex === item.k && scene.fromPrefixIndex !== item.k;
             const opacity = transitioningFrom
-              ? 1 - scene.markerProgress
+              ? 0.36 - 0.12 * scene.markerProgress
               : transitioningTo
-                ? 0.22 + 0.78 * scene.markerProgress
+                ? 0.3 + 0.7 * scene.markerProgress
                 : active
                   ? 1
                   : scene.clip.kind === "budget" && item.k === 4
@@ -708,7 +738,7 @@ function DistanceRuler({ scene }: { scene: Scene }) {
   );
 }
 
-function Slots({ count, budget }: { count: number; budget: BudgetState | null }) {
+function Slots({ count, budget, review }: { count: number; budget: BudgetState | null; review: PrefixReviewState | null }) {
   return (
     <div className="p4-slots" aria-label={`当前保留 ${Math.round(count)} 个有序 exemplar`}>
       {Array.from({ length: HERDING_DEMO_QUOTA }, (_, index) => {
@@ -716,15 +746,20 @@ function Slots({ count, budget }: { count: number; budget: BudgetState | null })
         const arriving = filled && index >= Math.floor(count);
         const isBudgetTail = budget !== null && index === 3;
         const isVacated = isBudgetTail && budget.tailState === "removed";
+        const isReviewAddition = review !== null
+          && review.fromPrefixIndex !== review.targetPrefixIndex
+          && review.introducedPrefixIndex === index + 1;
         return <span
           key={index}
           className={[
             filled ? "is-filled" : "",
             arriving ? "is-arriving" : "",
+            isReviewAddition ? "is-review-arriving" : "",
             isBudgetTail && budget.tailState === "pending" ? "is-tail-highlight" : "",
             isBudgetTail && budget.tailState === "removing" ? "is-tail-removing" : "",
             isVacated ? "is-vacated" : "",
           ].filter(Boolean).join(" ")}
+          style={isReviewAddition ? { opacity: 0.62 + 0.38 * review.arrivalProgress } : undefined}
         >
           {isBudgetTail
             ? <>
@@ -803,6 +838,13 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   const completedPhaseMs = clips.slice(activePhase.startIndex, state.clipIndex)
     .reduce((total, item) => total + item.durationMs + (item.holdMs ?? 0), 0);
   const phaseProgress = clamp((completedPhaseMs + state.elapsedMs) / activePhase.durationMs);
+  const reviewNarrative = scene.review
+    ? scene.review.activePrefixIndex === 1
+      ? "从首个已选样本 p₁ = a8 开始：ν₁ = z(p₁)，无需再次平均。"
+      : scene.review.arrivalProgress < 0.9
+        ? `加入 p${scene.review.introducedPrefixIndex} = ${HERDING_DEMO_ORDER[scene.review.introducedPrefixIndex - 1].id}；它与之前 ${scene.review.introducedPrefixIndex - 1} 项共同参与新的前缀均值。`
+        : `前 ${scene.review.activePrefixIndex} 项共同形成真实前缀均值 ν${scene.review.activePrefixIndex}；距离不保证逐项下降。`
+    : null;
 
   useEffect(() => {
     if (state.status === "playing" && state.clipIndex === activePhase.endIndex && state.isHolding) controls.pause();
@@ -865,6 +907,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         data-memory-slot-count={slotCount}
         data-prefix-count={scene.visiblePrefixCount}
         data-prefix-index={scene.reviewIndex ?? ""}
+        data-prefix-entry-index={scene.review?.introducedPrefixIndex ?? ""}
+        data-prefix-entry-progress={scene.review?.arrivalProgress.toFixed(3) ?? ""}
         data-tail-state={scene.budget?.tailState ?? ""}
         data-tail-opacity={scene.budget?.tailOpacity.toFixed(3) ?? ""}
         data-status={state.status}
@@ -882,7 +926,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
               {" · 阶段 "}{activePhaseIndex + 1} / {phaseRanges.length}
             </span>
             <h2>{phaseTitles[clip.kind]}</h2>
-            <p aria-live="polite">{clip.narrative}</p>
+            <p aria-live="polite">{reviewNarrative ?? clip.narrative}</p>
           </div>
           <span className="p4-workbench__phase">
             {phaseComplete ? "阶段完成" : `${Math.round(phaseProgress * 100)}%`}
@@ -921,7 +965,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
             </div>
             <div className="p4-current-formula" aria-label="当前公式">{CurrentFormula({ scene })}</div>
             <div className="p4-memory-heading"><b>有序 Exemplars</b><span>{slotCount} / {HERDING_DEMO_QUOTA}</span></div>
-            <Slots count={scene.slotCount} budget={scene.budget} />
+            <Slots count={scene.slotCount} budget={scene.budget} review={scene.review} />
             {clip.kind === "review" ? (
               <div className="p4-prefix-picker" role="group" aria-label="切换要回看的 Herding 前缀长度">
                 {ROUNDS.map((item) => (
