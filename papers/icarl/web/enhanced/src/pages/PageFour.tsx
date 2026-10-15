@@ -73,6 +73,7 @@ type DemoClip = AnimationClip & {
   kind: ClipKind;
   round: number;
   candidateIndex: number;
+  candidatePace?: "slow" | "fast";
   /** Cumulative clockwise sweep (in candidate steps) at the start of this clip. */
   sweepStart: number;
   /** Sweep when the clip ends; it changes only in explicit scan and round-commit clips. */
@@ -83,10 +84,29 @@ type DemoClip = AnimationClip & {
 
 const ROUNDS = HERDING_DEMO_ROUNDS;
 const stepDurations: Record<string, number> = { hull: 700, hover: 500, split: 560, gather: 1100, mean: 620, score: 820, norm: 760, commit: 900 };
+const PRE_SCORE_KINDS: ReadonlySet<ClipKind> = new Set(["hull", "hover", "split", "gather", "mean", "norm"]);
+const SLOW_CANDIDATE_PRE_SCORE_TIMING_SCALE = 0.5;
 
 function buildClips(): DemoClip[] {
   const clips: DemoClip[] = [];
-  const push = (clip: Omit<DemoClip, "id"> & { id: string }) => clips.push(clip);
+  const push = (clip: Omit<DemoClip, "id"> & { id: string }) => {
+    if (clip.candidatePace === "slow" && clip.kind === "scan") {
+      // Keep the travel time so the ring visibly reaches the candidate; shorten only its arrival pause.
+      clips.push({ ...clip, holdMs: Math.round((clip.holdMs ?? 0) * SLOW_CANDIDATE_PRE_SCORE_TIMING_SCALE) });
+      return;
+    }
+    if (clip.candidatePace === "slow" && PRE_SCORE_KINDS.has(clip.kind)) {
+      const shorten = (durationMs: number) => Math.round(durationMs * SLOW_CANDIDATE_PRE_SCORE_TIMING_SCALE);
+      clips.push({
+        ...clip,
+        move: shorten(clip.move),
+        durationMs: shorten(clip.durationMs),
+        holdMs: Math.round((clip.holdMs ?? 0) * SLOW_CANDIDATE_PRE_SCORE_TIMING_SCALE),
+      });
+      return;
+    }
+    clips.push(clip);
+  };
 
   push({ id: "target-contribute", kind: "target-contribute", round: 0, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1500, durationMs: 1500, holdMs: 650, narrative: "八个样本共同决定完整类别的原始均值" });
   push({ id: "target-normalize", kind: "target-normalize", round: 0, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1300, durationMs: 1300, holdMs: 900, narrative: "原始均值单位化为比较目标 μ_full" });
@@ -118,12 +138,14 @@ function buildClips(): DemoClip[] {
       const scale = isFirst ? 1 : laterCandidateScale;
       const legStart = sweep;
       const candidateIndex = candidate.candidateIndex;
+      const candidatePace: "slow" | "fast" = isFirst ? "slow" : "fast";
 
       push({
         id: `r${round.k}-scan-${candidate.id}`,
         kind: "scan",
         round: round.k,
         candidateIndex,
+        candidatePace,
         sweepStart: legStart,
         sweepEnd: sweepAt,
         move: legDuration(sweepAt - legStart),
@@ -134,7 +156,7 @@ function buildClips(): DemoClip[] {
           : `上一候选已完成均值与距离比较；扫描环再顺时针到达候选 ${candidate.id}`,
       });
 
-      const rest = { round: round.k, candidateIndex, sweepStart: sweepAt };
+      const rest = { round: round.k, candidateIndex, candidatePace, sweepStart: sweepAt };
 
       if (round.k === 1) {
         // k = 1 has no prefix to average: the candidate's own unit feature is the prefix mean.
