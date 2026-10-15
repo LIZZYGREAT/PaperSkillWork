@@ -204,7 +204,7 @@ function buildClips(): DemoClip[] {
     });
   }
 
-  push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 5600, durationMs: 5600, holdMs: 700, narrative: "逐项加入已选样本，并查看对应的真实前缀均值" });
+  push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 8000, durationMs: 8000, holdMs: 700, narrative: "逐项加入已选样本，并查看对应的真实前缀均值" });
   push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 4600, durationMs: 4600, holdMs: 800, narrative: "总预算保持 K = 12；类别增加后逐步标记并移出有序列表的尾项 p₄" });
   return clips;
 }
@@ -246,7 +246,7 @@ const phaseTitles: Record<ClipKind, string> = {
   "score-fade": "距离线停留后淡出，再检查下一候选",
   norm: "把原始前缀均值单位化",
   commit: "本轮比较结束，胜出项进入记忆槽",
-  review: "回看同一选择顺序的不同长度",
+  review: "四轮选择完成。现在看选出的顺序有什么用。",
   budget: "总容量不变时，只保留有序前缀",
 };
 
@@ -612,13 +612,18 @@ function HerdingScene({ scene }: { scene: Scene }) {
           && scene.review !== null
           && scene.review.fromPrefixIndex !== scene.review.targetPrefixIndex
           && HERDING_DEMO_ORDER[scene.review.introducedPrefixIndex - 1]?.id === point.id;
+        const reviewIntro = scene.clip.kind === "review" && scene.review !== null && scene.review.transitionProgress < 1;
+        const orderedIndex = HERDING_DEMO_ORDER.findIndex((item) => item.id === point.id);
+        const introPulse = reviewIntro
+          ? clamp(1 - Math.abs(scene.review!.transitionProgress - (orderedIndex + 0.5) / HERDING_DEMO_ORDER.length) / 0.18)
+          : 0;
         const isCandidate = point.id === candidate?.point.id && scene.clip.kind !== "scan";
         const isScanned = scene.scannedIds.has(point.id);
         const classes = ["p4-scene__point", isSelected ? "is-selected" : "", isReviewAddition ? "is-added-prefix" : "", isCandidate ? "is-candidate" : "", isScanned ? "is-scanned" : ""].filter(Boolean).join(" ");
         return (
           <g key={point.id} className={classes}>
             <title>{`${point.id}${isSelected ? ` · 有序样本 p${selectedOrdered.findIndex((item) => item.id === point.id) + 1}` : " · 未选候选"}`}</title>
-            {isSelected ? <circle className="p4-scene__selected-ring" cx={at.x} cy={at.y} r="12" opacity={isBudgetTail ? scene.budget?.tailOpacity ?? 1 : isReviewAddition ? 0.32 + 0.68 * (scene.review?.arrivalProgress ?? 0) : 1} /> : null}
+            {isSelected ? <circle className="p4-scene__selected-ring" cx={at.x} cy={at.y} r="12" opacity={isBudgetTail ? scene.budget?.tailOpacity ?? 1 : isReviewAddition ? 0.32 + 0.68 * (scene.review?.arrivalProgress ?? 0) : reviewIntro ? 0.2 + 0.8 * introPulse : 1} /> : null}
             {isCandidate ? <circle className="p4-scene__candidate-ring" cx={at.x} cy={at.y} r="16" opacity={scene.candidateHighlightOpacity} /> : null}
             <circle
               className="p4-scene__dot"
@@ -780,6 +785,164 @@ function Slots({ count, budget, review }: { count: number; budget: BudgetState |
   );
 }
 
+function OrderedMemoryStage({
+  scene,
+  reviewNarrative,
+  onSelectPrefix,
+}: {
+  scene: Scene;
+  reviewNarrative: string | null;
+  onSelectPrefix: (index: number) => void;
+}) {
+  const isReview = scene.clip.kind === "review";
+  const review = scene.review;
+  const budget = scene.budget;
+  const retainedCount = budget
+    ? budget.tailState === "removed" ? 3 : 4
+    : scene.visiblePrefixCount;
+  const boundaryPosition = budget ? 75 + (1 - budget.quotaChangeProgress) * 25 : 100;
+  const message = review
+    ? review.transitionProgress < 1
+      ? "上一阶段已经决定 p₁…p₄。现在停止扫描候选，把注意力转到已选顺序。"
+      : review.handoffProgress > 0
+        ? "下一步：预算只能留 3 项怎么办？当前完整列表仍有 4 项，p₄ 尚未移除。"
+        : reviewNarrative ?? "按顺序取前缀；新增名额时保留已有项，只继续加入下一项。"
+    : budget?.tailState === "removed"
+      ? "只从尾部移除 p₄=a5；前三项身份和顺序不变。当前类别保留 3/3 项。"
+      : budget?.tailState === "removing"
+        ? "p₄=a5 正离开原图记忆；退出完成前仍显示完整 P 和真实 ν₄。"
+        : budget?.tailState === "pending"
+          ? "类别数增加、总预算不变，边界移到 p₃ 之后；现在标出待移除的尾项 p₄=a5。"
+          : "总预算仍为 K=12。此前每类可留 4 项；类别增加后每类改留 3 项。";
+
+  return (
+    <div className={`p4-workbench__layout p4-workbench__layout--ordered ${isReview ? "is-review" : "is-budget"}`}>
+      <section className="panel p4-ordered-stage" aria-label={isReview ? "Herding 有序前缀工作台" : "固定总预算下的有序记忆截断"}>
+        <header className="p4-ordered-stage__header">
+          <div>
+            <span className="eyebrow">ORDERED EXEMPLAR MEMORY</span>
+            <h3>{isReview ? "有序样本带 P" : "类别增加时，保留同一顺序的前缀"}</h3>
+            <p>{isReview ? "真实 Herding 顺序：a8 → a2 → a4 → a5。前 m 项就是该容量下可保留的候选集合。" : "容量边界向前移动，前三项保持原位，只有尾项离开。"}</p>
+          </div>
+          <span className="p4-ordered-stage__count" aria-live="polite">
+            {budget ? `${retainedCount} / ${budget.tailState === "removed" ? 3 : 4}` : `${scene.visiblePrefixCount} / 4 项`}
+          </span>
+        </header>
+
+        {isReview ? (
+          <div className="p4-ordered-stage__review-summary">
+            <span>当前前缀</span>
+            <b>P<sub>{scene.visiblePrefixCount}</sub> = [{HERDING_DEMO_ORDER.slice(0, scene.visiblePrefixCount).map((point) => point.id).join(", ")}]</b>
+            <small>ν<sub>{scene.reviewIndex}</sub> 由这组真实样本重新计算</small>
+          </div>
+        ) : (
+          <div className="p4-ordered-stage__quota" data-budget-state={budget?.tailState} style={{ "--quota-change-fill": `${(budget?.quotaChangeProgress ?? 0) * 100}%` } as CSSProperties}>
+            <span className="p4-ordered-stage__total">总预算 <b>K = 12</b></span>
+            <strong className="p4-ordered-stage__quota-before">3 类 × 4 项 = 12</strong>
+            <i aria-hidden="true">→</i>
+            <strong className="p4-ordered-stage__quota-after" style={{ opacity: 0.45 + (budget?.quotaChangeProgress ?? 0) * 0.55 }}>4 类 × 3 项 = 12</strong>
+          </div>
+        )}
+
+        <div className="p4-ordered-stage__list" data-prefix-count={scene.visiblePrefixCount} data-tail-state={budget?.tailState ?? ""}>
+          <div className="p4-ordered-stage__cards">
+            {HERDING_DEMO_ORDER.map((point, index) => {
+              const visible = budget !== null || index < scene.visiblePrefixCount;
+              const isTail = budget !== null && index === HERDING_DEMO_ORDER.length - 1;
+              const isActive = index < retainedCount;
+              const isEntering = review !== null
+                && visible
+                && review.introducedPrefixIndex === index + 1
+                && (review.arrivalProgress < 1 || review.transitionProgress < 1);
+              const arrivalOpacity = review && isEntering
+                ? index === 0 && review.transitionProgress < 1
+                  ? 0.3 + 0.7 * review.transitionProgress
+                  : 0.32 + 0.68 * review.arrivalProgress
+                : visible ? 1 : 0.3;
+              const slotClass = [
+                "p4-ordered-card",
+                visible ? "is-visible" : "is-pending",
+                isActive ? "is-retained" : "",
+                isEntering ? "is-arriving" : "",
+                isTail && budget?.tailState === "pending" ? "is-tail-highlight" : "",
+                isTail && budget?.tailState === "removing" ? "is-tail-removing" : "",
+                isTail && budget?.tailState === "removed" ? "is-released" : "",
+              ].filter(Boolean).join(" ");
+              return (
+                <article
+                  key={point.id}
+                  className={slotClass}
+                  data-prefix-slot-index={index + 1}
+                  data-prefix-sample-id={visible ? point.id : ""}
+                  data-prefix-retained={isActive.toString()}
+                  style={{
+                    gridColumn: index + 1,
+                    "--arrival-opacity": arrivalOpacity,
+                    "--tail-displacement": isTail ? `${budget?.tailDisplacement ?? 0}px` : "0px",
+                  } as CSSProperties}
+                >
+                  <span className="p4-ordered-card__position">p<sub>{index + 1}</sub></span>
+                  <b>{visible ? point.id : "待加入"}</b>
+                  <small>{budget
+                    ? isTail
+                      ? budget.tailState === "removed" ? "释放 · 不再保留" : budget.tailState === "removing" ? "移出原图记忆" : budget.tailState === "pending" ? "移除尾项" : "原有尾项"
+                      : "保留 · 顺序不变"
+                    : visible ? isActive ? "当前前缀" : "已选顺序" : `第 ${index + 1} 项`}</small>
+                </article>
+              );
+            })}
+            {budget ? <span className="p4-ordered-stage__quota-boundary" style={{ left: `${boundaryPosition}%` }}><b>每类上限</b></span> : null}
+            <div className="p4-ordered-stage__retain-note">
+              {budget?.tailState === "removed" ? "前三项仍是原来的 p₁、p₂、p₃" : "按已选顺序逐项增加，不重新挑选前面的样本"}
+            </div>
+            <div className={`p4-ordered-stage__release-zone${budget ? " is-active" : ""}`} aria-label="尾项释放区">
+              <span>释放 / 不再保留</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="p4-ordered-stage__footer">
+          <p aria-live="polite">{message}</p>
+          {isReview ? (
+            <div className="p4-prefix-picker p4-prefix-picker--large" role="group" aria-label="切换要回看的 Herding 前缀长度">
+              {ROUNDS.map((item) => (
+                <button key={item.k} type="button" aria-pressed={scene.reviewIndex === item.k} onClick={() => onSelectPrefix(item.k)}>
+                  前 {item.k} 项
+                </button>
+              ))}
+            </div>
+          ) : budget?.tailState === "removed" ? (
+            <div className="p4-ordered-stage__final-result" aria-live="polite">
+              <span>P′ = [p₁, p₂, p₃] = [a8, a2, a4]</span>
+              <b>3 / 3</b>
+              <small>当前保留集合对应真实前缀均值 ν<sub>3</sub></small>
+            </div>
+          ) : (
+            <div className="p4-ordered-stage__budget-result" aria-live="polite">
+              <b>P = [p₁, p₂, p₃, p₄] = [a8, a2, a4, a5]</b>
+              <small>当前完整列表 · 真实前缀均值 ν<sub>4</sub></small>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <aside className="panel p4-ordered-reference" aria-label="有序前缀的真实特征空间对照图">
+        <header>
+          <span className="eyebrow">FIXED FEATURE SPACE</span>
+          <h3>圆图作真实性对照</h3>
+          <p>{isReview ? `当前只强调前 ${scene.visiblePrefixCount} 项与真实 ν${scene.reviewIndex}；其余已选项仍在原位。` : budget?.tailState === "removed" ? "a5 不再高亮；前三项与真实 ν₃ 对应。" : "全体候选留在原位；预算变化只影响有序记忆中的保留项。"}</p>
+        </header>
+        <div className="p4-ordered-reference__canvas"><HerdingScene scene={scene} /></div>
+        <div className="p4-ordered-reference__legend">
+          <span><i className="p4-legend-point" />样本特征</span>
+          <span><i className="p4-legend-target">★</i>完整目标 μ<sub>full</sub></span>
+          <span><i className="p4-legend-mean" />真实前缀均值</span>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
 function CurrentFormula({ scene }: { scene: Scene }) {
   const round = scene.clip.round >= 1 && scene.clip.round <= 4 ? roundOf(scene.clip.round) : null;
   const candidate = candidateOf(scene.clip);
@@ -855,6 +1018,12 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         ? `加入 p${scene.review.introducedPrefixIndex} = ${HERDING_DEMO_ORDER[scene.review.introducedPrefixIndex - 1].id}；它与之前 ${scene.review.introducedPrefixIndex - 1} 项共同参与新的前缀均值。`
         : `前 ${scene.review.activePrefixIndex} 项共同形成真实前缀均值 ν${scene.review.activePrefixIndex}；距离不保证逐项下降。`
     : null;
+  const workbenchNarrative = scene.review?.transitionProgress !== undefined && scene.review.transitionProgress < 1
+    ? "上一阶段已经决定每个 pₖ；现在停止扫描候选，开始整理最终顺序。"
+    : scene.review?.handoffProgress
+      ? "下一步预算只能留 3 项；现在仍保留完整四项，p₄ 尚未删除。"
+      : reviewNarrative ?? clip.narrative;
+  const orderedMemoryMode = clip.kind === "review";
 
   useEffect(() => {
     if (state.status === "playing" && state.clipIndex === activePhase.endIndex && state.isHolding) controls.pause();
@@ -938,14 +1107,24 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
               {" · 阶段 "}{activePhaseIndex + 1} / {phaseRanges.length}
             </span>
             <h2>{phaseTitles[clip.kind]}</h2>
-            <p aria-live="polite">{reviewNarrative ?? clip.narrative}</p>
+            <p aria-live="polite">{workbenchNarrative}</p>
           </div>
           <span className="p4-workbench__phase">
             {phaseComplete ? "阶段完成" : `${Math.round(phaseProgress * 100)}%`}
           </span>
         </header>
 
-        <div className="p4-workbench__layout">
+        {orderedMemoryMode ? (
+          <OrderedMemoryStage
+            scene={scene}
+            reviewNarrative={reviewNarrative}
+            onSelectPrefix={(index) => {
+              setManualReviewIndex(index);
+              controls.goToClip(clipIndexById.get("review-prefix") ?? 0, { autoPlay: false });
+            }}
+          />
+        ) : (
+          <div className="p4-workbench__layout">
           <section className="panel p4-visual-panel">
             <div className="p4-panel-title">
               <div><span className="eyebrow">ONE FIXED FEATURE SPACE</span><h3>目标、候选与当前前缀</h3></div>
@@ -1013,7 +1192,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
               </p>
             ) : null}
           </aside>
-        </div>
+          </div>
+        )}
 
         <div className="p4-workbench__controls" aria-label="Page 4 动画控制">
           <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex - 1)} disabled={activePhaseIndex === 0}>← 上一阶段</button>
