@@ -350,6 +350,33 @@
           ]
         },
         {
+          "id": "02b-target-normalization-fade",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(1)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-clip=\"target-normalize-fade\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 50
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
           "id": "03-phase-boundary-and-next-stage",
           "actions": [
             {
@@ -398,7 +425,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r1-scan-a7\"]",
+              "selector": "[data-clip=\"r1-scan-a8\"]",
               "state": "visible"
             },
             {
@@ -429,7 +456,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-gather-a7\"]",
+              "selector": "[data-clip=\"r2-gather-a4\"]",
               "state": "visible"
             },
             {
@@ -464,7 +491,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-score-a7\"]",
+              "selector": "[data-clip=\"r2-score-a4\"]",
               "state": "visible"
             },
             {
@@ -499,7 +526,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-candidate-id=\"a7\"][data-score-revealed=\"true\"]",
+              "selector": "[data-candidate-id=\"a4\"][data-score-revealed=\"true\"]",
               "state": "visible"
             },
             {
@@ -526,12 +553,12 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-candidate-id=\"a7\"][data-score-revealed=\"true\"]",
+              "selector": "[data-candidate-id=\"a4\"][data-score-revealed=\"true\"]",
               "state": "visible"
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-scan-a2\"]",
+              "selector": "[data-clip=\"r2-scan-a3\"]",
               "state": "visible"
             },
             {
@@ -562,7 +589,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-mean-a7\"]",
+              "selector": "[data-clip=\"r2-mean-a4\"]",
               "state": "visible"
             },
             {
@@ -597,7 +624,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-norm-a7\"]",
+              "selector": "[data-clip=\"r2-norm-a4\"]",
               "state": "visible"
             },
             {
@@ -632,7 +659,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r3-mean-a7\"]",
+              "selector": "[data-clip=\"r3-mean-a4\"]",
               "state": "visible"
             },
             {
@@ -667,7 +694,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r4-scan-a7\"]",
+              "selector": "[data-clip=\"r4-scan-a3\"]",
               "state": "visible"
             },
             {

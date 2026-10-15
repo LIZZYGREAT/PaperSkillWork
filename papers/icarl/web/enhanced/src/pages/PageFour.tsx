@@ -35,7 +35,7 @@ const RADIUS = HERDING_CHART.radius;
 const toChartPoint = projectHerdingFeature;
 const TARGET_POINT = toChartPoint(HERDING_DEMO_TARGET);
 const TARGET_RAW_POINT = toChartPoint(HERDING_DEMO_TARGET_RAW);
-const SCAN_START_ID = "a7";
+const SCAN_START_ID = "a8";
 const SCAN_START_POINT = HERDING_DEMO_POINTS.find((point) => point.id === SCAN_START_ID)!;
 const SCAN_START_CHART_POINT = toChartPoint(SCAN_START_POINT.feature);
 const SCAN_START_OFFSET_FROM_TOP = clockwiseOffsetFromTop(SCAN_START_CHART_POINT);
@@ -45,7 +45,7 @@ function diamond(point: Point, radius = 7) {
   return `${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`;
 }
 
-/** Scan order: clockwise from the lower-right a7 point, crossing the 0/360 boundary smoothly. */
+/** Scan order: clockwise from a8, crossing the 0/360 boundary smoothly. */
 const SCAN_ORDER = [...HERDING_DEMO_POINTS]
   .map((point) => {
     const offsetFromTop = clockwiseOffsetFromTop(toChartPoint(point.feature));
@@ -58,7 +58,7 @@ const SWEEP_STEP_MS = 360;
 
 /* ----------------------------------------------------------------- clips --- */
 
-type ClipKind = "target-contribute" | "target-normalize" | "scan" | "hull" | "hover" | "split" | "gather" | "mean" | "score" | "norm" | "commit" | "review" | "budget";
+type ClipKind = "target-contribute" | "target-normalize" | "target-normalize-fade" | "scan" | "hull" | "hover" | "split" | "gather" | "mean" | "score" | "norm" | "commit" | "review" | "budget";
 
 type DemoClip = AnimationClip & {
   kind: ClipKind;
@@ -81,6 +81,7 @@ function buildClips(): DemoClip[] {
 
   push({ id: "target-contribute", kind: "target-contribute", round: 0, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1500, durationMs: 1500, holdMs: 650, narrative: "八个样本共同决定完整类别的原始均值" });
   push({ id: "target-normalize", kind: "target-normalize", round: 0, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1300, durationMs: 1300, holdMs: 900, narrative: "原始均值单位化为比较目标 μ_full" });
+  push({ id: "target-normalize-fade", kind: "target-normalize-fade", round: 0, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 450, durationMs: 450, holdMs: 250, narrative: "虚线停留后淡出，保留 μ_full 作为后续比较目标" });
 
   for (const round of ROUNDS) {
     const selectedBefore = new Set(round.prefix.slice(0, round.k - 1).map((point) => point.id));
@@ -89,7 +90,7 @@ function buildClips(): DemoClip[] {
     const laterCandidateScale = round.k === 2 ? 0.42 : round.k === 3 ? 0.3 : round.k === 4 ? 0.55 : 1;
     const detailed = round.k === 2 || round.k === 3;
 
-    /** Walk the fixed geometry clockwise from a7, skipping entries already in the prefix. */
+    /** Walk the fixed geometry clockwise from a8, skipping entries already in the prefix. */
     const waypoints: { id: string; sweep: number; scored: boolean; candidateIndex: number }[] =
       SCAN_ORDER.map((entry) => ({
         id: entry.point.id,
@@ -120,7 +121,7 @@ function buildClips(): DemoClip[] {
         durationMs: legDuration(sweepAt - legStart),
         holdMs: isFirst ? 150 : 60,
         narrative: isFirst
-          ? `扫描环从右下候选 ${SCAN_START_ID} 出发，按顺时针顺序到达本轮第一个未选候选 ${candidate.id}`
+          ? `扫描环从候选 ${SCAN_START_ID} 出发，按顺时针顺序到达本轮第一个未选候选 ${candidate.id}`
           : `上一候选已完成均值与距离比较；扫描环再顺时针到达候选 ${candidate.id}`,
       });
 
@@ -203,6 +204,7 @@ const phaseRanges = phaseRailEntries.map((entry, index) => {
 const phaseTitles: Record<ClipKind, string> = {
   "target-contribute": "先确定要逼近的完整类别目标",
   "target-normalize": "把完整类别原始均值单位化为 μ_full",
+  "target-normalize-fade": "虚线淡出，完整类别目标保留",
   scan: "顺时针逐个检查尚未选择的候选",
   hull: "固定已有前缀并连出参与者",
   hover: "候选与已有前缀一起参与这次平均",
@@ -264,7 +266,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   let scanSweep: number | null = null;
   if (clip.kind === "scan") {
     scanSweep = (clip.sweepStart + (clip.sweepEnd - clip.sweepStart) * p) * TOTAL_SWEEP;
-  } else if (clip.kind !== "target-contribute" && clip.kind !== "target-normalize" && clip.kind !== "review" && clip.kind !== "budget") {
+  } else if (clip.kind !== "target-contribute" && clip.kind !== "target-normalize" && clip.kind !== "target-normalize-fade" && clip.kind !== "review" && clip.kind !== "budget") {
     scanSweep = (clip.sweepStart + (clip.sweepEnd - clip.sweepStart) * p) * TOTAL_SWEEP;
   }
 
@@ -325,9 +327,9 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     // Full-class mean offered by all eight real points.
     rawMeanPoint = TARGET_RAW_POINT;
   }
-  if (clip.kind === "target-normalize") {
+  if (clip.kind === "target-normalize" || clip.kind === "target-normalize-fade") {
     rawMeanPoint = TARGET_RAW_POINT;
-    const move = smoothstep(p);
+    const move = clip.kind === "target-normalize" ? smoothstep(p) : 1;
     normalizedPoint = { x: TARGET_RAW_POINT.x + (TARGET_POINT.x - TARGET_RAW_POINT.x) * move, y: TARGET_RAW_POINT.y + (TARGET_POINT.y - TARGET_RAW_POINT.y) * move };
   }
 
@@ -349,7 +351,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   if (clip.kind === "commit") slotCount = clip.round - 1 + clamp(progressWithin(p, 0.25, 0.9));
   else if (clip.round >= 2 && clip.round <= 5) slotCount = clip.round - 1;
   else if (clip.kind === "review" || clip.kind === "budget") slotCount = reviewIndex;
-  if (clip.kind === "target-contribute" || clip.kind === "target-normalize") slotCount = 0;
+  if (clip.kind === "target-contribute" || clip.kind === "target-normalize" || clip.kind === "target-normalize-fade") slotCount = 0;
 
   return {
     clip,
@@ -388,8 +390,9 @@ function HerdingScene({ scene }: { scene: Scene }) {
 
   const labels: ChartLabel[] = [];
   const obstacles: Point[] = [];
-  if (scene.targetContribute < 0.02 && scene.clip.kind !== "target-contribute") labels.push({ ...TARGET_RAW_POINT, id: "target-raw", text: "μ̄_full" });
-  if (scene.targetNormalize > 0.5) labels.push({ ...TARGET_POINT, id: "target", text: "μ_full" });
+  const isTargetNormalization = scene.clip.kind === "target-normalize" || scene.clip.kind === "target-normalize-fade";
+  if (scene.targetContribute < 0.02 && scene.clip.kind !== "target-contribute" && !isTargetNormalization) labels.push({ ...TARGET_RAW_POINT, id: "target-raw", text: "μ̄_full" });
+  if (scene.targetNormalize > 0.5 && !isTargetNormalization) labels.push({ ...TARGET_POINT, id: "target", text: "μ_full" });
   for (const point of HERDING_DEMO_POINTS) {
     const at = toChartPoint(point.feature);
     obstacles.push(at);
@@ -422,7 +425,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
       aria-label={`固定的八样本 Herding 特征空间。${phaseTitles[scene.clip.kind]}${candidate ? `；当前候选 ${candidate.point.id}` : ""}`}
     >
       <title>同一特征空间中的 Herding 计算与有序前缀</title>
-      <desc>坐标轴、八个单位候选特征与完整类别目标贯穿所有片段；扫描环从右下方的 a7 出发沿圆周顺时针移动，每个候选完成均值、单位化和距离记录后才转向下一候选。</desc>
+      <desc>坐标轴、八个单位候选特征与完整类别目标贯穿所有片段；扫描环从 a8 出发沿圆周顺时针移动，每个候选完成均值、单位化和距离记录后才转向下一候选。</desc>
       {/* Circle first, axes on top: the circle's fill must not hide the parts of the axes inside it. */}
       <circle className="p4-scene__circle" cx={CENTER.x} cy={CENTER.y} r={RADIUS} />
       <line className="p4-scene__axis" x1="16" y1={CENTER.y} x2={VIEW.width - 16} y2={CENTER.y} />
@@ -442,8 +445,12 @@ function HerdingScene({ scene }: { scene: Scene }) {
             return <line key={`tcl-${point.id}`} className="p4-scene__gather-line" x1={at.x} y1={at.y} x2={TARGET_RAW_POINT.x} y2={TARGET_RAW_POINT.y} opacity={clamp(scene.targetContribute * 1.4)} />;
           })
         : null}
-      {scene.clip.kind === "target-normalize" && scene.rawMeanPoint && scene.normalizedPoint ? (
-        <path className="p4-scene__normalize-path" d={`M ${scene.rawMeanPoint.x} ${scene.rawMeanPoint.y} L ${scene.normalizedPoint.x} ${scene.normalizedPoint.y}`} />
+      {(scene.clip.kind === "target-normalize" || scene.clip.kind === "target-normalize-fade") && scene.rawMeanPoint && scene.normalizedPoint ? (
+        <path
+          className="p4-scene__normalize-path"
+          d={`M ${scene.rawMeanPoint.x} ${scene.rawMeanPoint.y} L ${scene.normalizedPoint.x} ${scene.normalizedPoint.y}`}
+          opacity={scene.clip.kind === "target-normalize-fade" ? 1 - smoothstep(scene.progress) : 1}
+        />
       ) : null}
 
       {/* Scan ring: a continuous clockwise indicator that never teleports between candidates. */}
@@ -618,7 +625,7 @@ function CurrentFormula({ scene }: { scene: Scene }) {
   if (scene.clip.kind === "target-contribute") {
     return <span>μ̄<sub>full</sub> = (1/|X<sub>y</sub>|) Σ<sub>x∈X<sub>y</sub></sub> z(x)</span>;
   }
-  if (scene.clip.kind === "target-normalize") {
+  if (scene.clip.kind === "target-normalize" || scene.clip.kind === "target-normalize-fade") {
     return <span>μ<sub>full</sub> = normalize(μ̄<sub>full</sub>)</span>;
   }
   if (!round) {
@@ -757,7 +764,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
           <section className="panel p4-visual-panel">
             <div className="p4-panel-title">
               <div><span className="eyebrow">ONE FIXED FEATURE SPACE</span><h3>目标、候选与当前前缀</h3></div>
-              <span>扫描顺序：从右下 a7 顺时针</span>
+              <span>扫描顺序：从 a8 顺时针</span>
             </div>
             <div className="p4-visual-body">
               <div className="p4-canvas">
