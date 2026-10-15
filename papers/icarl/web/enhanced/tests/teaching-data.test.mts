@@ -348,7 +348,9 @@ assert.equal((p4BudgetEnd.match(/class="p4-scene__point/g) ?? []).length, 8, "Bu
 const p4BudgetSlotTags = p4BudgetEnd.match(/<article(?=[^>]*data-prefix-slot-index="[1-4]")[^>]*>/g) ?? [];
 assert.deepEqual(p4BudgetSlotTags.filter((tag) => attr(tag, "data-prefix-retained") === "true").map((tag) => attr(tag, "data-prefix-sample-id")), ["a8", "a2", "a4"], "P4 must preserve exactly p₁=a8, p₂=a2, p₃=a4 without reordering.");
 assert.ok(p4BudgetInitial.includes('data-budget-state="steady"') && p4BudgetInitial.includes("3 类 × 4 项") && p4BudgetInitial.includes("4 类 × 3 项"), "P4 must identify this as an independent K=12 3-to-4 class budget example.");
-assert.ok(p4BudgetEnd.includes("P4 独立预算示例") === false, "P4's terminal state must explain the completed truncation instead of leaving only the initial example copy.");
+assert.ok(p4BudgetInitial.includes("P4 独立预算示例"), "P4 must keep its simplified class expansion visibly distinct from the real P5 batch.");
+assert.ok(p4BudgetEnd.includes("不改原图或追加训练"), "P4 truncation must explain that the released tail changes memory membership, not its image or training history.");
+assert.ok(p4BudgetEnd.includes("P4 独立预算示例") && p4BudgetEnd.includes("只从尾部移除 p₄=a5"), "P4's terminal state must retain the example boundary and show the completed truncation.");
 
 const scanOrderFromStart = [...scanOrder.slice(scanOrder.findIndex((item) => item.id === "a8")), ...scanOrder.slice(0, scanOrder.findIndex((item) => item.id === "a8"))];
 

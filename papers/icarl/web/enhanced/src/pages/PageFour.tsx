@@ -808,7 +808,7 @@ function OrderedMemoryStage({
         ? "下一步：预算只能留 3 项怎么办？当前完整列表仍有 4 项，p₄ 尚未移除。"
         : reviewNarrative ?? "按顺序取前缀；新增名额时保留已有项，只继续加入下一项。"
     : budget?.tailState === "removed"
-      ? "只从尾部移除 p₄=a5；前三项身份和顺序不变。当前类别保留 3/3 项。"
+      ? "只从尾部移除 p₄=a5；前三项身份和顺序不变。当前保留 3/3 项，不改原图或追加训练。"
       : budget?.tailState === "removing"
         ? "p₄=a5 正离开原图记忆；退出完成前仍显示完整 P 和真实 ν₄。"
         : budget?.tailState === "pending"
@@ -822,7 +822,7 @@ function OrderedMemoryStage({
           <div>
             <span className="eyebrow">ORDERED EXEMPLAR MEMORY</span>
             <h3>{isReview ? "有序样本带 P" : "类别增加时，保留同一顺序的前缀"}</h3>
-            <p>{isReview ? "真实 Herding 顺序：a8 → a2 → a4 → a5。前 m 项就是该容量下可保留的候选集合。" : "容量边界向前移动，前三项保持原位，只有尾项离开。"}</p>
+            <p>{isReview ? "真实 Herding 顺序：a8 → a2 → a4 → a5。前 m 项就是该容量下可保留的候选集合。" : "P4 独立预算示例：总预算固定，类别由 3 增至 4；前三项保持原位，只有尾项离开。"}</p>
           </div>
           <span className="p4-ordered-stage__count" aria-live="polite">
             {budget ? `${retainedCount} / ${budget.tailState === "removed" ? 3 : 4}` : `${scene.visiblePrefixCount} / 4 项`}

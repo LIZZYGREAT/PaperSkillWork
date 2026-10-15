@@ -851,105 +851,365 @@
         {
           "id": "13a-prefix-review-00",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
-            { "type": "waitFor", "selector": "[data-prefix-count='1'][data-prefix-index='1']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-prefix-count='1'][data-prefix-index='1']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
-          "id": "13b-prefix-review-25",
+          "id": "13b-prefix-review-20",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
-            { "type": "wait", "milliseconds": 225 },
-            { "type": "waitFor", "selector": "[data-prefix-count='2'][data-prefix-index='2']", "state": "visible" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1600
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-prefix-count='1'][data-prefix-index='1']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
-          "id": "13c-prefix-review-50",
+          "id": "13c-prefix-review-40",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
-            { "type": "wait", "milliseconds": 450 },
-            { "type": "waitFor", "selector": "[data-prefix-count='3'][data-prefix-index='3']", "state": "visible" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3200
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-prefix-count='2'][data-prefix-index='2']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
-          "id": "13d-prefix-review-75",
+          "id": "13d-prefix-review-60",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
-            { "type": "wait", "milliseconds": 675 },
-            { "type": "waitFor", "selector": "[data-prefix-count='4'][data-prefix-index='4']", "state": "visible" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 4800
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-prefix-count='3'][data-prefix-index='3']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
-          "id": "13e-prefix-review-100",
+          "id": "13e-prefix-review-80",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
-            { "type": "wait", "milliseconds": 1000 },
-            { "type": "waitFor", "selector": "[data-phase-complete='true'][data-prefix-count='4'][data-prefix-index='4']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 6400
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-prefix-count='4'][data-prefix-index='4']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
+          "id": "13f-prefix-review-100",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 8700
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-phase-complete='true'][data-prefix-count='4'][data-prefix-index='4']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
           "id": "14a-budget-start-after-manual-review",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
-            { "type": "click", "selector": ".p4-prefix-picker button:nth-child(2)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
-            { "type": "waitFor", "selector": "[data-memory-slot-count='4'][data-prefix-count='4'][data-tail-state='steady']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-prefix-picker button:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-memory-slot-count='4'][data-prefix-count='4'][data-tail-state='steady']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
-          "id": "14b-budget-truncation-25",
+          "id": "14b-budget-truncation-20",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
-            { "type": "wait", "milliseconds": 300 },
-            { "type": "waitFor", "selector": "[data-tail-state='pending'][data-tail-opacity='1.000']", "state": "visible" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(7)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1400
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-tail-state='steady'][data-tail-opacity='1.000']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
-          "id": "14c-budget-truncation-50",
+          "id": "14c-budget-truncation-40",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
-            { "type": "wait", "milliseconds": 600 },
-            { "type": "waitFor", "selector": "[data-tail-state='removing']", "state": "visible" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(7)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2800
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p4-workbench[data-tail-state='pending']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
-          "id": "14d-budget-truncation-75",
+          "id": "14d-budget-truncation-60",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
-            { "type": "wait", "milliseconds": 900 },
-            { "type": "waitFor", "selector": "[data-tail-state='removed'][data-memory-slot-count='3'][data-prefix-index='3']", "state": "visible" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(7)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 4200
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-tail-state='removing'][data-memory-slot-count='4'][data-prefix-index='4']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
-          "id": "14e-budget-truncation-100",
+          "id": "14e-budget-truncation-80",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
-            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
-            { "type": "wait", "milliseconds": 1400 },
-            { "type": "waitFor", "selector": "[data-phase-complete='true'][data-tail-state='removed'][data-memory-slot-count='3']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(7)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 5600
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-tail-state='removed'][data-memory-slot-count='3'][data-prefix-index='3']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
+          "id": "14f-budget-truncation-100",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(7)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 7800
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-phase-complete='true'][data-tail-state='removed'][data-memory-slot-count='3']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
@@ -1873,54 +2133,287 @@
         {
           "id": "p7-query-00",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
-            { "type": "waitFor", "selector": ".p7-feature-panel--chart.is-querying .p7-query-pending", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']", "state": "visible" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p7-feature-panel--chart.is-querying .p7-query-pending",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
+          "id": "p7-query-10",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 620
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='暂停动画']"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
+          "id": "p7-query-15",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 930
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='暂停动画']"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
+          "id": "p7-query-20",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1240
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='暂停动画']"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
+          "id": "p7-query-30",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1860
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='暂停动画']"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
           "id": "p7-query-25",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
-            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
-            { "type": "wait", "milliseconds": 1550 },
-            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='暂停动画']" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1550
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='暂停动画']"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
           "id": "p7-query-50",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
-            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
-            { "type": "wait", "milliseconds": 3100 },
-            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='暂停动画']" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3100
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='暂停动画']"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
           "id": "p7-query-75",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
-            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
-            { "type": "wait", "milliseconds": 4650 },
-            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='暂停动画']" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 4650
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='暂停动画']"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
           "id": "p7-query-return-replay-resume",
           "actions": [
-            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(4)" },
-            { "type": "click", "selector": ".p7-stage-nav button:nth-of-type(5)" },
-            { "type": "waitFor", "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']", "state": "visible" },
-            { "type": "click", "selector": ".p7-playback-controls__center button:nth-of-type(2)" },
-            { "type": "waitFor", "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']", "state": "visible" },
-            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
-            { "type": "wait", "milliseconds": 1300 },
-            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='暂停动画']" }
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-stage-nav button:nth-of-type(5)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button:nth-of-type(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".tutorial-page[data-stage='query'][data-progress='0.00']",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1300
+            },
+            {
+              "type": "click",
+              "selector": ".p7-playback-controls__center button[aria-label='暂停动画']"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
           ]
         },
         {
