@@ -89,8 +89,8 @@ const lifetimes: Readonly<Record<RuntimeObjectId, { createdAt: number; releasedA
   targets: { createdAt: RUNTIME_CLIP_INDEX["build-targets-and-loss"], releasedAt: RUNTIME_CLIP_INDEX["update-theta"] + 1 },
   loss: { createdAt: RUNTIME_CLIP_INDEX["build-targets-and-loss"], releasedAt: RUNTIME_CLIP_INDEX["update-theta"] + 1 },
   prototypes: { createdAt: RUNTIME_CLIP_INDEX["form-prototypes"], releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] },
-  query: { createdAt: RUNTIME_CLIP_INDEX["query-arrives"], releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] },
-  prediction: { createdAt: RUNTIME_CLIP_INDEX["compare-six-distances"] + 1, releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] },
+  query: { createdAt: RUNTIME_CLIP_INDEX["query-arrives"], releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] + 1 },
+  prediction: { createdAt: RUNTIME_CLIP_INDEX["compare-six-distances"] + 1, releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] + 1 },
 };
 
 export type RuntimeScene = {
@@ -185,7 +185,7 @@ export function runtimeSceneAt(clipIndex: number, progress: number): RuntimeScen
     ? oldMemoryRetained + newExemplarsSelected
     : P_AFTER.A.length + P_AFTER.B.length + P_AFTER.C.length + P_AFTER.D.length + P_AFTER.E.length + P_AFTER.F.length;
   const queryProgress = clip.id === "query-arrives" ? boundedProgress : cursor > RUNTIME_CLIP_INDEX["query-arrives"] ? 1 : 0;
-  const comparisonProgress = clip.id === "compare-six-distances" ? boundedProgress : cursor > RUNTIME_CLIP_INDEX["compare-six-distances"] ? 1 : 0;
+  const comparisonProgress = clip.id === "compare-six-distances" ? clamp01(boundedProgress / 0.82) : cursor > RUNTIME_CLIP_INDEX["compare-six-distances"] ? 1 : 0;
   const nearestHighlightProgress = clip.id === "compare-six-distances" ? clamp01((boundedProgress - 0.82) / 0.18)
     : cursor > RUNTIME_CLIP_INDEX["compare-six-distances"] ? 1 : 0;
 

@@ -3013,6 +3013,112 @@
               "state": "visible"
             }
           ]
+        },
+        {
+          "id": "p9-query-enters-feature-space-midpoint",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(7)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-prediction-scene[data-clip=\"query-arrives\"]",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-play"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 600
+            }
+          ]
+        },
+        {
+          "id": "p9-query-distance-comparisons-midpoint",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-prediction-scene[data-clip=\"compare-six-distances\"]",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-play"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 950
+            }
+          ]
+        },
+        {
+          "id": "p9-query-nearest-prototype-result",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-play"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-prediction-result",
+              "state": "visible",
+              "timeoutMs": 10000
+            }
+          ]
+        },
+        {
+          "id": "p9-final-next-round-handoff",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-chapter:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-play"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-handoff-scene[data-progress=\"1.00\"]",
+              "state": "visible",
+              "timeoutMs": 10000
+            }
+          ]
         }
       ],
       "computedStyles": [
@@ -3025,11 +3131,6 @@
           "selector": ".p9-main-grid",
           "property": "display",
           "equals": "grid"
-        },
-        {
-          "selector": ".p9-chapter:disabled",
-          "property": "cursor",
-          "equals": "not-allowed"
         }
       ]
     }

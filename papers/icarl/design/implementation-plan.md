@@ -177,7 +177,7 @@ P5 现在把旧记忆中的 12 张 exemplar 与新到达三类的 18 张完整�
 
 P6 改为一张持续存在的六节点图：同一条样本路径依次显示共享表示、六个独立 sigmoid 输出、旧类 Q 与新类 one-hot 标签、逐节点 BCE、六项损失聚合及回到共享参数的反向信号。可切换 C2、C4、C5、C6 样本；局部 BCE 输出滑杆只改变曲线算例，不改变模型输出或总损失。播放、暂停、逐段选择、重播和 reduced-motion 行为均保留。动画中的模型输出和梯度是明确标注的合成教学演示，不表示实际优化器运行轨迹。
 
-P7 的运行状态与预测视图覆盖 A–F 六类；最近原型预测使用与 P9 相同的 `P_after`、prototype 和 query 数据。P9 的当前增量更新扩为 19 个详细步骤和 13 个语义阶段：D/E/F 各自进行两轮 Herding；K=12 时六类配额均为 2；旧类截短保持原列表前缀；新类分别使用完整六样本候选集；提交后的 `P_after` 恰为六类各两张。后续预测比较全部六类原型；下一类批次只作为交接提示。
+P7 的运行状态与预测视图覆盖 A–F 六类；最近原型预测使用与 P9 相同的 `P_after`、prototype 和 query 数据。当时的 P9 实现（2026-10-13）为 19 个详细步骤和 13 个语义阶段：D/E/F 各自进行两轮 Herding；K=12 时六类配额均为 2；旧类截短保持原列表前缀；新类分别使用完整六样本候选集；提交后的 `P_after` 恰为六类各两张。后续预测比较全部六类原型，下一类批次只作为交接提示。这是重构前的历史记录；当前八章、17 个 clips 的总图见下文“P9 全流程重构”条目。
 
 保护不变量：P4 的八样本独立 Herding 教学集、`P_BEFORE` 的身份/顺序/坐标、Page 3 已有预测结果、共享类别色与六节点身份、Q 在模型更新前生成、P 仅在记忆管理阶段变化、最终预测按归一化 exemplar 均值而非 sigmoid argmax；所有合成示例均不表述为论文训练或实验数据。检查范围：P5 各流程阶段和展开的 30×3 Q 明细；P6 旧类软目标、C4/C5/C6 hard target、BCE、损失聚合与反传；P7 六类原型及 query 最近均值；P9 初态、D/Q 构造、旧类截短、D/E/F 各类第二个 Herding 样本、记忆提交、预测与交接；Chromium 视口为 1440×900 和 1920×1080。HUMAN_ACCEPTANCE 仍由 W9 人工审查决定，W10 不属于本次实施。
 
@@ -272,3 +272,11 @@ P9 将收敛为八章：继承状态、准备 D、冻结 Q、更新模型、管�
 接通第 4–6 章。训练桥以一张真实教学 fixture 展示 sample ID 对齐的冻结 Q 软目标、真实新类硬标签、共享 BCE 与六节点损失；参数改变采用符号化离散交接，不伪造优化器轨迹或 loss 曲线，`P_before` 在提交前保持原样。记忆工作台按真实有序列表将旧类前缀由每类 4 项截为 2 项；D 类逐项演示真实 `NEW_CLASS_HERDING` 前两名，E/F 按各自真实顺序摘要补齐。候选只在 `P_after` 提交片段完成后成为持久记忆。原图 ID 保持不变并以固定 before/after 表示端点重编码；六个 Prototype 直接读取共享运行时 `PROTOTYPES` 坐标。
 
 测试覆盖目标与样本、Q/硬标签来源、六节点损失、Θ 提交边界、截断中的预算、D/E/F Herding 身份和顺序、P_after 提交边界，以及重编码身份和共享 Prototype 坐标。`npm.cmd test`、`tsc --noEmit`、Vite 生产构建和 `git diff --check` 通过。P3–P9 完整配置曾通过 210 个捕获、几何及样式检查和零浏览器错误；该轮检查发现原型图语义说明 10px 低于 11px 门槛，现已提高至 11px。修订后的 P9 定向标准 QA 在 1440×900、1920×1080 共 26 帧通过，`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`（0），无样式诊断。专用交互捕获覆盖 15 个状态、1440×900/1920×1080/1366×768 共 48 帧及 reduced-motion 记忆到原型路径；无横向溢出或浏览器错误。代表性训练、截断、Herding 和原型截图已目视检查，`VISUAL_REVIEW=PASS`。报告位于仓库根 `.visual-qa/p9-memory-slice-acceptance/`、`.visual-qa/p9-second-slice-final/` 与 `.visual-qa/p9-memory-slice-browser-review/`。无已批准截图基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 状态未修改。第 7、8 章继续留待最后切片。
+
+### P9 切片 3｜真实距离预测与下一轮交接（2026-10-16）
+
+接通第 7、8 章，八章现全部可导航，17 个内部 clips 继续共用一条 `useAnimationTimeline`。Query 使用共享 `QUERY_FEATURE`，在特征空间中沿固定方向进入后，按共享 `QUERY_DISTANCES` 的真实最近到最远次序逐条绘制并保留六条比较线；最近原型与类别由真实 argmin/`QUERY_PREDICTION` 决定。训练 head 保留在模型状态中，但作为非参与状态呈现，不用其 sigmoid argmax 分类。图表只复用现有 `FeatureSpaceWorkbench` 及共享点、Prototype、Query 和距离，没有增加第二份距离算法或新教学数据。
+
+最终交接显示 `S_(r+1)=Θ_after + P_after`，保留训练后的模型与 12 张原始 exemplar；D、Q、targets、loss、Query 和预测等本轮临时或派生对象在交接时退出。`X_next` 仅作为下一批入口提示，不播放未定义的下一轮训练。更新 P9 测试与 `visual-qa.json`，记录 Query 入场/比较/最近原型/最终交接帧；新增预测与交接样式并按窄屏纵向排布。
+
+验证：`npm.cmd test`、`npx.cmd tsc --noEmit`、`npm.cmd run build`（82 modules）和 `git diff --check` 通过。P9 定向标准 QA 在 1440×900、1920×1080 共 34 帧通过，`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`（0），报告位于 `.visual-qa/p9-runtime-focused-check/run-2026-10-15T19-59-10-557Z/report.md`。专用 Chromium 交互/截图检查共 40 帧，覆盖 1440×900、1920×1080、1366×768 和 390×844；Query 播放与暂停、六距离及最近原型、下一轮交接、reduced-motion 终态均通过，40 帧无页面横向溢出且无浏览器错误。已目视查看 390×844 的三距离比较中段与交接近终态；截图与指标在仓库根 `.visual-qa/p9-final-slice-browser-review/`。P3–P9 完整配置的本次复跑在 P6 处仅生成 64 张图便停止，未产出报告，不记为整套通过；P3–P8 仍依据此前 124 帧回归记录，P9 依据上述定向标准 QA 与 40 帧专项检查。无已批准截图基线，`REGRESSION=NOT_RUN`；这是 Agent 视觉抽样复核而非人工学习验收，`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 状态未改。

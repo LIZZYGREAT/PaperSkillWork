@@ -921,8 +921,17 @@ const p9IncomingIds = ["D", "E", "F"] as const;
 assert.deepEqual(p9IncomingIds.flatMap((classId) => P_AFTER[classId].map((sample) => sample.id)),
   p9IncomingIds.flatMap((classId) => NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id)),
   "P_after must use the first two actual runtime Herding identities for each new class.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5).comparisonProgress, 0.5);
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 1).objectStatus.prediction, "released");
+assert.ok(near(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5).comparisonProgress, 0.5 / 0.82),
+  "P9 must complete all six comparisons before the separate nearest-highlight phase begins.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["query-arrives"], 0.5).queryProgress, 0.5);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 0.5).objectStatus.query, "active");
+const p9FinalScene = runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 1);
+assert.equal(p9FinalScene.theta, "after");
+assert.equal(p9FinalScene.memory, "after");
+for (const id of ["D", "Q", "targets", "loss", "prototypes", "query", "prediction"] as const) {
+  assert.equal(p9FinalScene.objectStatus[id], "released", `P9 handoff must release temporary or derived ${id}.`);
+}
+assert.equal(p9FinalScene.objectStatus.X_new, "released", "The incoming batch ends after exemplar selection and is not carried into the next round.");
 
 function renderPageNineAt(clip: number, pct = 0): string {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
@@ -943,8 +952,9 @@ assert.match(p9InheritedMarkup, /data-clip="inherit-state"/);
 assert.match(p9InheritedMarkup, /data-theta-state="before"/);
 assert.ok(p9InheritedMarkup.includes('data-memory-source-ids="' + oldMemoryIdsBeforeP9.join(" ") + '"'),
   "The starting persistent panel must retain all twelve ordered P_before IDs.");
-assert.equal((p9InheritedMarkup.match(/class="p9-chapter[^\"]*"[^>]*disabled/g) ?? []).length, 2,
-  "The prediction and handoff chapters remain for the final P9 slice.");
+assert.equal((p9InheritedMarkup.match(/class="p9-chapter[^\"]*"[^>]*disabled/g) ?? []).length, 0,
+  "All eight P9 chapters must be available in the completed flow.");
+assert.match(p9InheritedMarkup, /片段 01 \/ 17/);
 
 const p9MergeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.25);
 const p9MergeMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.5);
@@ -1030,6 +1040,68 @@ for (const prototype of PROTOTYPES) {
   assert.ok(p9PrototypesQuarter.includes(`data-prototype-class="${prototype.classId}" data-prototype-point="${prototype.point.join(",")}"`),
     `P9 must render the shared ${prototype.classId} prototype coordinate without moving it.`);
 }
+
+const p9QueryEntry = renderPageNineAt(RUNTIME_CLIP_INDEX["query-arrives"], 0);
+const p9QueryMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["query-arrives"], 0.5);
+const p9QueryEnd = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0);
+assert.equal(distanceLines(p9QueryEntry).length, 0, "Query must arrive before any distance comparison begins.");
+assert.ok(near(queryMarkerStartX(p9QueryEntry), queryEntryX), "P9 Query must enter from the edge of the shared feature chart.");
+assert.ok(queryMarkerStartX(p9QueryMidpoint) !== queryEntryX && queryMarkerStartX(p9QueryMidpoint) !== queryFinalX,
+  "P9 Query must expose a distinct moving midpoint rather than only switching between endpoints.");
+assert.ok(near(queryMarkerStartX(p9QueryEnd), queryFinalX), "P9 Query must reach the fixed shared QUERY_FEATURE coordinate.");
+const p9QueryLabel = chartLabelPosition(p9QueryMidpoint, "query");
+const p9QueryMarker = queryMarkerPosition(p9QueryMidpoint);
+assert.ok(near(p9QueryMarker.x - p9QueryLabel.x, 14) && near(p9QueryLabel.y - p9QueryMarker.y, 28) && p9QueryLabel.anchor === "end",
+  "P9 Query label must keep the stable offset used by the shared prediction workbench.");
+
+const p9ComparisonMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5);
+const p9ComparisonLines = distanceLines(p9ComparisonMidpoint);
+assert.equal(p9ComparisonLines.length, 4, "At the middle checkpoint, P9 must retain three completed lines and draw the fourth.");
+assert.deepEqual(p9ComparisonLines.map((line) => attr(line, "data-prototype-class-id")), QUERY_DISTANCES.slice(0, 4).map((entry) => entry.classId),
+  "P9 must draw true comparisons in shared nearest-to-farthest distance order.");
+for (const line of p9ComparisonLines.slice(0, 3)) {
+  const classId = attr(line, "data-prototype-class-id");
+  const result = QUERY_DISTANCES.find((entry) => entry.classId === classId)!;
+  assert.ok(near(lineLength(line), result.distance * 160, 1e-6), `P9 completed ${classId} comparison must equal its true query-to-prototype distance.`);
+  assert.ok(line.includes("is-complete") && line.includes("opacity:0.68"), "P9 must keep finished distance lines clearly visible as the next comparisons proceed.");
+}
+assert.ok(p9ComparisonLines[3].includes("is-active"), "The fourth P9 distance must be visibly in flight at the midpoint.");
+assert.ok(near(lineLength(p9ComparisonLines[3]), QUERY_DISTANCES[3].distance * 160 * (0.5 / 0.82 * 6 - 3), 1e-6),
+  "The active P9 line length must track the mapped comparison progress.");
+const p9ComparisonActive = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.6);
+const p9ComparisonActiveLines = distanceLines(p9ComparisonActive);
+assert.equal(p9ComparisonActiveLines.length, 5, "P9 must show the fifth line partway through its drawing at 60%.");
+assert.ok(p9ComparisonActiveLines[4].includes("is-active"), "P9 must distinguish the line currently being drawn.");
+assert.ok(near(lineLength(p9ComparisonActiveLines[4]), QUERY_DISTANCES[4].distance * 160 * (0.6 / 0.82 * 6 - 4), 1e-6),
+  "P9 active distance geometry must scale with the current comparison progress.");
+
+const p9PredictionComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 1);
+assert.equal(distanceLines(p9PredictionComplete).length, QUERY_DISTANCES.length, "P9 must retain all six completed comparisons.");
+assert.equal(distanceLines(p9PredictionComplete).filter((line) => line.includes("is-nearest")).length, 1, "P9 must highlight one and only one nearest prototype.");
+assert.ok(p9PredictionComplete.includes(`data-prediction-class="${QUERY_PREDICTION}"`), "P9 prediction must be the shared true argmin.");
+assert.ok(p9PredictionComplete.includes(`data-result-class="${QUERY_PREDICTION}"`), "The prediction result card must identify the shared argmin class.");
+assert.ok(p9PredictionComplete.includes("训练 head 保留在模型中"), "P9 must keep the training head present but outside the final prediction rule.");
+for (const line of distanceLines(p9PredictionComplete)) {
+  const classId = attr(line, "data-prototype-class-id");
+  const result = QUERY_DISTANCES.find((entry) => entry.classId === classId)!;
+  assert.ok(near(lineLength(line), result.distance * 160, 1e-6), `Every final P9 distance line must use its exact shared feature-space distance (${classId}: ${lineLength(line)} vs ${result.distance * 160}).`);
+}
+
+const p9HandoffMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["handoff-next"], 0.5);
+const p9HandoffComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["handoff-next"], 1);
+assert.match(p9HandoffMidpoint, /data-next-state="S_r\+1"/);
+assert.match(p9HandoffMidpoint, /Sᵣ₊₁ = Θ_after \+ P_after/);
+assert.match(p9HandoffMidpoint, /data-next-batch-only="true"/);
+assert.match(p9HandoffMidpoint, /data-released-object="D"/);
+assert.match(p9HandoffMidpoint, /data-released-object="Q"/);
+assert.ok(p9HandoffMidpoint.includes("X_next") && p9HandoffMidpoint.includes("不播放假想的下一轮训练"));
+assert.ok(p9HandoffComplete.includes('data-object-id="D" data-status="released"'));
+assert.ok(p9HandoffComplete.includes('data-object-id="Q" data-status="released"'));
+assert.ok(p9HandoffComplete.includes('data-object-id="prediction" data-status="active"'));
+assert.ok(p9HandoffComplete.includes('data-object-id="query" data-status="active"'));
+assert.ok(p9HandoffComplete.includes('data-object-id="prototypes" data-status="released"'));
+assert.ok(p9HandoffComplete.includes('data-persistent') === false, "The handoff screen should not invent a second persistent-state record.");
+assert.match(p9HandoffComplete, /片段 17 \/ 17/);
 
 /* ---------------------------------------------------------------- report --- */
 
