@@ -123,12 +123,14 @@ function buildClips(): DemoClip[] {
         candidateIndex,
         sweepStart: legStart,
         sweepEnd: sweepAt,
-        move: legDuration(sweepAt - legStart),
-        durationMs: legDuration(sweepAt - legStart),
-        holdMs: isFirst ? 150 : 60,
-        narrative: isFirst
-          ? `扫描环从候选 ${SCAN_START_ID} 出发，按顺时针顺序到达本轮第一个未选候选 ${candidate.id}`
-          : `上一候选已完成均值与距离比较；扫描环再顺时针到达候选 ${candidate.id}`,
+        move: round.k === 1 && isFirst ? 140 : legDuration(sweepAt - legStart),
+        durationMs: round.k === 1 && isFirst ? 140 : legDuration(sweepAt - legStart),
+        holdMs: round.k === 1 && isFirst ? 0 : isFirst ? 150 : 60,
+        narrative: isFirst && round.k === 1
+          ? "从扫描起点 a8 立即开始第一条真实距离比较"
+          : isFirst
+            ? `扫描环从候选 ${SCAN_START_ID} 出发，按顺时针顺序到达本轮第一个未选候选 ${candidate.id}`
+            : `上一候选已完成均值与距离比较；扫描环再顺时针到达候选 ${candidate.id}`,
       });
 
       const rest = { round: round.k, candidateIndex, sweepStart: sweepAt };
@@ -158,10 +160,20 @@ function buildClips(): DemoClip[] {
       }
 
       if (round.k === 1) {
-        // k = 1 has no prefix to average: the candidate's own unit feature is the prefix mean.
-        push({ id: `r1-hull-${candidate.id}`, kind: "hover", ...rest, sweepEnd: sweepAt, move: stepDurations.hover, durationMs: stepDurations.hover, holdMs: 100, narrative: `只有一个名额：直接比较候选 ${candidate.id} 自己的单位特征到 μ_full 的距离` });
-        push({ id: `r1-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: stepDurations.norm, durationMs: stepDurations.norm, holdMs: 120, narrative: "ν₁(x) = z(x)：单个样本的前缀均值就是它自己的单位特征" });
-        push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: stepDurations.score, durationMs: stepDurations.score, holdMs: 650, narrative: `画出 ${candidate.id} 到 μ_full 的距离线，并记录本轮距离` });
+        // k = 1 has no prefix to average: show ν₁(a8) = z(a8) while its real distance grows.
+        const firstDistanceMs = isFirst ? 760 : 420;
+        push({
+          id: `r1-score-${candidate.id}`,
+          kind: "score",
+          ...rest,
+          sweepEnd: sweepAt,
+          move: firstDistanceMs,
+          durationMs: firstDistanceMs,
+          holdMs: isFirst ? 650 : 500,
+          narrative: isFirst
+            ? `ν₁(${candidate.id}) = z(${candidate.id})：距离线立即延伸并同步记录真实分数`
+            : `画出 ${candidate.id} 到 μ_full 的真实距离，并写入距离尺`,
+        });
         push({ id: `r1-score-fade-${candidate.id}`, kind: "score-fade", ...rest, sweepEnd: sweepAt, move: 650, durationMs: 650, holdMs: 0, narrative: "距离线停留后淡出；完全消失后才移动到下一候选" });
         sweep = sweepAt;
         continue;
@@ -521,10 +533,11 @@ function HerdingScene({ scene }: { scene: Scene }) {
       ) : null}
       {scanPoint && scene.clip.kind === "scan" ? (
         <circle
-          className="p4-scene__candidate-ring"
+          className={`p4-scene__candidate-ring${scene.clip.round === 1 && candidate?.point.id === SCAN_START_ID ? " is-anchor-confirmation" : ""}`}
           cx={scanPoint.x}
           cy={scanPoint.y}
-          r="16"
+          r={scene.clip.round === 1 && candidate?.point.id === SCAN_START_ID ? 14 + smoothstep(scene.progress) * 5 : 16}
+          opacity={scene.clip.round === 1 && candidate?.point.id === SCAN_START_ID ? 0.72 + smoothstep(scene.progress) * 0.28 : 1}
           aria-label="顺时针扫描中的候选位置"
         />
       ) : null}
@@ -842,6 +855,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         data-clip={clip.id}
         data-kind={clip.kind}
         data-round={clip.round}
+        data-clip-duration-ms={clip.durationMs}
         data-progress={state.progress.toFixed(3)}
         data-phase-group={activePhaseIndex + 1}
         data-phase-progress={phaseProgress.toFixed(3)}

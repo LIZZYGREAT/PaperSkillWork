@@ -313,7 +313,7 @@ for (const round of HERDING_DEMO_ROUNDS) {
   const firstId = orderedCandidates[0].id;
   const nextId = orderedCandidates[1].id;
   const fullSequenceIds = round.k === 1
-    ? [`r1-hull-${firstId}`, `r1-norm-${firstId}`, `r1-score-${firstId}`]
+    ? [`r1-scan-${firstId}`, `r1-score-${firstId}`]
     : [`r${round.k}-split-${firstId}`, `r${round.k}-mean-${firstId}`, `r${round.k}-norm-${firstId}`, `r${round.k}-score-${firstId}`];
   for (const id of fullSequenceIds) assert.ok(p4ClipIndex.has(id), `Round ${round.k}'s first candidate must keep the complete teaching step ${id}.`);
   assert.ok(p4ClipIndex.has(`r${round.k}-score-${nextId}`), `Round ${round.k}'s later candidate must retain a real score.`);
@@ -325,12 +325,25 @@ for (const round of HERDING_DEMO_ROUNDS) {
   }
 }
 
+const p4RoundOneFirstId = HERDING_DEMO_ROUNDS[0].candidates
+  .map((candidate) => candidate.point.id)
+  .find((id) => id === HERDING_DEMO_ORDER[0].id);
+assert.equal(p4RoundOneFirstId, "a8", "P4 round one must begin with the fixed a8 scan origin.");
+const p4A8ScanState = p4At("r1-scan-a8", 0.5);
+const p4A8ScanWorkbench = p4A8ScanState.match(/<section class="p4-workbench"[^>]*>/)?.[0];
+assert.ok(p4A8ScanWorkbench, "P4 must render the initial a8 scan state.");
+assert.equal(attr(p4A8ScanWorkbench!, "data-clip-duration-ms"), "140", "The zero-span a8 origin confirmation must not become a long idle scan.");
+assert.ok(p4A8ScanState.includes("is-anchor-confirmation"), "P4 must visibly pulse a8 while confirming the fixed scan origin.");
+assert.equal(p4ClipIndex.get("r1-score-a8"), p4ClipIndex.get("r1-scan-a8")! + 1, "P4 must start the first a8 distance immediately after its short origin confirmation.");
+assert.ok(!p4ClipIndex.has("r1-hull-a8") && !p4ClipIndex.has("r1-norm-a8"), "P4 must not insert static hull or normalization waits for ν₁(a8) = z(a8).");
+
 const p4RoundTwoFirst = HERDING_DEMO_ROUNDS[1];
 const p4RoundTwoCandidateIds = new Set(p4RoundTwoFirst.candidates.map((item) => item.point.id));
 const p4RoundTwoOrdered = scanOrderFromStart.filter((item) => p4RoundTwoCandidateIds.has(item.id));
 const p4RoundTwoFirstId = p4RoundTwoOrdered[0].id;
 const p4RoundTwoNextId = p4RoundTwoOrdered[1].id;
 const p4Score = p4RoundTwoFirst.candidates.find((item) => item.point.id === p4RoundTwoFirstId)!.score;
+const p4RoundOneA8Score = HERDING_DEMO_ROUNDS[0].candidates.find((item) => item.point.id === "a8")!.score;
 
 const p4TargetLabelMarkup = p4At("target-normalize", 1).match(/<text class="p4-scene__fixed-mean-label"[^>]*>/)?.[0];
 assert.ok(p4TargetLabelMarkup, "P4 must keep a visible label for the fixed full-class target.");
@@ -344,6 +357,15 @@ function p4ScorePath(markup: string): { start: [number, number]; end: [number, n
   if (!match) return null;
   return { start: [Number(match[1]), Number(match[2])], end: [Number(match[3]), Number(match[4])], opacity: Number(match[5]) };
 }
+
+const p4A8ScoreAtHalf = p4At("r1-score-a8", 0.5);
+const p4A8ScorePath = p4ScorePath(p4A8ScoreAtHalf);
+assert.ok(p4A8ScorePath, "P4 must draw the first real distance from a8 without an extra normalization clip.");
+assert.ok(near(Math.hypot(p4A8ScorePath!.end[0] - p4A8ScorePath!.start[0], p4A8ScorePath!.end[1] - p4A8ScorePath!.start[1]), p4RoundOneA8Score * HERDING_CHART.radius * 0.5, 1e-5),
+  "P4's first visible comparison must be the true a8-to-μ_full distance.");
+const p4A8RulerRow = p4A8ScoreAtHalf.match(/<span data-candidate-id="a8"[^>]*>/)?.[0];
+assert.ok(p4A8RulerRow, "P4's first a8 comparison must appear in the distance ruler.");
+assert.equal(attr(p4A8RulerRow!, "data-score-progress"), "0.500", "P4's a8 distance ruler must progress in sync with the visible first distance line.");
 
 const p4ScoreAtZero = p4At(`r2-score-${p4RoundTwoFirstId}`, 0);
 assert.equal(p4ScorePath(p4ScoreAtZero), null, "P4 must not draw a distance line before the comparison begins.");
