@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PaperFigure } from "../shared/core/paper-figure";
 import { PaperTerm } from "../components/PaperTerm";
+import { FIGURE2_SOURCE_FRAME, figure2Selection } from "../data/figure2-focus";
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B, type AblationResult } from "../data/table1-results";
 
 const figure2Src = new URL("../../assets/figures/figure-2.png", import.meta.url).href;
@@ -49,19 +50,8 @@ const mechanismComparisons: Record<Mechanism, { title: string; comparisonKind: s
 };
 
 const benchmarkLabels: Record<Benchmark, string> = { cifar: "iCIFAR-100", small: "iILSVRC-small", full: "iILSVRC-full" };
-const figure2Frame: SourceFrame = { width: 2134, height: 2183 };
+const figure2Frame: SourceFrame = FIGURE2_SOURCE_FRAME;
 const figure4Frame: SourceFrame = { width: 1017, height: 666 };
-
-// Rectangles are stored in the original PNG's pixel coordinates, so responsive resizing keeps focus attached to the source panels.
-const figure2Focus: Record<string, FocusRect> = {
-  "cifar-2": { x: 209, y: 41, width: 522, height: 397 },
-  "cifar-5": { x: 891, y: 41, width: 506, height: 397 },
-  "cifar-10": { x: 1532, y: 41, width: 525, height: 397 },
-  "cifar-20": { x: 371, y: 574, width: 529, height: 386 },
-  "cifar-50": { x: 1032, y: 574, width: 544, height: 386 },
-  "ilsvrc-small": { x: 235, y: 1244, width: 600, height: 441 },
-  "ilsvrc-full": { x: 1378, y: 1244, width: 600, height: 441 },
-};
 
 type MemoryFocus = "trend" | "prototype" | "classifier";
 const memoryFocusRects: Record<MemoryFocus, FocusRect> = {
@@ -74,8 +64,6 @@ const memoryInterpretations: Record<MemoryFocus, { label: string; heading: strin
   prototype: { label: "iCaRL 与 NCM", heading: "K ≥ 1,000 时两种原型分类表现接近", copy: "论文讨论指出，在这组预算下，exemplar 均值分类器与全数据 NCM 的结果接近。NCM 仍需访问全部历史图像，不受同样的 exemplar 预算限制。" },
   classifier: { label: "网络输出分类器", heading: "原图中的 Hybrid 1 低于原型分类配置", copy: "Hybrid 1 使用相同表示，但以网络输出分类。这里观察原始 Figure 4 的定性曲线，不从像素读取或补造精确数值。" },
 };
-
-const figure2FocusId = (benchmark: Benchmark, batch: number) => benchmark === "cifar" ? `cifar-${batch}` : benchmark === "small" ? "ilsvrc-small" : "ilsvrc-full";
 
 function EvidenceTag({ kind }: { kind: "PAPER RESULT" | "PAPER INTERPRETATION" | "PAPER LIMITATION" | "TEACHING EXPLANATION" | "GENERAL BACKGROUND" }) {
   return <span className={`p8-tag p8-tag--${kind.toLowerCase().replace(/ /g, "-")}`}>[{kind}]</span>;
@@ -117,10 +105,20 @@ function SourceFocusOverlay({ frame, rect, tone }: { frame: SourceFrame; rect?: 
 }
 
 function Figure2Evidence({ benchmark, batch }: { benchmark: Benchmark; batch: number }) {
-  const focus = figure2FocusId(benchmark, batch);
-  return <div className="p8-figure-focus" data-focus={focus}>
-    <PaperFigure src={figure2Src} mode="crop" figureLabel="Figure 2" alt="论文原始 Figure 2：iCIFAR-100 与 iILSVRC 的类别增量实验准确率曲线。" caption="原图报告各阶段对截至该时点所有已见类别的准确率；iCIFAR-100 使用多类准确率，iILSVRC 使用 Top-5 准确率。" source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 2, pp. 7–8." />
-    <SourceFocusOverlay frame={figure2Frame} rect={figure2Focus[focus]} tone="overall" />
+  const selection = figure2Selection(benchmark, batch);
+  const { x, y, width, height } = selection.rect;
+  return <div className="p8-figure-focus p8-figure-focus--selected" data-focus={selection.focusId} data-focus-x={x} data-focus-y={y} data-focus-width={width} data-focus-height={height}>
+    <svg className="p8-figure2-zoom" viewBox={`${x} ${y} ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Figure 2 原始图像局部：${selection.protocolLabel}`}>
+      <image href={figure2Src} x="0" y="0" width={figure2Frame.width} height={figure2Frame.height} preserveAspectRatio="none" />
+    </svg>
+    <p className="p8-figure2-caption"><b>{selection.protocolLabel}</b> · 同一原始 Figure 2 面板的放大裁切；坐标范围与下方完整原图中的高亮框同步。</p>
+    <details className="p8-source-figure-details">
+      <summary>查看完整 Figure 2 原图与当前裁切位置</summary>
+      <div className="p8-figure-focus p8-figure-focus--source">
+        <PaperFigure src={figure2Src} mode="crop" figureLabel="Figure 2" alt="论文原始 Figure 2：iCIFAR-100 与 iILSVRC 的类别增量实验准确率曲线。" caption={`原图报告各阶段对截至该时点所有已见类别的准确率；当前局部为 ${selection.protocolLabel}。`} source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 2, pp. 7–8." />
+        <SourceFocusOverlay frame={figure2Frame} rect={selection.rect} tone="overall" />
+      </div>
+    </details>
   </div>;
 }
 
@@ -286,6 +284,18 @@ function MemoryPanel() {
   </section>;
 }
 
+function EvidenceConclusion() {
+  return <section className="p8-evidence-synthesis" aria-label="研究问题、证据、支持结论与适用边界">
+    <header><span className="eyebrow">结尾总结 · 问题与证据逐项对应</span><h2>哪些结论有证据支持？</h2><p>结论跟随论文实际测量的对象与实验协议。</p></header>
+    <div className="p8-evidence-synthesis__grid">
+      <article><h3>整体效果</h3><p><b>问题</b> 类别逐批增加时，准确率怎样变化？</p><p><b>证据</b> Figure 2 的 iCIFAR-100 与 iILSVRC 曲线。</p><p><b>支持</b> 在报告的设置中，iCaRL 整体高于多数增量对照方法。</p><p><b>边界</b> iILSVRC-full 有排序例外；结论限于图中数据集、指标和协议。</p></article>
+      <article><h3>组件作用</h3><p><b>问题</b> 原型分类、回放和蒸馏各自带来什么差异？</p><p><b>证据</b> Table 1a 的 Hybrid 方法消融。</p><p><b>支持</b> iCaRL 高于 Hybrid 1；蒸馏相对 Hybrid 2 的差异随批次而变。</p><p><b>边界</b> 每批 2 类时 Hybrid 2 为 57.6%、iCaRL 为 57.0%；Hybrid 3 与 LwF.MC 也不能单独归因回放。</p></article>
+      <article><h3>原型近似</h3><p><b>问题</b> 受限 exemplar 均值与全数据均值分类差多少？</p><p><b>证据</b> Table 1b 的 iCaRL 与全数据 NCM 准确率。</p><p><b>支持</b> 表中两者的准确率差较小，支持在所测协议中用 exemplars 近似。</p><p><b>边界</b> 比较量是准确率百分点；NCM 可读取全部历史图像，预算不同。</p></article>
+      <article><h3>记忆预算</h3><p><b>问题</b> 增加 K 会怎样影响准确率与资源需求？</p><p><b>证据</b> Figure 4 的 iCIFAR-100、每批 10 类曲线。</p><p><b>支持</b> 该实验中更大的 K 伴随更高准确率。</p><p><b>边界</b> 这是单一协议的趋势；输出层参数仍随已见类别增长。</p></article>
+    </div>
+  </section>;
+}
+
 export function PageEight({ onContinue }: { onContinue?: () => void }) {
   const [tab, setTab] = useState<EvidenceTab>("overall");
   const [batch, setBatch] = useState<(typeof CLASSES_PER_BATCH)[number]>(10);
@@ -305,6 +315,7 @@ export function PageEight({ onContinue }: { onContinue?: () => void }) {
     {tab === "components" ? <ComponentPanel batch={batch} setBatch={setBatch} /> : null}
     {tab === "approximation" ? <ApproximationPanel batch={batch} setBatch={setBatch} /> : null}
     {tab === "memory" ? <MemoryPanel /> : null}
+    <EvidenceConclusion />
     <div className="p8-step-controls"><span>问题 {String(currentIndex + 1).padStart(2, "0")} / 04 · 论文证据</span><div>
       <button type="button" className="icarl-button icarl-button--quiet" disabled={currentIndex === 0} onClick={() => navigateTab(-1)}>上一个问题</button>
       <button type="button" className="icarl-button icarl-button--primary" disabled={isLast && !onContinue} onClick={() => isLast ? onContinue?.() : navigateTab(1)}>{isLast ? "进入第 9 页 · 完整运行" : "下一个问题"}<span aria-hidden="true"> →</span></button>

@@ -51,6 +51,8 @@ import {
   teacherSnapshotFor,
 } from "../src/data/incremental-training.ts";
 import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
+import { CLASSES_PER_BATCH, TABLE1A, TABLE1B } from "../src/data/table1-results.ts";
+import { FIGURE2_FOCUS_RECTS, FIGURE2_SOURCE_FRAME, figure2Selection } from "../src/data/figure2-focus.ts";
 import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
 import { PageThree } from "../src/pages/PageThree.tsx";
 import { PageFour } from "../src/pages/PageFour.tsx";
@@ -601,6 +603,36 @@ const p9StaticInference = renderToStaticMarkup(createElement(FeatureSpaceWorkben
 }));
 assert.equal(distanceLines(p9StaticInference).length, ALL_CLASS_IDS.length, "P9's existing inference mode must continue to show all full distances by default.");
 assert.ok(!p9StaticInference.includes("is-active") && !p9StaticInference.includes("is-complete"), "Optional P7 timeline props must not alter P9's static inference rendering.");
+
+/* ------------------------------------------------------------------ P8 --- */
+
+assert.deepEqual(CLASSES_PER_BATCH, [2, 5, 10, 20, 50], "P8 must expose the paper's five iCIFAR-100 batch settings.");
+assert.deepEqual(TABLE1A.map((row) => [row.batchSize, row.icarL, row.hybrid1, row.hybrid2, row.hybrid3, row.lwfMC]), [
+  [2, 57.0, 36.6, 57.6, 57.0, 11.7],
+  [5, 61.2, 50.9, 57.9, 56.7, 32.6],
+  [10, 64.1, 59.3, 59.9, 58.1, 44.4],
+  [20, 67.2, 65.6, 63.2, 60.5, 54.4],
+  [50, 68.6, 68.2, 65.3, 61.5, 64.5],
+], "P8 Table 1a must preserve all five rows of the paper's reported values.");
+assert.deepEqual(TABLE1B.map((row) => [row.batchSize, row.icarL, row.ncm]), [
+  [2, 57.0, 59.3], [5, 61.2, 62.1], [10, 64.1, 64.5], [20, 67.2, 67.5], [50, 68.6, 68.7],
+], "P8 Table 1b must preserve the iCaRL and full-data NCM values.");
+
+for (const rect of Object.values(FIGURE2_FOCUS_RECTS)) {
+  assert.ok(rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0, "Every Figure 2 crop must have a positive in-image rectangle.");
+  assert.ok(rect.x + rect.width <= FIGURE2_SOURCE_FRAME.width && rect.y + rect.height <= FIGURE2_SOURCE_FRAME.height,
+    "Every Figure 2 crop must remain within the original full-resolution source image.");
+}
+for (const batch of CLASSES_PER_BATCH) {
+  const selection = figure2Selection("cifar", batch);
+  assert.equal(selection.focusId, `cifar-${batch}`, `The iCIFAR-100 batch-${batch} selector must choose its matching Figure 2 panel.`);
+  assert.equal(selection.protocolLabel, `iCIFAR-100 · 每批 ${batch} 类 · 多类准确率`, "The focused panel caption must match the selected iCIFAR-100 protocol.");
+  assert.equal(selection.rect, FIGURE2_FOCUS_RECTS[selection.focusId], "The zoom and source overlay must use the same selected subfigure bounds.");
+}
+assert.equal(figure2Selection("small", 50).focusId, "ilsvrc-small");
+assert.equal(figure2Selection("small", 50).protocolLabel, "iILSVRC-small · 每批 10 类 · 验证集 Top-5");
+assert.equal(figure2Selection("full", 2).focusId, "ilsvrc-full");
+assert.equal(figure2Selection("full", 2).protocolLabel, "iILSVRC-full · 每批 100 类 · 验证集 Top-5");
 
 /* ---------------------------------------------------------------- report --- */
 
