@@ -14,6 +14,7 @@ import {
   clockwiseOffsetFromTop,
   projectHerdingFeature,
 } from "../data/herding-teaching-geometry";
+import { budgetAt, reviewAt, type BudgetState } from "../data/herding-phase-state";
 import {
   useAnimationTimeline,
   type AnimationClip,
@@ -257,8 +258,13 @@ type Scene = {
   scoreLineOpacity: number;
   decisionReveal: number;
   reviewIndex: number | null;
+  visiblePrefixCount: number;
+  fromPrefixIndex: number | null;
+  targetPrefixIndex: number | null;
+  markerProgress: number;
+  lineOpacity: number;
   slotCount: number;
-  tailRemoved: boolean;
+  budget: BudgetState | null;
 };
 
 function roundOf(k: number) {
@@ -283,8 +289,11 @@ function blendHex(from: string, to: string, progress: number) {
   return `rgb(${a.map((value, index) => Math.round(value + (b[index] - value) * t)).join(" ")})`;
 }
 
-function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
+function sceneAt(clip: DemoClip, progress: number, manualReviewIndex: number | null): Scene {
   const p = clamp(progress);
+  const reviewState = clip.kind === "review" ? reviewAt(p, manualReviewIndex) : null;
+  const budgetState = clip.kind === "budget" ? budgetAt(p) : null;
+  const prefixState = reviewState ?? budgetState;
   const candidate = candidateOf(clip);
   const round = clip.round >= 1 && clip.round <= 4 ? roundOf(clip.round) : null;
   const prefixPoints = round ? round.prefix.slice(0, round.k - 1) : [];
@@ -389,7 +398,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   let slotCount = 0;
   if (clip.kind === "commit") slotCount = clip.round - 1 + clamp(progressWithin(p, 0.25, 0.9));
   else if (clip.round >= 2 && clip.round <= 5) slotCount = clip.round - 1;
-  else if (clip.kind === "review" || clip.kind === "budget") slotCount = reviewIndex;
+  else if (prefixState) slotCount = prefixState.visiblePrefixCount;
   if (clip.kind === "target-contribute" || clip.kind === "target-normalize" || clip.kind === "target-normalize-fade") slotCount = 0;
 
   return {
@@ -410,9 +419,14 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     scoreReveal,
     scoreLineOpacity,
     decisionReveal,
-    reviewIndex: clip.kind === "review" || clip.kind === "budget" ? reviewIndex : null,
+    reviewIndex: prefixState?.activePrefixIndex ?? null,
+    visiblePrefixCount: prefixState?.visiblePrefixCount ?? Math.round(slotCount),
+    fromPrefixIndex: prefixState?.fromPrefixIndex ?? null,
+    targetPrefixIndex: prefixState?.targetPrefixIndex ?? null,
+    markerProgress: prefixState?.markerProgress ?? 0,
+    lineOpacity: prefixState?.lineOpacity ?? 0,
     slotCount,
-    tailRemoved: clip.kind === "budget" && progress > 0.55,
+    budget: budgetState,
   };
 }
 
@@ -423,7 +437,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
   const round = scene.clip.round >= 1 && scene.clip.round <= 4 ? roundOf(scene.clip.round) : null;
   const prefixPoints = round ? round.prefix.slice(0, round.k - 1) : [];
   const selectedOrdered = scene.clip.kind === "review" || scene.clip.kind === "budget"
-    ? HERDING_DEMO_ORDER.slice(0, scene.reviewIndex ?? 0)
+    ? HERDING_DEMO_ORDER.slice(0, scene.visiblePrefixCount)
     : round ? round.prefix.slice(0, scene.clip.kind === "commit" ? scene.clip.round : scene.clip.round - 1) : [];
   const selectedIds = new Set(selectedOrdered.map((point) => point.id));
   const showCandidateLabels = scene.clip.kind !== "review" && scene.clip.kind !== "budget";
@@ -439,7 +453,8 @@ function HerdingScene({ scene }: { scene: Scene }) {
     : scene.targetNormalize > 0.5 && scene.clip.kind !== "target-contribute"
       ? TARGET_POINT
       : null;
-  if (scene.targetContribute < 0.02 && scene.clip.kind !== "target-contribute" && !isTargetNormalization) labels.push({ ...TARGET_RAW_POINT, id: "target-raw", text: "μ̄_full" });
+  const isPrefixSummary = scene.clip.kind === "review" || scene.clip.kind === "budget";
+  if (scene.targetContribute < 0.02 && scene.clip.kind !== "target-contribute" && !isTargetNormalization && !isPrefixSummary) labels.push({ ...TARGET_RAW_POINT, id: "target-raw", text: "μ̄_full" });
   for (const point of HERDING_DEMO_POINTS) {
     const at = toChartPoint(point.feature);
     obstacles.push(at);
@@ -456,11 +471,10 @@ function HerdingScene({ scene }: { scene: Scene }) {
     if (!isTargetNormalization) labels.push({ ...scene.normalizedPoint, id: "unit-mean", text: round ? `ν${round.k}(x)` : "μ_full", opacity: scene.normalizedOpacity });
   }
   if (scene.reviewIndex !== null) {
-    for (const item of ROUNDS.slice(0, 4)) {
-      const point = toChartPoint(item.normalizedPrefixMean);
-      obstacles.push(point);
-      labels.push({ ...point, id: `prefix-${item.k}`, text: `ν${item.k}` });
-    }
+    const activePoint = toChartPoint(ROUNDS[scene.reviewIndex - 1].normalizedPrefixMean);
+    obstacles.push(activePoint);
+    const labelOpacity = scene.fromPrefixIndex === scene.targetPrefixIndex ? 1 : 0.22 + 0.78 * scene.markerProgress;
+    labels.push({ ...activePoint, id: "active-prefix", text: `ν${scene.reviewIndex}`, opacity: labelOpacity });
   }
 
   return (
@@ -555,20 +569,25 @@ function HerdingScene({ scene }: { scene: Scene }) {
       {HERDING_DEMO_POINTS.map((point) => {
         const at = toChartPoint(point.feature);
         const isSelected = selectedIds.has(point.id);
+        const isBudgetTail = scene.clip.kind === "budget" && point.id === HERDING_DEMO_ORDER[3].id;
         const isCandidate = point.id === candidate?.point.id && scene.clip.kind !== "scan";
         const isScanned = scene.scannedIds.has(point.id);
         const classes = ["p4-scene__point", isSelected ? "is-selected" : "", isCandidate ? "is-candidate" : "", isScanned ? "is-scanned" : ""].filter(Boolean).join(" ");
         return (
           <g key={point.id} className={classes}>
             <title>{`${point.id}${isSelected ? ` · 有序样本 p${selectedOrdered.findIndex((item) => item.id === point.id) + 1}` : " · 未选候选"}`}</title>
-            {isSelected ? <circle className="p4-scene__selected-ring" cx={at.x} cy={at.y} r="12" /> : null}
+            {isSelected ? <circle className="p4-scene__selected-ring" cx={at.x} cy={at.y} r="12" opacity={isBudgetTail ? scene.budget?.tailOpacity ?? 1 : 1} /> : null}
             {isCandidate ? <circle className="p4-scene__candidate-ring" cx={at.x} cy={at.y} r="16" opacity={scene.candidateHighlightOpacity} /> : null}
             <circle
               className="p4-scene__dot"
               cx={at.x}
               cy={at.y}
               r={isCandidate ? 7 : isSelected ? 6.4 : 5.2}
-              style={isCandidate ? { fill: blendHex("#91a19b", "#c2703f", scene.candidateHighlightOpacity) } : undefined}
+              style={isCandidate
+                ? { fill: blendHex("#91a19b", "#c2703f", scene.candidateHighlightOpacity) }
+                : isBudgetTail
+                  ? { fill: blendHex("#91a19b", "#35775f", scene.budget?.tailOpacity ?? 1) }
+                  : undefined}
             />
           </g>
         );
@@ -585,15 +604,26 @@ function HerdingScene({ scene }: { scene: Scene }) {
 
       {/* Ordered prefix nodes while reviewing. */}
       {scene.reviewIndex !== null
-        ? ROUNDS.slice(0, 4).map((item) => {
-            const data = roundOf(item.k);
-            const point = toChartPoint(data.normalizedPrefixMean);
+        ? ROUNDS.slice(0, scene.clip.kind === "budget" ? 4 : scene.visiblePrefixCount).map((item) => {
+            const point = toChartPoint(item.normalizedPrefixMean);
             const active = item.k === scene.reviewIndex;
+            const transitioningFrom = scene.fromPrefixIndex === item.k && scene.targetPrefixIndex !== item.k;
+            const transitioningTo = scene.targetPrefixIndex === item.k && scene.fromPrefixIndex !== item.k;
+            const opacity = transitioningFrom
+              ? 1 - scene.markerProgress
+              : transitioningTo
+                ? 0.22 + 0.78 * scene.markerProgress
+                : active
+                  ? 1
+                  : scene.clip.kind === "budget" && item.k === 4
+                    ? 0.18
+                    : 0.24;
+            const retired = scene.clip.kind === "budget" && item.k === 4 && scene.budget?.tailState === "removed";
             return (
-              <g key={`prefix-${item.k}`} className={`p4-scene__prefix-node${active ? " is-active" : ""}`}>
+              <g key={`prefix-${item.k}`} className={`p4-scene__prefix-node${active ? " is-active" : ""}${retired ? " is-retired" : ""}`} opacity={opacity}>
                 <circle cx={point.x} cy={point.y} r={active ? 9 : 5} />
-                <title>{`ν${item.k} = normalize(mean(z(p₁), …, z(p${item.k})))，由真实前缀计算`}</title>
-                <line x1={CENTER.x} y1={CENTER.y} x2={point.x} y2={point.y} opacity={active ? 0.6 : 0.2} />
+                <title>{`ν${item.k} = normalize(mean(z(p₁), …, z(p${item.k})))，由真实前缀计算${retired ? "；p₄ 已不属于当前保留列表" : ""}`}</title>
+                {active ? <line x1={CENTER.x} y1={CENTER.y} x2={point.x} y2={point.y} opacity={scene.lineOpacity} /> : null}
               </g>
             );
           })
@@ -664,18 +694,31 @@ function DistanceRuler({ scene }: { scene: Scene }) {
   );
 }
 
-function Slots({ count, tailRemoved }: { count: number; tailRemoved: boolean }) {
+function Slots({ count, budget }: { count: number; budget: BudgetState | null }) {
   return (
     <div className="p4-slots" aria-label={`当前保留 ${Math.round(count)} 个有序 exemplar`}>
       {Array.from({ length: HERDING_DEMO_QUOTA }, (_, index) => {
         const filled = index < count;
         const arriving = filled && index >= Math.floor(count);
-        return (
-          <span key={index} className={[filled ? "is-filled" : "", arriving ? "is-arriving" : "", index === 3 && tailRemoved ? "is-removed" : ""].filter(Boolean).join(" ")}>
-            <b>p<sub>{index + 1}</sub></b>
-            <small>{filled ? HERDING_DEMO_ORDER[index].id : "待选择"}</small>
-          </span>
-        );
+        const isBudgetTail = budget !== null && index === 3;
+        const isVacated = isBudgetTail && budget.tailState === "removed";
+        return <span
+          key={index}
+          className={[
+            filled ? "is-filled" : "",
+            arriving ? "is-arriving" : "",
+            isBudgetTail && budget.tailState === "pending" ? "is-tail-highlight" : "",
+            isBudgetTail && budget.tailState === "removing" ? "is-tail-removing" : "",
+            isVacated ? "is-vacated" : "",
+          ].filter(Boolean).join(" ")}
+        >
+          {isBudgetTail
+            ? <>
+                <span className="p4-slot-tail" style={{ "--tail-opacity": budget.tailOpacity, "--tail-displacement": `${budget.tailDisplacement}px` } as CSSProperties}><b>p₄</b><small>{HERDING_DEMO_ORDER[index].id}</small></span>
+                {isVacated ? <small className="p4-slot-empty">空槽</small> : null}
+              </>
+            : <><b>p<sub>{index + 1}</sub></b><small>{filled ? HERDING_DEMO_ORDER[index].id : "待选择"}</small></>}
+        </span>;
       })}
     </div>
   );
@@ -691,6 +734,12 @@ function CurrentFormula({ scene }: { scene: Scene }) {
     return <span>μ<sub>full</sub> = normalize(μ̄<sub>full</sub>)</span>;
   }
   if (!round) {
+    if (scene.clip.kind === "review") {
+      return <span>ν<sub>{scene.reviewIndex}</sub> = normalize((1/{scene.reviewIndex}) Σ<sub>i=1…{scene.reviewIndex}</sub> z(p<sub>i</sub>))</span>;
+    }
+    if (scene.clip.kind === "budget") {
+      return <span>保留前缀 ν<sub>{scene.reviewIndex}</sub> · P′ = [p₁, …, p<sub>{scene.visiblePrefixCount}</sub>]</span>;
+    }
     return <span>ν<sub>k</sub> = normalize((1/k) Σ<sub>i=1…k</sub> z(p<sub>i</sub>))</span>;
   }
   const k = round.k;
@@ -728,10 +777,10 @@ function CurrentFormula({ scene }: { scene: Scene }) {
 export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   const reducedMotion = useReducedMotion();
   const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
-  const [reviewIndex, setReviewIndex] = useState(4);
+  const [manualReviewIndex, setManualReviewIndex] = useState<number | null>(null);
   const workbenchRef = useRef<HTMLElement | null>(null);
   const clip = clips[state.clipIndex];
-  const scene = useMemo(() => sceneAt(clip, state.progress, reviewIndex), [clip, state.progress, reviewIndex]);
+  const scene = useMemo(() => sceneAt(clip, state.progress, manualReviewIndex), [clip, state.progress, manualReviewIndex]);
   const round = clip.round >= 1 && clip.round <= 4 ? roundOf(clip.round) : null;
   const candidate = candidateOf(clip);
   const activePhaseIndex = Math.max(0, phaseRanges.findIndex((phase) => state.clipIndex >= phase.startIndex && state.clipIndex <= phase.endIndex));
@@ -740,11 +789,6 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   const completedPhaseMs = clips.slice(activePhase.startIndex, state.clipIndex)
     .reduce((total, item) => total + item.durationMs + (item.holdMs ?? 0), 0);
   const phaseProgress = clamp((completedPhaseMs + state.elapsedMs) / activePhase.durationMs);
-
-  // Entering the review phase defaults to the full ordered list.
-  useEffect(() => {
-    if (clip.kind === "review") setReviewIndex((current) => (current < 1 ? 4 : current));
-  }, [clip.kind]);
 
   useEffect(() => {
     if (state.status === "playing" && state.clipIndex === activePhase.endIndex && state.isHolding) controls.pause();
@@ -758,7 +802,10 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
 
   function jumpToPhase(index: number, options?: { autoPlay?: boolean }) {
     const phase = phaseRanges[index];
-    if (phase) controls.goToClip(phase.startIndex, options);
+    if (phase) {
+      setManualReviewIndex(null);
+      controls.goToClip(phase.startIndex, options);
+    }
   }
 
   function startAnimation() {
@@ -774,6 +821,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
       }
       return;
     }
+    setManualReviewIndex(null);
     controls.play();
   }
 
@@ -800,6 +848,10 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         data-current-candidate-id={candidate?.point.id ?? ""}
         data-scored-candidate-ids={round?.candidates.filter((item) => scene.barProgress(item.point.id) > 0.98).map((item) => item.point.id).join(",") ?? ""}
         data-memory-slot-count={slotCount}
+        data-prefix-count={scene.visiblePrefixCount}
+        data-prefix-index={scene.reviewIndex ?? ""}
+        data-tail-state={scene.budget?.tailState ?? ""}
+        data-tail-opacity={scene.budget?.tailOpacity.toFixed(3) ?? ""}
         data-status={state.status}
         data-clip-ids={clips.map((item) => item.id).join(",")}
         ref={workbenchRef}
@@ -854,12 +906,12 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
             </div>
             <div className="p4-current-formula" aria-label="当前公式">{CurrentFormula({ scene })}</div>
             <div className="p4-memory-heading"><b>有序 Exemplars</b><span>{slotCount} / {HERDING_DEMO_QUOTA}</span></div>
-            <Slots count={scene.slotCount} tailRemoved={scene.tailRemoved} />
+            <Slots count={scene.slotCount} budget={scene.budget} />
             {clip.kind === "review" ? (
               <div className="p4-prefix-picker" role="group" aria-label="切换要回看的 Herding 前缀长度">
                 {ROUNDS.map((item) => (
-                  <button key={item.k} type="button" aria-pressed={reviewIndex === item.k} onClick={() => {
-                    setReviewIndex(item.k);
+                  <button key={item.k} type="button" aria-pressed={scene.reviewIndex === item.k} onClick={() => {
+                    setManualReviewIndex(item.k);
                     controls.goToClip(clipIndexById.get("review-prefix") ?? 0, { autoPlay: false });
                   }}>
                     前 {item.k} 项
@@ -871,7 +923,13 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
               <div className="p4-budget-change">
                 <span>总容量 K = 12</span>
                 <b>3 类 × 4 项 <i>→</i> 4 类 × 3 项</b>
-                <small>{scene.tailRemoved ? "只移除列表尾部的 p₄；p₁、p₂、p₃ 保持不变。" : "类别从三个变成四个，每类名额由四个缩到三个。"}</small>
+                <small>{scene.budget?.tailState === "removed"
+                  ? "p₄ 已离开尾槽；P′=[p₁,p₂,p₃]，ν₃ 是保留前缀的当前结果。"
+                  : scene.budget?.tailState === "removing"
+                    ? "p₄ 正从列表尾部退出；前三项身份、次序与坐标保持不变。"
+                    : scene.budget?.tailState === "pending"
+                      ? "高亮尾项 p₄：预算收紧只会移除有序列表末尾。"
+                      : "P4 独立教学示例：名额从 3 类各 4 项调整为 4 类各 3 项。"}</small>
               </div>
             ) : null}
             {clip.kind === "commit" && clip.round === 4 ? (

@@ -849,6 +849,110 @@
           ]
         },
         {
+          "id": "13a-prefix-review-00",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
+            { "type": "waitFor", "selector": "[data-prefix-count='1'][data-prefix-index='1']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "13b-prefix-review-25",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 225 },
+            { "type": "waitFor", "selector": "[data-prefix-count='2'][data-prefix-index='2']", "state": "visible" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+          ]
+        },
+        {
+          "id": "13c-prefix-review-50",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 450 },
+            { "type": "waitFor", "selector": "[data-prefix-count='3'][data-prefix-index='3']", "state": "visible" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+          ]
+        },
+        {
+          "id": "13d-prefix-review-75",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 675 },
+            { "type": "waitFor", "selector": "[data-prefix-count='4'][data-prefix-index='4']", "state": "visible" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+          ]
+        },
+        {
+          "id": "13e-prefix-review-100",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 1000 },
+            { "type": "waitFor", "selector": "[data-phase-complete='true'][data-prefix-count='4'][data-prefix-index='4']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "14a-budget-start-after-manual-review",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(6)" },
+            { "type": "click", "selector": ".p4-prefix-picker button:nth-child(2)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
+            { "type": "waitFor", "selector": "[data-memory-slot-count='4'][data-prefix-count='4'][data-tail-state='steady']", "state": "visible" }
+          ]
+        },
+        {
+          "id": "14b-budget-truncation-25",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 300 },
+            { "type": "waitFor", "selector": "[data-tail-state='pending'][data-tail-opacity='1.000']", "state": "visible" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+          ]
+        },
+        {
+          "id": "14c-budget-truncation-50",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 600 },
+            { "type": "waitFor", "selector": "[data-tail-state='removing']", "state": "visible" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+          ]
+        },
+        {
+          "id": "14d-budget-truncation-75",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 900 },
+            { "type": "waitFor", "selector": "[data-tail-state='removed'][data-memory-slot-count='3'][data-prefix-index='3']", "state": "visible" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" }
+          ]
+        },
+        {
+          "id": "14e-budget-truncation-100",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-phase-rail button:nth-child(7)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 1400 },
+            { "type": "waitFor", "selector": "[data-phase-complete='true'][data-tail-state='removed'][data-memory-slot-count='3']", "state": "visible" }
+          ]
+        },
+        {
           "id": "14-budget-truncation",
           "actions": [
             {

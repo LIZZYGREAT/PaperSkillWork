@@ -37,6 +37,7 @@ import {
   HERDING_DEMO_TARGET,
   HERDING_DEMO_TARGET_RAW,
 } from "../src/data/herding-teaching-demo.ts";
+import { budgetAt, reviewAt } from "../src/data/herding-phase-state.ts";
 import {
   HERDING_CHART,
   clockwiseOffsetFromTop,
@@ -261,6 +262,41 @@ const p4At = (id: string, pct = 0) => {
   assert.notEqual(index, undefined, `P4 timeline must include ${id}.`);
   return renderPageFourAt(index!, pct);
 };
+
+const reviewCheckpoints = [
+  { progress: 0, count: 1, active: 1 },
+  { progress: 0.25, count: 2, active: 2 },
+  { progress: 0.5, count: 3, active: 3 },
+  { progress: 0.75, count: 4, active: 4 },
+  { progress: 1, count: 4, active: 4 },
+] as const;
+for (const checkpoint of reviewCheckpoints) {
+  const state = reviewAt(checkpoint.progress);
+  assert.equal(state.visiblePrefixCount, checkpoint.count, `P4 review at ${checkpoint.progress} must show the correct ordered prefix length.`);
+  assert.equal(state.activePrefixIndex, checkpoint.active, `P4 review at ${checkpoint.progress} must focus a real computed prefix endpoint.`);
+  assert.deepEqual(state.currentPrefixPoint, HERDING_DEMO_ROUNDS[checkpoint.active - 1].normalizedPrefixMean,
+    "P4 review focus must use a computed Herding prefix mean, never a linearly interpolated model point.");
+}
+assert.equal(reviewAt(0.4, 2).visiblePrefixCount, 2, "Manual P4 review selection must pin exactly the chosen prefix.");
+assert.equal(reviewAt(0.4, 2).activePrefixIndex, 2, "Manual P4 review selection must keep its own selected endpoint.");
+
+const budgetCheckpoints = [
+  { progress: 0, count: 4, active: 4, tail: "steady", opacity: 1 },
+  { progress: 0.25, count: 4, active: 4, tail: "pending", opacity: 1 },
+  { progress: 0.5, count: 4, active: 3, tail: "removing" },
+  { progress: 0.75, count: 3, active: 3, tail: "removed", opacity: 0 },
+  { progress: 1, count: 3, active: 3, tail: "removed", opacity: 0 },
+] as const;
+for (const checkpoint of budgetCheckpoints) {
+  const state = budgetAt(checkpoint.progress);
+  assert.equal(state.visiblePrefixCount, checkpoint.count, `P4 budget at ${checkpoint.progress} must retain the correct prefix length independently of review selection.`);
+  assert.equal(state.activePrefixIndex, checkpoint.active, `P4 budget at ${checkpoint.progress} must focus the actual retained prefix.`);
+  assert.equal(state.tailState, checkpoint.tail, `P4 budget at ${checkpoint.progress} must expose the correct p₄ removal state.`);
+  if ("opacity" in checkpoint) assert.ok(near(state.tailOpacity, checkpoint.opacity), `P4 budget at ${checkpoint.progress} must have the expected tail opacity.`);
+}
+assert.ok(budgetAt(0.5).tailDisplacement > budgetAt(0.25).tailDisplacement, "P4 p₄ must move continuously while leaving the tail slot.");
+assert.equal(budgetAt(1).activePrefixIndex, 3, "The final P4 budget state must emphasize ν₃ for the retained three-item prefix.");
+
 const scanOrderFromStart = [...scanOrder.slice(scanOrder.findIndex((item) => item.id === "a8")), ...scanOrder.slice(0, scanOrder.findIndex((item) => item.id === "a8"))];
 
 for (const round of HERDING_DEMO_ROUNDS) {
