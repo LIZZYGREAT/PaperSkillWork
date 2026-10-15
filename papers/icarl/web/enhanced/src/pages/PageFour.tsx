@@ -35,14 +35,12 @@ const RADIUS = HERDING_CHART.radius;
 const toChartPoint = projectHerdingFeature;
 const TARGET_POINT = toChartPoint(HERDING_DEMO_TARGET);
 const TARGET_RAW_POINT = toChartPoint(HERDING_DEMO_TARGET_RAW);
-const TARGET_NORMALIZATION_DIRECTION = {
-  x: TARGET_POINT.x - TARGET_RAW_POINT.x,
-  y: TARGET_POINT.y - TARGET_RAW_POINT.y,
-};
-const TARGET_NORMALIZATION_LENGTH = Math.hypot(TARGET_NORMALIZATION_DIRECTION.x, TARGET_NORMALIZATION_DIRECTION.y) || 1;
-const TARGET_NORMALIZATION_LABEL_OFFSET = {
-  x: (TARGET_NORMALIZATION_DIRECTION.y / TARGET_NORMALIZATION_LENGTH) * 24,
-  y: (-TARGET_NORMALIZATION_DIRECTION.x / TARGET_NORMALIZATION_LENGTH) * 24,
+const TARGET_RADIAL_DIRECTION = { x: TARGET_POINT.x - CENTER.x, y: TARGET_POINT.y - CENTER.y };
+const TARGET_RADIAL_LENGTH = Math.hypot(TARGET_RADIAL_DIRECTION.x, TARGET_RADIAL_DIRECTION.y) || 1;
+const TARGET_LABEL_OUTSET = 34;
+const TARGET_LABEL_OFFSET = {
+  x: (TARGET_RADIAL_DIRECTION.x / TARGET_RADIAL_LENGTH) * TARGET_LABEL_OUTSET,
+  y: (TARGET_RADIAL_DIRECTION.y / TARGET_RADIAL_LENGTH) * TARGET_LABEL_OUTSET,
 };
 const SCAN_START_ID = "a8";
 const SCAN_START_POINT = HERDING_DEMO_POINTS.find((point) => point.id === SCAN_START_ID)!;
@@ -609,9 +607,9 @@ function HerdingScene({ scene }: { scene: Scene }) {
       {targetLabelPoint ? (
         <text
           className="p4-scene__fixed-mean-label"
-          x={targetLabelPoint.x + TARGET_NORMALIZATION_LABEL_OFFSET.x}
-          y={targetLabelPoint.y + TARGET_NORMALIZATION_LABEL_OFFSET.y}
-          textAnchor={TARGET_NORMALIZATION_LABEL_OFFSET.x < 0 ? "end" : "start"}
+          x={targetLabelPoint.x + TARGET_LABEL_OFFSET.x}
+          y={targetLabelPoint.y + TARGET_LABEL_OFFSET.y}
+          textAnchor="middle"
         >μ_full</text>
       ) : null}
       <text className="p4-scene__note" x="14" y="20">

@@ -237,6 +237,13 @@ const p4RoundTwoFirstId = p4RoundTwoOrdered[0].id;
 const p4RoundTwoNextId = p4RoundTwoOrdered[1].id;
 const p4Score = p4RoundTwoFirst.candidates.find((item) => item.point.id === p4RoundTwoFirstId)!.score;
 
+const p4TargetLabelMarkup = p4At("target-normalize", 1).match(/<text class="p4-scene__fixed-mean-label"[^>]*>/)?.[0];
+assert.ok(p4TargetLabelMarkup, "P4 must keep a visible label for the fixed full-class target.");
+const p4TargetLabelX = Number(attr(p4TargetLabelMarkup!, "x"));
+const p4TargetLabelY = Number(attr(p4TargetLabelMarkup!, "y"));
+assert.ok(near(Math.hypot(p4TargetLabelX - HERDING_CHART.center.x, p4TargetLabelY - HERDING_CHART.center.y), HERDING_CHART.radius + 34, 0.01),
+  "The μ_full label must sit radially outside the unit circle without moving its target marker.");
+
 function p4ScorePath(markup: string): { start: [number, number]; end: [number, number]; opacity: number } | null {
   const match = markup.match(/<path class="p4-scene__score-line" d="M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+)" opacity="([\d.]+)"/);
   if (!match) return null;
