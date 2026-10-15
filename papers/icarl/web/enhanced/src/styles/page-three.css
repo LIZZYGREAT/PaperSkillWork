@@ -67,7 +67,6 @@
 .p3-scene__point.is-selected .p3-scene__unit-point { stroke: #1f3c3e; stroke-width: 2.4; }
 .p3-scene__point:focus-visible .p3-scene__unit-point { stroke: #cc793f; stroke-width: 3; }
 .p3-scene__normalize-path { fill: none; stroke: #3d7a67; stroke-width: 2; stroke-dasharray: 6 4; }
-.p3-scene__normalize-path--query { stroke: #8a6448; }
 .p3-scene__raw-mean { fill: color-mix(in srgb, var(--p3-point-color) 10%, white); stroke: var(--p3-point-color); stroke-dasharray: 2 2; stroke-width: 2; }
 .p3-scene__prototype { fill: #fffefa; stroke: var(--p3-point-color); stroke-width: 2.8; }
 .p3-scene__label text { fill: #29484b; font: 650 17px Georgia, serif; paint-order: stroke; stroke: #fcfdfa; stroke-linejoin: round; stroke-width: 5px; }

@@ -257,7 +257,7 @@ function sceneAt(clipIndex: number, progress: number): SceneState {
    * Original-to-circle rays belong to the unitisation stage only. Keeping them afterwards would
    * collide with the aggregation rays, which also start at the origin.
    */
-  const unitizationRayOpacity = clipIndex === 0 ? 1 : 1 - clamp(progressWithin(p, 0.02, 0.16));
+  const unitizationRayOpacity = clipIndex === 0 ? 1 : 0;
 
   const contributionByClass = classIds.map((_, index) => {
     if (clipIndex !== 1) return null;
@@ -348,6 +348,7 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
   const queryMarkerPoint = lerpPoint(rawQueryPoint, unitQueryPoint, scene.queryUnitizeProgress);
   /** The dashed ray grows out of the origin to the query's raw position before the marker moves. */
   const queryRayReveal = scene.clipIndex < 2 ? 0 : scene.clipIndex > 2 ? 1 : smoothstep(progressWithin(scene.progress, 0.03, 0.24));
+  const queryRayEnd = lerpPoint(origin, queryMarkerPoint, queryRayReveal);
 
   return (
     <div className="p3-canvas">
@@ -539,8 +540,8 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
             className="p3-scene__query-ray"
             x1={origin.x}
             y1={origin.y}
-            x2={lerpPoint(origin, rawQueryPoint, queryRayReveal).x}
-            y2={lerpPoint(origin, rawQueryPoint, queryRayReveal).y}
+            x2={queryRayEnd.x}
+            y2={queryRayEnd.y}
           />
         ) : null}
         {scene.queryRawGhostOpacity > 0.02 ? (
@@ -550,12 +551,6 @@ function FeatureScene({ scene, selectedSampleId, onSelectSample }: {
             cy={rawQueryPoint.y}
             r="5"
             opacity={scene.queryRawGhostOpacity}
-          />
-        ) : null}
-        {scene.queryUnitizeProgress > 0.01 && scene.queryUnitizeProgress < 0.99 ? (
-          <path
-            className="p3-scene__normalize-path p3-scene__normalize-path--query"
-            d={lineRevealPath(rawQueryPoint, unitQueryPoint, scene.queryUnitizeProgress)}
           />
         ) : null}
       </g>
