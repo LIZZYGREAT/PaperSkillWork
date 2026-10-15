@@ -308,10 +308,10 @@ assert.match(p4Source, /function jumpToPhase\(index: number, options\?: \{ autoP
   "P4 replay and phase navigation must clear a manually pinned review before automatic playback.");
 
 const budgetCheckpoints = [
-  { progress: 0, count: 4, active: 4, tail: "steady", opacity: 1 },
-  { progress: 0.25, count: 4, active: 4, tail: "pending", opacity: 1 },
-  { progress: 0.5, count: 4, active: 3, tail: "removing" },
-  { progress: 0.75, count: 3, active: 3, tail: "removed", opacity: 0 },
+  { progress: 0, count: 4, active: 4, tail: "steady", opacity: 1, quota: 4 },
+  { progress: 0.25, count: 4, active: 4, tail: "pending", opacity: 1, quota: 4 },
+  { progress: 0.5, count: 4, active: 4, tail: "removing", quota: 4 },
+  { progress: 0.75, count: 4, active: 4, tail: "removing", quota: 4 },
   { progress: 1, count: 3, active: 3, tail: "removed", opacity: 0 },
 ] as const;
 for (const checkpoint of budgetCheckpoints) {
@@ -320,9 +320,31 @@ for (const checkpoint of budgetCheckpoints) {
   assert.equal(state.activePrefixIndex, checkpoint.active, `P4 budget at ${checkpoint.progress} must focus the actual retained prefix.`);
   assert.equal(state.tailState, checkpoint.tail, `P4 budget at ${checkpoint.progress} must expose the correct p₄ removal state.`);
   if ("opacity" in checkpoint) assert.ok(near(state.tailOpacity, checkpoint.opacity), `P4 budget at ${checkpoint.progress} must have the expected tail opacity.`);
+  if ("quota" in checkpoint) assert.equal(state.visiblePrefixCount, checkpoint.quota, "P4 must keep the old four-item quota active until p₄ has fully exited.");
+  if (state.tailState !== "removed") {
+    assert.equal(state.activePrefixIndex, 4, "P4 must keep the true ν₄ result active while p₄ remains in the list.");
+    assert.equal(state.pendingPrefixIndex, state.tailState === "steady" ? null : 3, "P4 must distinguish the pending ν₃ from the current ν₄.");
+  }
 }
 assert.ok(budgetAt(0.5).tailDisplacement > budgetAt(0.25).tailDisplacement, "P4 p₄ must move continuously while leaving the tail slot.");
 assert.equal(budgetAt(1).activePrefixIndex, 3, "The final P4 budget state must emphasize ν₃ for the retained three-item prefix.");
+assert.deepEqual(budgetAt(0.5).currentPrefixPoint, HERDING_DEMO_ROUNDS[3].normalizedPrefixMean, "P4 must retain the actual ν₄ coordinates until the tail removal completes.");
+assert.deepEqual(budgetAt(1).currentPrefixPoint, HERDING_DEMO_ROUNDS[2].normalizedPrefixMean, "P4 must activate the actual ν₃ coordinates after removal.");
+const p4BudgetInitial = p4At("budget-shrink", 0);
+const p4BudgetMidpoint = p4At("budget-shrink", 0.5);
+const p4BudgetNearEnd = p4At("budget-shrink", 0.75);
+const p4BudgetEnd = p4At("budget-shrink", 1);
+assert.ok(p4BudgetInitial.includes('data-clip-duration-ms="4600"'), "P4's budget cause-and-effect sequence must run for about 4–5 seconds.");
+assert.ok(p4BudgetInitial.includes("P = [p₁, p₂, p₃, p₄]") && p4BudgetInitial.includes("ν<sub>4</sub>"), "P4's budget phase must begin with the ordered four-item prefix and true ν₄.");
+assert.ok(p4BudgetMidpoint.includes("退出完成前，当前列表与结果仍是 P=[p₁,p₂,p₃,p₄]、ν₄"), "P4 must not announce ν₃ while the p₄ slot is still leaving.");
+assert.ok(p4BudgetNearEnd.includes('data-memory-slot-count="4"') && p4BudgetNearEnd.includes("当前 P = [p₁, p₂, p₃, p₄]"), "P4 at 75% must still show ν₄ and four slots until p₄ finishes exiting.");
+assert.ok(p4BudgetEnd.includes('data-memory-slot-count="3"') && p4BudgetEnd.includes('data-memory-slot-quota="3"'), "P4's final state must show 3 / 3 retained exemplars.");
+assert.ok(p4BudgetEnd.includes("P′ = [p₁, p₂, p₃]") && p4BudgetEnd.includes("ν<sub>3</sub>"), "P4's final formula must match the retained prefix and true ν₃.");
+assert.equal((p4BudgetEnd.match(/class="p4-scene__point/g) ?? []).length, 8, "Budget truncation must preserve all eight raw candidate points in the feature space.");
+const p4BudgetSlotTags = p4BudgetEnd.match(/<span(?=[^>]*data-prefix-slot-index="[1-4]")[^>]*>/g) ?? [];
+assert.deepEqual(p4BudgetSlotTags.filter((tag) => attr(tag, "data-prefix-retained") === "true").map((tag) => attr(tag, "data-prefix-sample-id")), ["a8", "a2", "a4"], "P4 must preserve exactly p₁=a8, p₂=a2, p₃=a4 without reordering.");
+assert.ok(p4BudgetInitial.includes('data-budget-state="steady"') && p4BudgetInitial.includes("3 类 × 4 项") && p4BudgetInitial.includes("4 类 × 3 项"), "P4 must identify this as an independent K=12 3-to-4 class budget example.");
+assert.ok(p4BudgetEnd.includes("P4 独立预算示例") === false, "P4's terminal state must explain the completed truncation instead of leaving only the initial example copy.");
 
 const scanOrderFromStart = [...scanOrder.slice(scanOrder.findIndex((item) => item.id === "a8")), ...scanOrder.slice(0, scanOrder.findIndex((item) => item.id === "a8"))];
 

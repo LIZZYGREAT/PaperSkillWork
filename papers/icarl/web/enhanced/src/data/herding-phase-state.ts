@@ -16,6 +16,9 @@ export type PrefixReviewState = {
 export type BudgetTailState = "steady" | "pending" | "removing" | "removed";
 
 export type BudgetState = PrefixReviewState & {
+  pendingPrefixIndex: number | null;
+  pendingPrefixProgress: number;
+  quotaChangeProgress: number;
   tailOpacity: number;
   tailDisplacement: number;
   tailState: BudgetTailState;
@@ -72,16 +75,20 @@ export function reviewAt(progress: number, manualReviewIndex: number | null = nu
 /** Shows p₄ leaving its slot while preserving all candidate and prefix coordinates. */
 export function budgetAt(progress: number): BudgetState {
   const p = clamp01(progress);
-  const tailMotion = ease((p - 0.42) / (0.75 - 0.42));
-  const markerProgress = tailMotion;
-  const tailState: BudgetTailState = p < 0.18 ? "steady" : p < 0.42 ? "pending" : p < 0.75 ? "removing" : "removed";
-  const prefix = p < 0.42
-    ? makePrefixState(4, 4, 1, 4)
-    : makePrefixState(4, 3, markerProgress, p < 0.75 ? 4 : 3);
+  const quotaChangeProgress = ease((p - 0.12) / 0.16);
+  const tailMotion = ease((p - 0.34) / (0.86 - 0.34));
+  const tailState: BudgetTailState = p < 0.16 ? "steady" : p < 0.34 ? "pending" : p < 0.86 ? "removing" : "removed";
+  const isRemoved = tailState === "removed";
+  const prefix = isRemoved
+    ? makePrefixState(4, 3, 1, 3)
+    : makePrefixState(4, 4, 1, 4);
   return {
     ...prefix,
+    pendingPrefixIndex: p >= 0.16 && !isRemoved ? 3 : null,
+    pendingPrefixProgress: p < 0.16 ? 0 : p < 0.34 ? ease((p - 0.16) / 0.18) : isRemoved ? 0 : 0.82,
+    quotaChangeProgress,
     tailOpacity: 1 - tailMotion,
-    tailDisplacement: 24 * tailMotion,
+    tailDisplacement: 30 * tailMotion,
     tailState,
   };
 }

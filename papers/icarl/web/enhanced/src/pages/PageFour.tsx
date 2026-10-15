@@ -205,7 +205,7 @@ function buildClips(): DemoClip[] {
   }
 
   push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 5600, durationMs: 5600, holdMs: 700, narrative: "逐项加入已选样本，并查看对应的真实前缀均值" });
-  push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 1200, durationMs: 1200, holdMs: 1600, narrative: "总预算不变、类别变多时，只保留有序列表的前缀" });
+  push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 4600, durationMs: 4600, holdMs: 800, narrative: "总预算保持 K = 12；类别增加后逐步标记并移出有序列表的尾项 p₄" });
   return clips;
 }
 
@@ -653,21 +653,25 @@ function HerdingScene({ scene }: { scene: Scene }) {
             const active = item.k === scene.reviewIndex;
             const transitioningFrom = scene.fromPrefixIndex === item.k && scene.targetPrefixIndex !== item.k;
             const transitioningTo = scene.targetPrefixIndex === item.k && scene.fromPrefixIndex !== item.k;
+            const pending = scene.clip.kind === "budget" && scene.budget?.pendingPrefixIndex === item.k;
             const opacity = transitioningFrom
               ? 0.36 - 0.12 * scene.markerProgress
               : transitioningTo
                 ? 0.3 + 0.7 * scene.markerProgress
                 : active
                   ? 1
+                  : pending
+                    ? 0.34 + 0.26 * (scene.budget?.pendingPrefixProgress ?? 0)
                   : scene.clip.kind === "budget" && item.k === 4
                     ? 0.18
                     : 0.24;
             const retired = scene.clip.kind === "budget" && item.k === 4 && scene.budget?.tailState === "removed";
             return (
-              <g key={`prefix-${item.k}`} className={`p4-scene__prefix-node${active ? " is-active" : ""}${retired ? " is-retired" : ""}`} opacity={opacity}>
+              <g key={`prefix-${item.k}`} className={`p4-scene__prefix-node${active ? " is-active" : ""}${pending ? " is-pending" : ""}${retired ? " is-retired" : ""}`} opacity={opacity}>
                 <circle cx={point.x} cy={point.y} r={active ? 9 : 5} />
-                <title>{`ν${item.k} = normalize(mean(z(p₁), …, z(p${item.k})))，由真实前缀计算${retired ? "；p₄ 已不属于当前保留列表" : ""}`}</title>
+                <title>{`ν${item.k} = normalize(mean(z(p₁), …, z(p${item.k})))，由真实前缀计算${retired ? "；p₄ 已不属于当前保留列表" : ""}${pending ? "；预算调整后待生效，p₄ 完全退出后才切换" : ""}`}</title>
                 {active ? <line x1={CENTER.x} y1={CENTER.y} x2={point.x} y2={point.y} opacity={scene.lineOpacity} /> : null}
+                {pending ? <line className="p4-scene__prefix-pending-ray" x1={CENTER.x} y1={CENTER.y} x2={point.x} y2={point.y} opacity={0.36 + 0.42 * (scene.budget?.pendingPrefixProgress ?? 0)} /> : null}
               </g>
             );
           })
@@ -751,6 +755,9 @@ function Slots({ count, budget, review }: { count: number; budget: BudgetState |
           && review.introducedPrefixIndex === index + 1;
         return <span
           key={index}
+          data-prefix-slot-index={index + 1}
+          data-prefix-sample-id={filled ? HERDING_DEMO_ORDER[index].id : ""}
+          data-prefix-retained={filled.toString()}
           className={[
             filled ? "is-filled" : "",
             arriving ? "is-arriving" : "",
@@ -787,7 +794,10 @@ function CurrentFormula({ scene }: { scene: Scene }) {
       return <span>ν<sub>{scene.reviewIndex}</sub> = normalize((1/{scene.reviewIndex}) Σ<sub>i=1…{scene.reviewIndex}</sub> z(p<sub>i</sub>))</span>;
     }
     if (scene.clip.kind === "budget") {
-      return <span>保留前缀 ν<sub>{scene.reviewIndex}</sub> · P′ = [p₁, …, p<sub>{scene.visiblePrefixCount}</sub>]</span>;
+      if (scene.budget?.tailState === "removed") {
+        return <span>当前前缀 ν<sub>3</sub> · P′ = [p₁, p₂, p₃]</span>;
+      }
+      return <span>当前 P = [p₁, p₂, p₃, p₄] · ν<sub>4</sub>；p₄ 完全退出后切换到 ν<sub>3</sub></span>;
     }
     return <span>ν<sub>k</sub> = normalize((1/k) Σ<sub>i=1…k</sub> z(p<sub>i</sub>))</span>;
   }
@@ -905,12 +915,14 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         data-current-candidate-id={candidate?.point.id ?? ""}
         data-scored-candidate-ids={round?.candidates.filter((item) => scene.barProgress(item.point.id) > 0.98).map((item) => item.point.id).join(",") ?? ""}
         data-memory-slot-count={slotCount}
+        data-memory-slot-quota={scene.budget?.tailState === "removed" ? scene.budget.visiblePrefixCount : HERDING_DEMO_QUOTA}
         data-prefix-count={scene.visiblePrefixCount}
         data-prefix-index={scene.reviewIndex ?? ""}
         data-prefix-entry-index={scene.review?.introducedPrefixIndex ?? ""}
         data-prefix-entry-progress={scene.review?.arrivalProgress.toFixed(3) ?? ""}
         data-tail-state={scene.budget?.tailState ?? ""}
         data-tail-opacity={scene.budget?.tailOpacity.toFixed(3) ?? ""}
+        data-quota-change-progress={scene.budget?.quotaChangeProgress.toFixed(3) ?? ""}
         data-status={state.status}
         data-clip-ids={clips.map((item) => item.id).join(",")}
         ref={workbenchRef}
@@ -964,7 +976,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
               {round ? <span className="p4-k-badge">k = {round.k}</span> : null}
             </div>
             <div className="p4-current-formula" aria-label="当前公式">{CurrentFormula({ scene })}</div>
-            <div className="p4-memory-heading"><b>有序 Exemplars</b><span>{slotCount} / {HERDING_DEMO_QUOTA}</span></div>
+            <div className="p4-memory-heading"><b>有序 Exemplars</b><span>{slotCount} / {scene.budget?.tailState === "removed" ? scene.budget.visiblePrefixCount : HERDING_DEMO_QUOTA}</span></div>
             <Slots count={scene.slotCount} budget={scene.budget} review={scene.review} />
             {clip.kind === "review" ? (
               <div className="p4-prefix-picker" role="group" aria-label="切换要回看的 Herding 前缀长度">
@@ -979,16 +991,20 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
               </div>
             ) : null}
             {clip.kind === "budget" ? (
-              <div className="p4-budget-change">
+              <div
+                className="p4-budget-change"
+                data-budget-state={scene.budget?.tailState ?? "steady"}
+                style={{ "--quota-change-fill": `${(scene.budget?.quotaChangeProgress ?? 0) * 100}%` } as CSSProperties}
+              >
                 <span>总容量 K = 12</span>
                 <b>3 类 × 4 项 <i>→</i> 4 类 × 3 项</b>
                 <small>{scene.budget?.tailState === "removed"
-                  ? "p₄ 已离开尾槽；P′=[p₁,p₂,p₃]，ν₃ 是保留前缀的当前结果。"
+                  ? "p₄ = a5 已离开尾槽；前三项顺序不变，P′=[p₁,p₂,p₃]，当前结果切换为真实前缀 ν₃。"
                   : scene.budget?.tailState === "removing"
-                    ? "p₄ 正从列表尾部退出；前三项身份、次序与坐标保持不变。"
+                    ? "仅尾项 p₄ = a5 正从列表退出；前三项保持不变。退出完成前，当前列表与结果仍是 P=[p₁,p₂,p₃,p₄]、ν₄。"
                     : scene.budget?.tailState === "pending"
-                      ? "高亮尾项 p₄：预算收紧只会移除有序列表末尾。"
-                      : "P4 独立教学示例：名额从 3 类各 4 项调整为 4 类各 3 项。"}</small>
+                      ? "K 保持 12；类别由 3 增至 4，每类配额从 4 降到 3。只标记尾项 p₄ = a5；当前仍为 ν₄。"
+                      : "P4 独立预算示例：当前有序列表 P=[p₁,p₂,p₃,p₄]，结果为 ν₄；名额由 3 类各 4 项调整为 4 类各 3 项。"}</small>
               </div>
             ) : null}
             {clip.kind === "commit" && clip.round === 4 ? (

@@ -62,7 +62,9 @@
 .p4-scene__prefix-node circle { fill: #fff; stroke: #4a816c; stroke-width: 1.6; }
 .p4-scene__prefix-node.is-active circle { fill: #4a816c; stroke: #fff; stroke-width: 2; }
 .p4-scene__prefix-node.is-retired circle { fill: #e9e7e0; stroke: #9a9488; }
+.p4-scene__prefix-node.is-pending circle { fill: #fff8ee; stroke: #bd7449; stroke-width: 2; stroke-dasharray: 2 2; }
 .p4-scene__prefix-node line { stroke: #4a816c; stroke-width: 1.2; }
+.p4-scene__prefix-node .p4-scene__prefix-pending-ray { stroke: #bd7449; stroke-width: 1.8; stroke-dasharray: 3 5; }
 .p4-scene__prefix-node text { fill: #35604f; font: 700 13px var(--mono); paint-order: stroke; stroke: #fbfcfa; stroke-width: 4px; }
 .p4-scene .feature-chart-labels text { fill: #355254; font: 650 18px var(--mono); paint-order: stroke; stroke: #fbfcfa; stroke-linejoin: round; stroke-width: 5px; }
 .p4-scene .feature-chart-labels__tick { stroke: #7e9389; stroke-width: 1.4; }
@@ -118,7 +120,9 @@
 .p4-prefix-picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 3px; border: 1px solid #dce5df; border-radius: 7px; background: #f3f7f3; }
 .p4-prefix-picker button { min-width: 0; padding: 6px 3px; border: 1px solid transparent; border-radius: 5px; color: #607471; background: transparent; font-size: 11px; cursor: pointer; }
 .p4-prefix-picker button[aria-pressed="true"] { border-color: #bad3c3; color: #315f4e; background: white; }
-.p4-budget-change { display: grid; gap: 4px; padding: 8px 10px; border: 1px solid #e2e8e3; border-radius: 7px; color: #647775; background: #fafbf8; font-size: 11px; }
+.p4-budget-change { display: grid; gap: 4px; padding: 8px 10px; border: 1px solid #e2e8e3; border-radius: 7px; color: #647775; background: linear-gradient(90deg, #fff4e8 0%, #fff4e8 var(--quota-change-fill, 0%), #fafbf8 var(--quota-change-fill, 0%), #fafbf8 100%); font-size: 11px; }
+.p4-budget-change[data-budget-state="pending"], .p4-budget-change[data-budget-state="removing"] { border-color: #d6b79c; }
+.p4-budget-change[data-budget-state="removed"] { border-color: #c8ddcf; background: #eef6ef; }
 .p4-budget-change b { color: #376452; font: 650 12px var(--mono); }
 .p4-budget-change i { padding-inline: 5px; color: #9b7252; font-style: normal; }
 .p4-budget-change small { color: #5c716d; font-size: 11px; line-height: 1.45; }
