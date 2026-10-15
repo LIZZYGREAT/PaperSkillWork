@@ -205,7 +205,7 @@ function buildClips(): DemoClip[] {
   }
 
   push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 8000, durationMs: 8000, holdMs: 700, narrative: "逐项加入已选样本，并查看对应的真实前缀均值" });
-  push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 4600, durationMs: 4600, holdMs: 800, narrative: "总预算保持 K = 12；类别增加后逐步标记并移出有序列表的尾项 p₄" });
+  push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 7000, durationMs: 7000, holdMs: 800, narrative: "总预算 K = 12 不变；类别增加后把容量边界移到前三项并移除尾项 p₄" });
   return clips;
 }
 
@@ -247,7 +247,7 @@ const phaseTitles: Record<ClipKind, string> = {
   norm: "把原始前缀均值单位化",
   commit: "本轮比较结束，胜出项进入记忆槽",
   review: "四轮选择完成。现在看选出的顺序有什么用。",
-  budget: "总容量不变时，只保留有序前缀",
+  budget: "总预算 K = 12 不变，类别增加后只保留原顺序的前三项",
 };
 
 /* ------------------------------------------------------------------ scene --- */
@@ -1023,7 +1023,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
     : scene.review?.handoffProgress
       ? "下一步预算只能留 3 项；现在仍保留完整四项，p₄ 尚未删除。"
       : reviewNarrative ?? clip.narrative;
-  const orderedMemoryMode = clip.kind === "review";
+  const orderedMemoryMode = clip.kind === "review" || clip.kind === "budget";
 
   useEffect(() => {
     if (state.status === "playing" && state.clipIndex === activePhase.endIndex && state.isHolding) controls.pause();

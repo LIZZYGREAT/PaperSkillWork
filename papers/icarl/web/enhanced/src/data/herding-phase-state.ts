@@ -91,20 +91,20 @@ export function reviewAt(progress: number, manualReviewIndex: number | null = nu
 /** Shows p₄ leaving its slot while preserving all candidate and prefix coordinates. */
 export function budgetAt(progress: number): BudgetState {
   const p = clamp01(progress);
-  const quotaChangeProgress = ease((p - 0.12) / 0.16);
-  const tailMotion = ease((p - 0.34) / (0.86 - 0.34));
-  const tailState: BudgetTailState = p < 0.16 ? "steady" : p < 0.34 ? "pending" : p < 0.86 ? "removing" : "removed";
+  const quotaChangeProgress = ease((p - 0.214) / (0.386 - 0.214));
+  const tailMotion = ease((p - 0.514) / (0.743 - 0.514));
+  const tailState: BudgetTailState = p < 0.214 ? "steady" : p < 0.514 ? "pending" : p < 0.743 ? "removing" : "removed";
   const isRemoved = tailState === "removed";
   const prefix = isRemoved
     ? makePrefixState(4, 3, 1, 3)
     : makePrefixState(4, 4, 1, 4);
   return {
     ...prefix,
-    pendingPrefixIndex: p >= 0.16 && !isRemoved ? 3 : null,
-    pendingPrefixProgress: p < 0.16 ? 0 : p < 0.34 ? ease((p - 0.16) / 0.18) : isRemoved ? 0 : 0.82,
+    pendingPrefixIndex: p >= 0.214 && !isRemoved ? 3 : null,
+    pendingPrefixProgress: p < 0.386 ? 0 : p < 0.514 ? ease((p - 0.386) / (0.514 - 0.386)) : isRemoved ? 0 : 1,
     quotaChangeProgress,
     tailOpacity: 1 - tailMotion,
-    tailDisplacement: 30 * tailMotion,
+    tailDisplacement: 118 * tailMotion,
     tailState,
   };
 }
