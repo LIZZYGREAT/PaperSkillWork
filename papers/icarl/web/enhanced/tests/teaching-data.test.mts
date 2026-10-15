@@ -54,6 +54,7 @@ import {
   teacherSnapshotFor,
 } from "../src/data/incremental-training.ts";
 import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
+import { RUNTIME_CHAPTERS, RUNTIME_CLIPS, RUNTIME_CHAPTER_FIRST_CLIP, RUNTIME_CLIP_INDEX, runtimeSceneAt } from "../src/pages/page-nine-scene.ts";
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B } from "../src/data/table1-results.ts";
 import { FIGURE2_FOCUS_RECTS, FIGURE2_SOURCE_FRAME, figure2Selection } from "../src/data/figure2-focus.ts";
 import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
@@ -846,6 +847,65 @@ assert.ok(figure2Evidence.includes("论文原始完整 Figure 2") && figure2Evid
 assert.ok(figure2Evidence.includes("data-focus={selection.focusId}") && figure2Evidence.includes("SourceFocusOverlay"), "P8 must keep the selected protocol linked to its source subfigure.");
 assert.ok(!figure2Evidence.includes("p8-figure2-zoom") && !figure2Evidence.includes('mode="crop"') && !figure2Evidence.includes("p8-source-figure-details"), "P8 must not render a separate Figure 2 crop or duplicated full-image layer.");
 
+/* ------------------------------------------------------------------ P9 scene contract --- */
+
+assert.deepEqual(RUNTIME_CHAPTERS.map(({ id }) => id), [
+  "inherited", "prepare-d", "snapshot-q", "train-update", "manage-memory", "rebuild-prototypes", "predict", "handoff",
+], "P9 must have eight reader-facing chapters.");
+assert.equal(RUNTIME_CLIPS.length, 17, "P9 may use detailed clips internally while keeping eight top-level chapters.");
+assert.ok(RUNTIME_CLIPS.every((clip) => clip.durationMs > 0 && clip.narrative.length > 0), "Every P9 clip needs a timed scene and a teaching sentence.");
+for (const chapter of RUNTIME_CHAPTERS) {
+  assert.ok(RUNTIME_CHAPTER_FIRST_CLIP[chapter.id] >= 0, `P9 chapter ${chapter.id} needs an addressable first clip.`);
+  assert.ok(RUNTIME_CLIPS.some((clip) => clip.chapterId === chapter.id), `P9 chapter ${chapter.id} must own at least one clip.`);
+}
+
+const p9InitialScene = runtimeSceneAt(0, 0);
+assert.equal(p9InitialScene.theta, "before");
+assert.equal(p9InitialScene.memory, "before");
+assert.equal(p9InitialScene.objectStatus.X_new, "pending");
+assert.equal(p9InitialScene.objectStatus.D, "pending");
+assert.equal(p9InitialScene.objectStatus.Q, "pending");
+assert.equal(p9InitialScene.dSampleCount, null, "D must not exist in the inherited starting state.");
+
+const oldMemoryIdsBeforeP9 = OLD_CLASS_IDS.flatMap((classId) => P_BEFORE[classId].map((sample) => sample.id));
+const dMergeCheckpoints = [0.25, 0.5, 0.75, 1].map((progress) => runtimeSceneAt(RUNTIME_CLIP_INDEX["merge-training-set"], progress));
+assert.deepEqual(dMergeCheckpoints.map((scene) => scene.dSampleCount), [8, 15, 23, 30], "P9 D count must advance with the continuous merge progress.");
+assert.deepEqual(dMergeCheckpoints.map((scene) => scene.oldCopiesInD), [3, 6, 9, 12], "P9 must copy old exemplar inputs into D in measurable intermediate states.");
+assert.deepEqual(dMergeCheckpoints.map((scene) => scene.incomingSamplesInD), [5, 9, 14, 18], "P9 must merge the real incoming batch as it arrives.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.5).objectStatus.D, "active");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["merge-training-set"], 1).objectStatus.X_new, "active");
+assert.deepEqual(OLD_CLASS_IDS.flatMap((classId) => P_BEFORE[classId].map((sample) => sample.id)), oldMemoryIdsBeforeP9,
+  "Copying the twelve old samples into D must leave the persistent P_before lists intact.");
+assert.equal(INCREMENTAL_STAGE_DATA.trainingSamples.length, 30);
+assert.equal(new Set(INCREMENTAL_STAGE_DATA.trainingSamples.map((sample) => sample.id)).size, 30,
+  "D must keep a unique sample identity for every old copy and incoming image.");
+
+const p9OldSampleScene = runtimeSceneAt(RUNTIME_CLIP_INDEX["snapshot-old-row"], 0.6);
+const p9NewSampleScene = runtimeSceneAt(RUNTIME_CLIP_INDEX["snapshot-new-row"], 0.6);
+const oldQSample = INCREMENTAL_STAGE_DATA.trainingSamples.find((sample) => sample.id === p9OldSampleScene.activeQSampleId)!;
+const newQSample = INCREMENTAL_STAGE_DATA.trainingSamples.find((sample) => sample.id === p9NewSampleScene.activeQSampleId)!;
+assert.equal(oldQSample.classId, "A", "The first illustrated Q write must use a real old exemplar.");
+assert.equal(newQSample.classId, "D", "The second illustrated Q write must use a real incoming sample.");
+assert.deepEqual(teacherSnapshotFor(oldQSample), INCREMENTAL_STAGE_DATA.snapshotBySampleId.get(oldQSample.id), "The old sample must write its own frozen teacher row.");
+assert.deepEqual(teacherSnapshotFor(newQSample), INCREMENTAL_STAGE_DATA.snapshotBySampleId.get(newQSample.id), "The new sample must also write its own frozen teacher row.");
+assert.equal(p9OldSampleScene.activeQCellProgress.length, 3);
+assert.equal(p9NewSampleScene.activeQCellProgress.length, 3);
+assert.ok(p9OldSampleScene.activeQCellProgress.some((progress) => progress > 0 && progress < 1), "A Q row must expose a visible per-cell intermediate write.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.25).qRowsWritten, 9,
+  "Batch Q filling must expose row-by-row progress rather than jump from 2 to 30.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1).qRowsWritten, 30);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0.5).objectStatus.Q, "active");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["update-theta"], 0.5).theta, "training");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["update-theta"], 1).theta, "after", "Θ_after is submitted only when the symbolic update clip completes.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["update-theta"], 1).objectStatus.Q, "released");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["truncate-old-prefix"], 0.5).oldMemoryRetained, 9);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["truncate-old-prefix"], 1).oldMemoryRetained, 6);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["herd-class-d"], 0.5).newExemplarsSelected, 1);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["herd-classes-e-f"], 1).newExemplarsSelected, 6);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["commit-p-after"], 1).committedMemoryCount, 12);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5).comparisonProgress, 0.5);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 1).objectStatus.prediction, "released");
+
 /* ---------------------------------------------------------------- report --- */
 
 console.log(
@@ -855,5 +915,6 @@ console.log(
     `  P4  8 candidates, order ${HERDING_DEMO_ORDER.map((point) => point.id).join(" -> ")}, round distances ${roundDistances.map((value) => value.toFixed(3)).join(", ")}`,
     `  P5  P_old 12 + X_new 18 = D 30, Q 30x3 fixed before the update`,
     `  P7  ${QUERY_DISTANCES.length} displayed distances match the fixed query and prototype endpoints; argmin -> ${CLASS_VISUALS[QUERY_PREDICTION].displayLabel}`,
+    `  P9  ${RUNTIME_CHAPTERS.length} chapters, ${RUNTIME_CLIPS.length} shared-clock clips; D=30, Q=30x3 and memory remains K=12`,
   ].join("\n"),
 );

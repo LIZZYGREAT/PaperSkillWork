@@ -72,7 +72,7 @@ implementation:
       page: "Page 9 · iCaRL Runtime"
       core_items: [L23]
       evidence_refs: [OI01, C09, C10, C13, C05]
-      primary_vehicle: "Fixed runtime workbench driven by one 19-step state trace and 13 semantic timeline phases, with persistent, temporary, and derived objects separated"
+      primary_vehicle: "Continuous runtime workbench with eight reader-facing chapters and one shared timeline clock; persistent state stays anchored while temporary objects move through the central workspace"
       reusable_pattern: FlowStepper
       reason: "A controlled six-class update integrates the established objects: Θ/P persist, D/Q are created and released, old memory is prefix-truncated, each incoming class is herded independently, and six derived prototypes feed nearest-mean prediction."
   assets:
@@ -252,3 +252,9 @@ Chromium 1440×900 与 1920×1080 共采集 46 个状态（P4-06/07 的 0/20/40/
 按最新 P9 重构方案先复核 P4-06/07 与 P7 Query，不改已完成的 P4/P7 实现。生产预览中的 Chromium 检查覆盖 1440×900、1920×1080 共 44 个状态，包括 P4 有序前缀 0–100%、预算尾项退出 20–100%，以及 P7 Query 入场和最近原型终态。报告位于 `.visual-qa/run-2026-10-15T17-56-15-786Z/report.md`；`GEOMETRY_QA=PASS`、`BROWSER_ERRORS=PASS`（0），无截图基线，`REGRESSION=NOT_RUN`；无计算样式断言，`STYLE_QA=NOT_RUN`。人工查看的 1440×900 代表帧包括 P4 两项前缀、尾项释放中及 3/3 终态，和 P7 Query 起始、入场中段、六类比较完成态；`VISUAL_REVIEW=PASS`（Agent 代表帧复核，非人工 W9 接受）。
 
 既有 DOM 量测脚本 `.visual-qa/measure-query-and-interactions.mjs` 检查 P7 Query 进度 0/5/10/15/20/30/60/100%：marker 从 x=612 连续移动到 x≈465.66 后静止，`viewBox` 固定为 `0 0 640 520`，文字始终固定 `dx=-14、dy=28、text-anchor=end`，与 Class 1/`μ₁` 文字框无交叠。1366×768 下 P4-06、P4-07、P7 Query 均无页面横向溢出；P4 重播、暂停/续播与 reduced-motion 完整静止状态可用，P7 reduced-motion 下播放按钮禁用。`npm.cmd test` 通过；沙箱内 Vite 首次构建因 Windows `realpath EPERM` 失败，允许本地构建访问后 `npm.cmd run build` 通过（81 modules）。W7/W9/W10 状态未修改，`HUMAN_ACCEPTANCE=PENDING`。
+
+### P9 全流程重构｜场景合同（2026-10-16）
+
+P9 将收敛为八章：继承状态、准备 D、冻结 Q、更新模型、管理记忆、重建原型、最近原型预测、交接下一轮。内部用 17 个页面专用 clips 展示可暂停中间态，但每个区域只读 `useAnimationTimeline` 的同一进度；`runtimeSceneAt(clip, progress)` 只派生演示可见性、对象生命周期和运动进度，不重新计算 Herding、Q、BCE、Prototype 或距离。
+
+对象合同：`Θ` 与 `P` 始终是固定持久锚点；`X_new` 在到达后保留至 P_after 提交；`D` 从旧 P 的副本与新类图片合并后存在，在参数更新结束时释放；`Q` 从两个可识别样本的旧教师写入演示开始，补满 30×3 后冻结，并在训练结束时释放；targets/loss 只在训练 clip 有效；新记忆提交后从 `P_after` 重编码并形成六个派生 Prototype；Query/预测只在推断链中存在并于交接时退出。单元测试核验八章、clip 导航、D 合并中间态、样本 ID 与 Q 行一致、Θ 提交边界、旧前缀截短及最终 12 项预算。
