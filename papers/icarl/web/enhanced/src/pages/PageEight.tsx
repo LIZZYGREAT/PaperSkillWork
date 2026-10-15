@@ -108,17 +108,8 @@ function Figure2Evidence({ benchmark, batch }: { benchmark: Benchmark; batch: nu
   const selection = figure2Selection(benchmark, batch);
   const { x, y, width, height } = selection.rect;
   return <div className="p8-figure-focus p8-figure-focus--selected" data-focus={selection.focusId} data-focus-x={x} data-focus-y={y} data-focus-width={width} data-focus-height={height}>
-    <svg className="p8-figure2-zoom" viewBox={`${x} ${y} ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Figure 2 原始图像局部：${selection.protocolLabel}`}>
-      <image href={figure2Src} x="0" y="0" width={figure2Frame.width} height={figure2Frame.height} preserveAspectRatio="none" />
-    </svg>
-    <p className="p8-figure2-caption"><b>{selection.protocolLabel}</b> · 同一原始 Figure 2 面板的放大裁切；坐标范围与下方完整原图中的高亮框同步。</p>
-    <details className="p8-source-figure-details">
-      <summary>查看完整 Figure 2 原图与当前裁切位置</summary>
-      <div className="p8-figure-focus p8-figure-focus--source">
-        <PaperFigure src={figure2Src} mode="crop" figureLabel="Figure 2" alt="论文原始 Figure 2：iCIFAR-100 与 iILSVRC 的类别增量实验准确率曲线。" caption={`原图报告各阶段对截至该时点所有已见类别的准确率；当前局部为 ${selection.protocolLabel}。`} source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 2, pp. 7–8." />
-        <SourceFocusOverlay frame={figure2Frame} rect={selection.rect} tone="overall" />
-      </div>
-    </details>
+    <PaperFigure src={figure2Src} mode="original" figureLabel="Figure 2" alt="论文原始完整 Figure 2：iCIFAR-100 与 iILSVRC 的类别增量实验准确率曲线、坐标轴与图例。" caption={`完整原图保留所有数据集、坐标轴与图例。当前选择：${selection.protocolLabel}。`} source="Rebuffi et al., iCaRL, CVPR 2017, Fig. 2, pp. 7–8." />
+    <SourceFocusOverlay frame={figure2Frame} rect={selection.rect} tone="overall" />
   </div>;
 }
 

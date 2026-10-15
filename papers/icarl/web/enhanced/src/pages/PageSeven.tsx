@@ -179,9 +179,11 @@ function MemoryManagement({ stage, progress }: { stage: number; progress: number
 
 function ModelState() {
   return <section className="p7-model-panel" aria-label="训练更新后保留的模型状态">
-    <div className="p7-model-panel__heading"><span className="eyebrow">CURRENT MODEL</span><span className="p7-model-badge">更新完成</span></div>
-    <div className="p7-model-symbol"><span>当前参数</span><b>Θ<sub>after</sub></b><strong>φ<sub>Θ after</sub></strong></div>
-    <p>共享特征提取器已更新；训练 head 仍保留在同一网络中。</p>
+    <div className="p7-model-panel__identity">
+      <div className="p7-model-panel__heading"><span className="eyebrow">CURRENT MODEL</span><span className="p7-model-badge">更新完成</span></div>
+      <div className="p7-model-symbol"><span>当前参数</span><b>Θ<sub>after</sub></b><strong>φ<sub>Θ after</sub></strong></div>
+      <small>共享特征提取器已更新；训练 head 仍保留。</small>
+    </div>
     <div className="p7-temporary-state"><span>本轮训练对象 · 退出预测焦点</span><div><b>D</b><b>Q</b><b>targets</b><b>loss</b></div><small>整理记忆与最终预测不再读取这些训练对象。</small></div>
     <div className="p7-persistent-state"><span>跨阶段保留</span><div><b>Θ</b><i>+</i><b>P</b></div><small>网络参数与原始 exemplar 图片共同持久。</small></div>
   </section>;
@@ -196,14 +198,17 @@ function PrototypeKey() {
 function FeatureStage({ stage, progress }: { stage: number; progress: number }) {
   if (stage < 3) {
     const guidance = stage === 0
-      ? "P_before 仍保存原始图片，但旧 prototype 建立在更新前的特征位置。先完成记忆调整，再用 Θ_after 建立当前原型。"
+      ? "旧 prototype 仍处在更新前的特征位置；先整理记忆，再用 Θ_after 重建当前原型。"
       : stage === 1
-        ? "这一段只改变旧列表成员：不重新训练网络，也不把记忆缩减误画成特征移动。"
-        : "新类 exemplar 从完整六张数据中选出。下一段再把图像送入当前 φ_Θ_after，分别观察表示更新与原型重建。";
+        ? "这一段只改变旧列表成员；成员还在调整时，不重建原型。"
+        : "新类 exemplar 正在加入 P_after；名单固定后，再用当前 φ_Θ_after 统一编码。";
     return <section className="p7-feature-panel p7-feature-panel--waiting" aria-label="后续特征空间步骤">
       <header className="p7-panel-heading"><div><span className="eyebrow">FEATURE SPACE</span><h3>当前步骤：整理 P</h3></div><span className="p7-feature-status">第 4 段重建</span></header>
-      <div className="p7-feature-placeholder"><span>当前特征提取器</span><b>φ<sub>Θ after</sub></b><i aria-hidden="true">↓</i><strong>{stage < 2 ? "等待 P_after 成员确定" : "P_after 已就绪，下一步重新编码"}</strong></div>
-      <p>{guidance}</p>
+      <div className="p7-feature-placeholder" data-readiness={stage < 2 ? "pending-memory" : "memory-ready"}>
+        <span>当前特征提取器</span><b>φ<sub>Θ after</sub></b>
+        <strong>{stage < 2 ? "P_after 尚未就绪" : "P_after 已就绪 · 原型待重建"}</strong>
+        <small>{guidance}</small>
+      </div>
     </section>;
   }
 
@@ -290,7 +295,9 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
       </header>
 
       <nav className="p7-stage-nav" aria-label="训练后记忆交接步骤">
-        <div className="p7-stage-nav__track" aria-hidden="true"><span style={{ width: `${((stage + 1) / steps.length) * 100}%` }} /></div>
+        <div className="p7-stage-nav__track" aria-hidden="true">
+          {steps.slice(0, -1).map((_, index) => <i key={index} className="p7-stage-nav__segment" style={{ gridColumn: `${index + 1}` }}><span style={{ width: `${clamp01(stage - index) * 100}%` }} /></i>)}
+        </div>
         {steps.map((item, index) => <button key={item.id} type="button" className={`p7-stage-nav__step${index === stage ? " is-current" : index < stage ? " is-complete" : ""}`} aria-current={index === stage ? "step" : undefined} onClick={() => goToStage(index)}>
           <span>{String(index + 1).padStart(2, "0")}</span><b>{item.short}</b>
         </button>)}

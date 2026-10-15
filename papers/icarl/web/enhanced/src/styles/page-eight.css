@@ -39,12 +39,6 @@
 .p8-figure-focus .rk-paper-figure__image-wrap { width: min(100%, 68.4vh); margin-inline: auto; }
 .p8-figure-focus .rk-paper-figure figcaption { color: #566c6e; font-size: 13px; line-height: 1.5; }
 .p8-figure-focus .rk-paper-figure figcaption small { color: #617778; font-size: 12px; }
-.p8-figure2-zoom { display: block; width: min(100%, 900px); height: auto; margin-inline: auto; border: 1px solid #dce5e0; border-radius: 8px; background: #fff; }
-.p8-figure2-caption { max-width: 900px; margin: 7px auto 0; color: #52696b; font-size: 13px; line-height: 1.5; }
-.p8-figure2-caption b { color: #365b4c; }
-.p8-source-figure-details { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e1e8e3; }
-.p8-source-figure-details > summary { width: fit-content; color: #3d5f53; font-size: 13px; font-weight: 650; cursor: pointer; }
-.p8-figure-focus--source { margin-top: 10px; }
 .p8-source-focus { position: absolute; z-index: 2; top: 0; left: 50%; display: block; width: min(100%, 68.4vh); height: auto; overflow: visible; transform: translateX(-50%); pointer-events: none; }
 .p8-source-focus--overall { color: #c96f38; }
 .p8-source-focus--prototype { color: #557f9b; }

@@ -9,6 +9,8 @@
  * Run with `npm test`.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -563,6 +565,17 @@ function renderPageSevenAt(progress: number, clip = 4): string {
   }
 }
 
+function p7ConnectionWidths(markup: string): string[] {
+  return [...markup.matchAll(/class="p7-stage-nav__segment"[^>]*><span style="width:([^\"]+)"/g)].map((match) => match[1]);
+}
+
+const p7FirstStageMarkup = renderPageSevenAt(0, 0);
+assert.deepEqual(p7ConnectionWidths(p7FirstStageMarkup), ["0%", "0%", "0%", "0%"], "P7's first selected node must leave all four connector segments unfilled.");
+assert.ok(p7FirstStageMarkup.includes('data-readiness="pending-memory"'), "P7 early phases must explain why a current prototype is not ready yet.");
+assert.ok(!p7FirstStageMarkup.includes("等待 P_after 成员确定"), "P7 early phases must not spend a large panel repeating a waiting placeholder.");
+assert.deepEqual(p7ConnectionWidths(renderPageSevenAt(0, 1)), ["100%", "0%", "0%", "0%"], "P7's second selected node must complete only the first connection segment.");
+assert.deepEqual(p7ConnectionWidths(renderPageSevenAt(0, 4)), ["100%", "100%", "100%", "100%"], "P7's fifth selected node must complete exactly four connector segments.");
+
 function distanceLines(markup: string): string[] {
   return markup.match(/<line\b[^>]*class="feature-space__distance[^"]*"[^>]*>/g) ?? [];
 }
@@ -663,12 +676,18 @@ for (const batch of CLASSES_PER_BATCH) {
   const selection = figure2Selection("cifar", batch);
   assert.equal(selection.focusId, `cifar-${batch}`, `The iCIFAR-100 batch-${batch} selector must choose its matching Figure 2 panel.`);
   assert.equal(selection.protocolLabel, `iCIFAR-100 · 每批 ${batch} 类 · 多类准确率`, "The focused panel caption must match the selected iCIFAR-100 protocol.");
-  assert.equal(selection.rect, FIGURE2_FOCUS_RECTS[selection.focusId], "The zoom and source overlay must use the same selected subfigure bounds.");
+  assert.equal(selection.rect, FIGURE2_FOCUS_RECTS[selection.focusId], "The selected overlay must use the exact source-subfigure bounds.");
 }
 assert.equal(figure2Selection("small", 50).focusId, "ilsvrc-small");
 assert.equal(figure2Selection("small", 50).protocolLabel, "iILSVRC-small · 每批 10 类 · 验证集 Top-5");
 assert.equal(figure2Selection("full", 2).focusId, "ilsvrc-full");
 assert.equal(figure2Selection("full", 2).protocolLabel, "iILSVRC-full · 每批 100 类 · 验证集 Top-5");
+const p8Source = readFileSync(path.join(process.cwd(), "src/pages/PageEight.tsx"), "utf8");
+const figure2Evidence = p8Source.split("function Figure2Evidence(")[1]?.split("function Figure3Details(")[0] ?? "";
+assert.ok(figure2Evidence.includes('mode="original" figureLabel="Figure 2"'), "P8 must render the complete Figure 2 through the original-image component.");
+assert.ok(figure2Evidence.includes("论文原始完整 Figure 2") && figure2Evidence.includes("坐标轴与图例"), "P8 Figure 2 must identify the complete source figure with its axes and legend.");
+assert.ok(figure2Evidence.includes("data-focus={selection.focusId}") && figure2Evidence.includes("SourceFocusOverlay"), "P8 must keep the selected protocol linked to its source subfigure.");
+assert.ok(!figure2Evidence.includes("p8-figure2-zoom") && !figure2Evidence.includes('mode="crop"') && !figure2Evidence.includes("p8-source-figure-details"), "P8 must not render a separate Figure 2 crop or duplicated full-image layer.");
 
 /* ---------------------------------------------------------------- report --- */
 
