@@ -158,8 +158,6 @@
 .p5-clip-rail button b { color: #a27356; font: 650 11px var(--mono); }
 .p5-clip-rail button.is-complete { border-color: #cbddd0; color: #4e6e5c; background: #f2f7f1; }
 .p5-clip-rail button.is-current { border-color: #7fa891; color: #284f42; background: #eaf4ee; box-shadow: inset 0 0 0 1px #d6e7dd; }
-.p5-handoff { margin-top: 13px; }
-.p5-handoff p { font-size: 14px; line-height: 1.55; }
 
 @media (max-width: 1180px) {
   .p5-flow-board {

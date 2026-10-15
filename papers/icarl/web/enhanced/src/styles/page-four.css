@@ -142,8 +142,6 @@
 .p4-score-table__head { color: #526d65 !important; background: #f1f6f1; font-weight: 650 !important; }
 .p4-pseudocode > div { display: grid; gap: 4px; padding-top: 9px; }
 .p4-pseudocode code { padding: 5px 8px; color: #526d65; background: #f5f8f4; font: 11px/1.5 var(--mono); }
-.p4-handoff { margin-top: 1px; }
-.p4-handoff p { max-width: 930px; font-size: 14px; line-height: 1.55; }
 .p4-title-break { display: none; }
 
 @media (max-width: 1180px) {
@@ -169,7 +167,6 @@
   .p4-workbench__controls > .icarl-button:last-child { grid-column: 2; grid-row: 2; }
   .p4-phase-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .p4-title-break { display: initial; }
-  .p4-handoff { align-items: flex-start; flex-direction: column; }
 }
 
 @media (prefers-reduced-motion: reduce) {

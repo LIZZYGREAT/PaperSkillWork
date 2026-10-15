@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
+import { QuestionHandoff } from "../components/QuestionHandoff";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import { ALL_CLASS_IDS, CLASS_VISUALS, INCOMING_CLASS_IDS, INCOMING_SAMPLES, OLD_CLASS_IDS, P_BEFORE, type ClassId, type Sample } from "../data/icarl-runtime";
 import { binaryCrossEntropy, buildTargets, classLabel, sixNodeBceLoss, studentOutputFor, teacherSnapshotFor, type SixOutputs } from "../data/incremental-training";
@@ -498,10 +499,20 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
       <footer className="p6-controls" aria-label="连续训练动画控制">
         <button type="button" className="icarl-button icarl-button--quiet" onClick={() => changePhase(phaseIndex - 1)} disabled={phaseIndex === 0}>上一步</button>
         <div><button type="button" className="icarl-button icarl-button--quiet" onClick={playPause} aria-label={status === "playing" ? "暂停当前动画" : "继续当前动画"}>{status === "playing" ? "Ⅱ 暂停" : "▶ 继续"}</button><button type="button" className="icarl-button icarl-button--quiet" onClick={replay}>↺ 重播本段</button><span>{reducedMotion ? "减少动态效果" : status === "complete" ? "本段完成" : `${Math.round(phaseProgress * 100)}%`}</span></div>
-        {phaseIndex < phases.length - 1
-          ? <button type="button" className="icarl-button icarl-button--primary" onClick={() => changePhase(phaseIndex + 1)}>下一段 <b aria-hidden="true">→</b></button>
-          : <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue} disabled={!onContinue}>进入第 7 页 · 训练与预测 <b aria-hidden="true">→</b></button>}
+        {phaseIndex < phases.length - 1 ? <button type="button" className="icarl-button icarl-button--primary" onClick={() => changePhase(phaseIndex + 1)}>下一段 <b aria-hidden="true">→</b></button> : null}
       </footer>
     </section>
+    {phaseIndex === phases.length - 1 ? <QuestionHandoff
+      fromPage={6}
+      toPage={7}
+      steps={[
+        { label: "已经知道", body: <>旧类响应与新类标签共同形成损失，给出<strong>更新方向</strong>。</> },
+        { label: "新的限制", body: <>参数更新后，图片特征可能改变；旧 Prototype 不能直接沿用。</> },
+        { label: "下一问", body: <>怎样整理原始图片记忆，用当前表示<strong>重建 Prototype 并预测</strong>？</> },
+      ]}
+      actionLabel="查看训练后的记忆与预测"
+      onContinue={onContinue}
+      note="本页讲解公式与参数更新路径，不执行真实优化；Θ_after 是后续教学状态。"
+    /> : null}
   </article>;
 }

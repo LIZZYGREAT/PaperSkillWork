@@ -57,6 +57,7 @@ import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B } from "../src/data/table1-results.ts";
 import { FIGURE2_FOCUS_RECTS, FIGURE2_SOURCE_FRAME, figure2Selection } from "../src/data/figure2-focus.ts";
 import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
+import { QuestionHandoff } from "../src/components/QuestionHandoff.tsx";
 import { PageThree } from "../src/pages/PageThree.tsx";
 import { PageFour } from "../src/pages/PageFour.tsx";
 import { PageFive } from "../src/pages/PageFive.tsx";
@@ -67,14 +68,14 @@ const OLD_CLASS_IDS = ["A", "B", "C"] as const;
 const near = (a: number, b: number, tolerance = 1e-9) => Math.abs(a - b) <= tolerance;
 const unit = (vector: Vector2) => Math.hypot(vector[0], vector[1]);
 
-function renderPageThreeAt(clip: number, pct = 0): string {
+function renderPageThreeAt(clip: number, pct = 0, onContinue?: () => void): string {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", {
     configurable: true,
     value: { __ICARL_FREEZE__: { clip, pct }, matchMedia: () => ({ matches: false }) },
   });
   try {
-    return renderToStaticMarkup(createElement(PageThree));
+    return renderToStaticMarkup(createElement(PageThree, { onContinue }));
   } finally {
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
     else Reflect.deleteProperty(globalThis, "window");
@@ -240,7 +241,7 @@ for (const round of HERDING_DEMO_ROUNDS) {
 // Greedy Herding does not promise a monotonically shrinking distance; the animation must not either.
 const roundDistances = HERDING_DEMO_ROUNDS.map((round) => round.score);
 
-function renderPageFourAt(clip: number, pct = 0): string {
+function renderPageFourAt(clip: number, pct = 0, onContinue?: () => void): string {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", {
     configurable: true,
@@ -250,7 +251,7 @@ function renderPageFourAt(clip: number, pct = 0): string {
     },
   });
   try {
-    return renderToStaticMarkup(createElement(PageFour));
+    return renderToStaticMarkup(createElement(PageFour, { onContinue }));
   } finally {
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
     else Reflect.deleteProperty(globalThis, "window");
@@ -278,6 +279,11 @@ for (const checkpoint of reviewCheckpoints) {
   assert.equal(state.activePrefixIndex, checkpoint.active, `P4 review at ${checkpoint.progress} must focus a real computed prefix endpoint.`);
   assert.deepEqual(state.currentPrefixPoint, HERDING_DEMO_ROUNDS[checkpoint.active - 1].normalizedPrefixMean,
     "P4 review focus must use a computed Herding prefix mean, never a linearly interpolated model point.");
+  const markup = p4At("review-prefix", checkpoint.progress);
+  const workbench = markup.match(/<section class="p4-workbench"[^>]*>/)?.[0];
+  assert.ok(workbench, "P4 review must render its teaching workbench.");
+  assert.equal(attr(workbench!, "data-memory-slot-count"), String(checkpoint.count), `P4 review markup at ${checkpoint.progress} must keep the visible prefix count synchronized.`);
+  assert.equal(attr(workbench!, "data-prefix-count"), String(checkpoint.count), `P4 review markup at ${checkpoint.progress} must expose the same prefix count to the figure and list.`);
 }
 assert.equal(reviewAt(0.4, 2).visiblePrefixCount, 2, "Manual P4 review selection must pin exactly the chosen prefix.");
 assert.equal(reviewAt(0.4, 2).activePrefixIndex, 2, "Manual P4 review selection must keep its own selected endpoint.");
@@ -459,8 +465,8 @@ assert.equal(completedBatch.activeSampleId, null, "A completed batch must not po
 const scheduledIds = [...demoIds, ...remainingSamples.map((sample) => sample.id)];
 assert.equal(new Set(scheduledIds).size, INCREMENTAL_STAGE_DATA.trainingSamples.length, "The two demos and remaining batches must cover D exactly once by stable ID.");
 
-function renderPageFiveAt(clipId: string, pct = 0): string {
-  const initial = renderToStaticMarkup(createElement(PageFive));
+function renderPageFiveAt(clipId: string, pct = 0, onContinue?: () => void): string {
+  const initial = renderToStaticMarkup(createElement(PageFive, { onContinue }));
   const clipIds = attr(initial.match(/<section class="p5-workbench"[^>]*>/)?.[0] ?? "", "data-clip-ids").split(",");
   const clipIndex = clipIds.indexOf(clipId);
   assert.notEqual(clipIndex, -1, `P5 timeline must include ${clipId}.`);
@@ -470,7 +476,7 @@ function renderPageFiveAt(clipId: string, pct = 0): string {
     value: { __ICARL_FREEZE__: { clip: clipIndex, pct }, matchMedia: () => ({ matches: false }) },
   });
   try {
-    return renderToStaticMarkup(createElement(PageFive));
+    return renderToStaticMarkup(createElement(PageFive, { onContinue }));
   } finally {
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
     else Reflect.deleteProperty(globalThis, "window");
@@ -548,7 +554,7 @@ assert.deepEqual(QUERY_DISTANCES.map((entry) => entry.classId), [...QUERY_DISTAN
   .sort((a, b) => a.distance - b.distance || a.classId.localeCompare(b.classId))
   .map((entry) => entry.classId), "The P7 comparison order must follow the real distances.");
 
-function renderPageSevenAt(progress: number, clip = 4): string {
+function renderPageSevenAt(progress: number, clip = 4, onContinue?: () => void): string {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", {
     configurable: true,
@@ -558,7 +564,7 @@ function renderPageSevenAt(progress: number, clip = 4): string {
     },
   });
   try {
-    return renderToStaticMarkup(createElement(PageSeven));
+    return renderToStaticMarkup(createElement(PageSeven, { onContinue }));
   } finally {
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
     else Reflect.deleteProperty(globalThis, "window");
@@ -575,6 +581,43 @@ assert.ok(p7FirstStageMarkup.includes('data-readiness="pending-memory"'), "P7 ea
 assert.ok(!p7FirstStageMarkup.includes("等待 P_after 成员确定"), "P7 early phases must not spend a large panel repeating a waiting placeholder.");
 assert.deepEqual(p7ConnectionWidths(renderPageSevenAt(0, 1)), ["100%", "0%", "0%", "0%"], "P7's second selected node must complete only the first connection segment.");
 assert.deepEqual(p7ConnectionWidths(renderPageSevenAt(0, 4)), ["100%", "100%", "100%", "100%"], "P7's fifth selected node must complete exactly four connector segments.");
+
+const handoffSteps = [
+  { label: "已经知道", body: "已知事实" },
+  { label: "新的限制", body: "当前限制" },
+  { label: "下一问", body: "下一步问题" },
+] as const;
+const handoffMarkup = renderToStaticMarkup(createElement(QuestionHandoff, {
+  fromPage: 3,
+  toPage: 4,
+  steps: handoffSteps,
+  actionLabel: "继续",
+  onContinue: () => undefined,
+  note: "次级说明",
+}));
+assert.deepEqual([...handoffMarkup.matchAll(/icarl-question-handoff__step--(known|constraint|question)/g)].map((match) => match[1]), ["known", "constraint", "question"], "The shared handoff must preserve the known → constraint → question order.");
+const handoffQuestionCard = handoffMarkup.match(/<article class="[^"]*icarl-question-handoff__step--question[^"]*">[\s\S]*?<\/article>/)?.[0];
+assert.ok(handoffQuestionCard?.includes("继续") && handoffQuestionCard.includes("button"), "The continue action must stay inside the third question card.");
+assert.ok(handoffMarkup.includes("次级说明"), "The shared handoff must support a compact secondary note.");
+
+const p3HandoffMarkup = renderPageThreeAt(0, 0, () => undefined);
+assert.ok(p3HandoffMarkup.includes("有序的少量代表"), "P3 must hand off from prototype prediction to ordered exemplar selection.");
+assert.ok(p3HandoffMarkup.includes("icarl-question-handoff__step--question"), "P3's next-page action must use the third handoff card.");
+const p4HandoffMarkup = renderPageFourAt(0, 0, () => undefined);
+assert.ok(p4HandoffMarkup.includes("P4 的 3 类→4 类预算图是简化示例"), "P4 must distinguish its budget teaching example from P5's concrete batch.");
+assert.ok(p4HandoffMarkup.includes("3 个旧类 + 3 个新类"), "P4 must identify P5's three-old plus three-new class setup.");
+const p5HandoffMarkup = renderPageFiveAt("p5-handoff", 0, () => undefined);
+assert.ok(p5HandoffMarkup.includes("D=30") && p5HandoffMarkup.includes("Q=30×3"), "P5's handoff must preserve the fixed D and Q facts.");
+assert.ok(p5HandoffMarkup.includes("来源不同"), "P5 must distinguish old soft responses from new hard labels.");
+const p7HandoffMarkup = renderPageSevenAt(0, 4, () => undefined);
+assert.ok(p7HandoffMarkup.includes("整体结果、组件对照"), "P7 must lead to the paper's evidence and limitations.");
+const p7QuestionCard = p7HandoffMarkup.match(/<article class="[^"]*icarl-question-handoff__step--question[^"]*">[\s\S]*?<\/article>/)?.[0];
+const p7PlaybackControls = p7HandoffMarkup.match(/<footer class="p7-playback-controls"[^>]*>[\s\S]*?<\/footer>/)?.[0] ?? "";
+assert.ok(p7QuestionCard?.includes("查看论文证据与边界") && p7QuestionCard.includes("button"), "P7's page action must appear inside the third question card.");
+assert.ok(!p7PlaybackControls.includes("查看论文证据与边界"), "P7 must keep its page action out of the playback controls.");
+const p6Source = readFileSync(path.join(process.cwd(), "src/pages/PageSix.tsx"), "utf8");
+assert.ok(p6Source.includes('className="p6-handoff" role="status"'), "P6's in-workbench phase feedback must remain distinct from the page-end transition.");
+assert.ok(p6Source.includes("phaseIndex === phases.length - 1 ? <QuestionHandoff"), "P6's page-end handoff must appear only at the final training phase.");
 
 function distanceLines(markup: string): string[] {
   return markup.match(/<line\b[^>]*class="feature-space__distance[^"]*"[^>]*>/g) ?? [];

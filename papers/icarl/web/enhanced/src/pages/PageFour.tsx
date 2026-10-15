@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { QuestionHandoff } from "../components/QuestionHandoff";
 import { ChartLabels, FEATURE_FRAME, featureStar, type ChartLabel } from "../components/FeatureChart";
 import {
   HERDING_DEMO_ORDER,
@@ -397,8 +398,8 @@ function sceneAt(clip: DemoClip, progress: number, manualReviewIndex: number | n
 
   let slotCount = 0;
   if (clip.kind === "commit") slotCount = clip.round - 1 + clamp(progressWithin(p, 0.25, 0.9));
-  else if (clip.round >= 2 && clip.round <= 5) slotCount = clip.round - 1;
   else if (prefixState) slotCount = prefixState.visiblePrefixCount;
+  else if (clip.round >= 2 && clip.round <= 5) slotCount = clip.round - 1;
   if (clip.kind === "target-contribute" || clip.kind === "target-normalize" || clip.kind === "target-normalize-fade") slotCount = 0;
 
   return {
@@ -1006,13 +1007,18 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
       </details>
 
-      <footer className="icarl-handoff p4-handoff">
-        <div>
-          <span className="eyebrow">NEXT · PAGE 05</span>
-          <p>现在，我们已经知道怎样从完整类别数据中选出少量代表图片，也知道了如何在预算变紧时保留已有列表的前缀。它们已经承担了一项任务：通过类别原型支持之后的预测。可新的类别还会继续到来，特征提取器也需要不断更新。那么，这些保存下来的 Exemplars，能不能在训练时继续发挥作用？</p>
-        </div>
-        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入第 5 页 · 让 Exemplars 参与更新 <b aria-hidden="true">→</b></button> : null}
-      </footer>
+      <QuestionHandoff
+        fromPage={4}
+        toPage={5}
+        steps={[
+          { label: "已经知道", body: <>Herding 得到有序列表；预算收紧时，旧类保留它的<strong>前缀</strong>。</> },
+          { label: "新的限制", body: <>新类别到来后，旧图还要参与训练，帮助模型保留<strong>旧知识</strong>。</> },
+          { label: "下一问", body: <>旧 Exemplars 怎样并入训练集合，并准备 <strong>D</strong> 与 <strong>Q</strong>？</> },
+        ]}
+        actionLabel="让 Exemplars 参与更新"
+        onContinue={onContinue}
+        note="P4 的 3 类→4 类预算图是简化示例；P5 展示另一批次：3 个旧类 + 3 个新类。"
+      />
     </article>
   );
 }

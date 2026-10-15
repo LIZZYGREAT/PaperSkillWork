@@ -27,9 +27,6 @@
 .icarl-button--quiet:not(:disabled):hover { border-color: #8da99c; background: #f5f8f5; }
 .icarl-button--primary { border-color: #315f55; color: white; background: #315f55; }
 .icarl-button--primary:not(:disabled):hover { border-color: #234e44; background: #234e44; }
-.icarl-handoff { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px; border: 1px solid #d7e1dc; border-radius: 12px; background: #edf3ef; }
-.icarl-handoff p { margin: 5px 0 0; color: #29494b; font-size: 16px; font-weight: 600; line-height: 1.55; }
-.icarl-handoff button { flex: 0 0 auto; }
 .icarl-concept-note { display: flex; align-items: flex-start; gap: 15px; padding: 17px 20px; border-left: 3px solid #43816f; border-radius: 0 10px 10px 0; background: #f4f7f3; }
 .icarl-concept-note__index { color: #8c6d4f; font: 650 19px var(--mono); }
 .icarl-concept-note p { margin: 3px 0 0; color: #385457; font-size: 15px; line-height: 1.65; }
@@ -40,6 +37,5 @@
   .icarl-guided__controls { align-items: flex-start; flex-direction: column; }
   .icarl-guided__controls > div { width: 100%; }
   .icarl-guided__controls .icarl-button { flex: 1; }
-  .icarl-handoff { align-items: flex-start; flex-direction: column; }
   .icarl-page__heading h1 { font-size: clamp(30px, 8.5vw, 42px); }
 }

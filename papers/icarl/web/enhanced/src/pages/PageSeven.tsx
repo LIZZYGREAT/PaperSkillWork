@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
+import { QuestionHandoff } from "../components/QuestionHandoff";
 import { useAnimationTimeline, type AnimationClip } from "../shared/animation/useAnimationTimeline";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import {
@@ -316,15 +317,23 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
           <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip} disabled={reducedMotion}>↺ 重播本段</button>
           <span>{reducedMotion ? "逐段导航显示完整状态" : state.isHolding ? "当前状态已展开" : `${Math.round(state.progress * 100)}%`}</span>
         </div>
-        {stage < steps.length - 1
-          ? <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward}>下一段 <b aria-hidden="true">→</b></button>
-          : <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue} disabled={!onContinue}>继续到第 8 页 · 论文证据 <b aria-hidden="true">→</b></button>}
+        {stage < steps.length - 1 ? <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward}>下一段 <b aria-hidden="true">→</b></button> : null}
       </footer>
     </section>
 
     {stage === steps.length - 1 ? <>
       <ResponsibilitySummary />
-      <section className="p7-handoff panel"><div><span className="eyebrow">机制与证据相连</span><h2>这些设计带来了什么效果？</h2><p>接下来按整体结果、组件对照、近似代价与实验边界，逐项检查原论文证据。</p></div></section>
+      <QuestionHandoff
+        fromPage={7}
+        toPage={8}
+        steps={[
+          { label: "已经知道", body: <>旧类前缀截断、新类 Herding、当前 Prototype 与最近距离预测已贯通。</> },
+          { label: "新的限制", body: <>机制设计合理，不等于它在实验中一定带来更好的结果。</> },
+          { label: "下一问", body: <>原论文的整体结果、组件对照与<strong>记忆代价</strong>提供了什么证据？</> },
+        ]}
+        actionLabel="查看论文证据与边界"
+        onContinue={onContinue}
+      />
     </> : null}
   </article>;
 }

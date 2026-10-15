@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { QuestionHandoff } from "../components/QuestionHandoff";
 import {
   ALL_CLASS_IDS,
   CLASS_VISUALS,
@@ -528,17 +529,17 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
       </section>
 
-      <footer className="p5-handoff icarl-handoff">
-        <div>
-          <span className="eyebrow">NEXT · PAGE 06</span>
-          <p>
-            现在我们已经准备好本轮训练图片 D，也保存了旧模型对这些图片的响应 Q。
-            可是真实类别标签和 Q 提供的信息并不一样：下一步，我们怎样把它们组合成六个输出节点的训练目标，
-            让新模型既学习新类别、又尽量保留旧知识？
-          </p>
-        </div>
-        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>进入第 6 页 · 构造 Target <b aria-hidden="true">→</b></button> : null}
-      </footer>
+      <QuestionHandoff
+        fromPage={5}
+        toPage={6}
+        steps={[
+          { label: "已经知道", body: <>训练集合 <strong>D=30</strong> 与更新前旧 Teacher 的 <strong>Q=30×3</strong> 已固定。</> },
+          { label: "新的限制", body: <>Q 是旧类软响应；新类目标来自真实标签，二者<strong>来源不同</strong>。</> },
+          { label: "下一问", body: <>如何为六个独立 Sigmoid 节点构造 Target 并计算 <strong>BCE</strong>？</> },
+        ]}
+        actionLabel="构造六节点 Target"
+        onContinue={onContinue}
+      />
     </article>
   );
 }

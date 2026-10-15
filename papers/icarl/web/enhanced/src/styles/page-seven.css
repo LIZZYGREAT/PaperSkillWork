@@ -117,10 +117,6 @@
 .p7-responsibility__grid > div > span { color: #5c7568; font: 700 11px var(--mono); }
 .p7-responsibility__grid > div > b { color: #405d55; font-size: 13px; line-height: 1.45; }
 .p7-responsibility > p { margin: 0; color: #5d7270; font-size: 12px; line-height: 1.45; }
-.p7-handoff { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 15px 17px; border: 1px solid #d9e3dd; border-radius: 11px; background: #fffefa; }
-.p7-handoff h2 { margin: 4px 0; color: #314d50; font-size: 19px; }
-.p7-handoff p { margin: 0; color: #53696b; font-size: 14px; line-height: 1.5; }
-.p7-handoff > button { flex: 0 0 auto; min-height: 44px; }
 
 @media (max-width: 1180px) {
   .p7-state-workbench { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); }
@@ -154,8 +150,6 @@
   .p7-playback-controls__center { order: -1; width: 100%; }
   .p7-playback-controls > .icarl-button--primary { margin-left: auto; }
   .p7-responsibility__grid { grid-template-columns: minmax(0, 1fr); }
-  .p7-handoff { align-items: flex-start; flex-direction: column; }
-  .p7-handoff > button { max-width: 100%; white-space: normal; }
 }
 
 @media (prefers-reduced-motion: reduce) {

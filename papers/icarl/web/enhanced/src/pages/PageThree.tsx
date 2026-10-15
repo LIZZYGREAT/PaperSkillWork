@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
+import { QuestionHandoff } from "../components/QuestionHandoff";
 import {
   CLASS_VISUALS,
   encode2D,
@@ -919,13 +920,17 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
       </section>
 
-      <footer className="icarl-handoff">
-        <div>
-          <span className="eyebrow">NEXT · PAGE 04</span>
-          <p>我们已经能用当前特征提取器和已选 Exemplars 完成预测，但刚才暂时假定它们已经存在。那么，我们该怎么找到最典型的代表，又怎样管理这些代表？</p>
-        </div>
-        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>筛选与管理代表样本 <b aria-hidden="true">→</b></button> : null}
-      </footer>
+      <QuestionHandoff
+        fromPage={3}
+        toPage={4}
+        steps={[
+          { label: "已经知道", body: <>已选 Exemplars 可以计算每类 Prototype，再用最近距离完成预测。</> },
+          { label: "回到限制", body: <>但选择过程仍是前提；旧类别的<strong>全部图像</strong>也不能一直保存。</> },
+          { label: "下一问", body: <>怎样从完整类别数据中筛出<strong>有序的少量代表</strong>？</> },
+        ]}
+        actionLabel="筛选与管理代表样本"
+        onContinue={onContinue}
+      />
     </article>
   );
 }
