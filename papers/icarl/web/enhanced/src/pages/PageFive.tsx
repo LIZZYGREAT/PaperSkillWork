@@ -323,7 +323,6 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
     };
   }, [clip, state.elapsedMs, selectedId, inspectedSampleId]);
 
-  const showReadout = clip.kind === "merge";
   const resolvedReadout = scene.mergeComplete >= 1;
   const phaseLabel = scene.inspecting ? "查阅样本 · 已暂停"
     : clip.kind === "lock" || clip.kind === "handoff" ? "Q 已固定"
@@ -377,8 +376,8 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
 
         <div className="p5-flow-board" ref={flowBoardRef}>
           <MergeFlight tokens={scene.tokens} active={clip.kind === "merge"} boardRef={flowBoardRef} />
-          <section className="p5-source-bank" aria-label="持久旧记忆与新类完整批次">
-            <div className="p5-bank-heading"><span className="eyebrow">输入来源</span><b>P + X<sub>new</sub></b></div>
+          <section className="p5-source-bank" aria-label="第一步：持久旧记忆与新类完整批次">
+            <div className="p5-bank-heading"><span className="eyebrow">① 输入来源</span><b>P + X<sub>new</sub></b></div>
             <div className="p5-source-section p5-source-section--old">
               <header>
                 <b>旧类 Exemplars P</b><strong>{OLD_COUNT} 张</strong>
@@ -398,56 +397,44 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
                 ))}
               </div>
             </div>
-            {showReadout ? (
-              <div className={`p5-merge-readout${resolvedReadout ? " is-resolved" : ""}`} aria-live="polite">
-                <span><b>{OLD_COUNT}</b> 张旧副本</span>
-                <i>+</i>
-                <span><b>{NEW_COUNT}</b> 张新图片</span>
-                <i>=</i>
-                <span><b>{scene.arrived}</b> / {TRAINING_SET_SIZE} 已到达 D</span>
-              </div>
-            ) : null}
+            <div className={`p5-merge-readout${resolvedReadout ? " is-resolved" : ""}`} aria-live="polite">
+              <span><b>{OLD_COUNT}</b> 张旧副本</span>
+              <i>+</i>
+              <span><b>{NEW_COUNT}</b> 张新图片</span>
+              <span className="p5-merge-readout__progress"><b>{scene.dArrivedCount} / {TRAINING_SET_SIZE}</b> 已进入 D</span>
+            </div>
           </section>
 
-          <section className="p5-object p5-object--dataset" aria-label="训练集 D">
-            <span className="eyebrow">本轮训练集</span>
+          <section className="p5-object p5-object--dataset" aria-label="第二步：合并为训练集 D">
+            <span className="eyebrow">② 合并训练集</span>
             <b className="p5-object-symbol">D</b>
             <div className="p5-d-bar" aria-label={`${scene.dArrivedCount} 个训练样本已合入 D`}><i style={{ width: `${(scene.dArrivedCount / TRAINING_SET_SIZE) * 100}%` }} /></div>
             <strong>{scene.dArrivedCount} / {TRAINING_SET_SIZE} 张已合入</strong>
-            <small>{clip.kind === "merge" && scene.dArrivedCount < TRAINING_SET_SIZE ? "旧记忆只送出读取副本；原槽位保持不动" : "D 已准备好；训练结束后释放，持久记忆不受影响"}</small>
+            <small>{clip.kind === "recall" ? "下一段将把旧副本与新图片合入 D；P 的原槽位保持不动" : clip.kind === "merge" && scene.dArrivedCount < TRAINING_SET_SIZE ? "旧记忆只送出读取副本；原槽位保持不动" : "D 已准备好；训练结束后释放，持久记忆不受影响"}</small>
           </section>
 
-          <section className="p5-model-stack" aria-label="生成 Q 的更新前旧模型与待更新 Student">
-            <div className={`p5-model-card p5-model-card--teacher${clip.kind === "lock" || clip.kind === "handoff" ? " is-frozen" : ""}`}>
-              <span className="eyebrow">{clip.kind === "lock" || clip.kind === "handoff" ? "更新前 Teacher · 已固定参考" : "更新前的旧模型 · Q 的来源"}</span>
-              <b>共享特征 + 三个旧节点</b>
-              <div className="p5-model-input" data-sample-id={scene.shown.id}>
-                <span className="p5-selected-glyph" style={accent(scene.shown.classId)}>{CLASS_VISUALS[scene.shown.classId].glyph}</span>
-                <span>
-                  <small>{scene.inspecting ? scene.shownWritten ? "查阅 · Q 行已记录" : "查阅预览 · Q 行尚未写入" : isOldClass(scene.shown.classId) ? "P 中旧 exemplar 的读取副本" : "X_new 中的新类图片"}</small>
-                  <strong>{scene.shown.id} · {CLASS_VISUALS[scene.shown.classId].displayLabel}</strong>
-                </span>
-              </div>
-              <Nodes classIds={OLD_CLASS_IDS} kind="old" responses={scene.teacherResponses} activeIndex={scene.teacherActive} />
-              <small className="p5-model-caption">三个响应会写入右侧 Q 中同一行；Teacher 的参数在这之后不再变化。</small>
+          <section className={`p5-model-card p5-model-card--teacher${clip.kind === "lock" || clip.kind === "handoff" ? " is-frozen" : ""}`} aria-label="第三步：更新前旧 Teacher 读取 D">
+            <span className="eyebrow">③ {clip.kind === "lock" || clip.kind === "handoff" ? "更新前 Teacher · 固定参考" : "更新前旧 Teacher · Q 的来源"}</span>
+            <b>共享特征 + 三个旧节点</b>
+            <div className="p5-model-input" data-sample-id={scene.shown.id}>
+              <span className="p5-selected-glyph" style={accent(scene.shown.classId)}>{CLASS_VISUALS[scene.shown.classId].glyph}</span>
+              <span>
+                <small>{scene.inspecting ? scene.shownWritten ? "查阅 · Q 行已记录" : "查阅预览 · Q 行尚未写入" : isOldClass(scene.shown.classId) ? "P 中旧 exemplar 的读取副本" : "X_new 中的新类图片"}</small>
+                <strong>{scene.shown.id} · {CLASS_VISUALS[scene.shown.classId].displayLabel}</strong>
+              </span>
             </div>
-            <div className="p5-model-card p5-model-card--student" aria-label="本轮待训练六节点 Student">
-              <span className="eyebrow">Q 固定后 · 等待更新的 Student</span>
-              <b>同一共享网络 · 六节点输出头</b>
-              <Nodes classIds={ALL_CLASS_IDS} kind="student" />
-              <small>g₄–g₆ 在 Q 记录之后加入；它们不参与 Q。此时还没有执行任何梯度更新。</small>
-            </div>
+            <Nodes classIds={OLD_CLASS_IDS} kind="old" responses={scene.teacherResponses} activeIndex={scene.teacherActive} />
+            <small className="p5-model-caption">Teacher 逐张读取 D；三个旧节点响应写入该图片对应的 Q 行。</small>
           </section>
-
-          <section className="p5-object p5-object--snapshot" aria-label="更新前旧节点响应快照 Q">
+          <section className="p5-object p5-object--snapshot" aria-label="第四步：逐张记录更新前旧节点响应快照 Q">
             <header>
-              <div><span className="eyebrow">更新前旧节点响应</span><b className="p5-object-symbol">Q</b></div>
+              <div><span className="eyebrow">④ 旧节点响应快照</span><b className="p5-object-symbol">Q</b></div>
               <span className={`p5-lock${clip.kind === "lock" || clip.kind === "handoff" ? " is-locked" : ""}`}>
                 {clip.kind === "lock" || clip.kind === "handoff" ? "已固定" : scene.inspecting ? scene.shownWritten ? "已记录 · 查阅中" : "未记录 · 查阅中" : clip.kind === "batch" || clip.kind === "sample-to-teacher" ? "记录中" : "等待记录"}
               </span>
             </header>
             <strong>{scene.writtenCount} × 3</strong>
-            <small>一行一张 D 样本 · 三列旧节点 g₁ g₂ g₃ · 共 {TRAINING_SET_SIZE} 行</small>
+            <small>一行对应 D 中一张图片；三列依次记录旧节点 g₁、g₂、g₃，共 {TRAINING_SET_SIZE} 行。</small>
             <div className="p5-q-preview" aria-label={`${scene.writtenCount} 行已记录，共 ${TRAINING_SET_SIZE} 行`}>
               {trainingSamples.map((sample) => (
                 <span
@@ -495,14 +482,21 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
               <p>记录 q<sub>i</sub><sup>y</sup> = g<sub>y</sub>(x<sub>i</sub>) 用的是固定教学用旧节点权重，不是论文 checkpoint 或实验观测值；每一行的三个数值都由同一张图片确定性产生。</p>
             </details>
           </section>
+
+          <section className="p5-model-card p5-model-card--student" aria-label="第五步：使用固定 Q 的六节点 Student">
+            <span className="eyebrow">⑤ Q 固定后 · 待训练 Student</span>
+            <b>同一共享网络 · 六节点输出头</b>
+            <Nodes classIds={ALL_CLASS_IDS} kind="student" />
+            <small className="p5-student-bridge">下一页构造六维目标：旧节点读取 Q，新节点读取真实标签；此处尚未更新参数。</small>
+          </section>
         </div>
 
-        <div className="p5-order-strip" aria-label="增量更新对象顺序">
-          <span className={clip.kind === "recall" ? "is-current" : "is-complete"}>P + X<sub>new</sub></span><i>→</i>
-          <span className={clip.kind === "merge" ? "is-current" : clip.kind === "recall" ? "" : "is-complete"}>D · {TRAINING_SET_SIZE}</span><i>→</i>
-          <span className={clip.kind === "sample-to-teacher" || clip.kind === "batch" ? "is-current" : clip.kind === "lock" || clip.kind === "handoff" ? "is-complete" : ""}>Q · {TRAINING_SET_SIZE}×3</span><i>→</i>
-          <span className={clip.kind === "handoff" ? "is-current" : ""}>Student · 6</span>
-          <small>每一行 q<sub>i</sub> 与图片身份一一对应；Q 不随 Student 参数改变。</small>
+        <div className="p5-order-strip" aria-label="增量更新流程：输入、训练集、旧模型响应、Student">
+          <span className={clip.kind === "recall" ? "is-current" : "is-complete"}>① P + X<sub>new</sub></span><i>→</i>
+          <span className={clip.kind === "merge" ? "is-current" : clip.kind === "recall" ? "" : "is-complete"}>② D · {TRAINING_SET_SIZE}</span><i>→</i>
+          <span className={clip.kind === "sample-to-teacher" || clip.kind === "batch" ? "is-current" : clip.kind === "lock" || clip.kind === "handoff" ? "is-complete" : ""}>③ 旧 Teacher → ④ Q · {TRAINING_SET_SIZE}×3</span><i>→</i>
+          <span className={clip.kind === "handoff" ? "is-current" : ""}>⑤ Student · 6</span>
+          <small>Q 每行对应一张图片；固定后的 Q 会作为旧节点的训练目标。</small>
         </div>
 
         <footer className="p5-controls" aria-label="P5 动画控制">
