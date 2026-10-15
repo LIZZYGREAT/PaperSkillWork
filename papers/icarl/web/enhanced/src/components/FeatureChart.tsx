@@ -3,7 +3,12 @@ import { placeLabel } from "../shared/animation/easing";
 
 export const FEATURE_FRAME = { width: 640, height: 520, x: 320, y: 260, radius: 160 };
 export type ChartPosition = { x: number; y: number };
-export type ChartLabel = ChartPosition & { id: string; text: string; opacity?: number };
+export type ChartLabel = ChartPosition & {
+  id: string;
+  text: string;
+  opacity?: number;
+  fixedOffset?: { dx: number; dy: number; anchor?: "start" | "middle" | "end" };
+};
 
 export function featureStar(x: number, y: number, outer = 9, inner = 4) {
   return Array.from({ length: 10 }, (_, index) => {
@@ -27,11 +32,18 @@ export function ChartLabels({ labels, obstacles = [], width = FEATURE_FRAME.widt
   const boxes: { left: number; top: number; right: number; bottom: number }[] = [];
   return <g className="feature-chart-labels">{labels.map(label => {
     const estimate = [...label.text].reduce((sum, char) => sum + (/[\u2e80-\u9fff\uff00-\uffef]/.test(char) ? 1 : 0.62), 0) * fontSize;
-    const options = [20, 34, 52, 78, 106].flatMap(offset => [[1, -1], [-1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
-      const placed = placeLabel({ x: label.x, y: label.y }, label.text, {
+    const placements = label.fixedOffset
+      ? [label.fixedOffset]
+      : [20, 34, 52, 78, 106].flatMap(offset => [[1, -1], [-1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => ({
         dx: sx * offset,
         dy: sy * offset,
-        anchor: sx < 0 ? "end" : "start",
+        anchor: sx < 0 ? "end" as const : "start" as const,
+      })));
+    const options = placements.map(({ dx, dy, anchor }) => {
+      const placed = placeLabel({ x: label.x, y: label.y }, label.text, {
+        dx,
+        dy,
+        anchor,
         fontSize,
         bounds: { width, height },
         pad: 10,
@@ -45,11 +57,11 @@ export function ChartLabels({ labels, obstacles = [], width = FEATURE_FRAME.widt
       };
       const overlaps = boxes.filter(b => box.left < b.right + 6 && box.right > b.left - 6 && box.top < b.bottom + 4 && box.bottom > b.top - 4).length;
       const marks = obstacles.filter(p => p.x + 10 > box.left && p.x - 10 < box.right && p.y + 10 > box.top && p.y - 10 < box.bottom).length;
-      return { ...placed, box, textWidth, score: overlaps * 10000 + marks * 1000 + offset };
-    }));
+      return { ...placed, box, textWidth, score: overlaps * 10000 + marks * 1000 + Math.abs(dx) + Math.abs(dy) };
+    });
     const best = options.sort((a, b) => a.score - b.score)[0];
     boxes.push(best.box);
-    return <g key={label.id} opacity={label.opacity ?? 1}>
+    return <g key={label.id} data-label-id={label.id} opacity={label.opacity ?? 1}>
       {/* A small tick instead of a leader line: a line from the mark to its label reads as a ray
           belonging to the algorithm, which is exactly what it must not be mistaken for. */}
       <line

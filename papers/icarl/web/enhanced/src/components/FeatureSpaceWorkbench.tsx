@@ -68,6 +68,7 @@ export function FeatureSpaceWorkbench({
   focusableSamples = true,
   asideContent,
   legacy = false,
+  queryLabelOffset,
   queryRevealProgress,
   comparisonProgress,
   completedComparisonOpacity = 0.28,
@@ -94,6 +95,8 @@ export function FeatureSpaceWorkbench({
   focusableSamples?: boolean;
   asideContent?: ReactNode;
   legacy?: boolean;
+  /** Keep a caller-selected query label offset stable while its mark moves into the chart. */
+  queryLabelOffset?: NonNullable<ChartLabel["fixedOffset"]>;
   /** Reveal a query from the chart edge to its fixed feature coordinate. */
   queryRevealProgress?: number;
   /** Draw prototype distances in the supplied prototype order. */
@@ -156,7 +159,7 @@ export function FeatureSpaceWorkbench({
 
   const obstacles = [...points.map(item => xy(item.point, unitCircle)), ...prototypeRows.map(item => item.point), ...[rawMeanXY, targetXY, prefixXY, visibleQueryXY].filter((p): p is { x: number; y: number } => p !== null)];
   const labels: ChartLabel[] = [];
-  if (visibleQueryXY) labels.push({ ...visibleQueryXY, id: "query", text: "query q" });
+  if (visibleQueryXY) labels.push({ ...visibleQueryXY, id: "query", text: "query q", fixedOffset: queryLabelOffset });
   prototypeRows.forEach(({ prototype, point }) => labels.push({ ...point, id: `mean-${prototype.classId}`, text: `μ${CLASS_VISUALS[prototype.classId].index} · exemplar 原型` }));
   if (rawMeanXY) labels.push({ ...rawMeanXY, id: "raw", text: "原始均值 μ̄y" });
   if (targetXY) labels.push({ ...targetXY, id: "target", text: "归一化类均值 μy" });

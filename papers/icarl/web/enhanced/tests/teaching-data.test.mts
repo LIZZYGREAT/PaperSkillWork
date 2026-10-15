@@ -706,6 +706,18 @@ function queryMarkerStartX(markup: string): number {
   return Number(marker[1]);
 }
 
+function queryMarkerPosition(markup: string): { x: number; y: number } {
+  const marker = markup.match(/class="feature-space__query"[^>]*><path d="M ([\d.-]+) ([\d.-]+)/);
+  assert.ok(marker, "P7 must render the persistent Query marker during the final stage.");
+  return { x: Number(marker[1]), y: Number(marker[2]) + 8 };
+}
+
+function chartLabelPosition(markup: string, id: string): { x: number; y: number; anchor: string } {
+  const label = markup.match(new RegExp(`<g[^>]*data-label-id="${id}"[^>]*>[\\s\\S]*?<text x="([\\d.-]+)" y="([\\d.-]+)" text-anchor="(start|middle|end)">`));
+  assert.ok(label, `P7 must render chart label ${id}.`);
+  return { x: Number(label[1]), y: Number(label[2]), anchor: label[3] };
+}
+
 function prototypeMarks(markup: string): string[] {
   return markup.match(/<g class="feature-space__prototype"[^>]*><rect[^>]*><\/g>/g) ?? [];
 }
@@ -718,6 +730,21 @@ assert.ok(!p7AtZero.includes("p7-query-result"), "P7 at 0% must not reveal the p
 const queryFinalX = 320 + QUERY_FEATURE[0] * 160;
 const queryEntryX = queryFinalX >= 320 ? 612 : 28;
 assert.ok(near(queryMarkerStartX(p7AtZero), queryEntryX), "P7 at 0% must show Query at the chart edge.");
+
+const queryMotionCheckpoints = [0, 0.05, 0.1, 0.15, 0.2, 0.3, 0.6, 1] as const;
+const initialQueryLabel = chartLabelPosition(p7AtZero, "query");
+const initialClassOneLabel = chartLabelPosition(p7AtZero, `mean-${ALL_CLASS_IDS[0]}`);
+assert.equal(initialQueryLabel.anchor, "end", "P7's moving Query label must keep the selected below-left anchor.");
+for (const progress of queryMotionCheckpoints) {
+  const markup = renderPageSevenAt(progress);
+  const marker = queryMarkerPosition(markup);
+  const label = chartLabelPosition(markup, "query");
+  const classOneLabel = chartLabelPosition(markup, `mean-${ALL_CLASS_IDS[0]}`);
+  assert.ok(near(marker.x - label.x, 14) && near(label.y - marker.y, 28), `P7 Query text must keep the same lower offset at ${progress * 100}% progress.`);
+  assert.equal(label.anchor, "end", `P7 Query text must not flip sides at ${progress * 100}% progress.`);
+  assert.ok(near(classOneLabel.x, initialClassOneLabel.x) && near(classOneLabel.y, initialClassOneLabel.y),
+    `The Class 1 exemplar label must stay put while Query enters at ${progress * 100}% progress.`);
+}
 
 const p7At25 = renderPageSevenAt(0.25);
 const p7LinesAt25 = distanceLines(p7At25);

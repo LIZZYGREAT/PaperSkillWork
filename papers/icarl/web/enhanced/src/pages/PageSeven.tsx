@@ -239,6 +239,7 @@ function FeatureStage({ stage, progress }: { stage: number; progress: number }) 
       motionProgress={stage === 3 ? easedMotion : undefined}
       prototypes={PROTOTYPES}
       query={showQuery ? QUERY_FEATURE : undefined}
+      queryLabelOffset={showQuery ? { dx: -14, dy: 28, anchor: "end" } : undefined}
       queryRevealProgress={queryRevealProgress}
       comparisonProgress={comparisonProgress}
       completedComparisonOpacity={0.68}
