@@ -199,6 +199,10 @@ export function useAnimationTimeline({
   }, []);
 
   const toggle = useCallback(() => {
+    if (reducedMotion) {
+      if (clipIndex < clips.length - 1) advanceClip(1);
+      return;
+    }
     generationRef.current += 1;
     runStartRef.current = null;
     setStatus((current) => {
@@ -209,7 +213,6 @@ export function useAnimationTimeline({
       }
       return "playing";
     });
-    if (reducedMotion && clipIndex < clips.length - 1) advanceClip(1);
   }, [advanceClip, clipIndex, clipTotal, clips.length, reducedMotion]);
 
   const replayClip = useCallback(() => {

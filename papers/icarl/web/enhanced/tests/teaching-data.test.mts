@@ -64,6 +64,7 @@ import { PageFour } from "../src/pages/PageFour.tsx";
 import { PageFive } from "../src/pages/PageFive.tsx";
 import { PageSix } from "../src/pages/PageSix.tsx";
 import { PageSeven } from "../src/pages/PageSeven.tsx";
+import { PageNine } from "../src/pages/PageNine.tsx";
 
 const OLD_CLASS_IDS = ["A", "B", "C"] as const;
 const near = (a: number, b: number, tolerance = 1e-9) => Math.abs(a - b) <= tolerance;
@@ -905,6 +906,67 @@ assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["herd-classes-e-f"], 1).newExempl
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["commit-p-after"], 1).committedMemoryCount, 12);
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5).comparisonProgress, 0.5);
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 1).objectStatus.prediction, "released");
+
+function renderPageNineAt(clip: number, pct = 0): string {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { __ICARL_FREEZE__: { clip, pct }, matchMedia: () => ({ matches: false }) },
+  });
+  try {
+    return renderToStaticMarkup(createElement(PageNine, { onExit: () => undefined }));
+  } finally {
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
+}
+
+const p9InheritedMarkup = renderPageNineAt(RUNTIME_CLIP_INDEX["inherit-state"]);
+assert.match(p9InheritedMarkup, /data-clip="inherit-state"/);
+assert.match(p9InheritedMarkup, /data-theta-state="before"/);
+assert.ok(p9InheritedMarkup.includes('data-memory-source-ids="' + oldMemoryIdsBeforeP9.join(" ") + '"'),
+  "The starting persistent panel must retain all twelve ordered P_before IDs.");
+assert.equal((p9InheritedMarkup.match(/class="p9-chapter[^\"]*"[^>]*disabled/g) ?? []).length, 5,
+  "Only the already implemented first three chapters must be enabled in this vertical slice.");
+
+const p9MergeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.25);
+const p9MergeMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.5);
+const p9MergeThreeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.75);
+for (const [markup, expectedCount] of [[p9MergeQuarter, "8"], [p9MergeMidpoint, "15"], [p9MergeThreeQuarter, "23"]] as const) {
+  assert.equal(attr(markup.match(/class="p9-merge-scene"[^>]*>/)?.[0] ?? "", "data-d-count"), expectedCount,
+    "The rendered D counter must use the current copy progress.");
+  assert.ok(markup.includes('data-token-copy="true"'), "Moving old samples must be identified as training copies.");
+  assert.ok(markup.includes('data-copy-sample-id="' + P_BEFORE.A[0].id + '"'), "The old sample ID must be preserved when copied into D.");
+  assert.ok(markup.includes('data-original-sample-id="' + P_BEFORE.A[0].id + '"'), "The source P_before identity must remain visible.");
+}
+const p9FlightPosition = (markup: string) => attr(markup.match(/class="p9-flight-token p9-flight-token--old"[^>]*style="([^"]+)"/)?.[0] ?? "", "style");
+assert.notEqual(p9FlightPosition(p9MergeQuarter), p9FlightPosition(p9MergeThreeQuarter), "The same clock must move copied samples through the merge scene.");
+
+for (const clipId of ["snapshot-old-row", "snapshot-new-row"] as const) {
+  const scene = runtimeSceneAt(RUNTIME_CLIP_INDEX[clipId], 0.6);
+  const sample = INCREMENTAL_STAGE_DATA.trainingSamples.find((entry) => entry.id === scene.activeQSampleId)!;
+  const markup = renderPageNineAt(RUNTIME_CLIP_INDEX[clipId], 0.6);
+  const row = markup.match(new RegExp(`<div class="p9-q-row[^>]*data-q-row="${sample.id}"[^>]*>[\\s\\S]*?<\\/div>`))?.[0] ?? "";
+  assert.ok(row, `${clipId} must render the in-progress row for the exact active sample ID.`);
+  assert.deepEqual([...row.matchAll(/data-q-value="([^"]+)"/g)].map((match) => match[1]),
+    teacherSnapshotFor(sample).map((value) => value.toFixed(6)), "Every displayed Q cell must use the matching frozen teacher row.");
+  assert.equal(attr(markup.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-active-sample-id"), sample.id);
+}
+
+const p9FillQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.25);
+const p9FillMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.5);
+const p9FillThreeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.75);
+assert.deepEqual([p9FillQuarter, p9FillMidpoint, p9FillThreeQuarter].map((markup) =>
+  attr(markup.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows")), ["9", "16", "23"],
+  "Rendered Q row progress must keep advancing at each paused intermediate checkpoint.");
+const p9QComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1);
+assert.equal(attr(p9QComplete.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows"), "30");
+assert.match(p9QComplete, /30 行完成 · Q 保持冻结/);
+assert.match(p9QComplete, /data-theta-state="before"/);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1).objectStatus.targets, "pending",
+  "Targets must remain pending until the target-building clip begins after Q is frozen.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0).objectStatus.targets, "active",
+  "The target-building clip must create targets at its own start.");
 
 /* ---------------------------------------------------------------- report --- */
 

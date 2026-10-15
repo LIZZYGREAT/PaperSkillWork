@@ -258,3 +258,11 @@ Chromium 1440×900 与 1920×1080 共采集 46 个状态（P4-06/07 的 0/20/40/
 P9 将收敛为八章：继承状态、准备 D、冻结 Q、更新模型、管理记忆、重建原型、最近原型预测、交接下一轮。内部用 17 个页面专用 clips 展示可暂停中间态，但每个区域只读 `useAnimationTimeline` 的同一进度；`runtimeSceneAt(clip, progress)` 只派生演示可见性、对象生命周期和运动进度，不重新计算 Herding、Q、BCE、Prototype 或距离。
 
 对象合同：`Θ` 与 `P` 始终是固定持久锚点；`X_new` 在到达后保留至 P_after 提交；`D` 从旧 P 的副本与新类图片合并后存在，在参数更新结束时释放；`Q` 从两个可识别样本的旧教师写入演示开始，补满 30×3 后冻结，并在训练结束时释放；targets/loss 只在训练 clip 有效；新记忆提交后从 `P_after` 重编码并形成六个派生 Prototype；Query/预测只在推断链中存在并于交接时退出。单元测试核验八章、clip 导航、D 合并中间态、样本 ID 与 Q 行一致、Θ 提交边界、旧前缀截短及最终 12 项预算。
+
+### P9 切片 1｜继承状态 → D → 冻结 Q（2026-10-16）
+
+完成前 3 章的可运行切片，后 5 章暂时禁用，等待后续竖切片接入。`PageNine` 只创建一个 `useAnimationTimeline`；继承的 `Θ_before` 与有序 `P_before` 固定在左侧，18 张真实运行时新类图片进入后，中央工作台将 12 张旧图的训练副本与 18 张新图合成 `D`。旧图副本保留原 sample ID，持久原件和顺序不移动。D 在 25/50/75/100% 对应显示 8/15/23/30 个样本。
+
+接着以旧类与新类真实样本分别演示旧教师响应写入自己的 Q 行，再按 sample ID 补齐 30×3 矩阵。表格的 Q 数值直接读取 `teacherSnapshotFor`；Θ 持续显示 `before`，`Q` 完成时冻结，训练 targets/loss 保持 pending，直到其章节开始。修正了 D 目标卡误占连接列的问题，并将移动样本标记放在 Q 行下方的空白通道，不遮挡当前正在写入的单元格。测试覆盖四个 D 中间点、旧/新样本行身份与真实 teacher row、Q 进度和冻结边界，以及 targets 的创建时点。
+
+验证：`npm.cmd test`、`npm.cmd run build` 通过（82 modules），`git diff --check` 通过。Chromium P9 截图在 1440×900 与 1920×1080 共 12 个状态通过，报告 `web/enhanced/.visual-qa/run-2026-10-15T18-45-32-930Z/report.md`：`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`（0）。另外冻结 12 个场景状态，在 1440×900、1920×1080、1366×768 共检查 36 帧；页面无横向溢出，Q 移动标记不覆盖活动 Q 行，D 卡宽度约 200–252 px。常规动效下播放/暂停、前进/后退和章节重播边界均通过；减少动态效果时，手动前进一步会停在恰好一个完整 clip。该检查发现共享 timeline 的 reduced-motion 控件会多前进一个 clip，已修复 `useAnimationTimeline` 并重新构建；P4/P7 定向测量回归通过，P4 完整阶段保持暂停态、P7 reduced-motion 播放控件禁用，Query 几何与无溢出结果不变。人工查看了继承状态、D 合并 50/75%、旧/新样本 Q 写入和 Q 批量补齐状态，`VISUAL_REVIEW=PASS`；报告 runner 的 `VISUAL_REVIEW=NOT_RUN` 保持原样。无已批准截图基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。W7/W9/W10 状态未修改。

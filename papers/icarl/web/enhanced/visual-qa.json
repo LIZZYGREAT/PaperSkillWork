@@ -2728,7 +2728,7 @@
       "path": "/",
       "states": [
         {
-          "id": "p9-initial-three-old-classes",
+          "id": "p9-inherited-state",
           "actions": [
             {
               "type": "click",
@@ -2736,13 +2736,13 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-current-step strong",
+              "selector": ".p9-inherited-scene",
               "state": "visible"
             }
           ]
         },
         {
-          "id": "p9-build-d30-q30x3",
+          "id": "p9-new-batch-arrives",
           "actions": [
             {
               "type": "click",
@@ -2750,17 +2750,17 @@
             },
             {
               "type": "click",
-              "selector": ".p9-timeline__stage:nth-child(4)"
+              "selector": ".p9-chapter:nth-child(2)"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-current-step strong",
+              "selector": ".p9-incoming-batch",
               "state": "visible"
             }
           ]
         },
         {
-          "id": "p9-truncate-old-memory",
+          "id": "p9-merge-old-copies-and-new-images",
           "actions": [
             {
               "type": "click",
@@ -2768,17 +2768,21 @@
             },
             {
               "type": "click",
-              "selector": ".p9-timeline__stage:nth-child(6)"
+              "selector": ".p9-chapter:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-workbench-controls > button:last-child"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-current-step strong",
+              "selector": ".p9-merge-scene",
               "state": "visible"
             }
           ]
         },
         {
-          "id": "p9-herding-class4-second",
+          "id": "p9-old-sample-writes-q",
           "actions": [
             {
               "type": "click",
@@ -2786,25 +2790,17 @@
             },
             {
               "type": "click",
-              "selector": ".p9-timeline__stage:nth-child(7)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-player-controls button[aria-label='下一步']"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-player-controls button[aria-label='下一步']"
+              "selector": ".p9-chapter:nth-child(3)"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-current-step strong",
+              "selector": ".p9-snapshot-scene[data-clip=\"snapshot-old-row\"]",
               "state": "visible"
             }
           ]
         },
         {
-          "id": "p9-herding-class5-second",
+          "id": "p9-new-sample-writes-q",
           "actions": [
             {
               "type": "click",
@@ -2812,25 +2808,21 @@
             },
             {
               "type": "click",
-              "selector": ".p9-timeline__stage:nth-child(8)"
+              "selector": ".p9-chapter:nth-child(3)"
             },
             {
               "type": "click",
-              "selector": ".p9-player-controls button[aria-label='下一步']"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-player-controls button[aria-label='下一步']"
+              "selector": ".p9-workbench-controls > button:last-child"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-current-step strong",
+              "selector": ".p9-snapshot-scene[data-clip=\"snapshot-new-row\"]",
               "state": "visible"
             }
           ]
         },
         {
-          "id": "p9-herding-class6-second",
+          "id": "p9-q-fills-and-freezes",
           "actions": [
             {
               "type": "click",
@@ -2838,76 +2830,44 @@
             },
             {
               "type": "click",
-              "selector": ".p9-timeline__stage:nth-child(9)"
+              "selector": ".p9-chapter:nth-child(3)"
             },
             {
               "type": "click",
-              "selector": ".p9-player-controls button[aria-label='下一步']"
+              "selector": ".p9-workbench-controls > button:last-child"
             },
             {
               "type": "click",
-              "selector": ".p9-player-controls button[aria-label='下一步']"
+              "selector": ".p9-workbench-controls > button:last-child"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-play"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-current-step strong",
-              "state": "visible"
+              "selector": ".p9-snapshot-scene[data-clip=\"fill-q-rows\"][data-progress=\"1.00\"]",
+              "state": "visible",
+              "timeoutMs": 10000
             }
           ]
+        }
+      ],
+      "computedStyles": [
+        {
+          "selector": ".p9-page",
+          "property": "overflow",
+          "equals": "visible"
         },
         {
-          "id": "p9-six-class-memory-committed",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-timeline__stage:nth-child(10)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-current-step strong",
-              "state": "visible"
-            }
-          ]
+          "selector": ".p9-main-grid",
+          "property": "display",
+          "equals": "grid"
         },
         {
-          "id": "p9-prototype-prediction",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-timeline__stage:nth-child(12)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-current-step strong",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-next-increment-handoff",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-timeline__stage:nth-child(13)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-current-step strong",
-              "state": "visible"
-            }
-          ]
+          "selector": ".p9-chapter:disabled",
+          "property": "cursor",
+          "equals": "not-allowed"
         }
       ]
     }

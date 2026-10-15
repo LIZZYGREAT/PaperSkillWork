@@ -130,7 +130,7 @@ export function runtimeSceneAt(clipIndex: number, progress: number): RuntimeScen
   const chapterIndex = RUNTIME_CHAPTERS.findIndex((chapter) => chapter.id === clip.chapterId);
   const objectStatus = Object.fromEntries(Object.entries(lifetimes).map(([id, lifetime]) => [
     id,
-    cursor < lifetime.createdAt ? "pending" : cursor >= lifetime.releasedAt ? "released" : "active",
+    boundedIndex < lifetime.createdAt ? "pending" : cursor >= lifetime.releasedAt ? "released" : "active",
   ])) as Record<RuntimeObjectId, RuntimeObjectStatus>;
 
   let oldCopiesInD = 0;
