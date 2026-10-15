@@ -7,6 +7,7 @@ import {
   HERDING_DEMO_ROUNDS,
   HERDING_DEMO_TARGET,
   HERDING_DEMO_TARGET_RAW,
+  type HerdingDemoCandidate,
 } from "../data/herding-teaching-demo";
 import {
   HERDING_CHART,
@@ -31,27 +32,29 @@ import { useReducedMotion } from "../shared/foundation/accessibility/useReducedM
 const VIEW = { width: HERDING_CHART.width, height: HERDING_CHART.height };
 const CENTER: Point = HERDING_CHART.center;
 const RADIUS = HERDING_CHART.radius;
-const SCAN_TOP_DEG = HERDING_CHART.topAngleDeg;
 const toChartPoint = projectHerdingFeature;
 const TARGET_POINT = toChartPoint(HERDING_DEMO_TARGET);
 const TARGET_RAW_POINT = toChartPoint(HERDING_DEMO_TARGET_RAW);
+const SCAN_START_ID = "a7";
+const SCAN_START_POINT = HERDING_DEMO_POINTS.find((point) => point.id === SCAN_START_ID)!;
+const SCAN_START_CHART_POINT = toChartPoint(SCAN_START_POINT.feature);
+const SCAN_START_OFFSET_FROM_TOP = clockwiseOffsetFromTop(SCAN_START_CHART_POINT);
+const SCAN_START_DEG = HERDING_CHART.topAngleDeg + SCAN_START_OFFSET_FROM_TOP;
 
 function diamond(point: Point, radius = 7) {
   return `${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`;
 }
 
-/** Scan order: clockwise from the top, crossing the 0/360 boundary without jumping back. */
+/** Scan order: clockwise from the lower-right a7 point, crossing the 0/360 boundary smoothly. */
 const SCAN_ORDER = [...HERDING_DEMO_POINTS]
-  .map((point) => ({ point, offset: clockwiseOffsetFromTop(toChartPoint(point.feature)) }))
+  .map((point) => {
+    const offsetFromTop = clockwiseOffsetFromTop(toChartPoint(point.feature));
+    return { point, offset: (offsetFromTop - SCAN_START_OFFSET_FROM_TOP + 360) % 360 };
+  })
   .sort((a, b) => a.offset - b.offset);
 const SCAN_OFFSET_BY_ID = new Map(SCAN_ORDER.map((item) => [item.point.id, item.offset]));
-const TOTAL_SWEEP = SCAN_ORDER[SCAN_ORDER.length - 1].offset;
-/**
- * Travel time for one candidate step. The last clip of every candidate spends its tail on this, so
- * the ring keeps moving clockwise onto the next candidate while the current distance is still being
- * drawn: the sweep is one continuous scan rather than a stop-start series.
- */
-const SWEEP_STEP_MS = Math.round((TOTAL_SWEEP / Math.max(1, SCAN_ORDER.length - 1)) * 4.2);
+const TOTAL_SWEEP = 360;
+const SWEEP_STEP_MS = 360;
 
 /* ----------------------------------------------------------------- clips --- */
 
@@ -63,7 +66,7 @@ type DemoClip = AnimationClip & {
   candidateIndex: number;
   /** Cumulative clockwise sweep (in candidate steps) at the start of this clip. */
   sweepStart: number;
-  /** Sweep when the clip ends; differs from `sweepStart` when the ring travels during the clip. */
+  /** Sweep when the clip ends; it changes only in explicit scan and round-commit clips. */
   sweepEnd: number;
   /** Millisecond length of the movement part; the renderer derives sub-windows from it. */
   move: number;
@@ -86,11 +89,7 @@ function buildClips(): DemoClip[] {
     const laterCandidateScale = round.k === 2 ? 0.42 : round.k === 3 ? 0.3 : round.k === 4 ? 0.55 : 1;
     const detailed = round.k === 2 || round.k === 3;
 
-    /**
-     * One maintained clockwise array, exactly as the reader would write it down: start at a8, walk
-     * clockwise past every candidate, and delete an entry the moment it gets selected. The walk order
-     * therefore comes from the circle, never from the scores.
-     */
+    /** Walk the fixed geometry clockwise from a7, skipping entries already in the prefix. */
     const waypoints: { id: string; sweep: number; scored: boolean; candidateIndex: number }[] =
       SCAN_ORDER.map((entry) => ({
         id: entry.point.id,
@@ -100,46 +99,39 @@ function buildClips(): DemoClip[] {
       }));
     const scored = waypoints.filter((entry) => entry.scored);
     /** Milliseconds for a leg that covers `span` of the circle, proportional to the real arc. */
-    const legDuration = (span: number) => Math.max(240, Math.round(SWEEP_STEP_MS * Math.max(span, 0.12)));
+    const legDuration = (span: number) => Math.max(320, Math.round(SWEEP_STEP_MS * Math.max(span * (SCAN_ORDER.length - 1), 0.12)));
 
     let sweep = 0;
     for (const [order, candidate] of scored.entries()) {
       const sweepAt = candidate.sweep;
-      const nextWaypoint = waypoints[waypoints.findIndex((entry) => entry.id === candidate.id) + 1];
       const isFirst = order === 0;
-      const isLast = order === scored.length - 1;
       const scale = isFirst ? 1 : laterCandidateScale;
-      const legStart = isFirst ? 0 : sweep;
-      const travel = nextWaypoint ? legDuration(nextWaypoint.sweep - sweepAt) : 0;
+      const legStart = sweep;
       const candidateIndex = candidate.candidateIndex;
 
-      if (detailed || isFirst) {
-        push({
-          id: `r${round.k}-scan-${candidate.id}`,
-          kind: "scan",
-          round: round.k,
-          candidateIndex,
-          sweepStart: legStart,
-          sweepEnd: sweepAt,
-          move: legDuration(sweepAt - legStart),
-          durationMs: legDuration(sweepAt - legStart),
-          holdMs: isFirst ? 150 : 60,
-          narrative: isFirst
-            ? `扫描环从圆周顶部出发，按顺时针顺序逐个检查候选`
-            : `扫描环沿圆周继续顺时针到达候选 ${candidate.id}`,
-        });
-      }
+      push({
+        id: `r${round.k}-scan-${candidate.id}`,
+        kind: "scan",
+        round: round.k,
+        candidateIndex,
+        sweepStart: legStart,
+        sweepEnd: sweepAt,
+        move: legDuration(sweepAt - legStart),
+        durationMs: legDuration(sweepAt - legStart),
+        holdMs: isFirst ? 150 : 60,
+        narrative: isFirst
+          ? `扫描环从右下候选 ${SCAN_START_ID} 出发，按顺时针顺序到达本轮第一个未选候选 ${candidate.id}`
+          : `上一候选已完成均值与距离比较；扫描环再顺时针到达候选 ${candidate.id}`,
+      });
 
-      /** The clip that ends this candidate's inspection also carries the ring onto the next entry. */
-      const nextSweep = nextWaypoint ? nextWaypoint.sweep : 1;
       const rest = { round: round.k, candidateIndex, sweepStart: sweepAt };
 
       if (round.k === 1) {
         // k = 1 has no prefix to average: the candidate's own unit feature is the prefix mean.
         push({ id: `r1-hull-${candidate.id}`, kind: "hover", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.hover * scale), durationMs: Math.round(stepDurations.hover * scale), holdMs: 100, narrative: `只有一个名额：直接比较候选 ${candidate.id} 自己的单位特征到 μ_full 的距离` });
         push({ id: `r1-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 120, narrative: "ν₁(x) = z(x)：单个样本的前缀均值就是它自己的单位特征" });
-        push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: nextSweep, move: Math.round(stepDurations.score * scale) + travel, durationMs: Math.round(stepDurations.score * scale) + travel, holdMs: 140, narrative: `画出 ${candidate.id} 到 μ_full 的距离线；距离刚画完，扫描环已经顺时针走向下一个候选` });
-        sweep = nextSweep;
+        push({ id: `r1-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 140, narrative: `画出 ${candidate.id} 到 μ_full 的距离线，并记录本轮距离；完成后再转向下一个候选` });
+        sweep = sweepAt;
         continue;
       }
 
@@ -147,12 +139,12 @@ function buildClips(): DemoClip[] {
         const hullMs = Math.round(420 * scale);
         const gatherMs = Math.round(700 * scale);
         const normalizeMs = Math.round(500 * scale);
-        const scoreMs = Math.round(460 * scale) + travel;
+        const scoreMs = Math.round(460 * scale);
         push({ id: `r${round.k}-hull-${candidate.id}`, kind: "hull", ...rest, sweepEnd: sweepAt, move: hullMs, durationMs: hullMs, holdMs: 70, narrative: `固定前 ${round.k - 1} 项，用线段连出本次参与平均的 ${round.k} 个特征点` });
         push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: gatherMs, durationMs: gatherMs, holdMs: 100, narrative: `${round.k} 个真实端点各复制一个贡献点，聚合成前缀原始均值` });
         push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: normalizeMs, durationMs: normalizeMs, holdMs: 100, narrative: "单位化后与 μ_full 比较距离" });
-        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: nextSweep, move: scoreMs, durationMs: scoreMs, holdMs: 120, narrative: `${candidate.id} 的距离进入同尺度距离尺，扫描环继续前进` });
-        sweep = nextSweep;
+        push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: scoreMs, durationMs: scoreMs, holdMs: 120, narrative: `${candidate.id} 的距离进入本轮记录；完成后扫描环再继续前进` });
+        sweep = sweepAt;
         continue;
       }
 
@@ -161,11 +153,11 @@ function buildClips(): DemoClip[] {
       push({ id: `r${round.k}-gather-${candidate.id}`, kind: "gather", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.gather * scale), durationMs: Math.round(stepDurations.gather * scale), holdMs: 200, narrative: round.k === 2 ? "两个贡献点沿连线移动到真实中点" : "三个贡献点同时移动到真实算术重心" });
       push({ id: `r${round.k}-mean-${candidate.id}`, kind: "mean", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.mean * scale), durationMs: Math.round(stepDurations.mean * scale), holdMs: 170, narrative: round.k === 2 ? "中点就是两张图片前缀的原始均值 ν̄₂(x)" : "重心就是三张图片前缀的原始均值 ν̄₃(x)" });
       push({ id: `r${round.k}-norm-${candidate.id}`, kind: "norm", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.norm * scale), durationMs: Math.round(stepDurations.norm * scale), holdMs: 150, narrative: "沿径向把原始前缀均值单位化，得到用于比较的 νk(x)" });
-      push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: nextSweep, move: Math.round(stepDurations.score * scale) + travel, durationMs: Math.round(stepDurations.score * scale) + travel, holdMs: 160, narrative: `从 νk(x) 到 μ_full 画出距离线；距离画完的同时，扫描环顺时针走向下一个候选` });
-      sweep = nextSweep;
+      push({ id: `r${round.k}-score-${candidate.id}`, kind: "score", ...rest, sweepEnd: sweepAt, move: Math.round(stepDurations.score * scale), durationMs: Math.round(stepDurations.score * scale), holdMs: 160, narrative: `从 νk(x) 到 μ_full 画出距离线并记录；完成后扫描环再顺时针前往下一个候选` });
+      sweep = sweepAt;
     }
 
-    // Committing the winner: the ring finishes its sweep back to the top of the circle.
+    // After all candidate cycles finish, close the sweep back to the lower-right start point.
     push({
       id: `r${round.k}-commit`,
       kind: "commit",
@@ -254,6 +246,12 @@ function candidateOf(clip: DemoClip) {
   return round ? round.candidates[clip.candidateIndex] ?? null : null;
 }
 
+function candidatesInScanOrder(candidates: readonly HerdingDemoCandidate[]) {
+  return [...candidates].sort(
+    (a, b) => (SCAN_OFFSET_BY_ID.get(a.point.id) ?? 0) - (SCAN_OFFSET_BY_ID.get(b.point.id) ?? 0),
+  );
+}
+
 function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   const p = clamp(progress);
   const candidate = candidateOf(clip);
@@ -261,9 +259,8 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
   const prefixPoints = round ? round.prefix.slice(0, round.k - 1) : [];
   const participantPoints = round && candidate ? [...prefixPoints, candidate.point] : [];
 
-  // One continuous clockwise sweep. A scan clip draws the movement from `sweepStart` to `sweepEnd`;
-  // every other clip of a candidate starts where its scan ended and may carry the ring further, which
-  // is what keeps the ring advancing onto the next candidate while the distance is being drawn.
+  // The scan ring moves only during scan clips. It stays on the current candidate while that
+  // candidate's prefix mean, normalized mean, and distance are completed.
   let scanSweep: number | null = null;
   if (clip.kind === "scan") {
     scanSweep = (clip.sweepStart + (clip.sweepEnd - clip.sweepStart) * p) * TOTAL_SWEEP;
@@ -319,10 +316,7 @@ function sceneAt(clip: DemoClip, progress: number, reviewIndex: number): Scene {
     }
 
     if (clip.kind === "score") {
-      // The clip spends its head drawing the distance and its tail carrying the ring onward.
-      const travel = clip.durationMs - clip.move;
-      const detailShare = clip.move <= 0 ? 1 : (clip.move - travel) / clip.move;
-      scoreReveal = clamp(p / Math.max(0.15, detailShare));
+      scoreReveal = clamp(p);
     } else if (clip.kind === "commit") scoreReveal = 1;
     if (clip.kind === "commit") decisionReveal = smoothstep(progressWithin(p, 0.35, 0.85));
   }
@@ -388,18 +382,18 @@ function HerdingScene({ scene }: { scene: Scene }) {
     : round ? round.prefix.slice(0, scene.clip.kind === "commit" ? scene.clip.round : scene.clip.round - 1) : [];
   const selectedIds = new Set(selectedOrdered.map((point) => point.id));
   const showCandidateLabels = scene.clip.kind !== "review" && scene.clip.kind !== "budget";
-  const scanRadians = scene.scanSweep === null ? null : ((SCAN_TOP_DEG + scene.scanSweep) * Math.PI) / 180;
+  const scanRadians = scene.scanSweep === null ? null : ((SCAN_START_DEG + scene.scanSweep) * Math.PI) / 180;
   const scanPoint = scanRadians === null ? null : { x: CENTER.x + Math.cos(scanRadians) * RADIUS, y: CENTER.y + Math.sin(scanRadians) * RADIUS };
-  const sweptFrom = scene.scanSweep === null ? null : ((SCAN_TOP_DEG + Math.max(scene.scanSweep, 0.001)) * Math.PI) / 180;
+  const sweptFrom = scene.scanSweep === null ? null : ((SCAN_START_DEG + Math.max(scene.scanSweep, 0.001)) * Math.PI) / 180;
 
   const labels: ChartLabel[] = [];
   const obstacles: Point[] = [];
-  if (scene.targetContribute < 0.02) labels.push({ ...TARGET_RAW_POINT, id: "target-raw", text: "μ̄_full" });
+  if (scene.targetContribute < 0.02 && scene.clip.kind !== "target-contribute") labels.push({ ...TARGET_RAW_POINT, id: "target-raw", text: "μ̄_full" });
   if (scene.targetNormalize > 0.5) labels.push({ ...TARGET_POINT, id: "target", text: "μ_full" });
   for (const point of HERDING_DEMO_POINTS) {
     const at = toChartPoint(point.feature);
     obstacles.push(at);
-    if (showCandidateLabels && (selectedIds.has(point.id) || point.id === candidate?.point.id)) {
+    if (showCandidateLabels && (selectedIds.has(point.id) || (point.id === candidate?.point.id && scene.clip.kind !== "scan"))) {
       labels.push({ ...at, id: point.id, text: point.id });
     }
   }
@@ -428,7 +422,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
       aria-label={`固定的八样本 Herding 特征空间。${phaseTitles[scene.clip.kind]}${candidate ? `；当前候选 ${candidate.point.id}` : ""}`}
     >
       <title>同一特征空间中的 Herding 计算与有序前缀</title>
-      <desc>坐标轴、八个单位候选特征与完整类别目标贯穿所有片段；扫描环沿圆周顺时针移动，前缀均值由真实端点的贡献点聚合得到，距离线与右侧距离尺使用同一尺度。</desc>
+      <desc>坐标轴、八个单位候选特征与完整类别目标贯穿所有片段；扫描环从右下方的 a7 出发沿圆周顺时针移动，每个候选完成均值、单位化和距离记录后才转向下一候选。</desc>
       {/* Circle first, axes on top: the circle's fill must not hide the parts of the axes inside it. */}
       <circle className="p4-scene__circle" cx={CENTER.x} cy={CENTER.y} r={RADIUS} />
       <line className="p4-scene__axis" x1="16" y1={CENTER.y} x2={VIEW.width - 16} y2={CENTER.y} />
@@ -454,12 +448,16 @@ function HerdingScene({ scene }: { scene: Scene }) {
 
       {/* Scan ring: a continuous clockwise indicator that never teleports between candidates. */}
       {scene.scanSweep !== null && sweptFrom !== null ? (
-        <path className="p4-scene__scan-track" d={arcSegmentPath(CENTER, RADIUS, SCAN_TOP_DEG, scene.scanSweep)} />
+        <path className="p4-scene__scan-track" d={arcSegmentPath(CENTER, RADIUS, SCAN_START_DEG, scene.scanSweep)} />
       ) : null}
-      {scanPoint ? (
-        <g className="p4-scene__scan-mark">
-          <circle cx={scanPoint.x} cy={scanPoint.y} r="11" />
-        </g>
+      {scanPoint && scene.clip.kind === "scan" ? (
+        <circle
+          className="p4-scene__candidate-ring"
+          cx={scanPoint.x}
+          cy={scanPoint.y}
+          r="16"
+          aria-label="顺时针扫描中的候选位置"
+        />
       ) : null}
 
       {/* Prefix hull: connects exactly the points that take part in this comparison. */}
@@ -502,7 +500,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
       {HERDING_DEMO_POINTS.map((point) => {
         const at = toChartPoint(point.feature);
         const isSelected = selectedIds.has(point.id);
-        const isCandidate = point.id === candidate?.point.id;
+        const isCandidate = point.id === candidate?.point.id && scene.clip.kind !== "scan";
         const isScanned = scene.scannedIds.has(point.id);
         const classes = ["p4-scene__point", isSelected ? "is-selected" : "", isCandidate ? "is-candidate" : "", isScanned ? "is-scanned" : ""].filter(Boolean).join(" ");
         return (
@@ -556,19 +554,38 @@ function HerdingScene({ scene }: { scene: Scene }) {
 
 function DistanceRuler({ scene }: { scene: Scene }) {
   const round = scene.clip.round >= 1 && scene.clip.round <= 4 ? roundOf(scene.clip.round) : null;
-  if (!round) return null;
+  if (!round) {
+    return (
+      <div className="p4-ruler p4-ruler--empty" aria-label="当前没有候选距离轮次">
+        <div className="p4-ruler__head"><b>候选距离</b><span>逐轮记录</span></div>
+        <p>每轮只列出尚未选中的候选；均值与单位化完成后，再按顺时针顺序记录到 μ<sub>full</sub> 的距离。</p>
+      </div>
+    );
+  }
   const maximum = Math.max(...round.candidates.map((item) => item.score), 0.0001);
+  const activeCandidate = candidateOf(scene.clip);
+  const orderedCandidates = candidatesInScanOrder(round.candidates);
   return (
-    <div className="p4-ruler" aria-label="本轮候选到完整类别目标的同尺度距离比较">
-      <div className="p4-ruler__head"><b>同尺度距离尺</b><span>评分后显示</span></div>
+    <div className="p4-ruler" aria-label={`第 ${round.k} 轮候选到完整类别目标的距离，按顺时针扫描顺序排列`}>
+      <div className="p4-ruler__head"><b>到 μ<sub>full</sub> 的距离</b><span>第 {round.k} 轮 · 顺时针</span></div>
       <div className="p4-ruler__rows">
-        {round.candidates.map((item) => {
+        {orderedCandidates.map((item, index) => {
           const revealed = scene.barProgress(item.point.id);
           const chosen = item.point.id === round.chosen.id && scene.clip.kind === "commit";
+          const active = item.point.id === activeCandidate?.point.id && scene.clip.kind !== "commit" && scene.clip.kind !== "scan";
           return (
-            <span key={item.point.id} data-candidate-id={item.point.id} data-score-progress={revealed.toFixed(3)} data-score-revealed={(revealed > 0.98).toString()} className={chosen ? "is-chosen" : ""}>
+            <span
+              key={item.point.id}
+              data-candidate-id={item.point.id}
+              data-candidate-order={index + 1}
+              data-score-progress={revealed.toFixed(3)}
+              data-score-revealed={(revealed > 0.98).toString()}
+              className={[active ? "is-active" : "", chosen ? "is-chosen" : ""].filter(Boolean).join(" ")}
+              title={`第 ${index + 1} 个候选 ${item.point.id}，距离 ${revealed > 0.98 ? item.score.toFixed(3) : "尚未计算"}`}
+            >
+              <em>{String(index + 1).padStart(2, "0")}</em>
               <code>{item.point.id}</code>
-              <i style={{ width: `${(item.score / maximum) * revealed * 100}%` }} />
+              <span className="p4-ruler__bar"><i style={{ width: `${(item.score / maximum) * revealed * 100}%` }} /></span>
               <small>{revealed > 0.98 ? item.score.toFixed(3) : "…"}</small>
             </span>
           );
@@ -650,7 +667,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   const candidate = candidateOf(clip);
   const activePhaseIndex = Math.max(0, phaseRanges.findIndex((phase) => state.clipIndex >= phase.startIndex && state.clipIndex <= phase.endIndex));
   const activePhase = phaseRanges[activePhaseIndex];
-  const phaseComplete = state.clipIndex === activePhase.endIndex && state.isHolding && state.status !== "playing";
+  const phaseComplete = state.clipIndex === activePhase.endIndex && state.isHolding;
   const completedPhaseMs = clips.slice(activePhase.startIndex, state.clipIndex)
     .reduce((total, item) => total + item.durationMs + (item.holdMs ?? 0), 0);
   const phaseProgress = clamp((completedPhaseMs + state.elapsedMs) / activePhase.durationMs);
@@ -670,18 +687,22 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
     workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
   }
 
-  function jumpToPhase(index: number) {
+  function jumpToPhase(index: number, options?: { autoPlay?: boolean }) {
     const phase = phaseRanges[index];
-    if (phase) controls.goToClip(phase.startIndex);
+    if (phase) controls.goToClip(phase.startIndex, options);
   }
 
-  function togglePhasePlayback() {
+  function startAnimation() {
     if (state.status === "playing") {
       controls.pause();
       return;
     }
     if (phaseComplete || state.status === "finished") {
-      jumpToPhase(activePhaseIndex < phaseRanges.length - 1 ? activePhaseIndex + 1 : 0);
+      if (activePhaseIndex < phaseRanges.length - 1) {
+        jumpToPhase(activePhaseIndex + 1, { autoPlay: false });
+      } else {
+        jumpToPhase(0);
+      }
       return;
     }
     controls.play();
@@ -736,10 +757,13 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
           <section className="panel p4-visual-panel">
             <div className="p4-panel-title">
               <div><span className="eyebrow">ONE FIXED FEATURE SPACE</span><h3>目标、候选与当前前缀</h3></div>
-              <span>扫描顺序：从顶部顺时针</span>
+              <span>扫描顺序：从右下 a7 顺时针</span>
             </div>
-            <div className="p4-canvas">
-              <HerdingScene scene={scene} />
+            <div className="p4-visual-body">
+              <div className="p4-canvas">
+                <HerdingScene scene={scene} />
+              </div>
+              <DistanceRuler scene={scene} />
             </div>
             <div className="p4-legend" aria-label="图形标记说明">
               <span><i className="p4-legend-point" />单位特征</span>
@@ -760,7 +784,6 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
               {round ? <span className="p4-k-badge">k = {round.k}</span> : null}
             </div>
             <div className="p4-current-formula" aria-label="当前公式">{CurrentFormula({ scene })}</div>
-            <DistanceRuler scene={scene} />
             <div className="p4-memory-heading"><b>有序 Exemplars</b><span>{slotCount} / {HERDING_DEMO_QUOTA}</span></div>
             <Slots count={scene.slotCount} tailRemoved={scene.tailRemoved} />
             {clip.kind === "review" ? (
@@ -793,17 +816,12 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="p4-workbench__controls" aria-label="Page 4 动画控制">
           <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex - 1)} disabled={activePhaseIndex === 0}>← 上一阶段</button>
           <div className="p4-workbench__control-center">
-            <button
-              type="button"
-              className="icarl-button icarl-button--quiet"
-              onClick={togglePhasePlayback}
-            >
-              {state.status === "playing" ? "Ⅱ 暂停" : phaseComplete ? activePhaseIndex < phaseRanges.length - 1 ? "▶ 下一阶段" : "↺ 重新播放" : "▶ 继续本阶段"}
-            </button>
             <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex)}>↺ 重播本阶段</button>
-            <span aria-live="polite">阶段 {activePhaseIndex + 1} / {phaseRanges.length}</span>
+            <span aria-live="polite">阶段 {activePhaseIndex + 1} / {phaseRanges.length} · {Math.round(phaseProgress * 100)}%</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={() => jumpToPhase(activePhaseIndex + 1)} disabled={activePhaseIndex >= phaseRanges.length - 1}>下一阶段 →</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={startAnimation}>
+            {state.status === "playing" ? "Ⅱ 暂停" : phaseComplete && activePhaseIndex === phaseRanges.length - 1 ? "↺ 重新播放" : "▶ 开始动画"}
+          </button>
         </div>
 
         <div className="p4-phase-rail" role="group" aria-label="七个教学阶段">
@@ -826,7 +844,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
       </section>
 
       <details className="p4-calculation-details">
-        <summary>查看精确坐标、距离与候选排序</summary>
+        <summary>查看精确坐标与逐轮距离记录</summary>
         <p>
           完整类别原始均值：({HERDING_DEMO_TARGET_RAW[0].toFixed(3)}, {HERDING_DEMO_TARGET_RAW[1].toFixed(3)})；
           单位目标 μ<sub>full</sub>：({HERDING_DEMO_TARGET[0].toFixed(3)}, {HERDING_DEMO_TARGET[1].toFixed(3)})。
@@ -835,10 +853,11 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         {ROUNDS.map((item) => (
           <details key={item.k}>
             <summary>第 {item.k} 轮 · p{item.k} = {item.chosen.id} · {item.candidates.length} 个未选候选</summary>
-            <div className="p4-score-table" role="table" aria-label={`第 ${item.k} 轮候选坐标与得分`}>
-              <div className="p4-score-table__head" role="row"><span>候选</span><span>原始前缀均值</span><span>单位化前缀均值</span><span>距离</span></div>
-              {item.candidates.map((entry) => (
+            <div className="p4-score-table" role="table" aria-label={`第 ${item.k} 轮按扫描顺序排列的候选坐标与距离`}>
+              <div className="p4-score-table__head" role="row"><span>顺序</span><span>候选</span><span>原始前缀均值</span><span>单位化前缀均值</span><span>距离</span></div>
+              {candidatesInScanOrder(item.candidates).map((entry, index) => (
                 <div role="row" key={entry.point.id} className={entry.point.id === item.chosen.id ? "is-chosen" : ""}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
                   <span>{entry.point.id}{entry.point.id === item.chosen.id ? " · 选中" : ""}</span>
                   <span>({entry.rawPrefixMean[0].toFixed(3)}, {entry.rawPrefixMean[1].toFixed(3)})</span>
                   <span>({entry.normalizedPrefixMean[0].toFixed(3)}, {entry.normalizedPrefixMean[1].toFixed(3)})</span>

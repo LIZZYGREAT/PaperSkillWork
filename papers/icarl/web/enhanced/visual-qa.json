@@ -282,6 +282,20 @@
       "path": "/",
       "states": [
         {
+          "id": "00-page-four-start-paused",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-clip=\"target-contribute\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
           "id": "01-target-contribution",
           "actions": [
             {
@@ -348,7 +362,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-phase-complete=\"true\"]",
+              "selector": "[data-phase-complete=\"true\"][data-status=\"paused\"]",
               "state": "visible"
             },
             {
@@ -357,7 +371,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-phase-group=\"2\"]",
+              "selector": "[data-phase-group=\"2\"][data-status=\"paused\"]",
               "state": "visible"
             },
             {
@@ -384,12 +398,16 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r1-scan-a5\"]",
+              "selector": "[data-clip=\"r1-scan-a7\"]",
               "state": "visible"
             },
             {
               "type": "wait",
-              "milliseconds": 600
+              "milliseconds": 60
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "press",
@@ -411,7 +429,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-gather-a5\"]",
+              "selector": "[data-clip=\"r2-gather-a7\"]",
               "state": "visible"
             },
             {
@@ -420,7 +438,7 @@
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__control-center button:first-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -446,7 +464,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-score-a5\"]",
+              "selector": "[data-clip=\"r2-score-a7\"]",
               "state": "visible"
             },
             {
@@ -455,7 +473,7 @@
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__control-center button:first-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -481,12 +499,48 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-candidate-id=\"a5\"][data-score-revealed=\"true\"]",
+              "selector": "[data-candidate-id=\"a7\"][data-score-revealed=\"true\"]",
               "state": "visible"
             },
             {
               "type": "wait",
               "milliseconds": 200
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
+          "id": "07b-next-candidate-after-score",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-phase-rail button:nth-child(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-candidate-id=\"a7\"][data-score-revealed=\"true\"]",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-clip=\"r2-scan-a2\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 100
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "press",
@@ -508,7 +562,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-mean-a5\"]",
+              "selector": "[data-clip=\"r2-mean-a7\"]",
               "state": "visible"
             },
             {
@@ -517,7 +571,7 @@
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__control-center button:first-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -543,7 +597,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r2-norm-a5\"]",
+              "selector": "[data-clip=\"r2-norm-a7\"]",
               "state": "visible"
             },
             {
@@ -552,7 +606,7 @@
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__control-center button:first-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -578,7 +632,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r3-mean-a5\"]",
+              "selector": "[data-clip=\"r3-mean-a7\"]",
               "state": "visible"
             },
             {
@@ -587,7 +641,7 @@
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__control-center button:first-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -613,7 +667,7 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-clip=\"r4-scan-a5\"]",
+              "selector": "[data-clip=\"r4-scan-a7\"]",
               "state": "visible"
             },
             {
@@ -640,13 +694,18 @@
             },
             {
               "type": "waitFor",
-              "selector": "[data-phase-complete=\"true\"]",
+              "selector": "[data-phase-complete=\"true\"][data-status=\"paused\"]",
               "state": "visible",
               "timeoutMs": 30000
             },
             {
-              "type": "wait",
-              "milliseconds": 250
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
+              "type": "waitFor",
+              "selector": "[data-phase-group=\"6\"][data-status=\"paused\"]",
+              "state": "visible"
             },
             {
               "type": "press",
