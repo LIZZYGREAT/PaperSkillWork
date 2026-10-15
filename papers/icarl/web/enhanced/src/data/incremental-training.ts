@@ -107,6 +107,14 @@ export function binaryCrossEntropy(target: number, output: number): number {
   return -(target * Math.log(safeOutput) + (1 - target) * Math.log(1 - safeOutput));
 }
 
+/** The fixed six-node model loss is independent of the single-node formula probe shown on P6. */
+export function sixNodeBceLoss(targets: SixOutputs, outputs: SixOutputs): number {
+  if (targets.length !== ALL_CLASS_IDS.length || outputs.length !== ALL_CLASS_IDS.length) {
+    throw new Error("The sample loss requires one target and one output for each of the six nodes.");
+  }
+  return ALL_CLASS_IDS.reduce((sum, _, index) => sum + binaryCrossEntropy(targets[index], outputs[index]), 0);
+}
+
 export function classLabel(classId: ClassId): string {
   return CLASS_VISUALS[classId].displayLabel;
 }

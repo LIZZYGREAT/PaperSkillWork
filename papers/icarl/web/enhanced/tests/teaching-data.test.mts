@@ -16,6 +16,10 @@ import {
   CLASS_VISUALS,
   ALL_CLASS_IDS,
   P_BEFORE,
+  P_AFTER,
+  NEW_CLASS_HERDING,
+  NEXT_QUOTA,
+  CURRENT_EXEMPLARS,
   PROTOTYPES,
   QUERY_DISTANCES,
   QUERY_FEATURE,
@@ -40,7 +44,10 @@ import {
 } from "../src/data/herding-teaching-geometry.ts";
 import {
   INCREMENTAL_STAGE_DATA,
+  binaryCrossEntropy,
   buildTargets,
+  sixNodeBceLoss,
+  studentOutputFor,
   teacherSnapshotFor,
 } from "../src/data/incremental-training.ts";
 import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
@@ -48,6 +55,7 @@ import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.t
 import { PageThree } from "../src/pages/PageThree.tsx";
 import { PageFour } from "../src/pages/PageFour.tsx";
 import { PageFive } from "../src/pages/PageFive.tsx";
+import { PageSix } from "../src/pages/PageSix.tsx";
 import { PageSeven } from "../src/pages/PageSeven.tsx";
 
 const OLD_CLASS_IDS = ["A", "B", "C"] as const;
@@ -345,6 +353,17 @@ for (const sample of INCREMENTAL_STAGE_DATA.trainingSamples) {
       `${sample.id} new-node target must come from its real label.`,
     );
   }
+  const outputs = studentOutputFor(sample);
+  assert.equal(outputs.length, ALL_CLASS_IDS.length, `${sample.id} must have one fixed-model output per class node.`);
+  const modelLoss = sixNodeBceLoss(target, outputs);
+  const summedNodeLosses = target.reduce((sum, value, index) => sum + binaryCrossEntropy(value, outputs[index]), 0);
+  assert.ok(near(modelLoss, summedNodeLosses), `${sample.id} model loss must sum the same BCE used by each node.`);
+  const stableOutputs = [...outputs];
+  for (const exploredOutput of [0.11, 0.89]) {
+    binaryCrossEntropy(target[1], exploredOutput); // P6's local slider probes this single curve only.
+    assert.ok(near(sixNodeBceLoss(target, outputs), modelLoss), `${sample.id} formula exploration must not change the six-node model loss.`);
+    assert.deepEqual(studentOutputFor(sample), stableOutputs, `${sample.id} formula exploration must not rewrite model outputs.`);
+  }
   // Q is fixed before the update: re-reading it must never depend on the student.
   assert.deepEqual(teacherSnapshotFor(sample), row, `${sample.id} Q row must be stable across reads.`);
 }
@@ -355,6 +374,22 @@ const newExample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sampl
 assert.ok(oldExample && newExample, "P5 must find the planned old B and incoming E demonstrations.");
 assert.ok(trainingIds.has(oldExample.id) && trainingIds.has(newExample.id),
   "The demonstrated old and new samples must both belong to D.");
+assert.deepEqual(buildTargets(oldExample).slice(0, 3), teacherSnapshotFor(oldExample), "P6's old image must use its own Q row for the first three targets.");
+assert.deepEqual(buildTargets(oldExample).slice(3), [0, 0, 0], "P6's old image must use zeros for the three new-class targets.");
+assert.deepEqual(buildTargets(newExample).slice(0, 3), teacherSnapshotFor(newExample), "P6's new image must still use its own Q row for the old nodes.");
+assert.deepEqual(buildTargets(newExample).slice(3), [0, 1, 0], "P6's E image must use a one-hot target at the E output node.");
+
+const p6DefaultSample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sample.id === "x_28")!;
+const p6DefaultTargets = buildTargets(p6DefaultSample);
+const p6DefaultOutputs = studentOutputFor(p6DefaultSample);
+const p6DefaultPage = renderToStaticMarkup(createElement(PageSix));
+const p6ArticleTag = p6DefaultPage.match(/<article class="tutorial-page icarl-page icarl-page--p6"[^>]*>/)?.[0];
+assert.ok(p6ArticleTag, "P6 must render its current sample and separate model/exploration readouts.");
+assert.equal(attr(p6ArticleTag!, "data-sample"), p6DefaultSample.id);
+assert.equal(attr(p6ArticleTag!, "data-model-loss"), sixNodeBceLoss(p6DefaultTargets, p6DefaultOutputs).toFixed(6));
+assert.equal(attr(p6ArticleTag!, "data-model-output"), p6DefaultOutputs[4].toFixed(3));
+assert.equal(attr(p6ArticleTag!, "data-explore-output"), p6DefaultOutputs[4].toFixed(2));
+assert.equal(attr(p6ArticleTag!, "data-explore-loss"), binaryCrossEntropy(p6DefaultTargets[4], p6DefaultOutputs[4]).toFixed(6));
 
 const firstDemoWrite = snapshotWriteProgress([oldExample], 2950, { startMs: 2500, rowTravelMs: 900 });
 assert.equal(firstDemoWrite.activeSampleId, oldExample.id, "The old-image demo must write the Q row for that exact old sample.");
@@ -457,6 +492,17 @@ for (let batchIndex = 0; batchIndex < 4; batchIndex += 1) {
 /* ------------------------------------------------------------------ P7 --- */
 
 assert.equal(PROTOTYPES.length, 6, "P7 must compare all six current prototypes.");
+assert.equal(NEXT_QUOTA, 2, "P7's twelve-image budget must allocate two images to each of six classes.");
+for (const classId of OLD_CLASS_IDS) {
+  assert.deepEqual(P_AFTER[classId].map((sample) => sample.id), P_BEFORE[classId].slice(0, NEXT_QUOTA).map((sample) => sample.id),
+    `P7 must retain the first ${NEXT_QUOTA} old ${classId} exemplars in their original order.`);
+}
+for (const classId of INCREMENTAL_STAGE_DATA.incomingClassIds) {
+  assert.deepEqual(P_AFTER[classId].map((sample) => sample.id), NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id),
+    `P7 must select new ${classId} exemplars from that class's real Herding order.`);
+}
+assert.equal(CURRENT_EXEMPLARS.length, 12, "P7 must finish with exactly twelve retained images.");
+assert.equal(new Set(CURRENT_EXEMPLARS.map((sample) => sample.id)).size, 12, "P7's committed exemplar IDs must be unique.");
 assert.deepEqual(QUERY_PREDICTION, QUERY_DISTANCES[0].classId, "The P7 prediction must be the true minimum-distance class.");
 assert.deepEqual(QUERY_DISTANCES.map((entry) => entry.classId), [...QUERY_DISTANCES]
   .sort((a, b) => a.distance - b.distance || a.classId.localeCompare(b.classId))

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import { ALL_CLASS_IDS, CLASS_VISUALS, INCOMING_CLASS_IDS, INCOMING_SAMPLES, OLD_CLASS_IDS, P_BEFORE, type ClassId, type Sample } from "../data/icarl-runtime";
-import { binaryCrossEntropy, buildTargets, classLabel, studentOutputFor, teacherSnapshotFor, type SixOutputs } from "../data/incremental-training";
+import { binaryCrossEntropy, buildTargets, classLabel, sixNodeBceLoss, studentOutputFor, teacherSnapshotFor, type SixOutputs } from "../data/incremental-training";
 
 type PhaseId = "input" | "targets" | "bce" | "aggregate" | "backprop";
 type PlaybackStatus = "idle" | "playing" | "paused" | "complete";
@@ -330,7 +330,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const outputs = useMemo(() => studentOutputFor(sample), [sample]);
   const phase = phases[phaseIndex];
   const exploreLoss = binaryCrossEntropy(curveTarget, exploreOutput);
-  const modelLoss = ALL_CLASS_IDS.reduce((sum, _, index) => sum + binaryCrossEntropy(targets[index], outputs[index]), 0);
+  const modelLoss = sixNodeBceLoss(targets, outputs);
   const targetReady = phaseIndex >= 1;
 
   useEffect(() => {
@@ -464,7 +464,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     setExploreOutput(value);
   }
 
-  return <article className="tutorial-page icarl-page icarl-page--p6" data-phase={phase.id} data-sample={sample.id}>
+  return <article className="tutorial-page icarl-page icarl-page--p6" data-phase={phase.id} data-sample={sample.id} data-model-loss={modelLoss.toFixed(6)} data-explore-loss={exploreLoss.toFixed(6)} data-explore-output={exploreOutput.toFixed(2)} data-selected-target={targets[selectedNodeIndex].toFixed(3)} data-model-output={outputs[selectedNodeIndex].toFixed(3)}>
     <header className="page-heading icarl-page__heading p6-heading">
       <div className="icarl-page__eyebrow"><span>PAGE 06</span><i /> INCREMENTAL TRAINING · CONTINUOUS VIEW</div>
       <h1>旧知识与新类别怎样一起更新网络？</h1>
