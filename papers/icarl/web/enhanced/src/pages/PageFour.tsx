@@ -82,6 +82,8 @@ type DemoClip = AnimationClip & {
 };
 
 const ROUNDS = HERDING_DEMO_ROUNDS;
+/** P4 phase 05's dashed prefix links should draw at half their current speed. */
+const ROUND_FOUR_HULL_DURATION_SCALE = 2;
 const stepDurations: Record<string, number> = { hull: 700, hover: 500, split: 560, gather: 1100, mean: 620, score: 820, norm: 760, commit: 900 };
 
 function buildClips(): DemoClip[] {
@@ -206,7 +208,14 @@ function buildClips(): DemoClip[] {
 
   push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 8000, durationMs: 8000, holdMs: 700, narrative: "逐项加入已选样本，并查看对应的真实前缀均值" });
   push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 7000, durationMs: 7000, holdMs: 800, narrative: "总预算 K = 12 不变；类别增加后把容量边界移到前三项并移除尾项 p₄" });
-  return clips;
+  return clips.map((clip) => {
+    if (clip.round !== 4 || clip.kind !== "hull") return clip;
+    return {
+      ...clip,
+      move: Math.round(clip.move * ROUND_FOUR_HULL_DURATION_SCALE),
+      durationMs: Math.round(clip.durationMs * ROUND_FOUR_HULL_DURATION_SCALE),
+    };
+  });
 }
 
 const clips = buildClips();

@@ -240,3 +240,9 @@ Chromium 1440×900 与 1920×1080 共采集 46 个状态（P4-06/07 的 0/20/40/
 额外在 1366×768 检查 P4-06、P4-07 与 P7 Query，三者页面宽度均未超过视口。正常播放、暂停/继续、重播、阶段跳转均通过；reduced-motion 下 P4 保持可读的完整阶段状态，P7 播放控件禁用。开发服务器 Chromium 冒烟检查经过 P4-06、P4-07、P7 Query，页面错误与 console error 均为 0。
 
 验证：`npm.cmd test`、`npx tsc --noEmit`、`npm.cmd run build` 通过；`npm.cmd run dev -- --host 127.0.0.1 --port 4175 --strictPort` 启动并完成上述浏览器检查。实际 `BUILD=PASS`；自动浏览器报告中 `GEOMETRY_QA=PASS`、`BROWSER_ERRORS=PASS`（0）；人工截图复核 `VISUAL_REVIEW=PASS`。没有专门的计算样式断言，`STYLE_QA=NOT_RUN`；没有获批基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。W7/W9/W10 状态未修改。
+
+### P4 阶段 05 虚线连接放慢（2026-10-16）
+
+按用户补充，将修改限定为阶段 05（第四轮）绘制前缀虚线连接的片段：`p4-scene__hull-line` 的生长由 `hullReveal` 驱动，因此只把第四轮 `hull` 片段的运动时长加倍，使连线速度降至原来的 0.5 倍。该片段的停留时间及扫描、贡献点聚合、均值、归一化和评分时长保持不变；其他轮次的连线速度也保持不变。
+
+验证：`npm.cmd test`、`npx.cmd tsc --noEmit` 与 `npm.cmd run build` 通过。已尝试在 Chromium 两种桌面视口运行阶段 05 完成态检查，但本地预览服务器无法从 QA runner/浏览器环境连接，未生成截图；失败记录为根目录 `.visual-qa/run-2026-10-15T17-30-05-111Z/report.md`。因此本次 `BUILD=PASS`；`GEOMETRY_QA=NOT_RUN`、`STYLE_QA=NOT_RUN`、`VISUAL_REVIEW=NOT_RUN`、`BROWSER_ERRORS=NOT_RUN`、`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。W7/W9/W10 状态未修改。
