@@ -612,6 +612,9 @@ export function PageNine({ onExit }: { onExit: () => void }) {
     replayBoundary.current = currentChapter.id;
     timeline.controls.goToClip(RUNTIME_CHAPTER_FIRST_CLIP[currentChapter.id]);
   };
+  const playLabel = reducedMotion ? "下一步" : timeline.state.status === "playing" ? "暂停"
+    : timeline.state.status === "finished" || timeline.state.atEnd ? "从头播放"
+      : timeline.state.atStart ? "播放完整过程" : "继续播放";
 
   return (
     <article className="p9-page" id="runtime_workbench" data-canonical-id="runtime_workbench" data-clip={scene.clip.id} data-chapter={scene.chapterId} data-progress={scene.progress.toFixed(2)} aria-labelledby="page-nine-title">
@@ -625,7 +628,7 @@ export function PageNine({ onExit }: { onExit: () => void }) {
           <button type="button" className="p9-return" onClick={onExit}>← 第 8 页 · 实验与边界</button>
           <div className="p9-transport">
             <button type="button" onClick={timeline.controls.stepBack} disabled={!timeline.state.hasPrevious} aria-label="上一个片段">‹</button>
-            <button type="button" className="p9-play" onClick={timeline.controls.toggle} aria-label={reducedMotion ? "前进一步" : timeline.state.status === "playing" ? "暂停动画" : "播放完整过程"}>{reducedMotion ? "→" : timeline.state.status === "playing" ? "Ⅱ" : "▶"}</button>
+            <button type="button" className="p9-play" onClick={timeline.controls.toggle} disabled={reducedMotion && !timeline.state.hasNext} aria-label={playLabel} title={playLabel}>{reducedMotion ? "→" : timeline.state.status === "playing" ? "Ⅱ" : timeline.state.status === "finished" || timeline.state.atEnd ? "↺" : "▶"}</button>
             {!reducedMotion ? <button type="button" onClick={replayChapter} aria-label="重播当前章节" title="重播当前章节">↺</button> : null}
             <button type="button" onClick={timeline.controls.stepForward} disabled={!timeline.state.hasNext} aria-label="下一个片段">›</button>
           </div>
@@ -669,11 +672,6 @@ export function PageNine({ onExit }: { onExit: () => void }) {
               {scene.chapterId === "handoff" ? <HandoffScene scene={scene} /> : null}
             </div>
           </div>
-          <footer className="p9-workbench-controls">
-            <button type="button" onClick={timeline.controls.stepBack} disabled={!timeline.state.hasPrevious}>上一个片段</button>
-            <span>{scene.clip.narrative}</span>
-            <button type="button" onClick={timeline.controls.stepForward} disabled={!timeline.state.hasNext}>下一个片段</button>
-          </footer>
         </section>
 
         <Guidance scene={scene} />

@@ -334,6 +334,10 @@
               "selector": ".p4-phase-rail button:nth-child(1)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "waitFor",
               "selector": "[data-clip=\"target-normalize\"]",
               "state": "visible"
@@ -361,6 +365,10 @@
               "selector": ".p4-phase-rail button:nth-child(1)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "waitFor",
               "selector": "[data-clip=\"target-normalize-fade\"]",
               "state": "visible"
@@ -386,6 +394,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(1)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "waitFor",
@@ -468,6 +480,10 @@
               "selector": ".p4-phase-rail button:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "waitFor",
               "selector": "[data-clip=\"r2-gather-a4\"]",
               "state": "visible"
@@ -501,6 +517,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "waitFor",
@@ -538,6 +558,10 @@
               "selector": ".p4-phase-rail button:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "waitFor",
               "selector": "[data-candidate-id=\"a4\"][data-score-revealed=\"true\"]",
               "state": "visible"
@@ -563,6 +587,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "waitFor",
@@ -597,6 +625,10 @@
               "selector": ".p4-phase-rail button:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "waitFor",
               "selector": "[data-clip=\"r2-score-fade-a4\"]",
               "state": "visible",
@@ -627,6 +659,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "waitFor",
@@ -661,6 +697,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "waitFor",
@@ -698,6 +738,10 @@
               "selector": ".p4-phase-rail button:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "waitFor",
               "selector": "[data-clip=\"r2-norm-a4\"]",
               "state": "visible"
@@ -731,6 +775,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "waitFor",
@@ -793,6 +841,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "waitFor",
@@ -887,6 +939,10 @@
               "selector": ".p4-phase-rail button:nth-child(6)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "wait",
               "milliseconds": 1600
             },
@@ -916,6 +972,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -949,6 +1009,10 @@
               "selector": ".p4-phase-rail button:nth-child(6)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "wait",
               "milliseconds": 4800
             },
@@ -980,6 +1044,10 @@
               "selector": ".p4-phase-rail button:nth-child(6)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "wait",
               "milliseconds": 6400
             },
@@ -1009,6 +1077,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(6)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -1073,6 +1145,10 @@
               "selector": ".p4-phase-rail button:nth-child(7)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "wait",
               "milliseconds": 1400
             },
@@ -1102,6 +1178,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -1135,6 +1215,10 @@
               "selector": ".p4-phase-rail button:nth-child(7)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "wait",
               "milliseconds": 4200
             },
@@ -1166,6 +1250,10 @@
               "selector": ".p4-phase-rail button:nth-child(7)"
             },
             {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+            },
+            {
               "type": "wait",
               "milliseconds": 5600
             },
@@ -1195,6 +1283,10 @@
             {
               "type": "click",
               "selector": ".p4-phase-rail button:nth-child(7)"
+            },
+            {
+              "type": "click",
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "wait",
@@ -1321,6 +1413,10 @@
               "selector": ".p5-clip-rail button:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p5-control-main button:first-child"
+            },
+            {
               "state": "visible",
               "type": "waitFor",
               "selector": "[data-clip=\"p5-old-sample\"]"
@@ -1351,6 +1447,10 @@
             {
               "type": "click",
               "selector": ".p5-clip-rail button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p5-control-main button:first-child"
             },
             {
               "state": "visible",
@@ -1523,9 +1623,17 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "waitFor",
               "selector": ".p6-node-row[data-node-id='g1'] .p6-node-row__target.is-revealed",
               "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1550,8 +1658,16 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "wait",
               "milliseconds": 2500
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1576,8 +1692,16 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "wait",
               "milliseconds": 3750
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1600,6 +1724,10 @@
             {
               "type": "click",
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
             },
             {
               "type": "waitFor",
@@ -1633,9 +1761,17 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "waitFor",
               "selector": ".p6-node-row--soft.is-focused .p6-node-row__target.is-revealed",
               "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1664,9 +1800,17 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "waitFor",
               "selector": ".p6-node-row[data-node-id='g4'] .p6-node-row__target.is-revealed",
               "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1695,9 +1839,17 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "waitFor",
               "selector": ".p6-node-row[data-node-id='g5'] .p6-node-row__target.is-revealed",
               "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1726,9 +1878,17 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(2)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "waitFor",
               "selector": ".p6-node-row[data-node-id='g6'] .p6-node-row__target.is-revealed",
               "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1757,6 +1917,10 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "waitFor",
               "selector": ".p6-network-board[data-phase='bce'] .p6-focus-panel--bce .p6-loss-curve",
               "state": "visible"
@@ -1764,6 +1928,10 @@
             {
               "type": "wait",
               "milliseconds": 1400
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1788,8 +1956,16 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "wait",
               "milliseconds": 3100
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1814,8 +1990,16 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "wait",
               "milliseconds": 4650
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1838,6 +2022,10 @@
             {
               "type": "click",
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
             },
             {
               "type": "waitFor",
@@ -1907,8 +2095,16 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(4)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "wait",
               "milliseconds": 3000
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "waitFor",
@@ -1938,9 +2134,17 @@
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)"
             },
             {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
+            },
+            {
               "type": "waitFor",
               "selector": ".p6-feature-object.is-updating",
               "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='暂停当前动画']"
             },
             {
               "type": "press",
@@ -1963,6 +2167,10 @@
             {
               "type": "click",
               "selector": ".p6-phase-rail .icarl-guided__step:nth-child(5)"
+            },
+            {
+              "type": "click",
+              "selector": ".p6-controls > div button[aria-label='继续当前动画']"
             },
             {
               "type": "waitFor",
@@ -2772,7 +2980,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "waitFor",
@@ -2812,7 +3020,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "waitFor",
@@ -2834,11 +3042,11 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "click",
@@ -2883,7 +3091,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "waitFor",
@@ -2923,7 +3131,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "waitFor",
@@ -2945,11 +3153,11 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "waitFor",
@@ -2971,19 +3179,19 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "waitFor",
@@ -3005,7 +3213,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "waitFor",
@@ -3036,7 +3244,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 600
+              "milliseconds": 1500
             }
           ]
         },
@@ -3053,7 +3261,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "waitFor",
@@ -3066,7 +3274,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 950
+              "milliseconds": 3000
             }
           ]
         },
@@ -3083,7 +3291,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-workbench-controls > button:last-child"
+              "selector": ".p9-transport > button:last-child"
             },
             {
               "type": "click",
