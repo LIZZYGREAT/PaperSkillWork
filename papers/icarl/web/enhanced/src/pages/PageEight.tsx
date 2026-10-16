@@ -309,9 +309,9 @@ export function PageEight({ onContinue }: { onContinue?: () => void }) {
       <button type="button" className="icarl-button icarl-button--quiet" disabled={currentIndex === 0} onClick={() => navigateTab(-1)}>上一个问题</button>
       <button type="button" className="icarl-button icarl-button--primary" disabled={currentIndex === tabs.length - 1} onClick={() => navigateTab(1)}>下一个问题<span aria-hidden="true"> →</span></button>
     </div></div>
-    <section className="p8-page-handoff" aria-label="进入完整 iCaRL 运行">
-      <div><span className="eyebrow">实验总结 · 回到完整运行</span><h2>把证据放回系统流程</h2><p>继续追踪输入、快照、参数更新、记忆维护与最近原型预测。</p></div>
-      <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue} disabled={!onContinue}>下一页：完整 iCaRL 运行 <span aria-hidden="true">→</span></button>
+    <section className="p8-page-handoff" aria-label="进入 iCaRL 一次增量学习的完整逻辑">
+      <div><span className="eyebrow">实验总结 · 进入完整推演</span><h2>把证据放回系统流程</h2><p>按运行顺序追踪训练准备、模型更新、记忆维护、最近原型预测与下一轮交接。</p></div>
+      <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue} disabled={!onContinue}>下一页：一次增量学习的完整逻辑 <span aria-hidden="true">→</span></button>
     </section>
   </article>;
 }

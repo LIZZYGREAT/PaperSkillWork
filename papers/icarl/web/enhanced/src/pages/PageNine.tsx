@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
 import { SampleToken } from "../components/SampleToken";
 import {
@@ -19,665 +19,314 @@ import {
   QUERY_PREDICTION,
   TRAINING_SET_SIZE,
   projectSampleFeatures,
-  samplesForClass,
   type ClassId,
   type IncomingClassId,
   type Sample,
 } from "../data/icarl-runtime";
-import { INCREMENTAL_STAGE_DATA, binaryCrossEntropy, buildTargets, sixNodeBceLoss, studentOutputFor, teacherSnapshotFor } from "../data/incremental-training";
-import { useAnimationTimeline } from "../shared/animation/useAnimationTimeline";
-import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import {
-  RUNTIME_CHAPTERS,
-  RUNTIME_CHAPTER_FIRST_CLIP,
-  RUNTIME_CLIPS,
-  RUNTIME_CLIP_INDEX,
-  runtimeSceneAt,
-  type RuntimeChapterId,
-  type RuntimeObjectId,
-  type RuntimeScene,
-} from "./page-nine-scene";
+  INCREMENTAL_STAGE_DATA,
+  binaryCrossEntropy,
+  buildTargets,
+  sixNodeBceLoss,
+  studentOutputFor,
+  teacherSnapshotFor,
+} from "../data/incremental-training";
 
-const P9_COMPARISON_PROTOTYPES = ALL_CLASS_IDS.map((classId) => PROTOTYPES.find((prototype) => prototype.classId === classId)!);
-const P9_COMPARISON_ENTRIES = ALL_CLASS_IDS.map((classId) => QUERY_DISTANCES.find((entry) => entry.classId === classId)!);
 const oldDemoSample = P_BEFORE.A[0];
-const newDemoSample = INCOMING_SAMPLES.find((sample) => sample.classId === "D")!;
-const demoQSamples = [oldDemoSample, newDemoSample] as const;
-const trainingDemoSample = INCOMING_SAMPLES.find((sample) => sample.classId === "D")!;
-const trainingDemoTargets = buildTargets(trainingDemoSample);
-const trainingDemoOutputs = studentOutputFor(trainingDemoSample);
+const newDemoSample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sample.classId === "D")!;
+const trainingDemoTargets = buildTargets(newDemoSample);
+const trainingDemoOutputs = studentOutputFor(newDemoSample);
 const trainingDemoLoss = sixNodeBceLoss(trainingDemoTargets, trainingDemoOutputs);
-const p9CurrentPoints = projectSampleFeatures(CURRENT_EXEMPLARS, "after", true);
-const p9TrackedOldSamples = OLD_CLASS_IDS.flatMap((classId) => P_AFTER[classId]);
-const p9TrackedBeforePoints = projectSampleFeatures(p9TrackedOldSamples, "before", true);
-const p9PrototypeData = PROTOTYPES.map((prototype) => ({
-  classId: prototype.classId,
-  point: prototype.point,
-  sampleIds: P_AFTER[prototype.classId].map((sample) => sample.id),
-}));
+const currentFeaturePoints = projectSampleFeatures(CURRENT_EXEMPLARS, "after", true);
+const previousFeaturePoints = projectSampleFeatures(CURRENT_EXEMPLARS, "before", true);
+const queryPrototypes = ALL_CLASS_IDS.map((classId) => PROTOTYPES.find((prototype) => prototype.classId === classId)!);
 
 function classAccent(classId: ClassId): CSSProperties {
   return { "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties;
 }
 
-function P9FlowToken({ sample, start, end, progress, copy = false, lane = 84, source }: { sample: Sample; start: number; end: number; progress: number; copy?: boolean; lane?: number; source?: string }) {
-  const boundedProgress = Math.max(0, Math.min(1, progress));
-  const style = { left: `${start + (end - start) * boundedProgress}%`, top: `${lane}%`, "--class-accent": CLASS_VISUALS[sample.classId].color } as CSSProperties;
+function ProcessSection({
+  number,
+  title,
+  handoff,
+  children,
+  figure,
+}: {
+  number: string;
+  title: string;
+  handoff: string;
+  children: ReactNode;
+  figure: ReactNode;
+}) {
+  const id = `p9-step-${number}`;
   return (
-    <span className="p9-flow-token" style={style} data-flow-id={sample.id} data-flow-source={source} data-flow-start={start} data-flow-end={end} data-flow-progress={boundedProgress.toFixed(3)} data-training-copy={copy ? "true" : "false"}>
-      <SampleToken sample={sample} role={sample.classId === "A" || sample.classId === "B" || sample.classId === "C" ? "exemplar" : "incoming"} compact />
-      {copy ? <small>副本</small> : null}
-    </span>
-  );
-}
-
-function P9WorkbenchAnchors({ scene }: { scene: RuntimeScene }) {
-  const isFeatureChapter = scene.chapterId === "rebuild-prototypes" || scene.chapterId === "predict";
-  const isHandoff = scene.chapterId === "handoff";
-  const showFeatureObjects = isFeatureChapter || isHandoff;
-  const isReencoding = scene.clip.id === "reencode-p-after";
-  const isFormingPrototypes = scene.clip.id === "form-prototypes";
-  const isPredicting = scene.chapterId === "predict";
-  const prototypeProgress = isFormingPrototypes ? Math.max(0, Math.min(1, (scene.progress - 0.3) / 0.62)) : isPredicting || isHandoff ? 1 : 0;
-  const sampleOpacity = isReencoding ? scene.progress : isFeatureChapter || isHandoff ? 1 : 0;
-  const featureChartOpacity = isHandoff ? 1 - scene.progress : 1;
-  const routeSample = scene.activeQSampleId
-    ? INCREMENTAL_STAGE_DATA.trainingSamples.find((sample) => sample.id === scene.activeQSampleId) ?? null
-    : null;
-  const showQFlight = routeSample && (scene.clip.id === "snapshot-old-row" || scene.clip.id === "snapshot-new-row" || scene.clip.id === "fill-q-rows") && scene.progress < 1;
-  const showTrainingFlight = scene.clip.id === "build-targets-and-loss" || scene.clip.id === "update-theta";
-
-  return (
-    <section className="p9-workbench-anchors" data-anchor-focus={scene.focus} aria-label="持续挂载的对象锚点">
-      <div className="p9-anchor-route" aria-label="本轮对象交接路径">
-        <article className="p9-anchor-card" id="anchor_X_new" data-canonical-id="anchor_X_new" data-object-id="X_new" data-status={scene.objectStatus.X_new}>
-          <span className="p9-anchor-label">输入</span><strong>X_new</strong><b>{INCOMING_SAMPLES.length} 张</b><small>D / E / F · 完整批次</small>
-        </article>
-        <article className="p9-anchor-card" id="anchor_D" data-canonical-id="training_set_D" data-object-id="D" data-status={scene.objectStatus.D}>
-          <span className="p9-anchor-label">合并</span><strong>D</strong><b>{scene.dSampleCount ?? 0} / {TRAINING_SET_SIZE}</b><small>{scene.oldCopiesInD} 旧副本 + {scene.incomingSamplesInD} 新图</small>
-        </article>
-        <article className="p9-anchor-card" id="anchor_teacher" data-canonical-id="old_teacher" data-object-id="teacher" data-status={scene.clipIndex <= RUNTIME_CLIP_INDEX["fill-q-rows"] ? "active" : "released"}>
-          <span className="p9-anchor-label">固定教师</span><strong>Θ_before</strong><b>A · B · C</b><small>三个旧节点</small>
-        </article>
-        <article className="p9-anchor-card" id="anchor_Q" data-canonical-id="response_snapshot_Q" data-object-id="Q" data-status={scene.objectStatus.Q}>
-          <span className="p9-anchor-label">冻结响应</span><strong>Q · 30×3</strong><b>{scene.qRowsWritten} 行完成</b><small>{routeSample?.id ?? "按样本 ID 对齐"}</small>
-        </article>
-        <article className="p9-anchor-card" id="anchor_student" data-canonical-id="student_targets" data-object-id="student" data-status={scene.objectStatus.targets}>
-          <span className="p9-anchor-label">共同训练</span><strong>Student</strong><b>6 个 Sigmoid</b><small>Q 软目标 + 新类硬标签</small>
-        </article>
-        {scene.clip.id === "merge-training-set" ? <>
-          <P9FlowToken sample={oldDemoSample} start={10} end={30} progress={scene.progress} copy lane={72} source="P_before" />
-          <P9FlowToken sample={newDemoSample} start={10} end={30} progress={scene.progress} lane={96} source="X_new" />
-        </> : null}
-        {showQFlight && routeSample ? <P9FlowToken sample={routeSample} start={30} end={70} progress={scene.progress} source="D" /> : null}
-        {showTrainingFlight ? <P9FlowToken sample={trainingDemoSample} start={30} end={90} progress={scene.clip.id === "update-theta" ? 1 : scene.progress} source="D / Q" /> : null}
+    <section className="p9-step" data-step={number} aria-labelledby={`${id}-title`}>
+      <div className="p9-step__copy">
+        <span className="p9-step__number">{number} <i aria-hidden="true">/ 07</i></span>
+        <h2 id={`${id}-title`}>{title}</h2>
+        <div className="p9-step__narrative">{children}</div>
       </div>
-      <div className="p9-feature-anchor" data-object-id="feature-space" data-feature-state={scene.chapterId === "rebuild-prototypes" ? scene.objectStatus.prototypes : showFeatureObjects ? scene.objectStatus.query : "pending"}>
-        <header><div><span className="p9-anchor-label">同一特征空间 · 固定坐标</span><strong>{isPredicting ? "Query 与六个原型比较" : isHandoff ? "本轮推断结果正在交接" : isFeatureChapter ? "P_after 的图像、原型与 Query" : "等待 P_after 重编码"}</strong></div><span>{isPredicting ? `${Math.floor(scene.comparisonProgress * ALL_CLASS_IDS.length)} / ${ALL_CLASS_IDS.length} 条距离` : "φ_Θ_after"}</span></header>
-        <div className="p9-feature-anchor-chart p9-prediction-chart" style={{ "--p9-prototypes-opacity": prototypeProgress, "--p9-feature-samples-opacity": sampleOpacity, opacity: featureChartOpacity } as CSSProperties} data-shared-chart="true" data-prototypes-visible={prototypeProgress > 0 ? "true" : "false"}>
-          <FeatureSpaceWorkbench
-            mode={isPredicting || isHandoff ? "inference" : isFeatureChapter ? "prototypes" : "projection"}
-            title={isPredicting || isHandoff ? "共享特征空间 · 最近均值分类" : "共享特征空间 · P_after 重编码"}
-            description="同一张特征空间从原型构建连续到 Query 比较；坐标、exemplar ID 与真实运行时距离保持一致。"
-            points={showFeatureObjects ? p9CurrentPoints : []}
-            previousPoints={isReencoding ? p9TrackedBeforePoints : []}
-            motionProgress={isReencoding ? scene.progress : undefined}
-            prototypes={showFeatureObjects ? P9_COMPARISON_PROTOTYPES : []}
-            query={isPredicting || isHandoff ? QUERY_FEATURE : undefined}
-            queryLabelOffset={{ dx: -14, dy: 28, anchor: "end" }}
-            queryRevealProgress={isPredicting ? scene.queryProgress : isHandoff ? 1 : undefined}
-            comparisonProgress={isPredicting ? scene.comparisonProgress : isHandoff ? 1 : undefined}
-            completedComparisonOpacity={0.68}
-            nearestHighlightProgress={isPredicting ? scene.nearestHighlightProgress : isHandoff ? 1 : undefined}
-            unitCircle
-            markerScale={0.82}
-            showSampleLabels={false}
-            focusableSamples={false}
-          />
-        </div>
-        {isPredicting && scene.objectStatus.prediction === "active" ? <p className="p9-feature-result" style={{ opacity: scene.nearestHighlightProgress }} data-result-class={QUERY_PREDICTION}>六类比较完成 · argmin = {CLASS_VISUALS[QUERY_PREDICTION].displayLabel} · {QUERY_DISTANCES[0].distance.toFixed(3)}</p> : null}
+      <div className="p9-step__figure">
+        <div className="p9-figure-heading"><span>状态与逻辑图</span><b>{number}</b></div>
+        {figure}
       </div>
+      <div className="p9-step__handoff"><span>交给下一步</span><strong>{handoff}</strong></div>
     </section>
   );
 }
 
-function PersistentState({ scene }: { scene: RuntimeScene }) {
-  const isAfter = scene.memory === "after";
-  const isBuilding = scene.memory === "building" || scene.memory === "truncating";
-  const removedOldSamples = Math.max(0, P_BEFORE.A.length * OLD_CLASS_IDS.length - scene.oldMemoryRetained);
-  const memoryGroups = ALL_CLASS_IDS.map((classId) => {
-    const oldClass = OLD_CLASS_IDS.includes(classId as (typeof OLD_CLASS_IDS)[number]);
-    const oldClassIndex = oldClass ? OLD_CLASS_IDS.indexOf(classId as (typeof OLD_CLASS_IDS)[number]) : -1;
-    const removedFromThisClass = oldClass
-      ? Math.min(P_BEFORE[classId].length - NEXT_QUOTA, Math.max(0, removedOldSamples - oldClassIndex * (P_BEFORE[classId].length - NEXT_QUOTA)))
-      : 0;
-    const oldRetainedForClass = P_BEFORE[classId].length - removedFromThisClass;
-    const selectedCount = classId === "D" ? Math.min(NEXT_QUOTA, scene.newExemplarsSelected)
-      : classId === "E" ? Math.min(NEXT_QUOTA, Math.max(0, scene.newExemplarsSelected - NEXT_QUOTA))
-        : classId === "F" ? Math.min(NEXT_QUOTA, Math.max(0, scene.newExemplarsSelected - NEXT_QUOTA * 2)) : 0;
-    const retainedSamples = oldClass
-      ? (isAfter || isBuilding ? P_BEFORE[classId].slice(0, oldRetainedForClass) : P_BEFORE[classId])
-      : (isAfter ? P_AFTER[classId] : NEW_CLASS_HERDING[classId as IncomingClassId].ordered.slice(0, selectedCount));
-    const samples = oldClass && scene.clip.id === "truncate-old-prefix" ? P_BEFORE[classId] : retainedSamples;
-    return { classId, samples, retainedSamples, oldClass, oldRetainedForClass };
-  }).filter(({ oldClass, retainedSamples }) => oldClass || retainedSamples.length > 0 || isAfter);
-  const memoryIds = memoryGroups.flatMap(({ retainedSamples }) => retainedSamples.map((sample) => sample.id));
-  return (
-    <aside className="p9-persistent" aria-label="固定持久状态">
-      <section className="p9-card p9-model-card" id="persistent_model_state" data-canonical-id="persistent_model_state">
-        <header className="p9-card-heading">
-          <div><span className="p9-eyebrow">持久模型</span><h2>当前学习器</h2></div>
-          <b className="p9-theta-badge" data-theta-state={scene.theta}>Θ_{scene.theta}</b>
-        </header>
-        <div className="p9-model-diagram">
-          <div className="p9-extractor" id="feature_extractor" data-canonical-id="feature_extractor">
-            <span className="p9-layer-stack" aria-hidden="true"><i /><i /><i /><i /></span>
-            <strong>φ<sub>Θ</sub></strong>
-            <small>共享特征提取器</small>
-          </div>
-          <span className="p9-flow-arrow" aria-hidden="true">→</span>
-          <div className="p9-head-preview" id="training_head" data-canonical-id="training_head" aria-label="更新前的三个旧类别训练节点">
-            {OLD_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}>{CLASS_VISUALS[classId].glyph}<small>g{CLASS_VISUALS[classId].index}</small></span>)}
-          </div>
-        </div>
-        <p className="p9-card-note">{scene.theta === "before" ? "更新前的旧模型；Q 由这三个旧节点产生。" : "符号化参数状态；不展示虚构的优化器轨迹。"}</p>
-      </section>
-
-      <section className="p9-card p9-memory-card" id="persistent_memory_state" data-canonical-id="persistent_memory_state">
-        <header className="p9-card-heading">
-          <div><span className="p9-eyebrow">{isAfter ? "已提交持久记忆" : isBuilding ? "记忆构建工作区" : "持久图片记忆"}</span><h2>{isAfter ? "P_after 原始 exemplars" : isBuilding ? "待提交 P_after 候选" : "P_before 有序 exemplars"}</h2></div>
-          <b className="p9-budget-badge">K={MEMORY_BUDGET}</b>
-        </header>
-        <p className="p9-memory-caption">{isAfter ? "P_after · 12/12 张。六类各保留当前表示下的两张原始图片。" : isBuilding ? `待提交 P_after · ${scene.committedMemoryCount}/${MEMORY_BUDGET} 个槽位；旧图保留原 ID，新图按 Herding 顺序加入。` : "P_before · 12/12 张。旧图片一直留在原位；送入 D 的是训练副本。"}</p>
-        <div className={"p9-memory-groups" + (isBuilding || isAfter ? " is-compact" : "")} data-memory-count={isAfter ? MEMORY_BUDGET : isBuilding ? scene.committedMemoryCount : 12}>
-          {memoryGroups.map(({ classId, samples, oldClass, oldRetainedForClass }) => (
-            <section className="p9-memory-group" key={classId} style={classAccent(classId)} aria-label={CLASS_VISUALS[classId].displayLabel + " 的持久记忆"}>
-              <header><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><small>{oldClass ? isAfter ? "P_after" : isBuilding ? "待提交前缀" : "P_before" : isAfter ? "P_after" : "待提交"}</small></header>
-              <div className="p9-memory-tokens">
-                {samples.map((sample, index) => {
-                  const isLeaving = oldClass && scene.clip.id === "truncate-old-prefix" && index >= oldRetainedForClass;
-                  const order = oldClass ? index + 1 : index + 1;
-                  return <span className="p9-memory-token" key={sample.id} style={{ "--p9-token-opacity": isLeaving ? 0 : 1 } as CSSProperties} data-retained-id={isLeaving ? undefined : sample.id} data-memory-role={isLeaving ? "truncating-tail" : oldClass ? "old-prefix" : "herding-selection"} aria-hidden={isLeaving ? true : undefined}>
-                    <SampleToken sample={sample} role={isLeaving ? "removed" : oldClass ? "exemplar" : "selected"} order={order} compact />
-                  </span>;
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
-        <div className="p9-memory-integrity" data-memory-source-ids={memoryIds.join(" ")}>
-          <span aria-hidden="true">●</span> {isAfter ? "P_after 已提交 · 原始 exemplar" : isBuilding ? `预算占用 ${scene.committedMemoryCount}/${MEMORY_BUDGET} · 原始图片 ID 可追踪` : "持久原件不移动"}
-        </div>
-      </section>
-    </aside>
-  );
+function SampleTokens({ samples, role = "exemplar" }: { samples: readonly Sample[]; role?: "exemplar" | "incoming" | "selected" | "removed" }) {
+  return <div className="p9-token-list">{samples.map((sample, index) => (
+    <SampleToken key={sample.id} sample={sample} role={role} order={index + 1} compact />
+  ))}</div>;
 }
 
-function TrainingBridgeScene({ scene }: { scene: RuntimeScene }) {
-  const updating = scene.clip.id === "update-theta";
-  const isComplete = scene.theta === "after";
-  return (
-    <div className="p9-training-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-training-sample-id={trainingDemoSample.id}>
-      <section className="p9-training-sample-card">
-        <span className="p9-eyebrow">D 中的一张真实教学样本</span>
-        <SampleToken sample={trainingDemoSample} role="incoming" compact />
-        <small>Q 行 {trainingDemoSample.id} 与该图像 ID 对齐</small>
-      </section>
-      <div className="p9-training-objective">
-        <div className="p9-training-equation" data-six-node-loss={trainingDemoLoss.toFixed(6)}><span>Q 的 3 个软目标</span><i>+</i><span>真实新类 3 个硬标签</span><i>→</i><b>6 节点 BCE · Σ {trainingDemoLoss.toFixed(3)}</b></div>
-        <div className="p9-training-nodes" role="table" aria-label={`${trainingDemoSample.id} 的六节点教学 BCE 示例`}>
-          <div className="p9-training-row p9-training-row--head" role="row"><b>节点</b><span>目标值</span><span>当前输出</span><span>BCE</span></div>
-          {ALL_CLASS_IDS.map((classId, index) => {
-            const target = trainingDemoTargets[index];
-            const output = trainingDemoOutputs[index];
-            const source = index < OLD_CLASS_IDS.length ? "Q 软目标" : "类别硬标签";
-            return <div className="p9-training-row" role="row" key={classId} style={classAccent(classId)} data-target-source={source} data-node={classId}>
-              <b><i>{CLASS_VISUALS[classId].glyph}</i>{CLASS_VISUALS[classId].outputNodeLabel}</b>
-              <span>{target.toFixed(3)}<small>{source}</small></span>
-              <span>{output.toFixed(3)}</span>
-              <span>{binaryCrossEntropy(target, output).toFixed(3)}</span>
-            </div>;
-          })}
-        </div>
-        <small className="p9-training-fixture-note">固定教学数据用于说明目标与 BCE 对齐，不代表真实训练日志或优化器轨迹。</small>
-      </div>
-      <section className="p9-theta-transition" data-theta-state={scene.theta}>
-        <div><span>Θ_before</span><i aria-hidden="true">→</i><b>{isComplete ? "Θ_after 已提交" : updating ? "共享参数更新中" : "等待更新"}</b></div>
-        <div className="p9-symbolic-progress" role="progressbar" aria-label="符号化参数更新步骤，非损失曲线" aria-valuemin={0} aria-valuemax={100} aria-valuenow={updating ? Math.round(scene.progress * 100) : isComplete ? 100 : 0}>
-          <i style={{ width: (updating ? scene.progress : isComplete ? 1 : 0) * 100 + "%" }} />
-        </div>
-        <small>Θ_after 只在本片段结束时提交 · P_before 在训练期间不变</small>
-      </section>
+function P9Step01Figure() {
+  return <div className="p9-state-figure" data-p9-figure="inherited-state">
+    <div className="p9-model-state" data-object-id="Theta_before">
+      <span className="p9-model-mark" aria-hidden="true"><i /><i /><i /></span>
+      <b>Θ_before</b><small>已学到的共享模型参数</small>
     </div>
-  );
-}
-
-function MemoryConstructionScene({ scene }: { scene: RuntimeScene }) {
-  const selectedFor = (classId: IncomingClassId) => {
-    const count = classId === "D" ? Math.min(NEXT_QUOTA, scene.newExemplarsSelected)
-      : classId === "E" ? Math.min(NEXT_QUOTA, Math.max(0, scene.newExemplarsSelected - NEXT_QUOTA))
-        : Math.min(NEXT_QUOTA, Math.max(0, scene.newExemplarsSelected - NEXT_QUOTA * 2));
-    return NEW_CLASS_HERDING[classId].ordered.slice(0, count);
-  };
-  const selectedIds = INCOMING_CLASS_IDS.flatMap((classId) => selectedFor(classId).map((sample) => sample.id));
-  return (
-    <div className="p9-memory-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-memory-count={scene.committedMemoryCount} data-selected-ids={selectedIds.join(" ")}>
-      <div className="p9-memory-scene-summary">
-        <div><span className="p9-eyebrow">固定图片预算</span><strong>K = {MEMORY_BUDGET}</strong><small>旧类前缀 {scene.oldMemoryRetained} + 新类入选 {scene.newExemplarsSelected}</small></div>
-        <div className="p9-memory-meter" role="progressbar" aria-label="P9 持久记忆槽位占用" aria-valuemin={0} aria-valuemax={MEMORY_BUDGET} aria-valuenow={scene.committedMemoryCount}><span style={{ width: `${(scene.committedMemoryCount / MEMORY_BUDGET) * 100}%` }} /></div>
-        <b>{scene.committedMemoryCount} / {MEMORY_BUDGET}</b>
-      </div>
-      <section className="p9-memory-candidates">
-        <header><span className="p9-eyebrow">新类完整候选集 · 当前 φ_after 的 Herding 顺序</span><b>只显示本类六张真实样本</b></header>
-        {INCOMING_CLASS_IDS.map((classId) => {
-          const ordered = NEW_CLASS_HERDING[classId].ordered;
-          const selected = selectedFor(classId);
-          return <div className="p9-herding-class" key={classId} style={classAccent(classId)} data-class-id={classId} data-selected-ids={selected.map((sample) => sample.id).join(" ")}>
-            <div className="p9-herding-heading"><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><span>{selected.length}/{NEXT_QUOTA} 已入槽</span></div>
-            <div className="p9-herding-candidates">{ordered.map((sample, index) => {
-              const rank = selected.findIndex((entry) => entry.id === sample.id);
-              return <span key={sample.id} className={"p9-herding-candidate" + (rank >= 0 ? " is-selected" : "")} data-sample-id={sample.id} data-herding-rank={rank >= 0 ? rank + 1 : ""}>
-                <SampleToken sample={sample} role={rank >= 0 ? "selected" : "incoming"} order={rank >= 0 ? rank + 1 : undefined} compact />
-                <small>{rank >= 0 ? `p${rank + 1} · 入选` : "候选"}</small>
-              </span>;
-            })}</div>
-          </div>;
-        })}
-      </section>
-      <footer className="p9-memory-rule"><b>旧类</b><span>按 P_before 原顺序只保留前缀；不重跑旧类 Herding。</span><i aria-hidden="true">·</i><b>新类</b><span>按各自运行时 Herding 顺序取 p₁、p₂。</span></footer>
-      <p className="p9-memory-submit">{scene.memory === "after" ? "P_after 已提交：六类各两张，持久图片总数仍为 12。" : "名单确定后只提交一次 P_after；图片保持原始样本身份。"}</p>
+    <span className="p9-state-plus" aria-hidden="true">+</span>
+    <div className="p9-before-memory" data-object-id="P_before">
+      <header><b>P_before</b><span>原始 Exemplar · 12 / 12</span></header>
+      {OLD_CLASS_IDS.map((classId) => <div className="p9-memory-row" key={classId} style={classAccent(classId)}>
+        <b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b>
+        <SampleTokens samples={P_BEFORE[classId]} />
+      </div>)}
     </div>
-  );
+    <p className="p9-figure-caption">本轮开始时只继承模型参数与有序原始 exemplar。</p>
+  </div>;
 }
 
-function PrototypeRebuildScene({ scene }: { scene: RuntimeScene }) {
-  const isComplete = scene.clip.id === "form-prototypes" && scene.progress >= 1;
-  return (
-    <div className="p9-prototype-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-prototype-ids={ALL_CLASS_IDS.map((classId) => P_AFTER[classId].map((sample) => sample.id).join(",")).join(" ")}>
-      <div className="p9-prototype-inputs">
-        <div><span className="p9-eyebrow">已提交的原始记忆</span><b>P_after · 12 张</b><small>样本图像 ID 保留；旧图与新图一并读取</small></div>
-        <div className="p9-prototype-id-list">{CURRENT_EXEMPLARS.map((sample) => <span key={sample.id} style={classAccent(sample.classId)} data-exemplar-id={sample.id}>{CLASS_VISUALS[sample.classId].glyph} {sample.id}</span>)}</div>
-        <span className="p9-reencode-arrow" aria-hidden="true">↓</span>
-        <div className="p9-prototype-model"><b>φ<sub>Θ_after</sub></b><span>{scene.clip.id === "reencode-p-after" ? `重新编码中 · ${Math.round(scene.progress * 100)}%` : "归一化特征与类别均值"}</span></div>
-      </div>
-      <div className="p9-prototype-identity" data-shared-prototype-ids={p9PrototypeData.map(({ classId }) => classId).join(" ")}>
-        {p9PrototypeData.map(({ classId, point, sampleIds }) => <span key={classId} style={classAccent(classId)} data-prototype-class={classId} data-prototype-point={point.join(",")} data-exemplar-ids={sampleIds.join(" ")}>
-          <b>{CLASS_VISUALS[classId].glyph} μ{CLASS_VISUALS[classId].index}</b><small>{sampleIds.join(" + ")}</small>
-        </span>)}
-      </div>
-      <p className="p9-prototype-note">{isComplete ? "六类原型均由各自两张 P_after exemplar 的 φ_Θ_after 单位化特征均值构成。" : "同一 exemplar ID 重新编码；prototype 坐标只在 P_after 就绪后出现。"}</p>
+function P9Step02Figure() {
+  const incomingPerClass = INCOMING_SAMPLES.length / INCOMING_CLASS_IDS.length;
+  return <div className="p9-assembly-figure" data-p9-figure="training-set" data-d-count={TRAINING_SET_SIZE}>
+    <div className="p9-source-lanes">
+      <article className="p9-source-card" data-object-id="P_before">
+        <span>持久原件</span><b>P_before · 12 张</b>
+        <small>{P_BEFORE.A[0].id}、{P_BEFORE.B[0].id}、{P_BEFORE.C[0].id} …</small>
+      </article>
+      <span className="p9-route-label">读取训练副本</span>
+      <article className="p9-source-card p9-source-card--new" data-object-id="X_new">
+        <span>本批新图 X_new</span><b>{INCOMING_SAMPLES.length} 张</b>
+        <small>{INCOMING_CLASS_IDS.map((classId) => `${CLASS_VISUALS[classId].displayLabel} ${incomingPerClass}`).join(" · ")}</small>
+      </article>
     </div>
-  );
-}
-
-function PredictionScene({ scene }: { scene: RuntimeScene }) {
-  const comparisonCount = scene.comparisonProgress * P9_COMPARISON_ENTRIES.length;
-  const resultVisible = scene.objectStatus.prediction === "active";
-  return (
-    <div className="p9-prediction-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-query-progress={scene.queryProgress.toFixed(3)} data-comparison-progress={scene.comparisonProgress.toFixed(3)} data-prediction-class={resultVisible ? QUERY_PREDICTION : ""}>
-      <div className="p9-prediction-route"><span>φ<sub>Θ_after</sub></span><i aria-hidden="true">→</i><b>P_after 原型</b><i aria-hidden="true">←</i><span>最近距离决定类别</span></div>
-      <div className="p9-prediction-details">
-        <div className="p9-distance-list" aria-label="Query 到六类原型的共享运行时距离">
-          {P9_COMPARISON_ENTRIES.map((entry, index) => {
-            const amount = Math.max(0, Math.min(1, comparisonCount - index));
-            const state = amount >= 1 ? "complete" : amount > 0 ? "active" : "pending";
-            return <div className={`p9-distance-row p9-distance-row--${state}${resultVisible && entry.classId === QUERY_PREDICTION ? " is-nearest" : ""}`} key={entry.classId} data-comparison-rank={index + 1} data-prototype-class-id={entry.classId} data-distance={entry.distance.toFixed(6)} data-reveal-progress={amount.toFixed(3)} style={classAccent(entry.classId)}>
-              <span>{index + 1}</span><b><i>{CLASS_VISUALS[entry.classId].glyph}</i>{CLASS_VISUALS[entry.classId].displayLabel}</b><strong>{state === "pending" ? "—" : entry.distance.toFixed(3)}</strong><small>{state === "complete" ? "已比较" : state === "active" ? "正在比较" : "等待"}</small>
-            </div>;
-          })}
-        </div>
-        {resultVisible ? <div className="p9-prediction-result" data-result-class={QUERY_PREDICTION} style={{ opacity: scene.nearestHighlightProgress }}><span>最近原型</span><b style={classAccent(QUERY_PREDICTION)}><i>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>真实最小距离 · {QUERY_DISTANCES[0].distance.toFixed(3)}</small></div> : <p className="p9-prediction-pending">{scene.clip.id === "query-arrives" ? "Query 正在进入当前特征空间；尚未开始比较。" : `${Math.min(P9_COMPARISON_ENTRIES.length, Math.floor(comparisonCount))} / ${P9_COMPARISON_ENTRIES.length} 个距离已完成。`}</p>}
-        <p className="p9-prediction-note">训练 head 保留在模型中，但本次分类不读取它的 argmax。</p>
+    <div className="p9-assembly-arrow" aria-hidden="true">↓</div>
+    <article className="p9-training-set" data-object-id="D">
+      <header><div><span>本轮临时训练集</span><b>D</b></div><strong>{INCREMENTAL_STAGE_DATA.trainingSamples.length} 张</strong></header>
+      <div className="p9-set-equation"><span>12 旧图副本</span><i>+</i><span>18 张新图</span><i>=</i><b>30</b></div>
+      <div className="p9-set-samples" aria-label="D 中的代表性样本">
+        <SampleToken sample={oldDemoSample} role="exemplar" compact />
+        <SampleToken sample={newDemoSample} role="incoming" compact />
       </div>
-    </div>
-  );
-}
-
-function HandoffScene({ scene }: { scene: RuntimeScene }) {
-  const predictionOpacity = Math.max(0, 1 - scene.progress);
-  const nextBatchOpacity = Math.max(0, Math.min(1, (scene.progress - 0.35) / 0.45));
-  const releasedItems = ["D", "Q", "targets", "loss"] as const;
-  return (
-    <div className="p9-handoff-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-next-state="S_r+1">
-      <div className="p9-handoff-equation"><span>Sᵣ</span><i aria-hidden="true">→</i><strong>Sᵣ₊₁ = Θ_after + P_after</strong></div>
-      <div className="p9-handoff-persistent">
-        <section><span className="p9-eyebrow">持续保留 · 模型参数与训练 head</span><b>Θ_after</b><small>共享特征提取器和训练 head 都在模型中</small></section>
-        <section><span className="p9-eyebrow">持续保留 · 原始图片记忆</span><b>P_after · 12 / 12</b><small>六类各两张，可在下一轮重新编码</small></section>
-      </div>
-      <div className="p9-handoff-released" aria-label="本轮临时对象已释放">
-        <span className="p9-eyebrow">本轮计算对象已退出</span>
-        {releasedItems.map((id) => <span key={id} className="p9-handoff-object" data-released-object={id}>{id} · 已释放</span>)}
-        <span className="p9-handoff-object" data-released-object="X_new">X_new · 选样完成后已释放</span>
-      </div>
-      <div className="p9-handoff-prediction" style={{ opacity: predictionOpacity }} data-prediction-class={QUERY_PREDICTION}>
-        <span>本轮 Query 结果</span><b style={classAccent(QUERY_PREDICTION)}><i>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>当前预测是本轮派生结果，不进入下一轮持久状态</small>
-      </div>
-      <div className="p9-handoff-next" style={{ opacity: nextBatchOpacity }} data-next-batch-only="true"><b>X_next</b><span>下一批入口提示 · 不播放假想的下一轮训练</span></div>
-      <p className="p9-handoff-caption">本轮结束后，只有 Θ_after 与 P_after 进入下一轮；训练样本、冻结响应、目标、损失和单次预测都已完成职责。</p>
-    </div>
-  );
-}
-
-function IncomingBatch() {
-  return (
-    <div className="p9-incoming-batch">
-      <div className="p9-incoming-total"><strong>X_new</strong><span>3 类 × 6 张 = 18 张完整新图</span></div>
-      <div className="p9-incoming-classes">
-        {INCOMING_CLASS_IDS.map((classId) => {
-          const representatives = samplesForClass(classId).slice(0, 2);
-          return (
-            <section className="p9-incoming-class" key={classId} style={classAccent(classId)}>
-              <header><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><span>6 张</span></header>
-              <div>{representatives.map((sample) => <SampleToken key={sample.id} sample={sample} role="incoming" compact />)}<small>另 4 张</small></div>
-            </section>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function MergeScene({ scene }: { scene: RuntimeScene }) {
-  const targetSamples = [P_BEFORE.A[0], P_BEFORE.B[0], P_BEFORE.C[0], ...INCOMING_CLASS_IDS.map((classId) => samplesForClass(classId)[0])];
-  return (
-    <div className="p9-merge-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-d-count={scene.dSampleCount ?? 0}>
-      <div className="p9-merge-equation">
-        <span><b>{scene.oldCopiesInD}</b> / 12 旧图副本</span><i>+</i>
-        <span><b>{scene.incomingSamplesInD}</b> / 18 新图</span><i>=</i>
-        <strong>D <b>{scene.dSampleCount ?? 0}</b> / {TRAINING_SET_SIZE}</strong>
-      </div>
-      <div className="p9-merge-canvas">
-        <div className="p9-merge-sources">
-          <div className="p9-source-card">
-            <span className="p9-eyebrow">来源 1 · P_before 副本</span>
-            <strong>12 张已存旧图</strong>
-            <div className="p9-source-tokens">
-              {OLD_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}>{CLASS_VISUALS[classId].glyph} {P_BEFORE[classId][0].id}</span>)}
-            </div>
-            <small>左侧原件仍留在 P</small>
-          </div>
-          <div className="p9-source-card p9-source-card--incoming">
-            <span className="p9-eyebrow">来源 2 · X_new</span>
-            <strong>D / E / F · 18 张完整图片</strong>
-            <div className="p9-source-tokens">
-              {INCOMING_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}>{CLASS_VISUALS[classId].glyph} {samplesForClass(classId)[0].id}</span>)}
-            </div>
-            <small>每类六张，本轮均可用</small>
-          </div>
-        </div>
-        <div className="p9-merge-routes" aria-hidden="true"><i /><i /></div>
-        <div className="p9-d-target" data-detail-object="D">
-          <span className="p9-eyebrow">本轮训练集</span>
-          <strong>D</strong>
-          <b>{scene.dSampleCount ?? 0} / 30</b>
-          <div className="p9-d-examples">{targetSamples.map((sample, index) => <span key={sample.id} className={index < 3 ? "is-copy" : "is-new"} data-sample-id={sample.id}>{sample.id}</span>)}</div>
-          <small>显示代表 ID · 总数按真实 D 样本同步</small>
-        </div>
-      </div>
-      <footer className="p9-scene-proof">
-        <b>副本关系</b><span data-original-sample-id={oldDemoSample.id}>P 原件 {oldDemoSample.id} 仍在左侧</span><i aria-hidden="true">→</i><span data-copy-sample-id={oldDemoSample.id}>D 中为同 ID 训练副本</span>
-      </footer>
-    </div>
-  );
-}
-
-function QValue({ value, progress, column }: { value: number; progress: number; column: number }) {
-  const cellStyle = { "--q-fill": (progress * 100) + "%" } as CSSProperties;
-  return (
-    <span className={"p9-q-cell" + (progress > 0 ? " is-writing" : "")} data-q-column={column + 1} data-progress={progress.toFixed(3)} data-q-value={value.toFixed(6)} style={cellStyle}>
-      <i aria-hidden="true" /><b>{progress >= 1 ? value.toFixed(3) : progress > 0 ? value.toFixed(3) : "—"}</b>
-    </span>
-  );
-}
-
-function QTableRow({ sample, active = false, cellProgress = [] }: { sample: Sample; active?: boolean; cellProgress?: readonly number[] }) {
-  const values = teacherSnapshotFor(sample);
-  return (
-    <div className={"p9-q-row" + (active ? " is-active" : "")} role="row" data-q-row={sample.id} data-sample-id={sample.id} style={classAccent(sample.classId)}>
-      <b role="rowheader"><span>{CLASS_VISUALS[sample.classId].glyph}</span>{sample.id}</b>
-      {values.map((value, column) => <QValue key={column} value={value} progress={active ? cellProgress[column] ?? 0 : 1} column={column} />)}
-    </div>
-  );
-}
-
-function SnapshotScene({ scene }: { scene: RuntimeScene }) {
-  const sample = scene.activeQSampleId
-    ? INCREMENTAL_STAGE_DATA.trainingSamples.find((entry) => entry.id === scene.activeQSampleId) ?? null
-    : null;
-  const qRows = demoQSamples.filter((entry, index) => scene.qRowsWritten >= index + 1);
-  const visibleRows = [...qRows];
-  if (sample && !visibleRows.some((entry) => entry.id === sample.id)) visibleRows.push(sample);
-  const cells = sample ? scene.activeQCellProgress : [];
-  const notShownCount = Math.max(0, scene.qRowsWritten - qRows.length - (sample ? 1 : 0));
-  return (
-    <div className="p9-snapshot-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-q-rows={scene.qRowsWritten} data-active-sample-id={sample?.id ?? ""}>
-      <div className="p9-snapshot-heading">
-        <span><b>Q</b> · 旧节点响应快照</span><strong>{scene.qRowsWritten} / 30 行 · 3 列</strong>
-      </div>
-      <div className="p9-q-route">
-        <section className="p9-route-node p9-route-node--data" data-detail-object="D">
-          <span className="p9-eyebrow">D · 当前样本</span>
-          <strong>30 个训练 ID</strong>
-          {sample ? <SampleToken sample={sample} role={sample.classId === "A" || sample.classId === "B" || sample.classId === "C" ? "exemplar" : "incoming"} compact /> : <small>同一张图依序传入教师网络</small>}
-        </section>
-        <section className="p9-route-node p9-route-node--teacher" data-detail-object="teacher">
-          <span className="p9-eyebrow">Θ_before · 旧教师</span>
-          <strong>旧类别节点</strong>
-          <div className="p9-teacher-nodes">
-            {OLD_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}>{CLASS_VISUALS[classId].glyph}<small>g{CLASS_VISUALS[classId].index}</small></span>)}
-          </div>
-          <small>冻结快照来源 · 参数尚未更新</small>
-        </section>
-        <section className="p9-route-node p9-route-node--q" data-detail-object="Q">
-          <span className="p9-eyebrow">目标矩阵</span>
-          <strong>Q · 30 × 3</strong>
-          <div className="p9-q-table" role="table" aria-label="Q 响应快照示例行">
-            <div className="p9-q-header" role="row"><b role="columnheader">sample ID</b><span role="columnheader">g₁</span><span role="columnheader">g₂</span><span role="columnheader">g₃</span></div>
-            {visibleRows.map((entry) => <QTableRow key={entry.id} sample={entry} active={entry.id === sample?.id} cellProgress={entry.id === sample?.id ? cells : []} />)}
-            {notShownCount > 0 ? <div className="p9-q-more" role="row">+ {notShownCount} 行已写入各自的 ID</div> : null}
-          </div>
-          <small className="p9-q-freeze">{scene.qRowsWritten === 30 ? "30 行完成 · Q 保持冻结" : `${scene.qRowsWritten} 行完成${sample ? ` · ${sample.id} 写入中` : " · 等待下一行"}`}</small>
-        </section>
-        <div className="p9-q-route-line" aria-hidden="true"><i /></div>
-      </div>
-      <div className="p9-q-identity">
-        <span>当前流动 ID</span><strong>{sample?.id ?? (scene.qRowsWritten === 30 ? "30 个 ID 已完成" : "等待下一张样本")}</strong>
-        <i aria-hidden="true">=</i><span>当前 Q 行</span><strong data-q-current-id={sample?.id ?? ""}>{sample?.id ?? "Q: 30 × 3"}</strong>
-      </div>
-      <p className="p9-q-explanation">旧样本和新样本都读取 Θ_before 的三个旧输出；Q 的行身份与 D 中的 sample ID 一一对应。</p>
-    </div>
-  );
-}
-
-function InheritedScene() {
-  return (
-    <div className="p9-inherited-scene" data-clip="inherit-state">
-      <span className="p9-state-equation">Sᵣ = Θ_before + P_before</span>
-      <h3>这一轮开始前，系统只保留两类持久对象</h3>
-      <div className="p9-inherited-objects"><span>Θ_before<small>共享模型参数</small></span><i aria-hidden="true">+</i><span>P_before<small>12 张有序原始图片</small></span></div>
-      <p>还没有新批次、D 或 Q。接下来让新类别到达，并保留旧图片的原始身份。</p>
-    </div>
-  );
-}
-
-function ArrivalScene() {
-  return (
-    <div className="p9-arrival-scene" data-clip="receive-new-batch">
-      <span className="p9-state-equation">X_new · 18 张完整新图</span>
-      <h3>三类完整图像进入本轮</h3>
-      <IncomingBatch />
-      <p>每类六张。后续将它们与旧记忆的训练副本放进同一个 D。</p>
-    </div>
-  );
-}
-
-function Guidance({ scene }: { scene: RuntimeScene }) {
-  const chapter = RUNTIME_CHAPTERS[scene.chapterIndex];
-  const result = scene.clip.id === "merge-training-set"
-    ? (scene.dSampleCount ?? 0) + " / 30 个样本已汇入 D"
-    : scene.chapterId === "snapshot-q"
-      ? scene.qRowsWritten + " / 30 行 Q 已写入"
-      : scene.chapterId === "inherited"
-        ? "Θ_before 与 P_before 保持固定"
-        : scene.chapterId === "train-update"
-          ? scene.theta === "after" ? "Θ_after 已提交 · P_before 仍为 12 张" : "目标与六节点 BCE 已对齐 · 等待参数提交"
-          : scene.chapterId === "manage-memory"
-            ? `${scene.committedMemoryCount} / ${MEMORY_BUDGET} 个图片槽位 · ${scene.newExemplarsSelected} 张新类已选`
-            : scene.chapterId === "rebuild-prototypes"
-              ? `${PROTOTYPES.length} 个共享运行时原型 · P_after 身份不变`
-              : scene.chapterId === "predict"
-                ? scene.objectStatus.prediction === "active"
-                  ? `最近原型：${CLASS_VISUALS[QUERY_PREDICTION].displayLabel} · 距离 ${QUERY_DISTANCES[0].distance.toFixed(3)}`
-                  : `${Math.floor(scene.comparisonProgress * QUERY_DISTANCES.length)} / ${QUERY_DISTANCES.length} 个真实距离已比较`
-                : scene.chapterId === "handoff"
-                  ? "下一轮起点 = Θ_after + P_after"
-                  : "X_new = 18 张图像已到达";
-  const known = scene.chapterId === "manage-memory"
-    ? "P_before 的旧类列表有序；新类各有六张完整候选，K 固定为 12。"
-    : scene.chapterId === "rebuild-prototypes"
-      ? "P_after 已固定；类别原型必须使用当前 φ_Θ_after 重新编码。"
-      : scene.chapterId === "predict"
-        ? "P_after 原型与 Query 来自共享运行时；先按固定类别顺序完成六条比较，再确定真实最小距离。"
-        : scene.chapterId === "handoff"
-          ? "Θ_after 与已提交的 P_after 是仅有的下一轮持久起点。"
-      : scene.chapterId === "train-update"
-        ? "Q 已冻结；旧节点读取匹配 ID 的软目标，新节点读取真实类别硬标签。"
-        : scene.chapterId === "inherited" ? "上一轮留下 Θ_before 和 P_before。" : "旧记忆原件仍在固定位置，D/Q 都是本轮临时对象。";
-  const next = scene.chapterId === "manage-memory"
-    ? "六类名单确认后，集中提交 P_after，再进入重编码。"
-    : scene.chapterId === "rebuild-prototypes"
-      ? "只在记忆名单确定后生成原型；随后才接入 Query。"
-      : scene.chapterId === "predict"
-        ? "最后突出真实 argmin；训练 head 保留在模型中，但不参与本次分类。"
-        : scene.chapterId === "handoff"
-          ? "X_next 只作为下一批入口提示；停在可读的最终状态，不模拟下一轮训练。"
-      : scene.chapterId === "train-update"
-        ? "这段只显示教学目标与符号化参数提交，不绘制虚构的 loss 或优化器轨迹。"
-        : scene.chapterId === "snapshot-q" ? "Q 写完后会冻结，训练阶段再读取它。" : "继续播放或逐片段前进，可以暂停查看中间态。";
-  return (
-    <aside className="p9-guidance" aria-labelledby="p9-guidance-title">
-      <span className="p9-eyebrow">当前步骤 · 第 {scene.chapterIndex + 1} 章 / 8</span>
-      <h2 id="p9-guidance-title">{chapter.question}</h2>
-      <div className="p9-guide-block"><small>已知</small><p>{known}</p></div>
-      <div className="p9-guide-block p9-guide-block--current"><small>正在发生</small><p>{scene.clip.narrative}</p></div>
-      <div className="p9-result-card"><small>当前结果</small><strong>{result}</strong></div>
-      <p className="p9-guide-next">{next}</p>
-    </aside>
-  );
-}
-
-function ObjectStatusBand({ scene }: { scene: RuntimeScene }) {
-  const objectIds: readonly RuntimeObjectId[] = ["X_new", "D", "Q", "targets", "loss", "prototypes", "query", "prediction"];
-  const visible = objectIds.filter((id) => scene.objectStatus[id] !== "pending");
-  return (
-    <section className="p9-object-band" aria-label="持久与临时对象状态">
-        <div className="p9-object-band__persistent"><span className="p9-eyebrow">{scene.memory === "building" || scene.memory === "truncating" ? "当前状态 / 记忆候选" : "持久"}</span><b>Θ_{scene.theta}</b><i aria-hidden="true">+</i><b>{scene.memory === "after" ? "P_after · 12 / 12" : scene.memory === "before" ? "P_before · 12 / 12" : `P_after 构建中 · ${scene.committedMemoryCount} / ${MEMORY_BUDGET}`}</b></div>
-      <div className="p9-object-band__temporary">
-        <span className="p9-eyebrow">本轮暂存与释放</span>
-        {visible.length === 0 ? <span className="p9-empty-state">尚未创建临时对象</span> : visible.map((id) => {
-          const label = id === "X_new" ? "X_new · 18 张" : id === "D" ? "D · " + (scene.dSampleCount ?? 0) + " / 30" : id === "Q" ? "Q · " + scene.qRowsWritten + " / 30 行" : id;
-          const status = scene.objectStatus[id];
-          return <span key={id} className={"p9-object-pill p9-object-pill--" + status} data-object-id={id} data-status={status}>{label}{status === "released" ? " · 已释放" : ""}</span>;
-        })}
-      </div>
-    </section>
-  );
-}
-
-export function PageNine({ onExit }: { onExit: () => void }) {
-  const reducedMotion = useReducedMotion();
-  const timeline = useAnimationTimeline({ clips: RUNTIME_CLIPS, reducedMotion, autoPlay: false });
-  const pause = timeline.controls.pause;
-  const scene = runtimeSceneAt(timeline.state.clipIndex, timeline.state.progress);
-  const replayBoundary = useRef<RuntimeChapterId | null>(null);
-  const progressPercent = ((timeline.state.clipIndex + timeline.state.progress) / RUNTIME_CLIPS.length) * 100;
-  useEffect(() => {
-    if (replayBoundary.current && replayBoundary.current !== scene.chapterId) {
-      replayBoundary.current = null;
-      pause();
-    }
-  }, [scene.chapterId, pause]);
-
-  const currentChapter = RUNTIME_CHAPTERS[scene.chapterIndex];
-  const isMerge = scene.clip.id === "merge-training-set";
-  const isSnapshot = scene.chapterId === "snapshot-q";
-  const isTraining = scene.chapterId === "train-update";
-  const isMemory = scene.chapterId === "manage-memory";
-  const isPrototype = scene.chapterId === "rebuild-prototypes";
-  const handleChapterSelect = (chapterId: RuntimeChapterId) => {
-    replayBoundary.current = null;
-    timeline.controls.goToClip(RUNTIME_CHAPTER_FIRST_CLIP[chapterId], { autoPlay: false });
-  };
-  const replayChapter = () => {
-    replayBoundary.current = currentChapter.id;
-    timeline.controls.goToClip(RUNTIME_CHAPTER_FIRST_CLIP[currentChapter.id]);
-  };
-  const playLabel = reducedMotion ? "下一步" : timeline.state.status === "playing" ? "暂停"
-    : timeline.state.status === "finished" || timeline.state.atEnd ? "从头播放"
-      : timeline.state.atStart ? "播放完整过程" : "继续播放";
-
-  return (
-    <article className="p9-page" id="runtime_workbench" data-canonical-id="runtime_workbench" data-clip={scene.clip.id} data-chapter={scene.chapterId} data-progress={scene.progress.toFixed(2)} aria-labelledby="page-nine-title">
-      <header className="p9-header">
-        <div className="p9-title-block">
-          <div className="p9-kicker"><span>第 9 页</span><i /> iCaRL · 一次增量更新</div>
-          <h1 id="page-nine-title">从当前状态到下一轮就绪</h1>
-          <p>前面各页已解释选样、Replay、Q、BCE 和 Prototype。现在只追踪新类别怎样把 Θ_before + P_before 变成下一轮可用状态。</p>
-        </div>
-        <div className="p9-controls" aria-label="全流程播放控制">
-          <button type="button" className="p9-return" onClick={onExit}>← 第 8 页 · 实验与边界</button>
-          <div className="p9-transport">
-            <button type="button" onClick={timeline.controls.stepBack} disabled={!timeline.state.hasPrevious} aria-label="上一个片段">‹</button>
-            <button type="button" className="p9-play" onClick={timeline.controls.toggle} disabled={reducedMotion && !timeline.state.hasNext} aria-label={playLabel} title={playLabel}>{reducedMotion ? "→" : timeline.state.status === "playing" ? "Ⅱ" : timeline.state.status === "finished" || timeline.state.atEnd ? "↺" : "▶"}</button>
-            {!reducedMotion ? <button type="button" onClick={replayChapter} aria-label="重播当前章节" title="重播当前章节">↺</button> : null}
-            <button type="button" onClick={timeline.controls.stepForward} disabled={!timeline.state.hasNext} aria-label="下一个片段">›</button>
-          </div>
-          <div className="p9-playback-meter" role="progressbar" aria-label="全流程进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progressPercent)}>
-            <i style={{ width: progressPercent + "%" }} />
-          </div>
-          <b className="p9-playback-count">片段 {String(timeline.state.clipIndex + 1).padStart(2, "0")} / {RUNTIME_CLIPS.length}</b>
-        </div>
-      </header>
-
-      <nav className="p9-chapters" aria-label="P9 八个章节">
-        {RUNTIME_CHAPTERS.map((chapter, index) => {
-          const current = chapter.id === scene.chapterId;
-          return (
-            <button key={chapter.id} type="button" className={"p9-chapter" + (current ? " is-current" : "") + (index < scene.chapterIndex ? " is-complete" : "")} aria-current={current ? "step" : undefined} title={chapter.question} onClick={() => handleChapterSelect(chapter.id)}>
-              <span>{String(index + 1).padStart(2, "0")}</span><b>{chapter.title}</b>
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="p9-main-grid">
-        <PersistentState scene={scene} />
-
-        <section className="p9-workbench" aria-label="P9 连续状态工作台">
-          <header className="p9-workbench-heading">
-            <div><span className="p9-eyebrow">中央工作台 · 当前焦点</span><h2>{scene.clip.narrative}</h2></div>
-            <span className="p9-clip-progress">{Math.round(scene.progress * 100)}%</span>
-          </header>
-          <div className="p9-workbench-canvas" data-focus={scene.focus}>
-            <P9WorkbenchAnchors scene={scene} />
-            <div className="p9-active-scene" data-active-clip={scene.clip.id} aria-label="当前动作细节" aria-live="polite">
-              {scene.chapterId === "inherited" ? <InheritedScene /> : null}
-              {scene.clip.id === "receive-new-batch" ? <ArrivalScene /> : null}
-              {isMerge ? <MergeScene scene={scene} /> : null}
-              {isSnapshot ? <SnapshotScene scene={scene} /> : null}
-              {isTraining ? <TrainingBridgeScene scene={scene} /> : null}
-              {isMemory ? <MemoryConstructionScene scene={scene} /> : null}
-              {isPrototype ? <PrototypeRebuildScene scene={scene} /> : null}
-              {scene.chapterId === "predict" ? <PredictionScene scene={scene} /> : null}
-              {scene.chapterId === "handoff" ? <HandoffScene scene={scene} /> : null}
-            </div>
-          </div>
-        </section>
-
-        <Guidance scene={scene} />
-      </div>
-
-      <ObjectStatusBand scene={scene} />
     </article>
-  );
+    <p className="p9-integrity-note"><b>P_before 原件仍在。</b>进入 D 的 12 张旧图是读取副本，原有 ID 与顺序不变。</p>
+  </div>;
+}
+
+function QRow({ sample }: { sample: Sample }) {
+  const response = teacherSnapshotFor(sample);
+  return <tr data-q-sample-id={sample.id} data-q-class-id={sample.classId}>
+    <th scope="row">{sample.id}<small>{CLASS_VISUALS[sample.classId].displayLabel} · D</small></th>
+    {response.map((value, index) => <td key={index}>{value.toFixed(3)}</td>)}
+  </tr>;
+}
+
+function P9Step03Figure() {
+  const allRows = INCREMENTAL_STAGE_DATA.trainingSamples;
+  return <div className="p9-q-figure" data-p9-figure="q-snapshot" data-q-rows={allRows.length} data-q-columns={OLD_CLASS_IDS.length}>
+    <div className="p9-q-pipeline">
+      <article className="p9-q-d-source" data-object-id="D"><b>D</b><span>30 张 · 旧图和新图</span></article>
+      <span aria-hidden="true">→</span>
+      <article className="p9-teacher" data-object-id="teacher-before"><b>旧 Teacher</b><span>Θ_before</span><small>仅 g₁ · g₂ · g₃</small></article>
+      <span aria-hidden="true">→</span>
+      <article className="p9-q-lock" data-object-id="Q"><b>Q</b><span>30 × 3</span><small>冻结</small></article>
+    </div>
+    <div className="p9-q-samples">
+      <div className="p9-q-table-wrap">
+        <table className="p9-q-table">
+          <caption>两个示例样本写入各自的 Q 行</caption>
+          <thead><tr><th scope="col">D sample ID</th>{OLD_CLASS_IDS.map((classId) => <th scope="col" key={classId}>{CLASS_VISUALS[classId].outputNodeLabel}</th>)}</tr></thead>
+          <tbody>{[oldDemoSample, newDemoSample].map((sample) => <QRow sample={sample} key={sample.id} />)}</tbody>
+        </table>
+      </div>
+      <div className="p9-q-grid" aria-label="三十行冻结响应表示意">
+        {Array.from({ length: 30 }, (_, index) => <i key={index} aria-hidden="true" />)}
+        <span>其余行同样按 sample ID 对齐 · 共 30 行</span>
+      </div>
+    </div>
+    <details className="p9-q-details">
+      <summary>展开查看 D 的全部 30 行真实 Q 响应</summary>
+      <div className="p9-q-full-table">
+        <table className="p9-q-table">
+          <thead><tr><th scope="col">D sample ID</th><th scope="col">g₁</th><th scope="col">g₂</th><th scope="col">g₃</th></tr></thead>
+          <tbody>{allRows.map((sample) => <QRow sample={sample} key={sample.id} />)}</tbody>
+        </table>
+      </div>
+    </details>
+    <p className="p9-figure-caption">上方两行是代表性示例，不代表 Q 的实际遍历顺序；D 中 30 张图（包括新图）都有一行。</p>
+  </div>;
+}
+
+function P9Step04Figure() {
+  return <div className="p9-training-figure" data-p9-figure="student-training" data-training-sample-id={newDemoSample.id} data-loss={trainingDemoLoss.toFixed(6)}>
+    <div className="p9-training-inputs">
+      <article data-target-source="Q"><span>旧类目标</span><b>Q[{newDemoSample.id}]</b><small>三个软目标</small></article>
+      <i aria-hidden="true">+</i>
+      <article data-target-source="label"><span>新类标签</span><b>{CLASS_VISUALS[newDemoSample.classId].displayLabel}</b><small>三个硬目标</small></article>
+      <i aria-hidden="true">→</i>
+      <article className="p9-target-result"><span>六维 Target</span><b>{trainingDemoTargets.map((value) => value.toFixed(2)).join(" · ")}</b></article>
+    </div>
+    <div className="p9-node-grid" role="table" aria-label={`${newDemoSample.id} 的六个独立 Sigmoid BCE 教学示例`}>
+      <div className="p9-node-row p9-node-row--head" role="row"><span>独立节点</span><span>目标</span><span>示例输出</span><span>BCE</span></div>
+      {ALL_CLASS_IDS.map((classId, index) => {
+        const target = trainingDemoTargets[index];
+        const output = trainingDemoOutputs[index];
+        const source = index < OLD_CLASS_IDS.length ? "Q 软目标" : "真实标签硬目标";
+        return <div className="p9-node-row" role="row" key={classId} style={classAccent(classId)} data-target-source={source} data-node={classId}>
+          <b role="cell"><i>{CLASS_VISUALS[classId].glyph}</i>{CLASS_VISUALS[classId].outputNodeLabel}</b>
+          <span role="cell">{target.toFixed(3)}<small>{source}</small></span>
+          <span role="cell">{output.toFixed(3)}</span>
+          <span role="cell">{binaryCrossEntropy(target, output).toFixed(3)}</span>
+        </div>;
+      })}
+    </div>
+    <div className="p9-theta-after" data-theta-state="after"><span>Student 更新共享参数</span><b>Θ_before → Θ_after</b><small>符号化表示；不是实际优化器轨迹</small></div>
+    <p className="p9-integrity-note"><b>P_before 仍完整保留。</b>训练改动 Θ；记忆管理稍后才调整原始图片。</p>
+  </div>;
+}
+
+function P9Step05Figure() {
+  return <div className="p9-memory-figure" data-p9-figure="memory-update" data-memory-count={CURRENT_EXEMPLARS.length}>
+    <div className="p9-budget-meter" aria-label={`固定预算 ${MEMORY_BUDGET}，已分配 ${CURRENT_EXEMPLARS.length}`}>
+      <span>K = {MEMORY_BUDGET}</span><div>{Array.from({ length: MEMORY_BUDGET }, (_, index) => <i key={index} data-slot-filled={index < CURRENT_EXEMPLARS.length} />)}</div><b>{CURRENT_EXEMPLARS.length} / {MEMORY_BUDGET}</b>
+    </div>
+    <div className="p9-after-memory-grid">
+      {ALL_CLASS_IDS.map((classId) => {
+        const oldClass = OLD_CLASS_IDS.includes(classId as (typeof OLD_CLASS_IDS)[number]);
+        const after = P_AFTER[classId];
+        return <article className="p9-after-class" key={classId} style={classAccent(classId)} data-class-id={classId} data-kept-ids={after.map((sample) => sample.id).join(" ")}>
+          <header><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><span>{oldClass ? "旧序前缀" : "新类 Herding"}</span></header>
+          <div className="p9-after-samples">{after.map((sample, index) => <SampleToken key={sample.id} sample={sample} role={oldClass ? "exemplar" : "selected"} order={index + 1} compact />)}</div>
+        </article>;
+      })}
+    </div>
+    <div className="p9-memory-decisions">
+      {OLD_CLASS_IDS.map((classId) => <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span>{P_BEFORE[classId].map((sample, index) => <em key={sample.id} data-sample-id={sample.id} data-kept={index < NEXT_QUOTA}>{sample.id}{index < NEXT_QUOTA ? "" : " ×"}</em>)} → {P_AFTER[classId].map((sample) => sample.id).join("、")}</span></p>)}
+      {INCOMING_CLASS_IDS.map((classId) => <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span>真实 Herding 前缀：{NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id).join("、")}</span></p>)}
+    </div>
+    <p className="p9-figure-caption">P_after 在本轮选样全部完成后提交：6 类 × 每类 2 张原始图片。</p>
+  </div>;
+}
+
+function P9Step06Figure() {
+  return <div className="p9-feature-figure" data-p9-figure="prototype-query" data-prediction-class={QUERY_PREDICTION}>
+    <FeatureSpaceWorkbench
+      mode="inference"
+      title="当前特征空间 · 最近均值分类"
+      description="P_after 的原始 exemplar 经 φ_Θ_after 编码，形成六类 Prototype；Query 与每个原型逐一比较。"
+      points={currentFeaturePoints}
+      previousPoints={previousFeaturePoints}
+      motionProgress={1}
+      prototypes={queryPrototypes}
+      query={QUERY_FEATURE}
+      queryLabelOffset={{ dx: -14, dy: 28, anchor: "end" }}
+      queryRevealProgress={1}
+      comparisonProgress={1}
+      completedComparisonOpacity={0.68}
+      nearestHighlightProgress={1}
+      unitCircle
+      markerScale={0.82}
+      showSampleLabels={false}
+      focusableSamples={false}
+    />
+    <div className="p9-prototype-roster" aria-label="当前六类 Prototype 由 P_after 重建">
+      {ALL_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].glyph} μ{CLASS_VISUALS[classId].index}</b><small>{P_AFTER[classId].map((sample) => sample.id).join(" + ")}</small></span>)}
+    </div>
+    <div className="p9-query-result" data-result-class={QUERY_PREDICTION}><span>六个距离比较完成</span><b>最近原型：{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>最小欧氏距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 按 argmin 分类</small></div>
+  </div>;
+}
+
+function P9Step07Figure() {
+  return <div className="p9-handoff-figure" data-p9-figure="next-round-handoff">
+    <section className="p9-persistent-output" data-persistence="persistent">
+      <span>继续保存 · 下一轮输入</span>
+      <div><b>Θ_after</b><i aria-hidden="true">+</i><b>P_after</b></div>
+      <small>当前模型参数 + 12 张原始 exemplar</small>
+    </section>
+    <div className="p9-next-round-arrow" aria-hidden="true">↓</div>
+    <section className="p9-next-round" data-object-id="X_next"><span>下一批到来时</span><b>X_next</b><small>新的类别数据入口；不预演下一轮</small></section>
+    <section className="p9-temporary-output" data-persistence="temporary">
+      <span>本轮临时或派生对象 · 不作为下一轮持久状态</span>
+      <div>{["D", "Q", "Targets", "Loss", "当前 Query / 预测", "当前 Prototype"].map((item) => <b key={item}>{item}</b>)}</div>
+    </section>
+  </div>;
+}
+
+export function PageNine({ onExit }: { onExit?: () => void }) {
+  return <article className="tutorial-page icarl-page--p9">
+    <header className="page-heading p9-heading">
+      <span className="eyebrow">09 · 一次增量学习</span>
+      <h1>iCaRL 一次增量学习的完整逻辑</h1>
+      <p>从上一轮状态出发，追踪训练准备、模型更新、记忆维护、预测和下一轮交接。</p>
+    </header>
+    <aside className="p9-reading-note"><b>先看交接顺序。</b><span>这里不再逐项重讲前面介绍的机制；沿页面向下读，观察每一步为何出现、传入和留下了什么。</span></aside>
+
+    <div className="p9-process" aria-label="一轮 iCaRL 增量学习的七组图文推演">
+      <ProcessSection number="01" title="新类别还没来，系统手里有什么？" handoff="Θ_before + P_before" figure={<P9Step01Figure />}>
+        <p>上一轮结束后，iCaRL 保留两部分：已经学到的模型参数 <b>Θ_before</b>，以及各旧类按 Herding 顺序选出的少量原始 Exemplar 图片 <b>P_before</b>。</p>
+        <p>这一轮仍要识别旧类，又要接纳新类，所以从这些已保存状态出发继续学习。</p>
+        <p className="p9-why"><b>为什么从这里开始？</b>历史训练图片没有全部保存；旧模型和有限的原始 exemplar 是本轮可继承的学习状态。</p>
+      </ProcessSection>
+
+      <ProcessSection number="02" title="新图到了，只拿新图训练会怎样？" handoff="D · 30 张" figure={<P9Step02Figure />}>
+        <p>本批新增 D、E、F 三类，每类 6 张，共 <b>18 张 X_new</b>。如果只用新图更新表示，旧类能力容易退化。</p>
+        <p>于是从 <b>P_before 读取 12 张旧图的训练副本</b>，与新图一起构成 <b>D = 30</b>。进入 D 的是读取副本；P_before 原件及顺序不变。</p>
+        <p className="p9-why"><b>交接对象的身份：</b>D 是本轮临时训练集，不是持久记忆。</p>
+      </ProcessSection>
+
+      <ProcessSection number="03" title="模型参数将要改变，旧模型的判断如何保留下来？" handoff="D + 冻结 Q" figure={<P9Step03Figure />}>
+        <p>更新 Θ 之前，让 <b>旧 Teacher</b> 对 D 的每张图计算旧类三个 Sigmoid 节点的响应，形成 <b>Q ∈ R^(30×3)</b>。</p>
+        <p>Q 的每一行都与 D 中同一 sample ID 对齐。旧图和新图都有 Q 行；Q 不是新类标签，也不是更新后的 Student 输出。</p>
+        <p className="p9-why"><b>为什么要提前记录？</b>训练会改变 Θ；冻结的 Q 可在后续为旧类节点提供软目标。</p>
+      </ProcessSection>
+
+      <ProcessSection number="04" title="旧知识和新类真实标签，如何同时推动学习？" handoff="Θ_after · P_before 仍保留" figure={<P9Step04Figure />}>
+        <p>从 D 取一张图。旧类 1–3 节点使用它在 Q 中对应行的软目标；新类 4–6 节点使用真实类别构造硬目标。</p>
+        <p>六个独立 Sigmoid 节点分别计算 BCE，聚合损失后更新共享特征提取器与训练头。这里修改的是模型参数 <b>Θ</b>。</p>
+        <p className="p9-why"><b>此时不动什么？</b>P_before 原始记忆保持不变；Q 在训练期间也保持冻结。图中的参数变化只作符号示意。</p>
+      </ProcessSection>
+
+      <ProcessSection number="05" title="模型已经更新，旧记忆怎样给新类别腾位置？" handoff="Θ_after + P_after · 12 张" figure={<P9Step05Figure />}>
+        <p>记忆总预算仍是 <b>K=12</b>。当前类别从 3 类变成 6 类，因此每类可保留 2 张原始图片。</p>
+        <p>A/B/C 直接截断原有 Herding 有序列表，各留前两张，不回到旧类完整数据重新选样；D/E/F 在当前表示下按各自 Herding 顺序选前两张。</p>
+        <p className="p9-why"><b>先更新模型，再更新记忆。</b>旧类的保留 ID 不变，最终 P_after 才占满 12 个槽位。</p>
+      </ProcessSection>
+
+      <ProcessSection number="06" title="原始图片留了下来，原来的 Prototype 还能直接用吗？" handoff="一次 Query 预测 · Θ_after / P_after 不变" figure={<P9Step06Figure />}>
+        <p>共享特征提取器已经更新，同一张原始图片在当前模型下的特征也可能变化。因此不能把旧表示下的 Prototype 直接当作当前原型。</p>
+        <p>让 <b>P_after 的原始图片</b>重新经过当前 φ_Θ_after，计算六类 Prototype。Query 依当前特征到各原型的欧氏距离分类，取最近原型，而非对六个训练输出节点取 argmax。</p>
+        <p className="p9-why"><b>这是推断。</b>一次 Query 预测不更新模型参数，也不改变 exemplar 记忆。</p>
+      </ProcessSection>
+
+      <ProcessSection number="07" title="一次增量更新结束，哪些东西真正留下？" handoff="下一轮从 Θ_after + P_after 出发" figure={<P9Step07Figure />}>
+        <p>D、Q、Targets 与 Loss 是本轮训练临时对象；当前 Query 预测和 Prototype 是本轮推断使用的结果或派生表示。</p>
+        <p>下一轮继续依靠当前模型 <b>Θ_after</b> 和有限的原始图片记忆 <b>P_after</b>。新类别到来时，再从这两类持久状态出发。</p>
+        <p className="p9-why"><b>一轮增量更新闭环：</b>有限记忆参与训练 → 旧模型保存 Q → 联合训练更新 Θ → 调整有序记忆 P → 重建原型并预测 → 保留 Θ 和 P 等待下一轮。</p>
+      </ProcessSection>
+
+      <div className="p9-closing-summary" data-p9-summary>
+        <span>本轮结束后留下的状态</span>
+        <b>Θ_after + P_after → 下一轮</b>
+        <small>D / Q / Targets / Loss / 当前 Query 与 Prototype 均不替代持久模型和原始 exemplar 记忆。</small>
+      </div>
+    </div>
+
+    <footer className="p9-page-footer">
+      <p>本页使用共享合成教学数据说明对象交接，不是论文训练运行记录。论文实验数据与适用边界见 P8。</p>
+      <button type="button" className="icarl-button icarl-button--quiet" onClick={onExit} disabled={!onExit}>← 返回实验页</button>
+    </footer>
+  </article>;
 }

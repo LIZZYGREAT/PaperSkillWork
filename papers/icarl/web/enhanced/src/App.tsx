@@ -23,7 +23,7 @@ const pages: { id: PageId; number: string; title: string; subtitle: string }[] =
   { id: "page-6", number: "06", title: "训练信号与参数更新", subtitle: "六节点 BCE 与梯度路径" },
   { id: "page-7", number: "07", title: "训练后记忆与预测", subtitle: "P_after 与当前原型" },
   { id: "page-8", number: "08", title: "实验与边界", subtitle: "整体效果·机制证据·记忆边界" },
-  { id: "page-9", number: "09", title: "一次完整更新", subtitle: "跟踪运行时状态" },
+  { id: "page-9", number: "09", title: "iCaRL 一次增量学习的完整逻辑", subtitle: "从上一轮状态出发，追踪训练准备、更新、记忆、预测与交接" },
 ];
 
 export default function App() {
@@ -56,7 +56,7 @@ export default function App() {
 
   return (
     <>
-    <div className={`paper-app ewc-app ${activePage === "page-9" ? "ewc-app--runtime" : ""}`} id="icarL_runtime" data-canonical-id="icarL_runtime">
+    <div className="paper-app ewc-app" id="icarL_runtime" data-canonical-id="icarL_runtime">
       <a className="ewc-skip-link" href="#top">跳到当前页面</a>
       <aside className="ewc-rail" aria-label="Tutorial navigation">
         <a className="ewc-brand" href="#top" onClick={(event) => { event.preventDefault(); navigateToPage("page-1"); }} aria-label="iCaRL tutorial home">

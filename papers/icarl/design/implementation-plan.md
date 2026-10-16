@@ -280,3 +280,11 @@ P9 将收敛为八章：继承状态、准备 D、冻结 Q、更新模型、管�
 最终交接显示 `S_(r+1)=Θ_after + P_after`，保留训练后的模型与 12 张原始 exemplar；D、Q、targets、loss、Query 和预测等本轮临时或派生对象在交接时退出。`X_next` 仅作为下一批入口提示，不播放未定义的下一轮训练。更新 P9 测试与 `visual-qa.json`，记录 Query 入场/比较/最近原型/最终交接帧；新增预测与交接样式并按窄屏纵向排布。
 
 验证：`npm.cmd test`、`npx.cmd tsc --noEmit`、`npm.cmd run build`（82 modules）和 `git diff --check` 通过。P9 定向标准 QA 在 1440×900、1920×1080 共 34 帧通过，`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`（0），报告位于 `.visual-qa/p9-runtime-focused-check/run-2026-10-15T19-59-10-557Z/report.md`。专用 Chromium 交互/截图检查共 40 帧，覆盖 1440×900、1920×1080、1366×768 和 390×844；Query 播放与暂停、六距离及最近原型、下一轮交接、reduced-motion 终态均通过，40 帧无页面横向溢出且无浏览器错误。已目视查看 390×844 的三距离比较中段与交接近终态；截图与指标在仓库根 `.visual-qa/p9-final-slice-browser-review/`。P3–P9 完整配置的本次复跑在 P6 处仅生成 64 张图便停止，未产出报告，不记为整套通过；P3–P8 仍依据此前 124 帧回归记录，P9 依据上述定向标准 QA 与 40 帧专项检查。无已批准截图基线，`REGRESSION=NOT_RUN`；这是 Agent 视觉抽样复核而非人工学习验收，`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 状态未改。
+
+### P9 交错式图文推演重设计｜阶段 A：静态阅读主线（2026-10-16）
+
+本记录覆盖当前实施，并取代上文“P9 全流程重构”各切片作为现行设计；旧章节仅保留为历史记录。依据使用者确认的《iCaRL_P9_交错式图文推演重设计与 Codex 执行方案》，P9 从全页自动播放改为七组自上而下阅读的交错图文推演。P1–P8 教学内容、路由和九页结构维持原状，仅同步 P8→P9 入口及 P9 导航文案。
+
+阶段 A 已完成七组完整静态正文和图形：继承 `Θ_before + P_before`、从旧记忆读取副本并加入 `X_new` 构造 `D=30`、更新前 Teacher 生成按 ID 对齐且包含全部样本的 `Q=30×3`、软/硬目标构造与符号化 `Θ_after`、固定预算下旧前缀截断与新类 Herding、用当前 `P_after` 重建原型并按真实距离预测，以及持久状态与临时对象分流。图形读取现有 iCaRL / incremental-training fixtures，不增加独立算法或第二套演示数据。桌面交错列以文字与图形左右镜像，窄屏按文字→图→交接堆叠；结果默认完整可见。
+
+验证：`npm.cmd run build` 通过（TypeScript 与 Vite，81 modules）；`git diff --check` 通过。阶段 A 尚未添加局部重播、替换旧 P9 场景合同测试或运行 Chromium 截图检查；这些分别在阶段 B–D 完成后记录。当前 `BUILD=PASS`，`GEOMETRY_QA=NOT_RUN`、`STYLE_QA=NOT_RUN`、`VISUAL_REVIEW=NOT_RUN`、`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。W7/W9/W10 未变更。
