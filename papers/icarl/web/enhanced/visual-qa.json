@@ -2999,11 +2999,11 @@
             },
             {
               "type": "wait",
-              "milliseconds": 450
+              "milliseconds": 700
             },
             {
               "type": "waitFor",
-              "selector": ".p9-assembly-figure[data-example-count=\"2\"]",
+              "selector": ".p9-assembly-figure .p9-set-samples[data-example-count=\"2\"]",
               "state": "visible"
             }
           ]
@@ -3026,7 +3026,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 900
+              "milliseconds": 1150
             }
           ]
         },
@@ -3130,7 +3130,7 @@
               "type": "waitFor",
               "selector": ".p9-step[data-step=\"02\"] [data-d-count=\"30\"]",
               "state": "visible",
-              "timeoutMs": 1650
+              "timeoutMs": 1750
             }
           ]
         },
@@ -3603,6 +3603,41 @@
           "selector": ".ewc-rail",
           "property": "position",
           "equals": "sticky"
+        },
+        {
+          "selector": ".p9-node-row > span small",
+          "property": "font-size",
+          "equals": "11px"
+        },
+        {
+          "selector": ".p9-after-class > header span",
+          "property": "font-size",
+          "equals": "11px"
+        },
+        {
+          "selector": ".p9-q-grid span",
+          "property": "font-size",
+          "equals": "11px"
+        },
+        {
+          "selector": ".p9-training-inputs article small",
+          "property": "font-size",
+          "equals": "11px"
+        },
+        {
+          "selector": ".p9-q-table caption",
+          "property": "font-size",
+          "equals": "11px"
+        },
+        {
+          "selector": ".p9-memory-decisions p",
+          "property": "font-size",
+          "equals": "11px"
+        },
+        {
+          "selector": ".p9-feature-progress",
+          "property": "font-size",
+          "equals": "11px"
         }
       ]
     }

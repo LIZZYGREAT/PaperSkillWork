@@ -50,7 +50,7 @@ function classAccent(classId: ClassId): CSSProperties {
 
 type LocalReplay = { progress: number; playing: boolean; reducedMotion: boolean; toggle: () => void };
 
-function useLocalReplay(durationMs: number): LocalReplay {
+function useLocalReplay(durationMs: number, initialHoldMs = 0): LocalReplay {
   const reducedMotion = useReducedMotion();
   const [progress, setProgress] = useState(1);
   const [playing, setPlaying] = useState(false);
@@ -62,8 +62,8 @@ function useLocalReplay(durationMs: number): LocalReplay {
     let startAt: number | null = null;
     let frame = 0;
     const tick = (now: number) => {
-      if (startAt === null) startAt = now - startingProgress * durationMs;
-      const next = Math.min(1, (now - startAt) / durationMs);
+      if (startAt === null) startAt = now + (startingProgress === 0 ? initialHoldMs : 0) - startingProgress * durationMs;
+      const next = Math.max(0, Math.min(1, (now - startAt) / durationMs));
       progressRef.current = next;
       setProgress(next);
       if (next >= 1) {
@@ -74,7 +74,7 @@ function useLocalReplay(durationMs: number): LocalReplay {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [durationMs, playing, reducedMotion]);
+  }, [durationMs, initialHoldMs, playing, reducedMotion]);
 
   useEffect(() => {
     if (!reducedMotion || !playing) return;
@@ -161,7 +161,7 @@ function P9Step01Figure() {
 }
 
 function P9Step02Figure() {
-  const replay = useLocalReplay(1800);
+  const replay = useLocalReplay(1800, 250);
   const assembly = p9TrainingAssemblyAt(
     replay.progress,
     INCREMENTAL_STAGE_DATA.oldExemplars,
@@ -426,7 +426,7 @@ export function PageNine({ onExit }: { onExit?: () => void }) {
       </ProcessSection>
 
       <ProcessSection number="03" title="模型参数将要改变，旧模型的判断如何保留下来？" handoff="D + 冻结 Q" figure={<P9Step03Figure />}>
-        <p>更新 Θ 之前，让 <b>旧 Teacher</b> 对 D 的每张图计算旧类三个 Sigmoid 节点的响应，形成 <b>Q ∈ R^(30×3)</b>。</p>
+        <p>更新 Θ 之前，让 <b>旧 Teacher</b> 对 D 的每张图计算旧类三个 Sigmoid 节点的响应，形成 <b className="p9-q-formula">Q ∈ ℝ<sup className="p9-q-formula__exponent">30×3</sup></b>。</p>
         <p>Q 的每一行都与 D 中同一 sample ID 对齐。旧图和新图都有 Q 行；Q 不是新类标签，也不是更新后的 Student 输出。</p>
         <p className="p9-why"><b>为什么要提前记录？</b>训练会改变 Θ；冻结的 Q 可在后续为旧类节点提供软目标。</p>
       </ProcessSection>

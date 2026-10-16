@@ -1024,12 +1024,15 @@ const p9PageEightSource = readFileSync(path.join(process.cwd(), "src/pages/PageE
 const p9VisualQa = JSON.parse(readFileSync(path.join(process.cwd(), "visual-qa.json"), "utf8"));
 assert.ok(p9Source.includes("prototypes={visiblePrototypes}") && p9Source.includes("query={timeline.queryVisible ? QUERY_FEATURE : undefined}"), "P9-06 must add only formed Prototype objects and omit Query until stage C.");
 assert.ok(p9Source.includes("comparisonProgress={timeline.comparisonProgress}") && p9Source.includes("nearestHighlightProgress={timeline.nearestHighlightProgress}"), "P9-06 distance lines and nearest highlight must follow their separate timeline windows.");
+assert.ok(p9Source.includes("useLocalReplay(1800, 250)"), "P9-02 must hold briefly at a true empty D so the zero-progress state remains inspectable.");
 assert.doesNotMatch(p9Source, /RUNTIME_CLIPS|runtimeSceneAt|useAnimationTimeline|p9-chapters|p9-transport/, "P9 must not retain the 17-clip runtime or page-wide transport controls.");
 assert.doesNotMatch(p9Css, /p9-chapters|p9-transport|p9-active-scene|p9-workbench-anchors/, "P9 CSS must not retain selectors for the discarded large scene framework.");
 assert.ok(!existsSync(path.join(process.cwd(), "src/pages/page-nine-scene.ts")), "The obsolete page-only runtime module must be deleted.");
 assert.ok(p9Css.includes(".p9-step:nth-of-type(even) .p9-step__copy { grid-column: 2;"), "Desktop groups must alternate the text and diagram sides.");
 assert.ok(p9Css.includes(".p9-step:nth-of-type(even) .p9-step__copy, .p9-step:nth-of-type(even) .p9-step__figure { grid-column: 1; grid-row: auto; }"), "Mobile groups must stack text before diagrams without changing DOM order.");
 assert.ok(p9Css.includes("@media (prefers-reduced-motion: reduce)"), "P9 must honor the reduced-motion preference.");
+assert.match(p9Css, /\.p9-prototype-roster small \{[^}]*font: 11px var\(--mono\)/, "P9 Prototype member IDs must remain at least 11px when shown.");
+assert.ok(p9Markup.includes('Q ∈ ℝ<sup class="p9-q-formula__exponent">30×3</sup>'), "P9 Q shape must use a typographic real-number symbol and superscript.");
 assert.ok(appSource.includes('title: "iCaRL 一次增量学习的完整逻辑"') && !appSource.includes("ewc-app--runtime"), "P9 navigation must match the new title and use the shared app shell.");
 assert.ok(p9PageEightSource.includes("下一页：一次增量学习的完整逻辑"), "P8 must lead into the redesigned P9 reading flow.");
 assert.ok(Array.isArray(p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved")?.states), "Visual QA must cover the seven-group reading flow and local replays.");
