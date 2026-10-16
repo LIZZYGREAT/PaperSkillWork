@@ -886,6 +886,9 @@ assert.deepEqual(RUNTIME_CHAPTERS.map(({ id }) => id), [
 ], "P9 must have eight reader-facing chapters.");
 assert.equal(RUNTIME_CLIPS.length, 17, "P9 may use detailed clips internally while keeping eight top-level chapters.");
 assert.ok(RUNTIME_CLIPS.every((clip) => clip.durationMs > 0 && clip.narrative.length > 0), "Every P9 clip needs a timed scene and a teaching sentence.");
+const p9GuidedDurationMs = RUNTIME_CLIPS.reduce((total, clip) => total + clip.durationMs + (clip.holdMs ?? 0), 0);
+assert.ok(p9GuidedDurationMs >= 90_000 && p9GuidedDurationMs <= 120_000, "P9 guided playback must leave enough time to follow its major object transitions.");
+assert.equal(p9GuidedDurationMs, 99_500, "P9 timing should be a deliberate ~100 second walkthrough, including readable result holds.");
 for (const chapter of RUNTIME_CHAPTERS) {
   assert.ok(RUNTIME_CHAPTER_FIRST_CLIP[chapter.id] >= 0, `P9 chapter ${chapter.id} needs an addressable first clip.`);
   assert.ok(RUNTIME_CLIPS.some((clip) => clip.chapterId === chapter.id), `P9 chapter ${chapter.id} must own at least one clip.`);
@@ -926,6 +929,10 @@ assert.ok(p9OldSampleScene.activeQCellProgress.some((progress) => progress > 0 &
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.25).qRowsWritten, 9,
   "Batch Q filling must expose row-by-row progress rather than jump from 2 to 30.");
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1).qRowsWritten, 30);
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.999).qRowsWritten, 29,
+  "The active thirtieth row must not be counted as complete until all three cells finish.");
+assert.ok(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.999).activeQSampleId,
+  "The last Q row stays separately identifiable while its cells are being written.");
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0.5).objectStatus.Q, "active");
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["update-theta"], 0.5).theta, "training");
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["update-theta"], 1).theta, "after", "Θ_after is submitted only when the symbolic update clip completes.");
@@ -955,6 +962,12 @@ assert.ok(near(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5).
   "P9 must complete all six comparisons before the separate nearest-highlight phase begins.");
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["query-arrives"], 0.5).queryProgress, 0.5);
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 0.5).objectStatus.query, "active");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.82).objectStatus.prediction, "pending",
+  "The prediction status stays pending until all six comparison lines are complete.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.821).objectStatus.prediction, "active",
+  "The prediction status activates with the first visible argmin emphasis.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 1).objectStatus.prediction, "active",
+  "The prediction becomes active at the same completed frame as the argmin result.");
 const p9FinalScene = runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 1);
 assert.equal(p9FinalScene.theta, "after");
 assert.equal(p9FinalScene.memory, "after");
@@ -985,6 +998,16 @@ assert.ok(p9InheritedMarkup.includes('data-memory-source-ids="' + oldMemoryIdsBe
 assert.equal((p9InheritedMarkup.match(/class="p9-chapter[^\"]*"[^>]*disabled/g) ?? []).length, 0,
   "All eight P9 chapters must be available in the completed flow.");
 assert.match(p9InheritedMarkup, /片段 01 \/ 17/);
+const p9Source = readFileSync(path.join(process.cwd(), "src/pages/PageNine.tsx"), "utf8");
+assert.equal((p9Source.match(/<FeatureSpaceWorkbench\b/g) ?? []).length, 1,
+  "Prototype construction and Query comparison must share one mounted feature-space chart.");
+assert.match(p9Source, /<P9WorkbenchAnchors scene=\{scene\} \/>/,
+  "The central scene details must sit below a stable set of object anchors.");
+for (const anchorId of ["anchor_X_new", "training_set_D", "old_teacher", "response_snapshot_Q", "student_targets", "unit_circle"]) {
+  assert.ok(p9InheritedMarkup.includes(`data-canonical-id="${anchorId}"`), `P9 must keep the ${anchorId} object anchor present from the first frame.`);
+}
+assert.equal((p9InheritedMarkup.match(/data-shared-chart="true"/g) ?? []).length, 1,
+  "The shared feature-space chart must be present once before its prototype and Query data enter.");
 
 const p9MergeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.25);
 const p9MergeMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.5);
@@ -992,11 +1015,14 @@ const p9MergeThreeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-
 for (const [markup, expectedCount] of [[p9MergeQuarter, "8"], [p9MergeMidpoint, "15"], [p9MergeThreeQuarter, "23"]] as const) {
   assert.equal(attr(markup.match(/class="p9-merge-scene"[^>]*>/)?.[0] ?? "", "data-d-count"), expectedCount,
     "The rendered D counter must use the current copy progress.");
-  assert.ok(markup.includes('data-token-copy="true"'), "Moving old samples must be identified as training copies.");
+  assert.ok(markup.includes('data-training-copy="true"') && markup.includes('data-flow-source="P_before"'), "Moving old samples must be identified as P_before training copies.");
   assert.ok(markup.includes('data-copy-sample-id="' + P_BEFORE.A[0].id + '"'), "The old sample ID must be preserved when copied into D.");
   assert.ok(markup.includes('data-original-sample-id="' + P_BEFORE.A[0].id + '"'), "The source P_before identity must remain visible.");
 }
-const p9FlightPosition = (markup: string) => attr(markup.match(/class="p9-flight-token p9-flight-token--old"[^>]*style="([^"]+)"/)?.[0] ?? "", "style");
+assert.deepEqual([...p9MergeQuarter.matchAll(/class="p9-flow-token"[^>]*data-flow-id="([^"]+)"/g)].map((match) => match[1]),
+  [P_BEFORE.A[0].id, INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sample.classId === "D")!.id],
+  "The stable route must show the real old copy and new sample identities entering D.");
+const p9FlightPosition = (markup: string) => attr(markup.match(new RegExp(`class="p9-flow-token"[^>]*data-flow-id="${P_BEFORE.A[0].id}"[^>]*>`))?.[0] ?? "", "style");
 assert.notEqual(p9FlightPosition(p9MergeQuarter), p9FlightPosition(p9MergeThreeQuarter), "The same clock must move copied samples through the merge scene.");
 
 for (const clipId of ["snapshot-old-row", "snapshot-new-row"] as const) {
@@ -1008,6 +1034,7 @@ for (const clipId of ["snapshot-old-row", "snapshot-new-row"] as const) {
   assert.deepEqual([...row.matchAll(/data-q-value="([^"]+)"/g)].map((match) => match[1]),
     teacherSnapshotFor(sample).map((value) => value.toFixed(6)), "Every displayed Q cell must use the matching frozen teacher row.");
   assert.equal(attr(markup.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-active-sample-id"), sample.id);
+  assert.ok(markup.includes(`data-flow-id="${sample.id}"`), `${clipId} must move its exact D sample through the persistent route.`);
 }
 
 const p9FillQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.25);
@@ -1016,10 +1043,17 @@ const p9FillThreeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0
 assert.deepEqual([p9FillQuarter, p9FillMidpoint, p9FillThreeQuarter].map((markup) =>
   attr(markup.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows")), ["9", "16", "23"],
   "Rendered Q row progress must keep advancing at each paused intermediate checkpoint.");
+const p9QLastRow = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.999);
+assert.equal(attr(p9QLastRow.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows"), "29",
+  "At the final moving frame, the thirtieth Q row remains a separately displayed write in progress.");
+assert.match(p9QLastRow, /29 行完成 · .* 写入中/);
 const p9QComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1);
-assert.equal(attr(p9QComplete.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows"), "30");
-assert.match(p9QComplete, /30 行完成 · Q 保持冻结/);
+assert.equal(attr(p9QComplete.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows"), "29");
+assert.match(p9QComplete, /29 行完成 · .* 写入中/);
 assert.match(p9QComplete, /data-theta-state="before"/);
+const p9QFrozen = renderPageNineAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0);
+assert.ok(p9QFrozen.includes('data-object-id="Q" data-status="active"') && p9QFrozen.includes("30 行完成"),
+  "The next clip starts with all thirty Q rows completed and frozen.");
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1).objectStatus.targets, "pending",
   "Targets must remain pending until the target-building clip begins after Q is frozen.");
 assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0).objectStatus.targets, "active",
@@ -1030,6 +1064,8 @@ const trainingSample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => s
 const trainingTargets = buildTargets(trainingSample);
 const trainingOutputs = studentOutputFor(trainingSample);
 assert.match(p9TrainingMarkup, new RegExp(`data-training-sample-id="${trainingSample.id}"`));
+assert.ok(p9TrainingMarkup.includes(`data-flow-id="${trainingSample.id}"`),
+  "The exact Q sample ID must continue to the Student target during training setup.");
 assert.match(p9TrainingMarkup, new RegExp(`data-six-node-loss="${sixNodeBceLoss(trainingTargets, trainingOutputs).toFixed(6)}"`),
   "The compact bridge must use the actual target and six-node teaching loss functions.");
 assert.deepEqual([...p9TrainingMarkup.matchAll(/data-target-source="([^"]+)" data-node="([A-F])"/g)].map((match) => [match[2], match[1]]), [
@@ -1087,8 +1123,8 @@ assert.ok(near(p9QueryMarker.x - p9QueryLabel.x, 14) && near(p9QueryLabel.y - p9
 const p9ComparisonMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5);
 const p9ComparisonLines = distanceLines(p9ComparisonMidpoint);
 assert.equal(p9ComparisonLines.length, 4, "At the middle checkpoint, P9 must retain three completed lines and draw the fourth.");
-assert.deepEqual(p9ComparisonLines.map((line) => attr(line, "data-prototype-class-id")), QUERY_DISTANCES.slice(0, 4).map((entry) => entry.classId),
-  "P9 must draw true comparisons in shared nearest-to-farthest distance order.");
+assert.deepEqual(p9ComparisonLines.map((line) => attr(line, "data-prototype-class-id")), ALL_CLASS_IDS.slice(0, 4),
+  "P9 must draw true comparisons in fixed class order without exposing the nearest class first.");
 for (const line of p9ComparisonLines.slice(0, 3)) {
   const classId = attr(line, "data-prototype-class-id");
   const result = QUERY_DISTANCES.find((entry) => entry.classId === classId)!;
@@ -1096,20 +1132,23 @@ for (const line of p9ComparisonLines.slice(0, 3)) {
   assert.ok(line.includes("is-complete") && line.includes("opacity:0.68"), "P9 must keep finished distance lines clearly visible as the next comparisons proceed.");
 }
 assert.ok(p9ComparisonLines[3].includes("is-active"), "The fourth P9 distance must be visibly in flight at the midpoint.");
-assert.ok(near(lineLength(p9ComparisonLines[3]), QUERY_DISTANCES[3].distance * 160 * (0.5 / 0.82 * 6 - 3), 1e-6),
+assert.ok(near(lineLength(p9ComparisonLines[3]), QUERY_DISTANCES.find((entry) => entry.classId === ALL_CLASS_IDS[3])!.distance * 160 * (0.5 / 0.82 * 6 - 3), 1e-6),
   "The active P9 line length must track the mapped comparison progress.");
 const p9ComparisonActive = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.6);
 const p9ComparisonActiveLines = distanceLines(p9ComparisonActive);
 assert.equal(p9ComparisonActiveLines.length, 5, "P9 must show the fifth line partway through its drawing at 60%.");
 assert.ok(p9ComparisonActiveLines[4].includes("is-active"), "P9 must distinguish the line currently being drawn.");
-assert.ok(near(lineLength(p9ComparisonActiveLines[4]), QUERY_DISTANCES[4].distance * 160 * (0.6 / 0.82 * 6 - 4), 1e-6),
+assert.ok(near(lineLength(p9ComparisonActiveLines[4]), QUERY_DISTANCES.find((entry) => entry.classId === ALL_CLASS_IDS[4])!.distance * 160 * (0.6 / 0.82 * 6 - 4), 1e-6),
   "P9 active distance geometry must scale with the current comparison progress.");
 
 const p9PredictionComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 1);
 assert.equal(distanceLines(p9PredictionComplete).length, QUERY_DISTANCES.length, "P9 must retain all six completed comparisons.");
 assert.equal(distanceLines(p9PredictionComplete).filter((line) => line.includes("is-nearest")).length, 1, "P9 must highlight one and only one nearest prototype.");
 assert.ok(p9PredictionComplete.includes(`data-prediction-class="${QUERY_PREDICTION}"`), "P9 prediction must be the shared true argmin.");
-assert.ok(p9PredictionComplete.includes(`data-result-class="${QUERY_PREDICTION}"`), "The prediction result card must identify the shared argmin class.");
+assert.ok(p9PredictionComplete.includes(`data-result-class="${QUERY_PREDICTION}"`), "The result card must identify the shared argmin class.");
+assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 1).objectStatus.prediction, "active");
+assert.ok(p9Source.includes('data-result-class={QUERY_PREDICTION}') && p9Source.includes('scene.objectStatus.prediction === "active"'),
+  "The result card and object-status band must use the same prediction lifecycle event.");
 assert.ok(p9PredictionComplete.includes("训练 head 保留在模型中"), "P9 must keep the training head present but outside the final prediction rule.");
 for (const line of distanceLines(p9PredictionComplete)) {
   const classId = attr(line, "data-prototype-class-id");
@@ -1129,7 +1168,7 @@ assert.ok(p9HandoffComplete.includes('data-object-id="D" data-status="released"'
 assert.ok(p9HandoffComplete.includes('data-object-id="Q" data-status="released"'));
 assert.ok(p9HandoffComplete.includes('data-object-id="prediction" data-status="active"'));
 assert.ok(p9HandoffComplete.includes('data-object-id="query" data-status="active"'));
-assert.ok(p9HandoffComplete.includes('data-object-id="prototypes" data-status="released"'));
+assert.ok(p9HandoffComplete.includes('data-object-id="prototypes" data-status="active"'));
 assert.ok(p9HandoffComplete.includes('data-persistent') === false, "The handoff screen should not invent a second persistent-state record.");
 assert.match(p9HandoffComplete, /片段 17 \/ 17/);
 

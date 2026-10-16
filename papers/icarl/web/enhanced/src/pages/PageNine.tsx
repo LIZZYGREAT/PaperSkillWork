@@ -38,7 +38,8 @@ import {
   type RuntimeScene,
 } from "./page-nine-scene";
 
-const P9_COMPARISON_PROTOTYPES = QUERY_DISTANCES.map(({ classId }) => PROTOTYPES.find((prototype) => prototype.classId === classId)!);
+const P9_COMPARISON_PROTOTYPES = ALL_CLASS_IDS.map((classId) => PROTOTYPES.find((prototype) => prototype.classId === classId)!);
+const P9_COMPARISON_ENTRIES = ALL_CLASS_IDS.map((classId) => QUERY_DISTANCES.find((entry) => entry.classId === classId)!);
 const oldDemoSample = P_BEFORE.A[0];
 const newDemoSample = INCOMING_SAMPLES.find((sample) => sample.classId === "D")!;
 const demoQSamples = [oldDemoSample, newDemoSample] as const;
@@ -57,6 +58,87 @@ const p9PrototypeData = PROTOTYPES.map((prototype) => ({
 
 function classAccent(classId: ClassId): CSSProperties {
   return { "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties;
+}
+
+function P9FlowToken({ sample, start, end, progress, copy = false, lane = 84, source }: { sample: Sample; start: number; end: number; progress: number; copy?: boolean; lane?: number; source?: string }) {
+  const boundedProgress = Math.max(0, Math.min(1, progress));
+  const style = { left: `${start + (end - start) * boundedProgress}%`, top: `${lane}%`, "--class-accent": CLASS_VISUALS[sample.classId].color } as CSSProperties;
+  return (
+    <span className="p9-flow-token" style={style} data-flow-id={sample.id} data-flow-source={source} data-flow-start={start} data-flow-end={end} data-flow-progress={boundedProgress.toFixed(3)} data-training-copy={copy ? "true" : "false"}>
+      <SampleToken sample={sample} role={sample.classId === "A" || sample.classId === "B" || sample.classId === "C" ? "exemplar" : "incoming"} compact />
+      {copy ? <small>副本</small> : null}
+    </span>
+  );
+}
+
+function P9WorkbenchAnchors({ scene }: { scene: RuntimeScene }) {
+  const isFeatureChapter = scene.chapterId === "rebuild-prototypes" || scene.chapterId === "predict";
+  const isHandoff = scene.chapterId === "handoff";
+  const showFeatureObjects = isFeatureChapter || isHandoff;
+  const isReencoding = scene.clip.id === "reencode-p-after";
+  const isFormingPrototypes = scene.clip.id === "form-prototypes";
+  const isPredicting = scene.chapterId === "predict";
+  const prototypeProgress = isFormingPrototypes ? Math.max(0, Math.min(1, (scene.progress - 0.3) / 0.62)) : isPredicting || isHandoff ? 1 : 0;
+  const sampleOpacity = isReencoding ? scene.progress : isFeatureChapter || isHandoff ? 1 : 0;
+  const featureChartOpacity = isHandoff ? 1 - scene.progress : 1;
+  const routeSample = scene.activeQSampleId
+    ? INCREMENTAL_STAGE_DATA.trainingSamples.find((sample) => sample.id === scene.activeQSampleId) ?? null
+    : null;
+  const showQFlight = routeSample && (scene.clip.id === "snapshot-old-row" || scene.clip.id === "snapshot-new-row" || scene.clip.id === "fill-q-rows") && scene.progress < 1;
+  const showTrainingFlight = scene.clip.id === "build-targets-and-loss" || scene.clip.id === "update-theta";
+
+  return (
+    <section className="p9-workbench-anchors" data-anchor-focus={scene.focus} aria-label="持续挂载的对象锚点">
+      <div className="p9-anchor-route" aria-label="本轮对象交接路径">
+        <article className="p9-anchor-card" id="anchor_X_new" data-canonical-id="anchor_X_new" data-object-id="X_new" data-status={scene.objectStatus.X_new}>
+          <span className="p9-anchor-label">输入</span><strong>X_new</strong><b>{INCOMING_SAMPLES.length} 张</b><small>D / E / F · 完整批次</small>
+        </article>
+        <article className="p9-anchor-card" id="anchor_D" data-canonical-id="training_set_D" data-object-id="D" data-status={scene.objectStatus.D}>
+          <span className="p9-anchor-label">合并</span><strong>D</strong><b>{scene.dSampleCount ?? 0} / {TRAINING_SET_SIZE}</b><small>{scene.oldCopiesInD} 旧副本 + {scene.incomingSamplesInD} 新图</small>
+        </article>
+        <article className="p9-anchor-card" id="anchor_teacher" data-canonical-id="old_teacher" data-object-id="teacher" data-status={scene.clipIndex <= RUNTIME_CLIP_INDEX["fill-q-rows"] ? "active" : "released"}>
+          <span className="p9-anchor-label">固定教师</span><strong>Θ_before</strong><b>A · B · C</b><small>三个旧节点</small>
+        </article>
+        <article className="p9-anchor-card" id="anchor_Q" data-canonical-id="response_snapshot_Q" data-object-id="Q" data-status={scene.objectStatus.Q}>
+          <span className="p9-anchor-label">冻结响应</span><strong>Q · 30×3</strong><b>{scene.qRowsWritten} 行完成</b><small>{routeSample?.id ?? "按样本 ID 对齐"}</small>
+        </article>
+        <article className="p9-anchor-card" id="anchor_student" data-canonical-id="student_targets" data-object-id="student" data-status={scene.objectStatus.targets}>
+          <span className="p9-anchor-label">共同训练</span><strong>Student</strong><b>6 个 Sigmoid</b><small>Q 软目标 + 新类硬标签</small>
+        </article>
+        {scene.clip.id === "merge-training-set" ? <>
+          <P9FlowToken sample={oldDemoSample} start={10} end={30} progress={scene.progress} copy lane={72} source="P_before" />
+          <P9FlowToken sample={newDemoSample} start={10} end={30} progress={scene.progress} lane={96} source="X_new" />
+        </> : null}
+        {showQFlight && routeSample ? <P9FlowToken sample={routeSample} start={30} end={70} progress={scene.progress} source="D" /> : null}
+        {showTrainingFlight ? <P9FlowToken sample={trainingDemoSample} start={30} end={90} progress={scene.clip.id === "update-theta" ? 1 : scene.progress} source="D / Q" /> : null}
+      </div>
+      <div className="p9-feature-anchor" data-object-id="feature-space" data-feature-state={scene.chapterId === "rebuild-prototypes" ? scene.objectStatus.prototypes : showFeatureObjects ? scene.objectStatus.query : "pending"}>
+        <header><div><span className="p9-anchor-label">同一特征空间 · 固定坐标</span><strong>{isPredicting ? "Query 与六个原型比较" : isHandoff ? "本轮推断结果正在交接" : isFeatureChapter ? "P_after 的图像、原型与 Query" : "等待 P_after 重编码"}</strong></div><span>{isPredicting ? `${Math.floor(scene.comparisonProgress * ALL_CLASS_IDS.length)} / ${ALL_CLASS_IDS.length} 条距离` : "φ_Θ_after"}</span></header>
+        <div className="p9-feature-anchor-chart p9-prediction-chart" style={{ "--p9-prototypes-opacity": prototypeProgress, "--p9-feature-samples-opacity": sampleOpacity, opacity: featureChartOpacity } as CSSProperties} data-shared-chart="true" data-prototypes-visible={prototypeProgress > 0 ? "true" : "false"}>
+          <FeatureSpaceWorkbench
+            mode={isPredicting || isHandoff ? "inference" : isFeatureChapter ? "prototypes" : "projection"}
+            title={isPredicting || isHandoff ? "共享特征空间 · 最近均值分类" : "共享特征空间 · P_after 重编码"}
+            description="同一张特征空间从原型构建连续到 Query 比较；坐标、exemplar ID 与真实运行时距离保持一致。"
+            points={showFeatureObjects ? p9CurrentPoints : []}
+            previousPoints={isReencoding ? p9TrackedBeforePoints : []}
+            motionProgress={isReencoding ? scene.progress : undefined}
+            prototypes={showFeatureObjects ? P9_COMPARISON_PROTOTYPES : []}
+            query={isPredicting || isHandoff ? QUERY_FEATURE : undefined}
+            queryLabelOffset={{ dx: -14, dy: 28, anchor: "end" }}
+            queryRevealProgress={isPredicting ? scene.queryProgress : isHandoff ? 1 : undefined}
+            comparisonProgress={isPredicting ? scene.comparisonProgress : isHandoff ? 1 : undefined}
+            completedComparisonOpacity={0.68}
+            nearestHighlightProgress={isPredicting ? scene.nearestHighlightProgress : isHandoff ? 1 : undefined}
+            unitCircle
+            markerScale={0.82}
+            showSampleLabels={false}
+            focusableSamples={false}
+          />
+        </div>
+        {isPredicting && scene.objectStatus.prediction === "active" ? <p className="p9-feature-result" style={{ opacity: scene.nearestHighlightProgress }} data-result-class={QUERY_PREDICTION}>六类比较完成 · argmin = {CLASS_VISUALS[QUERY_PREDICTION].displayLabel} · {QUERY_DISTANCES[0].distance.toFixed(3)}</p> : null}
+      </div>
+    </section>
+  );
 }
 
 function PersistentState({ scene }: { scene: RuntimeScene }) {
@@ -209,9 +291,7 @@ function MemoryConstructionScene({ scene }: { scene: RuntimeScene }) {
 }
 
 function PrototypeRebuildScene({ scene }: { scene: RuntimeScene }) {
-  const rebuilding = scene.clip.id === "form-prototypes";
   const isComplete = scene.clip.id === "form-prototypes" && scene.progress >= 1;
-  const prototypeOpacity = rebuilding ? Math.max(0, Math.min(1, (scene.progress - 0.3) / 0.62)) : 0;
   return (
     <div className="p9-prototype-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-prototype-ids={ALL_CLASS_IDS.map((classId) => P_AFTER[classId].map((sample) => sample.id).join(",")).join(" ")}>
       <div className="p9-prototype-inputs">
@@ -219,20 +299,6 @@ function PrototypeRebuildScene({ scene }: { scene: RuntimeScene }) {
         <div className="p9-prototype-id-list">{CURRENT_EXEMPLARS.map((sample) => <span key={sample.id} style={classAccent(sample.classId)} data-exemplar-id={sample.id}>{CLASS_VISUALS[sample.classId].glyph} {sample.id}</span>)}</div>
         <span className="p9-reencode-arrow" aria-hidden="true">↓</span>
         <div className="p9-prototype-model"><b>φ<sub>Θ_after</sub></b><span>{scene.clip.id === "reencode-p-after" ? `重新编码中 · ${Math.round(scene.progress * 100)}%` : "归一化特征与类别均值"}</span></div>
-      </div>
-      <div className="p9-prototype-chart" style={{ "--p9-prototypes-opacity": prototypeOpacity } as CSSProperties} data-prototypes-visible={prototypeOpacity > 0 ? "true" : "false"}>
-        <FeatureSpaceWorkbench
-          mode="prototypes"
-          title={isComplete ? "六个 P_after 原型已重建" : "以当前表示重编码 exemplar"}
-          description="圆点表示归一化后的原始 exemplar 特征；方块位置来自 P9 共享 PROTOTYPES 运行时数据。固定端点用于表示状态对照，不是训练轨迹。"
-          points={p9CurrentPoints}
-          previousPoints={p9TrackedBeforePoints}
-          motionProgress={scene.clip.id === "reencode-p-after" ? scene.progress : 1}
-          unitCircle
-          prototypes={rebuilding ? PROTOTYPES : []}
-          showSampleLabels={false}
-          focusableSamples={false}
-        />
       </div>
       <div className="p9-prototype-identity" data-shared-prototype-ids={p9PrototypeData.map(({ classId }) => classId).join(" ")}>
         {p9PrototypeData.map(({ classId, point, sampleIds }) => <span key={classId} style={classAccent(classId)} data-prototype-class={classId} data-prototype-point={point.join(",")} data-exemplar-ids={sampleIds.join(" ")}>
@@ -245,42 +311,23 @@ function PrototypeRebuildScene({ scene }: { scene: RuntimeScene }) {
 }
 
 function PredictionScene({ scene }: { scene: RuntimeScene }) {
-  const comparisonCount = scene.comparisonProgress * QUERY_DISTANCES.length;
-  const resultVisible = scene.nearestHighlightProgress > 0;
+  const comparisonCount = scene.comparisonProgress * P9_COMPARISON_ENTRIES.length;
+  const resultVisible = scene.objectStatus.prediction === "active";
   return (
     <div className="p9-prediction-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-query-progress={scene.queryProgress.toFixed(3)} data-comparison-progress={scene.comparisonProgress.toFixed(3)} data-prediction-class={resultVisible ? QUERY_PREDICTION : ""}>
       <div className="p9-prediction-route"><span>φ<sub>Θ_after</sub></span><i aria-hidden="true">→</i><b>P_after 原型</b><i aria-hidden="true">←</i><span>最近距离决定类别</span></div>
-      <div className="p9-prediction-chart">
-        <FeatureSpaceWorkbench
-          mode="inference"
-          title="Query 与六类当前 Prototype"
-          description="同一 Query 到达固定教学坐标后，按共享运行时的真实距离顺序逐条连到六类 P_after 原型；连线仅表示特征空间欧氏距离。"
-          points={p9CurrentPoints}
-          prototypes={P9_COMPARISON_PROTOTYPES}
-          query={QUERY_FEATURE}
-          queryLabelOffset={{ dx: -14, dy: 28, anchor: "end" }}
-          queryRevealProgress={scene.queryProgress}
-          comparisonProgress={scene.comparisonProgress}
-          completedComparisonOpacity={0.68}
-          nearestHighlightProgress={scene.nearestHighlightProgress}
-          unitCircle
-          markerScale={0.82}
-          showSampleLabels={false}
-          focusableSamples={false}
-          asideContent={<>
-            <div className="p9-distance-list" aria-label="Query 到六类原型的共享运行时距离">
-              {QUERY_DISTANCES.map((entry, index) => {
-                const amount = Math.max(0, Math.min(1, comparisonCount - index));
-                const state = amount >= 1 ? "complete" : amount > 0 ? "active" : "pending";
-                return <div className={`p9-distance-row p9-distance-row--${state}${resultVisible && entry.classId === QUERY_PREDICTION ? " is-nearest" : ""}`} key={entry.classId} data-comparison-rank={index + 1} data-prototype-class-id={entry.classId} data-distance={entry.distance.toFixed(6)} data-reveal-progress={amount.toFixed(3)} style={classAccent(entry.classId)}>
-                  <span>{index + 1}</span><b><i>{CLASS_VISUALS[entry.classId].glyph}</i>{CLASS_VISUALS[entry.classId].displayLabel}</b><strong>{state === "pending" ? "—" : entry.distance.toFixed(3)}</strong><small>{state === "complete" ? "已比较" : state === "active" ? "正在比较" : "等待"}</small>
-                </div>;
-              })}
-            </div>
-            {resultVisible ? <div className="p9-prediction-result" data-result-class={QUERY_PREDICTION} style={{ opacity: scene.nearestHighlightProgress }}><span>最近原型</span><b style={classAccent(QUERY_PREDICTION)}><i>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>真实最小距离 · {QUERY_DISTANCES[0].distance.toFixed(3)}</small></div> : <p className="p9-prediction-pending">{scene.clip.id === "query-arrives" ? "Query 正在进入当前特征空间；尚未开始比较。" : `${Math.min(QUERY_DISTANCES.length, Math.floor(comparisonCount))} / ${QUERY_DISTANCES.length} 个距离已完成。`}</p>}
-            <p className="p9-prediction-note">训练 head 保留在模型中，但本次分类不读取它的 argmax。</p>
-          </>}
-        />
+      <div className="p9-prediction-details">
+        <div className="p9-distance-list" aria-label="Query 到六类原型的共享运行时距离">
+          {P9_COMPARISON_ENTRIES.map((entry, index) => {
+            const amount = Math.max(0, Math.min(1, comparisonCount - index));
+            const state = amount >= 1 ? "complete" : amount > 0 ? "active" : "pending";
+            return <div className={`p9-distance-row p9-distance-row--${state}${resultVisible && entry.classId === QUERY_PREDICTION ? " is-nearest" : ""}`} key={entry.classId} data-comparison-rank={index + 1} data-prototype-class-id={entry.classId} data-distance={entry.distance.toFixed(6)} data-reveal-progress={amount.toFixed(3)} style={classAccent(entry.classId)}>
+              <span>{index + 1}</span><b><i>{CLASS_VISUALS[entry.classId].glyph}</i>{CLASS_VISUALS[entry.classId].displayLabel}</b><strong>{state === "pending" ? "—" : entry.distance.toFixed(3)}</strong><small>{state === "complete" ? "已比较" : state === "active" ? "正在比较" : "等待"}</small>
+            </div>;
+          })}
+        </div>
+        {resultVisible ? <div className="p9-prediction-result" data-result-class={QUERY_PREDICTION} style={{ opacity: scene.nearestHighlightProgress }}><span>最近原型</span><b style={classAccent(QUERY_PREDICTION)}><i>{CLASS_VISUALS[QUERY_PREDICTION].glyph}</i>{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>真实最小距离 · {QUERY_DISTANCES[0].distance.toFixed(3)}</small></div> : <p className="p9-prediction-pending">{scene.clip.id === "query-arrives" ? "Query 正在进入当前特征空间；尚未开始比较。" : `${Math.min(P9_COMPARISON_ENTRIES.length, Math.floor(comparisonCount))} / ${P9_COMPARISON_ENTRIES.length} 个距离已完成。`}</p>}
+        <p className="p9-prediction-note">训练 head 保留在模型中，但本次分类不读取它的 argmax。</p>
       </div>
     </div>
   );
@@ -313,7 +360,7 @@ function HandoffScene({ scene }: { scene: RuntimeScene }) {
 
 function IncomingBatch() {
   return (
-    <div className="p9-incoming-batch" data-canonical-id="incoming_class_batch">
+    <div className="p9-incoming-batch">
       <div className="p9-incoming-total"><strong>X_new</strong><span>3 类 × 6 张 = 18 张完整新图</span></div>
       <div className="p9-incoming-classes">
         {INCOMING_CLASS_IDS.map((classId) => {
@@ -331,14 +378,6 @@ function IncomingBatch() {
 }
 
 function MergeScene({ scene }: { scene: RuntimeScene }) {
-  const oldFlightStyle = {
-    left: (12 + scene.progress * 57) + "%",
-    top: (29 + scene.progress * 14) + "%",
-  } as CSSProperties;
-  const newFlightStyle = {
-    left: (12 + scene.progress * 57) + "%",
-    top: (69 - scene.progress * 18) + "%",
-  } as CSSProperties;
   const targetSamples = [P_BEFORE.A[0], P_BEFORE.B[0], P_BEFORE.C[0], ...INCOMING_CLASS_IDS.map((classId) => samplesForClass(classId)[0])];
   return (
     <div className="p9-merge-scene" data-clip={scene.clip.id} data-progress={scene.progress.toFixed(2)} data-d-count={scene.dSampleCount ?? 0}>
@@ -367,13 +406,7 @@ function MergeScene({ scene }: { scene: RuntimeScene }) {
           </div>
         </div>
         <div className="p9-merge-routes" aria-hidden="true"><i /><i /></div>
-        <span className="p9-flight-token p9-flight-token--old" style={oldFlightStyle} data-sample-id={oldDemoSample.id} data-token-copy="true">
-          <SampleToken sample={oldDemoSample} role="exemplar" compact /><small>副本</small>
-        </span>
-        <span className="p9-flight-token p9-flight-token--new" style={newFlightStyle} data-sample-id={newDemoSample.id} data-token-copy="true">
-          <SampleToken sample={newDemoSample} role="incoming" compact />
-        </span>
-        <div className="p9-d-target" id="training_set_D" data-canonical-id="training_set_D">
+        <div className="p9-d-target" data-detail-object="D">
           <span className="p9-eyebrow">本轮训练集</span>
           <strong>D</strong>
           <b>{scene.dSampleCount ?? 0} / 30</b>
@@ -414,10 +447,6 @@ function SnapshotScene({ scene }: { scene: RuntimeScene }) {
   const qRows = demoQSamples.filter((entry, index) => scene.qRowsWritten >= index + 1);
   const visibleRows = [...qRows];
   if (sample && !visibleRows.some((entry) => entry.id === sample.id)) visibleRows.push(sample);
-  const routeProgress = scene.progress <= 0.43
-    ? scene.progress / 0.43
-    : 1 + (scene.progress - 0.43) / 0.57;
-  const flightStyle = { left: (6 + Math.min(1, routeProgress) * 84) + "%", top: "78%" } as CSSProperties;
   const cells = sample ? scene.activeQCellProgress : [];
   const notShownCount = Math.max(0, scene.qRowsWritten - qRows.length - (sample ? 1 : 0));
   return (
@@ -426,12 +455,12 @@ function SnapshotScene({ scene }: { scene: RuntimeScene }) {
         <span><b>Q</b> · 旧节点响应快照</span><strong>{scene.qRowsWritten} / 30 行 · 3 列</strong>
       </div>
       <div className="p9-q-route">
-        <section className="p9-route-node p9-route-node--data" id="training_set_D" data-canonical-id="training_set_D">
+        <section className="p9-route-node p9-route-node--data" data-detail-object="D">
           <span className="p9-eyebrow">D · 当前样本</span>
           <strong>30 个训练 ID</strong>
           {sample ? <SampleToken sample={sample} role={sample.classId === "A" || sample.classId === "B" || sample.classId === "C" ? "exemplar" : "incoming"} compact /> : <small>同一张图依序传入教师网络</small>}
         </section>
-        <section className="p9-route-node p9-route-node--teacher" id="old_teacher" data-canonical-id="old_teacher">
+        <section className="p9-route-node p9-route-node--teacher" data-detail-object="teacher">
           <span className="p9-eyebrow">Θ_before · 旧教师</span>
           <strong>旧类别节点</strong>
           <div className="p9-teacher-nodes">
@@ -439,7 +468,7 @@ function SnapshotScene({ scene }: { scene: RuntimeScene }) {
           </div>
           <small>冻结快照来源 · 参数尚未更新</small>
         </section>
-        <section className="p9-route-node p9-route-node--q" id="response_snapshot_Q" data-canonical-id="response_snapshot_Q">
+        <section className="p9-route-node p9-route-node--q" data-detail-object="Q">
           <span className="p9-eyebrow">目标矩阵</span>
           <strong>Q · 30 × 3</strong>
           <div className="p9-q-table" role="table" aria-label="Q 响应快照示例行">
@@ -447,10 +476,9 @@ function SnapshotScene({ scene }: { scene: RuntimeScene }) {
             {visibleRows.map((entry) => <QTableRow key={entry.id} sample={entry} active={entry.id === sample?.id} cellProgress={entry.id === sample?.id ? cells : []} />)}
             {notShownCount > 0 ? <div className="p9-q-more" role="row">+ {notShownCount} 行已写入各自的 ID</div> : null}
           </div>
-          <small className="p9-q-freeze">{scene.qRowsWritten === 30 ? "30 行完成 · Q 保持冻结" : "每个 sample ID 对应一行"}</small>
+          <small className="p9-q-freeze">{scene.qRowsWritten === 30 ? "30 行完成 · Q 保持冻结" : `${scene.qRowsWritten} 行完成${sample ? ` · ${sample.id} 写入中` : " · 等待下一行"}`}</small>
         </section>
         <div className="p9-q-route-line" aria-hidden="true"><i /></div>
-        {sample ? <span className="p9-q-flight" style={flightStyle} data-sample-id={sample.id} aria-hidden="true"><b style={classAccent(sample.classId)}>{CLASS_VISUALS[sample.classId].glyph}</b><small>{sample.id}</small></span> : null}
       </div>
       <div className="p9-q-identity">
         <span>当前流动 ID</span><strong>{sample?.id ?? (scene.qRowsWritten === 30 ? "30 个 ID 已完成" : "等待下一张样本")}</strong>
@@ -498,7 +526,7 @@ function Guidance({ scene }: { scene: RuntimeScene }) {
             : scene.chapterId === "rebuild-prototypes"
               ? `${PROTOTYPES.length} 个共享运行时原型 · P_after 身份不变`
               : scene.chapterId === "predict"
-                ? scene.nearestHighlightProgress > 0
+                ? scene.objectStatus.prediction === "active"
                   ? `最近原型：${CLASS_VISUALS[QUERY_PREDICTION].displayLabel} · 距离 ${QUERY_DISTANCES[0].distance.toFixed(3)}`
                   : `${Math.floor(scene.comparisonProgress * QUERY_DISTANCES.length)} / ${QUERY_DISTANCES.length} 个真实距离已比较`
                 : scene.chapterId === "handoff"
@@ -509,7 +537,7 @@ function Guidance({ scene }: { scene: RuntimeScene }) {
     : scene.chapterId === "rebuild-prototypes"
       ? "P_after 已固定；类别原型必须使用当前 φ_Θ_after 重新编码。"
       : scene.chapterId === "predict"
-        ? "P_after 原型与 Query 来自共享运行时；六条比较按真实距离排序并逐条保留。"
+        ? "P_after 原型与 Query 来自共享运行时；先按固定类别顺序完成六条比较，再确定真实最小距离。"
         : scene.chapterId === "handoff"
           ? "Θ_after 与已提交的 P_after 是仅有的下一轮持久起点。"
       : scene.chapterId === "train-update"
@@ -628,15 +656,18 @@ export function PageNine({ onExit }: { onExit: () => void }) {
             <span className="p9-clip-progress">{Math.round(scene.progress * 100)}%</span>
           </header>
           <div className="p9-workbench-canvas" data-focus={scene.focus}>
-            {scene.chapterId === "inherited" ? <InheritedScene /> : null}
-            {scene.clip.id === "receive-new-batch" ? <ArrivalScene /> : null}
-            {isMerge ? <MergeScene scene={scene} /> : null}
-            {isSnapshot ? <SnapshotScene scene={scene} /> : null}
-            {isTraining ? <TrainingBridgeScene scene={scene} /> : null}
-            {isMemory ? <MemoryConstructionScene scene={scene} /> : null}
-            {isPrototype ? <PrototypeRebuildScene scene={scene} /> : null}
-            {scene.chapterId === "predict" ? <PredictionScene scene={scene} /> : null}
-            {scene.chapterId === "handoff" ? <HandoffScene scene={scene} /> : null}
+            <P9WorkbenchAnchors scene={scene} />
+            <div className="p9-active-scene" data-active-clip={scene.clip.id} aria-label="当前动作细节" aria-live="polite">
+              {scene.chapterId === "inherited" ? <InheritedScene /> : null}
+              {scene.clip.id === "receive-new-batch" ? <ArrivalScene /> : null}
+              {isMerge ? <MergeScene scene={scene} /> : null}
+              {isSnapshot ? <SnapshotScene scene={scene} /> : null}
+              {isTraining ? <TrainingBridgeScene scene={scene} /> : null}
+              {isMemory ? <MemoryConstructionScene scene={scene} /> : null}
+              {isPrototype ? <PrototypeRebuildScene scene={scene} /> : null}
+              {scene.chapterId === "predict" ? <PredictionScene scene={scene} /> : null}
+              {scene.chapterId === "handoff" ? <HandoffScene scene={scene} /> : null}
+            </div>
           </div>
           <footer className="p9-workbench-controls">
             <button type="button" onClick={timeline.controls.stepBack} disabled={!timeline.state.hasPrevious}>上一个片段</button>

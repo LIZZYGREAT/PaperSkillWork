@@ -53,23 +53,23 @@ export type RuntimeClip = AnimationClip & {
 };
 
 export const RUNTIME_CLIPS: readonly RuntimeClip[] = [
-  { id: "inherit-state", chapterId: "inherited", focus: "state", operation: "hold", durationMs: 700, holdMs: 900, narrative: "上一轮只留下模型 Θ_before 与 12 张有序原始图片。" },
-  { id: "receive-new-batch", chapterId: "prepare-d", focus: "data", operation: "arrive", durationMs: 1400, holdMs: 300, narrative: "新类别 D、E、F 的 18 张完整图片作为 X_new 到达。" },
-  { id: "merge-training-set", chapterId: "prepare-d", focus: "data", operation: "merge", durationMs: 2400, holdMs: 700, narrative: "从 P_before 复制 12 张旧 exemplar，与 18 张新图合成 D。" },
-  { id: "snapshot-old-row", chapterId: "snapshot-q", focus: "snapshot", operation: "teacher-row", durationMs: 1700, holdMs: 350, narrative: "同一张旧类训练图经过未更新的三个旧节点，写入它自己的 Q 行。" },
-  { id: "snapshot-new-row", chapterId: "snapshot-q", focus: "snapshot", operation: "teacher-row", durationMs: 1700, holdMs: 350, narrative: "新类图像也经过相同的旧教师网络，并写入匹配 ID 的 Q 行。" },
-  { id: "fill-q-rows", chapterId: "snapshot-q", focus: "snapshot", operation: "batch-rows", durationMs: 1900, holdMs: 650, narrative: "其余样本沿 D 的次序批量补入；每一行仍与 sample ID 对齐。" },
-  { id: "build-targets-and-loss", chapterId: "train-update", focus: "model", operation: "targets", durationMs: 1500, holdMs: 350, narrative: "同一图像接收三个 Q 软目标与三个真实新类硬标签，再汇成六节点 BCE。" },
-  { id: "update-theta", chapterId: "train-update", focus: "model", operation: "update", durationMs: 1800, holdMs: 700, narrative: "符号化展示共享表示与训练 head 更新；结束时才提交 Θ_after。" },
-  { id: "truncate-old-prefix", chapterId: "manage-memory", focus: "memory", operation: "truncate", durationMs: 1700, holdMs: 350, narrative: "旧类各保留有序列表前两项，尾部两项逐步释放。" },
-  { id: "herd-class-d", chapterId: "manage-memory", focus: "memory", operation: "herd-d", durationMs: 2300, holdMs: 300, narrative: "用 Class 4 的真实运行时 Herding 顺序演示 p₁、p₂ 如何入选。" },
-  { id: "herd-classes-e-f", chapterId: "manage-memory", focus: "memory", operation: "herd-e-f", durationMs: 1700, holdMs: 500, narrative: "Class 5、6 各自沿用同一选择机制，并只从本类六张图中补入两项。" },
-  { id: "commit-p-after", chapterId: "manage-memory", focus: "memory", operation: "commit", durationMs: 1200, holdMs: 650, narrative: "旧类六项与新类六项合并，一次提交为 P_after=12。" },
-  { id: "reencode-p-after", chapterId: "rebuild-prototypes", focus: "feature", operation: "reencode", durationMs: 1600, holdMs: 350, narrative: "同一 exemplar ID 由当前 φ_after 重新编码；固定端点只是表示状态对照。" },
-  { id: "form-prototypes", chapterId: "rebuild-prototypes", focus: "feature", operation: "prototypes", durationMs: 1500, holdMs: 550, narrative: "六类各从自己的 P_after 图像计算归一化均值。" },
-  { id: "query-arrives", chapterId: "predict", focus: "prediction", operation: "query", durationMs: 1200, holdMs: 300, narrative: "Query 保持同一身份进入当前特征空间。" },
-  { id: "compare-six-distances", chapterId: "predict", focus: "prediction", operation: "compare", durationMs: 1900, holdMs: 500, narrative: "六条真实 Query–Prototype 距离逐条绘出并保留。" },
-  { id: "handoff-next", chapterId: "handoff", focus: "state", operation: "handoff", durationMs: 1300, holdMs: 1400, narrative: "Θ_after + P_after 留作下一轮状态；临时对象退出，X_next 只作为入口提示。" },
+  { id: "inherit-state", chapterId: "inherited", focus: "state", operation: "hold", durationMs: 4300, holdMs: 1200, narrative: "上一轮只留下模型 Θ_before 与 12 张有序原始图片。" },
+  { id: "receive-new-batch", chapterId: "prepare-d", focus: "data", operation: "arrive", durationMs: 2200, holdMs: 800, narrative: "新类别 D、E、F 的 18 张完整图片作为 X_new 到达。" },
+  { id: "merge-training-set", chapterId: "prepare-d", focus: "data", operation: "merge", durationMs: 8800, holdMs: 1700, narrative: "从 P_before 复制 12 张旧 exemplar，与 18 张新图合成 D。" },
+  { id: "snapshot-old-row", chapterId: "snapshot-q", focus: "snapshot", operation: "teacher-row", durationMs: 4200, holdMs: 1000, narrative: "同一张旧类训练图经过未更新的三个旧节点，写入它自己的 Q 行。" },
+  { id: "snapshot-new-row", chapterId: "snapshot-q", focus: "snapshot", operation: "teacher-row", durationMs: 4200, holdMs: 1000, narrative: "新类图像也经过相同的旧教师网络，并写入匹配 ID 的 Q 行。" },
+  { id: "fill-q-rows", chapterId: "snapshot-q", focus: "snapshot", operation: "batch-rows", durationMs: 8000, holdMs: 1100, narrative: "其余样本沿 D 的次序批量补入；每一行仍与 sample ID 对齐。" },
+  { id: "build-targets-and-loss", chapterId: "train-update", focus: "model", operation: "targets", durationMs: 5000, holdMs: 1000, narrative: "同一图像接收三个 Q 软目标与三个真实新类硬标签，再汇成六节点 BCE。" },
+  { id: "update-theta", chapterId: "train-update", focus: "model", operation: "update", durationMs: 6000, holdMs: 1500, narrative: "符号化展示共享表示与训练 head 更新；结束时才提交 Θ_after。" },
+  { id: "truncate-old-prefix", chapterId: "manage-memory", focus: "memory", operation: "truncate", durationMs: 4500, holdMs: 900, narrative: "旧类各保留有序列表前两项，尾部两项逐步释放。" },
+  { id: "herd-class-d", chapterId: "manage-memory", focus: "memory", operation: "herd-d", durationMs: 4500, holdMs: 900, narrative: "用 Class 4 的真实运行时 Herding 顺序演示 p₁、p₂ 如何入选。" },
+  { id: "herd-classes-e-f", chapterId: "manage-memory", focus: "memory", operation: "herd-e-f", durationMs: 4500, holdMs: 900, narrative: "Class 5、6 各自沿用同一选择机制，并只从本类六张图中补入两项。" },
+  { id: "commit-p-after", chapterId: "manage-memory", focus: "memory", operation: "commit", durationMs: 900, holdMs: 900, narrative: "旧类六项与新类六项合并，一次提交为 P_after=12。" },
+  { id: "reencode-p-after", chapterId: "rebuild-prototypes", focus: "feature", operation: "reencode", durationMs: 4000, holdMs: 1100, narrative: "同一 exemplar ID 由当前 φ_after 重新编码；固定端点只是表示状态对照。" },
+  { id: "form-prototypes", chapterId: "rebuild-prototypes", focus: "feature", operation: "prototypes", durationMs: 4500, holdMs: 1400, narrative: "六类各从自己的 P_after 图像计算归一化均值。" },
+  { id: "query-arrives", chapterId: "predict", focus: "prediction", operation: "query", durationMs: 3000, holdMs: 600, narrative: "Query 保持同一身份进入当前特征空间。" },
+  { id: "compare-six-distances", chapterId: "predict", focus: "prediction", operation: "compare", durationMs: 5800, holdMs: 1100, narrative: "六条真实 Query–Prototype 距离逐条绘出并保留。" },
+  { id: "handoff-next", chapterId: "handoff", focus: "state", operation: "handoff", durationMs: 6500, holdMs: 1500, narrative: "Θ_after + P_after 留作下一轮状态；临时对象退出，X_next 只作为入口提示。" },
 ];
 
 export const RUNTIME_CLIP_INDEX = Object.fromEntries(RUNTIME_CLIPS.map((clip, index) => [clip.id, index])) as Record<RuntimeClipId, number>;
@@ -88,9 +88,9 @@ const lifetimes: Readonly<Record<RuntimeObjectId, { createdAt: number; releasedA
   Q: { createdAt: RUNTIME_CLIP_INDEX["snapshot-old-row"], releasedAt: RUNTIME_CLIP_INDEX["update-theta"] + 1 },
   targets: { createdAt: RUNTIME_CLIP_INDEX["build-targets-and-loss"], releasedAt: RUNTIME_CLIP_INDEX["update-theta"] + 1 },
   loss: { createdAt: RUNTIME_CLIP_INDEX["build-targets-and-loss"], releasedAt: RUNTIME_CLIP_INDEX["update-theta"] + 1 },
-  prototypes: { createdAt: RUNTIME_CLIP_INDEX["form-prototypes"], releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] },
+  prototypes: { createdAt: RUNTIME_CLIP_INDEX["form-prototypes"], releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] + 1 },
   query: { createdAt: RUNTIME_CLIP_INDEX["query-arrives"], releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] + 1 },
-  prediction: { createdAt: RUNTIME_CLIP_INDEX["compare-six-distances"] + 1, releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] + 1 },
+  prediction: { createdAt: RUNTIME_CLIP_INDEX["compare-six-distances"], releasedAt: RUNTIME_CLIP_INDEX["handoff-next"] + 1 },
 };
 
 export type RuntimeScene = {
@@ -128,10 +128,12 @@ export function runtimeSceneAt(clipIndex: number, progress: number): RuntimeScen
   const boundedProgress = clamp01(progress);
   const cursor = boundedIndex + (boundedProgress >= 1 ? 1 : 0);
   const chapterIndex = RUNTIME_CHAPTERS.findIndex((chapter) => chapter.id === clip.chapterId);
-  const objectStatus = Object.fromEntries(Object.entries(lifetimes).map(([id, lifetime]) => [
-    id,
-    boundedIndex < lifetime.createdAt ? "pending" : cursor >= lifetime.releasedAt ? "released" : "active",
-  ])) as Record<RuntimeObjectId, RuntimeObjectStatus>;
+  const objectStatus = Object.fromEntries(Object.entries(lifetimes).map(([id, lifetime]) => {
+    const beforeCreation = id === "prediction"
+      ? boundedIndex < lifetime.createdAt || boundedIndex === lifetime.createdAt && boundedProgress <= 0.82
+      : boundedIndex < lifetime.createdAt;
+    return [id, beforeCreation ? "pending" : cursor >= lifetime.releasedAt ? "released" : "active"];
+  })) as Record<RuntimeObjectId, RuntimeObjectStatus>;
 
   let oldCopiesInD = 0;
   let incomingSamplesInD = 0;
@@ -163,7 +165,7 @@ export function runtimeSceneAt(clipIndex: number, progress: number): RuntimeScen
     activeQSampleId = boundedProgress < 1 ? remainingQSamples[rowIndex]?.id ?? null : null;
     const rowProgress = rowPosition - rowIndex;
     activeQCellProgress = Array.from({ length: 3 }, (_, index) => clamp01(rowProgress * 3 - index));
-    qRowsWritten = 2 + rounded(remainingQSamples.length * boundedProgress);
+    qRowsWritten = 2 + Math.floor(remainingQSamples.length * boundedProgress);
   }
 
   const theta = cursor < RUNTIME_CLIP_INDEX["update-theta"] ? "before"
