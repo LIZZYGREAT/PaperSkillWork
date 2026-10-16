@@ -311,13 +311,14 @@ function NodeRow({ index, classId, selected, value, target, targetReady, phase, 
 export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const initialFocusIndex = activeNodeIndex(DEFAULT_SAMPLE);
   const initialFocusTarget = buildTargets(DEFAULT_SAMPLE)[initialFocusIndex];
+  const reducedMotion = useReducedMotion();
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [sampleId, setSampleId] = useState(DEFAULT_SAMPLE.id);
   const [selectedNodeIndex, setSelectedNodeIndex] = useState(initialFocusIndex);
-  const [phaseProgress, setPhaseProgress] = useState(0);
+  const [phaseProgress, setPhaseProgress] = useState(() => reducedMotion ? 1 : 0);
   const [phaseRailOpen, setPhaseRailOpen] = useState(false);
-  const progressRef = useRef(0);
-  const [status, setStatus] = useState<PlaybackStatus>("idle");
+  const progressRef = useRef(reducedMotion ? 1 : 0);
+  const [status, setStatus] = useState<PlaybackStatus>(() => reducedMotion ? "complete" : "idle");
   const [animationRevision, setAnimationRevision] = useState(0);
   const [exploreOutput, setExploreOutput] = useState(studentOutputFor(DEFAULT_SAMPLE)[initialFocusIndex]);
   const exploreOutputRef = useRef(studentOutputFor(DEFAULT_SAMPLE)[initialFocusIndex]);
@@ -325,7 +326,6 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const curveTargetRef = useRef(initialFocusTarget);
   const curveFrameRef = useRef<number | null>(null);
   const [caseNotice, setCaseNotice] = useState("");
-  const reducedMotion = useReducedMotion();
   const sample = sampleChoices.find((choice) => choice.sample.id === sampleId)?.sample ?? DEFAULT_SAMPLE;
   const targets = useMemo(() => buildTargets(sample), [sample]);
   const outputs = useMemo(() => studentOutputFor(sample), [sample]);
@@ -397,16 +397,24 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     return () => window.cancelAnimationFrame(frame);
   }, [animationRevision, phase.durationMs, phaseIndex, reducedMotion, status]);
 
+  useEffect(() => {
+    if (!reducedMotion) return;
+    progressRef.current = 1;
+    setPhaseProgress(1);
+    setStatus("complete");
+  }, [phaseIndex, reducedMotion]);
+
   function changePhase(next: number) {
     const bounded = Math.max(0, Math.min(phases.length - 1, next));
     setPhaseRailOpen(false);
     setPhaseIndex(bounded);
-    progressRef.current = 0;
-    setPhaseProgress(0);
-    setStatus("playing");
+    progressRef.current = reducedMotion ? 1 : 0;
+    setPhaseProgress(reducedMotion ? 1 : 0);
+    setStatus(reducedMotion ? "complete" : "paused");
   }
 
   function playPause() {
+    if (reducedMotion) return;
     if (status === "playing") setStatus("paused");
     else {
       if (status === "complete") {
@@ -418,6 +426,12 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
   }
 
   function replay() {
+    if (reducedMotion) {
+      progressRef.current = 1;
+      setPhaseProgress(1);
+      setStatus("complete");
+      return;
+    }
     progressRef.current = 0;
     setPhaseProgress(0);
     setAnimationRevision((revision) => revision + 1);
@@ -429,9 +443,9 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     setSampleId(next.id);
     setSelectedNodeIndex(nextNode);
     setCaseNotice("");
-    setStatus("paused");
-    progressRef.current = 0;
-    setPhaseProgress(0);
+    progressRef.current = reducedMotion ? 1 : 0;
+    setPhaseProgress(reducedMotion ? 1 : 0);
+    setStatus(reducedMotion ? "complete" : "paused");
   }
 
   function chooseNode(index: number) {
@@ -497,9 +511,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
       </details>
 
       <footer className="p6-controls" aria-label="连续训练动画控制">
-        <button type="button" className="icarl-button icarl-button--quiet" onClick={() => changePhase(phaseIndex - 1)} disabled={phaseIndex === 0}>上一步</button>
-        <div><button type="button" className="icarl-button icarl-button--quiet" onClick={playPause} aria-label={status === "playing" ? "暂停当前动画" : "继续当前动画"}>{status === "playing" ? "Ⅱ 暂停" : "▶ 继续"}</button><button type="button" className="icarl-button icarl-button--quiet" onClick={replay}>↺ 重播本段</button><span>{reducedMotion ? "减少动态效果" : status === "complete" ? "本段完成" : `${Math.round(phaseProgress * 100)}%`}</span></div>
-        {phaseIndex < phases.length - 1 ? <button type="button" className="icarl-button icarl-button--primary" onClick={() => changePhase(phaseIndex + 1)}>下一段 <b aria-hidden="true">→</b></button> : null}
+        <div><button type="button" className="icarl-button icarl-button--quiet" onClick={playPause} disabled={reducedMotion} aria-label={status === "playing" ? "暂停当前动画" : "继续当前动画"}>{reducedMotion ? "减少动态效果" : status === "playing" ? "Ⅱ 暂停" : status === "complete" ? "↺ 从头播放" : phaseProgress > 0 ? "▶ 继续播放" : "▶ 播放本段"}</button><button type="button" className="icarl-button icarl-button--quiet" onClick={replay}>↺ 重播本段</button><span>{reducedMotion ? "阶段选择显示完整状态" : status === "complete" ? "本段完成" : `${Math.round(phaseProgress * 100)}%`}</span></div>
       </footer>
     </section>
     {phaseIndex === phases.length - 1 ? <QuestionHandoff

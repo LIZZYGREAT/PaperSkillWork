@@ -269,7 +269,6 @@ function MemoryPanel() {
         </div>
         <p className="p8-author-limit"><EvidenceTag kind="PAPER INTERPRETATION" /><span>作者将批量训练与增量训练的性能差距，以及不能保存原始图像的场景，留作后续研究问题。</span></p>
         <div className="p8-qualified-summary"><span>结论边界</span><b>论文结果支持的是所测数据与协议中的趋势</b><p>它不证明 iCaRL 对所有持续学习任务普遍占优，也不证明总模型开销与类别数无关。</p></div>
-        <section className="p8-end-card"><div><span className="eyebrow">回到完整运行</span><h2>把这些证据放回系统流程</h2><p>P9 将再次追踪输入、快照、参数更新、记忆维护与最近原型预测。</p></div></section>
       </aside>
     </div>
   </section>;
@@ -292,7 +291,6 @@ export function PageEight({ onContinue }: { onContinue?: () => void }) {
   const [batch, setBatch] = useState<(typeof CLASSES_PER_BATCH)[number]>(10);
   const [benchmark, setBenchmark] = useState<Benchmark>("cifar");
   const currentIndex = tabs.findIndex((item) => item.id === tab);
-  const isLast = currentIndex === tabs.length - 1;
 
   function navigateTab(offset: number) {
     const next = Math.max(0, Math.min(tabs.length - 1, currentIndex + offset));
@@ -309,7 +307,11 @@ export function PageEight({ onContinue }: { onContinue?: () => void }) {
     <EvidenceConclusion />
     <div className="p8-step-controls"><span>问题 {String(currentIndex + 1).padStart(2, "0")} / 04 · 论文证据</span><div>
       <button type="button" className="icarl-button icarl-button--quiet" disabled={currentIndex === 0} onClick={() => navigateTab(-1)}>上一个问题</button>
-      <button type="button" className="icarl-button icarl-button--primary" disabled={isLast && !onContinue} onClick={() => isLast ? onContinue?.() : navigateTab(1)}>{isLast ? "进入第 9 页 · 完整运行" : "下一个问题"}<span aria-hidden="true"> →</span></button>
+      <button type="button" className="icarl-button icarl-button--primary" disabled={currentIndex === tabs.length - 1} onClick={() => navigateTab(1)}>下一个问题<span aria-hidden="true"> →</span></button>
     </div></div>
+    <section className="p8-page-handoff" aria-label="进入完整 iCaRL 运行">
+      <div><span className="eyebrow">实验总结 · 回到完整运行</span><h2>把证据放回系统流程</h2><p>继续追踪输入、快照、参数更新、记忆维护与最近原型预测。</p></div>
+      <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue} disabled={!onContinue}>下一页：完整 iCaRL 运行 <span aria-hidden="true">→</span></button>
+    </section>
   </article>;
 }

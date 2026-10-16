@@ -714,10 +714,10 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
    */
   const stageFinished = state.isHolding || state.progress >= 0.999;
   const stageActionLabel = state.clipIndex >= clips.length - 1 && stageFinished
-    ? "重新播放"
+    ? "从头播放"
     : stageFinished
-      ? "继续播放"
-      : "开始播放";
+      ? reducedMotion ? "下一步" : "继续播放"
+      : state.elapsedMs > 0 ? "继续播放" : "播放本段";
 
   function startStage() {
     if (state.status === "playing") {
@@ -726,8 +726,8 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
     }
     if (stageFinished) {
       // Move on to the next stage and play it; on the last stage, start the journey over.
-      if (state.hasNext) controls.stepForward();
-      else controls.goToClip(0);
+      if (state.hasNext) controls.goToClip(state.clipIndex + 1, { autoPlay: !reducedMotion });
+      else controls.goToClip(0, { autoPlay: !reducedMotion });
       return;
     }
     controls.play();
@@ -738,7 +738,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   }
 
   function jumpToClip(index: number) {
-    controls.goToClip(index);
+    controls.goToClip(index, { autoPlay: false });
     if (chapterJumpsRef.current) chapterJumpsRef.current.open = false;
     requestAnimationFrame(focusWorkbench);
   }

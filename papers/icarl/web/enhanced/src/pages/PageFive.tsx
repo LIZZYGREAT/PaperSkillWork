@@ -507,7 +507,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         <footer className="p5-controls" aria-label="P5 动画控制">
           <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.stepBack)} disabled={!state.hasPrevious}>← 上一步</button>
           <div className="p5-control-main">
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.toggle)}>{state.status === "playing" ? "Ⅱ 暂停" : "▶ 继续"}</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.toggle)} disabled={reducedMotion} aria-label={state.status === "playing" ? "暂停当前片段" : "继续当前片段"}>{reducedMotion ? "减少动态效果" : state.status === "playing" ? "Ⅱ 暂停" : state.status === "finished" ? "↺ 从头播放" : state.elapsedMs > 0 ? "▶ 继续播放" : "▶ 播放本段"}</button>
             <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.replayClip)}>↺ 重播本片段</button>
             <span aria-live="polite">{state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
           </div>
@@ -521,7 +521,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
               type="button"
               className={index === state.clipIndex ? "is-current" : index < state.clipIndex ? "is-complete" : ""}
               aria-pressed={index === state.clipIndex}
-              onClick={() => leaveInspection(() => controls.goToClip(clipIndexById.get(item.id) ?? 0))}
+              onClick={() => leaveInspection(() => controls.goToClip(clipIndexById.get(item.id) ?? 0, { autoPlay: false }))}
             >
               <b>{String(index + 1).padStart(2, "0")}</b>{item.narrative}
             </button>

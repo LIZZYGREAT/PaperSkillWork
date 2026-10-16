@@ -309,8 +309,38 @@ assert.equal(reviewAt(0.4, 2).visiblePrefixCount, 2, "Manual P4 review selection
 assert.equal(reviewAt(0.4, 2).activePrefixIndex, 2, "Manual P4 review selection must keep its own selected endpoint.");
 assert.equal(reviewAt(0.2).activePrefixIndex, 1, "A direct manual review must not leak into the automatic 1→2→3→4 replay state.");
 const p4Source = readFileSync(path.join(process.cwd(), "src/pages/PageFour.tsx"), "utf8");
-assert.match(p4Source, /function jumpToPhase\(index: number, options\?: \{ autoPlay\?: boolean \}\)[\s\S]*?setManualReviewIndex\(null\);[\s\S]*?controls\.goToClip\(phase\.startIndex, options\)/,
-  "P4 replay and phase navigation must clear a manually pinned review before automatic playback.");
+assert.match(p4Source, /function jumpToPhase\(index: number, options\?: \{ autoPlay\?: boolean \}\)[\s\S]*?setManualReviewIndex\(null\);[\s\S]*?controls\.goToClip\(phase\.startIndex, \{ autoPlay: false, \.\.\.options \}\)/,
+  "P4 phase selection must clear a manually pinned review and pause at the selected phase unless playback is explicitly requested.");
+
+const p1Source = readFileSync(path.join(process.cwd(), "src/pages/PageOne.tsx"), "utf8");
+const p2Source = readFileSync(path.join(process.cwd(), "src/pages/PageTwo.tsx"), "utf8");
+const p3Source = readFileSync(path.join(process.cwd(), "src/pages/PageThree.tsx"), "utf8");
+const p5Source = readFileSync(path.join(process.cwd(), "src/pages/PageFive.tsx"), "utf8");
+const p6NavigationSource = readFileSync(path.join(process.cwd(), "src/pages/PageSix.tsx"), "utf8");
+const p7Source = readFileSync(path.join(process.cwd(), "src/pages/PageSeven.tsx"), "utf8");
+const p8NavigationSource = readFileSync(path.join(process.cwd(), "src/pages/PageEight.tsx"), "utf8");
+assert.match(p1Source, /下一页：模型怎样处理图片/,
+  "P1's final action must clearly identify the page transition.");
+assert.match(p2Source, /function selectStage\(nextStage: number\)\s*\{\s*setIsPlaying\(false\);\s*setStage\(nextStage\);/,
+  "P2 manual stage selection must stop the current path playback before showing the selected stage.");
+assert.match(p2Source, /下一页：用代表图片完成一次预测/,
+  "P2's final action must clearly identify the page transition.");
+assert.match(p3Source, /controls\.goToClip\(state\.clipIndex \+ 1, \{ autoPlay: !reducedMotion \}\)/,
+  "P3's continue action must start the next clip, while reduced motion keeps it paused.");
+assert.match(p3Source, /controls\.goToClip\(index, \{ autoPlay: false \}\)/,
+  "P3 manual clip selection must pause at the selected clip.");
+assert.match(p5Source, /controls\.goToClip\(clipIndexById\.get\(item\.id\) \?\? 0, \{ autoPlay: false \}\)/,
+  "P5 manual clip selection must pause without resetting the selected sample identity.");
+assert.match(p6NavigationSource, /setStatus\(reducedMotion \? "complete" : "paused"\)/,
+  "P6 manual phase selection must pause, or show the completed state under reduced motion.");
+assert.doesNotMatch(p6NavigationSource.match(/<footer className="p6-controls"[\s\S]*?<\/footer>/)?.[0] ?? "", /上一步|下一步|下一段/,
+  "P6 must not duplicate the step navigation already provided by its phase rail.");
+assert.match(p7Source, /controls\.goToClip\(stage \+ 1, \{ autoPlay: true \}\)/,
+  "P7's Play Next Segment action must actually start playback.");
+assert.match(p8NavigationSource, /className="p8-page-handoff"[\s\S]*?下一页：完整 iCaRL 运行/,
+  "P8 must provide its page transition as a separate action after the evidence summary.");
+assert.match(p8NavigationSource, /disabled=\{currentIndex === tabs\.length - 1\}/,
+  "P8's question navigation must stop at the final question instead of routing to another page.");
 
 const budgetCheckpoints = [
   { progress: 0, count: 4, active: 4, tail: "steady", opacity: 1, quota: 4 },

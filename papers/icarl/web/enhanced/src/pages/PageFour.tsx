@@ -1048,11 +1048,15 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
     const phase = phaseRanges[index];
     if (phase) {
       setManualReviewIndex(null);
-      controls.goToClip(phase.startIndex, options);
+      controls.goToClip(phase.startIndex, { autoPlay: false, ...options });
     }
   }
 
   function startAnimation() {
+    if (reducedMotion) {
+      controls.stepForward();
+      return;
+    }
     if (state.status === "playing") {
       controls.pause();
       return;
@@ -1210,8 +1214,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
             <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex)}>↺ 重播本阶段</button>
             <span aria-live="polite">阶段 {activePhaseIndex + 1} / {phaseRanges.length} · {Math.round(phaseProgress * 100)}%</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={startAnimation}>
-            {state.status === "playing" ? "Ⅱ 暂停" : phaseComplete && activePhaseIndex === phaseRanges.length - 1 ? "↺ 重新播放" : "▶ 开始动画"}
+          <button type="button" className="icarl-button icarl-button--primary" onClick={startAnimation} disabled={reducedMotion && !state.hasNext}>
+            {reducedMotion ? state.hasNext ? "下一步" : "本页完成" : state.status === "playing" ? "Ⅱ 暂停" : state.status === "finished" || (phaseComplete && activePhaseIndex === phaseRanges.length - 1) ? "↺ 从头播放" : phaseComplete ? "▶ 播放下一阶段" : state.elapsedMs > 0 ? "▶ 继续播放" : "▶ 播放本阶段"}
           </button>
         </div>
 

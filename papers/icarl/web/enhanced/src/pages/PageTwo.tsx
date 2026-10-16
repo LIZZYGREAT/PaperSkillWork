@@ -94,8 +94,8 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
               </div>
               <div className="p2-playback__controls">
                 <button className="p2-quiet-action" type="button" onClick={() => selectStage(Math.max(0, stage - 1))} disabled={stage === 0}>← 上一步</button>
-                <button className="p2-action p2-action--small" type="button" onClick={togglePlayback}>{reducedMotion ? "下一步 →" : isPlaying ? "暂停" : stage === flowStages.length - 1 ? "再次播放" : "播放完整路径"}</button>
-                {!reducedMotion ? <button className="p2-quiet-action" type="button" onClick={replayFlow}>从头播放</button> : null}
+                <button className="p2-action p2-action--small" type="button" onClick={togglePlayback} disabled={reducedMotion} title={reducedMotion ? "减少动态效果已启用；请用阶段按钮逐步查看。" : undefined}>{reducedMotion ? "减少动态效果" : isPlaying ? "Ⅱ 暂停" : stage === flowStages.length - 1 ? "↺ 从头播放" : stage > 0 ? "▶ 继续播放" : "▶ 播放完整路径"}</button>
+                {!reducedMotion && stage > 0 && stage < flowStages.length - 1 ? <button className="p2-quiet-action" type="button" onClick={replayFlow}>↺ 从头播放</button> : null}
                 <button className="p2-quiet-action" type="button" onClick={() => selectStage(Math.min(flowStages.length - 1, stage + 1))} disabled={stage === flowStages.length - 1}>下一步 →</button>
               </div>
             </div>
@@ -162,7 +162,7 @@ export function PageTwo({ onOpenPageThree }: { onOpenPageThree?: () => void }) {
               <div className="p2-handoff__step p2-handoff__step--question">
                 <span>03 · 下一问</span>
                 <p>那么，<strong>假设每个类别的代表图片已经选好了</strong>，一张新图片到来时，我们究竟怎样利用这些代表，判断它属于哪一类？</p>
-                <button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>用代表图片完成一次预测 <b aria-hidden="true">→</b></button>
+                <button type="button" className="icarl-button icarl-button--primary" onClick={onOpenPageThree}>下一页：用代表图片完成一次预测 <b aria-hidden="true">→</b></button>
               </div>
             </div>
           </section>

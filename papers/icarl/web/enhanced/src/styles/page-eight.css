@@ -198,6 +198,10 @@
 .p8-step-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 3px; color: #5b7173; font-size: 13px; }
 .p8-step-controls > div { display: flex; gap: 7px; }
 .p8-step-controls .icarl-button:disabled { opacity: .45; cursor: default; }
+.p8-page-handoff { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; border: 1px solid #cfded4; border-radius: 10px; background: linear-gradient(110deg, #f3f8f2, #fffefa); }
+.p8-page-handoff h2 { margin: 3px 0; color: #31544a; font-size: 17px; }
+.p8-page-handoff p { margin: 0; color: #566d67; font-size: 12px; line-height: 1.45; }
+.p8-page-handoff button { flex: 0 0 auto; min-height: 40px; }
 @media (max-width: 1100px) {
   .p8-workbench, .p8-memory-workbench { grid-template-columns: minmax(0, 1fr); }
   .p8-workbench__interpretation, .p8-memory-boundaries { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
@@ -225,6 +229,8 @@
   .p8-step-controls { align-items: flex-start; flex-direction: column; }
   .p8-step-controls > div { align-self: stretch; justify-content: space-between; }
   .p8-step-controls .icarl-button { flex: 1 1 0; }
+  .p8-page-handoff { align-items: flex-start; flex-direction: column; }
+  .p8-page-handoff button { width: 100%; }
   .p8-end-card { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 560px) {

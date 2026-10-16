@@ -319,7 +319,7 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
           <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip} disabled={reducedMotion}>↺ 重播本段</button>
           <span>{reducedMotion ? "逐段导航显示完整状态" : state.isHolding ? "当前状态已展开" : `${Math.round(state.progress * 100)}%`}</span>
         </div>
-        {stage < steps.length - 1 ? <button type="button" className="icarl-button icarl-button--primary" onClick={controls.stepForward}>下一段 <b aria-hidden="true">→</b></button> : null}
+        {stage < steps.length - 1 ? <button type="button" className="icarl-button icarl-button--primary" onClick={() => reducedMotion ? controls.stepForward() : controls.goToClip(stage + 1, { autoPlay: true })}>{reducedMotion ? "下一步" : "播放下一段"} <b aria-hidden="true">→</b></button> : null}
       </footer>
     </section>
 
