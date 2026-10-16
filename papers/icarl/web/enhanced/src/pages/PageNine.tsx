@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
 import { SampleToken } from "../components/SampleToken";
 import {
@@ -31,6 +31,7 @@ import {
   studentOutputFor,
   teacherSnapshotFor,
 } from "../data/incremental-training";
+import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 
 const oldDemoSample = P_BEFORE.A[0];
 const newDemoSample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sample.classId === "D")!;
@@ -43,6 +44,64 @@ const queryPrototypes = ALL_CLASS_IDS.map((classId) => PROTOTYPES.find((prototyp
 
 function classAccent(classId: ClassId): CSSProperties {
   return { "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties;
+}
+
+type LocalReplay = { progress: number; playing: boolean; reducedMotion: boolean; toggle: () => void };
+
+function useLocalReplay(durationMs: number): LocalReplay {
+  const reducedMotion = useReducedMotion();
+  const [progress, setProgress] = useState(1);
+  const [playing, setPlaying] = useState(false);
+  const progressRef = useRef(1);
+
+  useEffect(() => {
+    if (!playing || reducedMotion) return;
+    const startingProgress = progressRef.current;
+    let startAt: number | null = null;
+    let frame = 0;
+    const tick = (now: number) => {
+      if (startAt === null) startAt = now - startingProgress * durationMs;
+      const next = Math.min(1, (now - startAt) / durationMs);
+      progressRef.current = next;
+      setProgress(next);
+      if (next >= 1) {
+        setPlaying(false);
+        return;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [durationMs, playing, reducedMotion]);
+
+  useEffect(() => {
+    if (!reducedMotion || !playing) return;
+    progressRef.current = 1;
+    setProgress(1);
+    setPlaying(false);
+  }, [playing, reducedMotion]);
+
+  const toggle = () => {
+    if (reducedMotion) return;
+    if (playing) {
+      setPlaying(false);
+      return;
+    }
+    if (progressRef.current >= 1) {
+      progressRef.current = 0;
+      setProgress(0);
+    }
+    setPlaying(true);
+  };
+
+  return { progress, playing, reducedMotion, toggle };
+}
+
+function ReplayControl({ replay }: { replay: LocalReplay }) {
+  const label = replay.reducedMotion
+    ? "减少动态效果：完整结果已显示"
+    : replay.playing ? "暂停演示" : replay.progress < 1 ? "继续演示" : "重看形成过程";
+  return <button className="p9-replay" type="button" onClick={replay.toggle} disabled={replay.reducedMotion} aria-label={label} data-replay-state={replay.reducedMotion ? "reduced" : replay.playing ? "playing" : replay.progress < 1 ? "paused" : "complete"}>{label}</button>;
 }
 
 function ProcessSection({
@@ -100,8 +159,12 @@ function P9Step01Figure() {
 }
 
 function P9Step02Figure() {
+  const replay = useLocalReplay(1800);
+  const oldCopies = Math.round(replay.progress * INCREMENTAL_STAGE_DATA.oldExemplars.length);
+  const incomingCount = Math.round(replay.progress * INCREMENTAL_STAGE_DATA.incomingSamples.length);
+  const assembledCount = oldCopies + incomingCount;
   const incomingPerClass = INCOMING_SAMPLES.length / INCOMING_CLASS_IDS.length;
-  return <div className="p9-assembly-figure" data-p9-figure="training-set" data-d-count={TRAINING_SET_SIZE}>
+  return <div className="p9-assembly-figure" data-p9-figure="training-set" data-d-count={assembledCount} data-animation-progress={replay.progress.toFixed(3)}>
     <div className="p9-source-lanes">
       <article className="p9-source-card" data-object-id="P_before">
         <span>持久原件</span><b>P_before · 12 张</b>
@@ -115,46 +178,52 @@ function P9Step02Figure() {
     </div>
     <div className="p9-assembly-arrow" aria-hidden="true">↓</div>
     <article className="p9-training-set" data-object-id="D">
-      <header><div><span>本轮临时训练集</span><b>D</b></div><strong>{INCREMENTAL_STAGE_DATA.trainingSamples.length} 张</strong></header>
-      <div className="p9-set-equation"><span>12 旧图副本</span><i>+</i><span>18 张新图</span><i>=</i><b>30</b></div>
+      <header><div><span>本轮临时训练集</span><b>D</b></div><strong>{assembledCount} / {TRAINING_SET_SIZE} 张</strong></header>
+      <div className="p9-set-equation"><span>{oldCopies} / 12 旧图副本</span><i>+</i><span>{incomingCount} / 18 张新图</span><i>=</i><b>{assembledCount} / {TRAINING_SET_SIZE}</b></div>
+      <div className="p9-set-meter" aria-label={`D 已组装 ${assembledCount} 张，共 ${TRAINING_SET_SIZE} 张`}>{Array.from({ length: TRAINING_SET_SIZE }, (_, index) => <i key={index} data-slot-filled={index < assembledCount} />)}</div>
       <div className="p9-set-samples" aria-label="D 中的代表性样本">
         <SampleToken sample={oldDemoSample} role="exemplar" compact />
         <SampleToken sample={newDemoSample} role="incoming" compact />
       </div>
     </article>
     <p className="p9-integrity-note"><b>P_before 原件仍在。</b>进入 D 的 12 张旧图是读取副本，原有 ID 与顺序不变。</p>
+    <ReplayControl replay={replay} />
   </div>;
 }
 
-function QRow({ sample }: { sample: Sample }) {
+function QRow({ sample, opacity = 1, example = false }: { sample: Sample; opacity?: number; example?: boolean }) {
   const response = teacherSnapshotFor(sample);
-  return <tr data-q-sample-id={sample.id} data-q-class-id={sample.classId}>
+  return <tr data-q-sample-id={sample.id} data-q-class-id={sample.classId} data-q-example={example ? "true" : undefined} style={{ opacity }}>
     <th scope="row">{sample.id}<small>{CLASS_VISUALS[sample.classId].displayLabel} · D</small></th>
     {response.map((value, index) => <td key={index}>{value.toFixed(3)}</td>)}
   </tr>;
 }
 
 function P9Step03Figure() {
+  const replay = useLocalReplay(3200);
   const allRows = INCREMENTAL_STAGE_DATA.trainingSamples;
-  return <div className="p9-q-figure" data-p9-figure="q-snapshot" data-q-rows={allRows.length} data-q-columns={OLD_CLASS_IDS.length}>
+  const rowsWritten = Math.round(replay.progress * allRows.length);
+  const oldRowOpacity = replay.progress >= 1 ? 1 : Math.max(0.12, Math.min(1, (replay.progress - 0.04) / 0.24));
+  const newRowOpacity = replay.progress >= 1 ? 1 : Math.max(0.12, Math.min(1, (replay.progress - 0.3) / 0.22));
+  return <div className="p9-q-figure" data-p9-figure="q-snapshot" data-q-rows={allRows.length} data-q-columns={OLD_CLASS_IDS.length} data-q-written={rowsWritten} data-q-frozen={rowsWritten === allRows.length} data-animation-progress={replay.progress.toFixed(3)}>
     <div className="p9-q-pipeline">
       <article className="p9-q-d-source" data-object-id="D"><b>D</b><span>30 张 · 旧图和新图</span></article>
       <span aria-hidden="true">→</span>
       <article className="p9-teacher" data-object-id="teacher-before"><b>旧 Teacher</b><span>Θ_before</span><small>仅 g₁ · g₂ · g₃</small></article>
       <span aria-hidden="true">→</span>
-      <article className="p9-q-lock" data-object-id="Q"><b>Q</b><span>30 × 3</span><small>冻结</small></article>
+      <article className="p9-q-lock" data-object-id="Q"><b>Q</b><span>30 × 3</span><small>{rowsWritten === allRows.length ? "已冻结" : `生成 ${rowsWritten}/30`}</small></article>
     </div>
     <div className="p9-q-samples">
       <div className="p9-q-table-wrap">
         <table className="p9-q-table">
           <caption>两个示例样本写入各自的 Q 行</caption>
           <thead><tr><th scope="col">D sample ID</th>{OLD_CLASS_IDS.map((classId) => <th scope="col" key={classId}>{CLASS_VISUALS[classId].outputNodeLabel}</th>)}</tr></thead>
-          <tbody>{[oldDemoSample, newDemoSample].map((sample) => <QRow sample={sample} key={sample.id} />)}</tbody>
+          <tbody><QRow sample={oldDemoSample} key={oldDemoSample.id} opacity={oldRowOpacity} example /><QRow sample={newDemoSample} key={newDemoSample.id} opacity={newRowOpacity} example /></tbody>
         </table>
       </div>
       <div className="p9-q-grid" aria-label="三十行冻结响应表示意">
-        {Array.from({ length: 30 }, (_, index) => <i key={index} aria-hidden="true" />)}
-        <span>其余行同样按 sample ID 对齐 · 共 30 行</span>
+        {Array.from({ length: allRows.length }, (_, index) => <i key={index} aria-hidden="true" data-slot-filled={index < rowsWritten} />)}
+        <span>本演示写入进度 {rowsWritten} / 30 行；两条示例行的顺序不等同于实际遍历顺序。</span>
       </div>
     </div>
     <details className="p9-q-details">
@@ -162,22 +231,28 @@ function P9Step03Figure() {
       <div className="p9-q-full-table">
         <table className="p9-q-table">
           <thead><tr><th scope="col">D sample ID</th><th scope="col">g₁</th><th scope="col">g₂</th><th scope="col">g₃</th></tr></thead>
-          <tbody>{allRows.map((sample) => <QRow sample={sample} key={sample.id} />)}</tbody>
+          <tbody>{allRows.map((sample, index) => <QRow sample={sample} key={sample.id} opacity={index < rowsWritten ? 1 : 0.12} />)}</tbody>
         </table>
       </div>
     </details>
     <p className="p9-figure-caption">上方两行是代表性示例，不代表 Q 的实际遍历顺序；D 中 30 张图（包括新图）都有一行。</p>
+    <ReplayControl replay={replay} />
   </div>;
 }
 
 function P9Step04Figure() {
-  return <div className="p9-training-figure" data-p9-figure="student-training" data-training-sample-id={newDemoSample.id} data-loss={trainingDemoLoss.toFixed(6)}>
+  const replay = useLocalReplay(2200);
+  const qReveal = replay.progress >= 1 ? 1 : Math.max(0, Math.min(1, replay.progress / 0.23));
+  const labelReveal = replay.progress >= 1 ? 1 : Math.max(0, Math.min(1, (replay.progress - 0.2) / 0.22));
+  const targetReveal = replay.progress >= 1 ? 1 : Math.max(0, Math.min(1, (replay.progress - 0.42) / 0.26));
+  const updateComplete = replay.progress >= 1 || replay.progress > 0.88;
+  return <div className="p9-training-figure" data-p9-figure="student-training" data-training-sample-id={newDemoSample.id} data-loss={trainingDemoLoss.toFixed(6)} data-animation-progress={replay.progress.toFixed(3)}>
     <div className="p9-training-inputs">
-      <article data-target-source="Q"><span>旧类目标</span><b>Q[{newDemoSample.id}]</b><small>三个软目标</small></article>
+      <article data-target-source="Q" style={{ opacity: 0.42 + qReveal * 0.58, transform: `scale(${0.98 + qReveal * 0.02})` }}><span>旧类目标</span><b>Q[{newDemoSample.id}]</b><small>三个软目标</small></article>
       <i aria-hidden="true">+</i>
-      <article data-target-source="label"><span>新类标签</span><b>{CLASS_VISUALS[newDemoSample.classId].displayLabel}</b><small>三个硬目标</small></article>
+      <article data-target-source="label" style={{ opacity: 0.42 + labelReveal * 0.58, transform: `scale(${0.98 + labelReveal * 0.02})` }}><span>新类标签</span><b>{CLASS_VISUALS[newDemoSample.classId].displayLabel}</b><small>三个硬目标</small></article>
       <i aria-hidden="true">→</i>
-      <article className="p9-target-result"><span>六维 Target</span><b>{trainingDemoTargets.map((value) => value.toFixed(2)).join(" · ")}</b></article>
+      <article className="p9-target-result" data-target-ready={targetReveal >= 1} style={{ opacity: 0.2 + targetReveal * 0.8, transform: `scale(${0.97 + targetReveal * 0.03})` }}><span>六维 Target</span><b>{trainingDemoTargets.map((value) => value.toFixed(2)).join(" · ")}</b></article>
     </div>
     <div className="p9-node-grid" role="table" aria-label={`${newDemoSample.id} 的六个独立 Sigmoid BCE 教学示例`}>
       <div className="p9-node-row p9-node-row--head" role="row"><span>独立节点</span><span>目标</span><span>示例输出</span><span>BCE</span></div>
@@ -185,7 +260,8 @@ function P9Step04Figure() {
         const target = trainingDemoTargets[index];
         const output = trainingDemoOutputs[index];
         const source = index < OLD_CLASS_IDS.length ? "Q 软目标" : "真实标签硬目标";
-        return <div className="p9-node-row" role="row" key={classId} style={classAccent(classId)} data-target-source={source} data-node={classId}>
+        const nodeReveal = replay.progress >= 1 ? 1 : Math.max(0, Math.min(1, (targetReveal * ALL_CLASS_IDS.length) - index));
+        return <div className="p9-node-row" role="row" key={classId} style={{ ...classAccent(classId), opacity: nodeReveal, transform: `translateY(${(1 - nodeReveal) * 4}px)` }} data-target-source={source} data-node={classId} data-target-visible={nodeReveal >= 1}>
           <b role="cell"><i>{CLASS_VISUALS[classId].glyph}</i>{CLASS_VISUALS[classId].outputNodeLabel}</b>
           <span role="cell">{target.toFixed(3)}<small>{source}</small></span>
           <span role="cell">{output.toFixed(3)}</span>
@@ -193,8 +269,9 @@ function P9Step04Figure() {
         </div>;
       })}
     </div>
-    <div className="p9-theta-after" data-theta-state="after"><span>Student 更新共享参数</span><b>Θ_before → Θ_after</b><small>符号化表示；不是实际优化器轨迹</small></div>
+    <div className="p9-theta-after" data-theta-state={updateComplete ? "after" : "before"}><span>Student 更新共享参数</span><b>{updateComplete ? "Θ_after" : "Θ_before"}</b><small>符号化表示；不是实际优化器轨迹</small></div>
     <p className="p9-integrity-note"><b>P_before 仍完整保留。</b>训练改动 Θ；记忆管理稍后才调整原始图片。</p>
+    <ReplayControl replay={replay} />
   </div>;
 }
 

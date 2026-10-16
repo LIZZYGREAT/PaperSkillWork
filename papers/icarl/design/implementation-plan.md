@@ -288,3 +288,9 @@ P9 将收敛为八章：继承状态、准备 D、冻结 Q、更新模型、管�
 阶段 A 已完成七组完整静态正文和图形：继承 `Θ_before + P_before`、从旧记忆读取副本并加入 `X_new` 构造 `D=30`、更新前 Teacher 生成按 ID 对齐且包含全部样本的 `Q=30×3`、软/硬目标构造与符号化 `Θ_after`、固定预算下旧前缀截断与新类 Herding、用当前 `P_after` 重建原型并按真实距离预测，以及持久状态与临时对象分流。图形读取现有 iCaRL / incremental-training fixtures，不增加独立算法或第二套演示数据。桌面交错列以文字与图形左右镜像，窄屏按文字→图→交接堆叠；结果默认完整可见。
 
 验证：`npm.cmd run build` 通过（TypeScript 与 Vite，81 modules）；`git diff --check` 通过。阶段 A 尚未添加局部重播、替换旧 P9 场景合同测试或运行 Chromium 截图检查；这些分别在阶段 B–D 完成后记录。当前 `BUILD=PASS`，`GEOMETRY_QA=NOT_RUN`、`STYLE_QA=NOT_RUN`、`VISUAL_REVIEW=NOT_RUN`、`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。W7/W9/W10 未变更。
+
+### P9 交错式图文推演重设计｜阶段 B：训练前准备与参数更新（2026-10-16）
+
+阶段 B 完成第 02–04 组的按需局部重播，默认仍直接展示终态，未添加整页时钟或 autoplay。第 02 组按旧 exemplar 12 + 新图 18 逐步填入 D 的 30 个槽位，P_before 原件与 ID 保持展示。第 03 组展示旧、新样本各自的真实 `teacherSnapshotFor` 响应，30 行矩阵按进度填充并在完成时标记冻结；样例顺序明确标注为示例顺序而非 D 的遍历顺序，完整数据可展开查看。第 04 组依同一 D sample ID 显示 Q 软目标与新类硬标签，点亮六个独立 BCE 节点后将状态标为符号化 `Θ_after`，并持续声明其非实际优化器轨迹。
+
+每组只提供本组的暂停/继续/重看控件；减少动态效果时结果保持完整且控件不启动动画。验证：`npm.cmd run build` 通过（TypeScript 与 Vite，81 modules）。局部重播的浏览器截图、测试合同和最终几何检查留待阶段 D 一并验证；`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 未变更。
