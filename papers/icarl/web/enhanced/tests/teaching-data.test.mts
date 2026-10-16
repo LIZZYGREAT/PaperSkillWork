@@ -9,7 +9,7 @@
  * Run with `npm test`.
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -55,7 +55,6 @@ import {
   teacherSnapshotFor,
 } from "../src/data/incremental-training.ts";
 import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
-import { RUNTIME_CHAPTERS, RUNTIME_CLIPS, RUNTIME_CHAPTER_FIRST_CLIP, RUNTIME_CLIP_INDEX, runtimeSceneAt } from "../src/pages/page-nine-scene.ts";
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B } from "../src/data/table1-results.ts";
 import { FIGURE2_FOCUS_RECTS, FIGURE2_SOURCE_FRAME, figure2Selection } from "../src/data/figure2-focus.ts";
 import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
@@ -337,8 +336,8 @@ assert.doesNotMatch(p6NavigationSource.match(/<footer className="p6-controls"[\s
   "P6 must not duplicate the step navigation already provided by its phase rail.");
 assert.match(p7Source, /controls\.goToClip\(stage \+ 1, \{ autoPlay: true \}\)/,
   "P7's Play Next Segment action must actually start playback.");
-assert.match(p8NavigationSource, /className="p8-page-handoff"[\s\S]*?下一页：完整 iCaRL 运行/,
-  "P8 must provide its page transition as a separate action after the evidence summary.");
+assert.match(p8NavigationSource, /className="p8-page-handoff"[\s\S]*?下一页：一次增量学习的完整逻辑/,
+  "P8 must provide its page transition to the redesigned P9 after the evidence summary.");
 assert.match(p8NavigationSource, /disabled=\{currentIndex === tabs\.length - 1\}/,
   "P8's question navigation must stop at the final question instead of routing to another page.");
 
@@ -879,347 +878,115 @@ assert.ok(figure2Evidence.includes("论文原始完整 Figure 2") && figure2Evid
 assert.ok(figure2Evidence.includes("data-focus={selection.focusId}") && figure2Evidence.includes("SourceFocusOverlay"), "P8 must keep the selected protocol linked to its source subfigure.");
 assert.ok(!figure2Evidence.includes("p8-figure2-zoom") && !figure2Evidence.includes('mode="crop"') && !figure2Evidence.includes("p8-source-figure-details"), "P8 must not render a separate Figure 2 crop or duplicated full-image layer.");
 
-/* ------------------------------------------------------------------ P9 scene contract --- */
+/* ------------------------------------------------------------------ P9 interleaved flow contract --- */
 
-assert.deepEqual(RUNTIME_CHAPTERS.map(({ id }) => id), [
-  "inherited", "prepare-d", "snapshot-q", "train-update", "manage-memory", "rebuild-prototypes", "predict", "handoff",
-], "P9 must have eight reader-facing chapters.");
-assert.equal(RUNTIME_CLIPS.length, 17, "P9 may use detailed clips internally while keeping eight top-level chapters.");
-assert.ok(RUNTIME_CLIPS.every((clip) => clip.durationMs > 0 && clip.narrative.length > 0), "Every P9 clip needs a timed scene and a teaching sentence.");
-const p9GuidedDurationMs = RUNTIME_CLIPS.reduce((total, clip) => total + clip.durationMs + (clip.holdMs ?? 0), 0);
-assert.ok(p9GuidedDurationMs >= 90_000 && p9GuidedDurationMs <= 120_000, "P9 guided playback must leave enough time to follow its major object transitions.");
-assert.equal(p9GuidedDurationMs, 99_500, "P9 timing should be a deliberate ~100 second walkthrough, including readable result holds.");
-for (const chapter of RUNTIME_CHAPTERS) {
-  assert.ok(RUNTIME_CHAPTER_FIRST_CLIP[chapter.id] >= 0, `P9 chapter ${chapter.id} needs an addressable first clip.`);
-  assert.ok(RUNTIME_CLIPS.some((clip) => clip.chapterId === chapter.id), `P9 chapter ${chapter.id} must own at least one clip.`);
+assert.deepEqual(OLD_CLASS_IDS.map((classId) => P_BEFORE[classId].length), [4, 4, 4], "P9 starts with four ordered raw exemplars in each old class.");
+const oldP9Ids = OLD_CLASS_IDS.flatMap((classId) => P_BEFORE[classId].map((sample) => sample.id));
+assert.equal(oldP9Ids.length, 12);
+assert.equal(new Set(oldP9Ids).size, 12, "The inherited raw memory must contain twelve unique sample IDs.");
+assert.equal(MEMORY_BUDGET, 12, "P9 keeps the exemplar image budget fixed at K=12.");
+assert.equal(INCREMENTAL_STAGE_DATA.incomingSamples.length, 18, "P9's incoming batch must contain 18 raw samples.");
+assert.deepEqual(INCREMENTAL_STAGE_DATA.incomingClassIds.map((classId) => INCREMENTAL_STAGE_DATA.incomingSamples.filter((sample) => sample.classId === classId).length), [6, 6, 6]);
+assert.equal(INCREMENTAL_STAGE_DATA.trainingSamples.length, 30, "D must contain the 12 inherited exemplars and all 18 new samples.");
+assert.equal(new Set(INCREMENTAL_STAGE_DATA.trainingSamples.map((sample) => sample.id)).size, 30, "Every D sample ID must be unique.");
+assert.deepEqual(INCREMENTAL_STAGE_DATA.trainingSamples.slice(0, 12).map((sample) => sample.id), oldP9Ids, "Old exemplars enter D in a training copy while P_before retains its order and IDs.");
+assert.equal(INCREMENTAL_STAGE_DATA.snapshotBySampleId.size, 30, "Frozen Q must have one old-model row for every sample in D.");
+
+const p9OldExample = P_BEFORE.A[0];
+const p9NewExample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sample.classId === "D")!;
+for (const sample of INCREMENTAL_STAGE_DATA.trainingSamples) {
+  const q = teacherSnapshotFor(sample);
+  assert.deepEqual(q, INCREMENTAL_STAGE_DATA.snapshotBySampleId.get(sample.id), `Q for ${sample.id} must be the shared pre-update teacher response.`);
+  assert.equal(q.length, 3, `Q for ${sample.id} must contain only the three old output nodes.`);
+  const targets = buildTargets(sample, q);
+  assert.deepEqual(targets.slice(0, 3), q, `The old-node targets for ${sample.id} must use its own Q row.`);
+  assert.deepEqual(targets.slice(3), INCREMENTAL_STAGE_DATA.incomingClassIds.map((classId) => Number(sample.classId === classId)), `The new-node targets for ${sample.id} must come from its true class label.`);
+  const output = studentOutputFor(sample);
+  assert.equal(output.length, 6, "The student fixture must retain six independent Sigmoid outputs.");
+  const expectedLoss = targets.reduce((sum, target, index) => sum + binaryCrossEntropy(target, output[index]), 0);
+  assert.ok(near(sixNodeBceLoss(targets, output), expectedLoss), `Six-node BCE for ${sample.id} must aggregate the independent nodes.`);
 }
+assert.deepEqual(teacherSnapshotFor(p9OldExample), INCREMENTAL_STAGE_DATA.snapshotBySampleId.get(p9OldExample.id), "The old-image example must retain its own Q identity.");
+assert.deepEqual(teacherSnapshotFor(p9NewExample), INCREMENTAL_STAGE_DATA.snapshotBySampleId.get(p9NewExample.id), "The new-image example must also receive an old-teacher Q row.");
 
-const p9InitialScene = runtimeSceneAt(0, 0);
-assert.equal(p9InitialScene.theta, "before");
-assert.equal(p9InitialScene.memory, "before");
-assert.equal(p9InitialScene.objectStatus.X_new, "pending");
-assert.equal(p9InitialScene.objectStatus.D, "pending");
-assert.equal(p9InitialScene.objectStatus.Q, "pending");
-assert.equal(p9InitialScene.dSampleCount, null, "D must not exist in the inherited starting state.");
-
-const oldMemoryIdsBeforeP9 = OLD_CLASS_IDS.flatMap((classId) => P_BEFORE[classId].map((sample) => sample.id));
-const dMergeCheckpoints = [0.25, 0.5, 0.75, 1].map((progress) => runtimeSceneAt(RUNTIME_CLIP_INDEX["merge-training-set"], progress));
-assert.deepEqual(dMergeCheckpoints.map((scene) => scene.dSampleCount), [8, 15, 23, 30], "P9 D count must advance with the continuous merge progress.");
-assert.deepEqual(dMergeCheckpoints.map((scene) => scene.oldCopiesInD), [3, 6, 9, 12], "P9 must copy old exemplar inputs into D in measurable intermediate states.");
-assert.deepEqual(dMergeCheckpoints.map((scene) => scene.incomingSamplesInD), [5, 9, 14, 18], "P9 must merge the real incoming batch as it arrives.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.5).objectStatus.D, "active");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["merge-training-set"], 1).objectStatus.X_new, "active");
-assert.deepEqual(OLD_CLASS_IDS.flatMap((classId) => P_BEFORE[classId].map((sample) => sample.id)), oldMemoryIdsBeforeP9,
-  "Copying the twelve old samples into D must leave the persistent P_before lists intact.");
-assert.equal(INCREMENTAL_STAGE_DATA.trainingSamples.length, 30);
-assert.equal(new Set(INCREMENTAL_STAGE_DATA.trainingSamples.map((sample) => sample.id)).size, 30,
-  "D must keep a unique sample identity for every old copy and incoming image.");
-
-const p9OldSampleScene = runtimeSceneAt(RUNTIME_CLIP_INDEX["snapshot-old-row"], 0.6);
-const p9NewSampleScene = runtimeSceneAt(RUNTIME_CLIP_INDEX["snapshot-new-row"], 0.6);
-const oldQSample = INCREMENTAL_STAGE_DATA.trainingSamples.find((sample) => sample.id === p9OldSampleScene.activeQSampleId)!;
-const newQSample = INCREMENTAL_STAGE_DATA.trainingSamples.find((sample) => sample.id === p9NewSampleScene.activeQSampleId)!;
-assert.equal(oldQSample.classId, "A", "The first illustrated Q write must use a real old exemplar.");
-assert.equal(newQSample.classId, "D", "The second illustrated Q write must use a real incoming sample.");
-assert.deepEqual(teacherSnapshotFor(oldQSample), INCREMENTAL_STAGE_DATA.snapshotBySampleId.get(oldQSample.id), "The old sample must write its own frozen teacher row.");
-assert.deepEqual(teacherSnapshotFor(newQSample), INCREMENTAL_STAGE_DATA.snapshotBySampleId.get(newQSample.id), "The new sample must also write its own frozen teacher row.");
-assert.equal(p9OldSampleScene.activeQCellProgress.length, 3);
-assert.equal(p9NewSampleScene.activeQCellProgress.length, 3);
-assert.ok(p9OldSampleScene.activeQCellProgress.some((progress) => progress > 0 && progress < 1), "A Q row must expose a visible per-cell intermediate write.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.25).qRowsWritten, 9,
-  "Batch Q filling must expose row-by-row progress rather than jump from 2 to 30.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1).qRowsWritten, 30);
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.999).qRowsWritten, 29,
-  "The active thirtieth row must not be counted as complete until all three cells finish.");
-assert.ok(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.999).activeQSampleId,
-  "The last Q row stays separately identifiable while its cells are being written.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0.5).objectStatus.Q, "active");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["update-theta"], 0.5).theta, "training");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["update-theta"], 1).theta, "after", "Θ_after is submitted only when the symbolic update clip completes.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["update-theta"], 1).objectStatus.Q, "released");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["truncate-old-prefix"], 0.5).oldMemoryRetained, 9);
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["truncate-old-prefix"], 1).oldMemoryRetained, 6);
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["herd-class-d"], 0.5).newExemplarsSelected, 1);
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["herd-classes-e-f"], 1).newExemplarsSelected, 6);
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["commit-p-after"], 1).committedMemoryCount, 12);
-const truncationCheckpoints = [0.25, 0.5, 0.75, 1].map((progress) => runtimeSceneAt(RUNTIME_CLIP_INDEX["truncate-old-prefix"], progress));
-assert.deepEqual(truncationCheckpoints.map((scene) => scene.oldMemoryRetained), [10, 9, 7, 6]);
-assert.ok(truncationCheckpoints.every((scene) => scene.committedMemoryCount <= MEMORY_BUDGET), "Memory construction must never exceed K while old tails leave.");
-const herdDCheckpoints = [0.25, 0.5, 0.75, 1].map((progress) => runtimeSceneAt(RUNTIME_CLIP_INDEX["herd-class-d"], progress));
-assert.deepEqual(herdDCheckpoints.map((scene) => scene.newExemplarsSelected), [1, 1, 2, 2]);
-assert.deepEqual(herdDCheckpoints.map((scene) => scene.committedMemoryCount), [7, 7, 8, 8]);
-const herdEFCheckpoints = [0.25, 0.5, 0.75, 1].map((progress) => runtimeSceneAt(RUNTIME_CLIP_INDEX["herd-classes-e-f"], progress));
-assert.deepEqual(herdEFCheckpoints.map((scene) => scene.newExemplarsSelected), [3, 4, 5, 6]);
-assert.ok(herdEFCheckpoints.every((scene) => scene.committedMemoryCount <= MEMORY_BUDGET));
-assert.deepEqual(OLD_CLASS_IDS.flatMap((classId) => P_AFTER[classId].map((sample) => sample.id)),
-  OLD_CLASS_IDS.flatMap((classId) => P_BEFORE[classId].slice(0, NEXT_QUOTA).map((sample) => sample.id)),
-  "P_after must preserve the original ordered prefix for old classes without rerunning Herding.");
-const p9IncomingIds = ["D", "E", "F"] as const;
-assert.deepEqual(p9IncomingIds.flatMap((classId) => P_AFTER[classId].map((sample) => sample.id)),
-  p9IncomingIds.flatMap((classId) => NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id)),
-  "P_after must use the first two actual runtime Herding identities for each new class.");
-assert.ok(near(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5).comparisonProgress, 0.5 / 0.82),
-  "P9 must complete all six comparisons before the separate nearest-highlight phase begins.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["query-arrives"], 0.5).queryProgress, 0.5);
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 0.5).objectStatus.query, "active");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.82).objectStatus.prediction, "pending",
-  "The prediction status stays pending until all six comparison lines are complete.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.821).objectStatus.prediction, "active",
-  "The prediction status activates with the first visible argmin emphasis.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 1).objectStatus.prediction, "active",
-  "The prediction becomes active at the same completed frame as the argmin result.");
-const p9FinalScene = runtimeSceneAt(RUNTIME_CLIP_INDEX["handoff-next"], 1);
-assert.equal(p9FinalScene.theta, "after");
-assert.equal(p9FinalScene.memory, "after");
-for (const id of ["D", "Q", "targets", "loss", "prototypes", "query", "prediction"] as const) {
-  assert.equal(p9FinalScene.objectStatus[id], "released", `P9 handoff must release temporary or derived ${id}.`);
+for (const classId of OLD_CLASS_IDS) {
+  assert.deepEqual(P_AFTER[classId].map((sample) => sample.id), P_BEFORE[classId].slice(0, NEXT_QUOTA).map((sample) => sample.id), `Old class ${classId} must keep the original ordered prefix.`);
 }
-assert.equal(p9FinalScene.objectStatus.X_new, "released", "The incoming batch ends after exemplar selection and is not carried into the next round.");
+for (const classId of INCREMENTAL_STAGE_DATA.incomingClassIds) {
+  assert.deepEqual(P_AFTER[classId].map((sample) => sample.id), NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id), `New class ${classId} must use its actual Herding prefix.`);
+}
+const allP9After = ALL_CLASS_IDS.flatMap((classId) => P_AFTER[classId]);
+assert.equal(allP9After.length, 12, "P_after must fill but never exceed K=12.");
+assert.deepEqual(ALL_CLASS_IDS.map((classId) => P_AFTER[classId].length), [2, 2, 2, 2, 2, 2]);
+for (const distance of QUERY_DISTANCES) {
+  const prototype = PROTOTYPES.find((candidate) => candidate.classId === distance.classId)!;
+  assert.ok(near(distance.distance, euclideanDistance(QUERY_FEATURE, prototype.point)), `Query distance for class ${distance.classId} must use the current shared Prototype.`);
+}
+assert.equal(QUERY_PREDICTION, QUERY_DISTANCES[0].classId, "P9 prediction must remain the real nearest-prototype argmin.");
 
-function renderPageNineAt(clip: number, pct = 0, reducedMotion = false): string {
+function renderPageNineAt(reducedMotion = false): string {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", {
     configurable: true,
-    value: { __ICARL_FREEZE__: { clip, pct }, matchMedia: () => ({ matches: reducedMotion }) },
+    value: { matchMedia: () => ({ matches: reducedMotion }) },
   });
   try {
-    return renderToStaticMarkup(createElement(PageNine, { onExit: () => undefined }));
+    return renderToStaticMarkup(createElement(PageNine));
   } finally {
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow);
     else Reflect.deleteProperty(globalThis, "window");
   }
 }
 
-const p9InheritedMarkup = renderPageNineAt(RUNTIME_CLIP_INDEX["inherit-state"]);
-assert.match(p9InheritedMarkup, /data-clip="inherit-state"/);
-assert.match(p9InheritedMarkup, /data-theta-state="before"/);
-assert.ok(p9InheritedMarkup.includes('data-memory-source-ids="' + oldMemoryIdsBeforeP9.join(" ") + '"'),
-  "The starting persistent panel must retain all twelve ordered P_before IDs.");
-assert.equal((p9InheritedMarkup.match(/class="p9-chapter[^\"]*"[^>]*disabled/g) ?? []).length, 0,
-  "All eight P9 chapters must be available in the completed flow.");
-assert.match(p9InheritedMarkup, /片段 01 \/ 17/);
+const p9Markup = renderPageNineAt();
+assert.ok(p9Markup.includes("iCaRL 一次增量学习的完整逻辑"), "P9 must use the approved page title.");
+assert.deepEqual([...p9Markup.matchAll(/<section class="p9-step" data-step="(\d+)"/g)].map((match) => match[1]), ["01", "02", "03", "04", "05", "06", "07"], "The seven teaching groups must appear in reading order.");
+assert.ok(p9Markup.indexOf('class="p9-step__copy"') < p9Markup.indexOf('class="p9-step__figure"'), "Text must precede the corresponding figure in the mobile DOM reading order.");
+assert.ok(p9Markup.includes('data-d-count="30"') && p9Markup.includes("12 / 12 旧图副本") && p9Markup.includes("18 / 18 张新图"), "The default D state must show all 12 old copies and 18 new images assembled.");
+assert.ok(p9Markup.includes('data-object-id="P_before"') && p9Markup.includes("P_before 原件仍在"), "The D handoff must retain the persistent original memory while using copies.");
+assert.ok(p9Markup.includes('data-q-rows="30" data-q-columns="3"') && p9Markup.includes('data-q-frozen="true"'), "The default Q state must show 30 rows, three old nodes, and a frozen result.");
+const p9QExampleRows = [...p9Markup.matchAll(/<tr\b[^>]*data-q-example="true"[^>]*>[\s\S]*?<\/tr>/g)].map((match) => match[0]);
+assert.equal(p9QExampleRows.length, 2, "P9 must show one old and one new sample as explicit Q examples.");
+for (const [row, sample] of [[p9QExampleRows[0], p9OldExample], [p9QExampleRows[1], p9NewExample]] as const) {
+  assert.ok(row.includes(`data-q-sample-id="${sample.id}"`), `The Q row must retain sample ID ${sample.id}.`);
+  for (const value of teacherSnapshotFor(sample)) assert.ok(row.includes(value.toFixed(3)), `The Q row for ${sample.id} must show its true shared response value.`);
+}
+const p9QDetails = p9Markup.match(/<details class="p9-q-details">([\s\S]*?)<\/details>/)?.[1] ?? "";
+assert.deepEqual([...p9QDetails.matchAll(/data-q-sample-id="([^"]+)"/g)].map((match) => match[1]), INCREMENTAL_STAGE_DATA.trainingSamples.map((sample) => sample.id), "Expanded Q must preserve every actual D sample ID in its true row order.");
+assert.ok(p9Markup.includes(`data-training-sample-id="${p9NewExample.id}"`) && p9Markup.includes('data-target-ready="true"'), "The six-node Target must use the same new D sample and be complete by default.");
+assert.equal([...p9Markup.matchAll(/class="p9-node-row"[^>]*data-node="[A-F]"/g)].length, 6, "P9 training must display six independent Sigmoid/BCE nodes.");
+for (const id of allP9After.map((sample) => sample.id)) assert.ok(p9Markup.includes(`data-sample-id="${id}"`), `Committed P_after must preserve raw sample ID ${id}.`);
+assert.ok(p9Markup.includes('data-memory-count="12"') && p9Markup.includes('data-memory-state="submitted"'), "The final memory view must commit exactly twelve exemplars.");
+assert.ok(p9Markup.includes(`data-prediction-class="${QUERY_PREDICTION}"`) && p9Markup.includes(`data-result-class="${QUERY_PREDICTION}"`), "P9 must use the shared nearest-prototype class for its final result.");
+const p9DistanceLines = distanceLines(p9Markup);
+assert.equal(p9DistanceLines.length, ALL_CLASS_IDS.length, "The static Query view must show all six true prototype comparisons.");
+assert.deepEqual(p9DistanceLines.map((line) => attr(line, "data-prototype-class-id")), ALL_CLASS_IDS, "Query comparisons must be drawn in class order before highlighting the minimum.");
+assert.ok(p9Markup.includes("而非对六个训练输出节点取 argmax"), "P9 must keep nearest-prototype prediction distinct from training-head argmax.");
+assert.ok(p9Markup.includes("Θ_after") && p9Markup.includes("P_after") && p9Markup.includes("X_next"), "The final group must hand off the persistent state and label X_next only as an entrance cue.");
+assert.equal([...p9Markup.matchAll(/class="p9-replay"/g)].length, 6, "Each animated group must have only one local replay control.");
+assert.equal([...p9Markup.matchAll(/data-animation-progress="1\.000"/g)].length, 6, "All local animations must render their complete result before the reader starts them.");
+assert.doesNotMatch(p9Markup, /p9-chapters|p9-transport|p9-active-scene|片段 17 \/ 17/, "The rendered page must not include the legacy global player.");
+
+const p9ReducedMotion = renderPageNineAt(true);
+assert.equal([...p9ReducedMotion.matchAll(/class="p9-replay"[^>]*disabled=""/g)].length, 6, "Reduced-motion users must keep the complete result and have all replay controls disabled.");
+assert.ok(p9ReducedMotion.includes("减少动态效果：完整结果已显示") && p9ReducedMotion.includes('data-result-visible="true"'), "Reduced motion must retain a readable terminal state and result.");
+
 const p9Source = readFileSync(path.join(process.cwd(), "src/pages/PageNine.tsx"), "utf8");
-assert.equal((p9Source.match(/<FeatureSpaceWorkbench\b/g) ?? []).length, 1,
-  "Prototype construction and Query comparison must share one mounted feature-space chart.");
-assert.match(p9Source, /<P9WorkbenchAnchors scene=\{scene\} \/>/,
-  "The central scene details must sit below a stable set of object anchors.");
-for (const anchorId of ["anchor_X_new", "training_set_D", "old_teacher", "response_snapshot_Q", "student_targets", "unit_circle"]) {
-  assert.ok(p9InheritedMarkup.includes(`data-canonical-id="${anchorId}"`), `P9 must keep the ${anchorId} object anchor present from the first frame.`);
-}
-assert.equal((p9InheritedMarkup.match(/data-shared-chart="true"/g) ?? []).length, 1,
-  "The shared feature-space chart must be present once before its prototype and Query data enter.");
-const p9StablePipelineIds = ["anchor_X_new", "training_set_D", "old_teacher", "response_snapshot_Q", "student_targets"];
-function assertP9StableAnchors(markup: string, checkpoint: string) {
-  const pipelineIds = [...markup.matchAll(/class="p9-anchor-card"[^>]*data-canonical-id="([^"]+)"/g)].map((match) => match[1]);
-  assert.deepEqual(pipelineIds, p9StablePipelineIds, `P9 object anchors must stay in the same order at ${checkpoint}.`);
-  assert.equal((markup.match(/data-shared-chart="true"/g) ?? []).length, 1, `P9 must keep one feature chart mounted at ${checkpoint}.`);
-  assert.equal((markup.match(/data-canonical-id="unit_circle"/g) ?? []).length, 1, `P9 must preserve one feature-space identity at ${checkpoint}.`);
-}
-assertP9StableAnchors(p9InheritedMarkup, "inheritance");
-const p9VisualQa = JSON.parse(readFileSync(path.join(process.cwd(), "visual-qa.json"), "utf8")) as { pages: Array<{ states: Array<{ actions?: Array<{ selector?: string }> }> }> };
-const p9VisualQaSelectors = p9VisualQa.pages.flatMap((page) => page.states).flatMap((state) => state.actions ?? []).map((action) => action.selector ?? "");
-assert.ok(p9VisualQaSelectors.includes(".p9-transport > button:last-child"),
-  "P9 visual QA must advance with the single top transport control.");
-assert.ok(!p9VisualQaSelectors.some((selector) => selector.includes("p9-workbench-controls")),
-  "P9 visual QA must not target the removed duplicate controls.");
-assert.equal((p9Source.match(/onClick=\{timeline\.controls\.stepBack\}/g) ?? []).length, 1,
-  "P9 must expose one previous-clip control.");
-assert.equal((p9Source.match(/onClick=\{timeline\.controls\.stepForward\}/g) ?? []).length, 1,
-  "P9 must expose one next-clip control.");
-assert.doesNotMatch(p9Source, /p9-workbench-controls/,
-  "The workbench must not duplicate the previous/next transport controls.");
-const p9ReducedStart = renderPageNineAt(0, 0, true);
-const p9ReducedEnd = renderPageNineAt(RUNTIME_CLIPS.length - 1, 1, true);
-assert.match(p9ReducedStart, /class="p9-play"[^>]*aria-label="下一步"/);
-assert.match(p9ReducedEnd, /class="p9-play"[^>]*disabled(?:="")?[^>]*aria-label="下一步"/,
-  "Reduced-motion mode must stop offering a next-step action at the final clip.");
-
-const p9MergeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.25);
-const p9MergeMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.5);
-const p9MergeThreeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["merge-training-set"], 0.75);
-for (const [checkpoint, markup] of [["merge 25%", p9MergeQuarter], ["merge 50%", p9MergeMidpoint], ["merge 75%", p9MergeThreeQuarter]] as const) {
-  assertP9StableAnchors(markup, checkpoint);
-}
-for (const [markup, expectedCount] of [[p9MergeQuarter, "8"], [p9MergeMidpoint, "15"], [p9MergeThreeQuarter, "23"]] as const) {
-  assert.equal(attr(markup.match(/class="p9-merge-scene"[^>]*>/)?.[0] ?? "", "data-d-count"), expectedCount,
-    "The rendered D counter must use the current copy progress.");
-  assert.ok(markup.includes('data-training-copy="true"') && markup.includes('data-flow-source="P_before"'), "Moving old samples must be identified as P_before training copies.");
-  assert.ok(markup.includes('data-copy-sample-id="' + P_BEFORE.A[0].id + '"'), "The old sample ID must be preserved when copied into D.");
-  assert.ok(markup.includes('data-original-sample-id="' + P_BEFORE.A[0].id + '"'), "The source P_before identity must remain visible.");
-}
-assert.deepEqual([...p9MergeQuarter.matchAll(/class="p9-flow-token"[^>]*data-flow-id="([^"]+)"/g)].map((match) => match[1]),
-  [P_BEFORE.A[0].id, INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sample.classId === "D")!.id],
-  "The stable route must show the real old copy and new sample identities entering D.");
-const p9FlightPosition = (markup: string) => attr(markup.match(new RegExp(`class="p9-flow-token"[^>]*data-flow-id="${P_BEFORE.A[0].id}"[^>]*>`))?.[0] ?? "", "style");
-assert.notEqual(p9FlightPosition(p9MergeQuarter), p9FlightPosition(p9MergeThreeQuarter), "The same clock must move copied samples through the merge scene.");
-
-for (const clipId of ["snapshot-old-row", "snapshot-new-row"] as const) {
-  const scene = runtimeSceneAt(RUNTIME_CLIP_INDEX[clipId], 0.6);
-  const sample = INCREMENTAL_STAGE_DATA.trainingSamples.find((entry) => entry.id === scene.activeQSampleId)!;
-  const markup = renderPageNineAt(RUNTIME_CLIP_INDEX[clipId], 0.6);
-  assertP9StableAnchors(markup, clipId);
-  const row = markup.match(new RegExp(`<div class="p9-q-row[^>]*data-q-row="${sample.id}"[^>]*>[\\s\\S]*?<\\/div>`))?.[0] ?? "";
-  assert.ok(row, `${clipId} must render the in-progress row for the exact active sample ID.`);
-  assert.deepEqual([...row.matchAll(/data-q-value="([^"]+)"/g)].map((match) => match[1]),
-    teacherSnapshotFor(sample).map((value) => value.toFixed(6)), "Every displayed Q cell must use the matching frozen teacher row.");
-  assert.equal(attr(markup.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-active-sample-id"), sample.id);
-  assert.ok(markup.includes(`data-flow-id="${sample.id}"`), `${clipId} must move its exact D sample through the persistent route.`);
-}
-
-const p9FillQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.25);
-const p9FillMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.5);
-const p9FillThreeQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.75);
-for (const [checkpoint, markup] of [["Q 25%", p9FillQuarter], ["Q 50%", p9FillMidpoint], ["Q 75%", p9FillThreeQuarter]] as const) {
-  assertP9StableAnchors(markup, checkpoint);
-}
-assert.deepEqual([p9FillQuarter, p9FillMidpoint, p9FillThreeQuarter].map((markup) =>
-  attr(markup.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows")), ["9", "16", "23"],
-  "Rendered Q row progress must keep advancing at each paused intermediate checkpoint.");
-const p9QLastRow = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 0.999);
-assert.equal(attr(p9QLastRow.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows"), "29",
-  "At the final moving frame, the thirtieth Q row remains a separately displayed write in progress.");
-assert.match(p9QLastRow, /29 行完成 · .* 写入中/);
-const p9QComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1);
-assert.equal(attr(p9QComplete.match(/class="p9-snapshot-scene"[^>]*>/)?.[0] ?? "", "data-q-rows"), "29");
-assert.match(p9QComplete, /29 行完成 · .* 写入中/);
-assert.match(p9QComplete, /data-theta-state="before"/);
-const p9QFrozen = renderPageNineAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0);
-assertP9StableAnchors(p9QFrozen, "Q-to-training boundary");
-assert.ok(p9QFrozen.includes('data-object-id="Q" data-status="active"') && p9QFrozen.includes("30 行完成"),
-  "The next clip starts with all thirty Q rows completed and frozen.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["fill-q-rows"], 1).objectStatus.targets, "pending",
-  "Targets must remain pending until the target-building clip begins after Q is frozen.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0).objectStatus.targets, "active",
-  "The target-building clip must create targets at its own start.");
-
-const p9TrainingMarkup = renderPageNineAt(RUNTIME_CLIP_INDEX["build-targets-and-loss"], 0.5);
-assertP9StableAnchors(p9TrainingMarkup, "Student training");
-const trainingSample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sample.classId === "D")!;
-const trainingTargets = buildTargets(trainingSample);
-const trainingOutputs = studentOutputFor(trainingSample);
-assert.match(p9TrainingMarkup, new RegExp(`data-training-sample-id="${trainingSample.id}"`));
-assert.ok(p9TrainingMarkup.includes(`data-flow-id="${trainingSample.id}"`),
-  "The exact Q sample ID must continue to the Student target during training setup.");
-assert.match(p9TrainingMarkup, new RegExp(`data-six-node-loss="${sixNodeBceLoss(trainingTargets, trainingOutputs).toFixed(6)}"`),
-  "The compact bridge must use the actual target and six-node teaching loss functions.");
-assert.deepEqual([...p9TrainingMarkup.matchAll(/data-target-source="([^"]+)" data-node="([A-F])"/g)].map((match) => [match[2], match[1]]), [
-  ["A", "Q 软目标"], ["B", "Q 软目标"], ["C", "Q 软目标"],
-  ["D", "类别硬标签"], ["E", "类别硬标签"], ["F", "类别硬标签"],
-], "The bridge must distinguish frozen-Q old-node targets from true new-class labels.");
-assert.match(p9TrainingMarkup, /固定教学数据用于说明目标与 BCE 对齐/);
-const p9ThetaComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["truncate-old-prefix"], 0);
-assertP9StableAnchors(p9ThetaComplete, "theta update boundary");
-assert.match(p9ThetaComplete, /data-theta-state="after"/);
-assert.match(p9ThetaComplete, /Θ_after/);
-
-const p9TruncateMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["truncate-old-prefix"], 0.5);
-assertP9StableAnchors(p9TruncateMidpoint, "old-memory truncation");
-assert.equal(attr(p9TruncateMidpoint.match(/class="p9-memory-groups[^"]*"[^>]*>/)?.[0] ?? "", "data-memory-count"), "9");
-assert.equal((p9TruncateMidpoint.match(/data-memory-role="truncating-tail"/g) ?? []).length, 3,
-  "The old-class tails leave while original P_before IDs remain traceable.");
-for (const [progress, expectedSelected] of [[0.25, 1], [0.5, 1], [0.75, 2], [1, 2]] as const) {
-  const scene = runtimeSceneAt(RUNTIME_CLIP_INDEX["herd-class-d"], progress);
-  const markup = renderPageNineAt(RUNTIME_CLIP_INDEX["herd-class-d"], progress);
-  assertP9StableAnchors(markup, `D herding ${progress * 100}%`);
-  const selected = NEW_CLASS_HERDING.D.ordered.slice(0, expectedSelected).map((sample) => sample.id);
-  assert.equal(scene.newExemplarsSelected, expectedSelected);
-  assert.equal(attr(markup.match(/class="p9-memory-scene"[^>]*>/)?.[0] ?? "", "data-selected-ids"), selected.join(" "));
-  assert.equal(attr(markup.match(/class="p9-herding-class"[^>]*data-class-id="D"[^>]*>/)?.[0] ?? "", "data-selected-ids"), selected.join(" "));
-}
-const p9MemoryCommitted = renderPageNineAt(RUNTIME_CLIP_INDEX["reencode-p-after"], 0);
-assertP9StableAnchors(p9MemoryCommitted, "P_after commit boundary");
-const expectedAfterIds = ALL_CLASS_IDS.flatMap((classId) => P_AFTER[classId].map((sample) => sample.id));
-assert.equal(attr(p9MemoryCommitted.match(/class="p9-memory-integrity"[^>]*>/)?.[0] ?? "", "data-memory-source-ids"), expectedAfterIds.join(" "));
-assert.match(p9MemoryCommitted, /P_after 已提交 · 原始 exemplar/);
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["commit-p-after"], 1).objectStatus.X_new, "released");
-
-const p9ReencodeMarkup = renderPageNineAt(RUNTIME_CLIP_INDEX["reencode-p-after"], 0.5);
-assertP9StableAnchors(p9ReencodeMarkup, "prototype re-encoding");
-assert.equal((p9ReencodeMarkup.match(/data-motion-tracked="true"/g) ?? []).length, OLD_CLASS_IDS.length * NEXT_QUOTA,
-  "The same six retained old exemplar IDs must visibly move between fixed feature endpoints.");
-assert.match(p9ReencodeMarkup, /data-prototypes-visible="false"/);
-const p9PrototypesQuarter = renderPageNineAt(RUNTIME_CLIP_INDEX["form-prototypes"], 0.75);
-assertP9StableAnchors(p9PrototypesQuarter, "prototype construction");
-assert.equal((p9PrototypesQuarter.match(/class="feature-space__prototype"/g) ?? []).length, PROTOTYPES.length);
-assert.match(p9PrototypesQuarter, /data-prototypes-visible="true"/);
-for (const prototype of PROTOTYPES) {
-  assert.ok(p9PrototypesQuarter.includes(`data-prototype-class="${prototype.classId}" data-prototype-point="${prototype.point.join(",")}"`),
-    `P9 must render the shared ${prototype.classId} prototype coordinate without moving it.`);
-}
-
-const p9QueryEntry = renderPageNineAt(RUNTIME_CLIP_INDEX["query-arrives"], 0);
-const p9QueryMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["query-arrives"], 0.5);
-const p9QueryEnd = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0);
-assertP9StableAnchors(p9QueryEntry, "Query entry boundary");
-assertP9StableAnchors(p9QueryMidpoint, "Query arrival midpoint");
-assertP9StableAnchors(p9QueryEnd, "Query comparison boundary");
-assert.equal(distanceLines(p9QueryEntry).length, 0, "Query must arrive before any distance comparison begins.");
-assert.ok(near(queryMarkerStartX(p9QueryEntry), queryEntryX), "P9 Query must enter from the edge of the shared feature chart.");
-assert.ok(queryMarkerStartX(p9QueryMidpoint) !== queryEntryX && queryMarkerStartX(p9QueryMidpoint) !== queryFinalX,
-  "P9 Query must expose a distinct moving midpoint rather than only switching between endpoints.");
-assert.ok(near(queryMarkerStartX(p9QueryEnd), queryFinalX), "P9 Query must reach the fixed shared QUERY_FEATURE coordinate.");
-const p9QueryLabel = chartLabelPosition(p9QueryMidpoint, "query");
-const p9QueryMarker = queryMarkerPosition(p9QueryMidpoint);
-assert.ok(near(p9QueryMarker.x - p9QueryLabel.x, 14) && near(p9QueryLabel.y - p9QueryMarker.y, 28) && p9QueryLabel.anchor === "end",
-  "P9 Query label must keep the stable offset used by the shared prediction workbench.");
-
-const p9ComparisonMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.5);
-assertP9StableAnchors(p9ComparisonMidpoint, "distance comparison midpoint");
-const p9ComparisonLines = distanceLines(p9ComparisonMidpoint);
-assert.equal(p9ComparisonLines.length, 4, "At the middle checkpoint, P9 must retain three completed lines and draw the fourth.");
-assert.deepEqual(p9ComparisonLines.map((line) => attr(line, "data-prototype-class-id")), ALL_CLASS_IDS.slice(0, 4),
-  "P9 must draw true comparisons in fixed class order without exposing the nearest class first.");
-for (const line of p9ComparisonLines.slice(0, 3)) {
-  const classId = attr(line, "data-prototype-class-id");
-  const result = QUERY_DISTANCES.find((entry) => entry.classId === classId)!;
-  assert.ok(near(lineLength(line), result.distance * 160, 1e-6), `P9 completed ${classId} comparison must equal its true query-to-prototype distance.`);
-  assert.ok(line.includes("is-complete") && line.includes("opacity:0.68"), "P9 must keep finished distance lines clearly visible as the next comparisons proceed.");
-}
-assert.ok(p9ComparisonLines[3].includes("is-active"), "The fourth P9 distance must be visibly in flight at the midpoint.");
-assert.ok(near(lineLength(p9ComparisonLines[3]), QUERY_DISTANCES.find((entry) => entry.classId === ALL_CLASS_IDS[3])!.distance * 160 * (0.5 / 0.82 * 6 - 3), 1e-6),
-  "The active P9 line length must track the mapped comparison progress.");
-const p9ComparisonActive = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 0.6);
-assertP9StableAnchors(p9ComparisonActive, "distance comparison 60%");
-const p9ComparisonActiveLines = distanceLines(p9ComparisonActive);
-assert.equal(p9ComparisonActiveLines.length, 5, "P9 must show the fifth line partway through its drawing at 60%.");
-assert.ok(p9ComparisonActiveLines[4].includes("is-active"), "P9 must distinguish the line currently being drawn.");
-assert.ok(near(lineLength(p9ComparisonActiveLines[4]), QUERY_DISTANCES.find((entry) => entry.classId === ALL_CLASS_IDS[4])!.distance * 160 * (0.6 / 0.82 * 6 - 4), 1e-6),
-  "P9 active distance geometry must scale with the current comparison progress.");
-
-const p9PredictionComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 1);
-assertP9StableAnchors(p9PredictionComplete, "prediction completion boundary");
-assert.equal(distanceLines(p9PredictionComplete).length, QUERY_DISTANCES.length, "P9 must retain all six completed comparisons.");
-assert.equal(distanceLines(p9PredictionComplete).filter((line) => line.includes("is-nearest")).length, 1, "P9 must highlight one and only one nearest prototype.");
-assert.ok(p9PredictionComplete.includes(`data-prediction-class="${QUERY_PREDICTION}"`), "P9 prediction must be the shared true argmin.");
-assert.ok(p9PredictionComplete.includes(`data-result-class="${QUERY_PREDICTION}"`), "The result card must identify the shared argmin class.");
-assert.equal(runtimeSceneAt(RUNTIME_CLIP_INDEX["compare-six-distances"], 1).objectStatus.prediction, "active");
-assert.ok(p9Source.includes('data-result-class={QUERY_PREDICTION}') && p9Source.includes('scene.objectStatus.prediction === "active"'),
-  "The result card and object-status band must use the same prediction lifecycle event.");
-assert.ok(p9PredictionComplete.includes("训练 head 保留在模型中"), "P9 must keep the training head present but outside the final prediction rule.");
-for (const line of distanceLines(p9PredictionComplete)) {
-  const classId = attr(line, "data-prototype-class-id");
-  const result = QUERY_DISTANCES.find((entry) => entry.classId === classId)!;
-  assert.ok(near(lineLength(line), result.distance * 160, 1e-6), `Every final P9 distance line must use its exact shared feature-space distance (${classId}: ${lineLength(line)} vs ${result.distance * 160}).`);
-}
-
-const p9HandoffMidpoint = renderPageNineAt(RUNTIME_CLIP_INDEX["handoff-next"], 0.5);
-const p9HandoffComplete = renderPageNineAt(RUNTIME_CLIP_INDEX["handoff-next"], 1);
-assertP9StableAnchors(p9HandoffMidpoint, "handoff midpoint");
-assertP9StableAnchors(p9HandoffComplete, "handoff completion");
-assert.match(p9HandoffMidpoint, /data-next-state="S_r\+1"/);
-assert.match(p9HandoffMidpoint, /Sᵣ₊₁ = Θ_after \+ P_after/);
-assert.match(p9HandoffMidpoint, /data-next-batch-only="true"/);
-assert.match(p9HandoffMidpoint, /data-released-object="D"/);
-assert.match(p9HandoffMidpoint, /data-released-object="Q"/);
-assert.ok(p9HandoffMidpoint.includes("X_next") && p9HandoffMidpoint.includes("不播放假想的下一轮训练"));
-assert.ok(p9HandoffComplete.includes('data-object-id="D" data-status="released"'));
-assert.ok(p9HandoffComplete.includes('data-object-id="Q" data-status="released"'));
-assert.ok(p9HandoffComplete.includes('data-object-id="prediction" data-status="active"'));
-assert.ok(p9HandoffComplete.includes('data-object-id="query" data-status="active"'));
-assert.ok(p9HandoffComplete.includes('data-object-id="prototypes" data-status="active"'));
-assert.ok(p9HandoffComplete.includes('data-persistent') === false, "The handoff screen should not invent a second persistent-state record.");
-assert.match(p9HandoffComplete, /片段 17 \/ 17/);
-
+const p9Css = readFileSync(path.join(process.cwd(), "src/styles/page-nine.css"), "utf8");
+const appSource = readFileSync(path.join(process.cwd(), "src/App.tsx"), "utf8");
+const p9PageEightSource = readFileSync(path.join(process.cwd(), "src/pages/PageEight.tsx"), "utf8");
+const p9VisualQa = JSON.parse(readFileSync(path.join(process.cwd(), "visual-qa.json"), "utf8"));
+assert.doesNotMatch(p9Source, /RUNTIME_CLIPS|runtimeSceneAt|useAnimationTimeline|p9-chapters|p9-transport/, "P9 must not retain the 17-clip runtime or page-wide transport controls.");
+assert.doesNotMatch(p9Css, /p9-chapters|p9-transport|p9-active-scene|p9-workbench-anchors/, "P9 CSS must not retain selectors for the discarded large scene framework.");
+assert.ok(!existsSync(path.join(process.cwd(), "src/pages/page-nine-scene.ts")), "The obsolete page-only runtime module must be deleted.");
+assert.ok(p9Css.includes(".p9-step:nth-of-type(even) .p9-step__copy { grid-column: 2;"), "Desktop groups must alternate the text and diagram sides.");
+assert.ok(p9Css.includes(".p9-step:nth-of-type(even) .p9-step__copy, .p9-step:nth-of-type(even) .p9-step__figure { grid-column: 1; grid-row: auto; }"), "Mobile groups must stack text before diagrams without changing DOM order.");
+assert.ok(p9Css.includes("@media (prefers-reduced-motion: reduce)"), "P9 must honor the reduced-motion preference.");
+assert.ok(appSource.includes('title: "iCaRL 一次增量学习的完整逻辑"') && !appSource.includes("ewc-app--runtime"), "P9 navigation must match the new title and use the shared app shell.");
+assert.ok(p9PageEightSource.includes("下一页：一次增量学习的完整逻辑"), "P8 must lead into the redesigned P9 reading flow.");
+assert.ok(Array.isArray(p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved")?.states), "Visual QA must cover the seven-group reading flow and local replays.");
+const p9QaText = JSON.stringify(p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved"));
+assert.doesNotMatch(p9QaText, /p9-chapter|p9-transport|p9-play/, "P9 visual QA must not target removed playback controls.");
 /* ---------------------------------------------------------------- report --- */
 
 console.log(
@@ -1229,6 +996,6 @@ console.log(
     `  P4  8 candidates, order ${HERDING_DEMO_ORDER.map((point) => point.id).join(" -> ")}, round distances ${roundDistances.map((value) => value.toFixed(3)).join(", ")}`,
     `  P5  P_old 12 + X_new 18 = D 30, Q 30x3 fixed before the update`,
     `  P7  ${QUERY_DISTANCES.length} displayed distances match the fixed query and prototype endpoints; argmin -> ${CLASS_VISUALS[QUERY_PREDICTION].displayLabel}`,
-    `  P9  ${RUNTIME_CHAPTERS.length} chapters, ${RUNTIME_CLIPS.length} shared-clock clips; D=30, Q=30x3 and memory remains K=12`,
+    `  P9  7 interleaved groups; D=30, Q=30x3, six independent nodes and K=12 memory`,
   ].join("\n"),
 );

@@ -2932,11 +2932,11 @@
       ]
     },
     {
-      "id": "icarl-p9-runtime",
+      "id": "icarl-p9-interleaved",
       "path": "/",
       "states": [
         {
-          "id": "p9-inherited-state",
+          "id": "p9-seven-groups-default-complete",
           "actions": [
             {
               "type": "click",
@@ -2944,303 +2944,119 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-inherited-scene",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-closing-summary",
               "state": "visible"
             }
           ]
         },
         {
-          "id": "p9-new-batch-arrives",
+          "id": "p9-d-assembly-start",
           "actions": [
             {
               "type": "click",
               "selector": ".ewc-slice-nav__item:nth-child(9)"
             },
             {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(2)"
-            },
-            {
               "type": "waitFor",
-              "selector": ".p9-incoming-batch",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-merge-old-copies-and-new-images",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(2)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-merge-scene",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-old-sample-writes-q",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(3)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-snapshot-scene[data-clip=\"snapshot-old-row\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-new-sample-writes-q",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-snapshot-scene[data-clip=\"snapshot-new-row\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-q-fills-and-freezes",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-play"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-snapshot-scene[data-clip=\"fill-q-rows\"][data-progress=\"1.00\"]",
-              "state": "visible",
-              "timeoutMs": 10000
-            }
-          ]
-        },
-        {
-          "id": "p9-training-targets-and-loss",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(4)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-training-scene[data-clip=\"build-targets-and-loss\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-symbolic-theta-update",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-theta-transition[data-theta-state=\"training\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-old-prefix-memory-truncation",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(5)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-memory-scene[data-clip=\"truncate-old-prefix\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-herding-new-class-d",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(5)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-memory-scene[data-clip=\"herd-class-d\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-herding-new-classes-e-f",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(5)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-memory-scene[data-clip=\"herd-classes-e-f\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-submit-memory-before-reencoding",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(5)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-prototype-scene[data-clip=\"reencode-p-after\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-rebuild-six-prototypes",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(6)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-prototype-scene[data-clip=\"form-prototypes\"]",
-              "state": "visible"
-            }
-          ]
-        },
-        {
-          "id": "p9-query-enters-feature-space-midpoint",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".ewc-slice-nav__item:nth-child(9)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(7)"
-            },
-            {
-              "type": "waitFor",
-              "selector": ".p9-prediction-scene[data-clip=\"query-arrives\"]",
+              "selector": ".p9-heading h1",
               "state": "visible"
             },
             {
               "type": "click",
-              "selector": ".p9-play"
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 80
+            }
+          ]
+        },
+        {
+          "id": "p9-d-assembly-midpoint",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 900
+            }
+          ]
+        },
+        {
+          "id": "p9-q-write-start",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"03\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 80
+            }
+          ]
+        },
+        {
+          "id": "p9-q-old-sample-row",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"03\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 550
+            }
+          ]
+        },
+        {
+          "id": "p9-q-two-sample-rows",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"03\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3249,96 +3065,307 @@
           ]
         },
         {
-          "id": "p9-query-distance-comparisons-midpoint",
+          "id": "p9-q-frozen-terminal",
           "actions": [
             {
               "type": "click",
               "selector": ".ewc-slice-nav__item:nth-child(9)"
             },
             {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(7)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
               "type": "waitFor",
-              "selector": ".p9-prediction-scene[data-clip=\"compare-six-distances\"]",
+              "selector": ".p9-heading h1",
               "state": "visible"
             },
             {
               "type": "click",
-              "selector": ".p9-play"
+              "selector": ".p9-step[data-step=\"03\"] .p9-replay"
             },
             {
               "type": "wait",
-              "milliseconds": 3000
+              "milliseconds": 3400
             }
           ]
         },
         {
-          "id": "p9-query-nearest-prototype-result",
+          "id": "p9-target-and-parameter-midpoint",
           "actions": [
             {
               "type": "click",
               "selector": ".ewc-slice-nav__item:nth-child(9)"
             },
             {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(7)"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-transport > button:last-child"
-            },
-            {
-              "type": "click",
-              "selector": ".p9-play"
-            },
-            {
               "type": "waitFor",
-              "selector": ".p9-prediction-result",
-              "state": "visible",
-              "timeoutMs": 10000
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"04\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1100
             }
           ]
         },
         {
-          "id": "p9-final-next-round-handoff",
+          "id": "p9-memory-truncation-start",
           "actions": [
             {
               "type": "click",
               "selector": ".ewc-slice-nav__item:nth-child(9)"
             },
             {
-              "type": "click",
-              "selector": ".p9-chapter:nth-child(8)"
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
             },
             {
               "type": "click",
-              "selector": ".p9-play"
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 80
+            }
+          ]
+        },
+        {
+          "id": "p9-memory-old-prefix-truncation",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-handoff-scene[data-progress=\"1.00\"]",
-              "state": "visible",
-              "timeoutMs": 10000
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 650
+            }
+          ]
+        },
+        {
+          "id": "p9-memory-new-class-herding",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2450
+            }
+          ]
+        },
+        {
+          "id": "p9-memory-committed-terminal",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3750
+            }
+          ]
+        },
+        {
+          "id": "p9-prototype-reencoding-start",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 80
+            }
+          ]
+        },
+        {
+          "id": "p9-query-entry",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2000
+            }
+          ]
+        },
+        {
+          "id": "p9-query-distance-comparisons",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3800
+            }
+          ]
+        },
+        {
+          "id": "p9-nearest-prototype-terminal",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 5550
+            }
+          ]
+        },
+        {
+          "id": "p9-handoff-archive-start",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 80
+            }
+          ]
+        },
+        {
+          "id": "p9-handoff-archive-midpoint",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 950
+            }
+          ]
+        },
+        {
+          "id": "p9-handoff-terminal",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2050
             }
           ]
         }
       ],
       "computedStyles": [
         {
-          "selector": ".p9-page",
-          "property": "overflow",
-          "equals": "visible"
-        },
-        {
-          "selector": ".p9-main-grid",
+          "selector": ".p9-step",
           "property": "display",
           "equals": "grid"
+        },
+        {
+          "selector": ".p9-replay",
+          "property": "min-height",
+          "equals": "34px"
+        },
+        {
+          "selector": ".ewc-rail",
+          "property": "position",
+          "equals": "sticky"
         }
       ]
     }

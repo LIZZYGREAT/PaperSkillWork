@@ -300,3 +300,9 @@ P9 将收敛为八章：继承状态、准备 D、冻结 Q、更新模型、管�
 阶段 C 完成第 05–07 组局部重播。第 05 组先从 12 张旧记忆按原有序截出每类前两张，再按真实 Herding 前缀依次把 D/E/F 各两张放入固定 `K=12` 预算；中间候选数与提交状态可见，只有完成后标记持久 `P_after`。第 06 组复用 P7 的 `FeatureSpaceWorkbench`、同一批 `P_after` IDs、当前六类原型及 Query/距离：先重编码，再让 Query 入场，按 Class 1–6 顺序完成六次比较，比较结束后才显示最近类。第 07 组保留 `Θ_after + P_after` 与仅作入口提示的 `X_next`，把 D/Q/Targets/Loss/当前 Query 和派生 Prototype 显示为本轮临时对象。
 
 阶段 B、C 的局部重播只由各组按钮触发，默认仍为完整终态；减少动态效果时保持终态并禁用重播。验证：`npm.cmd run build` 通过（TypeScript 与 Vite，81 modules）；`git diff --check` 通过。QA 配置、DOM/共享数值不变量及浏览器检查在阶段 D 更新和运行。`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 未变更。
+
+### P9 交错式图文推演重设计｜阶段 D：退役旧运行时与最终检查（2026-10-16）
+
+阶段 D 更新 P9 教学数据合同测试与 `visual-qa.json`，保留 P1–P8 的检查配置，为 P9 配置七组静态终态、各组局部重播起始/中段/终态等 19 个检查状态；删除不再使用的 `page-nine-scene.ts` 旧运行时。测试核验七组内容顺序、共享合成数据身份与数值、30×3 Teacher 响应、六节点 BCE、K=12 记忆、原型预测及旧运行时控件不再出现。窄屏复核发现共享顶栏状态区超出容器，已让操作组在移动断点保持自身宽度，页面标题按剩余空间省略显示。
+
+验证：`npm.cmd test`、`npm.cmd run build`（81 modules）、`python tools/paper.py check icarl` 与 `git diff --check` 通过。全配置 Chromium 检查共 222 帧，覆盖 P1–P9 的 1440×900 与 1920×1080；整体及 P9 `GEOMETRY_QA=PASS`、P9 配置样式断言 `STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`（0）。报告：`web/enhanced/.visual-qa/p9-interleaved-redesign/run-2026-10-16T12-14-24-598Z/report.md`。Agent 目视复核七组完整静态主线、D 合并中段、旧记忆截断中段与临时对象交接帧，`VISUAL_REVIEW=PASS`（不代表人工学习效果验收）。另在 390×844 复核 P9：页面 `scrollWidth=clientWidth=375`，七组采用单列阅读，Q 表格在局部滚动容器内保留完整列。无已批准截图基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 状态未改。
