@@ -294,3 +294,9 @@ P9 将收敛为八章：继承状态、准备 D、冻结 Q、更新模型、管�
 阶段 B 完成第 02–04 组的按需局部重播，默认仍直接展示终态，未添加整页时钟或 autoplay。第 02 组按旧 exemplar 12 + 新图 18 逐步填入 D 的 30 个槽位，P_before 原件与 ID 保持展示。第 03 组展示旧、新样本各自的真实 `teacherSnapshotFor` 响应，30 行矩阵按进度填充并在完成时标记冻结；样例顺序明确标注为示例顺序而非 D 的遍历顺序，完整数据可展开查看。第 04 组依同一 D sample ID 显示 Q 软目标与新类硬标签，点亮六个独立 BCE 节点后将状态标为符号化 `Θ_after`，并持续声明其非实际优化器轨迹。
 
 每组只提供本组的暂停/继续/重看控件；减少动态效果时结果保持完整且控件不启动动画。验证：`npm.cmd run build` 通过（TypeScript 与 Vite，81 modules）。局部重播的浏览器截图、测试合同和最终几何检查留待阶段 D 一并验证；`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 未变更。
+
+### P9 交错式图文推演重设计｜阶段 C：记忆、预测与下一轮交接（2026-10-16）
+
+阶段 C 完成第 05–07 组局部重播。第 05 组先从 12 张旧记忆按原有序截出每类前两张，再按真实 Herding 前缀依次把 D/E/F 各两张放入固定 `K=12` 预算；中间候选数与提交状态可见，只有完成后标记持久 `P_after`。第 06 组复用 P7 的 `FeatureSpaceWorkbench`、同一批 `P_after` IDs、当前六类原型及 Query/距离：先重编码，再让 Query 入场，按 Class 1–6 顺序完成六次比较，比较结束后才显示最近类。第 07 组保留 `Θ_after + P_after` 与仅作入口提示的 `X_next`，把 D/Q/Targets/Loss/当前 Query 和派生 Prototype 显示为本轮临时对象。
+
+阶段 B、C 的局部重播只由各组按钮触发，默认仍为完整终态；减少动态效果时保持终态并禁用重播。验证：`npm.cmd run build` 通过（TypeScript 与 Vite，81 modules）；`git diff --check` 通过。QA 配置、DOM/共享数值不变量及浏览器检查在阶段 D 更新和运行。`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 未变更。

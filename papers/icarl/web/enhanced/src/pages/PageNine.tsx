@@ -276,58 +276,94 @@ function P9Step04Figure() {
 }
 
 function P9Step05Figure() {
-  return <div className="p9-memory-figure" data-p9-figure="memory-update" data-memory-count={CURRENT_EXEMPLARS.length}>
-    <div className="p9-budget-meter" aria-label={`固定预算 ${MEMORY_BUDGET}，已分配 ${CURRENT_EXEMPLARS.length}`}>
-      <span>K = {MEMORY_BUDGET}</span><div>{Array.from({ length: MEMORY_BUDGET }, (_, index) => <i key={index} data-slot-filled={index < CURRENT_EXEMPLARS.length} />)}</div><b>{CURRENT_EXEMPLARS.length} / {MEMORY_BUDGET}</b>
+  const replay = useLocalReplay(3600);
+  const progress = replay.progress;
+  const removalProgress = progress >= 1 ? 1 : Math.max(0, Math.min(1, progress / 0.45));
+  const classSelectionProgress = (classIndex: number) => progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - (0.45 + classIndex * 0.15)) / 0.15));
+  const oldRemoved = Math.round(removalProgress * OLD_CLASS_IDS.reduce((total, classId) => total + P_BEFORE[classId].length - NEXT_QUOTA, 0));
+  const oldRetained = OLD_CLASS_IDS.reduce((total, classId) => total + P_BEFORE[classId].length, 0) - oldRemoved;
+  const newSelected = INCOMING_CLASS_IDS.reduce((total, classId, classIndex) => {
+    const selection = classSelectionProgress(classIndex);
+    return total + (selection >= 0.5 ? 1 : 0) + (selection >= 1 ? 1 : 0);
+  }, 0);
+  const candidateSlots = oldRetained + newSelected;
+  const committed = progress >= 1;
+  return <div className="p9-memory-figure" data-p9-figure="memory-update" data-memory-count={candidateSlots} data-old-retained={oldRetained} data-new-selected={newSelected} data-memory-state={committed ? "submitted" : "building"} data-animation-progress={progress.toFixed(3)}>
+    <div className="p9-budget-meter" aria-label={`固定预算 ${MEMORY_BUDGET}，当前候选 ${candidateSlots}`}>
+      <span>K = {MEMORY_BUDGET}</span><div>{Array.from({ length: MEMORY_BUDGET }, (_, index) => <i key={index} data-slot-filled={index < candidateSlots} />)}</div><b>{candidateSlots} / {MEMORY_BUDGET}</b>
     </div>
     <div className="p9-after-memory-grid">
       {ALL_CLASS_IDS.map((classId) => {
         const oldClass = OLD_CLASS_IDS.includes(classId as (typeof OLD_CLASS_IDS)[number]);
         const after = P_AFTER[classId];
+        const classIndex = oldClass ? -1 : INCOMING_CLASS_IDS.indexOf(classId as IncomingClassId);
+        const selection = classIndex < 0 ? 1 : classSelectionProgress(classIndex);
+        const selectedCount = after.reduce((count, _, index) => count + (oldClass || selection >= (index + 1) / after.length ? 1 : 0), 0);
         return <article className="p9-after-class" key={classId} style={classAccent(classId)} data-class-id={classId} data-kept-ids={after.map((sample) => sample.id).join(" ")}>
-          <header><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><span>{oldClass ? "旧序前缀" : "新类 Herding"}</span></header>
-          <div className="p9-after-samples">{after.map((sample, index) => <SampleToken key={sample.id} sample={sample} role={oldClass ? "exemplar" : "selected"} order={index + 1} compact />)}</div>
+          <header><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><span>{oldClass ? "旧序前缀" : `${selectedCount} / ${NEXT_QUOTA} 入槽`}</span></header>
+          <div className="p9-after-samples">{after.map((sample, index) => {
+            const itemProgress = oldClass ? 1 : Math.max(0, Math.min(1, selection * after.length - index));
+            return <span className="p9-memory-selection" key={sample.id} style={{ opacity: itemProgress, transform: `translateY(${(1 - itemProgress) * 3}px)` }} data-selection-visible={itemProgress >= 1}><SampleToken sample={sample} role={oldClass ? "exemplar" : "selected"} order={index + 1} compact /></span>;
+          })}</div>
         </article>;
       })}
     </div>
     <div className="p9-memory-decisions">
-      {OLD_CLASS_IDS.map((classId) => <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span>{P_BEFORE[classId].map((sample, index) => <em key={sample.id} data-sample-id={sample.id} data-kept={index < NEXT_QUOTA}>{sample.id}{index < NEXT_QUOTA ? "" : " ×"}</em>)} → {P_AFTER[classId].map((sample) => sample.id).join("、")}</span></p>)}
-      {INCOMING_CLASS_IDS.map((classId) => <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span>真实 Herding 前缀：{NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id).join("、")}</span></p>)}
+      {OLD_CLASS_IDS.map((classId) => <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span>{P_BEFORE[classId].map((sample, index) => {
+        const tail = index >= NEXT_QUOTA;
+        return <em key={sample.id} style={{ opacity: tail ? 1 - removalProgress * 0.82 : 1 }} data-sample-id={sample.id} data-kept={!tail}>{sample.id}{tail ? " ×" : ""}</em>;
+      })} → {P_AFTER[classId].map((sample) => sample.id).join("、")}</span></p>)}
+      {INCOMING_CLASS_IDS.map((classId, classIndex) => {
+        const selectedIds = NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id);
+        return <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span style={{ opacity: 0.18 + classSelectionProgress(classIndex) * 0.82 }} data-herding-ids={selectedIds.join(" ")}>真实 Herding 前缀：{selectedIds.join("、")}<small> · 按类依次入槽</small></span></p>;
+      })}
     </div>
-    <p className="p9-figure-caption">P_after 在本轮选样全部完成后提交：6 类 × 每类 2 张原始图片。</p>
+    <p className="p9-figure-caption" data-memory-commit-state={committed ? "submitted" : "pending"}>{committed ? "P_after 已提交：6 类 × 每类 2 张原始图片。" : `候选预算 ${candidateSlots} / ${MEMORY_BUDGET}；全部选完后才提交 P_after。`}</p>
+    <ReplayControl replay={replay} />
   </div>;
 }
 
 function P9Step06Figure() {
-  return <div className="p9-feature-figure" data-p9-figure="prototype-query" data-prediction-class={QUERY_PREDICTION}>
+  const replay = useLocalReplay(5400);
+  const progress = replay.progress;
+  const encodingProgress = progress >= 1 ? 1 : Math.min(1, progress / 0.24);
+  const queryProgress = progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - 0.29) / 0.2));
+  const comparisonProgress = progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - 0.5) / 0.39));
+  const nearestProgress = progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - 0.91) / 0.09));
+  const comparisonsComplete = Math.floor(comparisonProgress * ALL_CLASS_IDS.length);
+  return <div className="p9-feature-figure" data-p9-figure="prototype-query" data-prediction-class={QUERY_PREDICTION} data-comparisons-complete={comparisonsComplete} data-animation-progress={progress.toFixed(3)}>
     <FeatureSpaceWorkbench
       mode="inference"
       title="当前特征空间 · 最近均值分类"
       description="P_after 的原始 exemplar 经 φ_Θ_after 编码，形成六类 Prototype；Query 与每个原型逐一比较。"
       points={currentFeaturePoints}
       previousPoints={previousFeaturePoints}
-      motionProgress={1}
+      motionProgress={encodingProgress}
       prototypes={queryPrototypes}
       query={QUERY_FEATURE}
       queryLabelOffset={{ dx: -14, dy: 28, anchor: "end" }}
-      queryRevealProgress={1}
-      comparisonProgress={1}
+      queryRevealProgress={queryProgress}
+      comparisonProgress={comparisonProgress}
       completedComparisonOpacity={0.68}
-      nearestHighlightProgress={1}
+      nearestHighlightProgress={nearestProgress}
       unitCircle
       markerScale={0.82}
       showSampleLabels={false}
       focusableSamples={false}
     />
+    <p className="p9-feature-progress">先用当前 φ 重编码 P_after · Query 入场 · 按 Class 1–6 顺序比较 {comparisonsComplete} / 6 个距离</p>
     <div className="p9-prototype-roster" aria-label="当前六类 Prototype 由 P_after 重建">
       {ALL_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].glyph} μ{CLASS_VISUALS[classId].index}</b><small>{P_AFTER[classId].map((sample) => sample.id).join(" + ")}</small></span>)}
     </div>
-    <div className="p9-query-result" data-result-class={QUERY_PREDICTION}><span>六个距离比较完成</span><b>最近原型：{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>最小欧氏距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 按 argmin 分类</small></div>
+    <div className="p9-query-result" data-result-class={QUERY_PREDICTION} data-result-visible={nearestProgress >= 1} style={{ opacity: nearestProgress, transform: `translateY(${(1 - nearestProgress) * 4}px)` }}><span>六个距离比较完成</span><b>最近原型：{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>最小欧氏距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 按 argmin 分类</small></div>
+    <ReplayControl replay={replay} />
   </div>;
 }
 
 function P9Step07Figure() {
-  return <div className="p9-handoff-figure" data-p9-figure="next-round-handoff">
+  const replay = useLocalReplay(1900);
+  const transientStyle: CSSProperties = { opacity: 0.42 + (1 - replay.progress) * 0.58, transform: `translateY(${replay.progress * 6}px)` };
+  return <div className="p9-handoff-figure" data-p9-figure="next-round-handoff" data-animation-progress={replay.progress.toFixed(3)}>
     <section className="p9-persistent-output" data-persistence="persistent">
       <span>继续保存 · 下一轮输入</span>
       <div><b>Θ_after</b><i aria-hidden="true">+</i><b>P_after</b></div>
@@ -335,10 +371,11 @@ function P9Step07Figure() {
     </section>
     <div className="p9-next-round-arrow" aria-hidden="true">↓</div>
     <section className="p9-next-round" data-object-id="X_next"><span>下一批到来时</span><b>X_next</b><small>新的类别数据入口；不预演下一轮</small></section>
-    <section className="p9-temporary-output" data-persistence="temporary">
+    <section className="p9-temporary-output" data-persistence="temporary" style={transientStyle}>
       <span>本轮临时或派生对象 · 不作为下一轮持久状态</span>
       <div>{["D", "Q", "Targets", "Loss", "当前 Query / 预测", "当前 Prototype"].map((item) => <b key={item}>{item}</b>)}</div>
     </section>
+    <ReplayControl replay={replay} />
   </div>;
 }
 
