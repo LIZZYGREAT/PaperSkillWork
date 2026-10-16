@@ -3130,7 +3130,7 @@
               "type": "waitFor",
               "selector": ".p9-step[data-step=\"02\"] [data-d-count=\"30\"]",
               "state": "visible",
-              "timeoutMs": 2200
+              "timeoutMs": 1650
             }
           ]
         },
@@ -3351,6 +3351,65 @@
             {
               "type": "wait",
               "milliseconds": 80
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-feature-figure[data-p9-phase=\"encoding\"][data-prototype-count=\"0\"][data-query-visible=\"false\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-prediction-30-first-prototype",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2700
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-feature-figure[data-p9-phase=\"prototypes\"][data-prototype-count=\"1\"][data-query-visible=\"false\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-prediction-50-six-prototypes",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 4500
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-feature-figure[data-p9-phase=\"prototypes\"][data-prototype-count=\"6\"][data-query-visible=\"false\"]",
+              "state": "visible"
             }
           ]
         },
@@ -3372,7 +3431,12 @@
             },
             {
               "type": "wait",
-              "milliseconds": 2000
+              "milliseconds": 5400
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-feature-figure[data-p9-phase=\"query\"][data-query-visible=\"true\"][data-comparisons-complete=\"0\"]",
+              "state": "visible"
             }
           ]
         },
@@ -3394,7 +3458,12 @@
             },
             {
               "type": "wait",
-              "milliseconds": 3800
+              "milliseconds": 6750
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-feature-figure[data-p9-phase=\"comparison\"][data-comparisons-complete=\"1\"]",
+              "state": "visible"
             }
           ]
         },
@@ -3416,7 +3485,39 @@
             },
             {
               "type": "wait",
-              "milliseconds": 5550
+              "milliseconds": 8460
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-feature-figure[data-p9-phase=\"nearest\"][data-comparisons-complete=\"6\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-prediction-100-static-result",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 9100
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-feature-figure[data-animation-progress=\"1.000\"][data-prototype-count=\"6\"][data-query-visible=\"true\"] .p9-query-result[data-result-visible=\"true\"]",
+              "state": "visible"
             }
           ]
         },

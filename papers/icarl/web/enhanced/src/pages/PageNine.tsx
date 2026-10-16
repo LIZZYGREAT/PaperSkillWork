@@ -332,38 +332,54 @@ function P9Step05Figure() {
 }
 
 function P9Step06Figure() {
-  const replay = useLocalReplay(5400);
+  const replay = useLocalReplay(9000);
   const progress = replay.progress;
-  const encodingProgress = progress >= 1 ? 1 : Math.min(1, progress / 0.24);
-  const queryProgress = progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - 0.29) / 0.2));
-  const comparisonProgress = progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - 0.5) / 0.39));
-  const nearestProgress = progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - 0.91) / 0.09));
-  const comparisonsComplete = Math.floor(comparisonProgress * ALL_CLASS_IDS.length);
-  return <div className="p9-feature-figure" data-p9-figure="prototype-query" data-prediction-class={QUERY_PREDICTION} data-comparisons-complete={comparisonsComplete} data-animation-progress={progress.toFixed(3)}>
+  const timeline = p9PredictionTimelineAt(progress);
+  const visiblePrototypes = queryPrototypes.slice(0, timeline.prototypeCount);
+  const phaseCopy = timeline.phase === "encoding"
+    ? "A · 重新编码 P_after exemplar：对照固定的更新前、更新后特征端点。"
+    : timeline.phase === "prototypes"
+      ? `B · 按 Class 1–6 顺序形成当前 Prototype：${timeline.prototypeCount} / 6。`
+      : timeline.phase === "query"
+        ? "C · Query 正在进入当前特征空间；尚未开始距离比较。"
+        : timeline.phase === "comparison"
+          ? `D · 按 Class 1–6 比较真实欧氏距离：${timeline.comparisonsComplete} / 6 条已完成，已画出的线保留。`
+          : "E · 六条真实距离已完成；强调最小距离并确定最近类别。";
+  const workbenchDescription = timeline.phase === "encoding"
+    ? "固定对照 P_after exemplar 在更新前与更新后的特征端点；中间移动仅为视觉插值。"
+    : timeline.phase === "prototypes"
+      ? `当前特征位置保持不变，依类别顺序形成 Prototype；已出现 ${timeline.prototypeCount} 个。`
+      : timeline.phase === "query"
+        ? "六类 Prototype 已形成；Query 正进入当前特征空间，距离比较尚未开始。"
+        : timeline.phase === "comparison"
+          ? "Query 依类别顺序与当前 Prototype 比较；已绘制的距离线持续保留。"
+          : "六条 Query 到当前 Prototype 的距离均已完成，最近原型由真实 argmin 决定。";
+  return <div className="p9-feature-figure" data-p9-figure="prototype-query" data-p9-phase={timeline.phase} data-prototype-count={timeline.prototypeCount} data-query-visible={timeline.queryVisible} data-prediction-class={QUERY_PREDICTION} data-comparisons-complete={timeline.comparisonsComplete} data-animation-progress={progress.toFixed(3)}>
     <FeatureSpaceWorkbench
       mode="inference"
       title="当前特征空间 · 最近均值分类"
-      description="P_after 的原始 exemplar 经 φ_Θ_after 编码，形成六类 Prototype；Query 与每个原型逐一比较。"
+      description={workbenchDescription}
       points={currentFeaturePoints}
       previousPoints={previousFeaturePoints}
-      motionProgress={encodingProgress}
-      prototypes={queryPrototypes}
-      query={QUERY_FEATURE}
+      motionProgress={timeline.encodingProgress}
+      prototypes={visiblePrototypes}
+      query={timeline.queryVisible ? QUERY_FEATURE : undefined}
       queryLabelOffset={{ dx: -14, dy: 28, anchor: "end" }}
-      queryRevealProgress={queryProgress}
-      comparisonProgress={comparisonProgress}
+      queryRevealProgress={timeline.queryRevealProgress}
+      comparisonProgress={timeline.comparisonProgress}
       completedComparisonOpacity={0.68}
-      nearestHighlightProgress={nearestProgress}
+      nearestHighlightProgress={timeline.nearestHighlightProgress}
       unitCircle
       markerScale={0.82}
       showSampleLabels={false}
       focusableSamples={false}
     />
-    <p className="p9-feature-progress">先用当前 φ 重编码 P_after · Query 入场 · 按 Class 1–6 顺序比较 {comparisonsComplete} / 6 个距离</p>
-    <div className="p9-prototype-roster" aria-label="当前六类 Prototype 由 P_after 重建">
-      {ALL_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].glyph} μ{CLASS_VISUALS[classId].index}</b><small>{P_AFTER[classId].map((sample) => sample.id).join(" + ")}</small></span>)}
+    <p className="p9-feature-progress">{phaseCopy}</p>
+    <p className="p9-feature-note">前后端点对应同一批图片在两种给定特征下的位置；中间移动只是视觉插值，不代表真实 SGD 轨迹。</p>
+    <div className="p9-prototype-roster" aria-label={`当前已形成 ${timeline.prototypeCount} / 6 类 Prototype`} data-prototype-count={timeline.prototypeCount}>
+      {ALL_CLASS_IDS.slice(0, timeline.prototypeCount).map((classId) => <span key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].glyph} μ{CLASS_VISUALS[classId].index}</b><small>{P_AFTER[classId].map((sample) => sample.id).join(" + ")}</small></span>)}
     </div>
-    <div className="p9-query-result" data-result-class={QUERY_PREDICTION} data-result-visible={nearestProgress >= 1} style={{ opacity: nearestProgress, transform: `translateY(${(1 - nearestProgress) * 4}px)` }}><span>六个距离比较完成</span><b>最近原型：{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>最小欧氏距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 按 argmin 分类</small></div>
+    {timeline.nearestHighlightActive && <div className="p9-query-result" data-result-class={QUERY_PREDICTION} data-result-visible={timeline.nearestHighlightProgress >= 1} style={{ opacity: timeline.nearestHighlightProgress, transform: `translateY(${(1 - timeline.nearestHighlightProgress) * 4}px)`, visibility: timeline.nearestHighlightProgress > 0 ? "visible" : "hidden" }}><span>六个距离比较完成</span><b>最近原型：{CLASS_VISUALS[QUERY_PREDICTION].displayLabel}</b><small>最小欧氏距离 {QUERY_DISTANCES[0].distance.toFixed(3)} · 按 argmin 分类</small></div>}
     <ReplayControl replay={replay} />
   </div>;
 }

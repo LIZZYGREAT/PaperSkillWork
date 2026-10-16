@@ -1002,6 +1002,8 @@ assert.equal([...p9Markup.matchAll(/class="p9-node-row"[^>]*data-node="[A-F]"/g)
 for (const id of allP9After.map((sample) => sample.id)) assert.ok(p9Markup.includes(`data-sample-id="${id}"`), `Committed P_after must preserve raw sample ID ${id}.`);
 assert.ok(p9Markup.includes('data-memory-count="12"') && p9Markup.includes('data-memory-state="submitted"'), "The final memory view must commit exactly twelve exemplars.");
 assert.ok(p9Markup.includes(`data-prediction-class="${QUERY_PREDICTION}"`) && p9Markup.includes(`data-result-class="${QUERY_PREDICTION}"`), "P9 must use the shared nearest-prototype class for its final result.");
+assert.ok(p9Markup.includes('data-p9-phase="nearest"') && p9Markup.includes('data-prototype-count="6" data-query-visible="true"'), "The default P9-06 replay must render its full terminal stage.");
+assert.ok(p9Markup.includes("不代表真实 SGD 轨迹"), "P9-06 must retain the limitation on its visual feature interpolation.");
 const p9DistanceLines = distanceLines(p9Markup);
 assert.equal(p9DistanceLines.length, ALL_CLASS_IDS.length, "The static Query view must show all six true prototype comparisons.");
 assert.deepEqual(p9DistanceLines.map((line) => attr(line, "data-prototype-class-id")), ALL_CLASS_IDS, "Query comparisons must be drawn in class order before highlighting the minimum.");
@@ -1020,6 +1022,8 @@ const p9Css = readFileSync(path.join(process.cwd(), "src/styles/page-nine.css"),
 const appSource = readFileSync(path.join(process.cwd(), "src/App.tsx"), "utf8");
 const p9PageEightSource = readFileSync(path.join(process.cwd(), "src/pages/PageEight.tsx"), "utf8");
 const p9VisualQa = JSON.parse(readFileSync(path.join(process.cwd(), "visual-qa.json"), "utf8"));
+assert.ok(p9Source.includes("prototypes={visiblePrototypes}") && p9Source.includes("query={timeline.queryVisible ? QUERY_FEATURE : undefined}"), "P9-06 must add only formed Prototype objects and omit Query until stage C.");
+assert.ok(p9Source.includes("comparisonProgress={timeline.comparisonProgress}") && p9Source.includes("nearestHighlightProgress={timeline.nearestHighlightProgress}"), "P9-06 distance lines and nearest highlight must follow their separate timeline windows.");
 assert.doesNotMatch(p9Source, /RUNTIME_CLIPS|runtimeSceneAt|useAnimationTimeline|p9-chapters|p9-transport/, "P9 must not retain the 17-clip runtime or page-wide transport controls.");
 assert.doesNotMatch(p9Css, /p9-chapters|p9-transport|p9-active-scene|p9-workbench-anchors/, "P9 CSS must not retain selectors for the discarded large scene framework.");
 assert.ok(!existsSync(path.join(process.cwd(), "src/pages/page-nine-scene.ts")), "The obsolete page-only runtime module must be deleted.");
@@ -1029,7 +1033,24 @@ assert.ok(p9Css.includes("@media (prefers-reduced-motion: reduce)"), "P9 must ho
 assert.ok(appSource.includes('title: "iCaRL 一次增量学习的完整逻辑"') && !appSource.includes("ewc-app--runtime"), "P9 navigation must match the new title and use the shared app shell.");
 assert.ok(p9PageEightSource.includes("下一页：一次增量学习的完整逻辑"), "P8 must lead into the redesigned P9 reading flow.");
 assert.ok(Array.isArray(p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved")?.states), "Visual QA must cover the seven-group reading flow and local replays.");
-const p9QaText = JSON.stringify(p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved"));
+const p9QaPage = p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved");
+const p9QaText = JSON.stringify(p9QaPage);
+const p9QaStateIds = new Set(p9QaPage.states.map((state: { id: string }) => state.id));
+for (const stateId of [
+  "p9-d-assembly-start",
+  "p9-d-assembly-quarter",
+  "p9-d-assembly-midpoint",
+  "p9-d-assembly-terminal",
+  "p9-d-assembly-paused",
+  "p9-d-assembly-pause-resume",
+  "p9-prototype-reencoding-start",
+  "p9-prediction-30-first-prototype",
+  "p9-prediction-50-six-prototypes",
+  "p9-query-entry",
+  "p9-query-distance-comparisons",
+  "p9-nearest-prototype-terminal",
+  "p9-prediction-100-static-result",
+]) assert.ok(p9QaStateIds.has(stateId), `Visual QA must keep the P9 checkpoint ${stateId}.`);
 assert.doesNotMatch(p9QaText, /p9-chapter|p9-transport|p9-play/, "P9 visual QA must not target removed playback controls.");
 /* ---------------------------------------------------------------- report --- */
 
