@@ -31,6 +31,8 @@ import {
   studentOutputFor,
   teacherSnapshotFor,
 } from "../data/incremental-training";
+import { p9TrainingAssemblyAt } from "../data/p9-training-assembly-state";
+import { p9PredictionTimelineAt } from "../data/p9-prediction-timeline";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 
 const oldDemoSample = P_BEFORE.A[0];
@@ -160,9 +162,14 @@ function P9Step01Figure() {
 
 function P9Step02Figure() {
   const replay = useLocalReplay(1800);
-  const oldCopies = Math.round(replay.progress * INCREMENTAL_STAGE_DATA.oldExemplars.length);
-  const incomingCount = Math.round(replay.progress * INCREMENTAL_STAGE_DATA.incomingSamples.length);
-  const assembledCount = oldCopies + incomingCount;
+  const assembly = p9TrainingAssemblyAt(
+    replay.progress,
+    INCREMENTAL_STAGE_DATA.oldExemplars,
+    INCREMENTAL_STAGE_DATA.incomingSamples,
+    oldDemoSample.id,
+    newDemoSample.id,
+  );
+  const { oldCopies, incomingCount, assembledCount } = assembly;
   const incomingPerClass = INCOMING_SAMPLES.length / INCOMING_CLASS_IDS.length;
   return <div className="p9-assembly-figure" data-p9-figure="training-set" data-d-count={assembledCount} data-animation-progress={replay.progress.toFixed(3)}>
     <div className="p9-source-lanes">
@@ -181,9 +188,10 @@ function P9Step02Figure() {
       <header><div><span>本轮临时训练集</span><b>D</b></div><strong>{assembledCount} / {TRAINING_SET_SIZE} 张</strong></header>
       <div className="p9-set-equation"><span>{oldCopies} / 12 旧图副本</span><i>+</i><span>{incomingCount} / 18 张新图</span><i>=</i><b>{assembledCount} / {TRAINING_SET_SIZE}</b></div>
       <div className="p9-set-meter" aria-label={`D 已组装 ${assembledCount} 张，共 ${TRAINING_SET_SIZE} 张`}>{Array.from({ length: TRAINING_SET_SIZE }, (_, index) => <i key={index} data-slot-filled={index < assembledCount} />)}</div>
-      <div className="p9-set-samples" aria-label="D 中的代表性样本">
-        <SampleToken sample={oldDemoSample} role="exemplar" compact />
-        <SampleToken sample={newDemoSample} role="incoming" compact />
+      <div className="p9-set-samples" aria-label="已到达 D 的示例样本" data-example-count={Number(assembly.oldExampleArrived) + Number(assembly.incomingExampleArrived)}>
+        {assembly.oldExampleArrived && <div className="p9-sample-arrival" data-example-sample-id={oldDemoSample.id}><SampleToken sample={oldDemoSample} role="exemplar" compact /></div>}
+        {assembly.incomingExampleArrived && <div className="p9-sample-arrival" data-example-sample-id={newDemoSample.id}><SampleToken sample={newDemoSample} role="incoming" compact /></div>}
+        {!assembly.oldExampleArrived && !assembly.incomingExampleArrived && <span className="p9-sample-placeholder">等待训练样本进入 D</span>}
       </div>
     </article>
     <p className="p9-integrity-note"><b>P_before 原件仍在。</b>进入 D 的 12 张旧图是读取副本，原有 ID 与顺序不变。</p>

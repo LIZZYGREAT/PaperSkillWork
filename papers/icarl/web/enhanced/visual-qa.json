@@ -2972,7 +2972,39 @@
             },
             {
               "type": "wait",
-              "milliseconds": 80
+              "milliseconds": 20
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-assembly-figure[data-d-count=\"0\"] .p9-set-samples[data-example-count=\"0\"] .p9-sample-placeholder",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-d-assembly-quarter",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 450
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-assembly-figure[data-example-count=\"2\"]",
+              "state": "visible"
             }
           ]
         },
@@ -2995,6 +3027,110 @@
             {
               "type": "wait",
               "milliseconds": 900
+            }
+          ]
+        },
+        {
+          "id": "p9-d-assembly-terminal",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"02\"] [data-d-count=\"30\"]",
+              "state": "visible",
+              "timeoutMs": 2200
+            }
+          ]
+        },
+        {
+          "id": "p9-d-assembly-paused",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 400
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay[data-replay-state=\"paused\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 300
+            }
+          ]
+        },
+        {
+          "id": "p9-d-assembly-pause-resume",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 400
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay[data-replay-state=\"paused\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 250
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"02\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"02\"] [data-d-count=\"30\"]",
+              "state": "visible",
+              "timeoutMs": 2200
             }
           ]
         },

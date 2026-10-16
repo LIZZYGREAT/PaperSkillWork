@@ -54,6 +54,8 @@ import {
   studentOutputFor,
   teacherSnapshotFor,
 } from "../src/data/incremental-training.ts";
+import { p9TrainingAssemblyAt } from "../src/data/p9-training-assembly-state.ts";
+import { p9PredictionTimelineAt } from "../src/data/p9-prediction-timeline.ts";
 import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress.ts";
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B } from "../src/data/table1-results.ts";
 import { FIGURE2_FOCUS_RECTS, FIGURE2_SOURCE_FRAME, figure2Selection } from "../src/data/figure2-focus.ts";
@@ -924,6 +926,45 @@ for (const distance of QUERY_DISTANCES) {
 }
 assert.equal(QUERY_PREDICTION, QUERY_DISTANCES[0].classId, "P9 prediction must remain the real nearest-prototype argmin.");
 
+const p9DStateAt = (progress: number) => p9TrainingAssemblyAt(
+  progress,
+  INCREMENTAL_STAGE_DATA.oldExemplars,
+  INCREMENTAL_STAGE_DATA.incomingSamples,
+  p9OldExample.id,
+  p9NewExample.id,
+);
+const p9DStart = p9DStateAt(0);
+assert.deepEqual([p9DStart.oldCopies, p9DStart.incomingCount, p9DStart.assembledCount], [0, 0, 0]);
+assert.equal(p9DStart.oldExampleArrived || p9DStart.incomingExampleArrived, false, "D must not show either example before its real ID enters the prefix.");
+for (const progress of [0.25, 0.5]) {
+  const state = p9DStateAt(progress);
+  assert.equal(state.assembledCount, state.oldCopies + state.incomingCount, `D counts must agree at ${progress * 100}%.`);
+  assert.equal(state.oldExampleArrived, INCREMENTAL_STAGE_DATA.oldExemplars.slice(0, state.oldCopies).some((sample) => sample.id === p9OldExample.id), `The old example token at ${progress * 100}% must track its actual training-copy ID.`);
+  assert.equal(state.incomingExampleArrived, INCREMENTAL_STAGE_DATA.incomingSamples.slice(0, state.incomingCount).some((sample) => sample.id === p9NewExample.id), `The new example token at ${progress * 100}% must track its actual incoming prefix ID.`);
+}
+const p9DEnd = p9DStateAt(1);
+assert.deepEqual([p9DEnd.oldCopies, p9DEnd.incomingCount, p9DEnd.assembledCount], [12, 18, 30]);
+assert.equal(p9DEnd.oldExampleArrived && p9DEnd.incomingExampleArrived, true, "Both true example IDs must be present at D's terminal state.");
+
+const p9TimelineStart = p9PredictionTimelineAt(0);
+assert.deepEqual([p9TimelineStart.phase, p9TimelineStart.prototypeCount, p9TimelineStart.queryVisible, p9TimelineStart.comparisonsComplete], ["encoding", 0, false, 0]);
+const p9Timeline30 = p9PredictionTimelineAt(0.30);
+assert.deepEqual([p9Timeline30.phase, p9Timeline30.prototypeCount, p9Timeline30.queryVisible], ["prototypes", 1, false], "30% begins the first prototype without exposing the Query.");
+const p9Timeline50 = p9PredictionTimelineAt(0.50);
+assert.deepEqual([p9Timeline50.prototypeCount, p9Timeline50.queryVisible, p9Timeline50.comparisonsComplete], [6, false, 0], "All prototypes must settle before Query entry.");
+const p9Timeline60 = p9PredictionTimelineAt(0.60);
+assert.equal(p9Timeline60.queryVisible, true);
+assert.ok(p9Timeline60.queryRevealProgress > 0 && p9Timeline60.queryRevealProgress < 1);
+assert.deepEqual([p9Timeline60.comparisonProgress, p9Timeline60.comparisonsComplete], [0, 0], "Query motion must finish before comparison lines start.");
+const p9Timeline75 = p9PredictionTimelineAt(0.75);
+assert.ok(p9Timeline75.comparisonProgress > 0 && p9Timeline75.comparisonProgress < 1);
+assert.equal(p9Timeline75.comparisonsComplete, 1, "At 75%, prior distance lines are complete while the next line is still forming.");
+assert.equal(p9Timeline75.nearestHighlightActive, false, "The nearest class must stay unhighlighted before comparisons finish.");
+const p9Timeline94 = p9PredictionTimelineAt(0.94);
+assert.deepEqual([p9Timeline94.comparisonsComplete, p9Timeline94.nearestHighlightActive, p9Timeline94.nearestHighlightProgress], [6, true, 0]);
+const p9TimelineEnd = p9PredictionTimelineAt(1);
+assert.deepEqual([p9TimelineEnd.prototypeCount, p9TimelineEnd.queryVisible, p9TimelineEnd.comparisonsComplete, p9TimelineEnd.nearestHighlightProgress], [6, true, 6, 1]);
+
 function renderPageNineAt(reducedMotion = false): string {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   Object.defineProperty(globalThis, "window", {
@@ -944,6 +985,9 @@ assert.deepEqual([...p9Markup.matchAll(/<section class="p9-step" data-step="(\d+
 assert.ok(p9Markup.indexOf('class="p9-step__copy"') < p9Markup.indexOf('class="p9-step__figure"'), "Text must precede the corresponding figure in the mobile DOM reading order.");
 assert.ok(p9Markup.includes('data-d-count="30"') && p9Markup.includes("12 / 12 旧图副本") && p9Markup.includes("18 / 18 张新图"), "The default D state must show all 12 old copies and 18 new images assembled.");
 assert.ok(p9Markup.includes('data-object-id="P_before"') && p9Markup.includes("P_before 原件仍在"), "The D handoff must retain the persistent original memory while using copies.");
+const p9DExampleSection = p9Markup.match(/<div class="p9-set-samples"[^>]*>[\s\S]*?class="p9-integrity-note"/)?.[0] ?? "";
+assert.ok(p9DExampleSection.includes(`data-example-sample-id="${p9OldExample.id}"`) && p9DExampleSection.includes(`data-example-sample-id="${p9NewExample.id}"`), "The default completed D state must show both arrived example IDs.");
+assert.ok(!p9DExampleSection.includes("等待训练样本进入 D"), "The completed D state must not show its empty placeholder.");
 assert.ok(p9Markup.includes('data-q-rows="30" data-q-columns="3"') && p9Markup.includes('data-q-frozen="true"'), "The default Q state must show 30 rows, three old nodes, and a frozen result.");
 const p9QExampleRows = [...p9Markup.matchAll(/<tr\b[^>]*data-q-example="true"[^>]*>[\s\S]*?<\/tr>/g)].map((match) => match[0]);
 assert.equal(p9QExampleRows.length, 2, "P9 must show one old and one new sample as explicit Q examples.");
