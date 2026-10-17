@@ -32,6 +32,7 @@ import {
   teacherSnapshotFor,
 } from "../data/incremental-training";
 import { p9TrainingAssemblyAt } from "../data/p9-training-assembly-state";
+import { p9MemoryTimelineAt } from "../data/p9-memory-timeline";
 import { p9PredictionTimelineAt } from "../data/p9-prediction-timeline";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 
@@ -285,33 +286,48 @@ function P9Step04Figure() {
 
 function P9Step05Figure() {
   const replay = useLocalReplay(3600);
-  const progress = replay.progress;
-  const removalProgress = progress >= 1 ? 1 : Math.max(0, Math.min(1, progress / 0.45));
-  const classSelectionProgress = (classIndex: number) => progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - (0.45 + classIndex * 0.15)) / 0.15));
-  const oldRemoved = Math.round(removalProgress * OLD_CLASS_IDS.reduce((total, classId) => total + P_BEFORE[classId].length - NEXT_QUOTA, 0));
-  const oldRetained = OLD_CLASS_IDS.reduce((total, classId) => total + P_BEFORE[classId].length, 0) - oldRemoved;
-  const newSelected = INCOMING_CLASS_IDS.reduce((total, classId, classIndex) => {
-    const selection = classSelectionProgress(classIndex);
-    return total + (selection >= 0.5 ? 1 : 0) + (selection >= 1 ? 1 : 0);
-  }, 0);
-  const candidateSlots = oldRetained + newSelected;
-  const committed = progress >= 1;
-  return <div className="p9-memory-figure" data-p9-figure="memory-update" data-memory-count={candidateSlots} data-old-retained={oldRetained} data-new-selected={newSelected} data-memory-state={committed ? "submitted" : "building"} data-animation-progress={progress.toFixed(3)}>
-    <div className="p9-budget-meter" aria-label={`固定预算 ${MEMORY_BUDGET}，当前候选 ${candidateSlots}`}>
-      <span>K = {MEMORY_BUDGET}</span><div>{Array.from({ length: MEMORY_BUDGET }, (_, index) => <i key={index} data-slot-filled={index < candidateSlots} />)}</div><b>{candidateSlots} / {MEMORY_BUDGET}</b>
+  const timeline = p9MemoryTimelineAt(replay.progress);
+  const committed = timeline.phase === "submitted";
+  const phaseLabel = timeline.phase === "trimming"
+    ? `先截断旧类后缀；目前仍保留 ${timeline.oldRetainedCount} 张`
+    : timeline.phase === "slots-freed"
+      ? `旧类各留前 ${NEXT_QUOTA} 张，已腾出 ${timeline.freedSlotCount} 个位置；新类尚未入槽`
+      : timeline.phase === "selecting"
+        ? `旧类位置已腾出；新类按各自 Herding 顺序依次入槽（${timeline.newSelectedCount} / ${INCOMING_CLASS_IDS.length * NEXT_QUOTA}）`
+        : `P_after 已提交：${ALL_CLASS_IDS.length} 类 × 每类 ${NEXT_QUOTA} 张原始图片`;
+  return <div className="p9-memory-figure" data-p9-figure="memory-update" data-memory-count={timeline.candidateCount} data-old-retained={timeline.oldRetainedCount} data-new-selected={timeline.newSelectedCount} data-memory-phase={timeline.phase} data-memory-state={committed ? "submitted" : "building"} data-animation-progress={timeline.progress.toFixed(3)}>
+    <div className="p9-budget-meter" aria-label={`固定预算 ${timeline.budget}，当前候选 ${timeline.candidateCount}`}>
+      <span>K = {timeline.budget}</span><div>{Array.from({ length: timeline.budget }, (_, index) => <i key={index} data-slot-filled={index < timeline.candidateCount} />)}</div><b>{timeline.candidateCount} / {timeline.budget}</b>
     </div>
+    <p className="p9-memory-phase" data-memory-phase-copy={timeline.phase}>{phaseLabel}</p>
     <div className="p9-after-memory-grid">
       {ALL_CLASS_IDS.map((classId) => {
         const oldClass = OLD_CLASS_IDS.includes(classId as (typeof OLD_CLASS_IDS)[number]);
         const after = P_AFTER[classId];
         const classIndex = oldClass ? -1 : INCOMING_CLASS_IDS.indexOf(classId as IncomingClassId);
-        const selection = classIndex < 0 ? 1 : classSelectionProgress(classIndex);
-        const selectedCount = after.reduce((count, _, index) => count + (oldClass || selection >= (index + 1) / after.length ? 1 : 0), 0);
-        return <article className="p9-after-class" key={classId} style={classAccent(classId)} data-class-id={classId} data-kept-ids={after.map((sample) => sample.id).join(" ")}>
-          <header><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><span>{oldClass ? "旧序前缀" : `${selectedCount} / ${NEXT_QUOTA} 入槽`}</span></header>
-          <div className="p9-after-samples">{after.map((sample, index) => {
-            const itemProgress = oldClass ? 1 : Math.max(0, Math.min(1, selection * after.length - index));
-            return <span className="p9-memory-selection" key={sample.id} style={{ opacity: itemProgress, transform: `translateY(${(1 - itemProgress) * 3}px)` }} data-selection-visible={itemProgress >= 1}><SampleToken sample={sample} role={oldClass ? "exemplar" : "selected"} order={index + 1} compact /></span>;
+        const oldClassState = oldClass ? timeline.oldClasses.find((item) => item.classId === classId)! : undefined;
+        const incomingClassState = !oldClass ? timeline.incomingClasses.find((item) => item.classId === classId)! : undefined;
+        const classSamples = oldClass ? P_BEFORE[classId] : after;
+        const selectedCount = oldClass ? oldClassState!.retainedCount : incomingClassState!.selectedCount;
+        const headerStatus = oldClass
+          ? `${selectedCount} / ${P_BEFORE[classId].length} 保留`
+          : timeline.phase === "trimming" || timeline.phase === "slots-freed"
+            ? "等待旧类腾位"
+            : timeline.phase === "selecting" && incomingClassState!.selectionProgress === 0
+              ? "等待前类入槽"
+              : `${selectedCount} / ${NEXT_QUOTA} 入槽`;
+        return <article className="p9-after-class" key={classId} style={classAccent(classId)} data-class-id={classId} data-class-kind={oldClass ? "old" : "incoming"} data-kept-ids={after.map((sample) => sample.id).join(" ")} data-visible-samples={selectedCount}>
+          <header><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><span>{headerStatus}</span></header>
+          <div className="p9-after-samples">{classSamples.map((sample, index) => {
+            if (oldClass) {
+              const retained = index < NEXT_QUOTA;
+              const tailIndex = index - NEXT_QUOTA;
+              const itemProgress = retained ? 0 : Math.max(0, Math.min(1, oldClassState!.trimProgress * (P_BEFORE[classId].length - NEXT_QUOTA) - tailIndex));
+              const opacity = retained ? 1 : 1 - itemProgress;
+              return <span className="p9-memory-selection" key={sample.id} style={{ opacity, transform: `translateY(${itemProgress * 3}px)` }} data-sample-id={sample.id} data-retained={retained} data-removal-visible={itemProgress >= 0.5}><SampleToken sample={sample} role={retained ? "exemplar" : "removed"} order={index + 1} compact /></span>;
+            }
+            const itemProgress = Math.max(0, Math.min(1, incomingClassState!.selectionProgress * after.length - index));
+            return <span className="p9-memory-selection" key={sample.id} style={{ opacity: itemProgress, transform: `translateY(${(1 - itemProgress) * 3}px)` }} data-sample-id={sample.id} data-selection-visible={itemProgress >= 1}><SampleToken sample={sample} role="selected" order={index + 1} compact /></span>;
           })}</div>
         </article>;
       })}
@@ -319,14 +335,18 @@ function P9Step05Figure() {
     <div className="p9-memory-decisions">
       {OLD_CLASS_IDS.map((classId) => <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span>{P_BEFORE[classId].map((sample, index) => {
         const tail = index >= NEXT_QUOTA;
-        return <em key={sample.id} style={{ opacity: tail ? 1 - removalProgress * 0.82 : 1 }} data-sample-id={sample.id} data-kept={!tail}>{sample.id}{tail ? " ×" : ""}</em>;
+        const classState = timeline.oldClasses.find((item) => item.classId === classId)!;
+        const itemProgress = tail ? Math.max(0, Math.min(1, classState.trimProgress * (P_BEFORE[classId].length - NEXT_QUOTA) - (index - NEXT_QUOTA))) : 0;
+        return <em key={sample.id} style={{ opacity: 1 - itemProgress }} data-sample-id={sample.id} data-kept={!tail}>{sample.id}{tail ? " ×" : ""}</em>;
       })} → {P_AFTER[classId].map((sample) => sample.id).join("、")}</span></p>)}
       {INCOMING_CLASS_IDS.map((classId, classIndex) => {
         const selectedIds = NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id);
-        return <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span style={{ opacity: 0.18 + classSelectionProgress(classIndex) * 0.82 }} data-herding-ids={selectedIds.join(" ")}>真实 Herding 前缀：{selectedIds.join("、")}<small> · 按类依次入槽</small></span></p>;
+        const selection = timeline.incomingClasses[classIndex];
+        const waiting = timeline.phase === "trimming" || timeline.phase === "slots-freed" || (timeline.phase === "selecting" && selection.selectionProgress === 0);
+        return <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span style={{ opacity: waiting ? 0.42 : 0.18 + selection.selectionProgress * 0.82 }} data-herding-ids={waiting ? undefined : selectedIds.join(" ")}>{waiting ? "等待前序腾出位置" : `真实 Herding 前缀：${selectedIds.join("、")}`}<small> · 按类依次入槽</small></span></p>;
       })}
     </div>
-    <p className="p9-figure-caption" data-memory-commit-state={committed ? "submitted" : "pending"}>{committed ? "P_after 已提交：6 类 × 每类 2 张原始图片。" : `候选预算 ${candidateSlots} / ${MEMORY_BUDGET}；全部选完后才提交 P_after。`}</p>
+    <p className="p9-figure-caption" data-memory-commit-state={committed ? "submitted" : "pending"}>{committed ? "P_after 已提交；旧类前缀与新类 Herding 样本合计 12 张。" : `候选预算 ${timeline.candidateCount} / ${timeline.budget}；全部选完后才提交 P_after。`}</p>
     <ReplayControl replay={replay} />
   </div>;
 }

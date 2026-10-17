@@ -3348,7 +3348,39 @@
             },
             {
               "type": "wait",
-              "milliseconds": 650
+              "milliseconds": 800
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"trimming\"][data-memory-count=\"9\"][data-new-selected=\"0\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-memory-slots-freed-before-arrival",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1800
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"slots-freed\"][data-memory-count=\"6\"][data-old-retained=\"6\"][data-new-selected=\"0\"]",
+              "state": "visible"
             }
           ]
         },
@@ -3370,7 +3402,12 @@
             },
             {
               "type": "wait",
-              "milliseconds": 2450
+              "milliseconds": 2700
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"selecting\"][data-new-selected=\"3\"]",
+              "state": "visible"
             }
           ]
         },
