@@ -3309,7 +3309,7 @@
           ]
         },
         {
-          "id": "p9-memory-truncation-start",
+          "id": "p9-memory-inherited-start",
           "actions": [
             {
               "type": "click",
@@ -3323,15 +3323,38 @@
             {
               "type": "click",
               "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3700
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "state": "visible"
             },
             {
               "type": "wait",
               "milliseconds": 80
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"inherited\"][data-memory-count=\"12\"][data-marked-count=\"0\"][data-new-selected=\"0\"]",
+              "state": "visible"
             }
           ]
         },
         {
-          "id": "p9-memory-old-prefix-truncation",
+          "id": "p9-memory-sequential-marking",
           "actions": [
             {
               "type": "click",
@@ -3348,11 +3371,119 @@
             },
             {
               "type": "wait",
-              "milliseconds": 800
+              "milliseconds": 3700
             },
             {
               "type": "waitFor",
-              "selector": ".p9-memory-figure[data-memory-phase=\"trimming\"][data-memory-count=\"9\"][data-new-selected=\"0\"]",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 950
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"marking\"][data-memory-count=\"12\"][data-removed-count=\"0\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-memory-marked-before-removal",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3700
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1750
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"marked\"][data-memory-count=\"12\"][data-marked-count=\"6\"][data-removed-count=\"0\"][data-new-selected=\"0\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-memory-sequential-removal",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3700
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3900
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"removing\"][data-memory-count=\"9\"][data-old-retained=\"9\"][data-removed-count=\"3\"][data-new-selected=\"0\"]",
               "state": "visible"
             }
           ]
@@ -3375,7 +3506,25 @@
             },
             {
               "type": "wait",
-              "milliseconds": 1800
+              "milliseconds": 3700
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 5500
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "state": "visible"
             },
             {
               "type": "waitFor",
@@ -3402,11 +3551,29 @@
             },
             {
               "type": "wait",
-              "milliseconds": 2700
+              "milliseconds": 3700
             },
             {
               "type": "waitFor",
-              "selector": ".p9-memory-figure[data-memory-phase=\"selecting\"][data-new-selected=\"3\"]",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 6400
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "state": "visible"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"selecting\"][data-new-selected=\"2\"]",
               "state": "visible"
             }
           ]
@@ -3429,7 +3596,21 @@
             },
             {
               "type": "wait",
-              "milliseconds": 3750
+              "milliseconds": 3700
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "state": "visible"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 7600
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-memory-figure[data-memory-phase=\"submitted\"][data-memory-count=\"12\"][data-old-retained=\"6\"][data-new-selected=\"6\"]",
+              "state": "visible"
             }
           ]
         },
@@ -3711,11 +3892,6 @@
           "equals": "11px"
         },
         {
-          "selector": ".p9-after-class > header span",
-          "property": "font-size",
-          "equals": "11px"
-        },
-        {
           "selector": ".p9-q-grid span",
           "property": "font-size",
           "equals": "11px"
@@ -3739,6 +3915,21 @@
           "selector": ".p9-feature-progress",
           "property": "font-size",
           "equals": "11px"
+        },
+        {
+          "selector": ".p9-memory-row__old-status",
+          "property": "font-size",
+          "equals": "11px"
+        },
+        {
+          "selector": ".p9-memory-phase",
+          "property": "height",
+          "equals": "44px"
+        },
+        {
+          "selector": ".p9-memory-rows > .p9-memory-row",
+          "property": "display",
+          "equals": "block"
         }
       ]
     }

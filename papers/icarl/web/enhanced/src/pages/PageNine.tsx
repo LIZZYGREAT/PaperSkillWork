@@ -32,7 +32,7 @@ import {
   teacherSnapshotFor,
 } from "../data/incremental-training";
 import { p9TrainingAssemblyAt } from "../data/p9-training-assembly-state";
-import { p9MemoryTimelineAt } from "../data/p9-memory-timeline";
+import { P9_MEMORY_REPLAY_DURATION_MS, p9MemoryTimelineAt } from "../data/p9-memory-timeline";
 import { p9PredictionTimelineAt } from "../data/p9-prediction-timeline";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 
@@ -49,33 +49,46 @@ function classAccent(classId: ClassId): CSSProperties {
   return { "--class-accent": CLASS_VISUALS[classId].color } as CSSProperties;
 }
 
-type LocalReplay = { progress: number; playing: boolean; reducedMotion: boolean; toggle: () => void };
+type LocalReplay = { progress: number; playing: boolean; direction: 1 | -1; reducedMotion: boolean; toggle: () => void };
 
-function useLocalReplay(durationMs: number, initialHoldMs = 0): LocalReplay {
+function useLocalReplay(durationMs: number, initialHoldMs = 0, rewindBeforeReplayMs = 0): LocalReplay {
   const reducedMotion = useReducedMotion();
   const [progress, setProgress] = useState(1);
   const [playing, setPlaying] = useState(false);
+  const [direction, setDirection] = useState<1 | -1>(1);
   const progressRef = useRef(1);
 
   useEffect(() => {
     if (!playing || reducedMotion) return;
     const startingProgress = progressRef.current;
+    const activeDurationMs = direction === -1 && rewindBeforeReplayMs > 0 ? rewindBeforeReplayMs : durationMs;
     let startAt: number | null = null;
     let frame = 0;
     const tick = (now: number) => {
-      if (startAt === null) startAt = now + (startingProgress === 0 ? initialHoldMs : 0) - startingProgress * durationMs;
-      const next = Math.max(0, Math.min(1, (now - startAt) / durationMs));
+      if (startAt === null) {
+        startAt = direction === 1
+          ? now + (startingProgress === 0 ? initialHoldMs : 0) - startingProgress * durationMs
+          : now + startingProgress * activeDurationMs;
+      }
+      const next = direction === 1
+        ? Math.max(0, Math.min(1, (now - startAt) / durationMs))
+        : Math.max(0, Math.min(1, (startAt - now) / activeDurationMs));
       progressRef.current = next;
       setProgress(next);
-      if (next >= 1) {
+      if (direction === 1 && next >= 1) {
         setPlaying(false);
+        setDirection(1);
+        return;
+      }
+      if (direction === -1 && next <= 0) {
+        setDirection(1);
         return;
       }
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [durationMs, initialHoldMs, playing, reducedMotion]);
+  }, [direction, durationMs, initialHoldMs, playing, reducedMotion, rewindBeforeReplayMs]);
 
   useEffect(() => {
     if (!reducedMotion || !playing) return;
@@ -91,20 +104,27 @@ function useLocalReplay(durationMs: number, initialHoldMs = 0): LocalReplay {
       return;
     }
     if (progressRef.current >= 1) {
-      progressRef.current = 0;
-      setProgress(0);
+      if (rewindBeforeReplayMs > 0) {
+        setDirection(-1);
+      } else {
+        progressRef.current = 0;
+        setProgress(0);
+        setDirection(1);
+      }
     }
     setPlaying(true);
   };
 
-  return { progress, playing, reducedMotion, toggle };
+  return { progress, playing, direction, reducedMotion, toggle };
 }
 
 function ReplayControl({ replay }: { replay: LocalReplay }) {
   const label = replay.reducedMotion
     ? "减少动态效果：完整结果已显示"
-    : replay.playing ? "暂停演示" : replay.progress < 1 ? "继续演示" : "重看形成过程";
-  return <button className="p9-replay" type="button" onClick={replay.toggle} disabled={replay.reducedMotion} aria-label={label} data-replay-state={replay.reducedMotion ? "reduced" : replay.playing ? "playing" : replay.progress < 1 ? "paused" : "complete"}>{label}</button>;
+    : replay.direction === -1 ? replay.playing ? "平滑回到起点…" : "继续回到起点"
+      : replay.playing ? "暂停演示" : replay.progress < 1 ? "继续演示" : "重看形成过程";
+  const replayState = replay.reducedMotion ? "reduced" : replay.direction === -1 ? replay.playing ? "rewinding" : "rewind-paused" : replay.playing ? "playing" : replay.progress < 1 ? "paused" : "complete";
+  return <button className="p9-replay" type="button" onClick={replay.toggle} disabled={replay.reducedMotion} aria-label={label} data-replay-state={replayState}>{label}</button>;
 }
 
 function ProcessSection({
@@ -285,64 +305,90 @@ function P9Step04Figure() {
 }
 
 function P9Step05Figure() {
-  const replay = useLocalReplay(3600);
+  const replay = useLocalReplay(P9_MEMORY_REPLAY_DURATION_MS, 0, 3600);
   const timeline = p9MemoryTimelineAt(replay.progress);
   const committed = timeline.phase === "submitted";
-  const phaseLabel = timeline.phase === "trimming"
-    ? `先截断旧类后缀；目前仍保留 ${timeline.oldRetainedCount} 张`
-    : timeline.phase === "slots-freed"
-      ? `旧类各留前 ${NEXT_QUOTA} 张，已腾出 ${timeline.freedSlotCount} 个位置；新类尚未入槽`
+  const phaseLabel = timeline.phase === "inherited"
+    ? "起点：旧类各保留 4 张原始 exemplar，共 12 张。"
+    : timeline.phase === "marking"
+      ? `逐张标记 6 个旧类尾部样本为「移除」；已标 ${timeline.markedOldSampleCount} / ${timeline.freedSlotCount}，尚未删除。`
+      : timeline.phase === "marked"
+        ? "6 个尾部样本均已标记；接下来逐张移除。"
+        : timeline.phase === "removing"
+          ? `逐张移除已标记样本；已移除 ${timeline.removedOldSampleCount} / ${timeline.freedSlotCount}。`
+          : timeline.phase === "slots-freed"
+      ? `旧类各留前 ${NEXT_QUOTA} 张，${timeline.freedSlotCount} 个旧槽位已清空；新类尚未加入。`
       : timeline.phase === "selecting"
-        ? `旧类位置已腾出；新类按各自 Herding 顺序依次入槽（${timeline.newSelectedCount} / ${INCOMING_CLASS_IDS.length * NEXT_QUOTA}）`
-        : `P_after 已提交：${ALL_CLASS_IDS.length} 类 × 每类 ${NEXT_QUOTA} 张原始图片`;
-  return <div className="p9-memory-figure" data-p9-figure="memory-update" data-memory-count={timeline.candidateCount} data-old-retained={timeline.oldRetainedCount} data-new-selected={timeline.newSelectedCount} data-memory-phase={timeline.phase} data-memory-state={committed ? "submitted" : "building"} data-animation-progress={timeline.progress.toFixed(3)}>
+        ? `新类按 Herding 顺序逐张加入空槽（${timeline.newSelectedCount} / ${INCOMING_CLASS_IDS.length * NEXT_QUOTA}）。`
+        : `P_after 已提交：${ALL_CLASS_IDS.length} 类各保留 ${NEXT_QUOTA} 张原始 exemplar。`;
+  return <div className="p9-memory-figure" data-p9-figure="memory-update" data-memory-count={timeline.candidateCount} data-old-retained={timeline.oldRetainedCount} data-new-selected={timeline.newSelectedCount} data-marked-count={timeline.fullyMarkedOldSampleCount} data-marking-count={timeline.markedOldSampleCount} data-removed-count={timeline.removedOldSampleCount} data-memory-phase={timeline.phase} data-memory-state={committed ? "submitted" : "building"} data-animation-progress={timeline.progress.toFixed(3)}>
     <div className="p9-budget-meter" aria-label={`固定预算 ${timeline.budget}，当前候选 ${timeline.candidateCount}`}>
       <span>K = {timeline.budget}</span><div>{Array.from({ length: timeline.budget }, (_, index) => <i key={index} data-slot-filled={index < timeline.candidateCount} />)}</div><b>{timeline.candidateCount} / {timeline.budget}</b>
     </div>
     <p className="p9-memory-phase" data-memory-phase-copy={timeline.phase}>{phaseLabel}</p>
-    <div className="p9-after-memory-grid">
-      {ALL_CLASS_IDS.map((classId) => {
-        const oldClass = OLD_CLASS_IDS.includes(classId as (typeof OLD_CLASS_IDS)[number]);
-        const after = P_AFTER[classId];
-        const classIndex = oldClass ? -1 : INCOMING_CLASS_IDS.indexOf(classId as IncomingClassId);
-        const oldClassState = oldClass ? timeline.oldClasses.find((item) => item.classId === classId)! : undefined;
-        const incomingClassState = !oldClass ? timeline.incomingClasses.find((item) => item.classId === classId)! : undefined;
-        const classSamples = oldClass ? P_BEFORE[classId] : after;
-        const selectedCount = oldClass ? oldClassState!.retainedCount : incomingClassState!.selectedCount;
-        const headerStatus = oldClass
-          ? `${selectedCount} / ${P_BEFORE[classId].length} 保留`
-          : timeline.phase === "trimming" || timeline.phase === "slots-freed"
-            ? "等待旧类腾位"
-            : timeline.phase === "selecting" && incomingClassState!.selectionProgress === 0
-              ? "等待前类入槽"
-              : `${selectedCount} / ${NEXT_QUOTA} 入槽`;
-        return <article className="p9-after-class" key={classId} style={classAccent(classId)} data-class-id={classId} data-class-kind={oldClass ? "old" : "incoming"} data-kept-ids={after.map((sample) => sample.id).join(" ")} data-visible-samples={selectedCount}>
-          <header><b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><span>{headerStatus}</span></header>
-          <div className="p9-after-samples">{classSamples.map((sample, index) => {
-            if (oldClass) {
-              const retained = index < NEXT_QUOTA;
-              const tailIndex = index - NEXT_QUOTA;
-              const itemProgress = retained ? 0 : Math.max(0, Math.min(1, oldClassState!.trimProgress * (P_BEFORE[classId].length - NEXT_QUOTA) - tailIndex));
-              const opacity = retained ? 1 : 1 - itemProgress;
-              return <span className="p9-memory-selection" key={sample.id} style={{ opacity, transform: `translateY(${itemProgress * 3}px)` }} data-sample-id={sample.id} data-retained={retained} data-removal-visible={itemProgress >= 0.5}><SampleToken sample={sample} role={retained ? "exemplar" : "removed"} order={index + 1} compact /></span>;
-            }
-            const itemProgress = Math.max(0, Math.min(1, incomingClassState!.selectionProgress * after.length - index));
-            return <span className="p9-memory-selection" key={sample.id} style={{ opacity: itemProgress, transform: `translateY(${(1 - itemProgress) * 3}px)` }} data-sample-id={sample.id} data-selection-visible={itemProgress >= 1}><SampleToken sample={sample} role="selected" order={index + 1} compact /></span>;
-          })}</div>
-        </article>;
+    <div className="p9-memory-rows" aria-label="三行各四个固定槽位：旧类各保留两个，空出的两个槽位由新增类填入">
+      {OLD_CLASS_IDS.map((oldClassId, oldClassIndex) => {
+        const incomingClassId = INCOMING_CLASS_IDS[oldClassIndex];
+        const oldClassState = timeline.oldClasses[oldClassIndex];
+        const incomingClassState = timeline.incomingClasses[oldClassIndex];
+        const oldSamples = P_BEFORE[oldClassId];
+        const incomingSamples = P_AFTER[incomingClassId];
+        const rowMarkedCount = oldClassState.samples.filter((item) => item.marked).length;
+        const rowRemovedCount = oldClassState.removedCount;
+        const showIncomingClass = timeline.phase === "submitted" || (timeline.phase === "selecting" && (incomingClassState.selectionProgress > 0 || incomingClassState.selectedCount > 0));
+        const oldStatus = timeline.phase === "inherited"
+          ? `${oldSamples.length} 张保留`
+          : timeline.phase === "marking" || timeline.phase === "marked"
+            ? `${oldSamples.length} 保留 · ${rowMarkedCount} 待移除`
+            : `${oldClassState.retainedCount} 保留 · ${rowRemovedCount} 已移除`;
+        const incomingStatus = `${incomingClassState.selectedCount} / ${NEXT_QUOTA} 入槽`;
+        return <section className="p9-memory-row" key={oldClassId} data-memory-row={oldClassId} data-incoming-row={incomingClassId} data-old-retained={oldClassState.retainedCount} data-new-selected={incomingClassState.selectedCount} data-kept-ids={[...P_AFTER[oldClassId], ...incomingSamples].map((sample) => sample.id).join(" ")}>
+          <header className="p9-memory-row__heading">
+            <div className="p9-memory-row__old-group">
+              <b className="p9-memory-row__old-label" style={classAccent(oldClassId)}>{CLASS_VISUALS[oldClassId].glyph} {CLASS_VISUALS[oldClassId].displayLabel}</b>
+              <span className="p9-memory-row__old-status">{oldStatus}</span>
+            </div>
+            <div className="p9-memory-row__new-group" data-incoming-visible={showIncomingClass}>{showIncomingClass && <><span className="p9-memory-row__handoff" aria-hidden="true">→</span><b className="p9-memory-row__incoming" style={classAccent(incomingClassId)}>{CLASS_VISUALS[incomingClassId].glyph} {CLASS_VISUALS[incomingClassId].displayLabel}<small>{incomingStatus}</small></b></>}</div>
+          </header>
+          <div className="p9-memory-row__slots">
+            {oldSamples.map((sample, slotIndex) => {
+              const retained = slotIndex < NEXT_QUOTA;
+              const oldSampleState = oldClassState.samples[slotIndex];
+              const removalProgress = oldSampleState.removalProgress;
+              const isMarked = oldSampleState.marked;
+              const incomingIndex = slotIndex - NEXT_QUOTA;
+              const incomingSample = incomingIndex >= 0 ? incomingSamples[incomingIndex] : undefined;
+              const incomingSampleState = incomingIndex >= 0 ? incomingClassState.samples[incomingIndex] : undefined;
+              const arrivalProgress = incomingSampleState?.arrivalProgress ?? 0;
+              const emptyStateVisible = timeline.phase === "slots-freed" || timeline.phase === "selecting" || timeline.phase === "submitted";
+              const emptyProgress = incomingSample && oldSampleState.removed && emptyStateVisible ? 1 : 0;
+              const slotState = retained ? "old-kept" : oldSampleState.removed
+                ? arrivalProgress > 0 ? "new-arriving" : "empty"
+                : removalProgress > 0 ? "old-removing" : isMarked ? "old-marked" : "old-present";
+              const oldVisualProgress = removalProgress > 0 ? removalProgress : 0;
+              return <div className="p9-memory-slot" key={`${oldClassId}-${slotIndex}`} style={classAccent(arrivalProgress > 0 ? incomingClassId : oldClassId)} data-slot={slotIndex + 1} data-slot-state={slotState} data-old-sample-id={sample.id} data-new-sample-id={incomingSample?.id}>
+                {incomingSample && <span className="p9-memory-slot__vacancy" style={{ opacity: emptyProgress }} aria-hidden="true" />}
+                <span className="p9-memory-slot__content p9-memory-slot__content--old" style={{ opacity: retained ? 1 : 1 - oldVisualProgress, transform: `translateY(${-6 * oldVisualProgress}px) scale(${1 - oldVisualProgress * 0.82})` }} data-sample-id={sample.id} data-retained={retained} data-marked={isMarked} data-mark-progress={oldSampleState.markedProgress.toFixed(3)} data-removal-progress={removalProgress.toFixed(3)}><SampleToken sample={sample} role={retained || !isMarked ? "exemplar" : "removed"} order={slotIndex + 1} compact /></span>
+                {incomingSample && <span className="p9-memory-slot__content p9-memory-slot__content--new" style={{ opacity: arrivalProgress, transform: `translate(${(1 - arrivalProgress) * 10}px, ${(1 - arrivalProgress) * 4}px) scale(${0.94 + arrivalProgress * 0.06})` }} data-sample-id={incomingSample.id} data-selection-progress={arrivalProgress.toFixed(3)}><SampleToken sample={incomingSample} role="selected" order={incomingIndex + 1} compact /></span>}
+                {incomingSample && <span className="p9-memory-slot__placeholder" style={{ opacity: emptyProgress * (1 - arrivalProgress) }} aria-hidden="true">空槽</span>}
+              </div>;
+            })}
+          </div>
+        </section>;
       })}
     </div>
     <div className="p9-memory-decisions">
       {OLD_CLASS_IDS.map((classId) => <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span>{P_BEFORE[classId].map((sample, index) => {
         const tail = index >= NEXT_QUOTA;
         const classState = timeline.oldClasses.find((item) => item.classId === classId)!;
-        const itemProgress = tail ? Math.max(0, Math.min(1, classState.trimProgress * (P_BEFORE[classId].length - NEXT_QUOTA) - (index - NEXT_QUOTA))) : 0;
-        return <em key={sample.id} style={{ opacity: 1 - itemProgress }} data-sample-id={sample.id} data-kept={!tail}>{sample.id}{tail ? " ×" : ""}</em>;
+        const sampleState = classState.samples[index];
+        const itemProgress = tail ? sampleState.removalProgress : 0;
+        return <em key={sample.id} style={{ opacity: 1 - itemProgress }} data-sample-id={sample.id} data-kept={!tail} data-marked={tail && sampleState.marked} data-removed={tail && sampleState.removed}>{sample.id}{tail && sampleState.marked && !sampleState.removed ? "（移除）" : sampleState.removed ? " ×" : ""}</em>;
       })} → {P_AFTER[classId].map((sample) => sample.id).join("、")}</span></p>)}
       {INCOMING_CLASS_IDS.map((classId, classIndex) => {
         const selectedIds = NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id);
         const selection = timeline.incomingClasses[classIndex];
-        const waiting = timeline.phase === "trimming" || timeline.phase === "slots-freed" || (timeline.phase === "selecting" && selection.selectionProgress === 0);
+        const waiting = timeline.phase !== "selecting" && timeline.phase !== "submitted" || (timeline.phase === "selecting" && selection.selectionProgress === 0);
         return <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span style={{ opacity: waiting ? 0.42 : 0.18 + selection.selectionProgress * 0.82 }} data-herding-ids={waiting ? undefined : selectedIds.join(" ")}>{waiting ? "等待前序腾出位置" : `真实 Herding 前缀：${selectedIds.join("、")}`}<small> · 按类依次入槽</small></span></p>;
       })}
     </div>
