@@ -61,6 +61,21 @@
 .p8-details { padding-top: 9px; border-top: 1px solid #e2e8e4; color: #52696b; }
 .p8-details > summary { width: fit-content; cursor: pointer; color: #3e5d58; font-size: 13px; font-weight: 650; }
 .p8-details > div { padding: 8px 2px 0; }
+.p8-table-details > summary { display: inline-flex; min-height: 36px; align-items: center; gap: 8px; padding: 7px 11px; border: 1px solid #d5e1d8; border-radius: 8px; color: #365c4a; background: #f4f8f3; transition: border-color .16s ease, background-color .16s ease; }
+.p8-table-details > summary::-webkit-details-marker { display: none; }
+.p8-table-details > summary::before { content: "+"; display: grid; width: 19px; height: 19px; place-items: center; border: 1px solid #c7d8ca; border-radius: 50%; color: #47715a; background: #fff; font: 600 14px/1 var(--mono); }
+.p8-table-details[open] > summary { border-color: #abc4b0; background: #edf5ed; }
+.p8-table-details[open] > summary::before { content: "−"; }
+.p8-table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid #dce6df; border-radius: 10px; background: #fffefa; box-shadow: 0 5px 15px rgb(30 52 56 / 5%); }
+.p8-table-wrap table { width: 100%; min-width: 560px; border-collapse: separate; border-spacing: 0; color: #455f5e; font-size: 14px; font-variant-numeric: tabular-nums; }
+.p8-table-wrap caption { padding: 10px 13px; border-bottom: 1px solid #dfe8e1; color: #456158; background: #f4f8f3; font-size: 13px; font-weight: 650; text-align: left; }
+.p8-table-wrap thead th { padding: 10px 12px; border-bottom: 1px solid #d5e1d8; color: #48635a; background: #edf4ee; font-size: 12px; font-weight: 700; text-align: center; white-space: nowrap; }
+.p8-table-wrap tbody th, .p8-table-wrap tbody td { padding: 9px 14px; border-bottom: 1px solid #e8eeea; color: #425d5d; text-align: right; white-space: nowrap; }
+.p8-table-wrap tbody th { color: #36584a; background: #f7f9f6; font-weight: 700; text-align: left; }
+.p8-table-wrap tbody tr:nth-child(even) td { background: #f9fbf8; }
+.p8-table-wrap thead th:nth-child(2), .p8-table-wrap tbody td:nth-child(2) { color: #315f49; background: #eef6ee; font-weight: 700; }
+.p8-table-wrap tbody tr:nth-child(even) td:nth-child(2) { background: #e8f2e8; }
+.p8-table-wrap tbody tr:last-child th, .p8-table-wrap tbody tr:last-child td { border-bottom: 0; }
 .p8-details p { margin: 5px 0; color: #53696b; font-size: 13px; line-height: 1.55; }
 .p8-details small { color: #65797a; font-size: 12px; line-height: 1.5; }
 .p8-dataset-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }

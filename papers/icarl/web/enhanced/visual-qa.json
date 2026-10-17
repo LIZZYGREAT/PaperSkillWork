@@ -2790,6 +2790,70 @@
           ]
         },
         {
+          "id": "p8-table1a-expanded",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-tabs button:nth-of-type(2)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-table-details > summary",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-table-details > summary"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-table-details[open] tbody tr:last-child",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
+          "id": "p8-table1b-expanded",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(8)"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-tabs button:nth-of-type(3)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-table-details > summary",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-table-details > summary"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p8-table-details[open] tbody tr:last-child",
+              "state": "visible"
+            },
+            {
+              "type": "press",
+              "selector": "body",
+              "key": "Home"
+            }
+          ]
+        },
+        {
           "id": "p8-components-replay-attribution-limit",
           "actions": [
             {
