@@ -3000,7 +3000,7 @@
       "path": "/",
       "states": [
         {
-          "id": "p9-seven-groups-default-complete",
+          "id": "p9-eight-groups-default-complete",
           "actions": [
             {
               "type": "click",
@@ -3287,7 +3287,7 @@
           ]
         },
         {
-          "id": "p9-target-and-parameter-midpoint",
+          "id": "p9-output-growth-start",
           "actions": [
             {
               "type": "click",
@@ -3304,7 +3304,66 @@
             },
             {
               "type": "wait",
+              "milliseconds": 80
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-output-growth[data-output-node-count=\"3\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-output-growth-terminal",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"04\"] .p9-replay"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2600
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-output-growth[data-output-node-count=\"6\"] .p9-initial-response[data-initial-response-count=\"3\"]",
+              "state": "visible"
+            }
+          ]
+        },
+        {
+          "id": "p9-target-and-parameter-midpoint",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".ewc-slice-nav__item:nth-child(9)"
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-heading h1",
+              "state": "visible"
+            },
+            {
+              "type": "click",
+              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+            },
+            {
+              "type": "wait",
               "milliseconds": 1100
+            },
+            {
+              "type": "waitFor",
+              "selector": ".p9-step[data-step=\"05\"] .p9-loss-equation[data-loss-formula=\"sigmoid-bce\"][data-loss-total]",
+              "state": "visible"
             }
           ]
         },
@@ -3322,7 +3381,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3330,7 +3389,7 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"playing\"]",
               "state": "visible"
             },
             {
@@ -3339,11 +3398,11 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"paused\"]",
               "state": "visible"
             },
             {
@@ -3367,7 +3426,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3375,7 +3434,7 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"playing\"]",
               "state": "visible"
             },
             {
@@ -3384,11 +3443,11 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"paused\"]",
               "state": "visible"
             },
             {
@@ -3412,7 +3471,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3420,7 +3479,7 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"playing\"]",
               "state": "visible"
             },
             {
@@ -3429,11 +3488,11 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"paused\"]",
               "state": "visible"
             },
             {
@@ -3457,7 +3516,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3465,7 +3524,7 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"playing\"]",
               "state": "visible"
             },
             {
@@ -3474,11 +3533,11 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"paused\"]",
               "state": "visible"
             },
             {
@@ -3502,7 +3561,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3510,7 +3569,7 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"playing\"]",
               "state": "visible"
             },
             {
@@ -3519,11 +3578,11 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"paused\"]",
               "state": "visible"
             },
             {
@@ -3547,7 +3606,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3555,7 +3614,7 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"playing\"]",
               "state": "visible"
             },
             {
@@ -3564,11 +3623,11 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"paused\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"paused\"]",
               "state": "visible"
             },
             {
@@ -3592,7 +3651,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3600,7 +3659,7 @@
             },
             {
               "type": "waitFor",
-              "selector": ".p9-step[data-step=\"05\"] .p9-replay[data-replay-state=\"playing\"]",
+              "selector": ".p9-step[data-step=\"06\"] .p9-replay[data-replay-state=\"playing\"]",
               "state": "visible"
             },
             {
@@ -3628,7 +3687,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3655,7 +3714,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3682,7 +3741,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3709,7 +3768,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3736,7 +3795,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3763,7 +3822,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3790,7 +3849,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"06\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3817,7 +3876,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"08\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3839,7 +3898,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"08\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3861,7 +3920,7 @@
             },
             {
               "type": "click",
-              "selector": ".p9-step[data-step=\"07\"] .p9-replay"
+              "selector": ".p9-step[data-step=\"08\"] .p9-replay"
             },
             {
               "type": "wait",
@@ -3907,9 +3966,14 @@
           "equals": "11px"
         },
         {
-          "selector": ".p9-memory-decisions p",
+          "selector": ".p9-memory-decisions__group > header b",
           "property": "font-size",
           "equals": "11px"
+        },
+        {
+          "selector": ".p9-memory-decisions__samples em",
+          "property": "font-size",
+          "equals": "10px"
         },
         {
           "selector": ".p9-feature-progress",
@@ -3930,6 +3994,21 @@
           "selector": ".p9-memory-rows > .p9-memory-row",
           "property": "display",
           "equals": "block"
+        },
+        {
+          "selector": ".p9-output-nodes",
+          "property": "display",
+          "equals": "grid"
+        },
+        {
+          "selector": ".p9-loss-equation > span",
+          "property": "font-size",
+          "equals": "12px"
+        },
+        {
+          "selector": ".p9-persistent-output > div",
+          "property": "justify-content",
+          "equals": "center"
         }
       ]
     }

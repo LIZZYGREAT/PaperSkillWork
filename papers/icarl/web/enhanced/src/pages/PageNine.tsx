@@ -41,6 +41,7 @@ const newDemoSample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => sa
 const trainingDemoTargets = buildTargets(newDemoSample);
 const trainingDemoOutputs = studentOutputFor(newDemoSample);
 const trainingDemoLoss = sixNodeBceLoss(trainingDemoTargets, trainingDemoOutputs);
+const initialNewNodeResponses: Readonly<Record<IncomingClassId, number>> = { D: 0.384, E: 0.716, F: 0.463 };
 const currentFeaturePoints = projectSampleFeatures(CURRENT_EXEMPLARS, "after", true);
 const previousFeaturePoints = projectSampleFeatures(CURRENT_EXEMPLARS, "before", true);
 const queryPrototypes = ALL_CLASS_IDS.map((classId) => PROTOTYPES.find((prototype) => prototype.classId === classId)!);
@@ -144,7 +145,7 @@ function ProcessSection({
   return (
     <section className="p9-step" data-step={number} aria-labelledby={`${id}-title`}>
       <div className="p9-step__copy">
-        <span className="p9-step__number">{number} <i aria-hidden="true">/ 07</i></span>
+        <span className="p9-step__number">{number} <i aria-hidden="true">/ 08</i></span>
         <h2 id={`${id}-title`}>{title}</h2>
         <div className="p9-step__narrative">{children}</div>
       </div>
@@ -270,6 +271,46 @@ function P9Step03Figure() {
 }
 
 function P9Step04Figure() {
+  const replay = useLocalReplay(2500);
+  const progress = replay.progress;
+  const newNodeProgress = INCOMING_CLASS_IDS.map((_classId, index) => progress >= 1 ? 1 : Math.max(0, Math.min(1, (progress - 0.16 - index * 0.2) / 0.2)));
+  const visibleNodeCount = OLD_CLASS_IDS.length + newNodeProgress.filter((value) => value >= 1).length;
+  const oldResponses = teacherSnapshotFor(newDemoSample);
+  return <div className="p9-output-growth" data-p9-figure="output-growth" data-output-node-count={visibleNodeCount} data-animation-progress={progress.toFixed(3)}>
+    <div className="p9-growth-input"><span>新一批类别到达</span><b>T_new · Class 4–6</b><small>当前示例输入：{newDemoSample.id}</small></div>
+    <div className="p9-growth-arrow" aria-hidden="true">↓</div>
+    <section className="p9-output-layer" aria-label={`按已见类别扩展的共享 Sigmoid 输出层，目前 ${visibleNodeCount} 个节点`}>
+      <header><b>共享分类输出层</b><span>{visibleNodeCount} / 6 个类别节点</span></header>
+      <div className="p9-output-nodes">
+        {OLD_CLASS_IDS.map((classId, index) => <article className="p9-output-node p9-output-node--inherited" key={classId} style={classAccent(classId)} data-node-kind="inherited" data-node-class={classId}>
+          <b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><strong>w<sub>{index + 1}</sub></strong><span>Q[x] = {oldResponses[index].toFixed(2)}</span>
+        </article>)}
+        {INCOMING_CLASS_IDS.map((classId, index) => {
+          const nodeProgress = newNodeProgress[index];
+          return <article className={`p9-output-node ${nodeProgress > 0 ? "p9-output-node--new" : "p9-output-node--slot"}`} key={classId} style={{ ...classAccent(classId), opacity: nodeProgress, transform: `translateX(${(1 - nodeProgress) * 12}px) scale(${0.92 + nodeProgress * 0.08})` }} data-node-kind={nodeProgress >= 1 ? "new" : "pending"} data-node-class={classId} data-node-progress={nodeProgress.toFixed(3)}>
+            <b>{CLASS_VISUALS[classId].glyph} {CLASS_VISUALS[classId].displayLabel}</b><strong>w<sub>{CLASS_VISUALS[classId].index}</sub></strong><span>随机初始权重</span>
+          </article>;
+        })}
+      </div>
+      <p>每个已见类别对应一个 Sigmoid 输出节点；新增类别时，为共享输出层追加对应节点。</p>
+    </section>
+    <div className="p9-initial-response" data-initial-response-count={newNodeProgress.filter((value) => value >= 0.5).length}>
+      <header><b>新节点的初始响应</b><span>尚未训练 · 随机初值示意</span></header>
+      <div>{INCOMING_CLASS_IDS.map((classId, index) => {
+        const nodeProgress = newNodeProgress[index];
+        return <p key={classId} style={{ ...classAccent(classId), opacity: nodeProgress, transform: `translateY(${(1 - nodeProgress) * 4}px)` }} data-response-class={classId} data-response-visible={nodeProgress >= 1}>
+          <b>{CLASS_VISUALS[classId].displayLabel}</b><code>g<sub>{CLASS_VISUALS[classId].index}</sub>({newDemoSample.id}) = {initialNewNodeResponses[classId].toFixed(3)}</code>
+        </p>;
+      })}</div>
+      <small>这些分值只演示随机初始化后、训练前可能出现的响应；不代表最终类别判断。</small>
+    </div>
+    <p className="p9-init-caveat">原论文规定输出层随已见类别增长，未指定新节点的初始化算法或具体分值；此处随机初值仅作流程示意。</p>
+    <p className="p9-growth-source">旧节点权重从 Θ_before 承接；新增节点随后与共享特征提取器一起训练。</p>
+    <ReplayControl replay={replay} />
+  </div>;
+}
+
+function P9Step05Figure() {
   const replay = useLocalReplay(2200);
   const qReveal = replay.progress >= 1 ? 1 : Math.max(0, Math.min(1, replay.progress / 0.23));
   const labelReveal = replay.progress >= 1 ? 1 : Math.max(0, Math.min(1, (replay.progress - 0.2) / 0.22));
@@ -298,13 +339,19 @@ function P9Step04Figure() {
         </div>;
       })}
     </div>
+    <div className="p9-loss-equation" data-loss-formula="sigmoid-bce" data-loss-total={trainingDemoLoss.toFixed(3)}>
+      <b>六节点 BCE（单张示例图）</b>
+      <span>ℒ(x) = −∑<sub>j=1</sub><sup>6</sup> [r<sub>j</sub> log g<sub>j</sub>(x) + (1−r<sub>j</sub>) log(1−g<sub>j</sub>(x))]</span>
+      <small>r₁…r₃ = Q[x] 软目标；r₄…r₆ = 真实类别硬目标</small>
+      <strong>本例六项求和：{trainingDemoLoss.toFixed(3)}</strong>
+    </div>
     <div className="p9-theta-after" data-theta-state={updateComplete ? "after" : "before"}><span>Student 更新共享参数</span><b>{updateComplete ? "Θ_after" : "Θ_before"}</b><small>符号化表示；不是实际优化器轨迹</small></div>
     <p className="p9-integrity-note"><b>P_before 仍完整保留。</b>训练改动 Θ；记忆管理稍后才调整原始图片。</p>
     <ReplayControl replay={replay} />
   </div>;
 }
 
-function P9Step05Figure() {
+function P9Step06Figure() {
   const replay = useLocalReplay(P9_MEMORY_REPLAY_DURATION_MS, 0, 3600);
   const timeline = p9MemoryTimelineAt(replay.progress);
   const committed = timeline.phase === "submitted";
@@ -378,26 +425,45 @@ function P9Step05Figure() {
       })}
     </div>
     <div className="p9-memory-decisions">
-      {OLD_CLASS_IDS.map((classId) => <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span>{P_BEFORE[classId].map((sample, index) => {
-        const tail = index >= NEXT_QUOTA;
-        const classState = timeline.oldClasses.find((item) => item.classId === classId)!;
-        const sampleState = classState.samples[index];
-        const itemProgress = tail ? sampleState.removalProgress : 0;
-        return <em key={sample.id} style={{ opacity: 1 - itemProgress }} data-sample-id={sample.id} data-kept={!tail} data-marked={tail && sampleState.marked} data-removed={tail && sampleState.removed}>{sample.id}{tail && sampleState.marked && !sampleState.removed ? "（移除）" : sampleState.removed ? " ×" : ""}</em>;
-      })} → {P_AFTER[classId].map((sample) => sample.id).join("、")}</span></p>)}
-      {INCOMING_CLASS_IDS.map((classId, classIndex) => {
-        const selectedIds = NEW_CLASS_HERDING[classId].ordered.slice(0, NEXT_QUOTA).map((sample) => sample.id);
-        const selection = timeline.incomingClasses[classIndex];
-        const waiting = timeline.phase !== "selecting" && timeline.phase !== "submitted" || (timeline.phase === "selecting" && selection.selectionProgress === 0);
-        return <p key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].displayLabel}</b><span style={{ opacity: waiting ? 0.42 : 0.18 + selection.selectionProgress * 0.82 }} data-herding-ids={waiting ? undefined : selectedIds.join(" ")}>{waiting ? "等待前序腾出位置" : `真实 Herding 前缀：${selectedIds.join("、")}`}<small> · 按类依次入槽</small></span></p>;
-      })}
+      <section className="p9-memory-decisions__group p9-memory-decisions__group--old" aria-label="旧类别有序记忆队列">
+        <header><b>旧类有序队列</b><small>前 {NEXT_QUOTA} 张保留 · 尾部移除</small></header>
+        <div className="p9-memory-decisions__rows">
+          {OLD_CLASS_IDS.map((classId) => {
+            const classState = timeline.oldClasses.find((item) => item.classId === classId)!;
+            return <div className="p9-memory-decision-row" key={classId} style={classAccent(classId)} data-decision-class={classId}>
+              <b>{CLASS_VISUALS[classId].displayLabel}</b>
+              <div className="p9-memory-decisions__samples">{P_BEFORE[classId].map((sample, index) => {
+                const retained = index < NEXT_QUOTA;
+                const sampleState = classState.samples[index];
+                const status = retained ? "保留" : sampleState.removed ? "已移除" : sampleState.marked ? "移除" : "";
+                return <em key={sample.id} data-sample-id={sample.id} data-kept={retained} data-marked={!retained && sampleState.marked} data-removed={!retained && sampleState.removed}>{sample.id}{status && <small>{status}</small>}</em>;
+              })}</div>
+            </div>;
+          })}
+        </div>
+      </section>
+      <section className="p9-memory-decisions__group p9-memory-decisions__group--new" aria-label="新类别 Herding 入选样本">
+        <header><b>新类 Herding 前缀</b><small>依次入槽 · 每类 {NEXT_QUOTA} 张</small></header>
+        <div className="p9-memory-decisions__rows">
+          {INCOMING_CLASS_IDS.map((classId, classIndex) => {
+            const selection = timeline.incomingClasses[classIndex];
+            const waiting = timeline.phase !== "selecting" && timeline.phase !== "submitted" || (timeline.phase === "selecting" && selection.selectionProgress === 0);
+            return <div className="p9-memory-decision-row" key={classId} style={classAccent(classId)} data-decision-class={classId}>
+              <b>{CLASS_VISUALS[classId].displayLabel}</b>
+              <div className="p9-memory-decisions__samples" data-herding-ids={waiting ? undefined : selection.samples.map((item) => item.sample.id).join(" ")}>
+                {waiting ? <span className="p9-memory-decisions__waiting">等待前序腾位</span> : selection.samples.map((item) => <em key={item.sample.id} style={{ opacity: Math.max(0.12, item.arrivalProgress) }} data-sample-id={item.sample.id} data-selected={item.selected}>{item.sample.id}<small>入槽</small></em>)}
+              </div>
+            </div>;
+          })}
+        </div>
+      </section>
     </div>
     <p className="p9-figure-caption" data-memory-commit-state={committed ? "submitted" : "pending"}>{committed ? "P_after 已提交；旧类前缀与新类 Herding 样本合计 12 张。" : `候选预算 ${timeline.candidateCount} / ${timeline.budget}；全部选完后才提交 P_after。`}</p>
     <ReplayControl replay={replay} />
   </div>;
 }
 
-function P9Step06Figure() {
+function P9Step07Figure() {
   const replay = useLocalReplay(9000);
   const progress = replay.progress;
   const timeline = p9PredictionTimelineAt(progress);
@@ -450,7 +516,7 @@ function P9Step06Figure() {
   </div>;
 }
 
-function P9Step07Figure() {
+function P9Step08Figure() {
   const replay = useLocalReplay(1900);
   const transientStyle: CSSProperties = { opacity: 0.42 + (1 - replay.progress) * 0.58, transform: `translateY(${replay.progress * 6}px)` };
   return <div className="p9-handoff-figure" data-p9-figure="next-round-handoff" data-animation-progress={replay.progress.toFixed(3)}>
@@ -478,7 +544,7 @@ export function PageNine({ onExit }: { onExit?: () => void }) {
     </header>
     <aside className="p9-reading-note"><b>先看交接顺序。</b><span>这里不再逐项重讲前面介绍的机制；沿页面向下读，观察每一步为何出现、传入和留下了什么。</span></aside>
 
-    <div className="p9-process" aria-label="一轮 iCaRL 增量学习的七组图文推演">
+    <div className="p9-process" aria-label="一轮 iCaRL 增量学习的八组图文推演">
       <ProcessSection number="01" title="新类别还没来，系统手里有什么？" handoff="Θ_before + P_before" figure={<P9Step01Figure />}>
         <p>上一轮结束后，iCaRL 保留两部分：已经学到的模型参数 <b>Θ_before</b>，以及各旧类按 Herding 顺序选出的少量原始 Exemplar 图片 <b>P_before</b>。</p>
         <p>这一轮仍要识别旧类，又要接纳新类，所以从这些已保存状态出发继续学习。</p>
@@ -497,25 +563,31 @@ export function PageNine({ onExit }: { onExit?: () => void }) {
         <p className="p9-why"><b>为什么要提前记录？</b>训练会改变 Θ；冻结的 Q 可在后续为旧类节点提供软目标。</p>
       </ProcessSection>
 
-      <ProcessSection number="04" title="旧知识和新类真实标签，如何同时推动学习？" handoff="Θ_after · P_before 仍保留" figure={<P9Step04Figure />}>
+      <ProcessSection number="04" title="新类别到来后，分类输出层如何扩展？" handoff="旧节点权重 + 新增 Sigmoid 节点" figure={<P9Step04Figure />}>
+        <p>本轮新类别到达后，iCaRL 将共享分类输出层扩展为每个已见类别各有一个 Sigmoid 节点。旧节点承接 <b>Θ_before</b> 中已有的权重，并为新类别追加节点及其权重向量。</p>
+        <p>新节点随机初始化后，对当前输入会先产生尚未训练的初始响应；这些分值只是随机初值下的输出，随后会与共享特征提取器一起接受训练。</p>
+        <p className="p9-why"><b>先扩层，再联合训练。</b>这里的三个初始分值是流程示意；原论文没有规定具体初始化算法或响应值。</p>
+      </ProcessSection>
+
+      <ProcessSection number="05" title="旧知识和新类真实标签，如何同时推动学习？" handoff="Θ_after · P_before 仍保留" figure={<P9Step05Figure />}>
         <p>从 D 取一张图。旧类 1–3 节点使用它在 Q 中对应行的软目标；新类 4–6 节点使用真实类别构造硬目标。</p>
-        <p>六个独立 Sigmoid 节点分别计算 BCE，聚合损失后更新共享特征提取器与训练头。这里修改的是模型参数 <b>Θ</b>。</p>
+        <p>六个独立 Sigmoid 节点分别计算 BCE，按图中公式求和后更新共享特征提取器与分类层。这里修改的是模型参数 <b>Θ</b>。</p>
         <p className="p9-why"><b>此时不动什么？</b>P_before 原始记忆保持不变；Q 在训练期间也保持冻结。图中的参数变化只作符号示意。</p>
       </ProcessSection>
 
-      <ProcessSection number="05" title="模型已经更新，旧记忆怎样给新类别腾位置？" handoff="Θ_after + P_after · 12 张" figure={<P9Step05Figure />}>
+      <ProcessSection number="06" title="模型已经更新，旧记忆怎样给新类别腾位置？" handoff="Θ_after + P_after · 12 张" figure={<P9Step06Figure />}>
         <p>记忆总预算仍是 <b>K=12</b>。当前类别从 3 类变成 6 类，因此每类可保留 2 张原始图片。</p>
         <p>A/B/C 直接截断原有 Herding 有序列表，各留前两张，不回到旧类完整数据重新选样；D/E/F 在当前表示下按各自 Herding 顺序选前两张。</p>
         <p className="p9-why"><b>先更新模型，再更新记忆。</b>旧类的保留 ID 不变，最终 P_after 才占满 12 个槽位。</p>
       </ProcessSection>
 
-      <ProcessSection number="06" title="原始图片留了下来，原来的 Prototype 还能直接用吗？" handoff="一次 Query 预测 · Θ_after / P_after 不变" figure={<P9Step06Figure />}>
+      <ProcessSection number="07" title="原始图片留了下来，原来的 Prototype 还能直接用吗？" handoff="一次 Query 预测 · Θ_after / P_after 不变" figure={<P9Step07Figure />}>
         <p>共享特征提取器已经更新，同一张原始图片在当前模型下的特征也可能变化。因此不能把旧表示下的 Prototype 直接当作当前原型。</p>
         <p>让 <b>P_after 的原始图片</b>重新经过当前 φ_Θ_after，计算六类 Prototype。Query 依当前特征到各原型的欧氏距离分类，取最近原型，而非对六个训练输出节点取 argmax。</p>
         <p className="p9-why"><b>这是推断。</b>一次 Query 预测不更新模型参数，也不改变 exemplar 记忆。</p>
       </ProcessSection>
 
-      <ProcessSection number="07" title="一次增量更新结束，哪些东西真正留下？" handoff="下一轮从 Θ_after + P_after 出发" figure={<P9Step07Figure />}>
+      <ProcessSection number="08" title="一次增量更新结束，哪些东西真正留下？" handoff="下一轮从 Θ_after + P_after 出发" figure={<P9Step08Figure />}>
         <p>D、Q、Targets 与 Loss 是本轮训练临时对象；当前 Query 预测和 Prototype 是本轮推断使用的结果或派生表示。</p>
         <p>下一轮继续依靠当前模型 <b>Θ_after</b> 和有限的原始图片记忆 <b>P_after</b>。新类别到来时，再从这两类持久状态出发。</p>
         <p className="p9-why"><b>一轮增量更新闭环：</b>有限记忆参与训练 → 旧模型保存 Q → 联合训练更新 Θ → 调整有序记忆 P → 重建原型并预测 → 保留 Θ 和 P 等待下一轮。</p>
