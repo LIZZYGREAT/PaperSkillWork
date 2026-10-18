@@ -748,6 +748,24 @@ function renderPageSevenAt(progress: number, clip = 4, onContinue?: () => void):
   }
 }
 
+const p7RouteMarkup = renderPageSevenAt(0, 0);
+assertTutorialRouteMarkup(p7RouteMarkup, "P7");
+assert.ok(p7RouteMarkup.includes("参数变了、类别增加了：下一轮该留下什么，当前该怎样预测？"), "P7 must frame post-update memory and prediction as a general algorithm question.");
+const p7GeneralReasoning = p7RouteMarkup.slice(p7RouteMarkup.indexOf('class="tutorial-route__reasoning"'), p7RouteMarkup.indexOf('class="tutorial-route__execution"'));
+assert.ok(p7GeneralReasoning.includes("固定总预算") && p7GeneralReasoning.includes("每类可分配的 Exemplar 名额会减少"),
+  "P7 must derive shrinking per-class memory from an expanding class set and a fixed total budget.");
+assert.ok(p7GeneralReasoning.includes("保留原前缀") && p7GeneralReasoning.includes("当前模型表示下为新类执行 Herding") && p7GeneralReasoning.includes("P_after"),
+  "P7 must explain how the old ordered prefix and newly selected Herding exemplars form the next memory.");
+assert.ok(p7GeneralReasoning.includes("保存的是原始 Exemplar 图片") && p7GeneralReasoning.includes("重新编码") && p7GeneralReasoning.includes("Query"),
+  "P7 must explain why the updated extractor re-encodes retained raw images before current-space prediction.");
+assert.ok(p7GeneralReasoning.includes("比距离") && p7GeneralReasoning.includes("Θ_after + P_after") && p7GeneralReasoning.includes("而不是旧 Q"),
+  "P7 must hand off nearest-prototype prediction and the persistent model-plus-image-memory state.");
+assert.doesNotMatch(p7GeneralReasoning, /K\s*=\s*12|4\s*截到\s*2|D\/E\/F|各选\s*2/u,
+  "P7's demonstration budget and class counts must not be presented as universal conditions.");
+const p7DemoNote = p7RouteMarkup.slice(p7RouteMarkup.indexOf('class="tutorial-route__demo-note"'));
+assert.ok(p7DemoNote.includes("K=12") && p7DemoNote.includes("4 截到 2") && p7DemoNote.includes("D/E/F 各选 2"),
+  "P7 must isolate its twelve-image and 4-to-2 budget details in the demonstration note.");
+
 function p7ConnectionWidths(markup: string): string[] {
   return [...markup.matchAll(/class="p7-stage-nav__segment"[^>]*><span style="width:([^\"]+)"/g)].map((match) => match[1]);
 }

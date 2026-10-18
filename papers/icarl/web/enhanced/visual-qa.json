@@ -529,7 +529,7 @@
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > button:last-child"
+              "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
               "type": "waitFor",
