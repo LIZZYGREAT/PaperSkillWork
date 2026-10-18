@@ -311,18 +311,19 @@
       "id": "icarl-p4-herding-and-memory",
       "path": "/",
       "computedStyles": [
-        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
-        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
-        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+        { "selector": ".p4-preview__header h2", "property": "font-size", "equals": "28px" },
+        { "selector": ".p4-preview__header p", "property": "font-size", "equals": "15px" },
+        { "selector": ".p4-preview__case h3", "property": "font-size", "equals": "17px" }
       ],
       "states": [
         {
-          "id": "00-preplay-reasoning-and-execution",
+          "id": "00-selection-comparison-and-prefix",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
-            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+            { "type": "waitFor", "selector": ".p4-preview__case--clustered", "state": "visible" },
+            { "type": "waitFor", "selector": ".p4-preview__case--representative", "state": "visible" },
+            { "type": "waitFor", "selector": ".p4-preview__round", "state": "visible" },
+            { "type": "waitFor", "selector": ".p4-preview__prefix-result", "state": "visible" }
           ]
         },
         {

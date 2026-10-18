@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { QuestionHandoff } from "../components/QuestionHandoff";
-import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import { ChartLabels, FEATURE_FRAME, featureStar, type ChartLabel } from "../components/FeatureChart";
 import {
   HERDING_DEMO_ORDER,
@@ -996,6 +994,78 @@ function CurrentFormula({ scene }: { scene: Scene }) {
   );
 }
 
+const P4_CONCEPT_POINTS = [
+  [45, 54], [72, 35], [103, 59], [127, 41], [156, 66], [184, 43], [207, 72], [232, 51],
+  [59, 105], [89, 87], [121, 112], [151, 94], [179, 119], [216, 103], [76, 139], [139, 144], [199, 142],
+] as const;
+
+function P4SelectionSketch({ mode }: { mode: "clustered" | "representative" }) {
+  const selected = mode === "clustered" ? new Set([0, 1, 8, 9]) : new Set([0, 5, 13, 16]);
+  const memoryMean = mode === "clustered" ? { x: 68, y: 70 } : { x: 145, y: 101 };
+  return (
+    <svg viewBox="0 0 280 180" role="img" aria-label={mode === "clustered" ? "少量样本集中在完整类别分布一侧，保留均值偏离完整类目标" : "少量样本分散覆盖，保留均值更接近完整类目标"}>
+      <path className="p4-preview__axis" d="M22 157H258M30 168V18" />
+      {P4_CONCEPT_POINTS.map(([x, y], index) => <circle key={`${x}-${y}`} className={selected.has(index) ? "is-selected" : ""} cx={x} cy={y} r={selected.has(index) ? 7 : 4.5} />)}
+      <path className="p4-preview__distance" d={`M${memoryMean.x} ${memoryMean.y}L151 92`} />
+      <circle className="p4-preview__mean" cx={memoryMean.x} cy={memoryMean.y} r="10" />
+      <text className="p4-preview__mean-label" x={memoryMean.x + 13} y={memoryMean.y + (mode === "clustered" ? 4 : 13)}>μ_keep</text>
+      <path className="p4-preview__target" d="M151 78l4 9 10 1-8 6 3 10-9-5-9 5 3-10-8-6 10-1Z" />
+      <text className="p4-preview__target-label" x={mode === "clustered" ? 164 : 177} y="84">μ_full</text>
+    </svg>
+  );
+}
+
+function P4Prelude({ onInspect, onPlayAll, reducedMotion }: { onInspect: () => void; onPlayAll: () => void; reducedMotion: boolean }) {
+  return (
+    <section className="p4-preview" aria-labelledby="p4-preview-title">
+      <header className="p4-preview__header">
+        <span className="eyebrow">Prototype 来自保留图片的特征均值</span>
+        <h2 id="p4-preview-title">少量图片怎么选，才不让类别参考偏到分布的一角？</h2>
+        <p>P3 的预测依赖 Prototype，因此选样要关心<strong>保留均值能否接近完整类目标 μ<sub>full</sub></strong>。</p>
+      </header>
+
+      <div className="p4-preview__comparison">
+        <article className="p4-preview__case p4-preview__case--clustered">
+          <header><span>解释性示意</span><h3>随意少量选样可能集中在一侧</h3></header>
+          <P4SelectionSketch mode="clustered" />
+          <p>同一个完整点集里，选中点过于集中时，保留均值 μ<sub>keep</sub> 会偏离 μ<sub>full</sub>。</p>
+        </article>
+        <div className="p4-preview__contrast" aria-hidden="true"><span>同一点集</span><b>≠</b><small>选法不同</small></div>
+        <article className="p4-preview__case p4-preview__case--representative">
+          <header><span>Herding 的目标</span><h3>让保留均值逐轮逼近完整类目标</h3></header>
+          <P4SelectionSketch mode="representative" />
+          <p>示意仅说明选样目标，不表示随机抽样必然更差，也不声称贪心结果是全局最优。</p>
+        </article>
+      </div>
+
+      <section className="p4-preview__round" aria-label="一轮 Herding 如何追加一个候选">
+        <header><span>一轮 Herding</span><strong>固定已有前缀，再试每个剩余候选</strong></header>
+        <div className="p4-preview__round-flow">
+          <div className="p4-preview__prefix"><span>已有前缀</span><b>[ p₁ ··· p<sub>k−1</sub> ]</b></div>
+          <svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h39m-8-7 8 7-8 7" /></svg>
+          <div className="p4-preview__candidate"><span>假设加入候选 x</span><i /><i /><i /></div>
+          <svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h39m-8-7 8 7-8 7" /></svg>
+          <div className="p4-preview__mean-step"><span>新均值并单位化</span><b>ν<sub>k</sub>(x)</b></div>
+          <svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h39m-8-7 8 7-8 7" /></svg>
+          <div className="p4-preview__compare-step"><span>比较 μ<sub>full</sub></span><b>取本轮距离最小</b></div>
+        </div>
+      </section>
+
+      <div className="p4-preview__prefix-result" aria-label="有序前缀支持容量缩减">
+        <div><span>有序列表</span><b>[ p₁</b><b>p₂</b><b>p₃</b><b className="is-tail">p₄ ]</b></div>
+        <svg viewBox="0 0 58 26" aria-hidden="true"><path d="M2 13h48m-8-7 8 7-8 7" /></svg>
+        <div className="p4-preview__quota"><i />名额边界前移<span>截去尾项，保留前缀</span></div>
+        <p><strong>完整类目标只在该类训练数据仍可访问时形成。</strong>长期保存的是原始图片与顺序；容量变小时不必重新访问旧类完整数据。</p>
+      </div>
+
+      <footer className="p4-preview__footer">
+        <p><b>示例设置</b>下方选样动画使用 8 个合成单位特征、选择前 4 项；独立预算例为 K=12、3→4 类、每类 4→3 项，与 P5/P7 的 3→6 类场景分开。</p>
+        <div><button type="button" className="icarl-button icarl-button--quiet p4-start-button" onClick={onInspect}>查看逐轮计算 ↓</button><button type="button" className="icarl-button icarl-button--primary" onClick={onPlayAll} disabled={reducedMotion}>▶ 完整播放</button></div>
+      </footer>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------------- page --- */
 
 export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
@@ -1083,28 +1153,9 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="icarl-page__eyebrow"><span>PAGE 04</span><i /> EXEMPLAR SELECTION &amp; MANAGEMENT</div>
         <h1>每个类别只能留下少量图片，怎样选择才更有代表性？</h1>
         <p>P3 的 Prototype 依赖每类保留 Exemplar 的特征均值。本页从“完整新类数据暂时可用、长期记忆有限”这个条件出发，推导怎样选样并保存有序列表。</p>
-        <button type="button" className="icarl-button icarl-button--primary p4-start-button" onClick={focusWorkbench}>开始演示 <b aria-hidden="true">↓</b></button>
       </header>
 
-      <TutorialRoutePreview
-        context="某个类别的完整图片当前可访问，需选出少量 Exemplars，使它们在已学习特征空间中尽量代表该类。"
-        reasoning={(
-          <>
-            <p>P3 的 Prototype 是由每类保留 Exemplar 的单位特征均值构成。因此，留下哪些图片会改变类别参考的位置：随意抽取的少量图片可能集中在该类特征分布的一小块，让保留均值偏离完整类别。</p>
-            <p>新类别的完整训练数据仍可访问时，可以先将图片映射到当前特征空间并单位化，再求均值、单位化，得到完整类目标 <strong>μ_full</strong>。选择少量图片的目的，是让它们在“特征均值”这一统计量上尽量接近该目标；这不代表有限记忆覆盖了类别的全部变化。</p>
-            <p>每轮固定已选前缀，对每个未选候选分别计算“加入后”的单位化前缀均值到 μ_full 的距离，再追加当前距离最小的候选。这是逐项<strong>贪心</strong>选择，不是搜索所有组合的全局最优解；距离也不保证每轮都下降。</p>
-            <p>保存顺序是为了预算变化：类别增多、每类名额缩小时，旧类可以截去列表尾部并保留前缀；旧类别完整数据若已不可访问，就不必为了缩短记忆重新选样。</p>
-          </>
-        )}
-        steps={[
-          { title: "估计完整类目标 μ_full", input: "该类此时仍可访问的完整训练数据", operation: "用当前表示编码、单位化特征；求均值并单位化", result: "用于选样的完整类目标向量" },
-          { title: "逐一评估未选候选", input: "固定的已选前缀与其余候选", operation: "对每个候选计算新增前缀均值，单位化后量到 μ_full 的距离", result: "本轮每个候选的真实距离" },
-          { title: "追加当前距离最小者", input: "本轮全部候选距离", operation: "比较并取当前 argmin；固定该结果作为新前缀", result: "列表增加一个有顺序的 Exemplar" },
-          { title: "满足名额并复用前缀", input: "所需保留数与完整有序列表", operation: "重复贪心步骤至名额；以后名额收缩时截去尾项", result: "原图与次序组成的保留列表前缀" },
-        ]}
-        output="得到该类按贪心次序排列的原始 Exemplar 列表。μ_full 只在完整类数据可访问时用于选样；后续持久保存的是图片与顺序，预算收缩时保留列表前缀。"
-        demoNote="选样图用八个合成单位特征逐轮选择前四项；独立预算例是 K=12、3→4 类、每类 4→3 项，不是 P5/P7 的 3→6 类场景。"
-      />
+      <P4Prelude onInspect={focusWorkbench} onPlayAll={playAll} reducedMotion={reducedMotion} />
 
       <section
         className="p4-workbench"
@@ -1298,18 +1349,11 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
       </details>
 
-      <QuestionHandoff
-        fromPage={4}
-        toPage={5}
-        steps={[
-          { label: "已经知道", body: <>Herding 得到有序列表；预算收紧时，旧类保留它的<strong>前缀</strong>。</> },
-          { label: "新的限制", body: <>新类别到来后，旧图还要参与训练，帮助模型保留<strong>旧知识</strong>。</> },
-          { label: "下一问", body: <>旧 Exemplars 怎样并入训练集合，并准备 <strong>D</strong> 与 <strong>Q</strong>？</> },
-        ]}
-        actionLabel="让 Exemplars 参与更新"
-        onContinue={onContinue}
-        note="P4 的 3 类→4 类预算图是简化示例；P5 展示另一批次：3 个旧类 + 3 个新类。"
-      />
+      <section className="p4-next-step" aria-label="第 4 页到第 5 页的学习衔接">
+        <div className="p4-next-step__list" aria-hidden="true"><span>p₁</span><span>p₂</span><span>p₃</span><span>p₄</span><svg viewBox="0 0 52 24"><path d="M2 12h43m-8-7 8 7-8 7" /></svg><b>D</b></div>
+        <p><strong>Herding 产生可截短的有序代表列表。</strong><span>下一问：新类到来，旧图怎样继续参与训练？</span></p>
+        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>让 Exemplars 参与更新 →</button> : null}
+      </section>
     </article>
   );
 }
