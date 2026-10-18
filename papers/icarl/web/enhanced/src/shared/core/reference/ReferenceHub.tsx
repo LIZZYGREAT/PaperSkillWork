@@ -33,7 +33,7 @@ export function ReferenceHub({ items, title = "Reference Hub", onOpen }: { items
 
   return (
     <section className="rk-reference-hub" aria-label={title}>
-      <header className="rk-reference-hub__heading"><div><h2>{title}</h2><p>Search terms, methods, evidence, and implementation notes.</p></div><span>{filtered.length} items</span></header>
+      <header className="rk-reference-hub__heading"><div><h2>{title}</h2><p>Search terms, methods, evidence, datasets, and implementation notes.</p></div><span>{filtered.length} {filtered.length === 1 ? "item" : "items"}</span></header>
       <div className="rk-reference-hub__filters">
         <label>Search references<input type="search" value={query} onChange={(event) => setQuery(event.currentTarget.value)} placeholder="Search" /></label>
         <label>Category<select value={kind} onChange={(event) => setKind(event.currentTarget.value as ReferenceKind | "all")}><option value="all">All categories</option>{KINDS.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>

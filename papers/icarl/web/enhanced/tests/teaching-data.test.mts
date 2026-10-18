@@ -66,10 +66,41 @@ import { PageFive } from "../src/pages/PageFive.tsx";
 import { PageSix } from "../src/pages/PageSix.tsx";
 import { PageSeven } from "../src/pages/PageSeven.tsx";
 import { PageNine } from "../src/pages/PageNine.tsx";
+import { ICARL_REFERENCE_ITEMS, ICARL_TERMS } from "../src/data/icarl-reference-content.tsx";
+import { ReferenceHub } from "../src/shared/core/reference/ReferenceHub.tsx";
 
 const OLD_CLASS_IDS = ["A", "B", "C"] as const;
 const near = (a: number, b: number, tolerance = 1e-9) => Math.abs(a - b) <= tolerance;
 const unit = (vector: Vector2) => Math.hypot(vector[0], vector[1]);
+const CJK_CHARACTERS = /[\u3400-\u9fff]/u;
+
+assert.equal(ICARL_REFERENCE_ITEMS.length, 20, "The Reference Hub must retain all 20 reference entries.");
+for (const item of ICARL_REFERENCE_ITEMS) {
+  assert.doesNotMatch(`${item.title} ${item.summary} ${(item.tags ?? []).join(" ")}`, CJK_CHARACTERS,
+    `Reference Hub entry ${item.id} must use English for its title, summary, and tags.`);
+  if (item.content) {
+    const detailMarkup = renderToStaticMarkup(createElement("div", null, item.content));
+    assert.doesNotMatch(detailMarkup, CJK_CHARACTERS, `Reference Hub entry ${item.id} must use English in its details.`);
+  }
+}
+for (const term of Object.values(ICARL_TERMS)) {
+  assert.doesNotMatch([term.label, term.fullName, term.definition, term.paperRole, term.confusion, term.sourceKind]
+    .filter(Boolean).join(" "), CJK_CHARACTERS, `Term popover ${term.id} must use English throughout.`);
+}
+const referenceHubMarkup = renderToStaticMarkup(createElement(ReferenceHub, { items: ICARL_REFERENCE_ITEMS }));
+assert.doesNotMatch(referenceHubMarkup, CJK_CHARACTERS, "Reference Hub filters, labels, and empty-state copy must use English.");
+const qReference = ICARL_REFERENCE_ITEMS.find((item) => item.id === "response-snapshot-q")!;
+assert.ok(qReference.summary.includes("pre-update sigmoid responses") && qReference.summary.includes("sample ID"),
+  "Response Snapshot Q must explain when it is recorded and how rows align with training images.");
+const qDetailMarkup = renderToStaticMarkup(createElement("div", null, qReference.content));
+assert.ok(qDetailMarkup.includes("new-class images") && qDetailMarkup.includes("N rows"),
+  "Response Snapshot Q must clarify that new images also receive rows while only old classes form columns.");
+const bceReference = ICARL_REFERENCE_ITEMS.find((item) => item.id === "binary-cross-entropy")!;
+const bceDetailMarkup = renderToStaticMarkup(createElement("div", null, bceReference.content));
+assert.ok(bceDetailMarkup.includes("g − r") && bceDetailMarkup.includes("independent sigmoid"),
+  "The BCE reference must explain the local gradient and independent-output interpretation.");
+assert.ok(ICARL_REFERENCE_ITEMS.find((item) => item.id === "cifar-100-dataset")?.summary.includes("20 superclasses"),
+  "The CIFAR-100 reference must provide useful dataset structure beyond its name.");
 
 function renderPageThreeAt(clip: number, pct = 0, onContinue?: () => void): string {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
