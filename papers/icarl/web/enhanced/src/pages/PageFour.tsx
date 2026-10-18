@@ -1222,13 +1222,13 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
 
         <div className="p4-workbench__controls" aria-label="Page 4 动画控制">
           <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex - 1)} disabled={activePhaseIndex === 0}>← 上一阶段</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={togglePlayback} disabled={reducedMotion}>{reducedMotion ? "逐步查看" : state.status === "playing" ? "Ⅱ 暂停" : state.elapsedMs > 0 && !phaseComplete ? "▶ 继续播放" : "▶ 播放本阶段"}</button>
           <div className="p4-workbench__control-center">
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={togglePlayback} disabled={reducedMotion}>{reducedMotion ? "逐步查看" : state.status === "playing" ? "Ⅱ 暂停" : state.elapsedMs > 0 && !phaseComplete ? "▶ 继续播放" : "▶ 播放本阶段"}</button>
             <button type="button" className="icarl-button icarl-button--quiet" onClick={replayPhase} disabled={reducedMotion}>↺ 重播本阶段</button>
             <button type="button" className="icarl-button icarl-button--quiet" onClick={playAll} disabled={reducedMotion}>▶ 完整播放</button>
             <span aria-live="polite">阶段 {activePhaseIndex + 1} / {phaseRanges.length} · {playMode === "all" ? "全程" : "本阶段"} · {Math.round(phaseProgress * 100)}%</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={() => jumpToPhase(activePhaseIndex + 1)} disabled={activePhaseIndex >= phaseRanges.length - 1}>下一阶段 →</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex + 1)} disabled={activePhaseIndex >= phaseRanges.length - 1}>下一阶段 →</button>
         </div>
 
         <div className="p4-phase-rail" role="group" aria-label="七个教学阶段">

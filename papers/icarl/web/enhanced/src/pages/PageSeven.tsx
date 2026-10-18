@@ -367,7 +367,7 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
       <footer className="p7-playback-controls" aria-label="P7 记忆交接动画控制">
         <button type="button" className="icarl-button icarl-button--quiet" onClick={() => goToStage(stage - 1)} disabled={!state.hasPrevious}>← 上一阶段</button>
         <div className="p7-playback-controls__center">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={togglePlayback} disabled={reducedMotion} aria-label={state.status === "playing" ? "暂停动画" : "播放本阶段"}>{reducedMotion ? "逐步查看" : state.status === "playing" ? "Ⅱ 暂停" : state.elapsedMs > 0 && !state.isHolding ? "▶ 继续播放" : "▶ 播放本阶段"}</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={togglePlayback} disabled={reducedMotion} aria-label={state.status === "playing" ? "暂停动画" : "播放记忆交接"}>{reducedMotion ? "逐步查看" : state.status === "playing" ? "Ⅱ 暂停" : state.elapsedMs > 0 && !state.isHolding ? "▶ 继续播放" : "▶ 播放本阶段"}</button>
           <button type="button" className="icarl-button icarl-button--quiet" onClick={replayStage} disabled={reducedMotion}>↺ 重播本阶段</button>
           <button type="button" className="icarl-button icarl-button--quiet" onClick={playAll} disabled={reducedMotion}>▶ 完整播放</button>
           <span>{reducedMotion ? "逐阶段显示结果" : `${playMode === "all" ? "全程" : "本阶段"} · ${state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}`}</span>

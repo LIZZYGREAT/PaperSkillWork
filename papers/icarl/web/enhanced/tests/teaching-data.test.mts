@@ -992,7 +992,7 @@ function renderPageNineAt(reducedMotion = false): string {
 
 const p9Markup = renderPageNineAt();
 assert.ok(p9Markup.includes("iCaRL 一次增量学习的完整逻辑"), "P9 must use the approved page title.");
-assert.deepEqual([...p9Markup.matchAll(/<section class="p9-step" data-step="(\d+)"/g)].map((match) => match[1]), ["01", "02", "03", "04", "05", "06", "07"], "The seven teaching groups must appear in reading order.");
+assert.deepEqual([...p9Markup.matchAll(/<section class="p9-step" data-step="(\d+)"/g)].map((match) => match[1]), ["01", "02", "03", "04", "05", "06", "07", "08"], "The eight teaching groups must appear in reading order.");
 assert.ok(p9Markup.indexOf('class="p9-step__copy"') < p9Markup.indexOf('class="p9-step__figure"'), "Text must precede the corresponding figure in the mobile DOM reading order.");
 assert.ok(p9Markup.includes('data-d-count="30"') && p9Markup.includes("12 / 12 旧图副本") && p9Markup.includes("18 / 18 张新图"), "The default D state must show all 12 old copies and 18 new images assembled.");
 assert.ok(p9Markup.includes('data-object-id="P_before"') && p9Markup.includes("P_before 原件仍在"), "The D handoff must retain the persistent original memory while using copies.");
@@ -1020,12 +1020,12 @@ assert.equal(p9DistanceLines.length, ALL_CLASS_IDS.length, "The static Query vie
 assert.deepEqual(p9DistanceLines.map((line) => attr(line, "data-prototype-class-id")), ALL_CLASS_IDS, "Query comparisons must be drawn in class order before highlighting the minimum.");
 assert.ok(p9Markup.includes("而非对六个训练输出节点取 argmax"), "P9 must keep nearest-prototype prediction distinct from training-head argmax.");
 assert.ok(p9Markup.includes("Θ_after") && p9Markup.includes("P_after") && p9Markup.includes("X_next"), "The final group must hand off the persistent state and label X_next only as an entrance cue.");
-assert.equal([...p9Markup.matchAll(/class="p9-replay"/g)].length, 6, "Each animated group must have only one local replay control.");
-assert.equal([...p9Markup.matchAll(/data-animation-progress="1\.000"/g)].length, 6, "All local animations must render their complete result before the reader starts them.");
+assert.equal([...p9Markup.matchAll(/class="p9-replay"/g)].length, 7, "Each animated group must have only one local replay control.");
+assert.equal([...p9Markup.matchAll(/data-animation-progress="1\.000"/g)].length, 7, "All local animations must render their complete result before the reader starts them.");
 assert.doesNotMatch(p9Markup, /p9-chapters|p9-transport|p9-active-scene|片段 17 \/ 17/, "The rendered page must not include the legacy global player.");
 
 const p9ReducedMotion = renderPageNineAt(true);
-assert.equal([...p9ReducedMotion.matchAll(/class="p9-replay"[^>]*disabled=""/g)].length, 6, "Reduced-motion users must keep the complete result and have all replay controls disabled.");
+assert.equal([...p9ReducedMotion.matchAll(/class="p9-replay"[^>]*disabled=""/g)].length, 7, "Reduced-motion users must keep the complete result and have all replay controls disabled.");
 assert.ok(p9ReducedMotion.includes("减少动态效果：完整结果已显示") && p9ReducedMotion.includes('data-result-visible="true"'), "Reduced motion must retain a readable terminal state and result.");
 
 const p9Source = readFileSync(path.join(process.cwd(), "src/pages/PageNine.tsx"), "utf8");
@@ -1046,7 +1046,7 @@ assert.match(p9Css, /\.p9-prototype-roster small \{[^}]*font: 11px var\(--mono\)
 assert.ok(p9Markup.includes('Q ∈ ℝ<sup class="p9-q-formula__exponent">30×3</sup>'), "P9 Q shape must use a typographic real-number symbol and superscript.");
 assert.ok(appSource.includes('title: "iCaRL 一次增量学习的完整逻辑"') && !appSource.includes("ewc-app--runtime"), "P9 navigation must match the new title and use the shared app shell.");
 assert.ok(p9PageEightSource.includes("下一页：一次增量学习的完整逻辑"), "P8 must lead into the redesigned P9 reading flow.");
-assert.ok(Array.isArray(p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved")?.states), "Visual QA must cover the seven-group reading flow and local replays.");
+assert.ok(Array.isArray(p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved")?.states), "Visual QA must cover the eight-group reading flow and local replays.");
 const p9QaPage = p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved");
 const p9QaText = JSON.stringify(p9QaPage);
 const p9QaStateIds = new Set(p9QaPage.states.map((state: { id: string }) => state.id));
@@ -1075,6 +1075,6 @@ console.log(
     `  P4  8 candidates, order ${HERDING_DEMO_ORDER.map((point) => point.id).join(" -> ")}, round distances ${roundDistances.map((value) => value.toFixed(3)).join(", ")}`,
     `  P5  P_old 12 + X_new 18 = D 30, Q 30x3 fixed before the update`,
     `  P7  ${QUERY_DISTANCES.length} displayed distances match the fixed query and prototype endpoints; argmin -> ${CLASS_VISUALS[QUERY_PREDICTION].displayLabel}`,
-    `  P9  7 interleaved groups; D=30, Q=30x3, six independent nodes and K=12 memory`,
+    `  P9  8 interleaved groups; D=30, Q=30x3, six independent nodes and K=12 memory`,
   ].join("\n"),
 );

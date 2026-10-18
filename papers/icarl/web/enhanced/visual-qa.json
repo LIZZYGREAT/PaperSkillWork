@@ -111,7 +111,7 @@
             },
             {
               "type": "click",
-              "selector": ".p3-workbench__controls > button.icarl-button--primary"
+              "selector": ".p3-playback-controls > button:first-child"
             },
             {
               "type": "wait",
@@ -134,6 +134,10 @@
             {
               "type": "click",
               "selector": ".p3-clip-rail button:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-playback-controls > button:first-child"
             },
             {
               "state": "visible",
@@ -163,6 +167,10 @@
               "selector": ".p3-clip-rail button:nth-child(3)"
             },
             {
+              "type": "click",
+              "selector": ".p3-playback-controls > button:first-child"
+            },
+            {
               "state": "visible",
               "type": "waitFor",
               "selector": "[data-clip=\"p3-c-query\"]"
@@ -188,6 +196,10 @@
             {
               "type": "click",
               "selector": ".p3-clip-rail button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-playback-controls > button:first-child"
             },
             {
               "state": "visible",
@@ -219,6 +231,10 @@
             {
               "type": "click",
               "selector": ".p3-clip-rail button:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".p3-playback-controls > button:first-child"
             },
             {
               "state": "visible",
@@ -406,6 +422,10 @@
             },
             {
               "type": "click",
+              "selector": ".p4-workbench__controls > button:last-child"
+            },
+            {
+              "type": "click",
               "selector": ".p4-workbench__controls > button.icarl-button--primary"
             },
             {
@@ -481,7 +501,7 @@
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+              "selector": ".p4-workbench__controls > button:last-child"
             },
             {
               "type": "waitFor",
@@ -854,7 +874,7 @@
             },
             {
               "type": "click",
-              "selector": ".p4-workbench__controls > button.icarl-button--primary"
+              "selector": ".p4-workbench__controls > button:last-child"
             },
             {
               "type": "waitFor",
@@ -1386,13 +1406,17 @@
               "selector": ".p5-clip-rail button:nth-child(2)"
             },
             {
+              "type": "click",
+              "selector": ".p5-control-main button:first-child"
+            },
+            {
               "state": "visible",
               "type": "waitFor",
               "selector": "[data-clip=\"p5-merge\"]"
             },
             {
               "type": "wait",
-              "milliseconds": 1000
+              "milliseconds": 8200
             },
             {
               "type": "press",
@@ -1446,7 +1470,7 @@
             },
             {
               "type": "click",
-              "selector": ".p5-clip-rail button:nth-child(4)"
+              "selector": ".p5-clip-rail button:nth-child(3)"
             },
             {
               "type": "click",
@@ -1482,7 +1506,11 @@
             },
             {
               "type": "click",
-              "selector": ".p5-clip-rail button:nth-child(8)"
+              "selector": ".p5-clip-rail button:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".p5-control-main button:first-child"
             },
             {
               "state": "visible",
@@ -1509,7 +1537,7 @@
             },
             {
               "type": "click",
-              "selector": ".p5-clip-rail button:nth-child(9)"
+              "selector": ".p5-clip-rail button:nth-child(4)"
             },
             {
               "state": "visible",
@@ -1532,7 +1560,7 @@
             },
             {
               "type": "click",
-              "selector": ".p5-clip-rail button:nth-child(10)"
+              "selector": ".p5-clip-rail button:nth-child(5)"
             },
             {
               "state": "visible",
@@ -1555,7 +1583,7 @@
             },
             {
               "type": "click",
-              "selector": ".p5-clip-rail button:nth-child(10)"
+              "selector": ".p5-clip-rail button:nth-child(5)"
             },
             {
               "type": "click",
