@@ -336,11 +336,16 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
     </header>
 
     <TutorialRoutePreview
-      input="训练后的 Θ_after、三类各四张旧原始图片，以及新类完整数据。"
-      reason="类别增多后要重分配记忆；模型变化后，旧表示下的 Prototype 也不能直接沿用。"
-      steps={["旧类有序前缀由 4 截到 2", "新类 D/E/F 各 Herding 选 2", "用当前模型重编码 P_after", "构造六类原型并比较 Query"]}
-      output="可保留的 Θ_after + P_after，以及本次 Query 的最近原型预测。"
-      boundary="before/after 是固定状态对照；本页不声称真实执行了 SGD。"
+      context="参数已更新；旧类别持有有序原始 Exemplar 记忆，本轮新类别的完整图片可供选择。目标是恢复固定预算的记忆，并用当前模型预测。"
+      reasoning={<p>类别数增加而总预算 K 固定时，每类名额会缩小；P4 的旧类有序列表可直接截去尾部，新类则可用当前可访问数据选取新 Exemplar。模型参数改变后，原图的特征坐标也可能改变，所以旧 Prototype 不一定适配当前表示；保存原图并用当前提取器重编码，才能建立与 Query 同空间的类别参考。</p>}
+      steps={[
+        { title: "按当前类别数分配记忆", input: "固定总预算 K 与已学类别数 t", operation: "据每类新名额调整旧类记忆长度", result: "旧类需要保留的有序前缀长度" },
+        { title: "形成下一轮原图记忆", input: "旧类有序 Exemplar 与新类完整数据", operation: "截短旧类列表，并在当前表示下为新类执行 Herding", result: "旧类前缀与新类代表合成 P_after" },
+        { title: "用当前表示重建 Prototype", input: "P_after 中保留的原始图片", operation: "通过更新后的特征提取器编码，逐类计算并单位化均值", result: "与当前特征空间一致的各类 μ_y" },
+        { title: "比较 Query 并交接状态", input: "当前模型、Query 与各类 Prototype", operation: "编码 Query，计算真实距离并选取 argmin", result: "本次预测；Θ_after 与 P_after 留给下一轮" },
+      ]}
+      output="得到与当前表示相配的 Prototype、一次最近原型预测，以及等待下一轮的持久状态 Θ_after + P_after。"
+      demoNote="本次固定状态演示 K=12：旧类名额由每类 4 截到 2，新类 D/E/F 各选 2；数量只用于本例，不是通用规则。"
     />
 
     <section className="p7-workbench" aria-label="参数更新后的记忆交接与预测工作台">

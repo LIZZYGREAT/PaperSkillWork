@@ -93,6 +93,32 @@ function p3VisibleLegend(clip: number): string {
   return legend!;
 }
 
+function assertTutorialRouteMarkup(markup: string, pageLabel: string): void {
+  const reasoningStart = markup.indexOf('class="tutorial-route__reasoning"');
+  const reasoningCopy = markup.indexOf('class="tutorial-route__reasoning-copy"');
+  const executionStart = markup.indexOf('class="tutorial-route__execution"');
+  const handoffStart = markup.indexOf('class="tutorial-route__handoff"');
+  assert.ok(reasoningStart >= 0 && reasoningCopy > reasoningStart, `${pageLabel} must render readable pre-play reasoning.`);
+  assert.ok(executionStart > reasoningCopy && handoffStart > executionStart, `${pageLabel} must order reasoning, execution, and handoff.`);
+  assert.equal([...markup.matchAll(/class="tutorial-route__step-card"/g)].length, 4, `${pageLabel} must explain four real execution steps.`);
+  assert.equal([...markup.matchAll(/<dt>/g)].filter((match) => match.index! > executionStart && match.index! < handoffStart).length, 12,
+    `${pageLabel} must state each step's input, processing, and resulting state.`);
+  assert.equal([...markup.matchAll(/<svg class="tutorial-route__connector"[^>]*aria-hidden="true"/g)].length, 3, `${pageLabel} must connect only adjacent step pairs with decorative SVGs.`);
+  assert.ok(markup.indexOf("本次演示") > handoffStart, `${pageLabel} must distinguish example conditions from its general reasoning.`);
+}
+
+const p3RouteMarkup = renderPageThreeAt(0);
+assertTutorialRouteMarkup(p3RouteMarkup, "P3");
+assert.ok(p3RouteMarkup.indexOf("Prototype μ_y") < p3RouteMarkup.indexOf("tutorial-route__execution"), "P3 must explain the role of a Prototype before listing operations.");
+assert.ok(p3RouteMarkup.indexOf("同一个当前特征提取器") < p3RouteMarkup.indexOf("tutorial-route__execution"), "P3 must explain why Query features are comparable to class Prototypes.");
+assert.ok(p3RouteMarkup.includes("本次二维动画使用三个已学类别、每类四张 Exemplar") && !p3RouteMarkup.slice(p3RouteMarkup.indexOf('class="tutorial-route__reasoning"'), p3RouteMarkup.indexOf('class="tutorial-route__execution"')).includes("三类各四张"),
+  "P3's three-class/four-exemplar values must stay in the demonstration note, not the general explanation.");
+const tutorialRouteCss = readFileSync(path.join(process.cwd(), "src/styles/tutorial-route.css"), "utf8");
+assert.doesNotMatch(tutorialRouteCss, /content\s*:\s*["']→["']/u, "Tutorial route arrows must not depend on a text glyph.");
+assert.doesNotMatch(tutorialRouteCss, /right\s*:\s*-\d/u, "Tutorial route arrows must not intrude into card space with a negative offset.");
+assert.ok(tutorialRouteCss.includes("grid-template-columns: minmax(0, 1fr) 28px") && tutorialRouteCss.includes("transform: rotate(90deg)"),
+  "Tutorial route arrows must have an independent desktop slot and turn downward with the single-column layout.");
+
 const p3NormalizeLegend = p3VisibleLegend(0);
 assert.match(p3NormalizeLegend, /单位圆/);
 assert.match(p3NormalizeLegend, /Exemplar 特征/);

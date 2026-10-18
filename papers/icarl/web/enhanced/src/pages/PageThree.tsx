@@ -765,8 +765,8 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
     <article className="tutorial-page icarl-page icarl-page--p3">
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
-        <h1>已选代表图片怎样<br className="p3-title-break" />完成一次预测？</h1>
-        <p>先假定三类代表图片已经选好，并且 Feature Extractor 训练完成、暂时固定。让这些 Exemplars 和一张新 Query 进入同一特征空间，看看 iCaRL 怎样用它们完成预测。</p>
+        <h1>已保留的 Exemplar 怎样帮助模型判断新图片属于哪个类别？</h1>
+        <p>特征提取器已经学习并固定；先看有限的类别记忆如何形成参考，再看一张新 Query 怎样据此完成预测。</p>
         <div className="p3-entry-actions">
           <button type="button" className="icarl-button icarl-button--quiet p3-start-button" onClick={focusWorkbench}>查看演示 <b aria-hidden="true">↓</b></button>
           <button type="button" className="icarl-button icarl-button--primary" onClick={playAll} disabled={reducedMotion}>▶ 从头完整播放</button>
@@ -774,11 +774,22 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
       </header>
 
       <TutorialRoutePreview
-        input="固定的特征提取器、三类各四张已保留 Exemplar，以及一张待分类 Query。"
-        reason="最终分类不读取训练输出头；少量旧图片先重建类原型，再让 Query 比较距离。"
-        steps={["Exemplar 编码并单位化", "同类求均值并形成 Prototype", "Query 用同一模型编码", "比较三类距离并取最近类"]}
-        output="Query 的预测类别。"
-        boundary="本页只读取固定模型与记忆，不更新参数或记忆。"
+        context="已学习且固定的特征提取器、各已学类别留下的部分 Exemplar，以及一张待分类 Query。目标是在不能访问完整历史训练集时，仍判断 Query 属于哪个已学类别。"
+        reasoning={(
+          <>
+            <p>预测时不能假设每个类别的全部历史训练图片都还可访问。若要比较 Query 属于哪个类别，就需要为<strong>每个类别</strong>准备一个能在同一特征空间比较的参考位置。</p>
+            <p>同一个已学习特征提取器会把图片映射到同一空间。于是可以将某类别保留图片的单位特征求均值、再将均值单位化，得到该类的 <strong>Prototype μ_y</strong>。它把有限记忆压缩成近似类别参考，不代表该类所有样本的完美中心；效果仍依赖学到的表示与保留样本。</p>
+            <p>Query 也由<strong>同一个当前特征提取器</strong>编码。比较它到各类 Prototype 的距离并取最小值，就得到基于最近均值的预测；这条推断规则不读取训练输出头做 argmax。</p>
+          </>
+        )}
+        steps={[
+          { title: "把每类记忆变成同空间特征", input: "当前特征提取器与各类保留原图", operation: "逐张编码，并将每个特征单位化", result: "每张图片的单位特征" },
+          { title: "为每个类别建立参考", input: "同一类别的单位化 Exemplar 特征", operation: "分别求均值，再将均值单位化", result: "该类近似参考向量 μ_y" },
+          { title: "编码待分类 Query", input: "一张新 Query 与同一固定提取器", operation: "映射并单位化 Query 特征", result: "与各 μ_y 同空间的 z_q" },
+          { title: "按最近 Prototype 判别", input: "Query 特征 z_q 与所有类别 μ_y", operation: "计算 ‖z_q − μ_y‖₂ 并取 argmin", result: "最近原型对应的预测类别" },
+        ]}
+        output="得到本次 Query 的预测类别。模型参数与持久 Exemplar 原图不变；Prototype 是由当前表示和保留图片导出的参考。"
+        demoNote="本次二维动画使用三个已学类别、每类四张 Exemplar；这些数量只为看清计算，不是算法固定条件。"
       />
 
       <section

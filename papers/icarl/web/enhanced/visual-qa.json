@@ -65,7 +65,21 @@
     {
       "id": "icarl-p3-prototype-prediction",
       "path": "/",
+      "computedStyles": [
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
+        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+      ],
       "states": [
+        {
+          "id": "00-preplay-reasoning-and-execution",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
+            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+          ]
+        },
         {
           "actions": [
             {
@@ -296,7 +310,21 @@
     {
       "id": "icarl-p4-herding-and-memory",
       "path": "/",
+      "computedStyles": [
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
+        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+      ],
       "states": [
+        {
+          "id": "00-preplay-reasoning-and-execution",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+          ]
+        },
         {
           "id": "00-page-four-start-paused",
           "actions": [
@@ -1375,7 +1403,21 @@
     {
       "id": "icarl-p5-replay-d-q",
       "path": "/",
+      "computedStyles": [
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
+        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+      ],
       "states": [
+        {
+          "id": "00-preplay-reasoning-and-execution",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
+            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+          ]
+        },
         {
           "actions": [
             {
@@ -1611,7 +1653,21 @@
     {
       "id": "icarl-p6-bce-training",
       "path": "/",
+      "computedStyles": [
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
+        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+      ],
       "states": [
+        {
+          "id": "00-preplay-reasoning-and-execution",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+          ]
+        },
         {
           "id": "p6-forward-animation-midpoint",
           "actions": [
@@ -2217,7 +2273,21 @@
     {
       "id": "icarl-p7-train-predict",
       "path": "/",
+      "computedStyles": [
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
+        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
+        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+      ],
       "states": [
+        {
+          "id": "00-preplay-reasoning-and-execution",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
+            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+          ]
+        },
         {
           "id": "p7-training-finished-pbefore",
           "actions": [

@@ -380,11 +380,16 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
       </header>
 
       <TutorialRoutePreview
-        input="P 中 12 张旧类 Exemplar 原件、X_new 中 18 张新类图片，以及仍未更新的旧网络。"
-        reason="旧图参与 Replay；参数更新前还要保存旧网络对 D 中全部图片的旧类别响应。"
-        steps={["读取 P 的副本并与 X_new 合成 D=30", "逐张送入更新前 Teacher", "三个旧节点响应写入同 ID 的 Q 行", "冻结 Q=30×3 并交给 Student"]}
-        output="训练集 D 与冻结的旧响应快照 Q。"
-        boundary="本页不更新模型参数，也不修改 P 的原始记忆。"
+        context="上一轮保存的旧类 Exemplar、本轮新类别的完整图片，以及尚未更新的 Teacher。目标是准备同时教旧类与新类的本轮训练输入和旧行为参考。"
+        reasoning={<p>Replay 让部分旧图重新进入训练集，但共享参数变化后，旧模型在这些图片上的响应仍可能改变；因此还需在更新前保存 Teacher 对本轮每张训练图的旧节点响应。</p>}
+        steps={[
+          { title: "合成本轮训练集 D", input: "旧记忆 P 的训练副本与新类完整数据", operation: "将两部分图片合并", result: "同一份 D 供本轮训练使用" },
+          { title: "获取更新前的旧响应", input: "D 中每张图片与未更新的 Teacher", operation: "逐张前向计算旧类别输出节点", result: "每张图对应的旧模型响应" },
+          { title: "按图片身份写入 Q", input: "样本 ID 与该图旧节点响应", operation: "写入 Q 中相同 ID 的一行", result: "旧类、新类图片都有对齐的响应行" },
+          { title: "冻结并交接训练材料", input: "训练图片 D、旧响应 Q 与真实标签", operation: "冻结 Q，交给下一页的 Student 目标构造", result: "每行 ID 对齐的数据与参考信号" },
+        ]}
+        output="D 提供训练图片，Q 记录参数更新前的旧 Teacher 响应；两者按同一 sample ID 对齐，并交给 P6。持久记忆原件不变。"
+        demoNote="本次数据示例为旧类 3、新类 3，D=12+18=30、Q=30×3；这些尺寸是示例设定。"
       />
 
       <section

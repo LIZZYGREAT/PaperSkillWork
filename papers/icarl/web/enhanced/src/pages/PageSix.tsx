@@ -524,11 +524,16 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     </header>
 
     <TutorialRoutePreview
-      input="D 中一张训练图、同 ID 的冻结 Q 行，以及真实类别标签。"
-      reason="前三个节点保留旧模型响应，后三个节点学习新类别；两类目标来源不同。"
-      steps={["图片经过共享特征提取器", "组装六维目标 r", "六个独立 Sigmoid 分别计算 BCE", "聚合损失并反传更新参数"]}
-      output="样本/mini-batch 损失与参数更新方向。"
-      boundary="页面只讲解计算流程，不真实运行 SGD；Θ_after 由下一页作为给定教学状态使用。"
+      context="P5 已准备训练图片 D、按 ID 对齐并冻结的旧响应 Q，以及每张图的真实类别标签。Student 需要在同次更新中保持旧类能力并学习新类。"
+      reasoning={<p>旧节点要参考参数更新前 Teacher 对当前图片的软响应；新节点要依据真实类别标签学习相应的 0/1 目标。两种信号来源不同，但可按输出节点拼成一个目标向量，再用 BCE 对每个独立 Sigmoid 输出计分并把梯度传回可训练参数。</p>}
+      steps={[
+        { title: "取得 Student 当前输出", input: "D 中一张图与共享特征提取器", operation: "经共享表示后计算各独立 Sigmoid 节点", result: "当前输出向量 g" },
+        { title: "拼接两类监督目标", input: "同 ID 的 Q 行与真实新类标签", operation: "旧节点取软响应，新节点按标签取硬目标", result: "来源可区分的目标向量 r" },
+        { title: "逐输出节点计算 BCE", input: "当前输出 g 与目标 r", operation: "逐节点比较，再汇总当前样本及 mini-batch 损失", result: "共享的一次训练损失" },
+        { title: "沿梯度路径更新", input: "mini-batch 汇总损失与可训练参数", operation: "将梯度反传至共享特征提取器和训练头", result: "参数更新方向与更新后状态含义" },
+      ]}
+      output="得到损失构造与参数更新方向的解释；Q 和目标向量是监督参考，不随 Student 更新。"
+      demoNote="本次画面用六个输出节点演示：旧节点 3 个、 新类节点 3 个；网页不执行真实 SGD，Θ_after 是下一页给定的教学状态。"
     />
 
     <section className="p6-workbench" aria-label="连续增量训练交互工作台">
