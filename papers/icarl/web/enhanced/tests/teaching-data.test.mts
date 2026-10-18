@@ -810,11 +810,16 @@ function renderPageSevenAt(progress: number, clip = 4, onContinue?: () => void):
 const p7RouteMarkup = renderPageSevenAt(0, 0);
 assert.ok(p7RouteMarkup.includes("模型更新后，记忆与 Prototype 要怎样一起更新？"), "P7 must frame memory and prototype refresh as a joint post-update question.");
 const p7Preview = p7RouteMarkup.match(/<section class="p7-preview"[\s\S]*?<\/section>/)?.[0] ?? "";
-assert.ok(p7Preview.includes("变化 A · 容量") && p7Preview.includes("旧类有序列表") && p7Preview.includes("截尾 + 补入") && p7Preview.includes("Herding") && p7Preview.includes("P_after"),
-  "P7's preview must show the fixed-budget memory path from ordered old lists and new-class Herding to P_after.");
+assert.ok(p7Preview.includes("变化 A · 容量") && p7Preview.includes('data-memory-source="old-prefix"')
+  && p7Preview.includes("P_before · 旧类有序 Exemplar") && p7Preview.includes("按新配额截尾") && p7Preview.includes("保留旧类前缀")
+  && p7Preview.includes('data-memory-source="new-herding"') && p7Preview.includes("本轮新类完整数据")
+  && p7Preview.includes("φ_after 下 Herding") && p7Preview.includes("选新类代表样本") && p7Preview.includes("P_after"),
+  "P7's preview must show old-prefix truncation and new-class Herding as two independent sources that merge into P_after.");
+assert.ok(!p7Preview.includes("截尾 + 补入"), "P7 must not imply that old-list truncation serially feeds the new-class Herding operation.");
 assert.ok(p7Preview.includes("变化 B · 表示") && p7Preview.includes("重新编码") && p7Preview.includes("φ_after") && p7Preview.includes("当前 Prototype"),
   "P7's preview must show the representation-change path from retained raw images through the current extractor to current prototypes.");
-assert.ok(p7Preview.includes("持久保存原始图片") && p7Preview.includes("不能简单沿用更新前坐标"),
+assert.ok(p7Preview.includes("P_after 保存的是原始图片，不是永久不变的特征坐标")
+  && p7Preview.includes("用 φ_after 对这些原图重新编码") && p7Preview.includes("Prototype 与当前 Query 的特征处在同一表示中"),
   "P7 must state why raw exemplars, rather than stale feature coordinates, are persisted.");
 assert.ok(p7Preview.includes("Query") && p7Preview.includes("比较距离") && p7Preview.includes("NME 预测") && p7Preview.includes("Θ_after + P_after"),
   "P7's two change paths must converge on current-space NME and the persistent model-plus-image-memory state.");

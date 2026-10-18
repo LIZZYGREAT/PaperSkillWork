@@ -17,6 +17,16 @@
 .p7-preview-change > p { margin: 0; color: #596f6e; font-size: 12px; line-height: 1.5; }
 .p7-preview-change > p strong { color: #355f4a; }
 .p7-preview-flow { display: grid; grid-template-columns: minmax(86px, 1fr) 76px minmax(82px, .85fr) 60px minmax(76px, .78fr); align-items: stretch; gap: 3px; min-width: 0; }
+.p7-preview-memory-merge { display: grid; grid-template-columns: minmax(0, 1fr) 50px minmax(88px, .5fr); align-items: center; gap: 5px; min-width: 0; }
+.p7-preview-memory-branches { display: grid; gap: 6px; min-width: 0; }
+.p7-preview-memory-branch { display: grid; grid-template-columns: minmax(105px, 1.05fr) 66px minmax(86px, .82fr); align-items: stretch; gap: 3px; min-width: 0; padding: 4px; border: 1px solid #e1e7e2; border-radius: 9px; background: #fbfcfa; }
+.p7-preview-memory-branch--old { border-left: 3px solid #829d90; }
+.p7-preview-memory-branch--new { border-left: 3px solid #bd8059; background: #fffaf6; }
+.p7-preview-memory-branch .p7-preview-node { min-height: 68px; padding: 6px; }
+.p7-preview-memory-branch--new .p7-preview-node:first-child { border-color: #ead6c8; background: #fff; }
+.p7-preview-memory-branch--new .p7-preview-node--operation { border-color: #dfc6b3; background: #fff5ec; }
+.p7-preview-memory-merge__join { width: 48px; height: 168px; overflow: visible; }
+.p7-preview-memory-merge__join path { fill: none; stroke: #8a8f82; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .p7-preview-node { display: grid; align-content: center; justify-items: center; gap: 5px; min-width: 0; min-height: 76px; padding: 8px; border: 1px solid #dce4df; border-radius: 8px; color: #426158; background: #fbfcfa; text-align: center; }
 .p7-preview-node small { color: #586f69; font-size: 12px; line-height: 1.35; }
 .p7-preview-node strong { color: #355d4a; font: 700 15px var(--mono); line-height: 1.35; }
@@ -219,6 +229,11 @@
   .p7-preview { gap: 12px; padding: 12px; }
   .p7-preview__heading h2 { font-size: 20px; }
   .p7-preview-flow { grid-template-columns: minmax(0, 1fr); }
+  .p7-preview-memory-merge { grid-template-columns: minmax(0, 1fr); }
+  .p7-preview-memory-branch { grid-template-columns: minmax(0, 1fr); }
+  .p7-preview-memory-branch .p7-preview-arrow { height: 27px; }
+  .p7-preview-memory-branch .p7-preview-arrow svg { width: 52px; transform: rotate(90deg); }
+  .p7-preview-memory-merge__join { justify-self: center; width: 58px; height: 58px; transform: rotate(90deg); }
   .p7-preview-arrow { height: 27px; }
   .p7-preview-arrow svg { width: 52px; transform: rotate(90deg); }
   .p7-preview__footer { display: grid; }

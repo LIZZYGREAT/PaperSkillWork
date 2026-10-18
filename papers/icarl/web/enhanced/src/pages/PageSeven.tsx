@@ -296,21 +296,27 @@ function PageSevenPreview({ onInspect, onPlay }: { onInspect: () => void; onPlay
     <div className="p7-preview__changes">
       <article className="p7-preview-change p7-preview-change--memory">
         <header><span>变化 A · 容量</span><h3>总预算固定，重组原始图片记忆</h3></header>
-        <div className="p7-preview-flow p7-preview-flow--memory">
-          <div className="p7-preview-node">
-            <small>旧类有序列表</small>
-            <div className="p7-preview-prefixes" aria-label="旧类列表保留前缀并截去尾项">
-              {OLD_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].glyph}</b><i /><i /><s /><s /></span>)}
+        <div className="p7-preview-memory-merge" aria-label="旧类截尾与新类 Herding 两条独立来源汇入 P_after">
+          <div className="p7-preview-memory-branches">
+            <div className="p7-preview-memory-branch p7-preview-memory-branch--old" data-memory-source="old-prefix">
+              <div className="p7-preview-node">
+                <small>P_before · 旧类有序 Exemplar</small>
+                <div className="p7-preview-prefixes" aria-label="旧类列表保留前缀并截去尾项">
+                  {OLD_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].glyph}</b><i /><i /><s /><s /></span>)}
+                </div>
+              </div>
+              <FlowArrow label="按新配额截尾" />
+              <div className="p7-preview-node p7-preview-node--operation"><small>旧类支路</small><strong>保留旧类前缀</strong></div>
+            </div>
+            <div className="p7-preview-memory-branch p7-preview-memory-branch--new" data-memory-source="new-herding">
+              <div className="p7-preview-node"><small>X_new</small><strong>本轮新类完整数据</strong></div>
+              <FlowArrow label="φ_after 下 Herding" />
+              <div className="p7-preview-node p7-preview-node--operation"><small>新类支路</small><strong>选新类代表样本</strong></div>
             </div>
           </div>
-          <FlowArrow label="截尾 + 补入" />
-          <div className="p7-preview-node p7-preview-node--operation">
-            <small>新类完整数据</small>
-            <strong>当前表示下<br />Herding</strong>
-          </div>
-          <FlowArrow />
-          <div className="p7-preview-node p7-preview-node--result"><small>下一轮原图记忆</small><strong>P_after</strong><span>6 类 × 2 张</span></div>
-        </div>
+          <svg className="p7-preview-memory-merge__join" viewBox="0 0 58 168" aria-hidden="true"><path d="M2 36h19q14 0 14 18v30m-33 48h19q14 0 14-18V84h20m-8-8 8 8-8 8" /></svg>
+          <div className="p7-preview-node p7-preview-node--result"><small>全部已学类的原图记忆</small><strong>P_after</strong><span>6 类 × 2 张</span></div>
+            </div>
         <p>旧类保留原列表前缀；新类从本轮完整数据中选入代表样本。</p>
       </article>
 
@@ -326,7 +332,7 @@ function PageSevenPreview({ onInspect, onPlay }: { onInspect: () => void; onPlay
             <div className="p7-preview-prototypes">{ALL_CLASS_IDS.map((classId) => <i key={classId} style={classAccent(classId)}>{CLASS_VISUALS[classId].glyph}</i>)}</div>
           </div>
         </div>
-        <p><strong>持久保存原始图片</strong>使 Prototype 可以用当前特征提取器重新计算；不能简单沿用更新前坐标。</p>
+        <p><strong>P_after 保存的是原始图片，不是永久不变的特征坐标。</strong>特征提取器更新后，需用 φ_after 对这些原图重新编码，才能让 Prototype 与当前 Query 的特征处在同一表示中。</p>
       </article>
     </div>
 
