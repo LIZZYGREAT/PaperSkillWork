@@ -720,7 +720,7 @@ function P3ConceptMap({ onInspect, onPlayAll, reducedMotion }: { onInspect: () =
         </div>
 
         <section className="p3-concept__space" aria-label="同类特征聚合为类别 Prototype">
-          <span className="p3-concept__panel-label">共同特征空间 · 概念示意</span>
+          <span className="p3-concept__panel-label">每类特征形成一个 Prototype</span>
           <svg viewBox="0 0 300 190" role="img" aria-label="三组同类特征分别聚合为三个类别 Prototype">
             <path className="p3-concept__axis" d="M28 160H278M46 176V18" />
             <g className="p3-concept__cluster p3-concept__cluster--one">
@@ -748,24 +748,24 @@ function P3ConceptMap({ onInspect, onPlayAll, reducedMotion }: { onInspect: () =
           <div className="p3-concept__query-mark"><i />Query<span>同一个当前 φ 编码</span></div>
           <div className="p3-concept__distances">
             {classIds.map((classId, index) => (
-              <span key={classId} className={index === 0 ? "is-nearest" : ""} style={{ "--p3-concept-color": CLASS_VISUALS[classId].color } as CSSProperties}>
-                <i /><b>μ<sub>{index + 1}</sub></b><em>{index === 0 ? "最近" : "比较"}</em>
+              <span key={classId} style={{ "--p3-concept-color": CLASS_VISUALS[classId].color } as CSSProperties}>
+                <i /><b>μ<sub>{index + 1}</sub></b><em>待比较</em>
               </span>
             ))}
           </div>
-          <p>比较距离，最近的类别参考高亮；这里不使用训练输出头。</p>
+          <p>动画将比较所有类别距离；此处不提前指定最近类别。</p>
         </section>
       </div>
 
       <ol className="p3-concept__reasoning">
-        <li><span>1</span><p>每类只保存部分旧图，不能把所有历史图重新拿来比较。</p></li>
-        <li><span>2</span><p>同类图片经同一表示网络后可以聚集，因此用保留图片形成<strong>近似参考位置</strong>。</p></li>
-        <li><span>3</span><p>Query 用<strong>同一当前表示</strong>编码，再看离哪个 Prototype 最近。</p></li>
+        <li><span>1</span><p><strong>历史原图不能全部保存</strong>，因此无法总是重放全部旧图。</p></li>
+        <li><span>2</span><p>每类保留图片经当前表示形成<strong>Prototype 参考</strong>。</p></li>
+        <li><span>3</span><p>Query 与<strong>所有已学类别参考</strong>比较距离，再由 argmin 决定类别。</p></li>
       </ol>
 
-      <div className="p3-concept__conclusion"><b>Exemplar 原图</b><i>→</i><b>当前表示下的 Prototype</b><i>→</i><strong>Query 最近邻预测</strong></div>
+      <div className="p3-concept__conclusion"><b>每类保留的原图</b><i>→</i><b>当前表示下的 Prototype</b><i>→</i><strong>Query 的最近原型判别</strong></div>
       <footer className="p3-concept__footer">
-        <p><b>接下来动画将展示</b>编码 → 单位化 → 类均值 → Prototype → 距离 argmin。<span>示例设置：3 个类别、每类 4 张图片。</span></p>
+        <p><b>接下来观察</b>看同类保留图怎样形成 Prototype，再看 Query 的距离比较如何决定类别。<span>示例设置：3 个类别、每类 4 张图片。</span></p>
         <div>
           <button type="button" className="icarl-button icarl-button--quiet p3-start-button" onClick={onInspect}>查看演示 ↓</button>
           <button type="button" className="icarl-button icarl-button--primary" onClick={onPlayAll} disabled={reducedMotion}>▶ 从头完整播放</button>

@@ -45,9 +45,6 @@
 .p3-concept__distances > span > i { height: 0; border-top: 2px dashed var(--p3-concept-color); }
 .p3-concept__distances b { color: var(--p3-concept-color); font: 750 14px var(--mono); }
 .p3-concept__distances em { color: #7b8a86; font-size: 12px; font-style: normal; }
-.p3-concept__distances > span.is-nearest { border-color: color-mix(in srgb, var(--p3-concept-color) 58%, white); background: color-mix(in srgb, var(--p3-concept-color) 7%, white); box-shadow: inset 3px 0 0 var(--p3-concept-color); }
-.p3-concept__distances > span.is-nearest > i { border-top-style: solid; border-top-width: 3px; }
-.p3-concept__distances > span.is-nearest em { color: #285b50; font-weight: 750; }
 .p3-concept__reasoning { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; padding: 0; list-style: none; }
 .p3-concept__reasoning li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 8px; padding: 10px 11px; border-top: 1px solid #d9e3de; }
 .p3-concept__reasoning li > span { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 50%; color: #315e52; background: #e3efe8; font: 750 12px var(--mono); }
