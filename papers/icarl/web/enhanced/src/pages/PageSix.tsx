@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
-import { QuestionHandoff } from "../components/QuestionHandoff";
-import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import { ALL_CLASS_IDS, CLASS_VISUALS, INCOMING_CLASS_IDS, INCOMING_SAMPLES, OLD_CLASS_IDS, P_BEFORE, type ClassId, type Sample } from "../data/icarl-runtime";
 import { binaryCrossEntropy, buildTargets, classLabel, sixNodeBceLoss, studentOutputFor, teacherSnapshotFor, type SixOutputs } from "../data/incremental-training";
@@ -316,6 +314,78 @@ function NodeRow({ index, classId, selected, value, target, targetReady, phase, 
   </button>;
 }
 
+function P6TargetMap({ sample, targets, onChooseSample, onInspect, onPlayAll, reducedMotion }: {
+  sample: Sample;
+  targets: SixOutputs;
+  onChooseSample: (sample: Sample) => void;
+  onInspect: () => void;
+  onPlayAll: () => void;
+  reducedMotion: boolean;
+}) {
+  const qRow = teacherSnapshotFor(sample);
+  return (
+    <section className="p6-preview" aria-labelledby="p6-preview-title">
+      <header className="p6-preview__header">
+        <span className="eyebrow">同一个 Student · 两种 Target 来源</span>
+        <h2 id="p6-preview-title">旧模型只有旧节点，所以旧节点读 Q；新节点必须由真实类别监督</h2>
+        <p><strong>Soft target 与 Hard target 来源不同</strong>，进入 Student 后都使用同一种逐节点 BCE。</p>
+      </header>
+
+      <div className="p6-preview__chooser" role="group" aria-label="切换目标拆分图中的训练样本">
+        <span>选择一张 D 中样本</span>
+        {sampleChoices.map(({ sample: choice, label }) => <button key={choice.id} type="button" className={choice.id === sample.id ? "is-selected" : ""} aria-pressed={choice.id === sample.id} style={accent(choice.classId)} onClick={() => onChooseSample(choice)}><i>{CLASS_VISUALS[choice.classId].glyph}</i><b>{label}</b><small>{choice.id}</small></button>)}
+      </div>
+
+      <div className="p6-preview__assembly">
+        <section className="p6-preview__sources" aria-label="两路目标来源">
+          <div className="p6-preview__source p6-preview__source--q">
+            <span>更新前旧行为</span><b>Q[{sample.id}]</b>
+            <div>{qRow.map((value, index) => <i key={index}>{value.toFixed(2)}</i>)}</div>
+            <small>旧 Teacher 的三个旧节点响应</small>
+          </div>
+          <div className="p6-preview__source p6-preview__source--label">
+            <span>真实类别</span><b>y = {CLASS_VISUALS[sample.classId].displayLabel}</b>
+            <div>{INCOMING_CLASS_IDS.map((classId) => <i key={classId}>{sample.classId === classId ? "1" : "0"}</i>)}</div>
+            <small>只为三个新节点给出 0/1 监督</small>
+          </div>
+        </section>
+
+        <svg className="p6-preview__join" viewBox="0 0 86 126" aria-hidden="true"><path d="M2 25H31Q43 25 43 42V63M2 101H31Q43 101 43 84V63H78m-9-8 9 8-9 8" /></svg>
+
+        <section className="p6-preview__target" aria-label={`样本 ${sample.id} 的六维目标 r`}>
+          <header><span>六维目标 r</span><b>按节点一一对应</b></header>
+          <div>
+            {ALL_CLASS_IDS.map((classId, index) => <span key={classId} className={index < OLD_CLASS_IDS.length ? "is-soft" : "is-hard"} style={accent(classId)}><i>{CLASS_VISUALS[classId].glyph}</i><b>{targets[index].toFixed(index < OLD_CLASS_IDS.length ? 2 : 0)}</b><small>{index < OLD_CLASS_IDS.length ? "Q soft" : "标签 hard"}</small></span>)}
+          </div>
+        </section>
+
+        <svg className="p6-preview__arrow" viewBox="0 0 54 28" aria-hidden="true"><path d="M2 14h45m-8-8 8 8-8 8" /></svg>
+
+        <section className="p6-preview__student" aria-label="Student 当前六个独立 Sigmoid 输出">
+          <header><span>Student 当前输出 g</span><b>六个独立 Sigmoid</b></header>
+          <div>{ALL_CLASS_IDS.map((classId) => <i key={classId} style={accent(classId)}>{CLASS_VISUALS[classId].outputNodeLabel}</i>)}</div>
+          <p>目标 r 与输出 g 在相同节点位置比较。</p>
+        </section>
+      </div>
+
+      <div className="p6-preview__loss-route" aria-label="逐节点 BCE 汇总为样本损失与 mini-batch 更新方向">
+        <div>{ALL_CLASS_IDS.map((classId) => <span key={classId} style={accent(classId)}>BCE<sub>{CLASS_VISUALS[classId].index}</sub></span>)}</div>
+        <svg viewBox="0 0 54 28" aria-hidden="true"><path d="M2 14h45m-8-8 8 8-8 8" /></svg>
+        <b>样本损失 ℓ<sub>i</sub></b>
+        <svg viewBox="0 0 54 28" aria-hidden="true"><path d="M2 14h45m-8-8 8 8-8 8" /></svg>
+        <b>mini-batch</b>
+        <svg viewBox="0 0 54 28" aria-hidden="true"><path d="M2 14h45m-8-8 8 8-8 8" /></svg>
+        <strong>参数更新方向</strong>
+      </div>
+
+      <footer className="p6-preview__footer">
+        <p><b>边界</b>本页只演示目标、损失与反传方向，不执行真实 SGD，也不把示例 g 当作训练收敛结果。<span>示例设置：3 个旧节点 + 3 个新节点。</span></p>
+        <div><button type="button" className="icarl-button icarl-button--quiet" onClick={onInspect}>观察具体怎么算 ↓</button><button type="button" className="icarl-button icarl-button--primary" onClick={onPlayAll} disabled={reducedMotion}>▶ 完整播放</button></div>
+      </footer>
+    </section>
+  );
+}
+
 export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const initialFocusIndex = activeNodeIndex(DEFAULT_SAMPLE);
   const initialFocusTarget = buildTargets(DEFAULT_SAMPLE)[initialFocusIndex];
@@ -334,6 +404,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const [curveTarget, setCurveTarget] = useState(initialFocusTarget);
   const curveTargetRef = useRef(initialFocusTarget);
   const curveFrameRef = useRef<number | null>(null);
+  const workbenchRef = useRef<HTMLElement | null>(null);
   const [caseNotice, setCaseNotice] = useState("");
   const sample = sampleChoices.find((choice) => choice.sample.id === sampleId)?.sample ?? DEFAULT_SAMPLE;
   const targets = useMemo(() => buildTargets(sample), [sample]);
@@ -516,34 +587,20 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     setExploreOutput(value);
   }
 
+  function focusWorkbench() {
+    workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  }
+
   return <article className="tutorial-page icarl-page icarl-page--p6" data-phase={phase.id} data-sample={sample.id} data-model-loss={modelLoss.toFixed(6)} data-explore-loss={exploreLoss.toFixed(6)} data-explore-output={exploreOutput.toFixed(2)} data-selected-target={targets[selectedNodeIndex].toFixed(3)} data-model-output={outputs[selectedNodeIndex].toFixed(3)}>
     <header className="page-heading icarl-page__heading p6-heading">
       <div className="icarl-page__eyebrow"><span>PAGE 06</span><i /> INCREMENTAL TRAINING · CONTINUOUS VIEW</div>
-      <h1>同一次参数更新，怎样兼顾旧知识与新类别？</h1>
-      <p>P5 已准备好训练集 D 与冻结的旧响应 Q。现在沿着目标来源、损失计算到梯度返回网络，解释 Student 怎样同时受到旧模型约束并学习新标签。</p>
+      <h1>同一个 Student 为什么要两种 Target？</h1>
+      <p>P5 已准备好 D、Q 与真实标签；现在先拆清目标来源，再观察六个节点怎样共享同一条损失与反传路径。</p>
     </header>
 
-    <TutorialRoutePreview
-      context="P5 已准备训练图片 D、按 ID 对齐并冻结的旧响应 Q，以及每张图的真实类别标签。Student 需要在同次更新中保持旧类能力并学习新类。"
-      reasoning={(
-        <>
-          <p>P5 给 Student 准备了同一批训练图片 D、更新前冻结的 Q，以及真实标签。一次更新必须兼顾两件事：尽量不让旧类别输出任意偏离旧模型，同时学习本轮新类别；只照顾一边，另一边就缺少相应训练信号。</p>
-          <p>因此，<strong>旧节点</strong>使用同 ID 的 Q 行作为软目标，保留旧 Teacher 对各旧节点的响应强度；<strong>新节点</strong>使用图片真实类别构造 0/1 硬目标，因为 Q 只记录了旧模型输出，并不包含新类别的监督。按节点拼接后，得到来源明确的目标向量 r。</p>
-          <p>Student 对图片前向计算独立 Sigmoid 输出 g，再逐节点比较 g 与 r 并计算二元交叉熵 BCE，最后汇总成本样本或 mini-batch 的训练损失。可导的损失梯度传回共享特征提取器与训练头；Q 只是固定参照，不随 Student 更新。</p>
-          <p>本页展示的是目标、损失与更新方向的计算路径，不是网页执行真实 SGD 后得到参数。P7 的 Θ_after 是固定教学状态，用来继续讲模型更新后的记忆管理与预测。</p>
-        </>
-      )}
-      steps={[
-        { title: "取得 Student 当前输出", input: "D 中一张图与共享特征提取器", operation: "经共享表示后计算各独立 Sigmoid 节点", result: "当前输出向量 g" },
-        { title: "按节点来源构造目标", input: "同 ID 的 Q 行与该图真实类别", operation: "旧节点取教师软响应；新节点按标签取 0/1 硬目标", result: "各节点来源明确的目标向量 r" },
-        { title: "逐节点比较并算 BCE", input: "Student 输出 g 与目标 r", operation: "对每个独立 Sigmoid 节点算 BCE，再汇总样本损失", result: "可用于学习的当前损失信号" },
-        { title: "反传至可训练参数", input: "样本或 mini-batch 损失及网络参数", operation: "把损失梯度传回共享表示与训练头", result: "符号化的更新方向；Q 保持冻结" },
-      ]}
-      output="软、硬目标合成当前 Student 的训练信号；P7 接收更新后状态 Θ_after，Q 仍只是本轮固定参考。"
-      demoNote="本次画面以六个输出节点举例：旧类 3 个、新类 3 个；网页不执行真实 SGD，Θ_after 是下一页给定的教学状态。"
-    />
+    <P6TargetMap sample={sample} targets={targets} onChooseSample={chooseSample} onInspect={focusWorkbench} onPlayAll={playAll} reducedMotion={reducedMotion} />
 
-    <section className="p6-workbench" aria-label="连续增量训练交互工作台">
+    <section className="p6-workbench" aria-label="连续增量训练交互工作台" ref={workbenchRef}>
       <div className="p6-workbench__guide">
         <div><span className="eyebrow">PHASE {String(phaseIndex + 1).padStart(2, "0")} / 05</span><h2>{phase.title}</h2><p aria-live="polite">{phase.guidance}</p><small>本阶段产出：{phaseOutputs[phaseIndex]}</small></div>
         <span className={`p6-workbench__status p6-workbench__status--${status}`}>{status === "playing" ? playMode === "all" ? "完整播放中" : "本阶段播放中" : status === "complete" ? "本阶段完成" : status === "paused" ? "已暂停" : "可逐步查看"}</span>
@@ -573,17 +630,10 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
         <button type="button" className="icarl-button icarl-button--primary" onClick={() => changePhase(phaseIndex + 1)} disabled={phaseIndex >= phases.length - 1}>下一阶段 →</button>
       </footer>
     </section>
-    {phaseIndex === phases.length - 1 ? <QuestionHandoff
-      fromPage={6}
-      toPage={7}
-      steps={[
-        { label: "已经知道", body: <>旧类响应与新类标签共同形成损失，给出<strong>更新方向</strong>。</> },
-        { label: "新的限制", body: <>参数更新后，图片特征可能改变；旧 Prototype 不能直接沿用。</> },
-        { label: "下一问", body: <>怎样整理原始图片记忆，用当前表示<strong>重建 Prototype 并预测</strong>？</> },
-      ]}
-      actionLabel="查看训练后的记忆与预测"
-      onContinue={onContinue}
-      note="本页讲解公式与参数更新路径，不执行真实优化；Θ_after 是后续教学状态。"
-    /> : null}
+    <section className="p6-next-step" aria-label="第 6 页到第 7 页的学习衔接">
+      <div className="p6-next-step__state" aria-hidden="true"><b>Θ<sub>before</sub></b><svg viewBox="0 0 54 24"><path d="M2 12h45m-8-7 8 7-8 7" /></svg><b>Θ<sub>after</sub></b><span>P 原图保留</span></div>
+      <p><strong>Q 与标签提供两类 Target，梯度更新共享网络。</strong><span>下一问：模型变了，Prototype 与记忆怎么办？</span></p>
+      {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>查看训练后的记忆与预测 →</button> : null}
+    </section>
   </article>;
 }

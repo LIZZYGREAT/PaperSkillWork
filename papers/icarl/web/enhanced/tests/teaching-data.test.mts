@@ -589,16 +589,19 @@ const p6DefaultSample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => 
 const p6DefaultTargets = buildTargets(p6DefaultSample);
 const p6DefaultOutputs = studentOutputFor(p6DefaultSample);
 const p6DefaultPage = renderToStaticMarkup(createElement(PageSix));
-assertTutorialRouteMarkup(p6DefaultPage, "P6");
-const p6GeneralReasoning = p6DefaultPage.slice(p6DefaultPage.indexOf('class="tutorial-route__reasoning"'), p6DefaultPage.indexOf('class="tutorial-route__execution"'));
-assert.ok(p6GeneralReasoning.includes("旧节点") && p6GeneralReasoning.includes("软目标") && p6GeneralReasoning.includes("新节点") && p6GeneralReasoning.includes("0/1 硬目标"),
+assert.ok(p6DefaultPage.includes('class="p6-preview"') && !p6DefaultPage.includes('class="tutorial-route"'),
+  "P6 must use its own dual-target assembly instead of the shared route template.");
+assert.ok(p6DefaultPage.includes("旧节点读 Q") && p6DefaultPage.includes("新节点必须由真实类别监督"),
   "P6 must explain why old and new outputs use different target sources.");
-assert.ok(p6GeneralReasoning.includes("逐节点") && p6GeneralReasoning.includes("二元交叉熵 BCE") && p6GeneralReasoning.includes("损失梯度传回"),
-  "P6 must trace independent-node BCE into backpropagation.");
-assert.ok(p6GeneralReasoning.includes("不是网页执行真实 SGD") && p6GeneralReasoning.includes("固定教学状态"),
-  "P6 must preserve the symbolic-update limitation in its pre-play reasoning.");
-assert.doesNotMatch(p6GeneralReasoning, /六个输出|旧类 3 个|新类 3 个/u, "P6's six-node counts must remain in the demonstration note.");
-assert.ok(p6DefaultPage.slice(p6DefaultPage.indexOf('class="tutorial-route__demo-note"')).includes("六个输出节点举例"),
+assert.equal([...p6DefaultPage.matchAll(/class="p6-preview__target"/g)].length, 1, "P6 must assemble one six-dimensional target vector.");
+assert.equal([...p6DefaultPage.matchAll(/class="is-soft"/g)].length, 3, "P6's target map must show three old-node soft targets.");
+assert.equal([...p6DefaultPage.matchAll(/class="is-hard"/g)].length, 3, "P6's target map must show three new-node hard targets.");
+assert.ok(p6DefaultPage.includes("mini-batch") && p6DefaultPage.includes("参数更新方向"),
+  "P6 must trace six independent BCE terms into batch aggregation and an update direction.");
+const p6Boundary = p6DefaultPage.slice(p6DefaultPage.indexOf('class="p6-preview__footer"'));
+assert.ok(p6Boundary.includes("不执行真实 SGD") && p6Boundary.includes("不把示例 g 当作训练收敛结果"),
+  "P6 must preserve the symbolic-update limitation in its pre-play briefing.");
+assert.ok(p6Boundary.includes("示例设置：3 个旧节点 + 3 个新节点"),
   "P6 must label the six-node and three-plus-three counts as a specific example.");
 const p6ArticleTag = p6DefaultPage.match(/<article class="tutorial-page icarl-page icarl-page--p6"[^>]*>/)?.[0];
 assert.ok(p6ArticleTag, "P6 must render its current sample and separate model/exploration readouts.");
@@ -831,7 +834,7 @@ assert.ok(p7QuestionCard?.includes("查看论文证据与边界") && p7QuestionC
 assert.ok(!p7PlaybackControls.includes("查看论文证据与边界"), "P7 must keep its page action out of the playback controls.");
 const p6Source = readFileSync(path.join(process.cwd(), "src/pages/PageSix.tsx"), "utf8");
 assert.ok(p6Source.includes('className="p6-handoff" role="status"'), "P6's in-workbench phase feedback must remain distinct from the page-end transition.");
-assert.ok(p6Source.includes("phaseIndex === phases.length - 1 ? <QuestionHandoff"), "P6's page-end handoff must appear only at the final training phase.");
+assert.ok(p6Source.includes('className="p6-next-step"') && !p6Source.includes("<QuestionHandoff"), "P6's page-end transition must be compact and distinct from in-workbench status.");
 
 function distanceLines(markup: string): string[] {
   return markup.match(/<line\b[^>]*class="feature-space__distance[^"]*"[^>]*>/g) ?? [];
