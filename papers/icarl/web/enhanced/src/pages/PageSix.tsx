@@ -379,7 +379,7 @@ function P6TargetMap({ sample, targets, onChooseSample, onInspect, onPlayAll, re
       </div>
 
       <footer className="p6-preview__footer">
-        <p><b>边界</b>本页只演示目标、损失与反传方向，不执行真实 SGD，也不把示例 g 当作训练收敛结果。<span>示例设置：3 个旧节点 + 3 个新节点。</span></p>
+        <p><b>接下来观察</b>同一张图的前三个旧类目标来自冻结 Q，新增节点目标来自真实标签；看它们怎样组成 r，并分别与 g 计算 BCE。<span><b>边界</b>本页只演示目标、损失与反传方向，不执行真实 SGD，也不把示例 g 当作训练收敛结果。</span><span>示例设置：3 个旧节点 + 3 个新节点。</span></p>
         <div><button type="button" className="icarl-button icarl-button--quiet" onClick={onInspect}>观察具体怎么算 ↓</button><button type="button" className="icarl-button icarl-button--primary" onClick={onPlayAll} disabled={reducedMotion}>▶ 完整播放</button></div>
       </footer>
     </section>

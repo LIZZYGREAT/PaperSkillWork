@@ -339,7 +339,7 @@ function PageSevenPreview({ onInspect, onPlay }: { onInspect: () => void; onPlay
     </div>
 
     <footer className="p7-preview__footer">
-      <p><b>本例设置</b>K=12；旧类每类 4 → 2，新类 D / E / F 各选 2。这里只展示机制，不把数量当作通用规则。</p>
+      <p><b>接下来观察</b>固定 K 下旧类截去尾项、新类补入图片；随后用更新后的特征提取器重建 Prototype，Query 再在当前空间比较距离。<span><b>本例设置</b>K=12；旧类每类 4 → 2，新类 D / E / F 各选 2。</span></p>
       <div><button type="button" className="icarl-button icarl-button--quiet" onClick={onInspect}>查看分阶段工作台</button><button type="button" className="icarl-button icarl-button--primary" onClick={onPlay}>▶ 完整播放</button></div>
     </footer>
   </section>;

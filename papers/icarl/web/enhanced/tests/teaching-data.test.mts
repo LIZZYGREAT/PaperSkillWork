@@ -613,6 +613,9 @@ assert.equal([...p6DefaultPage.matchAll(/class="is-hard"/g)].length, 3, "P6's ta
 assert.ok(p6DefaultPage.includes("mini-batch") && p6DefaultPage.includes("参数更新方向"),
   "P6 must trace six independent BCE terms into batch aggregation and an update direction.");
 const p6Boundary = p6DefaultPage.slice(p6DefaultPage.indexOf('class="p6-preview__footer"'));
+assert.ok(p6Boundary.includes("同一张图的前三个旧类目标来自冻结 Q") && p6Boundary.includes("新增节点目标来自真实标签")
+  && p6Boundary.includes("组成 r") && p6Boundary.includes("与 g 计算 BCE"),
+  "P6's pre-play task must trace the same image's Q and label sources into r and BCE.");
 assert.ok(p6Boundary.includes("不执行真实 SGD") && p6Boundary.includes("不把示例 g 当作训练收敛结果"),
   "P6 must preserve the symbolic-update limitation in its pre-play briefing.");
 assert.ok(p6Boundary.includes("示例设置：3 个旧节点 + 3 个新节点"),
@@ -790,6 +793,8 @@ assert.ok(p7Preview.includes("Query") && p7Preview.includes("比较距离") && p
   "P7's two change paths must converge on current-space NME and the persistent model-plus-image-memory state.");
 assert.ok(p7Preview.includes("本例设置") && p7Preview.includes("K=12") && p7Preview.includes("4 → 2") && p7Preview.includes("D / E / F 各选 2"),
   "P7 must isolate its twelve-image and 4-to-2 budget details as example-only settings.");
+assert.ok(p7Preview.includes("固定 K 下旧类截去尾项、新类补入图片") && p7Preview.includes("重建 Prototype") && p7Preview.includes("Query 再在当前空间比较距离"),
+  "P7's pre-play task must trace memory changes into prototype rebuilding and current-space prediction.");
 assert.ok(p7Preview.includes("查看分阶段工作台") && p7Preview.includes("▶ 完整播放"),
   "P7's preview must provide direct actions for inspection and full playback.");
 
