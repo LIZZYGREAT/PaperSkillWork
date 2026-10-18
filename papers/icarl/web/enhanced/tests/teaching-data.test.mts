@@ -129,8 +129,10 @@ assert.ok(p3RouteMarkup.includes('class="p3-concept"') && !p3RouteMarkup.include
 assert.equal([...p3RouteMarkup.matchAll(/class="p3-concept__memory"/g)].length, 1, "P3 must show finite exemplar memory as the source of class references.");
 assert.ok(p3RouteMarkup.includes("同一个当前 φ") && p3RouteMarkup.includes("每类特征形成一个 Prototype"),
   "P3 must visibly keep exemplar and Query encoding in the same current feature space.");
-assert.ok(p3RouteMarkup.includes("近似参考位置 Prototype") && p3RouteMarkup.includes("Query 的最近原型判别"),
+assert.ok(p3RouteMarkup.includes("Prototype 是某个类别在当前特征空间中的近似参考位置") && p3RouteMarkup.includes("Query 的最近原型判别"),
   "P3 must connect the approximate class reference to nearest-prototype prediction.");
+assert.ok(p3RouteMarkup.includes("不是某张“典型图片”") && p3RouteMarkup.includes("不是训练输出头的分数"),
+  "P3 must distinguish a prototype reference position from a representative image and a training-head score.");
 const p3PrincipleCopy = p3RouteMarkup.slice(p3RouteMarkup.indexOf('class="p3-concept__map"'), p3RouteMarkup.indexOf('class="p3-concept__footer"'));
 assert.doesNotMatch(p3PrincipleCopy, /3 个类别|每类 4 张/u, "P3's demonstration counts must stay outside the general concept map.");
 assert.equal([...p3PrincipleCopy.matchAll(/<em>待比较<\/em>/g)].length, 3, "P3 must show all three concept distances as equal and pending.");

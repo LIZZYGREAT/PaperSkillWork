@@ -736,7 +736,7 @@ function P3ConceptMap({ onInspect, onPlayAll, reducedMotion }: { onInspect: () =
               <circle className="p3-concept__prototype" cx="144" cy="133" r="12" /><text x="144" y="138">μ₃</text>
             </g>
           </svg>
-          <p>同类保留图片形成一个<strong>近似参考位置 Prototype μ<sub>y</sub></strong>。</p>
+          <p><strong>Prototype 是某个类别在当前特征空间中的近似参考位置</strong>，由该类保留图像的特征构成；它不是某张“典型图片”，也不是训练输出头的分数。</p>
         </section>
 
         <div className="p3-concept__bridge p3-concept__bridge--query" aria-hidden="true">
