@@ -202,13 +202,13 @@ function buildClips(): DemoClip[] {
       sweepEnd: 1,
       move: stepDurations.commit,
       durationMs: stepDurations.commit,
-      holdMs: 700,
+      holdMs: 1400,
       narrative: `全部候选比较完毕：${round.chosen.id} 的前缀均值离 μ_full 最近，成为 p${round.k}`,
     });
   }
 
-  push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 8000, durationMs: 8000, holdMs: 700, narrative: "逐项加入已选样本，并查看对应的真实前缀均值" });
-  push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 7000, durationMs: 7000, holdMs: 800, narrative: "总预算 K = 12 不变；类别增加后把容量边界移到前三项并移除尾项 p₄" });
+  push({ id: "review-prefix", kind: "review", round: 5, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 8000, durationMs: 8000, holdMs: 1200, narrative: "逐项加入已选样本，并查看对应的真实前缀均值" });
+  push({ id: "budget-shrink", kind: "budget", round: 6, candidateIndex: 0, sweepStart: 0, sweepEnd: 0, move: 7000, durationMs: 7000, holdMs: 1500, narrative: "总预算 K = 12 不变；类别增加后把容量边界移到前三项并移除尾项 p₄" });
   return clips.map((clip) => {
     if (clip.round !== 4 || clip.kind !== "hull") return clip;
     return {
@@ -241,24 +241,6 @@ const phaseRanges = phaseRailEntries.map((entry, index) => {
     .reduce((total, clip) => total + clip.durationMs + (clip.holdMs ?? 0), 0);
   return { ...entry, startIndex, endIndex, durationMs };
 });
-
-const phaseTitles: Record<ClipKind, string> = {
-  "target-contribute": "先确定要逼近的完整类别目标",
-  "target-normalize": "把完整类别原始均值单位化为 μ_full",
-  "target-normalize-fade": "虚线淡出，完整类别目标保留",
-  scan: "顺时针逐个检查尚未选择的候选",
-  hull: "固定已有前缀并连出参与者",
-  hover: "确认候选单位特征直接参与比较",
-  split: "从每个真实端点复制贡献点",
-  gather: "贡献点沿连线聚合成原始前缀均值",
-  mean: "原始前缀均值停留在计算位置",
-  score: "用单位化前缀均值比较到目标的距离",
-  "score-fade": "距离线停留后淡出，再检查下一候选",
-  norm: "把原始前缀均值单位化",
-  commit: "本轮比较结束，胜出项进入记忆槽",
-  review: "四轮选择完成。现在看选出的顺序有什么用。",
-  budget: "总预算 K = 12 不变，类别增加后只保留原顺序的前三项",
-};
 
 function stablePhaseTitle(phaseIndex: number, clip: DemoClip) {
   if (phaseIndex === 0) return "建立当前类别的完整目标 μ_full";
@@ -518,7 +500,7 @@ function HerdingScene({ scene }: { scene: Scene }) {
       viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label={`固定的八样本 Herding 特征空间。${phaseTitles[scene.clip.kind]}${candidate ? `；当前候选 ${candidate.point.id}` : ""}`}
+      aria-label={`固定的八样本 Herding 特征空间。${scene.clip.narrative}${candidate ? `；当前候选 ${candidate.point.id}` : ""}`}
     >
       <title>同一特征空间中的 Herding 计算与有序前缀</title>
       <desc>坐标轴、八个单位候选特征与完整类别目标贯穿所有片段；扫描环从 a8 出发沿圆周顺时针移动，每个候选完成均值、单位化和距离记录后才转向下一候选。</desc>
@@ -1044,6 +1026,11 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
     : scene.review?.handoffProgress
       ? "下一步预算只能留 3 项；现在仍保留完整四项，p₄ 尚未删除。"
       : reviewNarrative ?? clip.narrative;
+  const currentAction = clip.kind === "score-fade"
+    ? `${candidate?.point.id ?? "上一候选"} 的真实分数已记录；清场后继续比较下一候选。`
+    : clip.kind === "commit"
+      ? `本轮全部候选已比较，${round?.chosen.id} 以最小真实距离成为 p${clip.round}。`
+      : workbenchNarrative;
   const orderedMemoryMode = clip.kind === "review" || clip.kind === "budget";
 
   useEffect(() => {
@@ -1145,7 +1132,7 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
               {" · 阶段 "}{activePhaseIndex + 1} / {phaseRanges.length}
             </span>
             <h2>{stablePhaseTitle(activePhaseIndex, clip)}</h2>
-            <p aria-live="polite"><strong>当前动作：</strong>{phaseTitles[clip.kind]}。{workbenchNarrative}</p>
+            <p aria-live="polite"><strong>当前动作：</strong>{currentAction}</p>
           </div>
           <span className="p4-workbench__phase">
             {phaseComplete ? "阶段完成" : `${Math.round(phaseProgress * 100)}%`}

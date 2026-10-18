@@ -217,6 +217,12 @@ const clipTitles: readonly string[] = [
   "新 Query 进入同一空间",
   "几何比较与决策",
 ];
+const stageResults: readonly string[] = [
+  "阶段结果：十二张 Exemplar 已成为单位特征，图片身份和类别保持不变。",
+  "阶段结果：三类 Prototype 已由各自四张 Exemplar 的单位特征计算完成。",
+  "阶段结果：Query 已用同一固定模型编码；它不写入记忆。",
+  `最终结果：三类真实距离比较完成，最近原型给出 ${CLASS_VISUALS[predictedClass].displayLabel}。`,
+];
 
 /* ------------------------------------------------------------------ types --- */
 
@@ -787,7 +793,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
           <div>
             <span className="eyebrow">片段 {state.clipIndex + 1} / {clips.length} · {clipTitles[state.clipIndex]}</span>
             <h2>{state.clip.narrative}</h2>
-            <p aria-live="polite">{clipNarratives[state.clipIndex][narrationIndex]}</p>
+            <p aria-live="polite">{state.isHolding ? stageResults[state.clipIndex] : clipNarratives[state.clipIndex][narrationIndex]}</p>
           </div>
           <span className="p3-workbench__phase">{state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
         </header>

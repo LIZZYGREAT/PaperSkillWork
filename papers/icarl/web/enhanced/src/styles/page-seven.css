@@ -6,6 +6,7 @@
 .p7-workbench__guide { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 0 2px 12px; border-bottom: 1px solid #dce5e0; }
 .p7-workbench__guide h2 { margin: 4px 0 3px; color: var(--p7-ink); font-size: 21px; line-height: 1.35; }
 .p7-workbench__guide p { max-width: 920px; margin: 0; color: #52696b; font-size: 14px; line-height: 1.55; }
+.p7-workbench__guide > div > small { color: #3f6259; font-size: 13px; line-height: 1.45; }
 .p7-playback-status { flex: 0 0 auto; margin-top: 3px; padding: 7px 10px; border: 1px solid #d3dfd7; border-radius: 999px; color: #526b64; background: #eff5f0; font-size: 12px; }
 .p7-playback-status--playing { border-color: #bfdbc9; color: #38664f; background: #eaf5ed; }
 .p7-playback-status--finished { border-color: #d8d7c9; color: #6d664b; background: #f6f4eb; }

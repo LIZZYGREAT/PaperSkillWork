@@ -69,7 +69,7 @@ const steps: readonly P7Step[] = [
 const clips: readonly AnimationClip[] = steps.map((step) => ({
   id: step.id,
   durationMs: step.durationMs,
-  holdMs: 650,
+  holdMs: step.id === "query" ? 1600 : step.id === "rebuild-prototypes" ? 1200 : 900,
   narrative: step.narrative,
 }));
 
@@ -281,6 +281,18 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
   const [playMode, setPlayMode] = useState<"all" | "phase">("phase");
   const stage = state.clipIndex;
   const step = steps[stage];
+  const currentAction = stage === 0 ? "确认 Θ_after 是给定的训练后状态，旧 P_before 原图仍完整保留。"
+    : stage === 1 ? state.progress < 0.8 ? "按原有顺序移出 A、B、C 各自的尾部两项。" : "旧类各保留前两项，六个记忆位置已经释放。"
+    : stage === 2 ? `按当前表示读取新类 Herding 顺序，正在补入第 ${Math.min(6, Math.max(1, Math.ceil(state.progress * 6)))} / 6 张新 exemplar。`
+    : stage === 3 ? state.progress < 0.7 ? "用 φ_after 重新编码 P_after 中同一批原始图片。" : "六类当前 Prototype 正由各自两张保留图片的当前特征形成。"
+    : state.progress < 0.2 ? "Query 正在进入当前特征空间。" : state.progress < 0.82 ? `正在累积六类真实距离：${Math.min(6, Math.floor(((state.progress - 0.2) / 0.62) * 6))} / 6。` : "六条距离已经齐备，现在高亮 argmin 并揭示预测。";
+  const stageOutputs = [
+    "Θ_after 与仍完整的 P_before。",
+    "A、B、C 各两张的旧类前缀。",
+    "共 12 张原始图片的 P_after。",
+    "由当前表示计算的六个类别 Prototype。",
+    "Query 的六类距离与最近原型预测。",
+  ] as const;
 
   function goToStage(index: number) {
     setPlayMode("phase");
@@ -333,7 +345,7 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
 
     <section className="p7-workbench" aria-label="参数更新后的记忆交接与预测工作台">
       <header className="p7-workbench__guide">
-        <div><span className="eyebrow">PHASE {String(stage + 1).padStart(2, "0")} / 05</span><h2>{step.title}</h2><p aria-live="polite">{step.narrative}</p></div>
+        <div><span className="eyebrow">PHASE {String(stage + 1).padStart(2, "0")} / 05</span><h2>{step.title}</h2><p aria-live="polite"><strong>当前动作：</strong>{currentAction}</p><small>完成后：{stageOutputs[stage]}</small></div>
         <span className={`p7-playback-status p7-playback-status--${state.status}`}>{state.status === "playing" ? "动画运行中" : state.status === "finished" ? "本轮交接完成" : reducedMotion ? "减少动态效果 · 可逐段查看" : "已暂停 · 可逐段查看"}</span>
       </header>
 
