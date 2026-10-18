@@ -375,20 +375,27 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
     <article className="tutorial-page icarl-page icarl-page--p5" data-data-check={INCREMENTAL_DATA_VALIDATION ? "pass" : "fail"}>
       <header className="page-heading icarl-page__heading p5-heading">
         <div className="icarl-page__eyebrow"><span>PAGE 05</span><i /> REPLAY · OLD RESPONSES Q</div>
-        <h1>保存的 Exemplars 怎样继续参与学习？</h1>
-        <p>新类别还会到来。让旧记忆和新类图片共同形成训练集，并在参数改变之前保存旧节点的响应。</p>
+        <h1>旧图片能参加新训练，但旧模型的行为怎样保留？</h1>
+        <p>新类别到来后，旧类仍须可识别。本页先将部分旧 Exemplar 与新类图片并入 D，再说明为什么 Replay 之外还要冻结更新前响应 Q。</p>
       </header>
 
       <TutorialRoutePreview
         context="上一轮保存的旧类 Exemplar、本轮新类别的完整图片，以及尚未更新的 Teacher。目标是准备同时教旧类与新类的本轮训练输入和旧行为参考。"
-        reasoning={<p>Replay 让部分旧图重新进入训练集，但共享参数变化后，旧模型在这些图片上的响应仍可能改变；因此还需在更新前保存 Teacher 对本轮每张训练图的旧节点响应。</p>}
+        reasoning={(
+          <>
+            <p>新类别到来后，模型仍要识别旧类。若参数更新只看新类图片，共享表示可能偏向当前数据，旧类识别随之退化。因此，把记忆中的部分旧 Exemplar 训练副本与新类图片一同放进训练集 <strong>D</strong>，让旧输入继续参与学习；这就是 Replay。</p>
+            <p>但 Replay 只保证训练时再次看到部分旧图片，并没有记录更新前模型对它们的判断。共享参数改变后，同一图片在旧类别输出节点上的响应也可能改变。若希望新模型受到旧行为约束，就还需要一份更新前的参考信号。</p>
+            <p>所以先保持旧 Teacher 不变，让它对 <strong>D 中每一张图片</strong>前向计算，把旧类别节点的响应按 sample ID 写入冻结快照 <strong>Q</strong>。新类图片同样要有 Q 行：这些值表示旧 Teacher 如何响应这张输入，不是它的真实新类标签。</p>
+            <p>D 与 Q 因而分工不同：D 保存参与训练的图片及其真实类别，Q 保存旧 Teacher 的更新前响应；两者按同一 ID 对齐。下一页再把 Q 与标签分别用于 Student 的旧、新类别目标。</p>
+          </>
+        )}
         steps={[
-          { title: "合成本轮训练集 D", input: "旧记忆 P 的训练副本与新类完整数据", operation: "将两部分图片合并", result: "同一份 D 供本轮训练使用" },
-          { title: "获取更新前的旧响应", input: "D 中每张图片与未更新的 Teacher", operation: "逐张前向计算旧类别输出节点", result: "每张图对应的旧模型响应" },
-          { title: "按图片身份写入 Q", input: "样本 ID 与该图旧节点响应", operation: "写入 Q 中相同 ID 的一行", result: "旧类、新类图片都有对齐的响应行" },
-          { title: "冻结并交接训练材料", input: "训练图片 D、旧响应 Q 与真实标签", operation: "冻结 Q，交给下一页的 Student 目标构造", result: "每行 ID 对齐的数据与参考信号" },
+          { title: "合成训练集 D", input: "旧记忆原图的训练副本与新类数据", operation: "读取旧图副本并同新类图片合并", result: "旧、新图片共同组成的 D" },
+          { title: "查询更新前 Teacher", input: "D 中每一张图片与尚未更新的旧模型", operation: "逐张前向计算所有旧类别输出节点", result: "每张输入对应的旧节点响应" },
+          { title: "按 ID 写入 Q 行", input: "每张 D 图片的 sample ID 与旧响应", operation: "把响应写入同一 ID 的 Q 行，包含新类图片", result: "与 D 全部样本对齐的旧响应快照" },
+          { title: "冻结并交接", input: "训练图片 D、冻结 Q 与真实标签", operation: "保持 Q 不变，交给 P6 构造 Student 目标", result: "用途不同但按 ID 对齐的训练材料" },
         ]}
-        output="D 提供训练图片，Q 记录参数更新前的旧 Teacher 响应；两者按同一 sample ID 对齐，并交给 P6。持久记忆原件不变。"
+        output="D 是本轮临时训练输入，Q 是更新前冻结的旧节点参考；旧记忆原件不变，二者按 ID 一同交给 P6。"
         demoNote="本次数据示例为旧类 3、新类 3，D=12+18=30、Q=30×3；这些尺寸是示例设定。"
       />
 

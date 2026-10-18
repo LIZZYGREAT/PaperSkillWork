@@ -519,21 +519,28 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
   return <article className="tutorial-page icarl-page icarl-page--p6" data-phase={phase.id} data-sample={sample.id} data-model-loss={modelLoss.toFixed(6)} data-explore-loss={exploreLoss.toFixed(6)} data-explore-output={exploreOutput.toFixed(2)} data-selected-target={targets[selectedNodeIndex].toFixed(3)} data-model-output={outputs[selectedNodeIndex].toFixed(3)}>
     <header className="page-heading icarl-page__heading p6-heading">
       <div className="icarl-page__eyebrow"><span>PAGE 06</span><i /> INCREMENTAL TRAINING · CONTINUOUS VIEW</div>
-      <h1>旧知识与新类别怎样一起更新网络？</h1>
-      <p>上一页，我们把旧 Exemplars 与新类完整数据合成训练集 D，并在更新前记录了旧模型的响应快照 Q。现在，同一张图片怎样同时提供“保留旧类别响应”和“学会新类别”的信号？先为六个输出节点构造目标，再比较当前输出，最后让损失梯度返回网络。</p>
+      <h1>同一次参数更新，怎样兼顾旧知识与新类别？</h1>
+      <p>P5 已准备好训练集 D 与冻结的旧响应 Q。现在沿着目标来源、损失计算到梯度返回网络，解释 Student 怎样同时受到旧模型约束并学习新标签。</p>
     </header>
 
     <TutorialRoutePreview
       context="P5 已准备训练图片 D、按 ID 对齐并冻结的旧响应 Q，以及每张图的真实类别标签。Student 需要在同次更新中保持旧类能力并学习新类。"
-      reasoning={<p>旧节点要参考参数更新前 Teacher 对当前图片的软响应；新节点要依据真实类别标签学习相应的 0/1 目标。两种信号来源不同，但可按输出节点拼成一个目标向量，再用 BCE 对每个独立 Sigmoid 输出计分并把梯度传回可训练参数。</p>}
+      reasoning={(
+        <>
+          <p>P5 给 Student 准备了同一批训练图片 D、更新前冻结的 Q，以及真实标签。一次更新必须兼顾两件事：尽量不让旧类别输出任意偏离旧模型，同时学习本轮新类别；只照顾一边，另一边就缺少相应训练信号。</p>
+          <p>因此，<strong>旧节点</strong>使用同 ID 的 Q 行作为软目标，保留旧 Teacher 对各旧节点的响应强度；<strong>新节点</strong>使用图片真实类别构造 0/1 硬目标，因为 Q 只记录了旧模型输出，并不包含新类别的监督。按节点拼接后，得到来源明确的目标向量 r。</p>
+          <p>Student 对图片前向计算独立 Sigmoid 输出 g，再逐节点比较 g 与 r 并计算二元交叉熵 BCE，最后汇总成本样本或 mini-batch 的训练损失。可导的损失梯度传回共享特征提取器与训练头；Q 只是固定参照，不随 Student 更新。</p>
+          <p>本页展示的是目标、损失与更新方向的计算路径，不是网页执行真实 SGD 后得到参数。P7 的 Θ_after 是固定教学状态，用来继续讲模型更新后的记忆管理与预测。</p>
+        </>
+      )}
       steps={[
         { title: "取得 Student 当前输出", input: "D 中一张图与共享特征提取器", operation: "经共享表示后计算各独立 Sigmoid 节点", result: "当前输出向量 g" },
-        { title: "拼接两类监督目标", input: "同 ID 的 Q 行与真实新类标签", operation: "旧节点取软响应，新节点按标签取硬目标", result: "来源可区分的目标向量 r" },
-        { title: "逐输出节点计算 BCE", input: "当前输出 g 与目标 r", operation: "逐节点比较，再汇总当前样本及 mini-batch 损失", result: "共享的一次训练损失" },
-        { title: "沿梯度路径更新", input: "mini-batch 汇总损失与可训练参数", operation: "将梯度反传至共享特征提取器和训练头", result: "参数更新方向与更新后状态含义" },
+        { title: "按节点来源构造目标", input: "同 ID 的 Q 行与该图真实类别", operation: "旧节点取教师软响应；新节点按标签取 0/1 硬目标", result: "各节点来源明确的目标向量 r" },
+        { title: "逐节点比较并算 BCE", input: "Student 输出 g 与目标 r", operation: "对每个独立 Sigmoid 节点算 BCE，再汇总样本损失", result: "可用于学习的当前损失信号" },
+        { title: "反传至可训练参数", input: "样本或 mini-batch 损失及网络参数", operation: "把损失梯度传回共享表示与训练头", result: "符号化的更新方向；Q 保持冻结" },
       ]}
-      output="得到损失构造与参数更新方向的解释；Q 和目标向量是监督参考，不随 Student 更新。"
-      demoNote="本次画面用六个输出节点演示：旧节点 3 个、 新类节点 3 个；网页不执行真实 SGD，Θ_after 是下一页给定的教学状态。"
+      output="软、硬目标合成当前 Student 的训练信号；P7 接收更新后状态 Θ_after，Q 仍只是本轮固定参考。"
+      demoNote="本次画面以六个输出节点举例：旧类 3 个、新类 3 个；网页不执行真实 SGD，Θ_after 是下一页给定的教学状态。"
     />
 
     <section className="p6-workbench" aria-label="连续增量训练交互工作台">

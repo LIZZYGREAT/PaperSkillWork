@@ -582,6 +582,17 @@ const p6DefaultSample = INCREMENTAL_STAGE_DATA.incomingSamples.find((sample) => 
 const p6DefaultTargets = buildTargets(p6DefaultSample);
 const p6DefaultOutputs = studentOutputFor(p6DefaultSample);
 const p6DefaultPage = renderToStaticMarkup(createElement(PageSix));
+assertTutorialRouteMarkup(p6DefaultPage, "P6");
+const p6GeneralReasoning = p6DefaultPage.slice(p6DefaultPage.indexOf('class="tutorial-route__reasoning"'), p6DefaultPage.indexOf('class="tutorial-route__execution"'));
+assert.ok(p6GeneralReasoning.includes("旧节点") && p6GeneralReasoning.includes("软目标") && p6GeneralReasoning.includes("新节点") && p6GeneralReasoning.includes("0/1 硬目标"),
+  "P6 must explain why old and new outputs use different target sources.");
+assert.ok(p6GeneralReasoning.includes("逐节点") && p6GeneralReasoning.includes("二元交叉熵 BCE") && p6GeneralReasoning.includes("损失梯度传回"),
+  "P6 must trace independent-node BCE into backpropagation.");
+assert.ok(p6GeneralReasoning.includes("不是网页执行真实 SGD") && p6GeneralReasoning.includes("固定教学状态"),
+  "P6 must preserve the symbolic-update limitation in its pre-play reasoning.");
+assert.doesNotMatch(p6GeneralReasoning, /六个输出|旧类 3 个|新类 3 个/u, "P6's six-node counts must remain in the demonstration note.");
+assert.ok(p6DefaultPage.slice(p6DefaultPage.indexOf('class="tutorial-route__demo-note"')).includes("六个输出节点举例"),
+  "P6 must label the six-node and three-plus-three counts as a specific example.");
 const p6ArticleTag = p6DefaultPage.match(/<article class="tutorial-page icarl-page icarl-page--p6"[^>]*>/)?.[0];
 assert.ok(p6ArticleTag, "P6 must render its current sample and separate model/exploration readouts.");
 assert.equal(attr(p6ArticleTag!, "data-sample"), p6DefaultSample.id);
@@ -635,6 +646,19 @@ function renderPageFiveAt(clipId: string, pct = 0, onContinue?: () => void): str
     else Reflect.deleteProperty(globalThis, "window");
   }
 }
+
+const p5RouteMarkup = renderPageFiveAt("p5-merge", 0);
+assertTutorialRouteMarkup(p5RouteMarkup, "P5");
+const p5GeneralReasoning = p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="tutorial-route__reasoning"'), p5RouteMarkup.indexOf('class="tutorial-route__execution"'));
+assert.ok(p5GeneralReasoning.includes("Replay 只保证训练时再次看到部分旧图片") && p5GeneralReasoning.includes("并没有记录更新前模型"),
+  "P5 must explain why replayed inputs alone do not preserve old model responses.");
+assert.ok(p5GeneralReasoning.includes("D 中每一张图片") && p5GeneralReasoning.includes("新类图片同样要有 Q 行"),
+  "P5 must explain why every old and new D sample receives an old-teacher Q row.");
+assert.ok(p5GeneralReasoning.includes("D 与 Q 因而分工不同") && p5GeneralReasoning.includes("同一 ID 对齐"),
+  "P5 must distinguish the training-input and frozen-response roles while preserving ID alignment.");
+assert.doesNotMatch(p5GeneralReasoning, /12\s*\+\s*18|30\s*[×x]\s*3|旧类\s*3|新类\s*3/u, "P5's demonstration dimensions must not be presented as general conditions.");
+assert.ok(p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="tutorial-route__demo-note"')).includes("D=12+18=30、Q=30×3"),
+  "P5 must retain its real D/Q dimensions as a labeled demonstration example.");
 
 function p5WorkbenchTag(markup: string): string {
   const tag = markup.match(/<section class="p5-workbench"[^>]*>/)?.[0];
