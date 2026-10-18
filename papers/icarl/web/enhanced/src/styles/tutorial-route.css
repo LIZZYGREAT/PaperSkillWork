@@ -30,8 +30,8 @@
 
 .tutorial-route__execution { display: grid; gap: 10px; }
 .tutorial-route__execution h3 { color: #274943; font-size: 17px; line-height: 1.3; }
-.tutorial-route__steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin: 0; padding: 0; list-style: none; }
-.tutorial-route__step { display: grid; grid-template-columns: minmax(0, 1fr) 28px; min-width: 0; align-items: stretch; }
+.tutorial-route__steps { display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr); gap: 0; margin: 0; padding: 0; list-style: none; }
+.tutorial-route__step { display: grid; grid-column: span 2; grid-template-columns: minmax(0, 1fr) 28px; min-width: 0; align-items: stretch; }
 .tutorial-route__step-card { display: grid; align-content: start; gap: 10px; min-width: 0; height: 100%; padding: 12px; border: 1px solid #dbe5df; border-radius: 9px; background: rgb(255 255 255 / 88%); }
 .tutorial-route__step-heading { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 8px; }
 .tutorial-route__step-heading > span { padding-top: 2px; color: #9a694d; font: 750 12px var(--mono); }
@@ -42,17 +42,17 @@
 .tutorial-route__step-details dd { margin: 0; color: #35514d; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
 .tutorial-route__connector { width: 22px; height: 22px; align-self: center; justify-self: center; overflow: visible; color: #a66e4c; }
 .tutorial-route__connector path { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.tutorial-route__step:last-child { grid-template-columns: minmax(0, 1fr); }
+.tutorial-route__step:last-child { grid-column: span 1; grid-template-columns: minmax(0, 1fr); }
 
 .tutorial-route__handoff { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid #dfe7e1; }
 .tutorial-route__handoff p { font-size: 14px; line-height: 1.5; }
 .tutorial-route__demo-note { color: #687b76; }
 
-@container (max-width: 940px) {
+@container (max-width: 900px) {
   .tutorial-route__steps { grid-template-columns: minmax(0, 1fr); }
-  .tutorial-route__step { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 28px; }
+  .tutorial-route__step { grid-column: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 28px; }
   .tutorial-route__connector { transform: rotate(90deg); }
-  .tutorial-route__step:last-child { grid-template-rows: auto; }
+  .tutorial-route__step:last-child { grid-column: auto; grid-template-rows: auto; }
 }
 
 @media (max-width: 560px) {

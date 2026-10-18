@@ -1081,22 +1081,29 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
     <article className="tutorial-page icarl-page icarl-page--p4">
       <header className="page-heading icarl-page__heading p4-intro">
         <div className="icarl-page__eyebrow"><span>PAGE 04</span><i /> EXEMPLAR SELECTION &amp; MANAGEMENT</div>
-        <h1>怎样找到少量代表，<br className="p4-title-break" />并让它们共同代表整个类别？</h1>
-        <p>已选 Exemplars 可以支持预测；现在回到一个新类别的完整训练数据仍可用的时候，看看怎样用少量样本逼近这个类别的整体特征，并在以后预算收紧时保留有用的顺序。</p>
+        <h1>每个类别只能留下少量图片，怎样选择才更有代表性？</h1>
+        <p>P3 的 Prototype 依赖每类保留 Exemplar 的特征均值。本页从“完整新类数据暂时可用、长期记忆有限”这个条件出发，推导怎样选样并保存有序列表。</p>
         <button type="button" className="icarl-button icarl-button--primary p4-start-button" onClick={focusWorkbench}>开始演示 <b aria-hidden="true">↓</b></button>
       </header>
 
       <TutorialRoutePreview
         context="某个类别的完整图片当前可访问，需选出少量 Exemplars，使它们在已学习特征空间中尽量代表该类。"
-        reasoning={<p>随意留下少量图片可能集中在类别分布的一小块，导致保留样本的特征均值偏离完整类别；需要用完整类别当前可访问时计算的目标均值来比较候选。</p>}
+        reasoning={(
+          <>
+            <p>P3 的 Prototype 是由每类保留 Exemplar 的单位特征均值构成。因此，留下哪些图片会改变类别参考的位置：随意抽取的少量图片可能集中在该类特征分布的一小块，让保留均值偏离完整类别。</p>
+            <p>新类别的完整训练数据仍可访问时，可以先将图片映射到当前特征空间并单位化，再求均值、单位化，得到完整类目标 <strong>μ_full</strong>。选择少量图片的目的，是让它们在“特征均值”这一统计量上尽量接近该目标；这不代表有限记忆覆盖了类别的全部变化。</p>
+            <p>每轮固定已选前缀，对每个未选候选分别计算“加入后”的单位化前缀均值到 μ_full 的距离，再追加当前距离最小的候选。这是逐项<strong>贪心</strong>选择，不是搜索所有组合的全局最优解；距离也不保证每轮都下降。</p>
+            <p>保存顺序是为了预算变化：类别增多、每类名额缩小时，旧类可以截去列表尾部并保留前缀；旧类别完整数据若已不可访问，就不必为了缩短记忆重新选样。</p>
+          </>
+        )}
         steps={[
-          { title: "计算完整类别目标", input: "该类当前可访问的完整训练图片", operation: "编码并单位化各图片特征，求均值后再单位化", result: "目标向量 μ_full" },
-          { title: "评估加入每个候选", input: "已有有序前缀与所有未选图片", operation: "分别计算加入候选后的单位化前缀均值及到 μ_full 的距离", result: "每个候选对应一个真实距离" },
-          { title: "选出当前最接近者", input: "本轮全部候选距离", operation: "比较并选择距离最小的候选", result: "胜出图片追加到有序列表末尾" },
-          { title: "按预算保留有序前缀", input: "完整有序列表与新的每类名额", operation: "名额减少时截去尾项", result: "保留前缀原图与原顺序" },
+          { title: "估计完整类目标 μ_full", input: "该类此时仍可访问的完整训练数据", operation: "用当前表示编码、单位化特征；求均值并单位化", result: "用于选样的完整类目标向量" },
+          { title: "逐一评估未选候选", input: "固定的已选前缀与其余候选", operation: "对每个候选计算新增前缀均值，单位化后量到 μ_full 的距离", result: "本轮每个候选的真实距离" },
+          { title: "追加当前距离最小者", input: "本轮全部候选距离", operation: "比较并取当前 argmin；固定该结果作为新前缀", result: "列表增加一个有顺序的 Exemplar" },
+          { title: "满足名额并复用前缀", input: "所需保留数与完整有序列表", operation: "重复贪心步骤至名额；以后名额收缩时截去尾项", result: "原图与次序组成的保留列表前缀" },
         ]}
-        output="得到该类按贪心次序排列的原始 Exemplar 列表；之后名额收紧时可直接保留前缀。"
-        demoNote="当前组件迁移保留原八候选、四轮选择与预算示例；通用推理不限定候选数或最终保留数量。"
+        output="得到该类按贪心次序排列的原始 Exemplar 列表。μ_full 只在完整类数据可访问时用于选样；后续持久保存的是图片与顺序，预算收缩时保留列表前缀。"
+        demoNote="选样图用八个合成单位特征逐轮选择前四项；独立预算例是 K=12、3→4 类、每类 4→3 项，不是 P5/P7 的 3→6 类场景。"
       />
 
       <section

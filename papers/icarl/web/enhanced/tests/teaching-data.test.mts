@@ -296,6 +296,19 @@ const p4At = (id: string, pct = 0) => {
   return renderPageFourAt(index!, pct);
 };
 
+const p4RouteMarkup = renderPageFourAt(0);
+assertTutorialRouteMarkup(p4RouteMarkup, "P4");
+assert.ok(p4RouteMarkup.includes("每个类别只能留下少量图片，怎样选择才更有代表性？"), "P4 must use a general, non-numeric question as its page title.");
+const p4GeneralReasoning = p4RouteMarkup.slice(p4RouteMarkup.indexOf('class="tutorial-route__reasoning"'), p4RouteMarkup.indexOf('class="tutorial-route__execution"'));
+assert.ok(p4GeneralReasoning.includes("偏离完整类别") && p4GeneralReasoning.includes("μ_full"), "P4 must connect biased small-memory means to a full-class target.");
+assert.ok(p4GeneralReasoning.includes("逐项") && p4GeneralReasoning.includes("全局最优") && p4GeneralReasoning.includes("不保证每轮都下降"),
+  "P4 must explain greedy Herding and its non-monotonic, non-global-optimum limitation.");
+assert.ok(p4GeneralReasoning.includes("截去列表尾部") && p4GeneralReasoning.includes("保留前缀"), "P4 must explain why the ordered list supports later truncation.");
+assert.doesNotMatch(p4GeneralReasoning, /八个候选|四个候选|K\s*=\s*12|3→4|4→3/u, "P4's general reasoning must not absorb its example counts.");
+const p4DemoNote = p4RouteMarkup.slice(p4RouteMarkup.indexOf('class="tutorial-route__demo-note"'));
+assert.ok(p4DemoNote.includes("八个合成单位特征") && p4DemoNote.includes("K=12") && p4DemoNote.includes("3→4 类") && p4DemoNote.includes("P5/P7 的 3→6 类"),
+  "P4 must label its eight-candidate and 3-to-4 budget scenes as examples independent of the later 3-to-6 increment.");
+
 const reviewCheckpoints = [
   { progress: 0, count: 1, active: 1 },
   { progress: 0.05, count: 1, active: 1 },
