@@ -605,8 +605,14 @@ const p6DefaultOutputs = studentOutputFor(p6DefaultSample);
 const p6DefaultPage = renderToStaticMarkup(createElement(PageSix));
 assert.ok(p6DefaultPage.includes('class="p6-preview"') && !p6DefaultPage.includes('class="tutorial-route"'),
   "P6 must use its own dual-target assembly instead of the shared route template.");
-assert.ok(p6DefaultPage.includes("旧节点读 Q") && p6DefaultPage.includes("新节点必须由真实类别监督"),
-  "P6 must explain why old and new outputs use different target sources.");
+assert.ok(p6DefaultPage.includes("Target：告诉模型每个输出节点应该接近什么")
+  && p6DefaultPage.includes("旧节点读取冻结 Q 的响应强度") && p6DefaultPage.includes("新节点读取真实标签的 0/1"),
+  "P6 must define Target and explain why old and new outputs use different target sources.");
+assert.ok(p6DefaultPage.includes('data-flow="student-to-bce"') && p6DefaultPage.includes('data-flow="target-to-bce"')
+  && p6DefaultPage.includes('data-flow-inputs="r,g"'),
+  "P6 must show x-to-Student-to-g and Q-plus-y-to-r as parallel paths that meet at BCE.");
+assert.ok(p6DefaultPage.includes("r 不是输入图片，也不是 Student 已有的预测 g"),
+  "P6 must keep Target distinct from both the image input and the Student's current prediction.");
 assert.equal([...p6DefaultPage.matchAll(/class="p6-preview__target"/g)].length, 1, "P6 must assemble one six-dimensional target vector.");
 assert.equal([...p6DefaultPage.matchAll(/class="is-soft"/g)].length, 3, "P6's target map must show three old-node soft targets.");
 assert.equal([...p6DefaultPage.matchAll(/class="is-hard"/g)].length, 3, "P6's target map must show three new-node hard targets.");

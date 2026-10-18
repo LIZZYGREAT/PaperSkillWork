@@ -314,9 +314,10 @@ function NodeRow({ index, classId, selected, value, target, targetReady, phase, 
   </button>;
 }
 
-function P6TargetMap({ sample, targets, onChooseSample, onInspect, onPlayAll, reducedMotion }: {
+function P6TargetMap({ sample, targets, outputs, onChooseSample, onInspect, onPlayAll, reducedMotion }: {
   sample: Sample;
   targets: SixOutputs;
+  outputs: SixOutputs;
   onChooseSample: (sample: Sample) => void;
   onInspect: () => void;
   onPlayAll: () => void;
@@ -326,9 +327,9 @@ function P6TargetMap({ sample, targets, onChooseSample, onInspect, onPlayAll, re
   return (
     <section className="p6-preview" aria-labelledby="p6-preview-title">
       <header className="p6-preview__header">
-        <span className="eyebrow">同一个 Student · 两种 Target 来源</span>
-        <h2 id="p6-preview-title">旧模型只有旧节点，所以旧节点读 Q；新节点必须由真实类别监督</h2>
-        <p><strong>Soft target 与 Hard target 来源不同</strong>，进入 Student 后都使用同一种逐节点 BCE。</p>
+        <span className="eyebrow">SAME IMAGE · TWO PARALLEL PATHS</span>
+        <h2 id="p6-preview-title">Target：告诉模型每个输出节点应该接近什么</h2>
+        <p>Student 接收图片 <strong>x</strong> 并产生当前输出 <strong>g</strong>；只有 g 还无法判断是否符合学习目标，因此同一张训练图还需要监督参考 <strong>r = Target</strong>。</p>
       </header>
 
       <div className="p6-preview__chooser" role="group" aria-label="切换目标拆分图中的训练样本">
@@ -336,35 +337,60 @@ function P6TargetMap({ sample, targets, onChooseSample, onInspect, onPlayAll, re
         {sampleChoices.map(({ sample: choice, label }) => <button key={choice.id} type="button" className={choice.id === sample.id ? "is-selected" : ""} aria-pressed={choice.id === sample.id} style={accent(choice.classId)} onClick={() => onChooseSample(choice)}><i>{CLASS_VISUALS[choice.classId].glyph}</i><b>{label}</b><small>{choice.id}</small></button>)}
       </div>
 
-      <div className="p6-preview__assembly">
-        <section className="p6-preview__sources" aria-label="两路目标来源">
-          <div className="p6-preview__source p6-preview__source--q">
-            <span>更新前旧行为</span><b>Q[{sample.id}]</b>
-            <div>{qRow.map((value, index) => <i key={index}>{value.toFixed(2)}</i>)}</div>
-            <small>旧 Teacher 的三个旧节点响应</small>
-          </div>
-          <div className="p6-preview__source p6-preview__source--label">
-            <span>真实类别</span><b>y = {CLASS_VISUALS[sample.classId].displayLabel}</b>
-            <div>{INCOMING_CLASS_IDS.map((classId) => <i key={classId}>{sample.classId === classId ? "1" : "0"}</i>)}</div>
-            <small>只为三个新节点给出 0/1 监督</small>
-          </div>
-        </section>
+      <section className="p6-preview__concept" aria-label="Target 概念边界">
+        <p><b>为什么需要</b><span>g 只是 Student 的当前回答；r 才给出每个节点应靠近的监督参考。</span></p>
+        <p><b>为什么两种来源</b><span>旧节点读取冻结 Q 的响应强度，新节点读取真实标签的 0/1。</span></p>
+        <p><b>概念边界</b><span><strong>r 与 g 在 BCE 中比较</strong>；r 不是输入图片，也不是 Student 已有的预测 g。</span></p>
+      </section>
 
-        <svg className="p6-preview__join" viewBox="0 0 86 126" aria-hidden="true"><path d="M2 25H31Q43 25 43 42V63M2 101H31Q43 101 43 84V63H78m-9-8 9 8-9 8" /></svg>
+      <div className="p6-preview__parallel" data-sample={sample.id}>
+        <div className="p6-preview__paths">
+          <section className="p6-preview__student-path" data-flow="student-to-bce" aria-label="同一训练图片进入 Student 产生当前输出 g">
+            <header><i>01</i><span><b>同一图片前向</b><small>x → Student(Θ) → g</small></span></header>
+            <div className="p6-preview__student-build">
+              <div className="p6-preview__input" style={accent(sample.classId)}><i>{CLASS_VISUALS[sample.classId].glyph}</i><span><b>x = {sample.id}</b><small>训练图片 · 输入 Student</small></span></div>
+              <svg className="p6-preview__arrow" viewBox="0 0 54 28" aria-hidden="true"><path d="M2 14h45m-8-8 8 8-8 8" /></svg>
+              <section className="p6-preview__student" aria-label="Student 当前六个独立 Sigmoid 输出 g">
+                <header><span>Student(Θ) 当前输出 g</span><b>六个独立 Sigmoid</b></header>
+                <div>{ALL_CLASS_IDS.map((classId, index) => <span key={classId} style={accent(classId)}><i>{CLASS_VISUALS[classId].outputNodeLabel}</i><b>{outputs[index].toFixed(2)}</b></span>)}</div>
+              </section>
+            </div>
+          </section>
 
-        <section className="p6-preview__target" aria-label={`样本 ${sample.id} 的六维目标 r`}>
-          <header><span>六维目标 r</span><b>按节点一一对应</b></header>
-          <div>
-            {ALL_CLASS_IDS.map((classId, index) => <span key={classId} className={index < OLD_CLASS_IDS.length ? "is-soft" : "is-hard"} style={accent(classId)}><i>{CLASS_VISUALS[classId].glyph}</i><b>{targets[index].toFixed(index < OLD_CLASS_IDS.length ? 2 : 0)}</b><small>{index < OLD_CLASS_IDS.length ? "Q soft" : "标签 hard"}</small></span>)}
-          </div>
-        </section>
+          <section className="p6-preview__target-path" data-flow="target-to-bce" aria-label="冻结 Q 与真实标签装配监督目标 r">
+            <header><i>02</i><span><b>装配监督目标</b><small>Q + y → r</small></span></header>
+            <div className="p6-preview__target-build">
+              <section className="p6-preview__sources" aria-label="两路目标来源">
+                <div className="p6-preview__source p6-preview__source--q">
+                  <span>更新前旧行为</span><b>Q[{sample.id}]</b>
+                  <div>{qRow.map((value, index) => <i key={index}>{value.toFixed(2)}</i>)}</div>
+                  <small>冻结 Teacher 的三个旧节点响应</small>
+                </div>
+                <div className="p6-preview__source p6-preview__source--label">
+                  <span>真实类别</span><b>y = {CLASS_VISUALS[sample.classId].displayLabel}</b>
+                  <div>{INCOMING_CLASS_IDS.map((classId) => <i key={classId}>{sample.classId === classId ? "1" : "0"}</i>)}</div>
+                  <small>只为三个新节点给出 0/1 监督</small>
+                </div>
+              </section>
 
-        <svg className="p6-preview__arrow" viewBox="0 0 54 28" aria-hidden="true"><path d="M2 14h45m-8-8 8 8-8 8" /></svg>
+              <svg className="p6-preview__join" viewBox="0 0 86 126" aria-hidden="true"><path d="M2 25H31Q43 25 43 42V63M2 101H31Q43 101 43 84V63H78m-9-8 9 8-9 8" /></svg>
 
-        <section className="p6-preview__student" aria-label="Student 当前六个独立 Sigmoid 输出">
-          <header><span>Student 当前输出 g</span><b>六个独立 Sigmoid</b></header>
-          <div>{ALL_CLASS_IDS.map((classId) => <i key={classId} style={accent(classId)}>{CLASS_VISUALS[classId].outputNodeLabel}</i>)}</div>
-          <p>目标 r 与输出 g 在相同节点位置比较。</p>
+              <section className="p6-preview__target" aria-label={`样本 ${sample.id} 的六维监督目标 r`}>
+                <header><span>监督目标 r</span><b>按节点一一对应</b></header>
+                <div>
+                  {ALL_CLASS_IDS.map((classId, index) => <span key={classId} className={index < OLD_CLASS_IDS.length ? "is-soft" : "is-hard"} style={accent(classId)}><i>{CLASS_VISUALS[classId].glyph}</i><b>{targets[index].toFixed(index < OLD_CLASS_IDS.length ? 2 : 0)}</b><small>{index < OLD_CLASS_IDS.length ? "Q soft" : "标签 hard"}</small></span>)}
+                </div>
+              </section>
+            </div>
+          </section>
+        </div>
+
+        <svg className="p6-preview__merge" viewBox="0 0 74 168" aria-hidden="true"><path d="M2 36h24q14 0 14 18v30m-38 48h24q14 0 14-18V84h27m-9-8 9 8-9 8" /></svg>
+        <section className="p6-preview__bce" data-flow-inputs="r,g" aria-label="输出 g 与监督目标 r 在对应节点计算二元交叉熵">
+          <span>03 · 用于监督</span>
+          <b>r<sub>j</sub> 与 g<sub>j</sub></b>
+          <strong>BCE<sub>j</sub>(r<sub>j</sub>, g<sub>j</sub>)</strong>
+          <small>两条路径在同一节点汇合；损失推动 g 向 r 靠近。</small>
         </section>
       </div>
 
@@ -598,7 +624,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
       <p>P5 已准备好 D、Q 与真实标签；现在先拆清目标来源，再观察六个节点怎样共享同一条损失与反传路径。</p>
     </header>
 
-    <P6TargetMap sample={sample} targets={targets} onChooseSample={chooseSample} onInspect={focusWorkbench} onPlayAll={playAll} reducedMotion={reducedMotion} />
+    <P6TargetMap sample={sample} targets={targets} outputs={outputs} onChooseSample={chooseSample} onInspect={focusWorkbench} onPlayAll={playAll} reducedMotion={reducedMotion} />
 
     <section className="p6-workbench" aria-label="连续增量训练交互工作台" ref={workbenchRef}>
       <div className="p6-workbench__guide">
