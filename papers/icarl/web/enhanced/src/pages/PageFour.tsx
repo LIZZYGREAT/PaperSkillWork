@@ -1025,6 +1025,45 @@ function P4SelectionSketch({ mode }: { mode: "clustered" | "representative" }) {
   );
 }
 
+function P4HerdingMechanism() {
+  const round = ROUNDS[1];
+  const prefixBefore = round.prefix.slice(0, round.k - 1);
+  const candidates = candidatesInScanOrder(round.candidates);
+  return (
+    <section className="p4-preview__mechanism" data-round={round.k} data-chosen={round.chosen.id} aria-labelledby="p4-herding-mechanism-title">
+      <header>
+        <span>CORE MECHANISM · REAL ROUND {round.k}</span>
+        <h3 id="p4-herding-mechanism-title">Herding：每次只确定下一张要保留的图</h3>
+        <p>完整类别数据暂时可用时，可以算出 μ<sub>full</sub>；长期记忆容量有限，随意留下几张图可能让保留均值偏离这个完整类参考。</p>
+      </header>
+
+      <ol className="p4-preview__mechanism-states">
+        <li className="p4-preview__mechanism-state p4-preview__mechanism-state--prefix">
+          <span>01 · 固定已有前缀</span>
+          <b>[ {prefixBefore.map((point, index) => `p${index + 1}=${point.id}`).join(" · ")} ]</b>
+          <small>前面已经选定，不在本轮改写；μ<sub>full</sub> 也保持固定。</small>
+        </li>
+        <li className="p4-preview__mechanism-state p4-preview__mechanism-state--try">
+          <span>02 · 逐个试未选候选 x</span>
+          <b>ν<sub>{round.k}</sub>(x) = unit(mean(prefix + x))</b>
+          <div aria-label={`第 ${round.k} 轮所有未选候选的真实距离`}>
+            {candidates.map((candidate) => <i key={candidate.point.id} className={candidate.point.id === round.chosen.id ? "is-minimum" : ""} data-candidate={candidate.point.id} data-score={candidate.score.toFixed(6)}>{candidate.point.id}<small>d={candidate.score.toFixed(3)}</small></i>)}
+          </div>
+          <small>每个候选都与同一 μ<sub>full</sub> 比较；上面数值来自本页真实第 {round.k} 轮。</small>
+        </li>
+        <li className="p4-preview__mechanism-state p4-preview__mechanism-state--commit">
+          <span>03 · 提交本轮 arg min</span>
+          <b>p<sub>{round.k}</sub> = {round.chosen.id}</b>
+          <strong>d<sub>{round.k}</sub> = {round.score.toFixed(3)}</strong>
+          <small>只把本轮最小项追加到末尾，得到 [ {round.prefix.map((point) => point.id).join(" → ")} ]。</small>
+        </li>
+      </ol>
+
+      <p className="p4-preview__mechanism-boundary"><b>边界</b>这是逐轮贪心选择：只保证当前轮取 arg min，不保证固定长度下全局最优，也不保证距离每轮下降。输出顺序支持容量缩减时截去尾项、保留前缀。</p>
+    </section>
+  );
+}
+
 function P4Prelude({ onInspect, onPlayAll, reducedMotion }: { onInspect: () => void; onPlayAll: () => void; reducedMotion: boolean }) {
   return (
     <section className="p4-preview" aria-labelledby="p4-preview-title">
@@ -1048,18 +1087,7 @@ function P4Prelude({ onInspect, onPlayAll, reducedMotion }: { onInspect: () => v
         </article>
       </div>
 
-      <section className="p4-preview__round" aria-label="一轮 Herding 如何追加一个候选">
-        <header><span>一轮 Herding</span><strong>固定已有前缀，再试每个剩余候选</strong></header>
-        <div className="p4-preview__round-flow">
-          <div className="p4-preview__prefix"><span>已有前缀</span><b>[ p₁ ··· p<sub>k−1</sub> ]</b></div>
-          <svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h39m-8-7 8 7-8 7" /></svg>
-          <div className="p4-preview__candidate"><span>假设加入候选 x</span><i /><i /><i /></div>
-          <svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h39m-8-7 8 7-8 7" /></svg>
-          <div className="p4-preview__mean-step"><span>新均值并单位化</span><b>ν<sub>k</sub>(x)</b></div>
-          <svg viewBox="0 0 48 24" aria-hidden="true"><path d="M2 12h39m-8-7 8 7-8 7" /></svg>
-          <div className="p4-preview__compare-step"><span>比较 μ<sub>full</sub></span><b>取本轮距离最小</b></div>
-        </div>
-      </section>
+      <P4HerdingMechanism />
 
       <div className="p4-preview__prefix-result" aria-label="有序前缀支持容量缩减">
         <div><span>有序列表</span><b>[ p₁</b><b>p₂</b><b>p₃</b><b className="is-tail">p₄ ]</b></div>

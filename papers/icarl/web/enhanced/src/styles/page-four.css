@@ -31,19 +31,26 @@
 .p4-preview__case > p { margin: 0; color: #536b65; font-size: 13px; line-height: 1.5; }
 .p4-preview__contrast { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; min-height: 22px; color: #647a72; text-align: center; }
 .p4-preview__contrast span { font-size: 14px; font-weight: 700; }
-.p4-preview__round { display: grid; gap: 9px; padding: 12px 14px; border: 1px solid #d5e2dc; border-radius: 12px; background: #f1f7f3; }
-.p4-preview__round > header { display: flex; align-items: baseline; gap: 12px; }
-.p4-preview__round > header span { color: #9a6748; font: 750 12px var(--mono); }
-.p4-preview__round > header strong { color: #315b51; font-size: 15px; }
-.p4-preview__round-flow { display: grid; grid-template-columns: minmax(150px, 1fr) 48px minmax(150px, 1fr) 48px minmax(150px, 1fr) 48px minmax(170px, 1.1fr); align-items: center; gap: 6px; }
-.p4-preview__round-flow > div { display: grid; min-height: 60px; align-content: center; justify-items: center; gap: 4px; padding: 8px; border: 1px solid #d9e3dd; border-radius: 8px; color: #536c65; background: #fff; text-align: center; }
-.p4-preview__round-flow span { font-size: 12px; }
-.p4-preview__round-flow b { color: #315e52; font: 750 14px var(--mono); }
-.p4-preview__round-flow > svg { width: 42px; }
-.p4-preview__round-flow > svg path, .p4-preview__prefix-result > svg path { fill: none; stroke: #9c6d4e; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.p4-preview__candidate { grid-template-columns: 1fr repeat(3, auto); }
-.p4-preview__candidate span { grid-column: 1 / -1; }
-.p4-preview__candidate i { width: 11px; height: 11px; border: 1px solid #7c9188; border-radius: 50%; background: #b9c9c1; }
+.p4-preview__mechanism { display: grid; gap: 11px; padding: 13px 14px; border: 1px solid #cfded6; border-radius: 12px; background: #f3f8f4; }
+.p4-preview__mechanism > header { display: grid; gap: 4px; }
+.p4-preview__mechanism > header > span { color: #936344; font: 750 11px var(--mono); letter-spacing: .05em; }
+.p4-preview__mechanism h3 { margin: 0; color: #28564b; font-size: 18px; line-height: 1.35; }
+.p4-preview__mechanism > header p { max-width: 960px; margin: 0; color: #536c65; font-size: 13px; line-height: 1.5; }
+.p4-preview__mechanism-states { display: grid; grid-template-columns: minmax(155px, .7fr) minmax(360px, 1.65fr) minmax(175px, .78fr); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.p4-preview__mechanism-state { display: grid; align-content: start; gap: 6px; min-width: 0; padding: 10px; border: 1px solid #d9e3dd; border-radius: 9px; color: #526a64; background: #fff; }
+.p4-preview__mechanism-state > span { color: #667d75; font: 750 10px var(--mono); letter-spacing: .03em; }
+.p4-preview__mechanism-state > b { color: #315f53; font: 750 13px/1.4 var(--mono); }
+.p4-preview__mechanism-state > small { color: #697c76; font-size: 11px; line-height: 1.45; }
+.p4-preview__mechanism-state--try > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.p4-preview__mechanism-state--try > div > i { display: grid; justify-items: center; gap: 1px; min-width: 0; padding: 5px 3px; border: 1px solid #dfe6e1; border-radius: 6px; color: #587069; background: #f9fbf9; font: 700 11px var(--mono); font-style: normal; }
+.p4-preview__mechanism-state--try > div > i small { color: #71847d; font: 10px var(--mono); }
+.p4-preview__mechanism-state--try > div > i.is-minimum { border-color: #8ab49d; color: #285f4d; background: #eaf5ed; box-shadow: inset 0 0 0 1px #cee2d5; }
+.p4-preview__mechanism-state--try > div > i.is-minimum small { color: #3f755f; }
+.p4-preview__mechanism-state--commit { border-color: #d8c4b2; background: #fff9f3; }
+.p4-preview__mechanism-state--commit > strong { justify-self: start; padding: 5px 7px; border: 1px solid #dfc7b5; border-radius: 6px; color: #87593f; background: #fff; font: 750 12px var(--mono); }
+.p4-preview__mechanism-boundary { margin: 0; padding: 8px 10px; border-left: 3px solid #a87555; border-radius: 0 7px 7px 0; color: #596e68; background: #fffaf5; font-size: 12px; line-height: 1.5; }
+.p4-preview__mechanism-boundary b { margin-right: .5em; color: #805b43; }
+.p4-preview__prefix-result > svg path { fill: none; stroke: #9c6d4e; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .p4-preview__prefix-result { display: grid; grid-template-columns: auto 58px auto minmax(280px, 1fr); align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid #e1d5c9; border-radius: 11px; background: #fdf8f2; }
 .p4-preview__prefix-result > div:first-child { display: flex; align-items: center; gap: 5px; }
 .p4-preview__prefix-result > div:first-child > span { margin-right: 3px; color: #6c7a76; font-size: 12px; }
@@ -277,8 +284,7 @@
 .p4-title-break { display: none; }
 
 @media (max-width: 1180px) {
-  .p4-preview__round-flow { grid-template-columns: minmax(130px, 1fr) 34px minmax(130px, 1fr) 34px minmax(130px, 1fr) 34px minmax(145px, 1fr); }
-  .p4-preview__round-flow > svg { width: 32px; }
+  .p4-preview__mechanism-states { grid-template-columns: minmax(145px, .66fr) minmax(320px, 1.55fr) minmax(165px, .75fr); }
   .p4-preview__prefix-result { grid-template-columns: auto 48px auto minmax(220px, 1fr); }
   .p4-workbench { height: auto; min-height: 0; }
   .p4-workbench__layout { grid-template-columns: minmax(0, 1fr); }
@@ -294,8 +300,9 @@
   .p4-preview { padding: 14px; }
   .p4-preview__comparison { grid-template-columns: minmax(0, 1fr); }
   .p4-preview__contrast { grid-column: auto; min-height: 0; padding-bottom: 2px; }
-  .p4-preview__round-flow { grid-template-columns: minmax(0, 1fr); }
-  .p4-preview__round-flow > svg, .p4-preview__prefix-result > svg { justify-self: center; transform: rotate(90deg); }
+  .p4-preview__mechanism-states { grid-template-columns: minmax(0, 1fr); }
+  .p4-preview__mechanism-state--try > div { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .p4-preview__prefix-result > svg { justify-self: center; transform: rotate(90deg); }
   .p4-preview__prefix-result { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
   .p4-preview__footer { align-items: stretch; flex-direction: column; }
   .p4-preview__footer > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }

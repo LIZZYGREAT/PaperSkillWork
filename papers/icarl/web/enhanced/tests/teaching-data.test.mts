@@ -326,6 +326,19 @@ assert.ok(p4GeneralReasoning.includes("贪心结果是全局最优") && p4Genera
   "P4 must distinguish per-round greedy selection from a global optimum claim.");
 assert.ok(p4GeneralReasoning.includes("截去尾项，保留前缀") && p4GeneralReasoning.includes("长期保存的是原始图片与顺序"), "P4 must explain why the ordered list supports later truncation.");
 assert.doesNotMatch(p4GeneralReasoning, /八个候选|四个候选|K\s*=\s*12|3→4|4→3/u, "P4's general reasoning must not absorb its example counts.");
+const p4Mechanism = p4RouteMarkup.match(/<section class="p4-preview__mechanism"[\s\S]*?<\/section>/)?.[0] ?? "";
+const p4MechanismRound = HERDING_DEMO_ROUNDS[1];
+assert.ok(p4Mechanism.includes("Herding：每次只确定下一张要保留的图")
+  && p4Mechanism.includes("固定已有前缀") && p4Mechanism.includes("逐个试未选候选") && p4Mechanism.includes("提交本轮 arg min"),
+  "P4's mechanism card must show prefix, candidate trial, and greedy commit as three states.");
+assert.ok(p4Mechanism.includes('data-round="2"') && p4Mechanism.includes(`data-chosen="${p4MechanismRound.chosen.id}"`),
+  "P4's compact mechanism must use the real second Herding round.");
+for (const candidate of p4MechanismRound.candidates) {
+  assert.ok(p4Mechanism.includes(`data-candidate="${candidate.point.id}" data-score="${candidate.score.toFixed(6)}"`),
+    `P4's mechanism card must show ${candidate.point.id}'s actual round-two distance.`);
+}
+assert.ok(p4Mechanism.includes("不保证固定长度下全局最优") && p4Mechanism.includes("不保证距离每轮下降"),
+  "P4's mechanism card must state the greedy boundary without promising monotonic improvement.");
 const p4DemoNote = p4RouteMarkup.slice(p4RouteMarkup.indexOf('class="p4-preview__footer"'));
 assert.ok(p4DemoNote.includes("8 个合成单位特征") && p4DemoNote.includes("K=12") && p4DemoNote.includes("3→4 类") && p4DemoNote.includes("P5/P7 的 3→6 类"),
   "P4 must label its eight-candidate and 3-to-4 budget scenes as examples independent of the later 3-to-6 increment.");
