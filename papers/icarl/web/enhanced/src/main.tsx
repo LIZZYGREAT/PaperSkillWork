@@ -8,6 +8,7 @@ import "./styles/page-one.css";
 import "./styles/page-two.css";
 import "./styles/icarl-guided.css";
 import "./styles/question-handoff.css";
+import "./styles/tutorial-route.css";
 import "./styles/page-three.css";
 import "./styles/page-four.css";
 import "./styles/page-five.css";

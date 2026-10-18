@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { GuidedStepControls, type GuidedStep } from "../components/GuidedStepControls";
 import { QuestionHandoff } from "../components/QuestionHandoff";
+import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import { ALL_CLASS_IDS, CLASS_VISUALS, INCOMING_CLASS_IDS, INCOMING_SAMPLES, OLD_CLASS_IDS, P_BEFORE, type ClassId, type Sample } from "../data/icarl-runtime";
 import { binaryCrossEntropy, buildTargets, classLabel, sixNodeBceLoss, studentOutputFor, teacherSnapshotFor, type SixOutputs } from "../data/incremental-training";
@@ -485,6 +486,14 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
       <h1>旧知识与新类别怎样一起更新网络？</h1>
       <p>上一页，我们把旧 Exemplars 与新类完整数据合成训练集 D，并在更新前记录了旧模型的响应快照 Q。现在，同一张图片怎样同时提供“保留旧类别响应”和“学会新类别”的信号？先为六个输出节点构造目标，再比较当前输出，最后让损失梯度返回网络。</p>
     </header>
+
+    <TutorialRoutePreview
+      input="D 中一张训练图、同 ID 的冻结 Q 行，以及真实类别标签。"
+      reason="前三个节点保留旧模型响应，后三个节点学习新类别；两类目标来源不同。"
+      steps={["图片经过共享特征提取器", "组装六维目标 r", "六个独立 Sigmoid 分别计算 BCE", "聚合损失并反传更新参数"]}
+      output="样本/mini-batch 损失与参数更新方向。"
+      boundary="页面只讲解计算流程，不真实运行 SGD；Θ_after 由下一页作为给定教学状态使用。"
+    />
 
     <section className="p6-workbench" aria-label="连续增量训练交互工作台">
       <div className="p6-workbench__guide">

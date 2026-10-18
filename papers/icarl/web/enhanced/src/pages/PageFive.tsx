@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { QuestionHandoff } from "../components/QuestionHandoff";
+import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import {
   ALL_CLASS_IDS,
   CLASS_VISUALS,
@@ -11,11 +12,7 @@ import {
 } from "../data/icarl-runtime";
 import { INCREMENTAL_DATA_VALIDATION, INCREMENTAL_STAGE_DATA, teacherSnapshotFor } from "../data/incremental-training";
 import { snapshotWriteProgress } from "../data/incremental-snapshot-progress";
-import {
-  activeNarrationIndex,
-  useAnimationTimeline,
-  type AnimationClip,
-} from "../shared/animation/useAnimationTimeline";
+import { useAnimationTimeline, type AnimationClip } from "../shared/animation/useAnimationTimeline";
 import { clamp, lerp, progressWithin, smoothstep } from "../shared/animation/easing";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 
@@ -42,31 +39,6 @@ const isOldClass = (classId: ClassId) => (OLD_CLASS_IDS as readonly string[]).in
 type ClipKind = "recall" | "merge" | "sample-to-teacher" | "batch" | "lock" | "handoff";
 
 type FlowClip = AnimationClip & { kind: ClipKind; batchStart?: number; batchCount?: number };
-
-const guidance: readonly (readonly string[])[] = [
-  [
-    "前面用 Exemplars 构造 Prototype，模型已经能预测新图片。",
-    "新类别还会继续到来，共享特征提取器也需要继续更新。",
-    "如果这一轮只看新图片，旧类别的判别能力很可能一起退化。",
-    "既然保存了旧类真实代表图片，就让它们也参加这一轮训练：这就是 Replay。",
-  ],
-  [
-    "从持久记忆 P 读取旧类 Exemplars 的训练副本，原槽位保持不动。",
-    "新类图片 X_new 是这一轮的完整数据，和旧副本一起构成 D = P_old ∪ X_new。",
-    "12 + 18 = 30：D 是这一轮的训练集，不等于持久记忆本身。",
-  ],
-  [
-    "D 已经准备好了。可是参数一旦更新，网络对旧类别的响应也会跟着改变。",
-    "能不能在改动参数之前，先把旧模型原来的判断记下来？",
-    "为便于看清对应关系，先演示一张旧类图和一张新类图；每张图都由更新前的旧模型产生三个旧节点响应。",
-    "之后按 D 中其余样本的原有顺序补齐；无论展示先后，每张图始终写入自己的 Q 行。",
-  ],
-  [
-    "Q 的一行对应 D 中一张图片，三列对应旧节点 g₁、g₂、g₃，所以 Q 是 30 × 3。",
-    "这些响应记录的是更新前模型的行为，不是这张图片的真实类别标签。",
-    "一旦记录完成，Q 就在本轮训练中保持固定；下一页会用它作为旧节点的训练目标。",
-  ],
-];
 
 const clips: readonly FlowClip[] = [
   { id: "p5-recall", kind: "recall", durationMs: 2600, holdMs: 900, narrative: "旧记忆与新数据同时在场" },
@@ -228,11 +200,6 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
   const [inspectedSampleId, setInspectedSampleId] = useState<string | null>(null);
   const flowBoardRef = useRef<HTMLDivElement | null>(null);
 
-  const guidanceIndex = clip.kind === "recall" ? activeNarrationIndex(guidance[0], state.progress)
-    : clip.kind === "merge" ? activeNarrationIndex(guidance[1], state.progress)
-    : clip.kind === "sample-to-teacher" || clip.kind === "batch" ? activeNarrationIndex(guidance[2], state.progress)
-    : activeNarrationIndex(guidance[3], state.progress);
-
   const scene = useMemo(() => {
     const elapsed = state.elapsedMs;
 
@@ -331,6 +298,17 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
     : clip.kind === "sample-to-teacher" ? "演示单张样本"
     : clip.kind === "merge" ? "读取副本 → D"
     : "Replay → D";
+  const stageTitle = clip.kind === "recall" ? "阶段 01：确认本轮输入与 Replay 的目的"
+    : clip.kind === "merge" ? "阶段 02：合成训练集 D=30"
+    : clip.kind === "sample-to-teacher" || clip.kind === "batch" ? "阶段 03：旧 Teacher 为 D 的每张图生成三个旧节点响应"
+    : clip.kind === "lock" ? "阶段 04：冻结按 sample ID 对齐的 Q=30×3"
+    : "阶段 05：把 D 与 Q 交给六节点 Student";
+  const actionHint = clip.kind === "recall" ? "看输入区：P 只提供训练副本，X_new 提供本轮新类图片。"
+    : clip.kind === "merge" ? `旧副本与新图片正在汇入 D：${scene.dArrivedCount} / ${TRAINING_SET_SIZE}。`
+    : clip.kind === "sample-to-teacher" ? `${scene.shown.id} → 三个旧节点响应 → Q[${scene.shown.id}]。`
+    : clip.kind === "batch" ? `${scene.shown.id} 正在写入自己的 Q 行；已完成 ${scene.writtenCount} / ${TRAINING_SET_SIZE}。`
+    : clip.kind === "lock" ? "Q 每行对应 D 中同 ID 图片；训练期间保持冻结。"
+    : "D 提供训练图片，Q 提供旧节点目标；此处尚未更新参数。";
 
   function inspectSample(sampleId: string) {
     if (state.status === "playing") controls.pause();
@@ -351,6 +329,14 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         <p>新类别还会到来。让旧记忆和新类图片共同形成训练集，并在参数改变之前保存旧节点的响应。</p>
       </header>
 
+      <TutorialRoutePreview
+        input="P 中 12 张旧类 Exemplar 原件、X_new 中 18 张新类图片，以及仍未更新的旧网络。"
+        reason="旧图参与 Replay；参数更新前还要保存旧网络对 D 中全部图片的旧类别响应。"
+        steps={["读取 P 的副本并与 X_new 合成 D=30", "逐张送入更新前 Teacher", "三个旧节点响应写入同 ID 的 Q 行", "冻结 Q=30×3 并交给 Student"]}
+        output="训练集 D 与冻结的旧响应快照 Q。"
+        boundary="本页不更新模型参数，也不修改 P 的原始记忆。"
+      />
+
       <section
         className="p5-workbench"
         aria-label="Replay、训练集 D 与旧响应快照 Q 连续工作台"
@@ -367,12 +353,9 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
       >
         <header className="p5-workbench__guide">
           <div>
-            <span className="eyebrow">片段 {state.clipIndex + 1} / {clips.length} · {clip.narrative}</span>
-            <div className="p5-guidance-copy" aria-live="polite">
-              {guidance[clip.kind === "recall" ? 0 : clip.kind === "merge" ? 1 : clip.kind === "sample-to-teacher" || clip.kind === "batch" ? 2 : 3].map((line, index) => (
-                <p key={line} className={`${index === guidanceIndex ? "is-current" : ""} ${index < guidanceIndex ? "is-read" : ""}`}>{line}</p>
-              ))}
-            </div>
+            <span className="eyebrow">片段 {state.clipIndex + 1} / {clips.length}</span>
+            <h2>{stageTitle}</h2>
+            <p className="p5-action-hint" aria-live="polite">{actionHint}</p>
           </div>
           <span className={`p5-guide-status${clip.kind === "lock" || clip.kind === "handoff" ? " is-locked" : ""}`}>{phaseLabel}</span>
         </header>

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
 import { QuestionHandoff } from "../components/QuestionHandoff";
+import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import { useAnimationTimeline, type AnimationClip } from "../shared/animation/useAnimationTimeline";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import {
@@ -290,6 +291,14 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
       <h1>更新后的模型怎样整理记忆并完成预测？</h1>
       <p>P6 已说明旧响应 Q 与新类别标签怎样共同更新共享网络。假定真实训练完成后得到 Θ_after；本页用固定的 before/after 教学状态演示后续交接，并非 P6 实时算出的优化轨迹。参数变化后，同一张图片的特征表示也可能变化：<b>旧 Prototype 还能直接沿用吗？</b> 我们保存原始 Exemplar 图片，再用当前特征提取器重新编码，构造当前类别原型。</p>
     </header>
+
+    <TutorialRoutePreview
+      input="训练后的 Θ_after、三类各四张旧原始图片，以及新类完整数据。"
+      reason="类别增多后要重分配记忆；模型变化后，旧表示下的 Prototype 也不能直接沿用。"
+      steps={["旧类有序前缀由 4 截到 2", "新类 D/E/F 各 Herding 选 2", "用当前模型重编码 P_after", "构造六类原型并比较 Query"]}
+      output="可保留的 Θ_after + P_after，以及本次 Query 的最近原型预测。"
+      boundary="before/after 是固定状态对照；本页不声称真实执行了 SGD。"
+    />
 
     <section className="p7-workbench" aria-label="参数更新后的记忆交接与预测工作台">
       <header className="p7-workbench__guide">

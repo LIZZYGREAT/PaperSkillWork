@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
 import { QuestionHandoff } from "../components/QuestionHandoff";
+import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import {
   CLASS_VISUALS,
   encode2D,
@@ -751,6 +752,14 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         <p>先假定三类代表图片已经选好，并且 Feature Extractor 训练完成、暂时固定。让这些 Exemplars 和一张新 Query 进入同一特征空间，看看 iCaRL 怎样用它们完成预测。</p>
         <button type="button" className="icarl-button icarl-button--primary p3-start-button" onClick={focusWorkbench}>进入演示 <b aria-hidden="true">↓</b></button>
       </header>
+
+      <TutorialRoutePreview
+        input="固定的特征提取器、三类各四张已保留 Exemplar，以及一张待分类 Query。"
+        reason="最终分类不读取训练输出头；少量旧图片先重建类原型，再让 Query 比较距离。"
+        steps={["Exemplar 编码并单位化", "同类求均值并形成 Prototype", "Query 用同一模型编码", "比较三类距离并取最近类"]}
+        output="Query 的预测类别。"
+        boundary="本页只读取固定模型与记忆，不更新参数或记忆。"
+      />
 
       <section
         className="p3-workbench"

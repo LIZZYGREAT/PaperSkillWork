@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { QuestionHandoff } from "../components/QuestionHandoff";
+import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import { ChartLabels, FEATURE_FRAME, featureStar, type ChartLabel } from "../components/FeatureChart";
 import {
   HERDING_DEMO_ORDER,
@@ -258,6 +259,16 @@ const phaseTitles: Record<ClipKind, string> = {
   review: "四轮选择完成。现在看选出的顺序有什么用。",
   budget: "总预算 K = 12 不变，类别增加后只保留原顺序的前三项",
 };
+
+function stablePhaseTitle(phaseIndex: number, clip: DemoClip) {
+  if (phaseIndex === 0) return "建立当前类别的完整目标 μ_full";
+  if (phaseIndex >= 1 && phaseIndex <= 4) {
+    return clip.kind === "commit"
+      ? `第 ${phaseIndex} 轮结果：确定 p${phaseIndex}`
+      : `第 ${phaseIndex} 轮：在已有前缀后选择 p${phaseIndex}`;
+  }
+  return phaseIndex === 5 ? "四轮完成：检查有序列表的前缀" : "预算缩小时保留有序列表前缀";
+}
 
 /* ------------------------------------------------------------------ scene --- */
 
@@ -1082,6 +1093,14 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <button type="button" className="icarl-button icarl-button--primary p4-start-button" onClick={focusWorkbench}>开始演示 <b aria-hidden="true">↓</b></button>
       </header>
 
+      <TutorialRoutePreview
+        input="当前类别八张图片的单位特征，以及完整类别的目标均值 μ_full。"
+        reason="少量图片的特征均值要尽量代表完整类别，而不是随意挑选四张。"
+        steps={["固定已经选好的前缀", "逐个加入未选候选并求均值", "单位化并测量到 μ_full 的距离", "选最小距离候选加入有序列表"]}
+        output="按贪心顺序排列的 P=[p₁,p₂,p₃,p₄]；预算缩小时保留前缀。"
+        boundary="本页八样本是独立教学示例；真实候选、距离和均值保持不变。"
+      />
+
       <section
         className="p4-workbench"
         aria-label="Herding 同屏教学工作台"
@@ -1119,8 +1138,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
                   : "REVIEW THE ORDERED MEMORY"}
               {" · 阶段 "}{activePhaseIndex + 1} / {phaseRanges.length}
             </span>
-            <h2>{phaseTitles[clip.kind]}</h2>
-            <p aria-live="polite">{workbenchNarrative}</p>
+            <h2>{stablePhaseTitle(activePhaseIndex, clip)}</h2>
+            <p aria-live="polite"><strong>当前动作：</strong>{phaseTitles[clip.kind]}。{workbenchNarrative}</p>
           </div>
           <span className="p4-workbench__phase">
             {phaseComplete ? "阶段完成" : `${Math.round(phaseProgress * 100)}%`}
