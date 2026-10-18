@@ -1,7 +1,5 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
-import { QuestionHandoff } from "../components/QuestionHandoff";
-import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import { useAnimationTimeline, type AnimationClip } from "../shared/animation/useAnimationTimeline";
 import { useReducedMotion } from "../shared/foundation/accessibility/useReducedMotion";
 import {
@@ -275,10 +273,83 @@ function ResponsibilitySummary() {
   </section>;
 }
 
+function FlowArrow({ label }: { label?: string }) {
+  return <div className="p7-preview-arrow" aria-hidden="true">
+    {label ? <span>{label}</span> : null}
+    <svg viewBox="0 0 68 20" focusable="false">
+      <path d="M2 10h58" />
+      <path d="m53 3 9 7-9 7" />
+    </svg>
+  </div>;
+}
+
+function PageSevenPreview({ onInspect, onPlay }: { onInspect: () => void; onPlay: () => void }) {
+  return <section className="p7-preview" aria-labelledby="p7-preview-title">
+    <header className="p7-preview__heading">
+      <div>
+        <span className="eyebrow">TWO CHANGES · ONE CURRENT SPACE</span>
+        <h2 id="p7-preview-title">模型更新后，为什么不能沿用旧 Prototype？</h2>
+      </div>
+      <p>类别增加会改变记忆配额；参数更新会改变特征坐标。两件事必须分别处理，最后才能在同一个当前空间里预测。</p>
+    </header>
+
+    <div className="p7-preview__changes">
+      <article className="p7-preview-change p7-preview-change--memory">
+        <header><span>变化 A · 容量</span><h3>总预算固定，重组原始图片记忆</h3></header>
+        <div className="p7-preview-flow p7-preview-flow--memory">
+          <div className="p7-preview-node">
+            <small>旧类有序列表</small>
+            <div className="p7-preview-prefixes" aria-label="旧类列表保留前缀并截去尾项">
+              {OLD_CLASS_IDS.map((classId) => <span key={classId} style={classAccent(classId)}><b>{CLASS_VISUALS[classId].glyph}</b><i /><i /><s /><s /></span>)}
+            </div>
+          </div>
+          <FlowArrow label="截尾 + 补入" />
+          <div className="p7-preview-node p7-preview-node--operation">
+            <small>新类完整数据</small>
+            <strong>当前表示下<br />Herding</strong>
+          </div>
+          <FlowArrow />
+          <div className="p7-preview-node p7-preview-node--result"><small>下一轮原图记忆</small><strong>P_after</strong><span>6 类 × 2 张</span></div>
+        </div>
+        <p>旧类保留原列表前缀；新类从本轮完整数据中选入代表样本。</p>
+      </article>
+
+      <article className="p7-preview-change p7-preview-change--space">
+        <header><span>变化 B · 表示</span><h3>特征提取器更新，重建当前 Prototype</h3></header>
+        <div className="p7-preview-flow p7-preview-flow--space">
+          <div className="p7-preview-node p7-preview-node--result"><small>保存的是原图</small><strong>P_after</strong></div>
+          <FlowArrow label="重新编码" />
+          <div className="p7-preview-node p7-preview-node--extractor"><small>当前提取器</small><strong>φ_after</strong></div>
+          <FlowArrow label="逐类均值" />
+          <div className="p7-preview-node">
+            <small>当前 Prototype</small>
+            <div className="p7-preview-prototypes">{ALL_CLASS_IDS.map((classId) => <i key={classId} style={classAccent(classId)}>{CLASS_VISUALS[classId].glyph}</i>)}</div>
+          </div>
+        </div>
+        <p><strong>持久保存原始图片</strong>使 Prototype 可以用当前特征提取器重新计算；不能简单沿用更新前坐标。</p>
+      </article>
+    </div>
+
+    <div className="p7-preview__prediction">
+      <span className="eyebrow">PREDICTION · 汇合到当前空间</span>
+      <div className="p7-preview__prediction-flow">
+        <b>Query</b><FlowArrow label="φ_after" /><b>当前特征</b><FlowArrow label="比较距离" /><b>当前 Prototype</b><FlowArrow label="argmin" /><strong>NME 预测</strong>
+      </div>
+      <p>本次预测不写回状态；交给下一轮的是 <b>Θ_after + P_after</b>。</p>
+    </div>
+
+    <footer className="p7-preview__footer">
+      <p><b>本例设置</b>K=12；旧类每类 4 → 2，新类 D / E / F 各选 2。这里只展示机制，不把数量当作通用规则。</p>
+      <div><button type="button" className="icarl-button icarl-button--quiet" onClick={onInspect}>查看分阶段工作台</button><button type="button" className="icarl-button icarl-button--primary" onClick={onPlay}>▶ 完整播放</button></div>
+    </footer>
+  </section>;
+}
+
 export function PageSeven({ onContinue }: { onContinue?: () => void }) {
   const reducedMotion = useReducedMotion();
   const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
   const [playMode, setPlayMode] = useState<"all" | "phase">("phase");
+  const workbenchRef = useRef<HTMLElement | null>(null);
   const stage = state.clipIndex;
   const step = steps[stage];
   const currentAction = stage === 0 ? "确认 Θ_after 是给定的训练后状态，旧 P_before 原图仍完整保留。"
@@ -328,32 +399,21 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
     controls.goToClip(0, { autoPlay: true });
   }
 
+  function focusWorkbench({ play = false }: { play?: boolean } = {}) {
+    workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    if (play) playAll();
+  }
+
   return <article className="tutorial-page icarl-page icarl-page--p7" data-stage={step.id} data-progress={state.progress.toFixed(2)}>
     <header className="page-heading icarl-page__heading p7-heading">
       <div className="icarl-page__eyebrow"><span>PAGE 07</span><i /> POST-UPDATE MEMORY · CURRENT PROTOTYPES</div>
-      <h1>参数变了、类别增加了：下一轮该留下什么，当前该怎样预测？</h1>
-      <p>P6 解释了本轮训练信号如何更新共享网络。现在从更新后的模型出发，准备下一轮有限记忆，并在与当前模型一致的特征空间中完成预测。本页使用固定的 before/after 教学状态说明交接；Θ_after 是给定状态，并非 P6 实时算出的优化轨迹。</p>
+      <h1>模型更新后，记忆与 Prototype 要怎样一起更新？</h1>
+      <p>P6 得到了新的共享网络。现在要同时解决两种变化：类别更多但总记忆预算不变；特征提取器更新后，旧图片的坐标也可能改变。</p>
     </header>
 
-    <TutorialRoutePreview
-      context="参数已更新；旧类别持有有序原始 Exemplar 记忆，本轮新类别的完整图片可供选择。目标是恢复固定预算的记忆，并用当前模型预测。"
-      reasoning={<>
-        <p>模型更新完成后，我们得到了新的特征提取器，但持续学习还需要准备下一轮：保存有限数量的旧图，并继续识别所有已学类别。随着类别增多，在固定总预算下，每类可分配的 Exemplar 名额会减少。</p>
-        <p>P4 已经为各旧类别形成了有序 Exemplar 列表。因此缩减每类容量时，可以直接截去尾项、保留原前缀；不需要再访问旧类别的完整训练集。与此同时，本轮新类别的数据还可访问，可以在当前模型表示下为新类执行 Herding，填补它们的 Exemplar 名额。两部分合起来才是下轮要保存的 P_after。</p>
-        <p>还有一个不同的问题：P3 的 Prototype 是从图片特征算出来的，而本轮共享特征提取器已经更新。同一张原始图片可能映射到不同的特征坐标，旧 Prototype 不再一定和当前表示匹配。因此我们保存的是原始 Exemplar 图片，使用更新后的当前网络重新编码它们，计算当前版本的类别 Prototype。</p>
-        <p>最后，Query 在这一当前特征空间内与各类 Prototype 比距离，完成预测。一次预测不再改变模型或记忆。真正留给下一轮的是 Θ_after + P_after：更新后的模型和原始 Exemplar 记忆，而不是旧 Q 或上一次预测的结果。</p>
-      </>}
-      steps={[
-        { title: "确认当前模型与预算", input: "更新后的模型、旧有序原图记忆、总预算与类别数", operation: "按当前类别数确定每类可保留名额", result: "本轮旧类记忆的目标长度" },
-        { title: "组成下一轮原图记忆", input: "旧类有序列表与新类可访问数据", operation: "旧类保留原前缀；新类在当前表示下执行 Herding", result: "合并后的原始图片记忆 P_after" },
-        { title: "重编码并构造 Prototype", input: "P_after 中保留的原始图片", operation: "用更新后的当前特征提取器编码，逐类计算并单位化均值", result: "与 Query 同空间的当前类别 Prototype" },
-        { title: "比较 Query 并交接状态", input: "当前模型、Query 与各类 Prototype", operation: "用同一当前模型编码 Query，比较真实距离并取最小值", result: "本次预测；Θ_after 与 P_after 留给下一轮" },
-      ]}
-      output="得到与当前表示相配的 Prototype、一次最近原型预测，以及等待下一轮的持久状态 Θ_after + P_after。"
-      demoNote="固定教学状态示例：K=12，旧类名额由每类 4 截到 2，新类 D/E/F 各选 2；数量只用于本例，不是通用规则。"
-    />
+    <PageSevenPreview onInspect={() => focusWorkbench()} onPlay={() => focusWorkbench({ play: true })} />
 
-    <section className="p7-workbench" aria-label="参数更新后的记忆交接与预测工作台">
+    <section ref={workbenchRef} className="p7-workbench" aria-label="参数更新后的记忆交接与预测工作台">
       <header className="p7-workbench__guide">
         <div><span className="eyebrow">PHASE {String(stage + 1).padStart(2, "0")} / 05</span><h2>{step.title}</h2><p aria-live="polite"><strong>当前动作：</strong>{currentAction}</p><small>完成后：{stageOutputs[stage]}</small></div>
         <span className={`p7-playback-status p7-playback-status--${state.status}`}>{state.status === "playing" ? "动画运行中" : state.status === "finished" ? "本轮交接完成" : reducedMotion ? "减少动态效果 · 可逐段查看" : "已暂停 · 可逐段查看"}</span>
@@ -386,19 +446,12 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
       </footer>
     </section>
 
-    {stage === steps.length - 1 ? <>
-      <ResponsibilitySummary />
-      <QuestionHandoff
-        fromPage={7}
-        toPage={8}
-        steps={[
-          { label: "已经知道", body: <>旧类前缀截断、新类 Herding、当前 Prototype 与最近距离预测已贯通。</> },
-          { label: "新的限制", body: <>机制设计合理，不等于它在实验中一定带来更好的结果。</> },
-          { label: "下一问", body: <>原论文的整体结果、组件对照与<strong>记忆代价</strong>提供了什么证据？</> },
-        ]}
-        actionLabel="查看论文证据与边界"
-        onContinue={onContinue}
-      />
-    </> : null}
+    {stage === steps.length - 1 ? <ResponsibilitySummary /> : null}
+
+    <section className="p7-next-step" aria-label="从训练后交接到论文证据">
+      <div className="p7-next-step__mark" aria-hidden="true"><span>P_after</span><svg viewBox="0 0 52 20"><path d="M2 10h42" /><path d="m37 3 9 7-9 7" /></svg><span>μ_current</span></div>
+      <div><span className="eyebrow">NEXT · 从机制到证据</span><p><strong>记忆按容量重组，Prototype 用当前表示重建。</strong>下一问：这种完整机制在原论文实验中效果如何，代价又是什么？</p></div>
+      <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>查看论文证据与边界 <b aria-hidden="true">→</b></button>
+    </section>
   </article>;
 }

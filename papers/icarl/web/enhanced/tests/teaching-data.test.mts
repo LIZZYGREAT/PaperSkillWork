@@ -762,22 +762,20 @@ function renderPageSevenAt(progress: number, clip = 4, onContinue?: () => void):
 }
 
 const p7RouteMarkup = renderPageSevenAt(0, 0);
-assertTutorialRouteMarkup(p7RouteMarkup, "P7");
-assert.ok(p7RouteMarkup.includes("参数变了、类别增加了：下一轮该留下什么，当前该怎样预测？"), "P7 must frame post-update memory and prediction as a general algorithm question.");
-const p7GeneralReasoning = p7RouteMarkup.slice(p7RouteMarkup.indexOf('class="tutorial-route__reasoning"'), p7RouteMarkup.indexOf('class="tutorial-route__execution"'));
-assert.ok(p7GeneralReasoning.includes("固定总预算") && p7GeneralReasoning.includes("每类可分配的 Exemplar 名额会减少"),
-  "P7 must derive shrinking per-class memory from an expanding class set and a fixed total budget.");
-assert.ok(p7GeneralReasoning.includes("保留原前缀") && p7GeneralReasoning.includes("当前模型表示下为新类执行 Herding") && p7GeneralReasoning.includes("P_after"),
-  "P7 must explain how the old ordered prefix and newly selected Herding exemplars form the next memory.");
-assert.ok(p7GeneralReasoning.includes("保存的是原始 Exemplar 图片") && p7GeneralReasoning.includes("重新编码") && p7GeneralReasoning.includes("Query"),
-  "P7 must explain why the updated extractor re-encodes retained raw images before current-space prediction.");
-assert.ok(p7GeneralReasoning.includes("比距离") && p7GeneralReasoning.includes("Θ_after + P_after") && p7GeneralReasoning.includes("而不是旧 Q"),
-  "P7 must hand off nearest-prototype prediction and the persistent model-plus-image-memory state.");
-assert.doesNotMatch(p7GeneralReasoning, /K\s*=\s*12|4\s*截到\s*2|D\/E\/F|各选\s*2/u,
-  "P7's demonstration budget and class counts must not be presented as universal conditions.");
-const p7DemoNote = p7RouteMarkup.slice(p7RouteMarkup.indexOf('class="tutorial-route__demo-note"'));
-assert.ok(p7DemoNote.includes("K=12") && p7DemoNote.includes("4 截到 2") && p7DemoNote.includes("D/E/F 各选 2"),
-  "P7 must isolate its twelve-image and 4-to-2 budget details in the demonstration note.");
+assert.ok(p7RouteMarkup.includes("模型更新后，记忆与 Prototype 要怎样一起更新？"), "P7 must frame memory and prototype refresh as a joint post-update question.");
+const p7Preview = p7RouteMarkup.match(/<section class="p7-preview"[\s\S]*?<\/section>/)?.[0] ?? "";
+assert.ok(p7Preview.includes("变化 A · 容量") && p7Preview.includes("旧类有序列表") && p7Preview.includes("截尾 + 补入") && p7Preview.includes("Herding") && p7Preview.includes("P_after"),
+  "P7's preview must show the fixed-budget memory path from ordered old lists and new-class Herding to P_after.");
+assert.ok(p7Preview.includes("变化 B · 表示") && p7Preview.includes("重新编码") && p7Preview.includes("φ_after") && p7Preview.includes("当前 Prototype"),
+  "P7's preview must show the representation-change path from retained raw images through the current extractor to current prototypes.");
+assert.ok(p7Preview.includes("持久保存原始图片") && p7Preview.includes("不能简单沿用更新前坐标"),
+  "P7 must state why raw exemplars, rather than stale feature coordinates, are persisted.");
+assert.ok(p7Preview.includes("Query") && p7Preview.includes("比较距离") && p7Preview.includes("NME 预测") && p7Preview.includes("Θ_after + P_after"),
+  "P7's two change paths must converge on current-space NME and the persistent model-plus-image-memory state.");
+assert.ok(p7Preview.includes("本例设置") && p7Preview.includes("K=12") && p7Preview.includes("4 → 2") && p7Preview.includes("D / E / F 各选 2"),
+  "P7 must isolate its twelve-image and 4-to-2 budget details as example-only settings.");
+assert.ok(p7Preview.includes("查看分阶段工作台") && p7Preview.includes("▶ 完整播放"),
+  "P7's preview must provide direct actions for inspection and full playback.");
 
 function p7ConnectionWidths(markup: string): string[] {
   return [...markup.matchAll(/class="p7-stage-nav__segment"[^>]*><span style="width:([^\"]+)"/g)].map((match) => match[1]);
@@ -827,10 +825,12 @@ assert.ok(p5NextStep.includes("组成同一个 Student 的两类 Target") && p5N
   "P5's compact handoff must pose the next target-construction question and provide the cross-page action.");
 assert.ok(!p5HandoffMarkup.includes("icarl-question-handoff"), "P5 must not reuse the shared three-card handoff.");
 const p7HandoffMarkup = renderPageSevenAt(0, 4, () => undefined);
-assert.ok(p7HandoffMarkup.includes("整体结果、组件对照"), "P7 must lead to the paper's evidence and limitations.");
-const p7QuestionCard = p7HandoffMarkup.match(/<article class="[^"]*icarl-question-handoff__step--question[^"]*">[\s\S]*?<\/article>/)?.[0];
+const p7NextStep = p7HandoffMarkup.match(/<section class="p7-next-step"[\s\S]*?<\/section>/)?.[0] ?? "";
 const p7PlaybackControls = p7HandoffMarkup.match(/<footer class="p7-playback-controls"[^>]*>[\s\S]*?<\/footer>/)?.[0] ?? "";
-assert.ok(p7QuestionCard?.includes("查看论文证据与边界") && p7QuestionCard.includes("button"), "P7's page action must appear inside the third question card.");
+assert.ok(p7NextStep.includes("记忆按容量重组") && p7NextStep.includes("Prototype 用当前表示重建") && p7NextStep.includes("原论文实验中效果如何"),
+  "P7 must compactly hand off from the completed mechanism to the paper's evidence question.");
+assert.ok(p7NextStep.includes("查看论文证据与边界") && p7NextStep.includes("button") && !p7HandoffMarkup.includes("icarl-question-handoff"),
+  "P7 must use its compact page-specific transition instead of the shared three-card handoff.");
 assert.ok(!p7PlaybackControls.includes("查看论文证据与边界"), "P7 must keep its page action out of the playback controls.");
 const p6Source = readFileSync(path.join(process.cwd(), "src/pages/PageSix.tsx"), "utf8");
 assert.ok(p6Source.includes('className="p6-handoff" role="status"'), "P6's in-workbench phase feedback must remain distinct from the page-end transition.");

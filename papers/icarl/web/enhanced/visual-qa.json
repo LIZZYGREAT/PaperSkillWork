@@ -2276,18 +2276,18 @@
       "id": "icarl-p7-train-predict",
       "path": "/",
       "computedStyles": [
-        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
-        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
-        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+        { "selector": ".p7-preview__heading > p", "property": "font-size", "equals": "14px" },
+        { "selector": ".p7-preview-change > p", "property": "font-size", "equals": "12px" },
+        { "selector": ".p7-preview__prediction > p", "property": "font-size", "equals": "11px" }
       ],
       "states": [
         {
           "id": "00-preplay-reasoning-and-execution",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
-            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+            { "type": "waitFor", "selector": ".p7-preview__changes", "state": "visible" },
+            { "type": "waitFor", "selector": ".p7-preview__prediction-flow", "state": "visible" },
+            { "type": "waitFor", "selector": ".p7-preview__footer", "state": "visible" }
           ]
         },
         {
