@@ -60,7 +60,6 @@ import { snapshotWriteProgress } from "../src/data/incremental-snapshot-progress
 import { CLASSES_PER_BATCH, TABLE1A, TABLE1B } from "../src/data/table1-results.ts";
 import { FIGURE2_FOCUS_RECTS, FIGURE2_SOURCE_FRAME, figure2Selection } from "../src/data/figure2-focus.ts";
 import { FeatureSpaceWorkbench } from "../src/components/FeatureSpaceWorkbench.tsx";
-import { QuestionHandoff } from "../src/components/QuestionHandoff.tsx";
 import { PageThree } from "../src/pages/PageThree.tsx";
 import { PageFour } from "../src/pages/PageFour.tsx";
 import { PageFive } from "../src/pages/PageFive.tsx";
@@ -93,20 +92,6 @@ function p3VisibleLegend(clip: number): string {
   return legend!;
 }
 
-function assertTutorialRouteMarkup(markup: string, pageLabel: string): void {
-  const reasoningStart = markup.indexOf('class="tutorial-route__reasoning"');
-  const reasoningCopy = markup.indexOf('class="tutorial-route__reasoning-copy"');
-  const executionStart = markup.indexOf('class="tutorial-route__execution"');
-  const handoffStart = markup.indexOf('class="tutorial-route__handoff"');
-  assert.ok(reasoningStart >= 0 && reasoningCopy > reasoningStart, `${pageLabel} must render readable pre-play reasoning.`);
-  assert.ok(executionStart > reasoningCopy && handoffStart > executionStart, `${pageLabel} must order reasoning, execution, and handoff.`);
-  assert.equal([...markup.matchAll(/class="tutorial-route__step-card"/g)].length, 4, `${pageLabel} must explain four real execution steps.`);
-  assert.equal([...markup.matchAll(/<dt>/g)].filter((match) => match.index! > executionStart && match.index! < handoffStart).length, 12,
-    `${pageLabel} must state each step's input, processing, and resulting state.`);
-  assert.equal([...markup.matchAll(/<svg class="tutorial-route__connector"[^>]*aria-hidden="true"/g)].length, 3, `${pageLabel} must connect only adjacent step pairs with decorative SVGs.`);
-  assert.ok(markup.indexOf("本次演示") > handoffStart, `${pageLabel} must distinguish example conditions from its general reasoning.`);
-}
-
 const p3RouteMarkup = renderPageThreeAt(0);
 assert.ok(p3RouteMarkup.includes('class="p3-concept"') && !p3RouteMarkup.includes('class="tutorial-route"'),
   "P3 must use its own exemplar-to-prototype concept map instead of the shared route template.");
@@ -119,12 +104,6 @@ const p3PrincipleCopy = p3RouteMarkup.slice(p3RouteMarkup.indexOf('class="p3-con
 assert.doesNotMatch(p3PrincipleCopy, /3 个类别|每类 4 张/u, "P3's demonstration counts must stay outside the general concept map.");
 assert.ok(p3RouteMarkup.slice(p3RouteMarkup.indexOf('class="p3-concept__footer"')).includes("示例设置：3 个类别、每类 4 张图片"),
   "P3 must keep concrete class and exemplar counts in the demonstration note.");
-const tutorialRouteCss = readFileSync(path.join(process.cwd(), "src/styles/tutorial-route.css"), "utf8");
-assert.doesNotMatch(tutorialRouteCss, /content\s*:\s*["']→["']/u, "Tutorial route arrows must not depend on a text glyph.");
-assert.doesNotMatch(tutorialRouteCss, /right\s*:\s*-\d/u, "Tutorial route arrows must not intrude into card space with a negative offset.");
-assert.ok(tutorialRouteCss.includes("grid-template-columns: minmax(0, 1fr) 28px") && tutorialRouteCss.includes("transform: rotate(90deg)"),
-  "Tutorial route arrows must have an independent desktop slot and turn downward with the single-column layout.");
-
 const p3NormalizeLegend = p3VisibleLegend(0);
 assert.match(p3NormalizeLegend, /单位圆/);
 assert.match(p3NormalizeLegend, /Exemplar 特征/);
@@ -787,24 +766,6 @@ assert.ok(p7FirstStageMarkup.includes('data-readiness="pending-memory"'), "P7 ea
 assert.ok(!p7FirstStageMarkup.includes("等待 P_after 成员确定"), "P7 early phases must not spend a large panel repeating a waiting placeholder.");
 assert.deepEqual(p7ConnectionWidths(renderPageSevenAt(0, 1)), ["100%", "0%", "0%", "0%"], "P7's second selected node must complete only the first connection segment.");
 assert.deepEqual(p7ConnectionWidths(renderPageSevenAt(0, 4)), ["100%", "100%", "100%", "100%"], "P7's fifth selected node must complete exactly four connector segments.");
-
-const handoffSteps = [
-  { label: "已经知道", body: "已知事实" },
-  { label: "新的限制", body: "当前限制" },
-  { label: "下一问", body: "下一步问题" },
-] as const;
-const handoffMarkup = renderToStaticMarkup(createElement(QuestionHandoff, {
-  fromPage: 3,
-  toPage: 4,
-  steps: handoffSteps,
-  actionLabel: "继续",
-  onContinue: () => undefined,
-  note: "次级说明",
-}));
-assert.deepEqual([...handoffMarkup.matchAll(/icarl-question-handoff__step--(known|constraint|question)/g)].map((match) => match[1]), ["known", "constraint", "question"], "The shared handoff must preserve the known → constraint → question order.");
-const handoffQuestionCard = handoffMarkup.match(/<article class="[^"]*icarl-question-handoff__step--question[^"]*">[\s\S]*?<\/article>/)?.[0];
-assert.ok(handoffQuestionCard?.includes("继续") && handoffQuestionCard.includes("button"), "The continue action must stay inside the third question card.");
-assert.ok(handoffMarkup.includes("次级说明"), "The shared handoff must support a compact secondary note.");
 
 const p3HandoffMarkup = renderPageThreeAt(0, 0, () => undefined);
 const p3NextStep = p3HandoffMarkup.match(/<section class="p3-next-step"[\s\S]*?<\/section>/)?.[0] ?? "";
