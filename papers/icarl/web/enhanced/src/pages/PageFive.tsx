@@ -196,78 +196,100 @@ function Nodes({ classIds, kind, responses, activeIndex }: { classIds: readonly 
 
 function ReplayInputDiagram() {
   return (
-    <svg className="p5-briefing__diagram" viewBox="0 0 520 208" role="img" aria-labelledby="p5-replay-diagram-title p5-replay-diagram-desc">
-      <title id="p5-replay-diagram-title">旧记忆副本与新类图片合成训练集 D</title>
-      <desc id="p5-replay-diagram-desc">持久记忆 P 保留原件，只送出训练副本；训练副本与新类图片共同汇入本轮训练集 D。</desc>
+    <>
+    <svg className="p5-briefing__diagram" viewBox="0 0 560 212" role="img" aria-labelledby="p5-replay-diagram-title p5-replay-diagram-desc">
+      <title id="p5-replay-diagram-title">P 保留原始 Exemplar，训练副本与新类图片共同组成 D</title>
+      <desc id="p5-replay-diagram-desc">持久记忆 P 保留原始 Exemplar。P 的训练副本与新类图片分别沿独立连线汇入训练集 D。</desc>
       <defs>
         <marker id="p5-replay-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
           <path d="M0 0 8 4 0 8Z" />
         </marker>
       </defs>
       <g className="p5-briefing__node p5-briefing__node--memory">
-        <rect x="14" y="20" width="150" height="72" rx="14" />
-        <text x="34" y="51" className="p5-briefing__symbol">P</text>
-        <text x="69" y="48">持久记忆</text>
-        <text x="69" y="70" className="p5-briefing__subtext">旧 Exemplar 原件</text>
+        <rect x="16" y="20" width="228" height="74" rx="14" />
+        <text x="36" y="64" className="p5-briefing__symbol">P</text>
+        <text x="82" y="51">原始 Exemplar</text>
+        <text x="82" y="75" className="p5-briefing__subtext">持久保留</text>
       </g>
       <g className="p5-briefing__node p5-briefing__node--incoming">
-        <rect x="14" y="122" width="150" height="62" rx="14" />
-        <text x="31" y="151" className="p5-briefing__symbol">X</text>
-        <text x="53" y="156" className="p5-briefing__subscript">new</text>
-        <text x="92" y="151">新类图片</text>
-        <text x="92" y="172" className="p5-briefing__subtext">本轮完整数据</text>
+        <rect x="16" y="122" width="228" height="74" rx="14" />
+        <text x="34" y="166" className="p5-briefing__symbol">X</text>
+        <text x="57" y="174" className="p5-briefing__subscript">new</text>
+        <text x="103" y="153">新类图片</text>
+        <text x="103" y="177" className="p5-briefing__subtext">本轮完整数据</text>
       </g>
-      <path className="p5-briefing__link" d="M164 56 H238 Q258 56 258 76 V90" markerEnd="url(#p5-replay-arrow)" />
-      <path className="p5-briefing__link p5-briefing__link--incoming" d="M164 153 H238 Q258 153 258 133 V121" markerEnd="url(#p5-replay-arrow)" />
-      <text x="176" y="45" className="p5-briefing__link-label">取训练副本</text>
+      <path className="p5-briefing__link" d="M244 57 H316 Q337 57 337 78 V91 H380" markerEnd="url(#p5-replay-arrow)" />
+      <path className="p5-briefing__link p5-briefing__link--incoming" d="M244 159 H316 Q337 159 337 138 V125 H380" markerEnd="url(#p5-replay-arrow)" />
+      <text x="263" y="39" className="p5-briefing__link-label">训练副本</text>
       <g className="p5-briefing__node p5-briefing__node--dataset">
-        <rect x="294" y="70" width="208" height="78" rx="16" />
-        <text x="320" y="113" className="p5-briefing__symbol">D</text>
-        <text x="361" y="104">本轮训练集</text>
-        <text x="361" y="127" className="p5-briefing__subtext">旧副本 + 新图片</text>
+        <rect x="384" y="70" width="160" height="78" rx="16" />
+        <text x="402" y="116" className="p5-briefing__symbol">D</text>
+        <text x="444" y="103">训练集</text>
+        <text x="444" y="127" className="p5-briefing__subtext">旧副本 + 新图</text>
       </g>
-      <path className="p5-briefing__return" d="M42 99 V110 H137 V99" />
-      <text x="54" y="107" className="p5-briefing__retained-label">原件仍留在 P</text>
     </svg>
+    <div className="p5-briefing__mobile-diagram" role="img" aria-label="P 保留原始 Exemplar；训练副本与 X new 新类图片分别汇入训练集 D。">
+      <div className="p5-briefing__mobile-inputs">
+        <div className="p5-briefing__mobile-node"><b>P</b><span><strong>原始 Exemplar</strong><small>持久保留</small></span></div>
+        <div className="p5-briefing__mobile-node"><b>X<sub>new</sub></b><span><strong>新类图片</strong><small>本轮完整数据</small></span></div>
+      </div>
+      <div className="p5-briefing__mobile-arrows" aria-hidden="true">
+        <span>训练副本<i>↓</i></span><span>图片 + 真标签<i>↓</i></span>
+      </div>
+      <div className="p5-briefing__mobile-node p5-briefing__mobile-node--dataset"><b>D</b><span><strong>本轮训练集</strong><small>旧副本 + 新图</small></span></div>
+    </div>
+    </>
   );
 }
 
 function TeacherReferenceDiagram() {
   return (
-    <svg className="p5-briefing__diagram" viewBox="0 0 520 208" role="img" aria-labelledby="p5-teacher-diagram-title p5-teacher-diagram-desc">
-      <title id="p5-teacher-diagram-title">更新前 Teacher 为 D 的每张图片生成旧类响应快照 Q</title>
-      <desc id="p5-teacher-diagram-desc">D 中每张图片按 sample ID 进入冻结的更新前 Teacher，三个旧类别节点响应写入 Q 中相同 ID 的一行。</desc>
+    <>
+    <svg className="p5-briefing__diagram" viewBox="0 0 600 212" role="img" aria-labelledby="p5-teacher-diagram-title p5-teacher-diagram-desc">
+      <title id="p5-teacher-diagram-title">冻结 Teacher 按 sample ID 为 D 的每张图生成旧类响应 Q</title>
+      <desc id="p5-teacher-diagram-desc">D 中每张图连同 sample ID 经冻结 Teacher 读取更新前的旧节点响应，并写入 Q 中同一 ID 的一行；Q 不是类别真标签。</desc>
       <defs>
         <marker id="p5-teacher-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
           <path d="M0 0 8 4 0 8Z" />
         </marker>
       </defs>
       <g className="p5-briefing__node p5-briefing__node--image">
-        <rect x="12" y="63" width="110" height="80" rx="14" />
-        <text x="38" y="97" className="p5-briefing__symbol">D</text>
-        <text x="70" y="94">每张图</text>
-        <text x="29" y="122" className="p5-briefing__subtext">sample ID</text>
+        <rect x="12" y="64" width="120" height="88" rx="14" />
+        <text x="29" y="105" className="p5-briefing__symbol">D</text>
+        <text x="68" y="100">每张图</text>
+        <text x="28" y="130" className="p5-briefing__subtext">sample ID</text>
       </g>
-      <path className="p5-briefing__link" d="M122 103 H184" markerEnd="url(#p5-teacher-arrow)" />
+      <path className="p5-briefing__link" d="M132 108 H211" markerEnd="url(#p5-teacher-arrow)" />
       <g className="p5-briefing__node p5-briefing__node--teacher">
-        <rect x="196" y="43" width="154" height="120" rx="16" />
-        <text x="218" y="76">更新前 Teacher</text>
-        <text x="218" y="98" className="p5-briefing__subtext">冻结 · 不参与更新</text>
+        <rect x="215" y="48" width="172" height="124" rx="16" />
+        <text x="235" y="80">冻结 Teacher</text>
+        <text x="235" y="104" className="p5-briefing__subtext">读取更新前响应</text>
         <g className="p5-briefing__response-dots">
-          <circle cx="232" cy="128" r="12" /><circle cx="273" cy="128" r="12" /><circle cx="314" cy="128" r="12" />
-          <text x="228" y="133">1</text><text x="269" y="133">2</text><text x="310" y="133">3</text>
+          <circle cx="254" cy="143" r="12" /><circle cx="301" cy="143" r="12" /><circle cx="348" cy="143" r="12" />
+          <text x="250" y="148">1</text><text x="297" y="148">2</text><text x="344" y="148">3</text>
         </g>
       </g>
-      <path className="p5-briefing__link" d="M350 103 H404" markerEnd="url(#p5-teacher-arrow)" />
+      <path className="p5-briefing__link" d="M387 108 H466" markerEnd="url(#p5-teacher-arrow)" />
       <g className="p5-briefing__node p5-briefing__node--snapshot">
-        <rect x="416" y="63" width="92" height="80" rx="14" />
-        <text x="436" y="98" className="p5-briefing__symbol">Q</text>
-        <text x="468" y="95">一行</text>
-        <text x="432" y="122" className="p5-briefing__subtext">同一 ID</text>
+        <rect x="470" y="64" width="118" height="88" rx="14" />
+        <text x="487" y="105" className="p5-briefing__symbol">Q</text>
+        <text x="527" y="100">记录行</text>
+        <text x="493" y="130" className="p5-briefing__subtext">同一 ID</text>
       </g>
-      <text x="154" y="91" className="p5-briefing__link-label">逐张读取</text>
-      <text x="367" y="91" className="p5-briefing__link-label">旧类响应</text>
+      <text x="137" y="39" className="p5-briefing__link-label">逐张读取</text>
+      <text x="394" y="39" className="p5-briefing__link-label">写入旧类响应</text>
     </svg>
+    <div className="p5-briefing__mobile-diagram p5-briefing__mobile-diagram--teacher" role="img" aria-label="D 中每张图及其 sample ID 经冻结 Teacher 读取更新前旧类响应，再写入 Q 中同一 ID 的一行。">
+      <div className="p5-briefing__mobile-node"><b>D</b><span><strong>每张训练图 + sample ID</strong><small>逐张读取</small></span></div>
+      <div className="p5-briefing__mobile-arrow" aria-hidden="true">↓</div>
+      <div className="p5-briefing__mobile-node p5-briefing__mobile-node--teacher">
+        <span><strong>冻结 Teacher</strong><small>读取更新前旧类响应</small></span>
+        <i aria-hidden="true"><b>1</b><b>2</b><b>3</b></i>
+      </div>
+      <div className="p5-briefing__mobile-arrow" aria-hidden="true">↓</div>
+      <div className="p5-briefing__mobile-node p5-briefing__mobile-node--dataset"><b>Q</b><span><strong>按同一 ID 写入响应行</strong><small>不是类别真标签</small></span></div>
+    </div>
+    </>
   );
 }
 
@@ -276,34 +298,35 @@ function P5Briefing({ onInspect }: { onInspect: () => void }) {
     <section className="p5-briefing" aria-labelledby="p5-briefing-title">
       <header className="p5-briefing__header">
         <span className="eyebrow">先看两种训练信息从哪里来</span>
-        <h2 id="p5-briefing-title">Replay 让旧图回来，但它没有记录旧模型当时怎样响应</h2>
+        <h2 id="p5-briefing-title">旧图重新参与训练，为什么还需要保存旧模型的响应？</h2>
       </header>
 
       <div className="p5-briefing__sources">
         <article className="p5-briefing__source p5-briefing__source--replay">
-          <header><span>信息源 1 · 图片与真标签</span><h3>旧图重新参与训练</h3></header>
+          <header><span>信息源 1 · 图片与真标签</span><h3>Replay：让旧图继续参与学习</h3></header>
           <ReplayInputDiagram />
-          <p>只用新图容易忘记旧类别。Replay 让少量旧图的<strong>训练副本</strong>与新图共同组成 D，持久记忆 P 的原件仍保留。</p>
+          <p>读取旧 Exemplar 的<strong>训练副本</strong>，与新图共同组成 D；<strong>原件仍保留</strong>。</p>
         </article>
 
         <article className="p5-briefing__source p5-briefing__source--teacher">
-          <header><span>信息源 2 · 更新前旧行为</span><h3>先保存 Teacher 的旧类响应</h3></header>
+          <header><span>信息源 2 · 更新前旧行为</span><h3>Q：记录更新前 Teacher 的旧类响应</h3></header>
           <TeacherReferenceDiagram />
-          <p>共享参数更新后，旧节点响应可能改变。更新前 Teacher 为 D 中<strong>每张图片</strong>生成按 ID 对齐的 Q；<strong>Q 不是真实标签</strong>。</p>
+          <p>冻结 Teacher 逐张读取 D，并按 <strong>sample ID</strong> 写入旧类响应；<strong>Q 不是真实标签</strong>。</p>
         </article>
       </div>
 
       <div className="p5-briefing__merge" aria-label="D 与 Q 共同交给 P6">
         <div className="p5-briefing__merge-inputs">
           <span><b>D</b><i>图片 + 真标签</i></span>
-          <span><b>Q</b><i>更新前旧节点响应</i></span>
+          <span><b>Q</b><i>更新前旧类响应</i></span>
+          <small>按 ID 对齐</small>
         </div>
         <svg viewBox="0 0 84 28" aria-hidden="true"><path d="M2 5H34Q44 5 44 14M2 23H34Q44 23 44 14H77m-8-7 8 7-8 7" /></svg>
-        <strong>两种信息按 sample ID 对齐，下一页共同构造 Student 的目标</strong>
+        <strong>Student 的训练目标</strong>
       </div>
 
       <footer className="p5-briefing__footer">
-        <p><b>示例设置</b>下方动画使用 3 个旧类、3 个新类；D=12+18=30，Q=30×3。数值仅用于本次演示。</p>
+        <p><b>接下来观察</b>P 原件不动，训练副本进入 D；再看 D 中每张图怎样写出同 ID 的 Q 行。<span>本次演示：3 个旧类、3 个新类；D=12+18=30，Q=30×3。</span></p>
         <button type="button" className="icarl-button icarl-button--primary" onClick={onInspect}>查看具体怎么算 ↓</button>
       </footer>
     </section>

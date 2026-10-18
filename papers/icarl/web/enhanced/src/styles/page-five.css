@@ -26,36 +26,37 @@
 .p5-briefing__source h3 { margin: 0; color: #2c5048; font-size: 18px; line-height: 1.35; }
 .p5-briefing__source > p { margin: 0; color: #3e5a55; font-size: 15px; line-height: 1.55; }
 .p5-briefing__source > p strong { color: #225e52; }
-.p5-briefing__diagram { display: block; width: 100%; min-height: 190px; border: 1px solid #e0e8e3; border-radius: 11px; background: #fbfcfa; }
+.p5-briefing__diagram { display: block; width: 100%; height: clamp(190px, 16vw, 220px); border: 1px solid #e0e8e3; border-radius: 11px; background: #fbfcfa; }
+.p5-briefing__mobile-diagram { display: none; }
 .p5-briefing__diagram marker path { fill: #6f8f84; }
 .p5-briefing__node rect { fill: #fff; stroke: #ccdcd4; stroke-width: 1.5; }
-.p5-briefing__node text { fill: #36564f; font: 650 15px var(--sans); }
+.p5-briefing__node text { fill: #36564f; font: 650 16px var(--sans); }
 .p5-briefing__node--memory rect { fill: #edf6f0; stroke: #9fc6b1; }
 .p5-briefing__node--incoming rect { fill: #fdf4eb; stroke: #dfbc9f; }
 .p5-briefing__node--dataset rect { fill: #eef5f1; stroke: #94b8a6; stroke-width: 2; }
 .p5-briefing__node--teacher rect { fill: #f6f2eb; stroke: #d8b89c; stroke-width: 2; }
 .p5-briefing__node--snapshot rect { fill: #edf5ef; stroke: #9fc3ad; stroke-width: 2; }
-.p5-briefing__symbol { fill: #2e6655 !important; font: 800 25px var(--mono) !important; }
-.p5-briefing__subscript { fill: #2e6655 !important; font: 750 10px var(--mono) !important; }
-.p5-briefing__subtext { fill: #677b75 !important; font: 500 12px var(--sans) !important; }
+.p5-briefing__symbol { fill: #2e6655 !important; font: 800 26px var(--mono) !important; }
+.p5-briefing__subscript { fill: #2e6655 !important; font: 750 11px var(--mono) !important; }
+.p5-briefing__subtext { fill: #677b75 !important; font: 500 13px var(--sans) !important; }
 .p5-briefing__link { fill: none; stroke: #6f8f84; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .p5-briefing__link--incoming { stroke: #b17b58; }
-.p5-briefing__link-label { fill: #6a7d77; font: 600 12px var(--sans); }
-.p5-briefing__return { fill: none; stroke: #4c8870; stroke-dasharray: 4 4; stroke-width: 1.5; }
-.p5-briefing__retained-label { fill: #477160; font: 650 12px var(--sans); }
+.p5-briefing__link-label { fill: #6a7d77; font: 600 14px var(--sans); }
 .p5-briefing__response-dots circle { fill: #e5efe8; stroke: #7fa88e; }
-.p5-briefing__response-dots text { fill: #35604e; font: 750 11px var(--mono); }
-.p5-briefing__merge { display: grid; grid-template-columns: minmax(250px, .7fr) 84px minmax(320px, 1.3fr); align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid #cfddd6; border-radius: 12px; background: #eef5f1; }
-.p5-briefing__merge-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-.p5-briefing__merge-inputs > span { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; min-width: 0; padding: 7px 9px; border: 1px solid #d8e3dd; border-radius: 8px; background: #fffefa; }
-.p5-briefing__merge-inputs b { color: #2f6554; font: 800 18px var(--mono); }
+.p5-briefing__response-dots text { fill: #35604e; font: 750 12px var(--mono); }
+.p5-briefing__merge { display: grid; grid-template-columns: minmax(0, 1fr) 58px auto; align-items: center; gap: 10px; padding: 9px 13px; border: 1px solid #cfddd6; border-radius: 10px; background: #eef5f1; }
+.p5-briefing__merge-inputs { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; min-width: 0; }
+.p5-briefing__merge-inputs > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.p5-briefing__merge-inputs b { color: #2f6554; font: 800 17px var(--mono); }
 .p5-briefing__merge-inputs i { color: #536b64; font-size: 13px; font-style: normal; line-height: 1.35; }
-.p5-briefing__merge > svg { width: 84px; height: 28px; overflow: visible; }
+.p5-briefing__merge-inputs small { color: #71827c; font-size: 12px; }
+.p5-briefing__merge > svg { width: 58px; height: 24px; overflow: visible; }
 .p5-briefing__merge > svg path { fill: none; stroke: #9a6c4f; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.p5-briefing__merge > strong { color: #28564d; font-size: 15px; line-height: 1.45; }
+.p5-briefing__merge > strong { color: #28564d; font-size: 15px; line-height: 1.45; white-space: nowrap; }
 .p5-briefing__footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .p5-briefing__footer p { margin: 0; color: #687b76; font-size: 13px; line-height: 1.5; }
 .p5-briefing__footer p b { margin-right: .5em; color: #46655d; }
+.p5-briefing__footer p span { display: block; margin-top: 2px; color: #7a8984; font-size: 12px; }
 .p5-briefing__footer .icarl-button { flex: 0 0 auto; }
 
 .p5-next-step { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 17px; border: 1px solid #d5e2dc; border-radius: 13px; background: #f1f7f3; }
@@ -224,12 +225,23 @@
   }
 }
 
+@media (max-width: 960px) {
+  .p5-briefing__sources { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (max-width: 760px) {
   .p5-briefing { padding: 14px; }
-  .p5-briefing__sources { grid-template-columns: minmax(0, 1fr); }
-  .p5-briefing__diagram { min-height: 0; }
+  .p5-briefing__diagram { height: 190px; }
+  .p5-briefing__node text { font-size: 20px; }
+  .p5-briefing__symbol { font-size: 30px !important; }
+  .p5-briefing__subscript { font-size: 13px !important; }
+  .p5-briefing__subtext { font-size: 18px !important; }
+  .p5-briefing__link-label { font-size: 18px; }
+  .p5-briefing__response-dots text { font-size: 15px; }
   .p5-briefing__merge { grid-template-columns: minmax(0, 1fr); justify-items: stretch; }
+  .p5-briefing__merge-inputs { justify-content: space-between; }
   .p5-briefing__merge > svg { justify-self: center; transform: rotate(90deg); }
+  .p5-briefing__merge > strong { white-space: normal; text-align: center; }
   .p5-briefing__footer, .p5-next-step { align-items: stretch; flex-direction: column; }
   .p5-briefing__footer .icarl-button, .p5-next-step .icarl-button { width: 100%; }
   .p5-workbench { padding: 11px; }
@@ -244,6 +256,27 @@
   .p5-controls { grid-template-columns: 1fr 1fr; }
   .p5-control-main { grid-column: 1 / -1; grid-row: 1; }
   .p5-order-strip > small { flex-basis: 100%; margin-left: 0; }
+}
+
+@media (max-width: 900px) {
+  .p5-briefing__diagram { display: none; }
+  .p5-briefing__mobile-diagram { display: grid; gap: 7px; padding: 10px; border: 1px solid #e0e8e3; border-radius: 11px; background: #fbfcfa; }
+  .p5-briefing__mobile-inputs, .p5-briefing__mobile-arrows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .p5-briefing__mobile-node { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 58px; padding: 8px; border: 1px solid #d6e2dc; border-radius: 9px; background: #fff; }
+  .p5-briefing__mobile-node > b { flex: 0 0 auto; color: #2e6655; font: 800 20px var(--mono); }
+  .p5-briefing__mobile-node > b sub { font-size: 9px; }
+  .p5-briefing__mobile-node > span { display: grid; gap: 2px; min-width: 0; }
+  .p5-briefing__mobile-node strong { color: #36564f; font-size: 13px; line-height: 1.3; }
+  .p5-briefing__mobile-node small { color: #677b75; font-size: 12px; line-height: 1.3; }
+  .p5-briefing__mobile-arrows { justify-items: center; color: #627a70; font-size: 12px; line-height: 1.15; }
+  .p5-briefing__mobile-arrows span { display: grid; justify-items: center; gap: 1px; }
+  .p5-briefing__mobile-arrows i { color: #789486; font-size: 20px; font-style: normal; line-height: 1; }
+  .p5-briefing__mobile-node--dataset { justify-content: center; border-color: #a6c1b2; background: #f1f7f3; }
+  .p5-briefing__mobile-diagram--teacher .p5-briefing__mobile-node { padding: 8px 10px; }
+  .p5-briefing__mobile-diagram--teacher .p5-briefing__mobile-node--teacher { justify-content: space-between; border-color: #d8b89c; background: #f8f3eb; }
+  .p5-briefing__mobile-node--teacher > i { display: flex; gap: 5px; font-style: normal; }
+  .p5-briefing__mobile-node--teacher > i b { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid #7fa88e; border-radius: 50%; color: #35604e; background: #e5efe8; font: 700 11px var(--mono); }
+  .p5-briefing__mobile-arrow { color: #789486; font-size: 20px; line-height: 1; text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -672,12 +672,14 @@ assert.ok(p5RouteMarkup.includes('class="p5-briefing"') && !p5RouteMarkup.includ
   "P5 must replace the shared route template with its own two-source briefing.");
 assert.equal([...p5RouteMarkup.matchAll(/class="p5-briefing__source /g)].length, 2,
   "P5 must show replayed training inputs and frozen old behavior as two distinct information sources.");
-assert.ok(p5RouteMarkup.includes("旧副本 + 新图片") && p5RouteMarkup.includes("原件仍留在 P"),
+assert.ok(p5RouteMarkup.includes("训练副本") && p5RouteMarkup.includes("旧副本 + 新图") && p5RouteMarkup.includes("持久保留"),
   "P5's replay diagram must make copied training inputs and retained persistent memory visible.");
-assert.ok(p5RouteMarkup.includes("更新前 Teacher") && p5RouteMarkup.includes("冻结 · 不参与更新") && p5RouteMarkup.includes("同一 ID"),
+assert.ok(p5RouteMarkup.includes("冻结 Teacher") && p5RouteMarkup.includes("读取更新前响应") && p5RouteMarkup.includes("同一 ID"),
   "P5's behavior diagram must show the pre-update frozen Teacher and sample-ID aligned Q rows.");
-assert.ok(p5RouteMarkup.includes("Q 不是真实标签") && p5RouteMarkup.includes("两种信息按 sample ID 对齐"),
+assert.ok(p5RouteMarkup.includes("Q 不是真实标签") && p5RouteMarkup.includes("按 ID 对齐"),
   "P5 must distinguish Q from labels while explaining how D and Q align for P6.");
+assert.ok(p5RouteMarkup.includes('class="p5-briefing__mobile-arrows"') && p5RouteMarkup.includes("按同一 ID 写入响应行"),
+  "P5's narrow layout must retain the replay merge and sample-ID aligned Teacher-to-Q path.");
 const p5PrincipleCopy = p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="p5-briefing__sources"'), p5RouteMarkup.indexOf('class="p5-briefing__footer"'));
 assert.doesNotMatch(p5PrincipleCopy, /12\s*\+\s*18|30\s*[×x]\s*3|旧类\s*3|新类\s*3/u, "P5's demonstration dimensions must not be presented as general conditions.");
 assert.ok(p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="p5-briefing__footer"')).includes("D=12+18=30，Q=30×3"),
