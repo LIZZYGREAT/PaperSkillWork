@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
-import { QuestionHandoff } from "../components/QuestionHandoff";
-import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
 import {
   CLASS_VISUALS,
   encode2D,
@@ -692,6 +690,91 @@ function PlacedLabel({ point, text, placement, fontSize, className }: {
   );
 }
 
+function P3ConceptMap({ onInspect, onPlayAll, reducedMotion }: { onInspect: () => void; onPlayAll: () => void; reducedMotion: boolean }) {
+  return (
+    <section className="p3-concept" aria-labelledby="p3-concept-title">
+      <header className="p3-concept__header">
+        <span className="eyebrow">有限记忆怎样变成可比较的类别参考？</span>
+        <h2 id="p3-concept-title">历史图像不能全部保留，怎样给每个已学类别一个可比较的参考？</h2>
+      </header>
+
+      <div className="p3-concept__map">
+        <section className="p3-concept__memory" aria-label="每个类别只保留部分 Exemplar 原图">
+          <span className="p3-concept__panel-label">每类留下少量原图</span>
+          {classIds.map((classId) => (
+            <div key={classId} style={{ "--p3-concept-color": CLASS_VISUALS[classId].color } as CSSProperties}>
+              <b>{CLASS_VISUALS[classId].displayLabel}</b>
+              <span aria-label={`${CLASS_VISUALS[classId].displayLabel} 的部分 Exemplar`}>
+                <i /><i /><i /><i />
+              </span>
+              <small>Exemplars</small>
+            </div>
+          ))}
+          <p>原件是有限记忆，不是完整历史数据。</p>
+        </section>
+
+        <div className="p3-concept__bridge" aria-label="使用同一个当前特征提取器">
+          <span>同一个当前 φ</span>
+          <svg viewBox="0 0 88 32" aria-hidden="true"><path d="M2 16h78m-9-9 9 9-9 9" /></svg>
+          <small>逐张编码并单位化</small>
+        </div>
+
+        <section className="p3-concept__space" aria-label="同类特征聚合为类别 Prototype">
+          <span className="p3-concept__panel-label">共同特征空间 · 概念示意</span>
+          <svg viewBox="0 0 300 190" role="img" aria-label="三组同类特征分别聚合为三个类别 Prototype">
+            <path className="p3-concept__axis" d="M28 160H278M46 176V18" />
+            <g className="p3-concept__cluster p3-concept__cluster--one">
+              <circle cx="72" cy="66" r="5" /><circle cx="91" cy="56" r="5" /><circle cx="104" cy="78" r="5" /><circle cx="80" cy="89" r="5" />
+              <circle className="p3-concept__prototype" cx="87" cy="72" r="12" /><text x="87" y="77">μ₁</text>
+            </g>
+            <g className="p3-concept__cluster p3-concept__cluster--two">
+              <circle cx="181" cy="51" r="5" /><circle cx="207" cy="57" r="5" /><circle cx="215" cy="82" r="5" /><circle cx="189" cy="88" r="5" />
+              <circle className="p3-concept__prototype" cx="198" cy="69" r="12" /><text x="198" y="74">μ₂</text>
+            </g>
+            <g className="p3-concept__cluster p3-concept__cluster--three">
+              <circle cx="126" cy="126" r="5" /><circle cx="150" cy="116" r="5" /><circle cx="163" cy="140" r="5" /><circle cx="136" cy="149" r="5" />
+              <circle className="p3-concept__prototype" cx="144" cy="133" r="12" /><text x="144" y="138">μ₃</text>
+            </g>
+          </svg>
+          <p>同类保留图片形成一个<strong>近似参考位置 Prototype μ<sub>y</sub></strong>。</p>
+        </section>
+
+        <div className="p3-concept__bridge p3-concept__bridge--query" aria-hidden="true">
+          <svg viewBox="0 0 88 32"><path d="M2 16h78m-9-9 9 9-9 9" /></svg>
+        </div>
+
+        <section className="p3-concept__query" aria-label="Query 与不同类别 Prototype 比较距离">
+          <span className="p3-concept__panel-label">Query 找最近类别参考</span>
+          <div className="p3-concept__query-mark"><i />Query<span>同一个当前 φ 编码</span></div>
+          <div className="p3-concept__distances">
+            {classIds.map((classId, index) => (
+              <span key={classId} className={index === 0 ? "is-nearest" : ""} style={{ "--p3-concept-color": CLASS_VISUALS[classId].color } as CSSProperties}>
+                <i /><b>μ<sub>{index + 1}</sub></b><em>{index === 0 ? "最近" : "比较"}</em>
+              </span>
+            ))}
+          </div>
+          <p>比较距离，最近的类别参考高亮；这里不使用训练输出头。</p>
+        </section>
+      </div>
+
+      <ol className="p3-concept__reasoning">
+        <li><span>1</span><p>每类只保存部分旧图，不能把所有历史图重新拿来比较。</p></li>
+        <li><span>2</span><p>同类图片经同一表示网络后可以聚集，因此用保留图片形成<strong>近似参考位置</strong>。</p></li>
+        <li><span>3</span><p>Query 用<strong>同一当前表示</strong>编码，再看离哪个 Prototype 最近。</p></li>
+      </ol>
+
+      <div className="p3-concept__conclusion"><b>Exemplar 原图</b><i>→</i><b>当前表示下的 Prototype</b><i>→</i><strong>Query 最近邻预测</strong></div>
+      <footer className="p3-concept__footer">
+        <p><b>接下来动画将展示</b>编码 → 单位化 → 类均值 → Prototype → 距离 argmin。<span>示例设置：3 个类别、每类 4 张图片。</span></p>
+        <div>
+          <button type="button" className="icarl-button icarl-button--quiet p3-start-button" onClick={onInspect}>查看演示 ↓</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={onPlayAll} disabled={reducedMotion}>▶ 从头完整播放</button>
+        </div>
+      </footer>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------------- page --- */
 
 export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
@@ -765,32 +848,11 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
     <article className="tutorial-page icarl-page icarl-page--p3">
       <header className="page-heading icarl-page__heading">
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
-        <h1>已保留的 Exemplar 怎样帮助模型判断新图片属于哪个类别？</h1>
-        <p>特征提取器已经学习并固定；先看有限的类别记忆如何形成参考，再看一张新 Query 怎样据此完成预测。</p>
-        <div className="p3-entry-actions">
-          <button type="button" className="icarl-button icarl-button--quiet p3-start-button" onClick={focusWorkbench}>查看演示 <b aria-hidden="true">↓</b></button>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={playAll} disabled={reducedMotion}>▶ 从头完整播放</button>
-        </div>
+        <h1>分类为什么能不用训练输出头？</h1>
+        <p>把少量保留原图变成当前特征空间里的类别参考，再让 Query 与这些参考直接比较。</p>
       </header>
 
-      <TutorialRoutePreview
-        context="已学习且固定的特征提取器、各已学类别留下的部分 Exemplar，以及一张待分类 Query。目标是在不能访问完整历史训练集时，仍判断 Query 属于哪个已学类别。"
-        reasoning={(
-          <>
-            <p>预测时不能假设每个类别的全部历史训练图片都还可访问。若要比较 Query 属于哪个类别，就需要为<strong>每个类别</strong>准备一个能在同一特征空间比较的参考位置。</p>
-            <p>同一个已学习特征提取器会把图片映射到同一空间。于是可以将某类别保留图片的单位特征求均值、再将均值单位化，得到该类的 <strong>Prototype μ_y</strong>。它把有限记忆压缩成近似类别参考，不代表该类所有样本的完美中心；效果仍依赖学到的表示与保留样本。</p>
-            <p>Query 也由<strong>同一个当前特征提取器</strong>编码。比较它到各类 Prototype 的距离并取最小值，就得到基于最近均值的预测；这条推断规则不读取训练输出头做 argmax。</p>
-          </>
-        )}
-        steps={[
-          { title: "把每类记忆变成同空间特征", input: "当前特征提取器与各类保留原图", operation: "逐张编码，并将每个特征单位化", result: "每张图片的单位特征" },
-          { title: "为每个类别建立参考", input: "同一类别的单位化 Exemplar 特征", operation: "分别求均值，再将均值单位化", result: "该类近似参考向量 μ_y" },
-          { title: "编码待分类 Query", input: "一张新 Query 与同一固定提取器", operation: "映射并单位化 Query 特征", result: "与各 μ_y 同空间的 z_q" },
-          { title: "按最近 Prototype 判别", input: "Query 特征 z_q 与所有类别 μ_y", operation: "计算 ‖z_q − μ_y‖₂ 并取 argmin", result: "最近原型对应的预测类别" },
-        ]}
-        output="得到本次 Query 的预测类别。模型参数与持久 Exemplar 原图不变；Prototype 是由当前表示和保留图片导出的参考。"
-        demoNote="本次二维动画使用三个已学类别、每类四张 Exemplar；这些数量只为看清计算，不是算法固定条件。"
-      />
+      <P3ConceptMap onInspect={focusWorkbench} onPlayAll={playAll} reducedMotion={reducedMotion} />
 
       <section
         className="p3-workbench"
@@ -962,17 +1024,11 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
       </section>
 
-      <QuestionHandoff
-        fromPage={3}
-        toPage={4}
-        steps={[
-          { label: "已经知道", body: <>已选 Exemplars 可以计算每类 Prototype，再用最近距离完成预测。</> },
-          { label: "回到限制", body: <>但选择过程仍是前提；旧类别的<strong>全部图像</strong>也不能一直保存。</> },
-          { label: "下一问", body: <>怎样从完整类别数据中筛出<strong>有序的少量代表</strong>？</> },
-        ]}
-        actionLabel="筛选与管理代表样本"
-        onContinue={onContinue}
-      />
+      <section className="p3-next-step" aria-label="第 3 页到第 4 页的学习衔接">
+        <div className="p3-next-step__visual" aria-hidden="true"><span>μ<sub>y</sub></span><svg viewBox="0 0 56 24"><path d="M2 12h47m-8-7 8 7-8 7" /></svg><i /><i /><i /><i /><i /></div>
+        <p><strong>Prototype 可由有限原图计算，并用于 Query 分类。</strong><span>下一问：有限名额下，这些原图怎样选？</span></p>
+        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>筛选代表样本 →</button> : null}
+      </section>
     </article>
   );
 }

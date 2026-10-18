@@ -108,11 +108,17 @@ function assertTutorialRouteMarkup(markup: string, pageLabel: string): void {
 }
 
 const p3RouteMarkup = renderPageThreeAt(0);
-assertTutorialRouteMarkup(p3RouteMarkup, "P3");
-assert.ok(p3RouteMarkup.indexOf("Prototype μ_y") < p3RouteMarkup.indexOf("tutorial-route__execution"), "P3 must explain the role of a Prototype before listing operations.");
-assert.ok(p3RouteMarkup.indexOf("同一个当前特征提取器") < p3RouteMarkup.indexOf("tutorial-route__execution"), "P3 must explain why Query features are comparable to class Prototypes.");
-assert.ok(p3RouteMarkup.includes("本次二维动画使用三个已学类别、每类四张 Exemplar") && !p3RouteMarkup.slice(p3RouteMarkup.indexOf('class="tutorial-route__reasoning"'), p3RouteMarkup.indexOf('class="tutorial-route__execution"')).includes("三类各四张"),
-  "P3's three-class/four-exemplar values must stay in the demonstration note, not the general explanation.");
+assert.ok(p3RouteMarkup.includes('class="p3-concept"') && !p3RouteMarkup.includes('class="tutorial-route"'),
+  "P3 must use its own exemplar-to-prototype concept map instead of the shared route template.");
+assert.equal([...p3RouteMarkup.matchAll(/class="p3-concept__memory"/g)].length, 1, "P3 must show finite exemplar memory as the source of class references.");
+assert.ok(p3RouteMarkup.includes("同一个当前 φ") && p3RouteMarkup.includes("共同特征空间 · 概念示意"),
+  "P3 must visibly keep exemplar and Query encoding in the same current feature space.");
+assert.ok(p3RouteMarkup.includes("近似参考位置 Prototype") && p3RouteMarkup.includes("Query 最近邻预测"),
+  "P3 must connect the approximate class reference to nearest-prototype prediction.");
+const p3PrincipleCopy = p3RouteMarkup.slice(p3RouteMarkup.indexOf('class="p3-concept__map"'), p3RouteMarkup.indexOf('class="p3-concept__footer"'));
+assert.doesNotMatch(p3PrincipleCopy, /3 个类别|每类 4 张/u, "P3's demonstration counts must stay outside the general concept map.");
+assert.ok(p3RouteMarkup.slice(p3RouteMarkup.indexOf('class="p3-concept__footer"')).includes("示例设置：3 个类别、每类 4 张图片"),
+  "P3 must keep concrete class and exemplar counts in the demonstration note.");
 const tutorialRouteCss = readFileSync(path.join(process.cwd(), "src/styles/tutorial-route.css"), "utf8");
 assert.doesNotMatch(tutorialRouteCss, /content\s*:\s*["']→["']/u, "Tutorial route arrows must not depend on a text glyph.");
 assert.doesNotMatch(tutorialRouteCss, /right\s*:\s*-\d/u, "Tutorial route arrows must not intrude into card space with a negative offset.");
@@ -799,8 +805,11 @@ assert.ok(handoffQuestionCard?.includes("继续") && handoffQuestionCard.include
 assert.ok(handoffMarkup.includes("次级说明"), "The shared handoff must support a compact secondary note.");
 
 const p3HandoffMarkup = renderPageThreeAt(0, 0, () => undefined);
-assert.ok(p3HandoffMarkup.includes("有序的少量代表"), "P3 must hand off from prototype prediction to ordered exemplar selection.");
-assert.ok(p3HandoffMarkup.includes("icarl-question-handoff__step--question"), "P3's next-page action must use the third handoff card.");
+const p3NextStep = p3HandoffMarkup.match(/<section class="p3-next-step"[\s\S]*?<\/section>/)?.[0] ?? "";
+assert.ok(p3NextStep.includes("Prototype 可由有限原图计算") && p3NextStep.includes("这些原图怎样选"),
+  "P3 must hand off from prototype prediction to the exemplar-selection question.");
+assert.ok(p3NextStep.includes("筛选代表样本") && !p3HandoffMarkup.includes("icarl-question-handoff"),
+  "P3 must use its compact page-specific transition instead of the shared three-card handoff.");
 const p4HandoffMarkup = renderPageFourAt(0, 0, () => undefined);
 assert.ok(p4HandoffMarkup.includes("P4 的 3 类→4 类预算图是简化示例"), "P4 must distinguish its budget teaching example from P5's concrete batch.");
 assert.ok(p4HandoffMarkup.includes("3 个旧类 + 3 个新类"), "P4 must identify P5's three-old plus three-new class setup.");

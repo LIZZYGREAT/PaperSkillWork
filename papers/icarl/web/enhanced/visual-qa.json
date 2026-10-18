@@ -66,18 +66,18 @@
       "id": "icarl-p3-prototype-prediction",
       "path": "/",
       "computedStyles": [
-        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
-        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
-        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+        { "selector": ".p3-concept__header h2", "property": "font-size", "equals": "28px" },
+        { "selector": ".p3-concept__reasoning p", "property": "font-size", "equals": "14px" },
+        { "selector": ".p3-concept__panel-label", "property": "font-size", "equals": "14px" }
       ],
       "states": [
         {
-          "id": "00-preplay-reasoning-and-execution",
+          "id": "00-exemplar-prototype-query-map",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(3)" },
-            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+            { "type": "waitFor", "selector": ".p3-concept__memory", "state": "visible" },
+            { "type": "waitFor", "selector": ".p3-concept__space", "state": "visible" },
+            { "type": "waitFor", "selector": ".p3-concept__query", "state": "visible" }
           ]
         },
         {
