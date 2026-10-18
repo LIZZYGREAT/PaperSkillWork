@@ -648,16 +648,19 @@ function renderPageFiveAt(clipId: string, pct = 0, onContinue?: () => void): str
 }
 
 const p5RouteMarkup = renderPageFiveAt("p5-merge", 0);
-assertTutorialRouteMarkup(p5RouteMarkup, "P5");
-const p5GeneralReasoning = p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="tutorial-route__reasoning"'), p5RouteMarkup.indexOf('class="tutorial-route__execution"'));
-assert.ok(p5GeneralReasoning.includes("Replay 只保证训练时再次看到部分旧图片") && p5GeneralReasoning.includes("并没有记录更新前模型"),
-  "P5 must explain why replayed inputs alone do not preserve old model responses.");
-assert.ok(p5GeneralReasoning.includes("D 中每一张图片") && p5GeneralReasoning.includes("新类图片同样要有 Q 行"),
-  "P5 must explain why every old and new D sample receives an old-teacher Q row.");
-assert.ok(p5GeneralReasoning.includes("D 与 Q 因而分工不同") && p5GeneralReasoning.includes("同一 ID 对齐"),
-  "P5 must distinguish the training-input and frozen-response roles while preserving ID alignment.");
-assert.doesNotMatch(p5GeneralReasoning, /12\s*\+\s*18|30\s*[×x]\s*3|旧类\s*3|新类\s*3/u, "P5's demonstration dimensions must not be presented as general conditions.");
-assert.ok(p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="tutorial-route__demo-note"')).includes("D=12+18=30、Q=30×3"),
+assert.ok(p5RouteMarkup.includes('class="p5-briefing"') && !p5RouteMarkup.includes('class="tutorial-route"'),
+  "P5 must replace the shared route template with its own two-source briefing.");
+assert.equal([...p5RouteMarkup.matchAll(/class="p5-briefing__source /g)].length, 2,
+  "P5 must show replayed training inputs and frozen old behavior as two distinct information sources.");
+assert.ok(p5RouteMarkup.includes("旧副本 + 新图片") && p5RouteMarkup.includes("原件仍留在 P"),
+  "P5's replay diagram must make copied training inputs and retained persistent memory visible.");
+assert.ok(p5RouteMarkup.includes("更新前 Teacher") && p5RouteMarkup.includes("冻结 · 不参与更新") && p5RouteMarkup.includes("同一 ID"),
+  "P5's behavior diagram must show the pre-update frozen Teacher and sample-ID aligned Q rows.");
+assert.ok(p5RouteMarkup.includes("Q 不是真实标签") && p5RouteMarkup.includes("两种信息按 sample ID 对齐"),
+  "P5 must distinguish Q from labels while explaining how D and Q align for P6.");
+const p5PrincipleCopy = p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="p5-briefing__sources"'), p5RouteMarkup.indexOf('class="p5-briefing__footer"'));
+assert.doesNotMatch(p5PrincipleCopy, /12\s*\+\s*18|30\s*[×x]\s*3|旧类\s*3|新类\s*3/u, "P5's demonstration dimensions must not be presented as general conditions.");
+assert.ok(p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="p5-briefing__footer"')).includes("D=12+18=30，Q=30×3"),
   "P5 must retain its real D/Q dimensions as a labeled demonstration example.");
 
 function p5WorkbenchTag(markup: string): string {
@@ -802,8 +805,11 @@ const p4HandoffMarkup = renderPageFourAt(0, 0, () => undefined);
 assert.ok(p4HandoffMarkup.includes("P4 的 3 类→4 类预算图是简化示例"), "P4 must distinguish its budget teaching example from P5's concrete batch.");
 assert.ok(p4HandoffMarkup.includes("3 个旧类 + 3 个新类"), "P4 must identify P5's three-old plus three-new class setup.");
 const p5HandoffMarkup = renderPageFiveAt("p5-handoff", 0, () => undefined);
-assert.ok(p5HandoffMarkup.includes("D=30") && p5HandoffMarkup.includes("Q=30×3"), "P5's handoff must preserve the fixed D and Q facts.");
-assert.ok(p5HandoffMarkup.includes("来源不同"), "P5 must distinguish old soft responses from new hard labels.");
+const p5NextStep = p5HandoffMarkup.match(/<section class="p5-next-step"[\s\S]*?<\/section>/)?.[0] ?? "";
+assert.ok(p5NextStep.includes("D 是训练输入，Q 是冻结的旧行为参考"), "P5's compact handoff must preserve the distinct roles of D and Q.");
+assert.ok(p5NextStep.includes("组成同一个 Student 的两类 Target") && p5NextStep.includes("构造六节点 Target"),
+  "P5's compact handoff must pose the next target-construction question and provide the cross-page action.");
+assert.ok(!p5HandoffMarkup.includes("icarl-question-handoff"), "P5 must not reuse the shared three-card handoff.");
 const p7HandoffMarkup = renderPageSevenAt(0, 4, () => undefined);
 assert.ok(p7HandoffMarkup.includes("整体结果、组件对照"), "P7 must lead to the paper's evidence and limitations.");
 const p7QuestionCard = p7HandoffMarkup.match(/<article class="[^"]*icarl-question-handoff__step--question[^"]*">[\s\S]*?<\/article>/)?.[0];

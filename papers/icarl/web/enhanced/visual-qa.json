@@ -1404,18 +1404,18 @@
       "id": "icarl-p5-replay-d-q",
       "path": "/",
       "computedStyles": [
-        { "selector": ".tutorial-route__reasoning-copy > p", "property": "font-size", "equals": "15.5px" },
-        { "selector": ".tutorial-route__reasoning-copy > p", "property": "line-height", "equals": "24.8px" },
-        { "selector": ".tutorial-route__step-details dd", "property": "font-size", "equals": "14px" }
+        { "selector": ".p5-briefing__header h2", "property": "font-size", "equals": "28px" },
+        { "selector": ".p5-briefing__source > p", "property": "font-size", "equals": "15px" },
+        { "selector": ".p5-briefing__source > p", "property": "line-height", "equals": "23.25px" }
       ],
       "states": [
         {
-          "id": "00-preplay-reasoning-and-execution",
+          "id": "00-two-source-briefing",
           "actions": [
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
-            { "type": "waitFor", "selector": ".tutorial-route__reasoning-copy", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-route__execution", "state": "visible" },
-            { "type": "waitFor", "selector": ".tutorial-route__demo-note", "state": "visible" }
+            { "type": "waitFor", "selector": ".p5-briefing__source--replay .p5-briefing__diagram", "state": "visible" },
+            { "type": "waitFor", "selector": ".p5-briefing__source--teacher .p5-briefing__diagram", "state": "visible" },
+            { "type": "waitFor", "selector": ".p5-briefing__merge", "state": "visible" }
           ]
         },
         {
