@@ -999,18 +999,28 @@ const P4_CONCEPT_POINTS = [
   [59, 105], [89, 87], [121, 112], [151, 94], [179, 119], [216, 103], [76, 139], [139, 144], [199, 142],
 ] as const;
 
+function meanConceptPoint(points: readonly (readonly [number, number])[]) {
+  const total = points.reduce((sum, [x, y]) => ({ x: sum.x + x, y: sum.y + y }), { x: 0, y: 0 });
+  return { x: total.x / points.length, y: total.y / points.length };
+}
+
 function P4SelectionSketch({ mode }: { mode: "clustered" | "representative" }) {
   const selected = mode === "clustered" ? new Set([0, 1, 8, 9]) : new Set([0, 5, 13, 16]);
-  const memoryMean = mode === "clustered" ? { x: 68, y: 70 } : { x: 145, y: 101 };
+  const selectedPoints = P4_CONCEPT_POINTS.filter((_, index) => selected.has(index));
+  const memoryMean = meanConceptPoint(selectedPoints);
+  const fullMean = meanConceptPoint(P4_CONCEPT_POINTS);
+  const labelFullX = fullMean.x + (mode === "clustered" ? 13 : -12);
+  const labelFullAnchor = mode === "clustered" ? "start" : "end";
+  const starPath = `M${fullMean.x} ${fullMean.y - 14}l4 9 10 1-8 6 3 10-9-5-9 5 3-10-8-6 10-1Z`;
   return (
-    <svg viewBox="0 0 280 180" role="img" aria-label={mode === "clustered" ? "少量样本集中在完整类别分布一侧，保留均值偏离完整类目标" : "少量样本分散覆盖，保留均值更接近完整类目标"}>
+    <svg viewBox="0 0 280 180" role="img" aria-label={mode === "clustered" ? "二维示意坐标中，左侧保留点的坐标均值 μ keep 偏离完整点集均值 μ full" : "二维示意坐标中，分散保留点的坐标均值 μ keep 更接近完整点集均值 μ full"}>
       <path className="p4-preview__axis" d="M22 157H258M30 168V18" />
       {P4_CONCEPT_POINTS.map(([x, y], index) => <circle key={`${x}-${y}`} className={selected.has(index) ? "is-selected" : ""} cx={x} cy={y} r={selected.has(index) ? 7 : 4.5} />)}
-      <path className="p4-preview__distance" d={`M${memoryMean.x} ${memoryMean.y}L151 92`} />
+      <path className="p4-preview__distance" d={`M${memoryMean.x} ${memoryMean.y}L${fullMean.x} ${fullMean.y}`} />
       <circle className="p4-preview__mean" cx={memoryMean.x} cy={memoryMean.y} r="10" />
-      <text className="p4-preview__mean-label" x={memoryMean.x + 13} y={memoryMean.y + (mode === "clustered" ? 4 : 13)}>μ_keep</text>
-      <path className="p4-preview__target" d="M151 78l4 9 10 1-8 6 3 10-9-5-9 5 3-10-8-6 10-1Z" />
-      <text className="p4-preview__target-label" x={mode === "clustered" ? 164 : 177} y="84">μ_full</text>
+      <text className="p4-preview__mean-label" x={memoryMean.x + 13} y={memoryMean.y + (mode === "clustered" ? -12 : 14)}>μ_keep</text>
+      <path className="p4-preview__target" d={starPath} />
+      <text className="p4-preview__target-label" x={labelFullX} y={fullMean.y - 8} textAnchor={labelFullAnchor}>μ_full</text>
     </svg>
   );
 }
@@ -1025,16 +1035,16 @@ function P4Prelude({ onInspect, onPlayAll, reducedMotion }: { onInspect: () => v
       </header>
 
       <div className="p4-preview__comparison">
+        <div className="p4-preview__contrast"><span>同一批完整样本，保留方式不同</span></div>
         <article className="p4-preview__case p4-preview__case--clustered">
           <header><span>解释性示意</span><h3>随意少量选样可能集中在一侧</h3></header>
           <P4SelectionSketch mode="clustered" />
-          <p>同一个完整点集里，选中点过于集中时，保留均值 μ<sub>keep</sub> 会偏离 μ<sub>full</sub>。</p>
+          <p>圆点是同一二维示意点集；μ<sub>keep</sub> 与 μ<sub>full</sub> 分别按保留点和全体点的坐标均值计算。</p>
         </article>
-        <div className="p4-preview__contrast" aria-hidden="true"><span>同一点集</span><b>≠</b><small>选法不同</small></div>
         <article className="p4-preview__case p4-preview__case--representative">
           <header><span>Herding 的目标</span><h3>让保留均值逐轮逼近完整类目标</h3></header>
           <P4SelectionSketch mode="representative" />
-          <p>示意仅说明选样目标，不表示随机抽样必然更差，也不声称贪心结果是全局最优。</p>
+          <p>在同一套二维示意点中，分散选取让两种均值更近。每轮取本轮距离最小的候选，是逐轮贪心；这不意味着贪心结果是全局最优，也不保证距离每轮下降。</p>
         </article>
       </div>
 
@@ -1055,11 +1065,11 @@ function P4Prelude({ onInspect, onPlayAll, reducedMotion }: { onInspect: () => v
         <div><span>有序列表</span><b>[ p₁</b><b>p₂</b><b>p₃</b><b className="is-tail">p₄ ]</b></div>
         <svg viewBox="0 0 58 26" aria-hidden="true"><path d="M2 13h48m-8-7 8 7-8 7" /></svg>
         <div className="p4-preview__quota"><i />名额边界前移<span>截去尾项，保留前缀</span></div>
-        <p><strong>完整类目标只在该类训练数据仍可访问时形成。</strong>长期保存的是原始图片与顺序；容量变小时不必重新访问旧类完整数据。</p>
+        <p><strong>每轮选使当前距离最小的候选，不保证距离逐轮下降或全局最优。</strong>长期保存的是原始图片与顺序；预算缩减时截去尾项，保留前缀。</p>
       </div>
 
       <footer className="p4-preview__footer">
-        <p><b>示例设置</b>下方选样动画使用 8 个合成单位特征、选择前 4 项；独立预算例为 K=12、3→4 类、每类 4→3 项，与 P5/P7 的 3→6 类场景分开。</p>
+        <p><b>接下来观察</b>固定前缀，逐个试候选；看本轮哪个候选让保留均值最接近完整类参考。<span>本次示例：8 个合成单位特征选前 4 项；容量例 K=12，3→4 类、每类 4→3 项。P5/P7 的 3→6 类示例用于说明增类。</span></p>
         <div><button type="button" className="icarl-button icarl-button--quiet p4-start-button" onClick={onInspect}>查看逐轮计算 ↓</button><button type="button" className="icarl-button icarl-button--primary" onClick={onPlayAll} disabled={reducedMotion}>▶ 完整播放</button></div>
       </footer>
     </section>

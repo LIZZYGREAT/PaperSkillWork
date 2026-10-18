@@ -10,14 +10,14 @@
 .p4-preview__header h2 { margin: 0; color: #234b43; font-size: clamp(21px, 2.05vw, 28px); line-height: 1.3; }
 .p4-preview__header p { margin: 0; color: #4d6760; font-size: 15px; line-height: 1.5; }
 .p4-preview__header p strong { color: #285c51; }
-.p4-preview__comparison { display: grid; grid-template-columns: minmax(0, 1fr) 74px minmax(0, 1fr); align-items: stretch; gap: 10px; }
-.p4-preview__case { display: grid; grid-template-rows: auto minmax(180px, 1fr) auto; gap: 8px; min-width: 0; padding: 13px; border: 1px solid #dbe4df; border-radius: 12px; background: rgb(255 255 255 / 86%); }
-.p4-preview__case--clustered { border-top: 3px solid #b9825e; }
-.p4-preview__case--representative { border-top: 3px solid #4c8973; }
+.p4-preview__comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 8px 12px; }
+.p4-preview__case { display: grid; grid-template-rows: auto minmax(150px, 1fr) auto; gap: 7px; min-width: 0; padding: 11px; border: 1px solid #dbe4df; border-radius: 11px; background: rgb(255 255 255 / 86%); }
+.p4-preview__case--clustered { border-top: 2px solid #b9825e; }
+.p4-preview__case--representative { border-top: 2px solid #4c8973; }
 .p4-preview__case header { display: grid; gap: 2px; }
 .p4-preview__case header span { color: #6a7c77; font: 700 12px var(--mono); }
-.p4-preview__case h3 { margin: 0; color: #31544c; font-size: 17px; line-height: 1.35; }
-.p4-preview__case > svg { width: 100%; height: 100%; min-height: 180px; border: 1px solid #e5ebe7; border-radius: 9px; background: #fbfcfa; }
+.p4-preview__case h3 { margin: 0; color: #31544c; font-size: 16px; line-height: 1.35; }
+.p4-preview__case > svg { width: 100%; height: 100%; min-height: 150px; border: 1px solid #e5ebe7; border-radius: 8px; background: #fbfcfa; }
 .p4-preview__case > svg > circle { fill: #ccd6d0; stroke: white; stroke-width: 1.5; }
 .p4-preview__case > svg > circle.is-selected { fill: #c17c51; stroke: #8d5633; stroke-width: 2; }
 .p4-preview__case--representative > svg > circle.is-selected { fill: #5b957e; stroke: #356b56; }
@@ -26,13 +26,11 @@
 .p4-preview__mean { fill: #fff !important; stroke: #a7673f !important; stroke-width: 2.5 !important; }
 .p4-preview__case--representative .p4-preview__mean { stroke: #3d775f !important; }
 .p4-preview__target { fill: #d08a53; stroke: white; stroke-width: 1.5; }
-.p4-preview__mean-label, .p4-preview__target-label { fill: #6a5a4e; font: 700 11px var(--mono); }
+.p4-preview__mean-label, .p4-preview__target-label { fill: #6a5a4e; font: 700 14px var(--mono); }
 .p4-preview__target-label { fill: #9b5e34; }
 .p4-preview__case > p { margin: 0; color: #536b65; font-size: 13px; line-height: 1.5; }
-.p4-preview__contrast { display: grid; align-content: center; justify-items: center; gap: 5px; color: #6c7e78; text-align: center; }
-.p4-preview__contrast span { font-size: 12px; font-weight: 700; }
-.p4-preview__contrast b { color: #9b6a49; font: 700 27px Georgia, serif; }
-.p4-preview__contrast small { font-size: 11px; }
+.p4-preview__contrast { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; min-height: 22px; color: #647a72; text-align: center; }
+.p4-preview__contrast span { font-size: 14px; font-weight: 700; }
 .p4-preview__round { display: grid; gap: 9px; padding: 12px 14px; border: 1px solid #d5e2dc; border-radius: 12px; background: #f1f7f3; }
 .p4-preview__round > header { display: flex; align-items: baseline; gap: 12px; }
 .p4-preview__round > header span { color: #9a6748; font: 750 12px var(--mono); }
@@ -60,6 +58,7 @@
 .p4-preview__footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .p4-preview__footer p { margin: 0; color: #687b76; font-size: 13px; line-height: 1.5; }
 .p4-preview__footer p b { margin-right: .5em; color: #46655d; }
+.p4-preview__footer p span { display: block; margin-top: 2px; color: #7a8984; font-size: 12px; }
 .p4-preview__footer > div { display: flex; flex: 0 0 auto; gap: 8px; }
 .p4-preview__footer .p4-start-button { margin-top: 0; }
 
@@ -291,10 +290,10 @@
   .p4-phase-rail { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .p4-preview { padding: 14px; }
   .p4-preview__comparison { grid-template-columns: minmax(0, 1fr); }
-  .p4-preview__contrast { min-height: 48px; grid-template-columns: repeat(3, auto); align-items: center; justify-content: center; }
+  .p4-preview__contrast { grid-column: auto; min-height: 0; padding-bottom: 2px; }
   .p4-preview__round-flow { grid-template-columns: minmax(0, 1fr); }
   .p4-preview__round-flow > svg, .p4-preview__prefix-result > svg { justify-self: center; transform: rotate(90deg); }
   .p4-preview__prefix-result { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
