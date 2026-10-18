@@ -702,10 +702,18 @@ assert.ok(p5RouteMarkup.includes("训练副本") && p5RouteMarkup.includes("旧�
   "P5's replay diagram must make copied training inputs and retained persistent memory visible.");
 assert.ok(p5RouteMarkup.includes("冻结 Teacher") && p5RouteMarkup.includes("读取更新前响应") && p5RouteMarkup.includes("同一 ID"),
   "P5's behavior diagram must show the pre-update frozen Teacher and sample-ID aligned Q rows.");
-assert.ok(p5RouteMarkup.includes("Q 不是真实标签") && p5RouteMarkup.includes("按 ID 对齐"),
+assert.ok(p5RouteMarkup.includes("Q 不是真实标签") && p5RouteMarkup.includes("按图片 ID 对齐"),
   "P5 must distinguish Q from labels while explaining how D and Q align for P6.");
 assert.ok(p5RouteMarkup.includes('class="p5-briefing__mobile-arrows"') && p5RouteMarkup.includes("按同一 ID 写入响应行"),
   "P5's narrow layout must retain the replay merge and sample-ID aligned Teacher-to-Q path.");
+assert.equal([...p5RouteMarkup.matchAll(/class="p5-briefing__causal"/g)].length, 1,
+  "P5 must use one compact causal bridge between replay and the frozen-Q reference.");
+assert.ok(p5RouteMarkup.includes("Replay 解决旧图还能参与训练") && p5RouteMarkup.includes("冻结 Q 解决旧模型怎样响应也有参照"),
+  "P5's causal bridge must explain the distinct need solved by each information source.");
+assert.ok(p5RouteMarkup.includes('data-output="D"') && p5RouteMarkup.includes("同一张图与真标签")
+  && p5RouteMarkup.includes('data-output="Q"') && p5RouteMarkup.includes("对应 ID 的旧类响应")
+  && p5RouteMarkup.includes("P6 构造 Target"),
+  "P5's merge strip must present D and Q as aligned outputs handed to P6 for Target construction.");
 const p5PrincipleCopy = p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="p5-briefing__sources"'), p5RouteMarkup.indexOf('class="p5-briefing__footer"'));
 assert.doesNotMatch(p5PrincipleCopy, /12\s*\+\s*18|30\s*[×x]\s*3|旧类\s*3|新类\s*3/u, "P5's demonstration dimensions must not be presented as general conditions.");
 assert.ok(p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="p5-briefing__footer"')).includes("D=12+18=30，Q=30×3"),

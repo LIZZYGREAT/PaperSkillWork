@@ -197,7 +197,7 @@ function Nodes({ classIds, kind, responses, activeIndex }: { classIds: readonly 
 function ReplayInputDiagram() {
   return (
     <>
-    <svg className="p5-briefing__diagram" viewBox="0 0 560 212" role="img" aria-labelledby="p5-replay-diagram-title p5-replay-diagram-desc">
+    <svg className="p5-briefing__diagram p5-briefing__diagram--replay" viewBox="0 0 560 212" role="img" aria-labelledby="p5-replay-diagram-title p5-replay-diagram-desc">
       <title id="p5-replay-diagram-title">P 保留原始 Exemplar，训练副本与新类图片共同组成 D</title>
       <desc id="p5-replay-diagram-desc">持久记忆 P 保留原始 Exemplar。P 的训练副本与新类图片分别沿独立连线汇入训练集 D。</desc>
       <defs>
@@ -245,7 +245,7 @@ function ReplayInputDiagram() {
 function TeacherReferenceDiagram() {
   return (
     <>
-    <svg className="p5-briefing__diagram" viewBox="0 0 600 212" role="img" aria-labelledby="p5-teacher-diagram-title p5-teacher-diagram-desc">
+    <svg className="p5-briefing__diagram p5-briefing__diagram--teacher" viewBox="0 0 600 212" role="img" aria-labelledby="p5-teacher-diagram-title p5-teacher-diagram-desc">
       <title id="p5-teacher-diagram-title">冻结 Teacher 按 sample ID 为 D 的每张图生成旧类响应 Q</title>
       <desc id="p5-teacher-diagram-desc">D 中每张图连同 sample ID 经冻结 Teacher 读取更新前的旧节点响应，并写入 Q 中同一 ID 的一行；Q 不是类别真标签。</desc>
       <defs>
@@ -301,6 +301,8 @@ function P5Briefing({ onInspect }: { onInspect: () => void }) {
         <h2 id="p5-briefing-title">旧图重新参与训练，为什么还需要保存旧模型的响应？</h2>
       </header>
 
+      <p className="p5-briefing__causal"><b>Replay 解决旧图还能参与训练；冻结 Q 解决旧模型怎样响应也有参照。</b>两者按图片 ID 对齐，才能一起约束新 Student。</p>
+
       <div className="p5-briefing__sources">
         <article className="p5-briefing__source p5-briefing__source--replay">
           <header><span>信息源 1 · 图片与真标签</span><h3>Replay：让旧图继续参与学习</h3></header>
@@ -317,12 +319,12 @@ function P5Briefing({ onInspect }: { onInspect: () => void }) {
 
       <div className="p5-briefing__merge" aria-label="D 与 Q 共同交给 P6">
         <div className="p5-briefing__merge-inputs">
-          <span><b>D</b><i>图片 + 真标签</i></span>
-          <span><b>Q</b><i>更新前旧类响应</i></span>
-          <small>按 ID 对齐</small>
+          <span data-output="D"><b>D</b><i>同一张图与真标签</i><small>训练内容</small></span>
+          <em>按图片 ID 对齐</em>
+          <span data-output="Q"><b>Q</b><i>对应 ID 的旧类响应</i><small>旧节点 soft target 来源</small></span>
         </div>
         <svg viewBox="0 0 84 28" aria-hidden="true"><path d="M2 5H34Q44 5 44 14M2 23H34Q44 23 44 14H77m-8-7 8 7-8 7" /></svg>
-        <strong>Student 的训练目标</strong>
+        <strong>P6 构造 Target</strong>
       </div>
 
       <footer className="p5-briefing__footer">

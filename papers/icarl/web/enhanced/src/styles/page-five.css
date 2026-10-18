@@ -17,8 +17,10 @@
 .p5-briefing__header { display: grid; gap: 5px; }
 .p5-briefing__header .eyebrow { color: #607870; font: 750 12px var(--mono); letter-spacing: .08em; }
 .p5-briefing__header h2 { max-width: 920px; margin: 0; color: #234b43; font-size: clamp(21px, 2.1vw, 28px); line-height: 1.3; }
+.p5-briefing__causal { margin: 0; padding: 8px 11px; border-left: 3px solid #9b765b; border-radius: 0 8px 8px 0; color: #586e68; background: #fffaf5; font-size: 13px; line-height: 1.45; }
+.p5-briefing__causal b { margin-right: .45em; color: #315d53; }
 .p5-briefing__sources { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
-.p5-briefing__source { display: grid; min-width: 0; align-content: start; gap: 9px; padding: 14px; border: 1px solid #d8e4de; border-radius: 13px; background: rgb(255 255 255 / 86%); }
+.p5-briefing__source { display: grid; min-width: 0; grid-template-rows: auto minmax(190px, 1fr) auto; gap: 9px; padding: 14px; border: 1px solid #d8e4de; border-radius: 13px; background: rgb(255 255 255 / 86%); }
 .p5-briefing__source--replay { border-top: 3px solid #4c8870; }
 .p5-briefing__source--teacher { border-top: 3px solid #b77951; }
 .p5-briefing__source header { display: grid; gap: 2px; }
@@ -44,12 +46,14 @@
 .p5-briefing__link-label { fill: #6a7d77; font: 600 14px var(--sans); }
 .p5-briefing__response-dots circle { fill: #e5efe8; stroke: #7fa88e; }
 .p5-briefing__response-dots text { fill: #35604e; font: 750 12px var(--mono); }
-.p5-briefing__merge { display: grid; grid-template-columns: minmax(0, 1fr) 58px auto; align-items: center; gap: 10px; padding: 9px 13px; border: 1px solid #cfddd6; border-radius: 10px; background: #eef5f1; }
-.p5-briefing__merge-inputs { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; min-width: 0; }
-.p5-briefing__merge-inputs > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.p5-briefing__merge { display: grid; grid-template-columns: minmax(0, 1fr) 58px auto; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid #cfddd6; border-radius: 10px; background: #eef5f1; }
+.p5-briefing__merge-inputs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 7px; min-width: 0; }
+.p5-briefing__merge-inputs > span { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 1px 7px; min-width: 0; padding: 7px 9px; border: 1px solid #cdded5; border-radius: 8px; background: #fff; }
+.p5-briefing__merge-inputs > span[data-output="Q"] { border-color: #ddcab9; background: #fffaf5; }
 .p5-briefing__merge-inputs b { color: #2f6554; font: 800 17px var(--mono); }
 .p5-briefing__merge-inputs i { color: #536b64; font-size: 13px; font-style: normal; line-height: 1.35; }
-.p5-briefing__merge-inputs small { color: #71827c; font-size: 12px; }
+.p5-briefing__merge-inputs small { grid-column: 2; color: #71827c; font-size: 10px; }
+.p5-briefing__merge-inputs em { color: #7b6c61; font-size: 11px; font-style: normal; font-weight: 700; text-align: center; white-space: nowrap; }
 .p5-briefing__merge > svg { width: 58px; height: 24px; overflow: visible; }
 .p5-briefing__merge > svg path { fill: none; stroke: #9a6c4f; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .p5-briefing__merge > strong { color: #28564d; font-size: 15px; line-height: 1.45; white-space: nowrap; }
@@ -239,7 +243,8 @@
   .p5-briefing__link-label { font-size: 18px; }
   .p5-briefing__response-dots text { font-size: 15px; }
   .p5-briefing__merge { grid-template-columns: minmax(0, 1fr); justify-items: stretch; }
-  .p5-briefing__merge-inputs { justify-content: space-between; }
+  .p5-briefing__merge-inputs { grid-template-columns: minmax(0, 1fr); }
+  .p5-briefing__merge-inputs em { white-space: normal; }
   .p5-briefing__merge > svg { justify-self: center; transform: rotate(90deg); }
   .p5-briefing__merge > strong { white-space: normal; text-align: center; }
   .p5-briefing__footer, .p5-next-step { align-items: stretch; flex-direction: column; }
