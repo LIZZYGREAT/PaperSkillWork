@@ -310,8 +310,12 @@ assert.equal(reviewAt(0.4, 2).visiblePrefixCount, 2, "Manual P4 review selection
 assert.equal(reviewAt(0.4, 2).activePrefixIndex, 2, "Manual P4 review selection must keep its own selected endpoint.");
 assert.equal(reviewAt(0.2).activePrefixIndex, 1, "A direct manual review must not leak into the automatic 1→2→3→4 replay state.");
 const p4Source = readFileSync(path.join(process.cwd(), "src/pages/PageFour.tsx"), "utf8");
-assert.match(p4Source, /function jumpToPhase\(index: number, options\?: \{ autoPlay\?: boolean \}\)[\s\S]*?setManualReviewIndex\(null\);[\s\S]*?controls\.goToClip\(phase\.startIndex, \{ autoPlay: false, \.\.\.options \}\)/,
-  "P4 phase selection must clear a manually pinned review and pause at the selected phase unless playback is explicitly requested.");
+assert.match(p4Source, /function jumpToPhase\(index: number, options\?: \{ autoPlay\?: boolean \}\)[\s\S]*?setPlayMode\("phase"\);[\s\S]*?setManualReviewIndex\(null\);[\s\S]*?controls\.goToClip\(reducedMotion \? phase\.endIndex : phase\.startIndex, \{ autoPlay: false, \.\.\.options \}\)/,
+  "P4 phase selection must clear a manually pinned review, pause at the selected phase, and expose the completed phase under reduced motion.");
+assert.match(p4Source, /function replayPhase\(\)[\s\S]*?jumpToPhase\(activePhaseIndex, \{ autoPlay: !reducedMotion \}\)/,
+  "P4 replay phase must restart and play the selected teaching phase instead of only locating it.");
+assert.match(p4Source, /function playAll\(\)[\s\S]*?setPlayMode\("all"\);[\s\S]*?controls\.goToClip\(0, \{ autoPlay: true \}\)/,
+  "P4 full playback must start at the first clip and retain all-phase mode.");
 
 const p1Source = readFileSync(path.join(process.cwd(), "src/pages/PageOne.tsx"), "utf8");
 const p2Source = readFileSync(path.join(process.cwd(), "src/pages/PageTwo.tsx"), "utf8");
@@ -326,18 +330,25 @@ assert.match(p2Source, /function selectStage\(nextStage: number\)\s*\{\s*setIsPl
   "P2 manual stage selection must stop the current path playback before showing the selected stage.");
 assert.match(p2Source, /下一页：用代表图片完成一次预测/,
   "P2's final action must clearly identify the page transition.");
-assert.match(p3Source, /controls\.goToClip\(state\.clipIndex \+ 1, \{ autoPlay: !reducedMotion \}\)/,
-  "P3's continue action must start the next clip, while reduced motion keeps it paused.");
-assert.match(p3Source, /controls\.goToClip\(index, \{ autoPlay: false \}\)/,
-  "P3 manual clip selection must pause at the selected clip.");
-assert.match(p5Source, /controls\.goToClip\(clipIndexById\.get\(item\.id\) \?\? 0, \{ autoPlay: false \}\)/,
-  "P5 manual clip selection must pause without resetting the selected sample identity.");
+assert.match(p3Source, /function playAll\(\)[\s\S]*?setPlayMode\("all"\);[\s\S]*?controls\.goToClip\(0, \{ autoPlay: true \}\)/,
+  "P3 full playback must restart the complete page timeline.");
+assert.match(p3Source, /function moveStage\(index: number\)[\s\S]*?setPlayMode\("phase"\);[\s\S]*?controls\.goToClip\(index, \{ autoPlay: false \}\)/,
+  "P3 manual stage selection must pause at the selected stage.");
+assert.match(p5Source, /function goToPhase\(index: number\)[\s\S]*?controls\.goToClip\(reducedMotion \? phase\.endIndex : phase\.startIndex, \{ autoPlay: false \}\)/,
+  "P5 must expose five logical phases and show their terminal state under reduced motion.");
+assert.match(p5Source, /function playAll\(\)[\s\S]*?setPlayMode\("all"\);[\s\S]*?controls\.goToClip\(0, \{ autoPlay: true \}\)/,
+  "P5 full playback must retain every real Q-write clip while exposing phase-level navigation.");
 assert.match(p6NavigationSource, /setStatus\(reducedMotion \? "complete" : "paused"\)/,
   "P6 manual phase selection must pause, or show the completed state under reduced motion.");
-assert.doesNotMatch(p6NavigationSource.match(/<footer className="p6-controls"[\s\S]*?<\/footer>/)?.[0] ?? "", /上一步|下一步|下一段/,
-  "P6 must not duplicate the step navigation already provided by its phase rail.");
-assert.match(p7Source, /controls\.goToClip\(stage \+ 1, \{ autoPlay: true \}\)/,
-  "P7's Play Next Segment action must actually start playback.");
+const p6ControlsSource = p6NavigationSource.match(/<footer className="p6-controls"[\s\S]*?<\/footer>/)?.[0] ?? "";
+assert.match(p6ControlsSource, /上一阶段[\s\S]*?完整播放[\s\S]*?下一阶段/,
+  "P6 must keep previous, full-play, and next-stage controls visible without opening the phase directory.");
+assert.match(p6NavigationSource, /playMode !== "all"[\s\S]*?window\.setTimeout[\s\S]*?setPhaseIndex\(next\)[\s\S]*?setStatus\("playing"\)/,
+  "P6 full playback must hold a completed result and then continue to the next phase automatically.");
+assert.match(p7Source, /function playAll\(\)[\s\S]*?setPlayMode\("all"\);[\s\S]*?controls\.goToClip\(0, \{ autoPlay: true \}\)/,
+  "P7 full playback must restart the complete post-training handoff.");
+assert.match(p7Source, /function goToStage\(index: number\)[\s\S]*?controls\.goToClip\(index, \{ autoPlay: false \}\)/,
+  "P7 stage navigation must locate a stage and wait for explicit playback.");
 assert.match(p8NavigationSource, /className="p8-page-handoff"[\s\S]*?下一页：一次增量学习的完整逻辑/,
   "P8 must provide its page transition to the redesigned P9 after the evidence summary.");
 assert.match(p8NavigationSource, /disabled=\{currentIndex === tabs\.length - 1\}/,

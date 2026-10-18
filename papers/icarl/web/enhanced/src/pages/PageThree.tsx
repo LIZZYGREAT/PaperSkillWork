@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { ClassFeatureMarker } from "../components/FeatureSpaceWorkbench";
 import { QuestionHandoff } from "../components/QuestionHandoff";
 import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
@@ -691,6 +691,7 @@ function PlacedLabel({ point, text, placement, fontSize, className }: {
 export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   const reducedMotion = useReducedMotion();
   const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
+  const [playMode, setPlayMode] = useState<"all" | "phase">("phase");
   const scene = useMemo(() => sceneAt(state.clipIndex, state.progress), [state.clipIndex, state.progress]);
   const [selectedSampleId, setSelectedSampleId] = useState<string>(P_BEFORE.A[0].id);
   const workbenchRef = useRef<HTMLElement | null>(null);
@@ -709,29 +710,39 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
     ? "尚未开始比较"
     : scene.comparisonProgress.filter((value) => value > 0.999).length + " / 3 条比较线";
 
-  /**
-   * The stage button never jumps to a finished state. Its first press plays the current stage from
-   * its beginning; afterwards it continues the journey one stage at a time.
-   */
-  const stageFinished = state.isHolding || state.progress >= 0.999;
-  const stageActionLabel = state.clipIndex >= clips.length - 1 && stageFinished
-    ? "从头播放"
-    : stageFinished
-      ? reducedMotion ? "下一步" : "继续播放"
-      : state.elapsedMs > 0 ? "继续播放" : "播放本段";
+  useEffect(() => {
+    if (playMode === "phase" && state.status === "playing" && state.isHolding) controls.pause();
+  }, [controls.pause, playMode, state.isHolding, state.status]);
 
-  function startStage() {
+  function togglePlayback() {
     if (state.status === "playing") {
       controls.pause();
       return;
     }
-    if (stageFinished) {
-      // Move on to the next stage and play it; on the last stage, start the journey over.
-      if (state.hasNext) controls.goToClip(state.clipIndex + 1, { autoPlay: !reducedMotion });
-      else controls.goToClip(0, { autoPlay: !reducedMotion });
+    if (reducedMotion) return;
+    if (state.isHolding || state.status === "finished") {
+      setPlayMode("phase");
+      controls.replayClip();
       return;
     }
     controls.play();
+  }
+
+  function playAll() {
+    if (reducedMotion) return;
+    setPlayMode("all");
+    controls.goToClip(0, { autoPlay: true });
+    requestAnimationFrame(focusWorkbench);
+  }
+
+  function replayStage() {
+    setPlayMode("phase");
+    controls.replayClip();
+  }
+
+  function moveStage(index: number) {
+    setPlayMode("phase");
+    controls.goToClip(index, { autoPlay: false });
   }
 
   function focusWorkbench() {
@@ -739,7 +750,7 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
   }
 
   function jumpToClip(index: number) {
-    controls.goToClip(index, { autoPlay: false });
+    moveStage(index);
     if (chapterJumpsRef.current) chapterJumpsRef.current.open = false;
     requestAnimationFrame(focusWorkbench);
   }
@@ -750,7 +761,10 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="icarl-page__eyebrow"><span>PAGE 03</span><i /> PROTOTYPE CLASSIFICATION</div>
         <h1>已选代表图片怎样<br className="p3-title-break" />完成一次预测？</h1>
         <p>先假定三类代表图片已经选好，并且 Feature Extractor 训练完成、暂时固定。让这些 Exemplars 和一张新 Query 进入同一特征空间，看看 iCaRL 怎样用它们完成预测。</p>
-        <button type="button" className="icarl-button icarl-button--primary p3-start-button" onClick={focusWorkbench}>进入演示 <b aria-hidden="true">↓</b></button>
+        <div className="p3-entry-actions">
+          <button type="button" className="icarl-button icarl-button--quiet p3-start-button" onClick={focusWorkbench}>查看演示 <b aria-hidden="true">↓</b></button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={playAll} disabled={reducedMotion}>▶ 从头完整播放</button>
+        </div>
       </header>
 
       <TutorialRoutePreview
@@ -904,14 +918,16 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
 
         <div className="p3-workbench__controls" aria-label="Page 3 动画控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={!state.hasPrevious}>← 上一步</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => moveStage(state.clipIndex - 1)} disabled={!state.hasPrevious}>← 上一阶段</button>
           <div className="p3-playback-controls">
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip}>↺ 重播本阶段</button>
-            <span aria-live="polite">{String(state.clipIndex + 1).padStart(2, "0")} / 0{clips.length} · {state.clip.narrative} · {state.isHolding ? "停留" : `${Math.round(state.progress * 100)}%`}</span>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={togglePlayback} disabled={reducedMotion}>
+              {reducedMotion ? "逐步查看" : state.status === "playing" ? "Ⅱ 暂停" : state.elapsedMs > 0 && !state.isHolding ? "▶ 继续播放" : "▶ 播放本阶段"}
+            </button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={replayStage} disabled={reducedMotion}>↺ 重播本阶段</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={playAll} disabled={reducedMotion}>▶ 完整播放</button>
+            <span aria-live="polite">{String(state.clipIndex + 1).padStart(2, "0")} / 0{clips.length} · {playMode === "all" ? "全程" : "本阶段"} · {state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={startStage}>
-            {state.status === "playing" ? "Ⅱ 暂停" : stageActionLabel} <b aria-hidden="true">{state.status === "playing" ? "" : "▶"}</b>
-          </button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={() => moveStage(state.clipIndex + 1)} disabled={!state.hasNext}>下一阶段 →</button>
         </div>
 
         <div className="p3-clip-rail" role="group" aria-label="片段定位">

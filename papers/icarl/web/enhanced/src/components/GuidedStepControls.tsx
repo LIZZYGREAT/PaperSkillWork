@@ -5,11 +5,13 @@ export function GuidedStepControls({
   current,
   onChange,
   label,
+  showStepButtons = true,
 }: {
   steps: readonly GuidedStep[];
   current: number;
   onChange: (step: number) => void;
   label: string;
+  showStepButtons?: boolean;
 }) {
   const progress = ((current + 1) / steps.length) * 100;
 
@@ -38,13 +40,13 @@ export function GuidedStepControls({
           </button>
         ))}
       </nav>
-      <div className="icarl-guided__controls">
+      {showStepButtons ? <div className="icarl-guided__controls">
         <span>逐步查看 · 可直接选择任一阶段</span>
         <div>
           <button type="button" className="icarl-button icarl-button--quiet" onClick={() => onChange(Math.max(0, current - 1))} disabled={current === 0}>上一步</button>
           <button type="button" className="icarl-button icarl-button--primary" onClick={() => onChange(Math.min(steps.length - 1, current + 1))} disabled={current === steps.length - 1}>下一步</button>
         </div>
-      </div>
+      </div> : null}
     </section>
   );
 }

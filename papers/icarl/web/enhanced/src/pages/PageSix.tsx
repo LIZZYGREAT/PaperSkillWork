@@ -17,6 +17,13 @@ const phases: readonly (GuidedStep & { id: PhaseId; guidance: string; durationMs
   { id: "aggregate", short: "汇总损失", title: "六个节点先汇成样本损失", guidance: "三项旧节点 BCE 与三项新节点 BCE 汇成 ℓᵢ；再把一个 mini-batch 的样本损失合并，供本轮更新使用。", durationMs: 3700 },
   { id: "backprop", short: "反向传播", title: "损失梯度返回可训练参数", guidance: "L_batch 沿刚才的计算路径反向传到训练头与共享特征提取器。Q 和本轮 Target 在更新期间保持固定。", durationMs: 3900 },
 ];
+const phaseOutputs = [
+  "同一 sample.id 的共享表示与六个当前输出。",
+  "旧三节点 Q soft targets + 新三节点标签 hard targets。",
+  "六个节点各自的 BCE 项。",
+  "样本损失 ℓᵢ 与 mini-batch 损失 L_batch。",
+  "指向训练头和共享参数的更新方向。",
+] as const;
 
 const oldSample = P_BEFORE.B[0];
 const sampleById = (id: string): Sample => INCOMING_SAMPLES.find((sample) => sample.id === id) ?? INCOMING_SAMPLES[0];
@@ -320,6 +327,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
   const [phaseRailOpen, setPhaseRailOpen] = useState(false);
   const progressRef = useRef(reducedMotion ? 1 : 0);
   const [status, setStatus] = useState<PlaybackStatus>(() => reducedMotion ? "complete" : "idle");
+  const [playMode, setPlayMode] = useState<"all" | "phase">("phase");
   const [animationRevision, setAnimationRevision] = useState(0);
   const [exploreOutput, setExploreOutput] = useState(studentOutputFor(DEFAULT_SAMPLE)[initialFocusIndex]);
   const exploreOutputRef = useRef(studentOutputFor(DEFAULT_SAMPLE)[initialFocusIndex]);
@@ -405,9 +413,23 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     setStatus("complete");
   }, [phaseIndex, reducedMotion]);
 
+  useEffect(() => {
+    if (reducedMotion || playMode !== "all" || status !== "complete" || phaseIndex >= phases.length - 1) return;
+    const timer = window.setTimeout(() => {
+      const next = phaseIndex + 1;
+      setPhaseIndex(next);
+      progressRef.current = 0;
+      setPhaseProgress(0);
+      setAnimationRevision((revision) => revision + 1);
+      setStatus("playing");
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [phaseIndex, playMode, reducedMotion, status]);
+
   function changePhase(next: number) {
     const bounded = Math.max(0, Math.min(phases.length - 1, next));
     setPhaseRailOpen(false);
+    setPlayMode("phase");
     setPhaseIndex(bounded);
     progressRef.current = reducedMotion ? 1 : 0;
     setPhaseProgress(reducedMotion ? 1 : 0);
@@ -419,6 +441,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     if (status === "playing") setStatus("paused");
     else {
       if (status === "complete") {
+        setPlayMode("phase");
         progressRef.current = 0;
         setPhaseProgress(0);
       }
@@ -427,6 +450,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
   }
 
   function replay() {
+    setPlayMode("phase");
     if (reducedMotion) {
       progressRef.current = 1;
       setPhaseProgress(1);
@@ -444,9 +468,21 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     setSampleId(next.id);
     setSelectedNodeIndex(nextNode);
     setCaseNotice("");
+    setPlayMode("phase");
     progressRef.current = reducedMotion ? 1 : 0;
     setPhaseProgress(reducedMotion ? 1 : 0);
     setStatus(reducedMotion ? "complete" : "paused");
+  }
+
+  function playAll() {
+    if (reducedMotion) return;
+    setPhaseRailOpen(false);
+    setPlayMode("all");
+    setPhaseIndex(0);
+    progressRef.current = 0;
+    setPhaseProgress(0);
+    setAnimationRevision((revision) => revision + 1);
+    setStatus("playing");
   }
 
   function chooseNode(index: number) {
@@ -497,11 +533,11 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
 
     <section className="p6-workbench" aria-label="连续增量训练交互工作台">
       <div className="p6-workbench__guide">
-        <div><span className="eyebrow">PHASE {String(phaseIndex + 1).padStart(2, "0")} / 05</span><h2>{phase.title}</h2><p aria-live="polite">{phase.guidance}</p></div>
-        <span className={`p6-workbench__status p6-workbench__status--${status}`}>{status === "playing" ? "动画运行中" : status === "complete" ? "本段完成" : status === "paused" ? "已暂停" : "可逐步查看"}</span>
+        <div><span className="eyebrow">PHASE {String(phaseIndex + 1).padStart(2, "0")} / 05</span><h2>{phase.title}</h2><p aria-live="polite">{phase.guidance}</p><small>本阶段产出：{phaseOutputs[phaseIndex]}</small></div>
+        <span className={`p6-workbench__status p6-workbench__status--${status}`}>{status === "playing" ? playMode === "all" ? "完整播放中" : "本阶段播放中" : status === "complete" ? "本阶段完成" : status === "paused" ? "已暂停" : "可逐步查看"}</span>
       </div>
 
-      <details className="p6-phase-rail" open={phaseRailOpen} onToggle={(event) => setPhaseRailOpen(event.currentTarget.open)}><summary>五段引导 · 当前 {phaseIndex + 1}/5</summary><GuidedStepControls steps={phases} current={phaseIndex} onChange={changePhase} label="Page 6 连续增量训练阶段" /></details>
+      <details className="p6-phase-rail" open={phaseRailOpen} onToggle={(event) => setPhaseRailOpen(event.currentTarget.open)}><summary>五段目录 · 当前 {phaseIndex + 1}/5</summary><GuidedStepControls steps={phases} current={phaseIndex} onChange={changePhase} label="Page 6 连续增量训练阶段" showStepButtons={false} /></details>
 
       <div className="p6-sample-chooser"><span>选择训练样本 · D / Q / Target 同步</span><div role="group" aria-label="选择旧类或新类训练样本">
         {sampleChoices.map(({ sample: choice, label }) => <button key={choice.id} type="button" className={sample.id === choice.id ? "is-selected" : ""} aria-pressed={sample.id === choice.id} style={accent(choice.classId)} onClick={() => chooseSample(choice)}><i>{CLASS_VISUALS[choice.classId].glyph}</i>{label}<small>{choice.id}</small></button>)}
@@ -520,7 +556,9 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
       </details>
 
       <footer className="p6-controls" aria-label="连续训练动画控制">
-        <div><button type="button" className="icarl-button icarl-button--quiet" onClick={playPause} disabled={reducedMotion} aria-label={status === "playing" ? "暂停当前动画" : "继续当前动画"}>{reducedMotion ? "减少动态效果" : status === "playing" ? "Ⅱ 暂停" : status === "complete" ? "↺ 从头播放" : phaseProgress > 0 ? "▶ 继续播放" : "▶ 播放本段"}</button><button type="button" className="icarl-button icarl-button--quiet" onClick={replay}>↺ 重播本段</button><span>{reducedMotion ? "阶段选择显示完整状态" : status === "complete" ? "本段完成" : `${Math.round(phaseProgress * 100)}%`}</span></div>
+        <button type="button" className="icarl-button icarl-button--quiet" onClick={() => changePhase(phaseIndex - 1)} disabled={phaseIndex === 0}>← 上一阶段</button>
+        <div><button type="button" className="icarl-button icarl-button--quiet" onClick={playPause} disabled={reducedMotion} aria-label={status === "playing" ? "暂停当前动画" : "播放本阶段"}>{reducedMotion ? "逐步查看" : status === "playing" ? "Ⅱ 暂停" : phaseProgress > 0 && status !== "complete" ? "▶ 继续播放" : "▶ 播放本阶段"}</button><button type="button" className="icarl-button icarl-button--quiet" onClick={replay} disabled={reducedMotion}>↺ 重播本阶段</button><button type="button" className="icarl-button icarl-button--quiet" onClick={playAll} disabled={reducedMotion}>▶ 完整播放</button><span>{reducedMotion ? "逐阶段显示完整结果" : `${playMode === "all" ? "全程" : "本阶段"} · ${status === "complete" ? "结果停留" : `${Math.round(phaseProgress * 100)}%`}`}</span></div>
+        <button type="button" className="icarl-button icarl-button--primary" onClick={() => changePhase(phaseIndex + 1)} disabled={phaseIndex >= phases.length - 1}>下一阶段 →</button>
       </footer>
     </section>
     {phaseIndex === phases.length - 1 ? <QuestionHandoff

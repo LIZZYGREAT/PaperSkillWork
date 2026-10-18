@@ -1019,6 +1019,7 @@ function CurrentFormula({ scene }: { scene: Scene }) {
 export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   const reducedMotion = useReducedMotion();
   const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
+  const [playMode, setPlayMode] = useState<"all" | "phase">("phase");
   const [manualReviewIndex, setManualReviewIndex] = useState<number | null>(null);
   const workbenchRef = useRef<HTMLElement | null>(null);
   const clip = clips[state.clipIndex];
@@ -1046,8 +1047,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   const orderedMemoryMode = clip.kind === "review" || clip.kind === "budget";
 
   useEffect(() => {
-    if (state.status === "playing" && state.clipIndex === activePhase.endIndex && state.isHolding) controls.pause();
-  }, [state.status, state.clipIndex, state.isHolding, activePhase.endIndex, controls.pause]);
+    if (playMode === "phase" && state.status === "playing" && state.clipIndex === activePhase.endIndex && state.isHolding) controls.pause();
+  }, [state.status, state.clipIndex, state.isHolding, activePhase.endIndex, controls.pause, playMode]);
 
   const slotCount = Math.round(scene.slotCount);
 
@@ -1058,30 +1059,35 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
   function jumpToPhase(index: number, options?: { autoPlay?: boolean }) {
     const phase = phaseRanges[index];
     if (phase) {
+      setPlayMode("phase");
       setManualReviewIndex(null);
-      controls.goToClip(phase.startIndex, { autoPlay: false, ...options });
+      controls.goToClip(reducedMotion ? phase.endIndex : phase.startIndex, { autoPlay: false, ...options });
     }
   }
 
-  function startAnimation() {
-    if (reducedMotion) {
-      controls.stepForward();
-      return;
-    }
+  function togglePlayback() {
     if (state.status === "playing") {
       controls.pause();
       return;
     }
+    if (reducedMotion) return;
     if (phaseComplete || state.status === "finished") {
-      if (activePhaseIndex < phaseRanges.length - 1) {
-        jumpToPhase(activePhaseIndex + 1, { autoPlay: true });
-      } else {
-        jumpToPhase(0, { autoPlay: true });
-      }
+      jumpToPhase(activePhaseIndex, { autoPlay: true });
       return;
     }
-    setManualReviewIndex(null);
     controls.play();
+  }
+
+  function replayPhase() {
+    jumpToPhase(activePhaseIndex, { autoPlay: !reducedMotion });
+  }
+
+  function playAll() {
+    if (reducedMotion) return;
+    setPlayMode("all");
+    setManualReviewIndex(null);
+    controls.goToClip(0, { autoPlay: true });
+    requestAnimationFrame(focusWorkbench);
   }
 
   return (
@@ -1230,12 +1236,12 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
         <div className="p4-workbench__controls" aria-label="Page 4 动画控制">
           <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex - 1)} disabled={activePhaseIndex === 0}>← 上一阶段</button>
           <div className="p4-workbench__control-center">
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={() => jumpToPhase(activePhaseIndex)}>↺ 重播本阶段</button>
-            <span aria-live="polite">阶段 {activePhaseIndex + 1} / {phaseRanges.length} · {Math.round(phaseProgress * 100)}%</span>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={togglePlayback} disabled={reducedMotion}>{reducedMotion ? "逐步查看" : state.status === "playing" ? "Ⅱ 暂停" : state.elapsedMs > 0 && !phaseComplete ? "▶ 继续播放" : "▶ 播放本阶段"}</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={replayPhase} disabled={reducedMotion}>↺ 重播本阶段</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={playAll} disabled={reducedMotion}>▶ 完整播放</button>
+            <span aria-live="polite">阶段 {activePhaseIndex + 1} / {phaseRanges.length} · {playMode === "all" ? "全程" : "本阶段"} · {Math.round(phaseProgress * 100)}%</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={startAnimation} disabled={reducedMotion && !state.hasNext}>
-            {reducedMotion ? state.hasNext ? "下一步" : "本页完成" : state.status === "playing" ? "Ⅱ 暂停" : state.status === "finished" || (phaseComplete && activePhaseIndex === phaseRanges.length - 1) ? "↺ 从头播放" : phaseComplete ? "▶ 播放下一阶段" : state.elapsedMs > 0 ? "▶ 继续播放" : "▶ 播放本阶段"}
-          </button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={() => jumpToPhase(activePhaseIndex + 1)} disabled={activePhaseIndex >= phaseRanges.length - 1}>下一阶段 →</button>
         </div>
 
         <div className="p4-phase-rail" role="group" aria-label="七个教学阶段">

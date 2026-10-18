@@ -6,6 +6,7 @@
 .p6-workbench__guide .eyebrow, .p6-network-board .eyebrow { color: #61797a; font: 700 11px var(--mono); letter-spacing: .1em; }
 .p6-workbench__guide h2 { margin: 0; color: #28474b; font-size: clamp(19px, 1.8vw, 24px); line-height: 1.25; }
 .p6-workbench__guide p { max-width: 980px; margin: 0; color: #53696b; font-size: 14px; line-height: 1.5; }
+.p6-workbench__guide > div > small { color: #3f6259; font-size: 13px; line-height: 1.45; }
 .p6-workbench__status { flex: 0 0 auto; padding: 7px 10px; border: 1px solid #d7e1da; border-radius: 999px; color: #536a65; background: white; font-size: 12px; font-weight: 700; }
 .p6-workbench__status--playing { color: #356d58; border-color: #bcd6c7; background: #eff8f2; }
 .p6-workbench__status--complete { color: #476c55; border-color: #c4d9c8; background: #f0f6ed; }

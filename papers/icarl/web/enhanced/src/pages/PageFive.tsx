@@ -53,7 +53,13 @@ const clips: readonly FlowClip[] = [
   { id: "p5-handoff", kind: "handoff", durationMs: 2600, holdMs: 2200, narrative: "D、Q 与六节点 Student 等待下一步" },
 ];
 
-const clipIndexById = new Map(clips.map((clip, index) => [clip.id, index]));
+const phaseRanges = [
+  { id: "inputs", label: "输入与 Replay", startIndex: 0, endIndex: 0 },
+  { id: "dataset", label: "合成 D", startIndex: 1, endIndex: 1 },
+  { id: "snapshot", label: "生成 Q", startIndex: 2, endIndex: 7 },
+  { id: "freeze", label: "冻结 Q", startIndex: 8, endIndex: 8 },
+  { id: "handoff", label: "交给 Student", startIndex: 9, endIndex: 9 },
+] as const;
 
 /* ---------------------------------------------------------------- helpers --- */
 
@@ -195,10 +201,18 @@ function Nodes({ classIds, kind, responses, activeIndex }: { classIds: readonly 
 export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
   const reducedMotion = useReducedMotion();
   const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
+  const [playMode, setPlayMode] = useState<"all" | "phase">("phase");
   const clip = clips[state.clipIndex];
   const [selectedId, setSelectedId] = useState<string>(incomingSamples.find((sample) => sample.classId === "E")?.id ?? incomingSamples[0].id);
   const [inspectedSampleId, setInspectedSampleId] = useState<string | null>(null);
   const flowBoardRef = useRef<HTMLDivElement | null>(null);
+  const activePhaseIndex = Math.max(0, phaseRanges.findIndex((phase) => state.clipIndex >= phase.startIndex && state.clipIndex <= phase.endIndex));
+  const activePhase = phaseRanges[activePhaseIndex];
+  const phaseComplete = state.clipIndex === activePhase.endIndex && state.isHolding;
+
+  useEffect(() => {
+    if (playMode === "phase" && state.status === "playing" && phaseComplete) controls.pause();
+  }, [controls.pause, phaseComplete, playMode, state.status]);
 
   const scene = useMemo(() => {
     const elapsed = state.elapsedMs;
@@ -319,6 +333,42 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
   function leaveInspection(action: () => void) {
     setInspectedSampleId(null);
     action();
+  }
+
+  function goToPhase(index: number) {
+    const phase = phaseRanges[index];
+    if (!phase) return;
+    setPlayMode("phase");
+    setInspectedSampleId(null);
+    controls.goToClip(reducedMotion ? phase.endIndex : phase.startIndex, { autoPlay: false });
+  }
+
+  function togglePlayback() {
+    leaveInspection(() => {
+      if (state.status === "playing") {
+        controls.pause();
+        return;
+      }
+      if (reducedMotion) return;
+      if (phaseComplete || state.status === "finished") {
+        setPlayMode("phase");
+        controls.goToClip(activePhase.startIndex, { autoPlay: true });
+        return;
+      }
+      controls.play();
+    });
+  }
+
+  function replayPhase() {
+    if (reducedMotion) return;
+    setPlayMode("phase");
+    leaveInspection(() => controls.goToClip(activePhase.startIndex, { autoPlay: true }));
+  }
+
+  function playAll() {
+    if (reducedMotion) return;
+    setPlayMode("all");
+    leaveInspection(() => controls.goToClip(0, { autoPlay: true }));
   }
 
   return (
@@ -488,25 +538,26 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         </div>
 
         <footer className="p5-controls" aria-label="P5 动画控制">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.stepBack)} disabled={!state.hasPrevious}>← 上一步</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => goToPhase(activePhaseIndex - 1)} disabled={activePhaseIndex === 0}>← 上一阶段</button>
           <div className="p5-control-main">
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.toggle)} disabled={reducedMotion} aria-label={state.status === "playing" ? "暂停当前片段" : "继续当前片段"}>{reducedMotion ? "减少动态效果" : state.status === "playing" ? "Ⅱ 暂停" : state.status === "finished" ? "↺ 从头播放" : state.elapsedMs > 0 ? "▶ 继续播放" : "▶ 播放本段"}</button>
-            <button type="button" className="icarl-button icarl-button--quiet" onClick={() => leaveInspection(controls.replayClip)}>↺ 重播本片段</button>
-            <span aria-live="polite">{state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={togglePlayback} disabled={reducedMotion} aria-label={state.status === "playing" ? "暂停动画" : "播放本阶段"}>{reducedMotion ? "逐步查看" : state.status === "playing" ? "Ⅱ 暂停" : state.elapsedMs > 0 && !phaseComplete ? "▶ 继续播放" : "▶ 播放本阶段"}</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={replayPhase} disabled={reducedMotion}>↺ 重播本阶段</button>
+            <button type="button" className="icarl-button icarl-button--quiet" onClick={playAll} disabled={reducedMotion}>▶ 完整播放</button>
+            <span aria-live="polite">{playMode === "all" ? "全程" : "本阶段"} · {state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}</span>
           </div>
-          <button type="button" className="icarl-button icarl-button--primary" onClick={() => leaveInspection(controls.stepForward)} disabled={!state.hasNext}>下一步 →</button>
+          <button type="button" className="icarl-button icarl-button--primary" onClick={() => goToPhase(activePhaseIndex + 1)} disabled={activePhaseIndex >= phaseRanges.length - 1}>下一阶段 →</button>
         </footer>
 
-        <div className="p5-clip-rail" role="group" aria-label="片段定位">
-          {clips.map((item, index) => (
+        <div className="p5-clip-rail" role="group" aria-label="五个教学阶段">
+          {phaseRanges.map((item, index) => (
             <button
               key={item.id}
               type="button"
-              className={index === state.clipIndex ? "is-current" : index < state.clipIndex ? "is-complete" : ""}
-              aria-pressed={index === state.clipIndex}
-              onClick={() => leaveInspection(() => controls.goToClip(clipIndexById.get(item.id) ?? 0, { autoPlay: false }))}
+              className={index === activePhaseIndex ? "is-current" : index < activePhaseIndex ? "is-complete" : ""}
+              aria-pressed={index === activePhaseIndex}
+              onClick={() => goToPhase(index)}
             >
-              <b>{String(index + 1).padStart(2, "0")}</b>{item.narrative}
+              <b>{String(index + 1).padStart(2, "0")}</b>{item.label}
             </button>
           ))}
         </div>

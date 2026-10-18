@@ -146,10 +146,10 @@
 .p5-order-strip > small { margin-left: auto; color: #52695f; font-size: 12px; }
 
 .p5-controls { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid #dfe6e0; }
-.p5-control-main { display: flex; align-items: center; justify-content: center; gap: 7px; }
+.p5-control-main { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 7px; }
 .p5-control-main > span { min-width: 74px; color: #5a6f67; font: 12px var(--mono); text-align: center; }
 .p5-controls button { min-height: 36px; }
-.p5-clip-rail { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.p5-clip-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
 .p5-clip-rail button { display: flex; min-width: 0; align-items: center; gap: 4px; padding: 6px 5px; border: 1px solid #e0e7e1; border-radius: 6px; color: #526a61; background: #fffefa; font-size: 11px; text-align: left; cursor: pointer; }
 .p5-clip-rail button b { color: #a27356; font: 650 11px var(--mono); }
 .p5-clip-rail button.is-complete { border-color: #cbddd0; color: #4e6e5c; background: #f2f7f1; }

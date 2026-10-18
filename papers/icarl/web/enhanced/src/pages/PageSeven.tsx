@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { FeatureSpaceWorkbench } from "../components/FeatureSpaceWorkbench";
 import { QuestionHandoff } from "../components/QuestionHandoff";
 import { TutorialRoutePreview } from "../components/TutorialRoutePreview";
@@ -278,11 +278,42 @@ function ResponsibilitySummary() {
 export function PageSeven({ onContinue }: { onContinue?: () => void }) {
   const reducedMotion = useReducedMotion();
   const { state, controls } = useAnimationTimeline({ clips, reducedMotion, autoPlay: false });
+  const [playMode, setPlayMode] = useState<"all" | "phase">("phase");
   const stage = state.clipIndex;
   const step = steps[stage];
 
   function goToStage(index: number) {
+    setPlayMode("phase");
     controls.goToClip(index, { autoPlay: false });
+  }
+
+  useEffect(() => {
+    if (playMode === "phase" && state.status === "playing" && state.isHolding) controls.pause();
+  }, [controls.pause, playMode, state.isHolding, state.status]);
+
+  function togglePlayback() {
+    if (state.status === "playing") {
+      controls.pause();
+      return;
+    }
+    if (reducedMotion) return;
+    if (state.isHolding || state.status === "finished") {
+      setPlayMode("phase");
+      controls.replayClip();
+      return;
+    }
+    controls.play();
+  }
+
+  function replayStage() {
+    setPlayMode("phase");
+    controls.replayClip();
+  }
+
+  function playAll() {
+    if (reducedMotion) return;
+    setPlayMode("all");
+    controls.goToClip(0, { autoPlay: true });
   }
 
   return <article className="tutorial-page icarl-page icarl-page--p7" data-stage={step.id} data-progress={state.progress.toFixed(2)}>
@@ -322,13 +353,14 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
       </div>
 
       <footer className="p7-playback-controls" aria-label="P7 记忆交接动画控制">
-        <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.stepBack} disabled={!state.hasPrevious}>上一步</button>
+        <button type="button" className="icarl-button icarl-button--quiet" onClick={() => goToStage(stage - 1)} disabled={!state.hasPrevious}>← 上一阶段</button>
         <div className="p7-playback-controls__center">
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={() => state.status === "playing" ? controls.pause() : controls.play()} disabled={reducedMotion} aria-label={state.status === "playing" ? "暂停动画" : "播放记忆交接"}>{state.status === "playing" ? "Ⅱ 暂停" : "▶ 播放"}</button>
-          <button type="button" className="icarl-button icarl-button--quiet" onClick={controls.replayClip} disabled={reducedMotion}>↺ 重播本段</button>
-          <span>{reducedMotion ? "逐段导航显示完整状态" : state.isHolding ? "当前状态已展开" : `${Math.round(state.progress * 100)}%`}</span>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={togglePlayback} disabled={reducedMotion} aria-label={state.status === "playing" ? "暂停动画" : "播放本阶段"}>{reducedMotion ? "逐步查看" : state.status === "playing" ? "Ⅱ 暂停" : state.elapsedMs > 0 && !state.isHolding ? "▶ 继续播放" : "▶ 播放本阶段"}</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={replayStage} disabled={reducedMotion}>↺ 重播本阶段</button>
+          <button type="button" className="icarl-button icarl-button--quiet" onClick={playAll} disabled={reducedMotion}>▶ 完整播放</button>
+          <span>{reducedMotion ? "逐阶段显示结果" : `${playMode === "all" ? "全程" : "本阶段"} · ${state.isHolding ? "结果停留" : `${Math.round(state.progress * 100)}%`}`}</span>
         </div>
-        {stage < steps.length - 1 ? <button type="button" className="icarl-button icarl-button--primary" onClick={() => reducedMotion ? controls.stepForward() : controls.goToClip(stage + 1, { autoPlay: true })}>{reducedMotion ? "下一步" : "播放下一段"} <b aria-hidden="true">→</b></button> : null}
+        <button type="button" className="icarl-button icarl-button--primary" onClick={() => goToStage(stage + 1)} disabled={stage >= steps.length - 1}>下一阶段 <b aria-hidden="true">→</b></button>
       </footer>
     </section>
 
