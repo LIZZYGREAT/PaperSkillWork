@@ -54,7 +54,8 @@ workflow:
       reviewed_by: 用户（本次对话）
       note: 用户于2026-10-19确认教程没有问题，并明确要求将W9登记为complete。
     W10_upstream_preflight:
-      status: pending
+      status: complete
+      completed_by: automation
 artifacts:
   source_cache: source-cache
   paper_model: research/paper-model.md
