@@ -180,8 +180,10 @@
 .p7-next-step__mark svg { width: 42px; height: 18px; }
 .p7-next-step__mark path { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .p7-next-step > div:nth-child(2) { display: grid; gap: 4px; }
-.p7-next-step p { margin: 0; color: #526b66; font-size: 13px; line-height: 1.5; }
-.p7-next-step p strong { color: #315a47; }
+.p7-next-step p { display: grid; gap: 6px; margin: 0; color: #526b66; font-size: 13px; line-height: 1.5; }
+.p7-next-step p strong { color: #315a47; font-size: 14px; }
+.p7-next-step p span { color: #60736d; }
+.p7-next-step p b { display: inline-block; min-width: 68px; margin-right: 7px; color: #855c42; font: 750 10px var(--mono); letter-spacing: .04em; }
 
 @media (max-width: 1180px) {
   .p7-preview__prediction { grid-template-columns: 150px minmax(0, 1fr); }

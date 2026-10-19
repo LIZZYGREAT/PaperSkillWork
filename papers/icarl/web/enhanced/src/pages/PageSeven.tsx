@@ -63,6 +63,8 @@ const steps: readonly P7Step[] = [
     durationMs: 6200,
   },
 ];
+/** The first card describes the already-visible post-training state; motion starts with truncation. */
+const FIRST_VISIBLE_MOTION_STEP = 1;
 
 const clips: readonly AnimationClip[] = steps.map((step) => ({
   id: step.id,
@@ -386,6 +388,11 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
       return;
     }
     if (reducedMotion) return;
+    if (stage === 0) {
+      setPlayMode("phase");
+      controls.goToClip(FIRST_VISIBLE_MOTION_STEP, { autoPlay: true });
+      return;
+    }
     if (state.isHolding || state.status === "finished") {
       setPlayMode("phase");
       controls.replayClip();
@@ -402,15 +409,15 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
   function playAll() {
     if (reducedMotion) return;
     setPlayMode("all");
-    controls.goToClip(0, { autoPlay: true });
+    controls.goToClip(FIRST_VISIBLE_MOTION_STEP, { autoPlay: true });
   }
 
   function focusWorkbench({ play = false }: { play?: boolean } = {}) {
-    workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
-    if (play) playAll();
+    workbenchRef.current?.scrollIntoView({ behavior: play || reducedMotion ? "auto" : "smooth", block: "start" });
+    if (play) window.requestAnimationFrame(playAll);
   }
 
-  return <article className="tutorial-page icarl-page icarl-page--p7" data-stage={step.id} data-progress={state.progress.toFixed(2)}>
+  return <article className="tutorial-page icarl-page icarl-page--p7" data-stage={step.id} data-progress={state.progress.toFixed(2)} data-default-display-only={(stage === 0).toString()}>
     <header className="page-heading icarl-page__heading p7-heading">
       <div className="icarl-page__eyebrow"><span>PAGE 07</span><i /> POST-UPDATE MEMORY · CURRENT PROTOTYPES</div>
       <h1>模型更新后，记忆与 Prototype 要怎样一起更新？</h1>
@@ -456,7 +463,11 @@ export function PageSeven({ onContinue }: { onContinue?: () => void }) {
 
     <section className="p7-next-step" aria-label="从训练后交接到论文证据">
       <div className="p7-next-step__mark" aria-hidden="true"><span>P_after</span><svg viewBox="0 0 52 20"><path d="M2 10h42" /><path d="m37 3 9 7-9 7" /></svg><span>μ_current</span></div>
-      <div><span className="eyebrow">NEXT · 从机制到证据</span><p><strong>记忆按容量重组，Prototype 用当前表示重建。</strong>下一问：这种完整机制在原论文实验中效果如何，代价又是什么？</p></div>
+      <div><span className="eyebrow">NEXT · 从机制到证据</span><p>
+        <strong><b>本页结论</b>记忆按容量重组，Prototype 在当前表示空间重建，模型继续用最近 Prototype 预测。</strong>
+        <span><b>已经打通</b>至此，iCaRL 从新类到达、模型更新到训练后预测的完整机制已经闭合。</span>
+        <span><b>下一页转向</b>回到论文实验与边界，检验这种设计的实际效果、代价与成立前提。</span>
+      </p></div>
       <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>查看论文证据与边界 <b aria-hidden="true">→</b></button>
     </section>
   </article>;
