@@ -324,3 +324,13 @@ P9 将收敛为八章：继承状态、准备 D、冻结 Q、更新模型、管�
 实施记录（Block C）：P5 说明 Replay 输入本身不能保留旧教师行为，冻结的更新前 Teacher 必须为 D 中每张旧/新图片按 sample ID 写入 Q；D 与 Q 的训练输入/软目标职责分开。P6 说明旧节点从对应 Q 行取软目标、新节点从真实标签取 0/1 硬目标，独立 Sigmoid 节点计算 BCE 并把梯度传回可训练参数；网页不执行真实 SGD。P5 的 3+3 类和 D/Q 尺寸、P6 的六节点与 3+3 划分只在演示注中出现。新增文案合同测试。`npm.cmd test`、`npm.cmd run build`（86 modules）与 `git diff --check` 通过。P5/P6 的 Chromium DOM 检查覆盖 1440×900、1920×1080、1366×768、768×1024、390×844：桌面四卡横排、两种窄容器纵排；箭头均不相交、位于卡片间距/中心轴，末卡无箭头；正文为 15.5px/24.8px（390 下 15px/23.7px），步骤值 14px，无横向溢出。已目视检查桌面及窄屏流程，浏览器错误为 0，`VISUAL_REVIEW=PASS`、实测 `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`。全配置 runner 留待 D 集成后运行；读者五题验收尚未进行，`HUMAN_ACCEPTANCE=PENDING`。
 
 实施记录（Block D）：P7 现从参数更新后类别增加与固定预算推导每类名额缩减，说明旧类保留有序前缀、新类按当前表示 Herding 补入；随后用当前特征提取器重编码持久化原图、重建 Prototype，再对当前模型编码的 Query 做最近距离预测，最终交接仅为 Θ_after + P_after。K=12、旧类 4→2、新类 D/E/F 各 2 仅留在固定状态演示注；新增 P7 文案合同测试。集成回归同时修正 P4 一个旧截图状态的动作顺序，使其等待目标可由“播放当前阶段”自然到达，未改变页面算法或播放器。`npm.cmd test`、`npm.cmd run build`（86 modules）和 `git diff --check` 通过。标准全配置 Chromium runner 260/260 状态通过，其中 P3–P7 为 166/166，覆盖 1440×900 与 1920×1080；`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`（0 条）；已目视检查五页前置推理与执行入口代表截图，`VISUAL_REVIEW=PASS`。报告另有 P9 既有小字号语义提示（62 个状态各 1 项），本轮未改 P9；P1/P2 的 28 个记录未配置样式断言。未发现已批准基线，`REGRESSION=NOT_RUN`；五题读者验收仍待完成，`HUMAN_ACCEPTANCE=PENDING`。按用户要求，最终记录后清理本轮生成的临时 QA 截图/配置及未被计划引用的旧 iCaRL 检查缓存；方案记录保留为结果依据。
+
+### P3–P7 收尾优化与跨页引导修订（2026-10-19）
+
+执行依据：用户提供的《iCaRL_P3-P7_收尾优化与跨页引导修订方案_20261018》。本轮保持共享教学数据、算法结果、样本身份、主要按钮文案和阶段边界不变，只收敛 P3–P7 跨页交接、P4/P5/P6 关键图卡的视觉层级，以及 P4–P7 启动后的首个可见反馈。页面改动按 P3/P4、P5/P6、P7 三批提交，提交分别为 `67eca2e`、`d32488e`、`7af9541`。
+
+P3–P7 末尾交接统一改成“本页结论 → 还缺什么/新的问题 → 下一页问题或任务”，避免只用名词标签跳页。P5 的交接正文只从已经建立的 D、Q 与 sample ID 对齐关系提出监督依据问题，不把 Student/Target 当作读者已经掌握的前提；下一页按钮继续承担引入 Target 的动作。P4 的 Herding 提交区拉开 `p₂` 与 `d₂` 层级，并明确逐轮贪心、只保证当前轮 arg min、不保证全局最优或距离单调下降，以及持久化有序前缀。P5 重新平衡 Replay/D 与 Teacher/Q 两张概念图，并把 D、Q、按图片 ID 对齐和下一页监督依据排成同一条合并链。P6 将 01/02 步骤标题降级，把原装饰性大箭头替换为 `g_j ↔ r_j` 的“同一节点对应”语义关系，并明确 03 为逐节点比较。
+
+播放反馈方面，P5 的 `p5-recall` 与 P7 的 `training-complete` 保留为默认可读展示态，但不再作为点击播放后的独立静止片段；首次播放直接进入 P5 合并 D、P7 截断旧类。P4 与 P6 保留原有真实运动片段，并在播放前立即把工作台带入视野，避免平滑滚动吞掉首段变化。定向 150ms 浏览器捕获确认 P4 已进入目标贡献、P5 已进入合并 D、P6 工作台处于播放态、P7 已进入截断旧类；四页都在 200ms 门槛内出现状态与画面变化。
+
+验证：`npm.cmd test`、`npx.cmd tsc --noEmit`、`npm.cmd run build`（82 modules）通过。定向 Chromium QA 在 1440×900 与 1920×1080 共 26/26 个状态通过，覆盖 P3–P7 交接、P4/P5/P6 预览布局与 P4–P7 的 150ms 首反馈；报告位于 `web/enhanced/.visual-qa/finishing-run-escalated/run-2026-10-19T09-10-55-664Z/report.md`。`GEOMETRY_QA=PASS`、`BROWSER_ERRORS=PASS`（0）；已目视复核两档视口的概念图、语义箭头、五页交接与四个启动帧，`VISUAL_REVIEW=PASS`。本定向配置没有计算样式断言，`STYLE_QA=NOT_RUN`；无已批准截图基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`，W7/W9/W10 状态未修改。

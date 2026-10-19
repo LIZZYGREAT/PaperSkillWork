@@ -341,6 +341,15 @@
           ]
         },
         {
+          "id": "00b-p4-first-click-visible-feedback",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
+            { "type": "click", "selector": ".p4-workbench__controls > button.icarl-button--primary" },
+            { "type": "wait", "milliseconds": 150 },
+            { "type": "waitFor", "selector": ".p4-workbench[data-status=\"playing\"][data-clip=\"target-contribute\"]", "state": "visible" }
+          ]
+        },
+        {
           "id": "01-target-contribution",
           "actions": [
             {
@@ -1439,6 +1448,15 @@
           "id": "p5-replay-sources"
         },
         {
+          "id": "p5-first-click-starts-merge",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(5)" },
+            { "type": "click", "selector": ".p5-control-main button:first-child" },
+            { "type": "wait", "milliseconds": 150 },
+            { "type": "waitFor", "selector": ".p5-workbench[data-clip=\"p5-merge\"][data-status=\"playing\"][data-default-display-only=\"false\"]", "state": "visible" }
+          ]
+        },
+        {
           "actions": [
             {
               "type": "click",
@@ -1668,6 +1686,15 @@
             { "type": "waitFor", "selector": ".p6-preview__source--label", "state": "visible" },
             { "type": "waitFor", "selector": ".p6-preview__target", "state": "visible" },
             { "type": "waitFor", "selector": ".p6-preview__loss-route", "state": "visible" }
+          ]
+        },
+        {
+          "id": "00b-p6-first-click-visible-feedback",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(6)" },
+            { "type": "click", "selector": ".p6-controls > div button[aria-label='继续当前动画']" },
+            { "type": "wait", "milliseconds": 150 },
+            { "type": "waitFor", "selector": ".p6-workbench__status--playing", "state": "visible" }
           ]
         },
         {
@@ -2312,6 +2339,15 @@
               "selector": "body",
               "key": "Home"
             }
+          ]
+        },
+        {
+          "id": "p7-first-click-starts-truncation",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(7)" },
+            { "type": "click", "selector": ".p7-playback-controls__center button[aria-label='播放记忆交接']" },
+            { "type": "wait", "milliseconds": 150 },
+            { "type": "waitFor", "selector": ".icarl-page--p7[data-stage='truncate-old'][data-default-display-only='false'] .p7-playback-status--playing", "state": "visible" }
           ]
         },
         {

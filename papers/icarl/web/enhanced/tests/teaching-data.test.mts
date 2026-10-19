@@ -339,7 +339,7 @@ for (const candidate of p4MechanismRound.candidates) {
   assert.ok(p4Mechanism.includes(`data-candidate="${candidate.point.id}" data-score="${candidate.score.toFixed(6)}"`),
     `P4's mechanism card must show ${candidate.point.id}'s actual round-two distance.`);
 }
-assert.ok(p4Mechanism.includes("不保证固定长度下全局最优") && p4Mechanism.includes("不保证距离每轮下降"),
+assert.ok(p4Mechanism.includes("逐轮贪心") && p4Mechanism.includes("不保证全局最优") && p4Mechanism.includes("不保证距离每轮下降"),
   "P4's mechanism card must state the greedy boundary without promising monotonic improvement.");
 const p4DemoNote = p4RouteMarkup.slice(p4RouteMarkup.indexOf('class="p4-preview__footer"'));
 assert.ok(p4DemoNote.includes("8 个合成单位特征") && p4DemoNote.includes("K=12") && p4DemoNote.includes("3→4 类") && p4DemoNote.includes("P5/P7 的 3→6 类"),
@@ -411,8 +411,10 @@ assert.match(p3Source, /function moveStage\(index: number\)[\s\S]*?setPlayMode\(
   "P3 manual stage selection must pause at the selected stage.");
 assert.match(p5Source, /function goToPhase\(index: number\)[\s\S]*?controls\.goToClip\(reducedMotion \? phase\.endIndex : phase\.startIndex, \{ autoPlay: false \}\)/,
   "P5 must expose five logical phases and show their terminal state under reduced motion.");
-assert.match(p5Source, /function playAll\(\)[\s\S]*?setPlayMode\("all"\);[\s\S]*?controls\.goToClip\(0, \{ autoPlay: true \}\)/,
-  "P5 full playback must retain every real Q-write clip while exposing phase-level navigation.");
+assert.match(p5Source, /const FIRST_VISIBLE_MOTION_CLIP = 1;[\s\S]*?function playAll\(\)[\s\S]*?setPlayMode\("all"\);[\s\S]*?controls\.goToClip\(FIRST_VISIBLE_MOTION_CLIP, \{ autoPlay: true \}\)/,
+  "P5 full playback must skip the static display-only recall card and retain every real Q-write clip.");
+assert.match(p5Source, /activePhaseIndex === 0 && state\.clipIndex === 0[\s\S]*?controls\.goToClip\(FIRST_VISIBLE_MOTION_CLIP, \{ autoPlay: true \}\)/,
+  "P5's first stage-play click must enter the first visible merge motion immediately.");
 assert.match(p6NavigationSource, /setStatus\(reducedMotion \? "complete" : "paused"\)/,
   "P6 manual phase selection must pause, or show the completed state under reduced motion.");
 const p6ControlsSource = p6NavigationSource.match(/<footer className="p6-controls"[\s\S]*?<\/footer>/)?.[0] ?? "";
@@ -420,8 +422,10 @@ assert.match(p6ControlsSource, /上一阶段[\s\S]*?完整播放[\s\S]*?下一�
   "P6 must keep previous, full-play, and next-stage controls visible without opening the phase directory.");
 assert.match(p6NavigationSource, /playMode !== "all"[\s\S]*?window\.setTimeout[\s\S]*?setPhaseIndex\(next\)[\s\S]*?setStatus\("playing"\)/,
   "P6 full playback must hold a completed result and then continue to the next phase automatically.");
-assert.match(p7Source, /function playAll\(\)[\s\S]*?setPlayMode\("all"\);[\s\S]*?controls\.goToClip\(0, \{ autoPlay: true \}\)/,
-  "P7 full playback must restart the complete post-training handoff.");
+assert.match(p7Source, /const FIRST_VISIBLE_MOTION_STEP = 1;[\s\S]*?function playAll\(\)[\s\S]*?setPlayMode\("all"\);[\s\S]*?controls\.goToClip\(FIRST_VISIBLE_MOTION_STEP, \{ autoPlay: true \}\)/,
+  "P7 full playback must skip the already-visible post-training card and start with memory motion.");
+assert.match(p7Source, /if \(stage === 0\)[\s\S]*?controls\.goToClip\(FIRST_VISIBLE_MOTION_STEP, \{ autoPlay: true \}\)/,
+  "P7's first stage-play click must enter old-list truncation immediately.");
 assert.match(p7Source, /function goToStage\(index: number\)[\s\S]*?controls\.goToClip\(index, \{ autoPlay: false \}\)/,
   "P7 stage navigation must locate a stage and wait for explicit playback.");
 assert.match(p8NavigationSource, /className="p8-page-handoff"[\s\S]*?下一页：一次增量学习的完整逻辑/,
@@ -714,7 +718,7 @@ assert.ok(p5RouteMarkup.includes("Replay 解决旧图还能参与训练") && p5R
   "P5's causal bridge must explain the distinct need solved by each information source.");
 assert.ok(p5RouteMarkup.includes('data-output="D"') && p5RouteMarkup.includes("同一张图与真标签")
   && p5RouteMarkup.includes('data-output="Q"') && p5RouteMarkup.includes("对应 ID 的旧类响应")
-  && p5RouteMarkup.includes("P6 构造 Target"),
+  && p5RouteMarkup.includes("按图片 ID 对齐") && p5RouteMarkup.includes("下一页：构造监督依据"),
   "P5's merge strip must present D and Q as aligned outputs handed to P6 for Target construction.");
 const p5PrincipleCopy = p5RouteMarkup.slice(p5RouteMarkup.indexOf('class="p5-briefing__sources"'), p5RouteMarkup.indexOf('class="p5-briefing__footer"'));
 assert.doesNotMatch(p5PrincipleCopy, /12\s*\+\s*18|30\s*[×x]\s*3|旧类\s*3|新类\s*3/u, "P5's demonstration dimensions must not be presented as general conditions.");
@@ -845,26 +849,38 @@ assert.deepEqual(p7ConnectionWidths(renderPageSevenAt(0, 4)), ["100%", "100%", "
 
 const p3HandoffMarkup = renderPageThreeAt(0, 0, () => undefined);
 const p3NextStep = p3HandoffMarkup.match(/<section class="p3-next-step"[\s\S]*?<\/section>/)?.[0] ?? "";
-assert.ok(p3NextStep.includes("Prototype 可由有限原图计算") && p3NextStep.includes("这些原图怎样选"),
+assert.ok(p3NextStep.includes("本页结论") && p3NextStep.includes("Prototype 可由有限原图计算")
+  && p3NextStep.includes("还缺什么") && p3NextStep.includes("有限名额该留给谁")
+  && p3NextStep.includes("下一页问题") && p3NextStep.includes("类别参考尽量接近完整数据"),
   "P3 must hand off from prototype prediction to the exemplar-selection question.");
 assert.ok(p3NextStep.includes("筛选代表样本") && !p3HandoffMarkup.includes("icarl-question-handoff"),
   "P3 must use its compact page-specific transition instead of the shared three-card handoff.");
 const p4HandoffMarkup = renderPageFourAt(0, 0, () => undefined);
 const p4NextStep = p4HandoffMarkup.match(/<section class="p4-next-step"[\s\S]*?<\/section>/)?.[0] ?? "";
-assert.ok(p4NextStep.includes("Herding 产生可截短的有序代表列表") && p4NextStep.includes("旧图怎样继续参与训练"),
+assert.ok(p4NextStep.includes("本页结论") && p4NextStep.includes("有顺序、可裁剪的代表列表")
+  && p4NextStep.includes("还缺什么") && p4NextStep.includes("继续更新参数")
+  && p4NextStep.includes("下一页问题") && p4NextStep.includes("旧类记忆怎样重新进入训练"),
   "P4 must hand off from ordered exemplars to the replay question.");
 assert.ok(p4NextStep.includes("让 Exemplars 参与更新") && !p4HandoffMarkup.includes("icarl-question-handoff"),
   "P4 must use its compact page-specific transition instead of the shared three-card handoff.");
 const p5HandoffMarkup = renderPageFiveAt("p5-handoff", 0, () => undefined);
 const p5NextStep = p5HandoffMarkup.match(/<section class="p5-next-step"[\s\S]*?<\/section>/)?.[0] ?? "";
-assert.ok(p5NextStep.includes("D 是训练输入，Q 是冻结的旧行为参考"), "P5's compact handoff must preserve the distinct roles of D and Q.");
-assert.ok(p5NextStep.includes("组成同一个 Student 的两类 Target") && p5NextStep.includes("构造六节点 Target"),
-  "P5's compact handoff must pose the next target-construction question and provide the cross-page action.");
+const p5NextStepCopy = p5NextStep.slice(0, p5NextStep.indexOf("<button"));
+assert.ok(p5NextStep.includes("本页结论") && p5NextStep.includes("训练图片及其类别信息") && p5NextStep.includes("旧类响应"),
+  "P5's compact handoff must preserve the distinct roles of image/label information and old responses.");
+assert.ok(p5NextStep.includes("还缺什么") && p5NextStep.includes("逐节点比较的监督依据")
+  && p5NextStep.includes("下一页问题") && p5NextStep.includes("告诉每个输出节点应该接近什么")
+  && p5NextStep.includes("构造各节点 Target"),
+  "P5's compact handoff must explain the unresolved supervision question before naming the cross-page action.");
+assert.ok(!p5NextStepCopy.includes("Student") && !p5NextStepCopy.includes("两类 Target"),
+  "P5's handoff copy must not assume the reader already knows the next page's Student/Target terminology.");
 assert.ok(!p5HandoffMarkup.includes("icarl-question-handoff"), "P5 must not reuse the shared three-card handoff.");
 const p7HandoffMarkup = renderPageSevenAt(0, 4, () => undefined);
 const p7NextStep = p7HandoffMarkup.match(/<section class="p7-next-step"[\s\S]*?<\/section>/)?.[0] ?? "";
 const p7PlaybackControls = p7HandoffMarkup.match(/<footer class="p7-playback-controls"[^>]*>[\s\S]*?<\/footer>/)?.[0] ?? "";
-assert.ok(p7NextStep.includes("记忆按容量重组") && p7NextStep.includes("Prototype 用当前表示重建") && p7NextStep.includes("原论文实验中效果如何"),
+assert.ok(p7NextStep.includes("本页结论") && p7NextStep.includes("记忆按容量重组") && p7NextStep.includes("Prototype 在当前表示空间重建")
+  && p7NextStep.includes("已经打通") && p7NextStep.includes("完整机制已经闭合")
+  && p7NextStep.includes("下一页转向") && p7NextStep.includes("论文实验与边界"),
   "P7 must compactly hand off from the completed mechanism to the paper's evidence question.");
 assert.ok(p7NextStep.includes("查看论文证据与边界") && p7NextStep.includes("button") && !p7HandoffMarkup.includes("icarl-question-handoff"),
   "P7 must use its compact page-specific transition instead of the shared three-card handoff.");
@@ -872,6 +888,12 @@ assert.ok(!p7PlaybackControls.includes("查看论文证据与边界"), "P7 must 
 const p6Source = readFileSync(path.join(process.cwd(), "src/pages/PageSix.tsx"), "utf8");
 assert.ok(p6Source.includes('className="p6-handoff" role="status"'), "P6's in-workbench phase feedback must remain distinct from the page-end transition.");
 assert.ok(p6Source.includes('className="p6-next-step"') && !p6Source.includes("<QuestionHandoff"), "P6's page-end transition must be compact and distinct from in-workbench status.");
+assert.ok(p6Source.includes("同一节点对应") && p6Source.includes("对每个节点分别比较"),
+  "P6's target overview must replace the decorative bridge with an explicit node-wise relation.");
+assert.ok(p6Source.includes("本页结论") && p6Source.includes("共享网络因此更新到新的参数状态")
+  && p6Source.includes("新的问题") && p6Source.includes("原先的 Prototype 不能直接照搬")
+  && p6Source.includes("下一页任务") && p6Source.includes("当前表示空间重建"),
+  "P6's final handoff must connect the completed update to the need for current-space memory and prototypes.");
 
 function distanceLines(markup: string): string[] {
   return markup.match(/<line\b[^>]*class="feature-space__distance[^"]*"[^>]*>/g) ?? [];
