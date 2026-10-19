@@ -32,41 +32,43 @@
 .p5-briefing__mobile-diagram { display: none; }
 .p5-briefing__diagram marker path { fill: #6f8f84; }
 .p5-briefing__node rect { fill: #fff; stroke: #ccdcd4; stroke-width: 1.5; }
-.p5-briefing__node text { fill: #36564f; font: 650 16px var(--sans); }
+.p5-briefing__node text { fill: #36564f; font: 650 15px var(--sans); }
 .p5-briefing__node--memory rect { fill: #edf6f0; stroke: #9fc6b1; }
 .p5-briefing__node--incoming rect { fill: #fdf4eb; stroke: #dfbc9f; }
 .p5-briefing__node--dataset rect { fill: #eef5f1; stroke: #94b8a6; stroke-width: 2; }
 .p5-briefing__node--teacher rect { fill: #f6f2eb; stroke: #d8b89c; stroke-width: 2; }
 .p5-briefing__node--snapshot rect { fill: #edf5ef; stroke: #9fc3ad; stroke-width: 2; }
-.p5-briefing__symbol { fill: #2e6655 !important; font: 800 26px var(--mono) !important; }
-.p5-briefing__subscript { fill: #2e6655 !important; font: 750 11px var(--mono) !important; }
-.p5-briefing__subtext { fill: #677b75 !important; font: 500 13px var(--sans) !important; }
+.p5-briefing__symbol { fill: #2e6655 !important; font: 800 24px var(--mono) !important; }
+.p5-briefing__subscript { fill: #2e6655 !important; font: 750 10px var(--mono) !important; }
+.p5-briefing__subtext { fill: #677b75 !important; font: 500 12px var(--sans) !important; }
 .p5-briefing__link { fill: none; stroke: #6f8f84; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .p5-briefing__link--incoming { stroke: #b17b58; }
-.p5-briefing__link-label { fill: #6a7d77; font: 600 14px var(--sans); }
+.p5-briefing__link-label { fill: #6a7d77; font: 650 13px var(--sans); }
 .p5-briefing__response-dots circle { fill: #e5efe8; stroke: #7fa88e; }
 .p5-briefing__response-dots text { fill: #35604e; font: 750 12px var(--mono); }
-.p5-briefing__merge { display: grid; grid-template-columns: minmax(0, 1fr) 58px auto; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid #cfddd6; border-radius: 10px; background: #eef5f1; }
-.p5-briefing__merge-inputs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 7px; min-width: 0; }
+.p5-briefing__merge { display: grid; grid-template-columns: minmax(0, 1fr) 92px minmax(160px, .28fr); align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid #cfddd6; border-radius: 10px; background: #eef5f1; }
+.p5-briefing__merge-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 8px; min-width: 0; }
 .p5-briefing__merge-inputs > span { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 1px 7px; min-width: 0; padding: 7px 9px; border: 1px solid #cdded5; border-radius: 8px; background: #fff; }
 .p5-briefing__merge-inputs > span[data-output="Q"] { border-color: #ddcab9; background: #fffaf5; }
 .p5-briefing__merge-inputs b { color: #2f6554; font: 800 17px var(--mono); }
 .p5-briefing__merge-inputs i { color: #536b64; font-size: 13px; font-style: normal; line-height: 1.35; }
 .p5-briefing__merge-inputs small { grid-column: 2; color: #71827c; font-size: 10px; }
-.p5-briefing__merge-inputs em { color: #7b6c61; font-size: 11px; font-style: normal; font-weight: 700; text-align: center; white-space: nowrap; }
-.p5-briefing__merge > svg { width: 58px; height: 24px; overflow: visible; }
-.p5-briefing__merge > svg path { fill: none; stroke: #9a6c4f; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.p5-briefing__merge > strong { color: #28564d; font-size: 15px; line-height: 1.45; white-space: nowrap; }
+.p5-briefing__merge-bridge { display: grid; justify-items: center; gap: 2px; color: #7b6c61; }
+.p5-briefing__merge-bridge em { font-size: 10px; font-style: normal; font-weight: 750; text-align: center; white-space: nowrap; }
+.p5-briefing__merge-bridge svg { width: 62px; height: 24px; overflow: visible; }
+.p5-briefing__merge-bridge svg path { fill: none; stroke: #9a6c4f; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.p5-briefing__merge > strong { color: #28564d; font-size: 14px; line-height: 1.4; text-align: center; }
 .p5-briefing__footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .p5-briefing__footer p { margin: 0; color: #687b76; font-size: 13px; line-height: 1.5; }
 .p5-briefing__footer p b { margin-right: .5em; color: #46655d; }
 .p5-briefing__footer p span { display: block; margin-top: 2px; color: #7a8984; font-size: 12px; }
 .p5-briefing__footer .icarl-button { flex: 0 0 auto; }
 
-.p5-next-step { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 17px; border: 1px solid #d5e2dc; border-radius: 13px; background: #f1f7f3; }
-.p5-next-step p { display: grid; gap: 3px; margin: 0; color: #465f59; font-size: 14px; line-height: 1.45; }
-.p5-next-step p strong { color: #24584e; font-size: 16px; }
+.p5-next-step { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 14px 17px; border: 1px solid #d5e2dc; border-radius: 13px; background: #f1f7f3; }
+.p5-next-step p { display: grid; gap: 6px; margin: 0; color: #465f59; font-size: 13px; line-height: 1.45; }
+.p5-next-step p strong { color: #24584e; font-size: 14px; }
 .p5-next-step p span { color: #5d726c; }
+.p5-next-step p b { display: inline-block; min-width: 68px; margin-right: 7px; color: #865b41; font: 750 10px var(--mono); letter-spacing: .04em; }
 .p5-next-step .icarl-button { flex: 0 0 auto; }
 
 .p5-workbench {
@@ -245,9 +247,11 @@
   .p5-briefing__merge { grid-template-columns: minmax(0, 1fr); justify-items: stretch; }
   .p5-briefing__merge-inputs { grid-template-columns: minmax(0, 1fr); }
   .p5-briefing__merge-inputs em { white-space: normal; }
-  .p5-briefing__merge > svg { justify-self: center; transform: rotate(90deg); }
+  .p5-briefing__merge-bridge { justify-self: center; }
+  .p5-briefing__merge-bridge svg { transform: rotate(90deg); }
   .p5-briefing__merge > strong { white-space: normal; text-align: center; }
-  .p5-briefing__footer, .p5-next-step { align-items: stretch; flex-direction: column; }
+  .p5-briefing__footer { align-items: stretch; flex-direction: column; }
+  .p5-next-step { grid-template-columns: minmax(0, 1fr); }
   .p5-briefing__footer .icarl-button, .p5-next-step .icarl-button { width: 100%; }
   .p5-workbench { padding: 11px; }
   .p5-flow-board {

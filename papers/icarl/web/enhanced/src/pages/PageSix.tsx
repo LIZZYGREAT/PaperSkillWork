@@ -385,9 +385,13 @@ function P6TargetMap({ sample, targets, outputs, onChooseSample, onInspect, onPl
           </section>
         </div>
 
-        <svg className="p6-preview__merge" viewBox="0 0 74 168" aria-hidden="true"><path d="M2 36h24q14 0 14 18v30m-38 48h24q14 0 14-18V84h27m-9-8 9 8-9 8" /></svg>
+        <div className="p6-preview__relation" aria-label="当前输出 g 与监督目标 r 按同一节点一一对应">
+          <span>g<sub>j</sub> ↔ r<sub>j</sub></span>
+          <small>同一节点对应</small>
+          <svg viewBox="0 0 70 24" aria-hidden="true"><path d="M2 12h61m-8-7 8 7-8 7" /></svg>
+        </div>
         <section className="p6-preview__bce" data-flow-inputs="r,g" aria-label="输出 g 与监督目标 r 在对应节点计算二元交叉熵">
-          <span>03 · 用于监督</span>
+          <span>03 · 对每个节点分别比较</span>
           <b>r<sub>j</sub> 与 g<sub>j</sub></b>
           <strong>BCE<sub>j</sub>(r<sub>j</sub>, g<sub>j</sub>)</strong>
           <small>两条路径在同一节点汇合；损失推动 g 向 r 靠近。</small>
@@ -613,8 +617,9 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     setExploreOutput(value);
   }
 
-  function focusWorkbench() {
-    workbenchRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  function focusWorkbench({ play = false }: { play?: boolean } = {}) {
+    workbenchRef.current?.scrollIntoView({ behavior: play || reducedMotion ? "auto" : "smooth", block: "start" });
+    if (play) window.requestAnimationFrame(playAll);
   }
 
   return <article className="tutorial-page icarl-page icarl-page--p6" data-phase={phase.id} data-sample={sample.id} data-model-loss={modelLoss.toFixed(6)} data-explore-loss={exploreLoss.toFixed(6)} data-explore-output={exploreOutput.toFixed(2)} data-selected-target={targets[selectedNodeIndex].toFixed(3)} data-model-output={outputs[selectedNodeIndex].toFixed(3)}>
@@ -624,7 +629,7 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
       <p>P5 已准备好 D、Q 与真实标签；现在先拆清目标来源，再观察六个节点怎样共享同一条损失与反传路径。</p>
     </header>
 
-    <P6TargetMap sample={sample} targets={targets} outputs={outputs} onChooseSample={chooseSample} onInspect={focusWorkbench} onPlayAll={playAll} reducedMotion={reducedMotion} />
+    <P6TargetMap sample={sample} targets={targets} outputs={outputs} onChooseSample={chooseSample} onInspect={focusWorkbench} onPlayAll={() => focusWorkbench({ play: true })} reducedMotion={reducedMotion} />
 
     <section className="p6-workbench" aria-label="连续增量训练交互工作台" ref={workbenchRef}>
       <div className="p6-workbench__guide">
@@ -658,7 +663,11 @@ export function PageSix({ onContinue }: { onContinue?: () => void }) {
     </section>
     <section className="p6-next-step" aria-label="第 6 页到第 7 页的学习衔接">
       <div className="p6-next-step__state" aria-hidden="true"><b>Θ<sub>before</sub></b><svg viewBox="0 0 54 24"><path d="M2 12h45m-8-7 8 7-8 7" /></svg><b>Θ<sub>after</sub></b><span>P 原图保留</span></div>
-      <p><strong>Q 与标签提供两类 Target，梯度更新共享网络。</strong><span>下一问：模型变了，Prototype 与记忆怎么办？</span></p>
+      <p>
+        <strong><b>本页结论</b>每张图同时受到旧类参考与新类标签的监督，共享网络因此更新到新的参数状态。</strong>
+        <span><b>新的问题</b>模型一旦改变，旧图片的特征位置也可能改变，原先的 Prototype 不能直接照搬。</span>
+        <span><b>下一页任务</b>训练结束后重整保留记忆，并在当前表示空间重建预测所需的类别参考。</span>
+      </p>
       {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>查看训练后的记忆与预测 →</button> : null}
     </section>
   </article>;

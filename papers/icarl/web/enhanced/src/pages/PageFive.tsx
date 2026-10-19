@@ -74,6 +74,8 @@ const MERGE_TRAVEL = 900;
 
 const BATCH_TRAVEL = 260;
 const BATCH_HOLD = 120;
+/** The initial recall card is the page's default display state, not a timed playback segment. */
+const FIRST_VISIBLE_MOTION_CLIP = 1;
 
 /* ---------------------------------------------------------------- subviews --- */
 
@@ -197,7 +199,7 @@ function Nodes({ classIds, kind, responses, activeIndex }: { classIds: readonly 
 function ReplayInputDiagram() {
   return (
     <>
-    <svg className="p5-briefing__diagram p5-briefing__diagram--replay" viewBox="0 0 560 212" role="img" aria-labelledby="p5-replay-diagram-title p5-replay-diagram-desc">
+    <svg className="p5-briefing__diagram p5-briefing__diagram--replay" viewBox="0 0 600 212" role="img" aria-labelledby="p5-replay-diagram-title p5-replay-diagram-desc">
       <title id="p5-replay-diagram-title">P 保留原始 Exemplar，训练副本与新类图片共同组成 D</title>
       <desc id="p5-replay-diagram-desc">持久记忆 P 保留原始 Exemplar。P 的训练副本与新类图片分别沿独立连线汇入训练集 D。</desc>
       <defs>
@@ -206,26 +208,26 @@ function ReplayInputDiagram() {
         </marker>
       </defs>
       <g className="p5-briefing__node p5-briefing__node--memory">
-        <rect x="16" y="20" width="228" height="74" rx="14" />
-        <text x="36" y="64" className="p5-briefing__symbol">P</text>
-        <text x="82" y="51">原始 Exemplar</text>
-        <text x="82" y="75" className="p5-briefing__subtext">持久保留</text>
+        <rect x="16" y="20" width="240" height="74" rx="14" />
+        <text x="38" y="64" className="p5-briefing__symbol">P</text>
+        <text x="88" y="51">原始 Exemplar</text>
+        <text x="88" y="75" className="p5-briefing__subtext">持久保留</text>
       </g>
       <g className="p5-briefing__node p5-briefing__node--incoming">
-        <rect x="16" y="122" width="228" height="74" rx="14" />
-        <text x="34" y="166" className="p5-briefing__symbol">X</text>
-        <text x="57" y="174" className="p5-briefing__subscript">new</text>
-        <text x="103" y="153">新类图片</text>
-        <text x="103" y="177" className="p5-briefing__subtext">本轮完整数据</text>
+        <rect x="16" y="122" width="240" height="74" rx="14" />
+        <text x="36" y="164" className="p5-briefing__symbol">X</text>
+        <text x="59" y="173" className="p5-briefing__subscript">new</text>
+        <text x="106" y="153">新类图片</text>
+        <text x="106" y="177" className="p5-briefing__subtext">本轮完整数据</text>
       </g>
-      <path className="p5-briefing__link" d="M244 57 H316 Q337 57 337 78 V91 H380" markerEnd="url(#p5-replay-arrow)" />
-      <path className="p5-briefing__link p5-briefing__link--incoming" d="M244 159 H316 Q337 159 337 138 V125 H380" markerEnd="url(#p5-replay-arrow)" />
-      <text x="263" y="39" className="p5-briefing__link-label">训练副本</text>
+      <path className="p5-briefing__link" d="M256 57 H327 Q352 57 352 82 V94 H410" markerEnd="url(#p5-replay-arrow)" />
+      <path className="p5-briefing__link p5-briefing__link--incoming" d="M256 159 H327 Q352 159 352 134 V122 H410" markerEnd="url(#p5-replay-arrow)" />
+      <text x="276" y="39" className="p5-briefing__link-label">训练副本</text>
       <g className="p5-briefing__node p5-briefing__node--dataset">
-        <rect x="384" y="70" width="160" height="78" rx="16" />
-        <text x="402" y="116" className="p5-briefing__symbol">D</text>
-        <text x="444" y="103">训练集</text>
-        <text x="444" y="127" className="p5-briefing__subtext">旧副本 + 新图</text>
+        <rect x="414" y="65" width="170" height="82" rx="16" />
+        <text x="436" y="114" className="p5-briefing__symbol">D</text>
+        <text x="482" y="101">训练集</text>
+        <text x="482" y="127" className="p5-briefing__subtext">旧副本 + 新图</text>
       </g>
     </svg>
     <div className="p5-briefing__mobile-diagram" role="img" aria-label="P 保留原始 Exemplar；训练副本与 X new 新类图片分别汇入训练集 D。">
@@ -254,30 +256,30 @@ function TeacherReferenceDiagram() {
         </marker>
       </defs>
       <g className="p5-briefing__node p5-briefing__node--image">
-        <rect x="12" y="64" width="120" height="88" rx="14" />
+        <rect x="12" y="64" width="130" height="88" rx="14" />
         <text x="29" y="105" className="p5-briefing__symbol">D</text>
-        <text x="68" y="100">每张图</text>
+        <text x="72" y="100">每张图</text>
         <text x="28" y="130" className="p5-briefing__subtext">sample ID</text>
       </g>
-      <path className="p5-briefing__link" d="M132 108 H211" markerEnd="url(#p5-teacher-arrow)" />
+      <path className="p5-briefing__link" d="M142 108 H201" markerEnd="url(#p5-teacher-arrow)" />
       <g className="p5-briefing__node p5-briefing__node--teacher">
-        <rect x="215" y="48" width="172" height="124" rx="16" />
-        <text x="235" y="80">冻结 Teacher</text>
-        <text x="235" y="104" className="p5-briefing__subtext">读取更新前响应</text>
+        <rect x="205" y="42" width="190" height="136" rx="16" />
+        <text x="229" y="79">冻结 Teacher</text>
+        <text x="229" y="104" className="p5-briefing__subtext">读取更新前响应</text>
         <g className="p5-briefing__response-dots">
           <circle cx="254" cy="143" r="12" /><circle cx="301" cy="143" r="12" /><circle cx="348" cy="143" r="12" />
           <text x="250" y="148">1</text><text x="297" y="148">2</text><text x="344" y="148">3</text>
         </g>
       </g>
-      <path className="p5-briefing__link" d="M387 108 H466" markerEnd="url(#p5-teacher-arrow)" />
+      <path className="p5-briefing__link" d="M395 108 H454" markerEnd="url(#p5-teacher-arrow)" />
       <g className="p5-briefing__node p5-briefing__node--snapshot">
-        <rect x="470" y="64" width="118" height="88" rx="14" />
-        <text x="487" y="105" className="p5-briefing__symbol">Q</text>
-        <text x="527" y="100">记录行</text>
-        <text x="493" y="130" className="p5-briefing__subtext">同一 ID</text>
+        <rect x="458" y="64" width="130" height="88" rx="14" />
+        <text x="475" y="105" className="p5-briefing__symbol">Q</text>
+        <text x="518" y="100">记录行</text>
+        <text x="475" y="130" className="p5-briefing__subtext">同一 ID</text>
       </g>
-      <text x="137" y="39" className="p5-briefing__link-label">逐张读取</text>
-      <text x="394" y="39" className="p5-briefing__link-label">写入旧类响应</text>
+      <text x="145" y="35" className="p5-briefing__link-label">逐张读取</text>
+      <text x="400" y="35" className="p5-briefing__link-label">写入旧类响应</text>
     </svg>
     <div className="p5-briefing__mobile-diagram p5-briefing__mobile-diagram--teacher" role="img" aria-label="D 中每张图及其 sample ID 经冻结 Teacher 读取更新前旧类响应，再写入 Q 中同一 ID 的一行。">
       <div className="p5-briefing__mobile-node"><b>D</b><span><strong>每张训练图 + sample ID</strong><small>逐张读取</small></span></div>
@@ -320,11 +322,10 @@ function P5Briefing({ onInspect }: { onInspect: () => void }) {
       <div className="p5-briefing__merge" aria-label="D 与 Q 共同交给 P6">
         <div className="p5-briefing__merge-inputs">
           <span data-output="D"><b>D</b><i>同一张图与真标签</i><small>训练内容</small></span>
-          <em>按图片 ID 对齐</em>
           <span data-output="Q"><b>Q</b><i>对应 ID 的旧类响应</i><small>旧节点 soft target 来源</small></span>
         </div>
-        <svg viewBox="0 0 84 28" aria-hidden="true"><path d="M2 5H34Q44 5 44 14M2 23H34Q44 23 44 14H77m-8-7 8 7-8 7" /></svg>
-        <strong>P6 构造 Target</strong>
+        <div className="p5-briefing__merge-bridge"><em>按图片 ID 对齐</em><svg viewBox="0 0 84 28" aria-hidden="true"><path d="M2 5H34Q44 5 44 14M2 23H34Q44 23 44 14H77m-8-7 8 7-8 7" /></svg></div>
+        <strong>下一页：构造监督依据</strong>
       </div>
 
       <footer className="p5-briefing__footer">
@@ -490,6 +491,11 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         return;
       }
       if (reducedMotion) return;
+      if (activePhaseIndex === 0 && state.clipIndex === 0) {
+        setPlayMode("phase");
+        controls.goToClip(FIRST_VISIBLE_MOTION_CLIP, { autoPlay: true });
+        return;
+      }
       if (phaseComplete || state.status === "finished") {
         setPlayMode("phase");
         controls.goToClip(activePhase.startIndex, { autoPlay: true });
@@ -508,7 +514,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
   function playAll() {
     if (reducedMotion) return;
     setPlayMode("all");
-    leaveInspection(() => controls.goToClip(0, { autoPlay: true }));
+    leaveInspection(() => controls.goToClip(FIRST_VISIBLE_MOTION_CLIP, { autoPlay: true }));
   }
 
   return (
@@ -526,6 +532,7 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
         className="p5-workbench"
         aria-label="Replay、训练集 D 与旧响应快照 Q 连续工作台"
         data-clip={clip.id}
+        data-default-display-only={(state.clipIndex === 0).toString()}
         data-kind={clip.kind}
         data-progress={state.progress.toFixed(3)}
         data-status={state.status}
@@ -699,8 +706,12 @@ export function PageFive({ onContinue }: { onContinue?: () => void } = {}) {
       </section>
 
       <section className="p5-next-step" aria-label="第 5 页到第 6 页的学习衔接">
-        <p><strong>D 是训练输入，Q 是冻结的旧行为参考。</strong><span>下一问：它们怎样组成同一个 Student 的两类 Target？</span></p>
-        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>构造六节点 Target →</button> : null}
+        <p>
+          <strong><b>本页结论</b>本轮已备好两份材料：训练图片及其类别信息，以及更新前旧模型对同一批图片的旧类响应。</strong>
+          <span><b>还缺什么</b>材料已经按图片 ID 对齐，但还没有变成模型更新时可以逐节点比较的监督依据。</span>
+          <span><b>下一页问题</b>这两份信息怎样对应到同一张训练图上，告诉每个输出节点应该接近什么？</span>
+        </p>
+        {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>构造各节点 Target →</button> : null}
       </section>
     </article>
   );
