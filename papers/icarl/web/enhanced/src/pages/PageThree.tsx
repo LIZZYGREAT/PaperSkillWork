@@ -1026,7 +1026,11 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
 
       <section className="p3-next-step" aria-label="第 3 页到第 4 页的学习衔接">
         <div className="p3-next-step__visual" aria-hidden="true"><span>μ<sub>y</sub></span><svg viewBox="0 0 56 24"><path d="M2 12h47m-8-7 8 7-8 7" /></svg><i /><i /><i /><i /><i /></div>
-        <p><strong>Prototype 可由有限原图计算，并用于 Query 分类。</strong><span>下一问：有限名额下，这些原图怎样选？</span></p>
+        <p>
+          <strong><b>本页结论</b>Prototype 可由有限原图计算，并用于 Query 分类。</strong>
+          <span><b>还缺什么</b>预测规则假定代表图片已经选好，却没有说明有限名额该留给谁。</span>
+          <span><b>下一页问题</b>怎样选出少量图片，让它们形成的类别参考尽量接近完整数据？</span>
+        </p>
         {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>筛选代表样本 →</button> : null}
       </section>
     </article>

@@ -66,9 +66,10 @@
 .p3-next-step__visual svg { width: 48px; }
 .p3-next-step__visual svg path { fill: none; stroke: #a16d4c; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .p3-next-step__visual > i { width: 9px; height: 9px; border: 1px solid #648b7b; border-radius: 3px; background: #b9d4c7; }
-.p3-next-step p { display: grid; gap: 3px; margin: 0; color: #526b65; font-size: 14px; line-height: 1.45; }
-.p3-next-step p strong { color: #24584e; font-size: 16px; }
+.p3-next-step p { display: grid; gap: 6px; margin: 0; color: #526b65; font-size: 13px; line-height: 1.45; }
+.p3-next-step p strong { color: #24584e; font-size: 15px; }
 .p3-next-step p span { color: #5e726d; }
+.p3-next-step p b { display: inline-block; min-width: 68px; margin-right: 7px; color: #7c5a44; font: 750 10px var(--mono); letter-spacing: .04em; }
 .p3-workbench {
   display: grid;
   /* The diagram, not the chrome, decides the stage height: keep the frame tight so the square

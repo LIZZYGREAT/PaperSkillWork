@@ -1059,7 +1059,7 @@ function P4HerdingMechanism() {
         </li>
       </ol>
 
-      <p className="p4-preview__mechanism-boundary"><b>边界</b>这是逐轮贪心选择：只保证当前轮取 arg min，不保证固定长度下全局最优，也不保证距离每轮下降。输出顺序支持容量缩减时截去尾项、保留前缀。</p>
+      <p className="p4-preview__mechanism-boundary"><b>边界</b>这是<strong>逐轮贪心</strong>选择：只保证当前轮取 arg min，<strong>不保证全局最优</strong>，也不保证距离每轮下降。输出顺序支持容量缩减时截去尾项、<strong>保留前缀</strong>。</p>
     </section>
   );
 }
@@ -1181,8 +1181,8 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
     if (reducedMotion) return;
     setPlayMode("all");
     setManualReviewIndex(null);
+    workbenchRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
     controls.goToClip(0, { autoPlay: true });
-    requestAnimationFrame(focusWorkbench);
   }
 
   return (
@@ -1389,7 +1389,11 @@ export function PageFour({ onContinue }: { onContinue?: () => void } = {}) {
 
       <section className="p4-next-step" aria-label="第 4 页到第 5 页的学习衔接">
         <div className="p4-next-step__list" aria-hidden="true"><span>p₁</span><span>p₂</span><span>p₃</span><span>p₄</span><svg viewBox="0 0 52 24"><path d="M2 12h43m-8-7 8 7-8 7" /></svg><b>D</b></div>
-        <p><strong>Herding 产生可截短的有序代表列表。</strong><span>下一问：新类到来，旧图怎样继续参与训练？</span></p>
+        <p>
+          <strong><b>本页结论</b>Herding 得到的是有顺序、可裁剪的代表列表。</strong>
+          <span><b>还缺什么</b>只把旧类图片留在记忆中还不够；新类到来后，模型仍要继续更新参数。</span>
+          <span><b>下一页问题</b>旧类记忆怎样重新进入训练，而不只用于预测？</span>
+        </p>
         {onContinue ? <button type="button" className="icarl-button icarl-button--primary" onClick={onContinue}>让 Exemplars 参与更新 →</button> : null}
       </section>
     </article>
