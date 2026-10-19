@@ -1,36 +1,16 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { PageOne } from "./pages/PageOne";
-import { PageTwo } from "./pages/PageTwo";
-import { PageThree } from "./pages/PageThree";
-import { PageFour } from "./pages/PageFour";
-import { PageFive } from "./pages/PageFive";
-import { PageSix } from "./pages/PageSix";
-import { PageSeven } from "./pages/PageSeven";
-import { PageEight } from "./pages/PageEight";
-import { PageNine } from "./pages/PageNine";
 import { ICARL_REFERENCE_ITEMS, type ReferenceOpenEvent } from "./data/icarl-reference-content";
+import { pages, type PageId } from "./data/tutorial";
+import { widgetRegistry } from "./modules/registry";
 import { ReferenceHub } from "./shared/core/reference";
 import { useFocusTrap } from "./shared/foundation/accessibility/useReducedMotion";
-
-type PageId = "page-1" | "page-2" | "page-3" | "page-4" | "page-5" | "page-6" | "page-7" | "page-8" | "page-9";
-
-const pages: { id: PageId; number: string; title: string; subtitle: string }[] = [
-  { id: "page-1", number: "01", title: "类别增量学习", subtitle: "类别随时间逐批加入" },
-  { id: "page-2", number: "02", title: "图像与特征表示", subtitle: "打开模型内部路径" },
-  { id: "page-3", number: "03", title: "原型分类", subtitle: "类均值与最近距离" },
-  { id: "page-4", number: "04", title: "代表样本的筛选与管理", subtitle: "Herding、前缀与固定预算" },
-  { id: "page-5", number: "05", title: "让 Exemplars 参与后续更新", subtitle: "训练集 D 与 response Q" },
-  { id: "page-6", number: "06", title: "训练信号与参数更新", subtitle: "六节点 BCE 与梯度路径" },
-  { id: "page-7", number: "07", title: "训练后记忆与预测", subtitle: "P_after 与当前原型" },
-  { id: "page-8", number: "08", title: "实验与边界", subtitle: "整体效果·机制证据·记忆边界" },
-  { id: "page-9", number: "09", title: "iCaRL 一次增量学习的完整逻辑", subtitle: "从上一轮状态出发，追踪训练准备、更新、记忆、预测与交接" },
-];
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>("page-1");
   const [pageInstanceKey, setPageInstanceKey] = useState(0);
   const [referenceOpen, setReferenceOpen] = useState(false);
   const activePageInfo = pages.find((page) => page.id === activePage)!;
+  const ActivePage = widgetRegistry[activePage];
   const closeReference = useCallback(() => setReferenceOpen(false), []);
   const referenceDialogRef = useFocusTrap<HTMLElement>(referenceOpen, closeReference);
 
@@ -82,15 +62,7 @@ export default function App() {
           <div className="icarl-topbar__actions"><button type="button" className="icarl-hub-launch" aria-haspopup="dialog" aria-expanded={referenceOpen} onClick={() => setReferenceOpen(true)}><span aria-hidden="true">⌕</span> Reference Hub</button><span className="ewc-topbar__edition"><i /> W9 · 交互式教程</span></div>
         </header>
         <main className="tutorial-main ewc-main" id="top" key={pageInstanceKey}>
-          {activePage === "page-1" ? <PageOne onOpenPageTwo={() => navigateToPage("page-2")} /> : null}
-          {activePage === "page-2" ? <PageTwo onOpenPageThree={() => navigateToPage("page-3")} /> : null}
-          {activePage === "page-3" ? <PageThree onContinue={() => navigateToPage("page-4")} /> : null}
-          {activePage === "page-4" ? <PageFour onContinue={() => navigateToPage("page-5")} /> : null}
-          {activePage === "page-5" ? <PageFive onContinue={() => navigateToPage("page-6")} /> : null}
-          {activePage === "page-6" ? <PageSix onContinue={() => navigateToPage("page-7")} /> : null}
-          {activePage === "page-7" ? <PageSeven onContinue={() => navigateToPage("page-8")} /> : null}
-          {activePage === "page-8" ? <PageEight onContinue={() => navigateToPage("page-9")} /> : null}
-          {activePage === "page-9" ? <PageNine onExit={() => navigateToPage("page-8")} /> : null}
+          <ActivePage navigateToPage={navigateToPage} />
         </main>
         <footer className="site-footer ewc-footer"><span>iCaRL · 论文教学页面</span><span>第 01 · 02 · 03 · 04 · 05 · 06 · 07 · 08 · 09 页</span></footer>
       </div>

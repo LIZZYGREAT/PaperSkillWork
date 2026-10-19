@@ -1206,7 +1206,8 @@ assert.ok(p9Css.includes(".p9-step:nth-of-type(even) .p9-step__copy, .p9-step:nt
 assert.ok(p9Css.includes("@media (prefers-reduced-motion: reduce)"), "P9 must honor the reduced-motion preference.");
 assert.match(p9Css, /\.p9-prototype-roster small \{[^}]*font: 11px var\(--mono\)/, "P9 Prototype member IDs must remain at least 11px when shown.");
 assert.ok(p9Markup.includes('Q ∈ ℝ<sup class="p9-q-formula__exponent">30×3</sup>'), "P9 Q shape must use a typographic real-number symbol and superscript.");
-assert.ok(appSource.includes('title: "iCaRL 一次增量学习的完整逻辑"') && !appSource.includes("ewc-app--runtime"), "P9 navigation must match the new title and use the shared app shell.");
+const tutorialSource = readFileSync(path.join(process.cwd(), "src/data/tutorial.ts"), "utf8");
+assert.ok(tutorialSource.includes('title: "iCaRL 一次增量学习的完整逻辑"') && !appSource.includes("ewc-app--runtime"), "P9 navigation must match the new title and use the shared app shell.");
 assert.ok(p9PageEightSource.includes("下一页：一次增量学习的完整逻辑"), "P8 must lead into the redesigned P9 reading flow.");
 assert.ok(Array.isArray(p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved")?.states), "Visual QA must cover the eight-group reading flow and local replays.");
 const p9QaPage = p9VisualQa.pages.find((page: { id: string }) => page.id === "icarl-p9-interleaved");
@@ -1228,6 +1229,39 @@ for (const stateId of [
   "p9-prediction-100-static-result",
 ]) assert.ok(p9QaStateIds.has(stateId), `Visual QA must keep the P9 checkpoint ${stateId}.`);
 assert.doesNotMatch(p9QaText, /p9-chapter|p9-transport|p9-play/, "P9 visual QA must not target removed playback controls.");
+/* --------------------------------------------------- official W10 adapter --- */
+
+const registrySource = readFileSync(path.join(process.cwd(), "src/modules/registry.tsx"), "utf8");
+const mainSource = readFileSync(path.join(process.cwd(), "src/main.tsx"), "utf8");
+const viteSource = readFileSync(path.join(process.cwd(), "vite.config.ts"), "utf8");
+const paperCss = readFileSync(path.join(process.cwd(), "src/styles/paper.css"), "utf8");
+const globalCss = readFileSync(path.join(process.cwd(), "src/styles.css"), "utf8");
+const expectedPageIds = Array.from({ length: 9 }, (_, index) => `page-${index + 1}`);
+const tutorialComponentIds = [...new Set([...tutorialSource.matchAll(/componentId:\s*"(page-\d+)"/g)].map((match) => match[1]))];
+const registryPageIds = [...registrySource.matchAll(/widgetRegistry\["(page-\d+)"\]\s*=/g)].map((match) => match[1]);
+
+assert.deepEqual(tutorialComponentIds, expectedPageIds, "The official tutorial manifest must expose each of the nine pages exactly once.");
+assert.deepEqual(registryPageIds, expectedPageIds, "The widget registry must contain exactly the nine tutorial components.");
+assert.match(tutorialSource, /kind:\s*"chapter"/, "The official tutorial manifest must contain a real chapter.");
+assert.match(tutorialSource, /kind:\s*"module"/, "The official tutorial manifest must derive a module for every page.");
+assert.match(tutorialSource, /kind:\s*"scene"/, "The official tutorial manifest must derive a scene for every page.");
+assert.match(appSource, /import \{ pages, type PageId \} from "\.\/data\/tutorial"/, "App must read navigation from the official tutorial source.");
+assert.match(appSource, /import \{ widgetRegistry \} from "\.\/modules\/registry"/, "App must use the official widget registry.");
+assert.match(appSource, /<ActivePage navigateToPage=\{navigateToPage\} \/>/, "App must render the active page through the registry.");
+assert.doesNotMatch(appSource, /import \{ Page(?:One|Two|Three|Four|Five|Six|Seven|Eight|Nine) \}/, "App must not maintain a second direct page registry.");
+
+const expectedNavigationTargets = ["page-2", "page-3", "page-4", "page-5", "page-6", "page-7", "page-8", "page-9", "page-8"];
+for (const [index, target] of expectedNavigationTargets.entries()) {
+  const sourceId = `page-${index + 1}`;
+  const entryPattern = new RegExp(`widgetRegistry\\["${sourceId}"\\][\\s\\S]*?navigateToPage\\("${target}"\\)`);
+  assert.match(registrySource, entryPattern, `${sourceId} must retain its expected navigation target ${target}.`);
+}
+
+assert.ok(mainSource.includes('import "./styles/paper.css"'), "The official paper stylesheet must be loaded by the application.");
+assert.ok(paperCss.includes("--mono:") && paperCss.includes("--math:") && paperCss.includes("--radius:"), "paper.css must own real iCaRL style variables.");
+assert.ok(!globalCss.includes(":root { --mono:"), "The variables moved to paper.css must not remain duplicated in styles.css.");
+assert.match(viteSource, /base:\s*"\.\/"/, "The Vite build must retain its relative base for official subpath deployment.");
+
 /* ---------------------------------------------------------------- report --- */
 
 console.log(
