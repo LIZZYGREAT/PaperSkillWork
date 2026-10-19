@@ -17,7 +17,7 @@ paper:
   source_hash: 95b31caf45ddcef315e35f7111f5cd3de2b27affd6b8f83a0675ec5620819ca7
 workflow:
   version: 3
-  current_stage: W9
+  current_stage: W10
   stages:
     W0_source_intake:
       status: complete
@@ -50,7 +50,9 @@ workflow:
       status: complete
       completed_by: automation
     W9_final_audit:
-      status: pending
+      status: complete
+      reviewed_by: 用户（本次对话）
+      note: 用户于2026-10-19确认教程没有问题，并明确要求将W9登记为complete。
     W10_upstream_preflight:
       status: pending
 artifacts:
