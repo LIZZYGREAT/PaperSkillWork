@@ -2,7 +2,7 @@ schema_version: 3
 id: icarl
 title: 'iCaRL: Incremental Classifier and Representation Learning'
 paper:
-  url: http://arxiv.org/abs/1611.07725
+  url: https://arxiv.org/abs/1611.07725
   arxiv_id: arXiv:1611.07725
   authors:
   - Sylvestre-Alvise Rebuffi
