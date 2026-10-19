@@ -89,4 +89,3 @@ export const HERDING_DEMO_ROUNDS: readonly HerdingDemoRound[] = (() => {
 })();
 
 export const HERDING_DEMO_ORDER = HERDING_DEMO_ROUNDS.map((round) => round.chosen);
-

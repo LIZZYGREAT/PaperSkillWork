@@ -1036,4 +1036,3 @@ export function PageThree({ onContinue }: { onContinue?: () => void } = {}) {
     </article>
   );
 }
-
