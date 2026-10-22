@@ -38,7 +38,7 @@ The W6 CLI gate checks the configured release source's required entrypoints and 
 
 ### Confirm the current official checker revision
 
-Use the adjacent PaperSkill checkout only; do not clone, switch branches, reset, or overwrite it. A fetch updates Git references but not files, and is attempted only after confirming the checkout is clean and its `upstream` fetch URL is the official ReductTech repository. For a PowerShell session from PaperSkillWork root:
+Use the adjacent PaperSkill checkout only; do not clone, switch branches, reset, restore, or overwrite it. `git fetch upstream main` updates Git references but not the worktree, so unrelated local changes do not prevent the version check. For a PowerShell session from PaperSkillWork root:
 
 ```powershell
 $PaperSkill = (Resolve-Path ..\PaperSkill).Path
@@ -47,44 +47,57 @@ git -C $PaperSkill status --short --branch
 $UpstreamUrlOutput = git -C $PaperSkill remote get-url upstream 2>$null
 $RemoteExit = $LASTEXITCODE
 $UpstreamUrl = if ($RemoteExit -eq 0) { ($UpstreamUrlOutput -join '').Trim() } else { '' }
-$OfficialUrls = @('git@github.com:ReductTech/PaperSkill.git', 'https://github.com/ReductTech/PaperSkill.git')
+$OfficialRemotePattern = '^(?:git@github\.com:|https://github\.com/|ssh://git@github\.com(?::22)?/|ssh://git@ssh\.github\.com:443/)ReductTech/PaperSkill(?:\.git)?/?$'
+$IsOfficialRemote = $UpstreamUrl -match $OfficialRemotePattern
 $HeadBefore = (git -C $PaperSkill rev-parse HEAD).Trim()
 $HeadExit = $LASTEXITCODE
-$Dirty = git -C $PaperSkill status --porcelain
+$WorktreeStatus = git -C $PaperSkill status --short --branch
 $StatusExit = $LASTEXITCODE
+$WorktreeStatus
 $Scripts = @('paper-skill/scripts/syntax-check.js', 'paper-skill/scripts/validate-output.js')
-$LocalScriptsPresent = $true
+$ScriptsMatch = $true
 foreach ($Script in $Scripts) {
-    if (!(Test-Path (Join-Path $PaperSkill $Script))) { $LocalScriptsPresent = $false }
+    $LocalScript = Join-Path $PaperSkill $Script
+    if (!(Test-Path -LiteralPath $LocalScript -PathType Leaf)) {
+        $ScriptsMatch = $false
+        continue
+    }
 }
-if ($UpstreamUrl -notin $OfficialUrls -or $RemoteExit -ne 0 -or $HeadExit -ne 0 -or $StatusExit -ne 0 -or $Dirty -or !$LocalScriptsPresent) {
-    Write-Warning 'Current official checker revision NOT_RUN: verify the remote and clean working tree first.'
+if (!$IsOfficialRemote -or $RemoteExit -ne 0 -or $HeadExit -ne 0 -or $StatusExit -ne 0 -or !$ScriptsMatch) {
+    Write-Warning 'Current official checker revision NOT_RUN: verify the exact official remote, HEAD/status commands, and both local checker files.'
 } else {
     git -C $PaperSkill fetch upstream main
-    if ($LASTEXITCODE -ne 0) {
+    $FetchExit = $LASTEXITCODE
+    if ($FetchExit -ne 0) {
         Write-Warning 'Current official checker revision NOT_RUN: record the fetch/network error; do not reuse a cached SHA as current.'
     } else {
         $HeadSha = (git -C $PaperSkill rev-parse HEAD).Trim()
         $HeadExit = $LASTEXITCODE
         $MainSha = (git -C $PaperSkill rev-parse upstream/main).Trim()
         $MainExit = $LASTEXITCODE
-        $Present = $LocalScriptsPresent -and $HeadExit -eq 0 -and $MainExit -eq 0 -and $HeadSha -eq $HeadBefore
+        $ScriptsMatch = $true
         foreach ($Script in $Scripts) {
-            git -C $PaperSkill cat-file -e "upstream/main:$Script" 2>$null
-            if ($LASTEXITCODE -ne 0) { $Present = $false }
+            $LocalScript = Join-Path $PaperSkill $Script
+            $UpstreamBlob = (git -C $PaperSkill rev-parse "upstream/main:$Script" 2>$null).Trim()
+            $UpstreamBlobExit = $LASTEXITCODE
+            $WorkingBlob = (git -C $PaperSkill hash-object "--path=$Script" -- $LocalScript).Trim()
+            $WorkingBlobExit = $LASTEXITCODE
+            if ($UpstreamBlobExit -ne 0 -or $WorkingBlobExit -ne 0 -or $UpstreamBlob -ne $WorkingBlob) {
+                $ScriptsMatch = $false
+            }
         }
-        git -C $PaperSkill diff --quiet upstream/main -- $Scripts
-        $ScriptsMatch = $LASTEXITCODE -eq 0
-        if (!$Present -or !$ScriptsMatch) {
-            Write-Warning 'Current official compatibility NOT_RUN: local checker files are missing or differ from upstream/main.'
+        $HeadAfterFetch = (git -C $PaperSkill rev-parse HEAD).Trim()
+        $HeadAfterExit = $LASTEXITCODE
+        if ($HeadExit -ne 0 -or $MainExit -ne 0 -or $HeadAfterExit -ne 0 -or $HeadSha -ne $HeadBefore -or $HeadAfterFetch -ne $HeadBefore -or !$ScriptsMatch) {
+            Write-Warning 'Current official compatibility NOT_RUN: HEAD changed, a checker is absent, or a local checker blob differs from upstream/main.'
         } else {
-            "HEAD=$HeadSha upstream/main=$MainSha; both checker files match upstream/main"
+            "HEAD=$HeadSha upstream/main=$MainSha fetchExit=$FetchExit; both working-tree checker blobs match upstream/main"
         }
     }
 }
 ```
 
-If the checkout is on a personal branch, the exact files that will be executed still must match the successfully fetched `upstream/main` scripts. A mismatch, dirty checker file, absent script, or failed/unavailable fetch means the current-upstream `UPSTREAM_SYNTAX` and `UPSTREAM_OUTPUT` statuses are NOT_RUN; an older SHA may be noted only as the local diagnostic revision. Record the actual fetch error, HEAD/SHA (if known), `node --version`, file comparison, commands, exit codes, and evidence in the existing implementation plan/final-check. Never checkout/reset to force a match.
+The URL expression is anchored to GitHub's `ReductTech/PaperSkill` path and accepts canonical SCP SSH, HTTPS with/without `.git`, `ssh://git@github.com` (default/22), and GitHub's `ssh.github.com:443` form; it rejects lookalike hosts or paths. A dirty unrelated file does not block `fetch`, but each exact script that will execute must exist and its Git-cleaned working-tree blob must equal the successfully fetched `upstream/main` blob. A missing or modified checker, failed status/HEAD command, unexpected HEAD change, or failed/unavailable fetch means affected current-upstream statuses `UPSTREAM_SYNTAX` and `UPSTREAM_OUTPUT` are NOT_RUN; cached SHA may be noted only as a local diagnostic revision. Record the actual remote, worktree status, fetch error/exit code, HEAD/upstream SHAs, `node --version`, script blob comparison, commands, and evidence in the existing implementation plan/final-check. Never checkout/reset/restore to force a match.
 
 ## W7: Human Learning Review
 
