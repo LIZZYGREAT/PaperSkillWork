@@ -645,6 +645,7 @@ def cmd_paths(args: argparse.Namespace) -> int:
         "implementation_plan": "papers/{}/design/implementation-plan.md".format(args.paper_id),
         "final_check": "papers/{}/audit/final-check.md".format(args.paper_id),
         "enhanced": "papers/{}/web/enhanced".format(args.paper_id),
+        "publish_source": str(resolve_upstream_source(folder, config).resolve()),
     }
     web = config.get("web", {})
     if isinstance(web, dict) and web.get("final"):

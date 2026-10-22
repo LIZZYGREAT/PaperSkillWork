@@ -212,12 +212,15 @@ def test_release_check_reports_v3_stage_blockers(tmp_path):
 def test_paths_emits_only_configured_v3_paths(tmp_path):
     root = make_project(tmp_path)
     assert create_paper(root).returncode == 0
-    result = invoke(root, "paths", "demo-paper", "--json")
+    env = dict(os.environ)
+    env.update({"GIT_CONFIG_GLOBAL": str(tmp_path / "missing.gitconfig"), "GIT_CONFIG_NOSYSTEM": "1"})
+    result = invoke(root, "paths", "demo-paper", "--json", env=env)
     assert result.returncode == 0, result.stderr
     values = json.loads(result.stdout)
     assert values["source_cache"] == "papers/demo-paper/source-cache"
     assert values["learning_spine"] == "papers/demo-paper/design/learning-spine.md"
     assert values["enhanced"] == "papers/demo-paper/web/enhanced"
+    assert values["publish_source"] == str((root / "papers/demo-paper/web/enhanced").resolve())
     assert "final" not in values
     assert "release_output" not in values
     assert "canonical" not in values
@@ -228,6 +231,8 @@ def test_paths_adds_configured_final_and_release_output(tmp_path):
     root = make_project(tmp_path)
     assert create_paper(root).returncode == 0
     path, config = load_paper(root)
+    final_source = root / "papers/demo-paper/web/final"
+    final_source.mkdir(parents=True)
     config["web"]["final"] = "web/final"
     config["release"] = {
         "upstream_paper_name": "demo_paper",
@@ -239,7 +244,22 @@ def test_paths_adds_configured_final_and_release_output(tmp_path):
     assert result.returncode == 0, result.stderr
     values = json.loads(result.stdout)
     assert values["final"] == "papers/demo-paper/web/final"
+    assert values["publish_source"] == str(final_source.resolve())
     assert values["release_output"] == "html_output/demo_paper/ada0926"
+
+
+def test_paths_reports_missing_configured_final_instead_of_falling_back(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    config_path, config = load_paper(root)
+    config["web"]["final"] = "web/final"
+    save_paper(config_path, config)
+
+    result = invoke(root, "paths", "demo-paper", "--json")
+
+    assert result.returncode != 0
+    assert result.stdout == ""
+    assert "configured web.final source is missing: web/final" in result.stderr
 
 
 def test_release_info_reads_metadata_and_contributor_profile_without_side_effects(tmp_path):

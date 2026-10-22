@@ -6,9 +6,9 @@ See `design/implementation-plan.md` for the first-slice review and any revision 
 
 ## W8 Final-Source Compatibility Summary
 
-Record the exact final source path resolved by `python tools/paper.py release-info <paper-id> --json`; it must match the W8 record in `design/implementation-plan.md` and the source intended for W10. If the source changed after W8, rerun affected checks and inspect the updated page before accepting W9. Include the adjacent PaperSkill checker revision and exact commands/evidence; warning interpretation belongs in the notes.
+Record the exact final source path from the absolute `publish_source` field in `python tools/paper.py paths <paper-id> --json`; it must match the W8 record in `design/implementation-plan.md` and the source intended for W10. If the source changed after W8, rerun affected checks and inspect the updated page before accepting W9. Include the adjacent PaperSkill checker revision and exact commands/evidence; warning interpretation belongs in the notes.
 
-Final source path (`release-info.source`):
+Final source path (`paths.publish_source`, absolute):
 
 PaperSkill checker revision / tool version:
 

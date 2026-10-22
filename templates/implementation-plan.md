@@ -21,9 +21,9 @@ Record the latest confirmed W4/W5 decisions here. Keep this as the single projec
 
 ### Upstream Delivery Compatibility (W5)
 
-Record one concise project-level check here; do not repeat mappings for every page. Resolve the actual source from `paper.yaml` / `python tools/paper.py release-info <paper-id> --json`. Check the real React/Vite delivery structure, `tutorial.ts` metadata and any actual `componentId` registration, Vite `base` and subpath-safe asset references, and unusual dependencies, browser APIs, network requests, or build plugins. Note the checked official PaperSkill main revision/evidence and whether the adjacent checkout is current; a stale checker cannot establish current compatibility. Generator-only visual conventions are not automatically requirements for a custom page.
+Record one concise project-level check here; do not repeat mappings for every page. Resolve the actual source using `python tools/paper.py paths <paper-id> --json` and record the absolute `publish_source` field; it uses the shared Final-first/Enhanced-fallback resolver and does not read contributor profile data. Check the real React/Vite delivery structure, `tutorial.ts` metadata and any actual `componentId` registration, Vite `base` and subpath-safe asset references, and unusual dependencies, browser APIs, network requests, or build plugins. Note the checked official PaperSkill main revision/evidence and whether the adjacent checkout is current; a stale checker cannot establish current compatibility. Generator-only visual conventions are not automatically requirements for a custom page.
 
-- Final source path (`release-info.source`):
+- Final source path (`paths.publish_source`, absolute):
 - Required entrypoints and real tutorial metadata/registration:
 - Vite base, static assets, and subpath risks:
 - Special dependencies, APIs, network access, or build plugins and compatibility:
@@ -101,7 +101,7 @@ Check applicable patterns before inventing a new interaction: Architecture Explo
 
 Name the first 2–3 spine stages included where that range fits the content, the smallest end-to-end cognitive progression a learner can genuinely experience, included source figures, and what can be reviewed without implementing the rest. The slice should carry the reader from a perceived problem through an introduced mechanism to an observable conclusion and a natural next question, not merely collect clickable components.
 
-In the existing W6-scope command/results history below, record `UPSTREAM_SYNTAX` and `UPSTREAM_OUTPUT` as PASS / FAIL / NOT_RUN alongside the slice build and browser checks. Invoke the official upstream syntax checker with `--require-parser` and output validator directly against the real configured source; preserve and explain warnings, and do not add fake chapters or registrations to silence partial-slice warnings. If the source, adjacent PaperSkill checkout, or parser is unavailable, record `UPSTREAM_SOURCE_CHECK=NOT_RUN` plus the reason. W8 must rerun the checks on the final source.
+In the existing W6-scope command/results history below, record `UPSTREAM_SYNTAX` and `UPSTREAM_OUTPUT` as PASS / FAIL / NOT_RUN alongside the slice build and browser checks. Invoke the official upstream syntax checker with `--require-parser` and output validator directly against the absolute `publish_source` from `python tools/paper.py paths <paper-id> --json`; preserve and explain warnings, and do not add fake chapters or registrations to silence partial-slice warnings. If the source, adjacent PaperSkill checkout, or parser is unavailable, record `UPSTREAM_SOURCE_CHECK=NOT_RUN` plus the reason. W8 must rerun the checks on the final source.
 
 ### Vertical Slice Review (W7)
 
@@ -127,7 +127,7 @@ If a review is REVISE, retain that decision in this history. Record the affected
 
 List the remaining CORE stages to complete. List compact placements for SUPPORTING material and the Reference Hub/advanced locations for REFERENCE. Confirm DELETE items stay out. Identify the complete-algorithm integration scene and the semantic moments, state assertions, representative initial/intermediate/final views, and handoff checks needed to verify it against W2 and W4.
 
-Resolve the final source path from `release-info.source`; it must be the same source intended for W10. Install that source's dependencies from its existing lockfile before checks (`npm ci` when it has a package lock); the official syntax checker discovers TypeScript/esbuild under the target source. Record the actual PaperSkill checker revision, commands, tool versions, and log/evidence locations. Rerun source checks after any later source change.
+Resolve the final source path from the absolute `publish_source` field in `python tools/paper.py paths <paper-id> --json`; it must be the same source intended for W10. Install that source's dependencies from its existing lockfile before checks (`npm ci` when it has a package lock); the official syntax checker discovers TypeScript/esbuild under the target source. Record the actual PaperSkill checker revision, commands, tool versions, and log/evidence locations. Rerun source checks after any later source change.
 
 | W8 check | Status (PASS / FAIL / NOT_RUN) | Actual command, tool version, evidence/log, and notes |
 | --- | --- | --- |
