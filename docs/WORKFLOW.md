@@ -6,7 +6,7 @@
 
 W 阶段描述的是制作流程，不是固定的章节提纲。只有 W6 才开始编写教程页面代码。W2、W4、W7、W9 需要人工进行语义评审；W0、W1、W3、W5、W6、W8 通过结构检查后自动完成。W10 由使用者在 PaperSkill 中完成官方发布流程后记录。结构检查不能证明教程具备良好的教学效果。
 
-W4/W5 的叙事与表达规则见通用教学设计规范（TEACHING_DESIGN_STANDARD.md）；实际页面的浏览器验收见 Visual QA 规范（VISUAL_QA.md）。以下 W0–W10 阶段和机器可读 schema 保持不变。
+本文定义 W0–W10 的阶段契约和状态门禁；各阶段的具体执行步骤见 [任务对应的 Skill](../AGENTS.md#task-routes)。教学逻辑与示例规则见 [TEACHING_DESIGN_STANDARD.md](TEACHING_DESIGN_STANDARD.md)，网页浏览器检查见 [VISUAL_QA.md](VISUAL_QA.md)。本次文档整理不改变阶段或机器可读 schema。
 
 ## W0–W10 一览
 
@@ -74,99 +74,31 @@ source-cache/
 
 ## W4：信息优先级与学习主线
 
-对于每个 CORE 阶段，人工审查时确认读者先前已知什么、当前缺口是什么、为何引入下一机制、机制中什么发生变化，以及页面上可观察到什么并如何引出下一问题。这是检验因果衔接的提问，不是强制页面字段。术语只在读者确实需要命名或理解相关对象时引入，并指定一个主要教学位置。
-
-学习主线是一条因果/运行过程路径，不是论文目录，也不要求固定章节数。常见结构如下：
-
-```text
-问题 → 既有方法为何不足 → 核心思想 → 系统架构
-→ 信息/状态流 → 训练/推理 → 证据 → 局限
-```
-
-请根据论文调整结构，并保持主线连贯。优先级矩阵应遵守：
-
-- `CORE` 必须安排在主线的某个阶段。
-- `SUPPORTING` 用简洁的行内说明、简短交互、悬停提示或可展开细节呈现。
-- `REFERENCE` 放入 `Reference Hub`、悬停提示、实现说明或进阶详情，不应成为主线场景。
-- `DELETE` 直接省略，即使内容本身正确。
-
-不要为了凑章节而重复解释核心内容。检查器可以发现重复的项目 ID；语义上是否重复仍需人工判断。
+人工确认一条因果/运行过程主线，并为每个内容项分配唯一优先级：`CORE`、`SUPPORTING`、`REFERENCE` 或 `DELETE`。CORE 必须安排在主线上，SUPPORTING 保持精简，REFERENCE 位于主线之外，DELETE 省略。W4 的审查契约与具体步骤见 [TEACHING_DESIGN_STANDARD.md](TEACHING_DESIGN_STANDARD.md) 和 `learning-architecture` Skill；此处不规定章节数或页面字段。
 
 ## W5：交互规划
 
-在现有 implementation-plan 中记录本次设计交接：文字、图形、交互和动画各自承担什么任务；读者改变什么以及观察到什么；页面、状态和视口的验收范围；已确认的不变量、可自行调整项、未确认的取舍和受影响区域。高风险动画需列出关键状态及对象/连接关系。已有页面或用户提供的已确认设计是约束，不因“优化”之名重做。不要为同一决定新建平行合同；实际渲染检查按 VISUAL_QA.md 执行。
+W5 把已确认的学习主线交接为现有 `design/implementation-plan.md`，其具体设计步骤见 `implementation-plan` Skill。`implementation:` 下的 YAML 代码块是唯一机器可读计划：每个 CORE 恰好映射一次，每个 SUPPORTING 有精简位置，REFERENCE 位于主线之外，DELETE 不进入实现；证据与阶段引用必须能解析。
 
-先判断文字、表格或论文原图是否已经足够。只有当空间或时间关系确实难以用文字理解时，才设计可视化。不要仅仅因为某个标量能用滑块调节，就把它扩展成大型实验台。每个 CORE 项目只能在一个实现阶段中指定一个 `primary_vehicle`；深入内容放入参考区。
-
-`design/implementation-plan.md` 中 `implementation:` 下的 YAML 代码块是唯一的机器可读计划。它要求每个 CORE 恰好映射一次、每个 SUPPORTING 都有简洁呈现位置、每个 REFERENCE 都位于主线之外，并且不包含 DELETE。证据引用必须能解析；阶段 ID 必须存在于学习主线（Learning Spine）。`vertical_slice.stages` 和 `required_core_items` 定义 W6 的覆盖检查。选用的素材也必须指定阶段和渲染方式。
-
-如有适用模式，先查阅可复用模式库：Architecture Explorer、Flow Stepper、Branch Highlighter、Before/After Comparator、Timeline、Evidence Viewer、Term Hover、Reference Hub、Expandable Detail 或 Result Protocol Card。将选中的源代码复制或改编到 `web/enhanced/src/`，使每个导出项目都自包含；不要跨论文导入运行时代码。
-
-PaperSkillWork 内的 `reusable-kit/registry.yaml` 是可用模式名称的登记来源。`implementation.stages[].reusable_pattern` 为非空字符串时，W5 检查器会拒绝未登记的名称；不使用可复用模式时填写 `null`。持续学习工作区可在 W5/W6 复制默认组件，再按计划加入可选组件：
-
-```powershell
-python tools/paper.py scaffold-kit <paper-id> --preset continual-learning --add EvidenceViewer,BenchmarkExplorer
-```
-
-脚手架命令只在 `web/enhanced/src/shared/` 不存在时创建自包含副本。W5 明确选择 P1 可选组件后，在同一次调用中使用 `--add`；之后修改论文副本不会反向改写 Kit。
-
-建议提供 `Reference Hub` 和术语悬停解释。悬停内容应回答：术语是什么、它在本文中的作用是什么、以及容易与什么概念混淆。主线必需的推理应直接展示在主路径中。
+`vertical_slice.stages` 与 `required_core_items` 定义 W6 覆盖范围；选用的素材须映射到 Learning Spine 阶段或 Reference Hub 并指定渲染方式。可复用模式名称必须登记于 `reusable-kit/registry.yaml`，使用和复制边界见 [`docs/reusable-kit.md`](reusable-kit.md)。
 
 ### 上游要求处理
 
 W5 不再要求所有项目手写章节/模块映射表。先按真实学习主线设计页面；如已确认的教学设计与目标 PaperSkill 契约出现具体冲突，只在现有 design/implementation-plan.md 记录该冲突和待决选项。上游章节和模块是否合规，以正式预检时的官方校验器及 paper-skill/contract.md 为准，不在本仓库复制一套数量门槛。
 
-新建网页时模板直接提供完整的 React/Vite 源入口。src/data/tutorial.ts 由真实页面实现同步填充；自定义 App 可以直接渲染页面，不需要虚构 componentId。不得生成空白章节、假交互、占位模块或第二套教学运行时。
+新建网页时模板直接提供完整的 React/Vite 源入口。`src/data/tutorial.ts` 由真实页面实现同步填充；自定义 App 可以直接渲染页面，不需要虚构 `componentId`。不得生成空白章节、假交互、占位模块或第二套教学运行时。
 
 ## W6–W9：实现与评审
 
-每完成一个页面或完整交互，Codex 按 VISUAL_QA.md 对实际浏览器截图进行检查；共享 CSS 或组件变更要扩大回归范围，并保护已经确认的结构、视觉语义和动画。无法执行的检查如实记为 NOT_RUN。
-
-W6 从实际切片开始。首次创建网页时，上游所需的入口、基础样式、tutorial.ts、组件注册表、Vite 配置和锁文件已经由模板生成。Codex 实现真实切片、同步教学数据、安装依赖、构建并进行最小浏览器检查。W6 不再运行或保存独立的 structure 检查报告。
-
-W7 是学习效果评审，不是按钮或动画评审。如果评审者体验切片后仍无法解释问题、核心机制、系统架构和一条完整流程，应先修正教学设计，再继续编写剩余内容。W7 通过后再完成 W8。
-
-W8 完成所有计划中的 CORE，紧凑呈现 SUPPORTING，将 REFERENCE 放在主线之外并省略 DELETE。Codex 检查现有实现覆盖，运行项目测试和生产构建，并对真实发布源完成 Visual QA。W8 不要求准备 PaperSkill 检出或运行官方发布校验器；当前上游契约由 W10 的一次全量正式预检把关。不要重复填写工程检查 PASS。
-
-W9 保留真实人工判断。用户预览最终网页并确认学习、证据和视觉审阅；Codex 将构建、Visual QA、回归范围、教学与证据发现以及用户验收记录在现有 audit/final-check.md。不要要求用户为工程校验结果手填四行 PASS；不要由 Agent 代替用户确认成品。
+W6 只实现并检查计划中的首个真实切片；模板已提供正式源码入口。W7 是独立的人类学习效果门禁，只有记录 PASS 后才能进入 W8。W8 完成计划覆盖，执行项目测试、生产构建和实际源码的 Visual QA；不运行官方上游校验器。W9 由人审阅最终学习效果、证据和呈现，记录于现有 `audit/final-check.md`。各阶段具体实施与检查步骤见对应 Skill 和 [`VISUAL_QA.md`](VISUAL_QA.md)；未实际执行的检查标为 NOT_RUN。
 
 ## W10：一次正式上游预检
 
-W9 经使用者确认后，使用者按[人工投稿操作手册](UPSTREAM_RELEASE.md)在现有 PaperSkill 检出中同步官方主线、新建贡献分支，并用官方 Import 将 PaperSkillWork 的实际网页源码直接导入 PaperSkill。随后在该仓库运行官方 validate、仅提交当前论文版本并运行 preflight。所有命令成功、贡献差异仅含当前版本且 PaperSkill 工作区干净后，使用者执行 `python tools/paper.py stage <paper-id> W10 complete` 记录进度。该命令不验证旧报告或本仓库的 html_output，也不产生机器 PASS。可在现有 audit/final-check.md 记录实际命令、结果和 PaperSkill 目标路径。Push 和 PR 由使用者自行决定；Codex 不会操作个人 Fork。
+W9 经用户接受后，由用户按[唯一的 W10 投稿手册](UPSTREAM_RELEASE.md)在既有 PaperSkill 检出中运行官方 Import、validate 和 preflight，再记录 W10。该阶段是唯一正式发布门禁；Codex 不运行 PaperSkill 发布命令、Push 或 PR。细节以投稿手册为准。
 
-## 设计文档与工作区
+## 工作区文件
 
-每个设计决策只保留一份规范文档；不要创建重复的说明文件：
-
-```text
-research/
-├── paper-model.md
-└── evidence-registry.yaml
-design/
-├── learning-spine.md
-├── asset-plan.md
-└── implementation-plan.md
-audit/
-└── final-check.md
-```
-
-```text
-papers/<paper-id>/
-├── paper.yaml
-├── source/paper.url
-├── source-cache/
-├── research/
-├── design/
-├── audit/
-├── assets/figures/{original,web}/
-└── web/enhanced/
-```
-
-```text
-PaperSkill/html_output/<paper-name>/<version>/
-```
-
-术语和参考内容按需放入应用的知识/参考数据中；不要另建设计文档重复记录相同内容。
+`tools/paper.py new` 生成的文件、路径和占位符以 [`TEMPLATE_CONTRACT.md`](TEMPLATE_CONTRACT.md) 为准。每项设计决策留在对应的现有论文级文档中，不新增平行合同。
 
 ## 工具行为与历史工作区
 

@@ -13,7 +13,7 @@ Establish what the paper does before planning pages or interactions. Do not summ
 
 - `paper.yaml` and the declared paper source
 - `source-cache/content.md` and `source-cache/manifest.json`
-- `templates/paper-model-v3.md`
+- `templates/paper-model.md`
 
 ## Preconditions
 

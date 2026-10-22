@@ -13,7 +13,7 @@ Make sure each important tutorial statement has a defensible source boundary and
 
 - Complete source and `source-cache/manifest.json` / `source-cache/evidence.json`
 - `research/paper-model.md`
-- `templates/evidence-registry-v3.yaml`
+- `templates/evidence-registry.yaml`
 - `templates/asset-plan.md`
 
 ## Procedure

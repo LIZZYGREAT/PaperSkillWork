@@ -1,5 +1,23 @@
 # PaperSkillWork Repository Rules
 
+## Task routes
+
+Start with this file for repository-wide boundaries. Read the stage contract in `docs/WORKFLOW.md`, then use the matching skill for the task procedure. Load detailed standards and references only when the current task needs them.
+
+| Task | Read next |
+| --- | --- |
+| New workspace, source intake, or templates | `docs/WORKFLOW.md`, `docs/TEMPLATE_CONTRACT.md`, `tools/paper.py` |
+| W2 paper model | `.agents/skills/paper-review/SKILL.md` and its listed inputs |
+| W3 claims and source assets | `.agents/skills/evidence-audit/SKILL.md` and its listed inputs |
+| W4 learning spine | `.agents/skills/learning-architecture/SKILL.md`, `docs/TEACHING_DESIGN_STANDARD.md` |
+| W5–W7 implementation plan and slice review | `.agents/skills/implementation-plan/SKILL.md`; consult `docs/reusable-kit.md` and matching history cases when useful |
+| W6–W8 page implementation or UI repair | `.agents/skills/enhanced-implementation/SKILL.md`, the paper's `design/implementation-plan.md`, `docs/VISUAL_QA.md`; search `docs/ui-teaching-lessons.md` by matching symptom |
+| W9 learning/evidence audit | `.agents/skills/final-audit/SKILL.md`, `docs/VISUAL_QA.md` |
+| W10 release | `docs/UPSTREAM_RELEASE.md` after W9 acceptance; the user runs the official preflight |
+| Workflow, skill, template, or shared QA-tool changes | `docs/WORKFLOW.md`, `docs/TEMPLATE_CONTRACT.md`, relevant tests |
+
+Historical cases are diagnostic clues, not current policy. Apply only an active case that matches the observed issue and the paper's approved design; the teaching and Visual QA documents remain authoritative.
+
 ## Product principle
 
 The deliverable is an executable mental model of a paper, not an animated summary or a collection of concept demos. Establish the paper's causal and runtime logic first; rank what matters; only then choose presentation and interaction.
@@ -35,7 +53,7 @@ Cache one complete, systematic paper read under `source-cache/`. Use the cache f
 
 ## Visual feedback and iterative UI revisions
 
-Follow docs/VISUAL_QA.md for browser screenshots, geometry checks, regression scope, reporting, and stop conditions. If the rendered result cannot be inspected, report NOT_RUN rather than implying visual verification. Consult docs/ui-teaching-lessons.md for historical examples; reuse general layout lessons while keeping paper-specific visual mappings and semantics scoped to their original project.
+Follow docs/VISUAL_QA.md for browser screenshots, geometry checks, regression scope, reporting, and stop conditions. If the rendered result cannot be inspected, report NOT_RUN rather than implying visual verification. Search docs/ui-teaching-lessons.md by symptom when a matching historical case may help; do not treat project-specific visual mappings as general defaults.
 
 ## Visual assets
 
