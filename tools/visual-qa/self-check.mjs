@@ -385,8 +385,10 @@ async function main() {
     assert(await pathExists(baselinePath), "Cleaning one run affected an approved baseline outside that run.");
 
     const missingPath = path.join(qaRoot, `run-self-check-missing-${runId}`);
+    assert(!(await pathExists(missingPath)), "The idempotent cleanup fixture must be absent before the cleanup command runs.");
     const missingResult = runCleanup(missingPath);
-    assert(missingResult.status === 0 && missingResult.stdout.includes("Already absent"), "Cleaning an absent exact run path should be idempotent.");
+    assert(missingResult.status === 0 && missingResult.stdout.includes(`Already absent; nothing removed: ${missingPath}`), "An absent run must be reported as Already absent, not as an actual deletion.");
+    assert(!(await pathExists(missingPath)), "The Already absent cleanup fixture should remain absent after the command.");
 
     for (const forbiddenPath of [qaRoot, repositoryRoot, path.join(repositoryRoot, "papers"), path.join(repositoryRoot, "papers", `run-escape-${runId}`)]) {
       const rejected = runCleanup(forbiddenPath);
