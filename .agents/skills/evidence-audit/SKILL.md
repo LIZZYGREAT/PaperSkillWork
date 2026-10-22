@@ -22,10 +22,11 @@ Make sure each important tutorial statement has a defensible source boundary and
 2. Give each claim a unique ID, exact claim, type, source locator, conditions, and allowed wording.
 3. Keep `PAPER_FACT`, `PAPER_RESULT`, `AUTHOR_INTERPRETATION`, `OUR_INTERPRETATION`, `IMPLEMENTATION_MAPPING`, `GENERAL_BACKGROUND`, and `TEACHING_EXAMPLE` distinct.
 4. Tie each number to the applicable dataset/environment, model, split, metric, protocol, and source.
-5. Review the full W1 figure/table inventory. For each item decide `USE_DIRECTLY`, `CROP_AND_USE`, `REDRAW_FROM_PAPER`, `REFERENCE_ONLY`, or `DO_NOT_USE`, with rationale where it is excluded.
-6. For selected public assets, verify the original in `source-cache/figures/`; record paper/version, figure/page, source locator, caption, teaching role, processing plan, evidence IDs, attribution, and approved reuse-rights basis. W3 does not generate or require a derivative.
-7. Fill the registry `review` lists for unresolved source conflicts, evidence conflicts, or unsafe claim wording. W3 remains blocked until these lists are empty. Unclear/pending rights also block W3.
-8. Save `research/evidence-registry.yaml` and `design/asset-plan.md`.
+5. When attributing a result to one mechanism, distinguish the full system's absolute performance from a comparison that isolates that mechanism, state the tested conditions, and keep the conclusion within the evidence's scope.
+6. Review the full W1 figure/table inventory. For each item decide `USE_DIRECTLY`, `CROP_AND_USE`, `REDRAW_FROM_PAPER`, `REFERENCE_ONLY`, or `DO_NOT_USE`, with rationale where it is excluded.
+7. For selected public assets, verify the original in `source-cache/figures/`; record paper/version, figure/page, source locator, caption, teaching role, processing plan, evidence IDs, attribution, and approved reuse-rights basis. W3 does not generate or require a derivative.
+8. Fill the registry `review` lists for unresolved source conflicts, evidence conflicts, or unsafe claim wording. W3 remains blocked until these lists are empty. Unclear/pending rights also block W3.
+9. Save `research/evidence-registry.yaml` and `design/asset-plan.md`.
 
 ## Validation
 
