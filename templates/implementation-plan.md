@@ -26,6 +26,35 @@ For each confirmed page/state, record the approved effect or screenshot referenc
 
 For substantial motion, record the initial, key intermediate, and final states and the required object connections. Do not duplicate the same page contract in a new document.
 
+### Critical Teaching and Integration Scenes
+
+Use this section only for scenes whose algorithmic meaning depends on coordinated text, graphics, formulas, data, or motion. Ordinary prose pages do not need a frame contract.
+
+For each critical scene, record:
+
+- teaching purpose, what the reader already knows, the algorithmic relationship to explain, and the expected conclusion;
+- fixed inputs/data, persistent state, temporary or derived state, outputs, real lifecycle, stable object identities, and data provenance;
+- expression details that may change freely and the semantics, calculations, ordering, and approved visual relationships that must remain protected;
+- how the scene receives context from the prior page and hands state or a question to the next page without premature terminology, repeated first teaching, or unnecessary disclaimers.
+
+For a complete-algorithm integration scene, first derive one global execution model from W2 before storyboarding motion:
+
+```text
+initial objects and persistent state S0
+  → paper operation / computation A1 → state S1 + temporary values T1
+  → paper operation / computation A2 → state S2 + temporary values T2
+  → update, task boundary, or save → cross-round state S3
+  → prediction / output Y
+```
+
+Distinguish paper state, computed/derived values, and teaching-only visible state. The visible state may reveal the first two categories but must not alter their meaning. Reuse verified calculations or atomic assets when useful, but redesign the integration scene's overall composition, hierarchy, transitions, narrative focus, and state visibility for whole-system understanding; do not qualify a scene by concatenating earlier components.
+
+Record only the semantic moments that create understanding or carry risk; there is no required frame count, duration, or stage layout.
+
+| Moment / W2 operation | Entering state | Computation / trigger | Leaving state | Graphic action | Text and formula alignment | Protected invariants | Reproducible verification |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |
+
 ## Specific Upstream Contract Conflict (only if needed)
 
 Most projects need no entry here. Record only a concrete conflict that prevents the approved design from fitting the current upstream contract, and the decision needed to resolve it. Do not duplicate chapter, module, or component mappings; the user's W10 preflight checks the actual release source against the current official contract after W9 acceptance.
@@ -67,7 +96,7 @@ Check applicable patterns before inventing a new interaction: Architecture Explo
 
 ## Vertical Slice (W6)
 
-Name the first 2–3 spine stages included, the smallest end-to-end learner task, included source figures, and what can be reviewed without implementing the rest.
+Name the first 2–3 spine stages included where that range fits the content, the smallest end-to-end cognitive progression a learner can genuinely experience, included source figures, and what can be reviewed without implementing the rest. The slice should carry the reader from a perceived problem through an introduced mechanism to an observable conclusion and a natural next question, not merely collect clickable components.
 
 ### Vertical Slice Review (W7)
 
@@ -75,17 +104,19 @@ Vertical Slice Review: PENDING
 
 - Reviewer:
 - Decision: PASS / REVISE
-- Can the reviewer explain the problem and core idea after using the slice?
-- Can the reviewer reconstruct the architecture and one complete information/state flow?
+- Can the reviewer explain why the mechanism is introduced at this point?
+- Can the reviewer accurately explain the slice's key operation and one complete information/state flow?
+- Do prose and graphics work together to establish the conclusion?
+- Does the slice hand off naturally to the next part?
 - Was any key explanation hidden in hover or omitted?
 - Were any formulas, toys, or interactions unnecessary?
 - Required information-architecture changes:
 
-If the review is REVISE, update the spine/plan and repeat the slice review before W8.
+If the review is REVISE, update the spine/plan and repeat the slice review before W8. W7 does not require the later complete-algorithm integration scene to be finished; its full teaching effect is checked during W8 and formally accepted at W9.
 
 ## Full Implementation (W8)
 
-List the remaining CORE stages to complete. List compact placements for SUPPORTING material and the Reference Hub/advanced locations for REFERENCE. Confirm DELETE items stay out.
+List the remaining CORE stages to complete. List compact placements for SUPPORTING material and the Reference Hub/advanced locations for REFERENCE. Confirm DELETE items stay out. Identify the complete-algorithm integration scene and the semantic moments, state assertions, representative initial/intermediate/final views, and handoff checks needed to verify it against W2 and W4.
 
 ## Human Acceptance Record
 
