@@ -15,6 +15,7 @@ CASE_CATEGORIES = {
     "状态与动画",
     "布局与可读性",
     "交互可用性",
+    "图像坐标与缩放",
     "实施范围与回归",
 }
 
@@ -95,3 +96,22 @@ def test_ui_case_ids_status_targets_and_categories_are_consistent():
             assert target_id != case_id, f"{case_id} cannot target itself."
             target_status = re.search(r"^- \*\*状态\*\*：`?(active|merged|superseded)`?\s*$", records[target_id], re.MULTILINE)
             assert target_status and target_status.group(1) == "active", f"{case_id} should resolve to an active case."
+
+
+def test_ui_case_index_anchors_match_github_heading_slugs():
+    path = ROOT / "docs" / "ui-teaching-lessons.md"
+    text = path.read_text(encoding="utf-8")
+    case_index = text.split("## 案例", 1)[0]
+    headings = re.findall(r"^### (UI-\d{3}) \| (.+)$", text, re.MULTILINE)
+    indexed_slugs = re.findall(r"\[UI-\d{3}\]\(#([^)]+)\)", case_index)
+
+    def github_heading_slug(title: str) -> str:
+        return re.sub(r"[^\w -]", "", title.lower()).replace(" ", "-")
+
+    heading_slugs = {
+        github_heading_slug("{} | {}".format(case_id, title))
+        for case_id, title in headings
+    }
+    assert indexed_slugs, "The UI case index must link to its cases."
+    assert len(indexed_slugs) == len(set(indexed_slugs)), "The UI case index must not duplicate anchors."
+    assert set(indexed_slugs) == heading_slugs, "Every case index anchor must match a GitHub-style heading slug."
