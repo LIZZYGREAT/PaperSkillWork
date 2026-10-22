@@ -127,7 +127,7 @@ If a review is REVISE, retain that decision in this history. Record the affected
 
 List the remaining CORE stages to complete. List compact placements for SUPPORTING material and the Reference Hub/advanced locations for REFERENCE. Confirm DELETE items stay out. Identify the complete-algorithm integration scene and the semantic moments, state assertions, representative initial/intermediate/final views, and handoff checks needed to verify it against W2 and W4.
 
-Resolve the final source path from `release-info.source`; it must be the same source intended for W10. Record the actual PaperSkill checker revision, commands, tool versions, and log/evidence locations. Rerun source checks after any later source change.
+Resolve the final source path from `release-info.source`; it must be the same source intended for W10. Install that source's dependencies from its existing lockfile before checks (`npm ci` when it has a package lock); the official syntax checker discovers TypeScript/esbuild under the target source. Record the actual PaperSkill checker revision, commands, tool versions, and log/evidence locations. Rerun source checks after any later source change.
 
 | W8 check | Status (PASS / FAIL / NOT_RUN) | Actual command, tool version, evidence/log, and notes |
 | --- | --- | --- |
