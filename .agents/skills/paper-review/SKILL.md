@@ -51,6 +51,8 @@ Read bibliographic and source metadata from `paper.yaml` before asking the user 
 - No UI, animation, interaction, analogy, or chapter design appears in the model.
 - No result is broader than its protocol supports.
 
+The W2 `stage ... complete` command checks only the new execution-model structure: required section/subsections, non-template inputs/inference/state content, and a non-empty, non-template pseudocode block. It does not infer whether the algorithm is executable or faithful to the paper; that remains a human W2 and evidence-audit judgment. Routine `check` does not apply this new requirement retroactively to already accepted W2 artifacts.
+
 ## Forbidden Actions
 
 - Do not design web pages or interactions.

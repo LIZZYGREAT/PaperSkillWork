@@ -725,7 +725,12 @@ def cmd_stage(args: argparse.Namespace) -> int:
                 raise PaperError("{} requires --reviewed-by and --note for human acceptance".format(args.stage))
         elif args.reviewed_by or args.note:
             raise PaperError("{} is an automatic stage; omit --reviewed-by and --note".format(args.stage))
-        problems.extend(v3_stage_completion_problems(folder, args.stage, config))
+        problems.extend(v3_stage_completion_problems(
+            folder,
+            args.stage,
+            config,
+            require_w2_execution_model=(args.stage == "W2"),
+        ))
         if problems:
             raise PaperError("Cannot mark {} complete:\n- {}".format(args.stage, "\n- ".join(problems)))
     elif args.reviewed_by or args.note:
@@ -884,6 +889,69 @@ def hygiene_warnings(folder: Path) -> List[str]:
 def markdown_section(markdown: str, heading: str) -> str:
     match = re.search(r"^##\s+{}\s*$([\s\S]*?)(?=^##\s+|\Z)".format(re.escape(heading)), markdown, re.MULTILINE)
     return match.group(1).strip() if match else ""
+
+
+def markdown_subsection(markdown: str, heading: str) -> str:
+    match = re.search(r"^###\s+{}\s*$([\s\S]*?)(?=^#{{1,6}}\s+|\Z)".format(re.escape(heading)), markdown, re.MULTILINE)
+    return match.group(1).strip() if match else ""
+
+
+def v3_w2_execution_model_problems(text: str) -> List[str]:
+    problems: List[str] = []
+    if not re.search(r"^##\s+Algorithm Execution Model\s*$", text, re.MULTILINE):
+        return ["paper-model is missing section 'Algorithm Execution Model'"]
+
+    inputs_prompt = "List the model, data, parameters, persistent state, available history, and assumptions that exist before execution starts."
+    inference_prompt = "Describe inference separately: its entry point, inputs, required trained or persistent state, processing order, and outputs. If evaluation occurs between rounds, place it at the paper's actual timing rather than treating it as the final inference path."
+    template_pseudocode = """initialize model, data, parameters, and persistent state
+for each applicable task / round / step in the paper's real order:
+    read the state and inputs required by this step
+    execute training, update, selection, storage, or other key branches
+    commit the values and persistent objects needed by the next step
+return the paper-defined trained state or output"""
+    state_headers = {
+        "state / value", "created or read when", "temporary / derived / persistent",
+        "frozen / updatable", "consumed or retained by",
+    }
+
+    for heading in ("Inputs and Initialization", "Executable Pseudocode", "Prediction / Inference Entry", "State Classification"):
+        if not re.search(r"^###\s+{}\s*$".format(re.escape(heading)), text, re.MULTILINE):
+            problems.append("Algorithm Execution Model is missing subsection '{}'".format(heading))
+            continue
+        body = markdown_subsection(text, heading)
+        normalized = re.sub(r"\s+", " ", body).strip().lower()
+        if heading == "Inputs and Initialization":
+            if not normalized or normalized == inputs_prompt.lower():
+                problems.append("Algorithm Execution Model subsection '{}' is empty or still a template prompt".format(heading))
+        elif heading == "Prediction / Inference Entry":
+            if not normalized or normalized == inference_prompt.lower():
+                problems.append("Algorithm Execution Model subsection '{}' is empty or still a template prompt".format(heading))
+        elif heading == "Executable Pseudocode":
+            code_blocks = re.findall(r"```[^\n]*\n([\s\S]*?)```", body)
+            code = "\n".join(block.strip() for block in code_blocks).strip()
+            normalized_code = re.sub(r"\s+", " ", code).strip().lower()
+            normalized_template = re.sub(r"\s+", " ", template_pseudocode).strip().lower()
+            if not normalized_code:
+                problems.append("Algorithm Execution Model needs a non-empty pseudocode code block")
+            elif normalized_code == normalized_template:
+                problems.append("Algorithm Execution Model pseudocode is still the template placeholder")
+        elif heading == "State Classification":
+            has_state_content = False
+            for line in body.splitlines():
+                stripped = line.strip()
+                if not stripped.startswith("|"):
+                    plain = re.sub(r"[`*_>#]", "", stripped).strip()
+                    if plain:
+                        has_state_content = True
+                        break
+                    continue
+                cells = [re.sub(r"[`*_]", "", cell).strip().lower() for cell in stripped.strip("|").split("|")]
+                if any(cell and set(cell) - {"-", ":"} and cell not in state_headers for cell in cells):
+                    has_state_content = True
+                    break
+            if not has_state_content:
+                problems.append("Algorithm Execution Model subsection '{}' is empty or still a template table".format(heading))
+    return problems
 
 
 def read_json_object(path: Path, label: str) -> Tuple[Optional[Dict[str, Any]], List[str]]:
@@ -1472,7 +1540,12 @@ def validate_asset_materialization(
     return data, problems
 
 
-def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, Any]) -> List[str]:
+def v3_stage_completion_problems(
+    folder: Path,
+    stage_id: str,
+    config: Dict[str, Any],
+    require_w2_execution_model: bool = False,
+) -> List[str]:
     problems: List[str] = []
     paper = config.get("paper", {})
     if stage_id == "W0":
@@ -1513,6 +1586,8 @@ def v3_stage_completion_problems(folder: Path, stage_id: str, config: Dict[str, 
             ))
             if not normalized or prompt_only or re.fullmatch(r"\|?\s*(concept|object / variable).*", normalized, re.IGNORECASE):
                 problems.append("paper-model section '{}' is empty or still a template prompt".format(section))
+        if require_w2_execution_model:
+            problems.extend(v3_w2_execution_model_problems(text))
         return problems
     if stage_id == "W3":
         manifest, cache_problems = v3_cache_data(folder)

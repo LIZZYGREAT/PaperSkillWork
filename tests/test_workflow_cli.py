@@ -27,6 +27,88 @@ def test_human_review_stages_require_reviewer_and_note(tmp_path, stage):
     assert "requires --reviewed-by and --note" in result.stderr
 
 
+def test_new_w2_completion_requires_filled_algorithm_execution_model(tmp_path):
+    root, paper, config_path, _module = make_project(tmp_path)
+    config = load_config(config_path)
+    mark_prior_stages_complete(config, "W2")
+    save_config(config_path, config)
+
+    result = invoke(root, "stage", "demo-paper", "W2", "complete", "--reviewed-by", "Reviewer", "--note", "Reviewed")
+    assert result.returncode != 0
+    assert "missing section 'Algorithm Execution Model'" in result.stderr
+
+    model_path = paper / "research/paper-model.md"
+    model = model_path.read_text(encoding="utf-8")
+    template = (root / "templates/paper-model.md").read_text(encoding="utf-8")
+    algorithm_model = template.split("## Algorithm Execution Model", 1)[1].split("\n## Training", 1)[0]
+    model_path.write_text(model + "\n## Algorithm Execution Model" + algorithm_model, encoding="utf-8")
+
+    result = invoke(root, "stage", "demo-paper", "W2", "complete", "--reviewed-by", "Reviewer", "--note", "Reviewed")
+    assert result.returncode != 0
+    assert "still the template placeholder" in result.stderr
+    assert "still a template prompt" in result.stderr
+    assert "still a template table" in result.stderr
+
+
+def test_new_w2_completion_accepts_filled_execution_model_with_human_review(tmp_path):
+    root, paper, config_path, _module = make_project(tmp_path)
+    config = load_config(config_path)
+    mark_prior_stages_complete(config, "W2")
+    save_config(config_path, config)
+    model_path = paper / "research/paper-model.md"
+    model = model_path.read_text(encoding="utf-8")
+    model += """
+
+## Algorithm Execution Model
+
+### Inputs and Initialization
+
+Training starts with the initialized model parameters, current-task dataset, and saved exemplar memory.
+
+### Executable Pseudocode
+
+```text
+for each task t in order:
+    train the model on the current data and saved memory
+    update parameters and commit the selected exemplars
+```
+
+### Prediction / Inference Entry
+
+Given a test input, use the current model and persistent memory to produce the prediction.
+
+### State Classification
+
+| State / value | Created or read when | Temporary / derived / persistent | Frozen / updatable | Consumed or retained by |
+| --- | --- | --- | --- | --- |
+| parameters | initialized before task 1 | persistent model state | updatable during training | inherited by the next task |
+"""
+    model_path.write_text(model, encoding="utf-8")
+
+    result = invoke(root, "stage", "demo-paper", "W2", "complete", "--reviewed-by", "Reviewer", "--note", "Model checked against source")
+
+    assert result.returncode == 0, result.stderr
+    config = load_config(config_path)
+    entry = config["workflow"]["stages"][STAGE_KEYS["W2"]]
+    assert entry["status"] == "complete"
+    assert entry["reviewed_by"] == "Reviewer"
+    assert entry["note"] == "Model checked against source"
+
+
+def test_legacy_completed_w2_check_does_not_require_new_execution_section(tmp_path):
+    root, _paper, config_path, _module = make_project(tmp_path)
+    config = load_config(config_path)
+    mark_prior_stages_complete(config, "W3")
+    save_config(config_path, config)
+
+    result = invoke(root, "check", "demo-paper")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "[STAGE] W2 Paper Understanding Model: COMPLETE" in result.stdout
+    assert "[FAIL] W2:" not in result.stdout
+    assert "CHECK PASS" in result.stdout
+
+
 @pytest.mark.parametrize("stage", ["W0", "W1", "W3", "W5", "W6", "W8"])
 def test_automatic_stages_complete_without_fake_reviewer(tmp_path, stage):
     root, paper, config_path, _module = make_project(tmp_path)
