@@ -239,7 +239,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Check Visual QA runner behavior
-        run: node tools/visual-qa/self-check.mjs
+        run: node tools/visual-qa/self-check.mjs --keep-artifacts
 
       - name: Run Visual QA on Reusable Kit demo
         run: node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json --output .visual-qa/ci-kit

@@ -6,6 +6,8 @@ papers/*/source/*.pdf
 **/dist/
 **/dist-ssr/
 **/.vite/
+**/test-results/
+**/playwright-report/
 .visual-qa/
 /html_output/
 

@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, lstat, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
@@ -16,7 +16,11 @@ const DEFAULT_SEMANTIC_SELECTORS = ["h1", "h2", "h3", "p", "li", "label", "butto
 const STABLE_PROPERTIES = new Set(["x", "y", "width", "height"]);
 
 function printHelp() {
-  process.stdout.write("Usage: node tools/visual-qa/cli.mjs --config <path> [--output <directory>]\n");
+  process.stdout.write([
+    "Usage:",
+    "  node tools/visual-qa/cli.mjs --config <path> [--output <directory>]",
+    "  node tools/visual-qa/cli.mjs --cleanup-run <run-directory>",
+  ].join("\n") + "\n");
 }
 
 function parseArguments(args) {
@@ -24,14 +28,97 @@ function parseArguments(args) {
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
     if (argument === "--help" || argument === "-h") return { help: true };
-    if (argument !== "--config" && argument !== "--output") throw new Error(`Unknown option: ${argument}`);
+    if (!["--config", "--output", "--cleanup-run"].includes(argument)) throw new Error(`Unknown option: ${argument}`);
     const value = args[index + 1];
     if (!value || value.startsWith("--")) throw new Error(`Expected a value after ${argument}.`);
-    values[argument.slice(2)] = value;
+    const key = argument === "--cleanup-run" ? "cleanupRun" : argument.slice(2);
+    values[key] = value;
     index += 1;
+  }
+  if (values.cleanupRun) {
+    if (values.config || values.output) throw new Error("--cleanup-run cannot be combined with --config or --output.");
+    return values;
   }
   if (!values.config) throw new Error("Provide a config file with --config.");
   return values;
+}
+
+function isInsideDirectory(parent, candidate) {
+  const relative = path.relative(parent, candidate);
+  return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
+function samePath(left, right) {
+  return path.relative(path.resolve(left), path.resolve(right)) === "";
+}
+
+async function cleanupRun(runArgument) {
+  const controlledRoot = path.resolve(repositoryRoot, ".visual-qa");
+  const requestedPath = path.resolve(runArgument);
+  const runName = path.basename(requestedPath);
+  if (!runName.startsWith("run-") || !samePath(path.dirname(requestedPath), controlledRoot)) {
+    throw new Error("Only one direct .visual-qa/run-* directory can be cleaned; repository, papers, and external output paths are not allowed.");
+  }
+
+  let rootInfo;
+  try {
+    rootInfo = await lstat(controlledRoot);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      process.stdout.write(`Already absent; nothing removed: ${requestedPath}\n`);
+      return;
+    }
+    throw error;
+  }
+  if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) throw new Error(`Controlled .visual-qa root is not a real directory: ${controlledRoot}`);
+  const canonicalRoot = await realpath(controlledRoot);
+  if (!samePath(canonicalRoot, controlledRoot)) throw new Error(`Controlled .visual-qa root resolves outside its expected location: ${canonicalRoot}`);
+
+  let targetInfo;
+  try {
+    targetInfo = await lstat(requestedPath);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      process.stdout.write(`Already absent; nothing removed: ${requestedPath}\n`);
+      return;
+    }
+    throw error;
+  }
+  if (!targetInfo.isDirectory() || targetInfo.isSymbolicLink()) throw new Error(`Run target must be a real directory, not a file or link: ${requestedPath}`);
+  const canonicalTarget = await realpath(requestedPath);
+  if (!isInsideDirectory(canonicalRoot, canonicalTarget) || !samePath(path.dirname(canonicalTarget), canonicalRoot) || !samePath(path.join(canonicalRoot, runName), canonicalTarget)) {
+    throw new Error(`Run target escapes the controlled .visual-qa directory: ${canonicalTarget}`);
+  }
+
+  const reportPath = path.join(canonicalTarget, "report.json");
+  const reportInfo = await lstat(reportPath);
+  if (!reportInfo.isFile() || reportInfo.isSymbolicLink() || !samePath(await realpath(reportPath), reportPath)) {
+    throw new Error(`Runner report is missing or is not a regular file: ${reportPath}`);
+  }
+  let report;
+  try {
+    report = JSON.parse(await readFile(reportPath, "utf8"));
+  } catch (error) {
+    throw new Error(`Runner report is unreadable or invalid JSON at ${reportPath}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const expectedMarkdown = path.join(canonicalTarget, "report.md");
+  if (report?.tool !== "PaperSkillWork Visual QA"
+      || typeof report.startedAt !== "string"
+      || !Array.isArray(report.results)
+      || !samePath(report.artifacts?.directory ?? "", canonicalTarget)
+      || !samePath(report.artifacts?.json ?? "", reportPath)
+      || !samePath(report.artifacts?.markdown ?? "", expectedMarkdown)) {
+    throw new Error(`Report does not identify this runner-created run directory: ${reportPath}`);
+  }
+
+  // Recheck ownership immediately before the recursive removal.
+  const finalInfo = await lstat(requestedPath);
+  const finalTarget = await realpath(requestedPath);
+  if (!finalInfo.isDirectory() || finalInfo.isSymbolicLink() || !samePath(finalTarget, canonicalTarget) || !samePath(path.dirname(finalTarget), canonicalRoot)) {
+    throw new Error(`Run target changed during validation; nothing was removed: ${requestedPath}`);
+  }
+  await rm(canonicalTarget, { recursive: true });
+  process.stdout.write(`CLEANED: ${canonicalTarget}\n`);
 }
 
 function sanitizePathPart(value, label) {
@@ -696,10 +783,26 @@ async function main() {
 
   try {
     options = parseArguments(process.argv.slice(2));
-    if (options.help) {
-      printHelp();
-      return;
+  } catch (error) {
+    process.stderr.write(`Visual QA runner error: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+    return;
+  }
+  if (options.help) {
+    printHelp();
+    return;
+  }
+  if (options.cleanupRun) {
+    try {
+      await cleanupRun(options.cleanupRun);
+    } catch (error) {
+      process.stderr.write(`Visual QA cleanup failed: ${error instanceof Error ? error.message : String(error)}\n`);
+      process.exitCode = 1;
     }
+    return;
+  }
+
+  try {
     if (options.output) outputRoot = path.resolve(options.output);
     const loaded = await readConfig(options.config);
     config = loaded.config;

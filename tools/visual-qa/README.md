@@ -19,6 +19,14 @@ The runner loads Playwright from the Kit demo's existing lockfile so this reposi
 
 By default, artifacts go under `.visual-qa/run-<timestamp>/`. Use `--output <directory>` to choose another local artifact directory. Screenshots are stored by page, viewport, and state. The runner also writes `report.json` and `report.md`.
 
+Read the JSON/Markdown report and inspect the relevant screenshots before cleaning a run. Once its findings are recorded in the existing implementation plan or final audit, remove only that exact runner-created directory from the repository root:
+
+```powershell
+node tools/visual-qa/cli.mjs --cleanup-run .visual-qa/run-<timestamp>
+```
+
+The cleanup command accepts one direct `.visual-qa/run-*` directory only. It verifies the canonical path and the runner identity in `report.json`; missing runs are an idempotent no-op. It rejects links, incomplete/unknown directories, `.visual-qa/` itself, paper/source paths, and custom output outside the controlled root. It never runs automatically after a normal QA command. If a run failed before writing a complete report, retain its path for manual diagnosis rather than broadening cleanup.
+
 ## Project config
 
 Pass a JSON config with a `baseUrl`, optional local `server`, and a list of `pages`. Every state starts from a fresh page load, then applies only the declared actions. Supported actions are `click`, `fill`, `selectOption`, `press`, `scrollIntoView`, `waitFor`, and `wait`. Selectors use Playwright locator syntax, including CSS and role selectors. No arbitrary script is evaluated from config.
@@ -72,3 +80,5 @@ node tools/visual-qa/self-check.mjs
 ```
 
 The self-check runs normal and intentionally failing pages in both viewports. It verifies report fields and screenshots, and confirms that horizontal overflow, a browser `pageerror`, a changed stable layout, and an `rn:root` computed-style regression produce failing outcomes. Its artifacts are written under `.visual-qa/runner-self-check-<timestamp>/`. Expected failure fixtures do not count as visual review or human acceptance.
+
+After all assertions and server shutdown succeed, the self-check removes only its own newly-created temporary root by default. On a genuine self-check failure it preserves diagnostics and prints the path. Use `--keep-artifacts` to preserve successful self-check artifacts for CI upload; CI retains them for 7 days and uploads before any external retention cleanup. Cleanup/security scenarios also verify that one run can be removed without affecting a neighboring run or a baseline fixture.

@@ -42,6 +42,9 @@
 - 只有少量已获人工认可的关键画面适合纳入版本控制作为回归基准。基准需能追溯到认可的渲染结果。
 - 脚本不得默认更新基准图。差异不能通过自动刷新快照、关闭断言、隐藏溢出或忽略失败来消除。
 - 临时截图、差异图和机器报告放在被忽略的本地目录或 CI Artifact 中，按页面、视口和状态命名；仓库只保留有明确回归价值的获批基准。
+- 一次 QA 完成后，先读 `report.json` / `report.md` 并实际查看关键截图，再把命令、独立状态、问题摘要和结论记入现有 implementation-plan 或 final-check；随后只清理本轮 runner 生成的单个目录。失败证据保留至诊断和复测完成；需要交接或复审时明确保留必要证据和路径。清理后不把失效截图路径当作仍可访问的验收证据。
+- 从仓库根目录使用 `node tools/visual-qa/cli.mjs --cleanup-run .visual-qa/run-<timestamp>` 清理；入口仅接受 `.visual-qa/` 下一个带合法 runner 身份 `report.json` 的直接 `run-*` 子目录，不清理外部 `--output`、链接、未知目录、基线或历史目录。普通 QA 运行不会自动删除截图。若工具异常退出而没有完整报告，保留路径供人工诊断，不扩大自动清理范围。
+- Playwright 原生产物（如 `test-results/`、`playwright-report/`）在截图/报告检查及结果记录后，由产生它们的任务按确切目录清理；故障调查未完成时保留必要证据。关闭本任务启动的临时 Vite/HTTP 服务，只停止本次创建的进程。
 - 如浏览器或截图工具不可用，列出具体限制和未执行项目，并标记 NOT_RUN。
 
 ### W8 生产构建与子路径资源
@@ -95,4 +98,4 @@ node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo
 
 现有网页项目与新建项目模板都在各自目录保存 `visual-qa.json`。Push CI 使用事件 `before → sha` 的完整 Git 差异选择论文工作区和实际网页目录；首次 Push 或缺失基线用默认目标分支的 merge-base，无法确定基线时失败。网页修改会分别执行 `npm ci`、生产构建和 `vite preview` Chromium Smoke；纯论文资料变更只校验 workspace。公共 QA 或选择器改动会额外检查 EWC 与 iCaRL 代表性页面。
 
-维护 runner 时，从仓库根目录运行 `node tools/visual-qa/self-check.mjs`。它在两个宽屏视口验证正常报告、截图产物，以及横向溢出、浏览器 `pageerror`、跨状态稳定布局违例和 `rn:root` 计算样式错误的失败报告。该自检验证机器行为，不会把 `VISUAL_REVIEW` 或 `HUMAN_ACCEPTANCE` 标成通过。
+维护 runner 时，从仓库根目录运行 `node tools/visual-qa/self-check.mjs`。它在两个宽屏视口验证正常报告、截图产物，以及横向溢出、浏览器 `pageerror`、跨状态稳定布局违例和 `rn:root` 计算样式错误的失败报告；还会检查单次清理、路径拒绝、邻近运行目录和基线保护。全部断言通过且 HTTP 服务关闭后，它默认清理本次唯一新建的自检临时根目录；失败时保留诊断并打印路径。使用 `--keep-artifacts` 可显式保留成功产物供 CI 上传。该自检验证机器行为，不会把 `VISUAL_REVIEW` 或 `HUMAN_ACCEPTANCE` 标成通过。
