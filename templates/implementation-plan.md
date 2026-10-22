@@ -12,6 +12,7 @@ Record the latest confirmed W4/W5 decisions here. Keep this as the single projec
 
 - Design confirmation: DRAFT / CONFIRMED (the user approved the target and constraints).
 - Rendered-page acceptance: PENDING / PASS / REVISE (the user reviewed the actual browser rendering; this is separate from design confirmation).
+- W5 CLI structural completion is recorded separately in `paper.yaml`; it does not establish user design confirmation or rendered-page acceptance.
 - Confirmed learning and visual goals:
 - Protected structures, semantics, data, scales, colors, object identities, and interactions:
 - Changes allowed without a new design decision:
@@ -102,8 +103,8 @@ Name the first 2–3 spine stages included where that range fits the content, th
 
 Vertical Slice Review: PENDING
 
-- Reviewer:
-- Decision: PASS / REVISE
+- Reviewer (latest round):
+- Latest decision: PASS / REVISE
 - Can the reviewer explain why the mechanism is introduced at this point?
 - Can the reviewer accurately explain the slice's key operation and one complete information/state flow?
 - Do prose and graphics work together to establish the conclusion?
@@ -112,7 +113,11 @@ Vertical Slice Review: PENDING
 - Were any formulas, toys, or interactions unnecessary?
 - Required information-architecture changes:
 
-If the review is REVISE, update the spine/plan and repeat the slice review before W8. W7 does not require the later complete-algorithm integration scene to be finished; its full teaching effect is checked during W8 and formally accepted at W9.
+| Review round | Human decision and feedback | Affected slice and approved content to preserve | Changes made and any explicit design reconfirmation | W6-scope commands/results and NOT_RUN checks | Follow-up human review |
+| --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |
+
+If a review is REVISE, retain that decision in this history. Record the affected scope and protected approvals, repair the slice, rerun W6-scope build/interaction/visual checks, then ask a person to review again. “Repeat W6” means repeat the checks; do not call `stage ... W6 complete` again or reset W4/W5 in `paper.yaml`. If the repair changes W4's core order or reasoning, first record the user's explicit reconfirmation and affected stages. W7 may be marked complete only after a human PASS, with that reviewer's details. W7 does not require the later complete-algorithm integration scene to be finished; its full teaching effect is checked during W8 and formally accepted at W9.
 
 ## Full Implementation (W8)
 
@@ -120,4 +125,4 @@ List the remaining CORE stages to complete. List compact placements for SUPPORTI
 
 ## Human Acceptance Record
 
-Keep concise decisions, approved design changes, protected invariants, and follow-up changes here; do not create duplicate review documents.
+Keep the original approved decisions, later user reconfirmations, affected stages, changed invariants, and required W7/W9 re-reviews here; do not create duplicate review documents or manually reset completed workflow states. If a W8/W9 finding requires changing an approved W4/W5 decision, first state the impact and review scope, obtain the relevant human reconfirmation, and revisit affected learning acceptance before claiming PASS.

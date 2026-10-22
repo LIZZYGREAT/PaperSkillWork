@@ -33,6 +33,6 @@
 
 `release.upstream_paper_name`、`release.upstream_version` 和 `release.output` 初始为空。W9 确认后，用户手动触发 W10；工具从英文论文标题和统一 contributor profile 推导上游论文名及日期版本，并据此填写输出路径 `html_output/<upstream_paper_name>/<upstream_version>`。只有标题或 contributor profile 无法可靠推导时才需要手动补充。内部 `paper_id` 与上游论文名保持独立。W10 操作步骤只见 [docs/UPSTREAM_RELEASE.md](UPSTREAM_RELEASE.md)。
 
-生成模板不会分析原文、分配内容优先级或推进工作流阶段。只有 W2、W4、W7、W9 需要人工评审；W0、W1、W3、W5、W6、W8、W10 在检查通过后记录 `completed_by: automation`。若 W3 的来源/证据冲突、不安全措辞或素材使用权问题尚未解决，就不能完成。
+生成模板不会分析原文、分配内容优先级或推进工作流阶段。只有 W2、W4、W7、W9 需要人工评审；W0、W1、W3、W5、W6、W8、W10 在对应 CLI 结构检查通过后记录 `completed_by: automation`。W6/W8 的状态记录不代表 CLI 运行了项目测试、构建、浏览器或教学验收；这些检查由 Agent 执行并单独报告。W2 新执行模型结构只在首次 W2 complete 时校验，旧已完成论文的日常 `check` 不追溯要求迁移。若 W3 的来源/证据冲突、不安全措辞或素材使用权问题尚未解决，就不能完成。
 
 `implementation-plan.md` 中非空的 `reusable_pattern` 必须匹配 `reusable-kit/registry.yaml`。持续学习项目可用 `tools/paper.py scaffold-kit <paper-id> --preset continual-learning` 复制 P0 源码，并用 `--add` 复制 W5 明确选择的 P1 组件；复制结果独立保存在论文的 `web/enhanced/src/shared/` 中。
