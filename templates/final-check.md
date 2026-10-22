@@ -6,13 +6,18 @@ See `design/implementation-plan.md` for the first-slice review and any revision 
 
 ## W9 Learning Audit
 
-- [ ] A first-time reader can explain the problem and central idea.
+- [ ] A first-time reader can explain why the paper needs each key mechanism, not merely repeat its definition.
 - [ ] A reader can reconstruct the core architecture and ownership.
-- [ ] A reader can trace a complete data/state/runtime flow.
-- [ ] A reader can explain training/inference and the important equations where applicable.
-- [ ] A reader can explain the main design reason, experimental conclusions, and major limits.
+- [ ] Terms and mathematical tools appear in a valid cognitive dependency order, without unnecessary preview or repeated first teaching.
+- [ ] Cross-page transitions restore necessary context lightly without reteaching prior pages.
+- [ ] Important formulas receive explanation proportionate to their role and complexity, including concrete expansion, geometric intuition, or rigorous relationships where useful; they are neither hidden entirely in Reference nor presented as a formula wall.
+- [ ] The dedicated complete-algorithm integration scene has its own system-level teaching design rather than a sequence of earlier components.
+- [ ] From that integration scene, a reader can reconstruct W2's real execution: inputs and initialization, core objects and identities, one concrete operation, state changes, relevant branches, cross-round handoff, and prediction/output.
+- [ ] In representative initial, intermediate, commit/handoff, and final states, prose, graphics, formulas, animation, and data describe the same computation and preserve object identity.
+- [ ] A reader can explain training/inference and the main design reason, experimental conclusions, and major limits.
 - [ ] Main-line explanation is not hidden in hover or Reference.
 - [ ] No redundant core explanations, unnecessary formulas, toys, or interactions remain.
+- [ ] Previously accepted teaching effects and protected W4/W5 semantics remain present after implementation and local fixes.
 - [ ] Human reviewer and findings are recorded.
 
 ## W9 Evidence Audit
@@ -36,6 +41,8 @@ Record the actual commands, pages, states, viewports, screenshot/report location
 | HUMAN_ACCEPTANCE | PENDING / PASS / REVISE |  |
 
 BUILD, geometry, screenshot review, regression, and human acceptance are separate decisions. An agent must not record human W7/W9 acceptance on a person's behalf.
+
+For a complex integration scene, record algorithm/state assertions and actual initial, representative intermediate, handoff, and final-state checks alongside the visual evidence. A keyword assertion, final screenshot, or build result does not establish semantic alignment. Machine checks, Agent screenshot review, and the person's learning acceptance remain separate results.
 
 Record the exact build command and exit result. Geometry evidence names the pages, states, and viewports checked. Visual review requires screenshot paths and findings from screenshots actually inspected. Regression requires an approved baseline or before/after evidence and its interpretation. If evidence is missing, record BUILD, GEOMETRY_QA, VISUAL_REVIEW, or REGRESSION as NOT_RUN; keep HUMAN_ACCEPTANCE as PENDING until the user reviews the rendered result. A machine report cannot set visual review or human acceptance to PASS.
 

@@ -1,6 +1,6 @@
 # PaperSkillWork
 
-PaperSkillWork creates source-grounded, interactive tutorials that help first-time readers reconstruct a paper's problem, core mechanism, data or state flow, evidence, and limitations.
+PaperSkillWork creates source-grounded tutorials that help first-time readers understand why a paper's mechanisms are needed and reconstruct the real algorithm from initialization and state changes through prediction/output.
 
 ## Quick start
 
@@ -24,9 +24,10 @@ W0 source → W1 cache → W2 paper model → W3 evidence/assets → W4 learning
 
 W7 acceptance is required before full implementation. Human review gates are W2, W4, W7, and W9. The official W10 release flow is user-triggered after W9; see [`docs/UPSTREAM_RELEASE.md`](docs/UPSTREAM_RELEASE.md).
 
-## Standards and references
+## Authoritative standards and references
 
-- [`docs/TEACHING_DESIGN_STANDARD.md`](docs/TEACHING_DESIGN_STANDARD.md): common rules for teaching logic, examples, visuals, and interactions.
+- [`docs/WORKFLOW.md`](docs/WORKFLOW.md): W0–W10 responsibilities, gates, and document authority.
+- [`docs/TEACHING_DESIGN_STANDARD.md`](docs/TEACHING_DESIGN_STANDARD.md): authoritative teaching logic, cognitive sequencing, mathematical explanation, and expression rules.
 - [`docs/VISUAL_QA.md`](docs/VISUAL_QA.md): browser-based rendering, interaction, and regression checks.
 - [`docs/reusable-kit.md`](docs/reusable-kit.md): how to find and copy reusable patterns.
 - [`docs/TEMPLATE_CONTRACT.md`](docs/TEMPLATE_CONTRACT.md): template names and generated workspace paths.
