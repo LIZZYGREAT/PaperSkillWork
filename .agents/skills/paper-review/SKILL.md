@@ -29,15 +29,24 @@ Read bibliographic and source metadata from `paper.yaml` before asking the user 
 2. Define the problem and necessary prerequisites.
 3. Identify core objects/variables, their owners, architecture, branches, inputs, outputs, and shared/task-specific parts.
 4. Trace data flow and state/time from input to output.
-5. Explain training and inference/runtime as applicable, including supervision, loss, control/gradient flow, and actual updates.
-6. Select only equations essential to understanding the main mechanism; define every important term and relationship.
-7. Summarize evidence-bearing experiments, conditions, results, and limitations.
-8. Save `research/paper-model.md`. Figure inventory remains in the source-cache manifest; do not duplicate it here.
+5. Build the **Algorithm Execution Model** from the source before designing a teaching order:
+   - prefer and locate the paper's own algorithm or pseudocode;
+   - when no formal algorithm exists, label the procedure as a reconstruction and cite the prose, equations, figures, or appendices that establish its ordering;
+   - state inputs and initialization, then write executable pseudocode with the real processing order, important branches, updates, and applicable multi-round loops;
+   - separate the prediction/inference entry from training, including the trained or persistent state it reads and any inter-round evaluation timing;
+   - classify important values as temporary, derived, cross-round persistent, model parameters, frozen values, or updatable values.
+6. Use Data Flow, State and Time, Training, and Inference / Runtime to explain architecture and local mechanisms; do not restate a second full algorithm in each section. The Algorithm Execution Model is the coherent integration point.
+7. Explain training and inference/runtime as applicable, including supervision, loss, control/gradient flow, and actual updates.
+8. Select only equations essential to understanding the main mechanism; define every important term and relationship.
+9. Summarize evidence-bearing experiments, conditions, results, and limitations.
+10. Save `research/paper-model.md`. Figure inventory remains in the source-cache manifest; do not duplicate it here.
 
 ## Validation
 
 - A reader can state the problem, core insight, architecture, and a complete flow.
+- From the model alone, a reader can identify the initial state, one concrete operation, the resulting state, what survives into the next round, and the inference entry; teaching convenience has not changed the paper's real execution order.
 - Objects and variables are defined before use; system ownership/state is traceable.
+- Core pseudocode, equations, and state transitions have source locators, and reconstructed procedures are not misrepresented as the paper's own Algorithm.
 - The source cache and paper model agree on version and locators.
 - No UI, animation, interaction, analogy, or chapter design appears in the model.
 - No result is broader than its protocol supports.
