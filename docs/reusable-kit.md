@@ -87,6 +87,8 @@ Typography roles are exposed as overridable CSS custom properties in foundation/
 
 The local app at `reusable-kit/demo/` contains a Foundation Component Lab and LwF/EWC real-content scenarios. The Lab is the review surface for semantic typography roles, bounded Button/control variants, shared surfaces, viewport-safe Popover behavior, and default versus reading-sized Drawer layouts. The scenarios illustrate component reuse only; the displayed method sketches need paper-specific source checking before use in a tutorial.
 
+The LwF and EWC scenarios each provide one `KnowledgeEntry[]` registry for both Chinese `TermRef` previews and English `ReferenceHub` details. Their demo journey opens the reading-sized Drawer at the exact canonical ID, preserves the paper hash, supports related-entry and paper-section navigation, and switches between a list and a dedicated detail view on narrow screens.
+
 ```powershell
 cd reusable-kit/demo
 npm ci

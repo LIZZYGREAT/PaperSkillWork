@@ -83,7 +83,11 @@ const branchingMachine: StateMachineSpec = {
   ],
   illegalHints: [{ from: "idle", to: "done", message: "Choose a legal branch first." }],
 };
-const term = { id: "term-a", label: "Term A", definition: "A data-driven definition.", paperRole: "Test label.", confusion: "Another term." };
+const knowledge = [
+  { id: "term-a", kind: "term" as const, hover: { title: "术语 A", definitionZh: "用于测试的中文短解释。", paperRoleZh: "验证统一知识 ID。", confusionZh: "另一个术语。" }, reference: { titleEn: "Term A", summaryEn: "Searchable reference.", relatedIds: ["method-b"], tags: ["alpha"] } },
+  { id: "method-b", kind: "method" as const, hover: { title: "方法 B", definitionZh: "第二个中文短解释。" }, reference: { titleEn: "Method B", summaryEn: "Another reference.", relatedIds: ["term-a"], tags: ["beta"] } },
+];
+const term = knowledge[0];
 
 function Fixtures() {
   return <main>
@@ -99,9 +103,9 @@ function Fixtures() {
     <ResponsibilityMap spec={responsibility} />
     <StateMachineExplorer spec={stateMachine} />
     <StateMachineExplorer spec={branchingMachine} />
-    <ReferenceHub items={[{ id: "term-a", title: "Term A", kind: "term", summary: "Searchable reference." }, { id: "method-b", title: "Method B", kind: "method", summary: "Another reference." }]} />
-    <TermRef term={term} onOpenReference={(termId) => { document.body.dataset.reference = termId; }} />
-    <TermRef term={term} onOpenReference={(termId) => { document.body.dataset.reference = termId; }}>Term A repeated</TermRef>
+    <ReferenceHub entries={knowledge} />
+    <TermRef entry={term} onOpenReference={(termId) => { document.body.dataset.reference = termId; }} />
+    <TermRef entry={term} onOpenReference={(termId) => { document.body.dataset.reference = termId; }}>Term A repeated</TermRef>
     <ExpandableDetail title="Supporting detail"><p>Expandable content.</p></ExpandableDetail>
     <PaperFigure src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='80'%3E%3Crect width='160' height='80' fill='%23e3f2f6'/%3E%3C/svg%3E" alt="Simple demo illustration" figureLabel="Demo figure" caption="A local illustration." source="Reusable Kit demo" annotations={[{ id: "a", x: 50, y: 50, label: "A", text: "Annotation detail." }]} />
     <CompareView variants={[{ id: "a", title: "A" }, { id: "b", title: "B" }]} />
@@ -143,7 +147,8 @@ async function run() {
     catch (error) { results.push(`FAIL — ${name}: ${error instanceof Error ? error.message : String(error)}`); }
   };
   await check("Core components render", () => {
-    for (const label of ["Interactive process diagram", "Interactive architecture diagram", "Process steps", "Responsibility map", "Interactive state machine", "Reference Hub", "Evidence review", "Benchmark results"]) assert(document.querySelector(`[aria-label='${label}']`), `Missing ${label}`);
+    for (const label of ["Interactive process diagram", "Interactive architecture diagram", "Process steps", "Responsibility map", "Interactive state machine", "Evidence review", "Benchmark results"]) assert(document.querySelector(`[aria-label='${label}']`), `Missing ${label}`);
+    assert(document.querySelector(".rk-reference-hub"), "Missing Reference Hub");
     assert(document.body.textContent?.includes("Sample set"), "Dataset did not render.");
     assert(document.body.textContent?.includes("a + b"), "Formula did not render.");
     assert(document.querySelector("input[type='range']"), "Slider control did not render.");
@@ -230,14 +235,16 @@ async function run() {
     assert(machine.querySelector("#rk-state-blocked")?.classList.contains("is-next"), "Branch alternative was not highlighted.");
     assert(edges.filter((edge) => edge.dataset.from === "idle").length === 2, "Branch transitions were lost.");
   });
-  await check("Reference Hub search and deep links work", async () => {
+  await check("Reference Hub search and controlled selection work without rewriting the page hash", async () => {
     const hub = document.querySelector<HTMLElement>(".rk-reference-hub")!;
+    window.history.replaceState(null, "", "#paper-anchor");
     const search = hub.querySelector<HTMLInputElement>("input[type='search']")!;
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(search, "Method");
     search.dispatchEvent(new Event("input", { bubbles: true })); await wait();
     assert(hub.textContent?.includes("Method B"), "Search did not find the item.");
     hub.querySelector<HTMLButtonElement>(".rk-reference-hub__list button")?.click(); await wait();
-    assert(window.location.hash.includes("method-b"), "Selecting a reference did not update the deep link.");
+    assert(hub.querySelector(".rk-reference-hub__detail")?.textContent?.includes("Method B"), "Selecting a reference did not open its detail.");
+    assert(window.location.hash === "#paper-anchor", "Selecting a reference rewrote the paper anchor.");
   });
   await check("TermRef opens on click, closes on Escape, and opens its reference", async () => {
     const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".rk-term-ref[data-term-id='term-a']"));
@@ -249,7 +256,7 @@ async function run() {
     assert(button.getAttribute("aria-expanded") === "false", "Escape did not close the term.");
     button.click(); await wait();
     document.querySelector<HTMLButtonElement>(".rk-term-popover__link")?.click(); await wait();
-    assert(document.body.dataset.reference === term.id, "Open in Reference Hub did not report the selected term.");
+    assert(document.body.dataset.reference === term.id, "The Chinese hover did not report the canonical Hub ID.");
   });
   await check("Native controls accept keyboard focus", () => {
     const target = document.getElementById("keyboard-target") as HTMLButtonElement; target.focus();

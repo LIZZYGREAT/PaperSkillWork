@@ -3,7 +3,6 @@ import type { FlowStep } from "../../core/flow-stepper";
 import type { ProcessLoopSpec } from "../../core/process-loop";
 import type { ResponsibilityMapSpec } from "../../core/responsibility-map";
 import type { StateMachineSpec } from "../../core/state-machine";
-import type { TermDefinition } from "../../core/reference";
 import type { FormulaTermData } from "../../optional/formula";
 
 export const lwfProcess: ProcessLoopSpec = {
@@ -121,11 +120,6 @@ export const lwfStates: StateMachineSpec = {
   illegalHints: [{ from: "ready", to: "promoted", message: "The student must complete its forward, objective, and update phases before it can be promoted." }],
 };
 
-export const lwfTerms: TermDefinition[] = [
-  { id: "teacher", label: "Teacher", fullName: "Previous-task model", definition: "A fixed model that supplies outputs used to preserve old-task responses.", paperRole: "Provides targets while the student learns the current task.", confusion: "A second model that is jointly optimized." },
-  { id: "distillation", label: "Distillation", fullName: "Output-based knowledge distillation", definition: "A loss compares student outputs to target outputs from another model.", paperRole: "Supplies a function-level preservation signal.", confusion: "Freezing old parameters." },
-];
-
 export const ewcProcess: ProcessLoopSpec = {
   nodes: [
     { id: "task-a", label: "Task A training", kind: "input", position: { x: 125, y: 120 }, description: "Learn an earlier-task solution before estimating which parameters matter." },
@@ -199,11 +193,6 @@ export const ewcStates: StateMachineSpec = {
   transitions: [{ from: "task-a", to: "fisher" }, { from: "fisher", to: "stored" }, { from: "stored", to: "task-b" }, { from: "task-b", to: "consolidated" }],
   illegalHints: [{ from: "task-a", to: "task-b", message: "Estimate and store parameter importance before using an importance-weighted penalty on the new task." }],
 };
-
-export const ewcTerms: TermDefinition[] = [
-  { id: "fisher", label: "Fisher importance", fullName: "Diagonal Fisher information estimate", definition: "A parameter-wise estimate used to weight the regularization penalty.", paperRole: "Makes changes to more important parameters more costly.", confusion: "A hard freeze mask that forbids all parameter updates." },
-  { id: "optimum", label: "θ*", fullName: "Earlier-task optimum", definition: "The parameter values at the earlier task solution.", paperRole: "The reference point in the quadratic penalty.", confusion: "The current model state after new-task training." },
-];
 
 export const ewcFormulaTerms: FormulaTermData[] = [
   { id: "new-loss", label: "L_new(θ)", explanation: "Current-task objective evaluated at the parameters being optimized.", relatedIds: ["current-loss"] },

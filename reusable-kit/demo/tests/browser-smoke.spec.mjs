@@ -151,6 +151,7 @@ test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavio
   await expect(page.getByRole("dialog", { name: "Demo figure" })).toBeHidden();
   const keyboardTrigger = page.locator(".rk-term-ref").first();
   const keyboardPanel = await panelFor(keyboardTrigger);
+  await page.locator("#keyboard-target").focus();
   await keyboardTrigger.focus();
   await expect(keyboardPanel).toBeVisible();
   await page.keyboard.press("Escape");
@@ -165,7 +166,7 @@ test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavio
 
   await keyboardTrigger.click();
   await expect(keyboardPanel).toBeVisible();
-  await keyboardPanel.getByRole("button", { name: "Open in Reference Hub" }).click();
+  await keyboardPanel.getByRole("button", { name: "查看完整解释" }).click();
   await expect(page.locator("body")).toHaveAttribute("data-reference", "term-a");
   await expect(keyboardPanel).toBeHidden();
 
@@ -194,4 +195,46 @@ test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavio
   } finally {
     await mobileContext.close();
   }
+});
+
+test("Chinese hover opens the exact English Hub entry without changing the paper anchor", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "EWC scenario" }).click();
+  await page.locator("#ewc-update").scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.history.replaceState(null, "", "#ewc-update"));
+
+  const trigger = page.locator('.rk-term-ref[data-term-id="fisher"]');
+  await trigger.click();
+  const panelId = await trigger.getAttribute("aria-controls");
+  const hover = page.locator(`[id="${panelId}"]`);
+  await expect(hover).toContainText("如果某个参数对旧任务模型的预测分布更敏感");
+  await hover.getByRole("button", { name: "查看完整解释" }).click();
+
+  const drawer = page.getByRole("dialog", { name: "Reference Hub" });
+  const hub = drawer.locator(".rk-reference-hub");
+  await expect(drawer).toBeVisible();
+  await expect(hub.getByRole("heading", { name: "Diagonal Fisher importance estimate" })).toBeVisible();
+  await expect(hub.locator('[data-reference-id="fisher"]')).toHaveAttribute("aria-current", "true");
+  expect(await page.evaluate(() => window.location.hash)).toBe("#ewc-update");
+
+  const visibleCopy = await hub.innerText();
+  expect(visibleCopy).not.toMatch(/[\u3400-\u9fff]/);
+  const ariaCopy = await hub.locator("[aria-label]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label") ?? "").join(" "));
+  expect(ariaCopy).not.toMatch(/[\u3400-\u9fff]/);
+
+  await hub.getByRole("searchbox", { name: "Search references" }).fill("Stored earlier");
+  await expect(hub.getByRole("heading", { name: "Diagonal Fisher importance estimate" })).toBeVisible();
+  await hub.getByRole("button", { name: "Stored earlier-task optimum θ*" }).last().click();
+  await expect(hub.getByRole("heading", { name: "Stored earlier-task optimum θ*" })).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(hub.locator(".rk-reference-hub__list")).toBeHidden();
+  await hub.getByRole("button", { name: "Back to reference list" }).click();
+  await expect(hub.locator(".rk-reference-hub__list")).toBeVisible();
+  await expect(hub.locator(".rk-reference-hub__detail")).toBeHidden();
+
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(trigger).toBeFocused();
 });

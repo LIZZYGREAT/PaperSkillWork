@@ -40,6 +40,23 @@
           "actions": [
             { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" }
           ]
+        },
+        {
+          "id": "ewc-term-hover",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" },
+            { "type": "scrollIntoView", "selector": "#ewc-update" },
+            { "type": "click", "selector": ".rk-term-ref[data-term-id=\"fisher\"]" }
+          ]
+        },
+        {
+          "id": "ewc-reference-hub",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" },
+            { "type": "scrollIntoView", "selector": "#ewc-update" },
+            { "type": "click", "selector": ".rk-term-ref[data-term-id=\"fisher\"]" },
+            { "type": "click", "selector": "role=button[name=\"查看完整解释\"]" }
+          ]
         }
       ]
     }

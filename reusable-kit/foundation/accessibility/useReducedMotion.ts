@@ -34,6 +34,7 @@ export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () =
     (initial ?? container).focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        event.preventDefault();
         onClose();
         return;
       }
@@ -54,9 +55,9 @@ export function useFocusTrap<T extends HTMLElement>(open: boolean, onClose: () =
         first.focus();
       }
     };
-    container.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      container.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keydown", onKeyDown);
       if (previous?.isConnected) previous.focus();
     };
   }, [open, onClose]);

@@ -1,20 +1,19 @@
 import { useCallback, useId, useRef, useState } from "react";
-import type { FocusEvent, PointerEvent } from "react";
+import type { FocusEvent, PointerEvent, ReactNode } from "react";
 import { usePopoverPosition } from "../../foundation/overlay/Popover";
-import type { TermDefinition, TermRefLabels } from "./types";
+import type { KnowledgeEntry, TermRefLabels } from "./types";
 
 const DEFAULT_LABELS: TermRefLabels = {
-  definition: "definition",
-  paperRole: "Role in this paper:",
-  easyToConfuse: "Easy to confuse with:",
-  sourceKind: "Source type:",
-  openReference: "Open in Reference Hub",
+  definition: "术语解释",
+  paperRole: "在本文中的作用：",
+  easyToConfuse: "容易混淆：",
+  openReference: "查看完整解释",
 };
 
-export function TermRef({ term, children, onOpenReference, labels }: {
-  term: TermDefinition;
-  children?: string;
-  onOpenReference?: (termId: string) => void;
+export function TermRef({ entry, children, onOpenReference, labels }: {
+  entry: KnowledgeEntry;
+  children?: ReactNode;
+  onOpenReference?: (entryId: string) => void;
   labels?: Partial<TermRefLabels>;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -39,11 +38,13 @@ export function TermRef({ term, children, onOpenReference, labels }: {
   }, []);
   const position = usePopoverPosition(triggerRef, panelRef, open, close, { onEscape: noteEscape });
 
-  const onFocus = () => {
+  const onFocus = (event: FocusEvent<HTMLSpanElement>) => {
     if (skipNextFocusOpen.current) {
       skipNextFocusOpen.current = false;
       return;
     }
+    const previous = event.relatedTarget;
+    if (previous instanceof Element && previous.closest('[role="dialog"]')) return;
     setDismissed(false);
     setFocused(true);
   };
@@ -67,8 +68,9 @@ export function TermRef({ term, children, onOpenReference, labels }: {
     setPinned(true);
   };
   const openReference = () => {
-    onOpenReference?.(term.id);
     close();
+    triggerRef.current?.focus();
+    onOpenReference?.(entry.id);
   };
   const openOnHover = (event: PointerEvent<HTMLSpanElement>) => {
     if (event.pointerType === "touch") return;
@@ -78,21 +80,18 @@ export function TermRef({ term, children, onOpenReference, labels }: {
 
   return (
     <span className="rk-term-ref-wrap" onPointerEnter={openOnHover} onPointerOut={closeOnLeave} onFocus={onFocus} onBlur={closeOnBlur}>
-      <button ref={triggerRef} type="button" className="rk-term-ref" data-term-id={term.id} aria-haspopup="dialog" aria-expanded={open} aria-controls={panelId} onClick={onTriggerClick}>
-        {children ?? term.label}
+      <button ref={triggerRef} type="button" className="rk-term-ref" data-term-id={entry.id} aria-haspopup="dialog" aria-expanded={open} aria-controls={panelId} onClick={onTriggerClick}>
+        {children ?? entry.hover.title}
       </button>
       {open ? (
-        <div ref={panelRef} className="rk-term-popover" id={panelId} role="dialog" aria-label={term.label + " " + copy.definition} style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}>
-          <strong>{term.fullName ?? term.label}</strong>
-          <span>{term.definition}</span>
-          {term.paperRole ? <span><b>{copy.paperRole}</b> {term.paperRole}</span> : null}
-          {term.confusion ? <span><b>{copy.easyToConfuse}</b> {term.confusion}</span> : null}
-          {term.sourceKind ? <small><b>{copy.sourceKind}</b> {term.sourceKind}</small> : null}
+        <div ref={panelRef} className="rk-term-popover" id={panelId} role="dialog" aria-label={`${entry.hover.title} ${copy.definition}`} style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}>
+          <strong>{entry.hover.title}</strong>
+          <span>{entry.hover.definitionZh}</span>
+          {entry.hover.paperRoleZh ? <span><b>{copy.paperRole}</b> {entry.hover.paperRoleZh}</span> : null}
+          {entry.hover.confusionZh ? <span><b>{copy.easyToConfuse}</b> {entry.hover.confusionZh}</span> : null}
           {onOpenReference ? <button type="button" className="rk-term-popover__link" onClick={openReference}>{copy.openReference}</button> : null}
         </div>
       ) : null}
     </span>
   );
 }
-
-export const TermPopover = TermRef;
