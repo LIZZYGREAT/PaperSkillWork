@@ -29,6 +29,8 @@ Use docs/VISUAL_QA.md and record BUILD, GEOMETRY_QA, VISUAL_REVIEW, REGRESSION, 
 6. Record actual build, accessibility, reduced-motion, mobile, and engineering check outcomes.
 7. Save findings and verdict in `audit/final-check.md`. Complete W9 with `--reviewed-by` and `--note` only after a person accepts the learning and evidence audit.
 
+If a W9 finding has a verified root cause that applies across papers, use the history policy in `AGENTS.md` to merge or add a concise case. Keep paper-specific decisions in the existing implementation plan; unverified observations stay in the current audit and are not promoted as general guidance.
+
 Do not ask the reviewer to fill repeated upstream PASS rows. Record actual build and Visual QA results, runtime-mapping findings, and the person's learning/evidence verdict in the existing final-check. The user must review the rendered final page and explicitly accept W9.
 
 ## W10 Procedure

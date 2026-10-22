@@ -21,7 +21,9 @@ Implement the reviewed learning spine as an inspectable mental model. Optimize f
 
 ## W6: First Vertical Slice
 
-For rendered UI, follow docs/VISUAL_QA.md. Capture and inspect actual Chromium screenshots at the planned states and viewports; check geometry, visual balance, and any protected design baseline. Do not mark a check PASS if its screenshot or browser state was not inspected; record NOT_RUN with the reason.
+For rendered UI, follow `docs/VISUAL_QA.md`. Capture and inspect actual Chromium screenshots at the planned states and viewports; check geometry, visual balance, and any protected design baseline. For multi-step animation, inspect meaningful intermediate states as well as the final state. Do not mark a check PASS if its screenshot or browser state was not inspected; record NOT_RUN with the reason. Search `docs/ui-teaching-lessons.md` by matching symptom only when a historical case may help; do not read the entire case file by default.
+
+Before W6 edits, use the accepted W5 plan to identify the slice, approved design invariants, allowed local changes, and shared areas that may be affected. Do not treat the first-slice implementation as permission to redesign unreviewed stages.
 
 1. Confirm W0–W5 are complete. W2 and W4 must have human review records; W0, W1, W3, and W5 are automatic after their checks pass.
 2. Use the configured release source, whose initial project scaffold already contains the required React/Vite entrypoints, styles, tutorial data module, registry, and lockfile. Preserve the custom React runtime; do not create a second runtime or empty compatibility stubs.
@@ -41,14 +43,16 @@ Present the slice for a person to judge the learning path, architecture, flow, e
 
 After each page or complete interaction, inspect its relevant states. When a shared style or component changes, expand regression to affected pages and overlays. Preserve confirmed design invariants; pause for the user's decision if implementation would change an approved semantic or structural choice.
 
-Before editing, read `AGENTS.md`, `docs/WORKFLOW.md`, `docs/TEACHING_DESIGN_STANDARD.md`, `docs/VISUAL_QA.md`, and the project's `design/implementation-plan.md`. State the invariants and allowed local changes that will be protected. Fix ordinary layout defects within that scope; ask for a decision before changing approved diagram meaning, state order, primary workspace layout, or main animation.
+Before editing, follow the task route in `AGENTS.md` and read the project's `design/implementation-plan.md`. Read the applicable teaching, evidence, and browser QA rules for the change; do not reload the full workflow or unrelated standards when their route points to a focused section. Record the protected invariants, allowed local changes, and shared/adjacent areas at risk in the existing plan. Fix ordinary defects within that scope; ask for a decision before changing approved diagram meaning, state order, primary workspace layout, or main animation. After editing, inspect the actual diff and affected browser states; do not rely on a self-report that the approved design was preserved.
 
 1. Implement all remaining CORE content on the accepted spine.
 2. Keep SUPPORTING content compact; put REFERENCE material in the Reference Hub/advanced area; omit DELETE.
 3. Copy any reusable source into this paper's project. Do not import a cross-paper runtime package.
 4. Keep paper data separate from teaching toys. Use real calculations for simulations and explain simplifications.
 5. Support keyboard/focus, reduced motion, mobile, touch, and non-drag operation where applicable.
-6. Run project tests, the production build, and declared project audits when verification is requested; report their actual outcomes. Check implementation coverage and perform Visual QA against the actual publish source. W8 does not require a PaperSkill checkout or official upstream validator; the official contract is covered by the user's W10 preflight after W9 acceptance.
+6. At W8, run project tests, the production build, declared project audits, implementation coverage checks, and Visual QA against the actual publish source; report actual outcomes. For an intermediate fix, run the existing checks that cover the changed behavior when available. W8 does not require a PaperSkill checkout or official upstream validator; the official contract is covered by the user's W10 preflight after W9 acceptance.
+
+After a W6/W8 feedback fix is verified, decide whether to add, merge, supersede, add regression coverage for, or leave out a public history case. Search existing active cases first. Project-specific decisions stay in that paper's implementation plan. Add a general case only when the root cause and correction have evidence; if not verified, report the observation for the current task without promoting it to policy. Do not create a separate experience report.
 
 Update the implementation manifest for every CORE item and for each SUPPORTING/REFERENCE placement. W8 completes automatically only when every planned CORE is complete, lower-priority placements match the plan, selected asset derivatives/web copies plus README provenance exist, project tests and the actual source build pass, and Visual QA is complete. The user runs the sole official upstream validation flow as W10 after accepting W9; do not require an upstream checkout during W8.
 
