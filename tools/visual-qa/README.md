@@ -1,6 +1,6 @@
 # Visual QA runner
 
-This config-driven Chromium runner captures the two approved wide viewports (1440×900 and 1920×1080), records browser console/page errors, checks configured DOM geometry, and writes JSON and Markdown reports. It does not build a project, judge visual quality, approve designs, or change reference screenshots.
+This config-driven Chromium runner captures the two approved wide viewports (1440×900 and 1920×1080), records browser console/page errors, checks configured DOM geometry, and writes JSON and Markdown reports including each browser's actual URL. `BROWSER_ERRORS` covers CSS/JS, same-origin image/font/media requests, and same-origin dynamic requests with known static-resource extensions (excluding common `/api/`, `/graphql/`, `/analytics/`, and `/telemetry/` paths); it does not prove that untriggered or all possible assets work. It does not build a project, judge visual quality, approve designs, or change reference screenshots.
 
 ## Run the Kit demo example
 
@@ -17,7 +17,7 @@ node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo
 
 The runner loads Playwright from the Kit demo's existing lockfile so this repository keeps one pinned browser toolchain. Project pages do not import or depend on the demo. The example starts Vite preview on a strict port; if that port is occupied, the server startup error is reported instead of silently switching ports.
 
-By default, artifacts go under `.visual-qa/run-<timestamp>/`. Use `--output <directory>` to choose another local artifact directory. Screenshots are stored by page, viewport, and state. The runner also writes `report.json` and `report.md`.
+By default, artifacts go under `.visual-qa/run-<timestamp>/`. Use `--output <directory>` to choose another local artifact directory. Screenshots are stored by page, viewport, and state. The runner also writes `report.json` and `report.md`. When checking a subpath, use `pages[].path: "./"` or the full subpath rather than `"/"`, and verify `actualUrl` in the report; `baseUrl` alone does not prove the browser stayed under the subpath.
 
 Read the JSON/Markdown report and inspect the relevant screenshots before cleaning a run. Once its findings are recorded in the existing implementation plan or final audit, remove only that exact runner-created directory from the repository root:
 
@@ -79,6 +79,6 @@ From the repository root, run:
 node tools/visual-qa/self-check.mjs
 ```
 
-The self-check runs normal and intentionally failing pages in both viewports. It verifies report fields and screenshots, and confirms that horizontal overflow, a browser `pageerror`, a changed stable layout, and an `rn:root` computed-style regression produce failing outcomes. Its artifacts are written under `.visual-qa/runner-self-check-<timestamp>/`. Expected failure fixtures do not count as visual review or human acceptance.
+The self-check runs normal and intentionally failing pages in both viewports. It verifies actual URL reporting and screenshots, and confirms that horizontal overflow, a browser `pageerror`, same-origin image/font/dynamic-data 404s, a changed stable layout, and an `rn:root` computed-style regression produce failing outcomes; optional same-origin API and cross-origin API 404s are excluded from local asset errors. Its artifacts are written under `.visual-qa/runner-self-check-<timestamp>/`. Expected failure fixtures do not count as visual review or human acceptance.
 
 After all assertions and server shutdown succeed, the self-check removes only its own newly-created temporary root by default. On a genuine self-check failure it preserves diagnostics and prints the path. Use `--keep-artifacts` to preserve successful self-check artifacts for CI upload; CI retains them for 7 days and uploads before any external retention cleanup. Cleanup/security scenarios also verify that one run can be removed without affecting a neighboring run or a baseline fixture.

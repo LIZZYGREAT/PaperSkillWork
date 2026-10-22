@@ -27,7 +27,7 @@ function fixtureHtml(content, additionalCss = "") {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Visual QA self-check</title><style>body{margin:24px;font:16px sans-serif;color:#182b3a}main{max-width:720px}[data-vqa-stable-frame]{box-sizing:border-box;background:#e6f4f7;border:1px solid #247c97}${additionalCss}</style></head><body><main>${content}</main></body></html>`;
 }
 
-function fixtureFor(pathname) {
+function fixtureFor(pathname, optionalBaseUrl) {
   if (pathname === "/overflow") {
     return fixtureHtml('<div style="width:2400px"><h1>Intentional horizontal overflow</h1></div>');
   }
@@ -43,22 +43,65 @@ function fixtureFor(pathname) {
   if (pathname === "/styles-broken") {
     return fixtureHtml('<h1>Production style check</h1><aside class="ewc-rail">Navigation</aside>', 'rn:root{--nav:#183236}.ewc-rail{background:var(--nav)}');
   }
+  if (pathname === "/resources-pass") {
+    return fixtureHtml(`<h1>Static resource check</h1><img src="/assets/valid.svg" alt="Valid fixture"><script>fetch("/assets/valid.json");fetch("/api/optional.json");fetch("${optionalBaseUrl}optional.json");</script>`);
+  }
+  if (pathname === "/resources-broken") {
+    return fixtureHtml(`<h1>Static resource check</h1><img src="/assets/missing.png" alt="Missing fixture"><span class="missing-font">Font fixture</span><script>document.fonts.load("16px MissingFixture");fetch("/assets/missing.json").catch(() => {});fetch("/api/optional.json");fetch("${optionalBaseUrl}optional.json");</script>`, '@font-face{font-family:MissingFixture;src:url("/fonts/missing.woff2") format("woff2")}.missing-font{font-family:MissingFixture,sans-serif}');
+  }
   return fixtureHtml('<h1>Normal page</h1><p>The visual QA runner should capture both viewports and keep human review pending.</p><button type="button">Example control</button>');
 }
 
 async function startFixtureServer() {
+  let optionalBaseUrl = "";
   const server = createServer((request, response) => {
     const pathname = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+    if (pathname === "/assets/valid.svg") {
+      response.writeHead(200, { "content-type": "image/svg+xml; charset=utf-8" });
+      response.end('<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="2" height="2" fill="#247c97"/></svg>');
+      return;
+    }
+    if (pathname === "/assets/valid.json") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end('{"ok":true}');
+      return;
+    }
+    if (["/assets/missing.png", "/fonts/missing.woff2", "/assets/missing.json"].includes(pathname)) {
+      response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+      response.end("fixture resource missing");
+      return;
+    }
+    if (pathname === "/api/optional.json") {
+      response.writeHead(404, { "content-type": "application/json" });
+      response.end('{"optional":false}');
+      return;
+    }
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-    response.end(fixtureFor(pathname));
+    response.end(fixtureFor(pathname, optionalBaseUrl));
+  });
+  const optionalServer = createServer((request, response) => {
+    response.writeHead(404, { "access-control-allow-origin": "*", "content-type": "application/json" });
+    response.end('{"optional":false}');
   });
   await new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(0, "127.0.0.1", resolve);
   });
+  try {
+    await new Promise((resolve, reject) => {
+      optionalServer.once("error", reject);
+      optionalServer.listen(0, "127.0.0.1", resolve);
+    });
+  } catch (error) {
+    await new Promise((resolve) => server.close(() => resolve()));
+    throw error;
+  }
   const address = server.address();
+  const optionalAddress = optionalServer.address();
   assert(address && typeof address === "object", "The self-check fixture server did not expose its port.");
-  return { server, baseUrl: `http://127.0.0.1:${address.port}/` };
+  assert(optionalAddress && typeof optionalAddress === "object", "The optional API fixture server did not expose its port.");
+  optionalBaseUrl = `http://127.0.0.1:${optionalAddress.port}/optional/`;
+  return { servers: [server, optionalServer], baseUrl: `http://127.0.0.1:${address.port}/`, optionalBaseUrl };
 }
 
 function configFor(baseUrl, scenario) {
@@ -75,6 +118,9 @@ function configFor(baseUrl, scenario) {
     "stable-layout": "/stable",
     "styles-pass": "/styles-pass",
     "styles-broken": "/styles-broken",
+    "resources-pass": "/resources-pass",
+    "resources-broken": "/resources-broken",
+    "subpath-route": "./",
   };
   const computedStyles = scenario.startsWith("styles-")
     ? [
@@ -83,7 +129,7 @@ function configFor(baseUrl, scenario) {
     ]
     : [];
   return {
-    baseUrl,
+    baseUrl: scenario === "subpath-route" ? new URL("/papers/qa-fixture/qa-preview/", baseUrl).toString() : baseUrl,
     settleMs: 200,
     pages: [{ id: scenario, path: pathByScenario[scenario], states, computedStyles }],
     geometry: {
@@ -144,6 +190,7 @@ async function readRun(outputRoot) {
   await access(markdownPath);
   assert(report.artifacts?.json && report.artifacts?.markdown, "The JSON report is missing artifact paths.");
   for (const result of report.results) {
+    assert(typeof result.actualUrl === "string" && result.actualUrl.startsWith("http"), `No actual browser URL was recorded for ${result.pageId}/${result.viewport}/${result.stateId}.`);
     assert(result.screenshot, `No screenshot was recorded for ${result.pageId}/${result.viewport}/${result.stateId}.`);
     await access(path.resolve(runDirectory, result.screenshot));
   }
@@ -190,7 +237,7 @@ async function main() {
   const outputRoot = path.join(repositoryRoot, ".visual-qa", `runner-self-check-${runId}`);
   const configDirectory = path.join(outputRoot, "configs");
   const qaRoot = path.join(repositoryRoot, ".visual-qa");
-  let server = null;
+  let fixtureServers = [];
   let ownsOutputRoot = false;
   let failure = null;
   const diagnosticRunDirectories = [];
@@ -208,7 +255,7 @@ async function main() {
     ownsOutputRoot = true;
     await mkdir(configDirectory);
     const fixture = await startFixtureServer();
-    server = fixture.server;
+    fixtureServers = fixture.servers;
     const { baseUrl } = fixture;
 
     const normal = await runScenario({
@@ -228,6 +275,7 @@ async function main() {
     assert(normal.report.statuses.BUILD === "NOT_RUN", "The runner must not claim to have built the project.");
     assert(normal.report.results.length === 2, "Normal scenario should capture one state in both viewports.");
     assert(JSON.stringify(resultViewportIds(normal.report)) === JSON.stringify(expectedViewports), "Normal scenario did not execute both approved viewports.");
+    assert(normal.report.results.every((result) => result.actualUrl === result.url), "The report should record the actual non-redirected browser URL.");
 
     const overflow = await runScenario({
       baseUrl,
@@ -280,6 +328,39 @@ async function main() {
     assert(stylesBroken.report.results.every((result) => result.styleOutcome === "FAIL"), "The broken computed style did not fail in every viewport.");
     assert(stylesBroken.report.results.every((result) => result.diagnostics.some((item) => item.code === "computed-style-mismatch" && item.selector === ":root" && item.property === "--nav" && item.expected === "#183236" && item.actual === "")), "The missing :root variable diagnostic must record selector, property, expected value, and actual value.");
     assert(stylesBroken.report.results.every((result) => result.diagnostics.some((item) => item.code === "computed-style-mismatch" && item.selector === ".ewc-rail" && item.property === "background-color" && item.actual === "rgba(0, 0, 0, 0)")), "The rail background diagnostic must identify the transparent actual style.");
+
+    const resourcesPass = await runScenario({
+      baseUrl,
+      configDirectory,
+      outputDirectory: path.join(outputRoot, "resources-pass"),
+      scenario: "resources-pass",
+    });
+    assert(resourcesPass.command.code === 0, `Normal local resources and an optional cross-origin 404 should exit 0.\n${resourcesPass.command.stdout}\n${resourcesPass.command.stderr}`);
+    assert(resourcesPass.report.statuses.BROWSER_ERRORS === "PASS", "A valid image/JSON resource and optional cross-origin API 404 should report BROWSER_ERRORS=PASS.");
+    assert(resourcesPass.report.results.every((result) => result.consoleMessages.every((message) => message.type !== "asset-error" && !message.url?.includes("/api/optional.json"))), "Successful local resources or optional API failures were misclassified as asset errors.");
+
+    const resourcesBroken = await runScenario({
+      baseUrl,
+      configDirectory,
+      outputDirectory: path.join(outputRoot, "resources-broken"),
+      scenario: "resources-broken",
+    });
+    assert(resourcesBroken.command.code === 1, `Same-origin image/font/dynamic-data 404s should exit 1.\n${resourcesBroken.command.stdout}\n${resourcesBroken.command.stderr}`);
+    assert(resourcesBroken.report.statuses.BROWSER_ERRORS === "FAIL", "Same-origin image/font/dynamic-data 404s must report BROWSER_ERRORS=FAIL.");
+    assert(resourcesBroken.report.results.every((result) => ["image", "font", "fetch"].every((type) => result.consoleMessages.some((message) => message.type === "asset-error" && message.resourceType === type && message.status === 404))), "The report must identify image, font, and dynamic local JSON 404s for every viewport.");
+    assert(resourcesBroken.report.results.every((result) => result.consoleMessages.every((message) => !message.url?.includes("/api/optional.json"))), "A same-origin optional API 404 must not be reported as a missing static asset.");
+    assert(resourcesBroken.report.results.every((result) => result.consoleMessages.every((message) => !message.url?.startsWith(fixture.optionalBaseUrl))), "An optional cross-origin API failure must not be reported as a local asset error.");
+
+    const subpath = await runScenario({
+      baseUrl,
+      configDirectory,
+      outputDirectory: path.join(outputRoot, "subpath-route"),
+      scenario: "subpath-route",
+    });
+    assert(subpath.command.code === 0, `A relative page path under a non-root base should pass.\n${subpath.command.stdout}\n${subpath.command.stderr}`);
+    assert(subpath.report.results.every((result) => new URL(result.actualUrl).pathname === "/papers/qa-fixture/qa-preview/"), "The report must prove the browser visited the configured non-root subpath rather than `/`.");
+    const subpathMarkdown = await readFile(path.join(subpath.runDirectory, "report.md"), "utf8");
+    assert(subpathMarkdown.includes("http://127.0.0.1:") && subpathMarkdown.includes("/papers/qa-fixture/qa-preview/"), "The Markdown report must show the actual non-root browser URL.");
 
     const normalConfigPath = path.join(configDirectory, "normal.json");
     const cleanCommand = await runCli(normalConfigPath, qaRoot);
@@ -342,9 +423,9 @@ async function main() {
   } catch (error) {
     failure = error;
   } finally {
-    if (server) {
+    if (fixtureServers.length) {
       try {
-        await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+        await Promise.all(fixtureServers.map((server) => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))));
       } catch (error) {
         if (!failure) failure = error;
         else process.stderr.write(`Self-check server shutdown also failed: ${error instanceof Error ? error.message : String(error)}\n`);

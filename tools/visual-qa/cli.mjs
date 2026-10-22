@@ -14,6 +14,14 @@ const VIEWPORTS = [
 ];
 const DEFAULT_SEMANTIC_SELECTORS = ["h1", "h2", "h3", "p", "li", "label", "button", "input", "select", "[data-vqa-semantic]"];
 const STABLE_PROPERTIES = new Set(["x", "y", "width", "height"]);
+const ALWAYS_TRACKED_RESOURCE_TYPES = new Set(["stylesheet", "script"]);
+const LOCAL_STATIC_RESOURCE_TYPES = new Set(["image", "font", "media", "manifest", "texttrack"]);
+const LOCAL_STATIC_RESOURCE_EXTENSIONS = new Set([
+  ".avif", ".bmp", ".csv", ".gif", ".glb", ".gltf", ".ico", ".jpeg", ".jpg", ".json", ".m4a", ".m3u8",
+  ".mid", ".midi", ".mkv", ".mov", ".mp3", ".mp4", ".mpeg", ".mpg", ".mpd", ".oga", ".ogg", ".ogv",
+  ".otf", ".pdf", ".png", ".svg", ".tif", ".tiff", ".ttf", ".txt", ".wav", ".webm", ".webmanifest",
+  ".webp", ".woff", ".woff2", ".wasm", ".xml", ".bin",
+]);
 
 function printHelp() {
   process.stdout.write([
@@ -50,6 +58,25 @@ function isInsideDirectory(parent, candidate) {
 
 function samePath(left, right) {
   return path.relative(path.resolve(left), path.resolve(right)) === "";
+}
+
+function isTrackedStaticResource(request, pageUrl) {
+  const resourceType = request.resourceType();
+  if (ALWAYS_TRACKED_RESOURCE_TYPES.has(resourceType)) return true;
+
+  let requestUrl;
+  let pageOrigin;
+  try {
+    requestUrl = new URL(request.url());
+    pageOrigin = new URL(pageUrl).origin;
+  } catch {
+    return false;
+  }
+  if (requestUrl.origin !== pageOrigin) return false;
+  if (LOCAL_STATIC_RESOURCE_TYPES.has(resourceType)) return true;
+  if (!["fetch", "xhr", "other"].includes(resourceType)) return false;
+  if (/^\/(?:api|graphql|analytics|telemetry)(?:\/|$)/i.test(requestUrl.pathname)) return false;
+  return LOCAL_STATIC_RESOURCE_EXTENSIONS.has(path.posix.extname(requestUrl.pathname).toLowerCase());
 }
 
 async function cleanupRun(runArgument) {
@@ -583,18 +610,35 @@ async function runState({ browser, config, configDirectory, outputDirectory, pag
   let geometryOutcome = "FAIL";
   let styleOutcome = pageSpec.computedStyles.length ? "FAIL" : "NOT_RUN";
   let stateError = null;
+  const requestedUrl = new URL(pageSpec.path, config.baseUrl).toString();
   page.setDefaultTimeout(config.actionTimeoutMs ?? 10_000);
-  page.on("console", (message) => consoleMessages.push({ type: message.type(), text: message.text(), location: message.location() }));
+  page.on("console", (message) => {
+    // Network failures are classified from request/response events below so an optional
+    // cross-origin image/API does not become a global console-error failure by itself.
+    if (message.type() === "error" && /^Failed to load resource:/i.test(message.text())) return;
+    consoleMessages.push({ type: message.type(), text: message.text(), location: message.location() });
+  });
   page.on("pageerror", (error) => consoleMessages.push({ type: "pageerror", text: error.message }));
   page.on("response", (response) => {
     const request = response.request();
-    if (response.status() >= 400 && ["stylesheet", "script"].includes(request.resourceType())) {
-      consoleMessages.push({ type: "asset-error", text: `${request.resourceType()} returned HTTP ${response.status()}: ${response.url()}` });
+    if (response.status() >= 400 && isTrackedStaticResource(request, requestedUrl)) {
+      consoleMessages.push({
+        type: "asset-error",
+        resourceType: request.resourceType(),
+        status: response.status(),
+        url: response.url(),
+        text: `${request.resourceType()} returned HTTP ${response.status()}: ${response.url()}`,
+      });
     }
   });
   page.on("requestfailed", (request) => {
-    if (["stylesheet", "script"].includes(request.resourceType())) {
-      consoleMessages.push({ type: "asset-error", text: `${request.resourceType()} failed to load: ${request.url()} (${request.failure()?.errorText ?? "unknown network error"})` });
+    if (isTrackedStaticResource(request, requestedUrl)) {
+      consoleMessages.push({
+        type: "asset-error",
+        resourceType: request.resourceType(),
+        url: request.url(),
+        text: `${request.resourceType()} failed to load: ${request.url()} (${request.failure()?.errorText ?? "unknown network error"})`,
+      });
     }
   });
 
@@ -602,7 +646,8 @@ async function runState({ browser, config, configDirectory, outputDirectory, pag
     pageId: pageSpec.id,
     stateId: state.id,
     viewport: viewport.id,
-    url: new URL(pageSpec.path, config.baseUrl).toString(),
+    url: requestedUrl,
+    actualUrl: null,
     diagnostics,
     consoleMessages,
     screenshot: null,
@@ -614,6 +659,7 @@ async function runState({ browser, config, configDirectory, outputDirectory, pag
 
   try {
     const response = await page.goto(result.url, { waitUntil: "domcontentloaded", timeout: config.navigationTimeoutMs ?? 30_000 });
+    result.actualUrl = page.url();
     if (response && !response.ok()) throw new Error(`Page request returned HTTP ${response.status()}.`);
     for (const action of state.actions) await performAction(page, action);
     await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
@@ -685,6 +731,7 @@ async function runState({ browser, config, configDirectory, outputDirectory, pag
       result.styleOutcome = "FAIL";
     }
   } finally {
+    result.actualUrl = page.url();
     const isBrowserError = (message) => ["error", "pageerror", "asset-error"].includes(message.type);
     const hasBrowserErrors = consoleMessages.some(isBrowserError);
     result.browserErrors = consoleMessages.filter(isBrowserError).length;
@@ -743,9 +790,9 @@ function markdownReport(report) {
     "",
     "## Captures",
     "",
-    "| Page | Viewport | State | Result | Geometry | Styles | Browser errors | Screenshot |",
-    "| --- | --- | --- | --- | --- | --- | ---: | --- |",
-    ...report.results.map((result) => `| ${result.pageId} | ${result.viewport} | ${result.stateId} | ${result.outcome} | ${result.geometryOutcome} | ${result.styleOutcome} | ${result.browserErrors} | ${result.screenshot ?? "not captured"} |`),
+    "| Page | Viewport | State | Actual URL | Result | Geometry | Styles | Browser errors | Screenshot |",
+    "| --- | --- | --- | --- | --- | --- | --- | ---: | --- |",
+    ...report.results.map((result) => `| ${result.pageId} | ${result.viewport} | ${result.stateId} | ${result.actualUrl ?? "not available"} | ${result.outcome} | ${result.geometryOutcome} | ${result.styleOutcome} | ${result.browserErrors} | ${result.screenshot ?? "not captured"} |`),
     "",
     "## Diagnostics",
     "",

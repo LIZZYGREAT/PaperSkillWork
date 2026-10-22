@@ -20,6 +20,8 @@
 
 自动检查仅用于发现可以客观定义的问题。不要把所有 DOM 重叠都判错；浮层、图例和图形标签可能有意覆盖。局部公式或表格的合法滚动应与页面整体溢出区分。不要用留白百分比或综合审美评分代替截图复核。
 
+runner 的 `BROWSER_ERRORS` 会检查浏览器实际发出的 CSS/JS 请求，以及与当前页面同源的图片、字体、媒体和具有静态资源扩展名的动态本地请求；常见 `/api/`、`/graphql/`、`/analytics/`、`/telemetry/` 请求不按静态资源处理。它不代表检查了页面上所有可能的资源。复杂交互才会触发的资源必须在相应状态中实际操作/请求，并结合浏览器 Network 检查；不能仅凭 runner PASS 宣称所有图片、字体、视频或动态资源均正常。跨源可选 API/媒体失败不作为本地静态文件缺失，但其业务功能仍须按项目要求单独验证。
+
 ## 3. 按风险选取状态
 
 页面修改应在项目现有 implementation-plan 中列出本次需要查看的视口与状态，而不是维护另一套页面清单。通常包括：
@@ -55,7 +57,12 @@
 
 以下 PowerShell 范式从仓库根目录运行。若项目设置了绝对 Vite `base`，临时 URL 必须匹配该 base；早期检查可使用项目支持的 build 参数覆盖为同一 `qa-preview` 路径，并记录实际命令，不改写正式源码配置。
 
+runner 以 `new URL(pages[].path, baseUrl)` 解析页面地址：当 `baseUrl` 是 `/papers/<paper-name>/<version>/` 时，`path: "/"` 会访问站点根目录并丢失子路径。子路径配置必须用相对 `./` 或完整的 `/papers/<paper-name>/<version>/`；报告的每项 `actualUrl` 必须核对为预期非根地址。工具的服务 readiness HTTP 200 只表示服务启动，不是 `SUBPATH_ASSETS` 通过依据。
+
+下面的完整示例属于**人工交互预览模式**：它会打开系统浏览器并在 `Read-Host` 等待人工复核。Codex/W8 自动执行不得盲目运行该阻塞分支；请改用下节的非阻塞 Chromium runner 模式。
+
 ```powershell
+$RepoRoot = (Get-Location).Path
 $PaperId = 'ewc'
 $PathsJson = python tools/paper.py paths $PaperId --json
 if ($LASTEXITCODE -ne 0) { throw 'Could not resolve paths.publish_source' }
@@ -123,6 +130,60 @@ try {
 }
 ```
 
+#### Codex/W8 非阻塞 Chromium 模式
+
+此模式复用上面的 `npm run build`、新建 GUID staging、将 `dist` 复制到 `$StageRoute` 的步骤，但**不要**启动人工示例里的 `Start-Process`/`Read-Host` 服务段。由现有 Visual QA runner 启动并在自身 `finally` 停止临时 HTTP 服务；配置应填写真实页面和关键交互的 selector。示例从 staging 已准备完成处继续，配置文件放在 staging 内，runner 产物仍写入仓库 `.visual-qa/`：
+
+```powershell
+$PortListener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
+$PortListener.Start()
+try {
+    $Port = $PortListener.LocalEndpoint.Port
+} finally {
+    $PortListener.Stop()
+}
+$PreviewUrl = "http://127.0.0.1:$Port/papers/$PaperName/$Version/"
+$QaConfigPath = Join-Path $StageRoot 'visual-qa-subpath.json'
+$QaConfig = @{
+    baseUrl = $PreviewUrl
+    server = @{
+        command = 'python'
+        args = @('-m', 'http.server', "$Port", '--bind', '127.0.0.1')
+        cwd = '.'
+        readyPath = "/papers/$PaperName/$Version/"
+        startupTimeoutMs = 10000
+    }
+    pages = @(@{
+        id = 'production-subpath'
+        path = './'
+        states = @(
+            @{ id = 'initial' }
+            @{ id = 'key-interaction'; actions = @(@{ type = 'click'; selector = '[data-testid="replace-with-real-selector"]' }) }
+        )
+    })
+} | ConvertTo-Json -Depth 12
+[System.IO.File]::WriteAllText($QaConfigPath, $QaConfig + [Environment]::NewLine, [System.Text.UTF8Encoding]::new($false))
+$Runner = Join-Path $RepoRoot 'tools/visual-qa/cli.mjs'
+$OutputRoot = Join-Path $RepoRoot '.visual-qa'
+$RunnerOutput = & node $Runner --config $QaConfigPath --output $OutputRoot 2>&1
+$RunnerExitCode = $LASTEXITCODE
+$RunnerOutput | ForEach-Object { Write-Host $_ }
+$ReportLine = $RunnerOutput | ForEach-Object { $_.ToString() } | Where-Object { $_ -match '^Visual QA (PASS|FAIL)\. Report: ' } | Select-Object -Last 1
+if (!$ReportLine) { throw "Runner did not return its report path (exit $RunnerExitCode)." }
+$ReportPath = ([regex]::Match($ReportLine, 'Report: (.+)$')).Groups[1].Value.Trim()
+$RunDirectory = Split-Path -Parent $ReportPath # exact path from this invocation; do not synthesize a timestamp
+$Report = Get-Content -LiteralPath $ReportPath -Raw | ConvertFrom-Json
+$ExpectedPath = "/papers/$PaperName/$Version/"
+if (!$Report.results.Count) { throw "No browser result was captured; inspect $RunDirectory" }
+foreach ($Result in $Report.results) {
+    if (([uri]$Result.actualUrl).AbsolutePath -ne $ExpectedPath) { throw "Wrong actual browser URL: $($Result.actualUrl); expected $ExpectedPath" }
+}
+Write-Host "Visited $ExpectedPath; exit=$RunnerExitCode; BROWSER_ERRORS=$($Report.statuses.BROWSER_ERRORS); run=$RunDirectory"
+if ($RunnerExitCode -ne 0) { throw "Visual QA failed; preserve and inspect $RunDirectory before any cleanup." }
+```
+
+Runner 完成后由 Agent 读取报告、实际查看截图，并确认浏览器 Network/错误信息和所触发的动态资源；只将这次声明并执行的状态视为覆盖范围。确认并记录后，用**终端输出解析出的 `$RunDirectory`** 执行精确清理、核对 `CLEANED` 和 `Test-Path`，不要在截图检查前删掉证据。这个模式不等待人工输入；不能触发所需交互或检查 Network 时，相关 `SUBPATH_ASSETS` 结论为 NOT_RUN，而不是以首页 200、固定等待或根路径预览代替。
+
 Actually open the non-root URL, operate a representative page and any interaction that loads dynamic assets, then inspect browser Network for 4xx/5xx and resource errors. Record the path, page/state, `dist/index.html` references, Vite `base`, browser result and exact build command. `SUBPATH_ASSETS` is NOT_RUN if no browser/network inspection was possible. In `finally`, stop only the `python` process started above and remove only the fresh GUID staging directory; never copy `dist` into `PaperSkillWork/html_output/` or create a permanent preview server. For W9, rerun affected checks on the same final `publish_source`; if it changes, review the changed rendered states again before recording acceptance.
 
 ## 5. 修复范围与停止条件
@@ -168,7 +229,7 @@ node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo
 ]
 ```
 
-断言在状态操作、字体加载和页面稳定后执行，只接受选择器、CSS 属性名和期望字符串，不执行配置中的脚本。缺失选择器、空变量、实际值不符、CSS/JS 资源加载失败都会使状态与 CI 失败；诊断和 `report.json` 记录 `selector`、`property`、`expected`、`actual`。报告单独显示 `STYLE_QA`，不会改变 `VISUAL_REVIEW=NOT_RUN` 或 `HUMAN_ACCEPTANCE=PENDING`。
+断言在状态操作、字体加载和页面稳定后执行，只接受选择器、CSS 属性名和期望字符串，不执行配置中的脚本。缺失选择器、空变量或实际值不符会使状态与 CI 失败；诊断和 `report.json` 记录 `selector`、`property`、`expected`、`actual`。受支持的本地静态资源加载失败由独立的 `BROWSER_ERRORS` 检查报告，不混入 `STYLE_QA`。报告单独显示两个状态，不会改变 `VISUAL_REVIEW=NOT_RUN` 或 `HUMAN_ACCEPTANCE=PENDING`。
 
 现有网页项目与新建项目模板都在各自目录保存 `visual-qa.json`。Push CI 使用事件 `before → sha` 的完整 Git 差异选择论文工作区和实际网页目录；首次 Push 或缺失基线用默认目标分支的 merge-base，无法确定基线时失败。网页修改会分别执行 `npm ci`、生产构建和 `vite preview` Chromium Smoke；纯论文资料变更只校验 workspace。公共 QA 或选择器改动会额外检查 EWC 与 iCaRL 代表性页面。
 
