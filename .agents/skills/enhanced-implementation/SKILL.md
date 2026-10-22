@@ -31,10 +31,60 @@ Before W6 edits, use the accepted W5 plan to identify the slice, approved design
 4. Update `implementation-manifest.json` for each implemented slice CORE item with its planned stage, component, and `status: complete`.
 5. Distinguish paper facts, real experimental data, synthetic teaching data, and implementation mappings. Where a reader could mistake an example for paper data, or a simplification changes their understanding of the paper's computation or applicability, add a concise note beside that material. Obvious demonstrations that cannot reasonably be confused need no repeated disclaimer; never invent results or weaken evidence boundaries.
 6. Install dependencies, build the slice, and perform the minimal browser check on the actual configured source. Do not run or save a separate structure report; the scaffold supplies the standard source paths, and the slice contains only real implemented teaching content.
-7. Once the slice starts and builds, directly run the adjacent PaperSkill checkout's official `paper-skill/scripts/syntax-check.js <source> --require-parser` and `paper-skill/scripts/validate-output.js <source>` against the absolute `publish_source` from `paths --json`. Do not copy the checker or add a runner. Confirm the checkout is the intended current official main revision, and record its commit/tool version and actual commands; a stale or unverifiable checkout is NOT_RUN, not a current-upstream pass. Interpret warnings without inventing future chapters, placeholder content, or fake registrations. If the source, checkout, or parser is unavailable, record `UPSTREAM_SOURCE_CHECK=NOT_RUN` with the reason and individual statuses as NOT_RUN; this is not a compatibility pass and must be retried at W8. Do not run Import, repository Validate, or Preflight.
+7. Once the slice starts and builds, resolve the absolute `publish_source` from `paths --json`, install that source project's dependencies using its lockfile, and directly run the adjacent PaperSkill checkout's official `paper-skill/scripts/syntax-check.js <source> --require-parser` and `paper-skill/scripts/validate-output.js <source>`. `--require-parser` must fail if a real TypeScript/esbuild parser is unavailable; do not accept an auto-skip. Do not copy the checker or add a runner. Verify the checkout and exact script contents against current official `upstream/main` as described below, and record both SHAs, Node/tool versions, commands, exit codes, and evidence. A stale/mismatched/unverifiable checker means the current-upstream `UPSTREAM_SYNTAX` and `UPSTREAM_OUTPUT` results are NOT_RUN (a local diagnostic execution may be described separately, but is not an official-current pass). Interpret warnings without inventing future chapters, placeholder content, or fake registrations. A real partial slice may warn about unimplemented pages; explain that warning and keep the real slice sparse. If a source, dependency, parser, or current official checker is unavailable, set the affected individual status to NOT_RUN with the reason; do not add a combined source-check status. Do not run Import, repository Validate, or Preflight.
 8. Stop when the slice is usable. Do not implement or count the remaining spine yet.
 
-The W6 CLI gate checks the configured release source's required entrypoints and that every `vertical_slice.required_core_items` entry is complete in the manifest. It does not install dependencies, build, run a browser, or run upstream source checks. Separately run the applicable install/build and slice interaction/browser checks plus the two official source checkers. In the existing implementation-plan W6 history, record `UPSTREAM_SYNTAX`, `UPSTREAM_OUTPUT`, commands/revision, validator warnings, browser states/viewports, and any NOT_RUN reason. A real partial slice may produce warnings; never manufacture content to silence them. Do not describe W6 quality QA as passed if a required check was skipped. No reviewer fields are used for W6, and no separate report is created.
+The W6 CLI gate checks the configured release source's required entrypoints and that every `vertical_slice.required_core_items` entry is complete in the manifest. It does not install dependencies, build, run a browser, or run upstream source checks. Separately run the applicable install/build and slice interaction/browser checks plus the two official source checkers. In the existing implementation-plan W6 history, record only the four statuses `UPSTREAM_SYNTAX`, `UPSTREAM_OUTPUT`, `SOURCE_BUILD`, and `SUBPATH_ASSETS` (as applicable) using PASS / FAIL / NOT_RUN, plus actual commands, exit codes, current checker SHA/tool versions, validator warnings, browser states/viewports, evidence, and NOT_RUN reasons. A real partial slice may produce warnings for pages not yet implemented; explain them and never manufacture content to silence them. Do not describe W6 quality QA as passed if a required check was skipped. No reviewer fields are used for W6, and no separate report is created.
+
+### Confirm the current official checker revision
+
+Use the adjacent PaperSkill checkout only; do not clone, switch branches, reset, or overwrite it. A fetch updates Git references but not files, and is attempted only after confirming the checkout is clean and its `upstream` fetch URL is the official ReductTech repository. For a PowerShell session from PaperSkillWork root:
+
+```powershell
+$PaperSkill = (Resolve-Path ..\PaperSkill).Path
+git -C $PaperSkill remote -v
+git -C $PaperSkill status --short --branch
+$UpstreamUrlOutput = git -C $PaperSkill remote get-url upstream 2>$null
+$RemoteExit = $LASTEXITCODE
+$UpstreamUrl = if ($RemoteExit -eq 0) { ($UpstreamUrlOutput -join '').Trim() } else { '' }
+$OfficialUrls = @('git@github.com:ReductTech/PaperSkill.git', 'https://github.com/ReductTech/PaperSkill.git')
+$HeadBefore = (git -C $PaperSkill rev-parse HEAD).Trim()
+$HeadExit = $LASTEXITCODE
+$Dirty = git -C $PaperSkill status --porcelain
+$StatusExit = $LASTEXITCODE
+$Scripts = @('paper-skill/scripts/syntax-check.js', 'paper-skill/scripts/validate-output.js')
+$LocalScriptsPresent = $true
+foreach ($Script in $Scripts) {
+    if (!(Test-Path (Join-Path $PaperSkill $Script))) { $LocalScriptsPresent = $false }
+}
+if ($UpstreamUrl -notin $OfficialUrls -or $RemoteExit -ne 0 -or $HeadExit -ne 0 -or $StatusExit -ne 0 -or $Dirty -or !$LocalScriptsPresent) {
+    Write-Warning 'Current official checker revision NOT_RUN: verify the remote and clean working tree first.'
+} else {
+    git -C $PaperSkill fetch upstream main
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning 'Current official checker revision NOT_RUN: record the fetch/network error; do not reuse a cached SHA as current.'
+    } else {
+        $HeadSha = (git -C $PaperSkill rev-parse HEAD).Trim()
+        $HeadExit = $LASTEXITCODE
+        $MainSha = (git -C $PaperSkill rev-parse upstream/main).Trim()
+        $MainExit = $LASTEXITCODE
+        $Present = $LocalScriptsPresent -and $HeadExit -eq 0 -and $MainExit -eq 0 -and $HeadSha -eq $HeadBefore
+        foreach ($Script in $Scripts) {
+            git -C $PaperSkill cat-file -e "upstream/main:$Script" 2>$null
+            if ($LASTEXITCODE -ne 0) { $Present = $false }
+        }
+        git -C $PaperSkill diff --quiet upstream/main -- $Scripts
+        $ScriptsMatch = $LASTEXITCODE -eq 0
+        if (!$Present -or !$ScriptsMatch) {
+            Write-Warning 'Current official compatibility NOT_RUN: local checker files are missing or differ from upstream/main.'
+        } else {
+            "HEAD=$HeadSha upstream/main=$MainSha; both checker files match upstream/main"
+        }
+    }
+}
+```
+
+If the checkout is on a personal branch, the exact files that will be executed still must match the successfully fetched `upstream/main` scripts. A mismatch, dirty checker file, absent script, or failed/unavailable fetch means the current-upstream `UPSTREAM_SYNTAX` and `UPSTREAM_OUTPUT` statuses are NOT_RUN; an older SHA may be noted only as the local diagnostic revision. Record the actual fetch error, HEAD/SHA (if known), `node --version`, file comparison, commands, exit codes, and evidence in the existing implementation plan/final-check. Never checkout/reset to force a match.
 
 ## W7: Human Learning Review
 

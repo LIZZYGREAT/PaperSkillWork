@@ -49,7 +49,81 @@
 
 ### W8 生产构建与子路径资源
 
-对实际发布源码运行项目声明的生产构建命令，并单独报告 `SOURCE_BUILD`。子路径检查须确认 Vite `base`、构建后的 `dist/index.html` 实际引用的 CSS/JS、图片、字体和动态载入资源，并在预期的非根部署路径预览/操作页面，查看浏览器 Network 是否存在 404 或其他加载失败；单纯在 `/` 根路径正常不能证明 `SUBPATH_ASSETS` 通过。检查构建产物中实际被入口 HTML 引用的资源，不要把过期且未被引用的 hash 文件误当作部署文件。无法实际预览或检查网络时，将 `SUBPATH_ASSETS` 记为 NOT_RUN 并说明原因。
+对 `paths.publish_source` 对应的实际发布源码运行项目声明的生产构建（通常是 `npm run build`），记录命令/退出码并单独报告 `SOURCE_BUILD`。确认 `vite.config.*` 的 `base`，检查构建后的 `dist/index.html` 实际引用的 CSS/JS，并查看动态图片、字体及页面交互触发的资源。单纯在 `/` 根路径正常不能证明 `SUBPATH_ASSETS` 通过；检查真实被引用文件，不要把过期且未引用的 hash 文件误判为部署错误。
+
+无需部署到 GitHub，可在本机把生产 `dist` 暂存到形如 `/papers/<paper-name>/<version>/` 的路径下预览。`paper-name` 使用 `paper.yaml` 中配置的 `release.upstream_paper_name`；未配置时，用项目已有 `upstream_paper_name_from_title()` 对论文标题生成同一 canonical 名称，无需读取贡献者全局 Git 配置。只有官方 Import 已确定版本时才填实际版本；更早的验证使用 `qa-preview` 等明确的测试段名，它不是正式版本。临时预览 URL 必须以斜杠结尾，确保 `./images/...` 等相对 URL 从该部署目录解析。
+
+以下 PowerShell 范式从仓库根目录运行。若项目设置了绝对 Vite `base`，临时 URL 必须匹配该 base；早期检查可使用项目支持的 build 参数覆盖为同一 `qa-preview` 路径，并记录实际命令，不改写正式源码配置。
+
+```powershell
+$PaperId = 'ewc'
+$PathsJson = python tools/paper.py paths $PaperId --json
+if ($LASTEXITCODE -ne 0) { throw 'Could not resolve paths.publish_source' }
+$Paths = $PathsJson | ConvertFrom-Json
+$Source = $Paths.publish_source
+$PaperName = python -c "import sys; sys.path.insert(0, 'tools'); import paper; _, c = paper.read_paper(sys.argv[1]); r = c.get('release') or {}; print((r.get('upstream_paper_name') or '').strip() or paper.upstream_paper_name_from_title(c['title']))" $PaperId
+if ($LASTEXITCODE -ne 0) { throw 'Could not derive the paper-name from paper.yaml' }
+$Version = 'qa-preview' # replace only after the official Import selects a version
+$StageRoot = Join-Path $env:TEMP ('paperskillwork-subpath-' + [guid]::NewGuid().ToString('N'))
+$StageRoute = Join-Path $StageRoot ("papers\$PaperName\$Version")
+$Server = $null
+$Listener = $null
+$Pushed = $false
+$StageCreated = $false
+try {
+    if (Test-Path -LiteralPath $StageRoot) { throw "Temporary staging path already exists; refusing to reuse it: $StageRoot" }
+    Push-Location $Source
+    $Pushed = $true
+    npm run build
+    if ($LASTEXITCODE -ne 0) { throw "Production build failed with exit code $LASTEXITCODE" }
+    $Dist = Join-Path $Source 'dist'
+    if (!(Test-Path (Join-Path $Dist 'index.html'))) { throw "Build did not create $Dist\index.html" }
+    New-Item -ItemType Directory -Path $StageRoot -ErrorAction Stop | Out-Null
+    $StageCreated = $true
+    New-Item -ItemType Directory -Path $StageRoute -Force | Out-Null
+    Copy-Item -Path (Join-Path $Dist '*') -Destination $StageRoute -Recurse -Force
+    Select-String -Path (Join-Path $Dist 'index.html') -Pattern 'src=|href=' # inspect the actual emitted asset URLs
+
+    $Listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
+    $Listener.Start()
+    $Port = $Listener.LocalEndpoint.Port
+    $Listener.Stop()
+    $Listener = $null
+    $Server = Start-Process -FilePath python -ArgumentList @('-m', 'http.server', "$Port", '--bind', '127.0.0.1') -WorkingDirectory $StageRoot -PassThru -WindowStyle Hidden
+    $PreviewUrl = "http://127.0.0.1:$Port/papers/$PaperName/$Version/"
+    $Ready = $false
+    for ($Attempt = 0; $Attempt -lt 20; $Attempt++) {
+        try { Invoke-WebRequest -Uri $PreviewUrl -UseBasicParsing -TimeoutSec 2 | Out-Null; $Ready = $true; break }
+        catch { Start-Sleep -Milliseconds 250 }
+    }
+    if (!$Ready) { throw "Temporary preview did not become ready: $PreviewUrl" }
+    Write-Host "Open $PreviewUrl and operate a representative page/state. Inspect DevTools Network for all referenced JS/CSS, images, fonts, dynamic requests, and any 4xx/5xx responses; verify relative ./images/... paths at this non-root route. Press Enter here after review."
+    Start-Process $PreviewUrl
+    Read-Host 'Stop preview and clean the temporary stage'
+} finally {
+    if ($Server -and !$Server.HasExited) {
+        try { Stop-Process -Id $Server.Id -ErrorAction Stop }
+        catch { Write-Warning "Could not stop this task's preview process $($Server.Id): $_" }
+    }
+    if ($Listener) { $Listener.Stop() }
+    if ($Pushed) { Pop-Location }
+    if ($StageCreated -and (Test-Path -LiteralPath $StageRoot)) {
+        try {
+            $TempPrefix = [System.IO.Path]::GetFullPath((Resolve-Path $env:TEMP).Path + [System.IO.Path]::DirectorySeparatorChar)
+            $ResolvedStage = [System.IO.Path]::GetFullPath((Resolve-Path -LiteralPath $StageRoot).Path)
+            if ($ResolvedStage.StartsWith($TempPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                Remove-Item -LiteralPath $ResolvedStage -Recurse -Force -ErrorAction Stop
+            } else {
+                Write-Warning "Refusing to remove an unexpected staging path; inspect manually: $ResolvedStage"
+            }
+        } catch {
+            Write-Warning "Staging cleanup failed; inspect this exact path and error: $StageRoot — $_"
+        }
+    }
+}
+```
+
+Actually open the non-root URL, operate a representative page and any interaction that loads dynamic assets, then inspect browser Network for 4xx/5xx and resource errors. Record the path, page/state, `dist/index.html` references, Vite `base`, browser result and exact build command. `SUBPATH_ASSETS` is NOT_RUN if no browser/network inspection was possible. In `finally`, stop only the `python` process started above and remove only the fresh GUID staging directory; never copy `dist` into `PaperSkillWork/html_output/` or create a permanent preview server. For W9, rerun affected checks on the same final `publish_source`; if it changes, review the changed rendered states again before recording acceptance.
 
 ## 5. 修复范围与停止条件
 

@@ -1,6 +1,10 @@
 import json
 import shutil
 import subprocess
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def git(repo, *args):
@@ -85,3 +89,21 @@ def test_single_paper_import_fixture_selects_next_version_and_stages_only_that_d
     assert all(path.startswith(relative + "/") for path in staged)
     assert (paperskill / "catalog" / "papers.json").is_file()
     assert not (work / "html_output").exists()
+
+
+def test_workflow_docs_keep_four_individual_qa_statuses_and_single_w10_gate():
+    statuses = ("UPSTREAM_SYNTAX", "UPSTREAM_OUTPUT", "SOURCE_BUILD", "SUBPATH_ASSETS")
+    paths = (
+        REPO_ROOT / ".agents/skills/implementation-plan/SKILL.md",
+        REPO_ROOT / ".agents/skills/enhanced-implementation/SKILL.md",
+        REPO_ROOT / ".agents/skills/final-audit/SKILL.md",
+        REPO_ROOT / "docs/WORKFLOW.md",
+        REPO_ROOT / "templates/implementation-plan.md",
+        REPO_ROOT / "templates/final-check.md",
+    )
+    docs = "\n".join(path.read_text(encoding="utf-8") for path in paths)
+    for status in statuses:
+        assert status in docs
+    assert "UPSTREAM_SOURCE_CHECK" not in docs
+    assert "NOT_RUN" in (REPO_ROOT / "templates/final-check.md").read_text(encoding="utf-8")
+    assert "唯一正式发布门禁" in (REPO_ROOT / "docs/WORKFLOW.md").read_text(encoding="utf-8")

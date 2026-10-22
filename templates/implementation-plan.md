@@ -101,7 +101,7 @@ Check applicable patterns before inventing a new interaction: Architecture Explo
 
 Name the first 2–3 spine stages included where that range fits the content, the smallest end-to-end cognitive progression a learner can genuinely experience, included source figures, and what can be reviewed without implementing the rest. The slice should carry the reader from a perceived problem through an introduced mechanism to an observable conclusion and a natural next question, not merely collect clickable components.
 
-In the existing W6-scope command/results history below, record `UPSTREAM_SYNTAX` and `UPSTREAM_OUTPUT` as PASS / FAIL / NOT_RUN alongside the slice build and browser checks. Invoke the official upstream syntax checker with `--require-parser` and output validator directly against the absolute `publish_source` from `python tools/paper.py paths <paper-id> --json`; preserve and explain warnings, and do not add fake chapters or registrations to silence partial-slice warnings. If the source, adjacent PaperSkill checkout, or parser is unavailable, record `UPSTREAM_SOURCE_CHECK=NOT_RUN` plus the reason. W8 must rerun the checks on the final source.
+In the existing W6-scope command/results history below, record the applicable individual statuses `UPSTREAM_SYNTAX`, `UPSTREAM_OUTPUT`, `SOURCE_BUILD`, and `SUBPATH_ASSETS` as PASS / FAIL / NOT_RUN alongside commands, exit codes, current checker SHA/tool version, evidence, and browser states/viewports. Invoke the official upstream syntax checker with `--require-parser` and output validator directly against the absolute `publish_source` from `python tools/paper.py paths <paper-id> --json`; preserve and explain real partial-slice warnings, and do not add fake chapters or registrations to silence them. If the source, current upstream revision, or parser is unavailable, set the affected individual status(es) to NOT_RUN with the reason; do not add a combined status. W8 must rerun the checks on the final source.
 
 ### Vertical Slice Review (W7)
 
@@ -127,9 +127,9 @@ If a review is REVISE, retain that decision in this history. Record the affected
 
 List the remaining CORE stages to complete. List compact placements for SUPPORTING material and the Reference Hub/advanced locations for REFERENCE. Confirm DELETE items stay out. Identify the complete-algorithm integration scene and the semantic moments, state assertions, representative initial/intermediate/final views, and handoff checks needed to verify it against W2 and W4.
 
-Resolve the final source path from the absolute `publish_source` field in `python tools/paper.py paths <paper-id> --json`; it must be the same source intended for W10. Install that source's dependencies from its existing lockfile before checks (`npm ci` when it has a package lock); the official syntax checker discovers TypeScript/esbuild under the target source. Record the actual PaperSkill checker revision, commands, tool versions, and log/evidence locations. Rerun source checks after any later source change.
+Resolve the final source path from the absolute `publish_source` field in `python tools/paper.py paths <paper-id> --json`; it must be the same source intended for W10. Install that source's dependencies from its existing lockfile before checks (`npm ci` when it has a package lock); the official syntax checker discovers TypeScript/esbuild under the target source. Record the actual PaperSkill `upstream/main` SHA, whether both executed checker files match it, commands, exit codes, tool versions, and log/evidence locations. Rerun affected checks after any later source change. W8 `stage ... complete` means structural coverage only; it is not an engineering-quality PASS.
 
-| W8 check | Status (PASS / FAIL / NOT_RUN) | Actual command, tool version, evidence/log, and notes |
+| W8 check | Status (PASS / FAIL / NOT_RUN) | Actual command and exit code, checker SHA/tool version, evidence/log, and notes |
 | --- | --- | --- |
 | `UPSTREAM_SYNTAX` (`--require-parser`) |  |  |
 | `UPSTREAM_OUTPUT` (include warnings and interpretation) |  |  |
