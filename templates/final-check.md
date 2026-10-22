@@ -4,6 +4,21 @@
 
 See `design/implementation-plan.md` for the first-slice review and any revision loop.
 
+## W8 Final-Source Compatibility Summary
+
+Record the exact final source path resolved by `python tools/paper.py release-info <paper-id> --json`; it must match the W8 record in `design/implementation-plan.md` and the source intended for W10. If the source changed after W8, rerun affected checks and inspect the updated page before accepting W9. Include the adjacent PaperSkill checker revision and exact commands/evidence; warning interpretation belongs in the notes.
+
+Final source path (`release-info.source`):
+
+PaperSkill checker revision / tool version:
+
+| W8 check | Status (PASS / FAIL / NOT_RUN) | Command and evidence/log / notes |
+| --- | --- | --- |
+| `UPSTREAM_SYNTAX` (`--require-parser`) |  |  |
+| `UPSTREAM_OUTPUT` (warnings interpreted) |  |  |
+| `SOURCE_BUILD` (actual project production build) |  |  |
+| `SUBPATH_ASSETS` (production output and browser network at intended subpath) |  |  |
+
 ## W9 Learning Audit
 
 - [ ] A first-time reader can explain why the paper needs each key mechanism, not merely repeat its definition.
@@ -30,7 +45,7 @@ See `design/implementation-plan.md` for the first-slice review and any revision 
 
 ## W9 Visual QA Record
 
-Record the actual commands, pages, states, viewports, screenshot/report locations, and findings. Use NOT_RUN when a check was unavailable.
+Record the actual commands, pages, states, desktop/mobile viewports or devices, screenshot/report locations, and findings. Use NOT_RUN when a check was unavailable.
 
 | Status | Result | Evidence / notes |
 | --- | --- | --- |
@@ -49,7 +64,8 @@ Record the exact build command and exit result. Geometry evidence names the page
 ## Engineering, Accessibility, and Mobile
 
 - [ ] Build and project checks were run; actual outcomes are recorded.
-- [ ] Implementation coverage, project tests, production build, and Visual QA outcomes are recorded for the actual source. W8 does not require a PaperSkill checkout or official validator; that contract check belongs to the user's W10 preflight after W9 acceptance.
+- [ ] Implementation coverage, project tests, production build, W8 official source compatibility checks, and Visual QA outcomes are recorded for the actual source. These early source checks are not the official W10 Import, repository Validate, or Preflight.
+- [ ] Final-page navigation and key interactions were actually operated on desktop and mobile where supported; subpath production resource loading was checked separately from a root-path preview.
 - [ ] Keyboard/focus, touch/non-drag alternatives, reduced-motion, and mobile behavior were reviewed where applicable.
 - [ ] Export is self-contained and has no external shared runtime dependency or local machine path.
 

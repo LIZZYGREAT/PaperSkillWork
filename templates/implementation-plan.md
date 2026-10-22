@@ -19,6 +19,16 @@ Record the latest confirmed W4/W5 decisions here. Keep this as the single projec
 - Open choices that require user input:
 - Pages, shared components, and states affected by this change:
 
+### Upstream Delivery Compatibility (W5)
+
+Record one concise project-level check here; do not repeat mappings for every page. Resolve the actual source from `paper.yaml` / `python tools/paper.py release-info <paper-id> --json`. Check the real React/Vite delivery structure, `tutorial.ts` metadata and any actual `componentId` registration, Vite `base` and subpath-safe asset references, and unusual dependencies, browser APIs, network requests, or build plugins. Note the checked official PaperSkill main revision/evidence and whether the adjacent checkout is current; a stale checker cannot establish current compatibility. Generator-only visual conventions are not automatically requirements for a custom page.
+
+- Final source path (`release-info.source`):
+- Required entrypoints and real tutorial metadata/registration:
+- Vite base, static assets, and subpath risks:
+- Special dependencies, APIs, network access, or build plugins and compatibility:
+- Concrete receiving conflict (if any), official evidence, trade-off, protected approved design, and user decision needed:
+
 For each confirmed page/state, record the approved effect or screenshot reference and its change boundary:
 
 | Page / state | Confirmed effect or screenshot reference | Protected objects, scales, colors, connections, and animation | Layout changes allowed | Open trade-offs |
@@ -56,14 +66,6 @@ Record only the semantic moments that create understanding or carry risk; there 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  |  |
 
-## Specific Upstream Contract Conflict (only if needed)
-
-Most projects need no entry here. Record only a concrete conflict that prevents the approved design from fitting the current upstream contract, and the decision needed to resolve it. Do not duplicate chapter, module, or component mappings; the user's W10 preflight checks the actual release source against the current official contract after W9 acceptance.
-
-- Conflict and affected approved design:
-- Evidence from the current official contract/validator:
-- Decision needed:
-
 ## Visual QA State Plan
 
 List only the pages, states, and viewports relevant to this project or revision. Follow docs/VISUAL_QA.md.
@@ -99,6 +101,8 @@ Check applicable patterns before inventing a new interaction: Architecture Explo
 
 Name the first 2–3 spine stages included where that range fits the content, the smallest end-to-end cognitive progression a learner can genuinely experience, included source figures, and what can be reviewed without implementing the rest. The slice should carry the reader from a perceived problem through an introduced mechanism to an observable conclusion and a natural next question, not merely collect clickable components.
 
+In the existing W6-scope command/results history below, record `UPSTREAM_SYNTAX` and `UPSTREAM_OUTPUT` as PASS / FAIL / NOT_RUN alongside the slice build and browser checks. Invoke the official upstream syntax checker with `--require-parser` and output validator directly against the real configured source; preserve and explain warnings, and do not add fake chapters or registrations to silence partial-slice warnings. If the source, adjacent PaperSkill checkout, or parser is unavailable, record `UPSTREAM_SOURCE_CHECK=NOT_RUN` plus the reason. W8 must rerun the checks on the final source.
+
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING
@@ -122,6 +126,15 @@ If a review is REVISE, retain that decision in this history. Record the affected
 ## Full Implementation (W8)
 
 List the remaining CORE stages to complete. List compact placements for SUPPORTING material and the Reference Hub/advanced locations for REFERENCE. Confirm DELETE items stay out. Identify the complete-algorithm integration scene and the semantic moments, state assertions, representative initial/intermediate/final views, and handoff checks needed to verify it against W2 and W4.
+
+Resolve the final source path from `release-info.source`; it must be the same source intended for W10. Record the actual PaperSkill checker revision, commands, tool versions, and log/evidence locations. Rerun source checks after any later source change.
+
+| W8 check | Status (PASS / FAIL / NOT_RUN) | Actual command, tool version, evidence/log, and notes |
+| --- | --- | --- |
+| `UPSTREAM_SYNTAX` (`--require-parser`) |  |  |
+| `UPSTREAM_OUTPUT` (include warnings and interpretation) |  |  |
+| `SOURCE_BUILD` (actual project production build) |  |  |
+| `SUBPATH_ASSETS` (built output and browser network at deployed subpath) |  |  |
 
 ## Human Acceptance Record
 

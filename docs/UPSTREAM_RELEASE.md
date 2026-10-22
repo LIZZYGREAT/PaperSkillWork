@@ -72,9 +72,16 @@ git -C $PaperSkillRepo status --short
 git -C $PaperSkillRepo status --short --untracked-files=no
 git -C $PaperSkillRepo diff --cached --name-only
 git -C $PaperSkillRepo diff --name-only
+
+$CatalogPath = Join-Path $PaperSkillRepo 'catalog/papers.json'
+if (-not (Test-Path -LiteralPath $CatalogPath -PathType Leaf)) { throw 'catalog/papers.json is not present in this checkout' }
+git -C $PaperSkillRepo ls-files --error-unmatch -- catalog/papers.json *> $null
+if ($LASTEXITCODE -ne 0) { throw 'catalog/papers.json is not tracked; do not run the catalog restore step' }
+$CatalogStatus = @(git -C $PaperSkillRepo status --porcelain -- catalog/papers.json)
+if ($LASTEXITCODE -ne 0 -or $CatalogStatus.Count -ne 0) { throw 'catalog/papers.json has pre-existing changes; preserve them and stop' }
 ```
 
-若状态有改动、当前处于尚未完成的 paper/* 分支，或稀疏范围包含整个 html_output/，先停下核对。不要 reset、删除文件或覆盖分支。检查后按[初始化指南的安全收敛步骤](PAPERSKILL_SETUP.md#五安全收敛已有稀疏检出)恢复基础稀疏范围。PaperSkillWork 中可能遗留的 /html_output/ 不在本次流程中清理。
+若状态有改动、`catalog/papers.json` 不存在/未跟踪/已有修改、当前处于尚未完成的 paper/* 分支，或稀疏范围包含整个 html_output/，先停下核对。目录文件必须在整个 W10 流程开始时就确认干净，后续不得用 `git restore` 清理任何预存改动。不要 reset、删除文件或覆盖分支。检查后按[初始化指南的安全收敛步骤](PAPERSKILL_SETUP.md#五安全收敛已有稀疏检出)恢复基础稀疏范围。PaperSkillWork 中可能遗留的 /html_output/ 不在本次流程中清理。
 
 ## B. 同步官方主线、建分支并仅展开当前论文
 
@@ -134,11 +141,42 @@ try {
 
   npm run validate
   if ($LASTEXITCODE -ne 0) { throw 'Official validation failed; do not commit' }
+
+  # 目录文件须在 W10 开始时已确认干净；Import/validate 若意外改动了它则停止，不覆盖该改动。
+  $BeforeCatalogRun = @(git status --porcelain --untracked-files=all)
+  if ($LASTEXITCODE -ne 0) { throw 'Could not inspect status before catalog generation' }
+  $CatalogStatus = @(git status --porcelain -- catalog/papers.json)
+  if ($LASTEXITCODE -ne 0 -or $CatalogStatus.Count -ne 0) {
+    throw 'catalog/papers.json changed before generation; preserve and inspect it instead of restoring'
+  }
+
+  npm run catalog
+  if ($LASTEXITCODE -ne 0) { throw 'Official catalog generation failed; inspect the working tree before continuing' }
+
+  # Sparse checkout only indexes the currently checked-out subset. Ensure catalog generation changed no other path.
+  $AfterCatalogRun = @(git status --porcelain --untracked-files=all)
+  if ($LASTEXITCODE -ne 0) { throw 'Could not inspect status after catalog generation' }
+  $BeforeOther = @($BeforeCatalogRun | Where-Object { $_ -notmatch '\s+catalog/papers\.json$' } | Sort-Object)
+  $AfterOther = @($AfterCatalogRun | Where-Object { $_ -notmatch '\s+catalog/papers\.json$' } | Sort-Object)
+  if (($BeforeOther -join [Environment]::NewLine) -ne ($AfterOther -join [Environment]::NewLine)) {
+    throw 'Catalog generation changed unexpected paths; inspect everything and do not restore or stage'
+  }
+
+  $CatalogStatus = @(git status --porcelain -- catalog/papers.json)
+  if ($LASTEXITCODE -ne 0) { throw 'Could not inspect generated catalog status' }
+  if ($CatalogStatus.Count -gt 0) {
+    git restore -- catalog/papers.json
+    if ($LASTEXITCODE -ne 0) { throw 'Could not restore the catalog generated from the confirmed-clean baseline' }
+  }
+  $CatalogStatus = @(git status --short -- catalog/papers.json)
+  if ($LASTEXITCODE -ne 0 -or $CatalogStatus.Count -ne 0) {
+    throw 'Generated catalog changes remain; inspect before staging'
+  }
 }
 finally { Pop-Location }
 ```
 
-npm run import 从 PaperSkillWork 的现有网页源码直接生成版本。官方 Import 过滤 node_modules、dist、.git 等工作文件并生成 paper.json。正式版本只存在于 PaperSkill/$Relative；不要复制到 PaperSkillWork，也不要额外运行单篇 build，完整预检会构建受影响版本。
+npm run import 从 PaperSkillWork 的现有网页源码直接生成版本。官方 Import 过滤 node_modules、dist、.git 等工作文件并生成 paper.json。`npm run catalog` 仅验证当前 sparse checkout 可生成索引；脚本再次确认自动变更只涉及最初已确认干净的 `catalog/papers.json` 后才恢复该文件，并检查恢复完成。它不代表已索引整个上游仓库。正式版本只存在于 PaperSkill/$Relative；不要复制到 PaperSkillWork，也不要额外运行单篇 build，完整预检会构建受影响版本。
 
 ## D. 仅提交当前论文版本并运行官方 preflight
 
