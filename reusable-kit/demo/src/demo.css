@@ -12,4 +12,20 @@ body { margin: 0; background: #eef2f4; color: #172b3a; font-family: Inter, ui-sa
 .kit-demo__section > p:first-of-type { color: #5f7180; }
 .kit-demo__selection { color: #5f7180; font-size: .88rem; }
 .kit-demo__footer { color: #5f7180; font-size: .88rem; }
-@media (max-width: 760px) { .kit-demo__header { align-items: stretch; flex-direction: column; } .kit-demo__paper { padding: 14px; } .kit-demo__section { padding: 12px; } }
+.kit-lab { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kit-lab__intro { grid-column: 1 / -1; max-width: 78ch; }
+.kit-lab__intro > * + * { margin-top: 10px; }
+.kit-lab__type-stack { display: grid; gap: 14px; }
+.kit-lab__button-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.kit-lab__long-button { width: min(100%, 260px); min-height: 60px; white-space: normal; }
+.kit-lab__control-row { display: grid; grid-template-columns: auto auto minmax(180px, 1fr); align-items: end; gap: 12px; margin-top: 18px; }
+.kit-lab__reading-grid { display: grid; grid-template-columns: minmax(250px, .85fr) minmax(320px, 1.15fr); gap: 16px; }
+@media (max-width: 760px) {
+  .kit-demo__header { align-items: stretch; flex-direction: column; }
+  .kit-demo__paper { padding: 14px; }
+  .kit-demo__section { padding: 12px; }
+  .kit-lab { grid-template-columns: 1fr; }
+  .kit-lab__intro { grid-column: auto; }
+  .kit-lab__control-row, .kit-lab__reading-grid { grid-template-columns: 1fr; }
+  .kit-lab__control-row .rk-chip { justify-self: start; }
+}

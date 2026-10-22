@@ -2,12 +2,13 @@ import { useCallback, useId, useRef } from "react";
 import type { ReactNode } from "react";
 import { useFocusTrap } from "../accessibility/useReducedMotion";
 
-export function Drawer({ open, title, onClose, children, side = "right", closeLabel = "Close" }: {
+export function Drawer({ open, title, onClose, children, side = "right", size = "default", closeLabel = "Close" }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
   side?: "left" | "right";
+  size?: "default" | "reading";
   closeLabel?: string;
 }) {
   const closeRef = useRef(onClose);
@@ -18,7 +19,7 @@ export function Drawer({ open, title, onClose, children, side = "right", closeLa
   if (!open) return null;
   return (
     <div className="rk-overlay" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section ref={panelRef} className={"rk-drawer rk-drawer--" + side} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+      <section ref={panelRef} className={`rk-drawer rk-drawer--${side} rk-drawer--${size}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <header className="rk-overlay__header"><h2 id={titleId}>{title}</h2><button type="button" className="rk-overlay__close" onClick={onClose} aria-label={closeLabel}>×</button></header>
         <div className="rk-overlay__body">{children}</div>
       </section>

@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --configLoader runner",
-    "build": "tsc && vite build --configLoader runner",
-    "preview": "vite preview --configLoader runner",
+    "dev": "vite --configLoader bundle",
+    "build": "tsc && vite build --configLoader bundle",
+    "preview": "vite preview --configLoader bundle",
     "test:browser": "node ./scripts/test-browser.mjs"
   },
   "dependencies": {

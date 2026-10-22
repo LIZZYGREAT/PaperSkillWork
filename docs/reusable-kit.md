@@ -85,7 +85,7 @@ Typography roles are exposed as overridable CSS custom properties in foundation/
 
 ## Local demos and checks
 
-The local app at `reusable-kit/demo/` contains LwF and EWC mini demos. It illustrates component reuse only; the displayed method sketches need paper-specific source checking before use in a tutorial.
+The local app at `reusable-kit/demo/` contains a Foundation Component Lab and LwF/EWC real-content scenarios. The Lab is the review surface for semantic typography roles, bounded Button/control variants, shared surfaces, viewport-safe Popover behavior, and default versus reading-sized Drawer layouts. The scenarios illustrate component reuse only; the displayed method sketches need paper-specific source checking before use in a tutorial.
 
 ```powershell
 cd reusable-kit/demo
@@ -96,4 +96,4 @@ npm run build
 npm run test:browser
 ```
 
-`test:browser` runs the assertion page and LwF/EWC scroll-sync walkthrough in headless Chromium. Workflow and scaffold checks run from the repository root with `python -m pytest -q`. TypeScript consumers should build their paper project after copying components. The kit preserves keyboard focus, touch-sized controls, reduced-motion behavior, and narrow-screen scrolling; the paper-specific implementation still needs its own accessibility and mobile review.
+`test:browser` runs the assertion page, Component Lab layout checks, and LwF/EWC scroll-sync walkthrough in headless Chromium. Workflow and scaffold checks run from the repository root with `python -m pytest -q`. TypeScript consumers should build their paper project after copying components. The Kit preserves keyboard focus, touch-sized controls, reduced-motion behavior, and narrow-screen scrolling; the paper-specific implementation still needs its own accessibility and mobile review. Build and browser success keep the v2 work at `candidate`; approval still requires screenshot review and explicit human acceptance.

@@ -13,10 +13,43 @@ test("component interaction assertions pass in a real browser", async ({ page })
   expect(pageErrors).toEqual([]);
 });
 
+test("Component Lab exposes typography, button states, and responsive reading overlays", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  await expect(page.locator("[data-demo-view='component-lab']")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Typography roles" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Unavailable" })).toBeDisabled();
+  const iconButton = page.getByRole("button", { name: "Add reference" });
+  await expect(iconButton).toBeVisible();
+  const iconBox = await iconButton.boundingBox();
+  expect(iconBox.width).toBe(iconBox.height);
+
+  const mediumButton = page.getByRole("button", { name: "Primary action" });
+  expect(await mediumButton.evaluate((node) => getComputedStyle(node).minHeight)).toBe("44px");
+  expect(await page.locator(".rk-type--body").first().evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
+
+  await page.getByRole("button", { name: "Open reading Drawer" }).click();
+  const drawer = page.getByRole("dialog", { name: "Reading Drawer" });
+  await expect(drawer).toBeVisible();
+  const wideDrawer = await drawer.boundingBox();
+  expect(wideDrawer.width).toBeGreaterThanOrEqual(800);
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(page.getByRole("button", { name: "Open reading Drawer" })).toBeFocused();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Open reading Drawer" }).click();
+  await expect(drawer).toBeVisible();
+  const narrowDrawer = await drawer.boundingBox();
+  expect(narrowDrawer.width).toBeLessThanOrEqual(390);
+  expect(await drawer.locator(".kit-lab__reading-grid").evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+});
+
 test("scroll sections synchronize LwF steps, manual choice holds briefly, and EWC reuses the system view", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
+  await page.getByRole("button", { name: "LwF scenario" }).click();
   const system = page.locator(".rk-sticky-system");
   const processTitle = page.locator(".rk-process-loop__step-heading h3").first();
 
@@ -37,7 +70,7 @@ test("scroll sections synchronize LwF steps, manual choice holds briefly, and EW
   await expect(system).toHaveAttribute("data-active-step-id", "teacher");
   await expect(processTitle).toHaveText("Keep the old model fixed");
 
-  await page.getByRole("button", { name: "EWC mini demo" }).click();
+  await page.getByRole("button", { name: "EWC scenario" }).click();
   await expect(page.getByRole("heading", { name: "Elastic Weight Consolidation (EWC)" })).toBeVisible();
   await page.locator("#ewc-penalty").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "penalty");

@@ -3,7 +3,7 @@ import { setTimeout as delay } from "node:timers/promises";
 
 const baseUrl = "http://127.0.0.1:4173";
 const server = spawn(process.execPath, [
-  "./node_modules/vite/bin/vite.js", "preview", "--configLoader", "runner",
+  "./node_modules/vite/bin/vite.js", "preview", "--configLoader", "bundle",
   "--host", "127.0.0.1", "--port", "4173", "--strictPort",
 ], { stdio: "inherit" });
 const serverExited = new Promise((resolve) => server.once("exit", (code) => resolve(code ?? 1)));
