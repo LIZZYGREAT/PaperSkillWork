@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from "react";
 import { createDiagramPath } from "../../foundation/layout/diagram";
 import { Button } from "../../foundation/controls/Button";
 import { Feedback } from "../../foundation/feedback/Feedback";
+import { MetaList } from "../../foundation/data/MetaList";
 import { attemptTransition, validateStateMachine } from "./types";
 import type { StateMachineSpec } from "./types";
 
@@ -67,8 +68,40 @@ export function StateMachineExplorer({ spec, mode = "guided", showHistory = true
         </div>
       </div>
       <Feedback tone={invalid ? "warn" : "info"}>{message}</Feedback>
-      {showInspector ? <aside className="rk-state-machine__inspector" aria-live="polite"><h3>{current.label}</h3>{current.description ? <p>{current.description}</p> : null}{current.effect ? <p><b>Effect:</b> {current.effect}</p> : null}<h4>Allowed next states</h4>{knownTransitions.length ? <ul>{knownTransitions.map((transition, index) => <li key={`${transition.from}-${transition.to}-${index}`}><b>{spec.states.find((state) => state.id === transition.to)?.label}</b>{transition.condition ? ` — ${transition.condition}` : ""}</li>)}</ul> : <p>No outgoing transition is defined.</p>}</aside> : null}
-      {showHistory ? <div className="rk-state-machine__history"><h4>Transition history</h4><ol>{history.map((id, index) => <li key={`${id}-${index}`}>{spec.states.find((state) => state.id === id)?.label}</li>)}</ol><p>Rejected attempts: {invalidCount}</p></div> : null}
+      {showInspector ? <aside className="rk-state-machine__inspector" aria-live="polite">
+        <header className="rk-state-machine__inspector-head">
+          <p className="rk-state-machine__eyebrow">Inspecting</p>
+          <h3>{current.label}</h3>
+          {current.owner ? <p className="rk-state-machine__owner">{current.owner}</p> : null}
+        </header>
+        {current.description ? <p className="rk-state-machine__desc">{current.description}</p> : null}
+        {current.owner || current.effect ? <MetaList label="State facts" items={[
+          ...(current.owner ? [{ id: "owner", label: "Owner", value: current.owner }] : []),
+          ...(current.effect ? [{ id: "effect", label: "Effect", value: current.effect }] : []),
+        ]} /> : null}
+        <div className="rk-state-machine__next">
+          <p className="rk-state-machine__eyebrow">Allowed next states</p>
+          {knownTransitions.length ? <div className="rk-state-machine__chips">
+            {knownTransitions.map((transition, index) => {
+              const target = spec.states.find((state) => state.id === transition.to);
+              return <button key={`${transition.from}-${transition.to}-${index}`} type="button" className="rk-state-machine__chip" onClick={() => choose(transition.to)}>
+                <span>{target?.label ?? transition.to}</span>
+                <small>{transition.condition ?? "Ready to apply"}</small>
+              </button>;
+            })}
+          </div> : <p className="rk-state-machine__empty">No outgoing transition is defined.</p>}
+        </div>
+      </aside> : null}
+      {showHistory ? <div className="rk-state-machine__history">
+        <p className="rk-state-machine__eyebrow">Transition history</p>
+        <ol className="rk-state-history">
+          {history.map((id, index) => <li key={`${id}-${index}`} className={index === history.length - 1 ? "is-current" : undefined}>
+            <span className="rk-state-history__index">{String(index + 1).padStart(2, "0")}</span>
+            <span>{spec.states.find((state) => state.id === id)?.label}</span>
+          </li>)}
+        </ol>
+        <p className="rk-state-history__meta">Rejected attempts: {invalidCount}</p>
+      </div> : null}
     </section>
   );
 }

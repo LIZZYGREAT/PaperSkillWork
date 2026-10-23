@@ -21,6 +21,11 @@ export type DiagramNodeSpec = {
   order?: number;
   /** Short plain-text name used by the reflowed list when this node is an input. */
   inputLabel?: string;
+  /**
+   * `bar` lays the badge, title and note out side by side across the full width —
+   * use it for a convergence target that several branches write into.
+   */
+  variant?: "card" | "bar";
 };
 
 export type DiagramEdgeSpec = {
@@ -179,7 +184,7 @@ export function DiagramFlow({ spec, focus, label, className = "", framed = true,
   const nodeClass = (node: DiagramNodeSpec) => {
     const active = focusNodes !== null && focusNodes.has(node.id);
     const dimmed = focusNodes !== null && !focusNodes.has(node.id);
-    return `rk-diagram__node${active ? " is-active" : ""}${dimmed ? " is-dimmed" : ""}`;
+    return `rk-diagram__node${node.variant === "bar" ? " rk-diagram__node--bar" : ""}${active ? " is-active" : ""}${dimmed ? " is-dimmed" : ""}`;
   };
 
   const legend = spec.legend?.length ? (

@@ -36,6 +36,9 @@ components:
   StateMachineExplorer: {tier: P0, status: candidate, path: core/state-machine, category: state, default_for: [continual-learning]}
   PaperFigure: {tier: P0, status: candidate, path: core/paper-figure, category: evidence, default_for: [continual-learning]}
   StepNav: {tier: P1, status: candidate, path: compositions/step-nav, category: navigation}
+  SectionHeader: {tier: P1, status: candidate, path: compositions/section-header, category: layout}
+  FigureFrame: {tier: P1, status: candidate, path: compositions/figure-frame, category: layout}
+  MetaList: {tier: P1, status: candidate, path: foundation/data, category: layout}
   CompareView: {tier: P1, status: candidate, path: optional/compare-view, category: comparison}
   MultiViewInspector: {tier: P1, status: candidate, path: optional/multi-view, category: representation}
   RepresentationTransform: {tier: P1, status: candidate, path: optional/representation-transform, category: representation}

@@ -3,6 +3,7 @@ export * from "./controls/Button";
 export * from "./controls/Chip";
 export * from "./controls/SegmentedControl";
 export * from "./controls/Slider";
+export * from "./data/MetaList";
 export * from "./feedback/Feedback";
 export * from "./feedback/InlineCallout";
 export * from "./feedback/StatusPill";
