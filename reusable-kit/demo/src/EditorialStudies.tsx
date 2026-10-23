@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { Button } from "../../foundation/controls/Button";
+import { StepNav } from "../../compositions/step-nav";
 import "./editorial-studies.css";
 
 export const editorialSections = [
@@ -9,8 +12,16 @@ export const editorialSections = [
 const weights = [0.85, 0.30, 0.10];
 const thetaA = <span className="rk-math"><var>θ</var><sub>A</sub><sup>*</sup></span>;
 const fisherA = <span className="rk-math"><var>F</var><sub>A</sub></span>;
+const handoffStages = [
+  { id: "learn-a", label: "完成 A", reference: "已生成 · 尚未保存副本", fisher: "尚未估计", use: "B 尚未开始" },
+  { id: "save", label: "保存参考", reference: "已保存 · 后续保持固定", fisher: "尚未估计", use: "B 尚未开始" },
+  { id: "estimate", label: "估计重要性", reference: "继承已保存副本", fisher: "由 A 估计并保存", use: "B 尚未开始" },
+  { id: "use-b", label: "在 B 中使用", reference: "读取已保存副本", fisher: "读取 A 的重要性", use: "B 训练中 · θ 可更新" },
+];
 
 export function EditorialStudies() {
+  const [stageIndex, setStageIndex] = useState(0);
+  const stage = handoffStages[stageIndex];
   return <article className="ed-study" lang="zh-CN" data-demo-view="editorial">
     <header className="ed-study__opening">
       <p className="ed-study__eyebrow">EDITORIAL STUDIES <span>01 / 阅读实验</span></p>
@@ -44,23 +55,31 @@ export function EditorialStudies() {
     <section id="ed-b" className="ed-study__section ed-study__b" aria-labelledby="ed-b-title">
       <p className="ed-study__eyebrow">B / ALTERNATING CHRONICLE <span>EWC · 状态继承</span></p>
       <div className="ed-study__b-heading"><h2 id="ed-b-title">任务结束了，<br />什么被带到下一页？</h2><p>学习是先后发生的。参考位置与重要性却必须跨过任务边界，留给下一次训练读取。</p></div>
-      <ol className="ed-study__chronicle">
-        <li className="ed-study__moment">
+      <div className="ed-study__stage-control">
+        <div className="ed-study__stage-control-label"><p>沿交接顺序，检查此刻已有的状态</p><Button variant="quiet" size="small" onClick={() => setStageIndex(0)}>重置交接</Button></div>
+        <StepNav items={handoffStages} activeId={stage.id} onSelect={(id) => setStageIndex(handoffStages.findIndex((s) => s.id === id))} label="检查 EWC 交接阶段" compact />
+        <div className="ed-study__ledger" aria-live="polite" aria-atomic="true" data-stage={stage.id}>
+          <p className="ed-study__ledger-task">{stage.use}</p>
+          <dl><div><dt>{thetaA}</dt><dd>{stage.reference}</dd></div><div><dt>{fisherA}</dt><dd>{stage.fisher}</dd></div></dl>
+        </div>
+      </div>
+      <ol className="ed-study__chronicle" aria-label="EWC 交接顺序">
+        <li className="ed-study__moment" aria-current={stageIndex === 0 ? "step" : undefined}>
           <div className="ed-study__moment-copy"><h3>先完成任务 A</h3><p>用 A 的训练信号更新参数，得到参考解 {thetaA}。此时尚未开始训练 B。</p></div>
           <span className="ed-study__axis-number">01</span>
           <div className="ed-study__moment-visual"><span className="ed-study__caption">生成 / FROM TASK A</span><math display="block" aria-label="任务 A 训练得到 theta A 星"><msub><mi>D</mi><mi>A</mi></msub><mo>→</mo><msubsup><mi>θ</mi><mi>A</mi><mo>*</mo></msubsup></math></div>
         </li>
-        <li className="ed-study__moment ed-study__moment--reverse">
+        <li className="ed-study__moment ed-study__moment--reverse" aria-current={stageIndex === 1 ? "step" : undefined}>
           <div className="ed-study__moment-copy"><h3>把参考位置留下</h3><p>保存 {thetaA} 的数值副本。后续改变的是当前参数 θ，不是这份参考。</p></div>
           <span className="ed-study__axis-number">02</span>
           <div className="ed-study__moment-visual ed-study__stored"><span className="ed-study__caption">保存 / REFERENCE</span><div className="ed-study__state-symbol">{thetaA}</div><p>留下位置，而非冻结当前模型</p></div>
         </li>
-        <li className="ed-study__moment">
+        <li className="ed-study__moment" aria-current={stageIndex === 2 ? "step" : undefined}>
           <div className="ed-study__moment-copy"><h3>再估计重要性</h3><p>在 A 的信息与参考解上估计 {fisherA}，与 {thetaA} 一起保留。它是逐参数的权重，不是 B 的新学习结果。</p></div>
           <span className="ed-study__axis-number">03</span>
           <div className="ed-study__moment-visual"><span className="ed-study__caption">交接 / TWO STORED OBJECTS</span><div className="ed-study__state-pair">{thetaA}<span>＋</span>{fisherA}</div><p>位置 + 重要性</p></div>
         </li>
-        <li className="ed-study__moment ed-study__moment--reverse">
+        <li className="ed-study__moment ed-study__moment--reverse" aria-current={stageIndex === 3 ? "step" : undefined}>
           <div className="ed-study__moment-copy"><h3>在任务 B 中读取</h3><p>B 的损失驱动新学习；保存的 {thetaA} 与 {fisherA} 共同决定偏离旧解的代价。约束是软的，参数仍可更新。</p></div>
           <span className="ed-study__axis-number">04</span>
           <div className="ed-study__moment-visual ed-study__penalty"><span className="ed-study__caption">使用 / IN TASK B</span><math display="block" aria-label="EWC 惩罚 lambda 除以二，乘以各参数重要性与位移平方之和"><mfrac><mi>λ</mi><mn>2</mn></mfrac><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>F</mi><mrow><mi>A</mi><mo>,</mo><mi>i</mi></mrow></msub><msup><mrow><mo>(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>−</mo><msubsup><mi>θ</mi><mrow><mi>A</mi><mo>,</mo><mi>i</mi></mrow><mo>*</mo></msubsup><mo>)</mo></mrow><mn>2</mn></msup></math><p>λ 调节旧任务约束的强度</p></div>
