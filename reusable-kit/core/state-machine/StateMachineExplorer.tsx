@@ -112,32 +112,32 @@ export function StateMachineExplorer({ spec, mode = "guided", showHistory = true
         </div>
       </div>
       <Feedback tone={invalid ? "warn" : "info"}>{message}</Feedback>
-      {showInspector ? <aside className="rk-state-machine__inspector" aria-live="polite">
-        <header className="rk-state-machine__inspector-head">
-          <p className="rk-state-machine__eyebrow">Inspecting this state</p>
-          <h3>{current.label}</h3>
-          {current.owner ? <p className="rk-state-machine__owner">{current.owner}</p> : null}
-        </header>
-        <div className="rk-state-machine__inspector-body">
-          <div className="rk-state-machine__inspector-main">
-            {current.description ? <p className="rk-state-machine__desc">{current.description}</p> : null}
-            {current.effect ? <MetaList label="What this state enables" items={[{ id: "effect", label: "Effect", value: current.effect }]} /> : null}
-          </div>
-          <div className="rk-state-machine__next">
-            <p className="rk-state-machine__eyebrow">Allowed next states</p>
-            {knownTransitions.length ? <div className="rk-state-machine__chips">
-              {knownTransitions.map((transition, index) => {
-                const target = spec.states.find((state) => state.id === transition.to);
-                return <button key={`${transition.from}-${transition.to}-${index}`} type="button" className="rk-state-machine__chip" onClick={() => choose(transition.to)}>
-                  <span>{target?.label ?? transition.to}<i aria-hidden="true">→</i></span>
-                  <small>{transition.condition ?? "Ready to apply"}</small>
-                </button>;
-              })}
-            </div> : <p className="rk-state-machine__empty">This is a terminal state: no outgoing transition is defined.</p>}
+      {showInspector ? <aside className="rk-state-machine__statusbar" aria-live="polite">
+        <div className="rk-state-machine__identity">
+          <span className="rk-state-machine__ordinal" aria-hidden="true">{String(stepIndex).padStart(2, "0")}</span>
+          <div className="rk-state-machine__identity-copy">
+            <p className="rk-state-machine__eyebrow">Inspecting</p>
+            <h3>{current.label}</h3>
+            {current.owner ? <p className="rk-state-machine__owner">{current.owner}</p> : null}
           </div>
         </div>
-      </aside> : null}
-      {showHistory ? <div className="rk-state-machine__history">
+        <div className="rk-state-machine__meaning">
+          {current.description ? <p className="rk-state-machine__desc">{current.description}</p> : null}
+          {current.effect ? <p className="rk-state-machine__effect"><b>Effect</b><span>{current.effect}</span></p> : null}
+        </div>
+        <div className="rk-state-machine__action">
+          <p className="rk-state-machine__eyebrow">{knownTransitions.length === 1 ? "Next state" : knownTransitions.length ? "Next states" : "Terminal"}</p>
+          {knownTransitions.length ? <div className="rk-state-machine__chips">
+            {knownTransitions.map((transition, index) => {
+              const target = spec.states.find((state) => state.id === transition.to);
+              return <button key={`${transition.from}-${transition.to}-${index}`} type="button" className="rk-state-machine__chip" onClick={() => choose(transition.to)}>
+                <span>{target?.label ?? transition.to}<i aria-hidden="true">→</i></span>
+                <small>{transition.condition ?? "Ready to apply"}</small>
+              </button>;
+            })}
+          </div> : <p className="rk-state-machine__empty">No outgoing transition is defined.</p>}
+        </div>
+      </aside> : null}      {showHistory ? <div className="rk-state-machine__history">
         <p className="rk-state-machine__eyebrow">Transition history</p>
         <ol className="rk-state-history">
           {history.map((id, index) => <li key={`${id}-${index}`} className={index === history.length - 1 ? "is-current" : undefined}>

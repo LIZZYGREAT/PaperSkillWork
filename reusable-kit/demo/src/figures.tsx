@@ -352,14 +352,14 @@ export const labRoleGraph: DiagramSpec = {
     node({ id: "role-objective", column: 4, row: 1, order: 4, role: "objective", badge: "OBJECTIVE", title: "目标", meta: "比较或惩罚在这里发生" }),
     node({ id: "role-trainable", column: 1, row: 2, order: 5, role: "trainable", badge: "TRAINABLE", title: "可训练", meta: "接收梯度的参数" }),
     node({ id: "role-label", column: 2, row: 2, order: 6, role: "label", badge: "LABEL", title: "标签", meta: "虚线：外部监督" }),
-    node({ id: "role-update", column: 3, row: 2, columnSpan: 2, order: 7, role: "update", variant: "bar", badge: "UPDATE TARGET", title: "更新落点", meta: "整张图里唯一的深色对象" }),
+    node({ id: "role-update", column: 1, row: 3, columnSpan: 4, order: 7, role: "update", variant: "bar", badge: "UPDATE TARGET", title: "更新落点", meta: "整张图里唯一的深色对象；两条信号都从上方汇入" }),
   ],
   edges: [
     { id: "r-input-frozen", from: "role-input", to: "role-frozen" },
     { id: "r-frozen-target", from: "role-frozen", to: "role-target" },
     { id: "r-target-objective", from: "role-target", to: "role-objective" },
-    { id: "r-trainable-update", from: "role-trainable", to: "role-update", mode: "smooth" },
-    { id: "r-label-update", from: "role-label", to: "role-update", mode: "smooth" },
+    { id: "r-trainable-update", from: "role-trainable", to: "role-update", mode: "smooth", startPort: "bottom", endPort: "top" },
+    { id: "r-label-update", from: "role-label", to: "role-update", mode: "smooth", startPort: "bottom", endPort: "top" },
   ],
   note: "角色不靠色相区分：冻结＝虚线加斜纹，可训练＝左侧色条，参考值＝沙色，更新落点＝深色。",
 };

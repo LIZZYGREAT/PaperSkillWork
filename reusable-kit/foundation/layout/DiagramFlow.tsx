@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortDiagramPath } from "./diagram";
-import type { DiagramPortMode } from "./diagram";
+import type { DiagramPort, DiagramPortMode } from "./diagram";
 
 export type DiagramRole = "input" | "model" | "trainable" | "frozen" | "target" | "objective" | "label" | "update" | "output";
 
@@ -34,6 +34,9 @@ export type DiagramEdgeSpec = {
   to: string;
   kind?: "data" | "gradient" | "control";
   mode?: DiagramPortMode;
+  /** Pin the connector to a named side when the automatic choice would graze a node. */
+  startPort?: DiagramPort;
+  endPort?: DiagramPort;
   label?: string;
 };
 
@@ -150,7 +153,7 @@ export function DiagramFlow({ spec, focus, label, className = "", framed = true,
         { x: to.cx, y: to.cy },
         { width: from.width, height: from.height },
         { width: to.width, height: to.height },
-        { mode: edge.mode ?? "straight" },
+        { mode: edge.mode ?? "straight", startPort: edge.startPort, endPort: edge.endPort },
       );
       nextPaths.push({ id: edge.id, d: geometry.d, start: geometry.start, end: geometry.end });
     }
