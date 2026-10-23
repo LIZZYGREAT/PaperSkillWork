@@ -18,10 +18,12 @@ test("Component Lab exposes typography, button states, and responsive reading ov
   await page.goto("/");
   await expect(page.locator("[data-demo-view='component-lab']")).toBeVisible();
   await expect(page.locator(".kit-shell")).toHaveAttribute("data-visual-direction", "warm");
-  await page.getByRole("button", { name: "Clear Research" }).click();
-  await expect(page.locator(".kit-shell")).toHaveAttribute("data-visual-direction", "clear");
-  await expect(page.getByText("Warm Editorial and Clear Research are review candidates.")).toBeVisible();
+  await expect(page.getByText("Every component stays a candidate until a named human accepts the rendered result.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Typography roles" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Figure and section anatomy" })).toBeVisible();
+  await expect(page.locator(".kit-lab .rk-section-head__title")).toHaveText("章节开头用同一种结构");
+  await expect(page.locator(".kit-lab .rk-figure__title")).toHaveText("图有自己的抬头与编号");
+  await expect(page.locator(".kit-lab .rk-meta-list__row")).toHaveCount(3);
   await expect(page.getByRole("button", { name: "Unavailable" })).toBeDisabled();
   const iconButton = page.getByRole("button", { name: "Add reference" });
   await expect(iconButton).toBeVisible();
@@ -188,20 +190,23 @@ test("scroll sections synchronize LwF steps and EWC reuses the same system view"
   await expect(focusTitle).toHaveText("Teacher 提供目标，但它不学习");
 
   await page.getByRole("button", { name: "EWC scenario" }).click();
-  await expect(page.getByRole("heading", { name: "When a model learns again, what should it resist changing?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /哪些参数不该乱动/ })).toBeVisible();
+  const ewcPanel = page.locator(".kit-ewc-panel");
   await page.locator("#ewc-task-a").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "old");
-  await expect(page.locator(".rk-process-loop .rk-process-node").filter({ hasText: "Fisher importance F" })).toHaveClass(/is-dimmed/);
-  await expect(page.locator("#ewc-task-a")).toContainText("Fisher importance and the EWC penalty do not exist yet");
+  await expect(ewcPanel).toHaveAttribute("data-focus-step", "old");
+  await expect(page.locator(".kit-ewc-panel [data-diagram-node='fisher']")).toHaveClass(/is-dimmed/);
   await expect(page.locator("#ewc-task-a .rk-diagram [data-diagram-node='theta']")).toHaveAttribute("data-state", "trainable");
   await expect(page.locator("#ewc-task-a .rk-diagram [data-diagram-node='star']")).toHaveAttribute("data-state", "target");
   await page.locator("#ewc-importance").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "estimate");
-  await expect(page.locator(".rk-process-loop .rk-process-node").filter({ hasText: "Fisher importance F" })).toHaveClass(/is-active/);
-  await expect(page.locator(".rk-process-loop .rk-process-node").filter({ hasText: "EWC penalty" })).toHaveClass(/is-dimmed/);
+  await expect(page.locator(".kit-ewc-panel [data-diagram-node='fisher']")).not.toHaveClass(/is-dimmed/);
+  await expect(page.locator("#ewc-importance .kit-ewc__estimate-bars li")).toHaveCount(3);
   await page.locator("#ewc-penalty").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "penalty");
-  await expect(page.locator(".rk-process-loop__step-heading h3").first()).toHaveText("Form the EWC penalty");
+  await expect(page.locator(".kit-ewc-panel .rk-figure__title")).toHaveText("Form the penalty from stored state");
+  await expect(page.locator(".kit-ewc-panel [data-diagram-node='penalty']")).not.toHaveClass(/is-dimmed/);
+  await expect(page.locator(".kit-ewc-panel [data-diagram-node='thetaB']")).toHaveClass(/is-dimmed/);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator("#ewc-stored").evaluate((node) => window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.35, behavior: "instant" }));
