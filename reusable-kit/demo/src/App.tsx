@@ -161,8 +161,8 @@ function LwfDemo() {
   };
   return <div className="kit-demo__paper kit-method-page kit-lwf" data-demo-view="lwf">
     <header className="kit-lwf__hero">
-      <p className="kit-lwf__kicker">LEARNING WITHOUT FORGETTING · RESPONSE PRESERVATION</p>
-      <h2>一边保留旧响应，一边学会新类别</h2>
+      <p className="kit-lwf__eyebrow"><span>Learning without Forgetting</span><i aria-hidden="true" /><span>响应保留 · RESPONSE PRESERVATION</span></p>
+      <h2>一边<em>保留旧响应</em>，一边<em>学会新类别</em></h2>
       <p className="kit-lwf__lead">下面的图只回答一件事：同一个输入怎样分成两条计算路径，teacher 的目标与 student 的两类输出在哪里比较，最后是哪个模型被更新。</p>
       <p className="kit-lwf__question"><b>当前问题</b><span>student 能学会当前标签，同时让旧类响应仍然可用吗？</span></p>
     </header>
@@ -181,7 +181,12 @@ function LwfDemo() {
         <DiagramFlow spec={lwfObjectiveGraph} label="LwF 目标合成：两组比较形成两个损失，合成梯度后只更新 student 参数" />
         <ExpandableDetail title="展开组件责任审计" summary="需要逐项核对“谁负责什么”时再打开。" level="supporting"><ResponsibilityMap spec={lwfResponsibilities} /></ExpandableDetail>
       </section>
-      <section id="lwf-update" className="kit-demo__section"><h3>5. 更新与交接</h3><p>两个目标都作用在 student 参数上。任务结束时，更新后的 student 才成为下一个任务的 teacher。</p><FlowStepper steps={lwfFlow} step={flowIndex} onStepChange={(step, index) => { setFlowIndex(index); }} /><h4>任务级生命周期</h4><p>依次推进合法阶段；试着从 ready 直接跳到 promotion，看看系统如何拒绝。</p><StateMachineExplorer spec={lwfStates} /><Button variant="secondary" onClick={() => { setReferenceId(null); setHubOpen(true); }}>Browse LwF references</Button></section>
+      <section id="lwf-update" className="kit-demo__section"><h3>5. 更新与交接</h3><p>两个目标都作用在 student 参数上。任务结束时，更新后的 student 才成为下一个任务的 teacher。</p><FlowStepper steps={lwfFlow} step={flowIndex} onStepChange={(step, index) => { setFlowIndex(index); }} /><h4>任务级生命周期</h4><p>依次推进合法阶段；试着从 ready 直接跳到 promotion，看看系统如何拒绝。</p><StateMachineExplorer spec={lwfStates} />
+        <div className="kit-section-foot">
+          <p className="kit-section-foot__note">本节结束时，student 才成为下一任务的 teacher；teacher 副本不参与本任务的更新。</p>
+          <Button variant="secondary" onClick={() => { setReferenceId(null); setHubOpen(true); }}>查看 LwF 参考条目</Button>
+        </div>
+      </section>
     </StickySystemView><KnowledgeDrawer entries={lwfKnowledge} open={hubOpen} selectedId={referenceId} onSelectedIdChange={setReferenceId} onClose={() => setHubOpen(false)} /></div>;
 }
 
@@ -197,12 +202,13 @@ function LwfFocusPanel({ step, onStepChange }: { step: number; onStepChange: (st
   };
   return <section className="kit-lwf-panel" aria-label="LwF 计算关系图" data-focus-step={current.id}>
     <header className="kit-lwf-panel__header">
-      <div>
-        <p className="kit-lwf-panel__meta">因果链定位 · STEP {String(index + 1).padStart(2, "0")} / {String(lwfGraphSteps.length).padStart(2, "0")}</p>
+      <div className="kit-lwf-panel__heading">
+        <p className="rk-type--eyebrow">因果链定位</p>
         <h3 className="kit-lwf-focus__title">{current.title}</h3>
-        <p className="kit-lwf-panel__note">{current.note}</p>
       </div>
+      <p className="kit-lwf-panel__counter"><span>{String(index + 1).padStart(2, "0")}</span><i>/ {String(lwfGraphSteps.length).padStart(2, "0")}</i></p>
     </header>
+    <p className="kit-lwf-panel__note">{current.note}</p>
     <StepNav items={lwfNavItems} activeId={current.id} onSelect={choose} label="选择 LwF 机制步骤" />
     <DiagramFlow spec={lwfGraph} focus={{ nodes: current.nodes, edges: current.edges }} label="LwF 因果图：同一输入经 teacher 与 student 两条路径形成两个损失，梯度只更新 student 参数" framed={false} />
   </section>;
@@ -225,7 +231,10 @@ function EwcDemo() {
     <section id="ewc-update" className="kit-demo__section"><h3>6. Combine and update</h3><p>The optimizer receives the current-task and regularization signals, then updates the current parameter values.</p>
     <CompareView variants={[{ id: "new-task", title: "Current-task objective", summary: "Fits the new task examples." }, { id: "regularized", title: "EWC objective", summary: "Adds an importance-weighted constraint around stored parameters." }]} changes={["The regularized objective includes stored parameter importance and an earlier-task reference point."]} invariants={["Both variants optimize the current model on the new task."]} />
     <p>For example, the <TermRef entry={ewcKnowledge[0]} onOpenReference={openReference}>Fisher importance estimate</TermRef> weights the penalty around <TermRef entry={ewcKnowledge[1]} onOpenReference={openReference}>θ*</TermRef>.</p><ExpandableDetail title="Interpret the penalty carefully" level="advanced"><p>The method discourages changes according to the estimated importance weights; it does not mean every earlier parameter is frozen.</p></ExpandableDetail>
-    <Button variant="secondary" onClick={() => { setReferenceId(null); setHubOpen(true); }}>Browse EWC references</Button>
+    <div className="kit-section-foot">
+      <p className="kit-section-foot__note">The consolidated θ is the model that a later task would regularize again.</p>
+      <Button variant="secondary" onClick={() => { setReferenceId(null); setHubOpen(true); }}>Browse EWC references</Button>
+    </div>
     </section>
   </StickySystemView><KnowledgeDrawer entries={ewcKnowledge} open={hubOpen} selectedId={referenceId} onSelectedIdChange={setReferenceId} onClose={() => setHubOpen(false)} /></div>;
 }

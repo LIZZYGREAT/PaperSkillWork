@@ -135,15 +135,21 @@ test("LwF opening keeps the title compact and the causal figure complete", async
   await expect(page.locator(".kit-lwf-panel [data-diagram-edge='lnew-update']")).toHaveClass(/is-active/);
   await expect(page.locator(".kit-lwf-panel [data-diagram-node='teacher']")).toHaveClass(/is-dimmed/);
 
-  // The objective figure renders both comparisons and one update object.
+  // The objective figure typesets real formulas, not styled text.
   await expect(page.locator("#lwf-loss .rk-diagram [data-diagram-node='merge']")).toHaveAttribute("data-state", "objective");
   await expect(page.locator("#lwf-loss .rk-diagram [data-diagram-node='params']")).toHaveAttribute("data-state", "update");
-  const lossMath = await page.locator("#lwf-loss .rk-diagram [data-diagram-node='lOld'] .rk-math").first().evaluate((node) => ({
-    family: getComputedStyle(node).fontFamily,
-    subscripts: node.querySelectorAll("sub").length,
+  const lossMath = await page.locator("#lwf-loss .rk-diagram [data-diagram-node='lOld'] math").first().evaluate((node) => ({
+    display: node.getAttribute("display"),
+    subscripts: node.querySelectorAll("msub").length,
+    sums: node.querySelectorAll("munderover").length,
+    fontSize: Number.parseFloat(getComputedStyle(node).fontSize),
   }));
+  expect(lossMath.display).toBe("block");
   expect(lossMath.subscripts).toBeGreaterThanOrEqual(2);
-  expect(lossMath.family).toMatch(/Math|Cambria|STIX/i);
+  expect(lossMath.sums).toBe(1);
+  expect(lossMath.fontSize).toBeGreaterThanOrEqual(18);
+  const mergeFractions = await page.locator("#lwf-loss .rk-diagram [data-diagram-node='merge'] math mfrac").count();
+  expect(mergeFractions).toBe(2);
 
   // Narrow screens reflow the same spec into an ordered, fully labelled list.
   await page.setViewportSize({ width: 390, height: 844 });

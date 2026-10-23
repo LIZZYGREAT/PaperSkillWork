@@ -93,7 +93,7 @@ button { touch-action: manipulation; }
 .kit-sidebar__chapter strong { font-size: 13px; font-weight: 600; line-height: 1.5; }
 .kit-sidebar__chapter.is-active strong { font-weight: 680; }
 .kit-sidebar__course:focus-visible, .kit-sidebar__chapter:focus-visible, .kit-sidebar__brand:focus-visible { outline: 2px solid var(--rk-focus); outline-offset: 2px; }
-.kit-sidebar__note { margin: auto 2px 0; padding: 14px; border: 1px solid var(--demo-rail-line); border-radius: 11px; background: color-mix(in srgb, var(--rk-surface) 62%, var(--demo-rail)); }
+.kit-sidebar__note { margin: auto 2px 0; padding: 14px 2px 0; border: 0; border-top: 1px solid var(--demo-rail-line); background: transparent; }
 .kit-sidebar__note-dot { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--demo-copper); }
 .kit-sidebar__note strong { font-size: 13px; }
 .kit-sidebar__note p { margin: 8px 0 0; color: var(--rk-muted); font-size: 12px; line-height: 1.65; }
@@ -138,30 +138,39 @@ button { touch-action: manipulation; }
 .kit-method-page .rk-sticky-system__visual { position: static; min-width: 0; }
 .kit-method-page .rk-sticky-system__content { display: grid; gap: 0; min-width: 0; }
 
-/* LwF scene: compact question block above a wide causal figure ----------- */
-.kit-lwf { display: grid; gap: clamp(20px, 2.4vw, 32px); }
-.kit-lwf__hero { display: grid; gap: 10px; max-width: 80ch; padding-bottom: clamp(14px, 1.8vw, 22px); border-bottom: 1px solid var(--demo-line); }
-.kit-lwf__kicker { margin: 0; color: var(--demo-copper); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
-.kit-lwf__hero h2 { max-width: 26ch; margin: 0; color: var(--rk-ink); font-size: clamp(30px, 2.9vw, 44px); font-weight: 720; letter-spacing: -.028em; line-height: 1.14; text-wrap: balance; }
+/* LwF scene: editorial question block above a wide causal figure ---------- */
+.kit-lwf { display: grid; gap: clamp(22px, 2.6vw, 34px); }
+.kit-lwf__hero { display: grid; gap: 12px; max-width: 74ch; padding-bottom: clamp(14px, 1.8vw, 22px); border-bottom: 1px solid var(--demo-line); }
+.kit-lwf__eyebrow { display: flex; align-items: center; gap: 12px; margin: 0; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .1em; line-height: 1.4; text-transform: uppercase; }
+.kit-lwf__eyebrow i { flex: none; width: 26px; height: 1px; background: var(--demo-line); }
+.kit-lwf__hero h2 { max-width: 26ch; margin: 0; color: var(--rk-ink); font-size: clamp(30px, 2.7vw, 40px); font-weight: 680; letter-spacing: -.035em; line-height: 1.16; text-wrap: balance; }
+.kit-lwf__hero h2 em { font-style: normal; color: var(--rk-accent-strong); background: linear-gradient(to top, color-mix(in srgb, var(--rk-accent) 18%, transparent) 0 .32em, transparent .32em); }
 .kit-lwf__lead { max-width: 66ch; margin: 0; color: var(--rk-muted); font-size: 16px; line-height: 1.75; }
-.kit-lwf__question { display: grid; gap: 3px; margin: 2px 0 0; padding-left: 14px; border-left: 2px solid var(--demo-copper); }
-.kit-lwf__question b { color: var(--demo-copper); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.kit-lwf__question { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; padding-left: 14px; border-left: 2px solid var(--demo-copper); }
+.kit-lwf__question b { flex: none; color: var(--demo-copper); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .09em; }
 .kit-lwf__question span { color: var(--rk-ink); font-size: 16px; line-height: 1.6; }
 
-.kit-lwf-panel { display: grid; gap: 14px; min-width: 0; padding: clamp(16px, 2vw, 26px); border: 1px solid var(--demo-line); border-radius: 14px; background: var(--demo-panel); scroll-margin-top: 88px; }
-.kit-lwf-panel__header { display: grid; gap: 5px; }
-.kit-lwf-panel__meta { margin: 0; color: var(--demo-copper); font-size: 12px; font-weight: 700; letter-spacing: .06em; }
-.kit-lwf-focus__title { margin: 0; color: var(--rk-ink); font-size: clamp(19px, 1.8vw, 25px); font-weight: 720; letter-spacing: -.01em; line-height: 1.28; }
-.kit-lwf-panel__note { max-width: 80ch; margin: 0; color: var(--rk-muted); font-size: 15px; line-height: 1.65; }
-.kit-lwf__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px 20px; margin: 0; padding: 0; list-style: none; }
-.kit-lwf__facts li { display: grid; gap: 2px; padding-left: 12px; border-left: 2px solid var(--rk-line-strong); }
-.kit-lwf__facts b { color: var(--rk-ink); font-size: 13px; font-weight: 700; letter-spacing: .03em; }
-.kit-lwf__facts span { color: var(--rk-muted); font-size: 14px; line-height: 1.6; }
-.kit-lwf__chapter > header { max-width: 80ch; margin-bottom: 18px; }
-.kit-lwf__chapter > header > span { display: block; margin-bottom: 7px; color: var(--demo-copper); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
-.kit-lwf__chapter > header h3 { margin: 0 0 10px; font-size: clamp(22px, 2.1vw, 30px); font-weight: 700; letter-spacing: -.015em; line-height: 1.24; }
-.kit-lwf__chapter > header p { margin: 0; color: var(--rk-muted); font-size: 16px; line-height: 1.75; }
-.kit-lwf .rk-diagram { margin-top: 18px; }
+.kit-lwf-panel { display: grid; gap: 14px; min-width: 0; padding: clamp(18px, 2.2vw, 28px); border: 1px solid var(--demo-line); border-radius: 18px; background: var(--demo-panel); box-shadow: 0 1px 2px color-mix(in srgb, var(--rk-ink) 4%, transparent); scroll-margin-top: 88px; }
+.kit-lwf-panel__header { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
+.kit-lwf-panel__heading { display: grid; gap: 6px; min-width: 0; }
+.kit-lwf-focus__title { margin: 0; color: var(--rk-ink); font-size: clamp(20px, 1.9vw, 27px); font-weight: 700; letter-spacing: -.02em; line-height: 1.25; }
+.kit-lwf-panel__counter { flex: none; display: flex; align-items: baseline; gap: 3px; color: var(--rk-ink); font-family: var(--rk-font-mono); font-variant-numeric: tabular-nums; }
+.kit-lwf-panel__counter span { font-size: 22px; font-weight: 600; letter-spacing: -.04em; }
+.kit-lwf-panel__counter i { color: var(--rk-muted); font-size: 12px; font-style: normal; }
+.kit-lwf-panel__note { max-width: 82ch; margin: 0; color: var(--rk-muted); font-size: 15px; line-height: 1.7; }
+.kit-lwf__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px 20px; margin: 0; padding: 0; list-style: none; }
+.kit-lwf__facts li { display: grid; gap: 3px; padding-left: 12px; border-left: 2px solid var(--demo-line); }
+.kit-lwf__facts b { color: var(--rk-ink); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.kit-lwf__facts span { color: var(--rk-muted); font-size: 14px; line-height: 1.65; }
+.kit-lwf__chapter > header { max-width: 80ch; margin-bottom: 20px; }
+.kit-lwf__chapter > header > span { display: block; margin-bottom: 8px; color: var(--demo-copper); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .09em; }
+.kit-lwf__chapter > header h3 { margin: 0 0 10px; font-size: clamp(22px, 2.1vw, 30px); font-weight: 700; letter-spacing: -.02em; line-height: 1.24; }
+.kit-lwf__chapter > header p { margin: 0; color: var(--rk-muted); font-size: 16px; line-height: 1.8; }
+.kit-lwf .rk-diagram { margin-top: 20px; }
+
+/* Section footer: the action belongs to the section, not to the page edge. */
+.kit-section-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-top: clamp(20px, 2.4vw, 30px); padding-top: 16px; border-top: 1px solid var(--demo-line); }
+.kit-section-foot__note { max-width: 62ch; margin: 0; color: var(--rk-muted); font-size: 14px; line-height: 1.65; }
 
 /* EWC scene: unchanged apart from replacing the decorative parameter figure --- */
 .kit-ewc { gap: clamp(22px, 2.6vw, 34px); }
