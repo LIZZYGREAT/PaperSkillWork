@@ -36,7 +36,7 @@ export function EditorialStudies() {
         <div className="ed-study__a-copy">
           <h2 id="ed-a-title">同样的改动，<br />为什么代价不同？</h2>
           <p className="ed-study__lead">任务 A 刚刚学完，模型留下一个参考解 {thetaA}。即将学习 B 时，所有参数都该被一样地保护吗？</p>
-          <p>如果模型在旧任务上的预测对某个参数更敏感，移动它就更需要谨慎。EWC 用对角 Fisher 估计为每个 <span className="rk-math"><var>θ</var><sub>i</sub></span> 赋予权重 <span className="rk-math"><var>F</var><sub>i</sub></span>：<strong className="ed-study__emphasis">并非所有参数，都应被同等保护。</strong></p>
+          <p>如果模型在旧任务上的预测对某个参数更敏感，移动它就更需要谨慎。EWC 用对角 Fisher 估计为每个 <span className="rk-math"><var>θ</var><sub>i</sub></span> 赋予权重 <span className="rk-math"><var>F</var><sub>i</sub></span>：<strong className="ed-study__emphasis"><span>并非所有参数，</span><wbr /><span>都应被同等保护。</span></strong></p>
         </div>
         <figure className="ed-study__weights">
           <figcaption><span>三个参数，一份重要性切片</span><strong>F<sub>i</sub></strong></figcaption>
@@ -65,12 +65,12 @@ export function EditorialStudies() {
       </div>
       <ol className="ed-study__chronicle" aria-label="EWC 交接顺序">
         <li className="ed-study__moment" aria-current={stageIndex === 0 ? "step" : undefined}>
-          <div className="ed-study__moment-copy"><h3>先完成任务 A</h3><p>用 A 的训练信号更新参数，得到参考解 {thetaA}。此时尚未开始训练 B。</p></div>
+          <div className="ed-study__moment-copy"><h3>先完成任务 A</h3><p>在 A 上训练参数，得到参考解 {thetaA}。任务 B 此时尚未开始。</p></div>
           <span className="ed-study__axis-number">01</span>
           <div className="ed-study__moment-visual"><span className="ed-study__caption">生成 / FROM TASK A</span><math display="block" aria-label="任务 A 训练得到 theta A 星"><msub><mi>D</mi><mi>A</mi></msub><mo>→</mo><msubsup><mi>θ</mi><mi>A</mi><mo>*</mo></msubsup></math></div>
         </li>
         <li className="ed-study__moment ed-study__moment--reverse" aria-current={stageIndex === 1 ? "step" : undefined}>
-          <div className="ed-study__moment-copy"><h3>把参考位置留下</h3><p>保存 {thetaA} 的数值副本。后续改变的是当前参数 θ，不是这份参考。</p></div>
+          <div className="ed-study__moment-copy"><h3>把参考位置留下</h3><p>保存 {thetaA} 的数值副本。以后改变的是当前参数 θ，这份参考保持固定。</p></div>
           <span className="ed-study__axis-number">02</span>
           <div className="ed-study__moment-visual ed-study__stored"><span className="ed-study__caption">保存 / REFERENCE</span><div className="ed-study__state-symbol">{thetaA}</div><p>留下位置，而非冻结当前模型</p></div>
         </li>

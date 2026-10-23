@@ -18,6 +18,7 @@
 .ed-study__a-copy > p { max-width: 34em; margin-top: 22px; }
 .ed-study__lead { font-size: 18px; }
 .ed-study__emphasis { padding: 1px 2px; background: var(--rk-accent-soft); color: var(--rk-accent-strong); font-weight: 700; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.ed-study__emphasis > span { display: inline-block; }
 .ed-study__weights { padding: 20px 0 0 24px; border-left: 1px solid var(--ed-rule); }
 .ed-study__weights figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 14px; }
 .ed-study__weights figcaption strong { color: var(--ed-accent); font-family: var(--rk-font-math); font-size: 24px; }
@@ -103,4 +104,5 @@
   .ed-study__student { padding-left: 18px; }
   .ed-study__convergence { padding: 22px 12px; }
   .ed-study__convergence math { font-size: 23px; }
+  .ed-study__proposition strong { display: block; }
 }
