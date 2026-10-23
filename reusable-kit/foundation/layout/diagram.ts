@@ -2,6 +2,9 @@ export type DiagramPoint = { x: number; y: number };
 export type DiagramNodeSize = { width: number; height: number };
 export type DiagramPathMode = "straight" | "curve" | "orthogonal";
 export type DiagramPath = { d: string; label: DiagramPoint };
+export type DiagramPort = "left" | "right" | "top" | "bottom";
+export type DiagramPortMode = "straight" | "smooth" | "orthogonal";
+export type DiagramPortPath = { d: string; label: DiagramPoint; startPort: DiagramPort; endPort: DiagramPort };
 
 function boundaryPoint(center: DiagramPoint, toward: DiagramPoint, size: DiagramNodeSize): DiagramPoint {
   const dx = toward.x - center.x;
@@ -45,4 +48,86 @@ export function createDiagramPath(
   }
 
   return { d: `M ${start.x} ${start.y} L ${end.x} ${end.y}`, label: { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 } };
+}
+
+/** Point on one named edge of a box, using the box centre and size. */
+export function diagramPortPoint(center: DiagramPoint, size: DiagramNodeSize, port: DiagramPort): DiagramPoint {
+  switch (port) {
+    case "left": return { x: center.x - size.width / 2, y: center.y };
+    case "right": return { x: center.x + size.width / 2, y: center.y };
+    case "top": return { x: center.x, y: center.y - size.height / 2 };
+    default: return { x: center.x, y: center.y + size.height / 2 };
+  }
+}
+
+/**
+ * Pick the pair of box edges that a connector should leave from and arrive at.
+ * Connectors stay on the dominant axis, so a diagram keeps a readable direction
+ * when the reader resizes the page instead of being rescaled to fit.
+ */
+export function chooseDiagramPorts(
+  source: DiagramPoint,
+  target: DiagramPoint,
+  sourceSize: DiagramNodeSize,
+  targetSize: DiagramNodeSize,
+): { startPort: DiagramPort; endPort: DiagramPort } {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  if (Math.abs(dx) >= Math.abs(dy) * 0.9) {
+    return dx >= 0 ? { startPort: "right", endPort: "left" } : { startPort: "left", endPort: "right" };
+  }
+  return dy >= 0 ? { startPort: "bottom", endPort: "top" } : { startPort: "top", endPort: "bottom" };
+}
+
+/**
+ * Port-anchored connector geometry. `mode: "smooth"` is a cubic funnel that keeps
+ * converging edges from overlapping the boxes they connect.
+ */
+export function createPortDiagramPath(
+  source: DiagramPoint,
+  target: DiagramPoint,
+  sourceSize: DiagramNodeSize,
+  targetSize: DiagramNodeSize,
+  options: { mode?: DiagramPortMode; startPort?: DiagramPort; endPort?: DiagramPort } = {},
+): DiagramPortPath {
+  const chosen = chooseDiagramPorts(source, target, sourceSize, targetSize);
+  const startPort = options.startPort ?? chosen.startPort;
+  const endPort = options.endPort ?? chosen.endPort;
+  const start = diagramPortPoint(source, sourceSize, startPort);
+  const end = diagramPortPoint(target, targetSize, endPort);
+  const mode = options.mode ?? "straight";
+  const horizontal = ["left", "right"].includes(startPort);
+  const label = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+
+  if (mode === "orthogonal") {
+    if (horizontal) {
+      const middleX = (start.x + end.x) / 2;
+      return { d: `M ${start.x} ${start.y} L ${middleX} ${start.y} L ${middleX} ${end.y} L ${end.x} ${end.y}`, label: { x: middleX, y: (start.y + end.y) / 2 }, startPort, endPort };
+    }
+    const middleY = (start.y + end.y) / 2;
+    return { d: `M ${start.x} ${start.y} L ${start.x} ${middleY} L ${end.x} ${middleY} L ${end.x} ${end.y}`, label: { x: (start.x + end.x) / 2, y: middleY }, startPort, endPort };
+  }
+
+  if (mode === "smooth") {
+    if (horizontal) {
+      const bend = Math.max(12, Math.abs(end.x - start.x) * 0.45);
+      const sign = end.x >= start.x ? 1 : -1;
+      return {
+        d: `M ${start.x} ${start.y} C ${start.x + bend * sign} ${start.y}, ${end.x - bend * sign} ${end.y}, ${end.x} ${end.y}`,
+        label: { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 },
+        startPort,
+        endPort,
+      };
+    }
+    const bend = Math.max(12, Math.abs(end.y - start.y) * 0.45);
+    const sign = end.y >= start.y ? 1 : -1;
+    return {
+      d: `M ${start.x} ${start.y} C ${start.x} ${start.y + bend * sign}, ${end.x} ${end.y - bend * sign}, ${end.x} ${end.y}`,
+      label: { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 },
+      startPort,
+      endPort,
+    };
+  }
+
+  return { d: `M ${start.x} ${start.y} L ${end.x} ${end.y}`, label, startPort, endPort };
 }
