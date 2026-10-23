@@ -138,13 +138,13 @@ export const ewcProcess: ProcessLoopSpec = {
     { id: "penalty-update", from: "penalty", to: "optimizer", label: "∇L_EWC", kind: "gradient", direction: "forward", path: "curve" }, { id: "update-b", from: "optimizer", to: "theta-b", kind: "control" },
   ],
   steps: [
-    { id: "old", title: "Train the earlier task", summary: "Learn a parameter solution for the earlier task.", activeNodes: ["task-a", "theta-star"], activeEdges: ["a-star"] },
-    { id: "estimate", title: "Estimate parameter importance", summary: "Estimate which parameters are important to the earlier solution.", activeNodes: ["task-a", "fisher"], activeEdges: ["a-fisher"] },
-    { id: "store", title: "Store θ* and importance", summary: "Retain the earlier optimum and its importance weights for the next task.", activeNodes: ["theta-star", "fisher"] },
-    { id: "new-task", title: "Receive the new task", summary: "The current task supplies new examples and a new learning objective.", activeNodes: ["task-b", "new-loss"], activeEdges: ["b-loss"] },
-    { id: "penalty", title: "Form the EWC penalty", summary: "Moving important parameters away from the stored solution incurs a larger penalty.", activeNodes: ["theta-star", "fisher", "penalty"], activeEdges: ["star-penalty", "fisher-penalty"] },
-    { id: "combine", title: "Combine objectives", summary: "Optimize the new-task objective together with the importance-weighted penalty.", activeNodes: ["new-loss", "penalty", "optimizer"], activeEdges: ["loss-update", "penalty-update"] },
-    { id: "update", title: "Update parameters", summary: "The optimizer produces a consolidated parameter state for the new task.", activeNodes: ["optimizer", "theta-b"], activeEdges: ["update-b"] },
+    { id: "old", title: "Train the earlier task", summary: "Learn a parameter solution for the earlier task; importance and regularization do not exist yet.", activeNodes: ["task-a", "theta-star"], activeEdges: ["a-star"], dimNodes: ["fisher", "task-b", "new-loss", "penalty", "optimizer", "theta-b"] },
+    { id: "estimate", title: "Estimate parameter importance", summary: "Use the learned task A solution to estimate which parameters matter; the EWC penalty is still inactive.", activeNodes: ["task-a", "theta-star", "fisher"], activeEdges: ["a-fisher"], dimNodes: ["task-b", "new-loss", "penalty", "optimizer", "theta-b"] },
+    { id: "store", title: "Store θ* and importance", summary: "Retain the earlier optimum and its importance weights for the next task.", activeNodes: ["theta-star", "fisher"], dimNodes: ["task-a", "task-b", "new-loss", "penalty", "optimizer", "theta-b"] },
+    { id: "new-task", title: "Receive the new task", summary: "The current task supplies new examples and a new learning objective; the stored state remains available.", activeNodes: ["theta-star", "fisher", "task-b", "new-loss"], activeEdges: ["b-loss"], dimNodes: ["task-a", "penalty", "optimizer", "theta-b"] },
+    { id: "penalty", title: "Form the EWC penalty", summary: "Moving important parameters away from the stored solution incurs a larger penalty.", activeNodes: ["theta-star", "fisher", "penalty"], activeEdges: ["star-penalty", "fisher-penalty"], dimNodes: ["task-a", "task-b", "new-loss", "optimizer", "theta-b"] },
+    { id: "combine", title: "Combine objectives", summary: "Optimize the new-task objective together with the importance-weighted penalty.", activeNodes: ["new-loss", "penalty", "optimizer"], activeEdges: ["loss-update", "penalty-update"], dimNodes: ["task-a", "task-b", "theta-star", "fisher", "theta-b"] },
+    { id: "update", title: "Update parameters", summary: "The optimizer produces a consolidated parameter state for the new task.", activeNodes: ["optimizer", "theta-b"], activeEdges: ["update-b"], dimNodes: ["task-a", "task-b", "theta-star", "fisher", "new-loss", "penalty"] },
   ],
 };
 

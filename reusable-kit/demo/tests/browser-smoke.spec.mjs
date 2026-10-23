@@ -17,6 +17,10 @@ test("Component Lab exposes typography, button states, and responsive reading ov
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
   await expect(page.locator("[data-demo-view='component-lab']")).toBeVisible();
+  await expect(page.locator(".kit-shell")).toHaveAttribute("data-visual-direction", "warm");
+  await page.getByRole("button", { name: "Clear Research" }).click();
+  await expect(page.locator(".kit-shell")).toHaveAttribute("data-visual-direction", "clear");
+  await expect(page.getByText("Warm Editorial and Clear Research are review candidates.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Typography roles" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Unavailable" })).toBeDisabled();
   const iconButton = page.getByRole("button", { name: "Add reference" });
@@ -51,30 +55,45 @@ test("scroll sections synchronize LwF steps, manual choice holds briefly, and EW
   await page.goto("/");
   await page.getByRole("button", { name: "LwF scenario" }).click();
   const system = page.locator(".rk-sticky-system");
-  const processTitle = page.locator(".rk-process-loop__step-heading h3").first();
+  const focusTitle = page.locator(".kit-lwf-focus__title");
+  expect((await page.locator(".kit-lwf__opening").evaluate((node) => getComputedStyle(node).gridTemplateColumns)).split(" ").length).toBe(2);
 
   await page.locator("#lwf-loss").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "loss");
-  await expect(processTitle).toHaveText("Combine the two objectives");
+  await expect(focusTitle).toHaveText("Two objectives, one student update");
+  await expect(page.locator(".kit-lwf-focus svg")).toHaveCount(0);
+  await expect(page.locator("#lwf-loss .kit-lwf-objectives")).toBeVisible();
+  const objectiveBackgrounds = await page.locator("#lwf-loss .kit-lwf-objectives__pair article").evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).backgroundColor));
+  expect(new Set(objectiveBackgrounds).size).toBe(2);
 
-  await page.locator(".rk-process-loop").first().getByLabel("Select process step").selectOption("teacher");
+  await page.locator(".kit-lwf-focus nav button").filter({ hasText: "Keep teacher fixed" }).click();
   await expect(system).toHaveAttribute("data-active-step-id", "teacher");
   await page.waitForTimeout(180);
   await expect(system).toHaveAttribute("data-active-step-id", "teacher");
-  await expect(processTitle).toHaveText("Keep the old model fixed");
+  await expect(focusTitle).toHaveText("The old model becomes a fixed response provider");
   await expect(page.locator(".rk-flow-step[aria-current='step']")).toContainText("Teacher");
+  await page.locator("#lwf-loss").evaluate((node) => window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.35, behavior: "instant" }));
+  await expect(system).toHaveAttribute("data-active-step-id", "teacher");
   await expect(system).toHaveAttribute("data-active-step-id", "loss", { timeout: 2500 });
   await expect(page.locator(".rk-flow-step[aria-current='step']")).toContainText("Losses");
 
   await page.locator("#lwf-update .rk-flow-step").filter({ hasText: "Teacher" }).click();
   await expect(system).toHaveAttribute("data-active-step-id", "teacher");
-  await expect(processTitle).toHaveText("Keep the old model fixed");
+  await expect(focusTitle).toHaveText("The old model becomes a fixed response provider");
 
   await page.getByRole("button", { name: "EWC scenario" }).click();
-  await expect(page.getByRole("heading", { name: "Elastic Weight Consolidation (EWC)" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "When a model learns again, what should it resist changing?" })).toBeVisible();
+  await page.locator("#ewc-task-a").scrollIntoViewIfNeeded();
+  await expect(system).toHaveAttribute("data-active-step-id", "old");
+  await expect(page.locator(".rk-process-loop .rk-process-node").filter({ hasText: "Fisher importance F" })).toHaveClass(/is-dimmed/);
+  await expect(page.locator("#ewc-task-a")).toContainText("Fisher importance and the EWC penalty do not exist yet");
+  await page.locator("#ewc-importance").scrollIntoViewIfNeeded();
+  await expect(system).toHaveAttribute("data-active-step-id", "estimate");
+  await expect(page.locator(".rk-process-loop .rk-process-node").filter({ hasText: "Fisher importance F" })).toHaveClass(/is-active/);
+  await expect(page.locator(".rk-process-loop .rk-process-node").filter({ hasText: "EWC penalty" })).toHaveClass(/is-dimmed/);
   await page.locator("#ewc-penalty").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "penalty");
-  await expect(processTitle).toHaveText("Form the EWC penalty");
+  await expect(page.locator(".rk-process-loop__step-heading h3").first()).toHaveText("Form the EWC penalty");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator("#ewc-stored").evaluate((node) => window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.35, behavior: "instant" }));

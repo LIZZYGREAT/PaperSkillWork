@@ -36,16 +36,60 @@
           ]
         },
         {
-          "id": "lwf-step-picker",
+          "id": "lwf-forward-focus",
           "actions": [
             { "type": "click", "selector": "role=button[name=\"LwF scenario\"]" },
-            { "type": "click", "selector": "role=combobox[name=\"Select process step\"]" }
+            { "type": "scrollIntoView", "selector": "#lwf-forward" }
           ]
         },
         {
-          "id": "ewc-tab",
+          "id": "lwf-loss-focus",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"LwF scenario\"]" },
+            { "type": "scrollIntoView", "selector": "#lwf-loss" }
+          ]
+        },
+        {
+          "id": "ewc-warm-hero",
           "actions": [
             { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" }
+          ]
+        },
+        {
+          "id": "ewc-warm-task-a",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" },
+            { "type": "scrollIntoView", "selector": "#ewc-task-a" }
+          ]
+        },
+        {
+          "id": "ewc-warm-importance",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" },
+            { "type": "scrollIntoView", "selector": "#ewc-importance" }
+          ]
+        },
+        {
+          "id": "ewc-clear-hero",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" },
+            { "type": "click", "selector": "role=button[name=\"Clear Research\"]" }
+          ]
+        },
+        {
+          "id": "ewc-clear-task-a",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" },
+            { "type": "click", "selector": "role=button[name=\"Clear Research\"]" },
+            { "type": "scrollIntoView", "selector": "#ewc-task-a" }
+          ]
+        },
+        {
+          "id": "ewc-clear-importance",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" },
+            { "type": "click", "selector": "role=button[name=\"Clear Research\"]" },
+            { "type": "scrollIntoView", "selector": "#ewc-importance" }
           ]
         },
         {

@@ -38,6 +38,14 @@ Reusable patterns express interaction behavior and visual relationships, not pap
 
 This audit describes the Kit source at `1.0.0`; it is not an approval record. Existing copies under `papers/**` are historical consumers and stay untouched. Every registry entry remains a v2 `candidate` until its API, representative content, browser states, screenshots, and human visual review have been completed.
 
+### Phase A visual direction candidates
+
+The Demo exposes two switchable, real-page candidates while the v2 visual direction is under review. `Warm Editorial` uses a warm paper surface, restrained serif display accents, and softer grouping for a research-magazine reading rhythm. `Clear Research` uses a cooler neutral canvas, sans-serif display type, sharper geometry, and higher structural contrast for a more technical reading rhythm. They share the same content, semantic state, component APIs, and canonical knowledge entries so review compares visual language rather than two different tutorials.
+
+Both directions remain `candidate`. The selector is intentionally Demo-local: it does not create a second Foundation token system, alter `registry.yaml`, or make either direction the scaffold default. The EWC candidate makes its whole-system context explicit, dims future objects until their producing step, and replaces the first two equal-weight component lists with a stage-specific Task A view and an importance-estimation transformation. Human review must select or revise a direction before these choices migrate into Foundation styles.
+
+The LwF candidate no longer presents the full topology as one always-visible edge graph. Its persistent view changes with the reading step and shows only the relationships required for the current question. The forward stage uses two explicit lanes, while the loss stage uses two colored comparisons that merge into one student-update signal. The generic responsibility map remains available as a collapsed audit view rather than occupying the main teaching surface as a two-column card inventory.
+
 | Area | Current evidence | Decision | v2 public boundary and risk |
 | --- | --- | --- | --- |
 | Typography and surface styles | `kit.css` exposes only body, supporting, meta, and formula roles, while component rules still use scattered rem/px values and repeated selectors. | REFACTOR | Add a small semantic type/spacing/surface token set and use it inside Kit components. Do not rewrite typography in existing papers. |
