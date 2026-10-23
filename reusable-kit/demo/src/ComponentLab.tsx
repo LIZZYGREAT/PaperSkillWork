@@ -89,7 +89,7 @@ export function ComponentLab() {
       <header className="rk-surface__header"><h3 id="lab-figure-title" className="rk-type--heading-2">Page compositions</h3><p className="rk-type--supporting">The header and frame carry every teaching page, so a new paper inherits the hierarchy instead of inventing another one.</p></header>
       <div className="kit-lab__anatomy">
         <SectionHeader index="01" eyebrow="Section header" title="章节开头用同一种结构" lead="编号、栏目名、标题、导语各就各位；hairline 把标题和上一节分开，而不是再加一层卡片。" />
-        <FigureFrame label="Figure frame · 图注条" title="图有自己的抬头与编号" note="图注条说明这张图要回答什么，画布区域用浅色纸面把图和正文分开。" bleed={false}><div className="kit-lab__anatomy-body">图内容区域（DiagramFlow、状态机或论文原图）</div></FigureFrame>
+        <FigureFrame label="Figure frame · 图注条" title="图有自己的抬头与编号" note="图注条说明这张图要回答什么，画布区域用浅色纸面把图和正文分开。"><div className="kit-lab__anatomy-body">图内容区域（DiagramFlow、状态机或论文原图）</div></FigureFrame>
       </div>
     </section>
 

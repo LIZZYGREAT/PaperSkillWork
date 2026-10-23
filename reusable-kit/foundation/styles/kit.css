@@ -100,8 +100,7 @@
 
 /* Figure: caption strip, drawing area, key row. The frame bleeds past the text
    column by exactly its own padding so the drawing still starts on the text edge. */
-.rk-figure { --rk-figure-pad: clamp(14px, 1.6vw, 22px); box-sizing: border-box; display: grid; gap: 13px; min-width: 0; margin: 0; margin-inline: calc(-1 * var(--rk-figure-pad)); padding: var(--rk-figure-pad); border: 1px solid var(--rk-line); border-radius: var(--rk-radius-large); background: var(--rk-surface); box-shadow: 0 1px 2px rgb(24 42 34 / 5%); }
-.rk-figure--contained { margin-inline: 0; }
+.rk-figure { --rk-figure-pad: clamp(14px, 1.6vw, 20px); box-sizing: border-box; display: grid; gap: 12px; min-width: 0; margin: 0; padding: var(--rk-figure-pad); border: 1px solid var(--rk-line); border-radius: var(--rk-radius-large); background: var(--rk-surface); box-shadow: 0 1px 2px rgb(24 42 34 / 5%); }
 .rk-figure__header { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
 .rk-figure__heading { display: grid; gap: 5px; min-width: 0; }
 .rk-figure__eyebrow { margin: 0; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .11em; text-transform: uppercase; }
@@ -158,7 +157,8 @@
 .rk-diagram__edge.is-dimmed .rk-diagram__port { opacity: .3; }
 .rk-diagram__edge marker path { fill: var(--rk-edge-line); }
 .rk-diagram__edge.is-active marker path { fill: var(--rk-edge-active); }
-.rk-diagram__port { fill: var(--rk-surface); stroke: var(--rk-edge-line); stroke-width: 1.1; }
+.rk-diagram__ports { position: absolute; z-index: 3; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.rk-diagram__port { fill: var(--rk-surface); stroke: var(--rk-edge-line); stroke-width: 1.4; }
 .rk-diagram__edge.is-active .rk-diagram__port { stroke: var(--rk-edge-active); stroke-width: 1.4; }
 .rk-diagram__label { position: absolute; z-index: 2; max-width: 15ch; padding: 1px 6px; transform: translate(-50%, -50%); border-radius: 5px; background: var(--rk-surface); color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; line-height: 1.3; text-align: center; pointer-events: none; text-wrap: balance; }
 .rk-diagram__node { position: relative; z-index: 1; display: grid; align-content: center; gap: 3px; min-width: 0; min-height: 58px; padding: 10px 13px; border: 1px solid var(--rk-line-strong); border-radius: 12px; background: var(--rk-surface); color: var(--rk-ink); line-height: 1.34; box-shadow: 0 1px 2px color-mix(in srgb, var(--rk-ink) 5%, transparent); }
@@ -325,15 +325,15 @@
 .rk-reference-hub__heading h2 { margin: 0; } .rk-reference-hub__heading p { margin: 4px 0 0; color: var(--rk-muted); }
 .rk-reference-hub__filters label { display: grid; gap: 6px; flex: 1; }
 .rk-reference-hub__filters input, .rk-reference-hub__filters select { min-height: 42px; padding: 8px 10px; border: 1px solid var(--rk-line); border-radius: 8px; background: var(--rk-surface); color: inherit; font: inherit; }
-.rk-reference-hub__grid { display: grid; grid-template-columns: minmax(250px, .9fr) minmax(260px, 1.1fr); grid-template-rows: minmax(0, 1fr); gap: 16px; height: min(70vh, 760px); min-height: 320px; max-height: min(70vh, 760px); overflow: hidden; }
-.rk-reference-hub__list { display: grid; align-content: start; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.rk-reference-hub__list, .rk-reference-hub__detail { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.rk-reference-hub__grid { display: grid; grid-template-columns: minmax(250px, .9fr) minmax(260px, 1.1fr); grid-template-rows: minmax(0, 1fr); gap: 20px; height: min(70vh, 760px); min-height: 320px; max-height: min(70vh, 760px); overflow: hidden; }
+.rk-reference-hub__list { display: grid; align-content: start; gap: 8px; margin: 0; padding: 0 4px 0 0; list-style: none; }
+.rk-reference-hub__list, .rk-reference-hub__detail { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable both-edges; scrollbar-width: thin; }
 .rk-reference-hub__list button { display: flex; align-items: start; justify-content: space-between; gap: 12px; width: 100%; min-height: 64px; padding: 12px; border: 1px solid var(--rk-line); border-radius: 10px; background: var(--rk-surface); text-align: left; cursor: pointer; }
 .rk-reference-hub__list button > span:first-child { min-width: 0; overflow-wrap: anywhere; }
 .rk-reference-hub__list button.is-selected { border-color: var(--rk-accent); background: var(--rk-accent-soft); }
 .rk-reference-hub__list small { display: block; margin-top: 4px; color: var(--rk-muted); }
 .rk-reference-hub__kind { flex: none; color: var(--rk-accent); font-size: var(--rk-type-meta); text-transform: capitalize; }
-.rk-reference-hub__empty, .rk-reference-hub__detail { padding: 16px; border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: var(--rk-surface-soft); }
+.rk-reference-hub__empty, .rk-reference-hub__detail { padding: 18px 20px; border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: var(--rk-surface); }
 .rk-reference-hub__detail { margin: 0; overflow-wrap: anywhere; }
 .rk-reference-hub__detail > .rk-reference-hub__kind { display: block; margin-top: 2px; }
 .rk-reference-hub__detail h3 { margin: 8px 0; font-size: var(--rk-type-heading-2); line-height: var(--rk-leading-heading); }
@@ -484,13 +484,13 @@
 /* Inspector: header row, then two columns of content so the panel fills its width
    instead of leaving a blank half. */
 .rk-state-machine__inspector { display: grid; gap: 16px; margin-top: 14px; padding: clamp(16px, 1.8vw, 24px); border: 1px solid var(--rk-line); border-radius: 14px; background: var(--rk-surface); }
-.rk-state-machine__inspector-head { display: grid; gap: 3px; }
+.rk-state-machine__inspector-head { display: grid; gap: 3px; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 18px; }\n.rk-state-machine__inspector-head > .rk-state-machine__eyebrow { grid-column: 1 / -1; }\n.rk-state-machine__inspector-head h3 { grid-column: 1; }\n.rk-state-machine__inspector-head .rk-state-machine__owner { grid-column: 2; text-align: right; }
 .rk-state-machine__inspector h3 { margin: 0; font-size: 1.5rem; font-weight: 700; line-height: 1.2; letter-spacing: -.025em; }
 .rk-state-machine__owner { margin: 0; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; letter-spacing: .02em; }
-.rk-state-machine__inspector-body { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(250px, 1fr); gap: 24px 36px; padding-top: 14px; border-top: 1px solid var(--rk-line); }
+.rk-state-machine__inspector-body { display: grid; gap: 16px; padding-top: 14px; border-top: 1px solid var(--rk-line); }
 .rk-state-machine__inspector-main { display: grid; align-content: start; gap: 12px; min-width: 0; }
 .rk-state-machine__desc { max-width: 62ch; margin: 0; color: var(--rk-muted); font-size: var(--rk-type-supporting); line-height: 1.72; }
-.rk-state-machine__next { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.rk-state-machine__next { display: grid; align-content: start; gap: 8px; min-width: 0; padding-top: 14px; border-top: 1px solid var(--rk-line); }
 .rk-state-machine__chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .rk-state-machine__chip { display: grid; gap: 2px; min-height: 48px; padding: 8px 14px; border: 1px solid var(--rk-line-strong); border-radius: 10px; background: var(--rk-surface); color: var(--rk-ink); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
 .rk-state-machine__chip span { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 650; }
@@ -600,20 +600,20 @@
 .rk-dataset-card p { padding-top: 10px; border-top: 1px solid var(--rk-line); }
 /* Formula beside the reading it needs: the equation is typeset on its own paper,
    the terms and the selected explanation sit next to it. */
-.rk-formula-block { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr); align-items: start; gap: 18px 26px; min-width: 0; color: var(--rk-ink); font-family: var(--rk-font-body); font-size: var(--rk-type-body); line-height: var(--rk-leading-body); }
-.rk-formula-block__main { display: grid; gap: 10px; min-width: 0; padding: clamp(16px, 1.8vw, 24px); border: 1px solid var(--rk-line); border-radius: 14px; background-color: var(--rk-figure); background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--rk-line) 62%, transparent) 1px, transparent 0); background-size: 20px 20px; }
+.rk-formula-block { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr); align-items: stretch; gap: 18px 26px; min-width: 0; color: var(--rk-ink); font-family: var(--rk-font-body); font-size: var(--rk-type-body); line-height: var(--rk-leading-body); }
+.rk-formula-block__main { display: grid; align-content: center; gap: 10px; min-width: 0; padding: clamp(16px, 1.8vw, 24px); border: 1px solid var(--rk-line); border-radius: 14px; background-color: var(--rk-figure); background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--rk-line) 62%, transparent) 1px, transparent 0); background-size: 20px 20px; }
 .rk-formula-block__label { margin: 0; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 .rk-formula-block__equation { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; padding: 4px 0; color: var(--rk-ink); font-family: var(--rk-font-math); font-size: clamp(1.2rem, 1.5vw, 1.45rem); line-height: 1.75; }
 .rk-formula-block__equation > * { max-width: 100%; }
 .rk-formula-block__equation math { font-size: inherit; }
-.rk-formula-block__side { display: grid; align-content: start; gap: 14px; min-width: 0; }
+.rk-formula-block__side { display: grid; grid-template-rows: auto minmax(0, 1fr); align-content: start; gap: 14px; min-width: 0; }
 .rk-formula-block__terms { display: grid; gap: 8px; }
 .rk-formula-block__terms-label { margin: 0; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .rk-formula-block__term-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .rk-formula-term { min-height: 38px; padding: 5px 14px; border: 1px solid var(--rk-line-strong); border-radius: 999px; background: var(--rk-surface); color: var(--rk-ink); font-family: var(--rk-font-math); font-size: 15px; font-weight: 500; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
 .rk-formula-term:hover { border-color: var(--rk-accent); }
 .rk-formula-term.is-selected { border-color: var(--rk-accent); background: var(--rk-accent-soft); color: var(--rk-accent-strong); }
-.rk-formula-block__explanation { display: grid; align-self: start; align-content: start; gap: 6px; min-height: 104px; margin: 0; padding: 14px 16px; border-left: 3px solid var(--rk-line-strong); border-radius: 0 10px 10px 0; background: var(--rk-surface); }
+.rk-formula-block__explanation { display: grid; align-self: stretch; align-content: start; gap: 6px; min-height: 0; margin: 0; padding: 14px 16px; border-left: 3px solid var(--rk-line-strong); border-radius: 0 10px 10px 0; background: var(--rk-surface); }
 .rk-formula-block__explanation.has-term { border-left-color: var(--rk-accent); background: var(--rk-accent-soft); }
 .rk-formula-block__term-name { margin: 0; color: var(--rk-accent-strong); font-family: var(--rk-font-math); font-size: 17px; font-weight: 600; }
 .rk-formula-block__term-body { margin: 0; color: var(--rk-ink); font-size: var(--rk-type-supporting); line-height: 1.68; }

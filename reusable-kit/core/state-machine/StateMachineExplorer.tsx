@@ -88,7 +88,8 @@ export function StateMachineExplorer({ spec, mode = "guided", showHistory = true
               const from = positions.get(transition.from)!;
               const to = positions.get(transition.to)!;
               const sameRow = Math.abs(from.y - to.y) < 1;
-              const pathMode = transition.path ?? (sameRow ? "straight" : to.x <= from.x ? "curve" : "orthogonal");
+              const nearlyVertical = Math.abs(from.x - to.x) < NODE_WIDTH / 2;
+              const pathMode = transition.path ?? (sameRow || nearlyVertical ? "straight" : to.x <= from.x ? "curve" : "orthogonal");
               const path = createDiagramPath(from, to, size, size, pathMode);
               const available = transition.from === currentId;
               return <g key={`${transition.from}-${transition.to}-${index}`} className={`rk-state-machine__edge ${available ? "is-available" : "is-dimmed"}`} data-from={transition.from} data-to={transition.to} data-path={pathMode}><path d={path.d} markerEnd={`url(#${markerId})`} />{transition.condition ? <text x={path.label.x} y={path.label.y - 6}>{transition.condition}</text> : null}<title>{transition.condition ?? `${transition.from} to ${transition.to}`}</title></g>;

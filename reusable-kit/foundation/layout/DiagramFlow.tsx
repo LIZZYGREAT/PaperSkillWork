@@ -234,9 +234,18 @@ export function DiagramFlow({ spec, focus, label, className = "", framed = true,
             const state = edgeState(edge);
             return <g key={edge.id} className={`rk-diagram__edge is-${edge.kind ?? "data"}${state.active ? " is-active" : ""}${state.dimmed ? " is-dimmed" : ""}`} data-diagram-edge={edge.id} data-from={edge.from} data-to={edge.to}>
               <path d={measured.d} markerEnd={`url(#${markerId})`} />
-              <circle className="rk-diagram__port" cx={measured.start.x} cy={measured.start.y} r="2.1" />
-              <circle className="rk-diagram__port" cx={measured.end.x} cy={measured.end.y} r="2.1" />
               <title>{`${titleById.get(edge.from)?.inputLabel ?? edge.from} → ${titleById.get(edge.to)?.inputLabel ?? edge.to}`}</title>
+            </g>;
+          })}
+        </svg>
+        <svg className="rk-diagram__ports" viewBox={`0 0 ${Math.max(size.width, 1)} ${Math.max(size.height, 1)}`} preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          {spec.edges.map((edge) => {
+            const measured = paths.find((item) => item.id === edge.id);
+            if (!measured) return null;
+            const state = edgeState(edge);
+            return <g key={`${edge.id}-ports`} className={`rk-diagram__edge is-${edge.kind ?? "data"}${state.active ? " is-active" : ""}${state.dimmed ? " is-dimmed" : ""}`}>
+              <circle className="rk-diagram__port" cx={measured.start.x} cy={measured.start.y} r="2.7" />
+              <circle className="rk-diagram__port" cx={measured.end.x} cy={measured.end.y} r="2.7" />
             </g>;
           })}
         </svg>

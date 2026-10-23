@@ -8,19 +8,17 @@ export type FigureFrameCounter = { index: number; total: number };
  * every figure on a page in the same hierarchy without turning each one into
  * another card.
  */
-export function FigureFrame({ label, title, counter, note, children, footer, bleed = true, className = "", headingId }: {
+export function FigureFrame({ label, title, counter, note, children, footer, className = "", headingId }: {
   label: string;
   title: ReactNode;
   counter?: FigureFrameCounter;
   note?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  /** Bleed the frame past the text column so the figure content still aligns with it. */
-  bleed?: boolean;
   className?: string;
   headingId?: string;
 }) {
-  return <div className={`rk-figure${bleed ? "" : " rk-figure--contained"}${className ? ` ${className}` : ""}`}>
+  return <div className={`rk-figure${className ? ` ${className}` : ""}`}>
     <header className="rk-figure__header">
       <div className="rk-figure__heading">
         <p className="rk-figure__eyebrow">{label}</p>
