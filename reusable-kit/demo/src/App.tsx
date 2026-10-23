@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
 import { ExpandableDetail, ReferenceHub, TermRef } from "../../core/reference";
 import type { KnowledgeEntry } from "../../core/reference";
 import { FlowStepper } from "../../core/flow-stepper";
@@ -14,12 +13,15 @@ import { SegmentedControl } from "../../foundation/controls/SegmentedControl";
 import { Slider } from "../../foundation/controls/Slider";
 import { InlineCallout } from "../../foundation/feedback/InlineCallout";
 import { StickySystemView, useStickyStepSync } from "../../foundation/layout/StickySystemView";
+import { DiagramFlow } from "../../foundation/layout/DiagramFlow";
 import { Drawer } from "../../foundation/overlay/Drawer";
 import { Popover } from "../../foundation/overlay/Popover";
+import { StepNav } from "../../compositions/step-nav";
 import {
   ewcFormulaTerms, ewcProcess, ewcResponsibilities, ewcStates,
   lwfFlow, lwfResponsibilities, lwfStates,
 } from "./data";
+import { ewcTaskAGraph, labNavItems, lwfGraph, lwfGraphSteps, lwfNavItems, lwfObjectiveGraph } from "./figures";
 import { ewcKnowledge, lwfKnowledge } from "./knowledge";
 
 type DemoKind = "lab" | "lwf" | "ewc";
@@ -33,14 +35,15 @@ const choices = [
 const labSections = [
   { id: "lab-type-title", title: "Typography roles" },
   { id: "lab-button-title", title: "Buttons and controls" },
+  { id: "lab-nav-title", title: "Step navigation" },
   { id: "lab-overlay-title", title: "Overlay contracts" },
 ];
 const lwfSections = [
-  { id: "lwf-problem", stepId: "arrive", title: "A new task arrives" },
-  { id: "lwf-teacher", stepId: "teacher", title: "Keep the old model fixed" },
-  { id: "lwf-forward", stepId: "forward", title: "Run both model paths" },
-  { id: "lwf-loss", stepId: "loss", title: "Form the two losses" },
-  { id: "lwf-update", stepId: "update", title: "Update the student" },
+  { id: "lwf-problem", stepId: "arrive", title: "新任务到达" },
+  { id: "lwf-teacher", stepId: "teacher", title: "冻结 teacher" },
+  { id: "lwf-forward", stepId: "forward", title: "两条计算路径" },
+  { id: "lwf-loss", stepId: "loss", title: "两个损失汇合" },
+  { id: "lwf-update", stepId: "update", title: "更新与交接" },
 ];
 const ewcSections = [
   { id: "ewc-task-a", stepId: "old", title: "Learn task A" },
@@ -121,11 +124,13 @@ export default function App() {
 function ComponentLab() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sliderValue, setSliderValue] = useState(36);
+  const [navStep, setNavStep] = useState("objects");
   return <div className="kit-demo__paper kit-lab" data-demo-view="component-lab">
     <section className="kit-lab__intro"><p className="rk-type--meta">FOUNDATION V2 · CANDIDATE</p><h2 className="rk-type--heading-1">Readable defaults with bounded variants</h2><p className="rk-type--body">中文正文、English labels、数学符号 θᵢ and code-like IDs share a deliberate hierarchy. Resize the page to inspect wrapping rather than shrinking the content.</p></section>
     <InlineCallout kind="note" title="Candidate status">Warm Editorial and Clear Research are review candidates. Neither becomes an approved Kit default until screenshot review and explicit human acceptance.</InlineCallout>
-    <section className="rk-surface" aria-labelledby="lab-type-title"><header className="rk-surface__header"><h3 id="lab-type-title" className="rk-type--heading-2">Typography roles</h3><p className="rk-type--supporting">Semantic roles expose a small token set; paper themes may replace the family and colors.</p></header><div className="kit-lab__type-stack"><p className="rk-type--display">Display / 开篇标题</p><p className="rk-type--heading-1">Heading 1 / 页面标题</p><p className="rk-type--heading-2">Heading 2 / 章节标题</p><p className="rk-type--heading-3">Heading 3 / 内部小节</p><p className="rk-type--body">Body — 主要解释用于连续阅读，包含 Fisher Information、xₜ 和中文标点。</p><p className="rk-type--supporting">Supporting — 图旁说明和辅助信息。</p><p className="rk-type--caption">Caption — Figure 2. Source-bound summary with enough line height.</p><p className="rk-type--diagram-label">Diagram label — Gradient ∇L</p><p className="rk-type--meta">META · VERSION 2 CANDIDATE</p></div></section>
+    <section className="rk-surface" aria-labelledby="lab-type-title"><header className="rk-surface__header"><h3 id="lab-type-title" className="rk-type--heading-2">Typography roles</h3><p className="rk-type--supporting">Semantic roles expose a small token set; paper themes may replace the family and colors.</p></header><div className="kit-lab__type-stack"><p className="rk-type--display">Display / 开篇标题</p><p className="rk-type--heading-1">Heading 1 / 页面标题</p><p className="rk-type--heading-2">Heading 2 / 章节标题</p><p className="rk-type--heading-3">Heading 3 / 内部小节</p><p className="rk-type--body">Body — 主要解释用于连续阅读，包含 Fisher Information、xₜ 和中文标点。</p><p className="rk-type--supporting">Supporting — 图旁说明和辅助信息。</p><p className="rk-type--caption">Caption — Figure 2. Source-bound summary with enough line height.</p><p className="rk-type--diagram-label">Diagram label — Gradient ∇L</p><p className="rk-type--meta">META · VERSION 2 CANDIDATE</p><p className="rk-math">样本公式 <var>L</var><sub>old</sub> = −Σ<sub>i</sub> <var>t</var><sub>i</sub> log <var>ŷ</var><sub>i</sub></p></div></section>
     <section className="rk-surface rk-surface--soft" aria-labelledby="lab-button-title"><header className="rk-surface__header"><h3 id="lab-button-title" className="rk-type--heading-2">Buttons and controls</h3><p className="rk-type--supporting">Variants retain alignment across English, Chinese, icons, long text, and disabled states.</p></header><div className="kit-lab__button-grid"><Button>Primary action</Button><Button variant="secondary">次要操作</Button><Button variant="quiet">Quiet action</Button><Button variant="danger">Delete draft</Button><Button size="small">Small</Button><Button disabled>Unavailable</Button><Button variant="secondary" iconOnly aria-label="Add reference">＋</Button><Button className="kit-lab__long-button">A deliberately long action label that wraps in a narrow container</Button></div><div className="kit-lab__control-row"><Chip active>Selected chip</Chip><Chip tone="good">Verified</Chip><Slider label="Example threshold" value={sliderValue} displayValue={`${sliderValue}%`} onChange={setSliderValue} /></div></section>
+    <section className="rk-surface" aria-labelledby="lab-nav-title"><header className="rk-surface__header"><h3 id="lab-nav-title" className="rk-type--heading-2">Step navigation</h3><p className="rk-type--supporting">Every step name stays complete. The grid wraps to a second row instead of shortening a label with an ellipsis, and the current step is marked by a bottom rule plus a tint, not by a heavy border.</p></header><StepNav items={labNavItems} activeId={navStep} onSelect={setNavStep} label="Component Lab step navigation sample" /></section>
     <section className="rk-surface" aria-labelledby="lab-overlay-title"><header className="rk-surface__header"><h3 id="lab-overlay-title" className="rk-type--heading-2">Overlay contracts</h3><p className="rk-type--supporting">Popover remains viewport-safe; the reading Drawer has room for composed two-column content on wide screens.</p></header><div className="kit-lab__button-grid"><Popover label="Compact supporting detail" trigger="Open viewport-safe popover"><p>This supporting detail is intentionally compact. Escape and outside press dismiss it.</p></Popover><Button variant="secondary" onClick={() => setDrawerOpen(true)}>Open reading Drawer</Button></div></section>
     <Drawer open={drawerOpen} title="Reading Drawer" size="reading" onClose={() => setDrawerOpen(false)}><div className="kit-lab__reading-grid"><aside className="rk-surface rk-surface--soft"><p className="rk-type--meta">ENTRY LIST</p><h3 className="rk-type--heading-3">Stable navigation column</h3><p className="rk-type--supporting">The wide contract reserves enough space for a list and a readable detail pane.</p></aside><article className="rk-surface"><p className="rk-type--meta">DETAIL</p><h3 className="rk-type--heading-2">Long-form reference content</h3><p className="rk-type--body">This is a layout contract demonstration, not the final Reference Hub. At narrow widths the columns collapse without horizontal page scrolling.</p></article></div></Drawer>
   </div>;
@@ -154,59 +159,53 @@ function LwfDemo() {
     const index = lwfFlow.findIndex((item) => item.id === stepId);
     if (index >= 0) setFlowIndex(index);
   };
-  return <div className="kit-demo__paper kit-method-page kit-lwf" data-demo-view="lwf"><StickySystemView sections={lwfSections} onActiveSectionChange={(section) => { if (section.stepId) updateFromStepId(section.stepId); }} visual={<div className="kit-lwf__opening"><header className="kit-lwf__hero"><p>LEARNING WITHOUT FORGETTING · RESPONSE PRESERVATION</p><h2>Keep an old behavior visible while the student learns something new</h2><span>Follow one causal question at a time. The visual removes unrelated edges instead of shrinking a complete topology into the frame.</span><div className="kit-lwf__premise"><b>THE QUESTION</b><p>Can the student learn current labels while its earlier response remains available?</p></div></header><LwfFocusVisual step={flowIndex} onStepChange={setFlowIndex} /></div>}>
-    <section id="lwf-problem" className="kit-demo__section"><h3>1. Problem: a new task arrives</h3><p>A new task introduces new labels while the model should retain useful behavior from earlier tasks. The teacher stays fixed during the current task.</p><InlineCallout kind="note" title="System state">The task changes; the old model supplies responses while a student learns the new task.</InlineCallout></section>
-    <section id="lwf-teacher" className="kit-demo__section"><h3>2. Teacher: preserve an old response target</h3><p>The <TermRef entry={lwfKnowledge[0]} onOpenReference={openReference}>teacher</TermRef> evaluates the current input. Its old-class response becomes a target for the student; it is not jointly optimized.</p><ExpandableDetail title="What distillation means here" summary="A supporting definition." level="supporting"><p><TermRef entry={lwfKnowledge[1]} onOpenReference={openReference}>distillation objective</TermRef> compares student outputs with the fixed teacher response. That function-level signal is different from freezing all old parameters.</p></ExpandableDetail></section>
-    <section id="lwf-forward" className="kit-demo__section kit-lwf__chapter"><header><span>03 · TWO PURPOSES, ONE STUDENT</span><h3>Separate the teacher target from the student's two outputs</h3><p>The fixed teacher contributes only an old-response target. The trainable student produces an old-class response and a new-class response from its shared backbone.</p></header><LwfModelLanes /></section>
-    <section id="lwf-loss" className="kit-demo__section kit-lwf__chapter"><header><span>04 · OBJECTIVES MEET</span><h3>Two comparisons create one update signal</h3><p>The losses answer different questions. Their gradients meet only after each comparison is understandable on its own.</p></header><LwfObjectiveComposer /><ExpandableDetail title="Inspect the responsibility audit" summary="Open the reusable map only when you need a component-by-component ownership check." level="supporting"><ResponsibilityMap spec={lwfResponsibilities} /></ExpandableDetail></section>
-    <section id="lwf-update" className="kit-demo__section"><h3>5. Update: carry the student forward</h3><p>Both objectives contribute to the student update. At the task boundary, the updated student becomes the teacher for task t+1.</p><FlowStepper steps={lwfFlow} step={flowIndex} onStepChange={(step, index) => { setFlowIndex(index); }} /><h4>Task-level lifecycle</h4><p>Advance through the legal phases; try jumping directly from the ready state to promotion.</p><StateMachineExplorer spec={lwfStates} /><Button variant="secondary" onClick={() => { setReferenceId(null); setHubOpen(true); }}>Browse LwF references</Button></section>
-  </StickySystemView><KnowledgeDrawer entries={lwfKnowledge} open={hubOpen} selectedId={referenceId} onSelectedIdChange={setReferenceId} onClose={() => setHubOpen(false)} /></div>;
+  return <div className="kit-demo__paper kit-method-page kit-lwf" data-demo-view="lwf">
+    <header className="kit-lwf__hero">
+      <p className="kit-lwf__kicker">LEARNING WITHOUT FORGETTING · RESPONSE PRESERVATION</p>
+      <h2>一边保留旧响应，一边学会新类别</h2>
+      <p className="kit-lwf__lead">下面的图只回答一件事：同一个输入怎样分成两条计算路径，teacher 的目标与 student 的两类输出在哪里比较，最后是哪个模型被更新。</p>
+      <p className="kit-lwf__question"><b>当前问题</b><span>student 能学会当前标签，同时让旧类响应仍然可用吗？</span></p>
+    </header>
+    <StickySystemView sections={lwfSections} onActiveSectionChange={(section) => { if (section.stepId) updateFromStepId(section.stepId); }} visual={<LwfFocusPanel step={flowIndex} onStepChange={setFlowIndex} />}>
+      <section id="lwf-problem" className="kit-demo__section"><h3>1. 新任务到达：冲突从哪里开始</h3><p>当前任务带来新的标签，而系统必须继续提供旧类的响应。图里两个对象同时出现：新的输入与标签，以及已经训练好、此时不再变化的 teacher。</p><InlineCallout kind="note" title="系统状态">任务在变，旧模型不跟着变：teacher 只提供旧响应，student 承担本任务的更新。</InlineCallout></section>
+      <section id="lwf-teacher" className="kit-demo__section"><h3>2. Teacher：只产出目标，不参与更新</h3><p><TermRef entry={lwfKnowledge[0]} onOpenReference={openReference}>teacher</TermRef> 读取与 student 相同的输入 <span className="rk-math"><var>x</var><sub>t</sub></span>，给出旧类响应目标 <span className="rk-math"><var>T</var><sub>old</sub></span>。它在整个任务期间保持冻结：本任务的梯度不会写回这个模型。</p><ExpandableDetail title="这里的 distillation 指什么" summary="与冻结全部旧参数的差别。" level="supporting"><p><TermRef entry={lwfKnowledge[1]} onOpenReference={openReference}>distillation objective</TermRef> 比较的是 student 输出与固定 teacher 响应之间的函数层差异；它不等于把旧参数全部冻结，更新仍然作用于 student 参数。</p></ExpandableDetail></section>
+      <section id="lwf-forward" className="kit-demo__section kit-lwf__chapter"><header><span>03 · 两条路径，一个 student</span><h3>同一个 x<sub>t</sub>，两个输出头</h3><p>teacher 路径只贡献旧响应目标；student 路径用共享骨干 <span className="rk-math"><var>h</var><sub>t</sub></span> 同时产出旧类输出 <span className="rk-math"><var>ŷ</var><sub>old</sub></span> 与新类输出 <span className="rk-math"><var>ŷ</var><sub>new</sub></span>。两路输入相同，身份与用途不同。</p></header>
+        <ul className="kit-lwf__facts">
+          <li><b>输入</b><span>同一批当前任务样本进入两条路径。</span></li>
+          <li><b>Teacher</b><span>冻结，只产出旧响应目标，不接收梯度。</span></li>
+          <li><b>Student</b><span>共享骨干可训练，两个输出头分别服务旧类与新类。</span></li>
+          <li><b>监督</b><span>旧类靠 teacher 目标，新类靠当前任务标签。</span></li>
+        </ul>
+      </section>
+      <section id="lwf-loss" className="kit-demo__section kit-lwf__chapter"><header><span>04 · 两个目标在这里汇合</span><h3>先各自比较，再合成为一次更新</h3><p>两个损失回答不同的问题，所以在汇合前必须各自读得懂：<span className="rk-math"><var>L</var><sub>old</sub></span> 比较 teacher 目标与 student 旧类输出，<span className="rk-math"><var>L</var><sub>new</sub></span> 比较当前标签与 student 新类输出。</p></header>
+        <DiagramFlow spec={lwfObjectiveGraph} label="LwF 目标合成：两组比较形成两个损失，合成梯度后只更新 student 参数" />
+        <ExpandableDetail title="展开组件责任审计" summary="需要逐项核对“谁负责什么”时再打开。" level="supporting"><ResponsibilityMap spec={lwfResponsibilities} /></ExpandableDetail>
+      </section>
+      <section id="lwf-update" className="kit-demo__section"><h3>5. 更新与交接</h3><p>两个目标都作用在 student 参数上。任务结束时，更新后的 student 才成为下一个任务的 teacher。</p><FlowStepper steps={lwfFlow} step={flowIndex} onStepChange={(step, index) => { setFlowIndex(index); }} /><h4>任务级生命周期</h4><p>依次推进合法阶段；试着从 ready 直接跳到 promotion，看看系统如何拒绝。</p><StateMachineExplorer spec={lwfStates} /><Button variant="secondary" onClick={() => { setReferenceId(null); setHubOpen(true); }}>Browse LwF references</Button></section>
+    </StickySystemView><KnowledgeDrawer entries={lwfKnowledge} open={hubOpen} selectedId={referenceId} onSelectedIdChange={setReferenceId} onClose={() => setHubOpen(false)} /></div>;
 }
 
-const lwfFocusCopy = [
-  { id: "arrive", tab: "New task", title: "A new task enters an existing system", note: "Start with the conflict: learn the current labels without discarding the earlier response." },
-  { id: "teacher", tab: "Keep teacher fixed", title: "The old model becomes a fixed response provider", note: "Only the teacher path is in focus. No update enters this model during the task." },
-  { id: "forward", tab: "Run two paths", title: "Teacher and student see the same input for different reasons", note: "The teacher supplies a target; the student supplies the responses that will be trained." },
-  { id: "loss", tab: "Form two losses", title: "Two objectives, one student update", note: "Old-response preservation and current-task learning stay visually distinct until their gradients combine." },
-  { id: "update", tab: "Carry forward", title: "Update the student, then promote it at the task boundary", note: "The teacher remains fixed during learning; promotion happens only after the student update is complete." },
-];
-
-function LwfFocusVisual({ step, onStepChange }: { step: number; onStepChange: (step: number) => void }) {
+function LwfFocusPanel({ step, onStepChange }: { step: number; onStepChange: (step: number) => void }) {
   const stickySync = useStickyStepSync();
-  const current = lwfFocusCopy[Math.max(0, Math.min(step, lwfFocusCopy.length - 1))];
-  const choose = (index: number) => {
-    onStepChange(index);
-    stickySync?.setManualStep(lwfFocusCopy[index].id);
+  const index = Math.max(0, Math.min(step, lwfGraphSteps.length - 1));
+  const current = lwfGraphSteps[index];
+  const choose = (stepId: string) => {
+    const next = lwfGraphSteps.findIndex((item) => item.id === stepId);
+    if (next < 0) return;
+    onStepChange(next);
+    stickySync?.setManualStep(stepId);
   };
-  return <section className="kit-lwf-focus" aria-label="Focused LwF mechanism" data-focus-step={current.id}>
-    <header><div><span>FOCUSED SYSTEM VIEW</span><h3 className="kit-lwf-focus__title">{current.title}</h3><p>{current.note}</p></div><strong>{String(step + 1).padStart(2, "0")} / 05</strong></header>
-    <nav aria-label="Choose LwF focus step">{lwfFocusCopy.map((item, index) => <button key={item.id} type="button" aria-pressed={index === step} onClick={() => choose(index)}><i>{String(index + 1).padStart(2, "0")}</i><span>{item.tab}</span></button>)}</nav>
-    <LwfFocusScene stepId={current.id} />
+  return <section className="kit-lwf-panel" aria-label="LwF 计算关系图" data-focus-step={current.id}>
+    <header className="kit-lwf-panel__header">
+      <div>
+        <p className="kit-lwf-panel__meta">因果链定位 · STEP {String(index + 1).padStart(2, "0")} / {String(lwfGraphSteps.length).padStart(2, "0")}</p>
+        <h3 className="kit-lwf-focus__title">{current.title}</h3>
+        <p className="kit-lwf-panel__note">{current.note}</p>
+      </div>
+    </header>
+    <StepNav items={lwfNavItems} activeId={current.id} onSelect={choose} label="选择 LwF 机制步骤" />
+    <DiagramFlow spec={lwfGraph} focus={{ nodes: current.nodes, edges: current.edges }} label="LwF 因果图：同一输入经 teacher 与 student 两条路径形成两个损失，梯度只更新 student 参数" framed={false} />
   </section>;
-}
-
-function LwfFocusScene({ stepId }: { stepId: string }) {
-  if (stepId === "arrive") return <div className="kit-lwf-scene kit-lwf-scene--arrive"><article className="is-input"><span>NEW CONDITION</span><strong>Current task xₜ, yₜ</strong><small>new examples and labels</small></article><b aria-hidden="true">→</b><div className="kit-lwf-scene__question"><span>LEARNING CONFLICT</span><strong>Change the student</strong><em>without losing the earlier response</em></div></div>;
-  if (stepId === "teacher") return <div className="kit-lwf-scene kit-lwf-scene--teacher"><article className="is-input"><span>SAME INPUT</span><strong>xₜ</strong></article><b aria-hidden="true">→</b><article className="is-frozen"><span>FROZEN</span><strong>Fixed teacher</strong><small>no parameter update</small></article><b aria-hidden="true">→</b><article className="is-target"><span>OUTPUT</span><strong>Old-response target</strong><small>what the student should preserve</small></article></div>;
-  if (stepId === "forward") return <div className="kit-lwf-scene kit-lwf-scene--forward"><div className="kit-lwf-scene__shared-input"><span>SHARED INPUT</span><strong>xₜ</strong></div><div className="kit-lwf-scene__lanes"><article><span>REFERENCE LANE · FROZEN</span><div><b>Teacher</b><i aria-hidden="true">→</i><b>Old target</b></div></article><article><span>LEARNING LANE · TRAINABLE</span><div><b>Student backbone</b><i aria-hidden="true">→</i><b>Old head + new head</b></div></article></div></div>;
-  if (stepId === "loss") return <div className="kit-lwf-scene kit-lwf-scene--loss"><article className="is-preserve"><span>PRESERVE</span><strong>teacher target ↔ student old output</strong><small>L_old</small></article><article className="is-learn"><span>LEARN</span><strong>current label ↔ student new output</strong><small>L_new</small></article><b aria-hidden="true">↓</b><div><span>COMBINE AFTER COMPARISON</span><strong>∇L_old + ∇L_new</strong></div></div>;
-  return <div className="kit-lwf-scene kit-lwf-scene--update"><div className="kit-lwf-scene__signal"><span>COMBINED SIGNAL</span><strong>∇L_old + ∇L_new</strong></div><b aria-hidden="true">→</b><article className="is-student"><span>UPDATE</span><strong>Trainable student</strong></article><b aria-hidden="true">→</b><article className="is-promote"><span>TASK BOUNDARY</span><strong>Next teacher</strong><small>promotion, not joint training</small></article></div>;
-}
-
-function LwfModelLanes() {
-  return <div className="kit-lwf-lanes" role="img" aria-label="Fixed teacher lane produces the old response target while the trainable student lane branches into old and new class outputs">
-    <div className="kit-lwf-lanes__input"><span>SAME INPUT</span><strong>xₜ</strong></div>
-    <section className="kit-lwf-lanes__lane is-teacher"><header><span>REFERENCE LANE</span><b>Frozen for this task</b></header><div><strong>Fixed teacher</strong><i aria-hidden="true">→</i><strong>Old-response target</strong></div><p>Produces the behavior to preserve.</p></section>
-    <section className="kit-lwf-lanes__lane is-student"><header><span>LEARNING LANE</span><b>Receives gradients</b></header><div><strong>Student backbone θₛ</strong><i aria-hidden="true">→</i><span><b>Old-class output</b><b>New-class output</b></span></div><p>Produces both trainable comparisons.</p></section>
-  </div>;
-}
-
-function LwfObjectiveComposer() {
-  return <div className="kit-lwf-objectives">
-    <div className="kit-lwf-objectives__pair"><article className="is-preserve"><span>OLD BEHAVIOR</span><h4>Preserve the response</h4><p>Teacher target <b>compared with</b> student old output</p><strong>L_old</strong></article><article className="is-learn"><span>CURRENT TASK</span><h4>Learn the new labels</h4><p>Current label <b>compared with</b> student new output</p><strong>L_new</strong></article></div>
-    <div className="kit-lwf-objectives__merge"><i aria-hidden="true">↘</i><div><span>SHARED DESTINATION</span><strong>Both gradients update the student</strong><p>The teacher remains fixed; the optimizer changes only trainable student parameters.</p></div><i aria-hidden="true">↙</i></div>
-    <dl><div><dt>Teacher</dt><dd>supplies the old target</dd></div><div><dt>Student</dt><dd>supplies old and new outputs</dd></div><div><dt>Objectives</dt><dd>state what to preserve and learn</dd></div><div><dt>Optimizer</dt><dd>applies the combined update</dd></div></dl>
-  </div>;
 }
 
 function EwcDemo() {
@@ -218,7 +217,7 @@ function EwcDemo() {
     <header className="kit-ewc__hero"><div><p className="kit-ewc__kicker">ELASTIC WEIGHT CONSOLIDATION · MECHANISM STUDY</p><h2>When a model learns again, what should it resist changing?</h2><p className="kit-demo__lead">First learn task A. Only after that solution exists do we estimate which parameters deserve stronger protection during task B.</p></div><aside className="kit-ewc__brief" aria-label="Reading brief"><span>OBSERVE</span><strong>State appears only when the algorithm has produced it.</strong><p>Future objects stay visibly dormant, so the whole-system map never masquerades as the current execution state.</p></aside></header>
     <InlineCallout kind="paper-fact" title="Mechanism sketch">This candidate uses abstract task labels, synthetic parameter examples, and no benchmark values. Confirm paper-specific notation and conditions against the source before reuse.</InlineCallout>
     <StickySystemView sections={ewcSections} visual={<div className="kit-ewc__system"><header><div><span>WHOLE-SYSTEM MAP</span><strong>Inactive objects are context, not completed state</strong></div><i>Scroll-linked</i></header><ProcessLoopExplorer spec={ewcProcess} nodeWidth={180} showProgress /></div>}>
-    <section id="ewc-task-a" className="kit-demo__section kit-ewc__chapter"><header className="kit-ewc__chapter-header"><span>01 · ESTABLISH THE REFERENCE</span><h3>Learn task A before anything can be protected</h3><p>The model updates its current parameters while fitting task A. At this moment, Fisher importance and the EWC penalty do not exist yet.</p></header><div className="kit-ewc__task-a-visual" role="img" aria-label="Task A data updates a trainable parameter field and produces the stored solution theta star"><div className="kit-ewc__source"><span>TASK A</span><strong>examples + objective</strong><small>available now</small></div><span className="kit-ewc__flow" aria-hidden="true">→</span><div className="kit-ewc__parameter-field"><span>TRAINABLE PARAMETERS θ</span><div className="kit-ewc__parameter-row"><i style={{ "--parameter-level": "76%" } as CSSProperties} /><i style={{ "--parameter-level": "38%" } as CSSProperties} /><i style={{ "--parameter-level": "58%" } as CSSProperties} /><i style={{ "--parameter-level": "88%" } as CSSProperties} /><i style={{ "--parameter-level": "46%" } as CSSProperties} /></div><small>updates continue while task A is learned</small></div><span className="kit-ewc__flow" aria-hidden="true">→</span><div className="kit-ewc__result"><span>PRODUCED AT STAGE END</span><strong>stored solution θ*</strong><small>reference values only; importance is next</small></div></div><div className="kit-ewc__handoff"><span>What this stage hands forward</span><p>A parameter reference θ* that can later be paired with an importance estimate. No future penalty is active in this stage.</p></div></section>
+    <section id="ewc-task-a" className="kit-demo__section kit-ewc__chapter"><header className="kit-ewc__chapter-header"><span>01 · ESTABLISH THE REFERENCE</span><h3>Learn task A before anything can be protected</h3><p>The model updates its current parameters while fitting task A. At this moment, Fisher importance and the EWC penalty do not exist yet.</p></header><DiagramFlow spec={ewcTaskAGraph} label="Task A training: data updates trainable parameters and produces the stored reference theta star" /><div className="kit-ewc__handoff"><span>What this stage hands forward</span><p>A parameter reference θ* that can later be paired with an importance estimate. No future penalty is active in this stage.</p></div></section>
     <section id="ewc-importance" className="kit-demo__section kit-ewc__chapter"><header className="kit-ewc__chapter-header"><span>02 · ASK WHAT MATTERS</span><h3>Estimate importance as a visible transformation</h3><p>With θ* available, the earlier-task model and estimation data produce parameter-wise weights. The result changes how strongly later movement is discouraged.</p></header><div className="kit-ewc__importance"><div className="kit-ewc__importance-input"><span>INPUT</span><strong>θ* + task A estimation signal</strong><p>The earlier solution is fixed while sensitivity is estimated.</p></div><div className="kit-ewc__estimator" aria-label="Fisher importance estimation"><span>ESTIMATE</span><strong>Diagonal Fisher importance</strong><div><i /><i /><i /><i /></div><small>synthetic teaching profile</small></div><div className="kit-ewc__importance-output"><span>OUTPUT · F</span><ol><li><b>θ₁</b><i style={{ width: "84%" }} /><em>higher</em></li><li><b>θ₂</b><i style={{ width: "34%" }} /><em>lower</em></li><li><b>θ₃</b><i style={{ width: "62%" }} /><em>medium</em></li></ol></div></div><div className="kit-ewc__interpretation"><span>INTERPRETATION</span><p>These weights do not freeze the model. They prepare a later constraint in which equal parameter movements can carry unequal cost.</p></div><ExpandableDetail title="Inspect component responsibilities" summary="The reusable ResponsibilityMap remains available as a supporting audit view." level="supporting"><ResponsibilityMap spec={ewcResponsibilities} /></ExpandableDetail></section>
     <section id="ewc-stored" className="kit-demo__section"><h3>3. Store θ* and importance</h3><p>Retain both the reference parameters and the importance weights for learning later tasks.</p></section>
     <section id="ewc-task-b" className="kit-demo__section"><h3>4. Train task B</h3><p>The new task supplies its own objective, which is combined with the regularization penalty.</p><StateMachineExplorer spec={ewcStates} /></section>

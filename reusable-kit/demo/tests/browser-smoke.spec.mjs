@@ -49,28 +49,128 @@ test("Component Lab exposes typography, button states, and responsive reading ov
   expect(await drawer.locator(".kit-lab__reading-grid").evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
 });
 
-test("scroll sections synchronize LwF steps, manual choice holds briefly, and EWC reuses the system view", async ({ page }) => {
+test("LwF opening keeps the title compact and the causal figure complete", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "LwF scenario" }).click();
+
+  const headingMetrics = await page.locator(".kit-lwf__hero h2").evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return { fontSize: Number.parseFloat(getComputedStyle(node).fontSize), height: rect.height };
+  });
+  expect(headingMetrics.fontSize).toBeGreaterThanOrEqual(28);
+  expect(headingMetrics.fontSize).toBeLessThanOrEqual(52);
+  expect(headingMetrics.height).toBeLessThanOrEqual(130);
+
+  const heroHeight = await page.locator(".kit-lwf__hero").evaluate((node) => node.getBoundingClientRect().height);
+  expect(heroHeight).toBeLessThanOrEqual(900 * 0.4);
+
+  const figure = page.locator(".kit-lwf-panel .rk-diagram");
+  await expect(figure).toHaveAttribute("data-diagram-mode", "grid");
+  const figureBox = await figure.boundingBox();
+  expect(figureBox.width).toBeGreaterThanOrEqual(700);
+  expect(figureBox.height).toBeGreaterThanOrEqual(320);
+
+  // Every labelled step keeps its full text: no ellipsis and no horizontal clipping.
+  const navLabels = await page.locator(".kit-lwf-panel .rk-step-nav__label").evaluateAll((nodes) => nodes.map((node) => ({
+    text: (node.textContent ?? "").trim(),
+    textOverflow: getComputedStyle(node).textOverflow,
+    whiteSpace: getComputedStyle(node).whiteSpace,
+    clipped: node.scrollWidth > node.clientWidth + 1,
+    fontSize: Number.parseFloat(getComputedStyle(node).fontSize),
+  })));
+  expect(navLabels.map((label) => label.text)).toEqual([
+    "新任务到来冲突",
+    "冻结 teacher目标",
+    "同一输入的两路输出预测",
+    "形成两个损失比较",
+    "更新 student梯度",
+  ]);
+  expect(navLabels.every((label) => label.textOverflow !== "ellipsis")).toBe(true);
+  expect(navLabels.every((label) => label.whiteSpace !== "nowrap")).toBe(true);
+  expect(navLabels.filter((label) => label.clipped)).toEqual([]);
+  expect(navLabels.every((label) => label.fontSize >= 12)).toBe(true);
+
+  // In-figure text keeps its role size instead of being scaled down to fit.
+  const figureType = await page.locator(".kit-lwf-panel [data-diagram-node] .rk-diagram__title").evaluateAll((nodes) => nodes.map((node) => Number.parseFloat(getComputedStyle(node).fontSize)));
+  expect(figureType.length).toBe(10);
+  expect(figureType.every((size) => size >= 14)).toBe(true);
+
+  // Every key object and every connector stays inside the figure box.
+  const geometryProblems = await page.locator(".kit-lwf-panel .rk-diagram__canvas").evaluate((canvas) => {
+    const box = canvas.getBoundingClientRect();
+    const problems = [];
+    for (const node of canvas.querySelectorAll("[data-diagram-node]")) {
+      const rect = node.getBoundingClientRect();
+      if (rect.left < box.left - 1 || rect.top < box.top - 1 || rect.right > box.right + 1 || rect.bottom > box.bottom + 1) {
+        problems.push(`${node.getAttribute("data-diagram-node")} outside the figure box`);
+      }
+      if (rect.width < 90 || rect.height < 40) problems.push(`${node.getAttribute("data-diagram-node")} is too small to read`);
+    }
+    const svg = canvas.querySelector(".rk-diagram__edges");
+    for (const path of svg.querySelectorAll(".rk-diagram__edge path")) {
+      const bbox = path.getBBox();
+      if (bbox.x < -1 || bbox.y < -1 || bbox.x + bbox.width > box.width + 1 || bbox.y + bbox.height > box.height + 1) {
+        problems.push(`connector outside the figure box at ${Math.round(bbox.x)},${Math.round(bbox.y)}`);
+      }
+    }
+    return { problems, connectors: svg.querySelectorAll(".rk-diagram__edge").length };
+  });
+  expect(geometryProblems.problems).toEqual([]);
+  expect(geometryProblems.connectors).toBe(11);
+
+  // Objects, states, and connectors follow the selected step.
+  const focusTitle = page.locator(".kit-lwf-focus__title");
+  await page.locator(".kit-lwf-panel [data-step-id='teacher']").click();
+  await expect(focusTitle).toHaveText("Teacher 提供目标，但它不学习");
+  await expect(page.locator(".kit-lwf-panel [data-diagram-node='teacher']")).toHaveAttribute("data-state", "frozen");
+  await expect(page.locator(".kit-lwf-panel [data-diagram-node='teacher']")).not.toHaveClass(/is-dimmed/);
+  await expect(page.locator(".kit-lwf-panel [data-diagram-node='backbone']")).toHaveClass(/is-dimmed/);
+  await expect(page.locator(".kit-lwf-panel [data-diagram-edge='teacher-target']")).toHaveClass(/is-active/);
+
+  await page.locator(".kit-lwf-panel [data-step-id='update']").click();
+  await expect(focusTitle).toHaveText("两条梯度汇入同一个更新对象");
+  await expect(page.locator(".kit-lwf-panel [data-diagram-node='update']")).toHaveAttribute("data-state", "update");
+  await expect(page.locator(".kit-lwf-panel [data-diagram-edge='lnew-update']")).toHaveClass(/is-active/);
+  await expect(page.locator(".kit-lwf-panel [data-diagram-node='teacher']")).toHaveClass(/is-dimmed/);
+
+  // The objective figure renders both comparisons and one update object.
+  await expect(page.locator("#lwf-loss .rk-diagram [data-diagram-node='merge']")).toHaveAttribute("data-state", "objective");
+  await expect(page.locator("#lwf-loss .rk-diagram [data-diagram-node='params']")).toHaveAttribute("data-state", "update");
+  const lossMath = await page.locator("#lwf-loss .rk-diagram [data-diagram-node='lOld'] .rk-math").first().evaluate((node) => ({
+    family: getComputedStyle(node).fontFamily,
+    subscripts: node.querySelectorAll("sub").length,
+  }));
+  expect(lossMath.subscripts).toBeGreaterThanOrEqual(2);
+  expect(lossMath.family).toMatch(/Math|Cambria|STIX/i);
+
+  // Narrow screens reflow the same spec into an ordered, fully labelled list.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".kit-lwf-panel .rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
+  await expect(page.locator(".kit-lwf-panel [data-diagram-node='lOld']")).toContainText("输入 ← 旧响应目标 · 旧类输出");
+  await expect(page.locator(".kit-lwf-panel [data-diagram-node='update']")).toContainText("更新 Student 参数");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator(".kit-lwf-panel .rk-diagram")).toHaveAttribute("data-diagram-mode", "grid");
+});
+
+test("scroll sections synchronize LwF steps and EWC reuses the same system view", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page.getByRole("button", { name: "LwF scenario" }).click();
   const system = page.locator(".rk-sticky-system");
   const focusTitle = page.locator(".kit-lwf-focus__title");
-  expect((await page.locator(".kit-lwf__opening").evaluate((node) => getComputedStyle(node).gridTemplateColumns)).split(" ").length).toBe(2);
 
   await page.locator("#lwf-loss").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "loss");
-  await expect(focusTitle).toHaveText("Two objectives, one student update");
-  await expect(page.locator(".kit-lwf-focus svg")).toHaveCount(0);
-  await expect(page.locator("#lwf-loss .kit-lwf-objectives")).toBeVisible();
-  const objectiveBackgrounds = await page.locator("#lwf-loss .kit-lwf-objectives__pair article").evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).backgroundColor));
-  expect(new Set(objectiveBackgrounds).size).toBe(2);
+  await expect(focusTitle).toHaveText("两次比较各有自己的对象");
 
-  await page.locator(".kit-lwf-focus nav button").filter({ hasText: "Keep teacher fixed" }).click();
+  await page.locator(".kit-lwf-panel [data-step-id='teacher']").click();
   await expect(system).toHaveAttribute("data-active-step-id", "teacher");
   await page.waitForTimeout(180);
   await expect(system).toHaveAttribute("data-active-step-id", "teacher");
-  await expect(focusTitle).toHaveText("The old model becomes a fixed response provider");
+  await expect(focusTitle).toHaveText("Teacher 提供目标，但它不学习");
   await expect(page.locator(".rk-flow-step[aria-current='step']")).toContainText("Teacher");
   await page.locator("#lwf-loss").evaluate((node) => window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.35, behavior: "instant" }));
   await expect(system).toHaveAttribute("data-active-step-id", "teacher");
@@ -79,7 +179,7 @@ test("scroll sections synchronize LwF steps, manual choice holds briefly, and EW
 
   await page.locator("#lwf-update .rk-flow-step").filter({ hasText: "Teacher" }).click();
   await expect(system).toHaveAttribute("data-active-step-id", "teacher");
-  await expect(focusTitle).toHaveText("The old model becomes a fixed response provider");
+  await expect(focusTitle).toHaveText("Teacher 提供目标，但它不学习");
 
   await page.getByRole("button", { name: "EWC scenario" }).click();
   await expect(page.getByRole("heading", { name: "When a model learns again, what should it resist changing?" })).toBeVisible();
@@ -87,6 +187,8 @@ test("scroll sections synchronize LwF steps, manual choice holds briefly, and EW
   await expect(system).toHaveAttribute("data-active-step-id", "old");
   await expect(page.locator(".rk-process-loop .rk-process-node").filter({ hasText: "Fisher importance F" })).toHaveClass(/is-dimmed/);
   await expect(page.locator("#ewc-task-a")).toContainText("Fisher importance and the EWC penalty do not exist yet");
+  await expect(page.locator("#ewc-task-a .rk-diagram [data-diagram-node='theta']")).toHaveAttribute("data-state", "trainable");
+  await expect(page.locator("#ewc-task-a .rk-diagram [data-diagram-node='star']")).toHaveAttribute("data-state", "target");
   await page.locator("#ewc-importance").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "estimate");
   await expect(page.locator(".rk-process-loop .rk-process-node").filter({ hasText: "Fisher importance F" })).toHaveClass(/is-active/);
@@ -99,6 +201,46 @@ test("scroll sections synchronize LwF steps, manual choice holds briefly, and EW
   await page.locator("#ewc-stored").evaluate((node) => window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.35, behavior: "instant" }));
   await expect(system).toHaveAttribute("data-active-step-id", "store");
   await expect.poll(() => page.locator(".rk-sticky-system__visual").evaluate((node) => getComputedStyle(node).position)).toBe("static");
+});
+
+test("sidebar selection and keyboard focus stay separate states", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  const active = page.locator(".kit-sidebar__course.is-active");
+  await expect(active).toHaveAttribute("aria-current", "page");
+
+  const restState = await active.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { borderWidths: [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth], boxShadow: style.boxShadow, outlineStyle: style.outlineStyle };
+  });
+  expect(new Set(restState.borderWidths)).toEqual(new Set(["1px"]));
+  expect(restState.boxShadow).toBe("none");
+  expect(restState.outlineStyle).toBe("none");
+
+  // Keyboard focus on the already-selected course must not stack a second heavy border.
+  await page.locator(".kit-sidebar__brand").focus();
+  await page.keyboard.press("Tab");
+  const focusRing = await page.evaluate(() => {
+    const element = document.activeElement;
+    const style = getComputedStyle(element);
+    return {
+      focused: element.matches(":focus-visible"),
+      classes: element.className,
+      outlineWidth: style.outlineWidth,
+      outlineStyle: style.outlineStyle,
+      outlineOffset: style.outlineOffset,
+      boxShadow: style.boxShadow,
+      borderWidths: [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth],
+    };
+  });
+  expect(focusRing.classes).toContain("kit-sidebar__course");
+  expect(focusRing.classes).toContain("is-active");
+  expect(focusRing.focused).toBe(true);
+  expect(focusRing.outlineStyle).toBe("solid");
+  expect(focusRing.outlineWidth).toBe("2px");
+  expect(focusRing.outlineOffset).toBe("2px");
+  expect(focusRing.boxShadow).toBe("none");
+  expect(new Set(focusRing.borderWidths)).toEqual(new Set(["1px"]));
 });
 
 test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavior", async ({ page, browser }) => {
