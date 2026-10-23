@@ -16,6 +16,7 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
   const errors = useMemo(() => validateArchitectureSpec(spec), [spec]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<string[]>([]);
+  const [zoomed, setZoomed] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
   const markerId = `rk-architecture-arrow-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -32,7 +33,8 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
   const visible = spec.nodes.filter((node) => !collapsed.includes(node.group ?? "System"));
   const width = Math.max(540, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 36));
   const height = Math.max(170, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 36));
-  const canvasScale = viewportWidth > 0 ? Math.min(1, viewportWidth / width) : 1;
+  const fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / width) : 1;
+  const canvasScale = zoomed ? 1 : fitScale;
   const visibleIds = new Set(visible.map((node) => node.id));
   const selected = spec.nodes.find((node) => node.id === selectedId);
   const toggleGroup = (group: string) => setCollapsed((items) => items.includes(group) ? items.filter((item) => item !== group) : [...items, group]);
@@ -61,8 +63,8 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
 
   return (
     <section className="rk-architecture" aria-label="Interactive architecture diagram">
-      <div className="rk-architecture__group-controls">{groups.map((group) => <button key={group} type="button" className="rk-architecture__group-toggle" aria-expanded={!collapsed.includes(group)} onClick={() => toggleGroup(group)}>{collapsed.includes(group) ? "Expand" : "Collapse"} {group}</button>)}</div>
-      <div className="rk-architecture__viewport" ref={viewportRef} tabIndex={0} aria-label="Complete architecture diagram scaled to fit">
+      <div className="rk-architecture__group-controls">{groups.map((group) => <button key={group} type="button" className="rk-architecture__group-toggle" aria-expanded={!collapsed.includes(group)} onClick={() => toggleGroup(group)}>{collapsed.includes(group) ? "Expand" : "Collapse"} {group}</button>)}{fitScale < 0.82 ? <button type="button" className="rk-architecture__zoom" aria-pressed={zoomed} onClick={() => { setZoomed((value) => !value); if (viewportRef.current) viewportRef.current.scrollLeft = 0; }}>{zoomed ? "Fit complete diagram" : "Enlarge diagram"}</button> : null}</div>
+      <div className={`rk-architecture__viewport ${zoomed ? "is-zoomed" : ""}`} ref={viewportRef} tabIndex={0} aria-label={zoomed ? "Enlarged architecture diagram; scroll horizontally to inspect" : "Complete architecture diagram scaled to fit"}>
         <div className="rk-architecture__fit" style={{ width: `${width * canvasScale}px`, height: `${height * canvasScale}px` }}>
         <div className="rk-architecture__canvas" style={{ width: `${width}px`, height: `${height}px`, transform: `scale(${canvasScale})` }}>
           <svg className="rk-architecture__edges" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Architecture connections">

@@ -116,6 +116,7 @@ export function ProcessLoopExplorer({ spec, initialStep = 0, mode = "manual", sh
   const errors = useMemo(() => validateProcessLoopSpec(spec), [spec]);
   const [internalStepIndex, setInternalStepIndex] = useState(Math.max(0, Math.min(initialStep, spec.steps.length - 1)));
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [zoomed, setZoomed] = useState(false);
   const [playing, setPlaying] = useState(mode === "autoplay" && !reducedMotion);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -150,7 +151,8 @@ export function ProcessLoopExplorer({ spec, initialStep = 0, mode = "manual", sh
   const positions = new Map(spec.nodes.map((node, index) => [node.id, node.position ?? { x: 125 + (index % 4) * 250, y: 70 + Math.floor(index / 4) * 148 }]));
   const canvasWidth = Math.max(1000, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 24));
   const canvasHeight = Math.max(150, rows * 148, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 24));
-  const canvasScale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1;
+  const fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1;
+  const canvasScale = zoomed ? 1 : fitScale;
   const nodesById = new Map(spec.nodes.map((node) => [node.id, node]));
   const selectedNode = spec.nodes.find((node) => node.id === selectedNodeId);
 
@@ -168,13 +170,14 @@ export function ProcessLoopExplorer({ spec, initialStep = 0, mode = "manual", sh
       <div className="rk-process-loop__controls">
         <Button variant="secondary" onClick={() => changeStep(stepIndex - 1)} disabled={stepIndex === 0}>Previous</Button>
         <label>Step <StepPicker options={spec.steps.map(({ id, title }) => ({ id, title }))} value={step.id} onChange={(stepId) => changeStep(spec.steps.findIndex((item) => item.id === stepId))} /></label>
-        <Button variant="secondary" onClick={() => changeStep(stepIndex + 1)} disabled={stepIndex === spec.steps.length - 1}>Next</Button>
+        <Button onClick={() => changeStep(stepIndex + 1)} disabled={stepIndex === spec.steps.length - 1}>Next</Button>
         <Button variant="quiet" onClick={() => { changeStep(0); setSelectedNodeId(null); }}>Reset</Button>
         <Button variant="quiet" onClick={() => setPlaying((value) => !value)} disabled={reducedMotion} aria-pressed={playing}>{playing ? "Pause" : "Play"}</Button>
+        {fitScale < 0.82 ? <Button variant="secondary" className="rk-process-loop__zoom" aria-pressed={zoomed} onClick={() => { setZoomed((value) => !value); if (viewportRef.current) viewportRef.current.scrollLeft = 0; }}>{zoomed ? "Fit complete diagram" : "Enlarge diagram"}</Button> : null}
       </div>
       {showProgress ? <div className="rk-process-loop__progress" role="progressbar" aria-label="Process progress" aria-valuemin={1} aria-valuemax={spec.steps.length} aria-valuenow={stepIndex + 1}><span style={{ width: `${((stepIndex + 1) / spec.steps.length) * 100}%` }} /></div> : null}
       <div className="rk-process-loop__step-heading" aria-live="polite"><span>Step {stepIndex + 1} of {spec.steps.length}</span><h3>{step.title}</h3><p>{step.summary}</p></div>
-      <div className="rk-process-loop__viewport" ref={viewportRef} tabIndex={0} aria-label="Complete system diagram scaled to fit">
+      <div className={`rk-process-loop__viewport ${zoomed ? "is-zoomed" : ""}`} ref={viewportRef} tabIndex={0} aria-label={zoomed ? "Enlarged system diagram; scroll horizontally to inspect" : "Complete system diagram scaled to fit"}>
         <div className="rk-process-loop__fit" style={{ width: `${canvasWidth * canvasScale}px`, height: `${canvasHeight * canvasScale}px` }}>
         <div className="rk-process-loop__canvas" style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, transform: `scale(${canvasScale})` }}>
           <svg className="rk-process-loop__edges" viewBox={`0 0 ${canvasWidth} ${canvasHeight}`} role="img" aria-label="Process connections">

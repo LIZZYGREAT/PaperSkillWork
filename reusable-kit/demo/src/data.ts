@@ -150,7 +150,7 @@ export const ewcProcess: ProcessLoopSpec = {
 
 export const ewcArchitecture: ArchitectureSpec = {
   nodes: [
-    { id: "params", label: "Current parameters θ", group: "Current model", status: "trainable", position: { x: 900, y: 380 }, detail: "These are adjusted while learning the current task." },
+    { id: "params", label: "Current parameters θ", group: "Current model", status: "trainable", position: { x: 960, y: 380 }, detail: "These are adjusted while learning the current task." },
     { id: "optimum", label: "Stored optimum θ*", group: "Earlier-task state", status: "frozen", position: { x: 130, y: 105 }, detail: "The earlier task's parameter solution anchors the regularizer." },
     { id: "importance", label: "Importance F", group: "Earlier-task state", status: "frozen", position: { x: 130, y: 300 }, detail: "Importance weights set the relative penalty on parameter changes." },
     { id: "current-loss", label: "Current-task loss", group: "New-task objective", position: { x: 130, y: 530 }, detail: "Encourages performance on the new task." },
