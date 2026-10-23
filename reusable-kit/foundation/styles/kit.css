@@ -22,7 +22,8 @@
   --rk-shadow: 0 18px 45px rgb(30 52 56 / 14%);
   --rk-shadow-soft: 0 8px 26px rgb(30 52 56 / 5%);
   --rk-font-body: inherit;
-  --rk-font-math: "STIX Two Math", "Cambria Math", "Times New Roman", serif;
+  --rk-font-math: "Cambria Math", "STIX Two Math", "Latin Modern Math", "Times New Roman", serif;
+  --rk-font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Menlo, monospace;
   --rk-type-display: clamp(32px, 3vw, 44px);
   --rk-type-heading-1: clamp(28px, 2.6vw, 36px);
   --rk-type-heading-2: clamp(22px, 2.2vw, 28px);
@@ -35,18 +36,21 @@
   --rk-type-meta: 13px;
   --rk-type-formula: 20px;
   /* Semantic roles for teaching diagrams. Each role carries a shape/label cue as
-     well as a hue, so a diagram never depends on colour alone. */
-  --rk-role-input: #35608a;
-  --rk-role-input-soft: #eaf0f6;
-  --rk-role-frozen: #5d5478;
-  --rk-role-frozen-soft: #f1eef7;
+     well as a hue, so a diagram never depends on colour alone. The palette stays
+     deliberately narrow: one accent green, one warm clay, ink, neutrals. */
+  --rk-role-input: #4d6157;
+  --rk-role-input-soft: #eef0ec;
+  --rk-role-frozen: #55665f;
+  --rk-role-frozen-soft: #eef0eb;
   --rk-role-trainable: var(--rk-accent);
   --rk-role-trainable-soft: var(--rk-accent-soft);
-  --rk-role-target: #8a5a2d;
-  --rk-role-target-soft: #f8f0e4;
-  --rk-role-objective: #2b4f47;
-  --rk-role-objective-soft: #eef3ee;
-  --rk-role-update: #1f4038;
+  --rk-role-target: #a06b3d;
+  --rk-role-target-soft: #f7efe3;
+  --rk-role-objective: #2f5a47;
+  --rk-role-objective-soft: #eef2ec;
+  --rk-role-update: #1d352c;
+  --rk-edge-line: #9aa8a1;
+  --rk-edge-active: var(--rk-accent-strong);
   --rk-diagram-gap-x: clamp(16px, 2.8vw, 46px);
   --rk-diagram-gap-y: clamp(12px, 1.4vw, 18px);
   --rk-diagram-min-column: 128px;
@@ -79,64 +83,88 @@
 .rk-surface__header > :last-child { margin-bottom: 0; }
 
 /* Math typography ---------------------------------------------------------- */
-/* Use for any expression a reader may need to re-read: real <var>/<sub>/<sup>
-   markup in the math stack, never a serif display face standing in for notation. */
-.rk-math { color: var(--rk-ink); font-family: var(--rk-font-math); font-size: 1.06em; font-variant-numeric: lining-nums; line-height: 1.45; }
-.rk-math var { font-style: italic; }
+/* Real MathML where the notation matters: <math> with msub/msup/mfrac/munderover,
+   rendered by the browser's math layout engine. Inline symbols use the same stack
+   with <var>/<sub>/<sup>. A serif display face never stands in for notation. */
+.rk-math, .rk-mathml { color: var(--rk-ink); font-family: var(--rk-font-math); font-variant-numeric: lining-nums; }
+.rk-math { font-size: 1.12em; line-height: 1.5; }
+.rk-math var, .rk-mathml var { font-style: italic; }
 .rk-math__tok { white-space: nowrap; }
 .rk-math sub, .rk-math sup { font-size: .7em; line-height: 0; }
-.rk-math--block { display: block; max-width: 100%; overflow-x: auto; padding: 10px 12px; border-radius: 8px; background: var(--rk-surface-soft); }
+.rk-mathml { display: block; min-width: 0; line-height: 1.9; }
+.rk-mathml--inline { display: inline-block; line-height: 1.4; vertical-align: -.08em; }
+.rk-mathml math { margin: 0; color: inherit; font-family: var(--rk-font-math); font-size: 1.14em; }
+.rk-mathml--inline math { font-size: 1.26em; }
+.rk-mathml math[display="block"] { display: block; }
+.rk-math__block { display: block; max-width: 100%; overflow-x: auto; padding: 12px 14px; border-radius: 10px; background: var(--rk-surface-soft); }
+.rk-type--eyebrow { margin: 0; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .11em; text-transform: uppercase; }
 
 /* Diagram primitives ------------------------------------------------------ */
 /* DiagramFlow lays real DOM nodes out in a grid and draws connectors between the
-   measured boxes. It reflows instead of scaling, so in-figure text keeps its role
-   size at every viewport. */
-.rk-diagram { display: grid; gap: 10px; min-width: 0; padding: clamp(16px, 2vw, 26px); border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: var(--rk-surface); color: var(--rk-ink); }
-.rk-diagram--flush { padding: 0; border: 0; background: transparent; }
+   measured boxes. Stage bands name the columns; connectors carry port dots so an
+   endpoint is visible rather than implied. It reflows instead of scaling, so
+   in-figure text keeps its role size at every viewport. */
+.rk-diagram { display: grid; gap: 12px; min-width: 0; padding: clamp(16px, 2vw, 26px); border: 1px solid var(--rk-line); border-radius: 16px; background-color: var(--rk-surface); background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--rk-line) 62%, transparent) 1px, transparent 0); background-size: 22px 22px; color: var(--rk-ink); }
+.rk-diagram--flush { padding: 0; border: 0; border-radius: 0; background-image: none; background-color: transparent; }
 .rk-diagram__canvas { position: relative; display: grid; align-items: stretch; min-width: 0; column-gap: var(--rk-diagram-gap-x); row-gap: var(--rk-diagram-gap-y); }
+/* Stage names sit above the columns on a hairline, like a drawing's section rule:
+   they name the columns without painting another panel behind the figure. */
+.rk-diagram__zone-rule { align-self: end; height: 0; border-bottom: 1px solid var(--rk-line); }
+.rk-diagram__zone-label { z-index: 1; align-self: end; margin: 0; padding: 0 0 7px 2px; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .11em; line-height: 1.4; text-transform: uppercase; }
 .rk-diagram__edges { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.rk-diagram__edge path { fill: none; stroke: var(--rk-edge-line, #93a5a0); stroke-width: 1.7; }
-.rk-diagram__edge.is-gradient path { stroke-dasharray: 6 4; }
+.rk-diagram__edge path { fill: none; stroke: var(--rk-edge-line); stroke-width: 1.4; stroke-linecap: round; }
+.rk-diagram__edge.is-gradient path { stroke-dasharray: 5 4; }
 .rk-diagram__edge.is-control path { stroke-dasharray: 2 4; }
-.rk-diagram__edge.is-active path { stroke: var(--rk-edge-active, var(--rk-accent)); stroke-width: 2.4; }
-.rk-diagram__edge.is-dimmed path { opacity: .34; }
-.rk-diagram__edge marker path { fill: var(--rk-edge-line, #93a5a0); }
-.rk-diagram__edge.is-active marker path { fill: var(--rk-edge-active, var(--rk-accent)); }
-.rk-diagram__edge.is-gradient.is-active marker path { fill: var(--rk-edge-active, var(--rk-accent)); }
-.rk-diagram__label { position: absolute; z-index: 2; max-width: 15ch; padding: 1px 6px; transform: translate(-50%, -50%); border-radius: 5px; background: var(--rk-surface); color: var(--rk-muted); font-size: 12px; line-height: 1.3; text-align: center; pointer-events: none; text-wrap: balance; }
-.rk-diagram__node { position: relative; z-index: 1; display: grid; align-content: center; gap: 3px; min-width: 0; min-height: 62px; padding: 10px 12px; border: 1px solid var(--rk-line-strong); border-radius: 11px; background: var(--rk-surface); color: var(--rk-ink); line-height: 1.35; }
-.rk-diagram__title { font-size: var(--rk-type-diagram-label); font-weight: 690; letter-spacing: -.005em; overflow-wrap: anywhere; }
-.rk-diagram__meta { color: var(--rk-muted); font-size: var(--rk-type-diagram-meta); line-height: 1.4; overflow-wrap: anywhere; }
-.rk-diagram__badge { justify-self: start; margin-top: 2px; color: var(--rk-muted); font-size: var(--rk-type-diagram-meta); font-weight: 680; letter-spacing: .05em; text-transform: uppercase; }
-.rk-diagram__node[data-state="input"] { border-color: color-mix(in srgb, var(--rk-role-input) 42%, var(--rk-line)); background: color-mix(in srgb, var(--rk-role-input-soft) 72%, var(--rk-surface)); }
+.rk-diagram__edge.is-active path { stroke: var(--rk-edge-active); stroke-width: 2; }
+.rk-diagram__edge.is-dimmed path { opacity: .3; }
+.rk-diagram__edge.is-dimmed .rk-diagram__port { opacity: .3; }
+.rk-diagram__edge marker path { fill: var(--rk-edge-line); }
+.rk-diagram__edge.is-active marker path { fill: var(--rk-edge-active); }
+.rk-diagram__port { fill: var(--rk-surface); stroke: var(--rk-edge-line); stroke-width: 1.1; }
+.rk-diagram__edge.is-active .rk-diagram__port { stroke: var(--rk-edge-active); stroke-width: 1.4; }
+.rk-diagram__label { position: absolute; z-index: 2; max-width: 15ch; padding: 1px 6px; transform: translate(-50%, -50%); border-radius: 5px; background: var(--rk-surface); color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; line-height: 1.3; text-align: center; pointer-events: none; text-wrap: balance; }
+.rk-diagram__node { position: relative; z-index: 1; display: grid; align-content: center; gap: 4px; min-width: 0; min-height: 62px; padding: 11px 13px; border: 1px solid var(--rk-line-strong); border-radius: 12px; background: var(--rk-surface); color: var(--rk-ink); line-height: 1.38; box-shadow: 0 1px 2px color-mix(in srgb, var(--rk-ink) 5%, transparent); }
+.rk-diagram__title { font-size: var(--rk-type-diagram-label); font-weight: 660; letter-spacing: -.005em; overflow-wrap: anywhere; }
+.rk-diagram__symbol { display: block; font-size: 1.9em; font-weight: 500; line-height: 1.25; }
+.rk-diagram__symbol .rk-mathml--inline math { font-size: 1em; }
+.rk-diagram__meta { color: var(--rk-muted); font-size: var(--rk-type-diagram-meta); line-height: 1.45; overflow-wrap: anywhere; }
+.rk-diagram__badge { justify-self: start; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: var(--rk-type-diagram-meta); font-weight: 600; letter-spacing: .09em; line-height: 1.3; text-transform: uppercase; }
+/* Roles: form first, colour second, and always a text badge. */
+.rk-diagram__node[data-state="input"] { border-color: color-mix(in srgb, var(--rk-role-input) 30%, var(--rk-line)); }
 .rk-diagram__node[data-state="input"] .rk-diagram__badge { color: var(--rk-role-input); }
-.rk-diagram__node[data-state="frozen"] { border-style: dashed; border-color: color-mix(in srgb, var(--rk-role-frozen) 48%, var(--rk-line)); background: var(--rk-role-frozen-soft); }
+.rk-diagram__node[data-state="frozen"] { border-style: dashed; border-color: color-mix(in srgb, var(--rk-role-frozen) 52%, var(--rk-line)); background-image: repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb, var(--rk-role-frozen) 13%, transparent) 7px 8px); }
 .rk-diagram__node[data-state="frozen"] .rk-diagram__badge { color: var(--rk-role-frozen); }
 .rk-diagram__node[data-state="trainable"] { border-left: 3px solid var(--rk-role-trainable); }
 .rk-diagram__node[data-state="trainable"] .rk-diagram__badge { color: var(--rk-role-trainable); }
-.rk-diagram__node[data-state="target"] { border-left: 3px solid var(--rk-role-target); background: var(--rk-role-target-soft); }
+.rk-diagram__node[data-state="target"] { border-color: color-mix(in srgb, var(--rk-role-target) 34%, var(--rk-line)); border-left: 3px solid var(--rk-role-target); background-color: var(--rk-role-target-soft); }
 .rk-diagram__node[data-state="target"] .rk-diagram__badge { color: var(--rk-role-target); }
-.rk-diagram__node[data-state="objective"] { border-color: color-mix(in srgb, var(--rk-role-objective) 40%, var(--rk-line)); background: var(--rk-role-objective-soft); }
+.rk-diagram__node[data-state="objective"] { border-color: color-mix(in srgb, var(--rk-role-objective) 30%, var(--rk-line)); background-color: var(--rk-role-objective-soft); }
 .rk-diagram__node[data-state="objective"] .rk-diagram__badge { color: var(--rk-role-objective); }
-.rk-diagram__node[data-state="label"] { border-style: dashed; border-color: color-mix(in srgb, var(--rk-role-input) 34%, var(--rk-line)); }
-.rk-diagram__node[data-state="update"] { border-color: var(--rk-role-update); background: var(--rk-role-update); color: #fff; }
+.rk-diagram__node[data-state="objective"] math { font-size: 1.4em; }
+.rk-diagram__node[data-state="objective"] .rk-diagram__title { line-height: 1.5; }
+.rk-diagram__node[data-state="label"] { border-style: dashed; border-color: color-mix(in srgb, var(--rk-role-input) 34%, var(--rk-line)); background-color: transparent; }
+.rk-diagram__node[data-state="update"] { border-color: var(--rk-role-update); background-color: var(--rk-role-update); color: #fff; }
 .rk-diagram__node[data-state="update"] .rk-diagram__meta { color: #cdddd6; }
-.rk-diagram__node[data-state="update"] .rk-diagram__badge { color: #e6c8b0; }
-.rk-diagram__node.is-active { box-shadow: 0 0 0 2px color-mix(in srgb, var(--rk-accent) 26%, transparent); }
-.rk-diagram__node.is-dimmed { opacity: .55; }
-.rk-diagram__legend { display: flex; flex-wrap: wrap; gap: 5px 20px; margin: 0; padding: 9px 0 0; border-top: 1px dashed var(--rk-line); color: var(--rk-muted); font-size: 12px; line-height: 1.5; list-style: none; }
+.rk-diagram__node[data-state="update"] .rk-diagram__badge { color: #e3bd9b; }
+.rk-diagram__node[data-state="update"] .rk-diagram__list-inputs { color: #cdddd6; }
+.rk-diagram__node.is-active { border-color: var(--rk-accent-strong); box-shadow: 0 0 0 2px color-mix(in srgb, var(--rk-accent) 22%, transparent), 0 2px 8px color-mix(in srgb, var(--rk-ink) 8%, transparent); }
+.rk-diagram__node.is-dimmed { opacity: .5; }
+.rk-diagram__legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 10px 0 0; border-top: 1px solid var(--rk-line); color: var(--rk-muted); font-size: 12px; line-height: 1.55; list-style: none; }
 .rk-diagram__legend li { display: inline-flex; align-items: center; gap: 7px; }
-.rk-diagram__legend i { display: block; flex: none; width: 20px; height: 0; border-top: 2px solid var(--rk-edge-line, #93a5a0); }
+.rk-diagram__legend i { display: block; flex: none; width: 20px; height: 0; border-top: 2px solid var(--rk-edge-line); }
 .rk-diagram__legend i.is-gradient { border-top-style: dashed; }
-.rk-diagram__legend i.is-frozen { height: 12px; border: 1px dashed color-mix(in srgb, var(--rk-role-frozen) 55%, var(--rk-line)); border-radius: 4px; background: var(--rk-role-frozen-soft); }
+.rk-diagram__legend i.is-frozen { height: 12px; border: 1px dashed color-mix(in srgb, var(--rk-role-frozen) 55%, var(--rk-line)); border-radius: 4px; background-image: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--rk-role-frozen) 16%, transparent) 4px 5px); }
 .rk-diagram__legend i.is-trainable { height: 12px; border: 0; border-left: 3px solid var(--rk-role-trainable); border-radius: 2px; background: var(--rk-surface-soft); }
 .rk-diagram__legend i.is-update { height: 12px; border: 0; border-radius: 4px; background: var(--rk-role-update); }
-.rk-diagram__note { margin: 0; color: var(--rk-muted); font-size: 12px; line-height: 1.55; }
-/* Narrow layout: the same spec, reflowed into an ordered derivation list. */
-.rk-diagram__list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.rk-diagram__list-node { grid-template-columns: 30px minmax(0, 1fr); align-content: start; align-items: start; gap: 2px 10px; min-height: 0; }
-.rk-diagram__list-number { grid-row: 1 / span 4; color: var(--rk-role-target); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.5; }
-.rk-diagram__list-inputs { color: var(--rk-muted); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.rk-diagram__note { margin: 6px 0 0; color: var(--rk-muted); font-size: 12px; line-height: 1.6; }
+/* Narrow layout: the same spec, reflowed into an ordered derivation list that keeps
+   the stage bands as group headings. */
+.rk-diagram__list { display: grid; gap: 14px; margin: 0; }
+.rk-diagram__list-group { display: grid; gap: 6px; }
+.rk-diagram__list-zone { margin: 0; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .11em; text-transform: uppercase; }
+.rk-diagram__list-items { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.rk-diagram__list-node { align-content: start; align-items: start; gap: 3px; min-height: 0; padding: 12px; }
+.rk-diagram__list-inputs { color: var(--rk-muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 
 /* Step navigation --------------------------------------------------------- */
 /* Full labels are a hard requirement: the grid wraps to as many rows as the
@@ -294,7 +322,12 @@
 .rk-process-node small, .rk-architecture__node small { color: var(--rk-muted); }
 .rk-process-node--input { border-left: 4px solid #3a82a0; } .rk-process-node--loss { border-left: 4px solid #b36a36; } .rk-process-node--memory { border-left: 4px solid #6c59a1; }
 .rk-process-loop__footer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .8fr); gap: 12px; margin-top: 12px; }
-.rk-process-loop__annotations, .rk-process-loop__inspector, .rk-architecture__inspector, .rk-state-machine__inspector, .rk-state-machine__history { padding: 14px; border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: var(--rk-surface-soft); }
+.rk-process-loop__annotations, .rk-process-loop__inspector, .rk-architecture__inspector { padding: 14px; border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: var(--rk-surface-soft); }
+/* The inspected state is the point of this component, so it gets the emphasis; the
+   transition history is a record and stays quiet under a hairline. */
+.rk-state-machine__inspector { padding: 16px 18px; border: 1px solid var(--rk-line); border-left: 3px solid var(--rk-accent); border-radius: 10px; background: var(--rk-surface); }
+.rk-state-machine__inspector h3 { font-size: 1.16rem; }
+.rk-state-machine__history { padding: 14px 2px 0; border: 0; border-top: 1px solid var(--rk-line); background: transparent; }
 .rk-process-loop__annotations p { margin: 0 0 8px; } .rk-process-loop__annotations p:last-child { margin-bottom: 0; }
 .rk-process-loop__inspector h4, .rk-architecture__inspector strong { margin: 0; }
 .rk-process-loop__inspector p, .rk-architecture__inspector p { margin: 6px 0; color: var(--rk-muted); }
@@ -345,7 +378,7 @@
 .rk-flow-stepper__detail h3 { margin: 4px 0; } .rk-flow-stepper__detail p { margin: 6px 0; }
 .rk-flow-stepper__status { color: var(--rk-accent); }
 .rk-flow-stepper { font-family: var(--rk-font-body); font-size: var(--rk-type-body); line-height: var(--rk-leading-body); }
-.rk-flow-stepper__actions { display: flex; justify-content: space-between; gap: 8px; }
+.rk-flow-stepper__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .rk-responsibility__columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
 .rk-responsibility__columns h3 { margin-top: 0; }
 .rk-responsibility__steps, .rk-responsibility__actors { display: grid; gap: 8px; }

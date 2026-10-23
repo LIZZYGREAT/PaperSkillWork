@@ -4,7 +4,7 @@ export type DiagramPathMode = "straight" | "curve" | "orthogonal";
 export type DiagramPath = { d: string; label: DiagramPoint };
 export type DiagramPort = "left" | "right" | "top" | "bottom";
 export type DiagramPortMode = "straight" | "smooth" | "orthogonal";
-export type DiagramPortPath = { d: string; label: DiagramPoint; startPort: DiagramPort; endPort: DiagramPort };
+export type DiagramPortPath = { d: string; label: DiagramPoint; start: DiagramPoint; end: DiagramPoint; startPort: DiagramPort; endPort: DiagramPort };
 
 function boundaryPoint(center: DiagramPoint, toward: DiagramPoint, size: DiagramNodeSize): DiagramPoint {
   const dx = toward.x - center.x;
@@ -102,10 +102,10 @@ export function createPortDiagramPath(
   if (mode === "orthogonal") {
     if (horizontal) {
       const middleX = (start.x + end.x) / 2;
-      return { d: `M ${start.x} ${start.y} L ${middleX} ${start.y} L ${middleX} ${end.y} L ${end.x} ${end.y}`, label: { x: middleX, y: (start.y + end.y) / 2 }, startPort, endPort };
+      return { d: `M ${start.x} ${start.y} L ${middleX} ${start.y} L ${middleX} ${end.y} L ${end.x} ${end.y}`, label: { x: middleX, y: (start.y + end.y) / 2 }, start, end, startPort, endPort };
     }
     const middleY = (start.y + end.y) / 2;
-    return { d: `M ${start.x} ${start.y} L ${start.x} ${middleY} L ${end.x} ${middleY} L ${end.x} ${end.y}`, label: { x: (start.x + end.x) / 2, y: middleY }, startPort, endPort };
+    return { d: `M ${start.x} ${start.y} L ${start.x} ${middleY} L ${end.x} ${middleY} L ${end.x} ${end.y}`, label: { x: (start.x + end.x) / 2, y: middleY }, start, end, startPort, endPort };
   }
 
   if (mode === "smooth") {
@@ -115,6 +115,8 @@ export function createPortDiagramPath(
       return {
         d: `M ${start.x} ${start.y} C ${start.x + bend * sign} ${start.y}, ${end.x - bend * sign} ${end.y}, ${end.x} ${end.y}`,
         label: { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 },
+        start,
+        end,
         startPort,
         endPort,
       };
@@ -124,10 +126,12 @@ export function createPortDiagramPath(
     return {
       d: `M ${start.x} ${start.y} C ${start.x} ${start.y + bend * sign}, ${end.x} ${end.y - bend * sign}, ${end.x} ${end.y}`,
       label: { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 },
+      start,
+      end,
       startPort,
       endPort,
     };
   }
 
-  return { d: `M ${start.x} ${start.y} L ${end.x} ${end.y}`, label, startPort, endPort };
+  return { d: `M ${start.x} ${start.y} L ${end.x} ${end.y}`, label, start, end, startPort, endPort };
 }
