@@ -8,7 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
 const demoRequire = createRequire(path.join(repositoryRoot, "reusable-kit/demo/package.json"));
-const VIEWPORTS = [
+const DEFAULT_VIEWPORTS = [
   { id: "1440x900", width: 1440, height: 900 },
   { id: "1920x1080", width: 1920, height: 1080 },
 ];
@@ -191,6 +191,26 @@ function normalizeComputedStyles(value = [], pageId) {
   });
 }
 
+function normalizeViewports(value) {
+  if (value === undefined) return DEFAULT_VIEWPORTS;
+  if (!Array.isArray(value) || value.length === 0 || value.length > 6) {
+    throw new Error("viewports must be an array with 1-6 entries.");
+  }
+  const ids = new Set();
+  return value.map((entry, index) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) throw new Error(`viewports[${index}] must be an object.`);
+    for (const key of ["width", "height"]) {
+      if (!Number.isInteger(entry[key]) || entry[key] < 240 || entry[key] > 4096) {
+        throw new Error(`viewports[${index}].${key} must be an integer between 240 and 4096.`);
+      }
+    }
+    const id = sanitizePathPart(entry.id ?? `${entry.width}x${entry.height}`, `viewports[${index}].id`);
+    if (ids.has(id)) throw new Error(`Duplicate viewport id: ${id}`);
+    ids.add(id);
+    return { id, width: entry.width, height: entry.height };
+  });
+}
+
 function validateConfig(config) {
   if (!config || typeof config !== "object" || Array.isArray(config)) throw new Error("The config root must be a JSON object.");
   if (typeof config.baseUrl !== "string") throw new Error("Config needs a baseUrl.");
@@ -224,6 +244,7 @@ function validateConfig(config) {
   });
 
   const geometry = config.geometry ?? {};
+  const viewports = normalizeViewports(config.viewports);
   const clippingSelectors = geometry.clippingSelectors ?? [];
   const semanticSelectors = geometry.semanticSelectors ?? DEFAULT_SEMANTIC_SELECTORS;
   if (!Array.isArray(clippingSelectors) || clippingSelectors.some((item) => typeof item !== "string")) {
@@ -248,7 +269,7 @@ function validateConfig(config) {
   if (regression.pixelThreshold !== undefined && regression.pixelThreshold > 255) {
     throw new Error("regression.pixelThreshold cannot exceed 255.");
   }
-  return { ...config, pages, baseUrl: baseUrl.toString(), geometry: { ...geometry, clippingSelectors, semanticSelectors, stableAcrossStates: stableSelectors }, regression };
+  return { ...config, pages, baseUrl: baseUrl.toString(), viewports, geometry: { ...geometry, clippingSelectors, semanticSelectors, stableAcrossStates: stableSelectors }, regression };
 }
 
 async function readConfig(configPath) {
@@ -820,7 +841,7 @@ async function main() {
     tool: "PaperSkillWork Visual QA",
     startedAt,
     baseUrl: null,
-    viewports: VIEWPORTS,
+    viewports: DEFAULT_VIEWPORTS,
     statuses: {},
     outcome: "FAIL",
     regression: { compared: 0, missing: 0, failed: 0 },
@@ -855,6 +876,7 @@ async function main() {
     config = loaded.config;
     configDirectory = loaded.directory;
     report.baseUrl = config.baseUrl;
+    report.viewports = config.viewports;
     outputDirectory = path.join(outputRoot, `run-${startedAt.replace(/[:.]/g, "-")}`);
     await mkdir(outputDirectory, { recursive: true });
 
@@ -864,7 +886,7 @@ async function main() {
     browser = await chromium.launch({ headless: true });
     report.browser = { name: "Chromium", version: browser.version() };
 
-    for (const viewport of VIEWPORTS) {
+    for (const viewport of config.viewports) {
       const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, deviceScaleFactor: 1 });
       try {
         for (const pageSpec of config.pages) {
