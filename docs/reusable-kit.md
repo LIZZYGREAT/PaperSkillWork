@@ -53,6 +53,9 @@ Do not blur these. A view that only works for one paper is not a reusable compon
 - `SectionHeader` (`compositions/section-header`): numbered eyebrow on a hairline rule, heading, and one lead paragraph. One header for every section is what keeps a long tutorial from becoming a stack of cards.
 - `FigureFrame` (`compositions/figure-frame`): caption strip, step counter, note, a sage drawing area, and a key row. It bleeds past the text column by exactly its own padding, so the drawing still starts on the text edge instead of floating inside a box.
 - `MetaList` (`foundation/data`): hairline label/value rows for inspected facts. It lives in Foundation because `core/` components (the state machine inspector) use it too.
+- `StateMachineExplorer` lays states on a centred grid derived from the authored rows instead of trusting hand-placed coordinates, so the graph fills the width. The inspected state is a two-column panel — what the state is on the left, the pressable legal transitions on the right — and history is a numbered chip trail.
+- `FormulaBlock` puts the equation on its own tinted paper with real MathML typesetting and keeps the terms plus the selected explanation beside it, so the expression and its annotation are read together.
+- `CompareView` renders two lettered columns with their own rule and tone, then states the consequence as two short lists (`What changes` / `What stays invariant`) instead of a pair of tinted boxes.
 - Branch and merge layouts are **recipes, not components**: `recipes/diagram-branch.md`, `recipes/diagram-merge.md`. They describe the structure a paper must satisfy on top of `DiagramFlow`. They stay recipes until two semantically unrelated papers use the same abstraction.
 
 **3. Paper-specific teaching scenes — reuse the language, not the figure**

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { ExpandableDetail, TermRef } from "../../core/reference";
 import { CompareView } from "../../optional/compare-view";
 import { FormulaBlock } from "../../optional/formula";
@@ -26,8 +27,33 @@ export const ewcSections = [
   { id: "ewc-update", stepId: "combine", title: "Combine and update" },
 ];
 
+/** Block formula helper: MathML laid out by the browser's math engine. */
+function FormulaMath({ label, children }: { label: string; children: ReactNode }) {
+  return <span className="rk-mathml"><math display="block" aria-label={label}>{children}</math></span>;
+}
+
+/** Inline formula helper for a short expression inside a card or prose. */
+function SmallMath({ label, children }: { label: string; children: ReactNode }) {
+  return <span className="rk-mathml rk-mathml--inline"><math display="inline" aria-label={label}>{children}</math></span>;
+}
+
 const thetaStar = <span className="rk-math"><var>θ</var><sup>*</sup></span>;
 const fisher = <span className="rk-math"><var>F</var></span>;
+
+const newTaskObjective = <SmallMath label="L new of theta">
+  <mrow><msub><mi>L</mi><mtext>new</mtext></msub><mo>(</mo><mi>θ</mi><mo>)</mo></mrow>
+</SmallMath>;
+
+const ewcObjective = <SmallMath label="L new of theta plus lambda over two times the sum over i of F i times the square of theta i minus theta star i">
+  <mrow>
+    <msub><mi>L</mi><mtext>new</mtext></msub><mo>(</mo><mi>θ</mi><mo>)</mo>
+    <mo>+</mo>
+    <mfrac><mi>λ</mi><mn>2</mn></mfrac>
+    <munder><mo>∑</mo><mi>i</mi></munder>
+    <msub><mi>F</mi><mi>i</mi></msub>
+    <msup><mrow><mo>(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>−</mo><msubsup><mi>θ</mi><mi>i</mi><mo>*</mo></msubsup><mo>)</mo></mrow><mn>2</mn></msup>
+  </mrow>
+</SmallMath>;
 
 export function EwcDemo() {
   const [stepIndex, setStepIndex] = useState(0);
@@ -97,12 +123,34 @@ export function EwcDemo() {
       </section>
       <section id="ewc-penalty" className="kit-demo__section">
         <SectionHeader index="05" eyebrow="Form the penalty" title="Equal movement, unequal cost" lead={<>The penalty is quadratic in the distance from {thetaStar} and weighted by {fisher}: the same numerical change costs more where the earlier task was more sensitive.</>} />
-        <FormulaBlock formula="L(θ) = L_new(θ) + (λ / 2) Σᵢ Fᵢ (θᵢ − θ*ᵢ)²" description="Select a term to highlight the object it belongs to." terms={ewcFormulaTerms} onTermSelect={(id) => setSelectedTerm(id)} />
-        <p className="kit-demo__selection" aria-live="polite">{selectedTerm ? `Selected term: ${selectedTerm}` : "No formula term selected."}</p>
+        <FormulaBlock
+          label="Objective · 目标函数"
+          formula="L(theta) = L_new(theta) + (lambda / 2) * sum_i F_i (theta_i - theta*_i)^2"
+          accessibleLabel="L of theta equals L new of theta plus lambda over two times the sum over i of F sub i times the square of theta sub i minus theta star sub i"
+          termsLabel="Terms"
+          description="选择一个符号，看它在式子里指什么。"
+          terms={ewcFormulaTerms}
+          onTermSelect={(id) => setSelectedTerm(id)}
+          renderedFormula={<FormulaMath label="L of theta equals L new of theta plus lambda over two times the sum over i of F sub i times the square of theta sub i minus theta star sub i">
+            <mrow>
+              <mi>L</mi><mo>(</mo><mi>θ</mi><mo>)</mo>
+              <mo>=</mo>
+              <msub><mi>L</mi><mtext>new</mtext></msub><mo>(</mo><mi>θ</mi><mo>)</mo>
+              <mo>+</mo>
+              <mfrac><mi>λ</mi><mn>2</mn></mfrac>
+              <munder><mo>∑</mo><mi>i</mi></munder>
+              <msub><mi>F</mi><mi>i</mi></msub>
+              <msup>
+                <mrow><mo>(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>−</mo><msubsup><mi>θ</mi><mi>i</mi><mo>*</mo></msubsup><mo>)</mo></mrow>
+                <mn>2</mn>
+              </msup>
+            </mrow>
+          </FormulaMath>}
+        />
       </section>
       <section id="ewc-update" className="kit-demo__section">
         <SectionHeader index="06" eyebrow="Combine and update" title="One optimizer, two different signals" lead="The actual optimizer applies both; the two objectives answer different questions and stay visible as separate inputs." />
-        <CompareView variants={[{ id: "new-task", title: "Current-task objective", summary: "Fits the new task examples." }, { id: "regularized", title: "EWC objective", summary: "Adds an importance-weighted constraint around stored parameters." }]} changes={["The regularized objective includes stored parameter importance and an earlier-task reference point."]} invariants={["Both variants optimize the current model on the new task."]} />
+        <CompareView variants={[{ id: "new-task", title: "Current-task objective", summary: "Fits the new task examples only.", content: newTaskObjective }, { id: "regularized", title: "EWC objective", summary: "Adds an importance-weighted constraint around the stored parameters.", content: ewcObjective }]} changes={["The regularized objective includes stored parameter importance and an earlier-task reference point."]} invariants={["Both variants optimize the current model on the new task."]} />
         <p>The <TermRef entry={ewcKnowledge[0]} onOpenReference={openReference}>Fisher importance estimate</TermRef> weights the penalty around <TermRef entry={ewcKnowledge[1]} onOpenReference={openReference}>θ*</TermRef>.</p>
         <ExpandableDetail title="Interpret the penalty carefully" level="advanced"><p>The method discourages changes according to the estimated importance weights; it does not mean every earlier parameter is frozen.</p></ExpandableDetail>
         <div className="kit-section-foot">

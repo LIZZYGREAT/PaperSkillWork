@@ -41,12 +41,13 @@ function node(spec: DiagramNodeSpec): DiagramNodeSpec {
 /* -------------------------------------------------------------------------- */
 
 export const lwfGraph: DiagramSpec = {
-  columns: 4,
+  columns: 5,
   zones: [
     { id: "input", label: "输入", from: 1, span: 1 },
     { id: "paths", label: "两条路径", from: 2, span: 1 },
     { id: "outputs", label: "输出与标签", from: 3, span: 1 },
     { id: "compare", label: "比较", from: 4, span: 1 },
+    { id: "update", label: "更新", from: 5, span: 1 },
   ],
   nodes: [
     node({ id: "x", column: 1, row: 1, rowSpan: 2, order: 1, role: "input", inputLabel: "xₜ", badge: "INPUT", title: <>当前输入 {xT}</>, meta: "同一批样本送入两条路径" }),
@@ -58,7 +59,7 @@ export const lwfGraph: DiagramSpec = {
     node({ id: "label", column: 3, row: 4, order: 7, role: "label", inputLabel: "当前标签", badge: "LABEL", title: <>当前任务标签 {yT}</>, meta: "只监督新类输出" }),
     node({ id: "lOld", column: 4, row: 1, rowSpan: 2, order: 8, role: "objective", inputLabel: "旧响应损失", badge: "OBJECTIVE", title: <span className="rk-diagram__symbol">{Lold}</span>, meta: "teacher 目标 × 旧类输出" }),
     node({ id: "lNew", column: 4, row: 4, order: 9, role: "objective", inputLabel: "新任务损失", badge: "OBJECTIVE", title: <span className="rk-diagram__symbol">{Lnew}</span>, meta: "当前标签 × 新类输出" }),
-    node({ id: "update", column: 1, row: 5, columnSpan: 4, order: 10, role: "update", variant: "bar", badge: "UPDATE TARGET", title: <>更新 Student 参数 {thetaS}</>, meta: "两条损失的梯度只写入 student；teacher 保持冻结" }),
+    node({ id: "update", column: 5, row: 2, rowSpan: 2, order: 10, role: "update", inputLabel: "参数更新", badge: "UPDATE TARGET", title: <>更新 Student 参数 {thetaS}</>, meta: "两条损失的梯度只写入 student；teacher 保持冻结" }),
   ],
   edges: [
     { id: "x-teacher", from: "x", to: "teacher" },
@@ -77,7 +78,7 @@ export const lwfGraph: DiagramSpec = {
     { id: "flow", text: "实线：前向计算", swatch: "solid" },
     { id: "frozen", text: "斜纹 + 虚线框：本任务冻结", swatch: "frozen" },
     { id: "trainable", text: "左侧色条：可训练 / 预测输出", swatch: "trainable" },
-    { id: "update", text: "深色横条：参数更新的唯一落点", swatch: "update" },
+    { id: "update", text: "深色节点：参数更新的唯一落点", swatch: "update" },
   ],
   note: "只画计算关系：teacher 在本任务内不更新，student 更新完成后才在任务边界成为下一个 teacher。",
 };
