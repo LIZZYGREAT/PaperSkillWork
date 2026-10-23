@@ -358,8 +358,8 @@ export const labRoleGraph: DiagramSpec = {
     { id: "r-input-frozen", from: "role-input", to: "role-frozen" },
     { id: "r-frozen-target", from: "role-frozen", to: "role-target" },
     { id: "r-target-objective", from: "role-target", to: "role-objective" },
-    { id: "r-trainable-update", from: "role-trainable", to: "role-update", mode: "smooth", startPort: "bottom", endPort: "top" },
-    { id: "r-label-update", from: "role-label", to: "role-update", mode: "smooth", startPort: "bottom", endPort: "top" },
+    { id: "r-trainable-update", from: "role-trainable", to: "role-update", mode: "orthogonal", startPort: "bottom", endPort: "top", endOffset: 0.34 },
+    { id: "r-label-update", from: "role-label", to: "role-update", mode: "orthogonal", startPort: "bottom", endPort: "top", endOffset: 0.42 },
   ],
   note: "角色不靠色相区分：冻结＝虚线加斜纹，可训练＝左侧色条，参考值＝沙色，更新落点＝深色。",
 };

@@ -77,7 +77,7 @@ export function ComponentLab() {
 
     <section className="rk-surface" aria-labelledby="lab-diagram-title">
       <header className="rk-surface__header"><h3 id="lab-diagram-title" className="rk-type--heading-2">Diagram roles</h3><p className="rk-type--supporting">Every node role in one figure. Form carries the state, so the figure still reads in greyscale.</p></header>
-      <DiagramFlow spec={labRoleGraph} label="Diagram role vocabulary: input, frozen, target, objective, trainable, label and update target" framed={false} />
+      <DiagramFlow spec={labRoleGraph} label="Diagram role vocabulary: input, frozen, target, objective, trainable, label and update target" framed={false} className="rk-diagram--roomy" />
     </section>
 
     <section className="rk-surface" aria-labelledby="lab-nav-title">

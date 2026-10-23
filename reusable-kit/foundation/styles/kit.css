@@ -483,15 +483,13 @@
 .rk-state-machine__edge.is-available path { stroke: var(--rk-accent); stroke-width: 2.2; }
 /* Inspector: header row, then two columns of content so the panel fills its width
    instead of leaving a blank half. */
-.rk-state-machine__inspector { display: grid; gap: 16px; margin-top: 14px; padding: clamp(16px, 1.8vw, 24px); border: 1px solid var(--rk-line); border-radius: 14px; background: var(--rk-surface); }
-.rk-state-machine__identity { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: start; gap: 12px; }\n.rk-state-machine__inspector-head > .rk-state-machine__eyebrow { grid-column: 1 / -1; }\n.rk-state-machine__inspector-head h3 { grid-column: 1; }\n.rk-state-machine__statusbar h3 { margin: 0; font-size: 1.35rem; font-weight: 700; line-height: 1.2; letter-spacing: -.025em; }
+
 .rk-state-machine__ordinal { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--rk-accent-soft); color: var(--rk-accent-strong); font-family: var(--rk-font-mono); font-size: 13px; font-weight: 700; }
 .rk-state-machine__identity-copy { display: grid; gap: 3px; }
 .rk-state-machine__owner { margin: 0; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 12px; letter-spacing: .02em; }
 .rk-state-machine__meaning { display: grid; gap: 8px; align-content: start; padding-left: 22px; border-left: 1px solid var(--rk-line); }
 .rk-state-machine__effect { margin: 0; color: var(--rk-ink); font-size: var(--rk-type-supporting); line-height: 1.6; }
 .rk-state-machine__effect b { display: inline-block; margin-right: 8px; color: var(--rk-accent-strong); font-family: var(--rk-font-mono); font-size: 12px; letter-spacing: .07em; text-transform: uppercase; }
-.rk-state-machine__inspector-main { display: grid; align-content: start; gap: 12px; min-width: 0; }
 .rk-state-machine__desc { max-width: 62ch; margin: 0; color: var(--rk-muted); font-size: var(--rk-type-supporting); line-height: 1.72; }
 .rk-state-machine__action { display: grid; align-content: start; gap: 8px; min-width: 0; padding-left: 22px; border-left: 1px solid var(--rk-line); }
 .rk-state-machine__chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -651,3 +649,14 @@
 .rk-state-machine__statusbar h3 { margin: 0; font-size: 1.3rem; font-weight: 700; line-height: 1.2; letter-spacing: -.025em; }
 .rk-state-machine__meaning { display: grid; gap: 8px; align-content: start; padding-left: 24px; border-left: 1px solid var(--rk-line); }
 .rk-state-machine__action { display: grid; align-content: start; gap: 8px; padding-left: 24px; border-left: 1px solid var(--rk-line); }
+/* Stage strip refinements: centre the three zones and give the rules a full height. */
+.rk-state-machine__statusbar { align-items: center; padding: 14px clamp(16px, 1.8vw, 22px); }
+.rk-state-machine__identity, .rk-state-machine__meaning, .rk-state-machine__action { align-self: stretch; align-content: center; }
+.rk-state-machine__action { justify-items: start; }
+/* A figure that needs vertical air between rows (converging connectors). */
+.rk-diagram--roomy { --rk-diagram-gap-y: 34px; }
+/* Narrow: the status strip stacks, and its rules become horizontal. */
+@media (max-width: 900px) {
+  .rk-state-machine__statusbar { grid-template-columns: minmax(0, 1fr); }
+  .rk-state-machine__meaning, .rk-state-machine__action { align-self: auto; padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--rk-line); }
+}

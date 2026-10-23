@@ -51,12 +51,13 @@ export function createDiagramPath(
 }
 
 /** Point on one named edge of a box, using the box centre and size. */
-export function diagramPortPoint(center: DiagramPoint, size: DiagramNodeSize, port: DiagramPort): DiagramPoint {
+export function diagramPortPoint(center: DiagramPoint, size: DiagramNodeSize, port: DiagramPort, offset = 0.5): DiagramPoint {
+  const along = Math.max(0.05, Math.min(0.95, offset));
   switch (port) {
-    case "left": return { x: center.x - size.width / 2, y: center.y };
-    case "right": return { x: center.x + size.width / 2, y: center.y };
-    case "top": return { x: center.x, y: center.y - size.height / 2 };
-    default: return { x: center.x, y: center.y + size.height / 2 };
+    case "left": return { x: center.x - size.width / 2, y: center.y - size.height / 2 + size.height * along };
+    case "right": return { x: center.x + size.width / 2, y: center.y - size.height / 2 + size.height * along };
+    case "top": return { x: center.x - size.width / 2 + size.width * along, y: center.y - size.height / 2 };
+    default: return { x: center.x - size.width / 2 + size.width * along, y: center.y + size.height / 2 };
   }
 }
 
@@ -88,13 +89,13 @@ export function createPortDiagramPath(
   target: DiagramPoint,
   sourceSize: DiagramNodeSize,
   targetSize: DiagramNodeSize,
-  options: { mode?: DiagramPortMode; startPort?: DiagramPort; endPort?: DiagramPort } = {},
+  options: { mode?: DiagramPortMode; startPort?: DiagramPort; endPort?: DiagramPort; startOffset?: number; endOffset?: number } = {},
 ): DiagramPortPath {
   const chosen = chooseDiagramPorts(source, target, sourceSize, targetSize);
   const startPort = options.startPort ?? chosen.startPort;
   const endPort = options.endPort ?? chosen.endPort;
-  const start = diagramPortPoint(source, sourceSize, startPort);
-  const end = diagramPortPoint(target, targetSize, endPort);
+  const start = diagramPortPoint(source, sourceSize, startPort, options.startOffset);
+  const end = diagramPortPoint(target, targetSize, endPort, options.endOffset);
   const mode = options.mode ?? "straight";
   const horizontal = ["left", "right"].includes(startPort);
   const label = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };

@@ -37,6 +37,9 @@ export type DiagramEdgeSpec = {
   /** Pin the connector to a named side when the automatic choice would graze a node. */
   startPort?: DiagramPort;
   endPort?: DiagramPort;
+  /** 0–1 along that side, so two connectors can land on different points of one edge. */
+  startOffset?: number;
+  endOffset?: number;
   label?: string;
 };
 
@@ -153,7 +156,7 @@ export function DiagramFlow({ spec, focus, label, className = "", framed = true,
         { x: to.cx, y: to.cy },
         { width: from.width, height: from.height },
         { width: to.width, height: to.height },
-        { mode: edge.mode ?? "straight", startPort: edge.startPort, endPort: edge.endPort },
+        { mode: edge.mode ?? "straight", startPort: edge.startPort, endPort: edge.endPort, startOffset: edge.startOffset, endOffset: edge.endOffset },
       );
       nextPaths.push({ id: edge.id, d: geometry.d, start: geometry.start, end: geometry.end });
     }

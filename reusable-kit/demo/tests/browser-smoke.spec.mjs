@@ -256,6 +256,8 @@ test("sidebar selection and keyboard focus stay separate states", async ({ page 
 });
 
 test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavior", async ({ page, browser }) => {
+  // Fail fast and name the step instead of hanging on a locator that never resolves.
+  page.setDefaultTimeout(6000);
   const viewport = { width: 390, height: 844 };
   const panelFor = async (trigger) => {
     const panelId = await trigger.getAttribute("aria-controls");
@@ -346,6 +348,7 @@ test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavio
   const mobileContext = await browser.newContext({ viewport, isMobile: true, hasTouch: true });
   try {
     const mobilePage = await mobileContext.newPage();
+    mobilePage.setDefaultTimeout(6000);
     await mobilePage.goto(new URL("/tests.html", page.url()).toString());
     await expect(mobilePage.locator("#summary")).toHaveAttribute("data-result", "pass", { timeout: 15_000 });
     await mobilePage.getByRole("dialog", { name: "Demo figure" }).getByRole("button", { name: "Close" }).click();
