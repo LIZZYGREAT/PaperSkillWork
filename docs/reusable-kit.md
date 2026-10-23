@@ -18,6 +18,9 @@ Add the shared stylesheet once from the paper entry point, then import only the 
 ```tsx
 import "./shared/foundation/styles/kit.css";
 import { DiagramFlow } from "./shared/foundation/layout/DiagramFlow";
+import { FigureFrame } from "./shared/compositions/figure-frame";
+import { SectionHeader } from "./shared/compositions/section-header";
+import { MetaList } from "./shared/foundation/data/MetaList";
 import { StepNav } from "./shared/compositions/step-nav";
 ```
 
@@ -38,6 +41,7 @@ Do not blur these. A view that only works for one paper is not a reusable compon
 **1. Foundation / visual primitives — must be directly reusable**
 
 - Typography, colour roles, spacing, surfaces, buttons, focus, overlays (`foundation/styles/kit.css`, `foundation/controls`, `foundation/overlay`).
+- Visual language: warm paper for reading, a sage surface for figures, one accent green, one clay accent, and neutrals. Roles carry form as well as colour — dashed outline plus hatching for frozen, a left bar for trainable, a sand fill for a stored reference, one dark bar for the single update target.
 - Diagram primitives: `DiagramNode` roles, connectors, arrowheads, port dots, labels, state badges, and the geometry in `foundation/layout/diagram.ts`.
 - `DiagramFlow` (`foundation/layout/DiagramFlow.tsx`): declarative nodes in a grid with connectors measured from the real boxes. Stage names sit on a hairline above the columns instead of in another panel; each role carries form as well as colour (dashed outline and hatching for frozen, a left bar for trainable, a filled block for the one update target). Wide layouts draw the graph; narrow layouts reflow the same spec into an ordered list grouped under the same stage names, listing each node's inputs. It reflows instead of scaling, so in-figure text keeps its role size at every viewport. `template` overrides the equal-column grid when one stage needs more room than another.
 - Math typography: formulas are MathML (`<math>`, `msub`, `munderover`, `mfrac`), laid out by the browser's math engine, so summation limits, fractions, and italic variables are real rather than styled text. Writing MathML in JSX needs `foundation/math/mathml-jsx.d.ts` in the program; a paper copies it beside its own `src` types. Inline symbols inside prose use `.rk-math` with `<var>`/`<sub>`.
@@ -45,7 +49,10 @@ Do not blur these. A view that only works for one paper is not a reusable compon
 
 **2. Reusable compositions — approved only after cross-scene validation**
 
-- `StepNav` (`compositions/step-nav`): synchronised step navigation whose grid wraps to as many rows as the width needs, so no step name is ever replaced by an ellipsis. It owns no state; the caller passes the current step. Validated against two different data samples (a five-step LwF mechanism and a four-item Component Lab sample with deliberately long Chinese and English labels), which is why it is a shared composition rather than a one-off.
+- `StepNav` (`compositions/step-nav`): synchronised step navigation whose grid wraps to as many rows as the width needs, so no step name is ever replaced by an ellipsis. It owns no state; the caller passes the current step. Validated against three data samples (a five-step LwF mechanism, a seven-step EWC system view, and a four-item Component Lab sample with deliberately long Chinese and English labels).
+- `SectionHeader` (`compositions/section-header`): numbered eyebrow on a hairline rule, heading, and one lead paragraph. One header for every section is what keeps a long tutorial from becoming a stack of cards.
+- `FigureFrame` (`compositions/figure-frame`): caption strip, step counter, note, a sage drawing area, and a key row. It bleeds past the text column by exactly its own padding, so the drawing still starts on the text edge instead of floating inside a box.
+- `MetaList` (`foundation/data`): hairline label/value rows for inspected facts. It lives in Foundation because `core/` components (the state machine inspector) use it too.
 - Branch and merge layouts are **recipes, not components**: `recipes/diagram-branch.md`, `recipes/diagram-merge.md`. They describe the structure a paper must satisfy on top of `DiagramFlow`. They stay recipes until two semantically unrelated papers use the same abstraction.
 
 **3. Paper-specific teaching scenes — reuse the language, not the figure**
@@ -90,7 +97,7 @@ npm run test:browser
 
 The demo holds the Foundation Component Lab and the two paper scenarios. `test:browser` runs the assertion page plus Chromium checks for typography/control states, overlay contracts, the LwF figure (label completeness, connector geometry, in-figure type size, title/figure ratio, per-step object and edge state, narrow-screen reflow, sidebar selection versus keyboard focus), and the TermRef → English Hub journey. It asserts the *properties* the design requires, not a particular DOM shape.
 
-Visual QA runs from the repository root; the Kit demo config declares four viewports (1280, 1440, 1920, 390) and the selectors that must not clip:
+Visual QA runs from the repository root; the Kit demo config declares three desktop viewports (1280×900, 1440×900, 1920×1080) and the selectors that must not clip. Narrow and mobile layouts are out of scope for this review round:
 
 ```powershell
 node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json
@@ -101,7 +108,7 @@ Build and browser success keep this work at `candidate`. `HUMAN_ACCEPTANCE` in t
 
 ## Still open
 
-- Nobody has accepted either visual direction (`Warm Editorial`, `Clear Research`); the selector stays demo-local until one is chosen.
+- The Kit now has one visual direction (warm paper, one green, one clay, sage figure surface). It has not been signed off by a human, and the earlier second candidate has been deleted rather than kept as a toggle.
 - No component has an approval record, so the scaffold gate currently blocks a fresh copy unless `--allow-unapproved` is passed.
 - The LwF notation in `figures.tsx` is a mechanism sketch. The loss coefficients, temperature, and head structure have not been checked against the paper PDF and must be verified before any of it appears in a tutorial.
 - `ResponsibilityMap` is still only reachable as a collapsed audit view in the LwF scene; its own visual quality has not been redesigned.
