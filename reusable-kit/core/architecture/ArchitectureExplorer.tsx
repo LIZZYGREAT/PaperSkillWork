@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createDiagramPath } from "../../foundation/layout/diagram";
 import type { DiagramPoint } from "../../foundation/layout/diagram";
 import type { ArchitectureSpec } from "./types";
@@ -16,6 +16,8 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
   const errors = useMemo(() => validateArchitectureSpec(spec), [spec]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<string[]>([]);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
   const markerId = `rk-architecture-arrow-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const highlighted = new Set(highlightedIds);
   const branches = new Set(highlightedBranches);
@@ -30,11 +32,21 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
   const visible = spec.nodes.filter((node) => !collapsed.includes(node.group ?? "System"));
   const width = Math.max(540, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 36));
   const height = Math.max(170, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 36));
+  const canvasScale = viewportWidth > 0 ? Math.min(1, viewportWidth / width) : 1;
   const visibleIds = new Set(visible.map((node) => node.id));
   const selected = spec.nodes.find((node) => node.id === selectedId);
   const toggleGroup = (group: string) => setCollapsed((items) => items.includes(group) ? items.filter((item) => item !== group) : [...items, group]);
   const branchNodes = new Set(spec.edges.filter((edge) => edge.branch && branches.has(edge.branch)).flatMap((edge) => [edge.from, edge.to]));
   const anyHighlight = highlighted.size > 0 || branches.size > 0;
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const observer = new ResizeObserver(([entry]) => setViewportWidth(entry.contentRect.width));
+    observer.observe(viewport);
+    setViewportWidth(viewport.clientWidth);
+    return () => observer.disconnect();
+  }, []);
 
   const groupBounds = (group: string) => {
     const members = visible.filter((node) => (node.group ?? "System") === group);
@@ -50,8 +62,9 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
   return (
     <section className="rk-architecture" aria-label="Interactive architecture diagram">
       <div className="rk-architecture__group-controls">{groups.map((group) => <button key={group} type="button" className="rk-architecture__group-toggle" aria-expanded={!collapsed.includes(group)} onClick={() => toggleGroup(group)}>{collapsed.includes(group) ? "Expand" : "Collapse"} {group}</button>)}</div>
-      <div className="rk-architecture__viewport" tabIndex={0} aria-label="Scrollable architecture diagram">
-        <div className="rk-architecture__canvas" style={{ width: `${width}px`, height: `${height}px` }}>
+      <div className="rk-architecture__viewport" ref={viewportRef} tabIndex={0} aria-label="Complete architecture diagram scaled to fit">
+        <div className="rk-architecture__fit" style={{ width: `${width * canvasScale}px`, height: `${height * canvasScale}px` }}>
+        <div className="rk-architecture__canvas" style={{ width: `${width}px`, height: `${height}px`, transform: `scale(${canvasScale})` }}>
           <svg className="rk-architecture__edges" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Architecture connections">
             <defs><marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
             <g className="rk-architecture__groups" aria-hidden="true">{groups.map((group) => { const bounds = groupBounds(group); return bounds ? <g key={group} className="rk-architecture__group-region"><rect x={bounds.x} y={bounds.y} width={bounds.width} height={bounds.height} rx="14" /><text x={bounds.x + 12} y={bounds.y + 20}>{group}</text></g> : null; })}</g>
@@ -69,6 +82,7 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
             const active = !anyHighlight || highlighted.has(node.id) || branchNodes.has(node.id);
             return <button id={`architecture-node-${node.id}`} key={node.id} type="button" className={`rk-architecture__node rk-architecture__node--${node.status ?? "normal"} ${active ? "is-active" : "is-dimmed"} ${selectedId === node.id ? "is-selected" : ""}`} style={{ left: `${point.x}px`, top: `${point.y}px` }} aria-pressed={selectedId === node.id} onClick={() => { setSelectedId(node.id); onNodeSelect?.(node.id); }}><b>{node.label}</b>{node.group ? <small>{node.group}</small> : null}{showStatus && node.status && node.status !== "normal" ? <span className="rk-architecture__status">{node.status}</span> : null}</button>;
           })}
+        </div>
         </div>
       </div>
       <aside className="rk-architecture__inspector" aria-live="polite"><strong>{selected?.label ?? "Select a component"}</strong><p>{selected?.detail ?? "Inspect node ownership and the paths that connect components."}</p>{selected?.status ? <span className="rk-architecture__status">{selected.status}</span> : null}</aside>

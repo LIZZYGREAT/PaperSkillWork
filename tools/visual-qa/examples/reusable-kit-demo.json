@@ -36,6 +36,13 @@
           ]
         },
         {
+          "id": "lwf-step-picker",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"LwF scenario\"]" },
+            { "type": "click", "selector": "role=combobox[name=\"Select process step\"]" }
+          ]
+        },
+        {
           "id": "ewc-tab",
           "actions": [
             { "type": "click", "selector": "role=button[name=\"EWC scenario\"]" }

@@ -7,18 +7,18 @@ import type { FormulaTermData } from "../../optional/formula";
 
 export const lwfProcess: ProcessLoopSpec = {
   nodes: [
-    { id: "task", label: "Current task input xₜ", kind: "input", position: { x: 125, y: 240 }, description: "The same current-task example is evaluated by the fixed teacher and trainable student." },
-    { id: "teacher", label: "Fixed teacher", kind: "module", group: "Old model", position: { x: 400, y: 105 }, description: "A fixed copy of the previously learned model provides old-task responses." },
-    { id: "student", label: "Trainable student", kind: "module", group: "Student", position: { x: 400, y: 340 }, description: "Initialized from the previous model and updated using old-response and current-task objectives." },
-    { id: "shared", label: "Shared backbone hₜ", kind: "parameter", group: "Student", position: { x: 690, y: 340 }, description: "The shared representation feeds both task-specific output heads." },
-    { id: "old-head", label: "Old-class head", kind: "module", group: "Student", position: { x: 970, y: 255 }, description: "Produces student outputs for previously learned classes." },
-    { id: "new-head", label: "New-class head", kind: "module", group: "Student", position: { x: 970, y: 430 }, description: "Produces the student outputs supervised by current-task labels." },
-    { id: "target", label: "Teacher old response", kind: "output", group: "Teacher target", position: { x: 690, y: 105 }, description: "The fixed teacher's output is the target for old-class response preservation." },
-    { id: "new-label", label: "Current-task label yₜ", kind: "input", position: { x: 970, y: 570 }, description: "The current task's label supplies supervision for the new-class output." },
-    { id: "old-loss", label: "L_old · response loss", kind: "loss", position: { x: 1260, y: 185 }, description: "Compares the teacher's old response target with the student's old-class output." },
-    { id: "new-loss", label: "L_new · task loss", kind: "loss", position: { x: 1260, y: 485 }, description: "Combines the new-class student output with the current-task label." },
-    { id: "optimizer", label: "Backward + optimizer", kind: "module", position: { x: 1530, y: 335 }, description: "Combines objective gradients and updates the student; the teacher stays fixed within the task." },
-    { id: "next-teacher", label: "Student → next teacher", kind: "state", position: { x: 1830, y: 100 }, description: "At the task boundary, the updated student becomes the teacher for the next task." },
+    { id: "task", label: "Current task input xₜ", kind: "input", position: { x: 100, y: 360 }, description: "The same current-task example is evaluated by the fixed teacher and trainable student." },
+    { id: "teacher", label: "Fixed teacher", kind: "module", group: "Old model", position: { x: 300, y: 140 }, description: "A fixed copy of the previously learned model provides old-task responses." },
+    { id: "student", label: "Trainable student", kind: "module", group: "Student", position: { x: 300, y: 450 }, description: "Initialized from the previous model and updated using old-response and current-task objectives." },
+    { id: "shared", label: "Shared backbone hₜ", kind: "parameter", group: "Student", position: { x: 500, y: 450 }, description: "The shared representation feeds both task-specific output heads." },
+    { id: "old-head", label: "Old-class head", kind: "module", group: "Student", position: { x: 700, y: 300 }, description: "Produces student outputs for previously learned classes." },
+    { id: "new-head", label: "New-class head", kind: "module", group: "Student", position: { x: 700, y: 510 }, description: "Produces the student outputs supervised by current-task labels." },
+    { id: "target", label: "Teacher old response", kind: "output", group: "Teacher target", position: { x: 500, y: 140 }, description: "The fixed teacher's output is the target for old-class response preservation." },
+    { id: "new-label", label: "Current-task label yₜ", kind: "input", position: { x: 700, y: 690 }, description: "The current task's label supplies supervision for the new-class output." },
+    { id: "old-loss", label: "L_old · response loss", kind: "loss", position: { x: 900, y: 220 }, description: "Compares the teacher's old response target with the student's old-class output." },
+    { id: "new-loss", label: "L_new · task loss", kind: "loss", position: { x: 900, y: 570 }, description: "Combines the new-class student output with the current-task label." },
+    { id: "optimizer", label: "Backward + optimizer", kind: "module", position: { x: 1000, y: 390 }, description: "Combines objective gradients and updates the student; the teacher stays fixed within the task." },
+    { id: "next-teacher", label: "Student → next teacher", kind: "state", position: { x: 900, y: 80 }, description: "At the task boundary, the updated student becomes the teacher for the next task." },
   ],
   edges: [
     { id: "task-teacher", from: "task", to: "teacher", label: "same xₜ", kind: "data", path: "curve" },
@@ -54,15 +54,15 @@ export const lwfProcess: ProcessLoopSpec = {
 
 export const lwfArchitecture: ArchitectureSpec = {
   nodes: [
-    { id: "input", label: "Current input xₜ", group: "Input", position: { x: 120, y: 255 }, detail: "The same current-task example enters the teacher and student paths." },
-    { id: "teacher", label: "Fixed teacher", group: "Teacher", status: "frozen", position: { x: 430, y: 115 }, detail: "Produces an old-response target and remains fixed during this task's update." },
-    { id: "teacher-out", label: "Old response target", group: "Teacher", position: { x: 720, y: 115 }, detail: "The teacher output is compared with the student's old-class response." },
-    { id: "student-shared", label: "Shared backbone θₛ", group: "Student", status: "trainable", position: { x: 430, y: 340 }, detail: "Trainable shared parameters produce a feature used by both class heads." },
-    { id: "student-old", label: "Old-class head θₒ", group: "Student", status: "trainable", position: { x: 760, y: 270 }, detail: "Produces the student's outputs over previously learned classes." },
-    { id: "student-new", label: "New-class head θₙ", group: "Student", status: "trainable", position: { x: 760, y: 430 }, detail: "Produces the student's outputs over current-task classes." },
-    { id: "new-label", label: "Current label yₜ", group: "Current supervision", position: { x: 1070, y: 540 }, detail: "Supplies supervised targets for the new-class head." },
-    { id: "loss-old", label: "L_old · response", group: "Objectives", position: { x: 1080, y: 175 }, detail: "Compares the teacher target with the student old-class response." },
-    { id: "loss-new", label: "L_new · task", group: "Objectives", position: { x: 1080, y: 415 }, detail: "Combines current-task labels with student new-class outputs." },
+    { id: "input", label: "Current input xₜ", group: "Input", position: { x: 160, y: 330 }, detail: "The same current-task example enters the teacher and student paths." },
+    { id: "teacher", label: "Fixed teacher", group: "Teacher", status: "frozen", position: { x: 350, y: 120 }, detail: "Produces an old-response target and remains fixed during this task's update." },
+    { id: "teacher-out", label: "Old response target", group: "Teacher", position: { x: 620, y: 120 }, detail: "The teacher output is compared with the student's old-class response." },
+    { id: "student-shared", label: "Shared backbone θₛ", group: "Student", status: "trainable", position: { x: 350, y: 430 }, detail: "Trainable shared parameters produce a feature used by both class heads." },
+    { id: "student-old", label: "Old-class head θₒ", group: "Student", status: "trainable", position: { x: 620, y: 330 }, detail: "Produces the student's outputs over previously learned classes." },
+    { id: "student-new", label: "New-class head θₙ", group: "Student", status: "trainable", position: { x: 620, y: 520 }, detail: "Produces the student's outputs over current-task classes." },
+    { id: "new-label", label: "Current label yₜ", group: "Current supervision", position: { x: 900, y: 660 }, detail: "Supplies supervised targets for the new-class head." },
+    { id: "loss-old", label: "L_old · response", group: "Objectives", position: { x: 900, y: 180 }, detail: "Compares the teacher target with the student old-class response." },
+    { id: "loss-new", label: "L_new · task", group: "Objectives", position: { x: 900, y: 480 }, detail: "Combines current-task labels with student new-class outputs." },
   ],
   edges: [
     { from: "input", to: "teacher", branch: "teacher", path: "curve", label: "xₜ" }, { from: "teacher", to: "teacher-out", branch: "teacher", label: "old response" },
@@ -104,13 +104,13 @@ export const lwfResponsibilities: ResponsibilityMapSpec = {
 export const lwfStates: StateMachineSpec = {
   initialState: "ready",
   states: [
-    { id: "ready", label: "Old model ready", owner: "Previous task", description: "Parameters from the previously learned tasks are available." },
-    { id: "teacher", label: "Teacher fixed", owner: "Teacher copy", effect: "Old-task responses can be computed as targets." },
-    { id: "student", label: "Student initialized", owner: "Student model", effect: "A trainable model is ready for current-task learning." },
-    { id: "forward", label: "Forward pass", owner: "Teacher and student", effect: "Old and new outputs are available." },
-    { id: "objectives", label: "Objectives formed", owner: "Loss functions", effect: "Old-response and current-task signals are combined." },
-    { id: "update", label: "Student updated", owner: "Optimizer", effect: "Student parameters have changed; the teacher remains fixed for this task." },
-    { id: "promoted", label: "Promoted for next task", owner: "Task boundary", terminal: true, effect: "The completed student becomes the starting teacher for the next task." },
+    { id: "ready", label: "Old model ready", owner: "Previous task", position: { x: 120, y: 110 }, description: "Parameters from the previously learned tasks are available." },
+    { id: "teacher", label: "Teacher fixed", owner: "Teacher copy", position: { x: 350, y: 110 }, effect: "Old-task responses can be computed as targets." },
+    { id: "student", label: "Student initialized", owner: "Student model", position: { x: 580, y: 110 }, effect: "A trainable model is ready for current-task learning." },
+    { id: "forward", label: "Forward pass", owner: "Teacher and student", position: { x: 810, y: 110 }, effect: "Old and new outputs are available." },
+    { id: "objectives", label: "Objectives formed", owner: "Loss functions", position: { x: 810, y: 270 }, effect: "Old-response and current-task signals are combined." },
+    { id: "update", label: "Student updated", owner: "Optimizer", position: { x: 580, y: 270 }, effect: "Student parameters have changed; the teacher remains fixed for this task." },
+    { id: "promoted", label: "Promoted for next task", owner: "Task boundary", position: { x: 350, y: 270 }, terminal: true, effect: "The completed student becomes the starting teacher for the next task." },
   ],
   transitions: [
     { from: "ready", to: "teacher", explanation: "The previous model is held fixed as the response provider." },
@@ -122,14 +122,14 @@ export const lwfStates: StateMachineSpec = {
 
 export const ewcProcess: ProcessLoopSpec = {
   nodes: [
-    { id: "task-a", label: "Task A training", kind: "input", position: { x: 125, y: 120 }, description: "Learn an earlier-task solution before estimating which parameters matter." },
-    { id: "theta-star", label: "Stored optimum θ*", kind: "parameter", position: { x: 430, y: 90 }, description: "Retain the earlier task's parameter values as the regularizer's reference point." },
-    { id: "fisher", label: "Fisher importance F", kind: "memory", position: { x: 430, y: 275 }, description: "Store parameter-wise importance weights estimated for the earlier task." },
-    { id: "task-b", label: "Task B data", kind: "input", position: { x: 125, y: 485 }, description: "New-task examples supply the current task objective." },
-    { id: "new-loss", label: "New-task loss", kind: "loss", position: { x: 430, y: 485 }, description: "Favors parameters that fit the current task." },
-    { id: "penalty", label: "EWC penalty", kind: "loss", position: { x: 760, y: 205 }, description: "Importance-weighted changes away from θ* incur a larger penalty." },
-    { id: "optimizer", label: "Combined optimizer", kind: "module", position: { x: 1080, y: 380 }, description: "Combines the new-task learning signal with the EWC penalty." },
-    { id: "theta-b", label: "Updated parameters θ", kind: "state", position: { x: 1390, y: 380 }, description: "The current solution is updated while being regularized toward important earlier parameters." },
+    { id: "task-a", label: "Task A training", kind: "input", position: { x: 100, y: 135 }, description: "Learn an earlier-task solution before estimating which parameters matter." },
+    { id: "theta-star", label: "Stored optimum θ*", kind: "parameter", position: { x: 300, y: 100 }, description: "Retain the earlier task's parameter values as the regularizer's reference point." },
+    { id: "fisher", label: "Fisher importance F", kind: "memory", position: { x: 300, y: 280 }, description: "Store parameter-wise importance weights estimated for the earlier task." },
+    { id: "task-b", label: "Task B data", kind: "input", position: { x: 100, y: 500 }, description: "New-task examples supply the current task objective." },
+    { id: "new-loss", label: "New-task loss", kind: "loss", position: { x: 300, y: 500 }, description: "Favors parameters that fit the current task." },
+    { id: "penalty", label: "EWC penalty", kind: "loss", position: { x: 520, y: 205 }, description: "Importance-weighted changes away from θ* incur a larger penalty." },
+    { id: "optimizer", label: "Combined optimizer", kind: "module", position: { x: 720, y: 400 }, description: "Combines the new-task learning signal with the EWC penalty." },
+    { id: "theta-b", label: "Updated parameters θ", kind: "state", position: { x: 930, y: 400 }, description: "The current solution is updated while being regularized toward important earlier parameters." },
   ],
   edges: [
     { id: "a-star", from: "task-a", to: "theta-star", label: "learn θ*", kind: "control" }, { id: "a-fisher", from: "task-a", to: "fisher", label: "estimate F", kind: "memory", path: "curve" },
@@ -150,12 +150,12 @@ export const ewcProcess: ProcessLoopSpec = {
 
 export const ewcArchitecture: ArchitectureSpec = {
   nodes: [
-    { id: "params", label: "Current parameters θ", group: "Current model", status: "trainable", position: { x: 1060, y: 370 }, detail: "These are adjusted while learning the current task." },
-    { id: "optimum", label: "Stored optimum θ*", group: "Earlier-task state", status: "frozen", position: { x: 150, y: 105 }, detail: "The earlier task's parameter solution anchors the regularizer." },
-    { id: "importance", label: "Importance F", group: "Earlier-task state", status: "frozen", position: { x: 150, y: 300 }, detail: "Importance weights set the relative penalty on parameter changes." },
-    { id: "current-loss", label: "Current-task loss", group: "New-task objective", position: { x: 150, y: 530 }, detail: "Encourages performance on the new task." },
-    { id: "ewc-penalty", label: "EWC penalty", group: "Regularizer", position: { x: 530, y: 210 }, detail: "Discourages changes to parameters estimated to be important." },
-    { id: "optimizer", label: "Optimizer", group: "Update", position: { x: 800, y: 370 }, detail: "Combines gradient signals to update the current parameters." },
+    { id: "params", label: "Current parameters θ", group: "Current model", status: "trainable", position: { x: 900, y: 380 }, detail: "These are adjusted while learning the current task." },
+    { id: "optimum", label: "Stored optimum θ*", group: "Earlier-task state", status: "frozen", position: { x: 130, y: 105 }, detail: "The earlier task's parameter solution anchors the regularizer." },
+    { id: "importance", label: "Importance F", group: "Earlier-task state", status: "frozen", position: { x: 130, y: 300 }, detail: "Importance weights set the relative penalty on parameter changes." },
+    { id: "current-loss", label: "Current-task loss", group: "New-task objective", position: { x: 130, y: 530 }, detail: "Encourages performance on the new task." },
+    { id: "ewc-penalty", label: "EWC penalty", group: "Regularizer", position: { x: 430, y: 210 }, detail: "Discourages changes to parameters estimated to be important." },
+    { id: "optimizer", label: "Optimizer", group: "Update", position: { x: 670, y: 380 }, detail: "Combines gradient signals to update the current parameters." },
   ],
   edges: [
     { from: "optimum", to: "ewc-penalty", branch: "regularizer", label: "reference", path: "curve" }, { from: "importance", to: "ewc-penalty", branch: "regularizer", label: "weights", path: "curve" },
@@ -184,11 +184,11 @@ export const ewcResponsibilities: ResponsibilityMapSpec = {
 export const ewcStates: StateMachineSpec = {
   initialState: "task-a",
   states: [
-    { id: "task-a", label: "Train task A", owner: "Model", description: "Learn an earlier task solution." },
-    { id: "fisher", label: "Estimate Fisher", owner: "Importance estimator", effect: "Parameter importance values are estimated." },
-    { id: "stored", label: "Store θ* and F", owner: "Task state", effect: "The reference parameters and importance weights are retained." },
-    { id: "task-b", label: "Train task B with penalty", owner: "Combined objective", effect: "New-task learning is regularized by the stored state." },
-    { id: "consolidated", label: "Consolidated model", owner: "Optimizer", terminal: true, effect: "The updated parameters are ready for a later task." },
+    { id: "task-a", label: "Train task A", owner: "Model", position: { x: 140, y: 110 }, description: "Learn an earlier task solution." },
+    { id: "fisher", label: "Estimate Fisher", owner: "Importance estimator", position: { x: 380, y: 110 }, effect: "Parameter importance values are estimated." },
+    { id: "stored", label: "Store θ* and F", owner: "Task state", position: { x: 620, y: 110 }, effect: "The reference parameters and importance weights are retained." },
+    { id: "task-b", label: "Train task B with penalty", owner: "Combined objective", position: { x: 620, y: 280 }, effect: "New-task learning is regularized by the stored state." },
+    { id: "consolidated", label: "Consolidated model", owner: "Optimizer", position: { x: 380, y: 280 }, terminal: true, effect: "The updated parameters are ready for a later task." },
   ],
   transitions: [{ from: "task-a", to: "fisher" }, { from: "fisher", to: "stored" }, { from: "stored", to: "task-b" }, { from: "task-b", to: "consolidated" }],
   illegalHints: [{ from: "task-a", to: "task-b", message: "Estimate and store parameter importance before using an importance-weighted penalty on the new task." }],

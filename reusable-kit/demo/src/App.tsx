@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArchitectureExplorer } from "../../core/architecture";
 import { ExpandableDetail, ReferenceHub, TermRef } from "../../core/reference";
 import type { KnowledgeEntry } from "../../core/reference";
@@ -10,7 +10,6 @@ import { CompareView } from "../../optional/compare-view";
 import { FormulaBlock } from "../../optional/formula";
 import { Button } from "../../foundation/controls/Button";
 import { Chip } from "../../foundation/controls/Chip";
-import { SegmentedControl } from "../../foundation/controls/SegmentedControl";
 import { Slider } from "../../foundation/controls/Slider";
 import { InlineCallout } from "../../foundation/feedback/InlineCallout";
 import { StickySystemView } from "../../foundation/layout/StickySystemView";
@@ -25,29 +24,96 @@ import { ewcKnowledge, lwfKnowledge } from "./knowledge";
 type DemoKind = "lab" | "lwf" | "ewc";
 
 const choices = [
-  { value: "lab" as const, label: "Component Lab" },
-  { value: "lwf" as const, label: "LwF scenario" },
-  { value: "ewc" as const, label: "EWC scenario" },
+  { value: "lab" as const, label: "Component Lab", description: "Typography, controls, overlays" },
+  { value: "lwf" as const, label: "LwF scenario", description: "Preserving earlier responses" },
+  { value: "ewc" as const, label: "EWC scenario", description: "Protecting important parameters" },
+];
+const labSections = [
+  { id: "lab-type-title", title: "Typography roles" },
+  { id: "lab-button-title", title: "Buttons and controls" },
+  { id: "lab-overlay-title", title: "Overlay contracts" },
 ];
 const lwfSections = [
-  { id: "lwf-problem", stepId: "arrive" },
-  { id: "lwf-teacher", stepId: "teacher" },
-  { id: "lwf-forward", stepId: "forward" },
-  { id: "lwf-loss", stepId: "loss" },
-  { id: "lwf-update", stepId: "update" },
+  { id: "lwf-problem", stepId: "arrive", title: "A new task arrives" },
+  { id: "lwf-teacher", stepId: "teacher", title: "Keep the old model fixed" },
+  { id: "lwf-forward", stepId: "forward", title: "Run both model paths" },
+  { id: "lwf-loss", stepId: "loss", title: "Form the two losses" },
+  { id: "lwf-update", stepId: "update", title: "Update the student" },
 ];
 const ewcSections = [
-  { id: "ewc-task-a", stepId: "old" },
-  { id: "ewc-importance", stepId: "estimate" },
-  { id: "ewc-stored", stepId: "store" },
-  { id: "ewc-task-b", stepId: "new-task" },
-  { id: "ewc-penalty", stepId: "penalty" },
-  { id: "ewc-update", stepId: "combine" },
+  { id: "ewc-task-a", stepId: "old", title: "Learn task A" },
+  { id: "ewc-importance", stepId: "estimate", title: "Estimate importance" },
+  { id: "ewc-stored", stepId: "store", title: "Store earlier-task state" },
+  { id: "ewc-task-b", stepId: "new-task", title: "Train task B" },
+  { id: "ewc-penalty", stepId: "penalty", title: "Form the EWC penalty" },
+  { id: "ewc-update", stepId: "combine", title: "Combine and update" },
 ];
 
 export default function App() {
   const [demo, setDemo] = useState<DemoKind>("lab");
-  return <main className="kit-demo"><header className="kit-demo__header"><div><p className="kit-demo__eyebrow">PAPERSKILLWORK · REUSABLE KIT</p><h1>Component Lab and real-content scenarios</h1><p>Inspect Foundation states first, then exercise two paper-shaped combinations built from the same Kit source.</p></div><SegmentedControl label="Choose demo view" value={demo} options={choices} onChange={setDemo} /></header><InlineCallout kind="note" title="Candidate status">These examples are implementation and review evidence. They do not become approved components until browser screenshots and human visual review are complete.</InlineCallout>{demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : <EwcDemo />}<footer className="kit-demo__footer">Source components are copied into each paper project by <code>tools/paper.py scaffold-kit</code>. Editing a paper's copy does not change this kit.</footer></main>;
+  const [activeSection, setActiveSection] = useState("lab-type-title");
+  const [hubOpen, setHubOpen] = useState(false);
+  const [referenceId, setReferenceId] = useState<string | null>(null);
+  const sections = demo === "lab" ? labSections : demo === "lwf" ? lwfSections : ewcSections;
+  const page = demo === "lab"
+    ? { number: "01", breadcrumb: "Kit foundations", eyebrow: "PAGE 01 · COMPONENT FOUNDATIONS", title: "把论文机制拆成可读、可交互的组件", description: "Reusable components for turning research methods into clear, inspectable learning experiences." }
+    : demo === "lwf"
+      ? { number: "02", breadcrumb: "Learning without Forgetting", eyebrow: "PAGE 02 · LEARNING WITHOUT FORGETTING", title: "旧知识要保留，新任务仍要学习", description: "Learning without Forgetting (LwF) uses fixed teacher responses to preserve earlier behavior while a student learns new classes." }
+      : { number: "03", breadcrumb: "Elastic Weight Consolidation", eyebrow: "PAGE 03 · ELASTIC WEIGHT CONSOLIDATION", title: "重要参数少改，模型继续学习", description: "EWC estimates which earlier-task parameters matter and regularizes changes while learning the next task." };
+  const referenceEntries = demo === "ewc" ? ewcKnowledge : lwfKnowledge;
+
+  useEffect(() => {
+    setActiveSection(sections[0]?.id ?? "");
+    const targets = sections.map((section) => document.getElementById(section.id)).filter((element): element is HTMLElement => Boolean(element));
+    if (!targets.length || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+      if (visible) setActiveSection(visible.target.id);
+    }, { rootMargin: "-18% 0px -68% 0px", threshold: 0 });
+    targets.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [demo, sections]);
+
+  const goToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return <div className="kit-shell">
+    <aside className="kit-sidebar">
+      <a className="kit-sidebar__brand" href="#top" aria-label="PaperSkillWork reusable kit home">
+        <span className="kit-sidebar__mark" aria-hidden="true">P</span><span><strong>PaperSkillWork</strong><small>REUSABLE KIT</small></span>
+      </a>
+      <p className="kit-sidebar__label">学习路径 <span>LEARNING PATH</span></p>
+      <nav className="kit-sidebar__courses" aria-label="Choose a learning demo">
+        {choices.map((choice, index) => <button key={choice.value} type="button" aria-label={choice.label} aria-current={demo === choice.value ? "page" : undefined} className={`kit-sidebar__course ${demo === choice.value ? "is-active" : ""}`} onClick={() => setDemo(choice.value)}>
+          <span className="kit-sidebar__number">{String(index + 1).padStart(2, "0")}</span><span className="kit-sidebar__course-copy"><strong>{choice.label}</strong><small>{choice.description}</small></span>
+        </button>)}
+      </nav>
+      <nav className="kit-sidebar__chapters" aria-label="Sections on this page">
+        <p>本页内容 <span>ON THIS PAGE</span></p>
+        {sections.map((section, index) => <button key={section.id} type="button" className={`kit-sidebar__chapter ${activeSection === section.id ? "is-active" : ""}`} onClick={() => goToSection(section.id)}>
+          <span>{String(index + 1).padStart(2, "0")}</span><strong>{section.title}</strong>
+        </button>)}
+      </nav>
+      <aside className="kit-sidebar__note"><span className="kit-sidebar__note-dot" /> <strong>论文导读</strong><p>沿着任务、模型更新与损失信号，观察同一个学习器如何持续演进。</p></aside>
+      <div className="kit-sidebar__footer">PaperSkillWork · Interactive paper learning</div>
+    </aside>
+
+    <div className="kit-shell__main" id="top">
+      <header className="kit-topbar">
+        <div className="kit-topbar__breadcrumb"><span>REUSABLE KIT</span><b>/</b><strong>{page.number} · {page.breadcrumb}</strong></div>
+        <div className="kit-topbar__actions"><Button variant="secondary" className="kit-topbar__hub" onClick={() => { setReferenceId(null); setHubOpen(true); }}><span aria-hidden="true">⌕</span> Reference Hub</Button><span className="kit-topbar__badge"><i /> INTERACTIVE TUTORIAL</span></div>
+      </header>
+      <main className="kit-page">
+        <section className="kit-page__intro"><p className="kit-page__eyebrow"><span>{page.eyebrow}</span><i /> PaperSkillWork</p><h1>{page.title}</h1><p>{page.description}</p></section>
+        <InlineCallout kind="note" title="Candidate status">These examples are implementation and review evidence. They do not become approved components until browser screenshots and human visual review are complete.</InlineCallout>
+        {demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : <EwcDemo />}
+        <footer className="kit-demo__footer">Source components are copied into each paper project by <code>tools/paper.py scaffold-kit</code>. Editing a paper's copy does not change this kit.</footer>
+      </main>
+    </div>
+    <KnowledgeDrawer entries={referenceEntries} open={hubOpen} selectedId={referenceId} onSelectedIdChange={setReferenceId} onClose={() => setHubOpen(false)} />
+  </div>;
 }
 
 function ComponentLab() {
@@ -86,7 +152,7 @@ function LwfDemo() {
     const index = lwfFlow.findIndex((item) => item.id === stepId);
     if (index >= 0) setFlowIndex(index);
   };
-  return <div className="kit-demo__paper"><h2>Learning without Forgetting (LwF)</h2><p className="kit-demo__lead">Scroll the learning spine or select a step. The process view and stepper stay synchronized.</p><StickySystemView sections={lwfSections} onActiveSectionChange={(section) => { if (section.stepId) updateFromStepId(section.stepId); }} visual={<ProcessLoopExplorer spec={lwfProcess} showProgress onStepChange={(stepId) => updateFromStepId(stepId)} />}>
+  return <div className="kit-demo__paper kit-method-page" data-demo-view="lwf"><h2>Learning without Forgetting (LwF)</h2><p className="kit-demo__lead">Scroll the learning spine or select a step. The process view and stepper stay synchronized.</p><StickySystemView sections={lwfSections} onActiveSectionChange={(section) => { if (section.stepId) updateFromStepId(section.stepId); }} visual={<ProcessLoopExplorer spec={lwfProcess} nodeWidth={180} showProgress onStepChange={(stepId) => updateFromStepId(stepId)} />}>
     <section id="lwf-problem" className="kit-demo__section"><h3>1. Problem: a new task arrives</h3><p>A new task introduces new labels while the model should retain useful behavior from earlier tasks. The teacher stays fixed during the current task.</p><InlineCallout kind="note" title="System state">The task changes; the old model supplies responses while a student learns the new task.</InlineCallout></section>
     <section id="lwf-teacher" className="kit-demo__section"><h3>2. Teacher: preserve an old response target</h3><p>The <TermRef entry={lwfKnowledge[0]} onOpenReference={openReference}>teacher</TermRef> evaluates the current input. Its old-class response becomes a target for the student; it is not jointly optimized.</p><ExpandableDetail title="What distillation means here" summary="A supporting definition." level="supporting"><p><TermRef entry={lwfKnowledge[1]} onOpenReference={openReference}>distillation objective</TermRef> compares student outputs with the fixed teacher response. That function-level signal is different from freezing all old parameters.</p></ExpandableDetail></section>
     <section id="lwf-forward" className="kit-demo__section"><h3>3. Forward: one shared backbone, two heads</h3><p>The student backbone θₛ branches into old-class θₒ and new-class θₙ heads. This spatial split represents the model's two output paths.</p><ArchitectureExplorer spec={lwfArchitecture} highlightedIds={flow.relatedIds} /></section>
@@ -100,7 +166,7 @@ function EwcDemo() {
   const [hubOpen, setHubOpen] = useState(false);
   const [referenceId, setReferenceId] = useState<string | null>(null);
   const openReference = (entryId: string) => { setReferenceId(entryId); setHubOpen(true); };
-  return <div className="kit-demo__paper"><h2>Elastic Weight Consolidation (EWC)</h2><p className="kit-demo__lead">A second method shape uses the same process, state, and responsibility interfaces.</p><InlineCallout kind="paper-fact" title="Mechanism sketch">This example uses abstract task labels and no benchmark values. Confirm paper-specific notation and conditions against the source before reusing it.</InlineCallout><StickySystemView sections={ewcSections} visual={<ProcessLoopExplorer spec={ewcProcess} showProgress />}>
+  return <div className="kit-demo__paper kit-method-page" data-demo-view="ewc"><h2>Elastic Weight Consolidation (EWC)</h2><p className="kit-demo__lead">A second method shape uses the same process, state, and responsibility interfaces.</p><InlineCallout kind="paper-fact" title="Mechanism sketch">This example uses abstract task labels and no benchmark values. Confirm paper-specific notation and conditions against the source before reusing it.</InlineCallout><StickySystemView sections={ewcSections} visual={<ProcessLoopExplorer spec={ewcProcess} nodeWidth={180} showProgress />}>
     <section id="ewc-task-a" className="kit-demo__section"><h3>1. Learn task A</h3><p>Train an earlier-task solution θ* before estimating which parameters matter to its performance.</p><ArchitectureExplorer spec={ewcArchitecture} /></section>
     <section id="ewc-importance" className="kit-demo__section"><h3>2. Estimate parameter importance</h3><p>The Fisher information estimate assigns relative importance to parameters after task A.</p><ResponsibilityMap spec={ewcResponsibilities} /></section>
     <section id="ewc-stored" className="kit-demo__section"><h3>3. Store θ* and importance</h3><p>Retain both the reference parameters and the importance weights for learning later tasks.</p></section>
