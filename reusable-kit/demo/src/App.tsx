@@ -16,13 +16,15 @@ import { KnowledgeDrawer } from "./KnowledgeDrawer";
 import { lwfFlow, lwfResponsibilities, lwfStates } from "./data";
 import { labNavItems, lwfGraph, lwfGraphSteps, lwfNavItems, lwfObjectiveGraph } from "./figures";
 import { ewcKnowledge, lwfKnowledge } from "./knowledge";
+import { EditorialStudies, editorialSections } from "./EditorialStudies";
 
-type DemoKind = "lab" | "lwf" | "ewc";
+type DemoKind = "lab" | "lwf" | "ewc" | "editorial";
 
 const choices = [
   { value: "lab" as const, label: "Component Lab", description: "Typography, controls, overlays" },
   { value: "lwf" as const, label: "LwF scenario", description: "Preserving earlier responses" },
   { value: "ewc" as const, label: "EWC scenario", description: "Protecting important parameters" },
+  { value: "editorial" as const, label: "Editorial studies", description: "三种编辑构图 · 待人工评审" },
 ];
 /** LwF sections, grouped so the rail can show the reading structure. */
 const lwfGroups = [
@@ -39,16 +41,18 @@ const lwfGroups = [
 const lwfSections = lwfGroups.flatMap((group) => group.sections.map(({ id, stepId, rail }) => ({ id, stepId, title: rail })));
 
 export default function App() {
-  const [demo, setDemo] = useState<DemoKind>("lab");
+  const [demo, setDemo] = useState<DemoKind>(() => new URLSearchParams(window.location.search).get("demo") === "editorial" ? "editorial" : "lab");
   const [activeSection, setActiveSection] = useState("lab-type-title");
   const [hubOpen, setHubOpen] = useState(false);
   const [referenceId, setReferenceId] = useState<string | null>(null);
-  const sections = demo === "lab" ? labSections : demo === "lwf" ? lwfSections : ewcSections;
+  const sections = demo === "lab" ? labSections : demo === "lwf" ? lwfSections : demo === "editorial" ? editorialSections : ewcSections;
   const page = demo === "lab"
     ? { number: "01", breadcrumb: "Kit foundations", eyebrow: "PAGE 01 · COMPONENT FOUNDATIONS", title: "把论文机制拆成可读、可交互的组件", description: "Reusable components for turning research methods into clear, inspectable learning experiences." }
     : demo === "lwf"
       ? { number: "02", breadcrumb: "Learning without Forgetting", eyebrow: "PAGE 02 · LEARNING WITHOUT FORGETTING" }
-      : { number: "03", breadcrumb: "Elastic Weight Consolidation", eyebrow: "PAGE 03 · ELASTIC WEIGHT CONSOLIDATION" };
+      : demo === "editorial"
+        ? { number: "04", breadcrumb: "Editorial composition studies", eyebrow: "PAGE 04 · EDITORIAL STUDIES" }
+        : { number: "03", breadcrumb: "Elastic Weight Consolidation", eyebrow: "PAGE 03 · ELASTIC WEIGHT CONSOLIDATION" };
   const referenceEntries = demo === "ewc" ? ewcKnowledge : lwfKnowledge;
   const activeIndex = Math.max(0, sections.findIndex((section) => section.id === activeSection));
 
@@ -105,7 +109,7 @@ export default function App() {
       </header>
       <main className="kit-page">
         {demo === "lab" ? <section className="kit-page__intro"><p className="kit-page__eyebrow"><span>{page.eyebrow}</span><i /> PaperSkillWork</p><h1>{page.title}</h1><p>{page.description}</p></section> : null}
-        {demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : <EwcDemo />}
+        {demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : demo === "editorial" ? <EditorialStudies /> : <EwcDemo />}
         <footer className="kit-demo__footer">Source components are copied into each paper project by <code>tools/paper.py scaffold-kit</code>. Editing a paper's copy does not change this kit.</footer>
       </main>
     </div>
