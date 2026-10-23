@@ -133,59 +133,160 @@ try {
 
 #### Codex/W8 非阻塞 Chromium 模式
 
-此模式复用上面的 `npm run build`、新建 GUID staging、将 `dist` 复制到 `$StageRoute` 的步骤，但**不要**启动人工示例里的 `Start-Process`/`Read-Host` 服务段。由现有 Visual QA runner 启动并在自身 `finally` 停止临时 HTTP 服务；配置应填写真实页面和关键交互的 selector。示例从 staging 已准备完成处继续，配置文件放在 staging 内，runner 产物仍写入仓库 `.visual-qa/`：
+以下 PowerShell 示例从仓库根目录运行，覆盖生产构建、GUID staging、runner 管理的 HTTP 服务、现有项目浏览器状态、报告与截图审阅及精确清理。它不启动系统浏览器或等待人工输入，不复用已有服务器，也不使用占位 selector；配置从项目现有 visual-qa.json 派生，只临时覆盖服务、基址和页面相对路径。
 
 ```powershell
-$PortListener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
-$PortListener.Start()
+$ErrorActionPreference = 'Stop'
+$RepoRoot = (Resolve-Path -LiteralPath '.').Path
+$PaperId = 'icarl'
+$Version = 'qa-preview' # temporary path segment, not an official upstream version
+$TempRoot = (Resolve-Path -LiteralPath $env:TEMP).Path
+$StageRoot = Join-Path $TempRoot ('paperskillwork-subpath-' + [guid]::NewGuid().ToString('N'))
+$StageCreated = $false
+$LocationPushed = $false
+$PortListener = $null
+$Port = $null
+$RunnerExitCode = $null
+$RunDirectory = $null
 try {
+    $PathsOutput = & python tools/paper.py paths $PaperId --json
+    $PathsExitCode = $LASTEXITCODE
+    if ($PathsExitCode -ne 0) { throw "Could not resolve paths.publish_source (exit $PathsExitCode)" }
+    $Paths = ($PathsOutput -join [Environment]::NewLine) | ConvertFrom-Json
+    $Source = [System.IO.Path]::GetFullPath($Paths.publish_source)
+    $PaperName = (& python -c "import sys; sys.path.insert(0, 'tools'); import paper; _, c = paper.read_paper(sys.argv[1]); r = c.get('release') or {}; print((r.get('upstream_paper_name') or '').strip() or paper.upstream_paper_name_from_title(c['title']))" $PaperId | Out-String).Trim()
+    $PaperNameExitCode = $LASTEXITCODE
+    if ($PaperNameExitCode -ne 0 -or !$PaperName) { throw "Could not derive paper-name (exit $PaperNameExitCode)" }
+    if ($PaperName -in @('.', '..') -or [System.IO.Path]::GetFileName($PaperName) -ne $PaperName) { throw "Unsafe paper-name path segment: $PaperName" }
+    $ExpectedPath = "/papers/$PaperName/$Version/"
+    $StageRoute = Join-Path $StageRoot ("papers\$PaperName\$Version")
+
+    if (Test-Path -LiteralPath $StageRoot) { throw "Refusing to reuse existing staging path: $StageRoot" }
+    New-Item -ItemType Directory -Path $StageRoot -ErrorAction Stop | Out-Null
+    $StageCreated = $true
+    Push-Location -LiteralPath $Source
+    $LocationPushed = $true
+    npm run build
+    $BuildExitCode = $LASTEXITCODE
+    if ($BuildExitCode -ne 0) { throw "Production build failed (exit $BuildExitCode)" }
+    $Dist = Join-Path $Source 'dist'
+    if (!(Test-Path -LiteralPath (Join-Path $Dist 'index.html'))) { throw "Build did not create $Dist\index.html" }
+    New-Item -ItemType Directory -Path $StageRoute -Force | Out-Null
+    Copy-Item -Path (Join-Path $Dist '*') -Destination $StageRoute -Recurse -Force
+    Write-Host 'BUILD=PASS command=npm run build'
+    Select-String -Path (Join-Path $Dist 'index.html') -Pattern 'src=|href=' # record emitted asset references
+    Pop-Location
+    $LocationPushed = $false
+
+    $PortListener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
+    $PortListener.Start()
     $Port = $PortListener.LocalEndpoint.Port
-} finally {
     $PortListener.Stop()
-}
-$PreviewUrl = "http://127.0.0.1:$Port/papers/$PaperName/$Version/"
-$QaConfigPath = Join-Path $StageRoot 'visual-qa-subpath.json'
-$QaConfig = @{
-    baseUrl = $PreviewUrl
-    server = @{
-        command = 'python'
-        args = @('-m', 'http.server', "$Port", '--bind', '127.0.0.1')
-        cwd = '.'
-        readyPath = "/papers/$PaperName/$Version/"
-        startupTimeoutMs = 10000
+    $PortListener = $null
+    $PreviewUrl = "http://127.0.0.1:$Port$ExpectedPath"
+    $QaConfigPath = Join-Path $StageRoot 'visual-qa-subpath.json'
+    $QaConfig = Get-Content -LiteralPath (Join-Path $Source 'visual-qa.json') -Raw | ConvertFrom-Json
+    $QaConfig.baseUrl = $PreviewUrl
+    $QaConfig.server.command = 'python'
+    $QaConfig.server.args = @('-m', 'http.server', "$Port", '--bind', '127.0.0.1')
+    $QaConfig.server.cwd = '.'
+    $QaConfig.server.readyPath = $ExpectedPath
+    $QaConfig.server | Add-Member -NotePropertyName startupTimeoutMs -NotePropertyValue 10000 -Force
+    foreach ($Page in $QaConfig.pages) { $Page.path = './' }
+    [System.IO.File]::WriteAllText(
+        $QaConfigPath,
+        ($QaConfig | ConvertTo-Json -Depth 100) + [Environment]::NewLine,
+        [System.Text.UTF8Encoding]::new($false)
+    )
+
+    $Runner = Join-Path $RepoRoot 'tools/visual-qa/cli.mjs'
+    $OutputRoot = Join-Path $RepoRoot '.visual-qa' # direct run-* child accepted by --cleanup-run
+    $RunnerOutput = & node $Runner --config $QaConfigPath --output $OutputRoot 2>&1
+    $RunnerExitCode = $LASTEXITCODE
+    $RunnerOutput | ForEach-Object { Write-Host $_ }
+    $ReportLine = $RunnerOutput | ForEach-Object { $_.ToString() } | Where-Object { $_ -match '^Visual QA (PASS|FAIL)\. Report: ' } | Select-Object -Last 1
+    if (!$ReportLine) { throw "Runner returned no complete report path (exit $RunnerExitCode); preserve output for diagnosis." }
+    $ReportMatch = [regex]::Match($ReportLine, '^Visual QA (PASS|FAIL)\. Report: (.+)$')
+    $MarkdownReportPath = $ReportMatch.Groups[2].Value.Trim()
+    if (![System.IO.Path]::IsPathRooted($MarkdownReportPath)) { $MarkdownReportPath = Join-Path $RepoRoot $MarkdownReportPath }
+    $MarkdownReportPath = [System.IO.Path]::GetFullPath($MarkdownReportPath)
+    $RunDirectory = [System.IO.Path]::GetFullPath((Split-Path -Parent $MarkdownReportPath))
+    $ExpectedOutputRoot = [System.IO.Path]::GetFullPath($OutputRoot)
+    if (![string]::Equals([System.IO.Path]::GetDirectoryName($RunDirectory), $ExpectedOutputRoot, [System.StringComparison]::OrdinalIgnoreCase) -or [System.IO.Path]::GetFileName($RunDirectory) -notmatch '^run-') {
+        throw "Report is not in a direct .visual-qa/run-* directory: $RunDirectory"
     }
-    pages = @(@{
-        id = 'production-subpath'
-        path = './'
-        states = @(
-            @{ id = 'initial' }
-            @{ id = 'key-interaction'; actions = @(@{ type = 'click'; selector = '[data-testid="replace-with-real-selector"]' }) }
-        )
-    })
-} | ConvertTo-Json -Depth 12
-[System.IO.File]::WriteAllText($QaConfigPath, $QaConfig + [Environment]::NewLine, [System.Text.UTF8Encoding]::new($false))
-$Runner = Join-Path $RepoRoot 'tools/visual-qa/cli.mjs'
-$OutputRoot = Join-Path $RepoRoot '.visual-qa'
-$RunnerOutput = & node $Runner --config $QaConfigPath --output $OutputRoot 2>&1
-$RunnerExitCode = $LASTEXITCODE
-$RunnerOutput | ForEach-Object { Write-Host $_ }
-$ReportLine = $RunnerOutput | ForEach-Object { $_.ToString() } | Where-Object { $_ -match '^Visual QA (PASS|FAIL)\. Report: ' } | Select-Object -Last 1
-if (!$ReportLine) { throw "Runner did not return its report path (exit $RunnerExitCode)." }
-$ReportPath = ([regex]::Match($ReportLine, 'Report: (.+)$')).Groups[1].Value.Trim()
-$RunDirectory = Split-Path -Parent $ReportPath # exact path from this invocation; do not synthesize a timestamp
-$Report = Get-Content -LiteralPath $ReportPath -Raw | ConvertFrom-Json
-$ExpectedPath = "/papers/$PaperName/$Version/"
-if (!$Report.results.Count) { throw "No browser result was captured; inspect $RunDirectory" }
-foreach ($Result in $Report.results) {
-    if (([uri]$Result.actualUrl).AbsolutePath -ne $ExpectedPath) { throw "Wrong actual browser URL: $($Result.actualUrl); expected $ExpectedPath" }
+    $ReportJsonPath = Join-Path $RunDirectory 'report.json'
+    if (!(Test-Path -LiteralPath $MarkdownReportPath)) { throw "Runner-reported Markdown report is missing: $MarkdownReportPath" }
+    if (!(Test-Path -LiteralPath $ReportJsonPath)) { throw "Runner JSON report is missing: $ReportJsonPath" }
+    $Report = Get-Content -LiteralPath $ReportJsonPath -Raw | ConvertFrom-Json
+    if (@($Report.results).Count -eq 0) { throw "No browser results; preserve and inspect $RunDirectory" }
+    foreach ($Result in $Report.results) {
+        if (!$Result.actualUrl -or ([uri]$Result.actualUrl).AbsolutePath -ne $ExpectedPath) { throw "Wrong actualUrl '$($Result.actualUrl)'; expected $ExpectedPath" }
+    }
+    Write-Host "SUBPATH_BROWSER=PASS expected=$ExpectedPath results=$(@($Report.results).Count) BROWSER_ERRORS=$($Report.statuses.BROWSER_ERRORS)"
+    Write-Host "REPORT_MARKDOWN=$MarkdownReportPath"
+    Write-Host "REPORT_JSON=$ReportJsonPath"
+    Write-Host "SCREENSHOTS_AND_EVIDENCE=$RunDirectory"
+    if ($RunnerExitCode -ne 0) { throw "Visual QA failed; preserve and inspect $RunDirectory before cleanup." }
+} finally {
+    if ($PortListener) { try { $PortListener.Stop() } catch { Write-Warning "Port reservation cleanup failed: $_" } }
+    if ($LocationPushed) { try { Pop-Location } catch { Write-Warning "Could not restore the original location: $_" } }
+    # The runner stops only its spawned HTTP child; this read-only check never terminates processes.
+    if ($Port) {
+        $ReleaseProbe = $null
+        try {
+            $ReleaseProbe = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $Port)
+            $ReleaseProbe.Start()
+            $ReleaseProbe.Stop()
+            $ReleaseProbe = $null
+            Write-Host "HTTP_SERVER_RELEASE=PASS port=$Port (loopback port was bindable after runner exit)"
+        } catch {
+            if ($ReleaseProbe) { try { $ReleaseProbe.Stop() } catch {} }
+            $Owners = @()
+            try { $Owners = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop) } catch {}
+            if ($Owners.Count -gt 0) {
+                foreach ($OwningProcessId in ($Owners.OwningProcess | Sort-Object -Unique)) {
+                    $Owner = Get-Process -Id $OwningProcessId -ErrorAction SilentlyContinue
+                    $OwnerName = if ($Owner) { $Owner.ProcessName } else { 'unknown' }
+                    Write-Warning "HTTP_SERVER_RELEASE=CHECK_REQUIRED port=$Port ownerPid=$OwningProcessId owner=$OwnerName; no process was stopped."
+                }
+            } else {
+                Write-Warning "HTTP_SERVER_RELEASE=CHECK_REQUIRED port=$Port; could not confirm release and no process was stopped: $_"
+            }
+        }
+    }
+    # Remove only this invocation's exact GUID directory after validating identity and direct Temp parent.
+    if ($StageCreated) {
+        try {
+            $ResolvedTempRoot = [System.IO.Path]::GetFullPath((Resolve-Path -LiteralPath $TempRoot).Path)
+            $ResolvedStageRoot = [System.IO.Path]::GetFullPath($StageRoot)
+            $SameParent = [string]::Equals([System.IO.Path]::GetDirectoryName($ResolvedStageRoot), $ResolvedTempRoot, [System.StringComparison]::OrdinalIgnoreCase)
+            if (!$SameParent -or [System.IO.Path]::GetFileName($ResolvedStageRoot) -notmatch '^paperskillwork-subpath-[0-9a-f]{32}$') { throw "Refusing to remove unexpected staging path: $ResolvedStageRoot" }
+            $StageInfo = Get-Item -LiteralPath $ResolvedStageRoot -ErrorAction Stop
+            if (($StageInfo.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { throw "Refusing to remove a reparse-point directory: $ResolvedStageRoot" }
+            Remove-Item -LiteralPath $ResolvedStageRoot -Recurse -Force -ErrorAction Stop
+            if (Test-Path -LiteralPath $ResolvedStageRoot) { throw "Staging directory remains: $ResolvedStageRoot" }
+            Write-Host "STAGING_CLEANED: $ResolvedStageRoot"
+        } catch { Write-Warning "STAGING_CLEANUP=FAILED exactPath=$StageRoot error=$_" }
+    }
 }
-Write-Host "Visited $ExpectedPath; exit=$RunnerExitCode; BROWSER_ERRORS=$($Report.statuses.BROWSER_ERRORS); run=$RunDirectory"
-if ($RunnerExitCode -ne 0) { throw "Visual QA failed; preserve and inspect $RunDirectory before any cleanup." }
 ```
 
-Runner 完成后由 Agent 读取报告、实际查看截图，并确认浏览器 Network/错误信息和所触发的动态资源；只将这次声明并执行的状态视为覆盖范围。确认并记录后，用**终端输出解析出的 `$RunDirectory`** 执行精确清理、核对 `CLEANED` 和 `Test-Path`，不要在截图检查前删掉证据。这个模式不等待人工输入；不能触发所需交互或检查 Network 时，相关 `SUBPATH_ASSETS` 结论为 NOT_RUN，而不是以首页 200、固定等待或根路径预览代替。
+runner 的 finally 只负责关闭本次 runner 创建的 HTTP 子进程；外层 finally 对专用端口做只读确认。若端口仍有监听，只报告 PID/进程名供诊断，不按端口或进程名终止进程。staging 仅在确认是 TEMP 下本次新建的直接 GUID 子目录后清除，并确认路径已不存在；报告和截图不在示例中自动删除。
 
-Actually open the non-root URL, operate a representative page and any interaction that loads dynamic assets, then inspect browser Network for 4xx/5xx and resource errors. Record the path, page/state, `dist/index.html` references, Vite `base`, browser result and exact build command. `SUBPATH_ASSETS` is NOT_RUN if no browser/network inspection was possible. In `finally`, stop only the `python` process started above and remove only the fresh GUID staging directory; never copy `dist` into `PaperSkillWork/html_output/` or create a permanent preview server. For W9, rerun affected checks on the same final `publish_source`; if it changes, review the changed rendered states again before recording acceptance.
+运行后先读取 report.json / report.md、实际查看相关状态截图、核对每项 actualUrl 都是预期的 /papers/<paper-name>/<version>/，并检查报告记录的浏览器/资源错误。记录 BUILD 命令、SUBPATH_ASSETS 结论和报告/截图路径后，才从本次终端输出取得 RunDirectory 并执行精确清理：
+
+```powershell
+$CleanupOutput = & node tools/visual-qa/cli.mjs --cleanup-run $RunDirectory 2>&1
+$CleanupExitCode = $LASTEXITCODE
+$CleanupOutput | ForEach-Object { Write-Host $_ }
+if ($CleanupExitCode -ne 0) { throw "Visual QA artifact cleanup failed: $RunDirectory" }
+$CleanedLine = "CLEANED: $RunDirectory"
+if ($CleanupOutput -notcontains $CleanedLine) { throw "Cleanup did not confirm deletion of this run: $RunDirectory" }
+if (Test-Path -LiteralPath $RunDirectory) { throw "Run directory remains after cleanup: $RunDirectory" }
+```
+
+只有输出为 CLEANED: <same-path> 且 Test-Path 为 false，才可报告本轮产物已清理。失败或报告不完整时保留证据；未能检查动态资源/Network 时，SUBPATH_ASSETS 标记为 NOT_RUN，不能以首页 200 代替。不要复制到 PaperSkillWork/html_output/，不要创建常驻预览服务。W9 在同一最终 publish_source 上复查；若源码变化，先复核受影响渲染状态再记录验收。
 
 ## 5. 修复范围与停止条件
 

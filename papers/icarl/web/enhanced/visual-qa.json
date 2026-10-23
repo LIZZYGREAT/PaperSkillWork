@@ -313,7 +313,7 @@
       "computedStyles": [
         { "selector": ".p4-preview__header h2", "property": "font-size", "equals": "28px" },
         { "selector": ".p4-preview__header p", "property": "font-size", "equals": "15px" },
-        { "selector": ".p4-preview__case h3", "property": "font-size", "equals": "17px" }
+        { "selector": ".p4-preview__case h3", "property": "font-size", "equals": "16px" }
       ],
       "states": [
         {
@@ -322,7 +322,7 @@
             { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(4)" },
             { "type": "waitFor", "selector": ".p4-preview__case--clustered", "state": "visible" },
             { "type": "waitFor", "selector": ".p4-preview__case--representative", "state": "visible" },
-            { "type": "waitFor", "selector": ".p4-preview__round", "state": "visible" },
+            { "type": "waitFor", "selector": ".p4-preview__mechanism[data-round='2']", "state": "visible" },
             { "type": "waitFor", "selector": ".p4-preview__prefix-result", "state": "visible" }
           ]
         },
