@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../../foundation/controls/Button";
 import { StepNav } from "../../compositions/step-nav";
 import "./editorial-studies.css";
@@ -22,6 +22,10 @@ const handoffStages = [
 export function EditorialStudies() {
   const [stageIndex, setStageIndex] = useState(0);
   const stage = handoffStages[stageIndex];
+  useEffect(() => {
+    const section = editorialSections.find(s => `#${s.id}` === window.location.hash);
+    if (section) document.getElementById(section.id)?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, []);
   return <article className="ed-study" lang="zh-CN" data-demo-view="editorial">
     <header className="ed-study__opening">
       <p className="ed-study__eyebrow">EDITORIAL STUDIES <span>01 / 阅读实验</span></p>

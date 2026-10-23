@@ -44,6 +44,8 @@ test("editorial studies preserve the EWC handoff and keyboard reset", async ({ p
 test("editorial compositions reflow at every requested viewport with readable mathematics", async ({ page }) => {
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/?demo=editorial#ed-c");
+  await expect(page.locator("#ed-c-title")).toBeInViewport();
   await page.goto("/");
   await page.getByRole("button", { name: "Editorial studies", exact: true }).click();
   for (const [width, height] of [[1280, 900], [1440, 900], [1920, 1080], [390, 844]]) {
