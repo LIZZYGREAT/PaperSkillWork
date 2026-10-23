@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createDiagramPath } from "../../foundation/layout/diagram";
+import { layoutGraphByRows } from "../../foundation/layout/graph-layout";
 import type { DiagramPoint } from "../../foundation/layout/diagram";
 import type { ArchitectureSpec } from "./types";
 import { validateArchitectureSpec } from "./types";
@@ -26,15 +27,20 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
   if (errors.length) return <div role="alert" className="rk-error"><strong>ArchitectureExplorer data needs attention</strong><ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>;
 
   const groups = Array.from(new Set(spec.nodes.map((node) => node.group ?? "System")));
-  const groupedRows = groups.map((group) => spec.nodes.filter((node) => (node.group ?? "System") === group));
-  const autoPositions = new Map<string, DiagramPoint>();
-  groupedRows.forEach((nodes, row) => nodes.forEach((node, index) => autoPositions.set(node.id, { x: 160 + index * 270, y: 72 + row * 160 })));
-  const positions = new Map(spec.nodes.map((node) => [node.id, node.position ?? autoPositions.get(node.id)!]));
+  // Authored coordinates win; only a spec without any coordinates is auto-laid out.
+  const authored = spec.nodes.some((node) => node.position);
+  const seeded = spec.nodes.map((node) => {
+    const group = node.group ?? "System";
+    const withinGroup = spec.nodes.filter((item) => (item.group ?? "System") === group);
+    return { id: node.id, position: node.position ?? { x: 160 + withinGroup.indexOf(node) * 270, y: 72 + groups.indexOf(group) * 160 } };
+  });
+  const layout = authored ? null : layoutGraphByRows(seeded, { nodeWidth: nodeSize.width, nodeHeight: nodeSize.height, maxPerRow: 4, rowBucket: 150 });
+  const positions = layout ? layout.positions : new Map(seeded.map((item) => [item.id, item.position!]));
   const visible = spec.nodes.filter((node) => !collapsed.includes(node.group ?? "System"));
-  const width = Math.max(540, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 36));
-  const height = Math.max(170, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 36));
-  const fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / width) : 1;
-  const canvasScale = zoomed ? 1 : fitScale;
+  const width = layout ? layout.width : Math.max(640, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 36));
+  const height = layout ? layout.height : Math.max(200, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 36));
+  const needsScroll = viewportWidth > 0 && width > viewportWidth + 1;
+  const canvasScale = 1;
   const visibleIds = new Set(visible.map((node) => node.id));
   const selected = spec.nodes.find((node) => node.id === selectedId);
   const toggleGroup = (group: string) => setCollapsed((items) => items.includes(group) ? items.filter((item) => item !== group) : [...items, group]);
@@ -63,10 +69,10 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
 
   return (
     <section className="rk-architecture" aria-label="Interactive architecture diagram">
-      <div className="rk-architecture__group-controls">{groups.map((group) => <button key={group} type="button" className="rk-architecture__group-toggle" aria-expanded={!collapsed.includes(group)} onClick={() => toggleGroup(group)}>{collapsed.includes(group) ? "Expand" : "Collapse"} {group}</button>)}{fitScale < 0.82 ? <button type="button" className="rk-architecture__zoom" aria-pressed={zoomed} onClick={() => { setZoomed((value) => !value); if (viewportRef.current) viewportRef.current.scrollLeft = 0; }}>{zoomed ? "Fit complete diagram" : "Enlarge diagram"}</button> : null}</div>
-      <div className={`rk-architecture__viewport ${zoomed ? "is-zoomed" : ""}`} ref={viewportRef} tabIndex={0} aria-label={zoomed ? "Enlarged architecture diagram; scroll horizontally to inspect" : "Complete architecture diagram scaled to fit"}>
-        <div className="rk-architecture__fit" style={{ width: `${width * canvasScale}px`, height: `${height * canvasScale}px` }}>
-        <div className="rk-architecture__canvas" style={{ width: `${width}px`, height: `${height}px`, transform: `scale(${canvasScale})` }}>
+      <div className="rk-architecture__group-controls">{groups.map((group) => <button key={group} type="button" className="rk-architecture__group-toggle" aria-expanded={!collapsed.includes(group)} onClick={() => toggleGroup(group)}>{collapsed.includes(group) ? "Expand" : "Collapse"} {group}</button>)}{needsScroll ? <button type="button" className="rk-architecture__zoom" aria-pressed={zoomed} onClick={() => { setZoomed((value) => !value); if (viewportRef.current) viewportRef.current.scrollLeft = 0; }}>{zoomed ? "Fit complete diagram" : "Scroll the full diagram"}</button> : null}</div>
+      <div className={`rk-architecture__viewport ${zoomed || needsScroll ? "is-zoomed" : ""}`} ref={viewportRef} tabIndex={0} aria-label={zoomed ? "Enlarged architecture diagram; scroll horizontally to inspect" : "Complete architecture diagram scaled to fit"}>
+        <div className="rk-architecture__fit" style={{ width: `${width}px`, height: `${height}px` }}>
+        <div className="rk-architecture__canvas" style={{ width: `${width}px`, height: `${height}px` }}>
           <svg className="rk-architecture__edges" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Architecture connections">
             <defs><marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
             <g className="rk-architecture__groups" aria-hidden="true">{groups.map((group) => { const bounds = groupBounds(group); return bounds ? <g key={group} className="rk-architecture__group-region"><rect x={bounds.x} y={bounds.y} width={bounds.width} height={bounds.height} rx="14" /><text x={bounds.x + 12} y={bounds.y + 20}>{group}</text></g> : null; })}</g>
@@ -82,7 +88,7 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
           {visible.map((node) => {
             const point = positions.get(node.id)!;
             const active = !anyHighlight || highlighted.has(node.id) || branchNodes.has(node.id);
-            return <button id={`architecture-node-${node.id}`} key={node.id} type="button" className={`rk-architecture__node rk-architecture__node--${node.status ?? "normal"} ${active ? "is-active" : "is-dimmed"} ${selectedId === node.id ? "is-selected" : ""}`} style={{ left: `${point.x}px`, top: `${point.y}px` }} aria-pressed={selectedId === node.id} onClick={() => { setSelectedId(node.id); onNodeSelect?.(node.id); }}><b>{node.label}</b>{node.group ? <small>{node.group}</small> : null}{showStatus && node.status && node.status !== "normal" ? <span className="rk-architecture__status">{node.status}</span> : null}</button>;
+            return <button id={`architecture-node-${node.id}`} key={node.id} type="button" className={`rk-architecture__node rk-architecture__node--${node.status ?? "normal"} ${active ? "is-active" : "is-dimmed"} ${selectedId === node.id ? "is-selected" : ""}`} style={{ left: `${point.x}px`, top: `${point.y}px` }} aria-pressed={selectedId === node.id} onClick={() => { setSelectedId(node.id); onNodeSelect?.(node.id); }}><span className="rk-architecture__ordinal">{String(spec.nodes.findIndex((item) => item.id === node.id) + 1).padStart(2, "0")}</span><b>{node.label}</b>{node.group ? <small>{node.group}</small> : null}{showStatus && node.status && node.status !== "normal" ? <span className="rk-architecture__status">{node.status}</span> : null}</button>;
           })}
         </div>
         </div>

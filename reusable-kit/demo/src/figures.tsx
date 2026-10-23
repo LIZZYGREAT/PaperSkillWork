@@ -339,3 +339,27 @@ export const labNavItems: StepNavItem[] = [
   { id: "evidence", label: "Bind every claim to a source locator and a page", hint: "证据" },
   { id: "boundary", label: "State where the mechanism stops applying", hint: "边界" },
 ];
+/* -------------------------------------------------------------------------- */
+/* Component Lab · one figure that shows every node role                      */
+/* -------------------------------------------------------------------------- */
+
+export const labRoleGraph: DiagramSpec = {
+  columns: 4,
+  nodes: [
+    node({ id: "role-input", column: 1, row: 1, order: 1, role: "input", badge: "INPUT", title: "输入", meta: "外部提供的数据或标签" }),
+    node({ id: "role-frozen", column: 2, row: 1, order: 2, role: "frozen", badge: "FROZEN", title: "冻结", meta: "本任务内不更新" }),
+    node({ id: "role-target", column: 3, row: 1, order: 3, role: "target", badge: "TARGET", title: "参考值", meta: "被比较或被锚定的对象" }),
+    node({ id: "role-objective", column: 4, row: 1, order: 4, role: "objective", badge: "OBJECTIVE", title: "目标", meta: "比较或惩罚在这里发生" }),
+    node({ id: "role-trainable", column: 1, row: 2, order: 5, role: "trainable", badge: "TRAINABLE", title: "可训练", meta: "接收梯度的参数" }),
+    node({ id: "role-label", column: 2, row: 2, order: 6, role: "label", badge: "LABEL", title: "标签", meta: "虚线：外部监督" }),
+    node({ id: "role-update", column: 3, row: 2, columnSpan: 2, order: 7, role: "update", variant: "bar", badge: "UPDATE TARGET", title: "更新落点", meta: "整张图里唯一的深色对象" }),
+  ],
+  edges: [
+    { id: "r-input-frozen", from: "role-input", to: "role-frozen" },
+    { id: "r-frozen-target", from: "role-frozen", to: "role-target" },
+    { id: "r-target-objective", from: "role-target", to: "role-objective" },
+    { id: "r-trainable-update", from: "role-trainable", to: "role-update", mode: "smooth" },
+    { id: "r-label-update", from: "role-label", to: "role-update", mode: "smooth" },
+  ],
+  note: "角色不靠色相区分：冻结＝虚线加斜纹，可训练＝左侧色条，参考值＝沙色，更新落点＝深色。",
+};

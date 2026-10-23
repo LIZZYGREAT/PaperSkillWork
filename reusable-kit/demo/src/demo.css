@@ -167,6 +167,12 @@ button { touch-action: manipulation; }
 .kit-lab__long-button { width: min(100%, 260px); min-height: 58px; white-space: normal; }
 .kit-lab__control-row { display: grid; grid-template-columns: auto auto minmax(170px, 1fr); align-items: end; gap: 12px; margin-top: 16px; }
 .kit-lab__reading-grid { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(300px, 1.15fr); gap: 14px; }
+.kit-lab__grid2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px 32px; margin-bottom: 22px; }
+.kit-lab__swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
+.kit-lab__swatches li { display: grid; grid-template-columns: 26px minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; gap: 2px 10px; padding: 8px 10px; border: 1px solid var(--rk-line); border-radius: 10px; background: var(--rk-surface); }
+.kit-lab__swatches i { grid-row: 1 / span 2; width: 26px; height: 26px; border: 1px solid var(--rk-line-strong); border-radius: 6px; }
+.kit-lab__swatches strong { font-size: 13px; font-weight: 650; }
+.kit-lab__swatches code { color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 11px; }
 .kit-lab__anatomy { display: grid; gap: 24px; }
 .kit-lab__anatomy-body { padding: 26px; border: 1px dashed var(--rk-line-strong); border-radius: 12px; color: var(--rk-muted); font-size: 14px; text-align: center; }
 .kit-lab__sub { margin: 0 0 10px; color: var(--rk-ink); font-family: var(--rk-font-mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
@@ -195,7 +201,7 @@ button { touch-action: manipulation; }
   .kit-lwf__lane + .kit-lwf__lane { border-left: 0; border-top: 1px solid var(--demo-line); padding-left: 0; }
   .kit-ewc__estimate { grid-template-columns: 1fr; }
   .kit-ewc__estimate-col.is-middle { padding-inline: 0; border-inline: 0; border-block: 1px solid var(--demo-line); padding-block: 14px; }
-  .kit-lab__reading-grid { grid-template-columns: 1fr; }
+  .kit-lab__reading-grid, .kit-lab__grid2 { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

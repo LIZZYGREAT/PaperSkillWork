@@ -19,8 +19,9 @@ test("Component Lab exposes typography, button states, and responsive reading ov
   await expect(page.locator("[data-demo-view='component-lab']")).toBeVisible();
   await expect(page.locator(".kit-shell")).toHaveAttribute("data-visual-direction", "warm");
   await expect(page.getByText("Every component stays a candidate until a named human accepts the rendered result.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Typography roles" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Figure and section anatomy" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tokens and type roles" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Page compositions" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Diagram roles" })).toBeVisible();
   await expect(page.locator(".kit-lab .rk-section-head__title")).toHaveText("章节开头用同一种结构");
   await expect(page.locator(".kit-lab .rk-figure__title")).toHaveText("图有自己的抬头与编号");
   await expect(page.locator(".kit-lab .rk-meta-list__row")).toHaveCount(3);
@@ -201,7 +202,7 @@ test("scroll sections synchronize LwF steps and EWC reuses the same system view"
   await page.locator("#ewc-importance").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "estimate");
   await expect(page.locator(".kit-ewc-panel [data-diagram-node='fisher']")).not.toHaveClass(/is-dimmed/);
-  await expect(page.locator("#ewc-importance .kit-ewc__estimate-bars li")).toHaveCount(3);
+  await expect(page.locator("#ewc-importance .rk-bars__row")).toHaveCount(3);
   await page.locator("#ewc-penalty").scrollIntoViewIfNeeded();
   await expect(system).toHaveAttribute("data-active-step-id", "penalty");
   await expect(page.locator(".kit-ewc-panel .rk-figure__title")).toHaveText("Form the penalty from stored state");

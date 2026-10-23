@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createDiagramPath } from "../../foundation/layout/diagram";
+import { layoutGraphByRows } from "../../foundation/layout/graph-layout";
 import { useStickyStepSync } from "../../foundation/layout/StickySystemView";
 import { useReducedMotion } from "../../foundation/accessibility/useReducedMotion";
 import { Button } from "../../foundation/controls/Button";
@@ -143,16 +144,21 @@ export function ProcessLoopExplorer({ spec, initialStep = 0, mode = "manual", sh
   if (errors.length) return <div className="rk-process-loop rk-error" role="alert"><strong>ProcessLoopExplorer data needs attention</strong><ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>;
   if (!step) return null;
 
-  const nodeSize = { width: Math.max(140, nodeWidth), height: 78 };
+  const nodeSize = { width: Math.max(150, nodeWidth), height: 84 };
   const activeNodes = new Set(step.activeNodes ?? []);
   const activeEdges = new Set(step.activeEdges ?? []);
   const dimNodes = new Set(step.dimNodes ?? []);
-  const rows = Math.ceil(spec.nodes.length / 4);
-  const positions = new Map(spec.nodes.map((node, index) => [node.id, node.position ?? { x: 125 + (index % 4) * 250, y: 70 + Math.floor(index / 4) * 148 }]));
-  const canvasWidth = Math.max(1000, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 24));
-  const canvasHeight = Math.max(150, rows * 148, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 24));
-  const fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1;
-  const canvasScale = zoomed ? 1 : fitScale;
+  // A spec that authors coordinates keeps them (papers hand-tune those); a spec with
+  // no coordinates at all gets the centred grid, which fills the width instead of
+  // clustering in a corner.
+  const authored = spec.nodes.some((node) => node.position);
+  const seeded = spec.nodes.map((node, index) => ({ id: node.id, position: node.position ?? { x: 125 + (index % 4) * 250, y: 70 + Math.floor(index / 4) * 148 } }));
+  const layout = authored ? null : layoutGraphByRows(seeded, { nodeWidth: nodeSize.width, nodeHeight: nodeSize.height, maxPerRow: 4, rowBucket: 140 });
+  const positions = layout ? layout.positions : new Map(seeded.map((item) => [item.id, item.position!]));
+  const canvasWidth = layout ? layout.width : Math.max(760, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 24));
+  const canvasHeight = layout ? layout.height : Math.max(200, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 24));
+  const canvasScale = 1;
+  const needsScroll = viewportWidth > 0 && canvasWidth > viewportWidth + 1;
   const nodesById = new Map(spec.nodes.map((node) => [node.id, node]));
   const selectedNode = spec.nodes.find((node) => node.id === selectedNodeId);
 
@@ -173,13 +179,13 @@ export function ProcessLoopExplorer({ spec, initialStep = 0, mode = "manual", sh
         <Button onClick={() => changeStep(stepIndex + 1)} disabled={stepIndex === spec.steps.length - 1}>Next</Button>
         <Button variant="quiet" onClick={() => { changeStep(0); setSelectedNodeId(null); }}>Reset</Button>
         <Button variant="quiet" onClick={() => setPlaying((value) => !value)} disabled={reducedMotion} aria-pressed={playing}>{playing ? "Pause" : "Play"}</Button>
-        {fitScale < 0.82 ? <Button variant="secondary" className="rk-process-loop__zoom" aria-pressed={zoomed} onClick={() => { setZoomed((value) => !value); if (viewportRef.current) viewportRef.current.scrollLeft = 0; }}>{zoomed ? "Fit complete diagram" : "Enlarge diagram"}</Button> : null}
+        {needsScroll ? <Button variant="secondary" className="rk-process-loop__zoom" aria-pressed={zoomed} onClick={() => { setZoomed((value) => !value); if (viewportRef.current) viewportRef.current.scrollLeft = 0; }}>{zoomed ? "Fit complete diagram" : "Scroll the full diagram"}</Button> : null}
       </div>
       {showProgress ? <div className="rk-process-loop__progress" role="progressbar" aria-label="Process progress" aria-valuemin={1} aria-valuemax={spec.steps.length} aria-valuenow={stepIndex + 1}><span style={{ width: `${((stepIndex + 1) / spec.steps.length) * 100}%` }} /></div> : null}
       <div className="rk-process-loop__step-heading" aria-live="polite"><span>Step {stepIndex + 1} of {spec.steps.length}</span><h3>{step.title}</h3><p>{step.summary}</p></div>
-      <div className={`rk-process-loop__viewport ${zoomed ? "is-zoomed" : ""}`} ref={viewportRef} tabIndex={0} aria-label={zoomed ? "Enlarged system diagram; scroll horizontally to inspect" : "Complete system diagram scaled to fit"}>
-        <div className="rk-process-loop__fit" style={{ width: `${canvasWidth * canvasScale}px`, height: `${canvasHeight * canvasScale}px` }}>
-        <div className="rk-process-loop__canvas" style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, transform: `scale(${canvasScale})` }}>
+      <div className={`rk-process-loop__viewport ${zoomed || needsScroll ? "is-zoomed" : ""}`} ref={viewportRef} tabIndex={0} aria-label={needsScroll ? "Process diagram; scroll horizontally to inspect" : "Complete process diagram"}>
+        <div className="rk-process-loop__fit" style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}>
+        <div className="rk-process-loop__canvas" style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}>
           <svg className="rk-process-loop__edges" viewBox={`0 0 ${canvasWidth} ${canvasHeight}`} role="img" aria-label="Process connections">
             <defs><marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
             {spec.edges.map((edge, index) => {
@@ -198,7 +204,7 @@ export function ProcessLoopExplorer({ spec, initialStep = 0, mode = "manual", sh
           <div className="rk-process-loop__nodes">
             {spec.nodes.map((node) => {
               const point = positions.get(node.id)!;
-              return <button key={node.id} type="button" className={`rk-process-node rk-process-node--${node.kind ?? "module"} ${activeNodes.has(node.id) ? "is-active" : ""} ${dimNodes.has(node.id) ? "is-dimmed" : ""} ${selectedNodeId === node.id ? "is-selected" : ""}`} style={{ left: `${point.x}px`, top: `${point.y}px`, width: `${nodeSize.width}px` }} aria-pressed={selectedNodeId === node.id} onClick={() => selectNode(node.id)}><b>{node.label}</b>{node.group ? <small>{node.group}</small> : null}</button>;
+              return <button key={node.id} type="button" className={`rk-process-node rk-process-node--${node.kind ?? "module"} ${activeNodes.has(node.id) ? "is-active" : ""} ${dimNodes.has(node.id) ? "is-dimmed" : ""} ${selectedNodeId === node.id ? "is-selected" : ""}`} style={{ left: `${point.x}px`, top: `${point.y}px`, width: `${nodeSize.width}px` }} aria-pressed={selectedNodeId === node.id} onClick={() => selectNode(node.id)}><span className="rk-process-node__ordinal">{String(spec.nodes.findIndex((item) => item.id === node.id) + 1).padStart(2, "0")}</span><b>{node.label}</b>{node.group ? <small>{node.group}</small> : null}</button>;
             })}
           </div>
         </div>

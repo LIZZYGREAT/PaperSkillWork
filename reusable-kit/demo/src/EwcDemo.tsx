@@ -9,6 +9,7 @@ import { Button } from "../../foundation/controls/Button";
 import { InlineCallout } from "../../foundation/feedback/InlineCallout";
 import { StickySystemView, useStickyStepSync } from "../../foundation/layout/StickySystemView";
 import { DiagramFlow } from "../../foundation/layout/DiagramFlow";
+import { BarMeter } from "../../foundation/data/BarMeter";
 import { MetaList } from "../../foundation/data/MetaList";
 import { FigureFrame } from "../../compositions/figure-frame";
 import { SectionHeader } from "../../compositions/section-header";
@@ -99,11 +100,7 @@ export function EwcDemo() {
             </div>
             <div className="kit-ewc__estimate-col">
               <p className="kit-ewc__estimate-label">Output · {fisher}</p>
-              <ul className="kit-ewc__estimate-bars">
-                <li><b>θ₁</b><span><i style={{ width: "84%" }} /></span><em>0.84</em></li>
-                <li><b>θ₂</b><span><i style={{ width: "34%" }} /></span><em>0.34</em></li>
-                <li><b>θ₃</b><span><i style={{ width: "62%" }} /></span><em>0.62</em></li>
-              </ul>
+              <BarMeter label="Synthetic importance weights" items={[{ id: "t1", label: "θ₁", value: 0.84, display: "0.84" }, { id: "t2", label: "θ₂", value: 0.34, display: "0.34" }, { id: "t3", label: "θ₃", value: 0.62, display: "0.62" }]} />
             </div>
           </div>
         </FigureFrame>

@@ -4,17 +4,13 @@ import { FlowStepper } from "../../core/flow-stepper";
 import { ResponsibilityMap } from "../../core/responsibility-map";
 import { StateMachineExplorer } from "../../core/state-machine";
 import { Button } from "../../foundation/controls/Button";
-import { Chip } from "../../foundation/controls/Chip";
-import { Slider } from "../../foundation/controls/Slider";
 import { InlineCallout } from "../../foundation/feedback/InlineCallout";
 import { StickySystemView, useStickyStepSync } from "../../foundation/layout/StickySystemView";
 import { DiagramFlow } from "../../foundation/layout/DiagramFlow";
-import { Drawer } from "../../foundation/overlay/Drawer";
-import { Popover } from "../../foundation/overlay/Popover";
 import { FigureFrame } from "../../compositions/figure-frame";
-import { MetaList } from "../../foundation/data/MetaList";
 import { SectionHeader } from "../../compositions/section-header";
 import { StepNav } from "../../compositions/step-nav";
+import { ComponentLab, labSections } from "./ComponentLab";
 import { EwcDemo, ewcSections } from "./EwcDemo";
 import { KnowledgeDrawer } from "./KnowledgeDrawer";
 import { lwfFlow, lwfResponsibilities, lwfStates } from "./data";
@@ -27,13 +23,6 @@ const choices = [
   { value: "lab" as const, label: "Component Lab", description: "Typography, controls, overlays" },
   { value: "lwf" as const, label: "LwF scenario", description: "Preserving earlier responses" },
   { value: "ewc" as const, label: "EWC scenario", description: "Protecting important parameters" },
-];
-const labSections = [
-  { id: "lab-type-title", title: "Typography roles" },
-  { id: "lab-button-title", title: "Buttons and controls" },
-  { id: "lab-nav-title", title: "Step navigation" },
-  { id: "lab-figure-title", title: "Figure and section anatomy" },
-  { id: "lab-overlay-title", title: "Overlay contracts" },
 ];
 /** LwF sections, grouped so the rail can show the reading structure. */
 const lwfGroups = [
@@ -48,14 +37,13 @@ const lwfGroups = [
   ] },
 ];
 const lwfSections = lwfGroups.flatMap((group) => group.sections.map(({ id, stepId, rail }) => ({ id, stepId, title: rail })));
-const labNavSections = labSections;
 
 export default function App() {
   const [demo, setDemo] = useState<DemoKind>("lab");
   const [activeSection, setActiveSection] = useState("lab-type-title");
   const [hubOpen, setHubOpen] = useState(false);
   const [referenceId, setReferenceId] = useState<string | null>(null);
-  const sections = demo === "lab" ? labNavSections : demo === "lwf" ? lwfSections : ewcSections;
+  const sections = demo === "lab" ? labSections : demo === "lwf" ? lwfSections : ewcSections;
   const page = demo === "lab"
     ? { number: "01", breadcrumb: "Kit foundations", eyebrow: "PAGE 01 · COMPONENT FOUNDATIONS", title: "把论文机制拆成可读、可交互的组件", description: "Reusable components for turning research methods into clear, inspectable learning experiences." }
     : demo === "lwf"
@@ -122,22 +110,6 @@ export default function App() {
       </main>
     </div>
     <KnowledgeDrawer entries={referenceEntries} open={hubOpen} selectedId={referenceId} onSelectedIdChange={setReferenceId} onClose={() => setHubOpen(false)} />
-  </div>;
-}
-
-function ComponentLab() {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [sliderValue, setSliderValue] = useState(36);
-  const [navStep, setNavStep] = useState("objects");
-  return <div className="kit-demo__paper kit-lab" data-demo-view="component-lab">
-    <section className="kit-lab__intro"><p className="rk-type--meta">FOUNDATION V2 · CANDIDATE</p><h2 className="rk-type--heading-1">Readable defaults with bounded variants</h2><p className="rk-type--body">中文正文、English labels、数学符号 θᵢ and code-like IDs share a deliberate hierarchy. Resize the page to inspect wrapping rather than shrinking the content.</p></section>
-    <InlineCallout kind="note" title="Candidate status">Every component stays a candidate until a named human accepts the rendered result. This Lab is the review surface, not an approval record.</InlineCallout>
-    <section className="rk-surface" aria-labelledby="lab-type-title"><header className="rk-surface__header"><h3 id="lab-type-title" className="rk-type--heading-2">Typography roles</h3><p className="rk-type--supporting">Semantic roles expose a small token set; paper themes may replace the family and colors.</p></header><div className="kit-lab__type-stack"><p className="rk-type--display">Display / 开篇标题</p><p className="rk-type--heading-1">Heading 1 / 页面标题</p><p className="rk-type--heading-2">Heading 2 / 章节标题</p><p className="rk-type--heading-3">Heading 3 / 内部小节</p><p className="rk-type--body">Body — 主要解释用于连续阅读，包含 Fisher Information、xₜ 和中文标点。</p><p className="rk-type--supporting">Supporting — 图旁说明和辅助信息。</p><p className="rk-type--caption">Caption — Figure 2. Source-bound summary with enough line height.</p><p className="rk-type--diagram-label">Diagram label — Gradient ∇L</p><p className="rk-type--meta">META · VERSION 2 CANDIDATE</p></div></section>
-    <section className="rk-surface rk-surface--soft" aria-labelledby="lab-button-title"><header className="rk-surface__header"><h3 id="lab-button-title" className="rk-type--heading-2">Buttons and controls</h3><p className="rk-type--supporting">Variants retain alignment across English, Chinese, icons, long text, and disabled states.</p></header><div className="kit-lab__button-grid"><Button>Primary action</Button><Button variant="secondary">次要操作</Button><Button variant="quiet">Quiet action</Button><Button variant="danger">Delete draft</Button><Button size="small">Small</Button><Button disabled>Unavailable</Button><Button variant="secondary" iconOnly aria-label="Add reference">＋</Button><Button className="kit-lab__long-button">A deliberately long action label that wraps in a narrow container</Button></div><div className="kit-lab__control-row"><Chip active>Selected chip</Chip><Chip tone="good">Verified</Chip><Slider label="Example threshold" value={sliderValue} displayValue={`${sliderValue}%`} onChange={setSliderValue} /></div></section>
-    <section className="rk-surface" aria-labelledby="lab-nav-title"><header className="rk-surface__header"><h3 id="lab-nav-title" className="rk-type--heading-2">Step navigation</h3><p className="rk-type--supporting">Every step name stays complete. The grid wraps to a second row instead of shortening a label with an ellipsis, and the current step is marked by a bottom rule plus a tint, not by a heavy border.</p></header><StepNav items={labNavItems} activeId={navStep} onSelect={setNavStep} label="Component Lab step navigation sample" /></section>
-    <section className="rk-surface" aria-labelledby="lab-figure-title"><header className="rk-surface__header"><h3 id="lab-figure-title" className="rk-type--heading-2">Figure and section anatomy</h3><p className="rk-type--supporting">The same header, frame and fact list carry every teaching page, so a new paper inherits its hierarchy instead of inventing another one.</p></header><div className="kit-lab__anatomy"><SectionHeader index="01" eyebrow="Section header" title="章节开头用同一种结构" lead="编号、栏目名、标题、导语各就各位；hairline 把标题和上一节分开，而不是再加一层卡片。" /><FigureFrame label="Figure frame · 图注条" title="图有自己的抬头与编号" note="图注条说明这张图要回答什么，画布区域用浅色纸面把图和正文分开。" bleed={false}><div className="kit-lab__anatomy-body">图内容区域（DiagramFlow、状态机或论文原图）</div></FigureFrame><MetaList label="Meta list sample" items={[{ id: "owner", label: "Owner", value: "Teacher copy" }, { id: "effect", label: "Effect", value: "Old-task responses become available as targets." }, { id: "status", label: "Status", value: "Frozen for this task" }]} /></div></section>
-    <section className="rk-surface" aria-labelledby="lab-overlay-title"><header className="rk-surface__header"><h3 id="lab-overlay-title" className="rk-type--heading-2">Overlay contracts</h3><p className="rk-type--supporting">Popover remains viewport-safe; the reading Drawer has room for composed two-column content on wide screens.</p></header><div className="kit-lab__button-grid"><Popover label="Compact supporting detail" trigger="Open viewport-safe popover"><p>This supporting detail is intentionally compact. Escape and outside press dismiss it.</p></Popover><Button variant="secondary" onClick={() => setDrawerOpen(true)}>Open reading Drawer</Button></div></section>
-    <Drawer open={drawerOpen} title="Reading Drawer" size="reading" onClose={() => setDrawerOpen(false)}><div className="kit-lab__reading-grid"><aside className="rk-surface rk-surface--soft"><p className="rk-type--meta">ENTRY LIST</p><h3 className="rk-type--heading-3">Stable navigation column</h3><p className="rk-type--supporting">The wide contract reserves enough space for a list and a readable detail pane.</p></aside><article className="rk-surface"><p className="rk-type--meta">DETAIL</p><h3 className="rk-type--heading-2">Long-form reference content</h3><p className="rk-type--body">This is a layout contract demonstration, not the final Reference Hub. At narrow widths the columns collapse without horizontal page scrolling.</p></article></div></Drawer>
   </div>;
 }
 
