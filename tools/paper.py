@@ -2,6 +2,7 @@
 """Mechanical workspace and workflow checks for PaperSkillWork."""
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -47,6 +48,7 @@ UPSTREAM_PAPER_NAME_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 UPSTREAM_VERSION_RE = re.compile(r"^[a-z][a-z0-9]*[0-9]{4}(?:_[0-9]+)?$")
 PLACEHOLDER_RE = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
 ALLOWED_PLACEHOLDERS = {"paper_id", "paper_title", "paper_url", "arxiv_id"}
+KIT_COMPONENT_STATUSES = ("candidate", "approved", "deprecated")
 STAGES: List[Tuple[str, str, str]] = [
     ("W0", "W0_source_intake", "Source Intake"),
     ("W1", "W1_source_cache", "Source Cache + Asset Inventory"),
@@ -381,6 +383,44 @@ def quote_yaml(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def registry_entry_status(entry: Dict[str, Any]) -> Optional[str]:
+    """Return the maturity status of a registry entry, or None when it is not declared."""
+    status = entry.get("status")
+    return status if isinstance(status, str) else None
+
+
+def approval_evidence_problems(name: str, entry: Dict[str, Any]) -> List[str]:
+    """Verify the human acceptance record that an approved component must carry."""
+    problems: List[str] = []
+    approved_by = entry.get("approved_by")
+    if not isinstance(approved_by, str) or not approved_by.strip():
+        problems.append("reusable-kit component '{}' is approved but is missing a non-empty approved_by".format(name))
+    approved_at = entry.get("approved_at")
+    if not isinstance(approved_at, str) or not approved_at.strip():
+        problems.append("reusable-kit component '{}' is approved but is missing a non-empty approved_at date".format(name))
+    elif not re.fullmatch(r"\d{4}-\d{2}-\d{2}", approved_at.strip()):
+        problems.append(
+            "reusable-kit component '{}' is approved but approved_at '{}' is not a YYYY-MM-DD date".format(name, approved_at)
+        )
+    else:
+        try:
+            datetime.date.fromisoformat(approved_at.strip())
+        except ValueError:
+            problems.append(
+                "reusable-kit component '{}' is approved but approved_at '{}' is not a real calendar date".format(name, approved_at)
+            )
+    evidence = entry.get("evidence")
+    if not isinstance(evidence, list) or not evidence:
+        problems.append("reusable-kit component '{}' is approved but is missing a non-empty evidence list".format(name))
+    else:
+        for index, item in enumerate(evidence, start=1):
+            if not isinstance(item, str) or not item.strip():
+                problems.append(
+                    "reusable-kit component '{}' is approved but evidence item {} is not a non-empty string".format(name, index)
+                )
+    return problems
+
+
 def reusable_kit_registry() -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
     """Load the reusable component registry and verify its source directories."""
     registry_path = REUSABLE_KIT / "registry.yaml"
@@ -395,12 +435,19 @@ def reusable_kit_registry() -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
         return {}, ["reusable-kit/registry.yaml must define a components mapping"]
     components: Dict[str, Dict[str, Any]] = {}
     problems: List[str] = []
+    version = data.get("version")
+    if not isinstance(version, int) or isinstance(version, bool) or version != 2:
+        problems.append("reusable-kit/registry.yaml must declare version: 2")
     for name, entry in data["components"].items():
         if not isinstance(name, str) or not isinstance(entry, dict):
             problems.append("reusable-kit registry entries need string names and mappings")
             continue
         tier = entry.get("tier")
         relative = entry.get("path")
+        status = registry_entry_status(entry)
+        if status is None or status not in KIT_COMPONENT_STATUSES:
+            problems.append("reusable-kit component '{}' has an invalid status".format(name))
+            continue
         if tier not in ("P0", "P1", "P2"):
             problems.append("reusable-kit component '{}' has an invalid tier".format(name))
             continue
@@ -420,6 +467,20 @@ def reusable_kit_registry() -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
         if not source.is_dir():
             problems.append("reusable-kit component '{}' source directory is missing: {}".format(name, relative))
             continue
+        if status == "approved":
+            approval_problems = approval_evidence_problems(name, entry)
+            if approval_problems:
+                problems.extend(approval_problems)
+                continue
+        else:
+            recorded = sorted(key for key in ("approved_by", "approved_at", "evidence") if entry.get(key) is not None)
+            if recorded:
+                problems.append(
+                    "reusable-kit component '{}' is {} but records {}; only an approved entry may carry an approval record".format(
+                        name, status, ", ".join(recorded)
+                    )
+                )
+                continue
         components[name] = entry
     return components, problems
 
@@ -460,12 +521,30 @@ def cmd_scaffold_kit(args: argparse.Namespace) -> int:
         raise PaperError("--add accepts optional P1 components only: {}".format(", ".join(not_optional)))
 
     sources = ["foundation"]
+    copied_components: List[str] = []
     for name, entry in registry.items():
         if entry.get("tier") == "P0" and "continual-learning" in entry.get("default_for", []):
             path = entry["path"]
             if path != "foundation" and not path.startswith("foundation/"):
                 sources.append(path)
+            copied_components.append(name)
     sources.extend(registry[name]["path"] for name in requested)
+    copied_components.extend(requested)
+    copied_components = list(dict.fromkeys(copied_components))
+
+    deprecated = sorted(name for name in copied_components if registry_entry_status(registry[name]) == "deprecated")
+    if deprecated:
+        raise PaperError(
+            "Reusable Kit component(s) are deprecated and must not be scaffolded: {}".format(", ".join(deprecated))
+        )
+    unapproved = sorted(name for name in copied_components if registry_entry_status(registry[name]) != "approved")
+    if unapproved and not args.allow_unapproved:
+        raise PaperError(
+            "Reusable Kit component(s) are not approved: {}. Pass --allow-unapproved to scaffold them anyway.".format(
+                ", ".join(unapproved)
+            )
+        )
+
     sources = list(dict.fromkeys(sources))
     compact_sources = [path for path in sources if not any(path.startswith(parent + "/") for parent in sources)]
 
@@ -500,6 +579,10 @@ def cmd_scaffold_kit(args: argparse.Namespace) -> int:
     except (OSError, ValueError) as exc:
         raise PaperError("Could not scaffold the Reusable Kit: {}".format(exc))
 
+    for name in unapproved:
+        print("[WARN] {} is {}, not approved; copied because --allow-unapproved was passed".format(
+            name, registry_entry_status(registry[name])
+        ))
     copied = ", ".join(compact_sources)
     print("Copied Reusable Kit v{} into papers/{}/web/enhanced/src/shared".format(version_path.read_text(encoding="utf-8").strip(), args.paper_id))
     print("Included: {}".format(copied))
@@ -1144,7 +1227,12 @@ def v3_priority_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Dict[str
     return data, problems
 
 
-def v3_implementation_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+def v3_implementation_data(
+    folder: Path,
+    evidence_ids: set,
+    warnings: Optional[List[str]] = None,
+) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    """Validate the implementation plan; candidate component use is a warning, not a failure."""
     plan, problems = fenced_yaml(folder / "design/implementation-plan.md")
     if plan is None:
         return None, problems
@@ -1195,6 +1283,18 @@ def v3_implementation_data(folder: Path, evidence_ids: set) -> Tuple[Optional[Di
             problems.append("{} reusable_pattern must be a string or null".format(label))
         elif isinstance(stage.get("reusable_pattern"), str) and stage["reusable_pattern"] not in reusable_components:
             problems.append("{} uses unknown reusable_pattern '{}' (see reusable-kit/registry.yaml)".format(label, stage["reusable_pattern"]))
+        else:
+            pattern = stage.get("reusable_pattern")
+            if isinstance(pattern, str) and pattern in reusable_components:
+                pattern_status = registry_entry_status(reusable_components[pattern])
+                if pattern_status == "deprecated":
+                    problems.append(
+                        "{} uses deprecated reusable component '{}' and must choose a supported one".format(label, pattern)
+                    )
+                elif pattern_status != "approved" and warnings is not None:
+                    warnings.append(
+                        "{} uses candidate reusable component '{}'; it stays usable but is not approved yet".format(label, pattern)
+                    )
         core_items = stage.get("core_items")
         if not isinstance(core_items, list) or not core_items:
             problems.append("{} core_items must be a non-empty list".format(label))
@@ -1670,7 +1770,11 @@ def v3_stage_completion_problems(
     return problems
 
 
-def v3_cross_reference_problems(folder: Path, stage_index: int) -> List[str]:
+def v3_cross_reference_problems(
+    folder: Path,
+    stage_index: int,
+    warnings: Optional[List[str]] = None,
+) -> List[str]:
     problems: List[str] = []
     manifest: Optional[Dict[str, Any]] = None
     evidence_ids: set = set()
@@ -1685,6 +1789,10 @@ def v3_cross_reference_problems(folder: Path, stage_index: int) -> List[str]:
     if stage_index >= STAGE_IDS.index("W4"):
         _spine, spine_problems = v3_priority_data(folder, evidence_ids)
         problems.extend(spine_problems)
+    if stage_index >= STAGE_IDS.index("W5") and warnings is not None:
+        # Re-read the implementation plan only for its non-blocking maturity warnings;
+        # its problems are already reported by the W5/W6/W8 artifact checks.
+        _plan, _implementation_problems = v3_implementation_data(folder, evidence_ids, warnings=warnings)
     return problems
 
 
@@ -1718,7 +1826,7 @@ def cmd_check_v3(folder: Path, config: Dict[str, Any], paper_id: str) -> int:
         elif stage_id == config["workflow"]["current_stage"]:
             warnings.extend("{}: {}".format(stage_id, issue) for issue in issues)
     current_stage_index = STAGE_IDS.index(config["workflow"]["current_stage"])
-    for issue in v3_cross_reference_problems(folder, current_stage_index):
+    for issue in v3_cross_reference_problems(folder, current_stage_index, warnings):
         if not any(issue in warning for warning in warnings) and not any(issue in failure for failure in failures):
             warnings.append(issue)
     warnings.extend(hygiene_warnings(folder))
@@ -1784,6 +1892,11 @@ def build_parser() -> argparse.ArgumentParser:
     scaffold.add_argument("paper_id")
     scaffold.add_argument("--preset", choices=("continual-learning",), default="continual-learning")
     scaffold.add_argument("--add", default="", help="comma-separated optional P1 component names selected in W5")
+    scaffold.add_argument(
+        "--allow-unapproved",
+        action="store_true",
+        help="copy components whose registry status is candidate instead of approved",
+    )
     scaffold.set_defaults(func=cmd_scaffold_kit)
 
     for name, help_text, handler in (

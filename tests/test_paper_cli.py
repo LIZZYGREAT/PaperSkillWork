@@ -1,3 +1,5 @@
+import argparse
+import importlib.util
 import json
 import os
 import shutil
@@ -7,6 +9,8 @@ from pathlib import Path
 
 import pytest
 import yaml
+
+from workflow_helpers import write_fake_kit
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -67,6 +71,15 @@ def snapshot_files(root):
         for path in root.rglob("*")
         if path.is_file()
     }
+
+
+def load_paper_module(root):
+    module_path = root / "tools" / "paper.py"
+    name = "paper_cli_{}".format(abs(hash(str(root))))
+    spec = importlib.util.spec_from_file_location(name, module_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def init_git_repo(root):
@@ -391,20 +404,21 @@ def test_scaffold_kit_copies_default_continual_learning_components_once(tmp_path
     assert "App.tsx" in base_files
     assert "data/tutorial.ts" in base_files
 
-    result = invoke(root, "scaffold-kit", "demo-paper", "--preset", "continual-learning")
+    result = invoke(root, "scaffold-kit", "demo-paper", "--preset", "continual-learning", "--allow-unapproved")
 
     shared = src / "shared"
     assert result.returncode == 0, result.stdout + result.stderr
+    assert "[WARN] Button is candidate, not approved; copied because --allow-unapproved was passed" in result.stdout
     assert src.is_dir()
     assert all((src / relative).read_bytes() == content for relative, content in base_files.items())
-    assert (shared / "KIT_VERSION").read_text(encoding="utf-8").strip() == "1.0.0"
+    assert (shared / "KIT_VERSION").read_text(encoding="utf-8").strip() == "2.0.0"
     assert (shared / "foundation/styles/kit.css").is_file()
     assert (shared / "core/process-loop/ProcessLoopExplorer.tsx").is_file()
     assert (shared / "core/reference/ReferenceHub.tsx").is_file()
     assert not (shared / "optional/evidence-viewer/EvidenceViewer.tsx").exists()
     after_scaffold = snapshot_files(src)
 
-    duplicate = invoke(root, "scaffold-kit", "demo-paper")
+    duplicate = invoke(root, "scaffold-kit", "demo-paper", "--allow-unapproved")
     assert duplicate.returncode != 0
     assert "destination already exists" in duplicate.stderr
     assert (shared / "KIT_VERSION").is_file()
@@ -417,10 +431,16 @@ def test_scaffold_kit_adds_only_selected_optional_components(tmp_path):
     src = root / "papers/demo-paper/web/enhanced/src"
     base_files = snapshot_files(src)
 
-    result = invoke(root, "scaffold-kit", "demo-paper", "--add", "EvidenceViewer,BenchmarkExplorer,CompareView")
+    result = invoke(
+        root, "scaffold-kit", "demo-paper",
+        "--add", "EvidenceViewer,BenchmarkExplorer,CompareView",
+        "--allow-unapproved",
+    )
 
     shared = src / "shared"
     assert result.returncode == 0, result.stdout + result.stderr
+    assert "[WARN] CompareView is candidate, not approved; copied because --allow-unapproved was passed" in result.stdout
+    assert "Optional components: EvidenceViewer, BenchmarkExplorer, CompareView" in result.stdout
     assert all((src / relative).read_bytes() == content for relative, content in base_files.items())
     assert (shared / "optional/evidence-viewer/EvidenceViewer.tsx").is_file()
     assert (shared / "optional/benchmark-explorer/BenchmarkExplorer.tsx").is_file()
@@ -434,9 +454,162 @@ def test_scaffold_kit_rejects_unknown_or_non_optional_component_without_writing(
     src = root / "papers/demo-paper/web/enhanced/src"
     base_files = snapshot_files(src)
 
-    unknown = invoke(root, "scaffold-kit", "demo-paper", "--add", "ImaginaryExplorer")
-    core = invoke(root, "scaffold-kit", "demo-paper", "--add", "ProcessLoopExplorer")
+    unknown = invoke(root, "scaffold-kit", "demo-paper", "--add", "ImaginaryExplorer", "--allow-unapproved")
+    core = invoke(root, "scaffold-kit", "demo-paper", "--add", "ProcessLoopExplorer", "--allow-unapproved")
 
     assert unknown.returncode != 0 and "Unknown reusable component" in unknown.stderr
     assert core.returncode != 0 and "P1 components only" in core.stderr
     assert snapshot_files(src) == base_files
+
+
+def test_scaffold_kit_blocks_unapproved_components_without_flag(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    src = root / "papers/demo-paper/web/enhanced/src"
+    base_files = snapshot_files(src)
+
+    preset = invoke(root, "scaffold-kit", "demo-paper", "--preset", "continual-learning")
+    optional = invoke(root, "scaffold-kit", "demo-paper", "--add", "EvidenceViewer")
+
+    for result in (preset, optional):
+        assert result.returncode != 0
+        assert "--allow-unapproved" in result.stderr
+    assert "Button" in preset.stderr
+    assert "EvidenceViewer" in optional.stderr
+    assert "[WARN]" not in preset.stdout
+    assert not (src / "shared").exists()
+    assert snapshot_files(src) == base_files
+
+
+def test_scaffold_kit_prints_no_warning_without_unapproved_components(tmp_path, monkeypatch, capsys):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    kit = tmp_path / "approved-kit"
+    write_fake_kit(kit, {
+        "ApprovedDefault": {
+            "tier": "P0", "status": "approved", "path": "foundation/controls", "category": "control",
+            "default_for": ["continual-learning"], "approved_by": "A Reviewer",
+            "approved_at": "2026-02-01", "evidence": ["papers/demo/web/enhanced/App.tsx"],
+        },
+    })
+    module = load_paper_module(root)
+    monkeypatch.setattr(module, "REUSABLE_KIT", kit)
+
+    assert module.cmd_scaffold_kit(argparse.Namespace(
+        paper_id="demo-paper", preset="continual-learning", add="", allow_unapproved=False,
+    )) == 0
+
+    captured = capsys.readouterr()
+    assert "[WARN]" not in captured.out
+    assert "Copied Reusable Kit v9.9.9" in captured.out
+    shared = root / "papers/demo-paper/web/enhanced/src/shared"
+    assert (shared / "KIT_VERSION").read_text(encoding="utf-8").strip() == "9.9.9"
+    assert (shared / "foundation/controls/Placeholder.tsx").is_file()
+
+
+def test_scaffold_kit_rejects_deprecated_component(tmp_path, monkeypatch):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    src = root / "papers/demo-paper/web/enhanced/src"
+    base_files = snapshot_files(src)
+    kit = tmp_path / "deprecated-kit"
+    write_fake_kit(kit, {
+        "DeprecatedDefault": {
+            "tier": "P0", "status": "deprecated", "path": "foundation/controls",
+            "category": "control", "default_for": ["continual-learning"],
+        },
+        "DeprecatedOptional": {
+            "tier": "P1", "status": "deprecated", "path": "optional/old-view",
+            "category": "comparison",
+        },
+    })
+    module = load_paper_module(root)
+    monkeypatch.setattr(module, "REUSABLE_KIT", kit)
+
+    def run_scaffold(add="", allow_unapproved=False):
+        return module.cmd_scaffold_kit(argparse.Namespace(
+            paper_id="demo-paper", preset="continual-learning", add=add,
+            allow_unapproved=allow_unapproved,
+        ))
+
+    with pytest.raises(module.PaperError) as preset_error:
+        run_scaffold()
+    assert "deprecated" in str(preset_error.value)
+    assert "DeprecatedDefault" in str(preset_error.value)
+
+    with pytest.raises(module.PaperError) as optional_error:
+        run_scaffold(add="DeprecatedOptional", allow_unapproved=True)
+    assert "deprecated" in str(optional_error.value)
+    assert "DeprecatedOptional" in str(optional_error.value)
+
+    assert not (src / "shared").exists()
+    assert snapshot_files(src) == base_files
+
+
+def test_approved_component_requires_approval_record(tmp_path, monkeypatch):
+    root = make_project(tmp_path)
+    module = load_paper_module(root)
+
+    incomplete = tmp_path / "kit-incomplete"
+    write_fake_kit(incomplete, {
+        "Unapproved": {"tier": "P1", "status": "approved", "path": "optional/evidence-viewer", "category": "evidence"},
+    })
+    monkeypatch.setattr(module, "REUSABLE_KIT", incomplete)
+    components, problems = module.reusable_kit_registry()
+    assert "Unapproved" not in components
+    for field in ("approved_by", "approved_at", "evidence"):
+        assert any("Unapproved" in problem and field in problem for problem in problems), problems
+
+    bad_date = tmp_path / "kit-bad-date"
+    write_fake_kit(bad_date, {
+        "Unapproved": {
+            "tier": "P1", "status": "approved", "path": "optional/evidence-viewer", "category": "evidence",
+            "approved_by": "A Reviewer", "approved_at": "2026-13-01", "evidence": ["papers/demo/web/enhanced/App.tsx"],
+        },
+    })
+    monkeypatch.setattr(module, "REUSABLE_KIT", bad_date)
+    components, problems = module.reusable_kit_registry()
+    assert "Unapproved" not in components
+    assert any("Unapproved" in problem and "2026-13-01" in problem for problem in problems), problems
+
+    complete = tmp_path / "kit-complete"
+    write_fake_kit(complete, {
+        "Unapproved": {
+            "tier": "P1", "status": "approved", "path": "optional/evidence-viewer", "category": "evidence",
+            "approved_by": "A Reviewer", "approved_at": "2026-02-01", "evidence": ["papers/demo/web/enhanced/App.tsx"],
+        },
+    })
+    monkeypatch.setattr(module, "REUSABLE_KIT", complete)
+    components, problems = module.reusable_kit_registry()
+    assert problems == []
+    assert components["Unapproved"]["status"] == "approved"
+
+
+def test_non_approved_component_with_approval_record_is_rejected(tmp_path, monkeypatch):
+    root = make_project(tmp_path)
+    module = load_paper_module(root)
+    kit = tmp_path / "kit-contradictory"
+    write_fake_kit(kit, {
+        "FakeApproval": {
+            "tier": "P1", "status": "candidate", "path": "optional/evidence-viewer", "category": "evidence",
+            "approved_by": "A Reviewer", "approved_at": "2026-02-01", "evidence": ["papers/demo/web/enhanced/App.tsx"],
+        },
+    })
+    monkeypatch.setattr(module, "REUSABLE_KIT", kit)
+
+    components, problems = module.reusable_kit_registry()
+    assert "FakeApproval" not in components
+    assert any("FakeApproval" in problem and "candidate" in problem for problem in problems), problems
+
+
+def test_registry_requires_version_two(tmp_path, monkeypatch):
+    root = make_project(tmp_path)
+    module = load_paper_module(root)
+    kit = tmp_path / "kit-v1"
+    write_fake_kit(kit, {
+        "Button": {"tier": "P0", "status": "candidate", "path": "foundation/controls", "category": "control"},
+    }, version=1)
+    monkeypatch.setattr(module, "REUSABLE_KIT", kit)
+
+    _components, problems = module.reusable_kit_registry()
+    assert any("version: 2" in problem for problem in problems), problems

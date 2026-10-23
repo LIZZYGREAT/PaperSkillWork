@@ -3,7 +3,7 @@ import shutil
 
 import pytest
 
-from workflow_helpers import make_project, write_manifest, write_fenced_yaml
+from workflow_helpers import make_project, write_fake_kit, write_manifest, write_fenced_yaml
 
 
 def test_implementation_plan_covers_priorities_evidence_and_vertical_slice(tmp_path):
@@ -56,6 +56,36 @@ def test_implementation_plan_rejects_unregistered_reusable_pattern(tmp_path):
     write_fenced_yaml(path, "Implementation Plan", data)
     _plan, problems = module.v3_implementation_data(paper, evidence_ids)
     assert any("unknown reusable_pattern 'ImaginaryExplorer'" in problem for problem in problems)
+
+
+def test_implementation_plan_deprecated_reusable_pattern_fails_candidate_warns(tmp_path, monkeypatch):
+    _root, paper, _config_path, module = make_project(tmp_path)
+    evidence_ids, _entries, _problems = module.evidence_registry_ids_v3(paper)
+    kit = tmp_path / "maturity-kit"
+
+    write_fake_kit(kit, {
+        "ArchitectureExplorer": {
+            "tier": "P0", "status": "candidate", "path": "core/architecture", "category": "architecture",
+        },
+    })
+    monkeypatch.setattr(module, "REUSABLE_KIT", kit)
+    warnings = []
+    _plan, problems = module.v3_implementation_data(paper, evidence_ids, warnings=warnings)
+    assert problems == []
+    assert any("ArchitectureExplorer" in warning and "candidate" in warning for warning in warnings), warnings
+
+    write_fake_kit(kit, {
+        "ArchitectureExplorer": {
+            "tier": "P0", "status": "deprecated", "path": "core/architecture", "category": "architecture",
+        },
+    })
+    warnings = []
+    _plan, problems = module.v3_implementation_data(paper, evidence_ids, warnings=warnings)
+    assert any(
+        "uses deprecated reusable component 'ArchitectureExplorer' and must choose a supported one" in problem
+        for problem in problems
+    ), problems
+    assert warnings == []
 
 
 def test_w6_and_w8_do_not_require_local_upstream_reports(tmp_path):

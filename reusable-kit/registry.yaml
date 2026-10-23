@@ -1,31 +1,47 @@
-version: 1
+# Reusable Kit component registry (v2).
+#
+# `tier`  = copying scope: P0 ships with the continual-learning preset, P1 is opt-in.
+# `status` = maturity: candidate | approved | deprecated. Tier never implies approval.
+#
+# A component may only be marked `approved` when the following are all recorded:
+#   approved_by: the human reviewer who accepted it
+#   approved_at: ISO date (YYYY-MM-DD) of that acceptance
+#   evidence:    at least one path to the reviewed evidence (screenshots, browser
+#                states, or the paper/demo route that was actually inspected)
+# `deprecated` entries stay listed so old plans resolve, but they may not be scaffolded.
+#
+# Every entry is `candidate` until a human acceptance record exists. Do not promote a
+# component to honour an implementation plan, a build result, or an automated check.
+version: 2
 components:
-  Button: {tier: P0, path: foundation/controls, category: control, default_for: [continual-learning]}
-  Chip: {tier: P0, path: foundation/controls, category: control, default_for: [continual-learning]}
-  Slider: {tier: P0, path: foundation/controls, category: control, default_for: [continual-learning]}
-  SegmentedControl: {tier: P0, path: foundation/controls, category: control, default_for: [continual-learning]}
-  Feedback: {tier: P0, path: foundation/feedback, category: feedback, default_for: [continual-learning]}
-  StatusPill: {tier: P0, path: foundation/feedback, category: feedback, default_for: [continual-learning]}
-  InlineCallout: {tier: P1, path: foundation/feedback, category: explanation}
-  Popover: {tier: P0, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
-  Drawer: {tier: P0, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
-  MobileSheet: {tier: P0, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
-  StickySystemView: {tier: P0, path: foundation/layout, category: layout, default_for: [continual-learning]}
-  ReferenceHub: {tier: P0, path: core/reference, category: reference, default_for: [continual-learning]}
-  TermRef: {tier: P0, path: core/reference, category: reference, default_for: [continual-learning]}
-  ExpandableDetail: {tier: P0, path: core/reference, category: reference, default_for: [continual-learning]}
-  ProcessLoopExplorer: {tier: P0, path: core/process-loop, category: process, default_for: [continual-learning]}
-  ArchitectureExplorer: {tier: P0, path: core/architecture, category: architecture, default_for: [continual-learning]}
-  FlowStepper: {tier: P0, path: core/flow-stepper, category: process, default_for: [continual-learning]}
-  ResponsibilityMap: {tier: P0, path: core/responsibility-map, category: responsibility, default_for: [continual-learning]}
-  StateMachineExplorer: {tier: P0, path: core/state-machine, category: state, default_for: [continual-learning]}
-  PaperFigure: {tier: P0, path: core/paper-figure, category: evidence, default_for: [continual-learning]}
-  CompareView: {tier: P1, path: optional/compare-view, category: comparison}
-  MultiViewInspector: {tier: P1, path: optional/multi-view, category: representation}
-  RepresentationTransform: {tier: P1, path: optional/representation-transform, category: representation}
-  CompatibilityChecker: {tier: P1, path: optional/compatibility-checker, category: compatibility}
-  EvidenceViewer: {tier: P1, path: optional/evidence-viewer, category: evidence}
-  BenchmarkExplorer: {tier: P1, path: optional/benchmark-explorer, category: evidence}
-  DatasetCard: {tier: P1, path: optional/dataset-card, category: dataset}
-  FormulaBlock: {tier: P1, path: optional/formula, category: formula}
-  FormulaTerm: {tier: P1, path: optional/formula, category: formula}
+  Button: {tier: P0, status: candidate, path: foundation/controls, category: control, default_for: [continual-learning]}
+  Chip: {tier: P0, status: candidate, path: foundation/controls, category: control, default_for: [continual-learning]}
+  Slider: {tier: P0, status: candidate, path: foundation/controls, category: control, default_for: [continual-learning]}
+  SegmentedControl: {tier: P0, status: candidate, path: foundation/controls, category: control, default_for: [continual-learning]}
+  Feedback: {tier: P0, status: candidate, path: foundation/feedback, category: feedback, default_for: [continual-learning]}
+  StatusPill: {tier: P0, status: candidate, path: foundation/feedback, category: feedback, default_for: [continual-learning]}
+  InlineCallout: {tier: P1, status: candidate, path: foundation/feedback, category: explanation}
+  Popover: {tier: P0, status: candidate, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
+  Drawer: {tier: P0, status: candidate, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
+  MobileSheet: {tier: P0, status: candidate, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
+  StickySystemView: {tier: P0, status: candidate, path: foundation/layout, category: layout, default_for: [continual-learning]}
+  DiagramFlow: {tier: P0, status: candidate, path: foundation/layout, category: diagram, default_for: [continual-learning]}
+  ReferenceHub: {tier: P0, status: candidate, path: core/reference, category: reference, default_for: [continual-learning]}
+  TermRef: {tier: P0, status: candidate, path: core/reference, category: reference, default_for: [continual-learning]}
+  ExpandableDetail: {tier: P0, status: candidate, path: core/reference, category: reference, default_for: [continual-learning]}
+  ProcessLoopExplorer: {tier: P0, status: candidate, path: core/process-loop, category: process, default_for: [continual-learning]}
+  ArchitectureExplorer: {tier: P0, status: candidate, path: core/architecture, category: architecture, default_for: [continual-learning]}
+  FlowStepper: {tier: P0, status: candidate, path: core/flow-stepper, category: process, default_for: [continual-learning]}
+  ResponsibilityMap: {tier: P0, status: candidate, path: core/responsibility-map, category: responsibility, default_for: [continual-learning]}
+  StateMachineExplorer: {tier: P0, status: candidate, path: core/state-machine, category: state, default_for: [continual-learning]}
+  PaperFigure: {tier: P0, status: candidate, path: core/paper-figure, category: evidence, default_for: [continual-learning]}
+  StepNav: {tier: P1, status: candidate, path: compositions/step-nav, category: navigation}
+  CompareView: {tier: P1, status: candidate, path: optional/compare-view, category: comparison}
+  MultiViewInspector: {tier: P1, status: candidate, path: optional/multi-view, category: representation}
+  RepresentationTransform: {tier: P1, status: candidate, path: optional/representation-transform, category: representation}
+  CompatibilityChecker: {tier: P1, status: candidate, path: optional/compatibility-checker, category: compatibility}
+  EvidenceViewer: {tier: P1, status: candidate, path: optional/evidence-viewer, category: evidence}
+  BenchmarkExplorer: {tier: P1, status: candidate, path: optional/benchmark-explorer, category: evidence}
+  DatasetCard: {tier: P1, status: candidate, path: optional/dataset-card, category: dataset}
+  FormulaBlock: {tier: P1, status: candidate, path: optional/formula, category: formula}
+  FormulaTerm: {tier: P1, status: candidate, path: optional/formula, category: formula}

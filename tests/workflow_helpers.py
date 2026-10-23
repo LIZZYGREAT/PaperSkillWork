@@ -218,6 +218,21 @@ def load_paper_module(root):
     return module
 
 
+def write_fake_kit(path, components, version=2):
+    """Write a minimal Reusable Kit whose registry declares only the given components."""
+    path.mkdir(parents=True, exist_ok=True)
+    for entry in components.values():
+        source = path.joinpath(*entry["path"].split("/"))
+        source.mkdir(parents=True, exist_ok=True)
+        (source / "Placeholder.tsx").write_text("export {};\n", encoding="utf-8")
+    (path / "KIT_VERSION").write_text("9.9.9\n", encoding="utf-8")
+    (path / "registry.yaml").write_text(
+        yaml.safe_dump({"version": version, "components": components}, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    return path
+
+
 def load_config(path):
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
