@@ -35,4 +35,4 @@
 
 生成模板不会分析原文、分配内容优先级或推进工作流阶段。只有 W2、W4、W7、W9 需要人工评审；W0、W1、W3、W5、W6、W8、W10 在对应 CLI 结构检查通过后记录 `completed_by: automation`。W6/W8 的状态记录不代表 CLI 运行了项目测试、构建、浏览器或教学验收；这些检查由 Agent 执行并单独报告。W2 新执行模型结构只在首次 W2 complete 时校验，旧已完成论文的日常 `check` 不追溯要求迁移。若 W3 的来源/证据冲突、不安全措辞或素材使用权问题尚未解决，就不能完成。
 
-`implementation-plan.md` 中非空的 `reusable_pattern` 必须匹配 `reusable-kit/registry.yaml`。持续学习项目可用 `tools/paper.py scaffold-kit <paper-id> --preset continual-learning` 复制 P0 源码，并用 `--add` 复制 W5 明确选择的 P1 组件；复制结果独立保存在论文的 `web/enhanced/src/shared/` 中。
+`implementation-plan.md` 中非空的 `reusable_pattern` 必须匹配 `reusable-kit/registry.yaml`，其 `status` 决定成熟度：`deprecated` 使检查失败，`candidate` 只产生 `[WARN]`。持续学习项目可用 `tools/paper.py scaffold-kit <paper-id> --preset continual-learning` 复制 P0 源码，并用 `--add` 复制 W5 明确选择的 P1 组件；复制结果独立保存在论文的 `web/enhanced/src/shared/` 中。复制默认只接受 `approved` 组件；当前所有组件仍是 `candidate`，因此需要显式 `--allow-unapproved`，它把复制记为未批准复用，不构成批准。
