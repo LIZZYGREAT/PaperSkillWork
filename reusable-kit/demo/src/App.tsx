@@ -17,14 +17,16 @@ import { lwfFlow, lwfResponsibilities, lwfStates } from "./data";
 import { labNavItems, lwfGraph, lwfGraphSteps, lwfNavItems, lwfObjectiveGraph } from "./figures";
 import { ewcKnowledge, lwfKnowledge } from "./knowledge";
 import { EditorialStudies, editorialSections } from "./EditorialStudies";
+import { EditorialJourney, journeySections } from "./EditorialJourney";
 
-type DemoKind = "lab" | "lwf" | "ewc" | "editorial";
+type DemoKind = "lab" | "lwf" | "ewc" | "editorial" | "journey";
 
 const choices = [
   { value: "lab" as const, label: "Component Lab", description: "Typography, controls, overlays" },
   { value: "lwf" as const, label: "LwF scenario", description: "Preserving earlier responses" },
   { value: "ewc" as const, label: "EWC scenario", description: "Protecting important parameters" },
   { value: "editorial" as const, label: "Editorial studies", description: "三种编辑构图 · 待人工评审" },
+  { value: "journey" as const, label: "Reading Journey", description: "完整阅读实验 · LwF" },
 ];
 /** LwF sections, grouped so the rail can show the reading structure. */
 const lwfGroups = [
@@ -41,15 +43,19 @@ const lwfGroups = [
 const lwfSections = lwfGroups.flatMap((group) => group.sections.map(({ id, stepId, rail }) => ({ id, stepId, title: rail })));
 
 export default function App() {
-  const [demo, setDemo] = useState<DemoKind>(() => new URLSearchParams(window.location.search).get("demo") === "editorial" ? "editorial" : "lab");
+  const [demo, setDemo] = useState<DemoKind>(() => {
+    const requested = new URLSearchParams(window.location.search).get("demo");
+    return choices.find(choice => choice.value === requested)?.value ?? "lab";
+  });
   const [activeSection, setActiveSection] = useState("lab-type-title");
   const [hubOpen, setHubOpen] = useState(false);
   const [referenceId, setReferenceId] = useState<string | null>(null);
-  const sections = demo === "lab" ? labSections : demo === "lwf" ? lwfSections : demo === "editorial" ? editorialSections : ewcSections;
+  const sections = demo === "lab" ? labSections : demo === "lwf" ? lwfSections : demo === "editorial" ? editorialSections : demo === "journey" ? journeySections : ewcSections;
   const page = demo === "lab"
     ? { number: "01", breadcrumb: "Kit foundations", eyebrow: "PAGE 01 · COMPONENT FOUNDATIONS", title: "把论文机制拆成可读、可交互的组件", description: "Reusable components for turning research methods into clear, inspectable learning experiences." }
     : demo === "lwf"
       ? { number: "02", breadcrumb: "Learning without Forgetting", eyebrow: "PAGE 02 · LEARNING WITHOUT FORGETTING" }
+      : demo === "journey" ? { number: "05", breadcrumb: "Reading Journey · 完整阅读实验", eyebrow: "PAGE 05 · READING JOURNEY" }
       : demo === "editorial"
         ? { number: "04", breadcrumb: "Editorial composition studies", eyebrow: "PAGE 04 · EDITORIAL STUDIES" }
         : { number: "03", breadcrumb: "Elastic Weight Consolidation", eyebrow: "PAGE 03 · ELASTIC WEIGHT CONSOLIDATION" };
@@ -58,6 +64,10 @@ export default function App() {
 
   useEffect(() => {
     setActiveSection(sections[0]?.id ?? "");
+    const selectedCourse = document.querySelector<HTMLElement>(".kit-sidebar__course.is-active");
+    if (selectedCourse?.parentElement) selectedCourse.parentElement.scrollLeft = selectedCourse.offsetLeft - selectedCourse.parentElement.offsetLeft;
+    const anchor = window.location.hash.slice(1);
+    if (sections.some(section => section.id === anchor)) document.getElementById(anchor)?.scrollIntoView({ block: "start" });
     const targets = sections.map((section) => document.getElementById(section.id)).filter((element): element is HTMLElement => Boolean(element));
     if (!targets.length || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver((entries) => {
@@ -70,7 +80,17 @@ export default function App() {
 
   const goToSection = (sectionId: string) => {
     setActiveSection(sectionId);
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${sectionId}`);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  };
+
+  const chooseDemo = (value: DemoKind) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("demo", value);
+    url.hash = "";
+    window.history.replaceState(null, "", url);
+    setDemo(value);
+    window.scrollTo(0, 0);
   };
 
   return <div className="kit-shell" data-visual-direction="warm">
@@ -80,7 +100,7 @@ export default function App() {
       </a>
       <nav className="kit-sidebar__courses" aria-label="Choose a learning demo">
         <p className="kit-sidebar__label">学习路径 <span>LEARNING PATH</span></p>
-        {choices.map((choice, index) => <button key={choice.value} type="button" aria-label={choice.label} aria-current={demo === choice.value ? "page" : undefined} className={`kit-sidebar__course ${demo === choice.value ? "is-active" : ""}`} onClick={() => setDemo(choice.value)}>
+        {choices.map((choice, index) => <button key={choice.value} type="button" aria-label={choice.label} aria-current={demo === choice.value ? "page" : undefined} className={`kit-sidebar__course ${demo === choice.value ? "is-active" : ""}`} onClick={() => chooseDemo(choice.value)}>
           <span className="kit-sidebar__number">{String(index + 1).padStart(2, "0")}</span><span className="kit-sidebar__course-copy"><strong>{choice.label}</strong><small>{choice.description}</small></span>
         </button>)}
       </nav>
@@ -109,7 +129,7 @@ export default function App() {
       </header>
       <main className="kit-page">
         {demo === "lab" ? <section className="kit-page__intro"><p className="kit-page__eyebrow"><span>{page.eyebrow}</span><i /> PaperSkillWork</p><h1>{page.title}</h1><p>{page.description}</p></section> : null}
-        {demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : demo === "editorial" ? <EditorialStudies /> : <EwcDemo />}
+        {demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : demo === "editorial" ? <EditorialStudies /> : demo === "journey" ? <EditorialJourney /> : <EwcDemo />}
         <footer className="kit-demo__footer">Source components are copied into each paper project by <code>tools/paper.py scaffold-kit</code>. Editing a paper's copy does not change this kit.</footer>
       </main>
     </div>
