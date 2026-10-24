@@ -206,3 +206,7 @@ Baseline 保持默认；顶端提供 Baseline / A / B 键盘可用切换，候�
 使用 runner 实际输出的准确路径 `.visual-qa/run-2026-10-24T06-00-12-382Z/report.md` 读取 JSON/Markdown 并查看候选截图后，复制六张候选精选画面到上述评审目录。精确执行 `node tools/visual-qa/cli.mjs --cleanup-run .visual-qa/run-2026-10-24T06-00-12-382Z` 退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T06-00-12-382Z`，并确认该目录 `Test-Path=False`。本轮 `reusable-kit/demo/test-results` 在检查时只含最新 `.last-run.json`，已验证其解析路径位于 Demo 内后按确切路径删除，确认目录不存在；临时检查图 `candidate-A-stage-check-1440.png` 已删除。已停止本任务启动的 4187 Vite 服务，并核对 4173 / 4175 / 4187 均无监听；保留六张精选候选图和三张 baseline 图。
 
 **本轮结论：G0 完成；baseline 仍为默认；`HUMAN_ACCEPTANCE=PENDING`，待用户比较 A/B 并反馈。**
+
+### P3 · 用户反馈微调（B 比较标题）
+
+按用户截图反馈，B 方案两条局部比较的序号改为 `I / RESPONSE`、`II / LEARNING`；第二条标题在桌面端左移约 80–112px，保留阶梯式错位，1000px 以下恢复单列自然对齐。1440px Edge 预览截图为 `.visual-qa/journey-art-direction-review/candidate-B-comparisons-title-step-1440.png`。构建通过；浏览器用例 23/23 通过（包括 I / II 文案检查）。未查看手机截图；人工选型仍待用户确认。

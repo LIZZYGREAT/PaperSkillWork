@@ -958,6 +958,10 @@ test("Reading Journey art candidates preserve the canonical mechanism and its fa
       const resultSelector = variant.id === "stage" ? ".journey-art-stage-comparison" : ".journey-art-reveal-row";
       await expect(journey.locator(`${resultSelector}[data-comparison="old"] [data-comparison-field="result"]`)).toHaveCSS("border-left-style", "solid");
       await expect(journey.locator(`${resultSelector}[data-comparison="new"] [data-comparison-field="result"]`)).toHaveCSS("border-left-style", "dashed");
+      if (variant.id === "reveal") {
+        await expect(journey.locator('.journey-art-reveal-row--old .journey-art-reveal-identity > span')).toHaveText("I / RESPONSE");
+        await expect(journey.locator('.journey-art-reveal-row--new .journey-art-reveal-identity > span')).toHaveText("II / LEARNING");
+      }
     }
   }
 

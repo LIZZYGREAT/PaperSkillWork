@@ -138,7 +138,7 @@ function StageComparisonRows({ onStepChange }: { onStepChange: (stepId: string) 
 function RevealComparisonRows() {
   return <div className="journey-art-reveal-rows" aria-label="两条参照与预测的局部关系">
     {journeyComparisonPaths.map(path => <article key={path.kind} className={`journey-art-reveal-row journey-art-reveal-row--${path.kind}`} role="group" aria-label={path.purpose} data-comparison={path.kind} data-target={path.kind === "old" ? "target" : "label"} data-prediction={path.kind === "old" ? "oldOut" : "newOut"} data-result={path.kind === "old" ? "lOld" : "lNew"}>
-      <div className="journey-art-reveal-identity"><span>{path.kind === "old" ? "01 / RESPONSE" : "02 / LEARNING"}</span><h3>{path.purpose}</h3></div>
+      <div className="journey-art-reveal-identity"><span>{path.kind === "old" ? "I / RESPONSE" : "II / LEARNING"}</span><h3>{path.purpose}</h3></div>
       <div className="journey-art-reveal-relation">
         <p className="journey-art-reveal-object" data-comparison-field="target"><small>{path.kind === "old" ? "旧响应目标 · 参照" : "当前真实标签 · 参照"}</small><strong>{path.target}</strong><span>{path.targetDetail}</span></p>
         <span className="journey-art-reveal-join">与</span>
