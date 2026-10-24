@@ -15,6 +15,10 @@ The first command is a virtual sample for isolated validation; a real paper must
 
 Scaffolding writes `papers/<paper-id>/web/enhanced/src/shared/` plus `KIT_VERSION`, keeps the source layer paths (`foundation/`, `core/`, `compositions/`, `optional/`) so internal imports resolve after the copy, and refuses to overwrite an existing `shared/` directory. Choose all desired P1 additions on the first command; the scaffold operation is copy-on-scaffold and does not merge into an existing `src/shared/`.
 
+### Independent copy verification
+
+On 2026-10-25, a fresh `kit-smoke-demo` workspace was created and scaffolded with the two commands above, then removed after verification. `npm ci` and `npm run build` passed with strict TypeScript enabled. A headless Chromium run against the production preview verified `DiagramFlow` data/gradient semantics, `StickySystemView + StepNav + FigureFrame` manual synchronization, `FormulaBlock` term selection with `PullQuote`, and the 390px no-overflow/list fallback. This is engineering evidence only: all copied items remain `candidate`, and no human visual acceptance is implied.
+
 Add the shared stylesheet once from the paper entry point, then import only the components actually used:
 
 ```tsx
