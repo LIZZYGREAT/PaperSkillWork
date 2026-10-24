@@ -214,3 +214,7 @@ Baseline 保持默认；顶端提供 Baseline / A / B 键盘可用切换，候�
 ### P4 · A 方案节点箭头可读性
 
 按用户截图反馈，A 方案主图的列间距改为 20–28px、行间距改为 10–14px；路径线与箭头提高对比度和线宽。1890px 桌面复核图为 `.visual-qa/journey-art-direction-review/candidate-A-arrows-1890.png`。构建通过；Reading Journey 视口用例 4/4 通过（1280、1440、1920、390；手机只由自动化检查，没有人工查看截图）。
+
+### P5 · A 方案温度公式展开
+
+按用户反馈，A 的宽屏温度公式改为固定位置的浮层卡片，打开和关闭均不改变双栏容器或阅读列高度，并提供显式关闭按钮；其他版式仍保留行内展开。1440px Edge 公式卡片截图为 `.visual-qa/journey-art-direction-review/candidate-A-formula-overlay-1440.png`。定向浏览器用例通过，包含公式可见性、容器高度稳定与关闭行为；同时修正 A 优化章节的样式选择器，使训练限定与温度说明样式命中实际章节类名。

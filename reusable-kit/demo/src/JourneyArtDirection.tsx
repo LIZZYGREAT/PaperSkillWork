@@ -108,10 +108,10 @@ function StudentIdentity() {
   </header>;
 }
 
-export function JourneyTrainingDetails() {
+export function JourneyTrainingDetails({ overlayFormula = false }: { overlayFormula?: boolean } = {}) {
   return <>
     <div className="journey-training-notes"><b>阶段限定</b><p data-training-phase="warm-up">原文先 warm-up：固定共享参数和旧头，只训练新增任务头；随后才联合训练三组参数。上面的场景表示联合阶段，更新式不限定论文的具体优化器。</p></div>
-    <details className="journey-temperature"><summary>温度变换如何对应刚才的旧路比较？</summary><div className="journey-temperature-content"><p>Teacher 旧目标与 Student 旧预测分别做同一温度变换，再计算旧损失。<var>p</var> 为其中任意一个概率向量。<span className="journey-nowrap" data-temperature-setting>原文采用 <var>T</var> = 2。</span></p><div className="journey-temperature-equation"><math display="block" aria-label="p prime i 等于 p i 的一除以 T 次幂，除以所有类别 j 对应幂的和"><msubsup><mi>p</mi><mi>i</mi><mo>′</mo></msubsup><mo>=</mo><mfrac><msup><msub><mi>p</mi><mi>i</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup><mrow><munder><mo>∑</mo><mi>j</mi></munder><msup><msub><mi>p</mi><mi>j</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup></mrow></mfrac></math></div></div></details>
+    <details className={`journey-temperature${overlayFormula ? " journey-temperature--overlay" : ""}`}><summary>温度变换如何对应刚才的旧路比较？</summary><div className="journey-temperature-content">{overlayFormula ? <div className="journey-temperature-popover-head"><strong>旧路比较的温度公式</strong><button type="button" aria-label="关闭温度公式" onClick={event => event.currentTarget.closest("details")?.removeAttribute("open")}>关闭</button></div> : null}<p>Teacher 旧目标与 Student 旧预测分别做同一温度变换，再计算旧损失。<var>p</var> 为其中任意一个概率向量。<span className="journey-nowrap" data-temperature-setting>原文采用 <var>T</var> = 2。</span></p><div className="journey-temperature-equation"><math display="block" aria-label="p prime i 等于 p i 的一除以 T 次幂，除以所有类别 j 对应幂的和"><msubsup><mi>p</mi><mi>i</mi><mo>′</mo></msubsup><mo>=</mo><mfrac><msup><msub><mi>p</mi><mi>i</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup><mrow><munder><mo>∑</mo><mi>j</mi></munder><msup><msub><mi>p</mi><mi>j</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup></mrow></mfrac></math></div></div></details>
   </>;
 }
 
@@ -209,7 +209,7 @@ export function JourneyArtDirection({ direction, stepId, onStepChange }: {
       <section id="journey-student" className="journey-stage-optimization" aria-labelledby="journey-student-title">
         <header className="journey-section-heading"><div><p className="journey-kicker">04 / ONE LEARNER</p><h2 id="journey-student-title">两种要求，汇成 Student 的一次更新。</h2></div><p>沿着刚才的两个损失继续：先合成联合目标，再对同一组 Student 参数求梯度。Teacher 留下参照，Student 承担学习。</p><FocusAction stepId="update" onStepChange={onStepChange}>沿图追到 Student 更新</FocusAction></header>
         <StageStudentUpdate />
-        <JourneyTrainingDetails />
+        <JourneyTrainingDetails overlayFormula />
       </section>
     </div>
   </div>;

@@ -1013,6 +1013,30 @@ test("Shared Visual Stage narrative actions focus the matching loss and Student 
   await expect(scene.locator(".is-dimmed")).toHaveCount(0);
 });
 
+test("Shared Visual Stage temperature formula opens without resizing the composition", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=journey&art=stage");
+  const stage = page.locator(".journey-art-stage");
+  const disclosure = stage.locator(".journey-temperature--overlay");
+  const bounds = () => stage.evaluate(node => ({ stage: node.getBoundingClientRect().height, reading: node.querySelector(".journey-art-stage__reading").getBoundingClientRect().height }));
+  const before = await bounds();
+
+  await disclosure.locator("summary").click();
+  await expect(disclosure).toHaveAttribute("open", "");
+  const panel = disclosure.locator(".journey-temperature-content");
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveCSS("position", "fixed");
+  await expect(panel.locator("math mfrac").first()).toBeVisible();
+  const after = await bounds();
+  expect(Math.abs(after.stage - before.stage)).toBeLessThanOrEqual(1);
+  expect(Math.abs(after.reading - before.reading)).toBeLessThanOrEqual(1);
+
+  await panel.getByRole("button", { name: "关闭温度公式" }).click();
+  await expect(disclosure).not.toHaveAttribute("open");
+  expect(Math.abs((await bounds()).stage - before.stage)).toBeLessThanOrEqual(1);
+});
+
 for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
   test(`Reading Journey candidates stay legible at ${viewport.width}`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
