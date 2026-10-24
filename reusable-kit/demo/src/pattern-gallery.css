@@ -77,9 +77,10 @@
 .pattern-gallery__scroll-step:first-child { border-top: 1px solid var(--rk-line); }
 .pattern-gallery__scroll-status { margin: 16px 0 0; color: var(--rk-muted); font-size: 13px; }
 .pattern-gallery__scroll-status strong { color: var(--rk-accent-strong); }
-.pattern-gallery__type-preview { display: grid; gap: 24px; max-width: 80ch; }
-.pattern-gallery__type-preview > p { margin: 0; }
-.pattern-gallery__type-preview .rk-formula-block { width: 100%; }
+.pattern-gallery__type-preview { display: grid; grid-template-columns: minmax(280px, .78fr) minmax(0, 1.42fr); gap: 24px clamp(24px, 3vw, 44px); align-items: start; min-width: 0; }
+.pattern-gallery__type-preview > p { grid-column: 1 / -1; margin: 0; }
+.pattern-gallery__type-preview > .rk-pullquote { grid-column: 1; grid-row: 2; }
+.pattern-gallery__type-preview .rk-formula-block { grid-column: 2; grid-row: 2; width: 100%; }
 .pattern-gallery__footer { display: grid; gap: 12px; padding: 22px 0 8px; border-top: 2px solid var(--rk-ink); }
 .pattern-gallery__footer > strong { color: var(--rk-ink); font-size: 16px; }
 .pattern-gallery__footer p { max-width: 84ch; margin: 0; color: var(--rk-muted); font-size: 14px; line-height: 1.65; }
@@ -99,6 +100,11 @@
   .pattern-gallery__scroll-demo .rk-sticky-system { grid-template-columns: minmax(0, 1fr); }
   .pattern-gallery__scroll-demo .rk-sticky-system__visual { position: static; }
   .pattern-gallery__scroll-step { min-height: 310px; scroll-margin-top: 24px; }
+}
+
+@media (max-width: 1080px) {
+  .pattern-gallery__type-preview { grid-template-columns: minmax(0, 1fr); }
+  .pattern-gallery__type-preview > .rk-pullquote, .pattern-gallery__type-preview .rk-formula-block { grid-column: 1; grid-row: auto; }
 }
 
 @media (max-width: 560px) {
