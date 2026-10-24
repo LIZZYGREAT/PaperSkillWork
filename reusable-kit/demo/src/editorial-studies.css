@@ -46,7 +46,8 @@
 .ed-study__chronicle { position: relative; list-style: none; margin: 38px 0 0; padding: 0; }
 .ed-study__chronicle::before { position: absolute; left: 50%; top: 24px; bottom: 40px; width: 1px; background: var(--ed-rule); content: ""; }
 .ed-study__moment { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); gap: 20px; padding: 24px 0; align-items: start; }
-.ed-study__moment-copy > p { margin-top: 12px; font-size: 16px; }
+.ed-study__moment-copy { min-width: 0; padding: 14px 18px; border-left: 2px solid var(--ed-accent); border-radius: 0 8px 8px 0; background: var(--rk-accent-soft); }
+.ed-study__moment-copy > p { margin-top: 10px; font-size: 16px; }
 .ed-study__moment--reverse .ed-study__moment-copy { grid-column: 3; grid-row: 1; }
 .ed-study__axis-number { grid-column: 2; grid-row: 1; justify-self: center; position: relative; padding: 4px 8px; background: var(--rk-canvas); color: var(--ed-accent); font: 600 13px/1.8 var(--rk-font-mono); }
 .ed-study__moment-visual { grid-column: 3; grid-row: 1; padding: 4px 0 12px; }
