@@ -106,14 +106,15 @@ export function EditorialStudies() {
         </aside>
         <div className="ed-study__student" aria-label="可训练 student">
           <p className="ed-study__role-label">02 / 可训练对象</p><h3>student <span>共享表示 → 两路输出</span></h3>
-          <div className="ed-study__signal"><span>旧类输出</span><p>与 teacher 的旧响应目标比较</p><strong>L<sub>old</sub></strong></div>
-          <div className="ed-study__signal"><span>新类输出</span><p>与当前任务的真实标签比较</p><strong>L<sub>new</sub></strong></div>
+          <div className="ed-study__signal" data-loss="old"><span>旧类输出</span><p>与 teacher 的旧响应目标比较</p><strong className="rk-math" data-loss-term="old"><var>L</var><sub>old</sub></strong></div>
+          <div className="ed-study__signal" data-loss="new"><span>新类输出</span><p>与当前任务的真实标签比较</p><strong className="rk-math" data-loss-term="new"><var>L</var><sub>new</sub></strong></div>
           <p className="ed-study__caption">旧路保留响应，新路学习标签；两路都经过 student 的共享表示。</p>
         </div>
       </div>
       <div className="ed-study__convergence">
-        <div><span className="ed-study__caption">两路学习信号，在目标中汇合</span><math display="block" aria-label="目标 J 等于 lambda old 乘 L old 加 L new 加 R"><mi>J</mi><mo>=</mo><msub><mi>λ</mi><mi>o</mi></msub><msub><mi>L</mi><mtext>old</mtext></msub><mo>+</mo><msub><mi>L</mi><mtext>new</mtext></msub><mo>+</mo><mi>R</mi></math></div>
-        <div className="ed-study__update"><span aria-hidden="true">↓</span><strong>只更新 student</strong><p>共享参数 + 旧任务头 + 新任务头</p></div>
+        <div><span className="ed-study__caption">两路学习信号，先组成同一个目标</span><math display="block" aria-label="目标 J 等于 lambda old 乘 L old 加 L new 加 R"><mi>J</mi><mo>=</mo><mrow data-loss="old"><msub><mi>λ</mi><mi>o</mi></msub><msub data-loss-term="old"><mi>L</mi><mtext>old</mtext></msub></mrow><mo>+</mo><msub data-loss="new" data-loss-term="new"><mi>L</mi><mtext>new</mtext></msub><mo>+</mo><mi>R</mi></math></div>
+        <div className="ed-study__gradient"><p>再对 student 的可训练参数求导</p><math display="block" aria-label="对 student 参数 theta student 求目标 J 的梯度"><msub><mo>∇</mo><msub><mi>θ</mi><mtext>student</mtext></msub></msub><mi>J</mi></math></div>
+        <div className="ed-study__update" data-update-target="student"><span aria-hidden="true">↓</span><strong>只更新 student</strong><p>共享参数 + 旧任务头 + 新任务头</p></div>
       </div>
       <p className="ed-study__caption ed-study__formula-note">机制简写，对应 LwF §3、式 (1)–(5) 的联合优化阶段：L<sub>old</sub> 使用温度变换并重新归一化的分布；λ<sub>o</sub> 为旧损失权重，R 为权重衰减。此前 warm-up 只训练新任务参数；这里不展开批次平均与完整训练流程。</p>
       <p className="ed-study__proposition">保留旧响应，<strong>不等于冻结 student。</strong></p>
