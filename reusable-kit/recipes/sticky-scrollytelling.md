@@ -61,6 +61,8 @@ export function ScrollStoryExample() {
 
 The `FigureFrame` content here is deliberately small so the synchronization contract is easy to copy. Replace the two object descriptions with the paper's actual visual and derive its state from the same `activeId` as the reading, not from a second timer.
 
+The Gallery's diagram-based variant sets `stackMinWidth={400}` so the graph remains a graph inside the two-column sticky layout when space allows, then falls back to an ordered list below that width. Tune this threshold to the width of the visual column in the consuming layout.
+
 ## Minimum Step Contract
 
 Each step needs a stable `id`, the corresponding DOM `sectionId`, a title, explanatory text, and enough paper-owned state to render the appropriate visual focus. The component API is `sections`, `visual`, and `children`; `useStickyStepSync` only supplies manual selection to controls rendered inside the view.

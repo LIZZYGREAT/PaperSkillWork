@@ -372,7 +372,7 @@ const stickyRecipeCode = [
   '  const active = steps.find(step => step.id === activeId) ?? steps[0];',
   '  const items = steps.map(step => ({ id: step.id, label: step.title }));',
   '  return <FigureFrame label="Current system state" title={active.title} footer={<StepNav items={items} activeId={activeId} onSelect={id => { onChoose(id); sync?.setManualStep(id); }} label="Choose a figure step" />}>',
-  '    <DiagramFlow spec={storySpec} focus={{ nodes: active.nodes, edges: active.edges }} label={`System view: ${active.title}`} framed={false} />',
+  '    <DiagramFlow spec={storySpec} focus={{ nodes: active.nodes, edges: active.edges }} label={`System view: ${active.title}`} framed={false} stackMinWidth={400} />',
   '  </FigureFrame>;',
   '}',
   '',
@@ -505,7 +505,7 @@ function PatternGallery() {
           <div><dt>Registry / scaffold</dt><dd><code>StickySystemView</code> · P0 · candidate。复制时显式传 <code>--allow-unapproved</code>。</dd></div>
         </dl>
       </div>
-      <CodePanel title="展开可复制的 StickySystemView 用法" code={stickyRecipeCode} source="recipes/sticky-scrollytelling.md" level="runnable" notice="完整 TSX 小样例，包含步骤数据与最小 DiagramFlow；请先在入口引入 Kit 样式。" />
+      <CodePanel title="展开可复制的 StickySystemView 用法" code={stickyRecipeCode} source="recipes/sticky-scrollytelling.md" level="runnable" notice="完整 TSX 小样例，DiagramFlow 的 400px 阈值适配双栏视口；更窄时回退为有序列表。请先在入口引入 Kit 样式。" />
       <p className="pattern-gallery__provenance">现有来源：<code>papers/lwf/web/final/src/v3/LwfVerticalSlice.tsx</code> 与 <code>styles/scrollytelling.css</code>；其 Kit 副本有 <code>readingLineRatio</code> 扩展，本 Kit API 未包含该选项。</p>
     </section>
 

@@ -95,6 +95,7 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   await stickyCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
   const stickyClipboard = await page.evaluate(() => navigator.clipboard.readText());
   expect(stickyClipboard).toContain("export function ScrollStoryExample()");
+  expect(stickyClipboard).toContain("stackMinWidth={400}");
   expect(stickyClipboard).not.toContain("renderFigure");
 
   const typographyCodePanel = page.locator("#gallery-typography .pattern-gallery__code-panel");
