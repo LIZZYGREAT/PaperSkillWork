@@ -121,3 +121,19 @@ Agent 实际查看了 1280/1440/1920 桌面整页、390 移动长图与 Student 
 第一部分：Reference Hub 上方 flex 等宽筛选与下方 0.9/1.1 两列不一致，列表还额外留出双侧滚动槽。共享样式改为同一组列宽/间距，控件占满各自列，取消列表空闲时的左右内缩；详情滚动和移动端列表/详情切换保留。`npm run build` 退出 0；`$env:HUB_REVIEW_CAPTURE='1'; npm run test:browser -- --grep 'Reference Hub filters|Chinese hover|Component Lab exposes'` 退出 0，3/3 通过。新增测试在 1280/1440/1920 下检查搜索/列表、分类/详情左右边界及两列上下边界，覆盖 Journey/EWC、空态/选中/无结果/移动返回；实际查看空态、详情与手机截图，精选保留在 `.visual-qa/editorial-journey-clarity-review/hub-{empty,selected,mobile}.png`。
 
 第二部分实施前决定：上一版虽然外框对齐，但分裂的二栏标题/引导、两个独立比较区和独立公式栏仍使阅读跳跃。03 改成共享列轴的两行比较表，直接核对要求/参照/预测/损失；04 将 Student 身份置于场景顶端，下面按来源→联合目标→更新顺序形成同一计算带，公式与其说明同轴；05 使用安静的纵向引导、连续时间线与紧凑边界结论。保留全页左右框、全部必要事实/公式、对象角色和既有入口；单独处理展开详情的图文配对与温度记号的不可拆行。
+
+实际改动：取消 03–05 固定二栏标题与强制标题断行，统一先标题再引导；03 以同一组四列贯穿两次比较，来源和预测在每行就近解释，减少分隔线；04 把来源、J、参数更新排在一条计算带，标号/表达式/注释各自共线，不再把公式放进独立的右侧隔间；05 将三条断开的短线合为连续阶段轴，并以一句较轻的命题收束，不再和主标题争夺焦点。温度详情使用说明与公式就近配对，`原文采用 T = 2。` 作为完整行内单元，正文仍能自然换行。保留 warm-up、联合训练范围、λo、R、η、参数记号差异及任务边界说明。
+
+复核 Hub 原生控件时，进一步发现 search/select 高度不同造成上沿相差数像素。补充上沿断言后先实际失败，再统一为 44px；最终在 Journey/EWC 三种桌面宽度下搜索框/列表、分类框/详情左右边界和两个控件上下沿均相差 ≤1px，移动返回与过滤仍通过。
+
+最终源码：`npm run build` 退出 0；`$env:HUB_REVIEW_CAPTURE='1'; $env:JOURNEY_REVIEW_CAPTURE='1'; npm run test:browser` 退出 0，16/16 通过。新增比较列轴、计算带说明/表达式轴线、T=2 不拆行断言，继续保留左右边界、正文行宽、数学、图谱和既有候选保护。中间一次截图采集在展开详情后留下滚动位置，修复采集起点并复跑四视口 4/4 后，最终全量再次 16/16 通过；精选长图从页首采集，避免固定顶栏出现在中段。
+
+Agent 已实际查看 1280/1440/1920 整页、1440 的 03→04 连续图、05 收尾和温度展开，以及 390 Student 和 Hub 窄屏，另查看 Hub 空态/详情。主图数据与内核、C1/C2 等正文均未修改。HUMAN_ACCEPTANCE 继续 PENDING，截图复核不是人工审美通过。
+
+统一配置新增 `temperature-detail` 和 `reference-hub` 空态/详情，沿用现有 runner，无新 QA 引擎。最终 `node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json` 退出 0，81/81 通过，GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS 均 PASS，浏览器错误 0、warning 0。已读 Markdown/JSON、核对 Journey/Hub 的 actualUrl，并查看最终 Hub 详情、Student 场景和 Editorial 基准截图。runner 的 BUILD/VISUAL_REVIEW 标记保持原样，由本记录补充实际构建与查图；无批准像素基线，REGRESSION=NOT_RUN。
+
+本轮精选证据在仓库根目录 `.visual-qa/editorial-journey-clarity-review/`：`hub-empty.png`、`hub-selected.png`、`hub-mobile.png`，`journey-full-1280.png`、`journey-full-1440.png`、`journey-full-1920.png`、`journey-full-390.png`，`paths-student-1440.png`、`handoff-1440.png`、`temperature-1440.png`，以及原样报告 `visual-qa-report.json/md`。这是本轮最终结果，历史目录未覆盖。
+
+真实 `Report:` 输出：中间检查 `.visual-qa/run-2026-10-24T04-51-50-413Z/report.md`（81/81 通过，后补控件上沿修复），最终检查 `.visual-qa/run-2026-10-24T04-58-04-047Z/report.md`（同一最终源码 81/81）。中间报告已读和查图后精确清理，退出 0，确认 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-51-50-413Z` 且目录不存在；最终报告父目录也按同一规则清理。
+
+最终清理退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-58-04-047Z`，验证目录不存在；本轮原生 `reusable-kit/demo/test-results` 已按准确绝对路径删除并验证不存在。4173/4175 无遗留监听，保留上述 10 张精选截图与原报告。

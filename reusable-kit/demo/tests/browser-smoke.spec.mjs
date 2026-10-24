@@ -13,7 +13,7 @@ test("Reference Hub filters and reading columns share both boundaries", async ({
         const box = selector => root.querySelector(selector).getBoundingClientRect();
         const search = box('input[type="search"]'), list = box('.rk-reference-hub__list');
         const category = box('select'), detail = box('.rk-reference-hub__detail');
-        return [search.left - list.left, search.right - list.right, category.left - detail.left, category.right - detail.right, search.bottom - category.bottom, list.top - detail.top];
+        return [search.left - list.left, search.right - list.right, category.left - detail.left, category.right - detail.right, search.top - category.top, search.bottom - category.bottom, list.top - detail.top];
       });
       expect(offsets.every(offset => Math.abs(offset) <= 1)).toBe(true);
       if (width === 1440 && process.env.HUB_REVIEW_CAPTURE) await drawer.screenshot({ path: testInfo.outputPath(`hub-${demo}-empty.png`) });
@@ -127,10 +127,26 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900
     const proseWidths = await journey.locator(".journey-section-heading > p, .journey-comparison-note, .journey-boundary-note").evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().width));
     expect(proseWidths.every(width => width <= 700)).toBe(true);
     if (viewport.width >= 1280) {
-      for (const selector of [".journey-comparison-lanes", ".journey-student", ".journey-closing"]) {
-        expect(await journey.locator(selector).evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(2);
-      }
+      expect(await journey.locator(".journey-calculation").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(3);
+      const rowAxes = await journey.locator(".journey-comparison-head, .journey-comparison").evaluateAll(rows => rows.map(row => [...row.children].map(cell => cell.getBoundingClientRect().left)));
+      expect(rowAxes).toHaveLength(3);
+      for (const axes of rowAxes.slice(1)) expect(axes.every((x, index) => Math.abs(x - rowAxes[0][index]) <= 1)).toBe(true);
+      const stageAxes = await journey.locator(".journey-calculation-stage").evaluateAll(stages => stages.map(stage => ({ label: stage.querySelector(".journey-calculation-label").getBoundingClientRect(), body: stage.querySelector(".journey-stage-body").getBoundingClientRect() })).map(({ label, body }) => ({ left: label.left - body.left, top: body.top })));
+      expect(stageAxes.every(axis => Math.abs(axis.left) <= 1 && Math.abs(axis.top - stageAxes[0].top) <= 1)).toBe(true);
     }
+    const temperature = journey.locator(".journey-temperature");
+    await temperature.locator("summary").click();
+    const setting = temperature.locator("[data-temperature-setting]");
+    await expect(setting).toHaveText("原文采用 T = 2。");
+    expect(await setting.evaluate(node => {
+      const bounds = node.getBoundingClientRect(), parent = node.parentElement.getBoundingClientRect();
+      return getComputedStyle(node).whiteSpace === "nowrap" && bounds.left >= parent.left - 1 && bounds.right <= parent.right + 1;
+    })).toBe(true);
+    if (process.env.JOURNEY_REVIEW_CAPTURE && viewport.width === 1440) {
+      await page.evaluate(() => scrollTo(0, 0));
+      await page.screenshot({ path: testInfo.outputPath("temperature-1440.png"), fullPage: true, clip: await temperature.boundingBox() });
+    }
+    await temperature.locator("summary").click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const diagram = journey.locator(".rk-diagram");
     await expect(diagram).toHaveAttribute("data-diagram-mode", viewport.width === 390 ? "list" : "grid");
@@ -149,6 +165,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900
     }
     if (process.env.JOURNEY_REVIEW_CAPTURE) {
       const capture = (name, options = {}) => page.screenshot({ path: testInfo.outputPath(`${name}-${viewport.width}.png`), ...options });
+      await page.evaluate(() => scrollTo(0, 0));
       await capture("journey-full", { fullPage: true });
       if (viewport.width === 390) {
         await capture("mobile-opening");

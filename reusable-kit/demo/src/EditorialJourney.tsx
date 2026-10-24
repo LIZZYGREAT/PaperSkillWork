@@ -52,41 +52,44 @@ export function EditorialJourney() {
     </section>
 
     <section id="journey-paths" className="journey-paths" aria-labelledby="journey-paths-title">
-      <header className="journey-section-heading"><div><p className="journey-kicker">03 / TWO COMPARISONS</p><h2 id="journey-paths-title">两次比较，<br />参照各有来处。</h2></div><p>Teacher 在当前输入上留下<strong className="journey-inline-emphasis">旧响应目标</strong>。Student 旧头给出的预测要接近它；新头则面对当前任务的真实标签。两路预测来自同一份 Student 共享表示，但监督来源不同。</p></header>
+      <header className="journey-section-heading"><div><p className="journey-kicker">03 / TWO COMPARISONS</p><h2 id="journey-paths-title">两次比较，参照各有来处。</h2></div><p>同一份 Student 共享表示分出两个输出头：旧头对照 Teacher 留下的<strong className="journey-inline-emphasis">旧响应目标</strong>，新头对照当前任务的真实标签。先分清每次比较的来源与结果。</p></header>
       <div className="journey-comparison-lanes">
-        <div className="journey-comparison-lane">
-          <div className="journey-comparison" data-comparison="old" data-target="target" data-prediction="oldOut" data-result="lOld"><p><span>固定参照</span>Teacher 旧响应目标</p><span className="journey-compare-sign" aria-label="与预测比较">↔</span><p><span>Student 预测</span>旧类输出</p><p className="journey-comparison-result"><Loss kind="old" /><small>旧响应偏差</small></p></div>
-          <p className="journey-comparison-note">比较前，两边概率都经过温度变换并重新归一化，再计算蒸馏交叉熵。它保留的是响应关系，并不把 Student 的旧参数锁住。</p>
+        <div className="journey-comparison-head" aria-hidden="true"><span>学习要求</span><span>比较的参照</span><span>Student 的预测</span><span>得到的损失</span></div>
+        <div className="journey-comparison" role="group" aria-label="旧响应比较" data-comparison="old" data-target="target" data-prediction="oldOut" data-result="lOld">
+          <p className="journey-comparison-purpose"><strong>保留旧响应</strong></p>
+          <p data-comparison-field="target"><span>比较的参照</span>Teacher 旧响应目标<small>在当前新任务图像上预先记录</small></p>
+          <p data-comparison-field="prediction"><span>Student 的预测</span>旧类输出<small>来自 Student 旧任务头</small></p>
+          <p className="journey-comparison-result" data-comparison-field="result"><Loss kind="old" /><small>旧响应偏差</small></p>
         </div>
-        <div className="journey-comparison-lane">
-          <div className="journey-comparison" data-comparison="new" data-target="label" data-prediction="newOut" data-result="lNew"><p><span>真实监督</span>当前任务标签</p><span className="journey-compare-sign" aria-label="与预测比较">↔</span><p><span>Student 预测</span>新类输出</p><p className="journey-comparison-result"><Loss kind="new" /><small>新任务分类误差</small></p></div>
-          <p className="journey-comparison-note">这里用新标签与新头概率计算分类交叉熵。两个损失各自成立后，还需要共同约束同一个学习者。</p>
+        <div className="journey-comparison" role="group" aria-label="新任务比较" data-comparison="new" data-target="label" data-prediction="newOut" data-result="lNew">
+          <p className="journey-comparison-purpose"><strong>学会新任务</strong></p>
+          <p data-comparison-field="target"><span>比较的参照</span>当前任务真实标签<small>只监督新类输出</small></p>
+          <p data-comparison-field="prediction"><span>Student 的预测</span>新类输出<small>来自 Student 新任务头</small></p>
+          <p className="journey-comparison-result" data-comparison-field="result"><Loss kind="new" /><small>新任务分类误差</small></p>
         </div>
       </div>
-      <p className="journey-target-note"><b>目标的出处</b><span>Teacher 的响应来自当前新任务图像，而非重新读取旧训练集；原文先记录这些响应，训练时可直接读取。</span></p>
+      <div className="journey-comparison-notes"><p className="journey-comparison-note"><b>旧路比较响应。</b>两边概率先经过温度变换并重新归一化，再计算蒸馏交叉熵；约束的是响应关系，而非冻结 Student 的旧参数。Teacher 目标不需要重新读取旧训练集。</p><p className="journey-comparison-note"><b>新路比较标签。</b>真实标签与新头概率计算分类交叉熵。两个损失各自成立后，下一步才是让它们共同约束同一个学习者。</p></div>
     </section>
 
     <section id="journey-student" className="journey-optimization" aria-labelledby="journey-student-title">
-      <header className="journey-section-heading"><div><p className="journey-kicker">04 / ONE LEARNER</p><h2 id="journey-student-title">把两种要求，<br />交给同一个 Student。</h2></div><p>比较已经完成。现在将它们写入联合目标，让保留旧响应和学习新任务共同影响参数。</p></header>
+      <header className="journey-section-heading"><div><p className="journey-kicker">04 / ONE LEARNER</p><h2 id="journey-student-title">两种要求，汇成 Student 的一次更新。</h2></div><p>沿着刚才的两个损失继续：先合成联合目标，再对同一组 Student 参数求梯度。Teacher 留下参照，Student 承担学习。</p></header>
       <div className="journey-student" data-role="student" data-state="trainable" data-stage="joint">
-        <div className="journey-student-identity">
-          <header><span className="journey-kicker">TRAINABLE · 联合优化阶段</span><h3>Student</h3><p data-parameter-definition>{theta} 统称此处的共享表示、旧任务头和新任务头参数；原文的同名记号只指共享参数。</p></header>
-          <div className="journey-loss-inputs"><p data-loss-source="old"><Loss kind="old" /><span>承接旧目标 ↔ 旧预测</span></p><p data-loss-source="new"><Loss kind="new" /><span>承接真实标签 ↔ 新预测</span></p></div>
-          <p className="journey-student-conclusion" data-update-target="student">两路损失，都改变 Student。<span data-role="teacher" data-state="frozen">Teacher 始终冻结，只提供参照。</span></p>
+        <header className="journey-student-identity"><div><span className="journey-kicker">TRAINABLE · 联合优化阶段</span><h3>Student</h3></div><p data-parameter-definition>{theta} 统称此处的共享表示、旧任务头和新任务头参数；原文的同名记号只指共享参数。</p></header>
+        <div className="journey-calculation">
+          <div className="journey-calculation-stage"><p className="journey-calculation-label">01 · 两路比较结果</p><div className="journey-stage-body journey-loss-inputs"><span data-loss-source="old"><Loss kind="old" /></span><span className="journey-source-join">与</span><span data-loss-source="new"><Loss kind="new" /></span></div><p className="journey-calculation-note">分别来自旧路比较与新路比较</p></div>
+          <div className="journey-calculation-stage"><p className="journey-calculation-label">02 · 合成联合目标</p><div className="journey-stage-body"><math display="block" data-equation="objective" aria-label="联合目标 J 等于 lambda o 乘 L old 加 L new 加 R"><mi>J</mi><mo>=</mo><msub><mi>λ</mi><mi>o</mi></msub><msub><mi>L</mi><mtext>old</mtext></msub><mo>+</mo><msub><mi>L</mi><mtext>new</mtext></msub><mo>+</mo><mi>R</mi></math></div><p className="journey-calculation-note"><span className="journey-nowrap"><var>λ</var><sub>o</sub>：旧损失权重</span>；<span className="journey-nowrap"><var>R</var>：权重衰减</span></p></div>
+          <div className="journey-calculation-stage"><p className="journey-calculation-label">03 · 更新 Student 参数</p><div className="journey-stage-body"><math display="block" data-equation="parameter-update" aria-label="theta s 赋值为 theta s 减 eta 乘 J 对 theta s 的梯度"><msub><mi>θ</mi><mi>s</mi></msub><mo>←</mo><msub><mi>θ</mi><mi>s</mi></msub><mo>−</mo><mi>η</mi><msub><mo>∇</mo><msub><mi>θ</mi><mi>s</mi></msub></msub><mi>J</mi></math></div><p className="journey-calculation-note">梯度下降教学示意；<var>η</var> 为步长</p></div>
         </div>
-        <div className="journey-equations">
-          <div><p>联合目标 / 两种要求在这里汇合</p><math display="block" data-equation="objective" aria-label="联合目标 J 等于 lambda o 乘 L old 加 L new 加 R"><mi>J</mi><mo>=</mo><msub><mi>λ</mi><mi>o</mi></msub><msub><mi>L</mi><mtext>old</mtext></msub><mo>+</mo><msub><mi>L</mi><mtext>new</mtext></msub><mo>+</mo><mi>R</mi></math></div>
-          <div><p>参数更新 / 梯度下降教学示意</p><math display="block" data-equation="parameter-update" aria-label="theta s 赋值为 theta s 减 eta 乘 J 对 theta s 的梯度"><msub><mi>θ</mi><mi>s</mi></msub><mo>←</mo><msub><mi>θ</mi><mi>s</mi></msub><mo>−</mo><mi>η</mi><msub><mo>∇</mo><msub><mi>θ</mi><mi>s</mi></msub></msub><mi>J</mi></math></div>
-        </div>
+        <p className="journey-student-conclusion" data-update-target="student">两路损失，都改变 Student。<span data-role="teacher" data-state="frozen">Teacher 始终冻结，只提供参照。</span></p>
       </div>
-      <div className="journey-training-notes"><p data-training-phase="warm-up"><b>先 warm-up，再联合训练。</b>原文先固定共享参数和旧头，只训练新增任务头；随后才联合训练三组参数。上面的场景表示后一个阶段。</p><p><b>保留数学条件。</b><var>λ</var><sub>o</sub> 控制旧损失权重，<var>R</var> 是权重衰减正则项；<var>η</var> 为教学更新式的步长，不限定具体优化器。</p></div>
-      <details className="journey-temperature"><summary>温度变换如何对应刚才的旧路比较？</summary><p>对 Teacher 旧目标与 Student 旧预测分别应用下式（<var>p</var> 为其中任意一个概率向量），再计算旧损失。原文采用 <var>T</var> = 2。</p><math display="block" aria-label="p prime i 等于 p i 的一除以 T 次幂，除以所有类别 j 对应幂的和"><msubsup><mi>p</mi><mi>i</mi><mo>′</mo></msubsup><mo>=</mo><mfrac><msup><msub><mi>p</mi><mi>i</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup><mrow><munder><mo>∑</mo><mi>j</mi></munder><msup><msub><mi>p</mi><mi>j</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup></mrow></mfrac></math></details>
+      <div className="journey-training-notes"><b>阶段限定</b><p data-training-phase="warm-up">原文先 warm-up：固定共享参数和旧头，只训练新增任务头；随后才联合训练三组参数。上面的场景表示联合阶段，更新式不限定论文的具体优化器。</p></div>
+      <details className="journey-temperature"><summary>温度变换如何对应刚才的旧路比较？</summary><div className="journey-temperature-content"><p>Teacher 旧目标与 Student 旧预测分别做同一温度变换，再计算旧损失。<var>p</var> 为其中任意一个概率向量。<span className="journey-nowrap" data-temperature-setting>原文采用 <var>T</var> = 2。</span></p><div className="journey-temperature-equation"><math display="block" aria-label="p prime i 等于 p i 的一除以 T 次幂，除以所有类别 j 对应幂的和"><msubsup><mi>p</mi><mi>i</mi><mo>′</mo></msubsup><mo>=</mo><mfrac><msup><msub><mi>p</mi><mi>i</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup><mrow><munder><mo>∑</mo><mi>j</mi></munder><msup><msub><mi>p</mi><mi>j</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup></mrow></mfrac></math></div></div></details>
     </section>
 
     <section id="journey-handoff" className="journey-handoff" aria-labelledby="journey-handoff-title">
-      <header className="journey-section-heading"><div><p className="journey-kicker">05 / AT THE TASK BOUNDARY</p><h2 id="journey-handoff-title">更新在任务内，<br />交接在任务之间。</h2></div><p>本轮联合训练改变 Student 的共享表示与两个任务头；固定 Teacher 不随每次梯度更新同步变化。训练结束后，学好的模型保留下来，成为下一任务的旧模型参照。</p></header>
+      <header className="journey-section-heading"><div><p className="journey-kicker">05 / AT THE TASK BOUNDARY</p><h2 id="journey-handoff-title">更新在任务内，交接在任务之间。</h2></div><p>本轮联合训练改变 Student 的共享表示与两个任务头；固定 Teacher 不随每次梯度更新同步变化。训练结束后，学好的模型保留下来，成为下一任务的旧模型参照。</p></header>
       <ol className="journey-timeline"><li><span>本任务内</span><strong>Teacher 固定</strong><small>Student 持续学习</small></li><li><span>任务边界</span><strong>保留训练后的模型</strong><small>既有头一起继承</small></li><li><span>下一任务开始</span><strong>在新输入上记录旧响应</strong><small>加入新头，再开始训练</small></li></ol>
-      <div className="journey-closing"><p className="journey-proposition">留下旧行为的参照，<br />让同一个学习者继续改变。</p><p className="journey-boundary-note">下一任务继承的是模型；旧响应目标要在下一份输入上重新生成。当前任务缓存的响应并不是适用于所有未来样本的记忆库，保留效果也受新旧数据分布关系影响。</p></div>
+      <div className="journey-closing"><p className="journey-proposition">下一任务继承的是模型。</p><p className="journey-boundary-note">旧响应目标要在下一份输入上重新生成。当前任务缓存的响应并不是适用于所有未来样本的记忆库，保留效果也受新旧数据分布关系影响。</p></div>
       <p className="journey-source">机制依据：<a href="https://arxiv.org/abs/1606.09282v3">Li &amp; Hoiem · Learning without Forgetting, v3</a>，§3，Eq.(1)–(4)，Fig.3；顺序任务见 §4.3。Teacher / Student 为本页教学命名，系统地图为机制示意。</p>
     </section>
   </article>;

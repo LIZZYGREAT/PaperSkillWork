@@ -325,7 +325,7 @@
 .rk-reference-hub__filters { display: grid; grid-template-columns: var(--rk-reference-columns); align-items: end; gap: var(--rk-reference-gap); }
 .rk-reference-hub__heading h2 { margin: 0; } .rk-reference-hub__heading p { margin: 4px 0 0; color: var(--rk-muted); }
 .rk-reference-hub__filters label { display: grid; min-width: 0; gap: 6px; }
-.rk-reference-hub__filters input, .rk-reference-hub__filters select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 42px; padding: 8px 10px; border: 1px solid var(--rk-line); border-radius: 8px; background: var(--rk-surface); color: inherit; font: inherit; }
+.rk-reference-hub__filters input, .rk-reference-hub__filters select { box-sizing: border-box; width: 100%; min-width: 0; height: 44px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--rk-line); border-radius: 8px; background: var(--rk-surface); color: inherit; font: inherit; }
 .rk-reference-hub__grid { display: grid; grid-template-columns: var(--rk-reference-columns); grid-template-rows: minmax(0, 1fr); gap: var(--rk-reference-gap); height: min(70vh, 760px); min-height: 320px; max-height: min(70vh, 760px); overflow: hidden; }
 .rk-reference-hub__list { display: grid; align-content: start; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .rk-reference-hub__list, .rk-reference-hub__detail { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable both-edges; scrollbar-width: thin; }

@@ -342,12 +342,36 @@
           ]
         },
         {
+          "id": "temperature-detail",
+          "actions": [
+            { "type": "click", "selector": ".journey-temperature summary" },
+            { "type": "scrollIntoView", "selector": ".journey-temperature" }
+          ]
+        },
+        {
           "id": "task-handoff",
           "actions": [
             {
               "type": "scrollIntoView",
               "selector": "#journey-handoff"
             }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reference-hub",
+      "path": "/?demo=journey",
+      "states": [
+        {
+          "id": "hub-empty",
+          "actions": [{ "type": "click", "selector": ".kit-topbar__hub" }]
+        },
+        {
+          "id": "hub-selected",
+          "actions": [
+            { "type": "click", "selector": ".kit-topbar__hub" },
+            { "type": "click", "selector": ".rk-reference-hub__list [data-reference-id='teacher']" }
           ]
         }
       ]
