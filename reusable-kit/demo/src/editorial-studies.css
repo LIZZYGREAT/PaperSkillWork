@@ -35,7 +35,7 @@
 .ed-study__b-heading > p { max-width: 28em; }
 .ed-study__stage-control { margin-top: 28px; }
 .ed-study__stage-control-label { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 20px; margin-bottom: 12px; font-size: 14px; }
-.ed-study .ed-study__stage-control .rk-step-nav__button { display: flex; justify-content: center; align-items: center; text-align: center; }
+.ed-study .ed-study__stage-control .rk-step-nav__button { display: flex; justify-content: flex-start; align-items: center; text-align: left; }
 .ed-study__ledger { margin-top: 16px; padding: 16px 0; border-block: 1px solid var(--ed-rule); font-size: 14px; }
 .ed-study__ledger-task { color: var(--ed-accent); font-weight: 650; }
 .ed-study__ledger dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin: 10px 0 0; }
