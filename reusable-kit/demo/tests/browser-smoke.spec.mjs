@@ -1,28 +1,76 @@
 import { expect, test } from "@playwright/test";
 
-test("editorial studies preserve the EWC handoff and keyboard reset", async ({ page }) => {
+test("editorial studies preserve the EWC handoff and keyboard reset", async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  if (process.env.EDITORIAL_REVIEW_CAPTURE) await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?demo=editorial");
   const study = page.locator(".ed-study");
   const ledger = study.locator(".ed-study__ledger");
   const nav = study.getByRole("list", { name: "检查 EWC 交接阶段" });
+  const stageIds = ["learn-a", "save", "estimate", "use-b"];
+  const titles = ["先完成任务 A", "把参考位置留下", "再估计重要性", "在任务 B 中读取"];
+  const captureHandoff = async (id) => {
+    if (!process.env.EDITORIAL_REVIEW_CAPTURE) return;
+    const scrollBefore = await page.evaluate(() => scrollY);
+    await page.evaluate(() => scrollTo(0, 0));
+    const box = await page.locator("#ed-b").boundingBox();
+    await page.screenshot({ fullPage: true, clip: box, path: testInfo.outputPath(`ed-b-${id}-1440.png`) });
+    await page.evaluate(y => scrollTo(0, y), scrollBefore);
+  };
+  const checkChronicle = async (index) => {
+    const moments = study.locator(".ed-study__chronicle > li");
+    await expect(study.locator(".ed-study__chronicle > li[aria-current='step']")).toHaveCount(1);
+    for (let i = 0; i < stageIds.length; i++) {
+      const row = moments.nth(i);
+      await expect(row).toHaveAttribute("data-stage", stageIds[i]);
+      await expect(row).toHaveAttribute("data-phase", i === index ? "current" : i < index ? "completed" : "upcoming");
+      await expect(row.locator("h3")).toHaveText(titles[i]);
+      await expect(row.locator(".ed-study__phase-label")).toHaveText(i === index ? "当前阶段" : i < index ? "已完成" : "后续预览");
+      await expect(row.locator(".ed-study__moment-copy")).toBeVisible();
+      await expect(row.locator(".ed-study__moment-visual")).toBeVisible();
+      // Current focus covers the narrative title and state expression, not only a numbered marker.
+      expect(await row.locator("h3").evaluate(n => getComputedStyle(n).textDecorationLine.includes("underline"))).toBe(i === index);
+      if (i === index) {
+        expect(await row.locator(".ed-study__moment-visual [data-state-object]").evaluateAll(nodes => nodes.length > 0 && nodes.every(n => getComputedStyle(n).textDecorationLine.includes("underline")))).toBe(true);
+      }
+      if (i > index) {
+        const decorations = await row.locator("[data-state-object='importance']").evaluateAll(nodes => nodes.map(n => getComputedStyle(n).textDecorationLine));
+        expect(decorations.every(d => !d.includes("underline"))).toBe(true);
+      }
+    }
+    const available = ledger.locator("dl > div");
+    await expect(available.first()).toHaveAttribute("data-availability", index === 0 ? "generated" : "stored");
+    await expect(available.last()).toHaveAttribute("data-availability", index < 2 ? "unavailable" : "stored");
+    expect(await moments.locator(".ed-study__moment-visual").evaluateAll(nodes => nodes.every(n => getComputedStyle(n).transitionDuration === "0s"))).toBe(true);
+  };
   await expect(ledger).toHaveAttribute("data-stage", "learn-a");
   await expect(ledger.locator("dd")).toHaveText(["已生成 · 尚未保存副本", "尚未估计"]);
+  await checkChronicle(0);
+  await captureHandoff("learn-a");
+  await nav.scrollIntoViewIfNeeded();
   for (const [id, values, task] of [
     ["save", ["已保存 · 后续保持固定", "尚未估计"], "B 尚未开始"],
     ["estimate", ["继承已保存副本", "由 A 估计并保存"], "B 尚未开始"],
     ["use-b", ["读取已保存副本", "读取 A 的重要性"], "B 训练中 · θ 可更新"],
   ]) {
+    const scrollBefore = await page.evaluate(() => scrollY);
     await nav.locator(`[data-step-id='${id}']`).click();
+    expect(await page.evaluate(() => scrollY)).toBeCloseTo(scrollBefore, 0);
     await expect(ledger).toHaveAttribute("data-stage", id);
     await expect(ledger.locator("dd")).toHaveText(values);
     await expect(ledger.locator(".ed-study__ledger-task")).toHaveText(task);
-    await expect(study.locator(".ed-study__chronicle > li[aria-current='step']")).toHaveCount(1);
+    await checkChronicle(stageIds.indexOf(id));
+    if (["estimate", "use-b"].includes(id)) await captureHandoff(id);
   }
   // A backward selection restores availability; it must not retain future Fisher state.
   await nav.locator("[data-step-id='save']").focus();
   await page.keyboard.press("Enter");
   await expect(ledger.locator("dd").last()).toHaveText("尚未估计");
+  await checkChronicle(1);
+  for (const index of [3, 0, 2, 1]) {
+    await nav.locator(`[data-step-id='${stageIds[index]}']`).click();
+    await checkChronicle(index);
+  }
   const reset = study.getByRole("button", { name: "重置交接" });
   await reset.focus();
   await page.keyboard.press("Tab");
@@ -35,15 +83,17 @@ test("editorial studies preserve the EWC handoff and keyboard reset", async ({ p
   await page.keyboard.press("Space");
   await expect(ledger).toHaveAttribute("data-stage", "learn-a");
   await expect(ledger.locator("dd")).toHaveText(["已生成 · 尚未保存副本", "尚未估计"]);
+  await checkChronicle(0);
   // Returning to an existing demo after the experiment preserves its independent state.
   await page.getByRole("button", { name: "EWC scenario", exact: true }).click();
   await expect(study).toHaveCount(0);
   await expect(page.locator(".kit-ewc-panel")).toHaveAttribute("data-focus-step", "old");
 });
 
-test("editorial compositions reflow at every requested viewport with readable mathematics", async ({ page }) => {
+test("editorial compositions reflow at every requested viewport with readable mathematics", async ({ page }, testInfo) => {
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
+  page.on("console", msg => { if (msg.type() === "error") errors.push(msg.text()); });
   await page.goto("/?demo=editorial#ed-c");
   await expect(page.locator("#ed-c-title")).toBeInViewport();
   await page.goto("/");
@@ -56,7 +106,7 @@ test("editorial compositions reflow at every requested viewport with readable ma
       await expect(page).toHaveURL(new RegExp(`#${id}$`));
       const diagnostics = await page.locator(`#${id}`).evaluate(section => {
         const box = section.getBoundingClientRect();
-        const nodes = [...section.querySelectorAll("h2, h3, p, math, .ed-study__weight, .rk-step-nav__label")];
+        const nodes = [...section.querySelectorAll("h2, h3, p, math, .ed-study__weight, .rk-step-nav__label, .ed-study__signal strong")];
         return {
           pageOverflow: document.documentElement.scrollWidth > innerWidth,
           bad: nodes.flatMap(n => {
@@ -64,11 +114,45 @@ test("editorial compositions reflow at every requested viewport with readable ma
             return r.left < box.left - 1 || r.right > box.right + 1 || n.scrollWidth > n.clientWidth + 1 || s.textOverflow === "ellipsis" || parseFloat(s.fontSize) < 12 ? [n.textContent] : [];
           }),
           sizes: [...section.querySelectorAll("math")].map(n => parseFloat(getComputedStyle(n).fontSize)),
+          clippedMath: [...section.querySelectorAll("math msub, math msubsup, math mfrac")].filter(n => {
+            const r = n.getBoundingClientRect(), m = n.closest("math").getBoundingClientRect();
+            return r.left < m.left - 1 || r.right > m.right + 1 || r.top < m.top - 1 || r.bottom > m.bottom + 1;
+          }).map(n => n.textContent),
         };
       });
       expect(diagnostics.pageOverflow, `${width}/${id}`).toBe(false);
       expect(diagnostics.bad, `${width}/${id}`).toEqual([]);
       expect(diagnostics.sizes.every(n => n >= 18)).toBe(true);
+      expect(diagnostics.clippedMath, `${width}/${id} mathematical bounds`).toEqual([]);
+      if (id === "ed-a") {
+        const emphasis = page.locator("#ed-a strong.ed-study__emphasis");
+        await expect(emphasis).toHaveText("并非所有参数，都应被同等保护。");
+        const reading = await emphasis.evaluate(n => {
+          const p = n.parentElement, bounds = p.getBoundingClientRect(), s = getComputedStyle(p);
+          const walker = document.createTreeWalker(n, NodeFilter.SHOW_TEXT), lines = [];
+          const range = document.createRange();
+          for (let text = walker.nextNode(); text; text = walker.nextNode()) for (let i = 0; i < text.length; i++) {
+            range.setStart(text, i); range.setEnd(text, i + 1);
+            const r = range.getBoundingClientRect();
+            let line = lines.find(l => Math.abs(l.top - r.top) < 1);
+            if (!line) { line = { top: r.top, count: 0 }; lines.push(line); }
+            line.count++;
+          }
+          range.selectNodeContents(n);
+          return { ratio: parseFloat(getComputedStyle(n).fontSize) / parseFloat(s.fontSize),
+            badRects: [...range.getClientRects()].filter(r => r.left < bounds.left - 1 || r.right > bounds.right + 1 || r.height > parseFloat(s.lineHeight) * 1.15).length,
+            lastLineChars: lines.at(-1).count };
+        });
+        expect(reading.ratio).toBeGreaterThanOrEqual(1.10);
+        expect(reading.ratio).toBeLessThanOrEqual(1.18);
+        expect(reading.badRects).toBe(0);
+        expect(reading.lastLineChars).toBeGreaterThan(2);
+      }
+      if (process.env.EDITORIAL_REVIEW_CAPTURE && [1440, 390].includes(width)) {
+        await page.evaluate(() => scrollTo(0, 0));
+        const box = await page.locator(`#${id}`).boundingBox();
+        await page.screenshot({ fullPage: true, clip: box, path: testInfo.outputPath(`${id}-${width}.png`) });
+      }
     }
     await page.locator("#ed-b [data-step-id='use-b']").click();
     await expect(page.locator(".ed-study__ledger")).toHaveAttribute("data-stage", "use-b");
@@ -88,6 +172,25 @@ test("editorial compositions reflow at every requested viewport with readable ma
   await expect(page.locator("#ed-b math msup")).toHaveCount(1);
   await expect(page.locator("#ed-c .ed-study__teacher")).toContainText("不接收梯度");
   await expect(page.locator("#ed-c .ed-study__signal")).toHaveCount(2);
+  for (const [loss, target] of [["old", "与 teacher 的旧响应目标比较"], ["new", "与当前任务的真实标签比较"]]) {
+    const comparison = page.locator(`#ed-c .ed-study__signal[data-loss='${loss}']`);
+    const term = page.locator(`#ed-c .ed-study__convergence math [data-loss-term='${loss}']`);
+    await expect(comparison.locator("p")).toHaveText(target);
+    await expect(comparison.locator("[data-loss-term] sub")).toHaveText(loss);
+    await expect(term.locator("mi")).toHaveText("L");
+    await expect(term.locator("mtext")).toHaveText(loss);
+    // The same symbol and visual cue continue from each comparison to its actual MathML term.
+    const cue = await comparison.locator("strong").evaluate(n => ({ ink: getComputedStyle(n).color, rule: getComputedStyle(n).borderBottomStyle }));
+    const formulaCue = await term.evaluate(n => {
+      const s = getComputedStyle(n.closest("[data-loss]"));
+      return { ink: s.color, rule: s.borderBottomStyle };
+    });
+    expect(formulaCue).toEqual(cue);
+  }
+  await expect(page.locator("#ed-c .ed-study__convergence > div:first-child math")).toHaveText("J=λoLold+Lnew+R");
+  await expect(page.locator("#ed-c .ed-study__gradient math msub")).toHaveCount(2);
+  await expect(page.locator("#ed-c .ed-study__gradient")).toContainText("再对 student 的可训练参数求导");
+  await expect(page.locator("#ed-c .ed-study__formula-note")).toContainText("warm-up 只训练新任务参数");
   await expect(page.locator("#ed-c .ed-study__update")).toContainText("只更新 student");
   expect(errors).toEqual([]);
 });

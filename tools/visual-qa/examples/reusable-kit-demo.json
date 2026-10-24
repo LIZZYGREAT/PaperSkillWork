@@ -166,6 +166,82 @@
           ]
         }
       ]
+    },
+    {
+      "id": "editorial-studies",
+      "path": "/?demo=editorial",
+      "computedStyles": [
+        {
+          "selector": ".ed-study__emphasis",
+          "property": "font-size",
+          "equals": "19.38px"
+        },
+        {
+          "selector": ".ed-study .ed-study__stage-control .rk-step-nav__button",
+          "property": "align-items",
+          "equals": "center"
+        },
+        {
+          "selector": ".ed-study .ed-study__stage-control .rk-step-nav__button",
+          "property": "text-align",
+          "equals": "left"
+        }
+      ],
+      "states": [
+        {
+          "id": "ed-a-default",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#ed-a"
+            }
+          ]
+        },
+        {
+          "id": "ed-b-learn-a",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#ed-b"
+            }
+          ]
+        },
+        {
+          "id": "ed-b-estimate",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "#ed-b [data-step-id='estimate']"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#ed-b"
+            }
+          ]
+        },
+        {
+          "id": "ed-b-use-b",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "#ed-b [data-step-id='use-b']"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#ed-b"
+            }
+          ]
+        },
+        {
+          "id": "ed-c-default",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#ed-c"
+            }
+          ]
+        }
+      ]
     }
   ],
   "geometry": {
@@ -195,7 +271,12 @@
       ".rk-diagram__meta",
       ".rk-diagram__badge",
       ".rk-diagram__list-inputs",
-      ".kit-lwf__lane p"
+      ".kit-lwf__lane p",
+      ".ed-study__emphasis",
+      ".ed-study__moment-copy h3",
+      ".ed-study__phase-label",
+      ".ed-study__signal strong",
+      ".ed-study math"
     ]
   },
   "settleMs": 200
