@@ -210,3 +210,7 @@ Baseline 保持默认；顶端提供 Baseline / A / B 键盘可用切换，候�
 ### P3 · 用户反馈微调（B 比较标题）
 
 按用户截图反馈，B 方案两条局部比较的序号改为 `I / RESPONSE`、`II / LEARNING`；第二条标题在桌面端左移约 80–112px，保留阶梯式错位，1000px 以下恢复单列自然对齐。1440px Edge 预览截图为 `.visual-qa/journey-art-direction-review/candidate-B-comparisons-title-step-1440.png`。构建通过；浏览器用例 23/23 通过（包括 I / II 文案检查）。未查看手机截图；人工选型仍待用户确认。
+
+### P4 · A 方案节点箭头可读性
+
+按用户截图反馈，A 方案主图的列间距改为 20–28px、行间距改为 10–14px；路径线与箭头提高对比度和线宽。1890px 桌面复核图为 `.visual-qa/journey-art-direction-review/candidate-A-arrows-1890.png`。构建通过；Reading Journey 视口用例 4/4 通过（1280、1440、1920、390；手机只由自动化检查，没有人工查看截图）。

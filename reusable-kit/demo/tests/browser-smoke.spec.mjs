@@ -1042,6 +1042,14 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900
           expect(Math.abs(top - 78)).toBeLessThanOrEqual(2);
         }
       }
+      if (direction === "stage" && viewport.width >= 1280) {
+        const edgeReadability = await diagram.locator(".rk-diagram__canvas").evaluate(canvas => {
+          const edge = canvas.querySelector('[data-diagram-edge="x-teacher"] path');
+          return { columnGap: Number.parseFloat(getComputedStyle(canvas).columnGap), strokeWidth: Number.parseFloat(getComputedStyle(edge).strokeWidth) };
+        });
+        expect(edgeReadability.columnGap).toBeGreaterThanOrEqual(20);
+        expect(edgeReadability.strokeWidth).toBeGreaterThanOrEqual(1.8);
+      }
       if (direction === "stage" && viewport.width < 1440) {
         await expect(journey.locator(".journey-art-stage__visual")).toHaveCSS("position", "static");
       }

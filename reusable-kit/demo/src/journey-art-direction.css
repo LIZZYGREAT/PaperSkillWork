@@ -33,7 +33,10 @@
 .journey-art-stage__visual { position: sticky; top: 78px; align-self: start; min-width: 0; }
 .journey-art-stage__visual .journey-map-scene { padding: 16px; }
 .journey-art-stage__visual .rk-diagram { margin-inline: 0; }
-.journey-art-stage__visual .rk-diagram__canvas { column-gap: 12px; row-gap: 8px; }
+.journey-art-stage__visual .rk-diagram__canvas { column-gap: clamp(20px, 1.5vw, 28px); row-gap: clamp(10px, .75vw, 14px); }
+.journey-art-stage__visual .rk-diagram__edge path { stroke: color-mix(in srgb, var(--rk-edge-line) 70%, var(--rk-ink)); stroke-width: 1.8; }
+.journey-art-stage__visual .rk-diagram__edge marker path { fill: color-mix(in srgb, var(--rk-edge-line) 70%, var(--rk-ink)); }
+.journey-art-stage__visual .rk-diagram__edge.is-active path { stroke-width: 2.4; }
 .journey-art-stage__visual .rk-step-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .journey-art-stage__visual .rk-step-nav__button { min-height: 50px; padding: 7px 6px; gap: 5px; font-size: 12px; }
 .journey-art-stage__visual .rk-step-nav__label { line-height: 1.3; }
