@@ -1,5 +1,4 @@
 export * from "./accessibility/useReducedMotion";
-export * from "./animation";
 export * from "./controls/Button";
 export * from "./controls/Chip";
 export * from "./controls/SegmentedControl";
@@ -11,7 +10,6 @@ export * from "./feedback/StatusPill";
 export * from "./layout/StickySystemView";
 export * from "./layout/diagram";
 export * from "./layout/DiagramFlow";
-export * from "./neural-network/MiniNetworkGlyph";
 export * from "./overlay/Drawer";
 export * from "./overlay/MobileSheet";
 export * from "./overlay/Popover";

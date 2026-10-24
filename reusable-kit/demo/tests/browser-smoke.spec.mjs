@@ -108,6 +108,36 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
 
   await page.locator(".pattern-gallery__type-preview .rk-formula-term").first().click();
   await expect(page.locator(".rk-formula-block__explanation.has-term")).toContainText("当前任务");
+
+  const networkGallery = page.locator("#gallery-mini-network");
+  await expect(networkGallery.locator(".rk-mini-network")).toHaveCount(2);
+  await expect(networkGallery.getByText("Original structure: 32; showing 5 representative nodes.")).toBeVisible();
+  await expect(networkGallery.locator("[data-network-layer='reference']")).toHaveAttribute("data-identity", "frozen");
+  await expect(networkGallery.locator("[data-network-layer='current']")).toHaveAttribute("data-identity", "trainable");
+  await networkGallery.getByRole("button", { name: "Show all context" }).click();
+  await expect(networkGallery.locator("[data-network-edge].is-focused")).toHaveCount(0);
+  const networkCodePanel = networkGallery.locator(".pattern-gallery__code-panel");
+  await networkCodePanel.locator("summary").click();
+  await networkCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('from "./shared/foundation/neural-network/MiniNetworkGlyph"');
+
+  const timelineGallery = page.locator("#gallery-timeline");
+  const networkTimeline = timelineGallery.locator("[data-timeline-example='network']");
+  const pipelineTimeline = timelineGallery.locator("[data-timeline-example='pipeline']");
+  await expect(networkTimeline).toHaveAttribute("data-clip", "input");
+  await expect(networkTimeline).toHaveAttribute("data-progress", "1.000");
+  await networkTimeline.getByRole("button", { name: "Next" }).click();
+  await expect(networkTimeline).toHaveAttribute("data-clip", "hidden");
+  await expect(networkTimeline).toHaveAttribute("data-progress", "1.000");
+  await pipelineTimeline.getByRole("button", { name: "Next" }).click();
+  await expect(pipelineTimeline).toHaveAttribute("data-clip", "transform");
+  await expect(pipelineTimeline.locator("[data-stage='transform']")).toHaveAttribute("data-state", "active");
+  const timelineCodePanel = timelineGallery.locator(".pattern-gallery__code-panel");
+  await timelineCodePanel.locator("summary").click();
+  await timelineCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
+  const timelineClipboard = await page.evaluate(() => navigator.clipboard.readText());
+  expect(timelineClipboard).toContain('from "./shared/foundation/animation/useAnimationTimeline"');
+  expect(timelineClipboard).toContain("autoPlay: false");
   expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
   expect(errors).toEqual([]);
 
@@ -115,7 +145,29 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   await expect(diagram).toHaveAttribute("data-diagram-mode", "list");
   await expect(sticky.locator(".rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
   await expect(sticky.locator(".rk-sticky-system__visual")).toHaveCSS("position", "static");
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(networkGallery.locator(".pg-network-grid")).toHaveCSS("grid-template-columns", /.+/);
+  expect(await networkGallery.locator(".pg-network-grid").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+  expect(await timelineGallery.locator(".pg-timeline-grid").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+  const pageOverflow = await page.evaluate(() => ({
+    fits: document.documentElement.scrollWidth <= innerWidth,
+    viewport: innerWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+    offenders: [...document.querySelectorAll("body *")].filter((node) => {
+      const rect = node.getBoundingClientRect();
+      let ancestor = node.parentElement;
+      let clippedByScroller = false;
+      while (ancestor && ancestor !== document.body) {
+        if (["auto", "scroll"].includes(getComputedStyle(ancestor).overflowX)) { clippedByScroller = true; break; }
+        ancestor = ancestor.parentElement;
+      }
+      return !clippedByScroller && (rect.right > innerWidth + 1 || rect.left < -1);
+    }).slice(0, 12).map((node) => {
+      const rect = node.getBoundingClientRect();
+      const parent = node.parentElement;
+      return `${node.tagName.toLowerCase()}.${node.className} [${rect.left},${rect.right}] parent=${parent?.className} overflow=${parent ? getComputedStyle(parent).overflowX : ""}`;
+    }),
+  }));
+  expect(pageOverflow, JSON.stringify(pageOverflow)).toMatchObject({ fits: true });
 });
 
 test("Reference Hub filters and reading columns share both boundaries", async ({ page }, testInfo) => {

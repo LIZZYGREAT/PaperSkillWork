@@ -10,6 +10,8 @@ import { FormulaBlock } from "../../optional/formula/FormulaBlock";
 import { FigureFrame } from "../../compositions/figure-frame/FigureFrame";
 import { SectionHeader } from "../../compositions/section-header/SectionHeader";
 import { StepNav } from "../../compositions/step-nav/StepNav";
+import { GalleryCodePanel as CodePanel } from "./GalleryCodePanel";
+import { MiniNetworkGallerySection, TimelineGallerySection } from "./AdvancedPrimitiveGallery";
 import "./pattern-gallery.css";
 
 type DiagramCase = "branch" | "merge";
@@ -22,6 +24,8 @@ export const patternGallerySections = [
   { id: "gallery-editorial", title: "Editorial layouts" },
   { id: "gallery-scroll", title: "Scroll & motion" },
   { id: "gallery-typography", title: "Typography & formula" },
+  { id: "gallery-mini-network", title: "Mini Network" },
+  { id: "gallery-timeline", title: "Timeline" },
 ];
 
 const branchBase: DiagramSpec = {
@@ -389,32 +393,6 @@ const stickyRecipeCode = [
   '}',
 ].join("\n");
 
-function CodePanel({ title, code, source, level, notice }: {
-  title: string;
-  code: string;
-  source: string;
-  level: "runnable" | "fragment";
-  notice: string;
-}) {
-  const [message, setMessage] = useState("");
-  const copyLabel = level === "runnable" ? "可运行示例" : "结构片段";
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setMessage(`已复制${copyLabel}`);
-    } catch {
-      setMessage("无法访问剪贴板；可选中代码复制");
-    }
-  };
-  return <details className="pattern-gallery__code-panel">
-    <summary>{title}</summary>
-    <div className="pattern-gallery__code-head"><span>来源：<code>{source}</code></span><Button variant="secondary" size="small" onClick={copy}>复制{copyLabel}</Button></div>
-    <p className="pattern-gallery__code-notice">{notice}</p>
-    <pre><code>{code}</code></pre>
-    <p className="pattern-gallery__copy-status" aria-live="polite">{message}</p>
-  </details>;
-}
-
 function PatternGallery() {
   const [diagramCase, setDiagramCase] = useState<DiagramCase>("branch");
   const [pathMode, setPathMode] = useState<PathMode>("smooth");
@@ -539,10 +517,13 @@ function PatternGallery() {
       <CodePanel title="展开可复制的文字与公式样例" code={typographyCode} source="recipes/typography-formula.md" level="runnable" notice="完整 TSX 组件；MathML 类型声明由脚手架复制。请先在入口引入 Kit 样式，并用论文来源核对公式。" />
     </section>
 
+    <MiniNetworkGallerySection />
+    <TimelineGallerySection />
+
     <footer className="pattern-gallery__footer">
       <strong>如何复制 Kit 组件</strong>
       <p>Registry 是组件成熟度的唯一来源；本页不复制或覆盖状态。首次复制 P0 基础组件时使用 preset；P1 才能通过 <code>--add</code> 选择。当前条目均为 candidate，<code>--allow-unapproved</code> 只表示接受复制候选组件，不代表批准。</p>
-      <pre><code>{'python3 tools/paper.py new kit-smoke-demo --title "Kit Smoke Demo" --url "https://example.org/kit-smoke"\n\n# 二选一：仅复制 P0 基础组件\npython3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --allow-unapproved\n\n# 或：首次复制 P0，并同时选择需要的 P1\npython3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --add StepNav,FigureFrame,FormulaBlock,PullQuote --allow-unapproved'}</code></pre>
+      <pre><code>{'python3 tools/paper.py new kit-smoke-demo --title "Kit Smoke Demo" --url "https://example.org/kit-smoke"\n\n# 二选一：仅复制 P0 基础组件\npython3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --allow-unapproved\n\n# 或：首次复制 P0，并同时选择需要的 P1\npython3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --add StepNav,FigureFrame,FormulaBlock,PullQuote,MiniNetworkGlyph,useAnimationTimeline --allow-unapproved'}</code></pre>
       <p>以上命令用于隔离烟测；正式论文请填写真实来源。两条 scaffold 命令互斥，不能顺序用于同一工作区。P0 默认由 preset 复制；<code>--add</code> 只接受 P1，且应在首次命令中一次选好。命令只复制一次，若目标已有 <code>src/shared</code> 会拒绝覆盖；入口文件需添加一次 <code>import "./shared/foundation/styles/kit.css";</code>。</p>
     </footer>
   </div>;

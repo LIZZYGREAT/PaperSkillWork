@@ -51,3 +51,5 @@ components:
   DatasetCard: {tier: P1, status: candidate, path: optional/dataset-card, category: dataset}
   FormulaBlock: {tier: P1, status: candidate, path: optional/formula, category: formula}
   FormulaTerm: {tier: P1, status: candidate, path: optional/formula, category: formula}
+  MiniNetworkGlyph: {tier: P1, status: candidate, path: foundation/neural-network, category: diagram, scaffold_opt_in: true}
+  useAnimationTimeline: {tier: P1, status: candidate, path: foundation/animation, category: animation, scaffold_opt_in: true}

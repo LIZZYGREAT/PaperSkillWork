@@ -416,6 +416,8 @@ def test_scaffold_kit_copies_default_continual_learning_components_once(tmp_path
     assert (shared / "core/process-loop/ProcessLoopExplorer.tsx").is_file()
     assert (shared / "core/reference/ReferenceHub.tsx").is_file()
     assert not (shared / "optional/evidence-viewer/EvidenceViewer.tsx").exists()
+    assert not (shared / "foundation/neural-network/MiniNetworkGlyph.tsx").exists()
+    assert not (shared / "foundation/animation/useAnimationTimeline.ts").exists()
     after_scaffold = snapshot_files(src)
 
     duplicate = invoke(root, "scaffold-kit", "demo-paper", "--allow-unapproved")
@@ -433,7 +435,7 @@ def test_scaffold_kit_adds_only_selected_optional_components(tmp_path):
 
     result = invoke(
         root, "scaffold-kit", "demo-paper",
-        "--add", "EvidenceViewer,BenchmarkExplorer,CompareView",
+        "--add", "EvidenceViewer,BenchmarkExplorer,CompareView,MiniNetworkGlyph,useAnimationTimeline",
         "--allow-unapproved",
     )
 
@@ -445,6 +447,10 @@ def test_scaffold_kit_adds_only_selected_optional_components(tmp_path):
     assert (shared / "optional/evidence-viewer/EvidenceViewer.tsx").is_file()
     assert (shared / "optional/benchmark-explorer/BenchmarkExplorer.tsx").is_file()
     assert (shared / "optional/compare-view/CompareView.tsx").is_file()
+    assert (shared / "foundation/neural-network/MiniNetworkGlyph.tsx").is_file()
+    assert (shared / "foundation/neural-network/mini-network-glyph.css").is_file()
+    assert (shared / "foundation/animation/useAnimationTimeline.ts").is_file()
+    assert (shared / "foundation/animation/easing.ts").is_file()
     assert not (shared / "optional/formula/FormulaBlock.tsx").exists()
 
 

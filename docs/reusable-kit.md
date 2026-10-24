@@ -19,6 +19,8 @@ Scaffolding writes `papers/<paper-id>/web/enhanced/src/shared/` plus `KIT_VERSIO
 
 On 2026-10-25, a fresh `kit-smoke-demo` workspace was created and scaffolded with the two commands above, then removed after verification. `npm ci` and `npm run build` passed with strict TypeScript enabled. A headless Chromium run against the production preview verified `DiagramFlow` data/gradient semantics, `StickySystemView + StepNav + FigureFrame` manual synchronization, `FormulaBlock` term selection with `PullQuote`, and the 390px no-overflow/list fallback. This is engineering evidence only: all copied items remain `candidate`, and no human visual acceptance is implied.
 
+The same date, a second fresh workspace explicitly selected `MiniNetworkGlyph,useAnimationTimeline` through `--add`. Its strict build and Chromium production-preview test passed with both candidates rendered together, timeline stepping changing network focus, compressed-count disclosure, frozen/trainable identity, and a 390px no-overflow check. The temporary workspace was then removed; this remains automated candidate evidence, not approval.
+
 Add the shared stylesheet once from the paper entry point, then import only the components actually used:
 
 ```tsx
@@ -45,6 +47,8 @@ Reusable Kit component(s) are not approved: ... Pass --allow-unapproved to scaff
 
 Do not blur these. A view that only works for one paper is not a reusable component because it happens to run in the same demo.
 
+Registry records maturity, Gallery supports discovery and interaction, Recipe supports choosing the right relationship, and Scaffold delivers a source-owned copy. None of these layers turns a layout into a mandatory paper template.
+
 **1. Foundation / visual primitives — must be directly reusable**
 
 - Typography, colour roles, spacing, surfaces, buttons, focus, overlays (`foundation/styles/kit.css`, `foundation/controls`, `foundation/overlay`).
@@ -68,6 +72,8 @@ Do not blur these. A view that only works for one paper is not a reusable compon
 **3. Paper-specific teaching scenes — reuse the language, not the figure**
 
 The LwF and EWC figures in `reusable-kit/demo/src/figures.tsx` are scene data for one paper each. A new paper writes its own figure specs with the same primitives. Reusing the visual language, the state cues, and the geometry is the goal; reusing the whole picture is not.
+
+The toolbox reuses primitives; each paper remains free to design the scene demanded by its objects, states, relationships, computation, and conclusion. Repeating a composition across adjacent sections is allowed when the repeated spatial relationship helps cognition, but changing only the text is not a default template strategy: the implementation plan should explain what the repetition lets the reader track. Conversely, avoiding repetition is not a reason to add motion or decoration that carries no teaching work.
 
 ## Maturity and the registry
 
@@ -105,7 +111,7 @@ npm run build
 npm run test:browser
 ```
 
-The first demo route is the Pattern Gallery: it makes DiagramFlow connector and focus variants, editorial composition recipes, StickySystemView scroll synchronization, and typography/formula examples discoverable with code panels. Diagram, sticky, and typography panels contain complete runnable TSX examples; editorial panels are TSX/CSS structural fragments whose caller data must be supplied. The Foundation Component Lab remains available as its own route, alongside the EWC, LwF, Editorial Studies, and Reading Journey scenarios. The Gallery is an entry point, not a second component registry; `registry.yaml` remains canonical and its entries remain candidates until human acceptance.
+The first demo route is the Pattern Gallery: it makes DiagramFlow connector and focus variants, editorial composition recipes, StickySystemView scroll synchronization, typography/formula examples, MiniNetworkGlyph structures, and two Animation Timeline scenes discoverable with code panels. Diagram, sticky, typography, network, and timeline panels contain complete runnable TSX examples; editorial panels are TSX/CSS structural fragments whose caller data must be supplied. The Foundation Component Lab remains available as its own route, alongside the EWC, LwF, Editorial Studies, and Reading Journey scenarios. The Gallery is an entry point, not a second component registry; `registry.yaml` remains canonical and its entries remain candidates until human acceptance.
 
 `test:browser` runs the assertion page plus Chromium checks for Gallery diagrams and scroll/manual synchronization, typography/control states, overlay contracts, the LwF figure (label completeness, connector geometry, in-figure type size, title/figure ratio, per-step object and edge state, narrow-screen reflow, sidebar selection versus keyboard focus), and the TermRef → English Hub journey. It asserts the *properties* the design requires, not a particular DOM shape.
 

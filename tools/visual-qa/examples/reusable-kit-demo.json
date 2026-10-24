@@ -231,6 +231,41 @@
             { "type": "click", "selector": ".pattern-gallery__type-preview .rk-formula-term:first-child" },
             { "type": "scrollIntoView", "selector": "#gallery-typography" }
           ]
+        },
+        {
+          "id": "gallery-mini-network-focus",
+          "actions": [
+            { "type": "scrollIntoView", "selector": "#gallery-mini-network" }
+          ]
+        },
+        {
+          "id": "gallery-mini-network-context",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"Show all context\"]" },
+            { "type": "scrollIntoView", "selector": "#gallery-mini-network" }
+          ]
+        },
+        {
+          "id": "gallery-timeline-start",
+          "actions": [
+            { "type": "scrollIntoView", "selector": "#gallery-timeline" }
+          ]
+        },
+        {
+          "id": "gallery-timeline-network-mid",
+          "actions": [
+            { "type": "click", "selector": "[data-timeline-example=\"network\"] .pg-timeline__controls button:first-child" },
+            { "type": "wait", "milliseconds": 420 },
+            { "type": "scrollIntoView", "selector": "#gallery-timeline" }
+          ]
+        },
+        {
+          "id": "gallery-timeline-next-stages",
+          "actions": [
+            { "type": "click", "selector": "[data-timeline-example=\"network\"] .pg-timeline__controls button:nth-child(3)" },
+            { "type": "click", "selector": "[data-timeline-example=\"pipeline\"] .pg-timeline__controls button:nth-child(3)" },
+            { "type": "scrollIntoView", "selector": "#gallery-timeline" }
+          ]
         }
       ]
     },

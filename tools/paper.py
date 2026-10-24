@@ -567,6 +567,14 @@ def cmd_scaffold_kit(args: argparse.Namespace) -> int:
                 target = stage / Path(*PurePosixPath(relative).parts)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(str(source), str(target))
+            selected_paths = {registry[name]["path"] for name in copied_components}
+            for name, entry in registry.items():
+                relative = entry["path"]
+                if entry.get("tier") != "P1" or entry.get("scaffold_opt_in") is not True or name in requested or relative in selected_paths:
+                    continue
+                optional_path = stage / Path(*PurePosixPath(relative).parts)
+                if optional_path.is_dir():
+                    shutil.rmtree(str(optional_path))
             shutil.copy2(str(version_path), str(stage / "KIT_VERSION"))
             stage.rename(destination)
         except Exception:
