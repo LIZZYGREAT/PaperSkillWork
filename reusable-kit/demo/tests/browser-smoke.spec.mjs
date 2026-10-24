@@ -1102,6 +1102,44 @@ test("Shared Visual Stage lifts L_new between its two incoming paths", async ({ 
   expect(Math.abs(positions.labelEdgeEnd - positions.lNew.center)).toBeLessThanOrEqual(2);
 });
 
+test("Editorial Reveal staggers the comparison rows and trims unused gaps", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=journey&art=reveal");
+  await page.evaluate(() => document.fonts.ready);
+
+  const geometry = await page.evaluate(() => {
+    const oldRow = document.querySelector('.journey-art-reveal-row[data-comparison="old"]');
+    const newRow = document.querySelector('.journey-art-reveal-row[data-comparison="new"]');
+    const box = node => {
+      const r = node.getBoundingClientRect();
+      return { left: r.left, right: r.right, width: r.width };
+    };
+    const oldHeading = oldRow.querySelector(".journey-art-reveal-identity");
+    const oldRelation = oldRow.querySelector(".journey-art-reveal-relation");
+    const newHeading = newRow.querySelector(".journey-art-reveal-identity");
+    const newRelation = newRow.querySelector(".journey-art-reveal-relation");
+    return {
+      oldHeading: box(oldHeading), oldRelation: box(oldRelation),
+      newHeading: box(newHeading), newRelation: box(newRelation), newRow: box(newRow),
+      relationGap: Number.parseFloat(getComputedStyle(newRelation).columnGap),
+      target: box(newRelation.querySelector('[data-comparison-field="target"]')),
+      prediction: box(newRelation.querySelector('[data-comparison-field="prediction"]')),
+      result: box(newRelation.querySelector('[data-comparison-field="result"]')),
+    };
+  });
+
+  expect(geometry.oldRelation.left - geometry.oldHeading.left).toBeLessThan(170);
+  expect(geometry.newHeading.left - geometry.oldHeading.left).toBeGreaterThan(160);
+  expect(geometry.newRelation.left - geometry.newHeading.left).toBeGreaterThan(170);
+  expect(geometry.newRelation.left - geometry.newHeading.left).toBeLessThan(240);
+  expect(geometry.newRelation.right).toBeLessThan(geometry.newRow.right - 30);
+  expect(geometry.relationGap).toBe(8);
+  expect(geometry.target.width).toBeLessThan(300);
+  expect(geometry.prediction.width).toBeLessThan(260);
+  expect(geometry.result.width).toBeLessThan(180);
+});
+
 for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
   test(`Reading Journey candidates stay legible at ${viewport.width}`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });

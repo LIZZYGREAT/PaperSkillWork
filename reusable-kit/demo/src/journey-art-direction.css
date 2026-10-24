@@ -165,6 +165,13 @@
 .journey-art-reveal-teacher span { color: var(--rk-muted); font-size: 12px; }
 .journey-art-reveal-optimization .journey-training-notes { margin-top: 20px; }
 
+@media (min-width: 1200px) {
+  .journey-art-reveal-row--old { grid-template-columns: minmax(0, .22fr) minmax(0, 1.8fr); }
+  .journey-art-reveal-row--new { margin-left: 8%; }
+  .journey-art-reveal-row--new .journey-art-reveal-identity { transform: translateX(clamp(-208px, -13vw, -150px)); }
+  .journey-art-reveal-row--new .journey-art-reveal-relation { grid-column: 2 / 3; grid-row: 2; margin-right: clamp(36px, 3.5vw, 50px); gap: 8px; }
+}
+
 @media (max-width: 1439px) {
   .journey-art-stage { grid-template-columns: minmax(0, 1fr); gap: 26px; }
   .journey-art-stage__visual { position: static; grid-row: 1; }
@@ -186,7 +193,7 @@
 @media (max-width: 1000px) {
   .journey-art-reveal-row, .journey-art-reveal-row--new { grid-template-columns: 1fr; margin-left: 0; }
   .journey-art-reveal-row--new .journey-art-reveal-identity { grid-column: 1; grid-row: auto; transform: none; }
-  .journey-art-reveal-row--new .journey-art-reveal-relation { grid-column: 1; grid-row: auto; }
+  .journey-art-reveal-row--new .journey-art-reveal-relation { grid-column: 1; grid-row: auto; margin-right: 0; }
   .journey-art-reveal-explanation, .journey-art-reveal-row--new .journey-art-reveal-explanation { grid-column: 1; margin-left: 0 !important; }
   .journey-art-reveal-relation { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(100px,.7fr); }
   .journey-art-reveal-convergence { grid-template-columns: minmax(120px,.7fr) 26px minmax(220px,1.2fr); }
