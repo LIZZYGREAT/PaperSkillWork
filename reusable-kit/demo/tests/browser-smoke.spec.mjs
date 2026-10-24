@@ -52,7 +52,14 @@ test("reading journey keeps the canonical graph, comparison ownership and task b
   await page.getByRole("navigation", { name: "Sections on this page" }).getByRole("button", { name: "05 在任务边界交接" }).click();
   await expect(page).toHaveURL(/#journey-handoff$/);
   await page.reload();
-  expect(await page.locator("#journey-handoff").evaluate(n => Math.abs(n.getBoundingClientRect().top) < 120)).toBe(true);
+  // A compact closing section can reach the document end before its top can
+  // reach the scroll margin. Assert the browser's legal anchor position.
+  await expect.poll(() => page.locator("#journey-handoff").evaluate(n => {
+    const anchorY = n.getBoundingClientRect().top + scrollY - parseFloat(getComputedStyle(n).scrollMarginTop);
+    const maxY = document.documentElement.scrollHeight - innerHeight;
+    return Math.abs(scrollY - Math.max(0, Math.min(anchorY, maxY)));
+  })).toBeLessThanOrEqual(1);
+  await expect(page.locator("#journey-handoff-title")).toBeInViewport({ ratio: 1 });
   for (const label of ["Component Lab", "EWC scenario", "LwF scenario", "Reading Journey"]) {
     await page.getByRole("button", { name: label, exact: true }).click();
     await expect(page.getByRole("button", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
@@ -71,13 +78,25 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900
     await page.goto("/?demo=journey");
     const journey = page.locator(".journey");
     await page.evaluate(() => document.fonts.ready);
-    // Different reading widths must share an axis; centered sections and a
-    // leading aside previously pushed 03–05 progressively away from 01–02.
-    const leftOffsets = await journey.evaluate(root => {
-      const left = root.getBoundingClientRect().left;
-      return [...root.querySelectorAll(":scope > [id], h1, #journey-map-title, #journey-paths-title, #journey-student-title, #journey-handoff-title, .journey-paths-copy")].map(node => ({ element: node.id || node.className || node.tagName, offset: node.getBoundingClientRect().left - left }));
+    // The page shares BOTH outer edges. Internal columns keep prose readable;
+    // checking only the left axis missed the original composition problem.
+    const boundaries = await journey.evaluate(root => {
+      const frame = root.getBoundingClientRect();
+      return [...root.querySelectorAll(":scope > [id], .journey-map-scene, .journey-comparison-lanes, .journey-student, .journey-timeline, .journey-closing, .journey-source")].map(node => { const box = node.getBoundingClientRect(); return { element: node.id || node.className, left: box.left - frame.left, right: box.right - frame.right }; });
     });
-    expect(leftOffsets.filter(item => Math.abs(item.offset) > 1)).toEqual([]);
+    expect(boundaries.filter(item => Math.abs(item.left) > 1 || Math.abs(item.right) > 1)).toEqual([]);
+    const titleOffsets = await journey.evaluate(root => {
+      const left = root.getBoundingClientRect().left;
+      return [...root.querySelectorAll("h1, #journey-map-title, #journey-paths-title, #journey-student-title, #journey-handoff-title")].map(node => node.getBoundingClientRect().left - left);
+    });
+    expect(titleOffsets.every(offset => Math.abs(offset) <= 1)).toBe(true);
+    const proseWidths = await journey.locator(".journey-section-heading > p, .journey-comparison-note, .journey-boundary-note").evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().width));
+    expect(proseWidths.every(width => width <= 700)).toBe(true);
+    if (viewport.width >= 1280) {
+      for (const selector of [".journey-comparison-lanes", ".journey-student", ".journey-closing"]) {
+        expect(await journey.locator(selector).evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(2);
+      }
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const diagram = journey.locator(".rk-diagram");
     await expect(diagram).toHaveAttribute("data-diagram-mode", viewport.width === 390 ? "list" : "grid");

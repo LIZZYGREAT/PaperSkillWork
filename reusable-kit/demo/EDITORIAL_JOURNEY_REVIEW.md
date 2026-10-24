@@ -93,3 +93,25 @@ QA 命令的真实输出为 `Visual QA PASS. Report: C:\Users\lenovo\Desktop\Pro
 本次终端 `Report:` 路径为 `C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-12-20-522Z\report.md`；已读报告并查图，清理使用其准确父目录。
 
 清理退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-12-20-522Z`，确认目录不存在；仅删除本轮新建的准确 `reusable-kit/demo/test-results` 并确认不存在，4173/4175 无监听。精选证据与历史目录保留。
+
+## 人工反馈重构 · 统一左右边界与内部构图（2026-10-24）
+
+用户明确指出上一轮只把窄区块左移，右侧仍参差，未完成整页布局。此次替代“不同宽度区块靠左”的方案：01–05 章节外框及主要构图统一使用整页左右边界；内部依据内容分列，正文不横向拉长。
+
+实施前构图决定：03 标题与引导分列，下方将旧/新比较及各自解释组成两条并行阅读栏，目标出处与转场合为轻量页脚；04 同一个 Student 场景中，左侧是主体/参数/两路来源，右侧是联合目标与更新，两列共同完成一个计算场景；05 标题/任务内变化分列，三阶段交接横跨整页，结尾命题与继承边界并列，来源说明封底。移动端按自然 DOM 顺序逐列折叠。保持全部事实、公式、图谱与状态语义，既有实验不变。
+
+检查同时覆盖左右坐标、主要构图边界及正文列宽；像素对齐只验证版式约束，仍需查看整页和连续局部，不能再用单侧坐标通过替代整页判断。
+
+实际实现采用 03 并行比较栏、04 Student 内主体/计算双栏、05 三阶段交接行与命题/边界双栏。各节外框、比较区域、Student 场景、交接行和封底说明均通到相同的左右边界；主说明与机制解释分别占自己的阅读列，而不是把原先窄文字拉成全宽。桌面正文列宽实测不超过 700px；移动端按完整来源与公式重排。
+
+验证命令：demo 目录 `npm run build` 退出 0；`$env:JOURNEY_REVIEW_CAPTURE='1'; npm run test:browser` 最终退出 0，15/15 通过；根目录 `node tools/visual-qa/cli.mjs --config .visual-qa/editorial-journey-recomposition-review/visual-qa.json` 退出 0，18/18 状态 PASS，GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS 均 PASS。四视口同时检查左右边界误差 ≤1px、标题左基线、段落列宽及桌面主要构图确实分列，无全页水平溢出或登记裁切。
+
+浏览器初跑 14/15；收尾重构变短后，旧锚点断言假定“总能滚到距顶 120px 内”，与文档末端的合法滚动上限冲突。改为核对 `min(锚点位置−scroll-margin, 文档最大滚动量)`，并额外检查收尾标题完整可见，保留锚点/重载行为保护，随后全量复跑通过。源码未因该断言修改，Visual QA 覆盖同一最终渲染源码。
+
+Agent 实际查看了 1280/1440/1920 桌面整页、390 移动长图与 Student 局部，以及 1440 的 03→04 和 05 连续区域；整体左右边界统一，左右列分别承载已有内容，未用填充文字撑满。原有 11px 辅助字号提醒保留；像素基线比较 NOT_RUN，HUMAN_ACCEPTANCE=PENDING。
+
+精选证据：`.visual-qa/editorial-journey-recomposition-review/` 内 `journey-full-1440.png`、`journey-full-1920.png`、`journey-full-390.png`、`paths-student-1440.png`、`handoff-1440.png`、本次局部 QA 配置与原样报告 `visual-qa-report.json/md`。上两轮截图保留供对照；当前人工评审应看本目录。
+
+本次输出 `Report: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-23-53-520Z\report.md`；已读取原报告和查图，使用其准确父目录清理。
+
+清理退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-23-53-520Z`，目录确已不存在；本轮 `reusable-kit/demo/test-results` 已精确删除并验证，4173/4175 无遗留监听。保留上述五张精选截图、配置与报告，不触碰历史目录。
