@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { JourneyArtDirection as JourneyArtDirectionView, JourneyDiagramScene, JourneyReviewSwitcher, Loss, theta } from "./JourneyArtDirection";
 import type { JourneyArtDirection } from "./JourneyArtDirection";
 import "./editorial-journey.css";
@@ -17,8 +17,22 @@ function readArtDirection(): JourneyArtDirection {
 }
 
 export function EditorialJourney() {
+  const journeyRef = useRef<HTMLElement>(null);
   const [stepId, setStepId] = useState("overview");
   const [artDirection, setArtDirection] = useState<JourneyArtDirection>(readArtDirection);
+  useLayoutEffect(() => {
+    const root = journeyRef.current;
+    const visual = root?.querySelector<HTMLElement>(".journey-art-stage__visual");
+    if (artDirection !== "stage" || !root || !visual) return;
+    const measure = () => root.style.setProperty("--journey-stage-visual-height", `${visual.getBoundingClientRect().height}px`);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(visual);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--journey-stage-visual-height");
+    };
+  }, [artDirection]);
   useEffect(() => {
     const syncFromLocation = () => setArtDirection(readArtDirection());
     window.addEventListener("popstate", syncFromLocation);
@@ -40,7 +54,7 @@ export function EditorialJourney() {
     if (active) requestAnimationFrame(() => document.getElementById(active.id)?.scrollIntoView({ behavior: "auto", block: "start" }));
   };
 
-  return <article className="journey" data-demo-view="journey" data-art-direction={artDirection} aria-label="LwF 完整阅读实验">
+  return <article ref={journeyRef} className="journey" data-demo-view="journey" data-art-direction={artDirection} aria-label="LwF 完整阅读实验">
     <JourneyReviewSwitcher value={artDirection} onChange={selectArtDirection} />
     <header id="journey-question" className="journey-opening">
       <p className="journey-kicker">READING JOURNEY <span>Learning without Forgetting / 01</span></p>
@@ -49,6 +63,7 @@ export function EditorialJourney() {
       <div className="journey-tension"><p><span>新任务</span>学会当前标签</p><p><span>旧任务</span>保留已有响应</p><a href="#journey-map">同一输入，怎样兼顾两者？ <b aria-hidden="true">↓</b></a></div>
     </header>
 
+    <div className="journey-body">
     {artDirection === "baseline" ? <>
       <section id="journey-map" className="journey-map" aria-labelledby="journey-map-title">
         <header className="journey-map-heading"><div><p className="journey-kicker">02 / THE WHOLE SYSTEM</p><h2 id="journey-map-title">沿着同一个输入，先看全局。</h2></div><p>先认出对象，再沿两条路径读到最右侧。<br />深色节点标出参数更新的唯一落点。</p></header>
@@ -95,8 +110,11 @@ export function EditorialJourney() {
     <section id="journey-handoff" className="journey-handoff" aria-labelledby="journey-handoff-title">
       <header className="journey-section-heading"><div><p className="journey-kicker">05 / AT THE TASK BOUNDARY</p><h2 id="journey-handoff-title">更新在任务内，交接在任务之间。</h2></div><p>本轮联合训练改变 Student 的共享表示与两个任务头；固定 Teacher 不随每次梯度更新同步变化。训练结束后，学好的模型保留下来，成为下一任务的旧模型参照。</p></header>
       <ol className="journey-timeline"><li><span>本任务内</span><strong>Teacher 固定</strong><small>Student 持续学习</small></li><li><span>任务边界</span><strong>保留训练后的模型</strong><small>既有头一起继承</small></li><li><span>下一任务开始</span><strong>在新输入上记录旧响应</strong><small>加入新头，再开始训练</small></li></ol>
+    </section>
+    </div>
+    <footer className="journey-ending">
       <div className="journey-closing"><p className="journey-proposition">下一任务继承的是模型。</p><p className="journey-boundary-note">旧响应目标要在下一份输入上重新生成。当前任务缓存的响应并不是适用于所有未来样本的记忆库，保留效果也受新旧数据分布关系影响。</p></div>
       <p className="journey-source">机制依据：<a href="https://arxiv.org/abs/1606.09282v3">Li &amp; Hoiem · Learning without Forgetting, v3</a>，§3，Eq.(1)–(4)，Fig.3；顺序任务见 §4.3。Teacher / Student 为本页教学命名，系统地图为机制示意。</p>
-    </section>
+    </footer>
   </article>;
 }

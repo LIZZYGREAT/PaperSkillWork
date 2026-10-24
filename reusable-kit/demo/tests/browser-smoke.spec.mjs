@@ -1037,7 +1037,7 @@ test("Shared Visual Stage temperature formula opens without resizing the composi
   expect(Math.abs((await bounds()).stage - before.stage)).toBeLessThanOrEqual(1);
 });
 
-test("Shared Visual Stage stays pinned until the full reading column reaches its end", async ({ page }) => {
+test("Shared Visual Stage stays pinned until the final green note passes the fixed header", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=journey&art=stage");
@@ -1047,6 +1047,10 @@ test("Shared Visual Stage stays pinned until the full reading column reaches its
     const visual = document.querySelector(".journey-art-stage__visual");
     const reading = document.querySelector(".journey-art-stage__reading");
     const finalText = document.querySelector(".journey-stage-optimization .journey-temperature");
+    const handoff = document.querySelector("#journey-handoff");
+    const ending = document.querySelector(".journey-ending");
+    const stage = document.querySelector(".journey-art-stage");
+    const article = document.querySelector(".journey");
     const readingBox = reading.getBoundingClientRect();
     const visualBox = visual.getBoundingClientRect();
     const releaseScroll = readingBox.bottom + scrollY - visualBox.height - 78;
@@ -1054,12 +1058,31 @@ test("Shared Visual Stage stays pinned until the full reading column reaches its
       releaseScroll,
       finalTextBottomAtRelease: finalText.getBoundingClientRect().bottom + scrollY - releaseScroll,
       readingPaddingBottom: Number.parseFloat(getComputedStyle(reading).paddingBottom),
+      visualHeight: visualBox.height,
+      handoffGap: handoff.getBoundingClientRect().top - finalText.getBoundingClientRect().bottom,
+      scrollRoomAfterRelease: document.documentElement.scrollHeight - innerHeight - releaseScroll,
+      handoffLeft: handoff.getBoundingClientRect().left,
+      visualRight: visual.getBoundingClientRect().right,
+      handoffWidth: handoff.getBoundingClientRect().width,
+      endingGap: ending.getBoundingClientRect().top - stage.getBoundingClientRect().bottom,
+      endingLeft: ending.getBoundingClientRect().left,
+      articleLeft: article.getBoundingClientRect().left,
+      endingWidth: ending.getBoundingClientRect().width,
+      articleWidth: article.getBoundingClientRect().width,
     };
   });
 
-  expect(boundary.readingPaddingBottom).toBe(0);
-  expect(boundary.finalTextBottomAtRelease).toBeGreaterThan(0);
-  expect(boundary.finalTextBottomAtRelease).toBeLessThanOrEqual(900);
+  expect(boundary.readingPaddingBottom).toBeCloseTo(boundary.visualHeight + 20, 0);
+  expect(boundary.finalTextBottomAtRelease).toBeGreaterThanOrEqual(-12);
+  expect(boundary.finalTextBottomAtRelease).toBeLessThanOrEqual(16);
+  expect(boundary.handoffGap).toBeLessThanOrEqual(150);
+  expect(boundary.handoffLeft).toBeGreaterThanOrEqual(boundary.visualRight);
+  expect(boundary.handoffWidth).toBeGreaterThan(280);
+  expect(boundary.scrollRoomAfterRelease).toBeGreaterThan(24);
+  expect(boundary.endingGap).toBeGreaterThanOrEqual(24);
+  expect(boundary.endingGap).toBeLessThan(80);
+  expect(boundary.endingLeft).toBeCloseTo(boundary.articleLeft, 0);
+  expect(boundary.endingWidth).toBeCloseTo(boundary.articleWidth, 0);
 
   const visual = page.locator(".journey-art-stage__visual");
   await page.evaluate(y => window.scrollTo(0, y), boundary.releaseScroll - 24);

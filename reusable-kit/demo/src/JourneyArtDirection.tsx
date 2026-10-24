@@ -195,7 +195,7 @@ export function JourneyArtDirection({ direction, stepId, onStepChange }: {
   onStepChange: (stepId: string) => void;
 }) {
   if (direction === "stage") return <div className="journey-art-stage" data-art-composition="shared-visual-stage">
-    <aside className="journey-art-stage__visual" aria-label="02 到 04 持续可见的 LwF 系统图"><JourneyDiagramScene stepId={stepId} onStepChange={onStepChange} /></aside>
+    <div className="journey-art-stage__visual-track"><aside className="journey-art-stage__visual" aria-label="02 到 04 持续可见的 LwF 系统图"><JourneyDiagramScene stepId={stepId} onStepChange={onStepChange} /></aside></div>
     <div className="journey-art-stage__reading">
       <section id="journey-map" className="journey-stage-map" aria-labelledby="journey-map-title">
         <JourneyMapHeading />
