@@ -32,6 +32,7 @@
 }
 @media (min-width: 1440px) {
   .journey-art-stage__reading { padding-bottom: clamp(380px, 44vh, 440px); }
+  .journey-art-stage__visual [data-diagram-node="lNew"] { transform: translateY(-56px); }
 }
 .journey-art-stage__visual { position: sticky; top: 78px; align-self: start; min-width: 0; }
 .journey-art-stage__visual .journey-map-scene { padding: 16px; }

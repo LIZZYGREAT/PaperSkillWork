@@ -1073,6 +1073,40 @@ test("Shared Visual Stage stays pinned until the phase note reaches the objectiv
   await expect.poll(() => visual.evaluate(node => Math.round(node.getBoundingClientRect().top))).toBe(54);
 });
 
+test("Shared Visual Stage lifts L_new between its two incoming paths", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=journey&art=stage");
+  await page.evaluate(() => document.fonts.ready);
+
+  const diagram = page.locator(".journey-art-stage__visual .rk-diagram");
+  await expect(diagram.locator('.rk-diagram__edges [data-diagram-edge="newout-lnew"] path')).toHaveCount(1);
+  await expect(diagram.locator('.rk-diagram__edges [data-diagram-edge="label-lnew"] path')).toHaveCount(1);
+  const positions = await diagram.evaluate(node => {
+    const canvas = node.querySelector(".rk-diagram__canvas");
+    const rect = id => {
+      const box = canvas.querySelector(`[data-diagram-node="${id}"]`).getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom, center: (box.top + box.bottom) / 2, left: box.left, right: box.right };
+    };
+    const edges = [...canvas.querySelectorAll(".rk-diagram__edges [data-diagram-edge]")];
+    const ports = [...canvas.querySelectorAll(".rk-diagram__ports circle")];
+    const endY = id => {
+      const index = edges.findIndex(edge => edge.dataset.diagramEdge === id);
+      return Number(ports[index * 2 + 1].getAttribute("cy")) + canvas.getBoundingClientRect().top;
+    };
+    return {
+      newOut: rect("newOut"), label: rect("label"), lNew: rect("lNew"),
+      newOutEdgeEnd: endY("newout-lnew"), labelEdgeEnd: endY("label-lnew"),
+    };
+  });
+
+  expect(positions.lNew.top).toBeGreaterThan(positions.newOut.top);
+  expect(positions.lNew.center).toBeGreaterThan(positions.newOut.center);
+  expect(positions.lNew.center).toBeLessThan(positions.label.center);
+  expect(Math.abs(positions.newOutEdgeEnd - positions.lNew.center)).toBeLessThanOrEqual(2);
+  expect(Math.abs(positions.labelEdgeEnd - positions.lNew.center)).toBeLessThanOrEqual(2);
+});
+
 for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
   test(`Reading Journey candidates stay legible at ${viewport.width}`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
