@@ -98,7 +98,9 @@ npm run build
 npm run test:browser
 ```
 
-The demo holds the Foundation Component Lab and the two paper scenarios. `test:browser` runs the assertion page plus Chromium checks for typography/control states, overlay contracts, the LwF figure (label completeness, connector geometry, in-figure type size, title/figure ratio, per-step object and edge state, narrow-screen reflow, sidebar selection versus keyboard focus), and the TermRef → English Hub journey. It asserts the *properties* the design requires, not a particular DOM shape.
+The first demo route is the Pattern Gallery: it makes DiagramFlow connector and focus variants, editorial composition recipes, StickySystemView scroll synchronization, and typography/formula examples discoverable with copyable starter code and source paths. The Foundation Component Lab remains available as its own route, alongside the EWC, LwF, Editorial Studies, and Reading Journey scenarios. The Gallery is an entry point, not a second component registry; `registry.yaml` remains canonical and its entries remain candidates until human acceptance.
+
+`test:browser` runs the assertion page plus Chromium checks for Gallery diagrams and scroll/manual synchronization, typography/control states, overlay contracts, the LwF figure (label completeness, connector geometry, in-figure type size, title/figure ratio, per-step object and edge state, narrow-screen reflow, sidebar selection versus keyboard focus), and the TermRef → English Hub journey. It asserts the *properties* the design requires, not a particular DOM shape.
 
 Visual QA runs from the repository root; the Kit demo config declares three desktop viewports (1280×900, 1440×900, 1920×1080) and the selectors that must not clip. Narrow and mobile layouts are out of scope for this review round:
 

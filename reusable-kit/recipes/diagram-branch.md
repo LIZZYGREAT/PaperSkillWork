@@ -30,3 +30,38 @@ The branches have no distinct identities, the split is only a list of examples, 
 
 ## Seen In
 LwF (frozen teacher lane versus trainable student backbone) and the EWC task-A chain, both in `reusable-kit/demo/src/figures.tsx`.
+
+## Copyable DiagramFlow Example
+
+This is a structural illustration. Replace the labels and relationships with facts from the paper; the component does not supply algorithm semantics.
+
+```tsx
+import { DiagramFlow } from "./shared/foundation/layout/DiagramFlow";
+import type { DiagramSpec } from "./shared/foundation/layout/DiagramFlow";
+
+const branchSpec: DiagramSpec = {
+  columns: 3,
+  zones: [
+    { id: "source", label: "Shared input", from: 1, span: 1 },
+    { id: "paths", label: "Distinct roles", from: 3, span: 1 },
+  ],
+  nodes: [
+    { id: "input", title: "Sample x", role: "input", column: 1, row: 2 },
+    { id: "task", title: "Current task", role: "label", column: 1, row: 4 },
+    { id: "reference", title: "Frozen reference", meta: "No current-task update", role: "frozen", column: 3, row: 1 },
+    { id: "learner", title: "Trainable model", meta: "Receives the update", role: "trainable", column: 3, row: 3 },
+  ],
+  edges: [
+    { id: "input-reference", from: "input", to: "reference", kind: "data", mode: "smooth", startPort: "right", endPort: "left" },
+    { id: "input-learner", from: "input", to: "learner", kind: "data", mode: "smooth", startPort: "right", endPort: "left" },
+    { id: "task-learner", from: "task", to: "learner", kind: "control", mode: "orthogonal" },
+  ],
+  note: "Solid = data; dotted = control. State differences are written in the nodes as well as styled.",
+};
+
+export function BranchExample() {
+  return <DiagramFlow spec={branchSpec} label="One input branches to a frozen reference and a trainable model" />;
+}
+```
+
+Use `focus={{ nodes, edges }}` to emphasize one path while keeping the surrounding structure visible. At narrow widths, `DiagramFlow` reflows the same spec into an ordered list; do not scale the diagram down or replace connectors with text arrows.

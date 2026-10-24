@@ -39,6 +39,9 @@ components:
   SectionHeader: {tier: P1, status: candidate, path: compositions/section-header, category: layout}
   FigureFrame: {tier: P1, status: candidate, path: compositions/figure-frame, category: layout}
   MetaList: {tier: P1, status: candidate, path: foundation/data, category: layout}
+  BarMeter: {tier: P1, status: candidate, path: foundation/data, category: data}
+  PullQuote: {tier: P1, status: candidate, path: foundation/data, category: content}
+  StatRow: {tier: P1, status: candidate, path: foundation/data, category: data}
   CompareView: {tier: P1, status: candidate, path: optional/compare-view, category: comparison}
   MultiViewInspector: {tier: P1, status: candidate, path: optional/multi-view, category: representation}
   RepresentationTransform: {tier: P1, status: candidate, path: optional/representation-transform, category: representation}

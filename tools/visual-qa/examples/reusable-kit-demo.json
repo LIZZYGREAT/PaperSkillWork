@@ -34,7 +34,7 @@
   "pages": [
     {
       "id": "kit-demo",
-      "path": "/",
+      "path": "/?demo=lab",
       "computedStyles": [
         {
           "selector": ".kit-topbar .rk-button",
@@ -163,6 +163,73 @@
               "type": "scrollIntoView",
               "selector": "#ewc-importance"
             }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pattern-gallery",
+      "path": "/?demo=gallery",
+      "computedStyles": [
+        {
+          "selector": "#gallery-diagrams .rk-diagram__title",
+          "property": "font-size",
+          "equals": "15px"
+        },
+        {
+          "selector": ".pattern-gallery__scroll-demo .rk-sticky-system__visual",
+          "property": "position",
+          "equals": "sticky"
+        }
+      ],
+      "states": [
+        { "id": "gallery-opening" },
+        {
+          "id": "gallery-orthogonal-connectors",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"Orthogonal\"]" }
+          ]
+        },
+        {
+          "id": "gallery-reference-focus",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"冻结参考路径\"]" }
+          ]
+        },
+        {
+          "id": "gallery-merge",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"汇合 · 两个完整目标\"]" },
+            { "type": "click", "selector": "role=button[name=\"任务目标路径\"]" }
+          ]
+        },
+        {
+          "id": "gallery-editorial-stagger",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"Staggered rows\"]" },
+            { "type": "scrollIntoView", "selector": "#gallery-editorial" }
+          ]
+        },
+        {
+          "id": "gallery-sticky-manual",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"Data pipeline\"]" },
+            { "type": "click", "selector": ".pattern-gallery__scroll-demo [data-step-id=\"check\"]" },
+            { "type": "scrollIntoView", "selector": "#gallery-scroll" }
+          ]
+        },
+        {
+          "id": "gallery-sticky-scroll",
+          "actions": [
+            { "type": "click", "selector": "role=button[name=\"Data pipeline\"]" },
+            { "type": "scrollIntoView", "selector": "[data-scroll-step=\"report\"]" }
+          ]
+        },
+        {
+          "id": "gallery-formula-terms",
+          "actions": [
+            { "type": "click", "selector": ".pattern-gallery__type-preview .rk-formula-term:first-child" },
+            { "type": "scrollIntoView", "selector": "#gallery-typography" }
           ]
         }
       ]
@@ -436,7 +503,11 @@
       ".journey h1",
       ".journey h2",
       ".journey math",
-      ".journey-comparison p"
+      ".journey-comparison p",
+      ".pattern-gallery__facts dd",
+      ".pattern-gallery__editorial h4",
+      ".pattern-gallery__scroll-step h3",
+      ".pg-overview figure span"
     ]
   },
   "settleMs": 200
