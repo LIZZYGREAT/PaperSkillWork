@@ -989,6 +989,26 @@ test("Reading Journey art switcher keeps the reader at the same section and supp
   await expect(page).toHaveURL(/\?demo=journey&keep=1#journey-paths$/);
 });
 
+test("Shared Visual Stage narrative actions focus the matching loss and Student update", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=journey&art=stage");
+  const journey = page.locator(".journey");
+  const scene = journey.locator(".journey-map-scene");
+
+  await journey.locator(".journey-art-stage-comparisons").getByRole("button", { name: "在主图定位两次比较" }).click();
+  await expect(scene).toHaveAttribute("data-focus-step", "loss");
+  expect(await scene.locator("[data-diagram-edge].is-active").evaluateAll(nodes => nodes.map(node => node.dataset.diagramEdge).sort())).toEqual(["label-lnew", "newout-lnew", "oldout-lold", "target-lold"].sort());
+
+  await journey.locator("#journey-student").getByRole("button", { name: "沿图追到 Student 更新" }).click();
+  await expect(scene).toHaveAttribute("data-focus-step", "update");
+  expect(await scene.locator("[data-diagram-node].is-active").evaluateAll(nodes => nodes.map(node => node.dataset.diagramNode).sort())).toEqual(["backbone", "lNew", "lOld", "update"].sort());
+  expect(await scene.locator("[data-diagram-edge].is-active").evaluateAll(nodes => nodes.map(node => node.dataset.diagramEdge).sort())).toEqual(["lnew-update", "lold-update"].sort());
+
+  await scene.getByRole("button", { name: "恢复概览" }).click();
+  await expect(scene).toHaveAttribute("data-focus-step", "overview");
+  await expect(scene.locator(".is-dimmed")).toHaveCount(0);
+});
+
 for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
   test(`Reading Journey candidates stay legible at ${viewport.width}`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
