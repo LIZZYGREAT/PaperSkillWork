@@ -137,3 +137,33 @@ Agent 已实际查看 1280/1440/1920 整页、1440 的 03→04 连续图、05 �
 真实 `Report:` 输出：中间检查 `.visual-qa/run-2026-10-24T04-51-50-413Z/report.md`（81/81 通过，后补控件上沿修复），最终检查 `.visual-qa/run-2026-10-24T04-58-04-047Z/report.md`（同一最终源码 81/81）。中间报告已读和查图后精确清理，退出 0，确认 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-51-50-413Z` 且目录不存在；最终报告父目录也按同一规则清理。
 
 最终清理退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-58-04-047Z`，验证目录不存在；本轮原生 `reusable-kit/demo/test-results` 已按准确绝对路径删除并验证不存在。4173/4175 无遗留监听，保留上述 10 张精选截图与原报告。
+
+## G0 双方案整页艺术指导实验（2026-10-24）
+
+本轮按 `task/PaperSkillWork_Reading_Journey_整页艺术指导双方案实验.md` 执行至 G0。实施基准为 `docs/workflow-governance` / `e6fdae3f9a220a0a51fc4169d2fcadbc57d58802`；开始时工作区干净。候选只挂在 `?demo=journey&art=stage|reveal`，baseline 仍为 `?demo=journey`；仅改 Reusable Kit Demo 与本评审记录，不改 `papers/**`、旧 Demo、候选 C1/C2、Kit registry 或共享图形引擎。
+
+### 02–04 固定内容核对清单
+
+| 身份 / 事实 | 02 首次建立 | 03 延续 | 04 收束 |
+| --- | --- | --- | --- |
+| `x`：本任务同一批当前输入 | 唯一输入节点 | Teacher 目标与 Student 两个输出均回指当前输入 | 不重用旧训练集 |
+| Teacher 冻结、旧目标 `target` | 旧模型读当前输入，不接梯度；旧响应可预先记录 | 作为 `L_old` 的参照来源 | 只保留外部参照身份，不作更新对象 |
+| Student 表示与两头：`backbone`、`oldOut`、`newOut` | 一个共享表示分出旧/新预测 | 旧目标 + 旧输出 → `L_old`；真实标签 + 新输出 → `L_new` | 两项损失共同约束可训练 Student 参数 |
+| 当前任务真实标签 `label` | 仅监督新头 | `label` + `newOut` → `L_new`，不可与 Teacher 目标互换 | 与旧响应损失分别成立后再合并 |
+| `L_old` / `L_new` 身份 | 图上分别标成两个 objective | 语义、文字标识及数学记号一贯区分；温度只作用于旧路 | `J = λ_o L_old + L_new + R`，包含权重衰减；两路汇合一次 |
+| 训练状态与参数范围 | 可训练 / 冻结角色明确 | 不把比较关系画成新的前向输出 | warm-up 先只训新头，再联合训练；`θ_s` 在 Demo 统称 Student 参数，区别论文同名共享参数；梯度下降式为教学示意，非优化器细节断言 |
+
+权威图谱不改节点 ID / 角色：`x`、`teacher`、`target`、`backbone`、`oldOut`、`newOut`、`label`、`lOld`、`lNew`、`update`；也不改 11 条边的 ID、端点或 `lwfGraphSteps` / `lwfNavItems` 的五步 ID、次序。源为 `reusable-kit/demo/src/figures.tsx` 的 `lwfGraph`、`lwfGraphSteps`、`lwfNavItems`；焦点状态只从该图与步骤派生。
+
+### baseline 浏览器记录与构图选择
+
+已在 Edge 实际打开 baseline `http://127.0.0.1:4187/?demo=journey`，视口 `1440×900`。全页为 `1440×3314`；02 主图画布约 `984×480`，在其全宽场景内最清楚。02→03 截图显示主图后转成四列对照表；03→04 又转成三列计算带。段落和颜色身份一致，但主视觉不随读者跨节，`L_old` / `L_new` 结果使用相同强调色，读图焦点因此从完整因果图切换成常规表格与公式行。
+
+新的基线证据放在 Git 忽略目录 `.visual-qa/journey-art-direction-review/`：`baseline-full-1440.png`、`baseline-map-comparisons-1440.png`、`baseline-comparisons-student-1440.png`。它们由本地 Vite 页面与系统 Edge 生成，不是历史 QA 截图。
+
+| 方案 | 02 主句与画面 | 03 转换 | 04 收束 | 与 baseline 的结构差异 |
+| --- | --- | --- | --- | --- |
+| A · Shared Visual Stage | “沿着同一个输入，先看全局。”唯一完整图成为宽幅主舞台，桌面右侧配叙述，02–04 的同一张图保持 sticky | 选择图中 `loss` 步聚焦 `target→L_old` 与 `label→L_new`；相邻文字解释两路来源和预测 | 选择 `update` 步，沿图内两条损失边追到唯一 Student 更新节点；公式与参数范围紧随说明 | 视觉锚点持续存在，局部焦点由显式键盘可用的步骤选择改变；不用自动滚动/动画，进入前和离开后恢复单栏阅读 |
+| B · Editorial Reveal | “先看全局。”02 使用完整权威图独立建立因果地图 | 版面尺度转成两条不等重的编辑式图文关系，各自呈现目标来源、Student 对应预测与损失，不再复制总图或使用四列模板 | 两种损失以独立源项在同一收束画面汇入 `J`，随后只有 Student 参数更新；Teacher 轻量留作固定参照 | 读者经历地图 → 局部比较 → 参数结论的有意尺度接力；无贯穿式 sticky 图，03 / 04 获得新的空间重心 |
+
+两候选都保留 01 问题与 05 任务边界原文；相同事实、公式、语义色、基础字体及对象量。不得用换色或字号变化冒充方向差异。实施后将以 1440 全页和两段连续截图检视整页节奏，再完成文档列出的构建、浏览器与 Visual QA 门禁；Codex 只给出供评审的观察，不代替用户选型。
