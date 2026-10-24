@@ -141,7 +141,7 @@
    measured boxes. Stage bands name the columns; connectors carry port dots so an
    endpoint is visible rather than implied. It reflows instead of scaling, so
    in-figure text keeps its role size at every viewport. */
-.rk-diagram { display: grid; gap: 12px; min-width: 0; padding: clamp(16px, 2vw, 26px); border: 1px solid var(--rk-line); border-radius: 16px; background-color: var(--rk-surface); background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--rk-line) 62%, transparent) 1px, transparent 0); background-size: 22px 22px; color: var(--rk-ink); }
+.rk-diagram { display: grid; gap: 12px; min-width: 0; margin: 0; padding: clamp(16px, 2vw, 26px); border: 1px solid var(--rk-line); border-radius: 16px; background-color: var(--rk-surface); background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--rk-line) 62%, transparent) 1px, transparent 0); background-size: 22px 22px; color: var(--rk-ink); }
 .rk-diagram--flush { padding: 0; border: 0; border-radius: 0; background-image: none; background-color: transparent; }
 .rk-diagram__canvas { position: relative; display: grid; align-items: stretch; min-width: 0; column-gap: var(--rk-diagram-gap-x); row-gap: var(--rk-diagram-gap-y); }
 /* Stage names sit above the columns on a hairline, like a drawing's section rule:
