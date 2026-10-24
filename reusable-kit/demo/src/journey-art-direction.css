@@ -30,6 +30,9 @@
   gap: 28px;
   margin: 26px 0 0;
 }
+@media (min-width: 1440px) {
+  .journey-art-stage__reading { padding-bottom: clamp(380px, 44vh, 440px); }
+}
 .journey-art-stage__visual { position: sticky; top: 78px; align-self: start; min-width: 0; }
 .journey-art-stage__visual .journey-map-scene { padding: 16px; }
 .journey-art-stage__visual .rk-diagram { margin-inline: 0; }

@@ -1037,6 +1037,42 @@ test("Shared Visual Stage temperature formula opens without resizing the composi
   expect(Math.abs((await bounds()).stage - before.stage)).toBeLessThanOrEqual(1);
 });
 
+test("Shared Visual Stage stays pinned until the phase note reaches the objective area", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=journey&art=stage");
+  await page.evaluate(() => document.fonts.ready);
+
+  const boundary = await page.evaluate(() => {
+    const stage = document.querySelector(".journey-art-stage");
+    const visual = document.querySelector(".journey-art-stage__visual");
+    const reading = document.querySelector(".journey-art-stage__reading");
+    const note = document.querySelector(".journey-stage-optimization .journey-training-notes");
+    const equation = document.querySelector(".journey-stage-optimization .journey-art-stage-equation");
+    const readingBox = reading.getBoundingClientRect();
+    const visualBox = visual.getBoundingClientRect();
+    const stageBox = stage.getBoundingClientRect();
+    return {
+      releaseScroll: stageBox.bottom + scrollY - visualBox.height - 78,
+      noteTopAtRelease: note.getBoundingClientRect().top + scrollY - (stageBox.bottom + scrollY - visualBox.height - 78),
+      equationTopAtRelease: equation.getBoundingClientRect().top + scrollY - (stageBox.bottom + scrollY - visualBox.height - 78),
+      readingPaddingBottom: Number.parseFloat(getComputedStyle(reading).paddingBottom),
+    };
+  });
+
+  expect(boundary.readingPaddingBottom).toBeGreaterThanOrEqual(390);
+  expect(boundary.noteTopAtRelease).toBeGreaterThanOrEqual(290);
+  expect(boundary.noteTopAtRelease).toBeLessThanOrEqual(330);
+  expect(boundary.equationTopAtRelease).toBeGreaterThanOrEqual(35);
+  expect(boundary.equationTopAtRelease).toBeLessThanOrEqual(75);
+
+  const visual = page.locator(".journey-art-stage__visual");
+  await page.evaluate(y => window.scrollTo(0, y), boundary.releaseScroll - 24);
+  await expect.poll(() => visual.evaluate(node => Math.round(node.getBoundingClientRect().top))).toBe(78);
+  await page.evaluate(y => window.scrollTo(0, y), boundary.releaseScroll + 24);
+  await expect.poll(() => visual.evaluate(node => Math.round(node.getBoundingClientRect().top))).toBe(54);
+});
+
 for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
   test(`Reading Journey candidates stay legible at ${viewport.width}`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
