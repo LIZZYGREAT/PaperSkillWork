@@ -16,6 +16,7 @@ type MathMLCoreAttributes = {
   display?: "block" | "inline" | "inline-block";
   className?: string;
   title?: string;
+  xmlns?: string;
   children?: ReactNode;
   "aria-label"?: string;
   mathvariant?: string;

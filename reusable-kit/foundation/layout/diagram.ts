@@ -69,8 +69,8 @@ export function diagramPortPoint(center: DiagramPoint, size: DiagramNodeSize, po
 export function chooseDiagramPorts(
   source: DiagramPoint,
   target: DiagramPoint,
-  sourceSize: DiagramNodeSize,
-  targetSize: DiagramNodeSize,
+  _sourceSize: DiagramNodeSize,
+  _targetSize: DiagramNodeSize,
 ): { startPort: DiagramPort; endPort: DiagramPort } {
   const dx = target.x - source.x;
   const dy = target.y - source.y;

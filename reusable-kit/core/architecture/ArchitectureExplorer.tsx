@@ -1,7 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createDiagramPath } from "../../foundation/layout/diagram";
 import { layoutGraphByRows } from "../../foundation/layout/graph-layout";
-import type { DiagramPoint } from "../../foundation/layout/diagram";
 import type { ArchitectureSpec } from "./types";
 import { validateArchitectureSpec } from "./types";
 
@@ -40,7 +39,6 @@ export function ArchitectureExplorer({ spec, highlightedIds = [], highlightedBra
   const width = layout ? layout.width : Math.max(640, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 36));
   const height = layout ? layout.height : Math.max(200, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 36));
   const needsScroll = viewportWidth > 0 && width > viewportWidth + 1;
-  const canvasScale = 1;
   const visibleIds = new Set(visible.map((node) => node.id));
   const selected = spec.nodes.find((node) => node.id === selectedId);
   const toggleGroup = (group: string) => setCollapsed((items) => items.includes(group) ? items.filter((item) => item !== group) : [...items, group]);

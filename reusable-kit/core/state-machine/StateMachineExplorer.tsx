@@ -2,7 +2,6 @@ import { useId, useMemo, useState } from "react";
 import { createDiagramPath } from "../../foundation/layout/diagram";
 import { Button } from "../../foundation/controls/Button";
 import { Feedback } from "../../foundation/feedback/Feedback";
-import { MetaList } from "../../foundation/data/MetaList";
 import { attemptTransition, validateStateMachine } from "./types";
 import type { StateMachineSpec, StateNode } from "./types";
 

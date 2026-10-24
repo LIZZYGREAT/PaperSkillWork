@@ -157,7 +157,6 @@ export function ProcessLoopExplorer({ spec, initialStep = 0, mode = "manual", sh
   const positions = layout ? layout.positions : new Map(seeded.map((item) => [item.id, item.position!]));
   const canvasWidth = layout ? layout.width : Math.max(760, ...Array.from(positions.values(), (point) => point.x + nodeSize.width / 2 + 24));
   const canvasHeight = layout ? layout.height : Math.max(200, ...Array.from(positions.values(), (point) => point.y + nodeSize.height / 2 + 24));
-  const canvasScale = 1;
   const needsScroll = viewportWidth > 0 && canvasWidth > viewportWidth + 1;
   const nodesById = new Map(spec.nodes.map((node) => [node.id, node]));
   const selectedNode = spec.nodes.find((node) => node.id === selectedNodeId);
@@ -188,7 +187,7 @@ export function ProcessLoopExplorer({ spec, initialStep = 0, mode = "manual", sh
         <div className="rk-process-loop__canvas" style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}>
           <svg className="rk-process-loop__edges" viewBox={`0 0 ${canvasWidth} ${canvasHeight}`} role="img" aria-label="Process connections">
             <defs><marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
-            {spec.edges.map((edge, index) => {
+            {spec.edges.map((edge) => {
               const reverse = edge.direction === "reverse" || (!edge.direction && edge.kind === "gradient");
               const sourceId = reverse ? edge.to : edge.from;
               const targetId = reverse ? edge.from : edge.to;
