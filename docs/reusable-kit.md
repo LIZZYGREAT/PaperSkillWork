@@ -7,15 +7,18 @@ Current source version: `2.0.0` (`reusable-kit/KIT_VERSION`).
 ## Copy-on-scaffold
 
 ```powershell
-python tools/paper.py new my-cl-paper --title "Continual Learning Paper" --url "https://example.org/paper"
-python tools/paper.py scaffold-kit my-cl-paper --preset continual-learning --add EvidenceViewer,FormulaBlock
+python3 tools/paper.py new kit-smoke-demo --title "Kit Smoke Demo" --url "https://example.org/kit-smoke"
+python3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --add StepNav,FigureFrame,FormulaBlock,PullQuote --allow-unapproved
 ```
 
-The command writes `papers/<paper-id>/web/enhanced/src/shared/` plus `KIT_VERSION`, keeps the source layer paths (`foundation/`, `core/`, `compositions/`, `optional/`) so internal imports resolve after the copy, and refuses to overwrite an existing `shared/` directory.
+The first command is a virtual sample for isolated validation; a real paper must use its real source and title. The second command is one first-scaffold option: the `continual-learning` preset includes P0 components, while `--add` accepts P1 components only. All current entries are `candidate`, so `--allow-unapproved` explicitly accepts copying them; it does not approve them. The alternative first-scaffold command without optional P1 additions is `python3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --allow-unapproved`. These two scaffold commands are mutually exclusive for the same new workspace.
+
+Scaffolding writes `papers/<paper-id>/web/enhanced/src/shared/` plus `KIT_VERSION`, keeps the source layer paths (`foundation/`, `core/`, `compositions/`, `optional/`) so internal imports resolve after the copy, and refuses to overwrite an existing `shared/` directory. Choose all desired P1 additions on the first command; the scaffold operation is copy-on-scaffold and does not merge into an existing `src/shared/`.
 
 Add the shared stylesheet once from the paper entry point, then import only the components actually used:
 
 ```tsx
+// In papers/<paper-id>/web/enhanced/src/App.tsx, add this stylesheet once.
 import "./shared/foundation/styles/kit.css";
 import { DiagramFlow } from "./shared/foundation/layout/DiagramFlow";
 import { FigureFrame } from "./shared/compositions/figure-frame";
@@ -26,13 +29,13 @@ import { StepNav } from "./shared/compositions/step-nav";
 
 ### Maturity gate
 
-`scaffold-kit` copies **approved** components only. No component is approved yet, so today the command refuses to run and lists the unapproved names it would have copied:
+`scaffold-kit` includes the P0 files in the selected preset and adds only requested P1 files. It refuses candidate copies by default. Without `--allow-unapproved`, it reports the requested candidate names and asks for the flag:
 
 ```
-Reusable Kit component(s) are not approved: Button, Chip, ... Accept this by passing --allow-unapproved.
+Reusable Kit component(s) are not approved: ... Pass --allow-unapproved to scaffold them anyway.
 ```
 
-`--allow-unapproved` copies them anyway and prints one `[WARN]` line per component. `deprecated` components can never be copied, with or without the flag. `python tools/paper.py check <paper-id>` fails on a `deprecated` `reusable_pattern` and only warns for a `candidate` one. A copied candidate is still a candidate: copying is not approval.
+`--add` accepts P1 only; P0 components such as `DiagramFlow` and `StickySystemView` already arrive through the `continual-learning` preset. Asking for a P0 with `--add` fails. `--allow-unapproved` copies candidate components and prints one `[WARN]` line per component. `deprecated` components can never be copied, with or without the flag. `python tools/paper.py check <paper-id>` fails on a `deprecated` `reusable_pattern` and only warns for a `candidate` one. A copied candidate is still a candidate: copying is not approval.
 
 ## Three delivery layers
 
@@ -98,11 +101,11 @@ npm run build
 npm run test:browser
 ```
 
-The first demo route is the Pattern Gallery: it makes DiagramFlow connector and focus variants, editorial composition recipes, StickySystemView scroll synchronization, and typography/formula examples discoverable with copyable starter code and source paths. The Foundation Component Lab remains available as its own route, alongside the EWC, LwF, Editorial Studies, and Reading Journey scenarios. The Gallery is an entry point, not a second component registry; `registry.yaml` remains canonical and its entries remain candidates until human acceptance.
+The first demo route is the Pattern Gallery: it makes DiagramFlow connector and focus variants, editorial composition recipes, StickySystemView scroll synchronization, and typography/formula examples discoverable with code panels. Diagram, sticky, and typography panels contain complete runnable TSX examples; editorial panels are TSX/CSS structural fragments whose caller data must be supplied. The Foundation Component Lab remains available as its own route, alongside the EWC, LwF, Editorial Studies, and Reading Journey scenarios. The Gallery is an entry point, not a second component registry; `registry.yaml` remains canonical and its entries remain candidates until human acceptance.
 
 `test:browser` runs the assertion page plus Chromium checks for Gallery diagrams and scroll/manual synchronization, typography/control states, overlay contracts, the LwF figure (label completeness, connector geometry, in-figure type size, title/figure ratio, per-step object and edge state, narrow-screen reflow, sidebar selection versus keyboard focus), and the TermRef → English Hub journey. It asserts the *properties* the design requires, not a particular DOM shape.
 
-Visual QA runs from the repository root; the Kit demo config declares three desktop viewports (1280×900, 1440×900, 1920×1080) and the selectors that must not clip. Narrow and mobile layouts are out of scope for this review round:
+Visual QA runs from the repository root; the Kit demo config captures three desktop viewports (1280×900, 1440×900, 1920×1080) and checks the declared selectors for clipping. The browser suite additionally checks its narrow reflow at 390px; the shared visual capture remains desktop-only:
 
 ```powershell
 node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json

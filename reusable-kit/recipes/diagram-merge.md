@@ -55,11 +55,11 @@ const mergeSpec: DiagramSpec = {
   edges: [
     { id: "old-preserve", from: "old", to: "preserve", kind: "data", mode: "smooth" },
     { id: "current-preserve", from: "current", to: "preserve", kind: "data", mode: "smooth" },
-    { id: "importance-preserve", from: "importance", to: "preserve", kind: "control", mode: "straight" },
+    { id: "importance-preserve", from: "importance", to: "preserve", kind: "data", mode: "straight" },
     { id: "prediction-task", from: "prediction", to: "task", kind: "data", mode: "smooth" },
     { id: "label-task", from: "label", to: "task", kind: "data", mode: "straight" },
-    { id: "preserve-combined", from: "preserve", to: "combined", kind: "gradient", mode: "smooth" },
-    { id: "task-combined", from: "task", to: "combined", kind: "gradient", mode: "smooth" },
+    { id: "preserve-combined", from: "preserve", to: "combined", kind: "data", mode: "smooth" },
+    { id: "task-combined", from: "task", to: "combined", kind: "data", mode: "smooth" },
     { id: "combined-update", from: "combined", to: "update", kind: "gradient", mode: "smooth" },
   ],
 };
@@ -69,4 +69,4 @@ export function MergeExample() {
 }
 ```
 
-The connector geometry is measured from the rendered nodes. Change `mode` to `straight`, `smooth`, or `orthogonal` where it clarifies the route; pin `startPort` / `endPort` only when automatic port selection grazes another object. Narrow layouts reflow into an ordered list while retaining incoming-input names.
+Solid connectors mean calculation inputs or objective-term contributions. The importance weight is numeric data entering the preservation comparison; it is not a control condition. The two objective results enter the combined objective as data dependencies, while only the edge from the combined objective to the parameter update represents gradient flow. The connector geometry is measured from the rendered nodes. Change `mode` to `straight`, `smooth`, or `orthogonal` where it clarifies the route; pin `startPort` / `endPort` only when automatic port selection grazes another object. Narrow layouts reflow into an ordered list while retaining incoming-input names.

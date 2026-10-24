@@ -16,33 +16,42 @@ Use the existing `StickySystemView` when several text sections explain changes i
 
 ## Copyable Example
 
+This is a complete, runnable TSX component with two local steps and a small visual that changes with the active step. It needs the Kit stylesheet imported once by the app entry point.
+
 ```tsx
 import { useState } from "react";
 import { StickySystemView, useStickyStepSync } from "./shared/foundation/layout/StickySystemView";
 import { FigureFrame } from "./shared/compositions/figure-frame/FigureFrame";
 import { StepNav } from "./shared/compositions/step-nav/StepNav";
 
-type Step = { id: string; sectionId: string; title: string; body: string };
+type Step = { id: string; sectionId: string; title: string; body: string; reference: string; learner: string };
 
-function SyncedFigure({ steps, activeId, onChoose }: {
-  steps: Step[]; activeId: string; onChoose: (id: string) => void;
-}) {
+const steps: Step[] = [
+  { id: "arrive", sectionId: "story-arrive", title: "共享输入", body: "同一份样本进入两个职责不同的对象。", reference: "冻结参考模型", learner: "当前可训练模型" },
+  { id: "compare", sectionId: "story-compare", title: "目标比较", body: "参照目标与当前预测用于响应比较；真实标签进入任务比较。", reference: "响应目标 + 当前预测", learner: "当前预测 + 真实标签 y" },
+];
+
+function SyncedFigure({ activeId, onChoose }: { activeId: string; onChoose: (id: string) => void }) {
   const sync = useStickyStepSync();
   const active = steps.find(step => step.id === activeId) ?? steps[0];
   return <FigureFrame label="Current system state" title={active.title}
     footer={<StepNav items={steps.map(step => ({ id: step.id, label: step.title }))}
       activeId={activeId} label="Choose a figure step"
       onSelect={id => { onChoose(id); sync?.setManualStep(id); }} />}>
-    {renderFigure(active.id)}
+    <div role="img" aria-label={`${active.reference} leads to ${active.learner}`}>
+      <p><strong>REFERENCE</strong> · {active.reference}</p>
+      <p aria-hidden="true">↓</p>
+      <p><strong>LEARNING</strong> · {active.learner}</p>
+    </div>
   </FigureFrame>;
 }
 
-export function ScrollStory({ steps }: { steps: Step[] }) {
+export function ScrollStoryExample() {
   const [activeId, setActiveId] = useState(steps[0].id);
   const sections = steps.map(step => ({ id: step.sectionId, stepId: step.id }));
   return <StickySystemView sections={sections}
     onActiveSectionChange={section => { if (section.stepId) setActiveId(section.stepId); }}
-    visual={<SyncedFigure steps={steps} activeId={activeId} onChoose={setActiveId} />}>
+    visual={<SyncedFigure activeId={activeId} onChoose={setActiveId} />}>
     {steps.map(step => <section id={step.sectionId} key={step.id}>
       <h2>{step.title}</h2><p>{step.body}</p>
     </section>)}
@@ -50,7 +59,7 @@ export function ScrollStory({ steps }: { steps: Step[] }) {
 }
 ```
 
-`renderFigure` above is the paper's own figure implementation. Its visual state should be derived from the same step ID used by the text, not from a second timer.
+The `FigureFrame` content here is deliberately small so the synchronization contract is easy to copy. Replace the two object descriptions with the paper's actual visual and derive its state from the same `activeId` as the reading, not from a second timer.
 
 ## Minimum Step Contract
 

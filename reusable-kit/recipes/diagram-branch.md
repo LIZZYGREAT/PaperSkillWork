@@ -33,35 +33,47 @@ LwF (frozen teacher lane versus trainable student backbone) and the EWC task-A c
 
 ## Copyable DiagramFlow Example
 
-This is a structural illustration. Replace the labels and relationships with facts from the paper; the component does not supply algorithm semantics.
+This is a complete, runnable structural illustration. It distinguishes the frozen reference from the trainable path, supplies the current label used by the task comparison, and combines objective contributions before the update edge. Replace the labels and relationships with facts from the paper; the component does not supply algorithm semantics.
 
 ```tsx
 import { DiagramFlow } from "./shared/foundation/layout/DiagramFlow";
 import type { DiagramSpec } from "./shared/foundation/layout/DiagramFlow";
 
 const branchSpec: DiagramSpec = {
-  columns: 3,
-  zones: [
-    { id: "source", label: "Shared input", from: 1, span: 1 },
-    { id: "paths", label: "Distinct roles", from: 3, span: 1 },
-  ],
+  columns: 5,
   nodes: [
-    { id: "input", title: "Sample x", role: "input", column: 1, row: 2 },
-    { id: "task", title: "Current task", role: "label", column: 1, row: 4 },
-    { id: "reference", title: "Frozen reference", meta: "No current-task update", role: "frozen", column: 3, row: 1 },
-    { id: "learner", title: "Trainable model", meta: "Receives the update", role: "trainable", column: 3, row: 3 },
+    { id: "sample", title: "输入样本 xₜ", role: "input", column: 1, row: 2 },
+    { id: "task", title: "当前任务 t", role: "label", column: 1, row: 5 },
+    { id: "teacher", title: "冻结参考模型", role: "frozen", column: 2, row: 1 },
+    { id: "student", title: "可训练模型", role: "trainable", column: 2, row: 4 },
+    { id: "target", title: "旧类响应目标", role: "target", column: 3, row: 1 },
+    { id: "prediction", title: "当前预测", role: "output", column: 3, row: 4 },
+    { id: "label", title: "当前真实标签 y", role: "label", column: 3, row: 7 },
+    { id: "old-loss", title: "响应比较", role: "objective", column: 4, row: 1 },
+    { id: "new-loss", title: "标签比较", role: "objective", column: 4, row: 5 },
+    { id: "combined", title: "组合目标", role: "objective", column: 5, row: 3 },
+    { id: "update", title: "student 参数", role: "update", column: 5, row: 6 },
   ],
   edges: [
-    { id: "input-reference", from: "input", to: "reference", kind: "data", mode: "smooth", startPort: "right", endPort: "left" },
-    { id: "input-learner", from: "input", to: "learner", kind: "data", mode: "smooth", startPort: "right", endPort: "left" },
-    { id: "task-learner", from: "task", to: "learner", kind: "control", mode: "orthogonal" },
+    { id: "input-teacher", from: "sample", to: "teacher", kind: "data", mode: "smooth" },
+    { id: "input-student", from: "sample", to: "student", kind: "data", mode: "smooth" },
+    { id: "teacher-target", from: "teacher", to: "target", kind: "data", mode: "straight" },
+    { id: "student-prediction", from: "student", to: "prediction", kind: "data", mode: "straight" },
+    { id: "task-control", from: "task", to: "student", kind: "control", mode: "orthogonal" },
+    { id: "target-old-loss", from: "target", to: "old-loss", kind: "data", mode: "smooth" },
+    { id: "prediction-old-loss", from: "prediction", to: "old-loss", kind: "data", mode: "smooth" },
+    { id: "prediction-new-loss", from: "prediction", to: "new-loss", kind: "data", mode: "smooth" },
+    { id: "label-new-loss", from: "label", to: "new-loss", kind: "data", mode: "straight" },
+    { id: "old-loss-combined", from: "old-loss", to: "combined", kind: "data", mode: "smooth" },
+    { id: "new-loss-combined", from: "new-loss", to: "combined", kind: "data", mode: "smooth" },
+    { id: "combined-update", from: "combined", to: "update", kind: "gradient", mode: "smooth" },
   ],
-  note: "Solid = data; dotted = control. State differences are written in the nodes as well as styled.",
+  note: "Solid = inputs and objective contributions; dotted = task control; dashed = gradient from the combined objective to the update target.",
 };
 
 export function BranchExample() {
-  return <DiagramFlow spec={branchSpec} label="One input branches to a frozen reference and a trainable model" />;
+  return <DiagramFlow spec={branchSpec} label="One input follows frozen and trainable paths before objective comparison and update" />;
 }
 ```
 
-Use `focus={{ nodes, edges }}` to emphasize one path while keeping the surrounding structure visible. At narrow widths, `DiagramFlow` reflows the same spec into an ordered list; do not scale the diagram down or replace connectors with text arrows.
+Solid connectors mean input data or objective-term contribution, dotted connectors mean task control, and the dashed connector means the combined objective's gradient reaches the update target. The sample and task marker are distinct; the task marker is not a label for the loss. Use `focus={{ nodes, edges }}` to emphasize one path while keeping the surrounding structure visible. Changing `mode` only changes connector geometry, not this edge meaning. At narrow widths, `DiagramFlow` reflows the same spec into an ordered list; do not scale the diagram down or replace connectors with text arrows.

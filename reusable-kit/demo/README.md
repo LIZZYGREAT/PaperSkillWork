@@ -1,6 +1,6 @@
 # Reusable Kit local demo
 
-The demo is the review surface for the Kit source. It contains a Foundation Component Lab plus LwF and EWC real-content scenarios that use the same primitives with different paper data. The examples contain no benchmark values and are not a substitute for checking a paper's source, evidence, or conditions.
+The demo is the review surface for the Kit source. Pattern Gallery is the entry route for reusable examples; its DiagramFlow, StickySystemView, and typography panels contain complete TSX components, while editorial panels are paired TSX/CSS fragments with caller-provided data. The Foundation Component Lab and LwF/EWC real-content scenarios remain available and use the same primitives with different paper data. The examples contain no benchmark values and are not a substitute for checking a paper's source, evidence, or conditions.
 
 Run locally:
 
