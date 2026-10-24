@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "../../foundation/controls/Button";
 import { StepNav } from "../../compositions/step-nav";
+import { EditorialCCandidates, type EditorialCVariant } from "./EditorialCCandidates";
 import "./editorial-studies.css";
 
 export const editorialSections = [
@@ -20,6 +21,8 @@ const handoffStages = [
 ];
 
 export function EditorialStudies() {
+  const cParam = new URLSearchParams(window.location.search).get("c");
+  const cVariant: EditorialCVariant = cParam === "c1" || cParam === "c2" ? cParam : "baseline";
   const [stageIndex, setStageIndex] = useState(0);
   const stage = handoffStages[stageIndex];
   const phase = (index: number) => index === stageIndex ? "current" : index < stageIndex ? "completed" : "upcoming";
@@ -94,7 +97,7 @@ export function EditorialStudies() {
       <p className="ed-study__handoff"><span>带走的认识</span>保存的不是过去的训练过程，而是供下一任务使用的参考位置与重要性。</p>
     </section>
 
-    <section id="ed-c" className="ed-study__section ed-study__c" aria-labelledby="ed-c-title">
+    {cVariant === "baseline" ? <section id="ed-c" className="ed-study__section ed-study__c" aria-labelledby="ed-c-title">
       <p className="ed-study__eyebrow">C / ASYMMETRIC COMPARISON <span>LwF · 联合优化阶段</span></p>
       <h2 id="ed-c-title">teacher 给出旧响应目标；<br /><em>student 接收更新。</em></h2>
       <p className="ed-study__c-intro">同一批当前任务输入 x，一边问“以前怎样回答”，另一边同时学习“现在怎样回答”。两次比较，指向同一个可训练对象。</p>
@@ -118,7 +121,7 @@ export function EditorialStudies() {
       </div>
       <p className="ed-study__caption ed-study__formula-note">机制简写，对应 LwF §3、式 (1)–(5) 的联合优化阶段：L<sub>old</sub> 使用温度变换并重新归一化的分布；λ<sub>o</sub> 为旧损失权重，R 为权重衰减。此前 warm-up 只训练新任务参数；这里不展开批次平均与完整训练流程。</p>
       <p className="ed-study__proposition">保留旧响应，<strong>不等于冻结 student。</strong></p>
-    </section>
+    </section> : <EditorialCCandidates variant={cVariant} />}
     <footer className="ed-study__sources"><span>机制依据</span><a href="https://arxiv.org/pdf/1612.00796" target="_blank" rel="noreferrer">EWC · §2 / Eq. (3)</a><a href="https://arxiv.org/pdf/1606.09282" target="_blank" rel="noreferrer">LwF · §3 / Eq. (1)–(5)</a><p>本页为构图候选，等待人工评审。</p></footer>
   </article>;
 }
