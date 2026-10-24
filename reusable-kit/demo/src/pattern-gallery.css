@@ -69,7 +69,7 @@
 .pg-overview__formula small { color: var(--rk-muted); font-size: 11px; line-height: 1.5; }
 .pattern-gallery__story-note { margin: 0; color: var(--rk-muted); font-size: 13px; }
 .pattern-gallery__scroll-demo { display: grid; gap: 14px; min-width: 0; }
-.pattern-gallery__scroll-demo .rk-sticky-system { grid-template-columns: minmax(520px, 1.1fr) minmax(340px, .9fr); align-items: start; }
+.pattern-gallery__scroll-demo .rk-sticky-system { grid-template-columns: minmax(520px, 2.7fr) minmax(220px, 1fr); align-items: start; }
 .pattern-gallery__scroll-demo .rk-figure__title { max-width: 22ch; }
 .pattern-gallery__scroll-demo .rk-diagram__canvas { --rk-diagram-gap-x: clamp(8px, 1vw, 16px); }
 .pattern-gallery__scroll-steps { min-width: 0; }
