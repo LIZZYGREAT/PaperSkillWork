@@ -32,11 +32,14 @@
 .journey .rk-diagram__edge.is-control path { stroke-dasharray: 2 4; }
 .journey .rk-step-nav { margin-top: 18px; }
 .journey-bridge { margin-top: 18px !important; color: var(--rk-muted); font-size: 14px; }
-.journey-paths { display: grid; grid-template-columns: minmax(140px, .7fr) minmax(0, 2.3fr); gap: 38px; margin: 65px auto 60px; max-width: 960px; }
+.journey-paths { margin: 65px 0 60px; max-width: 960px; }
+.journey-paths-heading { margin-bottom: 18px; }
+.journey-paths-heading h2 { margin-top: 9px; }
+.journey-paths-body { display: grid; grid-template-columns: minmax(0, 2.3fr) minmax(140px, .7fr); gap: 38px; }
 .journey-paths aside { padding-top: 7px; }
-.journey-paths aside > p:nth-child(2) { margin: 18px 0; font-size: 14px; }
+.journey-paths-reference { margin-bottom: 18px !important; font-size: 14px; }
 .journey-aside-note { max-width: 23ch; font-size: 12px; color: var(--rk-muted); }
-.journey-paths-copy > p { margin-top: 18px; }
+.journey-paths-copy > p:not(:first-child) { margin-top: 18px; }
 .journey-inline-emphasis { font-size: 1.15em; font-weight: 650; color: var(--rk-accent); background: var(--rk-accent-soft); padding: 0 .18em; }
 .journey-comparison { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) minmax(82px, .65fr); gap: 12px; align-items: center; margin-top: 25px; padding: 19px 0; border-block: 1px solid var(--rk-line); }
 .journey-comparison p { font-size: 14px; }
@@ -46,7 +49,7 @@
 .journey-comparison-result .rk-math { font-size: 24px; color: var(--rk-accent); }
 .journey-comparison-result small { display: block; font-size: 11px; color: var(--rk-muted); }
 .journey-comparison-note { font-size: 14px; color: var(--rk-muted); }
-.journey-optimization { max-width: 920px; margin: 0 auto; }
+.journey-optimization { max-width: 920px; margin: 0; }
 .journey-optimization > header { max-width: 680px; margin-bottom: 23px; }
 .journey-optimization h2 { margin: 9px 0 12px; }
 .journey-optimization > header > p:last-child { color: var(--rk-muted); }
@@ -67,7 +70,7 @@
 .journey-temperature { margin-top: 18px; font-size: 13px; color: var(--rk-muted); border-bottom: 1px solid var(--rk-line); padding-bottom: 15px; }
 .journey-temperature summary { cursor: pointer; color: var(--rk-accent); }
 .journey-temperature p { margin-top: 15px; max-width: 650px; }
-.journey-handoff { max-width: 770px; margin: 65px auto 10px; }
+.journey-handoff { max-width: 770px; margin: 65px 0 10px; }
 .journey-handoff h2 { margin: 10px 0 16px; }
 .journey-handoff > p:not(.journey-kicker, .journey-proposition, .journey-source) { color: var(--rk-muted); font-size: 14px; }
 .journey-timeline { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 22px; list-style: none; padding: 0; margin: 28px 0; }
@@ -77,14 +80,14 @@
 .journey-timeline strong { font-size: 14px; margin: 6px 0; }
 .journey-proposition { margin: 32px 0 23px !important; font-size: 29px; line-height: 1.65; letter-spacing: -.035em; }
 .journey-source { font-size: 11px; color: var(--rk-muted); border-top: 1px solid var(--rk-line); padding-top: 16px; }
-@media (max-width: 1200px) { .journey-equations { grid-template-columns: 1fr; gap: 10px; } .journey-paths { gap: 24px; } }
+@media (max-width: 1200px) { .journey-equations { grid-template-columns: 1fr; gap: 10px; } .journey-paths-body { gap: 24px; } }
 @media (max-width: 640px) {
   .journey h1 { font-size: 34px; } .journey h2 { font-size: 25px; }
   .journey-map-heading { display: block; } .journey-map-heading > p { margin-top: 12px; }
   .journey-map-scene { padding: 14px; } .journey-map-caption { flex-wrap: wrap; }
   .journey-tension { gap: 15px 28px; } .journey-tension a { margin-left: 0; }
-  .journey-paths { display: block; margin: 40px 0; } .journey-paths aside { margin-bottom: 20px; }
-  .journey-paths aside > p:nth-child(2) { display: none; } .journey-aside-note { max-width: none; margin-top: 10px !important; }
+  .journey-paths { margin: 40px 0; } .journey-paths-body { display: block; } .journey-paths aside { margin-top: 20px; }
+  .journey-aside-note { max-width: none; }
   .journey-comparison { grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr); gap: 8px; }
   .journey-comparison-result { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 14px; border-left: 0; padding: 0; }
   .journey-student { padding: 19px 16px; } .journey-student > header, .journey-training-notes { grid-template-columns: 1fr; gap: 14px; }

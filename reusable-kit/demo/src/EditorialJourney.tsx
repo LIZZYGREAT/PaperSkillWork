@@ -52,13 +52,16 @@ export function EditorialJourney() {
     </section>
 
     <section id="journey-paths" className="journey-paths" aria-labelledby="journey-paths-title">
-      <aside><p className="journey-kicker">03 / TWO COMPARISONS</p><p>回看地图中的<br /><b>目标 / 预测 / 标签</b></p><p className="journey-aside-note">Teacher 的响应来自当前新任务图像，而非重新读取旧训练集；原文先记录这些响应，训练时可直接读取。</p></aside>
-      <div className="journey-paths-copy"><h2 id="journey-paths-title">两次比较，参照各有来处。</h2>
+      <header className="journey-paths-heading"><p className="journey-kicker">03 / TWO COMPARISONS</p><h2 id="journey-paths-title">两次比较，参照各有来处。</h2></header>
+      <div className="journey-paths-body">
+      <div className="journey-paths-copy">
         <p>Teacher 在当前输入上留下<strong className="journey-inline-emphasis">旧响应目标</strong>。Student 旧头给出的预测要接近它；新头则面对当前任务的真实标签。两路预测来自同一份 Student 共享表示，但监督来源不同。</p>
         <div className="journey-comparison" data-comparison="old" data-target="target" data-prediction="oldOut" data-result="lOld"><p><span>固定参照</span>Teacher 旧响应目标</p><span className="journey-compare-sign" aria-label="与预测比较">↔</span><p><span>Student 预测</span>旧类输出</p><p className="journey-comparison-result"><Loss kind="old" /><small>旧响应偏差</small></p></div>
         <p className="journey-comparison-note">比较前，两边概率都经过温度变换并重新归一化，再计算蒸馏交叉熵。它保留的是响应关系，并不把 Student 的旧参数锁住。</p>
         <div className="journey-comparison" data-comparison="new" data-target="label" data-prediction="newOut" data-result="lNew"><p><span>真实监督</span>当前任务标签</p><span className="journey-compare-sign" aria-label="与预测比较">↔</span><p><span>Student 预测</span>新类输出</p><p className="journey-comparison-result"><Loss kind="new" /><small>新任务分类误差</small></p></div>
         <p className="journey-comparison-note">这里用新标签与新头概率计算分类交叉熵。两个损失各自成立后，还需要共同约束同一个学习者。</p>
+      </div>
+      <aside><p className="journey-paths-reference">回看地图中的<br /><b>目标 / 预测 / 标签</b></p><p className="journey-aside-note">Teacher 的响应来自当前新任务图像，而非重新读取旧训练集；原文先记录这些响应，训练时可直接读取。</p></aside>
       </div>
     </section>
 

@@ -71,6 +71,13 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900
     await page.goto("/?demo=journey");
     const journey = page.locator(".journey");
     await page.evaluate(() => document.fonts.ready);
+    // Different reading widths must share an axis; centered sections and a
+    // leading aside previously pushed 03–05 progressively away from 01–02.
+    const leftOffsets = await journey.evaluate(root => {
+      const left = root.getBoundingClientRect().left;
+      return [...root.querySelectorAll(":scope > [id], h1, #journey-map-title, #journey-paths-title, #journey-student-title, #journey-handoff-title, .journey-paths-copy")].map(node => ({ element: node.id || node.className || node.tagName, offset: node.getBoundingClientRect().left - left }));
+    });
+    expect(leftOffsets.filter(item => Math.abs(item.offset) > 1)).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const diagram = journey.locator(".rk-diagram");
     await expect(diagram).toHaveAttribute("data-diagram-mode", viewport.width === 390 ? "list" : "grid");

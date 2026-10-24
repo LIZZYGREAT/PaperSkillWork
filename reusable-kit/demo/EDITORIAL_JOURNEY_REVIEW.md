@@ -77,3 +77,19 @@ QA 命令的真实输出为 `Visual QA PASS. Report: C:\Users\lenovo\Desktop\Pro
 人工优先评估三点：开场是否足以引导继续阅读；总图到两次比较再到 Student 的节奏是否自然且无重复讲授；移动端长列表与 11px 辅助说明是否仍舒适。当前无待修复的机器失败；整页审美与教学结论待人审，不宣称 9/10 或通用模板。
 
 复现：在仓库根目录运行 `npm --prefix reusable-kit/demo run dev -- --host 127.0.0.1 --port 4187 --strictPort`，访问 `http://127.0.0.1:4187/?demo=journey`，也可直接从侧栏进入。QA 使用的 4173/4175 是临时生产预览端口。
+
+## 人工反馈修复 · 01–05 左边界（2026-10-24）
+
+用户三张浏览器截图指出：02 对齐主容器，03/04/05 却向右漂移，左侧形成空白。此前把窄段落分别居中当作节奏手段，Agent 整页复核也未识别这个问题；这一判断被人工反馈纠正。根因是三个不同 `max-width` 配合 `margin-inline: auto`，再叠加 03 左侧栏将正文推入第二列。
+
+本次仅修复局部构图：所有章节盒、编号、标题与主说明共用 01/02 的左基线；窄行宽仍保留，但只向右侧收窄。03 编号/标题放在正文上方，正文在左、来源旁注在右，移动端依次排列正文与旁注。保持学习顺序、全部机制说明、主图数据与状态、公式和既有页面不变。四视口测试增加实际坐标断言，防止仅 section 盒子对齐而正文仍缩进。此前关于“未发现无意义补白”的结论不再适用；以本次修复截图为准。
+
+验证：`npm run build` 退出 0；`$env:JOURNEY_REVIEW_CAPTURE='1'; npm run test:browser` 退出 0，15/15 通过。1280、1440、1920、390 四视口的章节盒、五个标题及 03 主说明左坐标均与 article 基线相差不超过 1px，并继续通过溢出、裁切、图谱与数学检查。
+
+使用现有统一 runner，仅筛选本次变更的 journey 页面，未改共享 QA 配置或引擎：`node tools/visual-qa/cli.mjs --config .visual-qa/editorial-journey-alignment-review/visual-qa.json` 退出 0，18/18 状态 PASS，GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS 均 PASS，0 浏览器错误。原有 11px 辅助字号 warning 保留，非本次修复范围。像素基线比较仍 NOT_RUN；HUMAN_ACCEPTANCE 仍 PENDING。Agent 已实际查看四种视口长图、1440 的 03→04 连续区域及 05 收尾，确认主内容回到同一左基线。
+
+新证据位于 `.visual-qa/editorial-journey-alignment-review/`（仓库根目录下，Git 忽略）：`journey-full-1440.png`、`journey-full-1920.png`、`journey-full-390.png`、`paths-student-1440.png`、`handoff-1440.png`，以及本次配置、原样报告 `visual-qa-report.json/md`。先前目录保留作前后对照，不覆盖历史证据。
+
+本次终端 `Report:` 路径为 `C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-12-20-522Z\report.md`；已读报告并查图，清理使用其准确父目录。
+
+清理退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-12-20-522Z`，确认目录不存在；仅删除本轮新建的准确 `reusable-kit/demo/test-results` 并确认不存在，4173/4175 无监听。精选证据与历史目录保留。
