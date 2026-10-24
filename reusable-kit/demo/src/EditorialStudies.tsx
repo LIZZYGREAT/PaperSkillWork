@@ -10,8 +10,8 @@ export const editorialSections = [
 ];
 
 const weights = [0.85, 0.30, 0.10];
-const thetaA = <span className="rk-math"><var>θ</var><sub>A</sub><sup>*</sup></span>;
-const fisherA = <span className="rk-math"><var>F</var><sub>A</sub></span>;
+const thetaA = <span className="rk-math" data-state-object="reference"><var>θ</var><sub>A</sub><sup>*</sup></span>;
+const fisherA = <span className="rk-math" data-state-object="importance"><var>F</var><sub>A</sub></span>;
 const handoffStages = [
   { id: "learn-a", label: "完成 A", reference: "已生成 · 尚未保存副本", fisher: "尚未估计", use: "B 尚未开始" },
   { id: "save", label: "保存参考", reference: "已保存 · 后续保持固定", fisher: "尚未估计", use: "B 尚未开始" },
@@ -22,6 +22,8 @@ const handoffStages = [
 export function EditorialStudies() {
   const [stageIndex, setStageIndex] = useState(0);
   const stage = handoffStages[stageIndex];
+  const phase = (index: number) => index === stageIndex ? "current" : index < stageIndex ? "completed" : "upcoming";
+  const phaseLabel = (index: number) => ({ current: "当前阶段", completed: "已完成", upcoming: "后续预览" })[phase(index)];
   useEffect(() => {
     const section = editorialSections.find(s => `#${s.id}` === window.location.hash);
     if (section) document.getElementById(section.id)?.scrollIntoView({ block: "start", behavior: "instant" });
@@ -64,29 +66,29 @@ export function EditorialStudies() {
         <StepNav items={handoffStages} activeId={stage.id} onSelect={(id) => setStageIndex(handoffStages.findIndex((s) => s.id === id))} label="检查 EWC 交接阶段" compact />
         <div className="ed-study__ledger" aria-live="polite" aria-atomic="true" data-stage={stage.id}>
           <p className="ed-study__ledger-task">{stage.use}</p>
-          <dl><div><dt>{thetaA}</dt><dd>{stage.reference}</dd></div><div><dt>{fisherA}</dt><dd>{stage.fisher}</dd></div></dl>
+          <dl><div data-availability={stageIndex === 0 ? "generated" : "stored"}><dt>{thetaA}</dt><dd>{stage.reference}</dd></div><div data-availability={stageIndex < 2 ? "unavailable" : "stored"}><dt>{fisherA}</dt><dd>{stage.fisher}</dd></div></dl>
         </div>
       </div>
       <ol className="ed-study__chronicle" aria-label="EWC 交接顺序">
-        <li className="ed-study__moment" aria-current={stageIndex === 0 ? "step" : undefined}>
+        <li className="ed-study__moment" data-stage="learn-a" data-phase={phase(0)} aria-current={stageIndex === 0 ? "step" : undefined}>
           <div className="ed-study__moment-copy"><h3>先完成任务 A</h3><p>在 A 上训练参数，得到参考解 {thetaA}。任务 B 此时尚未开始。</p></div>
           <span className="ed-study__axis-number">01</span>
-          <div className="ed-study__moment-visual"><span className="ed-study__caption">生成 / FROM TASK A</span><math display="block" aria-label="任务 A 训练得到 theta A 星"><msub><mi>D</mi><mi>A</mi></msub><mo>→</mo><msubsup><mi>θ</mi><mi>A</mi><mo>*</mo></msubsup></math></div>
+          <div className="ed-study__moment-visual"><span className="ed-study__phase-label">{phaseLabel(0)}</span><span className="ed-study__caption">生成 / FROM TASK A</span><math display="block" aria-label="任务 A 训练得到 theta A 星"><msub><mi>D</mi><mi>A</mi></msub><mo>→</mo><msubsup data-state-object="reference"><mi>θ</mi><mi>A</mi><mo>*</mo></msubsup></math></div>
         </li>
-        <li className="ed-study__moment ed-study__moment--reverse" aria-current={stageIndex === 1 ? "step" : undefined}>
+        <li className="ed-study__moment ed-study__moment--reverse" data-stage="save" data-phase={phase(1)} aria-current={stageIndex === 1 ? "step" : undefined}>
           <div className="ed-study__moment-copy"><h3>把参考位置留下</h3><p>保存 {thetaA} 的数值副本。以后改变的是当前参数 θ，这份参考保持固定。</p></div>
           <span className="ed-study__axis-number">02</span>
-          <div className="ed-study__moment-visual ed-study__stored"><span className="ed-study__caption">保存 / REFERENCE</span><div className="ed-study__state-symbol">{thetaA}</div><p>留下位置，而非冻结当前模型</p></div>
+          <div className="ed-study__moment-visual ed-study__stored"><span className="ed-study__phase-label">{phaseLabel(1)}</span><span className="ed-study__caption">保存 / REFERENCE</span><div className="ed-study__state-symbol">{thetaA}</div><p>留下位置，而非冻结当前模型</p></div>
         </li>
-        <li className="ed-study__moment" aria-current={stageIndex === 2 ? "step" : undefined}>
+        <li className="ed-study__moment" data-stage="estimate" data-phase={phase(2)} aria-current={stageIndex === 2 ? "step" : undefined}>
           <div className="ed-study__moment-copy"><h3>再估计重要性</h3><p>在 A 的信息与参考解上估计 {fisherA}，与 {thetaA} 一起保留。它是逐参数的权重，不是 B 的新学习结果。</p></div>
           <span className="ed-study__axis-number">03</span>
-          <div className="ed-study__moment-visual"><span className="ed-study__caption">交接 / TWO STORED OBJECTS</span><div className="ed-study__state-pair">{thetaA}<span>＋</span>{fisherA}</div><p>位置 + 重要性</p></div>
+          <div className="ed-study__moment-visual"><span className="ed-study__phase-label">{phaseLabel(2)}</span><span className="ed-study__caption">交接 / TWO STORED OBJECTS</span><div className="ed-study__state-pair">{thetaA}<span>＋</span>{fisherA}</div><p>位置 + 重要性</p></div>
         </li>
-        <li className="ed-study__moment ed-study__moment--reverse" aria-current={stageIndex === 3 ? "step" : undefined}>
+        <li className="ed-study__moment ed-study__moment--reverse" data-stage="use-b" data-phase={phase(3)} aria-current={stageIndex === 3 ? "step" : undefined}>
           <div className="ed-study__moment-copy"><h3>在任务 B 中读取</h3><p>B 的损失驱动新学习；保存的 {thetaA} 与 {fisherA} 共同决定偏离旧解的代价。约束是软的，参数仍可更新。</p></div>
           <span className="ed-study__axis-number">04</span>
-          <div className="ed-study__moment-visual ed-study__penalty"><span className="ed-study__caption">使用 / IN TASK B</span><math display="block" aria-label="EWC 惩罚 lambda 除以二，乘以各参数重要性与位移平方之和"><mfrac><mi>λ</mi><mn>2</mn></mfrac><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>F</mi><mrow><mi>A</mi><mo>,</mo><mi>i</mi></mrow></msub><msup><mrow><mo>(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>−</mo><msubsup><mi>θ</mi><mrow><mi>A</mi><mo>,</mo><mi>i</mi></mrow><mo>*</mo></msubsup><mo>)</mo></mrow><mn>2</mn></msup></math><p>λ 调节旧任务约束的强度</p></div>
+          <div className="ed-study__moment-visual ed-study__penalty"><span className="ed-study__phase-label">{phaseLabel(3)}</span><span className="ed-study__caption">使用 / IN TASK B</span><math display="block" aria-label="EWC 惩罚 lambda 除以二，乘以各参数重要性与位移平方之和"><mfrac><mi>λ</mi><mn>2</mn></mfrac><munder><mo>∑</mo><mi>i</mi></munder><msub data-state-object="importance"><mi>F</mi><mrow><mi>A</mi><mo>,</mo><mi>i</mi></mrow></msub><msup><mrow><mo>(</mo><msub><mi>θ</mi><mi>i</mi></msub><mo>−</mo><msubsup data-state-object="reference"><mi>θ</mi><mrow><mi>A</mi><mo>,</mo><mi>i</mi></mrow><mo>*</mo></msubsup><mo>)</mo></mrow><mn>2</mn></msup></math><p>λ 调节旧任务约束的强度</p></div>
         </li>
       </ol>
       <p className="ed-study__handoff"><span>带走的认识</span>保存的不是过去的训练过程，而是供下一任务使用的参考位置与重要性。</p>
