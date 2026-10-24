@@ -242,6 +242,50 @@
           ]
         }
       ]
+    },
+    {
+      "id": "editorial-c1",
+      "path": "/?demo=editorial&c=c1",
+      "computedStyles": [
+        {
+          "selector": ".ed-c-candidate[data-c-variant=\"c1\"] [data-equation=\"objective\"]",
+          "property": "font-size",
+          "equals": "25px"
+        }
+      ],
+      "states": [
+        {
+          "id": "c1-default",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#ed-c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "editorial-c2",
+      "path": "/?demo=editorial&c=c2",
+      "computedStyles": [
+        {
+          "selector": ".ed-c-candidate[data-c-variant=\"c2\"] [data-equation=\"objective\"]",
+          "property": "font-size",
+          "equals": "25px"
+        }
+      ],
+      "states": [
+        {
+          "id": "c2-default",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#ed-c"
+            }
+          ]
+        }
+      ]
     }
   ],
   "geometry": {
@@ -276,7 +320,10 @@
       ".ed-study__moment-copy h3",
       ".ed-study__phase-label",
       ".ed-study__signal strong",
-      ".ed-study math"
+      ".ed-study math",
+      ".ed-c-candidate h3",
+      ".ed-c-candidate h4",
+      ".ed-c-candidate [data-loss-result]"
     ]
   },
   "settleMs": 200

@@ -201,6 +201,97 @@ test("editorial compositions reflow at every requested viewport with readable ma
   expect(errors).toEqual([]);
 });
 
+test("C candidates preserve the baseline and explain one student update across viewports", async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
+  const errors = [];
+  page.on("pageerror", e => errors.push(e.message));
+  page.on("console", msg => { if (msg.type() === "error") errors.push(msg.text()); });
+  const captureSection = async (id, path) => {
+    await page.evaluate(() => scrollTo(0, 0));
+    const box = await page.locator(`#${id}`).boundingBox();
+    return page.screenshot({ fullPage: true, clip: box, ...(path ? { path } : {}) });
+  };
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?demo=editorial");
+  await page.evaluate(() => document.fonts.ready);
+  const baseline = await page.locator("#ed-c").evaluate(n => n.outerHTML);
+  const originalAB = await page.locator("#ed-a, #ed-b").evaluateAll(nodes => nodes.map(n => n.outerHTML));
+  const originalImages = [await captureSection("ed-a"), await captureSection("ed-b")];
+  await page.goto("/?demo=editorial&c=unrecognized#ed-c");
+  expect(await page.locator("#ed-c").evaluate(n => n.outerHTML)).toBe(baseline);
+
+  for (const variant of ["c1", "c2"]) {
+    for (const [width, height] of [[1280, 900], [1440, 900], [1920, 1080], [390, 844]]) {
+      await page.setViewportSize({ width, height });
+      await page.goto(`/?demo=editorial&c=${variant}#ed-c`);
+      await page.evaluate(() => document.fonts.ready);
+      const c = page.locator("#ed-c");
+      await expect(c).toHaveAttribute("data-c-variant", variant);
+      await expect(c.locator("#ed-c-title")).toBeInViewport();
+      const teacher = c.locator("[data-role='teacher']");
+      const student = c.locator("[data-role='student']");
+      await expect(teacher).toContainText("不接收梯度");
+      await expect(teacher).toContainText("预先记录");
+      await expect(teacher.locator("[data-equation]")).toHaveCount(0);
+      await expect(student.locator("[data-parameter-definition]")).toContainText("student 的可训练参数");
+      for (const [kind, output, target] of [["old", "旧类输出", "teacher 的旧响应目标"], ["new", "新类输出", "当前任务的真实标签"]]) {
+        const comparison = student.locator(`[data-comparison='${kind}']`);
+        await expect(comparison).toContainText(output);
+        await expect(comparison).toContainText(target);
+        await expect(comparison.locator("sub")).toHaveText(kind);
+        const term = student.locator(`[data-equation='objective'] [data-loss-term='${kind}']`);
+        await expect(term).toContainText(`L${kind}`);
+      }
+      await expect(student.locator("[data-equation='objective']")).toHaveText("J=λoLold+Lnew+R");
+      const update = student.locator("[data-update-target='student']");
+      await expect(update.locator("[data-equation='parameter-update']")).toHaveText("θs←θs−η∇θsJ");
+      await expect(update).toContainText("对 J 求导");
+      expect(await student.evaluate(n => !!(n.querySelector("[data-stage='objective']").compareDocumentPosition(n.querySelector("[data-stage='update']")) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+      const note = c.locator(".ed-c-mechanism-note");
+      for (const text of ["联合优化阶段", "温度变换并重新归一化", "旧损失权重", "权重衰减", "warm-up 只训练新任务参数", "梯度下降教学示意", "不是论文原图或实验结果"]) await expect(note).toContainText(text);
+      if (variant === "c2") {
+        await expect(c.locator("[data-role='current-labels']")).toContainText("来自当前任务数据");
+        expect(await c.locator("[data-role='current-labels']").evaluate(n => n.closest("[data-role='student']") === null)).toBe(true);
+        await expect(student.locator("[data-part='shared-representation']")).toContainText("两路输出");
+      }
+      const layout = await c.evaluate(section => {
+        const bounds = section.getBoundingClientRect();
+        return {
+          overflow: document.documentElement.scrollWidth > innerWidth,
+          bad: [...section.querySelectorAll("h2,h3,h4,p,math,[data-loss-result]")].filter(n => {
+            const r = n.getBoundingClientRect(), s = getComputedStyle(n);
+            return r.left < bounds.left - 1 || r.right > bounds.right + 1 || n.scrollWidth > n.clientWidth + 1 || s.textOverflow === "ellipsis" || parseFloat(s.fontSize) < 12;
+          }).map(n => n.textContent),
+          clippedMath: [...section.querySelectorAll("math msub,math mrow")].filter(n => {
+            const r = n.getBoundingClientRect(), m = n.closest("math").getBoundingClientRect();
+            return r.left < m.left - 1 || r.right > m.right + 1 || r.top < m.top - 1 || r.bottom > m.bottom + 1;
+          }).map(n => n.textContent),
+        };
+      });
+      expect(layout, `${variant} at ${width}`).toEqual({ overflow: false, bad: [], clippedMath: [] });
+      if (width === 1440) {
+        expect(await page.locator("#ed-a, #ed-b").evaluateAll(nodes => nodes.map(n => n.outerHTML))).toEqual(originalAB);
+        for (const [index, id] of ["ed-a", "ed-b"].entries()) expect((await captureSection(id)).equals(originalImages[index]), `${id} pixels unchanged in ${variant}`).toBe(true);
+      }
+      if (process.env.EDITORIAL_REVIEW_CAPTURE) {
+        await captureSection("ed-c", testInfo.outputPath(`${variant}-${width}-full.png`));
+        if (width === 1440) {
+          await c.evaluate(n => scrollTo(0, n.getBoundingClientRect().top + scrollY - document.querySelector(".kit-topbar").getBoundingClientRect().height - 16));
+          await page.screenshot({ path: testInfo.outputPath(`${variant}-1440-opening.png`) });
+        }
+      }
+    }
+  }
+  // The preview controls remain native links, including a keyboard route back to baseline.
+  await page.locator(".ed-c-preview-links a").filter({ hasText: "C1" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#ed-c")).toHaveAttribute("data-c-variant", "c1");
+  await page.getByRole("link", { name: "Baseline", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  expect(await page.locator("#ed-c").evaluate(n => n.outerHTML)).toBe(baseline);
+  expect(errors).toEqual([]);
+});
+
 test("component interaction assertions pass in a real browser", async ({ page }) => {
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));

@@ -43,3 +43,9 @@ Remove-Item Env:EDITORIAL_REVIEW_CAPTURE
 ```
 
 These optional captures go into Playwright's `test-results/`. Inspect actual screenshots and the shared runner report before cleaning this run's exact paths, as described in `docs/VISUAL_QA.md`. Passing automated checks leaves human visual acceptance pending and every registry entry at `candidate`.
+
+### C composition candidates
+
+The default `/?demo=editorial#ed-c` keeps the original C baseline. Open `/?demo=editorial&c=c1#ed-c` for the editorial convergence candidate, or `/?demo=editorial&c=c2#ed-c` for the student-centered computation scene. Unrecognized `c` values fall back to baseline; A/B stay identical. Native links within either candidate allow keyboard comparison and a return to baseline. Neither candidate is selected as the new default.
+
+See [the one-page design comparison and shared content checklist](EDITORIAL_C_REVIEW.md). The existing browser suite retains baseline C coverage and adds both candidate routes, four viewports, complete MathML, correct update ownership, and A/B DOM/pixel invariance. With `EDITORIAL_REVIEW_CAPTURE=1`, it also saves each candidate's full section at all four viewports and a 1440×900 opening screenshot. The same shared Visual QA config includes independent C1/C2 pages at the three desktop viewports.
