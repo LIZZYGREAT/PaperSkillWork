@@ -1,4 +1,4 @@
-.pattern-gallery { display: grid; gap: clamp(38px, 6vw, 72px); min-width: 0; }
+.pattern-gallery { display: grid; gap: clamp(38px, 6vw, 72px); min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .pattern-gallery__intro { max-width: 78ch; }
 .pattern-gallery__intro > * + * { margin-top: 10px; }
 .pattern-gallery__intro h2 { max-width: 20ch; }
