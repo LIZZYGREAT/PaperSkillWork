@@ -30,12 +30,18 @@ test("editorial studies preserve the EWC handoff and keyboard reset", async ({ p
       await expect(row.locator(".ed-study__moment-visual")).toBeVisible();
       // Current focus covers the narrative title and state expression, not only a numbered marker.
       expect(await row.locator("h3").evaluate(n => getComputedStyle(n).textDecorationLine.includes("underline"))).toBe(i === index);
+      const symbols = await row.locator(".ed-study__moment-visual [data-state-object]").evaluateAll(nodes => nodes.map(n => ({
+        background: getComputedStyle(n).backgroundColor,
+        // Decorating a MathML base/subscript separately produces broken lines resembling notation.
+        underlined: [n, ...n.querySelectorAll("*")].some(part => getComputedStyle(part).textDecorationLine.includes("underline")),
+      })));
+      expect(symbols.length).toBeGreaterThan(0);
+      expect(symbols.every(s => !s.underlined)).toBe(true);
       if (i === index) {
-        expect(await row.locator(".ed-study__moment-visual [data-state-object]").evaluateAll(nodes => nodes.length > 0 && nodes.every(n => getComputedStyle(n).textDecorationLine.includes("underline")))).toBe(true);
-      }
-      if (i > index) {
-        const decorations = await row.locator("[data-state-object='importance']").evaluateAll(nodes => nodes.map(n => getComputedStyle(n).textDecorationLine));
-        expect(decorations.every(d => !d.includes("underline"))).toBe(true);
+        const focusBackground = await row.locator(".ed-study__moment-copy").evaluate(n => getComputedStyle(n).backgroundColor);
+        expect(symbols.every(s => s.background === focusBackground)).toBe(true);
+      } else {
+        expect(symbols.every(s => s.background === "rgba(0, 0, 0, 0)")).toBe(true);
       }
     }
     const available = ledger.locator("dl > div");
