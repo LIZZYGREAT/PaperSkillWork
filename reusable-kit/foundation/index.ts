@@ -1,4 +1,5 @@
 export * from "./accessibility/useReducedMotion";
+export * from "./animation";
 export * from "./controls/Button";
 export * from "./controls/Chip";
 export * from "./controls/SegmentedControl";

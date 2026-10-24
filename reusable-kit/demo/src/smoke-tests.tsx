@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { useState } from "react";
 import "../../foundation/styles/kit.css";
 import { ArchitectureExplorer } from "../../core/architecture";
 import type { ArchitectureSpec } from "../../core/architecture";
@@ -18,6 +19,7 @@ import { Chip } from "../../foundation/controls/Chip";
 import { Slider } from "../../foundation/controls/Slider";
 import { Popover } from "../../foundation/overlay/Popover";
 import { MiniNetworkGlyph, validateMiniNetworkGlyph } from "../../foundation/neural-network";
+import { useAnimationTimeline, validateTimelineClips, type TimelineClock, type TimelineClip } from "../../foundation/animation";
 import { BenchmarkExplorer } from "../../optional/benchmark-explorer";
 import { CompatibilityChecker } from "../../optional/compatibility-checker";
 import { CompareView } from "../../optional/compare-view";
@@ -89,6 +91,58 @@ const knowledge = [
   { id: "method-b", kind: "method" as const, hover: { title: "方法 B", definitionZh: "第二个中文短解释。" }, reference: { titleEn: "Method B", summaryEn: "Another reference.", relatedIds: ["term-a"], tags: ["beta"] } },
 ];
 const term = knowledge[0];
+const timelineClips: TimelineClip[] = [
+  { id: "read", durationMs: 100, holdMs: 40 },
+  { id: "transform", durationMs: 80, holdMs: 20 },
+  { id: "output", durationMs: 60 },
+];
+const shortenedTimelineClips = [timelineClips[0], timelineClips[2]];
+
+class ManualClock implements TimelineClock {
+  private callbacks = new Map<number, FrameRequestCallback>();
+  private nextId = 1;
+  cancelled = 0;
+  request = (callback: FrameRequestCallback) => { const id = this.nextId++; this.callbacks.set(id, callback); return id; };
+  cancel = (handle: number) => { if (this.callbacks.delete(handle)) this.cancelled += 1; };
+  advance(now: number) { const current = [...this.callbacks.values()]; this.callbacks.clear(); current.forEach((callback) => callback(now)); }
+  get pending() { return this.callbacks.size; }
+}
+
+const manualClock = new ManualClock();
+const unmountClock = new ManualClock();
+
+function TimelineFixture({ reducedMotion = false }: { reducedMotion?: boolean }) {
+  const [shortened, setShortened] = useState(false);
+  const activeClips = shortened ? shortenedTimelineClips : timelineClips;
+  const timeline = useAnimationTimeline({ clips: activeClips, reducedMotion, clock: manualClock });
+  const state = timeline.state;
+  return <section className="timeline-fixture" data-reduced={reducedMotion} data-status={state.status} data-clip={state.clipId ?? "none"} data-progress={state.progress.toFixed(2)} data-holding={state.isHolding}>
+    <div data-timeline-region="network">{state.clipId}:{state.progress.toFixed(2)}</div>
+    <div data-timeline-region="pipeline">{state.clipId}:{state.progress.toFixed(2)}</div>
+    <button type="button" onClick={timeline.controls.play}>Play timeline</button>
+    <button type="button" onClick={timeline.controls.pause}>Pause timeline</button>
+    <button type="button" onClick={timeline.controls.replayClip}>Replay clip</button>
+    <button type="button" onClick={timeline.controls.stepBack}>Previous clip</button>
+    <button type="button" onClick={timeline.controls.stepForward}>Next clip</button>
+    <button type="button" onClick={() => timeline.controls.goToClip(2)}>Go to output</button>
+    <button type="button" onClick={() => setShortened(true)}>Replace clips</button>
+  </section>;
+}
+
+function TimelineBoundaryFixture({ clips }: { clips: TimelineClip[] }) {
+  const { state } = useAnimationTimeline({ clips, reducedMotion: false, clock: manualClock });
+  return <p className="timeline-boundary" data-status={state.status} data-errors={state.errors.length}>{state.clipId ?? "no clip"}</p>;
+}
+
+function AutoTimeline() {
+  const { state } = useAnimationTimeline({ clips: timelineClips, reducedMotion: false, autoPlay: true, clock: unmountClock });
+  return <span data-auto-timeline={state.status}>{state.clipId}</span>;
+}
+
+function UnmountTimelineFixture() {
+  const [mounted, setMounted] = useState(true);
+  return <section className="timeline-unmount"><button type="button" onClick={() => setMounted(false)}>Unmount timeline</button>{mounted && <AutoTimeline />}</section>;
+}
 
 function Fixtures() {
   return <main>
@@ -134,6 +188,11 @@ function Fixtures() {
       layers={[{ id: "frozen", label: "Frozen reference", nodeCount: 4, identity: "frozen" }, { id: "trainable", label: "Trainable output", nodeCount: 8, displayNodeCount: 6, identity: "trainable" }]}
       connectAdjacent
     />
+    <TimelineFixture />
+    <TimelineFixture reducedMotion />
+    <TimelineBoundaryFixture clips={[]} />
+    <TimelineBoundaryFixture clips={[{ id: "bad", durationMs: 0, holdMs: -1 }, { id: "bad", durationMs: 10 }]} />
+    <UnmountTimelineFixture />
     <InlineCallout>Inline information.</InlineCallout><Feedback>Feedback message.</Feedback><StatusPill>Ready</StatusPill><Button>Reusable button</Button>
   </main>;
 }
@@ -183,6 +242,53 @@ async function run() {
     const labelledBy = Array.from(glyphs).map(glyph => glyph.querySelector("svg")?.getAttribute("aria-labelledby"));
     assert(labelledBy.every(Boolean) && new Set(labelledBy).size === glyphs.length, "Multiple glyph instances reused SVG title/description IDs.");
     assert(validateMiniNetworkGlyph({ layers: [{ id: "same", label: "A", nodeCount: 1 }, { id: "same", label: "B", nodeCount: 0 }] }).length === 2, "Duplicate IDs and invalid node counts were not rejected deterministically.");
+  });
+  await check("Timeline validation rejects empty access, invalid durations, holds, and duplicate IDs", () => {
+    const boundaries = document.querySelectorAll<HTMLElement>(".timeline-boundary");
+    assert(boundaries[0].dataset.status === "empty" && boundaries[0].dataset.errors === "0", "Empty clips did not produce an explicit empty state.");
+    assert(boundaries[1].dataset.status === "invalid" && Number(boundaries[1].dataset.errors) === 3, "Invalid timeline input did not produce deterministic errors.");
+    assert(validateTimelineClips([{ id: "a", durationMs: Number.NaN }]).length === 1, "NaN duration was accepted.");
+  });
+  await check("One deterministic timeline clock drives two regions through motion, hold, stepping, replay, and replacement", async () => {
+    const fixture = document.querySelector<HTMLElement>(".timeline-fixture[data-reduced='false']")!;
+    const buttons = (label: string) => Array.from(fixture.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === label)!;
+    buttons("Play timeline").click(); await wait();
+    manualClock.advance(0); await wait();
+    manualClock.advance(50); await wait();
+    assert(fixture.dataset.clip === "read" && fixture.dataset.progress === "0.50", "Controlled clock did not expose a real intermediate state.");
+    assert(new Set(Array.from(fixture.querySelectorAll("[data-timeline-region]")).map((region) => region.textContent)).size === 1, "Two visual regions drifted apart.");
+    manualClock.advance(110); await wait();
+    assert(fixture.dataset.progress === "1.00" && fixture.dataset.holding === "true", "Motion did not enter its hold state continuously.");
+    buttons("Pause timeline").click(); await wait();
+    const paused = fixture.dataset.progress;
+    manualClock.advance(200); await wait();
+    assert(fixture.dataset.progress === paused, "A stale frame overwrote pause.");
+    buttons("Replay clip").click(); await wait();
+    assert(fixture.dataset.progress === "0.00" && fixture.dataset.status === "playing", "Replay did not reset the current clip.");
+    buttons("Go to output").click(); await wait();
+    assert(fixture.dataset.clip === "output" && fixture.dataset.status === "paused", "goToClip did not jump deterministically.");
+    buttons("Previous clip").click(); await wait();
+    assert(fixture.dataset.clip === "transform", "stepBack did not select the previous clip.");
+    buttons("Replace clips").click(); await wait();
+    assert(fixture.dataset.clip === "read" && fixture.dataset.progress === "0.00", "Runtime clip replacement left the timeline out of bounds.");
+    buttons("Next clip").click(); await wait();
+    assert(fixture.dataset.clip === "output", "Rapid forward stepping did not use the replacement list.");
+  });
+  await check("Reduced motion exposes meaningful completed clips without continuous playback", async () => {
+    const fixture = document.querySelector<HTMLElement>(".timeline-fixture[data-reduced='true']")!;
+    const button = (label: string) => Array.from(fixture.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === label)!;
+    assert(fixture.dataset.clip === "read" && fixture.dataset.progress === "1.00" && fixture.dataset.status === "paused", "Reduced motion did not start on a meaningful end state.");
+    button("Play timeline").click(); await wait();
+    manualClock.advance(500); await wait();
+    assert(fixture.dataset.clip === "read" && fixture.dataset.status === "paused", "Play restarted continuous motion under reduced motion.");
+    button("Next clip").click(); await wait();
+    assert(fixture.dataset.clip === "transform" && fixture.dataset.progress === "1.00", "Reduced-motion step did not expose the next completed state.");
+  });
+  await check("Timeline unmount cancels the scheduled frame", async () => {
+    await wait();
+    assert(unmountClock.pending === 1, "Autoplay did not schedule exactly one frame.");
+    document.querySelector<HTMLButtonElement>(".timeline-unmount button")!.click(); await wait();
+    assert(unmountClock.pending === 0 && unmountClock.cancelled >= 1, "Unmount left a frame scheduled.");
   });
   await check("Popover opens and Escape dismisses", async () => {
     const trigger = document.querySelector<HTMLButtonElement>(".rk-popover__trigger")!;
