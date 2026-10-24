@@ -556,7 +556,7 @@ function EditorialPreview({ kind }: { kind: EditorialLayout }) {
       <h3>{example.headline.before}<strong>{example.headline.emphasis}</strong>{example.headline.after}</h3>
     </div>
     {kind === "axis" ? <ol className="pg-axis">
-      <li><span className="pg-axis__marker">01</span><article><small>问题</small><h4><mark>旧目标</mark>来自哪里？</h4><p>先确认进入当前过程的参照对象。</p></article></li>
+      <li><span className="pg-axis__marker is-current">01</span><article><small>问题</small><h4><mark>旧目标</mark>来自哪里？</h4><p>先确认进入当前过程的参照对象。</p></article></li>
       <li className="is-right"><span className="pg-axis__marker">02</span><article><small>机制</small><h4>哪个对象保持<mark>固定</mark>？</h4><p>给冻结参照一个清楚、稳定的身份。</p></article></li>
       <li><span className="pg-axis__marker">03</span><article><small>更新</small><h4>最后<mark>改变</mark>了什么？</h4><p>把变化对象交给下一步推演。</p></article></li>
     </ol> : null}
