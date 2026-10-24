@@ -17,6 +17,7 @@ import { StatusPill } from "../../foundation/feedback/StatusPill";
 import { Chip } from "../../foundation/controls/Chip";
 import { Slider } from "../../foundation/controls/Slider";
 import { Popover } from "../../foundation/overlay/Popover";
+import { MiniNetworkGlyph, validateMiniNetworkGlyph } from "../../foundation/neural-network";
 import { BenchmarkExplorer } from "../../optional/benchmark-explorer";
 import { CompatibilityChecker } from "../../optional/compatibility-checker";
 import { CompareView } from "../../optional/compare-view";
@@ -116,6 +117,23 @@ function Fixtures() {
     <EvidenceViewer mode="judge" data={{ claim: "A sample claim.", experiment: "A sample protocol.", evidence: ["An observation."], interpretation: "An interpretation.", boundary: "A limit.", correctVerdict: "supported" }} />
     <DatasetCard dataset={{ name: "Sample set", task: "Classification", paperRole: "Illustrative only." }} />
     <FormulaBlock formula="a + b" terms={[{ id: "a", label: "a", explanation: "First term." }]} />
+    <MiniNetworkGlyph
+      label="Importance illustration"
+      description="Selected representative connections receive emphasis."
+      layers={[{ id: "input", label: "Input", nodeCount: 3 }, { id: "hidden", label: "Shared representation", nodeCount: 24, displayNodeCount: 5 }, { id: "output", label: "Output", nodeCount: 2 }]}
+      connections={[
+        { id: "important-a", fromLayer: "input", fromNode: 0, toLayer: "hidden", toNode: 1 },
+        { id: "important-b", fromLayer: "hidden", fromNode: 1, toLayer: "output", toNode: 0 },
+        { id: "context", fromLayer: "input", fromNode: 2, toLayer: "hidden", toNode: 4, state: "muted" },
+      ]}
+      focus={{ nodes: ["hidden:1"], edges: ["important-a", "important-b"] }}
+    />
+    <MiniNetworkGlyph
+      label="Role and structure illustration"
+      description="A frozen reference and a trainable copy use different visible identities and output widths."
+      layers={[{ id: "frozen", label: "Frozen reference", nodeCount: 4, identity: "frozen" }, { id: "trainable", label: "Trainable output", nodeCount: 8, displayNodeCount: 6, identity: "trainable" }]}
+      connectAdjacent
+    />
     <InlineCallout>Inline information.</InlineCallout><Feedback>Feedback message.</Feedback><StatusPill>Ready</StatusPill><Button>Reusable button</Button>
   </main>;
 }
@@ -153,6 +171,18 @@ async function run() {
     assert(document.body.textContent?.includes("a + b"), "Formula did not render.");
     assert(document.querySelector("input[type='range']"), "Slider control did not render.");
     assert(document.querySelector(".rk-chip[aria-pressed='true']"), "Chip pressed state did not render.");
+  });
+  await check("Mini network glyph distinguishes structure, identity, focus, and compression", () => {
+    const glyphs = document.querySelectorAll<HTMLElement>(".rk-mini-network");
+    assert(glyphs.length === 2, "Both mini network scenarios did not render.");
+    assert(glyphs[0].querySelectorAll("[data-network-edge]").length === 3, "Explicit sparse connections were not preserved.");
+    assert(glyphs[0].querySelectorAll("[data-network-edge].is-focused").length === 2, "Focused connections were not identified.");
+    assert(glyphs[0].textContent?.includes("Original structure: 24; showing 5 representative nodes."), "Compressed structure was not disclosed.");
+    assert(glyphs[1].querySelector("[data-network-layer='frozen'][data-identity='frozen']"), "Frozen identity was not exposed.");
+    assert(glyphs[1].querySelector("[data-network-layer='trainable'][data-identity='trainable']"), "Trainable identity was not exposed.");
+    const labelledBy = Array.from(glyphs).map(glyph => glyph.querySelector("svg")?.getAttribute("aria-labelledby"));
+    assert(labelledBy.every(Boolean) && new Set(labelledBy).size === glyphs.length, "Multiple glyph instances reused SVG title/description IDs.");
+    assert(validateMiniNetworkGlyph({ layers: [{ id: "same", label: "A", nodeCount: 1 }, { id: "same", label: "B", nodeCount: 0 }] }).length === 2, "Duplicate IDs and invalid node counts were not rejected deterministically.");
   });
   await check("Popover opens and Escape dismisses", async () => {
     const trigger = document.querySelector<HTMLButtonElement>(".rk-popover__trigger")!;

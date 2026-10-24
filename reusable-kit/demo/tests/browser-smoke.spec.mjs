@@ -606,11 +606,24 @@ test("component interaction assertions pass in a real browser", async ({ page })
   await page.goto("/tests.html");
 
   const summary = page.locator("#summary");
-  await expect(summary).toHaveAttribute("data-result", "pass", { timeout: 15_000 });
+  await expect(summary).toHaveAttribute("data-result", /pass|fail/, { timeout: 15_000 });
+  const failures = await page.locator("#summary + ol li").filter({ hasText: "FAIL" }).allTextContents();
+  expect(failures, failures.join("\n")).toEqual([]);
   const passed = Number(await summary.getAttribute("data-pass-count"));
   expect(passed).toBeGreaterThanOrEqual(18);
   expect(await page.locator("#summary + ol li").count()).toBe(passed);
   expect(pageErrors).toEqual([]);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const glyphs = page.locator(".rk-mini-network");
+  await expect(glyphs).toHaveCount(2);
+  expect(await glyphs.evaluateAll((nodes) => nodes.every((node) => {
+    const bounds = node.getBoundingClientRect();
+    const labels = node.querySelector(".rk-mini-network__labels");
+    return bounds.left >= -1 && bounds.right <= innerWidth + 1
+      && getComputedStyle(labels).gridTemplateColumns.split(" ").length === 1
+      && [...node.querySelectorAll("strong, span, small, figcaption")].every((label) => parseFloat(getComputedStyle(label).fontSize) >= 12);
+  }))).toBe(true);
 });
 
 test("Component Lab exposes typography, button states, and responsive reading overlays", async ({ page }) => {
