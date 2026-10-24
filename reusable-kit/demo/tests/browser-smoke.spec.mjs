@@ -1,5 +1,67 @@
 import { expect, test } from "@playwright/test";
 
+test("Pattern Gallery exposes connector variants, editorial recipes, and synchronized scroll states", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=gallery");
+  await expect(page.locator("[data-demo-view='pattern-gallery']")).toBeVisible();
+  const diagram = page.locator("#gallery-diagrams .rk-diagram");
+  await expect(diagram).toHaveAttribute("data-diagram-mode", "grid");
+  await expect(diagram.locator("[data-diagram-node]")).toHaveCount(9);
+  await expect(diagram.locator("[data-diagram-edge].is-data")).not.toHaveCount(0);
+  await expect(diagram.locator("[data-diagram-edge].is-gradient")).not.toHaveCount(0);
+  await expect(diagram.locator("[data-diagram-edge].is-control")).not.toHaveCount(0);
+  await expect(diagram.locator(".rk-diagram__ports circle")).toHaveCount(18);
+
+  await page.getByRole("button", { name: "Orthogonal", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Orthogonal", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "冻结参考路径", exact: true }).click();
+  await expect(diagram.locator('[data-diagram-node="teacher"]')).toHaveClass(/is-active/);
+  await expect(diagram.locator(".rk-diagram__node.is-dimmed")).not.toHaveCount(0);
+
+  await page.getByRole("button", { name: "汇合 · 两个完整目标", exact: true }).click();
+  await expect(diagram.locator('[data-diagram-node="stability"]')).toBeVisible();
+  await expect(diagram.locator('[data-diagram-node="task-loss"]')).toBeVisible();
+  await page.getByRole("button", { name: "任务目标路径", exact: true }).click();
+  await expect(diagram.locator(".rk-diagram__edges .rk-diagram__edge.is-active")).toHaveCount(4);
+
+  await page.getByRole("button", { name: "Staggered rows", exact: true }).click();
+  await expect(page.locator(".pattern-gallery__editorial")).toHaveAttribute("data-layout", "stagger");
+  await page.getByRole("button", { name: "Asymmetric", exact: true }).click();
+  await expect(page.locator(".pg-asymmetric section")).toContainText("当前学习对象");
+
+  await page.getByRole("button", { name: "Data pipeline", exact: true }).click();
+  const sticky = page.locator(".pattern-gallery__scroll-demo .rk-sticky-system");
+  await expect(sticky.locator(".rk-diagram")).toHaveAttribute("data-diagram-mode", "grid");
+  const checkStep = page.locator(".pattern-gallery__scroll-demo [data-step-id='check']");
+  await checkStep.click();
+  await expect(sticky).toHaveAttribute("data-active-step-id", "check");
+  await expect(sticky.locator('[data-diagram-node="quality"]')).toHaveClass(/is-active/);
+  await page.waitForTimeout(1200);
+  await page.locator("[data-scroll-step='report']").evaluate(element => {
+    const top = element.getBoundingClientRect().top + scrollY;
+    scrollTo(0, top - innerHeight * 0.4 + 4);
+  });
+  await expect.poll(() => sticky.getAttribute("data-active-step-id")).toBe("report");
+  const recordStep = page.locator(".pattern-gallery__scroll-demo [data-step-id='record']");
+  await recordStep.focus();
+  await page.keyboard.press("Enter");
+  await expect(sticky).toHaveAttribute("data-active-step-id", "record");
+
+  await page.locator(".pattern-gallery__type-preview .rk-formula-term").first().click();
+  await expect(page.locator(".rk-formula-block__explanation.has-term")).toContainText("当前任务");
+  expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+  expect(errors).toEqual([]);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(diagram).toHaveAttribute("data-diagram-mode", "list");
+  await expect(sticky.locator(".rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
+  await expect(sticky.locator(".rk-sticky-system__visual")).toHaveCSS("position", "static");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test("Reference Hub filters and reading columns share both boundaries", async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const demo of ["journey", "ewc"]) {
@@ -94,7 +156,7 @@ test("reading journey keeps the canonical graph, comparison ownership and task b
     return Math.abs(scrollY - Math.max(0, Math.min(anchorY, maxY)));
   })).toBeLessThanOrEqual(1);
   await expect(page.locator("#journey-handoff-title")).toBeInViewport({ ratio: 1 });
-  for (const label of ["Component Lab", "EWC scenario", "LwF scenario", "Reading Journey"]) {
+  for (const label of ["Pattern Gallery", "Component Lab", "EWC scenario", "LwF scenario", "Reading Journey"]) {
     await page.getByRole("button", { name: label, exact: true }).click();
     await expect(page.getByRole("button", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
   }
@@ -497,7 +559,7 @@ test("component interaction assertions pass in a real browser", async ({ page })
 
 test("Component Lab exposes typography, button states, and responsive reading overlays", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/");
+  await page.goto("/?demo=lab");
   await expect(page.locator("[data-demo-view='component-lab']")).toBeVisible();
   await expect(page.locator(".kit-shell")).toHaveAttribute("data-visual-direction", "warm");
   await expect(page.getByText("Every component stays a candidate until a named human accepts the rendered result.")).toBeVisible();

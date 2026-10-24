@@ -18,10 +18,12 @@ import { labNavItems, lwfGraph, lwfGraphSteps, lwfNavItems, lwfObjectiveGraph } 
 import { ewcKnowledge, lwfKnowledge } from "./knowledge";
 import { EditorialStudies, editorialSections } from "./EditorialStudies";
 import { EditorialJourney, journeySections } from "./EditorialJourney";
+import { PatternGallery, patternGallerySections } from "./PatternGallery";
 
-type DemoKind = "lab" | "lwf" | "ewc" | "editorial" | "journey";
+type DemoKind = "gallery" | "lab" | "lwf" | "ewc" | "editorial" | "journey";
 
 const choices = [
+  { value: "gallery" as const, label: "Pattern Gallery", description: "图表、构图、滚动联动与公式" },
   { value: "lab" as const, label: "Component Lab", description: "Typography, controls, overlays" },
   { value: "lwf" as const, label: "LwF scenario", description: "Preserving earlier responses" },
   { value: "ewc" as const, label: "EWC scenario", description: "Protecting important parameters" },
@@ -45,13 +47,15 @@ const lwfSections = lwfGroups.flatMap((group) => group.sections.map(({ id, stepI
 export default function App() {
   const [demo, setDemo] = useState<DemoKind>(() => {
     const requested = new URLSearchParams(window.location.search).get("demo");
-    return choices.find(choice => choice.value === requested)?.value ?? "lab";
+    return choices.find(choice => choice.value === requested)?.value ?? "gallery";
   });
-  const [activeSection, setActiveSection] = useState("lab-type-title");
+  const [activeSection, setActiveSection] = useState("gallery-diagrams");
   const [hubOpen, setHubOpen] = useState(false);
   const [referenceId, setReferenceId] = useState<string | null>(null);
-  const sections = demo === "lab" ? labSections : demo === "lwf" ? lwfSections : demo === "editorial" ? editorialSections : demo === "journey" ? journeySections : ewcSections;
-  const page = demo === "lab"
+  const sections = demo === "gallery" ? patternGallerySections : demo === "lab" ? labSections : demo === "lwf" ? lwfSections : demo === "editorial" ? editorialSections : demo === "journey" ? journeySections : ewcSections;
+  const page = demo === "gallery"
+    ? { number: "01", breadcrumb: "Reusable Pattern Gallery", eyebrow: "PAGE 01 · PATTERN GALLERY", title: "Reusable patterns for research tutorials", description: "" }
+    : demo === "lab"
     ? { number: "01", breadcrumb: "Kit foundations", eyebrow: "PAGE 01 · COMPONENT FOUNDATIONS", title: "把论文机制拆成可读、可交互的组件", description: "Reusable components for turning research methods into clear, inspectable learning experiences." }
     : demo === "lwf"
       ? { number: "02", breadcrumb: "Learning without Forgetting", eyebrow: "PAGE 02 · LEARNING WITHOUT FORGETTING" }
@@ -129,7 +133,7 @@ export default function App() {
       </header>
       <main className="kit-page">
         {demo === "lab" ? <section className="kit-page__intro"><p className="kit-page__eyebrow"><span>{page.eyebrow}</span><i /> PaperSkillWork</p><h1>{page.title}</h1><p>{page.description}</p></section> : null}
-        {demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : demo === "editorial" ? <EditorialStudies /> : demo === "journey" ? <EditorialJourney /> : <EwcDemo />}
+        {demo === "gallery" ? <PatternGallery /> : demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : demo === "editorial" ? <EditorialStudies /> : demo === "journey" ? <EditorialJourney /> : <EwcDemo />}
         <footer className="kit-demo__footer">Source components are copied into each paper project by <code>tools/paper.py scaffold-kit</code>. Editing a paper's copy does not change this kit.</footer>
       </main>
     </div>
