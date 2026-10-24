@@ -883,8 +883,9 @@ async function main() {
     runningServer = startServer(config.server, configDirectory, config.baseUrl);
     await waitForServer(runningServer);
     const chromium = chromiumFromDemoDependencies();
-    browser = await chromium.launch({ headless: true });
-    report.browser = { name: "Chromium", version: browser.version() };
+    const executablePath = process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE;
+    browser = await chromium.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
+    report.browser = { name: executablePath ? "Chromium-compatible executable" : "Chromium", version: browser.version() };
 
     for (const viewport of config.viewports) {
       const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, deviceScaleFactor: 1 });

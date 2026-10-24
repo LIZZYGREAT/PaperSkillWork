@@ -360,6 +360,26 @@
       ]
     },
     {
+      "id": "editorial-journey-stage-candidate",
+      "path": "/?demo=journey&art=stage",
+      "states": [
+        { "id": "stage-overview" },
+        { "id": "stage-02-map", "actions": [{ "type": "scrollIntoView", "selector": "#journey-map" }] },
+        { "id": "stage-02-to-03", "actions": [{ "type": "scrollIntoView", "selector": "#journey-paths" }] },
+        { "id": "stage-03-to-04", "actions": [{ "type": "scrollIntoView", "selector": "#journey-student" }] }
+      ]
+    },
+    {
+      "id": "editorial-journey-reveal-candidate",
+      "path": "/?demo=journey&art=reveal",
+      "states": [
+        { "id": "reveal-overview" },
+        { "id": "reveal-02-map", "actions": [{ "type": "scrollIntoView", "selector": "#journey-map" }] },
+        { "id": "reveal-02-to-03", "actions": [{ "type": "scrollIntoView", "selector": "#journey-paths" }] },
+        { "id": "reveal-03-to-04", "actions": [{ "type": "scrollIntoView", "selector": "#journey-student" }] }
+      ]
+    },
+    {
       "id": "reference-hub",
       "path": "/?demo=journey",
       "states": [

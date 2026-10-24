@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { DiagramFlow } from "../../foundation/layout/DiagramFlow";
-import { StepNav } from "../../compositions/step-nav";
-import { lwfGraph, lwfGraphSteps, lwfNavItems } from "./figures";
+import { useEffect, useState } from "react";
+import { JourneyArtDirection as JourneyArtDirectionView, JourneyDiagramScene, JourneyReviewSwitcher, Loss, theta } from "./JourneyArtDirection";
+import type { JourneyArtDirection } from "./JourneyArtDirection";
 import "./editorial-journey.css";
 
 export const journeySections = [
@@ -12,28 +11,37 @@ export const journeySections = [
   { id: "journey-handoff", title: "在任务边界交接" },
 ];
 
-// Same authoritative objects, geometry, endpoints and step IDs. Only this
-// experiment distinguishes comparison/update edges and explains their meaning.
-const journeyGraph = {
-  ...lwfGraph,
-  edges: lwfGraph.edges.map(edge => ({ ...edge, kind: edge.to === "update" ? "gradient" as const : ["lOld", "lNew"].includes(edge.to) ? "control" as const : "data" as const })),
-  legend: [
-    { id: "forward", text: "实线：前向计算", swatch: "solid" as const },
-    { id: "gradient", text: "虚线：损失对 Student 的更新作用", swatch: "gradient" as const },
-    ...lwfGraph.legend!.filter(item => item.id !== "flow"),
-  ],
-  note: "点线进入损失：将目标与预测送入比较；虚线进入更新：表示梯度作用归属，并非额外的前向输出。",
-};
-
-function Loss({ kind }: { kind: "old" | "new" }) {
-  return <span className="rk-math" data-loss={kind}><var>L</var><sub>{kind}</sub></span>;
+function readArtDirection(): JourneyArtDirection {
+  const requested = new URLSearchParams(window.location.search).get("art");
+  return requested === "stage" || requested === "reveal" ? requested : "baseline";
 }
-const theta = <span className="rk-math"><var>θ</var><sub>s</sub></span>;
 
 export function EditorialJourney() {
   const [stepId, setStepId] = useState("overview");
-  const current = lwfGraphSteps.find(step => step.id === stepId);
-  return <article className="journey" data-demo-view="journey" aria-label="LwF 完整阅读实验">
+  const [artDirection, setArtDirection] = useState<JourneyArtDirection>(readArtDirection);
+  useEffect(() => {
+    const syncFromLocation = () => setArtDirection(readArtDirection());
+    window.addEventListener("popstate", syncFromLocation);
+    return () => window.removeEventListener("popstate", syncFromLocation);
+  }, []);
+
+  const selectArtDirection = (next: JourneyArtDirection) => {
+    const candidates = journeySections.map(section => {
+      const element = document.getElementById(section.id);
+      return element ? { id: section.id, top: element.getBoundingClientRect().top, element } : null;
+    }).filter((item): item is { id: string; top: number; element: HTMLElement } => Boolean(item));
+    const active = candidates.sort((left, right) => Math.abs(left.top - 110) - Math.abs(right.top - 110))[0];
+    const url = new URL(window.location.href);
+    if (next === "baseline") url.searchParams.delete("art");
+    else url.searchParams.set("art", next);
+    if (active) url.hash = active.id;
+    window.history.replaceState(null, "", url);
+    setArtDirection(next);
+    if (active) requestAnimationFrame(() => document.getElementById(active.id)?.scrollIntoView({ behavior: "auto", block: "start" }));
+  };
+
+  return <article className="journey" data-demo-view="journey" data-art-direction={artDirection} aria-label="LwF 完整阅读实验">
+    <JourneyReviewSwitcher value={artDirection} onChange={selectArtDirection} />
     <header id="journey-question" className="journey-opening">
       <p className="journey-kicker">READING JOURNEY <span>Learning without Forgetting / 01</span></p>
       <h1>新知识进来了，<br /><em>旧响应还能留下吗？</em></h1>
@@ -41,15 +49,12 @@ export function EditorialJourney() {
       <div className="journey-tension"><p><span>新任务</span>学会当前标签</p><p><span>旧任务</span>保留已有响应</p><a href="#journey-map">同一输入，怎样兼顾两者？ <b aria-hidden="true">↓</b></a></div>
     </header>
 
-    <section id="journey-map" className="journey-map" aria-labelledby="journey-map-title">
-      <header className="journey-map-heading"><div><p className="journey-kicker">02 / THE WHOLE SYSTEM</p><h2 id="journey-map-title">沿着同一个输入，先看全局。</h2></div><p>先认出对象，再沿两条路径读到最右侧。<br />深色节点标出参数更新的唯一落点。</p></header>
-      <div className="journey-map-scene" data-focus-step={stepId}>
-        <div className="journey-map-caption"><p role="status" aria-live="polite"><strong>{current?.title ?? "全局概览 · 所有对象同时可见"}</strong><span>{current?.note ?? "Teacher 提供固定参照；Student 承担预测与学习。选择下方步骤，沿同一张图定位。"}</span></p><button type="button" onClick={() => setStepId("overview")} aria-pressed={stepId === "overview"}>恢复概览</button></div>
-        <DiagramFlow spec={journeyGraph} focus={current ? { nodes: current.nodes, edges: current.edges } : undefined} label="LwF 完整阅读系统地图" framed={false} />
-        <StepNav items={lwfNavItems} activeId={stepId} onSelect={setStepId} label="完整阅读实验：选择机制步骤" />
-      </div>
-      <p className="journey-bridge">地图已把两路输出放在眼前。下一步只问：它们分别拿什么作参照？</p>
-    </section>
+    {artDirection === "baseline" ? <>
+      <section id="journey-map" className="journey-map" aria-labelledby="journey-map-title">
+        <header className="journey-map-heading"><div><p className="journey-kicker">02 / THE WHOLE SYSTEM</p><h2 id="journey-map-title">沿着同一个输入，先看全局。</h2></div><p>先认出对象，再沿两条路径读到最右侧。<br />深色节点标出参数更新的唯一落点。</p></header>
+        <JourneyDiagramScene stepId={stepId} onStepChange={setStepId} />
+        <p className="journey-bridge">地图已把两路输出放在眼前。下一步只问：它们分别拿什么作参照？</p>
+      </section>
 
     <section id="journey-paths" className="journey-paths" aria-labelledby="journey-paths-title">
       <header className="journey-section-heading"><div><p className="journey-kicker">03 / TWO COMPARISONS</p><h2 id="journey-paths-title">两次比较，参照各有来处。</h2></div><p>同一份 Student 共享表示分出两个输出头：旧头对照 Teacher 留下的<strong className="journey-inline-emphasis">旧响应目标</strong>，新头对照当前任务的真实标签。先分清每次比较的来源与结果。</p></header>
@@ -85,6 +90,7 @@ export function EditorialJourney() {
       <div className="journey-training-notes"><b>阶段限定</b><p data-training-phase="warm-up">原文先 warm-up：固定共享参数和旧头，只训练新增任务头；随后才联合训练三组参数。上面的场景表示联合阶段，更新式不限定论文的具体优化器。</p></div>
       <details className="journey-temperature"><summary>温度变换如何对应刚才的旧路比较？</summary><div className="journey-temperature-content"><p>Teacher 旧目标与 Student 旧预测分别做同一温度变换，再计算旧损失。<var>p</var> 为其中任意一个概率向量。<span className="journey-nowrap" data-temperature-setting>原文采用 <var>T</var> = 2。</span></p><div className="journey-temperature-equation"><math display="block" aria-label="p prime i 等于 p i 的一除以 T 次幂，除以所有类别 j 对应幂的和"><msubsup><mi>p</mi><mi>i</mi><mo>′</mo></msubsup><mo>=</mo><mfrac><msup><msub><mi>p</mi><mi>i</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup><mrow><munder><mo>∑</mo><mi>j</mi></munder><msup><msub><mi>p</mi><mi>j</mi></msub><mfrac><mn>1</mn><mi>T</mi></mfrac></msup></mrow></mfrac></math></div></div></details>
     </section>
+    </> : <JourneyArtDirectionView direction={artDirection} stepId={stepId} onStepChange={setStepId} />}
 
     <section id="journey-handoff" className="journey-handoff" aria-labelledby="journey-handoff-title">
       <header className="journey-section-heading"><div><p className="journey-kicker">05 / AT THE TASK BOUNDARY</p><h2 id="journey-handoff-title">更新在任务内，交接在任务之间。</h2></div><p>本轮联合训练改变 Student 的共享表示与两个任务头；固定 Teacher 不随每次梯度更新同步变化。训练结束后，学好的模型保留下来，成为下一任务的旧模型参照。</p></header>

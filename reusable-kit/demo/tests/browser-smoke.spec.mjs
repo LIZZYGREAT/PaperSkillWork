@@ -896,3 +896,131 @@ test("Chinese hover opens the exact English Hub entry without changing the paper
   await expect(drawer).toBeHidden();
   await expect(trigger).toBeFocused();
 });
+
+test("Reading Journey art candidates preserve the canonical mechanism and its facts", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const variants = [
+    { id: "baseline", query: "", direction: "baseline" },
+    { id: "stage", query: "&art=stage", direction: "stage" },
+    { id: "reveal", query: "&art=reveal", direction: "reveal" },
+  ];
+  let baselineGraph;
+  const expectedNodes = ["x", "teacher", "target", "backbone", "oldOut", "newOut", "label", "lOld", "lNew", "update"];
+  const expectedEdges = ["x-teacher", "x-backbone", "teacher-target", "backbone-oldout", "backbone-newout", "target-lold", "oldout-lold", "newout-lnew", "label-lnew", "lold-update", "lnew-update"];
+  const expectedSteps = ["arrive", "teacher", "forward", "loss", "update"];
+
+  for (const variant of variants) {
+    await page.goto(`/?demo=journey${variant.query}`);
+    const journey = page.locator(".journey");
+    const scene = journey.locator(".journey-map-scene");
+    await expect(journey).toHaveAttribute("data-art-direction", variant.direction);
+    await expect(scene).toHaveCount(1);
+    await expect(scene).toHaveAttribute("data-focus-step", "overview");
+    await expect(journey.locator("[data-art-choice]")).toHaveCount(3);
+    await expect(journey.locator(`[data-art-choice="${variant.direction}"]`)).toHaveAttribute("aria-pressed", "true");
+
+    const nodes = await scene.locator("[data-diagram-node]").evaluateAll(elements => elements.map(element => [element.dataset.diagramNode, element.dataset.state]));
+    const edges = await scene.locator("[data-diagram-edge]").evaluateAll(elements => elements.map(element => [element.dataset.diagramEdge, element.dataset.from, element.dataset.to]));
+    const steps = await scene.locator("[data-step-id]").evaluateAll(elements => elements.map(element => element.dataset.stepId));
+    expect(nodes.map(([id]) => id)).toEqual(expectedNodes);
+    expect(new Set(nodes.map(([id]) => id)).size).toBe(expectedNodes.length);
+    expect(edges.map(([id]) => id)).toEqual(expectedEdges);
+    expect(steps).toEqual(expectedSteps);
+    await expect(scene.locator('[data-diagram-node="teacher"]')).toHaveAttribute("data-state", "frozen");
+
+    for (const [kind, target, prediction, result, targetText, predictionText] of [
+      ["old", "target", "oldOut", "lOld", "Teacher 旧响应目标", "旧类输出"],
+      ["new", "label", "newOut", "lNew", "当前任务真实标签", "新类输出"],
+    ]) {
+      const comparison = journey.locator(`[data-comparison="${kind}"]`);
+      await expect(comparison).toHaveAttribute("data-target", target);
+      await expect(comparison).toHaveAttribute("data-prediction", prediction);
+      await expect(comparison).toHaveAttribute("data-result", result);
+      await expect(comparison.locator('[data-comparison-field="target"]')).toContainText(targetText);
+      await expect(comparison.locator('[data-comparison-field="prediction"]')).toContainText(predictionText);
+    }
+    await expect(journey.locator("[data-role=teacher][data-state=frozen]")).toHaveCount(1);
+    await expect(journey.locator("[data-update-target=student]")).toHaveCount(1);
+    await expect(journey.locator("[data-training-phase=warm-up]")).toContainText("只训练新增任务头");
+    await expect(journey.locator("[data-temperature-setting]")).toContainText("T = 2");
+    await expect(journey.locator("#journey-handoff")).toContainText("不随每次梯度更新同步变化");
+    await expect(journey.locator('[data-equation="objective"]')).toHaveText("J=λoLold+Lnew+R");
+    await expect(journey.locator('[data-equation="parameter-update"]')).toHaveAttribute("aria-label", /theta s 赋值为 theta s 减 eta/);
+    await expect(journey.locator(".journey-review-controls__status strong")).toHaveText("CANDIDATE / 未批准");
+
+    const graph = { nodes, edges, steps };
+    if (baselineGraph) expect(graph).toEqual(baselineGraph);
+    else baselineGraph = graph;
+
+    if (variant.id !== "baseline") {
+      await expect(journey.locator('[data-comparison="old"] [data-loss="old"]')).toHaveCSS("color", "rgb(166, 91, 45)");
+      await expect(journey.locator('[data-comparison="new"] [data-loss="new"]')).toHaveCSS("color", "rgb(40, 118, 90)");
+      const resultSelector = variant.id === "stage" ? ".journey-art-stage-comparison" : ".journey-art-reveal-row";
+      await expect(journey.locator(`${resultSelector}[data-comparison="old"] [data-comparison-field="result"]`)).toHaveCSS("border-left-style", "solid");
+      await expect(journey.locator(`${resultSelector}[data-comparison="new"] [data-comparison-field="result"]`)).toHaveCSS("border-left-style", "dashed");
+    }
+  }
+
+  await page.goto("/?demo=journey&art=unknown");
+  await expect(page.locator(".journey")).toHaveAttribute("data-art-direction", "baseline");
+  await expect(page.locator('[data-art-choice="baseline"]')).toHaveAttribute("aria-pressed", "true");
+});
+
+test("Reading Journey art switcher keeps the reader at the same section and supports keyboard input", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=journey&keep=1#journey-paths");
+  const journey = page.locator(".journey");
+  const chooseWithoutScrolling = async (direction, key) => {
+    const button = journey.locator(`[data-art-choice="${direction}"]`);
+    await button.evaluate(element => element.focus({ preventScroll: true }));
+    await page.keyboard.press(key);
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+    await expect(journey).toHaveAttribute("data-art-direction", direction);
+    await expect(page).toHaveURL(new RegExp(`keep=1.*art=${direction}#journey-paths$`));
+  };
+
+  await chooseWithoutScrolling("stage", "Enter");
+  await chooseWithoutScrolling("reveal", "Space");
+  const baseline = journey.locator('[data-art-choice="baseline"]');
+  await baseline.evaluate(element => element.focus({ preventScroll: true }));
+  await page.keyboard.press("Enter");
+  await expect(baseline).toHaveAttribute("aria-pressed", "true");
+  await expect(journey).toHaveAttribute("data-art-direction", "baseline");
+  await expect(page).toHaveURL(/\?demo=journey&keep=1#journey-paths$/);
+});
+
+for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
+  test(`Reading Journey candidates stay legible at ${viewport.width}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize(viewport);
+    for (const direction of ["stage", "reveal"]) {
+      await page.goto(`/?demo=journey&art=${direction}`);
+      const journey = page.locator(".journey");
+      const diagram = journey.locator(".rk-diagram");
+      await page.evaluate(() => document.fonts.ready);
+      await expect(diagram).toHaveAttribute("data-diagram-mode", viewport.width === 390 ? "list" : "grid");
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      const formulas = journey.locator(".journey-art-math-line > math");
+      await expect(formulas).toHaveCount(2);
+      const formulaBounds = await formulas.evaluateAll(nodes => nodes.map(node => {
+        const box = node.getBoundingClientRect();
+        const parent = node.parentElement.getBoundingClientRect();
+        return { width: box.width, height: box.height, parentWidth: parent.width, overflow: node.scrollWidth > node.clientWidth + 2 };
+      }));
+      expect(formulaBounds.every(box => box.width <= box.parentWidth + 1 && box.height < 50 && !box.overflow)).toBe(true);
+
+      if (direction === "stage" && viewport.width >= 1440) {
+        const visual = journey.locator(".journey-art-stage__visual");
+        await expect(visual).toHaveCSS("position", "sticky");
+        for (const sectionId of ["journey-paths", "journey-student"]) {
+          await journey.locator(`#${sectionId}`).scrollIntoViewIfNeeded();
+          const top = await visual.evaluate(element => element.getBoundingClientRect().top);
+          expect(Math.abs(top - 78)).toBeLessThanOrEqual(2);
+        }
+      }
+      if (direction === "stage" && viewport.width < 1440) {
+        await expect(journey.locator(".journey-art-stage__visual")).toHaveCSS("position", "static");
+      }
+    }
+  });
+}

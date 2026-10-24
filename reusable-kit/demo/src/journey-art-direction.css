@@ -1,0 +1,205 @@
+.journey-review-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 24px;
+  padding: 10px 0 12px;
+  border-bottom: 1px solid var(--journey-rule);
+}
+.journey-review-controls__status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.journey-review-controls__status span { color: var(--rk-muted); font: 11px/1.5 var(--rk-font-mono); letter-spacing: .06em; }
+.journey-review-controls__status strong { color: #9c5428; font-size: 11px; font-weight: 650; letter-spacing: .03em; }
+.journey-review-controls__choices { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.journey-review-controls__choices button {
+  min-height: 36px;
+  padding: 5px 11px;
+  color: var(--rk-muted);
+  font-size: 12px;
+  border: 1px solid var(--rk-line);
+  border-radius: 3px;
+  background: transparent;
+}
+.journey-review-controls__choices button[aria-pressed="true"] { color: var(--rk-ink); border-color: var(--rk-accent); background: var(--rk-accent-soft); font-weight: 650; }
+.journey-review-controls__choices button:focus-visible, .journey-art-focus-action:focus-visible { outline: 2px solid var(--rk-focus); outline-offset: 3px; }
+
+.journey-art-stage {
+  display: grid;
+  grid-template-columns: minmax(680px, 2.3fr) minmax(280px, 1fr);
+  align-items: start;
+  gap: 28px;
+  margin: 26px 0 0;
+}
+.journey-art-stage__visual { position: sticky; top: 78px; align-self: start; min-width: 0; }
+.journey-art-stage__visual .journey-map-scene { padding: 16px; }
+.journey-art-stage__visual .rk-diagram { margin-inline: 0; }
+.journey-art-stage__visual .rk-diagram__canvas { column-gap: 12px; row-gap: 8px; }
+.journey-art-stage__visual .rk-step-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.journey-art-stage__visual .rk-step-nav__button { min-height: 50px; padding: 7px 6px; gap: 5px; font-size: 12px; }
+.journey-art-stage__visual .rk-step-nav__label { line-height: 1.3; }
+.journey-art-stage__visual .rk-step-nav__hint { font-size: 12px; }
+.journey-art-stage__reading { min-width: 0; }
+.journey-stage-map { min-width: 0; padding: 26px 0 22px; border-top: 1px solid var(--journey-rule); }
+.journey-stage-map .journey-map-heading { display: block; margin-bottom: 14px; }
+.journey-stage-map .journey-map-heading > p { margin-top: 10px; }
+.journey-stage-map-intro { color: var(--rk-muted); font-size: 14px; line-height: 1.75; }
+.journey-art-stage .journey-bridge { margin: 0 0 36px !important; padding: 12px 0; border-top: 1px solid var(--rk-line); border-bottom: 1px solid var(--rk-line); font-size: 13px; }
+.journey-stage-paths, .journey-stage-optimization { min-width: 0; margin: 0 0 46px; padding-top: 22px; border-top: 1px solid var(--journey-rule); }
+.journey-stage-paths .journey-section-heading, .journey-stage-optimization .journey-section-heading { margin-bottom: 18px; }
+.journey-stage-paths .journey-section-heading h2, .journey-stage-optimization .journey-section-heading h2 { font-size: 24px; line-height: 1.38; }
+.journey-stage-paths .journey-section-heading > p, .journey-stage-optimization .journey-section-heading > p { margin-top: 10px; font-size: 14px; }
+.journey-art-focus-action { margin-top: 12px; padding: 5px 0; color: var(--rk-accent); font-size: 12px; border: 0; border-bottom: 1px solid currentColor; background: transparent; }
+
+.journey-art-stage-comparison { padding: 15px 0 16px; border-top: 1px solid var(--rk-line); }
+.journey-art-stage-comparison h3 { margin: 0 0 10px; font-size: 15px; font-weight: 650; }
+.journey-art-stage-pair { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; gap: 8px; }
+.journey-art-stage-pair p { min-width: 0; margin: 0; }
+.journey-art-stage-pair small, .journey-art-stage-pair strong, .journey-art-stage-pair p span { display: block; }
+.journey-art-stage-pair small { margin-bottom: 4px; color: var(--rk-muted); font-size: 10px; }
+.journey-art-stage-pair strong { font-size: 13px; line-height: 1.5; }
+.journey-art-stage-pair p span { margin-top: 3px; color: var(--rk-muted); font-size: 11px; line-height: 1.55; }
+.journey-art-stage-join { display: grid; place-items: center; width: 62px; color: var(--rk-muted); font-size: 10px; line-height: 1.35; text-align: center; }
+.journey-art-stage-result { display: flex; align-items: baseline; gap: 8px; margin: 11px 0 0 !important; padding-left: 9px; border-left: 2px solid var(--rk-line-strong); }
+.journey-art-stage-result > span:first-child { color: var(--rk-muted); font-size: 12px; }
+.journey-art-stage-result small { color: var(--rk-muted); font-size: 11px; }
+.journey-art-stage-comparison[data-comparison="old"] .journey-art-stage-result { border-left-color: #a65b2d; }
+.journey-art-stage-comparison[data-comparison="new"] .journey-art-stage-result { border-left-style: dashed; border-left-color: #28765a; }
+.journey-loss-symbol[data-loss="old"] { color: #a65b2d; }
+.journey-loss-symbol[data-loss="new"] { color: #28765a; }
+.journey-art-stage-explanation { margin: 10px 0 0 !important; color: var(--rk-muted); font-size: 12px; line-height: 1.7; }
+.journey-art-stage-comparisons > .journey-art-focus-action { margin-top: 4px; }
+
+.journey-art-student { min-width: 0; }
+.journey-art-student--stage { padding: 16px 0 0; border-top: 1px solid var(--journey-rule); border-bottom: 1px solid var(--journey-rule); }
+.journey-art-student__identity { display: grid; grid-template-columns: 1fr; gap: 7px; margin-bottom: 17px; }
+.journey-art-student__identity h3 { margin: 3px 0 0; font-size: 25px; font-weight: 650; }
+.journey-art-student__identity p { max-width: 600px; color: var(--rk-muted); font-size: 13px; line-height: 1.65; }
+.journey-art-stage-calculation { display: grid; gap: 14px; }
+.journey-art-stage-source-row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-top: 1px solid var(--rk-line); border-bottom: 1px solid var(--rk-line); }
+.journey-art-stage-source-row > span:nth-child(2) { color: var(--rk-muted); font-size: 13px; }
+.journey-art-stage-source-row .rk-math { font-size: 21px; }
+.journey-art-stage-equation { display: flex; flex-direction: column; align-items: flex-start; padding-left: 10px; border-left: 2px solid var(--journey-rule); }
+.journey-art-stage-equation > span { display: block; color: var(--rk-muted); font-size: 11px; }
+.journey .journey-art-stage-equation math { display: block; max-width: 100%; margin: 2px 0 !important; font-size: 19px; line-height: 1.5; }
+.journey-art-math-line { display: flex; align-items: center; min-width: 0; }
+.journey .journey-art-math-line > math { display: inline math; flex: 0 0 auto; max-width: 100%; }
+.journey-art-stage-equation p { margin: 0 !important; color: var(--rk-muted); font-size: 12px; line-height: 1.55; }
+.journey-art-stage-equation--update { padding-top: 10px; border-top: 1px solid var(--rk-line); border-left-style: dashed; }
+.journey-art-student--stage .journey-student-conclusion { display: block; margin-top: 15px !important; padding: 12px 0; font-size: 14px; }
+.journey-art-student--stage .journey-student-conclusion span { display: block; margin-top: 4px; }
+.journey-art-stage-optimization .journey-training-notes { grid-template-columns: 1fr; gap: 5px; margin-top: 15px; font-size: 12px; }
+.journey-art-stage-optimization .journey-temperature { font-size: 12px; }
+.journey-art-stage-optimization .journey-temperature-content { grid-template-columns: 1fr; gap: 8px; }
+
+.journey-art-reveal-paths { margin-top: 58px; }
+.journey-art-reveal-rows { margin-top: 28px; }
+.journey-art-reveal-row { display: grid; grid-template-columns: minmax(155px, .62fr) minmax(0, 1.8fr); align-items: center; column-gap: 28px; row-gap: 12px; padding: 22px 0; border-top: 1px solid var(--journey-rule); }
+.journey-art-reveal-identity { min-width: 0; }
+.journey-art-reveal-identity > span { color: var(--rk-muted); font: 11px/1.5 var(--rk-font-mono); letter-spacing: .07em; }
+.journey-art-reveal-identity h3 { margin: 7px 0 0; font-size: 21px; font-weight: 600; }
+.journey-art-reveal-relation { display: grid; grid-template-columns: minmax(0, 1.15fr) auto minmax(0, 1fr) auto minmax(108px, .65fr); align-items: center; gap: 12px; min-width: 0; }
+.journey-art-reveal-object { min-width: 0; margin: 0 !important; padding: 7px 0; border-bottom: 2px solid var(--rk-line); }
+.journey-art-reveal-row--old .journey-art-reveal-object:first-child { border-bottom-color: #a65b2d; }
+.journey-art-reveal-row--new .journey-art-reveal-object:first-child { border-bottom-style: dashed; border-bottom-color: #28765a; }
+.journey-art-reveal-object small, .journey-art-reveal-object strong, .journey-art-reveal-object span { display: block; }
+.journey-art-reveal-object small { color: var(--rk-muted); font-size: 11px; }
+.journey-art-reveal-object strong { margin-top: 4px; font-size: 15px; line-height: 1.45; }
+.journey-art-reveal-object span { margin-top: 4px; color: var(--rk-muted); font-size: 12px; line-height: 1.5; }
+.journey-art-reveal-join, .journey-art-reveal-leads { color: var(--rk-muted); font-size: 12px; white-space: nowrap; }
+.journey-art-reveal-result { display: grid; justify-items: start; align-content: center; min-height: 72px; margin: 0 !important; padding: 7px 12px; border-left: 2px solid #a65b2d; background: rgba(255, 255, 255, .42); }
+.journey-art-reveal-row--new .journey-art-reveal-result { border-left-style: dashed; border-left-color: #28765a; }
+.journey-art-reveal-result .rk-math { font-size: 23px; }
+.journey-art-reveal-result span:last-child { color: var(--rk-muted); font-size: 11px; }
+.journey-art-reveal-explanation { grid-column: 2; max-width: 730px; margin: 0 !important; color: var(--rk-muted); font-size: 13px; line-height: 1.7; }
+.journey-art-reveal-row--new { margin-left: 7%; }
+.journey-art-reveal-row--new .journey-art-reveal-identity { grid-column: 2; grid-row: 1; }
+.journey-art-reveal-row--new .journey-art-reveal-relation { grid-column: 1 / 3; grid-row: 2; }
+.journey-art-reveal-row--new .journey-art-reveal-explanation { grid-column: 1 / 3; margin-left: 20% !important; }
+
+.journey-art-reveal-optimization { margin-top: 62px; }
+.journey-art-reveal-convergence { display: grid; grid-template-columns: minmax(130px, .78fr) 28px minmax(245px, 1.32fr) minmax(78px, .45fr) minmax(220px, 1.15fr); align-items: center; gap: 18px; margin-top: 27px; padding: 24px 0; border-top: 1px solid var(--journey-rule); border-bottom: 1px solid var(--journey-rule); }
+.journey-art-reveal-losses { display: grid; gap: 16px; min-width: 0; }
+.journey-art-reveal-losses p { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 !important; padding-bottom: 8px; border-bottom: 1px solid var(--rk-line); }
+.journey-art-reveal-losses p span { color: var(--rk-muted); font-size: 12px; }
+.journey-art-reveal-losses .rk-math { font-size: 22px; }
+.journey-art-reveal-flow, .journey-art-reveal-gradient b { color: var(--rk-accent); font-size: 23px; font-weight: 400; text-align: center; }
+.journey-art-reveal-objective { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 15px 16px; background: rgba(255, 255, 255, .48); }
+.journey-art-reveal-objective > span, .journey-art-reveal-objective > small { display: block; color: var(--rk-muted); font-size: 11px; }
+.journey .journey-art-reveal-objective math { display: inline math; margin: 9px 0 !important; font-size: 26px; line-height: 1.55; }
+.journey-art-reveal-gradient { display: grid; justify-items: center; gap: 3px; min-width: 0; }
+.journey-art-reveal-gradient span { color: var(--rk-muted); font-size: 11px; }
+.journey-art-reveal-gradient b { font-size: 18px; }
+.journey-art-reveal-update { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 16px; color: #fffdf7; background: #1d3d34; }
+.journey-art-reveal-update > span { color: #d4c49b; font: 10px/1.5 var(--rk-font-mono); letter-spacing: .06em; }
+.journey-art-reveal-update h3 { margin: 5px 0 8px; font-size: 23px; font-weight: 600; }
+.journey-art-reveal-update p { margin: 0 0 7px !important; color: rgba(255, 253, 247, .78); font-size: 12px; line-height: 1.55; }
+.journey-art-reveal-update [data-parameter-definition] { color: rgba(255, 253, 247, .9); }
+.journey .journey-art-reveal-update math { display: inline math; max-width: 100%; margin: 8px 0 !important; color: #fffdf7; font-size: 19px; line-height: 1.5; }
+.journey-art-reveal-teacher { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px 14px; margin: 3px 0 0 !important; padding: 10px 12px; border: 1px dashed var(--rk-line-strong); }
+.journey-art-reveal-teacher strong { font-size: 12px; }
+.journey-art-reveal-teacher span { color: var(--rk-muted); font-size: 12px; }
+.journey-art-reveal-optimization .journey-training-notes { margin-top: 20px; }
+
+@media (max-width: 1439px) {
+  .journey-art-stage { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .journey-art-stage__visual { position: static; grid-row: 1; }
+  .journey-art-stage__reading { grid-row: 2; }
+  .journey-stage-map .journey-map-heading { display: flex; }
+  .journey-art-stage .journey-stage-map-intro { max-width: 700px; }
+  .journey-art-stage .journey-stage-comparison { padding-block: 20px; }
+  .journey-art-stage-comparison h3 { font-size: 17px; }
+  .journey-art-stage-pair { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 18px; }
+  .journey-art-stage-pair strong { font-size: 15px; }
+  .journey-art-stage-pair p span { font-size: 12px; }
+  .journey-art-stage-join { width: 82px; }
+  .journey-art-stage-explanation { max-width: 800px; font-size: 13px; }
+  .journey-art-stage .journey-section-heading > p { max-width: 700px; }
+  .journey-art-student__identity { grid-template-columns: 220px minmax(0,1fr); }
+  .journey-art-stage-calculation { grid-template-columns: minmax(160px,.65fr) minmax(0,1fr); column-gap: 24px; }
+  .journey-art-stage-equation--update { grid-column: 1 / -1; }
+}
+@media (max-width: 1000px) {
+  .journey-art-reveal-row, .journey-art-reveal-row--new { grid-template-columns: 1fr; margin-left: 0; }
+  .journey-art-reveal-row--new .journey-art-reveal-identity, .journey-art-reveal-row--new .journey-art-reveal-relation { grid-column: 1; grid-row: auto; }
+  .journey-art-reveal-explanation, .journey-art-reveal-row--new .journey-art-reveal-explanation { grid-column: 1; margin-left: 0 !important; }
+  .journey-art-reveal-relation { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(100px,.7fr); }
+  .journey-art-reveal-convergence { grid-template-columns: minmax(120px,.7fr) 26px minmax(220px,1.2fr); }
+  .journey-art-reveal-gradient { grid-column: 2; grid-row: 2; }
+  .journey-art-reveal-update { grid-column: 3; grid-row: 2; }
+  .journey-art-reveal-teacher { grid-row: 3; }
+}
+@media (max-width: 640px) {
+  .journey-review-controls { display: block; margin-bottom: 18px; }
+  .journey-review-controls__choices { justify-content: flex-start; margin-top: 10px; }
+  .journey-review-controls__choices button { min-height: 40px; }
+  .journey-art-stage { margin-top: 20px; }
+  .journey-art-stage__visual .journey-map-scene { padding: 14px; }
+  .journey-stage-map .journey-map-heading { display: block; }
+  .journey-art-stage-pair { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 6px; }
+  .journey-art-stage-join { width: 48px; font-size: 9px; }
+  .journey-art-stage-pair strong { font-size: 13px; }
+  .journey-art-stage-pair p span { font-size: 11px; }
+  .journey-art-stage-calculation { grid-template-columns: 1fr; }
+  .journey-art-stage-equation--update { grid-column: auto; }
+  .journey-art-student__identity { grid-template-columns: 1fr; }
+  .journey-art-reveal-row { padding: 18px 0; }
+  .journey-art-reveal-relation { grid-template-columns: minmax(0,1fr); gap: 6px; }
+  .journey-art-reveal-join, .journey-art-reveal-leads { padding-left: 8px; font-size: 11px; }
+  .journey-art-reveal-join::before { content: "↓ "; }
+  .journey-art-reveal-leads::before { content: "↓ "; }
+  .journey-art-reveal-result { display: flex; align-items: baseline; gap: 10px; min-height: 0; }
+  .journey-art-reveal-result span:last-child { margin-left: auto; }
+  .journey-art-reveal-convergence { grid-template-columns: minmax(0,1fr); gap: 12px; padding-block: 19px; }
+  .journey-art-reveal-losses { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .journey-art-reveal-losses p { display: grid; justify-items: start; }
+  .journey-art-reveal-flow, .journey-art-reveal-gradient { grid-column: 1; grid-row: auto; }
+  .journey-art-reveal-flow { transform: rotate(90deg); }
+  .journey-art-reveal-gradient { display: flex; justify-content: center; align-items: center; }
+  .journey-art-reveal-gradient b { transform: rotate(90deg); }
+  .journey-art-reveal-update { grid-column: 1; grid-row: auto; }
+  .journey-art-reveal-update math, .journey-art-reveal-objective math { font-size: 22px; }
+  .journey-art-reveal-teacher { grid-column: 1; grid-row: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journey-review-controls *, .journey-art-focus-action { scroll-behavior: auto; transition: none; animation: none; }
+}
