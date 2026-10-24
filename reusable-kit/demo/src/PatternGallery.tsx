@@ -25,12 +25,12 @@ export const patternGallerySections = [
 ];
 
 const branchBase: DiagramSpec = {
-  columns: 4,
+  columns: 5,
   zones: [
     { id: "branch-input", label: "输入与任务", from: 1, span: 1 },
     { id: "branch-model", label: "参考 / 学习对象", from: 2, span: 1 },
     { id: "branch-output", label: "可读输出", from: 3, span: 1 },
-    { id: "branch-objective", label: "比较与更新", from: 4, span: 1 },
+    { id: "branch-objective", label: "比较与更新", from: 4, span: 2 },
   ],
   nodes: [
     { id: "sample", column: 1, row: 2, order: 1, title: "输入样本 xₜ", badge: "DATA", role: "input", inputLabel: "输入样本" },
@@ -39,9 +39,11 @@ const branchBase: DiagramSpec = {
     { id: "student", column: 2, row: 4, order: 4, title: "Student model", meta: "本任务更新", badge: "LEARNING", role: "trainable", inputLabel: "可训练模型" },
     { id: "target", column: 3, row: 1, order: 5, title: "旧类响应目标", badge: "TARGET", role: "target", inputLabel: "旧类目标" },
     { id: "prediction", column: 3, row: 4, order: 6, title: "当前预测", badge: "OUTPUT", role: "output", inputLabel: "student 预测" },
-    { id: "old-loss", column: 4, row: 1, order: 7, title: "响应比较", badge: "OBJECTIVE", role: "objective", inputLabel: "响应比较" },
-    { id: "new-loss", column: 4, row: 4, order: 8, title: "标签比较", badge: "OBJECTIVE", role: "objective", inputLabel: "标签比较" },
-    { id: "update", column: 4, row: 6, order: 9, title: "student 参数", meta: "唯一更新对象", badge: "UPDATE", role: "update", inputLabel: "student 参数" },
+    { id: "label", column: 3, row: 7, order: 7, title: "当前真实标签 y", badge: "LABEL", role: "label", inputLabel: "真实标签" },
+    { id: "old-loss", column: 4, row: 1, order: 8, title: "响应比较", badge: "OBJECTIVE", role: "objective", inputLabel: "响应比较" },
+    { id: "new-loss", column: 4, row: 5, order: 9, title: "标签比较", badge: "OBJECTIVE", role: "objective", inputLabel: "标签比较" },
+    { id: "combined", column: 5, row: 3, order: 10, title: "组合目标", meta: "组合规则依论文确定", badge: "OBJECTIVE", role: "objective", inputLabel: "组合目标" },
+    { id: "update", column: 5, row: 6, order: 11, title: "student 参数", meta: "唯一更新对象", badge: "UPDATE", role: "update", inputLabel: "student 参数" },
   ],
   edges: [
     { id: "input-teacher", from: "sample", to: "teacher", kind: "data", startPort: "right", endPort: "left", mode: "smooth" },
@@ -49,17 +51,20 @@ const branchBase: DiagramSpec = {
     { id: "teacher-target", from: "teacher", to: "target", kind: "data", mode: "straight" },
     { id: "student-prediction", from: "student", to: "prediction", kind: "data", mode: "straight" },
     { id: "task-control", from: "task", to: "student", kind: "control", mode: "orthogonal" },
-    { id: "target-old-loss", from: "target", to: "old-loss", kind: "gradient", mode: "smooth" },
-    { id: "prediction-new-loss", from: "prediction", to: "new-loss", kind: "gradient", mode: "smooth" },
-    { id: "old-loss-update", from: "old-loss", to: "update", kind: "gradient", mode: "smooth" },
-    { id: "new-loss-update", from: "new-loss", to: "update", kind: "gradient", mode: "smooth" },
+    { id: "target-old-loss", from: "target", to: "old-loss", kind: "data", mode: "smooth" },
+    { id: "prediction-old-loss", from: "prediction", to: "old-loss", kind: "data", mode: "smooth" },
+    { id: "prediction-new-loss", from: "prediction", to: "new-loss", kind: "data", mode: "smooth" },
+    { id: "label-new-loss", from: "label", to: "new-loss", kind: "data", mode: "straight" },
+    { id: "old-loss-combined", from: "old-loss", to: "combined", kind: "data", mode: "smooth" },
+    { id: "new-loss-combined", from: "new-loss", to: "combined", kind: "data", mode: "smooth" },
+    { id: "combined-update", from: "combined", to: "update", kind: "gradient", mode: "smooth" },
   ],
   legend: [
     { id: "reference", text: "冻结参考对象", swatch: "frozen" },
     { id: "learning", text: "可训练对象", swatch: "trainable" },
     { id: "target", text: "单一更新目标", swatch: "update" },
   ],
-  note: "示意数据用于演示结构，不代表任一论文的实测结果。实线表示数据，虚线表示梯度，点线表示控制。",
+  note: "实线表示输入数据或目标项贡献，点线表示任务控制，虚线仅表示组合目标传向参数更新的梯度。此图为通用结构示意。",
 };
 
 const mergeBase: DiagramSpec = {
@@ -83,11 +88,11 @@ const mergeBase: DiagramSpec = {
   edges: [
     { id: "prior-stability", from: "prior", to: "stability", kind: "data", mode: "smooth" },
     { id: "current-stability", from: "current", to: "stability", kind: "data", mode: "smooth" },
-    { id: "importance-stability", from: "importance", to: "stability", kind: "control", mode: "straight" },
+    { id: "importance-stability", from: "importance", to: "stability", kind: "data", mode: "straight" },
     { id: "prediction-task", from: "prediction", to: "task-loss", kind: "data", mode: "smooth" },
     { id: "label-task", from: "label", to: "task-loss", kind: "data", mode: "straight" },
-    { id: "stability-combined", from: "stability", to: "combined", kind: "gradient", mode: "smooth" },
-    { id: "task-combined", from: "task-loss", to: "combined", kind: "gradient", mode: "smooth" },
+    { id: "stability-combined", from: "stability", to: "combined", kind: "data", mode: "smooth" },
+    { id: "task-combined", from: "task-loss", to: "combined", kind: "data", mode: "smooth" },
     { id: "combined-update", from: "combined", to: "parameters", kind: "gradient", mode: "smooth" },
   ],
   legend: [
@@ -95,7 +100,7 @@ const mergeBase: DiagramSpec = {
     { id: "current", text: "当前参数接收更新", swatch: "trainable" },
     { id: "update", text: "更新对象显式标记", swatch: "update" },
   ],
-  note: "合并节点只表示结构关系。权重、温度和组合系数应来自目标论文；信息不足时保留说明，不补造公式。",
+  note: "实线表示计算输入或目标项贡献；虚线只表示组合目标传向参数更新的梯度。权重与组合规则按目标论文填写，不补造公式。",
 };
 
 const diagramModes: { value: PathMode; label: string }[] = [
@@ -106,43 +111,78 @@ const diagramModes: { value: PathMode; label: string }[] = [
 
 const branchCode = [
   'import { DiagramFlow } from "./shared/foundation/layout/DiagramFlow";',
+  'import type { DiagramSpec } from "./shared/foundation/layout/DiagramFlow";',
   '',
-  'const spec = {',
-  '  columns: 3,',
+  'const branchSpec: DiagramSpec = {',
+  '  columns: 5,',
   '  nodes: [',
-  '    { id: "input", title: "Input x", role: "input", column: 1, row: 2 },',
-  '    { id: "reference", title: "Frozen reference", role: "frozen", column: 3, row: 1 },',
-  '    { id: "learner", title: "Trainable model", role: "trainable", column: 3, row: 3 },',
+  '    { id: "sample", title: "输入样本 xₜ", role: "input", column: 1, row: 2 },',
+  '    { id: "task", title: "当前任务 t", role: "label", column: 1, row: 5 },',
+  '    { id: "teacher", title: "冻结参考模型", role: "frozen", column: 2, row: 1 },',
+  '    { id: "student", title: "可训练模型", role: "trainable", column: 2, row: 4 },',
+  '    { id: "target", title: "旧类响应目标", role: "target", column: 3, row: 1 },',
+  '    { id: "prediction", title: "当前预测", role: "output", column: 3, row: 4 },',
+  '    { id: "label", title: "当前真实标签 y", role: "label", column: 3, row: 7 },',
+  '    { id: "old-loss", title: "响应比较", role: "objective", column: 4, row: 1 },',
+  '    { id: "new-loss", title: "标签比较", role: "objective", column: 4, row: 5 },',
+  '    { id: "combined", title: "组合目标", role: "objective", column: 5, row: 3 },',
+  '    { id: "update", title: "student 参数", role: "update", column: 5, row: 6 },',
   '  ],',
   '  edges: [',
-  '    { id: "to-reference", from: "input", to: "reference", kind: "data", mode: "smooth" },',
-  '    { id: "to-learner", from: "input", to: "learner", kind: "data", mode: "orthogonal" },',
+  '    { id: "input-teacher", from: "sample", to: "teacher", kind: "data", mode: "smooth" },',
+  '    { id: "input-student", from: "sample", to: "student", kind: "data", mode: "smooth" },',
+  '    { id: "teacher-target", from: "teacher", to: "target", kind: "data", mode: "straight" },',
+  '    { id: "student-prediction", from: "student", to: "prediction", kind: "data", mode: "straight" },',
+  '    { id: "task-control", from: "task", to: "student", kind: "control", mode: "orthogonal" },',
+  '    { id: "target-old-loss", from: "target", to: "old-loss", kind: "data", mode: "smooth" },',
+  '    { id: "prediction-old-loss", from: "prediction", to: "old-loss", kind: "data", mode: "smooth" },',
+  '    { id: "prediction-new-loss", from: "prediction", to: "new-loss", kind: "data", mode: "smooth" },',
+  '    { id: "label-new-loss", from: "label", to: "new-loss", kind: "data", mode: "straight" },',
+  '    { id: "old-loss-combined", from: "old-loss", to: "combined", kind: "data", mode: "smooth" },',
+  '    { id: "new-loss-combined", from: "new-loss", to: "combined", kind: "data", mode: "smooth" },',
+  '    { id: "combined-update", from: "combined", to: "update", kind: "gradient", mode: "smooth" },',
   '  ],',
+  '  note: "Solid = data or objective contribution; dotted = task control; dashed = gradient to the update target.",',
   '};',
   '',
-  '<DiagramFlow spec={spec} label="One input branches to two distinct model roles" />',
+  'export function BranchExample() {',
+  '  return <DiagramFlow spec={branchSpec} label="输入经过冻结参考和可训练路径，目标与标签分别比较后进入组合目标" />;',
+  '}',
 ].join("\n");
 
 const mergeCode = [
   'import { DiagramFlow } from "./shared/foundation/layout/DiagramFlow";',
+  'import type { DiagramSpec } from "./shared/foundation/layout/DiagramFlow";',
   '',
-  'const spec = {',
+  'const mergeSpec: DiagramSpec = {',
   '  columns: 5,',
   '  nodes: [',
-  '    { id: "reference", title: "Reference", role: "frozen", column: 1, row: 1 },',
-  '    { id: "comparison", title: "Preservation objective", role: "objective", column: 3, row: 1 },',
-  '    { id: "task", title: "Task objective", role: "objective", column: 3, row: 3 },',
-  '    { id: "combined", title: "Combined objective", role: "objective", column: 4, row: 2 },',
-  '    { id: "update", title: "Trainable parameters", role: "update", column: 5, row: 2 },',
+  '    { id: "prior", title: "旧参数 θᴬ", role: "frozen", column: 1, row: 1 },',
+  '    { id: "current", title: "当前参数 θ", role: "trainable", column: 1, row: 3 },',
+  '    { id: "importance", title: "重要性权重 Ω", role: "target", column: 2, row: 2 },',
+  '    { id: "stability", title: "保持项", role: "objective", column: 3, row: 2 },',
+  '    { id: "prediction", title: "当前预测 f(x)", role: "output", column: 1, row: 5 },',
+  '    { id: "label", title: "当前标签 y", role: "label", column: 2, row: 5 },',
+  '    { id: "task-loss", title: "任务损失", role: "objective", column: 3, row: 5 },',
+  '    { id: "combined", title: "组合目标", role: "objective", column: 4, row: 3 },',
+  '    { id: "parameters", title: "当前参数 θ", role: "update", column: 5, row: 3 },',
   '  ],',
   '  edges: [',
-  '    { id: "preserve", from: "comparison", to: "combined", kind: "gradient", mode: "smooth" },',
-  '    { id: "task", from: "task", to: "combined", kind: "gradient", mode: "smooth" },',
-  '    { id: "update", from: "combined", to: "update", kind: "gradient", mode: "straight" },',
+  '    { id: "prior-stability", from: "prior", to: "stability", kind: "data", mode: "smooth" },',
+  '    { id: "current-stability", from: "current", to: "stability", kind: "data", mode: "smooth" },',
+  '    { id: "importance-stability", from: "importance", to: "stability", kind: "data", mode: "straight" },',
+  '    { id: "prediction-task", from: "prediction", to: "task-loss", kind: "data", mode: "smooth" },',
+  '    { id: "label-task", from: "label", to: "task-loss", kind: "data", mode: "straight" },',
+  '    { id: "stability-combined", from: "stability", to: "combined", kind: "data", mode: "smooth" },',
+  '    { id: "task-combined", from: "task-loss", to: "combined", kind: "data", mode: "smooth" },',
+  '    { id: "combined-update", from: "combined", to: "parameters", kind: "gradient", mode: "smooth" },',
   '  ],',
+  '  note: "Solid = calculation inputs and objective contributions; dashed = gradient from the combined objective to the update target.",',
   '};',
   '',
-  '<DiagramFlow spec={spec} label="Two objectives combine before one parameter update" />',
+  'export function MergeExample() {',
+  '  return <DiagramFlow spec={mergeSpec} label="两个完整计算作为数据贡献进入组合目标，再将梯度传向参数更新" />;',
+  '}',
 ].join("\n");
 
 const layoutOptions: { value: EditorialLayout; label: string }[] = [
@@ -193,13 +233,13 @@ const layoutExamples: Record<EditorialLayout, { title: string; topic: string; he
       '<div className="comparison-rows">',
       '  {rows.map((row, index) => (',
       '    <article className="comparison-row" data-depth={index % 2 ? "offset" : "base"} key={row.id}>',
-      '      <h3>{row.name}</h3><p>{row.relation}</p><strong>{row.result}</strong>',
+      '      <h3>{row.title}</h3><p>{row.relation}</p><strong>{row.result}</strong>',
       '    </article>',
       '  ))}',
       '</div>',
       '',
       '.comparison-rows { display: grid; gap: 16px; }',
-      '.comparison-row { display: grid; grid-template-columns: minmax(7rem,.8fr) minmax(8rem,1fr) minmax(12rem,1.35fr) minmax(4.75rem,.45fr); gap: 8px 16px; align-items: baseline; }',
+      '.comparison-row { display: grid; grid-template-columns: minmax(7rem,.8fr) minmax(0,1fr) minmax(12rem,1.35fr); gap: 8px 16px; align-items: baseline; }',
       '.comparison-row[data-depth="offset"] { width: calc(100% - clamp(24px, 8vw, 88px)); margin-inline-start: clamp(24px, 8vw, 88px); }',
       '@media (max-width: 700px) { .comparison-row { grid-template-columns: 1fr; gap: 6px; } .comparison-row[data-depth="offset"] { margin-inline-start: 0; } }',
     ].join("\n"),
@@ -236,10 +276,12 @@ const layoutExamples: Record<EditorialLayout, { title: string; topic: string; he
       '    <figcaption>OVERVIEW · 共享输入</figcaption>',
       '    <div className="overview-detail__flow">',
       '      <div className="overview-detail__node"><span>INPUT</span><strong>样本 x</strong></div>',
+      '      <i aria-hidden="true">→</i>',
       '      <div className="overview-detail__routes">',
       '        <article><span>REFERENCE · FROZEN</span><strong>旧模型 f_old</strong><small>目标响应 y_old</small></article>',
       '        <article className="is-active"><span>LEARNING · ACTIVE</span><strong>当前模型 f_θ</strong><small>预测响应 y_θ</small></article>',
       '      </div>',
+      '      <i aria-hidden="true">→</i>',
       '      <div className="overview-detail__node is-focus"><span>LOCAL FOCUS</span><strong>响应对齐</strong><small>比较两种响应</small></div>',
       '    </div>',
       '  </figure>',
@@ -262,78 +304,112 @@ const typographyCode = [
   'import { PullQuote } from "./shared/foundation/data/PullQuote";',
   'import { FormulaBlock } from "./shared/optional/formula/FormulaBlock";',
   '',
-  '<p>Use <strong>bold</strong> for one claim-bearing phrase, not for a whole paragraph.</p>',
-  '<PullQuote attribution="Teaching takeaway">State the conclusion in one short sentence.</PullQuote>',
-  '<FormulaBlock',
-  '  label="Objective"',
-  '  formula="L_total = L_task + λ L_preserve"',
-  '  accessibleLabel="Total loss equals task loss plus lambda times preservation loss"',
-  '  renderedFormula={<math><msub><mi>L</mi><mi>total</mi></msub><mo>=</mo><msub><mi>L</mi><mi>task</mi></msub><mo>+</mo><mi>λ</mi><msub><mi>L</mi><mi>preserve</mi></msub></math>}',
-  '  description="Select a term to connect notation with its role."',
-  '/>',
+  'export function TypographyExample() {',
+  '  return <section>',
+  '    <p>The reference stays fixed; <strong>the current model receives the update</strong>.</p>',
+  '    <PullQuote attribution="Teaching takeaway">Explain separate objectives before describing their combined effect.</PullQuote>',
+  '    <FormulaBlock',
+  '      label="Objective"',
+  '      formula="L_total = L_task + λ L_preserve"',
+  '      accessibleLabel="Total loss equals task loss plus lambda times preservation loss"',
+  '      renderedFormula={<math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>L</mi><mi>total</mi></msub><mo>=</mo><msub><mi>L</mi><mi>task</mi></msub><mo>+</mo><mi>λ</mi><msub><mi>L</mi><mi>preserve</mi></msub></math>}',
+  '      terms={[',
+  '        { id: "task", label: "L_task", explanation: "The task-fitting term; replace this with the paper\'s definition." },',
+  '        { id: "weight", label: "λ", explanation: "The trade-off coefficient; verify its meaning and value in the source." },',
+  '        { id: "preserve", label: "L_preserve", explanation: "The preservation objective; do not infer it from this label." },',
+  '      ]}',
+  '      description="Choose a symbol to read its role."',
+  '    />',
+  '  </section>;',
+  '}',
 ].join("\n");
 
 const stickyRecipeCode = [
-  'const sections = steps.map(step => ({ id: step.sectionId, stepId: step.id }));',
+  'import { useState } from "react";',
+  'import { DiagramFlow } from "./shared/foundation/layout/DiagramFlow";',
+  'import type { DiagramSpec } from "./shared/foundation/layout/DiagramFlow";',
+  'import { StickySystemView, useStickyStepSync } from "./shared/foundation/layout/StickySystemView";',
+  'import { FigureFrame } from "./shared/compositions/figure-frame/FigureFrame";',
+  'import { StepNav } from "./shared/compositions/step-nav/StepNav";',
   '',
-  '<StickySystemView',
-  '  sections={sections}',
-  '  onActiveSectionChange={section => section.stepId && setActiveId(section.stepId)}',
-  '  visual={<FigureFrame title={active.title}>{renderFigure(activeId)}</FigureFrame>}',
-  '>',
-  '  {steps.map(step => <section id={step.sectionId} key={step.id}>',
-  '    <h2>{step.title}</h2><p>{step.explanation}</p>',
-  '  </section>)}',
-  '</StickySystemView>',
+  'const steps = [',
+  '  { id: "arrive", sectionId: "story-arrive", title: "共享输入", body: "样本进入冻结参考路径和当前学习路径。", nodes: ["sample", "teacher", "student"], edges: ["input-teacher", "input-student"] },',
+  '  { id: "compare", sectionId: "story-compare", title: "目标与标签比较", body: "目标响应和真实标签是比较的输入；组合目标再将梯度传向当前参数。", nodes: ["target", "prediction", "label", "old-loss", "new-loss", "combined", "update"], edges: ["target-old-loss", "prediction-old-loss", "prediction-new-loss", "label-new-loss", "old-loss-combined", "new-loss-combined", "combined-update"] },',
+  '];',
   '',
-  '// In the visual controls, use useStickyStepSync().setManualStep(step.id).',
+  'const storySpec: DiagramSpec = {',
+  '  columns: 4,',
+  '  nodes: [',
+  '    { id: "sample", title: "样本 x", role: "input", column: 1, row: 2 },',
+  '    { id: "teacher", title: "冻结参考", role: "frozen", column: 2, row: 1 },',
+  '    { id: "student", title: "当前模型", role: "trainable", column: 2, row: 3 },',
+  '    { id: "target", title: "旧响应目标", role: "target", column: 3, row: 1 },',
+  '    { id: "prediction", title: "当前预测", role: "output", column: 3, row: 3 },',
+  '    { id: "label", title: "真实标签 y", role: "label", column: 3, row: 5 },',
+  '    { id: "old-loss", title: "响应比较", role: "objective", column: 4, row: 1 },',
+  '    { id: "new-loss", title: "标签比较", role: "objective", column: 4, row: 4 },',
+  '    { id: "combined", title: "组合目标", role: "objective", column: 4, row: 6 },',
+  '    { id: "update", title: "参数更新", role: "update", column: 4, row: 8 },',
+  '  ],',
+  '  edges: [',
+  '    { id: "input-teacher", from: "sample", to: "teacher", kind: "data", mode: "smooth" },',
+  '    { id: "input-student", from: "sample", to: "student", kind: "data", mode: "smooth" },',
+  '    { id: "teacher-target", from: "teacher", to: "target", kind: "data", mode: "straight" },',
+  '    { id: "student-prediction", from: "student", to: "prediction", kind: "data", mode: "straight" },',
+  '    { id: "target-old-loss", from: "target", to: "old-loss", kind: "data", mode: "smooth" },',
+  '    { id: "prediction-old-loss", from: "prediction", to: "old-loss", kind: "data", mode: "smooth" },',
+  '    { id: "prediction-new-loss", from: "prediction", to: "new-loss", kind: "data", mode: "smooth" },',
+  '    { id: "label-new-loss", from: "label", to: "new-loss", kind: "data", mode: "straight" },',
+  '    { id: "old-loss-combined", from: "old-loss", to: "combined", kind: "data", mode: "smooth" },',
+  '    { id: "new-loss-combined", from: "new-loss", to: "combined", kind: "data", mode: "smooth" },',
+  '    { id: "combined-update", from: "combined", to: "update", kind: "gradient", mode: "smooth" },',
+  '  ],',
+  '  note: "Solid = inputs and objective contributions; dashed = gradient to the update target.",',
+  '};',
+  '',
+  'function SyncedFigure({ activeId, onChoose }: { activeId: string; onChoose: (id: string) => void }) {',
+  '  const sync = useStickyStepSync();',
+  '  const active = steps.find(step => step.id === activeId) ?? steps[0];',
+  '  const items = steps.map(step => ({ id: step.id, label: step.title }));',
+  '  return <FigureFrame label="Current system state" title={active.title} footer={<StepNav items={items} activeId={activeId} onSelect={id => { onChoose(id); sync?.setManualStep(id); }} label="Choose a figure step" />}>',
+  '    <DiagramFlow spec={storySpec} focus={{ nodes: active.nodes, edges: active.edges }} label={`System view: ${active.title}`} framed={false} />',
+  '  </FigureFrame>;',
+  '}',
+  '',
+  'export function ScrollStoryExample() {',
+  '  const [activeId, setActiveId] = useState(steps[0].id);',
+  '  const sections = steps.map(step => ({ id: step.sectionId, stepId: step.id }));',
+  '  return <StickySystemView label="Scroll-synchronized system view" sections={sections}',
+  '    onActiveSectionChange={section => { if (section.stepId) setActiveId(section.stepId); }}',
+  '    visual={<SyncedFigure activeId={activeId} onChoose={setActiveId} />}>',
+  '    {steps.map(step => <section id={step.sectionId} key={step.id}>',
+  '      <h2>{step.title}</h2><p>{step.body}</p>',
+  '    </section>)}',
+  '  </StickySystemView>;',
+  '}',
 ].join("\n");
 
-const scrollBranchSpec: DiagramSpec = {
-  columns: 3,
-  zones: [
-    { id: "scroll-input", label: "Input", from: 1, span: 1 },
-    { id: "scroll-model", label: "Model roles", from: 2, span: 1 },
-    { id: "scroll-output", label: "Outputs / update", from: 3, span: 1 },
-  ],
-  nodes: [
-    { id: "sample", column: 1, row: 2, order: 1, title: "Input xₜ", role: "input", badge: "DATA", inputLabel: "Input" },
-    { id: "task", column: 1, row: 5, order: 2, title: "Task t", role: "label", badge: "CONTROL", inputLabel: "Task" },
-    { id: "teacher", column: 2, row: 1, order: 3, title: "Teacher", role: "frozen", badge: "FROZEN", inputLabel: "Reference model" },
-    { id: "student", column: 2, row: 4, order: 4, title: "Student", role: "trainable", badge: "TRAINABLE", inputLabel: "Current model" },
-    { id: "target", column: 3, row: 1, order: 5, title: "Old target", role: "target", badge: "TARGET", inputLabel: "Old response" },
-    { id: "prediction", column: 3, row: 4, order: 6, title: "Prediction", role: "output", badge: "OUTPUT", inputLabel: "Current output" },
-    { id: "old-loss", column: 3, row: 2, order: 7, title: "Old loss", role: "objective", badge: "OBJECTIVE", inputLabel: "Old comparison" },
-    { id: "new-loss", column: 3, row: 5, order: 8, title: "Task loss", role: "objective", badge: "OBJECTIVE", inputLabel: "Task comparison" },
-    { id: "update", column: 3, row: 7, order: 9, title: "Student params", role: "update", badge: "UPDATE", inputLabel: "Update target" },
-  ],
-  edges: [
-    { id: "input-teacher", from: "sample", to: "teacher", kind: "data", mode: "smooth" },
-    { id: "input-student", from: "sample", to: "student", kind: "data", mode: "smooth" },
-    { id: "teacher-target", from: "teacher", to: "target", kind: "data", mode: "straight" },
-    { id: "student-prediction", from: "student", to: "prediction", kind: "data", mode: "straight" },
-    { id: "task-control", from: "task", to: "student", kind: "control", mode: "orthogonal" },
-    { id: "target-old-loss", from: "target", to: "old-loss", kind: "gradient", mode: "straight" },
-    { id: "prediction-new-loss", from: "prediction", to: "new-loss", kind: "gradient", mode: "straight" },
-    { id: "old-loss-update", from: "old-loss", to: "update", kind: "gradient", mode: "smooth" },
-    { id: "new-loss-update", from: "new-loss", to: "update", kind: "gradient", mode: "smooth" },
-  ],
-  note: "Illustrative structure; each node and connector is driven by the current reading step.",
-};
-
-function CodePanel({ title, code, source }: { title: string; code: string; source: string }) {
+function CodePanel({ title, code, source, level, notice }: {
+  title: string;
+  code: string;
+  source: string;
+  level: "runnable" | "fragment";
+  notice: string;
+}) {
   const [message, setMessage] = useState("");
+  const copyLabel = level === "runnable" ? "可运行示例" : "结构片段";
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(code);
-      setMessage("已复制代码");
+      setMessage(`已复制${copyLabel}`);
     } catch {
       setMessage("无法访问剪贴板；可选中代码复制");
     }
   };
   return <details className="pattern-gallery__code-panel">
     <summary>{title}</summary>
-    <div className="pattern-gallery__code-head"><span>来源：<code>{source}</code></span><Button variant="secondary" size="small" onClick={copy}>复制代码</Button></div>
+    <div className="pattern-gallery__code-head"><span>来源：<code>{source}</code></span><Button variant="secondary" size="small" onClick={copy}>复制{copyLabel}</Button></div>
+    <p className="pattern-gallery__code-notice">{notice}</p>
     <pre><code>{code}</code></pre>
     <p className="pattern-gallery__copy-status" aria-live="polite">{message}</p>
   </details>;
@@ -350,7 +426,7 @@ function PatternGallery() {
     ? focusMode === "reference"
       ? { nodes: ["sample", "teacher", "target", "old-loss"], edges: ["input-teacher", "teacher-target", "target-old-loss"] }
       : focusMode === "learning"
-        ? { nodes: ["sample", "task", "student", "prediction", "new-loss", "update"], edges: ["input-student", "task-control", "student-prediction", "prediction-new-loss", "new-loss-update"] }
+        ? { nodes: ["sample", "task", "student", "prediction", "label", "new-loss"], edges: ["input-student", "task-control", "student-prediction", "prediction-new-loss", "label-new-loss"] }
         : undefined
     : focusMode === "reference"
       ? { nodes: ["prior", "current", "importance", "stability", "combined"], edges: ["prior-stability", "current-stability", "importance-stability", "stability-combined"] }
@@ -382,7 +458,7 @@ function PatternGallery() {
       <FigureFrame
         label={diagramCase === "branch" ? "结构样例 · Branch" : "结构样例 · Merge"}
         title={diagramCase === "branch" ? "同一输入进入职责不同的两条路径" : "先完成两次比较，再组合并更新"}
-        note={diagramCase === "branch" ? "节点文字同时标明对象状态；实线、虚线和点线分别表示数据、梯度与控制关系。" : "保持项与任务损失各自有独立输入和结果。组合规则需依据具体论文填写。"}
+        note={diagramCase === "branch" ? "实线表示输入数据或目标项贡献，点线表示任务控制，虚线仅表示组合目标传向参数更新的梯度。" : "实线表示计算输入或目标项贡献，虚线仅表示组合目标传向更新对象的梯度。组合规则依据具体论文填写。"}
       >
         <DiagramFlow spec={diagramSpec} focus={focus} label={diagramCase === "branch" ? "分支图样例：输入进入冻结参考路径和可训练路径" : "汇合图样例：保持目标与任务目标在参数更新前汇合"} framed={false} />
       </FigureFrame>
@@ -395,7 +471,7 @@ function PatternGallery() {
           <div><dt>Registry / scaffold</dt><dd><code>DiagramFlow</code> · P0 · candidate。当前需显式传 <code>--allow-unapproved</code> 才能复制。</dd></div>
         </dl>
       </div>
-      <CodePanel title="展开可复制的 DiagramFlow 分支样例" code={diagramCase === "branch" ? branchCode : mergeCode} source={diagramCase === "branch" ? "recipes/diagram-branch.md" : "recipes/diagram-merge.md"} />
+      <CodePanel title="展开可复制的 DiagramFlow 分支样例" code={diagramCase === "branch" ? branchCode : mergeCode} source={diagramCase === "branch" ? "recipes/diagram-branch.md" : "recipes/diagram-merge.md"} level="runnable" notice="完整 TSX 组件；目标和预测是损失输入，组合目标到更新目标才表示梯度。请先在入口引入 Kit 样式。" />
       <p className="pattern-gallery__provenance">已有场景：LwF teacher / student 图与目标合成图，见 <code>reusable-kit/demo/src/figures.tsx</code>；完整论文场景见 <code>papers/lwf/web/final/src/v3/LwfVerticalSlice.tsx</code>。</p>
     </section>
 
@@ -412,7 +488,7 @@ function PatternGallery() {
           <div><dt>Registry / scaffold</dt><dd>这是构图 Recipe，不是组件条目；无需 scaffold。先复制结构，再按论文的数据和语义改写。</dd></div>
         </dl>
       </div>
-      <CodePanel title="展开可复制的 TSX / CSS 构图样例" code={layoutExamples[editorialLayout].code} source={layoutExamples[editorialLayout].source} />
+      <CodePanel title="展开可复制的 TSX / CSS 构图样例" code={layoutExamples[editorialLayout].code} source={layoutExamples[editorialLayout].source} level="fragment" notice="结构片段，包含配套 TSX 与 CSS，必须一起复制；steps、rows、reference、learner、detail 等由调用方提供。" />
       <p className="pattern-gallery__provenance">更多实际构图：<code>reusable-kit/demo/src/EditorialStudies.tsx</code>、<code>JourneyArtDirection.tsx</code>、<code>EditorialCCandidates.tsx</code>。</p>
     </section>
 
@@ -429,7 +505,7 @@ function PatternGallery() {
           <div><dt>Registry / scaffold</dt><dd><code>StickySystemView</code> · P0 · candidate。复制时显式传 <code>--allow-unapproved</code>。</dd></div>
         </dl>
       </div>
-      <CodePanel title="展开可复制的 StickySystemView 用法" code={stickyRecipeCode} source="recipes/sticky-scrollytelling.md" />
+      <CodePanel title="展开可复制的 StickySystemView 用法" code={stickyRecipeCode} source="recipes/sticky-scrollytelling.md" level="runnable" notice="完整 TSX 小样例，包含步骤数据与最小 DiagramFlow；请先在入口引入 Kit 样式。" />
       <p className="pattern-gallery__provenance">现有来源：<code>papers/lwf/web/final/src/v3/LwfVerticalSlice.tsx</code> 与 <code>styles/scrollytelling.css</code>；其 Kit 副本有 <code>readingLineRatio</code> 扩展，本 Kit API 未包含该选项。</p>
     </section>
 
@@ -460,14 +536,14 @@ function PatternGallery() {
           <div><dt>Registry / scaffold</dt><dd><code>PullQuote</code> 本次补登记为 P1 candidate；<code>FormulaBlock</code> 已登记为 P1 candidate。</dd></div>
         </dl>
       </div>
-      <CodePanel title="展开可复制的文字与公式样例" code={typographyCode} source="recipes/typography-formula.md" />
+      <CodePanel title="展开可复制的文字与公式样例" code={typographyCode} source="recipes/typography-formula.md" level="runnable" notice="完整 TSX 组件；MathML 类型声明由脚手架复制。请先在入口引入 Kit 样式，并用论文来源核对公式。" />
     </section>
 
     <footer className="pattern-gallery__footer">
       <strong>如何复制 Kit 组件</strong>
-      <p>Registry 是组件成熟度的唯一来源；本页不复制或覆盖状态。由于这些条目仍为 candidate，脚手架命令需要显式接受候选复制：</p>
-      <pre><code>python tools/paper.py scaffold-kit &lt;paper-id&gt; --add DiagramFlow,StickySystemView --allow-unapproved</code></pre>
-      <p>复制后由论文项目独立持有源码；如需其他目录中的组件，可用同一命令的 <code>--add</code> 选项逐项选择。</p>
+      <p>Registry 是组件成熟度的唯一来源；本页不复制或覆盖状态。首次复制 P0 基础组件时使用 preset；P1 才能通过 <code>--add</code> 选择。当前条目均为 candidate，<code>--allow-unapproved</code> 只表示接受复制候选组件，不代表批准。</p>
+      <pre><code>{'python3 tools/paper.py new kit-smoke-demo --title "Kit Smoke Demo" --url "https://example.org/kit-smoke"\n\n# 二选一：仅复制 P0 基础组件\npython3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --allow-unapproved\n\n# 或：首次复制 P0，并同时选择需要的 P1\npython3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --add StepNav,FigureFrame,FormulaBlock,PullQuote --allow-unapproved'}</code></pre>
+      <p>以上命令用于隔离烟测；正式论文请填写真实来源。两条 scaffold 命令互斥，不能顺序用于同一工作区。P0 默认由 preset 复制；<code>--add</code> 只接受 P1，且应在首次命令中一次选好。命令只复制一次，若目标已有 <code>src/shared</code> 会拒绝覆盖；入口文件需添加一次 <code>import "./shared/foundation/styles/kit.css";</code>。</p>
     </footer>
   </div>;
 }
@@ -519,13 +595,13 @@ const stories: ScrollStory[] = [
     id: "teacher-student",
     label: "Teacher / Student",
     description: "样例 A · 冻结参考与当前学习路径",
-    spec: scrollBranchSpec,
+    spec: branchBase,
     steps: [
       { id: "arrive", title: "新样本进入", eyebrow: "01 · INPUT", copy: "同一个样本进入两条职责不同的路径。先识别共享输入，再看每个对象各自承担什么工作。", nodes: ["sample", "task"], edges: ["input-teacher", "input-student", "task-control"] },
-      { id: "reference", title: "旧响应作为固定目标", eyebrow: "02 · REFERENCE", copy: "冻结参考对象只产生目标，不接收当前阶段的参数更新。", nodes: ["sample", "teacher", "target"], edges: ["input-teacher", "teacher-target"] },
-      { id: "prediction", title: "当前模型产生预测", eyebrow: "03 · PREDICTION", copy: "可训练模型处理相同输入，形成当前预测；这一分支保留其独立身份。", nodes: ["sample", "student", "prediction"], edges: ["input-student", "student-prediction"] },
-      { id: "compare", title: "目标分别比较", eyebrow: "04 · OBJECTIVES", copy: "参照响应和当前预测进入各自的比较关系。实际目标函数必须由对应论文确定。", nodes: ["target", "prediction", "old-loss", "new-loss"], edges: ["target-old-loss", "prediction-new-loss"] },
-      { id: "update", title: "更新归属清楚", eyebrow: "05 · UPDATE", copy: "两个比较结果在示意图中抵达唯一更新目标。此处只演示结构，不填入论文系数。", nodes: ["old-loss", "new-loss", "update"], edges: ["old-loss-update", "new-loss-update"] },
+      { id: "reference", title: "旧响应作为固定目标", eyebrow: "02 · REFERENCE", copy: "冻结参考对象产生目标响应；目标与当前预测作为数据输入进入响应比较。", nodes: ["sample", "teacher", "target", "student", "prediction", "old-loss"], edges: ["input-teacher", "teacher-target", "input-student", "student-prediction", "target-old-loss", "prediction-old-loss"] },
+      { id: "prediction", title: "当前模型产生预测", eyebrow: "03 · PREDICTION", copy: "可训练模型处理相同输入，形成当前预测；标签比较还需要当前真实标签。", nodes: ["sample", "task", "student", "prediction", "label", "new-loss"], edges: ["input-student", "task-control", "student-prediction", "prediction-new-loss", "label-new-loss"] },
+      { id: "compare", title: "目标分别比较", eyebrow: "04 · OBJECTIVES", copy: "旧响应目标与当前预测进入响应比较；当前预测与真实标签进入任务比较。目标项以数据依赖进入组合目标。", nodes: ["target", "prediction", "label", "old-loss", "new-loss", "combined"], edges: ["target-old-loss", "prediction-old-loss", "prediction-new-loss", "label-new-loss", "old-loss-combined", "new-loss-combined"] },
+      { id: "update", title: "更新归属清楚", eyebrow: "05 · UPDATE", copy: "两个目标项先组合，再由组合目标向唯一更新对象传递梯度。具体组合规则由论文决定。", nodes: ["old-loss", "new-loss", "combined", "update"], edges: ["old-loss-combined", "new-loss-combined", "combined-update"] },
     ],
   },
   {

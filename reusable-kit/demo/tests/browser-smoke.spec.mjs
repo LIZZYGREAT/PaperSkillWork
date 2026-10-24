@@ -5,30 +5,70 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   page.on("pageerror", error => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/?demo=gallery");
   await expect(page.locator("[data-demo-view='pattern-gallery']")).toBeVisible();
   const diagram = page.locator("#gallery-diagrams .rk-diagram");
   await expect(diagram).toHaveAttribute("data-diagram-mode", "grid");
-  await expect(diagram.locator("[data-diagram-node]")).toHaveCount(9);
-  await expect(diagram.locator("[data-diagram-edge].is-data")).not.toHaveCount(0);
-  await expect(diagram.locator("[data-diagram-edge].is-gradient")).not.toHaveCount(0);
-  await expect(diagram.locator("[data-diagram-edge].is-control")).not.toHaveCount(0);
-  await expect(diagram.locator(".rk-diagram__ports circle")).toHaveCount(18);
+  await expect(diagram.locator("[data-diagram-node]")).toHaveCount(11);
+  await expect(diagram.locator("[data-diagram-edge].is-data")).toHaveCount(10);
+  await expect(diagram.locator("[data-diagram-edge].is-gradient")).toHaveCount(1);
+  await expect(diagram.locator("[data-diagram-edge].is-control")).toHaveCount(1);
+  await expect(diagram.locator("[data-diagram-node='label']")).toContainText("真实标签");
+  await expect(diagram.locator("[data-diagram-edge='label-new-loss'].is-data")).toHaveAttribute("data-from", "label");
+  await expect(diagram.locator("[data-diagram-edge='prediction-new-loss'].is-data")).toHaveAttribute("data-to", "new-loss");
+  await expect(diagram.locator("[data-diagram-edge='old-loss-combined'].is-data")).toHaveAttribute("data-to", "combined");
+  await expect(diagram.locator("[data-diagram-edge='combined-update'].is-gradient")).toHaveAttribute("data-to", "update");
+  await expect(diagram.locator(".rk-diagram__ports circle")).toHaveCount(24);
+  const branchSemantics = await diagram.locator("[data-diagram-edge]").evaluateAll(edges => edges.map(edge => [edge.dataset.diagramEdge, edge.classList.contains("is-data"), edge.classList.contains("is-gradient"), edge.classList.contains("is-control")]));
 
-  await page.getByRole("button", { name: "Orthogonal", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Orthogonal", exact: true })).toHaveAttribute("aria-pressed", "true");
+  for (const mode of ["Straight", "Smooth", "Orthogonal"]) {
+    const modeButton = page.getByRole("button", { name: mode, exact: true });
+    await modeButton.click();
+    await expect(modeButton).toHaveAttribute("aria-pressed", "true");
+    expect(await diagram.locator("[data-diagram-edge]").evaluateAll(edges => edges.map(edge => [edge.dataset.diagramEdge, edge.classList.contains("is-data"), edge.classList.contains("is-gradient"), edge.classList.contains("is-control")]))).toEqual(branchSemantics);
+  }
   await page.getByRole("button", { name: "冻结参考路径", exact: true }).click();
   await expect(diagram.locator('[data-diagram-node="teacher"]')).toHaveClass(/is-active/);
+  await expect(diagram.locator('[data-diagram-edge="target-old-loss"]')).toHaveClass(/is-active/);
+  await expect(diagram.locator(".rk-diagram__edges .rk-diagram__edge.is-active")).toHaveCount(3);
   await expect(diagram.locator(".rk-diagram__node.is-dimmed")).not.toHaveCount(0);
 
+  const diagramCodePanel = page.locator("#gallery-diagrams .pattern-gallery__code-panel");
+  await diagramCodePanel.locator("summary").click();
+  await diagramCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
+  const branchClipboard = await page.evaluate(() => navigator.clipboard.readText());
+  expect(branchClipboard).toContain("import type { DiagramSpec }");
+  expect(branchClipboard).toContain("export function BranchExample()");
+  expect(branchClipboard).toContain('id: "label-new-loss", from: "label", to: "new-loss", kind: "data"');
+  await expect(diagramCodePanel.locator(".pattern-gallery__copy-status")).toHaveText("已复制可运行示例");
+
   await page.getByRole("button", { name: "汇合 · 两个完整目标", exact: true }).click();
+  await expect(diagram.locator("[data-diagram-node]")).toHaveCount(9);
+  await expect(diagram.locator("[data-diagram-edge].is-data")).toHaveCount(7);
+  await expect(diagram.locator("[data-diagram-edge].is-gradient")).toHaveCount(1);
+  await expect(diagram.locator("[data-diagram-edge].is-control")).toHaveCount(0);
   await expect(diagram.locator('[data-diagram-node="stability"]')).toBeVisible();
   await expect(diagram.locator('[data-diagram-node="task-loss"]')).toBeVisible();
+  await expect(diagram.locator("[data-diagram-edge='importance-stability'].is-data")).toHaveAttribute("data-from", "importance");
+  await expect(diagram.locator("[data-diagram-edge='stability-combined'].is-data")).toHaveAttribute("data-to", "combined");
+  await expect(diagram.locator("[data-diagram-edge='task-combined'].is-data")).toHaveAttribute("data-to", "combined");
+  await expect(diagram.locator("[data-diagram-edge='combined-update'].is-gradient")).toHaveAttribute("data-to", "parameters");
   await page.getByRole("button", { name: "任务目标路径", exact: true }).click();
   await expect(diagram.locator(".rk-diagram__edges .rk-diagram__edge.is-active")).toHaveCount(4);
+  await diagramCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
+  const mergeClipboard = await page.evaluate(() => navigator.clipboard.readText());
+  expect(mergeClipboard).toContain("export function MergeExample()");
+  expect(mergeClipboard).toContain('id: "importance-stability", from: "importance", to: "stability", kind: "data"');
+  expect(mergeClipboard).toContain('id: "combined-update", from: "combined", to: "parameters", kind: "gradient"');
 
   await page.getByRole("button", { name: "Staggered rows", exact: true }).click();
   await expect(page.locator(".pattern-gallery__editorial")).toHaveAttribute("data-layout", "stagger");
+  const editorialCodePanel = page.locator("#gallery-editorial .pattern-gallery__code-panel");
+  await editorialCodePanel.locator("summary").click();
+  await editorialCodePanel.getByRole("button", { name: "复制结构片段" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(".comparison-rows {");
+  await expect(editorialCodePanel.locator(".pattern-gallery__code-notice")).toContainText("必须一起复制");
   await page.getByRole("button", { name: "Asymmetric", exact: true }).click();
   await expect(page.locator(".pg-asymmetric section")).toContainText("当前学习对象");
 
@@ -49,6 +89,21 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   await recordStep.focus();
   await page.keyboard.press("Enter");
   await expect(sticky).toHaveAttribute("data-active-step-id", "record");
+
+  const stickyCodePanel = page.locator("#gallery-scroll .pattern-gallery__code-panel");
+  await stickyCodePanel.locator("summary").click();
+  await stickyCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
+  const stickyClipboard = await page.evaluate(() => navigator.clipboard.readText());
+  expect(stickyClipboard).toContain("export function ScrollStoryExample()");
+  expect(stickyClipboard).not.toContain("renderFigure");
+
+  const typographyCodePanel = page.locator("#gallery-typography .pattern-gallery__code-panel");
+  await typographyCodePanel.locator("summary").click();
+  await typographyCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
+  const typographyClipboard = await page.evaluate(() => navigator.clipboard.readText());
+  expect(typographyClipboard).toContain("export function TypographyExample()");
+  expect(typographyClipboard).toContain('xmlns="http://www.w3.org/1998/Math/MathML"');
+  expect(typographyClipboard).toContain("terms={[");
 
   await page.locator(".pattern-gallery__type-preview .rk-formula-term").first().click();
   await expect(page.locator(".rk-formula-block__explanation.has-term")).toContainText("当前任务");

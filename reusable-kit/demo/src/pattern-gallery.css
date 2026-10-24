@@ -18,12 +18,13 @@
 .pattern-gallery__code-panel > summary { width: fit-content; padding: 13px 2px; color: var(--rk-accent-strong); font-size: 14px; font-weight: 650; cursor: pointer; }
 .pattern-gallery__code-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 2px 0 10px; color: var(--rk-muted); font-size: 12px; }
 .pattern-gallery__code-head code { overflow-wrap: anywhere; font-family: var(--rk-font-mono); }
+.pattern-gallery__code-notice { margin: 0 0 10px; color: var(--rk-muted); font-size: 13px; line-height: 1.6; }
 .pattern-gallery__code-panel pre, .pattern-gallery__footer pre { max-width: 100%; margin: 0; padding: 16px; overflow: auto; border: 1px solid var(--rk-line); background: var(--rk-surface); color: var(--rk-ink); font: 12px/1.65 var(--rk-font-mono); tab-size: 2; }
 .pattern-gallery__code-panel pre code, .pattern-gallery__footer pre code { white-space: pre; }
 .pattern-gallery__copy-status { min-height: 1.3em; margin: 5px 0 0; color: var(--rk-muted); font-size: 12px; }
 .pattern-gallery__editorial { min-width: 0; padding: clamp(22px, 3.5vw, 42px); border-block: 1px solid var(--rk-line); background: var(--rk-canvas); }
 .pattern-gallery__editorial-heading { display: grid; justify-items: start; gap: clamp(14px, 2vw, 20px); margin-bottom: clamp(28px, 4vw, 42px); }
-.pattern-gallery__editorial-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 14px; margin: 0; color: var(--rk-muted); font: 600 11px/1.5 var(--rk-font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.pattern-gallery__editorial-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 14px; margin: 0; color: var(--rk-muted); font: 600 12px/1.5 var(--rk-font-mono); letter-spacing: .12em; text-transform: uppercase; }
 .pattern-gallery__editorial-eyebrow i { flex: none; width: 28px; height: 1px; background: var(--rk-line-strong); }
 .pattern-gallery__editorial-eyebrow span:last-child { color: var(--rk-accent-strong); letter-spacing: .04em; text-transform: none; }
 .pattern-gallery__editorial-heading h3 { max-width: 34ch; margin: 0; color: var(--rk-ink); font-size: clamp(27px, 3.4vw, 42px); font-weight: 720; letter-spacing: -.035em; line-height: 1.15; text-wrap: balance; }
