@@ -167,3 +167,42 @@ Agent 已实际查看 1280/1440/1920 整页、1440 的 03→04 连续图、05 �
 | B · Editorial Reveal | “先看全局。”02 使用完整权威图独立建立因果地图 | 版面尺度转成两条不等重的编辑式图文关系，各自呈现目标来源、Student 对应预测与损失，不再复制总图或使用四列模板 | 两种损失以独立源项在同一收束画面汇入 `J`，随后只有 Student 参数更新；Teacher 轻量留作固定参照 | 读者经历地图 → 局部比较 → 参数结论的有意尺度接力；无贯穿式 sticky 图，03 / 04 获得新的空间重心 |
 
 两候选都保留 01 问题与 05 任务边界原文；相同事实、公式、语义色、基础字体及对象量。不得用换色或字号变化冒充方向差异。实施后将以 1440 全页和两段连续截图检视整页节奏，再完成文档列出的构建、浏览器与 Visual QA 门禁；Codex 只给出供评审的观察，不代替用户选型。
+
+### P1 · 候选已实现并分段提交
+
+Baseline 保持默认；顶端提供 Baseline / A / B 键盘可用切换，候选分别由 `?demo=journey&art=stage` 与 `?demo=journey&art=reveal` 直达。切换更新查询参数并保留最近章节锚点。A 让同一权威图在 1440px 以上粘性停留，03/04 叙述按钮把 `loss` / `update` 焦点同步到图；中宽屏改为顺序排布，窄屏复用 DiagramFlow 列表重排。B 使用完整图引入，再展开目标/预测/损失两条关系，最后让两路损失汇入唯一目标与 Student 更新。旧损失采用铁锈色和实线结果标记，新损失采用绿色和虚线标记，文字与线型共同给出身份。
+
+图谱节点、状态、11 条边及五步 ID / 次序与 baseline 完全相同；比较来源与输出映射、Teacher 冻结、Student 更新范围、`J`、warm-up、T=2、`θ_s` 记号说明及任务边界交接均保留。Baseline 的 01 / 05 内容和既有导航行为继续共用。无 `papers/**`、共享图形引擎、旧 Demo、C1/C2 或 registry 改动。
+
+分段提交：P0 基线记录 `96fef27`；P1 两候选与测试入口 `9b7d3a9`；P1 焦点联动覆盖 `90824ee`。构建与测试都在现有锁定依赖上执行；系统未安装 Playwright Chromium，因此通过 `PAPERWORK_PLAYWRIGHT_EXECUTABLE` 让既有 Playwright / Visual QA runner 使用已安装的 Chromium 内核 Edge，不下载浏览器。
+
+### P2 · 构建、行为与视觉复核
+
+| 检查 | 命令 / 结果 |
+| --- | --- |
+| 构建 | `npm --prefix reusable-kit/demo run build` 退出 0；TypeScript 与 Vite 构建成功，107 modules transformed |
+| 浏览器 | `$env:PAPERWORK_PLAYWRIGHT_EXECUTABLE='C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'; npm --prefix reusable-kit/demo run test:browser` 退出 0，23/23 通过。覆盖默认/未知查询降级、A/B 直达、图谱与事实不变量、loss/update 焦点、键盘切换与锚点保留、1280×900 / 1440×900 / 1920×1080 / 390×844 视口及 A 粘性边界 |
+| Visual QA | `node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json` 退出 0，105/105 状态 PASS；A/B 24 个状态（各 4 状态 × 3 个桌面视口）全部 geometry PASS，0 浏览器错误、0 warning；actualUrl 对应所选候选 |
+| 独立报告状态 | `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`；candidate 本身没有独立 computed-style 断言，因此候选行的 `styleOutcome=NOT_RUN`。runner 的 `BUILD=NOT_RUN` 与 `VISUAL_REVIEW=NOT_RUN` 保持原样，由此处补充真实构建与截图复核。无获批像素基线，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING` |
+
+最终 Visual QA 首轮曾提示 A/B 各两条 11px 说明文字；已提高到 12px，最终 105 个状态没有小字号 warning、横向溢出、登记裁切或浏览器错误。Agent 实际查看了 A/B 的 1440px 全长页和四张 1440×900 过渡画面，并以浏览器尺寸用例检查四种宽度。整体 `VISUAL_REVIEW=PASS`（Agent 实际查图），该项只描述截图复核完成，不代替用户选型或验收。
+
+评审目录：`.visual-qa/journey-art-direction-review/`（Git 忽略，本地证据）：
+
+| 截图 | 内容与像素尺寸 |
+| --- | --- |
+| `candidate-A-full-1440.png` | A 全长页，1440×3469；粘性图只在完整页截图的初始位置出现，往下左栏留白是 fullPage 截图对 `position: sticky` 的采集表现，不是连续滚动时的页面状态 |
+| `candidate-A-map-comparisons-1440.png` / `candidate-A-comparisons-student-1440.png` | A 的 02→03、03→04 连续视口，各 1440×900；实际滚动时完整图仍贴在左侧，右侧继续读章节 |
+| `candidate-B-full-1440.png` | B 全长页，1440×3465 |
+| `candidate-B-map-comparisons-1440.png` / `candidate-B-comparisons-student-1440.png` | B 的地图→比较、比较→更新视口，各 1440×900 |
+| `baseline-full-1440.png` / `baseline-map-comparisons-1440.png` / `baseline-comparisons-student-1440.png` | 三张原始 baseline 对照 |
+
+图面观察：
+
+- A 在桌面阅读时保留共同坐标系，损失比较与更新可立即回到图上的对应边；步骤选择和正文定位互相呼应。代价是 1440 宽度右侧叙述栏约 328px，比较说明密度高，主图占据主要视线。1280 以下改成单栏后没有粘性连续效果；移动端用对象顺序列表表示整张图，地图关系不再同时可见。
+- B 的层级接力清楚，03 的两行直接表达旧目标/旧输出与真标签/新输出，04 明确汇成 `J` 后只更新 Student；固定 Teacher 留在场外说明。读者需把 02 地图关系记到 03/04，尺度变化带来一次记忆负担；窄屏的两条关系和汇流场景纵向展开，阅读距离更长。
+- 两者都符合事实与对象身份约束；选择取决于更重视桌面阅读连续性（A）还是分节展开与结论收束（B）。本轮保留两候选供人比较，不晋级、不替用户选定。
+
+使用 runner 实际输出的准确路径 `.visual-qa/run-2026-10-24T06-00-12-382Z/report.md` 读取 JSON/Markdown 并查看候选截图后，复制六张候选精选画面到上述评审目录。精确执行 `node tools/visual-qa/cli.mjs --cleanup-run .visual-qa/run-2026-10-24T06-00-12-382Z` 退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T06-00-12-382Z`，并确认该目录 `Test-Path=False`。本轮 `reusable-kit/demo/test-results` 在检查时只含最新 `.last-run.json`，已验证其解析路径位于 Demo 内后按确切路径删除，确认目录不存在；临时检查图 `candidate-A-stage-check-1440.png` 已删除。已停止本任务启动的 4187 Vite 服务，并核对 4173 / 4175 / 4187 均无监听；保留六张精选候选图和三张 baseline 图。
+
+**本轮结论：G0 完成；baseline 仍为默认；`HUMAN_ACCEPTANCE=PENDING`，待用户比较 A/B 并反馈。**
