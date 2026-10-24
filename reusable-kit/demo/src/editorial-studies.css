@@ -15,10 +15,11 @@
 .ed-study__opening nav { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-top: 24px; font-size: 14px; }
 .ed-study__section { padding: 48px 0 42px; border-top: 1px solid var(--ed-rule); scroll-margin-top: 100px; }
 .ed-study__a-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .85fr); gap: clamp(28px, 4vw, 64px); align-items: center; }
-.ed-study__a-copy > p { max-width: 34em; margin-top: 22px; }
+.ed-study__a-copy > p { max-width: 34em; margin-top: 22px; text-wrap: pretty; }
 .ed-study__lead { font-size: 18px; }
-.ed-study__emphasis { padding: 1px 2px; background: var(--rk-accent-soft); color: var(--rk-accent-strong); font-weight: 700; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.ed-study__emphasis > span { display: inline-block; }
+.ed-study__emphasis { padding: 1px 2px; background: var(--rk-accent-soft); color: var(--rk-accent-strong); font-size: 1.14em; font-weight: 750; line-height: 1.35; vertical-align: baseline; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.ed-study__phrase { white-space: nowrap; }
+.ed-study__importance { color: var(--rk-accent-strong); text-decoration: underline; text-decoration-color: var(--ed-accent); text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .ed-study__weights { padding: 20px 0 0 24px; border-left: 1px solid var(--ed-rule); }
 .ed-study__weights figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 14px; }
 .ed-study__weights figcaption strong { color: var(--ed-accent); font-family: var(--rk-font-math); font-size: 24px; }

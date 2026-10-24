@@ -40,10 +40,10 @@ export function EditorialStudies() {
         <div className="ed-study__a-copy">
           <h2 id="ed-a-title">同样的改动，<br />为什么代价不同？</h2>
           <p className="ed-study__lead">任务 A 刚刚学完，模型留下一个参考解 {thetaA}。即将学习 B 时，所有参数都该被一样地保护吗？</p>
-          <p>如果模型在旧任务上的预测对某个参数更敏感，移动它就更需要谨慎。EWC 用对角 Fisher 估计为每个 <span className="rk-math"><var>θ</var><sub>i</sub></span> 赋予权重 <span className="rk-math"><var>F</var><sub>i</sub></span>：<strong className="ed-study__emphasis"><span>并非所有参数，</span><wbr /><span>都应被同等保护。</span></strong></p>
+          <p>如果模型在旧任务上的预测对某个参数更敏感，移动它就更需要谨慎。EWC 用对角 Fisher 估计为每个 <span className="rk-math"><var>θ</var><sub>i</sub></span> 赋予权重 <span className="rk-math ed-study__importance"><var>F</var><sub>i</sub></span>：<strong className="ed-study__emphasis">并非所有参数，都应被<span className="ed-study__phrase">同等保护。</span></strong></p>
         </div>
         <figure className="ed-study__weights">
-          <figcaption><span>三个参数，一份重要性切片</span><strong>F<sub>i</sub></strong></figcaption>
+          <figcaption><span>三个参数，一份重要性切片</span><strong className="rk-math ed-study__importance"><var>F</var><sub>i</sub></strong></figcaption>
           <div className="ed-study__weight-list">{weights.map((weight, i) => <div className="ed-study__weight" key={i} data-weight={weight}>
             <span className="rk-math"><var>θ</var><sub>{i + 1}</sub></span>
             <div className="ed-study__weight-track"><span style={{ width: `${weight * 100}%` }} /></div>
