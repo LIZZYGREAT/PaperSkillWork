@@ -1136,15 +1136,16 @@ test("Editorial Reveal staggers the comparison rows and trims unused gaps", asyn
     const newRow = document.querySelector('.journey-art-reveal-row[data-comparison="new"]');
     const box = node => {
       const r = node.getBoundingClientRect();
-      return { left: r.left, right: r.right, width: r.width };
+      return { left: r.left, right: r.right, top: r.top, width: r.width };
     };
     const oldHeading = oldRow.querySelector(".journey-art-reveal-identity");
     const oldRelation = oldRow.querySelector(".journey-art-reveal-relation");
     const newHeading = newRow.querySelector(".journey-art-reveal-identity");
     const newRelation = newRow.querySelector(".journey-art-reveal-relation");
     return {
-      oldHeading: box(oldHeading), oldRelation: box(oldRelation),
+      oldHeading: box(oldHeading), oldRelation: box(oldRelation), oldRow: box(oldRow), article: box(document.querySelector(".journey")),
       newHeading: box(newHeading), newRelation: box(newRelation), newRow: box(newRow),
+      newNumber: box(newHeading.querySelector("span")), newTargetLabel: box(newRelation.querySelector("small")),
       relationGap: Number.parseFloat(getComputedStyle(newRelation).columnGap),
       target: box(newRelation.querySelector('[data-comparison-field="target"]')),
       prediction: box(newRelation.querySelector('[data-comparison-field="prediction"]')),
@@ -1152,13 +1153,17 @@ test("Editorial Reveal staggers the comparison rows and trims unused gaps", asyn
     };
   });
 
-  expect(geometry.oldRelation.left - geometry.oldHeading.left).toBeLessThan(170);
-  expect(geometry.newHeading.left - geometry.oldHeading.left).toBeGreaterThan(160);
-  expect(geometry.newRelation.left - geometry.newHeading.left).toBeGreaterThan(170);
-  expect(geometry.newRelation.left - geometry.newHeading.left).toBeLessThan(240);
-  expect(geometry.newRelation.right).toBeLessThan(geometry.newRow.right - 30);
-  expect(geometry.relationGap).toBe(8);
-  expect(geometry.target.width).toBeLessThan(300);
+  expect(geometry.oldRow.width).toBeLessThan(geometry.article.width * .9);
+  expect(geometry.oldRelation.right).toBeLessThan(geometry.article.right - 100);
+  expect(geometry.newHeading.left - geometry.oldHeading.left).toBeGreaterThan(100);
+  expect(geometry.newHeading.left - geometry.oldHeading.left).toBeLessThan(190);
+  expect(Math.abs(geometry.oldRelation.top - geometry.oldHeading.top)).toBeLessThanOrEqual(1);
+  expect(Math.abs(geometry.newRelation.top - geometry.newHeading.top)).toBeLessThanOrEqual(1);
+  expect(Math.abs(geometry.newNumber.top - geometry.newTargetLabel.top)).toBeLessThanOrEqual(1);
+  expect(geometry.newRelation.left - geometry.newHeading.left).toBeCloseTo(geometry.oldRelation.left - geometry.oldHeading.left, 0);
+  expect(geometry.newRelation.right).toBeLessThanOrEqual(geometry.article.right);
+  expect(geometry.relationGap).toBe(12);
+  expect(geometry.target.width).toBeLessThan(280);
   expect(geometry.prediction.width).toBeLessThan(260);
   expect(geometry.result.width).toBeLessThan(180);
 });

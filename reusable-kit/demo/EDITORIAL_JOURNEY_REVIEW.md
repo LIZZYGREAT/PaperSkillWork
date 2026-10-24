@@ -242,3 +242,7 @@ Baseline 保持默认；顶端提供 Baseline / A / B 键盘可用切换，候�
 ### P11 · A 方案结尾恢复整栏收束
 
 将任务交接的标题与时间线保留在图旁，结语和来源移到独立整栏页尾；外层网格先容纳视觉轨道和交接正文，再排页尾，避免窄列结语旁出现整片空白或正文被粘性图覆盖。停留距离改为测量主图实际高度，1440px 与 1920px 均在最后说明越过顶部后释放。`npm run build` 通过；Shared Visual Stage 四项交互/几何检查与桌面截图检查共 5/5 通过。已查看两种宽度的整页、交接与页尾截图（`.visual-qa/journey-art-direction-review/A-*-p11.png`）；未人工查看手机布局。
+
+### P12 · B 方案整排阶梯与顶部对齐
+
+第一排限制为 960px，比较关系限制为 760px，缩短参照与预测下方横线及内部空白；第二排整排右移约 140–151px，II 标题相对旧版左移，参照、预测和损失上抬到同一排。II 与参照标签采用相同的行高和顶部间距，解释文字直接接在关系组下面。已查看 1440px、1920px 的整页与比较区截图：`.visual-qa/journey-art-direction-review/B-global-*-p12.png`、`B-staircase-*-p12.png`。最终构建通过；`npm run test:browser -- --grep 'Reading Journey|Shared Visual Stage|Editorial Reveal|desktop' --grep-invert '390'` 的 14 项现有桌面回归与 2 项临时截图检查共 16/16 通过，临时截图检查源码随后移除。手机布局未检查，整套仓库浏览器用例未运行。保留上述 A/B 桌面截图供人工复核。
