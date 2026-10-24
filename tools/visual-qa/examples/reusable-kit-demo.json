@@ -286,6 +286,71 @@
           ]
         }
       ]
+    },
+    {
+      "id": "editorial-journey",
+      "path": "/?demo=journey",
+      "computedStyles": [
+        {
+          "selector": ".journey .rk-diagram__title",
+          "property": "font-size",
+          "equals": "15px"
+        }
+      ],
+      "states": [
+        {
+          "id": "opening"
+        },
+        {
+          "id": "system-overview",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#journey-map"
+            }
+          ]
+        },
+        {
+          "id": "system-comparisons",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".journey [data-step-id=\"loss\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#journey-map"
+            }
+          ]
+        },
+        {
+          "id": "local-mechanism",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#journey-paths"
+            }
+          ]
+        },
+        {
+          "id": "student-optimization",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#journey-student"
+            }
+          ]
+        },
+        {
+          "id": "task-handoff",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "#journey-handoff"
+            }
+          ]
+        }
+      ]
     }
   ],
   "geometry": {
@@ -323,7 +388,11 @@
       ".ed-study math",
       ".ed-c-candidate h3",
       ".ed-c-candidate h4",
-      ".ed-c-candidate [data-loss-result]"
+      ".ed-c-candidate [data-loss-result]",
+      ".journey h1",
+      ".journey h2",
+      ".journey math",
+      ".journey-comparison p"
     ]
   },
   "settleMs": 200

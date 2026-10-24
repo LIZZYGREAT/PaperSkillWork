@@ -1,5 +1,118 @@
 import { expect, test } from "@playwright/test";
 
+test("reading journey keeps the canonical graph, comparison ownership and task boundaries", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=lwf");
+  const canonicalNodes = await page.locator(".kit-lwf-panel [data-diagram-node]").evaluateAll(nodes => nodes.map(n => [n.dataset.diagramNode, n.dataset.state]));
+  const canonicalEdges = await page.locator(".kit-lwf-panel [data-diagram-edge]").evaluateAll(nodes => nodes.map(n => [n.dataset.diagramEdge, n.dataset.from, n.dataset.to]));
+  await page.getByRole("button", { name: "Reading Journey", exact: true }).click();
+  await expect(page).toHaveURL(/demo=journey/);
+  const journey = page.locator(".journey");
+  const scene = journey.locator(".journey-map-scene");
+  await expect(scene).toHaveAttribute("data-focus-step", "overview");
+  expect(await scene.locator("[data-diagram-node]").evaluateAll(nodes => nodes.map(n => [n.dataset.diagramNode, n.dataset.state]))).toEqual(canonicalNodes);
+  await expect.poll(() => scene.locator("[data-diagram-edge]").count()).toBe(canonicalEdges.length);
+  expect(await scene.locator("[data-diagram-edge]").evaluateAll(nodes => nodes.map(n => [n.dataset.diagramEdge, n.dataset.from, n.dataset.to]))).toEqual(canonicalEdges);
+  await expect(scene.locator('[data-diagram-node="teacher"]')).toHaveAttribute("data-state", "frozen");
+  await expect(scene.locator('[data-diagram-node="backbone"]')).toHaveAttribute("data-state", "trainable");
+  const focusedNodes = { arrive: ["x", "label"], teacher: ["x", "teacher", "target"], forward: ["x", "target", "backbone", "oldOut", "newOut"], loss: ["target", "oldOut", "newOut", "label", "lOld", "lNew"], update: ["lOld", "lNew", "update", "backbone"] };
+  for (const id of ["teacher", "loss", "update", "arrive", "forward", "teacher"]) {
+    await scene.locator(`[data-step-id="${id}"]`).click();
+    await expect(scene).toHaveAttribute("data-focus-step", id);
+    expect(await scene.locator("[data-diagram-node].is-active").evaluateAll(nodes => nodes.map(n => n.dataset.diagramNode).sort())).toEqual([...focusedNodes[id]].sort());
+    await expect(scene.locator("[aria-current=step]")).toHaveCount(1);
+    expect(await scene.locator("[data-diagram-node].is-dimmed").evaluateAll(nodes => nodes.every(n => Number(getComputedStyle(n).opacity) >= .75))).toBe(true);
+    await expect(scene.getByRole("status")).not.toBeEmpty();
+    if (id === "loss") expect(await scene.locator("[data-diagram-edge].is-active").evaluateAll(nodes => nodes.map(n => n.dataset.diagramEdge).sort())).toEqual(["target-lold", "oldout-lold", "newout-lnew", "label-lnew"].sort());
+    if (id === "update") expect(await scene.locator("[data-diagram-edge].is-active").evaluateAll(nodes => nodes.map(n => n.dataset.diagramEdge).sort())).toEqual(["lold-update", "lnew-update"].sort());
+  }
+  const reset = scene.getByRole("button", { name: "恢复概览" });
+  await reset.focus();
+  await page.keyboard.press("Enter");
+  await expect(scene.locator(".is-dimmed")).toHaveCount(0);
+  await expect(reset).toHaveAttribute("aria-pressed", "true");
+  expect(await reset.evaluate(n => { const s = getComputedStyle(n); return s.outlineStyle === "solid" && parseFloat(s.outlineWidth) >= 2 && parseFloat(s.outlineOffset) >= 2 && s.boxShadow === "none"; })).toBe(true);
+  for (const [kind, target, prediction, result] of [["old", "target", "oldOut", "lOld"], ["new", "label", "newOut", "lNew"]]) {
+    const comparison = journey.locator(`[data-comparison="${kind}"]`);
+    await expect(comparison).toHaveAttribute("data-target", target);
+    await expect(comparison).toHaveAttribute("data-prediction", prediction);
+    await expect(comparison).toHaveAttribute("data-result", result);
+    await expect(comparison.locator(`[data-loss="${kind}"]`)).toBeVisible();
+  }
+  const student = journey.locator(".journey-student");
+  await expect(student.locator('[data-equation="objective"]')).toHaveText("J=λoLold+Lnew+R");
+  await expect(student.locator("[data-parameter-definition]")).toContainText("原文的同名记号只指共享参数");
+  await expect(student.locator('[data-role="teacher"]')).toHaveAttribute("data-state", "frozen");
+  await expect(journey.locator('[data-training-phase="warm-up"]')).toContainText("只训练新增任务头");
+  await expect(journey.locator("#journey-handoff")).toContainText("不随每次梯度更新同步变化");
+  await journey.locator("summary").click();
+  await expect(journey.locator("details math mfrac").first()).toBeVisible();
+  await page.getByRole("navigation", { name: "Sections on this page" }).getByRole("button", { name: "05 在任务边界交接" }).click();
+  await expect(page).toHaveURL(/#journey-handoff$/);
+  await page.reload();
+  expect(await page.locator("#journey-handoff").evaluate(n => Math.abs(n.getBoundingClientRect().top) < 120)).toBe(true);
+  for (const label of ["Component Lab", "EWC scenario", "LwF scenario", "Reading Journey"]) {
+    await page.getByRole("button", { name: label, exact: true }).click();
+    await expect(page.getByRole("button", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
+  }
+  for (const variant of ["c1", "c2"]) {
+    await page.goto(`/?demo=editorial&c=${variant}#ed-c`);
+    await expect(page.locator("[data-c-variant]")).toHaveAttribute("data-c-variant", variant);
+  }
+  expect(errors).toEqual([]);
+});
+
+for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
+  test(`reading journey reflows and stays legible at ${viewport.width}`, async ({ page }, testInfo) => {
+    await page.setViewportSize(viewport);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/?demo=journey");
+    const journey = page.locator(".journey");
+    await page.evaluate(() => document.fonts.ready);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const diagram = journey.locator(".rk-diagram");
+    await expect(diagram).toHaveAttribute("data-diagram-mode", viewport.width === 390 ? "list" : "grid");
+    expect(await diagram.locator('[data-state="update"] math').evaluate(n => getComputedStyle(n).color)).toBe("rgb(255, 255, 255)");
+    const geometry = await journey.locator("h1, h2, h3, math, .rk-step-nav__label, .rk-diagram__title, .rk-diagram__meta").evaluateAll(nodes => nodes.filter(n => n.getBoundingClientRect().width).map(n => ({ text: n.textContent, width: n.clientWidth, scroll: n.scrollWidth, ellipsis: getComputedStyle(n).textOverflow, nowrap: getComputedStyle(n).whiteSpace, clipped: ["hidden", "clip"].includes(getComputedStyle(n).overflowX) })));
+    expect(geometry.filter(n => n.scroll > n.width + 2 || n.ellipsis === "ellipsis" || n.clipped)).toEqual([]);
+    expect(await diagram.locator(".rk-diagram__title").evaluateAll(nodes => nodes.every(n => parseFloat(getComputedStyle(n).fontSize) >= 14))).toBe(true);
+    if (viewport.width === 390) {
+      // Input and ground-truth label are the two source nodes without incoming edges.
+      await expect(diagram.locator(".rk-diagram__list-inputs")).toHaveCount(8);
+      await expect(diagram.locator('[data-diagram-node="lOld"]')).toContainText("旧响应目标 · 旧类输出");
+      await expect(diagram.locator('[data-diagram-node="update"]')).toContainText("旧响应损失 · 新任务损失");
+    } else {
+      const bounds = await diagram.locator(".rk-diagram__canvas").evaluate(n => { const b = n.getBoundingClientRect(); return [...n.querySelectorAll("[data-diagram-node], [data-diagram-edge] path")].every(el => { const r = el.getBoundingClientRect(); return r.left >= b.left - 1 && r.right <= b.right + 1 && r.top >= b.top - 1 && r.bottom <= b.bottom + 1; }); });
+      expect(bounds).toBe(true);
+    }
+    if (process.env.JOURNEY_REVIEW_CAPTURE) {
+      const capture = (name, options = {}) => page.screenshot({ path: testInfo.outputPath(`${name}-${viewport.width}.png`), ...options });
+      await capture("journey-full", { fullPage: true });
+      if (viewport.width === 390) {
+        await capture("mobile-opening");
+        await journey.locator("#journey-student").scrollIntoViewIfNeeded();
+        await capture("mobile-student");
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await expect(diagram).toHaveAttribute("data-diagram-mode", "grid");
+        await expect(diagram.locator("[data-diagram-edge]")).toHaveCount(11);
+      }
+      if (viewport.width === 1440) {
+        for (const [name, first, last] of [["opening-map", ".journey-opening", "#journey-map"], ["paths-student", "#journey-paths", "#journey-student"], ["handoff", "#journey-handoff", "#journey-handoff"]]) {
+          await page.evaluate(() => scrollTo(0, 0));
+          const start = await page.locator(first).boundingBox();
+          const end = await page.locator(last).boundingBox();
+          await capture(name, { fullPage: true, clip: { x: start.x, y: start.y, width: start.width, height: end.y + end.height - start.y } });
+        }
+        await journey.locator('[data-step-id="loss"]').click();
+        await page.evaluate(() => scrollTo(0, 0));
+        await capture("map-loss", { fullPage: true, clip: await journey.locator(".journey-map-scene").boundingBox() });
+      }
+    }
+  });
+}
+
 test("editorial studies preserve the EWC handoff and keyboard reset", async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   if (process.env.EDITORIAL_REVIEW_CAPTURE) await page.setViewportSize({ width: 1440, height: 900 });

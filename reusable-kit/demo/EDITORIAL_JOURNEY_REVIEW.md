@@ -30,3 +30,50 @@ C1 仅吸收窄边注/宽解释的编辑关系；C2 仅吸收可训练对象中�
 `npm run build`（demo 目录）退出 0。依赖和锁文件未变，`npm ls --depth=0` 退出 0，已有锁定依赖可用，跳过 `npm ci`。首次沙箱内浏览器启动探测受 localhost `EACCES` 阻止，改用获准的沙箱外执行；不是页面断言失败。新增用例初跑纠正了测试预期中遗漏的 backbone 和两个无入边源节点，随后 5/5 通过。
 
 实际查看了 1280×900、1440×900、1920×1080 全页及 390×844 重排，1440 开场→总图、局部→Student、聚焦状态；发现并修复深色更新节点内 θs 的对比度以及聚焦截图受 sticky 顶栏遮挡。移动端沿用 DiagramFlow 输入可追溯的分组列表，不缩小主图；已选阅读入口自动在横向导航中露出。主图最强、Student 次强、第三段与收尾收窄；未发现等形卡片串联或无意义补白。最终全量回归和证据清理见 P2。
+
+## P2 · 验证与人工交付
+
+运行环境：Node `v24.18.0`，Playwright `1.63.0`，Vite `6.4.3`。安装目录锁与仓库锁的依赖版本差异为 0。以下 build / browser 在 `reusable-kit/demo`，QA 在仓库根目录执行。
+
+| 命令 / 检查 | 实际结果 |
+| --- | --- |
+| `npm ls --depth=0` | 退出 0；复用已有一致依赖，未运行 npm ci |
+| `npm run build` | 退出 0；TS 与 Vite 生产构建成功 |
+| `$env:JOURNEY_REVIEW_CAPTURE='1'; npm run test:browser` | 退出 0；15/15 通过，原有 10 项完整保留，新增 5 项 |
+| `node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json` | 退出 0；72/72 状态 PASS，含 journey 六状态 × 三桌面视口；actualUrl 全为预期入口，0 browser errors |
+| GEOMETRY_QA / STYLE_QA | PASS；无非预期页面横向溢出、登记元素裁切；主图标题实际 15px |
+| VISUAL_REVIEW | Agent 已实际查看四种视口的整页、1440 连续局部/聚焦/收尾及移动局部；另查看 1440 的 Lab、LwF、EWC、Editorial A/B/C 和 C1/C2 代表截图 |
+| REGRESSION | 浏览器回归通过，保护区域源码未改；像素基线比较 NOT_RUN（未配置获人工认可的基线），不声称像素完全一致 |
+| HUMAN_ACCEPTANCE | PENDING；不代填 PASS，不晋级 registry |
+
+新增断言核对主图与既有 LwF 页面拥有相同节点/边 ID、角色和端点；各步当前对象、损失与更新边、反复切换和键盘恢复；两组比较来源/预测/结果、参数定义与冻结状态、warm-up、温度分式；hash/重载与候选链接；四视口的溢出/裁切/数学/字体、图形边界、移动输入关系及恢复宽屏。Reduced Motion 下执行，主图无自动播放。上游发布/正式论文子路径、浏览器全屏、其他浏览器和人工学习验收均未执行，属于本轮范围之外。
+
+机器报告中的 VISUAL_REVIEW=NOT_RUN、BUILD=NOT_RUN 是 runner 不执行这些检查的独立标记；真实构建与 Agent 查图结果在本记录补充，未篡改原报告。18 条 warning 是 journey 每个状态重复报告的 8 处 11px 辅助文字（章节标记、公式说明、来源）；没有 error。保留为人工可读性风险，不以自动 PASS 掩盖。
+
+### 精选证据
+
+根目录：`C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\editorial-journey-review\`（Git 忽略，本地人工评审证据，不是批准基线）。
+
+| 文件 | 用途 |
+| --- | --- |
+| `journey-full-1440.png` | 1440×900 视口下的完整长图（1440×3336） |
+| `opening-map-1440.png` | 开场与主图连续构图 |
+| `map-loss-1440.png` | 两组比较聚焦，保留非焦点上下文 |
+| `paths-student-1440.png` | 局部解释 → Student 优化的连续画面 |
+| `handoff-1440.png` | 收束与任务边界 |
+| `journey-full-1280.png` / `journey-full-1920.png` | 另外两种桌面尺度 |
+| `journey-full-390.png` / `mobile-opening-390.png` | 移动重排完整长图与原始尺寸首屏 |
+| `visual-qa-report.json` / `visual-qa-report.md` | 本轮统一报告原样留存；报告内全量截图相对路径随 raw run 清理，人工查看上列精选文件 |
+| `wireframe.html` | P0 连续低成本线框 |
+
+QA 命令的真实输出为 `Visual QA PASS. Report: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T03-56-14-093Z\report.md`。已读 Markdown/JSON、核对 72 项与截图，再将本次输出的父目录用于精确清理；清理执行结果见下方。
+
+清理结果：`node tools/visual-qa/cli.mjs --cleanup-run <上述准确父目录>` 退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T03-56-14-093Z`，`Test-Path` 为 false。审查后只删除本任务新建的准确 `reusable-kit/demo/test-results` 目录并验证不存在；未创建 playwright-report。4173/4175 无监听，本次脚本所启服务已停止。保留上列 9 张截图、原报告与线框，未删除历史 QA 或基线。
+
+### 保留、放弃与人工停点
+
+保留宽幅唯一系统地图、收窄的两次比较、Student 内一体化目标与更新以及轻量边界关系。放弃完整复制 C1/C2、重画第二张系统图、独立大公式板/Update card、五节统一卡片和滚动驱动状态机。数据来源、比较与更新用线型和文字共同解释；主图局部定义与原场景隔离。
+
+人工优先评估三点：开场是否足以引导继续阅读；总图到两次比较再到 Student 的节奏是否自然且无重复讲授；移动端长列表与 11px 辅助说明是否仍舒适。当前无待修复的机器失败；整页审美与教学结论待人审，不宣称 9/10 或通用模板。
+
+复现：在仓库根目录运行 `npm --prefix reusable-kit/demo run dev -- --host 127.0.0.1 --port 4187 --strictPort`，访问 `http://127.0.0.1:4187/?demo=journey`，也可直接从侧栏进入。QA 使用的 4173/4175 是临时生产预览端口。
