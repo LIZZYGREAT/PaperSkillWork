@@ -115,3 +115,9 @@ Agent 实际查看了 1280/1440/1920 桌面整页、390 移动长图与 Student 
 本次输出 `Report: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-23-53-520Z\report.md`；已读取原报告和查图，使用其准确父目录清理。
 
 清理退出 0，输出 `CLEANED: C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\.visual-qa\run-2026-10-24T04-23-53-520Z`，目录确已不存在；本轮 `reusable-kit/demo/test-results` 已精确删除并验证，4173/4175 无遗留监听。保留上述五张精选截图、配置与报告，不触碰历史目录。
+
+## 人工反馈修复 · Reference Hub 与阅读清晰度（2026-10-24）
+
+第一部分：Reference Hub 上方 flex 等宽筛选与下方 0.9/1.1 两列不一致，列表还额外留出双侧滚动槽。共享样式改为同一组列宽/间距，控件占满各自列，取消列表空闲时的左右内缩；详情滚动和移动端列表/详情切换保留。`npm run build` 退出 0；`$env:HUB_REVIEW_CAPTURE='1'; npm run test:browser -- --grep 'Reference Hub filters|Chinese hover|Component Lab exposes'` 退出 0，3/3 通过。新增测试在 1280/1440/1920 下检查搜索/列表、分类/详情左右边界及两列上下边界，覆盖 Journey/EWC、空态/选中/无结果/移动返回；实际查看空态、详情与手机截图，精选保留在 `.visual-qa/editorial-journey-clarity-review/hub-{empty,selected,mobile}.png`。
+
+第二部分实施前决定：上一版虽然外框对齐，但分裂的二栏标题/引导、两个独立比较区和独立公式栏仍使阅读跳跃。03 改成共享列轴的两行比较表，直接核对要求/参照/预测/损失；04 将 Student 身份置于场景顶端，下面按来源→联合目标→更新顺序形成同一计算带，公式与其说明同轴；05 使用安静的纵向引导、连续时间线与紧凑边界结论。保留全页左右框、全部必要事实/公式、对象角色和既有入口；单独处理展开详情的图文配对与温度记号的不可拆行。

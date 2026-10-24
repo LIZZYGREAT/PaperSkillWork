@@ -1,5 +1,39 @@
 import { expect, test } from "@playwright/test";
 
+test("Reference Hub filters and reading columns share both boundaries", async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const demo of ["journey", "ewc"]) {
+    await page.goto(`/?demo=${demo}`);
+    await page.getByRole("button", { name: "Reference Hub", exact: false }).first().click();
+    const drawer = page.getByRole("dialog", { name: "Reference Hub" });
+    const hub = drawer.locator(".rk-reference-hub");
+    for (const width of [1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      const offsets = await hub.evaluate(root => {
+        const box = selector => root.querySelector(selector).getBoundingClientRect();
+        const search = box('input[type="search"]'), list = box('.rk-reference-hub__list');
+        const category = box('select'), detail = box('.rk-reference-hub__detail');
+        return [search.left - list.left, search.right - list.right, category.left - detail.left, category.right - detail.right, search.bottom - category.bottom, list.top - detail.top];
+      });
+      expect(offsets.every(offset => Math.abs(offset) <= 1)).toBe(true);
+      if (width === 1440 && process.env.HUB_REVIEW_CAPTURE) await drawer.screenshot({ path: testInfo.outputPath(`hub-${demo}-empty.png`) });
+    }
+    await hub.locator("[data-reference-id]").first().click();
+    await expect(hub.locator(".rk-reference-hub__detail h3")).toBeVisible();
+    if (process.env.HUB_REVIEW_CAPTURE) await drawer.screenshot({ path: testInfo.outputPath(`hub-${demo}-selected.png`) });
+    await hub.getByRole("searchbox").fill("no-matching-reference-123");
+    await expect(hub.getByText("No references match this search.")).toBeVisible();
+    await hub.getByRole("searchbox").fill("");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await hub.getByRole("button", { name: "Back to reference list" }).click();
+    await expect(hub.locator(".rk-reference-hub__list")).toBeVisible();
+    expect(await drawer.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+    if (process.env.HUB_REVIEW_CAPTURE && demo === "journey") await drawer.screenshot({ path: testInfo.outputPath("hub-mobile.png") });
+    await page.keyboard.press("Escape");
+    await expect(drawer).toBeHidden();
+  }
+});
+
 test("reading journey keeps the canonical graph, comparison ownership and task boundaries", async ({ page }) => {
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));

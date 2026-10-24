@@ -320,14 +320,16 @@
 .rk-term-popover { position: fixed; z-index: 1100; box-sizing: border-box; display: grid; gap: 8px; width: min(420px, calc(100vw - 24px)); max-height: min(70vh, 480px); overflow: auto; padding: 14px; border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: var(--rk-surface); color: var(--rk-ink); box-shadow: var(--rk-shadow); font-family: var(--rk-font-body); font-size: var(--rk-type-supporting); line-height: var(--rk-leading-body); overflow-wrap: anywhere; }
 .rk-term-popover > strong { font-size: var(--rk-type-body); }
 .rk-term-popover__link { justify-self: start; border: 0; background: transparent; color: var(--rk-accent); font: inherit; text-decoration: underline; cursor: pointer; }
-.rk-reference-hub { display: grid; gap: 16px; color: var(--rk-ink); font-family: var(--rk-font-body); font-size: var(--rk-type-body); line-height: var(--rk-leading-body); }
-.rk-reference-hub__heading, .rk-reference-hub__filters { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+.rk-reference-hub { --rk-reference-columns: minmax(0, .9fr) minmax(0, 1.1fr); --rk-reference-gap: 20px; display: grid; gap: 16px; color: var(--rk-ink); font-family: var(--rk-font-body); font-size: var(--rk-type-body); line-height: var(--rk-leading-body); }
+.rk-reference-hub__heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+.rk-reference-hub__filters { display: grid; grid-template-columns: var(--rk-reference-columns); align-items: end; gap: var(--rk-reference-gap); }
 .rk-reference-hub__heading h2 { margin: 0; } .rk-reference-hub__heading p { margin: 4px 0 0; color: var(--rk-muted); }
-.rk-reference-hub__filters label { display: grid; gap: 6px; flex: 1; }
-.rk-reference-hub__filters input, .rk-reference-hub__filters select { min-height: 42px; padding: 8px 10px; border: 1px solid var(--rk-line); border-radius: 8px; background: var(--rk-surface); color: inherit; font: inherit; }
-.rk-reference-hub__grid { display: grid; grid-template-columns: minmax(250px, .9fr) minmax(260px, 1.1fr); grid-template-rows: minmax(0, 1fr); gap: 20px; height: min(70vh, 760px); min-height: 320px; max-height: min(70vh, 760px); overflow: hidden; }
-.rk-reference-hub__list { display: grid; align-content: start; gap: 8px; margin: 0; padding: 0 4px 0 0; list-style: none; }
+.rk-reference-hub__filters label { display: grid; min-width: 0; gap: 6px; }
+.rk-reference-hub__filters input, .rk-reference-hub__filters select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 42px; padding: 8px 10px; border: 1px solid var(--rk-line); border-radius: 8px; background: var(--rk-surface); color: inherit; font: inherit; }
+.rk-reference-hub__grid { display: grid; grid-template-columns: var(--rk-reference-columns); grid-template-rows: minmax(0, 1fr); gap: var(--rk-reference-gap); height: min(70vh, 760px); min-height: 320px; max-height: min(70vh, 760px); overflow: hidden; }
+.rk-reference-hub__list { display: grid; align-content: start; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .rk-reference-hub__list, .rk-reference-hub__detail { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable both-edges; scrollbar-width: thin; }
+.rk-reference-hub__list { scrollbar-gutter: auto; }
 .rk-reference-hub__list button { display: flex; align-items: start; justify-content: space-between; gap: 12px; width: 100%; min-height: 64px; padding: 12px; border: 1px solid var(--rk-line); border-radius: 10px; background: var(--rk-surface); text-align: left; cursor: pointer; }
 .rk-reference-hub__list button > span:first-child { min-width: 0; overflow-wrap: anywhere; }
 .rk-reference-hub__list button.is-selected { border-color: var(--rk-accent); background: var(--rk-accent-soft); }
@@ -627,7 +629,8 @@
   .rk-mobile-sheet .rk-overlay { align-items: flex-end; }
   .rk-segments { width: 100%; }
   .rk-segments__option { flex: 1; }
-  .rk-reference-hub__heading, .rk-reference-hub__filters { align-items: stretch; flex-direction: column; }
+  .rk-reference-hub { --rk-reference-columns: minmax(0, 1fr); }
+  .rk-reference-hub__heading { align-items: stretch; flex-direction: column; }
   .rk-reference-hub__grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); height: min(64vh, 680px); min-height: 360px; max-height: min(64vh, 680px); }
   .rk-reference-hub[data-mobile-view="list"] .rk-reference-hub__detail { display: none; }
   .rk-reference-hub[data-mobile-view="detail"] .rk-reference-hub__list { display: none; }
