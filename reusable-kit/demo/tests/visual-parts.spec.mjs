@@ -50,7 +50,6 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
   const centre = rows => rows.reduce((sum, y) => sum + y, 0) / rows.length;
   expect(centre(outputRows)).toBeCloseTo(centre(hiddenRows));
   expect(centre(inputRows)).toBeCloseTo(centre(hiddenRows));
-  expect(outputRows[1] - outputRows[0]).toBeCloseTo(hiddenRows[1] - hiddenRows[0]);
   expect(outputRows[0]).toBeGreaterThan(hiddenRows[0]);
   expect(outputRows.at(-1)).toBeLessThan(hiddenRows.at(-1));
   const meter = shelf.locator('meter');

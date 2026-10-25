@@ -94,17 +94,18 @@ export function MiniNetworkGlyph({ layers, label, description, connections, conn
 
   // A shared coordinate frame keeps node size and graph height independent of
   // layer count. Density and available width determine the rendered scale.
-  const width = 384;
-  // Equal pitch keeps sparse layers centred instead of stretching them to the
-  // extremes. Grow the canvas only when more than five visible nodes need it.
-  const nodePitch = 30;
-  const height = Math.max(164, 44 + (Math.max(...layers.map(visibleCount)) - 1) * nodePitch);
+  const width = 320;
+  // Sparse layers sit nearer the centre; fuller layers use more of the canvas.
+  // These spans preserve a balanced silhouette rather than forcing equal pitch.
+  const layerSpans = [0, 0, 64, 108, 132, 144, 156, 168];
+  const height = Math.max(184, ...layers.map(layer => layerSpans[visibleCount(layer)] + 40));
   const positions = new Map<string, { x: number; y: number }>();
   layers.forEach((layer, layerIndex) => {
     const count = visibleCount(layer);
     const x = ((layerIndex + 0.5) / layers.length) * width;
     Array.from({ length: count }, (_, nodeIndex) => {
-      const y = height / 2 + (nodeIndex - (count - 1) / 2) * nodePitch;
+      const span = layerSpans[count];
+      const y = count === 1 ? height / 2 : height / 2 - span / 2 + nodeIndex / (count - 1) * span;
       positions.set(nodeKey(layer.id, nodeIndex), { x, y });
     });
   });

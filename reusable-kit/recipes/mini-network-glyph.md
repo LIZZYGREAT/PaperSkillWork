@@ -6,7 +6,7 @@ Use one Glyph for one small layer/node topology. `layers` supplies stable IDs, l
 
 Glyphs share one normalized coordinate frame. At the same density and rendered width, changing layer count preserves node diameter, drawing height and label baseline. A side-by-side comparison should give both Glyphs equal available width; do not resize their internal SVG separately.
 
-Nodes use equal vertical spacing around the graph's centre line. A two-node layer stays near the centre rather than stretching to the top and bottom of a larger layer. The canvas grows vertically when more than five visible nodes need space; a comparison of such taller graphs should account for their different row counts.
+Layers stay centred but use different vertical spans according to their visible node count. Two nodes sit nearer the centre; input and hidden layers spread farther vertically to keep a balanced silhouette. Equal spacing across layers is not a design goal. The canvas grows vertically when more than five visible nodes need space; a comparison of such taller graphs should account for their different row counts.
 
 ## Runnable single Glyph and parallel composition
 
