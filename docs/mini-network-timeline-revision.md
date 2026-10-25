@@ -44,3 +44,12 @@ Cleanup: reports and selected screenshot evidence reviewed; exact runner / nativ
 G3 cleanup confirmed: both exact runner directories printed `CLEANED` and `Test-Path=False`; owned `reusable-kit/demo/test-results` (only `.last-run.json`), the unique pytest root and the diagnosed first scaffold failure root printed exact owned cleanup confirmations and are absent. Both successful scaffold roots are absent. Historical QA directories and approved baselines untouched. Selected human-review evidence remains in the external `.qa/mini-network-timeline-20261025` directory.
 
 G3 engineering delivery complete; human acceptance PENDING. The user's subsequent five reference screenshots request an additional visual refinement pass, tracked below as G4/G5 without changing the validated model relationships or single-clock contract.
+
+
+## G4 · reference-informed Network refinement
+
+User supplied five screenshots (iCaRL feature extractor/output scene and stage overview, LwF expanded Student composition, EWC forward network and training chronicle). Applied their visual principles within this task: visible input object, differentiated diagram objects, quieter surfaces, clearer ownership and compact data paths. Did not copy paper-specific architecture counts, probabilities or source files.
+
+Network now pairs a fixed pixel input mark, the same Glyph and a caller-controlled connection explanation. Selection explicitly names input node 2 → hidden node 3 → output node 2. Parallel composition uses a shared-input trunk and two independent branches, whole-model frozen/trainable badges, separate symbolic outputs, compact topology sizes and a caption explaining reference ownership. The demo source and Recipe remain identical after import rewriting; public API unchanged.
+
+Validation: strict build PASS; `npm --prefix reusable-kit/demo run test:browser -- --grep "network focus"` PASS (1 test, three viewports). Reviewed latest full/focus/parallel and 1440/1920/390 captures in external `../.qa/mini-network-timeline-refinement-20261025/`. Stable geometry / edge set, ARIA, labels and branch ownership assertions remain intact. Human visual acceptance PENDING.
