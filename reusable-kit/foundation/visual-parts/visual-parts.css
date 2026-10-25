@@ -6,22 +6,24 @@
 .rk-sample-token__pixels { display: grid; gap: 3px; width: 100%; }
 .rk-sample-token__pixels i { display: block; aspect-ratio: 1; border-radius: 1px; background: var(--rk-accent); }
 .rk-feature-blocks, .rk-feature-aggregation { width: 112px; max-width: 100%; }
-.rk-feature-blocks svg, .rk-feature-aggregation svg { display: block; width: 100%; height: auto; fill: var(--rk-figure); stroke: var(--rk-accent); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.rk-feature-blocks svg, .rk-feature-aggregation svg { display: block; width: 100%; height: auto; fill: var(--rk-data-positive-fill); stroke: var(--rk-data-positive-line); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 .rk-feature-blocks path { fill: none; stroke: var(--rk-line-strong); }
 .rk-feature-aggregation .rk-feature-aggregation__frame { stroke-width: 1.5; }
-.rk-feature-aggregation .rk-feature-aggregation__bar { fill: var(--rk-accent); stroke: none; }
+.rk-feature-aggregation .rk-feature-aggregation__bar { fill: var(--rk-data-positive-fill); stroke: var(--rk-data-positive-line); stroke-width: 1; }
 .rk-feature-blocks[data-active="true"] rect, .rk-feature-aggregation[data-active="true"] .rk-feature-aggregation__frame { stroke-width: 2.5; stroke: var(--rk-accent-strong); }
 .rk-representation-vector__coordinates { display: flex; flex-wrap: wrap; justify-content: center; gap: 0; }
 .rk-vector-coordinate { display: grid; grid-template-rows: 44px 44px auto; min-width: 34px; text-align: center; font: 12px/1.6 var(--rk-font-mono); }
 .rk-vector-coordinate__positive, .rk-vector-coordinate__negative { display: flex; justify-content: center; }
 .rk-vector-coordinate__positive { align-items: end; border-bottom: 1px solid var(--rk-line-strong); }
 .rk-vector-coordinate__negative { align-items: start; }
-.rk-vector-coordinate i { box-sizing: border-box; width: 13px; background: var(--rk-accent); border: 1px solid var(--rk-accent); border-radius: 2px; }
+.rk-vector-coordinate i { box-sizing: border-box; width: 13px; background: var(--rk-data-positive-fill); border: 1px solid var(--rk-data-positive-line); border-radius: 2px; }
+.rk-vector-coordinate__negative i { background: var(--rk-data-negative-fill); border-color: var(--rk-data-negative-line); }
 .rk-response-meter { position: relative; display: grid; grid-template-columns: minmax(30px, auto) minmax(48px, 1fr) auto; align-items: center; gap: 4px 10px; min-width: 0; color: var(--rk-ink); font: 13px/1.5 var(--rk-font-body); }
 .rk-response-meter label { overflow-wrap: anywhere; }
 .rk-response-meter meter { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .rk-response-meter__track { position: relative; display: block; height: 8px; border-radius: 3px; background: var(--rk-surface-soft); }
-.rk-response-meter__fill { position: absolute; inset-block: 0; border-radius: 3px; background: var(--rk-accent); }
+.rk-response-meter__fill { position: absolute; inset-block: 0; border-radius: 3px; background: var(--rk-data-positive-fill); box-shadow: inset 0 0 0 1px var(--rk-data-positive-line); }
+.rk-response-meter__fill[data-negative="true"] { background: var(--rk-data-negative-fill); box-shadow: inset 0 0 0 1px var(--rk-data-negative-line); }
 .rk-response-meter__zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--rk-line-strong); }
 .rk-response-meter output { font: 12px/1.5 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
 .rk-response-meter small { grid-column: 1 / -1; color: var(--rk-muted); font-size: 12px; }

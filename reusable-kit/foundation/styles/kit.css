@@ -1,5 +1,6 @@
 :root {
-  /* Three tones only: warm paper, one confident green, one clay. Elevation is
+  /* Warm paper, pale green and pale orange fills with darker readable outlines.
+     Elevation is
      carried by tone steps, not by shadows on every surface. */
   --rk-canvas: #f7f7f2;
   --rk-surface: #ffffff;
@@ -12,10 +13,15 @@
   --rk-accent: #2e6b4e;
   --rk-accent-strong: #1b4a34;
   --rk-accent-soft: #e2ebdc;
-  --rk-good: #2f6b4a;
-  --rk-good-soft: #e4edde;
+  --rk-good: var(--rk-accent);
+  --rk-good-soft: var(--rk-accent-soft);
   --rk-warn: #8a5a25;
   --rk-warn-soft: #f8efdc;
+  /* Shared numeric marks: fill and outline always travel together. */
+  --rk-data-positive-fill: var(--rk-accent-soft);
+  --rk-data-positive-line: var(--rk-accent);
+  --rk-data-negative-fill: var(--rk-warn-soft);
+  --rk-data-negative-line: var(--rk-warn);
   --rk-bad: #98402a;
   --rk-bad-soft: #f8e7dd;
   --rk-focus: #a9683b;
