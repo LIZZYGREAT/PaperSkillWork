@@ -25,6 +25,10 @@
     {
       "width": 1920,
       "height": 1080
+    },
+    {
+      "width": 390,
+      "height": 900
     }
   ],
   "pages": [
@@ -33,14 +37,14 @@
       "path": "/?demo=gallery",
       "computedStyles": [
         {
-          "selector": ".kit-shell",
+          "selector": "body",
           "property": "background-color",
-          "equals": "rgb(247, 244, 237)"
+          "equals": "rgb(247, 247, 242)"
         },
         {
           "selector": ".pattern-gallery__section > .rk-section-head .rk-section-head__title",
           "property": "font-weight",
-          "equals": "600"
+          "equals": "700"
         },
         {
           "selector": ".pg-forward-nav button",
@@ -51,6 +55,64 @@
       "states": [
         {
           "id": "gallery-opening"
+        },
+        {
+          "id": "catalog-network-search",
+          "actions": [
+            {
+              "type": "fill",
+              "selector": "#gallery-catalog input",
+              "value": "MiniNetworkGlyph"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-catalog"
+            }
+          ]
+        },
+        {
+          "id": "catalog-timeline-search",
+          "actions": [
+            {
+              "type": "fill",
+              "selector": "#gallery-catalog input",
+              "value": "useAnimationTimeline"
+            },
+            {
+              "type": "click",
+              "selector": "#gallery-catalog nav button"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-catalog"
+            }
+          ]
+        },
+        {
+          "id": "parts-inspect",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "#gallery-parts summary"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-parts details"
+            }
+          ]
+        },
+        {
+          "id": "retrieval-changed",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-retrieval-query] button"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-retrieval"
+            }
+          ]
         },
         {
           "id": "gallery-orthogonal-connectors",
@@ -423,7 +485,10 @@
       ".pattern-gallery__facts dd",
       ".pattern-gallery__editorial h4",
       ".pattern-gallery__scroll-step h3",
-      ".pg-overview figure span"
+      ".pg-overview figure span",
+      ".asset-catalog__detail dd",
+      ".visual-specimen h1",
+      ".rk-mini-network__labels strong"
     ]
   },
   "settleMs": 200

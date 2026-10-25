@@ -7,4 +7,5 @@
 .parts-specimen__signals { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
 .parts-specimen__network { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 232px); gap: 24px; align-items: center; max-width: 600px; padding-block: 24px; }
 .parts-specimen__network > div { display: grid; gap: 12px; }
+.parts-specimen__inspect summary { cursor: pointer; padding-block: 12px; color: var(--rk-accent-strong); font-size: 14px; }
 @media (max-width: 580px) { .parts-specimen__network { grid-template-columns: minmax(0, 1fr); } }

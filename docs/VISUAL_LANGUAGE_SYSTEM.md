@@ -68,3 +68,53 @@ Gallery 首屏改为编辑式标题及真实网络/输入/特征块/向量混合
 独立 `test-advanced-scaffold.py` PASS（0）：新建隔离工程、Glyph 精确三文件闭包、编辑 kit.css、追加十种资产、保留编辑、从实际 Recipe 复制 TSX/CSS、编译所有 Registry 最小用法、生产构建；Chromium 操作 focus、五阶段、sigmoid 与检索，并测 390/1440/1920。未带 Gallery CSS。成功临时目录 `C:/Windows/Temp/kit-advanced-scaffold-1bbofjk4` 已输出 SCAFFOLD_CLEANED 且验证不存在。首次脚本误将无扩展名 KIT_VERSION 排除在计数外，修正后重跑。
 
 CLI/工作流/文档 54 项通过，另一个复制用例在沙箱中遇 WinError 5 原子重命名失败；正常本地环境复测相关 3 项全通过。路径安全补测 5 项通过。旧 easing 目录级复制断言改为“未被导入就不复制”，错误文案断言同步。最终全套结果归 S6 记录。
+
+## S6 · 综合回归与交付
+
+补全 inspect 实例；修正 Gallery 真实源码 glob 的目录层级并直接提供组件必需 CSS 面板，浏览器断言实际读取了 Glyph 源码及 CSS。仅打包此批展厅用到的源码族，避免把所有旧场景实现都塞进源码面板。删除已失效的样张步骤样式。
+
+压力回归发现旧时钟的一个真实竞争：RAF 可先更新 elapsedRef，再执行上一渲染的 effect；旧 effect 将该差异误判为 clip 配置替换，意外暂停播放。现在只有 clip 列表身份真正变化时才重整，单一时钟和既有 API 保持不变。补充批量帧断言，完整回归和实际持续播放均通过。隐藏的 inspect 实例只在展开后量几何；原移动端单列 DOM 假设改为对应层/节点中心对齐及完整文字检查。测试复制夹具排除同时被 Playwright 重建的临时 test-results，消除源文件枚举竞争，不改变源码验证范围。
+
+### 实际命令与独立结果
+
+以下均退出 0；所有 QA 都是工程与 Agent 复核，不是人的签收：
+
+| 检查 | 命令与范围 | 结果 |
+| --- | --- | --- |
+| 生产构建 | `npm.cmd --prefix reusable-kit/demo run build`；最终 TS/Vite 源码 | PASS |
+| CLI / 闭包 / 工作流 / 文档 | `python -m pytest -q tests/test_paper_cli.py tests/test_kit_copy.py tests/test_workflow_implementation.py tests/test_document_governance.py --basetemp ../.qa/kit-redesign-20261025/pytest-s6-final -o cache_dir=../.qa/kit-redesign-20261025/pytest-cache` | 56 PASS |
+| 完整 Chromium 回归 | Demo 中 `npm.cmd run test:browser`；控件、Reference Hub、LwF/EWC、Editorial、Reading Journey、时间线、三密度与窄屏 | 34 PASS |
+| 源码/CSS 面板最终修复后 | `npm.cmd run test:browser -- --grep 'one catalogue\|one forward\|component interaction assertions'` | 3 PASS |
+| 真实独立交付 | `python reusable-kit/demo/scripts/test-advanced-scaffold.py`；最小闭包、增量保留、Registry 用法、真实示例及独立构建/浏览器 | PASS；最终隔离目录 `kit-advanced-scaffold-5cnc3ozm` 已自清理并验证不存在 |
+| 核心场景共享 QA | `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-advanced.json` | 27 captures PASS，1440/1920/390 |
+| Gallery 共享 QA | `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-gallery.json` | 90 captures PASS，1440/1920/390 |
+| 共享路由回归 QA | `node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json` | 156 captures PASS，1280/1440/1920 |
+| QA 工具自检 | `node tools/visual-qa/self-check.mjs` | PASS，自己的临时产物已清理 |
+| 局部与首屏截图 | Demo 中 `node scripts/capture-redesign.mjs final` | 三视口 PASS，无页面/部件溢出和浏览器资源错误 |
+
+浏览器使用本机 Edge Chromium，100% / DPR 1；实际设置 `PAPERWORK_PLAYWRIGHT_EXECUTABLE`。Python 初次默认配置指向沙箱无权清理的历史 D:/Temp，改用本轮新建目录；一次夹具误复制正被重建的 test-results，修正夹具后全套通过。旧 Gallery 配置仍期望旧调色板及 600 字重，已依 S1 规则更新为 body canvas 与 700；没有更新图片基线、隐藏内容或降低可读性门槛。失败报告仅为旧样式断言，诊断后以新配置完整重跑。
+
+对应本轮终端实际返回的 run ID：advanced `13-07-49-998Z`；shared routes `13-16-55-834Z`；Gallery `13-30-25-309Z`（均为 `run-2026-10-25T` 前缀）。Gallery 旧断言失败记录为 `13-15-14-926Z`、`13-22-57-275Z`。报告中的 BUILD / VISUAL_REVIEW / REGRESSION 不由 runner 执行，仍显示 NOT_RUN；本表单独记录实际构建、Agent 实看与回归。HUMAN_ACCEPTANCE 保持 PENDING。
+
+### 实看与范围复核
+
+已实看 1440/1920 首屏、390 样张、紧凑/正常/放大网络、完整/聚焦连接、双模型、特征提取默认/阶段/暂停/响应、带符号检索两种输入、目录搜索与源码/CSS 详情，以及共享路由的 LwF/EWC 首屏、Editorial 和 Reference Hub。视觉上不再有网络占满横向画布、远离主图的说明或窄屏层标签列表脱离原层的问题。图元在不同构图共享外观；窄屏通过重排保持文字与数据。全页截图中的固定顶栏可能出现在长图中部，这是展厅 chrome，不是部件依赖。
+
+另用已有 Vite 运行真实 `papers/icarl`、`papers/ewc`、`papers/lwf` 的 enhanced 源码，仅浏览操作。iCaRL 第 2 页先“打开模型”再查看 SharedTrainingHead；三个页面均无 pageerror / 页面溢出，已实看特征提取局部及原页面。`git diff --exit-code HEAD -- papers` 为 0；没有修改原论文副本或任何教学/审核状态。上游 Import/Preflight/发布 NOT_RUN（本轮范围外）。本任务启动的临时预览均由脚本关闭。
+
+### 最终 A–F 核对与人工待签收
+
+| 项目 | 可复核证据 | 人工状态 |
+| --- | --- | --- |
+| A 默认完成度 | compact 正文、standard 局部/双模型、inspect 放大，未加 Glyph 内部 override；三视口标签/拓扑断言 | 待视觉签收 |
+| B 同语言不同构图 | 紧凑学习器、上下共享输入/并行模型、分段提取，以及新的非对称检索 | 待视觉签收 |
+| C 语义与数值 | 共享输入两路独立、冻结/训练文字+形状、30 边不变、单时钟、Wz/sigmoid/原始内积同源 | 工程 PASS，论文事实仍由当前场景负责 |
+| D 真实复制 | 精确三文件 Glyph；追加保留编辑；缺依赖/冲突先失败；真实源码独立编译运行 | 工程 PASS，待使用体验判断 |
+| E 可发现 | 两项指定教学查询、边界、真实源码、必需 CSS、最小用法和实际示例均可见并已测试 | 工程 PASS |
+| F 首屏设计 | baseline 与 S1/S4/final 三视口截图；从工具实验台改为标题与真实部件样张 | 待视觉签收 |
+
+全部 48 个 Registry 条目仍为 candidate，未生成 approved_by / approved_at / evidence。不能把本轮工程完成写成人已接受 A/B/D/F。
+
+最终与阶段签收所需截图保留在工作区父目录 `.qa/kit-redesign-20261025/review/` 和 `final/`。其余本轮临时图、pytest 工程、失败夹具、共享 runner 原始产物在查看/记录后按确切路径清理。保留这些图片是为了人工复核，不是批准基线。
+
+清理结果：上述五个确切 runner 目录均返回 `CLEANED: <same-path>`，逐一 Test-Path 为 False。自己创建的 pytest 工程、Playwright test-results、失败隔离目录均已核对绝对路径后清理并确认不存在；保留 review/final 中的必要截图，未触碰任何历史 QA 目录。最终文档治理补测 4 PASS（0），`git diff --check` 和 `git diff --exit-code HEAD -- papers` 均为 0。

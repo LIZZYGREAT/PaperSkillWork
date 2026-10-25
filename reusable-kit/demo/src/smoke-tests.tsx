@@ -259,7 +259,10 @@ async function run() {
     const buttons = (label: string) => Array.from(fixture.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === label)!;
     buttons("Play timeline").click(); await wait();
     manualClock.advance(0); await wait();
+    manualClock.advance(20);
+    manualClock.advance(35);
     manualClock.advance(50); await wait();
+    assert(fixture.dataset.status === "playing" && manualClock.pending === 1, "Batched frame updates were misread as a clip replacement and paused playback.");
     assert(fixture.dataset.clip === "read" && fixture.dataset.progress === "0.50", "Controlled clock did not expose a real intermediate state.");
     assert(new Set(Array.from(fixture.querySelectorAll("[data-timeline-region]")).map((region) => region.textContent)).size === 1, "Two visual regions drifted apart.");
     manualClock.advance(110); await wait();

@@ -23,7 +23,7 @@ def make_project(tmp_path):
     shutil.copytree(
         REPO_ROOT / "reusable-kit",
         tmp_path / "reusable-kit",
-        ignore=shutil.ignore_patterns("node_modules", "dist", ".playwright"),
+        ignore=shutil.ignore_patterns("node_modules", "dist", ".playwright", "test-results", "playwright-report"),
     )
     shutil.copy2(REPO_ROOT / ".gitignore", tmp_path / ".gitignore")
     (tmp_path / "papers").mkdir()

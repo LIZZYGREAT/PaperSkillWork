@@ -1,5 +1,7 @@
 # MiniNetworkGlyph / Timeline revision · 2026-10-25
 
+Historical record of the earlier revision. Commands below describe that run; the former `--add` interface has since been replaced by explicit `--select` and safe incremental copying. Use [current Kit instructions](reusable-kit.md) for new work.
+
 ## G0 · source audit
 
 - Baseline HEAD: `6500a8c8b95c07ff5c8e3fd570bd23eccf3cbd4e`; working tree clean before edits. Task scope is the two Kit candidates and their direct demo, recipe, scaffold and QA consumers. Original `papers/**` stay read-only.

@@ -672,7 +672,11 @@ test("component interaction assertions pass in a real browser", async ({ page })
     const bounds = node.getBoundingClientRect();
     const labels = node.querySelector(".rk-mini-network__labels");
     return bounds.left >= -1 && bounds.right <= innerWidth + 1
-      && getComputedStyle(labels).gridTemplateColumns.split(" ").length === 1
+      && [...labels.querySelectorAll('[data-network-label]')].every(label => {
+        const layer = node.querySelector(`[data-network-layer="${label.dataset.networkLabel}"] circle`);
+        const a = layer.getBoundingClientRect(), b = label.getBoundingClientRect();
+        return Math.abs(a.left + a.width / 2 - b.left - b.width / 2) < 6 && label.scrollWidth <= label.clientWidth;
+      })
       && [...node.querySelectorAll("strong, span, small, figcaption")].every((label) => parseFloat(getComputedStyle(label).fontSize) >= 12);
   }))).toBe(true);
 });

@@ -14,7 +14,7 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
   for (const width of [1440, 1920, 390]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await shelf.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
-    for (const glyph of await page.locator('#gallery-specimen .rk-mini-network, #gallery-parts .rk-mini-network').all()) {
+    for (const glyph of await page.locator('#gallery-specimen .rk-mini-network, #gallery-parts .parts-specimen__network .rk-mini-network').all()) {
       expect(await glyph.evaluate(g => [...g.querySelectorAll('[data-network-label]')].every(label => {
         const circle = g.querySelector(`[data-network-layer="${label.dataset.networkLabel}"] circle`);
         const a = circle.getBoundingClientRect(), b = label.getBoundingClientRect();
@@ -23,6 +23,9 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
     }
   }
   await expect(shelf.locator('.rk-flow-connector')).toHaveCount(4);
+  await shelf.locator('summary').click();
+  await expect(shelf.locator('[data-density="inspect"] [data-network-edge]')).toHaveCount(30);
+  await expect(shelf.locator('[data-density="inspect"]')).toBeVisible();
   await expect(shelf.locator('.rk-semantic-mark[data-state="frozen"]')).toContainText('冻结');
 });
 

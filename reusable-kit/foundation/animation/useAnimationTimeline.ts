@@ -104,6 +104,10 @@ export function useAnimationTimeline({
 
   useEffect(() => {
     const previous = previousClipsRef.current;
+    // Reconcile a replaced clip list only. RAF may advance elapsedRef before a
+    // previous render's passive effects flush; that is ordinary playback, not
+    // a config change, and must never pause the clock.
+    if (previous === clips) return;
     previousClipsRef.current = clips;
     if (!clips.length || errors.length) {
       stopCurrentRun();

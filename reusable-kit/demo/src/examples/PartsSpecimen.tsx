@@ -22,5 +22,6 @@ export function PartsSpecimen() {
     </div>
     <div className="parts-specimen__signals">{(['data', 'control', 'gradient', 'reference'] as const).map(kind => <FlowConnector key={kind} kind={kind} label={kind} />)}<SemanticMark state="frozen">参数冻结</SemanticMark><SemanticMark state="trainable">可训练</SemanticMark></div>
     <div className="parts-specimen__network"><div><h3 className="rk-type--heading-3">一个紧凑的学习器</h3><p className="rk-caption">同一个 Glyph 嵌入正文；节点和标签保持对齐。</p></div><MiniNetworkGlyph density="compact" layers={[{ id: 'in', label: '输入', nodeCount: 3 }, { id: 'h', label: '表示', nodeCount: 4 }, { id: 'out', label: '输出', nodeCount: 2 }]} connectAdjacent showDetails={false} label="紧凑学习器" description="3–4–2 教学示意" /></div>
+    <details className="parts-specimen__inspect"><summary>放大检查同一套绘图规则</summary><MiniNetworkGlyph density="inspect" layers={[{ id: 'in', label: '输入', nodeCount: 3 }, { id: 'h', label: '隐藏层', nodeCount: 5 }, { id: 'out', label: '输出', nodeCount: 3 }]} connectAdjacent label="放大检查网络" description="完整 3–5–3 教学结构；放大不改变拓扑或文字字号。" /></details>
   </section>;
 }

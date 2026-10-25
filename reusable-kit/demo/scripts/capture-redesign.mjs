@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
@@ -25,9 +25,24 @@ try {
     await page.goto('http://127.0.0.1:4186/?demo=gallery');
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: resolve(directory, `hero-${width}.png`) });
-    for (const [name, selector] of [['network','[data-network-example="local"]'], ['parallel','[data-network-example="parallel"]'], ['forward','[data-timeline-example="forward"]'], ['specimen','#gallery-specimen'], ['parts','#gallery-parts']]) {
+    const positions = {};
+    for (const [name, selector] of [['network','[data-network-example="local"]'], ['parallel','[data-network-example="parallel"]'], ['forward','[data-timeline-example="forward"]'], ['specimen','#gallery-specimen'], ['parts','#gallery-parts'], ['catalog','#gallery-catalog'], ['retrieval','[data-retrieval-query]']]) {
       const target = page.locator(selector);
-      if (await target.count()) await target.screenshot({ path: resolve(directory, `${name}-${width}.png`) });
+      if (await target.count()) {
+        positions[name] = await target.evaluate(el => { const b = el.getBoundingClientRect(); return { x:b.x, y:b.y+scrollY, width:b.width, height:b.height }; });
+        await target.screenshot({ path: resolve(directory, `${name}-${width}.png`) });
+      }
+    }
+    await writeFile(resolve(directory, `positions-${width}.json`), JSON.stringify(positions));
+    if (stage === 'final') {
+      await page.locator('[data-network-example="local"] button').click();
+      await page.locator('[data-network-example="local"]').screenshot({ path: resolve(directory, `focus-${width}.png`) });
+      await page.locator('#gallery-parts summary').click();
+      await page.locator('#gallery-parts details').screenshot({ path: resolve(directory, `inspect-${width}.png`) });
+      await page.locator('[data-retrieval-query] button').click();
+      await page.locator('[data-retrieval-query]').screenshot({ path: resolve(directory, `retrieval-changed-${width}.png`) });
+      await page.locator('[data-stage-target="responses"]').click();
+      await page.locator('[data-timeline-example="forward"]').screenshot({ path: resolve(directory, `responses-${width}.png`) });
     }
     console.log(JSON.stringify({ width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), parts: await page.locator('#gallery-parts').evaluateAll(nodes => nodes.map(el => ({ client: el.clientWidth, scroll: el.scrollWidth, offenders: [...el.querySelectorAll('*')].filter(n => n.scrollWidth > n.clientWidth + 1).map(n => [n.className, n.clientWidth, n.scrollWidth]) }))) }));
   }
