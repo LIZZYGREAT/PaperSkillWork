@@ -37,6 +37,7 @@ export type MiniNetworkGlyphProps = {
   focus?: MiniNetworkFocus;
   /** Hide optional metadata in a larger composition; labels and compression disclosure remain. */
   showDetails?: boolean;
+  density?: 'compact' | 'standard' | 'inspect';
   className?: string;
 };
 
@@ -84,18 +85,18 @@ function fullConnections(layers: MiniNetworkLayer[]): MiniNetworkConnection[] {
   });
 }
 
-export function MiniNetworkGlyph({ layers, label, description, connections, connectAdjacent = false, focus, showDetails = true, className = "" }: MiniNetworkGlyphProps) {
+export function MiniNetworkGlyph({ layers, label, description, connections, connectAdjacent = false, focus, showDetails = true, density = 'standard', className = "" }: MiniNetworkGlyphProps) {
   const instanceId = useId().replace(/:/g, "");
   const titleId = `rk-network-${instanceId}-title`;
   const descriptionId = `rk-network-${instanceId}-description`;
   const problems = validateMiniNetworkGlyph({ layers, connections });
   if (problems.length) return <div className="rk-error" role="alert">{problems.join(" ")}</div>;
 
-  const width = Math.max(320, layers.length * 150);
+  const width = Math.max(200, layers.length * 96);
   // Nodes occupy y=14..166. Keep equal padding above and below the graph.
-  const height = 180;
-  const top = 24;
-  const usableHeight = 132;
+  const height = 164;
+  const top = 22;
+  const usableHeight = 120;
   const positions = new Map<string, { x: number; y: number }>();
   layers.forEach((layer, layerIndex) => {
     const count = visibleCount(layer);
@@ -109,7 +110,7 @@ export function MiniNetworkGlyph({ layers, label, description, connections, conn
   const focused = Boolean(focus?.layers?.length || focus?.nodes?.length || focus?.edges?.length);
   const isFocusedNode = (layerId: string, index: number) => focus?.layers?.includes(layerId) || focus?.nodes?.includes(nodeKey(layerId, index));
 
-  return <figure className={`rk-mini-network ${className}`.trim()}>
+  return <figure className={`rk-mini-network ${className}`.trim()} data-density={density}>
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${titleId} ${descriptionId}`} preserveAspectRatio="xMidYMid meet">
       <title id={titleId}>{label}</title>
       <desc id={descriptionId}>{description}</desc>
@@ -119,7 +120,10 @@ export function MiniNetworkGlyph({ layers, label, description, connections, conn
           const end = positions.get(nodeKey(edge.toLayer, edge.toNode))!;
           const edgeIsFocused = edge.state === "focused" || focus?.edges?.includes(edge.id);
           const edgeIsMuted = edge.state === "muted" || (focused && !edgeIsFocused && !isFocusedNode(edge.fromLayer, edge.fromNode) && !isFocusedNode(edge.toLayer, edge.toNode));
-          const coordinates = { x1: start.x + 10, y1: start.y, x2: end.x - 10, y2: end.y };
+          const length = Math.hypot(end.x - start.x, end.y - start.y) || 1;
+          const dx = (end.x - start.x) / length * 8;
+          const dy = (end.y - start.y) / length * 8;
+          const coordinates = { x1: start.x + dx, y1: start.y + dy, x2: end.x - dx, y2: end.y - dy };
           return <g key={edge.id}>
             <line data-network-edge={edge.id} className={`${edgeIsFocused && edge.progress === undefined ? "is-focused" : ""} ${edgeIsMuted ? "is-muted" : ""}`.trim()} {...coordinates} />
             {edge.progress !== undefined && <line
@@ -137,7 +141,7 @@ export function MiniNetworkGlyph({ layers, label, description, connections, conn
         {Array.from({ length: visibleCount(layer) }, (_, nodeIndex) => {
           const point = positions.get(nodeKey(layer.id, nodeIndex))!;
           const nodeFocused = isFocusedNode(layer.id, nodeIndex);
-          return <circle key={nodeIndex} data-network-node={nodeKey(layer.id, nodeIndex)} className={`${nodeFocused ? "is-focused" : ""} ${focused && !nodeFocused ? "is-muted" : ""}`.trim()} cx={point.x} cy={point.y} r="10" />;
+          return <circle key={nodeIndex} data-network-node={nodeKey(layer.id, nodeIndex)} className={`${nodeFocused ? "is-focused" : ""} ${focused && !nodeFocused ? "is-muted" : ""}`.trim()} cx={point.x} cy={point.y} r="8" />;
         })}
       </g>)}
     </svg>

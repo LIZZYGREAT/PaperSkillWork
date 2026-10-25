@@ -1,0 +1,10 @@
+.parts-specimen { display: grid; gap: 26px; padding-block: 26px; scroll-margin-top: 100px; }
+.parts-specimen header { display: grid; gap: 12px; }
+.parts-specimen__shelf { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 30px; padding-block: 24px; border-block: 1px solid var(--rk-line); }
+.parts-specimen__response { display: grid; gap: 18px; flex: 0 1 220px; }
+.parts-specimen__response > label { display: grid; gap: 8px; font-size: 13px; }
+.parts-specimen__response input { box-sizing: border-box; width: 100%; margin: 0; accent-color: var(--rk-accent); }
+.parts-specimen__signals { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
+.parts-specimen__network { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 232px); gap: 24px; align-items: center; max-width: 600px; padding-block: 24px; }
+.parts-specimen__network > div { display: grid; gap: 12px; }
+@media (max-width: 580px) { .parts-specimen__network { grid-template-columns: minmax(0, 1fr); } }

@@ -110,7 +110,6 @@
 .pg-network-link, .pg-model-arrow, .pg-model-output > span { position: relative; display: block; width: 100%; height: 20px; color: var(--rk-accent); font-size: 0; }
 .pg-network-link::before, .pg-model-arrow::before, .pg-model-output > span::before { content: ""; position: absolute; inset-inline: 0 2px; top: 9px; height: 2px; background: currentColor; }
 .pg-network-link::after, .pg-model-arrow::after, .pg-model-output > span::after { content: ""; position: absolute; right: 2px; top: 5px; width: 8px; height: 8px; border-top: 2px solid currentColor; border-right: 2px solid currentColor; transform: rotate(45deg); }
-.pg-network-topology .rk-mini-network > svg, .pg-network-topology .rk-mini-network__labels { max-width: none; }
 
 .pg-network-topology { display: grid; gap: 8px; min-width: 0; }
 .pg-network-topology > .pg-network-kicker { padding-inline-start: 10px; }
@@ -133,7 +132,6 @@
 .pg-model h4 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 10px; font-size: 17px; }
 .pg-model h4 small { padding: 4px 8px; border-radius: 12px; background: color-mix(in srgb, var(--rk-accent) 10%, var(--rk-surface)); color: var(--rk-accent); font-size: 12px; font-weight: 500; }
 .pg-model[data-model-identity="frozen"] h4 small { border: 1px dashed color-mix(in srgb, var(--rk-accent) 40%, var(--rk-surface)); background: var(--rk-surface); }
-.pg-model .rk-mini-network { width: 100%; max-width: 520px; margin-inline: auto; }
 .pg-model-output { display: flex; align-items: center; gap: 12px; min-width: 0; line-height: 1.5; }
 .pg-model-output > span { flex: 0 0 32px; width: 32px; }
 .pg-model-output > div { display: grid; gap: 8px; }
@@ -148,7 +146,6 @@
   .pg-model { display: grid; grid-template-columns: 102px minmax(0, 1fr); align-items: center; gap: 16px; }
   .pg-model h4 { display: grid; justify-content: start; gap: 10px; margin: 0; font-size: 18px; font-weight: 600; }
   .pg-model h4 small { justify-self: start; }
-  .pg-model .rk-mini-network { max-width: none; }
 }
 @media (max-width: 1000px) {
   .pg-network-inspect { grid-template-columns: 92px 36px minmax(0, 1fr); }

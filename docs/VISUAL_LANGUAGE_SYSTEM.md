@@ -34,3 +34,11 @@ S1、S4、S6 画面供人判断；开发可以在 candidate 状态继续。自�
 - 资产所需 CSS 属于资产；Gallery 只能安排展厅。已删除 `gallery-theme.css` 对公共组件的整层覆盖，以及 Gallery 私有基础 token。图文组合可直接用 `.rk-figure-explanation`，也可以局部编排。
 
 S1 实现：`VisualSpecimen.tsx` 使用真实 MiniNetworkGlyph、状态标识和 MathML。`npm.cmd --prefix reusable-kit/demo run build` PASS（0）；`node scripts/capture-redesign.mjs s1` PASS（0），三个视口无横向溢出和浏览器错误。已实看 1440/1920 首屏与 390 样张：标题、图、公式有明确主次，窄屏重排；网络标签窄屏列表问题留给 S2。画面位于 `.qa/kit-redesign-20261025/s1/`，供人工校准，尚未签收。
+
+## S2 · 独立视觉小件
+
+新增 SampleToken（调用方内容/像素及 ID）、FeatureBlocks、FeatureAggregation、RepresentationVector（带符号及显式 extent）、ResponseMeter（调用方尺度）、FlowConnector（数据/控制/梯度/参照线型）、SemanticMark。每个组件导入自带 CSS，不需要 Gallery；没有计算 sigmoid 或预设论文事实。非法数值/尺度提供可访问的错误提示。
+
+MiniNetworkGlyph 增加 compact / standard / inspect 三种使用密度（232/360/560px 上限），缩短层间距、调整节点半径，窄屏标签仍对齐原层；斜线端点按节点半径裁出。保留完整拓扑、稳定 ID、压缩披露和 focus。删除场景对 Glyph 内部宽度的补丁。
+
+`npm.cmd run build` PASS（0）；浏览器 `--grep 'signed values|network focus'` 2 tests PASS（0），覆盖 30 边/11 节点、聚焦不改位置、独立双模型、向量正负值、动态得分与尺度、三个视口层标签对齐。首次测试发现 range 默认 margin 导致局部 2px 溢出，已修复并复测。实看 `.qa/kit-redesign-20261025/s2[-debug]/` 样张与小件、网络；外观脱离 Gallery overrides。原网络父布局仍疏散，S3 重排场景。

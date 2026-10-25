@@ -14,6 +14,7 @@ import { GalleryCodePanel as CodePanel } from "./GalleryCodePanel";
 import { MiniNetworkGallerySection } from "./MiniNetworkGallerySection";
 import { TimelineGallerySection } from "./TimelineGallerySection";
 import { VisualSpecimen } from "./examples/VisualSpecimen";
+import { PartsSpecimen } from "./examples/PartsSpecimen";
 import "./pattern-gallery.css";
 
 type DiagramCase = "branch" | "merge";
@@ -23,6 +24,7 @@ type EditorialLayout = "axis" | "stagger" | "asymmetric" | "overview";
 
 export const patternGallerySections = [
   { id: "gallery-specimen", title: "视觉样张" },
+  { id: "gallery-parts", title: "视觉小件" },
   { id: "gallery-diagrams", title: "分支与汇合" },
   { id: "gallery-editorial", title: "叙事构图" },
   { id: "gallery-scroll", title: "滚动联动" },
@@ -417,6 +419,7 @@ function PatternGallery() {
 
   return <div className="kit-demo__paper pattern-gallery" data-demo-view="pattern-gallery">
     <VisualSpecimen />
+    <PartsSpecimen />
     <header className="pattern-gallery__intro">
       <p className="rk-type--meta">可复用的教学表达 · Pattern Gallery</p>
       <h2 className="rk-type--heading-1">看清结构，再带入你的论文</h2>

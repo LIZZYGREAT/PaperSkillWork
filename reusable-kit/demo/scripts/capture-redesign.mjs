@@ -25,11 +25,11 @@ try {
     await page.goto('http://127.0.0.1:4186/?demo=gallery');
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: resolve(directory, `hero-${width}.png`) });
-    for (const [name, selector] of [['network','[data-network-example="local"]'], ['parallel','[data-network-example="parallel"]'], ['forward','[data-timeline-example="forward"]'], ['specimen','#gallery-specimen']]) {
+    for (const [name, selector] of [['network','[data-network-example="local"]'], ['parallel','[data-network-example="parallel"]'], ['forward','[data-timeline-example="forward"]'], ['specimen','#gallery-specimen'], ['parts','#gallery-parts']]) {
       const target = page.locator(selector);
       if (await target.count()) await target.screenshot({ path: resolve(directory, `${name}-${width}.png`) });
     }
-    console.log(JSON.stringify({ width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth) }));
+    console.log(JSON.stringify({ width, overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), parts: await page.locator('#gallery-parts').evaluateAll(nodes => nodes.map(el => ({ client: el.clientWidth, scroll: el.scrollWidth, offenders: [...el.querySelectorAll('*')].filter(n => n.scrollWidth > n.clientWidth + 1).map(n => [n.className, n.clientWidth, n.scrollWidth]) }))) }));
   }
   if (errors.length) throw new Error(errors.join('\n'));
   console.log(`CAPTURE_PASS: ${directory}`);
