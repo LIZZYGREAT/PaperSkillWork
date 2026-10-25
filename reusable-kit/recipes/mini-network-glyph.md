@@ -6,6 +6,8 @@ Use one Glyph for one small layer/node topology. `layers` supplies stable IDs, l
 
 Glyphs share one normalized coordinate frame. At the same density and rendered width, changing layer count preserves node diameter, drawing height and label baseline. A side-by-side comparison should give both Glyphs equal available width; do not resize their internal SVG separately.
 
+Nodes use equal vertical spacing around the graph's centre line. A two-node layer stays near the centre rather than stretching to the top and bottom of a larger layer. The canvas grows vertically when more than five visible nodes need space; a comparison of such taller graphs should account for their different row counts.
+
 ## Runnable single Glyph and parallel composition
 
 This is the exact TSX rendered by Gallery (`demo/src/examples/NetworkExamples.tsx`, only import paths rewritten), compiled by its strict TypeScript build. Render `LocalNetworkExample` for the single 3–5–3 topology; render `ParallelModelsExample` for independent 3-layer / 4-layer configurations. Counts are teaching illustrations. Shared input and whole-model ownership live outside the Glyph; no Teacher → Student forward edge exists.

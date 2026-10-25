@@ -45,6 +45,14 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
   await page.goto('/?demo=gallery');
   const shelf = page.locator('#gallery-parts');
   expect(await shelf.locator('.rk-vector-coordinate').evaluateAll(nodes => nodes.map(n => Number(n.dataset.value)))).toEqual([1, .5, -1]);
+  const compactLayers = await shelf.locator('.parts-specimen__network [data-network-layer]').evaluateAll(layers => layers.map(layer => [...layer.querySelectorAll('circle')].map(node => Number(node.getAttribute('cy')))));
+  const [inputRows, hiddenRows, outputRows] = compactLayers;
+  const centre = rows => rows.reduce((sum, y) => sum + y, 0) / rows.length;
+  expect(centre(outputRows)).toBeCloseTo(centre(hiddenRows));
+  expect(centre(inputRows)).toBeCloseTo(centre(hiddenRows));
+  expect(outputRows[1] - outputRows[0]).toBeCloseTo(hiddenRows[1] - hiddenRows[0]);
+  expect(outputRows[0]).toBeGreaterThan(hiddenRows[0]);
+  expect(outputRows.at(-1)).toBeLessThan(hiddenRows.at(-1));
   const meter = shelf.locator('meter');
   await expect(shelf.locator('.rk-response-meter small')).toHaveText('尺度：-4 至 4');
   await expect(meter).toHaveAttribute('min', '-4');
