@@ -124,3 +124,9 @@ CLI/工作流/文档 54 项通过，另一个复制用例在沙箱中遇 WinErro
 第一部分：FeatureAggregation 将细路径改为 10px 实心圆角柱，调整容器高度、柱间距和底部对齐；active 只强调外框与填充。RepresentationVector 去除坐标间的空隙，形成连续零线。修在公共组件/CSS，覆盖首屏、小件样张、特征提取、检索中的全部实例。构建 PASS（0）；数值、提取时间线、reduced motion 与检索 4 项浏览器测试 PASS（0），覆盖 1440/1920/390；已实看独立小件和提取场景截图。临时证据位于 `.qa/kit-feedback-20261025/parts/`，最终收敛时只保留必要画面。
 
 第二部分：σ 与 ResponseMeter 的类别标签按第一行对齐，不再居中到含尺度说明的两行整体；双模型输出去除 `<em>` 与 italic，t(x₁)/s(x₁) 使用正体，并统一桌面输出行。同步两份可复制 Recipe。生产构建 PASS（0），实际浏览器几何、网络语义与前向时间线 3 项 PASS（0）；1440/1920/390 无页面溢出。已实看双模型与响应截图，证据暂存 `.qa/kit-feedback-20261025/alignment/`。这仍是 Agent 复核，不代表人工签收。
+
+第三部分：用户确认第二图缺少的是每类得分的水平数值条。前向输出头改用公共 ResponseMeter，三个原始得分仍由同一个 Wz 推出 [2, 0, -1]，共用 [-2, 2] 尺度。公共部件在跨零尺度上以零线为起点，正值向右、负值向左、零值无填充；负值沿用 clay 色，数值及尺度保留，原生 meter 继续提供标签与值的无障碍语义。此修复也覆盖小件样张与检索中的全部实例；sigmoid [0, 1] 仍从左侧零起点绘制。同步 Recipe 和独立复制断言，未改数据、计算与预测边界。
+
+最终验证：`npm.cmd --prefix reusable-kit/demo run build` PASS（0）；Demo 中带 Edge 路径执行 `npm.cmd run test:browser -- --grep 'response labels|raw score bars|signed values|independent retrieval|one forward|reduced motion keeps|network focus'`，7 PASS（0），验证零值/符号/长度比例、无障碍标签、σ/C 几何、正体输出与时间线；`python reusable-kit/demo/scripts/test-advanced-scaffold.py` PASS（0），真实源码及 Recipe 在隔离工程构建和浏览器运行，隔离目录 `C:/Windows/Temp/kit-advanced-scaffold-325xznn4` 自清理并核实不存在。
+
+Demo 中 `node scripts/capture-redesign.mjs final ../../../.qa/kit-feedback-20261025` PASS（0），1440/1920/390 无页面或部件溢出、无页面/资源错误。已实看桌面得分/响应、小件、手机完整前向路径及双模型、1920 改变查询后的检索。最终必要截图保留在工作区父目录 `.qa/kit-feedback-20261025/final/`；中间 parts/alignment、其余截图及自己生成的 test-results 已核对确切路径后清理。所有修改限于 Kit 及本记录，论文副本与上游未修改；人工验收状态保持待签收。

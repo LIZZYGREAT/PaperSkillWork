@@ -51,6 +51,30 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
   await expect(shelf.locator('.rk-semantic-mark[data-state="frozen"]')).toContainText('冻结');
 });
 
+test('raw score bars preserve zero, sign and magnitude on a shared scale', async ({ page }) => {
+  await page.goto('/?demo=gallery');
+  const scores = page.locator('.pg-class-scores');
+  for (const width of [1440, 1920, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    const rows = await scores.locator('.rk-response-meter').evaluateAll(nodes => nodes.map(el => {
+      const track = el.querySelector('.rk-response-meter__track').getBoundingClientRect();
+      const fill = el.querySelector('.rk-response-meter__fill').getBoundingClientRect();
+      const zero = el.querySelector('.rk-response-meter__zero').getBoundingClientRect();
+      const meter = el.querySelector('meter');
+      return { value: meter.value, min: meter.min, max: meter.max, extent: fill.width / track.width,
+        start: fill.x - zero.x, end: fill.right - zero.x };
+    }));
+    expect(rows.map(n => n.value)).toEqual([2, 0, -1]);
+    for (const row of rows) {
+      expect([row.min, row.max]).toEqual([-2, 2]);
+      expect(row.extent).toBeCloseTo(Math.abs(row.value) / 4, 2);
+      expect(Math.abs(row.value < 0 ? row.end : row.start)).toBeLessThan(1);
+    }
+    await expect(scores.getByRole('meter', { name: 'g₁(x₁)' })).toHaveAttribute('value', '2');
+    expect(await scores.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+  }
+});
+
 test('independent retrieval composition derives every score and the winner from one query', async ({ page }) => {
   await page.goto('/?demo=gallery');
   const root = page.locator('[data-retrieval-query]');

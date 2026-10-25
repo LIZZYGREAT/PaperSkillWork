@@ -8,7 +8,7 @@
 | FeatureBlocks | `label`、1–7 的示意 `depth`、`active`；不是实际通道计数 |
 | FeatureAggregation | `label`、`active`；不预设池化运算 |
 | RepresentationVector | 有限 `values`、`label`、可选正 `extent`；默认按最大绝对值自适应，保留符号和数值 |
-| ResponseMeter | `label`、有限 `value/min/max`；范围必须覆盖值，不计算概率 |
+| ResponseMeter | `label`、有限 `value/min/max`；范围必须覆盖值，不计算概率；含零尺度从零向正负两侧绘条，保留原生 meter 语义 |
 | FlowConnector | `label`、data/control/gradient/reference 的 `kind`、right/down/left 的 `direction`；复杂网络使用 DiagramFlow |
 | SemanticMark | frozen/trainable/reference 的 `state` 与文字；不等同 focus |
 

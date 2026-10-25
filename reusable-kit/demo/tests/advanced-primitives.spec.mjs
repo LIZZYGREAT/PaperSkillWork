@@ -95,8 +95,10 @@ test("one forward timeline synchronizes navigation, objects, narrative and compu
   await capture(root, "timeline-extractor-trace-paused");
   await root.locator("[data-stage-target='responses']").click();
   await expectSynchronized(root, "responses");
-  await expect(root.locator("meter")).toHaveCount(3);
-  const values = await root.locator("meter").evaluateAll(nodes => nodes.map(n => n.value));
+  await expect(root.locator(".pg-class-scores meter")).toHaveCount(3);
+  expect(await root.locator(".pg-class-scores meter").evaluateAll(nodes => nodes.map(n => n.value))).toEqual([2, 0, -1]);
+  await expect(root.locator(".pg-class-responses meter")).toHaveCount(3);
+  const values = await root.locator(".pg-class-responses meter").evaluateAll(nodes => nodes.map(n => n.value));
   expect(values).toEqual([2, 0, -1].map(n => 1 / (1 + Math.exp(-n))));
   expect(await root.locator(".pg-head-score").evaluateAll(nodes => nodes.map(n => n.dataset.class))).toEqual(["1", "2", "3"]);
   expect(await root.locator(".pg-head-response").evaluateAll(nodes => nodes.map(n => n.dataset.class))).toEqual(["1", "2", "3"]);

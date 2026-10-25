@@ -34,6 +34,7 @@ const stages = [
 const features = [1, 0.5, -1];
 const weights = [[1, 0, -1], [0, 0, 0], [0, 0, 1]];
 const scores = weights.map(row => row.reduce((sum, weight, i) => sum + weight * features[i], 0));
+const scoreExtent = Math.max(1, ...scores.map(Math.abs));
 const responses = scores.map(score => 1 / (1 + Math.exp(-score)));
 const vectorLabel = (values: number[], decimals?: number) => `[${values.map(n => decimals === undefined ? String(n) : n.toFixed(decimals)).join(", ")}]`;
 
@@ -99,7 +100,7 @@ export function ForwardTimelineExample() {
       </li>
       <li data-object="scores" data-input-from="representation" data-state={objectState(3)}>
         {heading(3)}<div className="pg-forward-object pg-forward-object--scores"><span className="pg-output-eyebrow">一个训练输出头</span><div className="pg-class-scores">
-          {scores.map((score, j) => <div key={j} className="pg-head-score" data-class={j + 1} data-traced={index === 3 && tracedClass === j}><span className="pg-class-weight">w<sub>{j + 1}</sub></span><span>g<sub>{j + 1}</sub>(x₁)</span><strong>{score}</strong></div>)}
+          {scores.map((score, j) => <div key={j} className="pg-head-score" data-class={j + 1} data-traced={index === 3 && tracedClass === j}><span className="pg-class-weight">w<sub>{j + 1}</sub></span><ResponseMeter value={score} min={-scoreExtent} max={scoreExtent} label={`g${["₁", "₂", "₃"][j]}(x₁)`} /></div>)}
         </div><p>g<sub>j</sub>(x₁) = w<sub>j</sub><sup>T</sup>z</p></div><small className="pg-forward-system__source">{stageSource(3)}</small>
       </li>
       <li data-object="responses" data-input-from="scores" data-state={objectState(4)}>
@@ -155,8 +156,7 @@ export function ForwardTimelineExample() {
 .pg-extractor-heading b { font: 22px/1.5 var(--rk-font-math); }
 .pg-extractor-drawing { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; width: 100%; }
 .pg-class-scores, .pg-class-responses { display: grid; gap: 12px; width: 100%; max-width: 260px; }
-.pg-head-score { display: flex; align-items: center; gap: 14px; font-size: 14px; }
-.pg-head-score > strong { margin-inline-start: auto; font-family: var(--rk-font-mono); }
+.pg-head-score { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: start; gap: 10px; font-size: 14px; }
 .pg-class-weight { display: inline-block; padding: 5px 8px; border: 1px solid var(--rk-line-strong); border-radius: 50%; }
 .pg-head-response { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; align-items: start; }
 .pg-sigmoid-mark { color: var(--rk-accent); font: 400 13px/1.5 var(--rk-font-math); }

@@ -99,7 +99,8 @@ try {
   await forward.locator(`[data-stage-target="${id}"]`).click();
   for(const selector of ['.pg-forward-system','.pg-forward-note','.pg-forward-output']) assert.equal(await forward.locator(selector).getAttribute('data-stage'),id);
  }
- assert.deepEqual(await forward.locator('meter').evaluateAll(ns=>ns.map(n=>n.value)),[2,0,-1].map(v=>1/(1+Math.exp(-v))));
+ assert.deepEqual(await forward.locator('.pg-class-scores meter').evaluateAll(ns=>ns.map(n=>n.value)),[2,0,-1]);
+ assert.deepEqual(await forward.locator('.pg-class-responses meter').evaluateAll(ns=>ns.map(n=>n.value)),[2,0,-1].map(v=>1/(1+Math.exp(-v))));
  const retrieval=page.locator('[data-retrieval-query]');
  await retrieval.getByRole('button').click();
  assert.deepEqual(await retrieval.locator('meter').evaluateAll(ns=>ns.map(n=>n.value)),[-1,1.5]);
