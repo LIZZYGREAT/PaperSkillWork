@@ -69,3 +69,8 @@ The refinement retains the explicit teaching tradeoff: full target values stay v
 
 
 G5 cleanup complete: the exact final runner directory printed `CLEANED` and `Test-Path=False`; this task's native Playwright `test-results` and successful scaffold root are absent. Latest review screenshots remain intentionally outside the repository. G4 and G5 are committed separately. Human acceptance remains PENDING.
+
+
+## G6 · requested weight-node placement
+
+Based on the user's marked 11:37 screenshot, shifted the class-weight nodes and their branching rail to the right inside the training-head region. A bounded inset reserves room for g_j labels and numbers at narrow widths; the incoming horizontal connector moves with the rail. No calculation, clock or model relationship changed. Strict demo build PASS; existing `--grep "forward timeline"` browser test PASS (one test, 1440/1920/390 layouts and motion/hold/replay checks). Reviewed updated score-stage screenshot at `../.qa/mini-network-timeline-adjustments-20261025/timeline-scores.png`. This is a reversible CSS adjustment; no new test cases or API were added. Human visual acceptance PENDING.
