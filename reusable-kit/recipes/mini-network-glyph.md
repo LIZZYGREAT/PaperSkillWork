@@ -8,7 +8,13 @@ Use one Glyph for one small layer/node topology. `layers` supplies stable IDs, l
 
 This is the exact TSX rendered by Gallery (`demo/src/examples/NetworkExamples.tsx`, only import paths rewritten), compiled by its strict TypeScript build. Render `LocalNetworkExample` for the single 3–5–3 topology; render `ParallelModelsExample` for independent 3-layer / 4-layer configurations. Counts are teaching illustrations. Shared input and whole-model ownership live outside the Glyph; no Teacher → Student forward edge exists.
 
+Save as `NetworkExamples.tsx` and `network-examples.css`. Also import `shared/foundation/styles/kit.css` in the app. The CSS below is Recipe layout, not hidden Gallery styling.
+
 ```tsx
+import "./network-examples.css";
+import { SampleToken } from "./shared/foundation/visual-parts/SampleToken";
+import { FlowConnector } from "./shared/foundation/visual-parts/FlowConnector";
+import { SemanticMark } from "./shared/foundation/visual-parts/SemanticMark";
 import { useState } from "react";
 import { MiniNetworkGlyph, type MiniNetworkLayer } from "./shared/foundation/neural-network/MiniNetworkGlyph";
 
@@ -24,7 +30,7 @@ const selectedPath = {
 
 function SampleMark() {
   const pixels = [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
-  return <span className="pg-network-sample" aria-hidden="true">{pixels.map((value, i) => <i key={i} data-ink={value === 1} />)}</span>;
+  return <SampleToken sampleId="x1" label="示意输入 x₁" pixels={pixels} />;
 }
 
 export function LocalNetworkExample() {
@@ -35,7 +41,7 @@ export function LocalNetworkExample() {
     </button></header>
     <div className="pg-network-inspect">
       <div className="pg-network-input"><span className="pg-network-kicker">输入图像</span><SampleMark /><strong>x₁</strong><small>同一示意输入</small></div>
-      <span className="pg-network-link" aria-hidden="true">→</span>
+      <FlowConnector label="输入" />
       <div className="pg-network-topology"><span className="pg-network-kicker">三层网络 · 3–5–3</span>
         <MiniNetworkGlyph label="三层教学网络" description="输入 3、隐藏层 5、输出 3；人工指定一条连接路径，不计算 Fisher 重要性。"
           layers={layers} connectAdjacent focus={focused ? selectedPath : undefined} showDetails={false} />
@@ -61,9 +67,9 @@ export function ParallelModelsExample() {
       <div className="pg-shared-input" data-shared-input="x"><span className="pg-network-kicker">共享输入</span><SampleMark /><strong>同一输入 x₁</strong><span>分别送入两路</span></div>
       <div className="pg-model-paths">
         {models.map(model => <div className="pg-model-path" key={model.id} data-model-path={model.id} data-from="x" data-to={model.id}>
-          <span className="pg-model-arrow" aria-hidden="true">→</span>
+          <FlowConnector label="x₁" />
           <section className="pg-model" data-model={model.id} data-model-identity={model.id === "teacher" ? "frozen" : "trainable"}>
-            <h4>{model.name}<small>{model.role}</small></h4>
+            <h4>{model.name}<SemanticMark state={model.id === "teacher" ? "frozen" : "trainable"}>{model.role}</SemanticMark></h4>
             <MiniNetworkGlyph label={`${model.name} 内部教学结构`} description={`${model.name} 独立接收同一输入 x，产生自己的输出。层数仅为示意。`}
               layers={model.widths.map((nodeCount, index) => ({ id: `layer-${index}`, label: index === 0 ? "输入" : index === model.widths.length - 1 ? "输出" : `隐藏 ${index}`, nodeCount }))}
               connectAdjacent showDetails={false} />
@@ -77,14 +83,46 @@ export function ParallelModelsExample() {
 }
 ```
 
-For the Gallery layout, copy the warm palette token block at the top, the dedicated Network CSS section (`.pg-local-network`, `.pg-network-*`, `.pg-model-*`, `.pg-shared-input`) and related responsive rules from `demo/src/pattern-gallery.css`. Without these optional presentation rules the TSX still renders in document order. Each model row explicitly identifies input `x` and its own output. Frozen uses a dashed container plus text; trainable uses a solid container plus text.
-
-## Copy and boundaries
-
-Copy `foundation/neural-network/` and its required foundation styles/tokens (or use `scaffold-kit --add MiniNetworkGlyph --allow-unapproved` on the first scaffold). The TSX imports its paired CSS. No runtime import from `papers/**` is needed.
-
-Counts above seven are representative, not architecture recovery; explicit endpoints index visible nodes. Compression is disclosed even with `showDetails={false}`. Supply real layer names and long readable labels. Multiple instances have unique ARIA title/description IDs. Narrow layouts reflow labels; the outer layout must reflow model relationships too.
-
-Use blocks for convolutional feature maps, a feature extractor, vector z and class heads, as illustrated by the read-only iCaRL `SharedTrainingHead.tsx`. Use DiagramFlow or local composition for model branches, objectives and update ownership. The EWC 3–5–3 source only motivates a small teaching topology; the LwF `lwfGraph` motivates parallel shared input. Neither validates these demo widths as experimental architecture.
-
-Evidence: `tests/advanced-primitives.spec.mjs` checks fixed geometry under focus, 30 retained edges, separate model ownership and responsive labels. Core smoke fixtures independently cover sparse edges, compression, layer identities and invalid inputs. Human acceptance remains pending.
+```css
+/* Copy this Recipe layout alongside NetworkExamples.tsx. */
+.pg-local-network, .pg-model-composition { display: grid; gap: 24px; min-width: 0; padding-block: 28px; border-block: 1px solid var(--rk-line); }
+.pg-local-network header, .pg-model-composition header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; }
+.pg-local-network header > div, .pg-model-composition header > div { display: grid; gap: 8px; }
+.pg-local-network h3, .pg-model-composition h3 { margin: 0; font-size: 22px; line-height: 1.4; }
+.pg-local-network p, .pg-model-composition p { margin: 0; color: var(--rk-muted); font-size: 14px; line-height: 1.7; }
+.pg-network-kicker, .pg-local-network header span, .pg-model-composition header span { color: var(--rk-muted); font-size: 13px; }
+.pg-local-network button { padding: 10px 16px; border: 1px solid var(--rk-line-strong); border-radius: 6px; font: inherit; font-size: 14px; color: var(--rk-accent-strong); background: var(--rk-surface); cursor: pointer; }
+.pg-local-network button[aria-pressed="true"] { background: var(--rk-accent-soft); }
+.pg-local-network button:focus-visible { outline: 2px solid var(--rk-focus); outline-offset: 3px; }
+.pg-network-inspect { display: grid; grid-template-columns: 96px 44px minmax(0, 360px) minmax(160px, 240px); justify-content: center; align-items: center; gap: 24px; padding-block: 16px; }
+.pg-network-input, .pg-network-topology, .pg-network-selection { display: grid; gap: 14px; min-width: 0; }
+.pg-network-input { justify-items: center; text-align: center; }
+.pg-network-input > strong { font: italic 24px/1.4 var(--rk-font-math); }
+.pg-network-input small, .pg-network-selection small { color: var(--rk-muted); font-size: 13px; line-height: 1.7; }
+.pg-network-selection { align-content: start; border-inline-start: 2px solid var(--rk-line); padding-inline-start: 22px; }
+.pg-network-selection > strong { font-size: 18px; line-height: 1.5; }
+.pg-network-selection ol { margin: 0; padding-inline-start: 22px; font-size: 14px; line-height: 1.8; }
+.pg-model-branches { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.pg-shared-input { display: grid; grid-template-columns: auto auto; justify-self: center; align-items: center; justify-items: center; gap: 10px 24px; text-align: center; font-size: 13px; }
+.pg-shared-input .rk-sample-token { grid-row: 1 / 4; }
+.pg-model-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; border-block-start: 1px solid var(--rk-line-strong); margin-inline: 24px; }
+.pg-model-path { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; justify-items: center; align-content: start; }
+.pg-model-path > .rk-flow-connector { padding-block: 16px 4px; }
+.pg-model-path > .rk-flow-connector svg { transform: rotate(90deg); }
+.pg-model { box-sizing: border-box; display: grid; gap: 18px; width: 100%; min-width: 0; padding: 20px; border: 1px solid var(--rk-line-strong); border-radius: 8px; background: var(--rk-surface); }
+.pg-model[data-model-identity="frozen"] { border-style: dashed; }
+.pg-model h4 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 0; font-size: 18px; }
+.pg-model-output { display: flex; gap: 10px; align-items: center; }
+.pg-model-output > div { display: grid; gap: 6px; }
+.pg-model-output small, .pg-network-caption { font-size: 13px; color: var(--rk-muted); }
+.pg-model-output em { font: italic 23px/1.4 var(--rk-font-math); }
+.pg-primitive-boundary { font-size: 14px; color: var(--rk-muted); line-height: 1.7; }
+@media (max-width: 1100px) { .pg-network-inspect { grid-template-columns: 80px 44px minmax(0, 360px); } .pg-network-selection { grid-column: 1 / -1; } }
+@media (max-width: 700px) {
+  .pg-network-inspect, .pg-model-branches { grid-template-columns: minmax(0, 1fr); }
+  .pg-network-inspect > .rk-flow-connector svg { transform: rotate(90deg); }
+  .pg-network-inspect > .rk-flow-connector { padding-block: 10px; }
+  .pg-model-paths { grid-template-columns: minmax(0, 1fr); margin: 0; }
+  .pg-model { padding: 14px; }
+}
+```

@@ -1,3 +1,7 @@
+import "./network-examples.css";
+import { SampleToken } from "../../../foundation/visual-parts/SampleToken";
+import { FlowConnector } from "../../../foundation/visual-parts/FlowConnector";
+import { SemanticMark } from "../../../foundation/visual-parts/SemanticMark";
 import { useState } from "react";
 import { MiniNetworkGlyph, type MiniNetworkLayer } from "../../../foundation/neural-network/MiniNetworkGlyph";
 
@@ -13,7 +17,7 @@ const selectedPath = {
 
 function SampleMark() {
   const pixels = [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
-  return <span className="pg-network-sample" aria-hidden="true">{pixels.map((value, i) => <i key={i} data-ink={value === 1} />)}</span>;
+  return <SampleToken sampleId="x1" label="示意输入 x₁" pixels={pixels} />;
 }
 
 export function LocalNetworkExample() {
@@ -24,7 +28,7 @@ export function LocalNetworkExample() {
     </button></header>
     <div className="pg-network-inspect">
       <div className="pg-network-input"><span className="pg-network-kicker">输入图像</span><SampleMark /><strong>x₁</strong><small>同一示意输入</small></div>
-      <span className="pg-network-link" aria-hidden="true">→</span>
+      <FlowConnector label="输入" />
       <div className="pg-network-topology"><span className="pg-network-kicker">三层网络 · 3–5–3</span>
         <MiniNetworkGlyph label="三层教学网络" description="输入 3、隐藏层 5、输出 3；人工指定一条连接路径，不计算 Fisher 重要性。"
           layers={layers} connectAdjacent focus={focused ? selectedPath : undefined} showDetails={false} />
@@ -50,9 +54,9 @@ export function ParallelModelsExample() {
       <div className="pg-shared-input" data-shared-input="x"><span className="pg-network-kicker">共享输入</span><SampleMark /><strong>同一输入 x₁</strong><span>分别送入两路</span></div>
       <div className="pg-model-paths">
         {models.map(model => <div className="pg-model-path" key={model.id} data-model-path={model.id} data-from="x" data-to={model.id}>
-          <span className="pg-model-arrow" aria-hidden="true">→</span>
+          <FlowConnector label="x₁" />
           <section className="pg-model" data-model={model.id} data-model-identity={model.id === "teacher" ? "frozen" : "trainable"}>
-            <h4>{model.name}<small>{model.role}</small></h4>
+            <h4>{model.name}<SemanticMark state={model.id === "teacher" ? "frozen" : "trainable"}>{model.role}</SemanticMark></h4>
             <MiniNetworkGlyph label={`${model.name} 内部教学结构`} description={`${model.name} 独立接收同一输入 x，产生自己的输出。层数仅为示意。`}
               layers={model.widths.map((nodeCount, index) => ({ id: `layer-${index}`, label: index === 0 ? "输入" : index === model.widths.length - 1 ? "输出" : `隐藏 ${index}`, nodeCount }))}
               connectAdjacent showDetails={false} />

@@ -42,3 +42,11 @@ S1 实现：`VisualSpecimen.tsx` 使用真实 MiniNetworkGlyph、状态标识和
 MiniNetworkGlyph 增加 compact / standard / inspect 三种使用密度（232/360/560px 上限），缩短层间距、调整节点半径，窄屏标签仍对齐原层；斜线端点按节点半径裁出。保留完整拓扑、稳定 ID、压缩披露和 focus。删除场景对 Glyph 内部宽度的补丁。
 
 `npm.cmd run build` PASS（0）；浏览器 `--grep 'signed values|network focus'` 2 tests PASS（0），覆盖 30 边/11 节点、聚焦不改位置、独立双模型、向量正负值、动态得分与尺度、三个视口层标签对齐。首次测试发现 range 默认 margin 导致局部 2px 溢出，已修复并复测。实看 `.qa/kit-redesign-20261025/s2[-debug]/` 样张与小件、网络；外观脱离 Gallery overrides。原网络父布局仍疏散，S3 重排场景。
+
+## S3 · 自由组合与独立场景
+
+三个主要构图为紧凑学习器/局部网络、共享输入上方分流到并排独立模型、输入与提取在首行而表示/得分/响应在下一行的阶段教学。局部网络将输入、图、说明收拢；双模型身份在外层，前向没有 Teacher → Student。提取流程直接组合公共特征块、聚合和连接；向量和响应直接使用小件。单次 useAnimationTimeline 拥有阶段，计算留在场景。
+
+新增独立的 RetrievalExample，用相同小件组成非对称的原始内积检索。切换 q 后派生得分和最大值，不假定分类或概率。候选数据、查询和排序属于场景，不抽成通用算法组件。Editorial 样段使用 S1 真实样张。
+
+场景 CSS 从 Gallery 拆到 examples 配套文件。主要 Recipe 的 TSX/CSS 与运行源码同步。`npm.cmd run build` PASS（0）；五项浏览器测试 PASS（0），覆盖播放/暂停/重播、阶段交接、Wz 与 sigmoid、reduced motion、两个查询内积、390/1440/1920 几何。构建发现 ES2020 无 replaceAll，改用 split/join 后重新构建测试。s3-final 截图已实看局部网络、双模型、提取流程及窄屏；无溢出。长局部截图中悬浮 topbar 属于展厅，非场景依赖。

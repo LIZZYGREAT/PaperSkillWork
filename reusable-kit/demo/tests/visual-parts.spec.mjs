@@ -25,3 +25,16 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
   await expect(shelf.locator('.rk-flow-connector')).toHaveCount(4);
   await expect(shelf.locator('.rk-semantic-mark[data-state="frozen"]')).toContainText('冻结');
 });
+
+test('independent retrieval composition derives every score and the winner from one query', async ({ page }) => {
+  await page.goto('/?demo=gallery');
+  const root = page.locator('[data-retrieval-query]');
+  for (const expected of [[2, -.5], [-1, 1.5]]) {
+    expect(await root.locator('[data-score]').evaluateAll(nodes => nodes.map(n => Number(n.dataset.score)))).toEqual(expected);
+    expect(await root.locator('meter').evaluateAll(nodes => nodes.map(n => n.value))).toEqual(expected);
+    await expect(root.locator('p[role="status"]')).toContainText(expected[0] > expected[1] ? '候选 a' : '候选 b');
+    await root.getByRole('button').click();
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  expect(await root.evaluate(n => n.scrollWidth <= n.clientWidth)).toBe(true);
+});

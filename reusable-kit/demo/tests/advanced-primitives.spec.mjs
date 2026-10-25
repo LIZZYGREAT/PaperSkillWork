@@ -91,7 +91,7 @@ test("one forward timeline synchronizes navigation, objects, narrative and compu
   await expect.poll(async () => Number(await root.getAttribute("data-progress"))).toBeGreaterThan(0.38);
   await root.getByRole("button", { name: "暂停", exact: true }).click();
   await expectSynchronized(root, "extractor");
-  await expect(root.locator(".pg-extractor-drawing > svg > g.is-tracing")).toHaveCount(1);
+  await expect(root.locator(".pg-extractor-drawing [data-active='true']")).toHaveCount(1);
   await capture(root, "timeline-extractor-trace-paused");
   await root.locator("[data-stage-target='responses']").click();
   await expectSynchronized(root, "responses");

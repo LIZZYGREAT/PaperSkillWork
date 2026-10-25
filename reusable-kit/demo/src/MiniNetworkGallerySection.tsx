@@ -9,6 +9,6 @@ export function MiniNetworkGallerySection() {
     <LocalNetworkExample />
     <ParallelModelsExample />
     <p className="pg-primitive-boundary">使用边界：小型节点网络适合 Glyph；CNN 特征块、向量 z 和逐类输出头应使用块图组合。冻结或可训练若属于整个模型，就标在模型容器上。</p>
-    <GalleryCodePanel title="展开可运行的网络示例 · MiniNetworkGlyph" code={exampleSource.replace("../../../foundation/", "./shared/foundation/")} source="recipes/mini-network-glyph.md" level="runnable" notice="与上方实际渲染共用 TSX 源码。复制后渲染 LocalNetworkExample / ParallelModelsExample；布局样式见 Recipe。" />
+    <GalleryCodePanel title="展开可运行的网络示例 · MiniNetworkGlyph" code={exampleSource.split("../../../foundation/").join("./shared/foundation/")} source="recipes/mini-network-glyph.md" level="runnable" notice="与上方实际渲染共用 TSX 源码。复制后渲染 LocalNetworkExample / ParallelModelsExample；布局样式见 Recipe。" />
   </section>;
 }

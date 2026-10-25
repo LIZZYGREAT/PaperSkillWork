@@ -15,6 +15,7 @@ import { MiniNetworkGallerySection } from "./MiniNetworkGallerySection";
 import { TimelineGallerySection } from "./TimelineGallerySection";
 import { VisualSpecimen } from "./examples/VisualSpecimen";
 import { PartsSpecimen } from "./examples/PartsSpecimen";
+import { RetrievalExample } from "./examples/RetrievalExample";
 import "./pattern-gallery.css";
 
 type DiagramCase = "branch" | "merge";
@@ -420,6 +421,7 @@ function PatternGallery() {
   return <div className="kit-demo__paper pattern-gallery" data-demo-view="pattern-gallery">
     <VisualSpecimen />
     <PartsSpecimen />
+    <RetrievalExample />
     <header className="pattern-gallery__intro">
       <p className="rk-type--meta">可复用的教学表达 · Pattern Gallery</p>
       <h2 className="rk-type--heading-1">看清结构，再带入你的论文</h2>

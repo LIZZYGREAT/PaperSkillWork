@@ -1,4 +1,10 @@
-import { useId } from "react";
+import "./forward-timeline-example.css";
+import { SampleToken } from "../../../foundation/visual-parts/SampleToken";
+import { FeatureBlocks } from "../../../foundation/visual-parts/FeatureBlocks";
+import { FeatureAggregation } from "../../../foundation/visual-parts/FeatureAggregation";
+import { RepresentationVector } from "../../../foundation/visual-parts/RepresentationVector";
+import { ResponseMeter } from "../../../foundation/visual-parts/ResponseMeter";
+import { FlowConnector } from "../../../foundation/visual-parts/FlowConnector";
 import { useAnimationTimeline } from "../../../foundation/animation/useAnimationTimeline";
 
 const stages = [
@@ -28,32 +34,20 @@ function StageFormula({ index }: { index: number }) {
 
 function InputImage() {
   const pixels = [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
-  return <div className="pg-input-image" aria-hidden="true">{pixels.map((value, i) => <i key={i} data-ink={value === 1} />)}</div>;
+  return <SampleToken sampleId="x1" label="示意图像 x₁" pixels={pixels} />;
 }
 
-function FeatureBlocks({ tracedBlock }: { tracedBlock: number }) {
+function FeatureExtractorDrawing({ tracedBlock }: { tracedBlock: number }) {
   return <div className="pg-extractor-drawing">
-    <svg viewBox="0 0 290 150" role="img" aria-label="卷积特征块经过深层表示与聚合，得到一个向量；层数为教学示意">
-      <g className={tracedBlock === 0 ? "is-tracing" : ""}>
-        {[0, 1, 2, 3].map(i => <g key={i}><rect x={12 + i * 8} y={24 + i * 7} width="55" height="76" rx="5" /><path d={`M${23 + i * 8} ${47 + i * 7}h30m-30 16h30m-30 16h30`} /></g>)}
-        <rect className="pg-feature-patch" x="50" y="52" width="16" height="18" rx="2" />
-      </g>
-      <path className="pg-extractor-flow" d="M96 77h24m-5-4 5 4-5 4" />
-      <g className={tracedBlock === 1 ? "is-tracing" : ""}>
-        {[0, 1, 2].map(i => <rect key={i} x={126 + i * 7} y={39 + i * 6} width="36" height="54" rx="4" />)}
-      </g>
-      <path className="pg-extractor-flow" d="M181 77h24m-5-4 5 4-5 4" />
-      <g className={tracedBlock === 2 ? "is-tracing" : ""}>
-        <rect x="213" y="44" width="64" height="61" rx="7" />
-        {[18, 33, 25, 43, 31].map((height, i) => <rect className="pg-pool-bar" key={i} x={223 + i * 10} y={94 - height} width="4" height={height} rx="1" />)}
-      </g>
-    </svg>
-    <div className="pg-extractor-labels"><span>卷积特征块</span><span>深层表示</span><span>聚合</span></div>
+    <FeatureBlocks label="卷积特征块" active={tracedBlock === 0} />
+    <FlowConnector label="特征" />
+    <FeatureBlocks label="深层表示" depth={3} active={tracedBlock === 1} />
+    <FlowConnector label="聚合输入" />
+    <FeatureAggregation label="聚合" active={tracedBlock === 2} />
   </div>;
 }
 
 export function ForwardTimelineExample() {
-  const responseId = useId();
   const { state, controls } = useAnimationTimeline({ clips: stages, autoPlay: false });
   const index = state.clipIndex;
   const stage = stages[index];
@@ -81,12 +75,10 @@ export function ForwardTimelineExample() {
         {heading(0)}<div className="pg-forward-object pg-forward-object--input"><InputImage /><b>x₁</b><p>同一张输入图像</p></div><small className="pg-forward-system__source">{stageSource(0)}</small>
       </li>
       <li data-object="extractor" data-input-from="sample" data-state={objectState(1)}>
-        {heading(1)}<div className="pg-forward-object pg-forward-object--extractor"><div className="pg-extractor-heading"><span>共享特征提取器</span><b>φ<sub>Θ</sub></b></div><FeatureBlocks tracedBlock={tracedBlock} /><p>同一组共享参数 Θ</p></div><small className="pg-forward-system__source">{stageSource(1)}</small>
+        {heading(1)}<div className="pg-forward-object pg-forward-object--extractor"><div className="pg-extractor-heading"><span>共享特征提取器</span><b>φ<sub>Θ</sub></b></div><FeatureExtractorDrawing tracedBlock={tracedBlock} /><p>同一组共享参数 Θ</p></div><small className="pg-forward-system__source">{stageSource(1)}</small>
       </li>
       <li data-object="representation" data-input-from="extractor" data-state={objectState(2)}>
-        {heading(2)}<div className="pg-forward-object pg-forward-object--representation"><div className="pg-feature-vector" aria-label={`演示特征向量 ${vectorLabel(features)}`}>
-          {features.map((value, i) => <div key={i} className="pg-vector-coordinate"><span className="pg-vector-positive">{value > 0 && <i style={{ height: `${value * 48}px` }} />}</span><span className="pg-vector-negative">{value < 0 && <i style={{ height: `${Math.abs(value) * 48}px` }} />}</span><small>{value}</small></div>)}
-        </div><b>z = φ<sub>Θ</sub>(x₁)</b><p>同一个 z 送往每类权重</p></div><small className="pg-forward-system__source">{stageSource(2)}</small>
+        {heading(2)}<div className="pg-forward-object pg-forward-object--representation"><RepresentationVector values={features} label={`演示特征向量 ${vectorLabel(features)}`} /><b>z = φ<sub>Θ</sub>(x₁)</b><p>同一个 z 送往每类权重</p></div><small className="pg-forward-system__source">{stageSource(2)}</small>
       </li>
       <li data-object="scores" data-input-from="representation" data-state={objectState(3)}>
         {heading(3)}<div className="pg-forward-object pg-forward-object--scores"><span className="pg-output-eyebrow">一个训练输出头</span><div className="pg-class-scores">
@@ -95,7 +87,7 @@ export function ForwardTimelineExample() {
       </li>
       <li data-object="responses" data-input-from="scores" data-state={objectState(4)}>
         {heading(4)}<div className="pg-forward-object pg-forward-object--responses"><span className="pg-output-eyebrow">逐类独立响应</span><div className="pg-class-responses">
-          {responses.map((response, j) => <div key={j} className="pg-head-response" data-class={j + 1} data-traced={index === 4 && tracedClass === j}><span className="pg-sigmoid-mark">σ</span><span className="pg-response-value"><label htmlFor={`${responseId}-${j}`}>C{j + 1}</label><meter id={`${responseId}-${j}`} min="0" max="1" value={response} /><strong>{response.toFixed(3)}</strong></span></div>)}
+          {responses.map((response, j) => <div key={j} className="pg-head-response" data-class={j + 1} data-traced={index === 4 && tracedClass === j}><span className="pg-sigmoid-mark">σ</span><ResponseMeter value={response} min={0} max={1} label={`C${j + 1}`} /></div>)}
         </div><p>各类独立变换，不要求和为 1</p></div><small className="pg-forward-system__source">{stageSource(4)}</small>
       </li>
     </ol>

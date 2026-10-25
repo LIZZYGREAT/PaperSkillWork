@@ -12,8 +12,16 @@ Inputs: `clips`, `autoPlay` (default false), optional `reducedMotion`, injectabl
 
 Exact source from Gallery `demo/src/examples/ForwardTimelineExample.tsx` (only import paths rewritten); strict TypeScript compiles this same component. Render `ForwardTimelineExample`. The five `data-stage` regions share one snapshot. The complete system remains visible while progress traces the feature blocks and class rows; those highlights are teaching focus, not a second computation clock. Stage progress is teaching reveal time, not actual training/computation time. Values are synthetic and internally computed: Wz gives [2,0,−1], independent sigmoid gives [0.881,0.500,0.269]. This is training output, not nearest-mean inference.
 
+Save as `ForwardTimelineExample.tsx` and `forward-timeline-example.css`. Also import `shared/foundation/styles/kit.css` in the app. The CSS below is Recipe layout, not hidden Gallery styling.
+
 ```tsx
-import { useId } from "react";
+import "./forward-timeline-example.css";
+import { SampleToken } from "./shared/foundation/visual-parts/SampleToken";
+import { FeatureBlocks } from "./shared/foundation/visual-parts/FeatureBlocks";
+import { FeatureAggregation } from "./shared/foundation/visual-parts/FeatureAggregation";
+import { RepresentationVector } from "./shared/foundation/visual-parts/RepresentationVector";
+import { ResponseMeter } from "./shared/foundation/visual-parts/ResponseMeter";
+import { FlowConnector } from "./shared/foundation/visual-parts/FlowConnector";
 import { useAnimationTimeline } from "./shared/foundation/animation/useAnimationTimeline";
 
 const stages = [
@@ -43,32 +51,20 @@ function StageFormula({ index }: { index: number }) {
 
 function InputImage() {
   const pixels = [0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
-  return <div className="pg-input-image" aria-hidden="true">{pixels.map((value, i) => <i key={i} data-ink={value === 1} />)}</div>;
+  return <SampleToken sampleId="x1" label="示意图像 x₁" pixels={pixels} />;
 }
 
-function FeatureBlocks({ tracedBlock }: { tracedBlock: number }) {
+function FeatureExtractorDrawing({ tracedBlock }: { tracedBlock: number }) {
   return <div className="pg-extractor-drawing">
-    <svg viewBox="0 0 290 150" role="img" aria-label="卷积特征块经过深层表示与聚合，得到一个向量；层数为教学示意">
-      <g className={tracedBlock === 0 ? "is-tracing" : ""}>
-        {[0, 1, 2, 3].map(i => <g key={i}><rect x={12 + i * 8} y={24 + i * 7} width="55" height="76" rx="5" /><path d={`M${23 + i * 8} ${47 + i * 7}h30m-30 16h30m-30 16h30`} /></g>)}
-        <rect className="pg-feature-patch" x="50" y="52" width="16" height="18" rx="2" />
-      </g>
-      <path className="pg-extractor-flow" d="M96 77h24m-5-4 5 4-5 4" />
-      <g className={tracedBlock === 1 ? "is-tracing" : ""}>
-        {[0, 1, 2].map(i => <rect key={i} x={126 + i * 7} y={39 + i * 6} width="36" height="54" rx="4" />)}
-      </g>
-      <path className="pg-extractor-flow" d="M181 77h24m-5-4 5 4-5 4" />
-      <g className={tracedBlock === 2 ? "is-tracing" : ""}>
-        <rect x="213" y="44" width="64" height="61" rx="7" />
-        {[18, 33, 25, 43, 31].map((height, i) => <rect className="pg-pool-bar" key={i} x={223 + i * 10} y={94 - height} width="4" height={height} rx="1" />)}
-      </g>
-    </svg>
-    <div className="pg-extractor-labels"><span>卷积特征块</span><span>深层表示</span><span>聚合</span></div>
+    <FeatureBlocks label="卷积特征块" active={tracedBlock === 0} />
+    <FlowConnector label="特征" />
+    <FeatureBlocks label="深层表示" depth={3} active={tracedBlock === 1} />
+    <FlowConnector label="聚合输入" />
+    <FeatureAggregation label="聚合" active={tracedBlock === 2} />
   </div>;
 }
 
 export function ForwardTimelineExample() {
-  const responseId = useId();
   const { state, controls } = useAnimationTimeline({ clips: stages, autoPlay: false });
   const index = state.clipIndex;
   const stage = stages[index];
@@ -96,12 +92,10 @@ export function ForwardTimelineExample() {
         {heading(0)}<div className="pg-forward-object pg-forward-object--input"><InputImage /><b>x₁</b><p>同一张输入图像</p></div><small className="pg-forward-system__source">{stageSource(0)}</small>
       </li>
       <li data-object="extractor" data-input-from="sample" data-state={objectState(1)}>
-        {heading(1)}<div className="pg-forward-object pg-forward-object--extractor"><div className="pg-extractor-heading"><span>共享特征提取器</span><b>φ<sub>Θ</sub></b></div><FeatureBlocks tracedBlock={tracedBlock} /><p>同一组共享参数 Θ</p></div><small className="pg-forward-system__source">{stageSource(1)}</small>
+        {heading(1)}<div className="pg-forward-object pg-forward-object--extractor"><div className="pg-extractor-heading"><span>共享特征提取器</span><b>φ<sub>Θ</sub></b></div><FeatureExtractorDrawing tracedBlock={tracedBlock} /><p>同一组共享参数 Θ</p></div><small className="pg-forward-system__source">{stageSource(1)}</small>
       </li>
       <li data-object="representation" data-input-from="extractor" data-state={objectState(2)}>
-        {heading(2)}<div className="pg-forward-object pg-forward-object--representation"><div className="pg-feature-vector" aria-label={`演示特征向量 ${vectorLabel(features)}`}>
-          {features.map((value, i) => <div key={i} className="pg-vector-coordinate"><span className="pg-vector-positive">{value > 0 && <i style={{ height: `${value * 48}px` }} />}</span><span className="pg-vector-negative">{value < 0 && <i style={{ height: `${Math.abs(value) * 48}px` }} />}</span><small>{value}</small></div>)}
-        </div><b>z = φ<sub>Θ</sub>(x₁)</b><p>同一个 z 送往每类权重</p></div><small className="pg-forward-system__source">{stageSource(2)}</small>
+        {heading(2)}<div className="pg-forward-object pg-forward-object--representation"><RepresentationVector values={features} label={`演示特征向量 ${vectorLabel(features)}`} /><b>z = φ<sub>Θ</sub>(x₁)</b><p>同一个 z 送往每类权重</p></div><small className="pg-forward-system__source">{stageSource(2)}</small>
       </li>
       <li data-object="scores" data-input-from="representation" data-state={objectState(3)}>
         {heading(3)}<div className="pg-forward-object pg-forward-object--scores"><span className="pg-output-eyebrow">一个训练输出头</span><div className="pg-class-scores">
@@ -110,7 +104,7 @@ export function ForwardTimelineExample() {
       </li>
       <li data-object="responses" data-input-from="scores" data-state={objectState(4)}>
         {heading(4)}<div className="pg-forward-object pg-forward-object--responses"><span className="pg-output-eyebrow">逐类独立响应</span><div className="pg-class-responses">
-          {responses.map((response, j) => <div key={j} className="pg-head-response" data-class={j + 1} data-traced={index === 4 && tracedClass === j}><span className="pg-sigmoid-mark">σ</span><span className="pg-response-value"><label htmlFor={`${responseId}-${j}`}>C{j + 1}</label><meter id={`${responseId}-${j}`} min="0" max="1" value={response} /><strong>{response.toFixed(3)}</strong></span></div>)}
+          {responses.map((response, j) => <div key={j} className="pg-head-response" data-class={j + 1} data-traced={index === 4 && tracedClass === j}><span className="pg-sigmoid-mark">σ</span><ResponseMeter value={response} min={0} max={1} label={`C${j + 1}`} /></div>)}
         </div><p>各类独立变换，不要求和为 1</p></div><small className="pg-forward-system__source">{stageSource(4)}</small>
       </li>
     </ol>
@@ -126,10 +120,62 @@ export function ForwardTimelineExample() {
 }
 ```
 
-Copy the warm palette token block at the top and the dedicated Timeline CSS section and its responsive queries from `demo/src/pattern-gallery.css` for the Gallery presentation. This includes the extractor drawing, signed vector coordinates, class-weight rows and sigmoid meters, alongside `.pg-forward*`. The TSX also renders as semantic HTML without them. Copy `foundation/animation/` and `foundation/accessibility/useReducedMotion.ts` (scaffold resolves these dependencies); no paper runtime or QA global is needed. MathML typing for strict React TS is supplied by the foundation scaffold.
-
-## Independent reuse evidence and limits
-
-`demo/src/smoke-tests.tsx` uses the same Hook API for a test-only read → transform → validate → write pipeline with a controlled clock, source/destination regions, no network business fields. It verifies intermediate movement, hold, pause/resume, replay during playback, repeated play, completion, clip replacement, invalid jumps, reduced motion and RAF cancellation on unmount. This proves cross-context reuse separately from the main scene's single-clock multi-region synchronization.
-
-The Hook owns time, not neural-network operations or stage prose. Use CSS for isolated transitions; keep training state and geometry in caller code. `easing.ts` remains a dependency-free interpolation utility. Origin: the read-only iCaRL clock, with its private QA global excluded. Human acceptance remains pending.
+```css
+/* Recipe owns layout and stage emphasis. Visual parts own all drawing. */
+.pg-forward { display: grid; gap: 24px; min-width: 0; padding-block: 28px; border-block: 1px solid var(--rk-line); }
+.pg-forward header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+.pg-forward header > div { display: grid; gap: 10px; }
+.pg-forward h3 { margin: 0; font-size: 24px; line-height: 1.4; }
+.pg-forward p { margin: 0; color: var(--rk-muted); font-size: 14px; line-height: 1.8; }
+.pg-forward header span, .pg-teaching-badge, .pg-forward-note > span { color: var(--rk-muted); font-size: 13px; }
+.pg-forward button { padding: 10px 12px; color: var(--rk-ink); background: var(--rk-surface); border: 1px solid var(--rk-line); border-radius: 6px; font: inherit; font-size: 14px; line-height: 1.5; cursor: pointer; }
+.pg-forward button:disabled { opacity: .5; cursor: default; }
+.pg-forward button:focus-visible { outline: 2px solid var(--rk-focus); outline-offset: 3px; }
+.pg-forward-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.pg-forward-nav button { display: flex; align-items: center; gap: 10px; }
+.pg-forward-nav button[aria-current="step"] { background: var(--rk-accent-soft); border-color: var(--rk-accent); }
+.pg-forward-nav button > span { font: 12px var(--rk-font-mono); }
+.pg-forward-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pg-forward-controls > span { flex: 1 1 160px; color: var(--rk-muted); font-size: 13px; }
+.pg-forward-controls .pg-play-control { background: var(--rk-accent); color: white; }
+.pg-forward-track { height: 3px; background: var(--rk-line); }
+.pg-forward-track i { display: block; height: 100%; background: var(--rk-accent); }
+.pg-forward-system { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; list-style: none; margin: 0; padding: 0; }
+.pg-forward-system > li { display: grid; grid-template-rows: auto 1fr auto; gap: 16px; min-width: 0; padding-top: 16px; border-top: 2px solid var(--rk-line); }
+.pg-forward-system > li[data-object="extractor"] { grid-column: span 2; }
+.pg-forward-system > li[data-state="active"] { border-color: var(--rk-accent); }
+.pg-stage-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 28px; font-size: 14px; }
+.pg-stage-heading > span { color: var(--rk-muted); font: 12px var(--rk-font-mono); }
+.pg-stage-heading > small { margin-inline-start: auto; color: var(--rk-muted); font-size: 12px; }
+.pg-forward-object { display: grid; align-content: center; justify-items: center; gap: 12px; min-width: 0; min-height: 210px; padding: 12px; box-sizing: border-box; }
+.pg-forward-object > b { font: 21px/1.5 var(--rk-font-math); }
+.pg-forward-object > p, .pg-forward-system__source { color: var(--rk-muted); font-size: 12px; line-height: 1.6; text-align: center; }
+.pg-forward-system > li[data-state="active"] .pg-forward-object { background: var(--rk-figure); border-radius: 6px; }
+.pg-extractor-heading { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; font-size: 13px; }
+.pg-extractor-heading b { font: 22px/1.5 var(--rk-font-math); }
+.pg-extractor-drawing { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; width: 100%; }
+.pg-class-scores, .pg-class-responses { display: grid; gap: 12px; width: 100%; max-width: 260px; }
+.pg-head-score { display: flex; align-items: center; gap: 14px; font-size: 14px; }
+.pg-head-score > strong { margin-inline-start: auto; font-family: var(--rk-font-mono); }
+.pg-class-weight { display: inline-block; padding: 5px 8px; border: 1px solid var(--rk-line-strong); border-radius: 50%; }
+.pg-head-response { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; align-items: center; }
+.pg-sigmoid-mark { color: var(--rk-accent); font-family: var(--rk-font-math); }
+.pg-output-eyebrow { font-size: 13px; color: var(--rk-muted); }
+.pg-head-score[data-traced="true"], .pg-head-response[data-traced="true"] { outline: 2px solid var(--rk-accent); outline-offset: 4px; }
+.pg-forward-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 24px; background: var(--rk-surface-soft); }
+.pg-forward-note h4 { margin: 10px 0; font-size: 20px; }
+.pg-forward-output { display: grid; align-content: center; gap: 12px; min-width: 0; }
+.pg-forward-output math { font-size: 24px; }
+.pg-forward-output p { text-align: center; overflow-wrap: anywhere; }
+.pg-forward-footer { display: grid; gap: 16px; }
+.pg-forward-values, .pg-forward .pg-forward-boundary { font-size: 13px; color: var(--rk-muted); }
+.pg-forward-values summary { cursor: pointer; }
+@media (max-width: 720px) {
+  .pg-forward-system { grid-template-columns: minmax(0, 1fr); }
+  .pg-forward-system > li[data-object="extractor"] { grid-column: 1; }
+  .pg-forward-detail { grid-template-columns: minmax(0, 1fr); padding: 18px; }
+  .pg-extractor-drawing { gap: 8px; }
+  .pg-extractor-drawing > .rk-flow-connector { min-width: 100%; padding-block: 12px; }
+  .pg-extractor-drawing > .rk-flow-connector svg { transform: rotate(90deg); }
+}
+```
