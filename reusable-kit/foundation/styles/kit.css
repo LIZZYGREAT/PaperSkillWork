@@ -1,14 +1,14 @@
 :root {
   /* Three tones only: warm paper, one confident green, one clay. Elevation is
      carried by tone steps, not by shadows on every surface. */
-  --rk-canvas: #f5f2e9;
-  --rk-surface: #fffdf8;
-  --rk-surface-soft: #eae7d8;
-  --rk-figure: #eef2e3;
+  --rk-canvas: #f7f7f2;
+  --rk-surface: #ffffff;
+  --rk-surface-soft: #eff2eb;
+  --rk-figure: #f0f4ed;
   --rk-ink: #182a22;
   --rk-muted: #586a5d;
-  --rk-line: #dedbc9;
-  --rk-line-strong: #c5c3ad;
+  --rk-line: #dce3d9;
+  --rk-line-strong: #a7b6a6;
   --rk-accent: #2e6b4e;
   --rk-accent-strong: #1b4a34;
   --rk-accent-soft: #e2ebdc;
@@ -25,10 +25,10 @@
   --rk-shadow: 0 18px 45px rgb(24 42 34 / 16%);
   --rk-shadow-soft: 0 6px 20px rgb(24 42 34 / 6%);
   --rk-bleed: clamp(16px, 2vw, 26px);
-  --rk-font-body: inherit;
+  --rk-font-body: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   --rk-font-math: "Cambria Math", "STIX Two Math", "Latin Modern Math", "Times New Roman", serif;
   --rk-font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Menlo, monospace;
-  --rk-type-display: clamp(32px, 3vw, 44px);
+  --rk-type-display: clamp(34px, 3.8vw, 64px);
   --rk-type-heading-1: clamp(28px, 2.6vw, 36px);
   --rk-type-heading-2: clamp(22px, 2.2vw, 28px);
   --rk-type-heading-3: clamp(19px, 1.9vw, 22px);

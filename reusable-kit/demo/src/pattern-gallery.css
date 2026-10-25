@@ -1,51 +1,5 @@
-/* Gallery art direction. The example roots also carry these tokens when copied
-   into a standalone scaffold; other demo routes keep their existing theme. */
-.kit-shell[data-demo="gallery"], .pattern-gallery, .pg-local-network, .pg-model-composition, .pg-forward {
-  --rk-canvas: #f7f4ed;
-  --rk-surface: #fffdf8;
-  --rk-surface-soft: #f2ede3;
-  --rk-figure: #f4f1e7;
-  --rk-ink: #454236;
-  --rk-muted: #746f61;
-  --rk-line: #e5ded0;
-  --rk-line-strong: #ccc2b0;
-  --rk-accent: #687758;
-  --rk-accent-strong: #526344;
-  --rk-accent-soft: #edf0e3;
-  --rk-focus: #9b7049;
-  --rk-role-input: #776f5d;
-  --rk-role-input-soft: #f4f0e7;
-  --rk-role-frozen: #756f60;
-  --rk-role-frozen-soft: #f4f1e8;
-  --rk-role-trainable: var(--rk-accent);
-  --rk-role-target: #926d43;
-  --rk-role-target-soft: #f7eedf;
-  --rk-role-objective: #70785f;
-  --rk-role-objective-soft: #f0f1e7;
-  --rk-role-update: #687758;
-  --rk-edge-line: #b3b3a0;
-  --rk-edge-active: var(--rk-accent-strong);
-  --rk-font-body: "Inter", "Aptos", "Segoe UI", "PingFang SC", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
-  --rk-network-edge: #c5b59c;
-  --rk-network-node: #a68b68;
-  --rk-network-node-fill: #faf5eb;
-  --rk-network-node-width: 1.7;
-  --rk-network-focus: #946f48;
-  --rk-network-focus-fill: #f2e4cd;
-  --rk-network-rule: #e5ded0;
-  --pg-sage: #91a082;
-  --pg-sage-line: #c4cbb8;
-  --pg-sage-soft: #eef0e6;
-  --pg-clay: #be9b75;
-  --pg-clay-soft: #f4ebde;
-  --pg-amber: #b8a26c;
-  --pg-faint: #faf8f2;
-  --demo-rail: #f0ece2;
-  --demo-rail-line: var(--rk-line);
-  color: var(--rk-ink);
-  font-family: var(--rk-font-body);
-}
-
+/* Gallery and recipe layouts; visual defaults live with the assets. */
+:root { --pg-sage: #7f9d86; --pg-sage-line: #c1d1c1; --pg-sage-soft: #edf3ed; --pg-clay: #b7875b; --pg-clay-soft: #f4ebde; --pg-amber: #a69052; --pg-faint: #f7f8f3; }
 .pattern-gallery { display: grid; gap: clamp(24px, 3vw, 40px); min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .pattern-gallery__intro { max-width: 78ch; }
 .pattern-gallery__intro > * + * { margin-top: 10px; }

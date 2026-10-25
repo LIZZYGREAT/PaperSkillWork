@@ -1,0 +1,16 @@
+/* Optional editorial language. Import alongside kit.css; no Gallery selectors. */
+.rk-headline { margin: 0; color: var(--rk-ink); font: 750 var(--rk-type-display)/1.18 var(--rk-font-body); letter-spacing: -.04em; text-wrap: balance; }
+.rk-headline mark { background: linear-gradient(transparent 64%, var(--rk-accent-soft) 64%); color: var(--rk-accent-strong); padding: 0 .03em; }
+.rk-lead { margin: 0; max-width: 44ch; color: var(--rk-muted); font: 400 18px/1.85 var(--rk-font-body); }
+.rk-caption { margin: 0; color: var(--rk-muted); font: 400 13px/1.65 var(--rk-font-body); }
+.rk-equation { color: var(--rk-ink); font-family: var(--rk-font-math); font-size: var(--rk-type-formula); line-height: 1.6; }
+.rk-aside { border-inline-start: 2px solid var(--rk-line-strong); padding-inline-start: 18px; color: var(--rk-muted); font: 400 15px/1.8 var(--rk-font-body); }
+.rk-aside > :first-child { margin-top: 0; }
+.rk-aside > :last-child { margin-bottom: 0; }
+.rk-figure-explanation { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, 64px); }
+.rk-figure-explanation > * { min-width: 0; }
+.rk-state { display: inline-flex; align-items: center; gap: 6px; color: var(--rk-accent-strong); font: 600 12px/1.5 var(--rk-font-body); }
+.rk-state::before { content: ""; width: 8px; height: 8px; border: 1.5px solid currentColor; }
+.rk-state[data-state="frozen"]::before { border-style: dashed; }
+.rk-state[data-state="trainable"]::before { background: var(--rk-accent-soft); }
+@media (max-width: 680px) { .rk-figure-explanation { grid-template-columns: minmax(0, 1fr); } }
