@@ -74,7 +74,7 @@ export function ParallelModelsExample() {
               layers={model.widths.map((nodeCount, index) => ({ id: `layer-${index}`, label: index === 0 ? "输入" : index === model.widths.length - 1 ? "输出" : `隐藏 ${index}`, nodeCount }))}
               connectAdjacent showDetails={false} />
           </section>
-          <div className="pg-model-output" data-output-for={model.id}><span aria-hidden="true">→</span><div><small>{model.id === "teacher" ? "参考路径" : "学习路径"}</small><strong>{model.output}</strong><em>{model.symbol}</em></div></div>
+          <div className="pg-model-output" data-output-for={model.id}><span aria-hidden="true">→</span><div><small>{model.id === "teacher" ? "参考路径" : "学习路径"}</small><strong>{model.output}</strong><span className="pg-model-symbol">{model.symbol}</span></div></div>
         </div>)}
       </div>
     </div>
@@ -106,16 +106,16 @@ export function ParallelModelsExample() {
 .pg-shared-input { display: grid; grid-template-columns: auto auto; justify-self: center; align-items: center; justify-items: center; gap: 10px 24px; text-align: center; font-size: 13px; }
 .pg-shared-input .rk-sample-token { grid-row: 1 / 4; }
 .pg-model-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; border-block-start: 1px solid var(--rk-line-strong); margin-inline: 24px; }
-.pg-model-path { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; justify-items: center; align-content: start; }
+.pg-model-path { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; gap: 18px; justify-items: center; align-content: start; }
 .pg-model-path > .rk-flow-connector { padding-block: 16px 4px; }
 .pg-model-path > .rk-flow-connector svg { transform: rotate(90deg); }
-.pg-model { box-sizing: border-box; display: grid; gap: 18px; width: 100%; min-width: 0; padding: 20px; border: 1px solid var(--rk-line-strong); border-radius: 8px; background: var(--rk-surface); }
+.pg-model { box-sizing: border-box; display: grid; align-content: start; gap: 18px; width: 100%; min-width: 0; padding: 20px; border: 1px solid var(--rk-line-strong); border-radius: 8px; background: var(--rk-surface); }
 .pg-model[data-model-identity="frozen"] { border-style: dashed; }
 .pg-model h4 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 0; font-size: 18px; }
 .pg-model-output { display: flex; gap: 10px; align-items: center; }
 .pg-model-output > div { display: grid; gap: 6px; }
 .pg-model-output small, .pg-network-caption { font-size: 13px; color: var(--rk-muted); }
-.pg-model-output em { font: italic 23px/1.4 var(--rk-font-math); }
+.pg-model-symbol { font: 400 23px/1.4 var(--rk-font-math); }
 .pg-primitive-boundary { font-size: 14px; color: var(--rk-muted); line-height: 1.7; }
 @media (max-width: 1100px) { .pg-network-inspect { grid-template-columns: 80px 44px minmax(0, 360px); } .pg-network-selection { grid-column: 1 / -1; } }
 @media (max-width: 700px) {

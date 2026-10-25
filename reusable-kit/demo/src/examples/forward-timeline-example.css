@@ -35,8 +35,8 @@
 .pg-head-score { display: flex; align-items: center; gap: 14px; font-size: 14px; }
 .pg-head-score > strong { margin-inline-start: auto; font-family: var(--rk-font-mono); }
 .pg-class-weight { display: inline-block; padding: 5px 8px; border: 1px solid var(--rk-line-strong); border-radius: 50%; }
-.pg-head-response { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; align-items: center; }
-.pg-sigmoid-mark { color: var(--rk-accent); font-family: var(--rk-font-math); }
+.pg-head-response { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; align-items: start; }
+.pg-sigmoid-mark { color: var(--rk-accent); font: 400 13px/1.5 var(--rk-font-math); }
 .pg-output-eyebrow { font-size: 13px; color: var(--rk-muted); }
 .pg-head-score[data-traced="true"], .pg-head-response[data-traced="true"] { outline: 2px solid var(--rk-accent); outline-offset: 4px; }
 .pg-forward-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 24px; background: var(--rk-surface-soft); }

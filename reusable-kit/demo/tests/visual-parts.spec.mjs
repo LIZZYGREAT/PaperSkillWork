@@ -1,5 +1,27 @@
 import { test, expect } from '@playwright/test';
 
+test('response labels share one line and parallel output symbols stay upright and level', async ({ page }) => {
+  await page.goto('/?demo=gallery');
+  for (const width of [1440, 1920, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const row of await page.locator('.pg-head-response').all()) {
+      const offset = await row.evaluate(el => {
+        const a = el.querySelector('.pg-sigmoid-mark').getBoundingClientRect();
+        const b = el.querySelector('label').getBoundingClientRect();
+        return Math.abs(a.y + a.height / 2 - b.y - b.height / 2);
+      });
+      expect(offset).toBeLessThan(1);
+    }
+    const symbols = page.locator('.pg-model-symbol');
+    await expect(symbols).toHaveText(['t(x₁)', 's(x₁)']);
+    for (const symbol of await symbols.all()) await expect(symbol).toHaveCSS('font-style', 'normal');
+    if (width > 700) {
+      const tops = await symbols.evaluateAll(nodes => nodes.map(n => n.getBoundingClientRect().y));
+      expect(Math.abs(tops[0] - tops[1])).toBeLessThan(1);
+    }
+  }
+});
+
 test('signed values, explicit scales and responsive default parts', async ({ page }) => {
   await page.goto('/?demo=gallery');
   const shelf = page.locator('#gallery-parts');

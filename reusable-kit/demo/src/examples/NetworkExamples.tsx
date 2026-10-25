@@ -61,7 +61,7 @@ export function ParallelModelsExample() {
               layers={model.widths.map((nodeCount, index) => ({ id: `layer-${index}`, label: index === 0 ? "输入" : index === model.widths.length - 1 ? "输出" : `隐藏 ${index}`, nodeCount }))}
               connectAdjacent showDetails={false} />
           </section>
-          <div className="pg-model-output" data-output-for={model.id}><span aria-hidden="true">→</span><div><small>{model.id === "teacher" ? "参考路径" : "学习路径"}</small><strong>{model.output}</strong><em>{model.symbol}</em></div></div>
+          <div className="pg-model-output" data-output-for={model.id}><span aria-hidden="true">→</span><div><small>{model.id === "teacher" ? "参考路径" : "学习路径"}</small><strong>{model.output}</strong><span className="pg-model-symbol">{model.symbol}</span></div></div>
         </div>)}
       </div>
     </div>
