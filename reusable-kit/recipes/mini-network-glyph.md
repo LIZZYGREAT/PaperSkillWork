@@ -22,6 +22,8 @@ Import `MiniNetworkGlyph` from `foundation/neural-network/MiniNetworkGlyph`. The
 
 `displayNodeCount` is capped at seven. Whenever fewer nodes are drawn than `nodeCount`, the component prints the original and representative counts. Explicit connection indices address displayed nodes. `connectAdjacent` creates a full connection only when the caller opts in; it is never implied.
 
+An explicit connection may provide `progress` from `0` to `1`. The glyph keeps the complete connection as a structural guide and overlays the completed fraction from source to target. This is a rendering input—not an internal clock—so several glyphs or other visual regions can derive their progress from the same external timeline.
+
 ```tsx
 import { MiniNetworkGlyph } from "./shared/foundation/neural-network/MiniNetworkGlyph";
 

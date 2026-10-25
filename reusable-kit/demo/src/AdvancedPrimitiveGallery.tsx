@@ -12,9 +12,14 @@ const importanceLayers: MiniNetworkLayer[] = [
 ];
 const importanceConnections: MiniNetworkConnection[] = [
   { id: "signal-a", fromLayer: "signals", fromNode: 0, toLayer: "shared", toNode: 1 },
-  { id: "signal-b", fromLayer: "signals", fromNode: 1, toLayer: "shared", toNode: 3, state: "muted" },
+  { id: "signal-b", fromLayer: "signals", fromNode: 0, toLayer: "shared", toNode: 2 },
+  { id: "signal-c", fromLayer: "signals", fromNode: 1, toLayer: "shared", toNode: 2 },
+  { id: "signal-d", fromLayer: "signals", fromNode: 1, toLayer: "shared", toNode: 3 },
+  { id: "signal-e", fromLayer: "signals", fromNode: 2, toLayer: "shared", toNode: 4 },
   { id: "important-a", fromLayer: "shared", fromNode: 1, toLayer: "decision", toNode: 0 },
-  { id: "important-b", fromLayer: "shared", fromNode: 3, toLayer: "decision", toNode: 1, state: "muted" },
+  { id: "important-b", fromLayer: "shared", fromNode: 2, toLayer: "decision", toNode: 0 },
+  { id: "important-c", fromLayer: "shared", fromNode: 3, toLayer: "decision", toNode: 1 },
+  { id: "important-d", fromLayer: "shared", fromNode: 4, toLayer: "decision", toNode: 1 },
 ];
 const roleLayers: MiniNetworkLayer[] = [
   { id: "input", label: "Shared input", nodeCount: 3 },
@@ -52,9 +57,9 @@ const pipelineClips: TimelineClip[] = [
 function TimelineControls({ timeline }: { timeline: ReturnType<typeof useAnimationTimeline> }) {
   const { state, controls } = timeline;
   return <div className="pg-timeline__controls" aria-label="Timeline controls">
-    <Button size="small" onClick={controls.toggle}>{state.status === "playing" ? "Pause" : "Play / advance"}</Button>
+    <Button size="small" onClick={controls.toggle} disabled={state.atEnd}>{state.status === "playing" ? "Pause" : state.atEnd ? "Complete" : "Play / advance"}</Button>
     <Button variant="secondary" size="small" onClick={controls.stepBack} disabled={!state.hasPrevious}>Previous</Button>
-    <Button variant="secondary" size="small" onClick={controls.stepForward}>Next</Button>
+    <Button variant="secondary" size="small" onClick={controls.stepForward} disabled={!state.hasNext}>Next</Button>
     <Button variant="secondary" size="small" onClick={controls.replayClip}>Replay</Button>
     <span role="status">{state.clipId ?? "empty"} · {Math.round(state.progress * 100)}%{state.isHolding ? " · hold" : ""}</span>
   </div>;
@@ -63,13 +68,18 @@ function TimelineControls({ timeline }: { timeline: ReturnType<typeof useAnimati
 function NetworkTimelineExample() {
   const timeline = useAnimationTimeline({ clips: networkClips });
   const active = timeline.state.clipId ?? "input";
+  const phase = Math.max(0, timeline.state.clipIndex);
   const connections: MiniNetworkConnection[] = [
-    { id: "input-hidden", fromLayer: "input", fromNode: 1, toLayer: "hidden", toNode: 1 },
-    { id: "hidden-output", fromLayer: "hidden", fromNode: 1, toLayer: "output", toNode: 0 },
+    { id: "input-hidden", fromLayer: "input", fromNode: 1, toLayer: "hidden", toNode: 1, progress: phase === 0 ? 0 : phase === 1 ? timeline.state.progress : 1 },
+    { id: "hidden-output", fromLayer: "hidden", fromNode: 1, toLayer: "output", toNode: 0, progress: phase < 2 ? 0 : timeline.state.progress },
   ];
-  const focus = active === "input" ? { nodes: ["input:1"], edges: [] } : active === "hidden" ? { nodes: ["hidden:1"], edges: ["input-hidden"] } : { nodes: ["output:0"], edges: ["hidden-output"] };
+  const focus = active === "input"
+    ? { nodes: ["input:1"], edges: [] }
+    : active === "hidden"
+      ? { nodes: ["input:1", "hidden:1"], edges: ["input-hidden"] }
+      : { nodes: ["input:1", "hidden:1", "output:0"], edges: ["input-hidden", "hidden-output"] };
   return <article className="pg-timeline" data-timeline-example="network" data-clip={timeline.state.clipId} data-progress={timeline.state.progress.toFixed(3)} data-holding={timeline.state.isHolding}>
-    <header><span>SCENE A · NETWORK FLOW</span><h3>Forward attention through representative nodes</h3></header>
+    <header><span>SCENE A · NETWORK FLOW</span><h3>Forward progress along a retained path</h3></header>
     <MiniNetworkGlyph label="Illustrative forward flow" description="Timeline focus is illustrative and does not encode a paper algorithm."
       layers={[{ id: "input", label: "Input", nodeCount: 3 }, { id: "hidden", label: "Representation", nodeCount: 5 }, { id: "output", label: "Output", nodeCount: 2 }]}
       connections={connections} focus={focus} />
@@ -113,12 +123,12 @@ export function PipelineTimeline() {
 
 export function MiniNetworkGallerySection() {
   const [focusImportant, setFocusImportant] = useState(true);
-  const focus = useMemo(() => focusImportant ? { nodes: ["shared:1"], edges: ["signal-a", "important-a"] } : undefined, [focusImportant]);
+  const focus = useMemo(() => focusImportant ? { nodes: ["signals:0", "shared:1", "decision:0"], edges: ["signal-a", "important-a"] } : undefined, [focusImportant]);
   return <section id="gallery-mini-network" className="pattern-gallery__section" aria-labelledby="gallery-mini-network-title">
     <SectionHeader index="05" eyebrow="FOUNDATION / MINI NETWORK" title="Small network structure without paper-owned computation" lead="The same SVG primitive changes its structure, identity, and connection data. It is a glyph for relationships—not a default architecture and not a CNN feature extractor." headingId="gallery-mini-network-title" />
     <div className="pattern-gallery__controls"><Button size="small" variant={focusImportant ? "primary" : "secondary"} aria-pressed={focusImportant} onClick={() => setFocusImportant((value) => !value)}>{focusImportant ? "Show all context" : "Focus example connections"}</Button></div>
     <div className="pg-network-grid">
-      <article><h3>Parameter-importance illustration</h3><MiniNetworkGlyph label="Selected representative connections" description="Synthetic focus data highlights two representative connections; this is not a measured parameter score." layers={importanceLayers} connections={importanceConnections} focus={focus} /></article>
+      <article><h3>Representative connection focus</h3><MiniNetworkGlyph label="Selected representative connections" description="A selected path is emphasized within a sparse illustrative topology; no score or parameter importance is implied." layers={importanceLayers} connections={importanceConnections} focus={focus} /></article>
       <article><h3>Frozen / trainable structural roles</h3><MiniNetworkGlyph label="Frozen and trainable structure" description="The output-width example is distinct from a convolutional feature-block diagram." layers={roleLayers} connectAdjacent /></article>
     </div>
     <div className="pattern-gallery__facts"><dl>

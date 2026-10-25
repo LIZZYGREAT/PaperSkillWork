@@ -242,6 +242,7 @@ async function run() {
     const labelledBy = Array.from(glyphs).map(glyph => glyph.querySelector("svg")?.getAttribute("aria-labelledby"));
     assert(labelledBy.every(Boolean) && new Set(labelledBy).size === glyphs.length, "Multiple glyph instances reused SVG title/description IDs.");
     assert(validateMiniNetworkGlyph({ layers: [{ id: "same", label: "A", nodeCount: 1 }, { id: "same", label: "B", nodeCount: 0 }] }).length === 2, "Duplicate IDs and invalid node counts were not rejected deterministically.");
+    assert(validateMiniNetworkGlyph({ layers: [{ id: "a", label: "A", nodeCount: 1 }, { id: "b", label: "B", nodeCount: 1 }], connections: [{ id: "bad-progress", fromLayer: "a", fromNode: 0, toLayer: "b", toNode: 0, progress: 1.2 }] }).length === 1, "Out-of-range connection progress was accepted.");
   });
   await check("Timeline validation rejects empty access, invalid durations, holds, and duplicate IDs", () => {
     const boundaries = document.querySelectorAll<HTMLElement>(".timeline-boundary");

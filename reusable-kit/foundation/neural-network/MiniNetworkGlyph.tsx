@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import "./mini-network-glyph.css";
 
 export type NetworkIdentity = "neutral" | "frozen" | "trainable";
@@ -19,6 +19,7 @@ export type MiniNetworkConnection = {
   toLayer: string;
   toNode: number;
   state?: "neutral" | "focused" | "muted";
+  progress?: number;
 };
 
 export type MiniNetworkFocus = {
@@ -61,6 +62,7 @@ export function validateMiniNetworkGlyph({ layers, connections = [] }: Pick<Mini
     if (!from || !to) problems.push(`Connection '${edge.id}' references an unknown layer.`);
     if (from && (!Number.isInteger(edge.fromNode) || edge.fromNode < 0 || edge.fromNode >= visibleCount(from))) problems.push(`Connection '${edge.id}' has an invalid source node.`);
     if (to && (!Number.isInteger(edge.toNode) || edge.toNode < 0 || edge.toNode >= visibleCount(to))) problems.push(`Connection '${edge.id}' has an invalid target node.`);
+    if (edge.progress !== undefined && (!Number.isFinite(edge.progress) || edge.progress < 0 || edge.progress > 1)) problems.push(`Connection '${edge.id}' needs progress between 0 and 1.`);
   });
   return problems;
 }
@@ -114,7 +116,18 @@ export function MiniNetworkGlyph({ layers, label, description, connections, conn
           const end = positions.get(nodeKey(edge.toLayer, edge.toNode))!;
           const edgeIsFocused = edge.state === "focused" || focus?.edges?.includes(edge.id);
           const edgeIsMuted = edge.state === "muted" || (focused && !edgeIsFocused && !isFocusedNode(edge.fromLayer, edge.fromNode) && !isFocusedNode(edge.toLayer, edge.toNode));
-          return <line key={edge.id} data-network-edge={edge.id} className={`${edgeIsFocused ? "is-focused" : ""} ${edgeIsMuted ? "is-muted" : ""}`.trim()} x1={start.x + 10} y1={start.y} x2={end.x - 10} y2={end.y} />;
+          const coordinates = { x1: start.x + 10, y1: start.y, x2: end.x - 10, y2: end.y };
+          return <g key={edge.id}>
+            <line data-network-edge={edge.id} className={`${edgeIsFocused && edge.progress === undefined ? "is-focused" : ""} ${edgeIsMuted ? "is-muted" : ""}`.trim()} {...coordinates} />
+            {edge.progress !== undefined && <line
+              data-network-edge-progress={edge.id}
+              data-progress={edge.progress.toFixed(3)}
+              className="rk-mini-network__edge-progress"
+              pathLength="1"
+              style={{ "--rk-network-edge-progress": edge.progress } as CSSProperties}
+              {...coordinates}
+            />}
+          </g>;
         })}
       </g>
       {layers.map((layer) => <g key={layer.id} data-network-layer={layer.id} data-identity={layer.identity ?? "neutral"} className={focus?.layers?.includes(layer.id) ? "is-focused" : ""} aria-hidden="true">
