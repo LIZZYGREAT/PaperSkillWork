@@ -9,12 +9,12 @@
 | FeatureAggregation | `label`、`active`；不预设池化运算 |
 | RepresentationVector | 有限 `values`、`label`、可选正 `extent`；默认按最大绝对值自适应，保留符号和数值 |
 | ResponseMeter | `label`、有限 `value/min/max`；范围必须覆盖值，不计算概率；含零尺度从零向正负两侧绘条，保留原生 meter 语义；默认在上方显示“尺度：min 至 max”，同尺度成组使用时统一在组上方标一次，各条传 `showScale={false}` |
-| FlowConnector | `label`、data/control/gradient/reference 的 `kind`、right/down/left 的 `direction`；复杂网络使用 DiagramFlow |
+| FlowConnector | 无障碍文本 `label`、可选可见标签 `children`、data/control/gradient/reference 的 `kind`、right/down/left 的 `direction`；复杂网络使用 DiagramFlow |
 | SemanticMark | frozen/trainable/reference 的 `state` 与文字；不等同 focus |
 
 每个 TSX 导入 `visual-parts.css`；从入口导入 `shared/foundation/styles/kit.css`。不要另带 Gallery CSS 修外观。
 
-竖向连接使用 `direction="down"`，组件直接绘制竖向 SVG 并为标签留出 8px 间距；默认标签 13px、箭头线宽 1.5px。不要在场景中把横向 SVG 旋转成竖向，以免视觉边界越过布局盒并碰到标签。
+竖向连接使用 `direction="down"`，组件直接绘制竖向 SVG 并为标签留出 8px 间距，箭头线宽 1.5px。图形标签复用 `--rk-type-diagram-label`（15px），输入与输出数学符号统一使用 `.rk-diagram-symbol` 和 `--rk-type-diagram-symbol`（18px、正体数学字体）；下标用 `<sub>`，不依赖 Unicode 小号字形。连接件可传数学内容为 `children`，`label` 继续提供无障碍文本。不要把横向 SVG 旋转成竖向，以免视觉边界越过布局盒并碰到标签。
 
 聚合柱、向量柱、得分条与响应条共享 `kit.css` 中的 `--rk-data-positive-fill/line`（浅绿填充、绿描边）和 `--rk-data-negative-fill/line`（浅橙填充、暖橙描边）。零线方向和带符号数值同时保留；聚合采用无外框、无整块底色的开放柱形图，active 状态强调底部基线。全局主题可覆盖这四个变量，不需要页面 override 或独立样式文件。
 

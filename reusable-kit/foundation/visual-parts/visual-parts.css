@@ -1,5 +1,5 @@
 /* Complete visual defaults. The caller owns composition and data semantics. */
-.rk-sample-token, .rk-feature-blocks, .rk-feature-aggregation, .rk-representation-vector { box-sizing: border-box; display: grid; justify-items: center; gap: 10px; min-width: 0; margin: 0; color: var(--rk-ink); font: 400 13px/1.5 var(--rk-font-body); }
+.rk-sample-token, .rk-feature-blocks, .rk-feature-aggregation, .rk-representation-vector { box-sizing: border-box; display: grid; justify-items: center; gap: 10px; min-width: 0; margin: 0; color: var(--rk-ink); font: 400 var(--rk-type-diagram-label)/1.5 var(--rk-font-body); }
 .rk-sample-token figcaption, .rk-feature-blocks figcaption, .rk-feature-aggregation figcaption, .rk-representation-vector figcaption { max-width: 100%; text-align: center; overflow-wrap: anywhere; }
 .rk-sample-token__image { box-sizing: border-box; display: grid; place-items: center; width: 76px; min-height: 76px; padding: 8px; background: var(--rk-surface); border: 1px solid var(--rk-line-strong); border-radius: 8px; }
 .rk-sample-token__image > :not(.rk-sample-token__pixels) { max-width: 100%; }
@@ -28,7 +28,8 @@
 .rk-response-meter__zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--rk-line-strong); }
 .rk-response-meter output { font: 12px/1.5 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
 .rk-response-meter small { grid-column: 1 / -1; color: var(--rk-muted); font-size: 12px; }
-.rk-flow-connector { display: inline-grid; justify-items: center; align-content: center; gap: 6px; min-width: 40px; color: var(--rk-muted); font: 13px/1.5 var(--rk-font-body); }
+.rk-flow-connector { display: inline-grid; justify-items: center; align-content: center; gap: 6px; min-width: 40px; color: var(--rk-muted); font: 400 var(--rk-type-diagram-label)/1.5 var(--rk-font-body); }
+.rk-flow-connector__label { color: var(--rk-ink); }
 .rk-flow-connector svg { display: block; width: 44px; height: 16px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .rk-flow-connector[data-kind="control"] .rk-flow-connector__shaft { stroke-dasharray: 1 4; }
 .rk-flow-connector[data-kind="gradient"] { color: var(--rk-warn); }

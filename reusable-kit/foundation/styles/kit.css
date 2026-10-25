@@ -42,6 +42,7 @@
   --rk-type-supporting: 15px;
   --rk-type-caption: 14px;
   --rk-type-diagram-label: 15px;
+  --rk-type-diagram-symbol: 18px;
   --rk-type-diagram-meta: 13px;
   --rk-type-meta: 13px;
   --rk-type-formula: 20px;
@@ -78,6 +79,8 @@
   --rk-space-6: 24px;
 }
 
+.rk-diagram-symbol { color: var(--rk-ink); font: 400 var(--rk-type-diagram-symbol)/1.4 var(--rk-font-math); }
+.rk-diagram-symbol sub { font-size: .7em; line-height: 0; vertical-align: -.25em; }
 .rk-type--display, .rk-type--heading-1, .rk-type--heading-2, .rk-type--heading-3 { margin-block: 0; color: var(--rk-ink); font-family: var(--rk-font-body); line-height: var(--rk-leading-heading); text-wrap: balance; }
 .rk-type--display { font-size: var(--rk-type-display); font-weight: 760; letter-spacing: -.03em; }
 .rk-type--heading-1 { font-size: var(--rk-type-heading-1); font-weight: 740; letter-spacing: -.025em; }

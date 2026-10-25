@@ -11,13 +11,13 @@
 .pg-network-inspect { display: grid; grid-template-columns: 96px 44px minmax(0, 360px) minmax(160px, 240px); justify-content: center; align-items: center; gap: 24px; padding-block: 16px; }
 .pg-network-input, .pg-network-topology, .pg-network-selection { display: grid; gap: 14px; min-width: 0; }
 .pg-network-input { justify-items: center; text-align: center; }
-.pg-network-input > strong { font: italic 24px/1.4 var(--rk-font-math); }
 .pg-network-input small, .pg-network-selection small { color: var(--rk-muted); font-size: 13px; line-height: 1.7; }
 .pg-network-selection { align-content: start; border-inline-start: 2px solid var(--rk-line); padding-inline-start: 22px; }
 .pg-network-selection > strong { font-size: 18px; line-height: 1.5; }
 .pg-network-selection ol { margin: 0; padding-inline-start: 22px; font-size: 14px; line-height: 1.8; }
 .pg-model-branches { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
-.pg-shared-input { position: relative; display: grid; grid-template-columns: auto auto; justify-self: center; align-items: center; justify-items: center; gap: 10px 24px; text-align: center; font-size: 13px; }
+.pg-shared-input { position: relative; display: grid; grid-template-columns: auto auto; justify-self: center; align-items: center; justify-items: center; gap: 10px 24px; text-align: center; font: 400 var(--rk-type-diagram-label)/1.5 var(--rk-font-body); }
+.pg-shared-input .pg-network-kicker { font-size: var(--rk-type-diagram-label); }
 .pg-shared-input .rk-sample-token { grid-row: 1 / 4; }
 .pg-shared-input::after { position: absolute; top: 100%; left: 50%; width: 1px; height: 18px; background: var(--rk-line-strong); content: ""; }
 .pg-model-paths { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-inline: 24px; }
@@ -26,10 +26,9 @@
 .pg-model { box-sizing: border-box; display: grid; align-content: start; gap: 18px; width: 100%; min-width: 0; padding: 20px; border: 1px solid var(--rk-line-strong); border-radius: 8px; background: var(--rk-surface); }
 .pg-model[data-model-identity="frozen"] { border-style: dashed; }
 .pg-model h4 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 0; font-size: 18px; }
-.pg-model-output { display: flex; gap: 10px; align-items: center; }
-.pg-model-output > div { display: grid; gap: 6px; }
-.pg-model-output small, .pg-network-caption { font-size: 13px; color: var(--rk-muted); }
-.pg-model-symbol { font: 400 23px/1.4 var(--rk-font-math); }
+.pg-model-output { display: grid; justify-items: center; gap: 6px; }
+.pg-model-output small { font: 400 var(--rk-type-caption)/1.5 var(--rk-font-body); color: var(--rk-muted); }
+.pg-network-caption { font-size: 13px; color: var(--rk-muted); }
 .pg-primitive-boundary { font-size: 14px; color: var(--rk-muted); line-height: 1.7; }
 @media (max-width: 1100px) { .pg-network-inspect { grid-template-columns: 80px 44px minmax(0, 360px); } .pg-network-selection { grid-column: 1 / -1; } }
 @media (max-width: 700px) {
