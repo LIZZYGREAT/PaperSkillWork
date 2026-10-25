@@ -118,11 +118,11 @@
 .pg-model-paths { display: grid; gap: 18px; border-inline-start: 1px solid var(--rk-line-strong); }
 .pg-model-path { display: grid; grid-template-columns: 24px minmax(0, 1fr) 156px; gap: 10px; align-items: center; }
 .pg-model-arrow { color: #86a79e; }
-.pg-model { min-width: 0; padding: 14px 20px; border: 1px solid var(--rk-accent); border-radius: 10px; background: #f6faf7; }
-.pg-model[data-model-identity="frozen"] { border-style: dashed; border-color: #8a9e96; background: repeating-linear-gradient(135deg, transparent, transparent 8px, #71888209 8px, #71888209 10px), #fafbf8; }
+.pg-model { min-width: 0; padding: 14px 20px; border: 1px solid color-mix(in srgb, var(--rk-accent) 48%, var(--rk-surface)); border-radius: 10px; background: color-mix(in srgb, var(--rk-accent) 3%, var(--rk-surface)); }
+.pg-model[data-model-identity="frozen"] { --rk-accent: var(--rk-role-frozen, #55665f); border-style: dashed; background: repeating-linear-gradient(135deg, transparent, transparent 8px, color-mix(in srgb, var(--rk-accent) 4%, transparent) 8px, color-mix(in srgb, var(--rk-accent) 4%, transparent) 10px), color-mix(in srgb, var(--rk-accent) 2%, var(--rk-surface)); }
 .pg-model h4 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 10px; font-size: 17px; }
-.pg-model h4 small { padding: 4px 8px; border-radius: 12px; background: #e5efeb; color: #416e61; font-size: 12px; font-weight: 500; }
-.pg-model[data-model-identity="frozen"] h4 small { border: 1px dashed #9baca4; background: #f4f6f2; color: var(--rk-muted); }
+.pg-model h4 small { padding: 4px 8px; border-radius: 12px; background: color-mix(in srgb, var(--rk-accent) 10%, var(--rk-surface)); color: var(--rk-accent); font-size: 12px; font-weight: 500; }
+.pg-model[data-model-identity="frozen"] h4 small { border: 1px dashed color-mix(in srgb, var(--rk-accent) 40%, var(--rk-surface)); background: var(--rk-surface); }
 .pg-model .rk-mini-network { width: 100%; max-width: 350px; margin-inline: auto; }
 .pg-model-output { display: flex; align-items: center; gap: 12px; min-width: 0; line-height: 1.5; }
 .pg-model-output > span { font-size: 23px; color: #86a79e; }
