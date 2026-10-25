@@ -49,3 +49,14 @@ These optional captures go into Playwright's `test-results/`. Inspect actual scr
 The default `/?demo=editorial#ed-c` keeps the original C baseline. Open `/?demo=editorial&c=c1#ed-c` for the editorial convergence candidate, or `/?demo=editorial&c=c2#ed-c` for the student-centered computation scene. Unrecognized `c` values fall back to baseline; A/B stay identical. Native links within either candidate allow keyboard comparison and a return to baseline. Neither candidate is selected as the new default.
 
 See [the one-page design comparison and shared content checklist](EDITORIAL_C_REVIEW.md). The existing browser suite retains baseline C coverage and adds both candidate routes, four viewports, complete MathML, correct update ownership, and A/B DOM/pixel invariance. With `EDITORIAL_REVIEW_CAPTURE=1`, it also saves each candidate's full section at all four viewports and a 1440×900 opening screenshot. The same shared Visual QA config includes independent C1/C2 pages at the three desktop viewports.
+
+
+## Mini network and synchronized timeline
+
+Open `/?demo=gallery#gallery-mini-network` for the stable 3–5–3 focus toggle and shared-input Teacher/Student composition; open `/?demo=gallery#gallery-timeline` for the five-stage forward teaching scene. It creates one Hook and derives navigation, diagram, explanation, formula/output and controls from the same snapshot. Numbers are synthetic; sigmoid training output is distinct from nearest-mean classification.
+
+`src/examples/NetworkExamples.tsx` and `ForwardTimelineExample.tsx` are both the rendered components and raw sources for runnable copy panels. Their recipes use identical TSX after import-path rewriting. `tests/advanced-primitives.spec.mjs` verifies network geometry/ownership, five-region synchronization, replay while playing, independent sigmoid arithmetic, reduced motion and 1440/1920/390 layouts. The generic read/transform/validate/write reuse fixture and deterministic clock checks live in `src/smoke-tests.tsx`.
+
+Run `python reusable-kit/demo/scripts/test-advanced-scaffold.py` from repository root for a fresh isolated CLI scaffold, strict recipe TSX build and Chromium check. It installs from the template lockfile, never creates a test paper under this repository's `papers/`, and cleans only its own verified temporary root after success. Failures retain their exact diagnostic directory.
+
+To preserve review screenshots outside Playwright output, set `PAPERWORK_REVIEW_DIR` to an owned absolute directory before running `npm run test:browser -- --grep "network focus|forward timeline|reduced motion keeps"`. Inspect them and the shared QA report before exact cleanup. Human acceptance remains pending.

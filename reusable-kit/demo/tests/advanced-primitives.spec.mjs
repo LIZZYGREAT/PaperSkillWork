@@ -41,6 +41,13 @@ test("network focus preserves geometry and independent parallel model ownership"
     await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
     expect(await root.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
     expect(await root.locator(".rk-mini-network__labels strong, h4, [data-output-for] strong").evaluateAll(nodes => nodes.every(n => n.scrollWidth <= n.clientWidth && getComputedStyle(n).textOverflow !== "ellipsis"))).toBe(true);
+    if (width > 520) {
+      expect(await root.locator(".rk-mini-network").evaluateAll(glyphs => glyphs.every(glyph => [...glyph.querySelectorAll("[data-network-label]")].every(label => {
+        const layer = glyph.querySelector(`[data-network-layer='${label.dataset.networkLabel}'] circle`);
+        const a = layer.getBoundingClientRect(), b = label.getBoundingClientRect();
+        return Math.abs((a.left + a.width / 2) - (b.left + b.width / 2)) < 6;
+      })))).toBe(true);
+    }
     await capture(root, `network-${width}`);
   }
 });

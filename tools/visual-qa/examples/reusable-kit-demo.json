@@ -233,38 +233,120 @@
           ]
         },
         {
-          "id": "gallery-mini-network-focus",
+          "id": "gallery-mini-network-full",
           "actions": [
-            { "type": "scrollIntoView", "selector": "#gallery-mini-network" }
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"local\"]"
+            }
           ]
         },
         {
-          "id": "gallery-mini-network-context",
+          "id": "gallery-mini-network-focus",
           "actions": [
-            { "type": "click", "selector": "role=button[name=\"Show all context\"]" },
-            { "type": "scrollIntoView", "selector": "#gallery-mini-network" }
+            {
+              "type": "click",
+              "selector": "[data-network-example=\"local\"] button"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"local\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-mini-network-parallel",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"parallel\"]"
+            }
           ]
         },
         {
           "id": "gallery-timeline-start",
           "actions": [
-            { "type": "scrollIntoView", "selector": "#gallery-timeline" }
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
           ]
         },
         {
-          "id": "gallery-timeline-network-mid",
+          "id": "gallery-timeline-extractor",
           "actions": [
-            { "type": "click", "selector": "[data-timeline-example=\"network\"] .pg-timeline__controls button:first-child" },
-            { "type": "wait", "milliseconds": 420 },
-            { "type": "scrollIntoView", "selector": "#gallery-timeline" }
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"extractor\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
           ]
         },
         {
-          "id": "gallery-timeline-next-stages",
+          "id": "gallery-timeline-representation",
           "actions": [
-            { "type": "click", "selector": "[data-timeline-example=\"network\"] .pg-timeline__controls button:nth-child(3)" },
-            { "type": "click", "selector": "[data-timeline-example=\"pipeline\"] .pg-timeline__controls button:nth-child(3)" },
-            { "type": "scrollIntoView", "selector": "#gallery-timeline" }
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"representation\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-scores",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"scores\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-responses",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"responses\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-paused-motion",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"extractor\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".pg-forward-controls button:nth-child(4)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 450
+            },
+            {
+              "type": "click",
+              "selector": ".pg-forward-controls button:first-child"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
           ]
         }
       ]

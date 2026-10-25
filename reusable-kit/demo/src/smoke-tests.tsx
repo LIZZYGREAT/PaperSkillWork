@@ -174,8 +174,8 @@ function Fixtures() {
     <DatasetCard dataset={{ name: "Sample set", task: "Classification", paperRole: "Illustrative only." }} />
     <FormulaBlock formula="a + b" terms={[{ id: "a", label: "a", explanation: "First term." }]} />
     <MiniNetworkGlyph
-      label="Importance illustration"
-      description="Selected representative connections receive emphasis."
+      label="Sparse displayed-node API fixture"
+      description="Caller-selected displayed connections; no importance score is calculated."
       layers={[{ id: "input", label: "Input", nodeCount: 3 }, { id: "hidden", label: "Shared representation", nodeCount: 24, displayNodeCount: 5 }, { id: "output", label: "Output", nodeCount: 2 }]}
       connections={[
         { id: "important-a", fromLayer: "input", fromNode: 0, toLayer: "hidden", toNode: 1 },
@@ -185,10 +185,10 @@ function Fixtures() {
       focus={{ nodes: ["hidden:1"], edges: ["important-a", "important-b"] }}
     />
     <MiniNetworkGlyph
-      label="Role and structure illustration"
-      description="A frozen reference and a trainable copy use different visible identities and output widths."
-      layers={[{ id: "frozen", label: "Frozen reference", nodeCount: 4, identity: "frozen" }, { id: "trainable", label: "Trainable output", nodeCount: 8, displayNodeCount: 6, identity: "trainable" }]}
-      connectAdjacent
+      label="Single-model frozen feature layer and trainable head fixture"
+      description="Within one model a frozen feature layer feeds a trainable head; these are not separate Teacher and Student models."
+      layers={[{ id: "frozen", label: "Frozen feature layer within one model", nodeCount: 4, identity: "frozen" }, { id: "trainable", label: "Trainable head within the same model", nodeCount: 8, displayNodeCount: 6, identity: "trainable" }]}
+      connectAdjacent showDetails={false}
     />
     <TimelineFixture />
     <TimelineFixture reducedMotion />
@@ -241,6 +241,8 @@ async function run() {
     assert(glyphs[0].textContent?.includes("Original structure: 24; showing 5 representative nodes."), "Compressed structure was not disclosed.");
     assert(glyphs[1].querySelector("[data-network-layer='frozen'][data-identity='frozen']"), "Frozen identity was not exposed.");
     assert(glyphs[1].querySelector("[data-network-layer='trainable'][data-identity='trainable']"), "Trainable identity was not exposed.");
+    assert(glyphs[1].textContent?.includes("Original structure: 8; showing 6 representative nodes."), "Compact presentation hid the compression disclosure.");
+    assert(!glyphs[1].querySelector("figcaption") && glyphs[1].querySelector("desc")?.textContent?.includes("one model"), "Compact presentation lost accessible description or retained optional caption.");
     const labelledBy = Array.from(glyphs).map(glyph => glyph.querySelector("svg")?.getAttribute("aria-labelledby"));
     assert(labelledBy.every(Boolean) && new Set(labelledBy).size === glyphs.length, "Multiple glyph instances reused SVG title/description IDs.");
     assert(validateMiniNetworkGlyph({ layers: [{ id: "same", label: "A", nodeCount: 1 }, { id: "same", label: "B", nodeCount: 0 }] }).length === 2, "Duplicate IDs and invalid node counts were not rejected deterministically.");
@@ -299,6 +301,17 @@ async function run() {
     assert(fixture.dataset.status === "finished" && fixture.dataset.progress === "1.00" && manualClock.pending === 0, "Final completion retained motion or incorrect status.");
     buttons("Invalid jump").click(); await wait();
     assert(fixture.dataset.clip === "read" && fixture.dataset.status === "paused", "Nonfinite clip index was not bounded safely.");
+    buttons("Play timeline").click(); await wait();
+    manualClock.advance(1200); await wait();
+    manualClock.advance(1300); await wait();
+    assert(fixture.dataset.clip === "read" && fixture.dataset.holding === "true", "Natural playback skipped the first clip hold.");
+    manualClock.advance(1345); await wait();
+    assert(fixture.dataset.clip === "write" && fixture.dataset.progress === "0.00" && fixture.dataset.status === "playing", "Natural clip handoff lost its coherent entry state.");
+    manualClock.advance(1350); await wait();
+    manualClock.advance(1380); await wait();
+    assert(fixture.dataset.progress === "0.50", "Natural handoff did not schedule the next clip clock.");
+    manualClock.advance(1410); await wait();
+    assert(fixture.dataset.status === "finished" && manualClock.pending === 0, "Natural sequence completion did not cancel motion.");
   });
   await check("Reduced motion exposes meaningful completed clips without continuous playback", async () => {
     const fixture = document.querySelector<HTMLElement>(".timeline-fixture[data-reduced='true']")!;

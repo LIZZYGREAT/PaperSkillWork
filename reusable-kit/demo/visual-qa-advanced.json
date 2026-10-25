@@ -1,0 +1,195 @@
+{
+  "baseUrl": "http://127.0.0.1:4176",
+  "server": {
+    "command": "node",
+    "args": [
+      "node_modules/vite/bin/vite.js",
+      "preview",
+      "--configLoader",
+      "bundle",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "4176",
+      "--strictPort"
+    ],
+    "cwd": ".",
+    "readyPath": "/",
+    "startupTimeoutMs": 30000
+  },
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "pages": [
+    {
+      "id": "advanced-primitives-final",
+      "path": "/?demo=gallery",
+      "computedStyles": [
+        {
+          "selector": ".pg-forward-nav button",
+          "property": "white-space",
+          "equals": "normal"
+        }
+      ],
+      "states": [
+        {
+          "id": "gallery-mini-network-full",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"local\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-mini-network-focus",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-network-example=\"local\"] button"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"local\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-mini-network-parallel",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"parallel\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-start",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-extractor",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"extractor\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-representation",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"representation\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-scores",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"scores\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-responses",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"responses\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-paused-motion",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"extractor\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".pg-forward-controls button:nth-child(4)"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 450
+            },
+            {
+              "type": "click",
+              "selector": ".pg-forward-controls button:first-child"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "geometry": {
+    "checkPageHorizontalOverflow": true,
+    "minSemanticFontSizePx": 12,
+    "semanticSelectors": [
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "p",
+      "li",
+      "label",
+      "button",
+      "input",
+      "select",
+      ".rk-diagram__title",
+      ".rk-diagram__meta",
+      ".rk-diagram__badge",
+      ".rk-step-nav__label",
+      "[data-vqa-semantic]"
+    ],
+    "clippingSelectors": [
+      ".pg-model h4",
+      ".pg-forward-nav button",
+      ".pg-forward-note h4",
+      ".pg-forward-output caption",
+      ".rk-mini-network__labels strong"
+    ]
+  },
+  "settleMs": 200
+}
