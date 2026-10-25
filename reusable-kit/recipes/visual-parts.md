@@ -14,7 +14,7 @@
 
 每个 TSX 导入 `visual-parts.css`；从入口导入 `shared/foundation/styles/kit.css`。不要另带 Gallery CSS 修外观。
 
-聚合柱、向量柱、得分条与响应条共享 `kit.css` 中的 `--rk-data-positive-fill/line`（浅绿填充、绿描边）和 `--rk-data-negative-fill/line`（浅橙填充、暖橙描边）。零线方向和带符号数值同时保留；聚合的 active 状态强调外框。全局主题可覆盖这四个变量，不需要页面 override 或独立样式文件。
+聚合柱、向量柱、得分条与响应条共享 `kit.css` 中的 `--rk-data-positive-fill/line`（浅绿填充、绿描边）和 `--rk-data-negative-fill/line`（浅橙填充、暖橙描边）。零线方向和带符号数值同时保留；聚合采用无外框、无整块底色的开放柱形图，active 状态强调底部基线。全局主题可覆盖这四个变量，不需要页面 override 或独立样式文件。
 
 ```sh
 python tools/paper.py scaffold-kit <paper-id> --select SampleToken,RepresentationVector,ResponseMeter --allow-unapproved --dry-run

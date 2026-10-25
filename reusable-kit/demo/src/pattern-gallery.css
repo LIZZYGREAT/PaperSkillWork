@@ -1,5 +1,5 @@
 /* Gallery and recipe layouts; visual defaults live with the assets. */
-:root { --pg-sage: #7f9d86; --pg-sage-line: #c1d1c1; --pg-sage-soft: #edf3ed; --pg-clay: #b7875b; --pg-clay-soft: #f4ebde; --pg-amber: #a69052; --pg-faint: #f7f8f3; }
+:root { --pg-sage: var(--rk-accent); --pg-sage-line: var(--rk-line-strong); --pg-sage-soft: var(--rk-accent-soft); --pg-clay: var(--rk-warn); --pg-clay-soft: var(--rk-warn-soft); --pg-amber: var(--rk-warn); --pg-faint: var(--rk-canvas); }
 .pattern-gallery { display: grid; gap: clamp(24px, 3vw, 40px); min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .pattern-gallery__intro { max-width: 78ch; }
 .pattern-gallery__intro > * + * { margin-top: 10px; }

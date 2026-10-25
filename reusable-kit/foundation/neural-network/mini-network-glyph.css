@@ -7,7 +7,7 @@
 .rk-mini-network__edges line.rk-mini-network__edge-progress { stroke: var(--rk-network-focus, var(--rk-accent, #1e766d)); stroke-width: 3; stroke-dasharray: var(--rk-network-edge-progress) 1; }
 .rk-mini-network [data-network-layer] circle { fill: var(--rk-network-node-fill, color-mix(in srgb, var(--rk-accent, #1e766d) 4%, var(--rk-surface, #fff))); stroke: var(--rk-network-node, color-mix(in srgb, var(--rk-accent, #1e766d) 75%, var(--rk-ink, #1e2e2a))); stroke-width: var(--rk-network-node-width, 2); vector-effect: non-scaling-stroke; transition: opacity .16s ease, fill .16s ease, stroke .16s ease; }
 .rk-mini-network [data-identity="frozen"] circle { fill: color-mix(in srgb, var(--rk-surface, #fff) 80%, var(--rk-role-frozen, #718882)); stroke-dasharray: 4 3; }
-.rk-mini-network [data-identity="trainable"] circle { fill: color-mix(in srgb, var(--rk-accent-soft, #dcece5) 75%, white); stroke: var(--rk-accent, #1e766d); stroke-width: 3; }
+.rk-mini-network [data-identity="trainable"] circle { fill: var(--rk-accent-soft, #e2ebdc); stroke: var(--rk-accent, #2e6b4e); stroke-width: 3; }
 .rk-mini-network circle.is-focused { fill: var(--rk-network-focus-fill, var(--rk-accent, #1e766d)); stroke: var(--rk-network-focus, var(--rk-ink, #1e2e2a)); stroke-width: 3; }
 .rk-mini-network circle.is-muted { opacity: .5; }
 .rk-mini-network__labels { display: grid; width: 100%; gap: 0; min-width: 0; margin: 0; padding: 0; list-style: none; text-align: center; }

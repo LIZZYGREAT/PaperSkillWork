@@ -101,6 +101,19 @@ try {
  }
  assert.deepEqual(await forward.locator('.pg-class-scores meter').evaluateAll(ns=>ns.map(n=>n.value)),[2,0,-1]);
  assert.deepEqual(await forward.locator('.pg-class-responses meter').evaluateAll(ns=>ns.map(n=>n.value)),[2,0,-1].map(v=>1/(1+Math.exp(-v))));
+ // A copied paper can theme the shared palette without any Gallery overrides.
+ await page.evaluate(()=>{const el=document.documentElement;
+  el.style.setProperty('--rk-accent-soft','rgb(220, 234, 214)');
+  el.style.setProperty('--rk-warn-soft','rgb(250, 237, 211)');
+ });
+ for(const selector of ['.rk-vector-coordinate__positive i','.pg-class-scores [data-value="2"] .rk-response-meter__fill','.pg-class-responses .rk-response-meter__fill']){
+  assert.equal(await page.locator(selector).first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(220, 234, 214)');
+ }
+ assert.equal(await page.locator('.rk-feature-aggregation__bar').first().evaluate(el=>getComputedStyle(el).fill),'rgb(220, 234, 214)');
+ for(const selector of ['.rk-vector-coordinate__negative i','.pg-class-scores [data-value="-1"] .rk-response-meter__fill']){
+  assert.equal(await page.locator(selector).first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(250, 237, 211)');
+ }
+ await page.evaluate(()=>{const el=document.documentElement;el.style.removeProperty('--rk-accent-soft');el.style.removeProperty('--rk-warn-soft');});
  const retrieval=page.locator('[data-retrieval-query]');
  await retrieval.getByRole('button').click();
  assert.deepEqual(await retrieval.locator('meter').evaluateAll(ns=>ns.map(n=>n.value)),[-1,1.5]);
@@ -108,7 +121,7 @@ try {
  assert.equal(await page.locator('[role="alert"]').count(),0);
  for(const width of [1440,1920,390]){await page.setViewportSize({width,height:900});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${width}`);}
  assert.deepEqual(errors,[]);
- console.log('SCAFFOLD_BROWSER=PASS: exact three-file Glyph, incremental edits, Registry usages, real scenes, synchronized state, signed retrieval, 390/1440/1920 and no Gallery stylesheet');
+ console.log('SCAFFOLD_BROWSER=PASS: exact three-file Glyph, incremental edits, Registry usages, real scenes, shared palette theming, synchronized state, signed retrieval, 390/1440/1920 and no Gallery stylesheet');
 }finally{await browser?.close(); server.kill();}
 '''.replace('__PLAYWRIGHT__', json.dumps((REPO / 'reusable-kit/demo/node_modules/playwright/index.mjs').as_uri())).replace('__WEB__', json.dumps(str(web))).replace('__SNIPPETS__', str(len(snippets)))
         (root / 'check-browser.mjs').write_text(script, encoding='utf-8')

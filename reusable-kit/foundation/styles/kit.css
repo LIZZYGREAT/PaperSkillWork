@@ -24,7 +24,7 @@
   --rk-data-negative-line: var(--rk-warn);
   --rk-bad: #98402a;
   --rk-bad-soft: #f8e7dd;
-  --rk-focus: #a9683b;
+  --rk-focus: var(--rk-warn);
   --rk-radius-small: 8px;
   --rk-radius: 12px;
   --rk-radius-large: 18px;
@@ -54,11 +54,14 @@
   --rk-role-frozen-soft: #eef0eb;
   --rk-role-trainable: var(--rk-accent);
   --rk-role-trainable-soft: var(--rk-accent-soft);
-  --rk-role-target: #a06b3d;
-  --rk-role-target-soft: #f7efe3;
-  --rk-role-objective: #2f5a47;
-  --rk-role-objective-soft: #eef2ec;
-  --rk-role-update: #1d352c;
+  --rk-role-target: var(--rk-warn);
+  --rk-role-target-soft: var(--rk-warn-soft);
+  --rk-role-objective: var(--rk-accent);
+  --rk-role-objective-soft: var(--rk-accent-soft);
+  --rk-role-update: var(--rk-accent-strong);
+  --rk-network-node-fill: var(--rk-accent-soft);
+  --rk-network-focus: var(--rk-warn);
+  --rk-network-focus-fill: var(--rk-warn-soft);
   --rk-edge-line: #9aa8a1;
   --rk-edge-active: var(--rk-accent-strong);
   --rk-diagram-gap-x: clamp(16px, 2.8vw, 46px);
@@ -208,7 +211,7 @@
 .rk-bars__row { display: grid; grid-template-columns: minmax(52px, auto) minmax(0, 1fr) auto; align-items: center; gap: 10px 14px; }
 .rk-bars__label { color: var(--rk-ink); font-family: var(--rk-font-math); font-size: 15px; }
 .rk-bars__track { display: block; height: 9px; overflow: hidden; border-radius: 99px; background: color-mix(in srgb, var(--rk-line-strong) 50%, transparent); }
-.rk-bars__fill { display: block; height: 100%; border-radius: 99px; background: var(--rk-accent); }
+.rk-bars__fill { display: block; height: 100%; border-radius: 99px; background: var(--rk-data-positive-fill); box-shadow: inset 0 0 0 1px var(--rk-data-positive-line); }
 .rk-bars__value { color: var(--rk-ink); font-family: var(--rk-font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
 .rk-bars__note { grid-column: 2 / -1; color: var(--rk-muted); font-size: 12px; line-height: 1.5; }
 /* Headline numbers. */
@@ -291,7 +294,7 @@
 .rk-feedback--warn, .rk-callout--caution { border-color: #e2d3b3; color: var(--rk-warn); background: var(--rk-warn-soft); }
 .rk-feedback--bad { border-color: #e6c9b9; color: var(--rk-bad); background: var(--rk-bad-soft); }
 .rk-callout--paper-fact { border-left: 4px solid var(--rk-accent); }
-.rk-callout--implementation { border-left: 4px solid #7660a8; }
+.rk-callout--implementation { border-left: 4px solid var(--rk-accent); }
 .rk-callout__title { display: block; margin-bottom: 4px; }
 .rk-status-pill { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 9px; border-radius: 999px; background: var(--rk-surface-soft); color: var(--rk-muted); font-size: .84em; }
 .rk-status-pill--good { color: var(--rk-good); background: var(--rk-good-soft); }
@@ -371,12 +374,12 @@
 .rk-process-loop__step-heading > span, .rk-flow-stepper__detail > span { color: var(--rk-muted); font-size: .85rem; }
 .rk-process-loop__step-heading h3 { margin: 2px 0 4px; }
 .rk-process-loop__step-heading p { margin: 0; color: var(--rk-muted); }
-.rk-process-loop__viewport, .rk-architecture__viewport, .rk-state-machine__viewport { overflow: auto; border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: linear-gradient(180deg, var(--rk-surface), #f8faf7); }
+.rk-process-loop__viewport, .rk-architecture__viewport, .rk-state-machine__viewport { overflow: auto; border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: var(--rk-figure); }
 .rk-process-loop__canvas, .rk-architecture__canvas, .rk-state-machine__canvas { position: relative; box-sizing: border-box; }
 .rk-process-loop__edges, .rk-architecture__edges, .rk-state-machine__edges { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.rk-process-loop__edge path, .rk-architecture__edge path, .rk-state-machine__edge path { fill: none; stroke: #9aabb7; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.rk-process-loop__edge path, .rk-architecture__edge path, .rk-state-machine__edge path { fill: none; stroke: var(--rk-edge-line); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .rk-process-loop__edge marker path, .rk-architecture__edge marker path, .rk-state-machine__edge marker path { fill: currentColor; stroke: none; }
-.rk-process-loop__edge { color: #9aabb7; }
+.rk-process-loop__edge { color: var(--rk-edge-line); }
 .rk-process-loop__edge.is-active { color: var(--rk-accent); }
 .rk-process-loop__edge.is-active path { stroke: var(--rk-accent); stroke-width: 3; }
 .rk-edge--gradient path { stroke-dasharray: 7 5; }
@@ -387,11 +390,11 @@
 .rk-process-loop__nodes { position: absolute; inset: 0; }
 .rk-process-node { position: absolute; z-index: 1; display: grid; align-content: center; justify-items: start; gap: 4px; box-sizing: border-box; width: 220px; min-height: 78px; margin: 0; padding: 12px; transform: translate(-50%, -50%); border: 1px solid var(--rk-line); border-radius: 12px; background: var(--rk-surface); color: var(--rk-ink); text-align: left; font: inherit; box-shadow: 0 3px 12px rgb(30 52 56 / 6%); cursor: pointer; }
 .rk-process-node.is-active { border: 2px solid var(--rk-accent); background: var(--rk-accent-soft); }
-.rk-process-node.is-selected { outline: 3px solid #e0b551; outline-offset: 2px; }
+.rk-process-node.is-selected { outline: 3px solid var(--rk-focus); outline-offset: 2px; }
 .rk-process-node.is-dimmed { opacity: .45; }
 .rk-process-node small, .rk-architecture__node small { color: var(--rk-muted); }
 .rk-process-node__ordinal, .rk-architecture__ordinal { position: absolute; top: 9px; right: 11px; color: var(--rk-muted); font-family: var(--rk-font-mono); font-size: 11px; font-weight: 700; letter-spacing: .02em; }
-.rk-process-node--input { border-left: 4px solid #3a82a0; } .rk-process-node--loss { border-left: 4px solid #b36a36; } .rk-process-node--memory { border-left: 4px solid #6c59a1; }
+.rk-process-node--input { border-left: 4px solid var(--rk-role-input); } .rk-process-node--loss { border-left: 4px solid var(--rk-role-target); } .rk-process-node--memory { border-left: 4px solid var(--rk-role-frozen); }
 .rk-process-loop__footer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .8fr); gap: 12px; margin-top: 12px; }
 .rk-process-loop__annotations, .rk-process-loop__inspector, .rk-architecture__inspector { padding: 14px; border: 1px solid var(--rk-line); border-radius: var(--rk-radius); background: var(--rk-surface-soft); }
 /* The inspected state is the point of this component, so it gets the emphasis; the
@@ -405,15 +408,15 @@
 .rk-architecture__group-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .rk-architecture__group-toggle { min-height: 38px; padding: 4px 10px; border: 1px solid var(--rk-line); border-radius: 8px; background: var(--rk-surface); color: var(--rk-ink); cursor: pointer; }
 .rk-architecture__canvas { min-width: 100%; }
-.rk-architecture__group-region rect { fill: #f6f9f6; stroke: var(--rk-line-strong); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.rk-architecture__group-region rect { fill: var(--rk-surface-soft); stroke: var(--rk-line-strong); stroke-width: 1.5; stroke-dasharray: 5 4; }
 .rk-architecture__group-region text { fill: var(--rk-muted); font-size: 13px; font-weight: 650; }
-.rk-architecture__edge { color: #99aab5; }
+.rk-architecture__edge { color: var(--rk-edge-line); }
 .rk-architecture__edge.is-dimmed { opacity: .2; } .rk-architecture__edge.is-active { color: var(--rk-accent); }
 .rk-architecture__edge.is-active path { stroke: var(--rk-accent); stroke-width: 3; }
 .rk-architecture__node { position: absolute; z-index: 1; display: grid; gap: 4px; width: 220px; min-height: 78px; padding: 12px; transform: translate(-50%, -50%); border: 1px solid var(--rk-line); border-radius: 11px; background: var(--rk-surface); color: var(--rk-ink); text-align: left; font: inherit; box-shadow: 0 3px 12px rgb(30 52 56 / 6%); cursor: pointer; }
 .rk-architecture__node.is-dimmed { opacity: .38; }
-.rk-architecture__node.is-selected { outline: 3px solid #e0b551; outline-offset: 2px; }
-.rk-architecture__node--frozen { border-left: 4px solid #6c59a1; } .rk-architecture__node--trainable { border-left: 4px solid var(--rk-good); } .rk-architecture__node--inactive { opacity: .5; }
+.rk-architecture__node.is-selected { outline: 3px solid var(--rk-focus); outline-offset: 2px; }
+.rk-architecture__node--frozen { border-left: 4px dashed var(--rk-role-frozen); } .rk-architecture__node--trainable { border-left: 4px solid var(--rk-good); } .rk-architecture__node--inactive { opacity: .5; }
 .rk-architecture__status { justify-self: start; padding: 2px 7px; border-radius: 99px; background: var(--rk-accent-soft); color: var(--rk-accent); font-size: .75rem; }
 .rk-architecture__inspector { margin-top: 10px; } .rk-architecture__legend { color: var(--rk-muted); font-size: .86rem; }
 /* Fit-to-width behaviour owned by the graph components themselves. The canvas keeps
@@ -458,7 +461,7 @@
 .rk-responsibility__step { cursor: pointer; }
 .rk-responsibility__step small, .rk-responsibility__actor small { color: var(--rk-muted); }
 .rk-responsibility__step.is-active, .rk-responsibility__actor.is-owner { border-color: var(--rk-accent); background: var(--rk-accent-soft); }
-.rk-responsibility__step.is-unowned { border-style: dashed; border-color: #cc9c51; }
+.rk-responsibility__step.is-unowned { border-style: dashed; border-color: var(--rk-warn); }
 .rk-responsibility__actor { cursor: pointer; }
 .rk-responsibility__gap { border-style: dashed; color: var(--rk-warn); background: var(--rk-warn-soft); }
 .rk-responsibility__gap p { margin: 0; }

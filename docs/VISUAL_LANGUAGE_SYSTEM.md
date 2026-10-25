@@ -27,6 +27,7 @@ S1、S4、S6 画面供人判断；开发可以在 candidate 状态继续。自�
 ## 可执行视觉规则（S1）
 
 - `kit.css` 是颜色、文字、间距、状态与既有组件的基础；canvas 为中性暖白，surface 为白，figure 为淡绿；ink/secondary text、weak/strong line、accent、warning 各司其职。数据与状态不靠颜色独自表达。
+- 数值图元共享浅绿填充/绿描边与浅橙填充/暖橙描边；全局主题在 `:root` 覆盖基础变量，局部数值主题可覆盖 `--rk-data-positive-fill/line` 和 `--rk-data-negative-fill/line`。聚合采用开放柱形与底部基线，不带外框或整块底色。网络默认浅绿、聚焦浅橙；目标/比较、流程图/架构状态均复用公共语义变量。
 - 正文字体使用系统无衬线中文回退；数学使用 Cambria Math 等数学字体；数字用 tabular/mono。Hero 34–64px、章节 22–28px、局部 19–22px、正文 16px、引导 18px、注释 13–14px、图标注 12–15px、公式 20px。不用缩放或省略号塞文字。
 - `editorial.css` 提供可选 headline/mark、lead、caption、equation、aside、figure-explanation 和 state 类。不是强制的整页模板；大标题不用每节重复。默认靠空白、轴线和文字建立层级，只有真实分组才有表面。
 - focus 使用独立描边；冻结有虚线形状及文字，可训练有实线及文字。关系线必须由调用方声明类型和方向。聚焦不删除拓扑。
@@ -136,3 +137,7 @@ Demo 中 `node scripts/capture-redesign.mjs final ../../../.qa/kit-feedback-2026
 第五部分：按用户要求统一相似柱条的颜色。聚合柱、向量正负柱、原始得分和 sigmoid 响应条均使用 `--rk-accent` 实色；取消向量浅填充、负值 clay 填充和聚合 active 时的深色柱体。正负仍由零线方向及带符号数值表达，active 由外框/场景强调表达。本条取代第三部分的负值 clay 约定，同步 visual-parts Recipe。生产构建 PASS（0），既有数值/符号/尺度、检索及前向时间线浏览器测试 4 PASS（0）。实际三视口截图无溢出和页面/资源错误，已实看 1440 前向和 1920 检索，柱条填充一致；必要证据保留 `.qa/kit-feedback-20261025/bar-colors/forward-1440.png`、`retrieval-1920.png`。本轮其余截图及原生 test-results 已核对路径后清理。未改论文副本与上游。
 
 第六部分（替代第五部分的单色解释）：用户明确要求以最初向量图的浅绿、浅橙暖色为准。`kit.css` 增加公共 `--rk-data-positive-fill/line`、`--rk-data-negative-fill/line`，分别关联既有 accent-soft/accent 与 warn-soft/warn；good 状态复用相同绿色变量。向量、原始得分、响应、聚合柱及特征块在组件默认样式中使用浅填充和深描边，负值恢复浅橙，保留零线方向和数值；不是 Gallery 页面补丁。同步可复制 Recipe。构建 PASS（0），数值/符号/检索/前向时间线 4 项浏览器 PASS（0）；实看 `.qa/kit-feedback-20261025/warm-parts/forward-1440.png`，三视口无溢出和页面/资源错误。后续继续统一其他公共图形。
+
+第七部分：聚合删除外框矩形和整块填充，只保留浅绿圆角柱、细描边和底部基线，active 强调基线。公共网络节点、聚焦节点/路径、目标与比较角色、排名条、流程图/架构的连线和状态标记复用绿色/暖橙/中性色变量，去掉独立蓝紫黄常量；Gallery 原有私有色值改为公共变量的别名。没有新增独立样式文件，既有组件接口及论文副本保持不变。
+
+验证：生产构建 PASS（0），完整浏览器 36 项 PASS（0）；真实独立复制构建与浏览器 PASS（0），额外确认在根元素改变 accent-soft/warn-soft 会同时改变向量、聚合、得分和响应的填充，无需 Gallery 样式。首轮测试错误地在 main 覆盖根级别名的基础变量，修正为根元素的全局主题覆盖后复测通过；失败隔离目录 `C:/Windows/Temp/kit-advanced-scaffold-2femkf6t` 与成功自清理目录 `kit-advanced-scaffold-aazv42ok` 在诊断后清理/确认不存在。实看开放聚合、1440 小件/分支图、1920 聚焦网络、390 小件；实际三视口均无溢出或页面错误。必要截图集中保留 `.qa/kit-feedback-20261025/warm-final/`，warm-parts 中间图及本轮原生 test-results 在复核后清理。人工签收保持待确认。
