@@ -14,6 +14,8 @@
 
 每个 TSX 导入 `visual-parts.css`；从入口导入 `shared/foundation/styles/kit.css`。不要另带 Gallery CSS 修外观。
 
+聚合柱、向量柱、得分条与响应条统一使用 `--rk-accent` 实色填充。正负值通过相对零线的方向和带符号数值区分；聚合的 active 状态强调外框，柱体不另换颜色。
+
 ```sh
 python tools/paper.py scaffold-kit <paper-id> --select SampleToken,RepresentationVector,ResponseMeter --allow-unapproved --dry-run
 python tools/paper.py scaffold-kit <paper-id> --select SampleToken,RepresentationVector,ResponseMeter --allow-unapproved
