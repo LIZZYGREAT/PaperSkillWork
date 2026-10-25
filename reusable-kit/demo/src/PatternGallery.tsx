@@ -13,6 +13,7 @@ import { StepNav } from "../../compositions/step-nav/StepNav";
 import { GalleryCodePanel as CodePanel } from "./GalleryCodePanel";
 import { MiniNetworkGallerySection } from "./MiniNetworkGallerySection";
 import { TimelineGallerySection } from "./TimelineGallerySection";
+import { AssetCatalog } from "./AssetCatalog";
 import { VisualSpecimen } from "./examples/VisualSpecimen";
 import { PartsSpecimen } from "./examples/PartsSpecimen";
 import { RetrievalExample } from "./examples/RetrievalExample";
@@ -25,13 +26,15 @@ type EditorialLayout = "axis" | "stagger" | "asymmetric" | "overview";
 
 export const patternGallerySections = [
   { id: "gallery-specimen", title: "视觉样张" },
+  { id: "gallery-catalog", title: "查找资产" },
   { id: "gallery-parts", title: "视觉小件" },
+  { id: "gallery-mini-network", title: "小型网络" },
+  { id: "gallery-timeline", title: "同步时间线" },
+  { id: "gallery-retrieval", title: "独立检索场景" },
   { id: "gallery-diagrams", title: "分支与汇合" },
   { id: "gallery-editorial", title: "叙事构图" },
   { id: "gallery-scroll", title: "滚动联动" },
   { id: "gallery-typography", title: "文字与公式" },
-  { id: "gallery-mini-network", title: "小型网络" },
-  { id: "gallery-timeline", title: "同步时间线" },
 ];
 
 const branchBase: DiagramSpec = {
@@ -420,16 +423,11 @@ function PatternGallery() {
 
   return <div className="kit-demo__paper pattern-gallery" data-demo-view="pattern-gallery">
     <VisualSpecimen />
+    <AssetCatalog />
     <PartsSpecimen />
-    <RetrievalExample />
-    <header className="pattern-gallery__intro">
-      <p className="rk-type--meta">可复用的教学表达 · Pattern Gallery</p>
-      <h2 className="rk-type--heading-1">看清结构，再带入你的论文</h2>
-      <p className="rk-type--body">从图形关系到叙事排版，逐项查看交互示例、适用场景和配套代码。先找到合适的表达，再按论文中的对象与计算改写。</p>
-    </header>
-
-    <InlineCallout kind="note" title="候选状态说明">Reusable Kit 的组件仍为 candidate。构建和浏览器检查只验证实现，不代表人工批准。示意数据也不应被误认成论文结果。</InlineCallout>
-
+    <MiniNetworkGallerySection />
+    <TimelineGallerySection />
+    <div id="gallery-retrieval"><RetrievalExample /></div>
     <section id="gallery-diagrams" className="pattern-gallery__section" aria-labelledby="gallery-diagrams-title">
       <SectionHeader index="01" eyebrow="图形关系" title="分支、汇合与连接方向" lead="用分支区分不同职责，用汇合说明目标如何共同影响更新。切换结构、连线路径和聚焦范围，查看图形如何保持对象关系。" headingId="gallery-diagrams-title" />
       <div className="pattern-gallery__controls">
@@ -527,8 +525,6 @@ function PatternGallery() {
       <CodePanel title="展开可复制的文字与公式样例" code={typographyCode} source="recipes/typography-formula.md" level="runnable" notice="完整 TSX 组件；MathML 类型声明由脚手架复制。请先在入口引入 Kit 样式，并用论文来源核对公式。" />
     </section>
 
-    <MiniNetworkGallerySection />
-    <TimelineGallerySection />
 
     <footer className="pattern-gallery__footer">
       <strong>如何复制 Kit 组件</strong>

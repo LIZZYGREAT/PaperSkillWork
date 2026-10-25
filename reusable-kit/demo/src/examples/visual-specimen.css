@@ -6,4 +6,5 @@
 .visual-specimen__figure > figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; color: var(--rk-muted); font-size: 13px; }
 .visual-specimen__steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; color: var(--rk-accent-strong); font-size: 12px; }
 .visual-specimen__steps > span { padding-block: 10px; border-top: 2px solid var(--rk-line-strong); }
+.visual-specimen__parts { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-around; gap: 18px; border-top: 1px solid var(--rk-line); padding-top: 20px; }
 @media (max-width: 1100px) { .visual-specimen { grid-template-columns: minmax(0, 1fr); } .visual-specimen__copy { max-width: 46rem; } }

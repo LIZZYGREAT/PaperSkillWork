@@ -14,42 +14,495 @@
 # component to honour an implementation plan, a build result, or an automated check.
 version: 2
 components:
-  Button: {tier: P0, status: candidate, path: foundation/controls, category: control, default_for: [continual-learning]}
-  Chip: {tier: P0, status: candidate, path: foundation/controls, category: control, default_for: [continual-learning]}
-  Slider: {tier: P0, status: candidate, path: foundation/controls, category: control, default_for: [continual-learning]}
-  SegmentedControl: {tier: P0, status: candidate, path: foundation/controls, category: control, default_for: [continual-learning]}
-  Feedback: {tier: P0, status: candidate, path: foundation/feedback, category: feedback, default_for: [continual-learning]}
-  StatusPill: {tier: P0, status: candidate, path: foundation/feedback, category: feedback, default_for: [continual-learning]}
-  InlineCallout: {tier: P1, status: candidate, path: foundation/feedback, category: explanation}
-  Popover: {tier: P0, status: candidate, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
-  Drawer: {tier: P0, status: candidate, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
-  MobileSheet: {tier: P0, status: candidate, path: foundation/overlay, category: overlay, default_for: [continual-learning]}
-  StickySystemView: {tier: P0, status: candidate, path: foundation/layout, category: layout, default_for: [continual-learning]}
-  DiagramFlow: {tier: P0, status: candidate, path: foundation/layout, category: diagram, default_for: [continual-learning]}
-  ReferenceHub: {tier: P0, status: candidate, path: core/reference, category: reference, default_for: [continual-learning]}
-  TermRef: {tier: P0, status: candidate, path: core/reference, category: reference, default_for: [continual-learning]}
-  ExpandableDetail: {tier: P0, status: candidate, path: core/reference, category: reference, default_for: [continual-learning]}
-  ProcessLoopExplorer: {tier: P0, status: candidate, path: core/process-loop, category: process, default_for: [continual-learning]}
-  ArchitectureExplorer: {tier: P0, status: candidate, path: core/architecture, category: architecture, default_for: [continual-learning]}
-  FlowStepper: {tier: P0, status: candidate, path: core/flow-stepper, category: process, default_for: [continual-learning]}
-  ResponsibilityMap: {tier: P0, status: candidate, path: core/responsibility-map, category: responsibility, default_for: [continual-learning]}
-  StateMachineExplorer: {tier: P0, status: candidate, path: core/state-machine, category: state, default_for: [continual-learning]}
-  PaperFigure: {tier: P0, status: candidate, path: core/paper-figure, category: evidence, default_for: [continual-learning]}
-  StepNav: {tier: P1, status: candidate, path: compositions/step-nav, category: navigation}
-  SectionHeader: {tier: P1, status: candidate, path: compositions/section-header, category: layout}
-  FigureFrame: {tier: P1, status: candidate, path: compositions/figure-frame, category: layout}
-  MetaList: {tier: P1, status: candidate, path: foundation/data, category: layout}
-  BarMeter: {tier: P1, status: candidate, path: foundation/data, category: data}
-  PullQuote: {tier: P1, status: candidate, path: foundation/data, category: content}
-  StatRow: {tier: P1, status: candidate, path: foundation/data, category: data}
-  CompareView: {tier: P1, status: candidate, path: optional/compare-view, category: comparison}
-  MultiViewInspector: {tier: P1, status: candidate, path: optional/multi-view, category: representation}
-  RepresentationTransform: {tier: P1, status: candidate, path: optional/representation-transform, category: representation}
-  CompatibilityChecker: {tier: P1, status: candidate, path: optional/compatibility-checker, category: compatibility}
-  EvidenceViewer: {tier: P1, status: candidate, path: optional/evidence-viewer, category: evidence}
-  BenchmarkExplorer: {tier: P1, status: candidate, path: optional/benchmark-explorer, category: evidence}
-  DatasetCard: {tier: P1, status: candidate, path: optional/dataset-card, category: dataset}
-  FormulaBlock: {tier: P1, status: candidate, path: optional/formula, category: formula}
-  FormulaTerm: {tier: P1, status: candidate, path: optional/formula, category: formula}
-  MiniNetworkGlyph: {tier: P1, status: candidate, path: foundation/neural-network, category: diagram, scaffold_opt_in: true}
-  useAnimationTimeline: {tier: P1, status: candidate, path: foundation/animation, category: animation, scaffold_opt_in: true}
+  Button:
+    tier: P0
+    status: candidate
+    path: foundation/controls
+    category: control
+    default_for:
+    - continual-learning
+    source: foundation/controls/Button.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  Chip:
+    tier: P0
+    status: candidate
+    path: foundation/controls
+    category: control
+    default_for:
+    - continual-learning
+    source: foundation/controls/Chip.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  Slider:
+    tier: P0
+    status: candidate
+    path: foundation/controls
+    category: control
+    default_for:
+    - continual-learning
+    source: foundation/controls/Slider.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  SegmentedControl:
+    tier: P0
+    status: candidate
+    path: foundation/controls
+    category: control
+    default_for:
+    - continual-learning
+    source: foundation/controls/SegmentedControl.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  Feedback:
+    tier: P0
+    status: candidate
+    path: foundation/feedback
+    category: feedback
+    default_for:
+    - continual-learning
+    source: foundation/feedback/Feedback.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  StatusPill:
+    tier: P0
+    status: candidate
+    path: foundation/feedback
+    category: feedback
+    default_for:
+    - continual-learning
+    source: foundation/feedback/StatusPill.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  InlineCallout:
+    tier: P1
+    status: candidate
+    path: foundation/feedback
+    category: explanation
+    source: foundation/feedback/InlineCallout.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  Popover:
+    tier: P0
+    status: candidate
+    path: foundation/overlay
+    category: overlay
+    default_for:
+    - continual-learning
+    source: foundation/overlay/Popover.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  Drawer:
+    tier: P0
+    status: candidate
+    path: foundation/overlay
+    category: overlay
+    default_for:
+    - continual-learning
+    source: foundation/overlay/Drawer.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  MobileSheet:
+    tier: P0
+    status: candidate
+    path: foundation/overlay
+    category: overlay
+    default_for:
+    - continual-learning
+    source: foundation/overlay/MobileSheet.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  StickySystemView:
+    tier: P0
+    status: candidate
+    path: foundation/layout
+    category: layout
+    default_for:
+    - continual-learning
+    source: foundation/layout/StickySystemView.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    purpose: 滚动解释同一系统
+    use_when: 多个叙事段落指向同一组系统对象。
+    avoid_when: 不把所有页面强行变成粘性长叙事。
+    demo_anchor: gallery-scroll
+    recipe: recipes/sticky-scrollytelling.md
+  DiagramFlow:
+    tier: P0
+    status: candidate
+    path: foundation/layout
+    category: diagram
+    default_for:
+    - continual-learning
+    source: foundation/layout/DiagramFlow.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    purpose: 分支与汇合 · 明确数据和梯度方向
+    use_when: 多个对象的有向关系，需要端点和窄屏语义列表。
+    avoid_when: 不要把并列装饰元素随意画成算法关系。
+    demo_anchor: gallery-diagrams
+    recipe: recipes/diagram-branch.md
+  ReferenceHub:
+    tier: P0
+    status: candidate
+    path: core/reference
+    category: reference
+    default_for:
+    - continual-learning
+    source: core/reference/ReferenceHub.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  TermRef:
+    tier: P0
+    status: candidate
+    path: core/reference
+    category: reference
+    default_for:
+    - continual-learning
+    source: core/reference/TermRef.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  ExpandableDetail:
+    tier: P0
+    status: candidate
+    path: core/reference
+    category: reference
+    default_for:
+    - continual-learning
+    source: core/reference/ExpandableDetail.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  ProcessLoopExplorer:
+    tier: P0
+    status: candidate
+    path: core/process-loop
+    category: process
+    default_for:
+    - continual-learning
+    source: core/process-loop/ProcessLoopExplorer.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  ArchitectureExplorer:
+    tier: P0
+    status: candidate
+    path: core/architecture
+    category: architecture
+    default_for:
+    - continual-learning
+    source: core/architecture/ArchitectureExplorer.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  FlowStepper:
+    tier: P0
+    status: candidate
+    path: core/flow-stepper
+    category: process
+    default_for:
+    - continual-learning
+    source: core/flow-stepper/FlowStepper.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  ResponsibilityMap:
+    tier: P0
+    status: candidate
+    path: core/responsibility-map
+    category: responsibility
+    default_for:
+    - continual-learning
+    source: core/responsibility-map/ResponsibilityMap.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  StateMachineExplorer:
+    tier: P0
+    status: candidate
+    path: core/state-machine
+    category: state
+    default_for:
+    - continual-learning
+    source: core/state-machine/StateMachineExplorer.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  PaperFigure:
+    tier: P0
+    status: candidate
+    path: core/paper-figure
+    category: evidence
+    default_for:
+    - continual-learning
+    source: core/paper-figure/PaperFigure.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  StepNav:
+    tier: P1
+    status: candidate
+    path: compositions/step-nav
+    category: navigation
+    source: compositions/step-nav/StepNav.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  SectionHeader:
+    tier: P1
+    status: candidate
+    path: compositions/section-header
+    category: layout
+    source: compositions/section-header/SectionHeader.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  FigureFrame:
+    tier: P1
+    status: candidate
+    path: compositions/figure-frame
+    category: layout
+    source: compositions/figure-frame/FigureFrame.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  MetaList:
+    tier: P1
+    status: candidate
+    path: foundation/data
+    category: layout
+    source: foundation/data/MetaList.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  BarMeter:
+    tier: P1
+    status: candidate
+    path: foundation/data
+    category: data
+    source: foundation/data/BarMeter.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  PullQuote:
+    tier: P1
+    status: candidate
+    path: foundation/data
+    category: content
+    source: foundation/data/PullQuote.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  StatRow:
+    tier: P1
+    status: candidate
+    path: foundation/data
+    category: data
+    source: foundation/data/StatRow.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  CompareView:
+    tier: P1
+    status: candidate
+    path: optional/compare-view
+    category: comparison
+    source: optional/compare-view/CompareView.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  MultiViewInspector:
+    tier: P1
+    status: candidate
+    path: optional/multi-view
+    category: representation
+    source: optional/multi-view/MultiViewInspector.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  RepresentationTransform:
+    tier: P1
+    status: candidate
+    path: optional/representation-transform
+    category: representation
+    source: optional/representation-transform/RepresentationTransform.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  CompatibilityChecker:
+    tier: P1
+    status: candidate
+    path: optional/compatibility-checker
+    category: compatibility
+    source: optional/compatibility-checker/CompatibilityChecker.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  EvidenceViewer:
+    tier: P1
+    status: candidate
+    path: optional/evidence-viewer
+    category: evidence
+    source: optional/evidence-viewer/EvidenceViewer.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  BenchmarkExplorer:
+    tier: P1
+    status: candidate
+    path: optional/benchmark-explorer
+    category: evidence
+    source: optional/benchmark-explorer/BenchmarkExplorer.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  DatasetCard:
+    tier: P1
+    status: candidate
+    path: optional/dataset-card
+    category: dataset
+    source: optional/dataset-card/DatasetCard.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  FormulaBlock:
+    tier: P1
+    status: candidate
+    path: optional/formula
+    category: formula
+    source: optional/formula/FormulaBlock.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    purpose: 文字与公式逐项对应
+    use_when: 公式符号需要与解释联动。
+    avoid_when: 单行静态数学可直接使用 MathML。
+    demo_anchor: gallery-typography
+    recipe: recipes/typography-formula.md
+  FormulaTerm:
+    tier: P1
+    status: candidate
+    path: optional/formula
+    category: formula
+    source: optional/formula/FormulaBlock.tsx
+    dependencies:
+    - foundation/styles/kit.css
+  MiniNetworkGlyph:
+    tier: P1
+    status: candidate
+    path: foundation/neural-network
+    category: diagram
+    scaffold_opt_in: true
+    source: foundation/neural-network/MiniNetworkGlyph.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    purpose: 聚焦神经网络某条连接 · 并行模型
+    use_when: 呈现小型拓扑，保留层、节点和边 ID；共享输入的独立模型由 Recipe 组合。
+    avoid_when: 不能替代 CNN 特征图或整篇论文的机制场景。
+    demo_anchor: gallery-mini-network
+    recipe: recipes/mini-network-glyph.md
+    usage: <MiniNetworkGlyph label="示意网络" description="教学示意" layers={[{id:"x",label:"输入",nodeCount:3},{id:"h",label:"表示",nodeCount:5},{id:"y",label:"输出",nodeCount:3}]}
+      connectAdjacent showDetails={false} />
+  useAnimationTimeline:
+    tier: P1
+    status: candidate
+    path: foundation/animation
+    category: animation
+    scaffold_opt_in: true
+    source: foundation/animation/useAnimationTimeline.ts
+    dependencies:
+    - foundation/styles/kit.css
+    purpose: 从输入图像到分类响应做阶段讲解
+    use_when: 一个时钟同步图形、说明、公式与导航；调用方拥有计算。
+    avoid_when: 不作为论文计算引擎；不要每个视图各自建立时钟。
+    demo_anchor: gallery-timeline
+    recipe: recipes/animation-timeline.md
+  SampleToken:
+    tier: P1
+    status: candidate
+    path: foundation/visual-parts
+    source: foundation/visual-parts/SampleToken.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    category: visual-part
+    purpose: 输入对象与样本身份
+    use_when: 独立输入图块，或为场景中的调用方内容标注 ID。
+    avoid_when: 不内置数据集；其他模态应由调用方提供内容。
+    demo_anchor: gallery-parts
+    recipe: recipes/visual-parts.md
+    usage: <SampleToken sampleId="toy" label="示意样本"><span>x</span></SampleToken>
+  FeatureBlocks:
+    tier: P1
+    status: candidate
+    path: foundation/visual-parts
+    source: foundation/visual-parts/FeatureBlocks.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    category: visual-part
+    purpose: 卷积与深层特征
+    use_when: 说明特征处理路径，或独立标记特征块。
+    avoid_when: 不能从堆叠数推断真实层数或通道数。
+    demo_anchor: gallery-parts
+    recipe: recipes/visual-parts.md
+    usage: <FeatureBlocks label="卷积特征块" />
+  FeatureAggregation:
+    tier: P1
+    status: candidate
+    path: foundation/visual-parts
+    source: foundation/visual-parts/FeatureAggregation.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    category: visual-part
+    purpose: 特征聚合
+    use_when: 为调用方的聚合步骤提供独立图元。
+    avoid_when: 不推断池化算子或输出维度。
+    demo_anchor: gallery-parts
+    recipe: recipes/visual-parts.md
+    usage: <FeatureAggregation label="聚合" />
+  RepresentationVector:
+    tier: P1
+    status: candidate
+    path: foundation/visual-parts
+    source: foundation/visual-parts/RepresentationVector.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    category: visual-part
+    purpose: 呈现中间表示
+    use_when: 查看带符号向量，比较不同状态的坐标值。
+    avoid_when: 不计算向量，不擅自归一化；大向量应选择有意义的投影。
+    demo_anchor: gallery-parts
+    recipe: recipes/visual-parts.md
+    usage: <RepresentationVector label="表示 z" values={[1, .5, -1]} />
+  ResponseMeter:
+    tier: P1
+    status: candidate
+    path: foundation/visual-parts
+    source: foundation/visual-parts/ResponseMeter.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    category: visual-part
+    purpose: 原始得分与响应尺度
+    use_when: 在明确尺度内展示数值；支持负得分和动态输入。
+    avoid_when: 不假定概率、sigmoid、softmax 或最终预测。
+    demo_anchor: gallery-parts
+    recipe: recipes/visual-parts.md
+    usage: <ResponseMeter label="得分" value={-1} min={-3} max={3} />
+  FlowConnector:
+    tier: P1
+    status: candidate
+    path: foundation/visual-parts
+    source: foundation/visual-parts/FlowConnector.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    category: visual-part
+    purpose: 区分信号方向
+    use_when: 连接局部步骤，以文字与线型区分数据、控制、梯度、参照。
+    avoid_when: 多节点复杂关系用 DiagramFlow；方向须由场景明确给出。
+    demo_anchor: gallery-parts
+    recipe: recipes/visual-parts.md
+    usage: <FlowConnector kind="gradient" label="梯度" direction="left" />
+  SemanticMark:
+    tier: P1
+    status: candidate
+    path: foundation/visual-parts
+    source: foundation/visual-parts/SemanticMark.tsx
+    dependencies:
+    - foundation/styles/kit.css
+    category: visual-part
+    purpose: 标记模型身份
+    use_when: 为模型外层标记冻结、可训练或参照身份。
+    avoid_when: 不要把训练身份当作当前 focus。
+    demo_anchor: gallery-parts
+    recipe: recipes/visual-parts.md
+    usage: <SemanticMark state="frozen">参数冻结</SemanticMark>
+  EditorialTypography:
+    tier: P1
+    status: candidate
+    path: foundation/styles
+    source: foundation/styles/editorial.css
+    dependencies:
+    - foundation/styles/kit.css
+    category: typography
+    purpose: 编辑式标题与图文编排
+    use_when: 需要标题强调、侧注和非对称图文关系。
+    avoid_when: 不固定整页结构，也不要求每节重复 Hero。
+    demo_anchor: gallery-specimen
+    recipe: recipes/editorial-composition.md
