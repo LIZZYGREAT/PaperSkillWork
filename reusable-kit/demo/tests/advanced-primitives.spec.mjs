@@ -39,6 +39,26 @@ test("network focus preserves geometry and independent parallel model ownership"
   expect(new Set(labels).size).toBe(3);
   for (const width of [1440, 1920, 390]) {
     await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
+    const modelGeometry = await paths.evaluateAll(nodes => nodes.map(path => {
+      const model = path.querySelector('.pg-model');
+      const circle = model.querySelector('circle').getBoundingClientRect();
+      const svg = model.querySelector('svg').getBoundingClientRect();
+      const label = model.querySelector('[data-network-label]').getBoundingClientRect();
+      const modelBox = model.getBoundingClientRect();
+      return { nodeSize: circle.width, graphHeight: svg.height, graphTop: svg.top - modelBox.top, labelTop: label.top - modelBox.top };
+    }));
+    for (const property of ['nodeSize', 'graphHeight', 'graphTop', 'labelTop']) {
+      expect(Math.abs(modelGeometry[0][property] - modelGeometry[1][property])).toBeLessThan(1);
+    }
+    for (const connector of await paths.locator(':scope > .rk-flow-connector').all()) {
+      await expect(connector).toHaveAttribute('data-direction', 'down');
+      await expect(connector.locator('svg')).toHaveCSS('stroke-width', '1.5px');
+      expect(await connector.evaluate(el => {
+        const arrow = el.querySelector('svg').getBoundingClientRect();
+        const label = el.querySelector('span').getBoundingClientRect();
+        return label.top - arrow.bottom;
+      })).toBeGreaterThanOrEqual(8);
+    }
     expect(await root.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
     expect(await root.locator(".rk-mini-network__labels strong, h4, [data-output-for] strong").evaluateAll(nodes => nodes.every(n => n.scrollWidth <= n.clientWidth && getComputedStyle(n).textOverflow !== "ellipsis"))).toBe(true);
     if (width > 520) {

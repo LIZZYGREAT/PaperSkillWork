@@ -141,3 +141,7 @@ Demo 中 `node scripts/capture-redesign.mjs final ../../../.qa/kit-feedback-2026
 第七部分：聚合删除外框矩形和整块填充，只保留浅绿圆角柱、细描边和底部基线，active 强调基线。公共网络节点、聚焦节点/路径、目标与比较角色、排名条、流程图/架构的连线和状态标记复用绿色/暖橙/中性色变量，去掉独立蓝紫黄常量；Gallery 原有私有色值改为公共变量的别名。没有新增独立样式文件，既有组件接口及论文副本保持不变。
 
 验证：生产构建 PASS（0），完整浏览器 36 项 PASS（0）；真实独立复制构建与浏览器 PASS（0），额外确认在根元素改变 accent-soft/warn-soft 会同时改变向量、聚合、得分和响应的填充，无需 Gallery 样式。首轮测试错误地在 main 覆盖根级别名的基础变量，修正为根元素的全局主题覆盖后复测通过；失败隔离目录 `C:/Windows/Temp/kit-advanced-scaffold-2femkf6t` 与成功自清理目录 `kit-advanced-scaffold-aazv42ok` 在诊断后清理/确认不存在。实看开放聚合、1440 小件/分支图、1920 聚焦网络、390 小件；实际三视口均无溢出或页面错误。必要截图集中保留 `.qa/kit-feedback-20261025/warm-final/`，warm-parts 中间图及本轮原生 test-results 在复核后清理。人工签收保持待确认。
+
+第八部分：用户指出并排模型的 x₁/箭头关系与节点尺寸、图形高度不一致，并明确要求箭头不加粗。FlowConnector 的 down 方向改为直接绘制 16×48 坐标的竖向 SVG，显示高度 40px，保留 1.5px 线宽；默认标签 13px，竖向标签间距 8px。双模型调用明确传 down，删除局部旋转；共享输入的细线只连接两个入口，添加中央分支接入。MiniNetworkGlyph 统一 384×164 坐标框，给定相同密度与渲染宽度时，层数不再改变节点直径、图形高度或标签基线。修在公共组件和对应 Recipe，未加并排专用图形样式。
+
+生产构建 PASS（0）；`npm.cmd run test:browser -- --grep 'network focus|response labels|signed values|one catalogue|Pattern Gallery exposes|component interaction assertions'` 6 PASS（0），新增实际 DOM 几何断言覆盖 1440/1920/390 两侧节点直径、图高、图形/标签相对位置，确认竖向箭头 1.5px 与至少 8px 标签间距。独立复制构建/浏览器 PASS（0），隔离目录 `kit-advanced-scaffold-bw0cdx29` 自清理并核实不存在。实际截图无溢出和页面/资源错误，已实看三视口双模型；必要截图保留 `.qa/kit-feedback-20261025/network-alignment/parallel-{1440,1920,390}.png`。本轮多余截图、失败隔离夹具及原生 test-results 已核对绝对路径后清理。论文副本、审核状态与上游保持未修改。

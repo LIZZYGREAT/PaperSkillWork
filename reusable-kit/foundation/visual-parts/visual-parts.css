@@ -28,15 +28,15 @@
 .rk-response-meter__zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--rk-line-strong); }
 .rk-response-meter output { font: 12px/1.5 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
 .rk-response-meter small { grid-column: 1 / -1; color: var(--rk-muted); font-size: 12px; }
-.rk-flow-connector { display: inline-grid; justify-items: center; align-content: center; gap: 4px; min-width: 40px; color: var(--rk-muted); font: 12px/1.5 var(--rk-font-body); }
+.rk-flow-connector { display: inline-grid; justify-items: center; align-content: center; gap: 6px; min-width: 40px; color: var(--rk-muted); font: 13px/1.5 var(--rk-font-body); }
 .rk-flow-connector svg { display: block; width: 44px; height: 16px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .rk-flow-connector[data-kind="control"] .rk-flow-connector__shaft { stroke-dasharray: 1 4; }
 .rk-flow-connector[data-kind="gradient"] { color: var(--rk-warn); }
 .rk-flow-connector[data-kind="gradient"] .rk-flow-connector__shaft { stroke-dasharray: 5 3; }
 .rk-flow-connector[data-kind="reference"] .rk-flow-connector__shaft { stroke-dasharray: 8 3 1 3; }
 .rk-flow-connector[data-direction="left"] svg { transform: rotate(180deg); }
-.rk-flow-connector[data-direction="down"] { padding-top: 16px; gap: 18px; }
-.rk-flow-connector[data-direction="down"] svg { transform: rotate(90deg); }
+.rk-flow-connector[data-direction="down"] { gap: 8px; }
+.rk-flow-connector[data-direction="down"] svg { width: 16px; height: 40px; }
 .rk-semantic-mark { display: inline-flex; align-items: center; gap: 7px; color: var(--rk-accent-strong); font: 600 12px/1.5 var(--rk-font-body); }
 .rk-semantic-mark::before { content: ''; width: 9px; height: 9px; border: 1.5px solid currentColor; }
 .rk-semantic-mark[data-state="frozen"]::before { border-style: dashed; }

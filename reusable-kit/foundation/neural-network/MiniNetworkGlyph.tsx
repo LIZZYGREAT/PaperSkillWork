@@ -92,8 +92,10 @@ export function MiniNetworkGlyph({ layers, label, description, connections, conn
   const problems = validateMiniNetworkGlyph({ layers, connections });
   if (problems.length) return <div className="rk-error" role="alert">{problems.join(" ")}</div>;
 
-  const width = Math.max(200, layers.length * 96);
-  // Nodes occupy y=14..166. Keep equal padding above and below the graph.
+  // A shared coordinate frame keeps node size and graph height independent of
+  // layer count. Density and available width determine the rendered scale.
+  const width = 384;
+  // Nodes occupy y=14..150 with equal padding above and below the graph.
   const height = 164;
   const top = 22;
   const usableHeight = 120;

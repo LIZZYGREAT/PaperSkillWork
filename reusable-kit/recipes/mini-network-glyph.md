@@ -4,6 +4,8 @@ Use one Glyph for one small layer/node topology. `layers` supplies stable IDs, l
 
 `showDetails` (default `true`) controls optional count/identity metadata, layer detail and visible caption. Use `false` when a surrounding figure already explains those details. Layer labels, accessible SVG description and representative-node disclosure always remain. This supports compact diagrams in any outer composition, not a paper-specific model role.
 
+Glyphs share one normalized coordinate frame. At the same density and rendered width, changing layer count preserves node diameter, drawing height and label baseline. A side-by-side comparison should give both Glyphs equal available width; do not resize their internal SVG separately.
+
 ## Runnable single Glyph and parallel composition
 
 This is the exact TSX rendered by Gallery (`demo/src/examples/NetworkExamples.tsx`, only import paths rewritten), compiled by its strict TypeScript build. Render `LocalNetworkExample` for the single 3–5–3 topology; render `ParallelModelsExample` for independent 3-layer / 4-layer configurations. Counts are teaching illustrations. Shared input and whole-model ownership live outside the Glyph; no Teacher → Student forward edge exists.
@@ -67,7 +69,7 @@ export function ParallelModelsExample() {
       <div className="pg-shared-input" data-shared-input="x"><span className="pg-network-kicker">共享输入</span><SampleMark /><strong>同一输入 x₁</strong><span>分别送入两路</span></div>
       <div className="pg-model-paths">
         {models.map(model => <div className="pg-model-path" key={model.id} data-model-path={model.id} data-from="x" data-to={model.id}>
-          <FlowConnector label="x₁" />
+          <FlowConnector label="x₁" direction="down" />
           <section className="pg-model" data-model={model.id} data-model-identity={model.id === "teacher" ? "frozen" : "trainable"}>
             <h4>{model.name}<SemanticMark state={model.id === "teacher" ? "frozen" : "trainable"}>{model.role}</SemanticMark></h4>
             <MiniNetworkGlyph label={`${model.name} 内部教学结构`} description={`${model.name} 独立接收同一输入 x，产生自己的输出。层数仅为示意。`}
@@ -103,12 +105,12 @@ export function ParallelModelsExample() {
 .pg-network-selection > strong { font-size: 18px; line-height: 1.5; }
 .pg-network-selection ol { margin: 0; padding-inline-start: 22px; font-size: 14px; line-height: 1.8; }
 .pg-model-branches { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
-.pg-shared-input { display: grid; grid-template-columns: auto auto; justify-self: center; align-items: center; justify-items: center; gap: 10px 24px; text-align: center; font-size: 13px; }
+.pg-shared-input { position: relative; display: grid; grid-template-columns: auto auto; justify-self: center; align-items: center; justify-items: center; gap: 10px 24px; text-align: center; font-size: 13px; }
 .pg-shared-input .rk-sample-token { grid-row: 1 / 4; }
-.pg-model-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; border-block-start: 1px solid var(--rk-line-strong); margin-inline: 24px; }
+.pg-shared-input::after { position: absolute; top: 100%; left: 50%; width: 1px; height: 18px; background: var(--rk-line-strong); content: ""; }
+.pg-model-paths { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-inline: 24px; }
+.pg-model-paths::before { position: absolute; top: 0; left: calc(25% - 6px); right: calc(25% - 6px); height: 1px; background: var(--rk-line-strong); content: ""; }
 .pg-model-path { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; gap: 18px; justify-items: center; align-content: start; }
-.pg-model-path > .rk-flow-connector { padding-block: 16px 4px; }
-.pg-model-path > .rk-flow-connector svg { transform: rotate(90deg); }
 .pg-model { box-sizing: border-box; display: grid; align-content: start; gap: 18px; width: 100%; min-width: 0; padding: 20px; border: 1px solid var(--rk-line-strong); border-radius: 8px; background: var(--rk-surface); }
 .pg-model[data-model-identity="frozen"] { border-style: dashed; }
 .pg-model h4 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 0; font-size: 18px; }
@@ -123,6 +125,7 @@ export function ParallelModelsExample() {
   .pg-network-inspect > .rk-flow-connector svg { transform: rotate(90deg); }
   .pg-network-inspect > .rk-flow-connector { padding-block: 10px; }
   .pg-model-paths { grid-template-columns: minmax(0, 1fr); margin: 0; }
+  .pg-model-paths::before { display: none; }
   .pg-model { padding: 14px; }
 }
 ```

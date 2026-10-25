@@ -14,6 +14,8 @@
 
 每个 TSX 导入 `visual-parts.css`；从入口导入 `shared/foundation/styles/kit.css`。不要另带 Gallery CSS 修外观。
 
+竖向连接使用 `direction="down"`，组件直接绘制竖向 SVG 并为标签留出 8px 间距；默认标签 13px、箭头线宽 1.5px。不要在场景中把横向 SVG 旋转成竖向，以免视觉边界越过布局盒并碰到标签。
+
 聚合柱、向量柱、得分条与响应条共享 `kit.css` 中的 `--rk-data-positive-fill/line`（浅绿填充、绿描边）和 `--rk-data-negative-fill/line`（浅橙填充、暖橙描边）。零线方向和带符号数值同时保留；聚合采用无外框、无整块底色的开放柱形图，active 状态强调底部基线。全局主题可覆盖这四个变量，不需要页面 override 或独立样式文件。
 
 ```sh
