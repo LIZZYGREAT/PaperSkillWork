@@ -49,6 +49,7 @@ test("network focus preserves geometry and independent parallel model ownership"
       })))).toBe(true);
     }
     await capture(root, `network-${width}`);
+    if (width === 1440) await capture(root.locator("[data-network-example='parallel']"), "network-parallel");
   }
 });
 
@@ -87,13 +88,18 @@ test("one forward timeline synchronizes navigation, objects, narrative and compu
   await expect.poll(async () => Number(await root.getAttribute("data-progress"))).toBeGreaterThan(0.05);
   await root.getByRole("button", { name: "重播当前阶段", exact: true }).click();
   await expect.poll(async () => Number(await root.getAttribute("data-progress"))).toBeGreaterThan(0.1);
+  await expect.poll(async () => Number(await root.getAttribute("data-progress"))).toBeGreaterThan(0.38);
   await root.getByRole("button", { name: "暂停", exact: true }).click();
   await expectSynchronized(root, "extractor");
+  await expect(root.locator(".pg-extractor-drawing > svg > g.is-tracing")).toHaveCount(1);
+  await capture(root, "timeline-extractor-trace-paused");
   await root.locator("[data-stage-target='responses']").click();
   await expectSynchronized(root, "responses");
   await expect(root.locator("meter")).toHaveCount(3);
   const values = await root.locator("meter").evaluateAll(nodes => nodes.map(n => n.value));
   expect(values).toEqual([2, 0, -1].map(n => 1 / (1 + Math.exp(-n))));
+  expect(await root.locator(".pg-head-score").evaluateAll(nodes => nodes.map(n => n.dataset.class))).toEqual(["1", "2", "3"]);
+  expect(await root.locator(".pg-head-response").evaluateAll(nodes => nodes.map(n => n.dataset.class))).toEqual(["1", "2", "3"]);
   expect(values.reduce((sum, n) => sum + n, 0)).toBeGreaterThan(1);
   await expect(root.locator("math mfrac")).toHaveCount(1);
   await root.getByRole("button", { name: "重播当前阶段", exact: true }).click();
@@ -106,10 +112,17 @@ test("one forward timeline synchronizes navigation, objects, narrative and compu
   await root.getByRole("button", { name: "上一阶段", exact: true }).click();
   await expectSynchronized(root, "scores");
   await expect(root).toHaveAttribute("data-status", "paused");
-  for (const width of [1920, 390]) {
+  for (const width of [1440, 1920, 390]) {
     await page.setViewportSize({ width, height: width === 1920 ? 1080 : 844 });
     expect(await root.evaluate(n => n.scrollWidth <= n.clientWidth)).toBe(true);
     expect(await root.locator("button, h4, .pg-forward-system strong").evaluateAll(nodes => nodes.every(n => n.scrollWidth <= n.clientWidth && getComputedStyle(n).textOverflow !== "ellipsis"))).toBe(true);
+    expect(await root.locator(".pg-forward-object").evaluateAll(nodes => nodes.every(n => n.scrollHeight <= n.clientHeight + 1))).toBe(true);
+    const sourceLabelsHaveSpace = await root.locator(".pg-forward-system > li").evaluateAll(nodes => nodes.every(n => {
+      const object = n.querySelector(".pg-forward-object").getBoundingClientRect();
+      const source = n.querySelector(".pg-forward-system__source").getBoundingClientRect();
+      return object.bottom + 5 <= source.top;
+    }));
+    expect(sourceLabelsHaveSpace).toBe(true);
     if (width === 390) {
       await expect(root.locator("[data-input-from]")).toHaveCount(5);
       expect(await root.locator(".pg-forward-system").evaluate(n => getComputedStyle(n).gridTemplateColumns.split(" ").length)).toBe(1);

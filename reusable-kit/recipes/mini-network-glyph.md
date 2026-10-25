@@ -77,7 +77,7 @@ export function ParallelModelsExample() {
 }
 ```
 
-For the Gallery layout, copy the `.pg-local-network`, `.pg-model-*`, `.pg-shared-input` and related responsive rules from `demo/src/pattern-gallery.css`. Without these optional presentation rules the TSX still renders in document order. Each model row explicitly identifies input `x` and its own output. Frozen uses a dashed container plus text; trainable uses a solid container plus text.
+For the Gallery layout, copy the dedicated Network CSS section (`.pg-local-network`, `.pg-network-*`, `.pg-model-*`, `.pg-shared-input`) and related responsive rules from `demo/src/pattern-gallery.css`. Without these optional presentation rules the TSX still renders in document order. Each model row explicitly identifies input `x` and its own output. Frozen uses a dashed container plus text; trainable uses a solid container plus text.
 
 ## Copy and boundaries
 

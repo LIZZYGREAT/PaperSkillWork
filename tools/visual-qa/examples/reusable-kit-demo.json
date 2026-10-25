@@ -333,7 +333,7 @@
             },
             {
               "type": "click",
-              "selector": ".pg-forward-controls button:nth-child(4)"
+              "selector": ".pg-forward-controls .pg-replay-control"
             },
             {
               "type": "wait",
@@ -341,7 +341,7 @@
             },
             {
               "type": "click",
-              "selector": ".pg-forward-controls button:first-child"
+              "selector": ".pg-forward-controls .pg-play-control"
             },
             {
               "type": "scrollIntoView",

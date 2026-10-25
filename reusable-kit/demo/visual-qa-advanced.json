@@ -144,7 +144,7 @@
             },
             {
               "type": "click",
-              "selector": ".pg-forward-controls button:nth-child(4)"
+              "selector": ".pg-forward-controls .pg-replay-control"
             },
             {
               "type": "wait",
@@ -152,7 +152,7 @@
             },
             {
               "type": "click",
-              "selector": ".pg-forward-controls button:first-child"
+              "selector": ".pg-forward-controls .pg-play-control"
             },
             {
               "type": "scrollIntoView",
@@ -187,7 +187,7 @@
       ".pg-model h4",
       ".pg-forward-nav button",
       ".pg-forward-note h4",
-      ".pg-forward-output caption",
+      ".pg-forward-system__source",
       ".rk-mini-network__labels strong"
     ]
   },

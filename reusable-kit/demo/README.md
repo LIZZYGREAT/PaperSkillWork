@@ -60,3 +60,6 @@ Open `/?demo=gallery#gallery-mini-network` for the stable 3–5–3 focus toggle
 Run `python reusable-kit/demo/scripts/test-advanced-scaffold.py` from repository root for a fresh isolated CLI scaffold, strict recipe TSX build and Chromium check. It installs from the template lockfile, never creates a test paper under this repository's `papers/`, and cleans only its own verified temporary root after success. Failures retain their exact diagnostic directory.
 
 To preserve review screenshots outside Playwright output, set `PAPERWORK_REVIEW_DIR` to an owned absolute directory before running `npm run test:browser -- --grep "network focus|forward timeline|reduced motion keeps"`. Inspect them and the shared QA report before exact cleanup. Human acceptance remains pending.
+
+
+The reference-informed refinement uses object-specific graphics: a fixed pixel sample, layered feature blocks and pooling, a signed vector, class-weight branches and per-class sigmoid meters. The same Hook snapshot also traces inner feature blocks and class rows. Run `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-advanced.json` from repository root for the two revised sections at 1440/1920/390; inspect its exact report and screenshots before cleanup. Actual paper pages are read-only references.
