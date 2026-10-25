@@ -19,6 +19,7 @@ import { ewcKnowledge, lwfKnowledge } from "./knowledge";
 import { EditorialStudies, editorialSections } from "./EditorialStudies";
 import { EditorialJourney, journeySections } from "./EditorialJourney";
 import { PatternGallery, patternGallerySections } from "./PatternGallery";
+import "./gallery-theme.css";
 
 type DemoKind = "gallery" | "lab" | "lwf" | "ewc" | "editorial" | "journey";
 
@@ -97,7 +98,7 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
-  return <div className="kit-shell" data-visual-direction="warm">
+  return <div className="kit-shell" data-visual-direction="warm" data-demo={demo}>
     <aside className="kit-sidebar">
       <a className="kit-sidebar__brand" href="#top" aria-label="PaperSkillWork reusable kit home">
         <span className="kit-sidebar__mark" aria-hidden="true">P</span><span><strong>PaperSkillWork</strong><small>REUSABLE KIT</small></span>
