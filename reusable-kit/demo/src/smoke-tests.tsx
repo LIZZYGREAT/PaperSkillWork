@@ -94,9 +94,10 @@ const term = knowledge[0];
 const timelineClips: TimelineClip[] = [
   { id: "read", durationMs: 100, holdMs: 40 },
   { id: "transform", durationMs: 80, holdMs: 20 },
-  { id: "output", durationMs: 60 },
+  { id: "validate", durationMs: 60 },
+  { id: "write", durationMs: 60 },
 ];
-const shortenedTimelineClips = [timelineClips[0], timelineClips[2]];
+const shortenedTimelineClips = [timelineClips[0], timelineClips[3]];
 
 class ManualClock implements TimelineClock {
   private callbacks = new Map<number, FrameRequestCallback>();
@@ -117,15 +118,16 @@ function TimelineFixture({ reducedMotion = false }: { reducedMotion?: boolean })
   const timeline = useAnimationTimeline({ clips: activeClips, reducedMotion, clock: manualClock });
   const state = timeline.state;
   return <section className="timeline-fixture" data-reduced={reducedMotion} data-status={state.status} data-clip={state.clipId ?? "none"} data-progress={state.progress.toFixed(2)} data-holding={state.isHolding}>
-    <div data-timeline-region="network">{state.clipId}:{state.progress.toFixed(2)}</div>
-    <div data-timeline-region="pipeline">{state.clipId}:{state.progress.toFixed(2)}</div>
+    <div data-timeline-region="source">{state.clipId}:{state.progress.toFixed(2)}</div>
+    <div data-timeline-region="destination">{state.clipId}:{state.progress.toFixed(2)}</div>
     <button type="button" onClick={timeline.controls.play}>Play timeline</button>
     <button type="button" onClick={timeline.controls.pause}>Pause timeline</button>
     <button type="button" onClick={timeline.controls.replayClip}>Replay clip</button>
     <button type="button" onClick={timeline.controls.stepBack}>Previous clip</button>
     <button type="button" onClick={timeline.controls.stepForward}>Next clip</button>
-    <button type="button" onClick={() => timeline.controls.goToClip(2)}>Go to output</button>
+    <button type="button" onClick={() => timeline.controls.goToClip(3)}>Go to write</button>
     <button type="button" onClick={() => setShortened(true)}>Replace clips</button>
+    <button type="button" onClick={() => timeline.controls.goToClip(Number.NaN)}>Invalid jump</button>
   </section>;
 }
 
@@ -266,14 +268,37 @@ async function run() {
     assert(fixture.dataset.progress === paused, "A stale frame overwrote pause.");
     buttons("Replay clip").click(); await wait();
     assert(fixture.dataset.progress === "0.00" && fixture.dataset.status === "playing", "Replay did not reset the current clip.");
-    buttons("Go to output").click(); await wait();
-    assert(fixture.dataset.clip === "output" && fixture.dataset.status === "paused", "goToClip did not jump deterministically.");
+    buttons("Go to write").click(); await wait();
+    assert(fixture.dataset.clip === "write" && fixture.dataset.status === "paused", "goToClip did not jump deterministically.");
     buttons("Previous clip").click(); await wait();
-    assert(fixture.dataset.clip === "transform", "stepBack did not select the previous clip.");
+    assert(fixture.dataset.clip === "validate", "stepBack did not select the previous clip.");
     buttons("Replace clips").click(); await wait();
     assert(fixture.dataset.clip === "read" && fixture.dataset.progress === "0.00", "Runtime clip replacement left the timeline out of bounds.");
     buttons("Next clip").click(); await wait();
-    assert(fixture.dataset.clip === "output", "Rapid forward stepping did not use the replacement list.");
+    assert(fixture.dataset.clip === "write", "Rapid forward stepping did not use the replacement list.");
+    buttons("Play timeline").click(); await wait();
+    manualClock.advance(300); await wait();
+    manualClock.advance(330); await wait();
+    assert(fixture.dataset.progress === "0.50", "Last clip did not move.");
+    buttons("Replay clip").click(); await wait();
+    manualClock.advance(340); await wait();
+    manualClock.advance(370); await wait();
+    assert(fixture.dataset.progress === "0.50" && manualClock.pending === 1, "Replay while playing killed the clock.");
+    buttons("Play timeline").click(); await wait();
+    manualClock.advance(380); await wait();
+    manualClock.advance(390); await wait();
+    assert(Number(fixture.dataset.progress) > 0.5, "Repeated play killed or reset the running clock.");
+    buttons("Pause timeline").click(); await wait();
+    const resumeProgress = fixture.dataset.progress;
+    manualClock.advance(1000); await wait();
+    assert(fixture.dataset.progress === resumeProgress && manualClock.pending === 0, "Pause retained a live frame.");
+    buttons("Play timeline").click(); await wait();
+    manualClock.advance(1010); await wait();
+    assert(fixture.dataset.progress === resumeProgress, "Resume lost elapsed time.");
+    manualClock.advance(1100); await wait();
+    assert(fixture.dataset.status === "finished" && fixture.dataset.progress === "1.00" && manualClock.pending === 0, "Final completion retained motion or incorrect status.");
+    buttons("Invalid jump").click(); await wait();
+    assert(fixture.dataset.clip === "read" && fixture.dataset.status === "paused", "Nonfinite clip index was not bounded safely.");
   });
   await check("Reduced motion exposes meaningful completed clips without continuous playback", async () => {
     const fixture = document.querySelector<HTMLElement>(".timeline-fixture[data-reduced='true']")!;

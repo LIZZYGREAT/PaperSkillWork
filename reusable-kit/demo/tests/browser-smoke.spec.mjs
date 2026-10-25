@@ -121,27 +121,17 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('from "./shared/foundation/neural-network/MiniNetworkGlyph"');
 
   const timelineGallery = page.locator("#gallery-timeline");
-  const networkTimeline = timelineGallery.locator("[data-timeline-example='network']");
-  const pipelineTimeline = timelineGallery.locator("[data-timeline-example='pipeline']");
-  await expect(networkTimeline).toHaveAttribute("data-clip", "input");
-  await expect(networkTimeline).toHaveAttribute("data-progress", "1.000");
-  await networkTimeline.getByRole("button", { name: "Next" }).click();
-  await expect(networkTimeline).toHaveAttribute("data-clip", "hidden");
-  await expect(networkTimeline).toHaveAttribute("data-progress", "1.000");
-  await expect(networkTimeline.locator("[data-network-edge-progress='input-hidden']")).toHaveAttribute("data-progress", "1.000");
-  await networkTimeline.getByRole("button", { name: "Next" }).click();
-  await expect(networkTimeline).toHaveAttribute("data-clip", "output");
-  await expect(networkTimeline.locator("[data-network-edge-progress='input-hidden']")).toHaveAttribute("data-progress", "1.000");
-  await expect(networkTimeline.locator("[data-network-edge-progress='hidden-output']")).toHaveAttribute("data-progress", "1.000");
-  await expect(networkTimeline.getByRole("button", { name: "Complete" })).toBeDisabled();
-  await expect(networkTimeline.getByRole("button", { name: "Next" })).toBeDisabled();
-  await pipelineTimeline.getByRole("button", { name: "Next" }).click();
-  await expect(pipelineTimeline).toHaveAttribute("data-clip", "transform");
-  await expect(pipelineTimeline.locator("[data-stage='transform']")).toHaveAttribute("data-state", "active");
-  await pipelineTimeline.getByRole("button", { name: "Next" }).click();
-  await pipelineTimeline.getByRole("button", { name: "Next" }).click();
-  await expect(pipelineTimeline).toHaveAttribute("data-clip", "write");
-  await expect(pipelineTimeline.getByRole("button", { name: "Next" })).toBeDisabled();
+  const forward = timelineGallery.locator("[data-timeline-example='forward']");
+  for (const stage of ["sample", "extractor", "representation", "scores", "responses"]) {
+    if (stage !== "sample") await forward.getByRole("button", { name: "下一阶段", exact: true }).click();
+    await expect(forward).toHaveAttribute("data-stage", stage);
+    await expect(forward.locator(".pg-forward-nav [aria-current='step']")).toHaveAttribute("data-stage-target", stage);
+    await expect(forward.locator(".pg-forward-system li[data-state='active']")).toHaveAttribute("data-object", stage);
+    await expect(forward.locator(".pg-forward-note")).toHaveAttribute("data-stage", stage);
+    await expect(forward.locator(".pg-forward-output")).toHaveAttribute("data-stage", stage);
+    await expect(forward).toHaveAttribute("data-progress", "1.000");
+  }
+  await expect(forward.getByRole("button", { name: "下一阶段", exact: true })).toBeDisabled();
   const timelineCodePanel = timelineGallery.locator(".pattern-gallery__code-panel");
   await timelineCodePanel.locator("summary").click();
   await timelineCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
@@ -156,7 +146,7 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   await expect(sticky.locator(".rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
   await expect(sticky.locator(".rk-sticky-system__visual")).toHaveCSS("position", "static");
   expect(await networkGallery.locator(".pg-model-branches").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
-  expect(await timelineGallery.locator(".pg-timeline-grid").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+  expect(await timelineGallery.locator(".pg-forward-system").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
   const pageOverflow = await page.evaluate(() => ({
     fits: document.documentElement.scrollWidth <= innerWidth,
     viewport: innerWidth,

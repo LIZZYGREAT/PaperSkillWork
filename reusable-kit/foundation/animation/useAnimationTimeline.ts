@@ -35,6 +35,7 @@ export type TimelineControls = {
 };
 
 type Snapshot = { clipIndex: number; elapsedMs: number; status: TimelineStatus };
+const boundedIndex = (index: number, length: number) => Number.isFinite(index) ? Math.max(0, Math.min(length - 1, Math.floor(index))) : 0;
 
 const browserClock: TimelineClock = {
   request: (callback) => window.requestAnimationFrame(callback),
@@ -73,12 +74,12 @@ export function useAnimationTimeline({
   const reducedMotion = reducedMotionOverride ?? systemReducedMotion;
   const errors = useMemo(() => validateTimelineClips(clips), [clips]);
   const usable = clips.length > 0 && errors.length === 0;
-  const initialIndex = usable ? Math.max(0, Math.min(clips.length - 1, initialState?.clipIndex ?? 0)) : 0;
+  const initialIndex = usable ? boundedIndex(initialState?.clipIndex ?? 0, clips.length) : 0;
   const initialClip = usable ? clips[initialIndex] : null;
   const initialElapsed = initialClip
     ? reducedMotion
       ? timelineClipTotal(initialClip)
-      : Math.max(0, Math.min(timelineClipTotal(initialClip), initialState?.elapsedMs ?? 0))
+      : Math.max(0, Math.min(timelineClipTotal(initialClip), Number.isFinite(initialState?.elapsedMs) ? initialState!.elapsedMs! : 0))
     : 0;
   const [snapshot, setSnapshot] = useState<Snapshot>({
     clipIndex: initialIndex,
@@ -89,6 +90,8 @@ export function useAnimationTimeline({
   const generationRef = useRef(0);
   const runStartRef = useRef<number | null>(null);
   const previousClipsRef = useRef(clips);
+  // Restart an already-playing clip even when its index/status do not change.
+  const [runNonce, setRunNonce] = useState(0);
 
   const safeIndex = usable ? Math.max(0, Math.min(clips.length - 1, snapshot.clipIndex)) : 0;
   const clip = usable ? clips[safeIndex] : null;
@@ -155,14 +158,15 @@ export function useAnimationTimeline({
     };
     handle = clock.request(tick);
     return () => clock.cancel(handle);
-  }, [clock, clip, clipTotal, clips.length, reducedMotion, safeIndex, snapshot.status, usable]);
+  }, [clock, clip, clipTotal, clips.length, reducedMotion, runNonce, safeIndex, snapshot.status, usable]);
 
   const setClip = useCallback((index: number, status: TimelineStatus) => {
     if (!usable) return;
     stopCurrentRun();
-    const next = Math.max(0, Math.min(clips.length - 1, index));
+    const next = boundedIndex(index, clips.length);
     const elapsedMs = reducedMotion ? timelineClipTotal(clips[next]) : 0;
     elapsedRef.current = elapsedMs;
+    setRunNonce(value => value + 1);
     setSnapshot({ clipIndex: next, elapsedMs, status: reducedMotion ? "paused" : status });
   }, [clips, reducedMotion, stopCurrentRun, usable]);
 
@@ -172,6 +176,7 @@ export function useAnimationTimeline({
     let elapsedMs = elapsedRef.current;
     if (safeIndex === clips.length - 1 && elapsedMs >= clipTotal) elapsedMs = 0;
     elapsedRef.current = elapsedMs;
+    setRunNonce(value => value + 1);
     setSnapshot({ clipIndex: safeIndex, elapsedMs, status: "playing" });
   }, [clipTotal, clips.length, reducedMotion, safeIndex, stopCurrentRun, usable]);
 

@@ -12,7 +12,7 @@ import { SectionHeader } from "../../compositions/section-header/SectionHeader";
 import { StepNav } from "../../compositions/step-nav/StepNav";
 import { GalleryCodePanel as CodePanel } from "./GalleryCodePanel";
 import { MiniNetworkGallerySection } from "./MiniNetworkGallerySection";
-import { TimelineGallerySection } from "./AdvancedPrimitiveGallery";
+import { TimelineGallerySection } from "./TimelineGallerySection";
 import "./pattern-gallery.css";
 
 type DiagramCase = "branch" | "merge";
