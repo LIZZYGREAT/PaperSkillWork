@@ -2,6 +2,11 @@ import { test, expect } from '@playwright/test';
 
 test('response labels share one line and parallel output symbols stay upright and level', async ({ page }) => {
   await page.goto('/?demo=gallery');
+  for (const [selector, text] of [['scores', '尺度：-2 至 2'], ['responses', '尺度：0 至 1']]) {
+    const group = page.locator(`.pg-forward-object--${selector}`);
+    await expect(group.locator('.pg-output-heading small')).toHaveText(text);
+    await expect(group.locator('.rk-response-meter small')).toHaveCount(0);
+  }
   for (const width of [1440, 1920, 390]) {
     await page.setViewportSize({ width, height: 900 });
     for (const row of await page.locator('.pg-head-response').all()) {
@@ -27,6 +32,7 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
   const shelf = page.locator('#gallery-parts');
   expect(await shelf.locator('.rk-vector-coordinate').evaluateAll(nodes => nodes.map(n => Number(n.dataset.value)))).toEqual([1, .5, -1]);
   const meter = shelf.locator('meter');
+  await expect(shelf.locator('.rk-response-meter small')).toHaveText('尺度：-4 至 4');
   await expect(meter).toHaveAttribute('min', '-4');
   await expect(meter).toHaveAttribute('max', '4');
   await expect(meter).toHaveAttribute('value', '-1.5');
@@ -78,6 +84,8 @@ test('raw score bars preserve zero, sign and magnitude on a shared scale', async
 test('independent retrieval composition derives every score and the winner from one query', async ({ page }) => {
   await page.goto('/?demo=gallery');
   const root = page.locator('[data-retrieval-query]');
+  await expect(root.locator('.retrieval-example__scale')).toHaveText('内积尺度：-3 至 3');
+  await expect(root.locator('.rk-response-meter small')).toHaveCount(0);
   for (const expected of [[2, -.5], [-1, 1.5]]) {
     expect(await root.locator('[data-score]').evaluateAll(nodes => nodes.map(n => Number(n.dataset.score)))).toEqual(expected);
     expect(await root.locator('meter').evaluateAll(nodes => nodes.map(n => n.value))).toEqual(expected);

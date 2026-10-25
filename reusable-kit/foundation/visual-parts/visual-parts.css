@@ -27,7 +27,7 @@
 .rk-response-meter__fill[data-negative="true"] { background: var(--rk-warn); }
 .rk-response-meter__zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--rk-line-strong); }
 .rk-response-meter output { font: 12px/1.5 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
-.rk-response-meter small { grid-column: 2 / -1; color: var(--rk-muted); font-size: 12px; }
+.rk-response-meter small { grid-column: 1 / -1; color: var(--rk-muted); font-size: 12px; }
 .rk-flow-connector { display: inline-grid; justify-items: center; align-content: center; gap: 4px; min-width: 40px; color: var(--rk-muted); font: 12px/1.5 var(--rk-font-body); }
 .rk-flow-connector svg { display: block; width: 44px; height: 16px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .rk-flow-connector[data-kind="control"] .rk-flow-connector__shaft { stroke-dasharray: 1 4; }

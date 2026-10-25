@@ -82,13 +82,13 @@ export function ForwardTimelineExample() {
         {heading(2)}<div className="pg-forward-object pg-forward-object--representation"><RepresentationVector values={features} label={`演示特征向量 ${vectorLabel(features)}`} /><b>z = φ<sub>Θ</sub>(x₁)</b><p>同一个 z 送往每类权重</p></div><small className="pg-forward-system__source">{stageSource(2)}</small>
       </li>
       <li data-object="scores" data-input-from="representation" data-state={objectState(3)}>
-        {heading(3)}<div className="pg-forward-object pg-forward-object--scores"><span className="pg-output-eyebrow">一个训练输出头</span><div className="pg-class-scores">
-          {scores.map((score, j) => <div key={j} className="pg-head-score" data-class={j + 1} data-traced={index === 3 && tracedClass === j}><span className="pg-class-weight">w<sub>{j + 1}</sub></span><ResponseMeter value={score} min={-scoreExtent} max={scoreExtent} label={`g${["₁", "₂", "₃"][j]}(x₁)`} /></div>)}
+        {heading(3)}<div className="pg-forward-object pg-forward-object--scores"><div className="pg-output-heading"><span className="pg-output-eyebrow">一个训练输出头</span><small>尺度：{-scoreExtent} 至 {scoreExtent}</small></div><div className="pg-class-scores">
+          {scores.map((score, j) => <div key={j} className="pg-head-score" data-class={j + 1} data-traced={index === 3 && tracedClass === j}><span className="pg-class-weight">w<sub>{j + 1}</sub></span><ResponseMeter value={score} min={-scoreExtent} max={scoreExtent} label={`g${["₁", "₂", "₃"][j]}(x₁)`} showScale={false} /></div>)}
         </div><p>g<sub>j</sub>(x₁) = w<sub>j</sub><sup>T</sup>z</p></div><small className="pg-forward-system__source">{stageSource(3)}</small>
       </li>
       <li data-object="responses" data-input-from="scores" data-state={objectState(4)}>
-        {heading(4)}<div className="pg-forward-object pg-forward-object--responses"><span className="pg-output-eyebrow">逐类独立响应</span><div className="pg-class-responses">
-          {responses.map((response, j) => <div key={j} className="pg-head-response" data-class={j + 1} data-traced={index === 4 && tracedClass === j}><span className="pg-sigmoid-mark">σ</span><ResponseMeter value={response} min={0} max={1} label={`C${j + 1}`} /></div>)}
+        {heading(4)}<div className="pg-forward-object pg-forward-object--responses"><div className="pg-output-heading"><span className="pg-output-eyebrow">逐类独立响应</span><small>尺度：0 至 1</small></div><div className="pg-class-responses">
+          {responses.map((response, j) => <div key={j} className="pg-head-response" data-class={j + 1} data-traced={index === 4 && tracedClass === j}><span className="pg-sigmoid-mark">σ</span><ResponseMeter value={response} min={0} max={1} label={`C${j + 1}`} showScale={false} /></div>)}
         </div><p>各类独立变换，不要求和为 1</p></div><small className="pg-forward-system__source">{stageSource(4)}</small>
       </li>
     </ol>

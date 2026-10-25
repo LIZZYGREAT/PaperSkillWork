@@ -16,7 +16,8 @@ export function RetrievalExample() {
   return <section className="retrieval-example" data-retrieval-query={index} aria-labelledby="retrieval-title">
     <div className="retrieval-example__copy"><p className="rk-caption">一个新的组合 / 向量检索</p><h2 className="rk-type--heading-2" id="retrieval-title">相同小件，<br />换一种解释。</h2><p className="rk-lead">用内积比较两个候选表示。查询变化时，图、数值与排序一起变化。</p><button type="button" onClick={() => setIndex(1 - index)}>切换查询向量</button><p className="rk-caption">合成教学向量；使用原始内积，未做归一化，不表示概率。</p></div>
     <div className="retrieval-example__comparison"><div className="retrieval-example__query"><SampleToken sampleId={`query-${index}`} label="查询 q"><span aria-hidden="true">q</span></SampleToken><RepresentationVector values={query} label="查询表示" /></div>
-      {results.map(item => <div className="retrieval-example__result" key={item.id} data-candidate={item.id} data-score={item.score}><RepresentationVector values={item.values} label={`候选 ${item.id}`} /><ResponseMeter value={item.score} min={-3} max={3} label={`qᵀ${item.id}`} /></div>)}
+      <p className="retrieval-example__scale">内积尺度：-3 至 3</p>
+      {results.map(item => <div className="retrieval-example__result" key={item.id} data-candidate={item.id} data-score={item.score}><RepresentationVector values={item.values} label={`候选 ${item.id}`} /><ResponseMeter value={item.score} min={-3} max={3} label={`qᵀ${item.id}`} showScale={false} /></div>)}
       <p className="rk-aside" role="status">当前最大内积：候选 {best.id}，{best.score}。<br />两组候选向量保持不变。</p>
     </div>
   </section>;

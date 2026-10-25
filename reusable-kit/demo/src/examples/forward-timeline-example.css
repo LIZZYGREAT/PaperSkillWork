@@ -32,11 +32,13 @@
 .pg-extractor-heading b { font: 22px/1.5 var(--rk-font-math); }
 .pg-extractor-drawing { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; width: 100%; }
 .pg-class-scores, .pg-class-responses { display: grid; gap: 12px; width: 100%; max-width: 260px; }
-.pg-head-score { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: start; gap: 10px; font-size: 14px; }
+.pg-head-score { display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 10px; font-size: 14px; }
 .pg-class-weight { display: inline-block; padding: 5px 8px; border: 1px solid var(--rk-line-strong); border-radius: 50%; }
 .pg-head-response { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; align-items: start; }
 .pg-sigmoid-mark { color: var(--rk-accent); font: 400 13px/1.5 var(--rk-font-math); }
 .pg-output-eyebrow { font-size: 13px; color: var(--rk-muted); }
+.pg-output-heading { display: grid; gap: 4px; text-align: center; }
+.pg-output-heading small { color: var(--rk-muted); font-size: 12px; }
 .pg-head-score[data-traced="true"], .pg-head-response[data-traced="true"] { outline: 2px solid var(--rk-accent); outline-offset: 4px; }
 .pg-forward-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 24px; background: var(--rk-surface-soft); }
 .pg-forward-note h4 { margin: 10px 0; font-size: 20px; }
