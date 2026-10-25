@@ -24,12 +24,12 @@ import "./gallery-theme.css";
 type DemoKind = "gallery" | "lab" | "lwf" | "ewc" | "editorial" | "journey";
 
 const choices = [
-  { value: "gallery" as const, label: "Pattern Gallery", description: "图表、构图、滚动联动与公式" },
-  { value: "lab" as const, label: "Component Lab", description: "Typography, controls, overlays" },
-  { value: "lwf" as const, label: "LwF scenario", description: "Preserving earlier responses" },
-  { value: "ewc" as const, label: "EWC scenario", description: "Protecting important parameters" },
-  { value: "editorial" as const, label: "Editorial studies", description: "三种编辑构图 · 待人工评审" },
-  { value: "journey" as const, label: "Reading Journey", description: "完整阅读实验 · LwF" },
+  { value: "gallery" as const, label: "Pattern Gallery", description: "图表、构图、滚动联动与公式", galleryDescription: "图形、构图与同步演示" },
+  { value: "lab" as const, label: "Component Lab", description: "Typography, controls, overlays", galleryDescription: "字体、控件与阅读浮层" },
+  { value: "lwf" as const, label: "LwF scenario", description: "Preserving earlier responses", galleryDescription: "保留旧任务的响应" },
+  { value: "ewc" as const, label: "EWC scenario", description: "Protecting important parameters", galleryDescription: "保护重要参数" },
+  { value: "editorial" as const, label: "Editorial studies", description: "三种编辑构图 · 待人工评审", galleryDescription: "三种叙事构图" },
+  { value: "journey" as const, label: "Reading Journey", description: "完整阅读实验 · LwF", galleryDescription: "完整论文阅读 · LwF" },
 ];
 /** LwF sections, grouped so the rail can show the reading structure. */
 const lwfGroups = [
@@ -106,7 +106,7 @@ export default function App() {
       <nav className="kit-sidebar__courses" aria-label="Choose a learning demo">
         <p className="kit-sidebar__label">学习路径 <span>LEARNING PATH</span></p>
         {choices.map((choice, index) => <button key={choice.value} type="button" aria-label={choice.label} aria-current={demo === choice.value ? "page" : undefined} className={`kit-sidebar__course ${demo === choice.value ? "is-active" : ""}`} onClick={() => chooseDemo(choice.value)}>
-          <span className="kit-sidebar__number">{String(index + 1).padStart(2, "0")}</span><span className="kit-sidebar__course-copy"><strong>{choice.label}</strong><small>{choice.description}</small></span>
+          <span className="kit-sidebar__number">{String(index + 1).padStart(2, "0")}</span><span className="kit-sidebar__course-copy"><strong>{choice.label}</strong><small>{demo === "gallery" ? choice.galleryDescription : choice.description}</small></span>
         </button>)}
       </nav>
       <nav className="kit-sidebar__chapters" aria-label="Sections on this page">
