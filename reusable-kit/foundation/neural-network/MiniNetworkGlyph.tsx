@@ -92,7 +92,8 @@ export function MiniNetworkGlyph({ layers, label, description, connections, conn
   if (problems.length) return <div className="rk-error" role="alert">{problems.join(" ")}</div>;
 
   const width = Math.max(320, layers.length * 150);
-  const height = 210;
+  // Nodes occupy y=14..166. Keep equal padding above and below the graph.
+  const height = 180;
   const top = 24;
   const usableHeight = 132;
   const positions = new Map<string, { x: number; y: number }>();

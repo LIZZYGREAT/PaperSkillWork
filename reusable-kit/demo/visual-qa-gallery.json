@@ -1,0 +1,434 @@
+{
+  "baseUrl": "http://127.0.0.1:4178",
+  "server": {
+    "command": "node",
+    "args": [
+      "node_modules/vite/bin/vite.js",
+      "preview",
+      "--configLoader",
+      "bundle",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "4178",
+      "--strictPort"
+    ],
+    "cwd": ".",
+    "readyPath": "/",
+    "startupTimeoutMs": 30000
+  },
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "pages": [
+    {
+      "id": "pattern-gallery",
+      "path": "/?demo=gallery",
+      "computedStyles": [
+        {
+          "selector": ".kit-shell",
+          "property": "background-color",
+          "equals": "rgb(247, 244, 237)"
+        },
+        {
+          "selector": ".pattern-gallery__section > .rk-section-head .rk-section-head__title",
+          "property": "font-weight",
+          "equals": "600"
+        },
+        {
+          "selector": ".pg-forward-nav button",
+          "property": "white-space",
+          "equals": "normal"
+        }
+      ],
+      "states": [
+        {
+          "id": "gallery-opening"
+        },
+        {
+          "id": "gallery-orthogonal-connectors",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "role=button[name=\"Orthogonal\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-diagrams .rk-figure"
+            }
+          ]
+        },
+        {
+          "id": "gallery-reference-focus",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "#gallery-diagrams .pattern-gallery__focus-row button:nth-of-type(2)"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-diagrams .rk-figure"
+            }
+          ]
+        },
+        {
+          "id": "gallery-merge",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "#gallery-diagrams .pattern-gallery__controls .rk-segments:first-child button:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": "#gallery-diagrams .pattern-gallery__focus-row button:nth-of-type(3)"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-diagrams .rk-figure"
+            }
+          ]
+        },
+        {
+          "id": "gallery-editorial-stagger",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "role=button[name=\"Staggered rows\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-editorial"
+            }
+          ]
+        },
+        {
+          "id": "gallery-sticky-manual",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "role=button[name=\"Data pipeline\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".pattern-gallery__scroll-demo [data-step-id=\"check\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-scroll"
+            }
+          ]
+        },
+        {
+          "id": "gallery-sticky-scroll",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "role=button[name=\"Data pipeline\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-scroll-step=\"report\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-formula-terms",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".pattern-gallery__type-preview .rk-formula-term:first-child"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-typography"
+            }
+          ]
+        },
+        {
+          "id": "gallery-mini-network-full",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"local\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-mini-network-focus",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-network-example=\"local\"] button"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"local\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-mini-network-parallel",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-network-example=\"parallel\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-start",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-extractor",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"extractor\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-representation",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"representation\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-scores",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"scores\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-responses",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"responses\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-timeline-paused-motion",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-stage-target=\"extractor\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".pg-forward-controls .pg-replay-control"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 450
+            },
+            {
+              "type": "click",
+              "selector": ".pg-forward-controls .pg-play-control"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-timeline-example=\"forward\"]"
+            }
+          ]
+        },
+        {
+          "id": "gallery-editorial-axis",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "role=button[name=\"Alternating axis\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".pattern-gallery__editorial"
+            }
+          ]
+        },
+        {
+          "id": "gallery-editorial-asymmetric",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "role=button[name=\"Asymmetric\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".pattern-gallery__editorial"
+            }
+          ]
+        },
+        {
+          "id": "gallery-editorial-overview",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "role=button[name=\"Overview → detail\"]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".pattern-gallery__editorial"
+            }
+          ]
+        },
+        {
+          "id": "gallery-code-diagrams",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "#gallery-diagrams .pattern-gallery__code-panel summary"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-diagrams .pattern-gallery__code-panel"
+            }
+          ]
+        },
+        {
+          "id": "gallery-code-mini-network",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "#gallery-mini-network .pattern-gallery__code-panel summary"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-mini-network .pattern-gallery__code-panel"
+            }
+          ]
+        },
+        {
+          "id": "gallery-code-timeline",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "#gallery-timeline .pattern-gallery__code-panel summary"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "#gallery-timeline .pattern-gallery__code-panel"
+            }
+          ]
+        },
+        {
+          "id": "gallery-hub",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".kit-topbar__hub"
+            }
+          ]
+        },
+        {
+          "id": "gallery-hub-selected",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".kit-topbar__hub"
+            },
+            {
+              "type": "click",
+              "selector": ".rk-reference-hub__list li:first-child button"
+            }
+          ]
+        },
+        {
+          "id": "gallery-footer",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".pattern-gallery__footer"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "geometry": {
+    "checkPageHorizontalOverflow": true,
+    "minSemanticFontSizePx": 12,
+    "semanticSelectors": [
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "p",
+      "li",
+      "label",
+      "button",
+      "input",
+      "select",
+      ".rk-diagram__title",
+      ".rk-diagram__meta",
+      ".rk-diagram__badge",
+      ".rk-step-nav__label",
+      "[data-vqa-semantic]"
+    ],
+    "clippingSelectors": [
+      ".rk-step-nav__label",
+      ".kit-lwf-focus__title",
+      ".rk-diagram__title",
+      ".rk-diagram__meta",
+      ".rk-diagram__badge",
+      ".rk-diagram__list-inputs",
+      ".kit-lwf__lane p",
+      ".ed-study__emphasis",
+      ".ed-study__moment-copy h3",
+      ".ed-study__phase-label",
+      ".ed-study__signal strong",
+      ".ed-study math",
+      ".ed-c-candidate h3",
+      ".ed-c-candidate h4",
+      ".ed-c-candidate [data-loss-result]",
+      ".journey h1",
+      ".journey h2",
+      ".journey math",
+      ".journey-comparison p",
+      ".pattern-gallery__facts dd",
+      ".pattern-gallery__editorial h4",
+      ".pattern-gallery__scroll-step h3",
+      ".pg-overview figure span"
+    ]
+  },
+  "settleMs": 200
+}

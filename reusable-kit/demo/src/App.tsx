@@ -135,7 +135,7 @@ export default function App() {
       <main className="kit-page">
         {demo === "lab" ? <section className="kit-page__intro"><p className="kit-page__eyebrow"><span>{page.eyebrow}</span><i /> PaperSkillWork</p><h1>{page.title}</h1><p>{page.description}</p></section> : null}
         {demo === "gallery" ? <PatternGallery /> : demo === "lab" ? <ComponentLab /> : demo === "lwf" ? <LwfDemo /> : demo === "editorial" ? <EditorialStudies /> : demo === "journey" ? <EditorialJourney /> : <EwcDemo />}
-        <footer className="kit-demo__footer">Source components are copied into each paper project by <code>tools/paper.py scaffold-kit</code>. Editing a paper's copy does not change this kit.</footer>
+        <footer className="kit-demo__footer">{demo === "gallery" ? <>通过 <code>tools/paper.py scaffold-kit</code> 把组件复制到论文项目中，再在该项目内修改。各项目的副本独立维护。</> : <>Source components are copied into each paper project by <code>tools/paper.py scaffold-kit</code>. Editing a paper's copy does not change this kit.</>}</footer>
       </main>
     </div>
     <KnowledgeDrawer entries={referenceEntries} open={hubOpen} selectedId={referenceId} onSelectedIdChange={setReferenceId} onClose={() => setHubOpen(false)} />

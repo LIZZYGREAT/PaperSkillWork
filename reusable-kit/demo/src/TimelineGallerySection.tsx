@@ -5,8 +5,8 @@ import exampleSource from "./examples/ForwardTimelineExample.tsx?raw";
 
 export function TimelineGallerySection() {
   return <section id="gallery-timeline" className="pattern-gallery__section" aria-labelledby="gallery-timeline-title">
-    <SectionHeader index="06" eyebrow="FOUNDATION / TIMELINE" title="一个时钟，让整块教学画面同步推进" lead="导航、完整路径、当前说明、公式和输出都从同一份 timeline.state 推导。点击任一阶段，可暂停核对同一样本的前向过程。" headingId="gallery-timeline-title" />
+    <SectionHeader index="06" eyebrow="同步时间线" title="沿同一样本，逐步看清前向过程" lead="导航、图形、当前说明和公式由同一个时钟推进。可以播放完整路径，也可以选择某个阶段，停下来核对输入与输出。" headingId="gallery-timeline-title" />
     <ForwardTimelineExample />
-    <GalleryCodePanel title="Open runnable timeline example" code={exampleSource.replace("../../../foundation/", "./shared/foundation/")} source="recipes/animation-timeline.md" level="runnable" notice="与主舞台共用一份编译过的 TSX；只创建一次 Hook。流水线跨领域复用另由受控时钟 fixture 验证。" />
+    <GalleryCodePanel title="展开可运行的时间线示例 · useAnimationTimeline" code={exampleSource.replace("../../../foundation/", "./shared/foundation/")} source="recipes/animation-timeline.md" level="runnable" notice="与主舞台共用一份 TSX，通过一次 useAnimationTimeline 调用同步图形与文字；布局样式见 Recipe。" />
   </section>;
 }

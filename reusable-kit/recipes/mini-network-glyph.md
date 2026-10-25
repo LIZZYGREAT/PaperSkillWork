@@ -30,17 +30,17 @@ function SampleMark() {
 export function LocalNetworkExample() {
   const [focused, setFocused] = useState(false);
   return <article className="pg-local-network" data-network-example="local">
-    <header><div><span>01 / ONE SMALL NETWORK</span><h3>同一张网络，查看连接怎样相遇</h3></div><button type="button" aria-pressed={focused} onClick={() => setFocused(value => !value)}>
+    <header><div><span>01 · 网络内部</span><h3>同一张网络，查看连接怎样相遇</h3></div><button type="button" aria-pressed={focused} onClick={() => setFocused(value => !value)}>
       {focused ? "显示完整连接" : "聚焦局部连接"}
     </button></header>
     <div className="pg-network-inspect">
-      <div className="pg-network-input"><span className="pg-network-kicker">INPUT</span><SampleMark /><strong>x₁</strong><small>同一示意输入</small></div>
+      <div className="pg-network-input"><span className="pg-network-kicker">输入图像</span><SampleMark /><strong>x₁</strong><small>同一示意输入</small></div>
       <span className="pg-network-link" aria-hidden="true">→</span>
-      <div className="pg-network-topology"><span className="pg-network-kicker">MODEL · 3–5–3</span>
+      <div className="pg-network-topology"><span className="pg-network-kicker">三层网络 · 3–5–3</span>
         <MiniNetworkGlyph label="三层教学网络" description="输入 3、隐藏层 5、输出 3；人工指定一条连接路径，不计算 Fisher 重要性。"
           layers={layers} connectAdjacent focus={focused ? selectedPath : undefined} showDetails={false} />
       </div>
-      <aside className="pg-network-selection" data-focus-mode={focused ? "selected" : "all"} aria-live="polite"><span className="pg-network-kicker">{focused ? "SELECTED PATH" : "FULL TOPOLOGY"}</span><strong>{focused ? "沿两条连接看一条路径" : "30 条连接，保留完整结构"}</strong>
+      <aside className="pg-network-selection" data-focus-mode={focused ? "selected" : "all"} aria-live="polite"><span className="pg-network-kicker">{focused ? "当前路径" : "完整连接"}</span><strong>{focused ? "沿两条连接看一条路径" : "30 条连接，保留完整结构"}</strong>
         {focused ? <ol><li>输入节点 2</li><li>隐藏节点 3</li><li>输出节点 2</li></ol> : <p>3 个输入节点连接 5 个隐藏节点，再连接 3 个输出节点。</p>}
         <small>切换只改变强调，节点位置与连接集合保持不变。</small>
       </aside>
@@ -50,15 +50,15 @@ export function LocalNetworkExample() {
 }
 
 const models = [
-  { id: "teacher", name: "Teacher", role: "FROZEN · 参数冻结", output: "参照响应", symbol: "t(x₁)", widths: [3, 4, 3] },
-  { id: "student", name: "Student", role: "TRAINABLE · 可训练", output: "当前响应", symbol: "s(x₁)", widths: [3, 5, 4, 3] },
+  { id: "teacher", name: "Teacher", role: "参数冻结", output: "参照响应", symbol: "t(x₁)", widths: [3, 4, 3] },
+  { id: "student", name: "Student", role: "可训练", output: "当前响应", symbol: "s(x₁)", widths: [3, 5, 4, 3] },
 ];
 
 export function ParallelModelsExample() {
   return <article className="pg-model-composition" data-network-example="parallel">
-    <header><div><span>02 / TWO MODELS · ONE INPUT</span><h3>输入分成两路，模型各自产生响应</h3></div><p>模型身份标在整块容器上；<br />内部小网络仍使用同一个 Glyph。</p></header>
+    <header><div><span>02 · 共享输入，独立模型</span><h3>输入分成两路，模型各自产生响应</h3></div><p>模型身份标在整块容器上；<br />内部小网络仍使用同一个 Glyph。</p></header>
     <div className="pg-model-branches">
-      <div className="pg-shared-input" data-shared-input="x"><span className="pg-network-kicker">SHARED INPUT</span><SampleMark /><strong>同一输入 x₁</strong><span>分别送入两路</span></div>
+      <div className="pg-shared-input" data-shared-input="x"><span className="pg-network-kicker">共享输入</span><SampleMark /><strong>同一输入 x₁</strong><span>分别送入两路</span></div>
       <div className="pg-model-paths">
         {models.map(model => <div className="pg-model-path" key={model.id} data-model-path={model.id} data-from="x" data-to={model.id}>
           <span className="pg-model-arrow" aria-hidden="true">→</span>
@@ -68,7 +68,7 @@ export function ParallelModelsExample() {
               layers={model.widths.map((nodeCount, index) => ({ id: `layer-${index}`, label: index === 0 ? "输入" : index === model.widths.length - 1 ? "输出" : `隐藏 ${index}`, nodeCount }))}
               connectAdjacent showDetails={false} />
           </section>
-          <div className="pg-model-output" data-output-for={model.id}><span aria-hidden="true">→</span><div><small>{model.id === "teacher" ? "REFERENCE OUTPUT" : "CURRENT OUTPUT"}</small><strong>{model.output}</strong><em>{model.symbol}</em></div></div>
+          <div className="pg-model-output" data-output-for={model.id}><span aria-hidden="true">→</span><div><small>{model.id === "teacher" ? "参考路径" : "学习路径"}</small><strong>{model.output}</strong><em>{model.symbol}</em></div></div>
         </div>)}
       </div>
     </div>
@@ -77,7 +77,7 @@ export function ParallelModelsExample() {
 }
 ```
 
-For the Gallery layout, copy the dedicated Network CSS section (`.pg-local-network`, `.pg-network-*`, `.pg-model-*`, `.pg-shared-input`) and related responsive rules from `demo/src/pattern-gallery.css`. Without these optional presentation rules the TSX still renders in document order. Each model row explicitly identifies input `x` and its own output. Frozen uses a dashed container plus text; trainable uses a solid container plus text.
+For the Gallery layout, copy the warm palette token block at the top, the dedicated Network CSS section (`.pg-local-network`, `.pg-network-*`, `.pg-model-*`, `.pg-shared-input`) and related responsive rules from `demo/src/pattern-gallery.css`. Without these optional presentation rules the TSX still renders in document order. Each model row explicitly identifies input `x` and its own output. Frozen uses a dashed container plus text; trainable uses a solid container plus text.
 
 ## Copy and boundaries
 

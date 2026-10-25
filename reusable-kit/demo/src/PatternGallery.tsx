@@ -21,12 +21,12 @@ type DiagramFocus = "all" | "reference" | "learning";
 type EditorialLayout = "axis" | "stagger" | "asymmetric" | "overview";
 
 export const patternGallerySections = [
-  { id: "gallery-diagrams", title: "Diagram & connectors" },
-  { id: "gallery-editorial", title: "Editorial layouts" },
-  { id: "gallery-scroll", title: "Scroll & motion" },
-  { id: "gallery-typography", title: "Typography & formula" },
-  { id: "gallery-mini-network", title: "Mini Network" },
-  { id: "gallery-timeline", title: "Timeline" },
+  { id: "gallery-diagrams", title: "分支与汇合" },
+  { id: "gallery-editorial", title: "叙事构图" },
+  { id: "gallery-scroll", title: "滚动联动" },
+  { id: "gallery-typography", title: "文字与公式" },
+  { id: "gallery-mini-network", title: "小型网络" },
+  { id: "gallery-timeline", title: "同步时间线" },
 ];
 
 const branchBase: DiagramSpec = {
@@ -415,15 +415,15 @@ function PatternGallery() {
 
   return <div className="kit-demo__paper pattern-gallery" data-demo-view="pattern-gallery">
     <header className="pattern-gallery__intro">
-      <p className="rk-type--meta">REUSABLE PATTERNS · CANDIDATE</p>
-      <h2 className="rk-type--heading-1">从一个可见样例，找到下一步可复制的结构</h2>
-      <p className="rk-type--body">按能力浏览真实预览、适用边界、最小接口和源码来源。构图 Recipe 提供起步代码；组件成熟度仍以唯一的 Registry 为准。</p>
+      <p className="rk-type--meta">可复用的教学表达 · Pattern Gallery</p>
+      <h2 className="rk-type--heading-1">看清结构，再带入你的论文</h2>
+      <p className="rk-type--body">从图形关系到叙事排版，逐项查看交互示例、适用场景和配套代码。先找到合适的表达，再按论文中的对象与计算改写。</p>
     </header>
 
     <InlineCallout kind="note" title="候选状态说明">Reusable Kit 的组件仍为 candidate。构建和浏览器检查只验证实现，不代表人工批准。示意数据也不应被误认成论文结果。</InlineCallout>
 
     <section id="gallery-diagrams" className="pattern-gallery__section" aria-labelledby="gallery-diagrams-title">
-      <SectionHeader index="01" eyebrow="DIAGRAM / CONNECTORS" title="分支、汇合与连接几何" lead="DiagramFlow 已经支持节点角色、数据/梯度/控制线、端口、三种路径几何和聚焦。这里把这些变体放到一个可发现的样例里。" headingId="gallery-diagrams-title" />
+      <SectionHeader index="01" eyebrow="图形关系" title="分支、汇合与连接方向" lead="用分支区分不同职责，用汇合说明目标如何共同影响更新。切换结构、连线路径和聚焦范围，查看图形如何保持对象关系。" headingId="gallery-diagrams-title" />
       <div className="pattern-gallery__controls">
         <SegmentedControl label="选择图形结构" value={diagramCase} options={[{ value: "branch", label: "分支 · 两条不同职责" }, { value: "merge", label: "汇合 · 两个完整目标" }]} onChange={(value) => { setDiagramCase(value); setFocusMode("all"); }} />
         <SegmentedControl label="选择连线路径" value={pathMode} options={diagramModes} onChange={setPathMode} />
@@ -455,7 +455,7 @@ function PatternGallery() {
     </section>
 
     <section id="gallery-editorial" className="pattern-gallery__section" aria-labelledby="gallery-editorial-title">
-      <SectionHeader index="02" eyebrow="EDITORIAL COMPOSITION" title="构图 Recipe，而不是固定页面模板" lead="选择一种表达关系，先看布局如何帮助阅读，再复制最小结构。Recipe 只约束关系和适用边界，不要求所有论文采用同一版式。" headingId="gallery-editorial-title" />
+      <SectionHeader index="02" eyebrow="叙事构图" title="让版式顺着内容的关系展开" lead="先后步骤适合轴线，并列比较适合错位行，参照与主体可以分配不同宽度。选择一种构图，查看阅读顺序与解释空间如何变化。" headingId="gallery-editorial-title" />
       <SegmentedControl label="选择编辑构图" value={editorialLayout} options={layoutOptions} onChange={setEditorialLayout} />
       <EditorialPreview kind={editorialLayout} />
       <div className="pattern-gallery__facts">
@@ -472,7 +472,7 @@ function PatternGallery() {
     </section>
 
     <section id="gallery-scroll" className="pattern-gallery__section" aria-labelledby="gallery-scroll-title">
-      <SectionHeader index="03" eyebrow="SCROLL / MOTION" title="同一状态驱动固定图与滚动正文" lead="滚动到章节时，左侧主图跟随当前阶段；手动选图后暂时优先显示所选阶段。切换示例，看看同一 StickySystemView 如何承载不同数据。" headingId="gallery-scroll-title" />
+      <SectionHeader index="03" eyebrow="滚动联动" title="正文向前，图形跟随当前步骤" lead="滚动阅读时，主图聚焦正在解释的对象；也可以通过步骤导航停下来查看。两种示例使用相同的同步方式。" headingId="gallery-scroll-title" />
       <InlineCallout kind="note" title="交互提示">可以滚动右侧章节，也可以在左侧步骤导航直接选择。手动选择会暂时覆盖滚动位置，随后自动恢复同步。</InlineCallout>
       <StickyStoryChooser />
       <div className="pattern-gallery__facts">
@@ -489,12 +489,13 @@ function PatternGallery() {
     </section>
 
     <section id="gallery-typography" className="pattern-gallery__section" aria-labelledby="gallery-typography-title">
-      <SectionHeader index="04" eyebrow="TYPOGRAPHY / FORMULA" title="强调命题，并把符号解释放在公式旁" lead="行内强调标识局部命题，PullQuote 承载一条独立结论；FormulaBlock 将可读公式、术语按钮和逐项说明放在同一阅读区域。" headingId="gallery-typography-title" />
+      <SectionHeader index="04" eyebrow="文字与公式" title="让结论突出，让符号就近解释" lead="用适度强调标出关键命题，把公式和逐项说明放在一起。选择符号即可查看含义，阅读时无需在远处寻找定义。" headingId="gallery-typography-title" />
       <div className="pattern-gallery__type-preview">
         <p className="rk-type--body">冻结的参照模型提供稳定目标；<strong>当前可训练模型承担参数更新</strong>。符号 <span className="rk-math"><var>θ</var><sub>t</sub></span> 在正文中保留数学身份。</p>
         <PullQuote attribution="教学结论">需要保留的目标与需要拟合的新任务，可以分别解释，再说明它们如何共同影响更新。</PullQuote>
         <FormulaBlock
           label="目标结构示意"
+          termsLabel="符号"
           formula="L_total = L_task + λ L_preserve"
           accessibleLabel="总目标等于任务损失加 lambda 乘以保持损失"
           renderedFormula={<math><msub><mi>L</mi><mi>total</mi></msub><mo>=</mo><msub><mi>L</mi><mi>task</mi></msub><mo>+</mo><mi>λ</mi><msub><mi>L</mi><mi>preserve</mi></msub></math>}
@@ -512,7 +513,7 @@ function PatternGallery() {
           <div><dt>不要用于</dt><dd>连续多句都加粗，或公式项与目标、实现来源尚未核验时。</dd></div>
           <div><dt>最小接口</dt><dd><code>PullQuote(children, attribution?)</code>；<code>FormulaBlock(formula, renderedFormula, terms, description)</code>。</dd></div>
           <div><dt>键盘 / 降级</dt><dd>公式术语以按钮提供焦点和选择反馈；MathML 由浏览器排版，正文仍提供文字说明。</dd></div>
-          <div><dt>Registry / scaffold</dt><dd><code>PullQuote</code> 本次补登记为 P1 candidate；<code>FormulaBlock</code> 已登记为 P1 candidate。</dd></div>
+          <div><dt>Registry / scaffold</dt><dd><code>PullQuote</code> 与 <code>FormulaBlock</code> 均为 P1 candidate。</dd></div>
         </dl>
       </div>
       <CodePanel title="展开可复制的文字与公式样例" code={typographyCode} source="recipes/typography-formula.md" level="runnable" notice="完整 TSX 组件；MathML 类型声明由脚手架复制。请先在入口引入 Kit 样式，并用论文来源核对公式。" />
@@ -645,7 +646,7 @@ function StickyStory({ story }: { story: ScrollStory }) {
   >
     <div className="pattern-gallery__scroll-steps">
       {story.steps.map((step, index) => <section id={`scroll-${story.id}-${step.id}`} className="pattern-gallery__scroll-step" data-scroll-step={step.id} key={step.id}>
-        <SectionHeader index={String(index + 1).padStart(2, "0")} eyebrow={step.eyebrow} title={step.title} lead={step.copy} />
+        <SectionHeader index={String(index + 1).padStart(2, "0")} eyebrow="当前过程" title={step.title} lead={step.copy} />
         <p className="pattern-gallery__scroll-status">图形焦点：<strong>{activeId === step.id ? "当前步骤" : "向下滚动以同步"}</strong></p>
       </section>)}
     </div>

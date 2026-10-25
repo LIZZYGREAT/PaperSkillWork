@@ -64,7 +64,7 @@ export function ForwardTimelineExample() {
   const heading = (i: number) => <div className="pg-stage-heading"><span>{String(i + 1).padStart(2, "0")}</span><strong>{stages[i].title}</strong><small>{i < index ? "已完成" : i === index ? "当前阶段" : "预览"}</small></div>;
   // One snapshot drives the stage, object emphasis, traced sub-object, narrative and outputs.
   return <article className="pg-forward" data-timeline-example="forward" data-stage={state.clipId} data-progress={state.progress.toFixed(3)} data-status={state.status} data-holding={state.isHolding} data-sample="x1">
-    <header><div><span>ONE SAMPLE / SHARED MODEL</span><h3>看见一张图像，怎样变成逐类响应</h3><p>图像 x₁ → 特征提取器 → 表示 z → 逐类得分 → Sigmoid 响应</p></div><small className="pg-teaching-badge">教学示意 · 非论文实测</small></header>
+    <header><div><span>同一样本 · 共享模型</span><h3>看见一张图像，怎样变成逐类响应</h3><p>图像 x₁ → 特征提取器 → 表示 z → 逐类得分 → Sigmoid 响应</p></div><small className="pg-teaching-badge">教学示意 · 非论文实测</small></header>
     <nav className="pg-forward-nav" aria-label="前向计算阶段" data-stage={state.clipId}>
       {stages.map((item, i) => <button type="button" key={item.id} data-stage-target={item.id} aria-current={i === index ? "step" : undefined} onClick={() => controls.goToClip(i)}><span>{String(i + 1).padStart(2, "0")}</span>{item.title}</button>)}
     </nav>
@@ -81,7 +81,7 @@ export function ForwardTimelineExample() {
         {heading(0)}<div className="pg-forward-object pg-forward-object--input"><InputImage /><b>x₁</b><p>同一张输入图像</p></div><small className="pg-forward-system__source">{stageSource(0)}</small>
       </li>
       <li data-object="extractor" data-input-from="sample" data-state={objectState(1)}>
-        {heading(1)}<div className="pg-forward-object pg-forward-object--extractor"><div className="pg-extractor-heading"><span>SHARED FEATURE EXTRACTOR</span><b>φ<sub>Θ</sub></b></div><FeatureBlocks tracedBlock={tracedBlock} /><p>同一组共享参数 Θ</p></div><small className="pg-forward-system__source">{stageSource(1)}</small>
+        {heading(1)}<div className="pg-forward-object pg-forward-object--extractor"><div className="pg-extractor-heading"><span>共享特征提取器</span><b>φ<sub>Θ</sub></b></div><FeatureBlocks tracedBlock={tracedBlock} /><p>同一组共享参数 Θ</p></div><small className="pg-forward-system__source">{stageSource(1)}</small>
       </li>
       <li data-object="representation" data-input-from="extractor" data-state={objectState(2)}>
         {heading(2)}<div className="pg-forward-object pg-forward-object--representation"><div className="pg-feature-vector" aria-label={`演示特征向量 ${vectorLabel(features)}`}>
@@ -89,12 +89,12 @@ export function ForwardTimelineExample() {
         </div><b>z = φ<sub>Θ</sub>(x₁)</b><p>同一个 z 送往每类权重</p></div><small className="pg-forward-system__source">{stageSource(2)}</small>
       </li>
       <li data-object="scores" data-input-from="representation" data-state={objectState(3)}>
-        {heading(3)}<div className="pg-forward-object pg-forward-object--scores"><span className="pg-output-eyebrow">ONE TRAINING HEAD</span><div className="pg-class-scores">
+        {heading(3)}<div className="pg-forward-object pg-forward-object--scores"><span className="pg-output-eyebrow">一个训练输出头</span><div className="pg-class-scores">
           {scores.map((score, j) => <div key={j} className="pg-head-score" data-class={j + 1} data-traced={index === 3 && tracedClass === j}><span className="pg-class-weight">w<sub>{j + 1}</sub></span><span>g<sub>{j + 1}</sub>(x₁)</span><strong>{score}</strong></div>)}
         </div><p>g<sub>j</sub>(x₁) = w<sub>j</sub><sup>T</sup>z</p></div><small className="pg-forward-system__source">{stageSource(3)}</small>
       </li>
       <li data-object="responses" data-input-from="scores" data-state={objectState(4)}>
-        {heading(4)}<div className="pg-forward-object pg-forward-object--responses"><span className="pg-output-eyebrow">PER-CLASS RESPONSE</span><div className="pg-class-responses">
+        {heading(4)}<div className="pg-forward-object pg-forward-object--responses"><span className="pg-output-eyebrow">逐类独立响应</span><div className="pg-class-responses">
           {responses.map((response, j) => <div key={j} className="pg-head-response" data-class={j + 1} data-traced={index === 4 && tracedClass === j}><span className="pg-sigmoid-mark">σ</span><span className="pg-response-value"><label htmlFor={`${responseId}-${j}`}>C{j + 1}</label><meter id={`${responseId}-${j}`} min="0" max="1" value={response} /><strong>{response.toFixed(3)}</strong></span></div>)}
         </div><p>各类独立变换，不要求和为 1</p></div><small className="pg-forward-system__source">{stageSource(4)}</small>
       </li>
