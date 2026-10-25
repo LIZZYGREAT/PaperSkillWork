@@ -118,3 +118,7 @@ CLI/工作流/文档 54 项通过，另一个复制用例在沙箱中遇 WinErro
 最终与阶段签收所需截图保留在工作区父目录 `.qa/kit-redesign-20261025/review/` 和 `final/`。其余本轮临时图、pytest 工程、失败夹具、共享 runner 原始产物在查看/记录后按确切路径清理。保留这些图片是为了人工复核，不是批准基线。
 
 清理结果：上述五个确切 runner 目录均返回 `CLEANED: <same-path>`，逐一 Test-Path 为 False。自己创建的 pytest 工程、Playwright test-results、失败隔离目录均已核对绝对路径后清理并确认不存在；保留 review/final 中的必要截图，未触碰任何历史 QA 目录。最终文档治理补测 4 PASS（0），`git diff --check` 和 `git diff --exit-code HEAD -- papers` 均为 0。
+
+## 截图反馈修订 · 2026-10-25
+
+第一部分：FeatureAggregation 将细路径改为 10px 实心圆角柱，调整容器高度、柱间距和底部对齐；active 只强调外框与填充。RepresentationVector 去除坐标间的空隙，形成连续零线。修在公共组件/CSS，覆盖首屏、小件样张、特征提取、检索中的全部实例。构建 PASS（0）；数值、提取时间线、reduced motion 与检索 4 项浏览器测试 PASS（0），覆盖 1440/1920/390；已实看独立小件和提取场景截图。临时证据位于 `.qa/kit-feedback-20261025/parts/`，最终收敛时只保留必要画面。
