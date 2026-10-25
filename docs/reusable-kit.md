@@ -1,135 +1,59 @@
 # Reusable Kit
 
-`reusable-kit/` is a source template library for paper tutorials. It is copied into a paper workspace, never imported at runtime, and it never syncs back. Its job is to make a paper's *structure* readable — objects, connections, states, comparisons, evidence, terms — while the paper supplies every algorithm fact.
+Kit 是可发现、可复制、可自由组合的论文教学工具箱。视觉基础、小部件、Recipe 和真实参考场景各有职责；布局与计算属于当前论文。副本由论文工程独立拥有，不依赖跨论文运行时包。
 
-Current source version: `2.0.0` (`reusable-kit/KIT_VERSION`).
+## 从教学问题开始
 
-## Copy-on-scaffold
+根据 W2/W4 确认对象、数据流、状态与比较关系，在 Gallery 按需求或能力查找。资料直接读取唯一 registry.yaml；检查用途、适用/避免条件、效果和真实代码。W5 记录直接复用、组合小件或局部实现的决定；局部实现是正常结果。不要因 Kit 改变已确认的教学主线。
 
-```powershell
-python3 tools/paper.py new kit-smoke-demo --title "Kit Smoke Demo" --url "https://example.org/kit-smoke"
-python3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --add StepNav,FigureFrame,FormulaBlock,PullQuote --allow-unapproved
+连接真实数据和计算，在当前页面检验默认外观。共同缺陷修 Kit 并回归展厅；论文特化只改局部构图。新场景先在真实论文验证，再通过两个语境判断是部件、Recipe 还是参考。
+
+## 精确复制与安全追加
+
+从仓库根目录执行，paper-id 是已有工作区的实际 ID：
+
+```sh
+python tools/paper.py scaffold-kit <paper-id> --select MiniNetworkGlyph --allow-unapproved --dry-run
+python tools/paper.py scaffold-kit <paper-id> --select MiniNetworkGlyph --allow-unapproved
+python tools/paper.py scaffold-kit <paper-id> --select ResponseMeter --allow-unapproved
 ```
 
-The first command is a virtual sample for isolated validation; a real paper must use its real source and title. The second command is one first-scaffold option: the `continual-learning` preset includes P0 components, while `--add` accepts P1 components only. All current entries are `candidate`, so `--allow-unapproved` explicitly accepts copying them; it does not approve them. The alternative first-scaffold command without optional P1 additions is `python3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --allow-unapproved`. These two scaffold commands are mutually exclusive for the same new workspace.
+第一次只复制 Glyph TSX、其 CSS、kit.css 与来源元数据，第二次仅补齐响应条依赖。入口导入 `./shared/foundation/styles/kit.css`；从实际复制的具体模块导入组件，不导入未选的总 index。
 
-Scaffolding writes `papers/<paper-id>/web/enhanced/src/shared/` plus `KIT_VERSION`, keeps the source layer paths (`foundation/`, `core/`, `compositions/`, `optional/`) so internal imports resolve after the copy, and refuses to overwrite an existing `shared/` directory. Choose all desired P1 additions on the first command; the scaffold operation is copy-on-scaffold and does not merge into an existing `src/shared/`.
+`--preset continual-learning` 是显式的宽选择（P0），可和 `--select` 合用。没有隐式 preset 或强制覆盖。P0/P1 不限制精确选择，也不表示批准。
 
-### Independent copy verification
+复制器沿真实 TS/TSX/CSS 本地 import/export 和 Registry 非导入依赖求闭包；缺 CSS/Hook/类型会在写入前失败。路径限制在 Kit 与论文工程内。新文件以独占方式创建，冲突先汇总并拒绝本轮写入。相同来源版本的用户修改保留并输出 KEEP；若 Kit 同一依赖已演化且与副本不同，停止并手工合并，或在隔离工程比较。已有源码从不静默覆盖。
 
-On 2026-10-25, a fresh `kit-smoke-demo` workspace was created and scaffolded with the two commands above, then removed after verification. `npm ci` and `npm run build` passed with strict TypeScript enabled. A headless Chromium run against the production preview verified `DiagramFlow` data/gradient semantics, `StickySystemView + StepNav + FigureFrame` manual synchronization, `FormulaBlock` term selection with `PullQuote`, and the 390px no-overflow/list fallback. This is engineering evidence only: all copied items remain `candidate`, and no human visual acceptance is implied.
+`KIT_VERSION` 记录首次复制版本；`KIT_SELECTION.json` 记录累计选择与来源 SHA-256，供增量对比，不是工作流状态机。旧副本只有 KIT_VERSION 无 manifest 时，先在隔离工程比较和处理来源，不猜测所有权。
 
-The same date, a second fresh workspace explicitly selected `MiniNetworkGlyph,useAnimationTimeline` through `--add`. Its strict build and Chromium production-preview test passed with both candidates rendered together, timeline stepping changing network focus, compressed-count disclosure, frozen/trainable identity, and a 390px no-overflow check. The temporary workspace was then removed; this remains automated candidate evidence, not approval.
+当前所有资产为 candidate；`--allow-unapproved` 仅明确接受未批准复制。deprecated（包括实际导入的已登记依赖）均不可选。approved 必须有真实 approved_by、approved_at、evidence；自动检查不生成批准记录。
 
-Add the shared stylesheet once from the paper entry point, then import only the components actually used:
+## 部件、组合与参考
 
-```tsx
-// In papers/<paper-id>/web/enhanced/src/App.tsx, add this stylesheet once.
-import "./shared/foundation/styles/kit.css";
-import { DiagramFlow } from "./shared/foundation/layout/DiagramFlow";
-import { FigureFrame } from "./shared/compositions/figure-frame";
-import { SectionHeader } from "./shared/compositions/section-header";
-import { MetaList } from "./shared/foundation/data/MetaList";
-import { StepNav } from "./shared/compositions/step-nav";
-```
+| 表达任务 | 入口 | 边界 |
+| --- | --- | --- |
+| 聚焦网络连接 | MiniNetworkGlyph；[Recipe](../reusable-kit/recipes/mini-network-glyph.md) | 一张小网络；模型身份在外层，可用 compact/standard/inspect |
+| 输入、特征块、向量与响应 | [Visual Parts](../reusable-kit/recipes/visual-parts.md) | 调用方给 ID、数据和尺度；组件不计算算法 |
+| 五阶段训练响应 | useAnimationTimeline；[Recipe](../reusable-kit/recipes/animation-timeline.md) | 一个时钟；训练响应不等于预测 |
+| 信号类型与方向 | FlowConnector / DiagramFlow | 局部连接或复杂多对象图；方向必须明确 |
+| 标题、公式与图文 | EditorialTypography / MathTypography / FormulaBlock | [视觉规范](VISUAL_LANGUAGE_SYSTEM.md)，统一语言，不固定页面 |
+| 滚动解释同一系统 | StickySystemView | 不增加第二个计算引擎 |
+| LwF / EWC / iCaRL | papers 只读参考与 Demo 参考路由 | 不搬整篇事实，不为 Kit 改动已批准论文 |
 
-### Maturity gate
+网络、提取流程与独立内积检索使用同一批部件和不同构图。Recipe 单独交付布局 CSS，资产自身拥有必需外观；Gallery CSS 不参与复制。
 
-`scaffold-kit` includes the P0 files in the selected preset and adds only requested P1 files. It refuses candidate copies by default. Without `--allow-unapproved`, it reports the requested candidate names and asks for the flag:
+## 验证与签收
 
-```
-Reusable Kit component(s) are not approved: ... Pass --allow-unapproved to scaffold them anyway.
-```
-
-`--add` accepts P1 only; P0 components such as `DiagramFlow` and `StickySystemView` already arrive through the `continual-learning` preset. Asking for a P0 with `--add` fails. `--allow-unapproved` copies candidate components and prints one `[WARN]` line per component. `deprecated` components can never be copied, with or without the flag. `python tools/paper.py check <paper-id>` fails on a `deprecated` `reusable_pattern` and only warns for a `candidate` one. A copied candidate is still a candidate: copying is not approval.
-
-## Three delivery layers
-
-Do not blur these. A view that only works for one paper is not a reusable component because it happens to run in the same demo.
-
-Registry records maturity, Gallery supports discovery and interaction, Recipe supports choosing the right relationship, and Scaffold delivers a source-owned copy. None of these layers turns a layout into a mandatory paper template.
-
-**1. Foundation / visual primitives — must be directly reusable**
-
-- Typography, colour roles, spacing, surfaces, buttons, focus, overlays (`foundation/styles/kit.css`, `foundation/controls`, `foundation/overlay`).
-- Visual language: warm paper for reading, a sage surface for figures, one accent green, one clay accent, and neutrals. Roles carry form as well as colour — dashed outline plus hatching for frozen, a left bar for trainable, a sand fill for a stored reference, one dark bar for the single update target.
-- Diagram primitives: `DiagramNode` roles, connectors, arrowheads, port dots, labels, state badges, and the geometry in `foundation/layout/diagram.ts`.
-- `DiagramFlow` (`foundation/layout/DiagramFlow.tsx`): declarative nodes in a grid with connectors measured from the real boxes. Stage names sit on a hairline above the columns instead of in another panel; each role carries form as well as colour (dashed outline and hatching for frozen, a left bar for trainable, a filled block for the one update target). Wide layouts draw the graph; narrow layouts reflow the same spec into an ordered list grouped under the same stage names, listing each node's inputs. It reflows instead of scaling, so in-figure text keeps its role size at every viewport. `template` overrides the equal-column grid when one stage needs more room than another.
-- Math typography: formulas are MathML (`<math>`, `msub`, `munderover`, `mfrac`), laid out by the browser's math engine, so summation limits, fractions, and italic variables are real rather than styled text. Writing MathML in JSX needs `foundation/math/mathml-jsx.d.ts` in the program; a paper copies it beside its own `src` types. Inline symbols inside prose use `.rk-math` with `<var>`/`<sub>`.
-- `TermRef` (Chinese quick preview) + `ReferenceHub` (English detail) sharing one canonical entry ID.
-
-**2. Reusable compositions — approved only after cross-scene validation**
-
-- `StepNav` (`compositions/step-nav`): synchronised step navigation whose grid wraps to as many rows as the width needs, so no step name is ever replaced by an ellipsis. It owns no state; the caller passes the current step. Validated against three data samples (a five-step LwF mechanism, a seven-step EWC system view, and a four-item Component Lab sample with deliberately long Chinese and English labels).
-- `SectionHeader` (`compositions/section-header`): numbered eyebrow on a hairline rule, heading, and one lead paragraph. One header for every section is what keeps a long tutorial from becoming a stack of cards.
-- `FigureFrame` (`compositions/figure-frame`): caption strip, step counter, note, a sage drawing area, and a key row. It bleeds past the text column by exactly its own padding, so the drawing still starts on the text edge instead of floating inside a box.
-- `MetaList` (`foundation/data`): hairline label/value rows for inspected facts. It lives in Foundation because `core/` components (the state machine inspector) use it too.
-- `StateMachineExplorer` lays states on a centred grid derived from the authored rows instead of trusting hand-placed coordinates, so the graph fills the width. The inspected state is a two-column panel — what the state is on the left, the pressable legal transitions on the right — and history is a numbered chip trail.
-- `FormulaBlock` puts the equation on its own tinted paper with real MathML typesetting and keeps the terms plus the selected explanation beside it, so the expression and its annotation are read together.
-- `CompareView` renders two lettered columns with their own rule and tone, then states the consequence as two short lists (`What changes` / `What stays invariant`) instead of a pair of tinted boxes.
-- Branch and merge layouts are **recipes, not components**: `recipes/diagram-branch.md`, `recipes/diagram-merge.md`. They describe the structure a paper must satisfy on top of `DiagramFlow`. They stay recipes until two semantically unrelated papers use the same abstraction.
-
-**3. Paper-specific teaching scenes — reuse the language, not the figure**
-
-The LwF and EWC figures in `reusable-kit/demo/src/figures.tsx` are scene data for one paper each. A new paper writes its own figure specs with the same primitives. Reusing the visual language, the state cues, and the geometry is the goal; reusing the whole picture is not.
-
-The toolbox reuses primitives; each paper remains free to design the scene demanded by its objects, states, relationships, computation, and conclusion. Repeating a composition across adjacent sections is allowed when the repeated spatial relationship helps cognition, but changing only the text is not a default template strategy: the implementation plan should explain what the repetition lets the reader track. Conversely, avoiding repetition is not a reason to add motion or decoration that carries no teaching work.
-
-## Maturity and the registry
-
-`reusable-kit/registry.yaml` is canonical. `tier` (P0/P1) only controls copying scope; `status` records quality review:
-
-| Status | Meaning |
-| --- | --- |
-| `candidate` | Exists and is used in the demo/at least one paper. Not reviewed for reuse. |
-| `approved` | A named human accepted it, with a date and reviewed evidence recorded in the entry. |
-| `deprecated` | Kept so old plans resolve; may not be scaffolded. |
-
-`approved` requires `approved_by`, `approved_at` (`YYYY-MM-DD`) and a non-empty `evidence` list. The validator rejects an approval record on a non-approved entry and vice versa, so maturity cannot be claimed in one direction and silently kept in another. **Every entry is currently `candidate`**: this round produced the reviewable figures and the gate, not the acceptance.
-
-Layer 1 and 2 items are listed in the registry by name so `implementation.stages[].reusable_pattern` can resolve them. A non-null name that is not in the registry fails the implementation-plan check; use `null` when no reusable pattern applies.
-
-## Reviewer constraints that are not negotiable
-
-These come from the visual review that rejected the previous candidate. They apply to Kit work itself, not just to paper pages.
-
-- Do not hide a sizing failure with `overflow: hidden`, `text-overflow: ellipsis`, or an arbitrary font shrink. Mainline step names, node titles, and axis labels must stay complete.
-- Do not scale a diagram until its labels stop being readable; reflow, split into segments, or offer an inspect mode.
-- Do not make every region the same rounded card. Groups, alignment, and whitespace carry the hierarchy.
-- Do not put the paper's composition in a large override stylesheet. Paper CSS is for page rhythm; component behaviour and visual language belong in `kit.css`, where the component can be copied without its overrides.
-- Do not let the title compete with the figure. A page title is one or two lines at 38–52px on desktop; the figure is the main scene.
-- Do not claim approval, reuse success, or design completion from a passing build, a passing browser test, or a copied source directory.
-
-## Local demo and checks
-
-```powershell
-cd reusable-kit/demo
-npm ci
-npx playwright install chromium
-npm run dev
-npm run build
-npm run test:browser
-```
-
-The first demo route is the Pattern Gallery: it makes DiagramFlow connector and focus variants, editorial composition recipes, StickySystemView scroll synchronization, typography/formula examples, MiniNetworkGlyph local topology / parallel model composition, and one five-stage synchronized Animation Timeline scene discoverable with code panels. Diagram, sticky, typography, network, and timeline panels contain complete runnable TSX examples; editorial panels are TSX/CSS structural fragments whose caller data must be supplied. The Foundation Component Lab remains available as its own route, alongside the EWC, LwF, Editorial Studies, and Reading Journey scenarios. The Gallery is an entry point, not a second component registry; `registry.yaml` remains canonical and its entries remain candidates until human acceptance.
-
-`test:browser` runs the assertion page plus Chromium checks for Gallery diagrams and scroll/manual synchronization, typography/control states, overlay contracts, the LwF figure (label completeness, connector geometry, in-figure type size, title/figure ratio, per-step object and edge state, narrow-screen reflow, sidebar selection versus keyboard focus), and the TermRef → English Hub journey. It asserts the *properties* the design requires, not a particular DOM shape.
-
-Visual QA runs from the repository root; the Kit demo config captures three desktop viewports (1280×900, 1440×900, 1920×1080) and checks the declared selectors for clipping. The browser suite additionally checks its narrow reflow at 390px; the shared visual capture remains desktop-only:
-
-```powershell
+```sh
+npm --prefix reusable-kit/demo ci
+npm --prefix reusable-kit/demo run build
+npm --prefix reusable-kit/demo run test:browser
+python -m pytest -q tests/test_paper_cli.py tests/test_kit_copy.py tests/test_workflow_implementation.py tests/test_document_governance.py
+python reusable-kit/demo/scripts/test-advanced-scaffold.py
+node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-advanced.json
+node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-gallery.json
 node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json
 node tools/visual-qa/self-check.mjs
 ```
 
-Build and browser success keep this work at `candidate`. `HUMAN_ACCEPTANCE` in the Visual QA report stays `PENDING` until the user reviews the captured screenshots.
-
-## Still open
-
-- The Kit now has one visual direction (warm paper, one green, one clay, sage figure surface). It has not been signed off by a human, and the earlier second candidate has been deleted rather than kept as a toggle.
-- No component has an approval record, so the scaffold gate currently blocks a fresh copy unless `--allow-unapproved` is passed.
-- The LwF notation in `figures.tsx` is a mechanism sketch. The loss coefficients, temperature, and head structure have not been checked against the paper PDF and must be verified before any of it appears in a tutorial.
-- `ResponsibilityMap` is still only reachable as a collapsed audit view in the LwF scene; its own visual quality has not been redesigned.
-
-
-The 2026-10-25 revision replaces the serial frozen→trainable example with independent models receiving shared input, and replaces two unrelated players with one clock driving navigation, system focus, explanation and computed outputs. `MiniNetworkGlyph.showDetails` defaults to true; false retains labels, ARIA descriptions and compression disclosure while omitting optional metadata. Both P1 entries remain candidates. See [the execution and verification record](mini-network-timeline-revision.md). Gallery copy panels load the actual compiled example sources; the recipes contain the same TSX with standalone import paths.
+Windows 可设置 PAPERWORK_PLAYWRIGHT_EXECUTABLE 指向 Chromium/Edge。按 [Visual QA](VISUAL_QA.md) 检查报告和真实截图，清理本轮临时产物。数据/几何/交互测试不能代替视觉判断。S1/S4/S6 及最终 A/B/D/F 画面供人签收，未获同意保持 candidate。实际记录见 [视觉语言与执行记录](VISUAL_LANGUAGE_SYSTEM.md)。

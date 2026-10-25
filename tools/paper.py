@@ -428,7 +428,7 @@ def reusable_kit_registry() -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
         return {}, ["reusable-kit/registry.yaml is missing"]
     require_yaml()
     try:
-        data = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+        data = yaml.load(registry_path.read_text(encoding="utf-8"), Loader=UniqueKeyLoader)
     except (OSError, yaml.YAMLError) as exc:
         return {}, ["could not read reusable-kit/registry.yaml: {}".format(exc)]
     if not isinstance(data, dict) or not isinstance(data.get("components"), dict):
@@ -467,6 +467,25 @@ def reusable_kit_registry() -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
         if not source.is_dir():
             problems.append("reusable-kit component '{}' source directory is missing: {}".format(name, relative))
             continue
+        try:
+            entry_source = kit_file(REUSABLE_KIT, entry.get("source"))
+            if not entry_source.is_file():
+                raise PaperError("source file is missing")
+            entry_source.resolve().relative_to(source)
+            dependencies = entry.get("dependencies", [])
+            if not isinstance(dependencies, list):
+                raise PaperError("dependencies must be a file-path list")
+            for dependency in dependencies:
+                if not kit_file(REUSABLE_KIT, dependency).is_file():
+                    raise PaperError("dependency file is missing: {}".format(dependency))
+            for field in ("purpose", "use_when", "avoid_when", "demo_anchor", "usage"):
+                if field in entry and (not isinstance(entry[field], str) or not entry[field].strip()):
+                    raise PaperError("{} must be non-empty text".format(field))
+            if entry.get("recipe") and not kit_file(REUSABLE_KIT, entry["recipe"]).is_file():
+                raise PaperError("recipe is missing: {}".format(entry["recipe"]))
+        except (PaperError, ValueError) as exc:
+            problems.append("reusable-kit component '{}' has invalid source metadata: {}".format(name, exc))
+            continue
         if status == "approved":
             approval_problems = approval_evidence_problems(name, entry)
             if approval_problems:
@@ -485,118 +504,189 @@ def reusable_kit_registry() -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
     return components, problems
 
 
+def kit_file(root: Path, relative: str) -> Path:
+    """Resolve a portable source path without following links outside its owner."""
+    if not isinstance(relative, str) or not relative or "\\" in relative:
+        raise PaperError("Unsafe Kit file path: {}".format(relative))
+    path = PurePosixPath(relative)
+    if path.is_absolute() or PureWindowsPath(relative).drive or ".." in path.parts:
+        raise PaperError("Unsafe Kit file path: {}".format(relative))
+    target = root / Path(*path.parts)
+    try:
+        target.resolve().relative_to(root.resolve())
+    except ValueError:
+        raise PaperError("Kit file escapes its owner: {}".format(relative))
+    for item in (target, *target.parents):
+        if item == root.parent:
+            break
+        if item.is_symlink():
+            raise PaperError("Kit file cannot traverse a symlink: {}".format(relative))
+    return target
+
+
+def kit_source_closure(registry: Dict[str, Dict[str, Any]], selected: Sequence[str]) -> List[str]:
+    """Follow real local imports/exports plus declared non-import dependencies."""
+    visited = set()
+
+    def visit(relative: str) -> None:
+        if relative in visited:
+            return
+        source = kit_file(REUSABLE_KIT, relative)
+        if not source.is_file():
+            raise PaperError("Missing Kit dependency: {}".format(relative))
+        visited.add(relative)
+        if source.suffix not in (".ts", ".tsx", ".css"):
+            raise PaperError("Unsupported Kit source file: {}".format(relative))
+        content = source.read_text(encoding="utf-8")
+        imports = re.findall(r'''(?:\bfrom\s*|\bimport\s*|\bimport\s*\(\s*|@import\s*)["'](\.[^"']+)["']''', content)
+        for specifier in imports:
+            candidate = source.parent / specifier
+            choices = [candidate] if candidate.suffix else [Path(str(candidate) + ext) for ext in (".ts", ".tsx", ".css", ".d.ts")] + [candidate / "index.ts", candidate / "index.tsx"]
+            resolved = next((p for p in choices if p.is_file()), None)
+            if resolved is None:
+                raise PaperError("Missing Kit import '{}' from {}".format(specifier, relative))
+            try:
+                dependency = resolved.resolve().relative_to(REUSABLE_KIT.resolve()).as_posix()
+            except ValueError:
+                raise PaperError("Kit import escapes source: {} in {}".format(specifier, relative))
+            # Check the authored path as well, before normalization loses links.
+            if any(p.is_symlink() for p in (resolved, *resolved.parents) if p != REUSABLE_KIT.parent):
+                raise PaperError("Kit imports cannot traverse symlinks")
+            visit(dependency)
+
+    for name in selected:
+        entry = registry[name]
+        visit(entry["source"])
+        for relative in entry.get("dependencies", []):
+            visit(relative)
+    return sorted(visited)
+
+
 def cmd_scaffold_kit(args: argparse.Namespace) -> int:
+    import hashlib
+
     validate_paper_id(args.paper_id)
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
-    if args.preset != "continual-learning":
-        raise PaperError("Unsupported Reusable Kit preset: {}".format(args.preset))
     web_dir = folder / "web/enhanced"
     if not web_dir.is_dir():
         raise PaperError("Paper workspace is missing web/enhanced")
     src_dir = web_dir / "src"
-    if src_dir.is_symlink():
-        raise PaperError("web/enhanced/src cannot be a symlink")
-    if src_dir.exists() and not src_dir.is_dir():
-        raise PaperError("web/enhanced/src exists but is not a directory")
-    try:
-        workspace_root = folder.resolve()
-        web_dir.resolve().relative_to(workspace_root)
-        src_dir.resolve().relative_to(workspace_root)
-    except ValueError:
-        raise PaperError("web/enhanced/src resolves outside the paper workspace")
     destination = src_dir / "shared"
-    if destination.exists() or destination.is_symlink():
-        raise PaperError("Reusable Kit destination already exists and was left unchanged: {}".format(destination.relative_to(folder).as_posix()))
-
+    try:
+        for path in (web_dir, src_dir, destination):
+            path.resolve().relative_to(folder.resolve())
+            if path.is_symlink() or (path.exists() and not path.is_dir()):
+                raise PaperError("Kit destination must be a directory without symlinks: {}".format(path))
+    except ValueError:
+        raise PaperError("Kit destination resolves outside the paper workspace")
     registry, problems = reusable_kit_registry()
     if problems:
         raise PaperError("Reusable Kit registry is invalid: {}".format("; ".join(problems)))
-    requested = [name.strip() for name in (args.add or "").split(",") if name.strip()]
-    unknown = sorted(set(requested) - set(registry))
+    selected = [name.strip() for name in args.select.split(",") if name.strip()]
+    if args.preset:
+        selected = [name for name, entry in registry.items() if args.preset in entry.get("default_for", [])] + selected
+    selected = list(dict.fromkeys(selected))
+    if not selected:
+        raise PaperError("Choose --select AssetA,AssetB or an explicit --preset continual-learning")
+    unknown = sorted(set(selected) - set(registry))
     if unknown:
         raise PaperError("Unknown reusable component(s): {}".format(", ".join(unknown)))
-    not_optional = sorted(name for name in requested if registry[name].get("tier") != "P1")
-    if not_optional:
-        raise PaperError("--add accepts optional P1 components only: {}".format(", ".join(not_optional)))
-
-    sources = ["foundation"]
-    copied_components: List[str] = []
-    for name, entry in registry.items():
-        if entry.get("tier") == "P0" and "continual-learning" in entry.get("default_for", []):
-            path = entry["path"]
-            if path != "foundation" and not path.startswith("foundation/"):
-                sources.append(path)
-            copied_components.append(name)
-    sources.extend(registry[name]["path"] for name in requested)
-    copied_components.extend(requested)
-    copied_components = list(dict.fromkeys(copied_components))
-
-    deprecated = sorted(name for name in copied_components if registry_entry_status(registry[name]) == "deprecated")
+    files = kit_source_closure(registry, selected)
+    included = list(dict.fromkeys(selected + [name for name, entry in registry.items() if entry["source"] in files]))
+    deprecated = [name for name in included if registry_entry_status(registry[name]) == "deprecated"]
     if deprecated:
-        raise PaperError(
-            "Reusable Kit component(s) are deprecated and must not be scaffolded: {}".format(", ".join(deprecated))
-        )
-    unapproved = sorted(name for name in copied_components if registry_entry_status(registry[name]) != "approved")
+        raise PaperError("Kit components are deprecated and cannot be copied: {}".format(", ".join(deprecated)))
+    unapproved = sorted(name for name in included if registry_entry_status(registry[name]) != "approved")
     if unapproved and not args.allow_unapproved:
-        raise PaperError(
-            "Reusable Kit component(s) are not approved: {}. Pass --allow-unapproved to scaffold them anyway.".format(
-                ", ".join(unapproved)
-            )
-        )
-
-    sources = list(dict.fromkeys(sources))
-    compact_sources = [path for path in sources if not any(path.startswith(parent + "/") for parent in sources)]
-
-    try:
-        kit_root = REUSABLE_KIT.resolve()
-        source_paths = []
-        for relative in compact_sources:
-            source = (REUSABLE_KIT / Path(*PurePosixPath(relative).parts)).resolve()
-            source.relative_to(kit_root)
-            if not source.is_dir():
-                raise PaperError("Reusable Kit source directory is missing: {}".format(relative))
-            source_paths.append((relative, source))
-        version_path = REUSABLE_KIT / "KIT_VERSION"
-        if not version_path.is_file():
-            raise PaperError("reusable-kit/KIT_VERSION is missing")
-        src_dir.mkdir(parents=True, exist_ok=True)
-        stage = Path(tempfile.mkdtemp(prefix=".shared-scaffold-", dir=str(src_dir)))
+        raise PaperError("Reusable Kit component(s) are not approved: {}. Pass --allow-unapproved to scaffold them anyway.".format(", ".join(unapproved)))
+    version_path = REUSABLE_KIT / "KIT_VERSION"
+    if not version_path.is_file():
+        raise PaperError("reusable-kit/KIT_VERSION is missing")
+    version = version_path.read_text(encoding="utf-8").strip()
+    metadata = kit_file(destination, "KIT_SELECTION.json")
+    version_target = kit_file(destination, "KIT_VERSION")
+    previous = {"components": [], "files": {}}
+    if metadata.exists():
         try:
-            for relative, source in source_paths:
-                target = stage / Path(*PurePosixPath(relative).parts)
-                target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(str(source), str(target))
-            selected_paths = {registry[name]["path"] for name in copied_components}
-            for name, entry in registry.items():
-                relative = entry["path"]
-                if entry.get("tier") != "P1" or entry.get("scaffold_opt_in") is not True or name in requested or relative in selected_paths:
-                    continue
-                optional_path = stage / Path(*PurePosixPath(relative).parts)
-                if optional_path.is_dir():
-                    shutil.rmtree(str(optional_path))
+            previous = json.loads(metadata.read_text(encoding="utf-8"))
+            if not isinstance(previous, dict) or not isinstance(previous.get("components"), list) or not all(isinstance(n, str) for n in previous["components"]) or not isinstance(previous.get("files"), dict):
+                raise ValueError("components/files have invalid types")
+            for relative, digest in previous["files"].items():
+                kit_file(destination, relative)
+                if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+                    raise ValueError("invalid file digest")
+        except (OSError, ValueError, TypeError) as exc:
+            raise PaperError("Invalid KIT_SELECTION.json; reconcile provenance before appending: {}".format(exc))
+    elif version_target.exists():
+        raise PaperError("Existing KIT_VERSION has no selection manifest; reconcile the existing source copy before appending")
+
+    digest = lambda content: hashlib.sha256(content).hexdigest()
+    contents = {relative: kit_file(REUSABLE_KIT, relative).read_bytes() for relative in files}
+    conflicts, retained, new_files = [], [], []
+    for relative, content in contents.items():
+        target = kit_file(destination, relative)
+        # Validate every parent before writing anything, including file-vs-dir collisions.
+        if any(p.exists() and not p.is_dir() for p in target.parents if p != destination.parent):
+            conflicts.append(relative)
+        elif target.exists():
+            if not target.is_file():
+                conflicts.append(relative)
+            elif target.read_bytes() == content:
+                pass
+            elif previous["files"].get(relative) == digest(content):
+                retained.append(relative)  # Locally edited copy of the same source revision.
+            else:
+                conflicts.append(relative)
+        else:
+            new_files.append(relative)
+    if conflicts:
+        raise PaperError("Kit conflicts; no files were written:\n  {}\nReconcile these files manually or copy into a separate isolated project; existing source is never overwritten.".format("\n  ".join(sorted(set(conflicts)))))
+    if args.dry_run:
+        print(json.dumps({"selected": selected, "included": included, "files": files, "new_files": new_files, "retained_edits": retained}, indent=2))
+        return 0
+
+    src_dir.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix=".shared-scaffold-", dir=str(src_dir)))
+    created = []
+    made_destination = not destination.exists()
+    try:
+        for relative in new_files:
+            target = stage / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(contents[relative])
+        merged = dict(previous["files"])
+        merged.update({relative: digest(content) for relative, content in contents.items()})
+        provenance = {"kit_version": version, "components": sorted(set(previous["components"] + included)), "files": merged}
+        (stage / "KIT_SELECTION.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
+        if made_destination:
             shutil.copy2(str(version_path), str(stage / "KIT_VERSION"))
             stage.rename(destination)
-        except Exception:
-            resolved_stage = stage.resolve()
-            resolved_stage.relative_to(src_dir.resolve())
-            shutil.rmtree(str(resolved_stage), ignore_errors=True)
-            raise
-    except PaperError:
-        raise
-    except (OSError, ValueError) as exc:
-        raise PaperError("Could not scaffold the Reusable Kit: {}".format(exc))
-
+        else:
+            for relative in new_files:
+                target = kit_file(destination, relative)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with target.open("xb") as stream:
+                    created.append(target)
+                    stream.write((stage / relative).read_bytes())
+            # Atomic provenance replacement; no existing source file is ever replaced.
+            (stage / "KIT_SELECTION.json").replace(metadata)
+    except OSError as exc:
+        for target in reversed(created):
+            target.unlink()
+        raise PaperError("Could not scaffold Kit; new source files rolled back: {}".format(exc))
+    finally:
+        if stage.exists():
+            stage.resolve().relative_to(src_dir.resolve())
+            shutil.rmtree(str(stage))
     for name in unapproved:
-        print("[WARN] {} is {}, not approved; copied because --allow-unapproved was passed".format(
-            name, registry_entry_status(registry[name])
-        ))
-    copied = ", ".join(compact_sources)
-    print("Copied Reusable Kit v{} into papers/{}/web/enhanced/src/shared".format(version_path.read_text(encoding="utf-8").strip(), args.paper_id))
-    print("Included: {}".format(copied))
-    if requested:
-        print("Optional components: {}".format(", ".join(requested)))
-    print("The paper now owns this source copy; later paper edits do not update reusable-kit/.")
+        print("[WARN] {} is {}, not approved; copied because --allow-unapproved was passed".format(name, registry_entry_status(registry[name])))
+    for relative in retained:
+        print("[KEEP] Local edit retained: {}".format(relative))
+    print("Copied Reusable Kit v{} into papers/{}/web/enhanced/src/shared".format(version, args.paper_id))
+    print("Selected components: {}".format(", ".join(selected)))
+    print("Files: {} new, {} reused; source closure {}".format(len(new_files), len(files) - len(new_files), len(files)))
+    print("The paper now owns this source copy; existing source files were not overwritten.")
     return 0
 
 
@@ -1898,8 +1988,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     scaffold = subparsers.add_parser("scaffold-kit", help="copy the selected Reusable Kit source into a paper's enhanced project")
     scaffold.add_argument("paper_id")
-    scaffold.add_argument("--preset", choices=("continual-learning",), default="continual-learning")
-    scaffold.add_argument("--add", default="", help="comma-separated optional P1 component names selected in W5")
+    scaffold.add_argument("--preset", choices=("continual-learning",))
+    scaffold.add_argument("--select", default="", help="comma-separated asset names; copies only their source closure")
+    scaffold.add_argument("--dry-run", action="store_true", help="print the exact file closure without writing")
     scaffold.add_argument(
         "--allow-unapproved",
         action="store_true",

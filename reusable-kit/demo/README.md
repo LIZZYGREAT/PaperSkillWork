@@ -1,5 +1,7 @@
 # Reusable Kit local demo
 
+The redesigned entry is a visual specimen, the Registry-backed asset finder, standalone visual parts, independent model/feature/retrieval scenes, then advanced diagrams and editorial references. See [current Kit usage](../../docs/reusable-kit.md) and [visual language and evidence](../../docs/VISUAL_LANGUAGE_SYSTEM.md). Use `scaffold-kit --select` for exact file closures and safe incremental copies. Gallery layout CSS is never a component dependency. All assets remain candidate.
+
 The demo is the review surface for the Kit source. Pattern Gallery is the entry route for reusable examples; its DiagramFlow, StickySystemView, and typography panels contain complete TSX components, while editorial panels are paired TSX/CSS fragments with caller-provided data. The Foundation Component Lab and LwF/EWC real-content scenarios remain available and use the same primitives with different paper data. The examples contain no benchmark values and are not a substitute for checking a paper's source, evidence, or conditions.
 
 Run locally:

@@ -225,6 +225,8 @@ def write_fake_kit(path, components, version=2):
         source = path.joinpath(*entry["path"].split("/"))
         source.mkdir(parents=True, exist_ok=True)
         (source / "Placeholder.tsx").write_text("export {};\n", encoding="utf-8")
+        entry.setdefault("source", entry["path"] + "/Placeholder.tsx")
+        entry.setdefault("dependencies", [])
     (path / "KIT_VERSION").write_text("9.9.9\n", encoding="utf-8")
     (path / "registry.yaml").write_text(
         yaml.safe_dump({"version": version, "components": components}, sort_keys=False, allow_unicode=True),

@@ -58,3 +58,13 @@ Gallery 首屏改为编辑式标题及真实网络/输入/特征块/向量混合
 新增 AssetCatalog，Vite 在构建时直接读取唯一 registry.yaml（yaml 为构建依赖，无第二份目录数据）。按教学需求或能力搜索同一数据；详情包括适用/避免条件、真实源码、源示例、独立布局 CSS、尺度边界和选择命令。最小用法来自 Registry，S5 将逐一复制到隔离项目编译；复杂示例明确需要全部导入的小件。其余旧能力保留对应 Recipe 入口。
 
 `npm.cmd run build` PASS（0）；发现任务与原 Gallery 交互 2 tests PASS（0）。验证“神经网络某条连接”和“输入图像到分类响应”均能唯一找到相关资产；键盘选择、空搜索和三个视口无溢出。实看 s4 的 1440/1920/390 首屏：主图完整、文字层次明确、首屏不再由操作控件占据。截图保留供用户判断，未记录人工批准。复制命令将在 S5 接通。
+
+## S5 · 精确交付与 Agent 接入
+
+`scaffold-kit --select` 支持全部 tier 的显式资产选择；仅显式 preset 才包含 P0。Registry 新增 source/dependencies，校验路径、文件、元数据及 Recipe；沿真实 import/export 计算文件闭包。`--dry-run` 输出文件清单，首次在 staging 组装，追加独占创建新文件；先汇总全部冲突再写入，不覆盖用户源码。KIT_SELECTION.json 只保存累计选择及来源哈希，KIT_VERSION 记首次版本。相同来源的本地修改保留，新来源冲突要求手动处理。候选显式 opt-in，过时资产及被实际导入的过时依赖均拒绝。
+
+同步 W5 与 W6/W8 Skill、模板约定、使用文档与真实调用者。仍由既有 W0–W10 管理论文，不新增阶段或人工审批；局部实现是合法选择。
+
+独立 `test-advanced-scaffold.py` PASS（0）：新建隔离工程、Glyph 精确三文件闭包、编辑 kit.css、追加十种资产、保留编辑、从实际 Recipe 复制 TSX/CSS、编译所有 Registry 最小用法、生产构建；Chromium 操作 focus、五阶段、sigmoid 与检索，并测 390/1440/1920。未带 Gallery CSS。成功临时目录 `C:/Windows/Temp/kit-advanced-scaffold-1bbofjk4` 已输出 SCAFFOLD_CLEANED 且验证不存在。首次脚本误将无扩展名 KIT_VERSION 排除在计数外，修正后重跑。
+
+CLI/工作流/文档 54 项通过，另一个复制用例在沙箱中遇 WinError 5 原子重命名失败；正常本地环境复测相关 3 项全通过。路径安全补测 5 项通过。旧 easing 目录级复制断言改为“未被导入就不复制”，错误文案断言同步。最终全套结果归 S6 记录。

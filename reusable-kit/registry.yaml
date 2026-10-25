@@ -352,6 +352,7 @@ components:
     source: optional/formula/FormulaBlock.tsx
     dependencies:
     - foundation/styles/kit.css
+    - foundation/math/mathml-jsx.d.ts
     purpose: 文字与公式逐项对应
     use_when: 公式符号需要与解释联动。
     avoid_when: 单行静态数学可直接使用 MathML。
@@ -365,6 +366,7 @@ components:
     source: optional/formula/FormulaBlock.tsx
     dependencies:
     - foundation/styles/kit.css
+    - foundation/math/mathml-jsx.d.ts
   MiniNetworkGlyph:
     tier: P1
     status: candidate
@@ -500,9 +502,18 @@ components:
     source: foundation/styles/editorial.css
     dependencies:
     - foundation/styles/kit.css
+    - foundation/math/mathml-jsx.d.ts
     category: typography
     purpose: 编辑式标题与图文编排
     use_when: 需要标题强调、侧注和非对称图文关系。
     avoid_when: 不固定整页结构，也不要求每节重复 Hero。
     demo_anchor: gallery-specimen
     recipe: recipes/editorial-composition.md
+  MathTypography:
+    tier: P1
+    status: candidate
+    path: foundation/math
+    source: foundation/math/mathml-jsx.d.ts
+    dependencies:
+    - foundation/styles/kit.css
+    category: typography

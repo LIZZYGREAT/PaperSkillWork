@@ -411,7 +411,7 @@ def test_scaffold_kit_copies_default_continual_learning_components_once(tmp_path
     assert "[WARN] Button is candidate, not approved; copied because --allow-unapproved was passed" in result.stdout
     assert src.is_dir()
     assert all((src / relative).read_bytes() == content for relative, content in base_files.items())
-    assert (shared / "KIT_VERSION").read_text(encoding="utf-8").strip() == "2.0.0"
+    assert (shared / "KIT_VERSION").read_text(encoding="utf-8").strip() == "3.0.0"
     assert (shared / "foundation/styles/kit.css").is_file()
     assert (shared / "core/process-loop/ProcessLoopExplorer.tsx").is_file()
     assert (shared / "core/reference/ReferenceHub.tsx").is_file()
@@ -420,9 +420,9 @@ def test_scaffold_kit_copies_default_continual_learning_components_once(tmp_path
     assert not (shared / "foundation/animation/useAnimationTimeline.ts").exists()
     after_scaffold = snapshot_files(src)
 
-    duplicate = invoke(root, "scaffold-kit", "demo-paper", "--allow-unapproved")
-    assert duplicate.returncode != 0
-    assert "destination already exists" in duplicate.stderr
+    duplicate = invoke(root, "scaffold-kit", "demo-paper", "--preset", "continual-learning", "--allow-unapproved")
+    assert duplicate.returncode == 0, duplicate.stderr
+    assert "0 new" in duplicate.stdout
     assert (shared / "KIT_VERSION").is_file()
     assert snapshot_files(src) == after_scaffold
 
@@ -435,14 +435,14 @@ def test_scaffold_kit_adds_only_selected_optional_components(tmp_path):
 
     result = invoke(
         root, "scaffold-kit", "demo-paper",
-        "--add", "EvidenceViewer,BenchmarkExplorer,CompareView,MiniNetworkGlyph,useAnimationTimeline",
+        "--select", "EvidenceViewer,BenchmarkExplorer,CompareView,MiniNetworkGlyph,useAnimationTimeline",
         "--allow-unapproved",
     )
 
     shared = src / "shared"
     assert result.returncode == 0, result.stdout + result.stderr
     assert "[WARN] CompareView is candidate, not approved; copied because --allow-unapproved was passed" in result.stdout
-    assert "Optional components: EvidenceViewer, BenchmarkExplorer, CompareView" in result.stdout
+    assert "Selected components: EvidenceViewer, BenchmarkExplorer, CompareView" in result.stdout
     assert all((src / relative).read_bytes() == content for relative, content in base_files.items())
     assert (shared / "optional/evidence-viewer/EvidenceViewer.tsx").is_file()
     assert (shared / "optional/benchmark-explorer/BenchmarkExplorer.tsx").is_file()
@@ -450,22 +450,24 @@ def test_scaffold_kit_adds_only_selected_optional_components(tmp_path):
     assert (shared / "foundation/neural-network/MiniNetworkGlyph.tsx").is_file()
     assert (shared / "foundation/neural-network/mini-network-glyph.css").is_file()
     assert (shared / "foundation/animation/useAnimationTimeline.ts").is_file()
-    assert (shared / "foundation/animation/easing.ts").is_file()
+    # The clock does not import easing; precise copying must not include it.
+    assert not (shared / "foundation/animation/easing.ts").exists()
     assert not (shared / "optional/formula/FormulaBlock.tsx").exists()
 
 
-def test_scaffold_kit_rejects_unknown_or_non_optional_component_without_writing(tmp_path):
+def test_scaffold_kit_rejects_unknown_and_allows_precise_core_selection(tmp_path):
     root = make_project(tmp_path)
     assert create_paper(root).returncode == 0
     src = root / "papers/demo-paper/web/enhanced/src"
     base_files = snapshot_files(src)
 
-    unknown = invoke(root, "scaffold-kit", "demo-paper", "--add", "ImaginaryExplorer", "--allow-unapproved")
-    core = invoke(root, "scaffold-kit", "demo-paper", "--add", "ProcessLoopExplorer", "--allow-unapproved")
-
+    unknown = invoke(root, "scaffold-kit", "demo-paper", "--select", "ImaginaryExplorer", "--allow-unapproved")
     assert unknown.returncode != 0 and "Unknown reusable component" in unknown.stderr
-    assert core.returncode != 0 and "P1 components only" in core.stderr
     assert snapshot_files(src) == base_files
+    core = invoke(root, "scaffold-kit", "demo-paper", "--select", "ProcessLoopExplorer", "--allow-unapproved")
+    assert core.returncode == 0, core.stderr
+    assert (src / "shared/core/process-loop/ProcessLoopExplorer.tsx").is_file()
+    assert not (src / "shared/core/reference/ReferenceHub.tsx").exists()
 
 
 def test_scaffold_kit_blocks_unapproved_components_without_flag(tmp_path):
@@ -475,7 +477,7 @@ def test_scaffold_kit_blocks_unapproved_components_without_flag(tmp_path):
     base_files = snapshot_files(src)
 
     preset = invoke(root, "scaffold-kit", "demo-paper", "--preset", "continual-learning")
-    optional = invoke(root, "scaffold-kit", "demo-paper", "--add", "EvidenceViewer")
+    optional = invoke(root, "scaffold-kit", "demo-paper", "--select", "EvidenceViewer")
 
     for result in (preset, optional):
         assert result.returncode != 0
@@ -502,7 +504,7 @@ def test_scaffold_kit_prints_no_warning_without_unapproved_components(tmp_path, 
     monkeypatch.setattr(module, "REUSABLE_KIT", kit)
 
     assert module.cmd_scaffold_kit(argparse.Namespace(
-        paper_id="demo-paper", preset="continual-learning", add="", allow_unapproved=False,
+        paper_id="demo-paper", preset="continual-learning", select="", dry_run=False, allow_unapproved=False,
     )) == 0
 
     captured = capsys.readouterr()
@@ -534,7 +536,7 @@ def test_scaffold_kit_rejects_deprecated_component(tmp_path, monkeypatch):
 
     def run_scaffold(add="", allow_unapproved=False):
         return module.cmd_scaffold_kit(argparse.Namespace(
-            paper_id="demo-paper", preset="continual-learning", add=add,
+            paper_id="demo-paper", preset="continual-learning", select=add, dry_run=False,
             allow_unapproved=allow_unapproved,
         ))
 
