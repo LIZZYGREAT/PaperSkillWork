@@ -35,6 +35,8 @@ export type MiniNetworkGlyphProps = {
   connections?: MiniNetworkConnection[];
   connectAdjacent?: boolean;
   focus?: MiniNetworkFocus;
+  /** Hide optional metadata in a larger composition; labels and compression disclosure remain. */
+  showDetails?: boolean;
   className?: string;
 };
 
@@ -82,7 +84,7 @@ function fullConnections(layers: MiniNetworkLayer[]): MiniNetworkConnection[] {
   });
 }
 
-export function MiniNetworkGlyph({ layers, label, description, connections, connectAdjacent = false, focus, className = "" }: MiniNetworkGlyphProps) {
+export function MiniNetworkGlyph({ layers, label, description, connections, connectAdjacent = false, focus, showDetails = true, className = "" }: MiniNetworkGlyphProps) {
   const instanceId = useId().replace(/:/g, "");
   const titleId = `rk-network-${instanceId}-title`;
   const descriptionId = `rk-network-${instanceId}-description`;
@@ -141,11 +143,11 @@ export function MiniNetworkGlyph({ layers, label, description, connections, conn
     <ol className="rk-mini-network__labels" style={{ gridTemplateColumns: `repeat(${layers.length}, minmax(0, 1fr))` }}>
       {layers.map((layer) => <li key={layer.id} data-network-label={layer.id} data-identity={layer.identity ?? "neutral"}>
         <strong>{layer.label}</strong>
-        <span>{layer.identity ?? "neutral"} · {layer.nodeCount} {layer.nodeCount === 1 ? "node" : "nodes"}</span>
+        {showDetails && <span>{layer.identity ?? "neutral"} · {layer.nodeCount} {layer.nodeCount === 1 ? "node" : "nodes"}</span>}
         {layer.nodeCount > visibleCount(layer) && <small>Original structure: {layer.nodeCount}; showing {visibleCount(layer)} representative nodes.</small>}
-        {layer.detail && <small>{layer.detail}</small>}
+        {showDetails && layer.detail && <small>{layer.detail}</small>}
       </li>)}
     </ol>
-    <figcaption>{description}</figcaption>
+    {showDetails && <figcaption>{description}</figcaption>}
   </figure>;
 }

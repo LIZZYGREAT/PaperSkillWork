@@ -11,7 +11,8 @@ import { FigureFrame } from "../../compositions/figure-frame/FigureFrame";
 import { SectionHeader } from "../../compositions/section-header/SectionHeader";
 import { StepNav } from "../../compositions/step-nav/StepNav";
 import { GalleryCodePanel as CodePanel } from "./GalleryCodePanel";
-import { MiniNetworkGallerySection, TimelineGallerySection } from "./AdvancedPrimitiveGallery";
+import { MiniNetworkGallerySection } from "./MiniNetworkGallerySection";
+import { TimelineGallerySection } from "./AdvancedPrimitiveGallery";
 import "./pattern-gallery.css";
 
 type DiagramCase = "branch" | "merge";

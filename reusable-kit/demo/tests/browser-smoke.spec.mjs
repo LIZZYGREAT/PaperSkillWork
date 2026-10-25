@@ -110,12 +110,11 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   await expect(page.locator(".rk-formula-block__explanation.has-term")).toContainText("当前任务");
 
   const networkGallery = page.locator("#gallery-mini-network");
-  await expect(networkGallery.locator(".rk-mini-network")).toHaveCount(2);
-  await expect(networkGallery.getByText("Original structure: 32; showing 5 representative nodes.")).toBeVisible();
-  await expect(networkGallery.locator("[data-network-layer='reference']")).toHaveAttribute("data-identity", "frozen");
-  await expect(networkGallery.locator("[data-network-layer='current']")).toHaveAttribute("data-identity", "trainable");
-  await networkGallery.getByRole("button", { name: "Show all context" }).click();
-  await expect(networkGallery.locator("[data-network-edge].is-focused")).toHaveCount(0);
+  await expect(networkGallery.locator(".rk-mini-network")).toHaveCount(3);
+  await expect(networkGallery.locator("[data-model='teacher']")).toHaveAttribute("data-model-identity", "frozen");
+  await expect(networkGallery.locator("[data-model='student']")).toHaveAttribute("data-model-identity", "trainable");
+  await networkGallery.getByRole("button", { name: "聚焦局部连接" }).click();
+  await expect(networkGallery.locator("[data-network-edge].is-focused")).toHaveCount(2);
   const networkCodePanel = networkGallery.locator(".pattern-gallery__code-panel");
   await networkCodePanel.locator("summary").click();
   await networkCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
@@ -156,8 +155,7 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   await expect(diagram).toHaveAttribute("data-diagram-mode", "list");
   await expect(sticky.locator(".rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
   await expect(sticky.locator(".rk-sticky-system__visual")).toHaveCSS("position", "static");
-  await expect(networkGallery.locator(".pg-network-grid")).toHaveCSS("grid-template-columns", /.+/);
-  expect(await networkGallery.locator(".pg-network-grid").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+  expect(await networkGallery.locator(".pg-model-branches").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
   expect(await timelineGallery.locator(".pg-timeline-grid").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
   const pageOverflow = await page.evaluate(() => ({
     fits: document.documentElement.scrollWidth <= innerWidth,

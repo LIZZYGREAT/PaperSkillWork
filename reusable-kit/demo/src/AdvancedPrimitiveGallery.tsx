@@ -1,47 +1,8 @@
-import { useMemo, useState } from "react";
 import { Button } from "../../foundation/controls/Button";
-import { MiniNetworkGlyph, type MiniNetworkConnection, type MiniNetworkLayer } from "../../foundation/neural-network";
+import { MiniNetworkGlyph, type MiniNetworkConnection } from "../../foundation/neural-network";
 import { useAnimationTimeline, type TimelineClip } from "../../foundation/animation";
 import { SectionHeader } from "../../compositions/section-header/SectionHeader";
 import { GalleryCodePanel } from "./GalleryCodePanel";
-
-const importanceLayers: MiniNetworkLayer[] = [
-  { id: "signals", label: "Observed signals", nodeCount: 3 },
-  { id: "shared", label: "Shared representation", nodeCount: 32, displayNodeCount: 5, detail: "Compressed structural illustration" },
-  { id: "decision", label: "Decision", nodeCount: 2 },
-];
-const importanceConnections: MiniNetworkConnection[] = [
-  { id: "signal-a", fromLayer: "signals", fromNode: 0, toLayer: "shared", toNode: 1 },
-  { id: "signal-b", fromLayer: "signals", fromNode: 0, toLayer: "shared", toNode: 2 },
-  { id: "signal-c", fromLayer: "signals", fromNode: 1, toLayer: "shared", toNode: 2 },
-  { id: "signal-d", fromLayer: "signals", fromNode: 1, toLayer: "shared", toNode: 3 },
-  { id: "signal-e", fromLayer: "signals", fromNode: 2, toLayer: "shared", toNode: 4 },
-  { id: "important-a", fromLayer: "shared", fromNode: 1, toLayer: "decision", toNode: 0 },
-  { id: "important-b", fromLayer: "shared", fromNode: 2, toLayer: "decision", toNode: 0 },
-  { id: "important-c", fromLayer: "shared", fromNode: 3, toLayer: "decision", toNode: 1 },
-  { id: "important-d", fromLayer: "shared", fromNode: 4, toLayer: "decision", toNode: 1 },
-];
-const roleLayers: MiniNetworkLayer[] = [
-  { id: "input", label: "Shared input", nodeCount: 3 },
-  { id: "reference", label: "Frozen reference", nodeCount: 4, identity: "frozen" },
-  { id: "current", label: "Trainable output", nodeCount: 12, displayNodeCount: 6, identity: "trainable", detail: "Output width is illustrative, not a CNN feature block" },
-];
-
-const networkCode = `import { MiniNetworkGlyph } from "./shared/foundation/neural-network/MiniNetworkGlyph";
-
-export function StructureExample() {
-  return <MiniNetworkGlyph
-    label="Frozen reference and trainable output"
-    description="A structural illustration; displayed nodes are representatives."
-    layers={[
-      { id: "input", label: "Shared input", nodeCount: 3 },
-      { id: "reference", label: "Frozen reference", nodeCount: 4, identity: "frozen" },
-      { id: "output", label: "Trainable output", nodeCount: 12, displayNodeCount: 6, identity: "trainable" },
-    ]}
-    connectAdjacent
-  />;
-}`;
-
 const networkClips: TimelineClip[] = [
   { id: "input", durationMs: 850, holdMs: 350 },
   { id: "hidden", durationMs: 950, holdMs: 350 },
@@ -120,26 +81,6 @@ export function PipelineTimeline() {
     <button onClick={controls.replayClip}>Replay</button>
   </section>;
 }`;
-
-export function MiniNetworkGallerySection() {
-  const [focusImportant, setFocusImportant] = useState(true);
-  const focus = useMemo(() => focusImportant ? { nodes: ["signals:0", "shared:1", "decision:0"], edges: ["signal-a", "important-a"] } : undefined, [focusImportant]);
-  return <section id="gallery-mini-network" className="pattern-gallery__section" aria-labelledby="gallery-mini-network-title">
-    <SectionHeader index="05" eyebrow="FOUNDATION / MINI NETWORK" title="Small network structure without paper-owned computation" lead="The same SVG primitive changes its structure, identity, and connection data. It is a glyph for relationships—not a default architecture and not a CNN feature extractor." headingId="gallery-mini-network-title" />
-    <div className="pattern-gallery__controls"><Button size="small" variant={focusImportant ? "primary" : "secondary"} aria-pressed={focusImportant} onClick={() => setFocusImportant((value) => !value)}>{focusImportant ? "Show all context" : "Focus example connections"}</Button></div>
-    <div className="pg-network-grid">
-      <article><h3>Representative connection focus</h3><MiniNetworkGlyph label="Selected representative connections" description="A selected path is emphasized within a sparse illustrative topology; no score or parameter importance is implied." layers={importanceLayers} connections={importanceConnections} focus={focus} /></article>
-      <article><h3>Frozen / trainable structural roles</h3><MiniNetworkGlyph label="Frozen and trainable structure" description="The output-width example is distinct from a convolutional feature-block diagram." layers={roleLayers} connectAdjacent /></article>
-    </div>
-    <div className="pattern-gallery__facts"><dl>
-      <div><dt>Use</dt><dd>Small layer/node topology, selected representative connections, or frozen/trainable identity.</dd></div>
-      <div><dt>Do not use</dt><dd>Exact large architectures, CNN feature maps, probabilities, Fisher computation, gradients, or class-incremental logic.</dd></div>
-      <div><dt>Responsive / access</dt><dd>SVG title/description IDs are unique per instance; labels stay HTML-sized and stack below 520px. Counts above seven are disclosed as representative.</dd></div>
-      <div><dt>Source</dt><dd><code>foundation/neural-network/MiniNetworkGlyph.tsx</code> + <code>mini-network-glyph.css</code>; inspired by EWC's small node mark and checked against iCaRL/LwF role differences.</dd></div>
-    </dl></div>
-    <GalleryCodePanel title="Open runnable MiniNetworkGlyph example" code={networkCode} source="recipes/mini-network-glyph.md" level="runnable" notice="Complete TSX. The component imports its paired CSS; supply paper-owned labels, counts, and connection data." />
-  </section>;
-}
 
 export function TimelineGallerySection() {
   return <section id="gallery-timeline" className="pattern-gallery__section" aria-labelledby="gallery-timeline-title">

@@ -12,3 +12,8 @@
 ## Stage results
 
 G0: source paths, relationships and state contract verified. No implementation changes in this commit.
+
+
+G1: replaced arbitrary importance data and serial frozen/current model with one interactive 3–5–3 Glyph and two independent parallel model Glyphs (3/4 layers). Added generic `showDetails?: boolean = true`; HTML layer labels, ARIA description and compressed-count disclosure are retained when false. Gallery copy panel and recipe use the actual compiled `NetworkExamples.tsx` source. Old Network data and CSS removed.
+
+Validation: `npm --prefix reusable-kit/demo run build` exit 0; `npm --prefix reusable-kit/demo run test:browser -- --grep "network focus"` exit 0 (1 test). Verified 11 stable node coordinates / IDs, 30 retained edges, 2 selected edges, independent x→Teacher / x→Student ownership, different layer counts, unique ARIA IDs and readable labels at 1440/1920/390. Inspected new screenshots (full/context, focus, parallel composition and narrow reflow), saved outside the repository in `../.qa/mini-network-timeline-20261025/`. Locator screenshots of tall sections include the existing sticky topbar at the current scroll position; this is capture context, not network clipping. Browser startup required sandbox escalation for localhost access; the initial sandboxed attempt failed to reach preview and is not counted as PASS. G1 semantic/geometry review passed for proceeding to G2; aesthetic/human acceptance remains PENDING.
