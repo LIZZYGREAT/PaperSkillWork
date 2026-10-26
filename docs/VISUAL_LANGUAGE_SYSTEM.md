@@ -201,3 +201,9 @@ Gallery 顶部准备了两种构图供并排浏览，均使用同一实际 `Para
 两份页面报告均记录零几何/样式诊断和零浏览器错误。已读取报告并实看当前 B 首屏及机制图；机器 QA 报告本身仍把 `HUMAN_ACCEPTANCE` 留在 PENDING，用户仅确认 B 的首屏编排。之后按规范清理这两个精确 Visual QA run 目录并验证不存在。
 
 两次早期 Visual QA 运行暴露的是重复示例和代码面板造成的旧定位歧义；配置改为精确区块后完整复跑通过，最终两份报告均记录 0 浏览器错误、0 几何/样式诊断。高级 QA 还促使开场眉题从 11px 调整到 12px；移动模型输出公式调整到与输入符号一致的 18px。Gallery 首屏的 B 构图已由用户确认；其余 Registry 条目仍为 candidate，未被本次选择批准。`git diff --exit-code HEAD -- papers` 退出 0；论文副本、上游和审批状态未改动。
+
+### R4 场景复现与公式排版补记 · 2026-10-26
+
+R4 场景源码与一条命令式的隔离预览入口整理到 `reusable-kit/validation/`，见其 README 和 [R4 报告](../reusable-kit/validation/r4/REPORT.md)。网络场景的 TypeScript/Vite 构建及 MiniNetworkGlyph 精确闭包检查通过；矩阵场景只保留了旧记录中的 1440px 桌面截图。新向量范数裁剪场景选择并复制 `RepresentationVector`、`ResponseMeter` 和 `FlowConnector` 的五文件闭包，独立 TypeScript/Vite 构建通过。
+
+用户截图指出向量坐标原样暴露浮点尾数、缩放公式挤成一行及连接标签过长。现在显示数字最多两位小数，计算仍用完整精度；坐标增加间距，通式与数值代入拆行，连接标签收短。修复提交为 `73b8742`。构建输出 PASS；但本次没有完成该场景的桌面浏览器和 F11 全屏复核：Edge 窗口最小化，Edge 自动化入口不可用，Codex 内浏览器连接本机地址超时。未改用其他浏览器自动化通道，也未检查手机屏。具体限制和预览命令记于 R4 报告；上述工程构建不代表视觉验收。T4 的 data-flow 分类及单条桌面浏览器回归已于 `0312420` 提交。
