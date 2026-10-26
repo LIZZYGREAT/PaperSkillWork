@@ -34,6 +34,8 @@ Cache one complete, systematic paper read under `source-cache/`. Use the cache f
 
 ## Visual assets
 
+Rendered QA defaults to the two desktop scenarios and proactive ordinary-defect repair in `docs/VISUAL_QA.md`, the sole visual standard. Mobile/tablet visual checks run only on its explicit triggers, not as routine required states; preserve existing responsive and accessibility behavior.
+
 Follow the asset lifecycle in `docs/WORKFLOW.md`. Do not publish assets with unclear reuse rights, submit a paper PDF, or omit provenance. Use relative image paths in the tutorial.
 
 ## Project and release boundaries

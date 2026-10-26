@@ -97,11 +97,11 @@ Record only the semantic moments that create understanding or carry risk; there 
 
 ## Visual QA State Plan
 
-List only the pages, states, and viewports relevant to this project or revision. Follow docs/VISUAL_QA.md.
+List only affected interaction states per page. Follow docs/VISUAL_QA.md: default to the two desktop layouts below; record mobile/tablet only on an explicit special-check trigger with its reason. Record actual F11 inner dimensions, screen, zoom and running mode when observed; keep FULLSCREEN_LAYOUT and FULLSCREEN_REAL separate, with NOT_RUN/reason for unavailable real F11.
 
 | Page / area | State | Viewport | Observable expectation |
 | --- | --- | --- | --- |
-|  |  | 1440x900 / 1920x1080 |  |
+|  |  | Desktop Window 1440×900 / Fullscreen Layout 1920×1080 |  |
 
 ## Primary Spine Mapping
 

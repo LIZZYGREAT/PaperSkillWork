@@ -45,7 +45,7 @@ W10 上游打包与预检
 | W6 | 首个切片能否形成可体验的认知推进闭环？实现通常为 2–3 个主线阶段的最小真实切片，使读者从问题、机制、操作走到结论与下一问题。 | CLI 只检查切片覆盖和必要源码入口。Agent 使用 `paths.publish_source` 的绝对路径直接运行当前官方 `syntax-check.js --require-parser` 与 `validate-output.js`，并另行执行切片构建、交互和浏览器检查；解释真实 warning，不造占位内容。只记录 `UPSTREAM_SYNTAX`、`UPSTREAM_OUTPUT`、`SOURCE_BUILD`、`SUBPATH_ASSETS` 四项独立状态；上游 revision 或解析器不可核实时，受影响项为 `NOT_RUN` 并说明原因。CLI 通过或任一上游源码检查通过均不代表学习质量验收通过。 |
 | W7 | 初次阅读者是否理解为什么引入机制、能否准确解释关键操作、能否从图文共同得到结论并自然进入下一部分？此时不要求最终贯通页完成。 | **人工评审：** 记录 PASS/REVISE 和理由。REVISE 时记录反馈与保留项、修复切片、重跑 W6 范围的 QA 并再次人工复审；不重复提交已完成的 W6 complete，也不重置 W4/W5 阶段状态。 |
 | W8 | 如何按已批准语义完成全部内容？以同一计算模型驱动数据、状态、公式与动画，逐段验证复杂流程与交接；实现全部 CORE，紧凑呈现 SUPPORTING，将 REFERENCE 放在主线之外并省略 DELETE。 | CLI 只检查实现覆盖和素材文件条件。Agent 对将要发布的同一源码重跑当前官方语法/输出校验，运行实际项目构建与测试，并在生产产物和非根子路径下检查资源及浏览器网络；在现有计划记录 `UPSTREAM_SYNTAX`、`UPSTREAM_OUTPUT`、`SOURCE_BUILD`、`SUBPATH_ASSETS` 的状态、命令、工具版本与证据。 |
-| W9 | 学习者能否说明关键机制为何需要，并沿认知连续、数学解释充分的主线重建真实算法？人工核验完整贯通场景的独立设计，以及代表性初态、中间态、交接与终态中文字、图形、公式、动画、数据的一致性；同时审阅证据、视觉、无障碍、移动端和示例边界。 | 人工评审：确认 W8 使用当前官方工具检查的源码与 `paths.publish_source` 指向的 W10 源一致，实际操作最终桌面/移动页面；在 audit/final-check.md 区分兼容预检、正式 W10 Preflight、Agent 视觉复核和人的学习/证据结论。源码若有后续变化，重查受影响项目。 |
+| W9 | 学习者能否说明关键机制为何需要，并沿认知连续、数学解释充分的主线重建真实算法？人工核验完整贯通场景的独立设计，以及代表性初态、中间态、交接与终态中文字、图形、公式、动画、数据的一致性；同时审阅证据、视觉、无障碍和示例边界；移动端视觉仅按 VISUAL_QA.md 的专项触发条件检查。 | 人工评审：确认 W8 使用当前官方工具检查的源码与 `paths.publish_source` 指向的 W10 源一致，实际操作最终普通桌面浏览器及真实浏览器 F11 全屏；无法实测 F11 时明确 NOT_RUN/PENDING，不以 1920 布局模拟代替；在 audit/final-check.md 区分兼容预检、正式 W10 Preflight、Agent 视觉复核和人的学习/证据结论。源码若有后续变化，重查受影响项目。 |
 | W10 | 教程能否作为独立上游项目导入和验证？ | W9 经使用者确认后，使用者在现有 PaperSkill 检出中运行官方 Import、validate、`npm run catalog`（检查后安全恢复自动索引）和 preflight；通过后再记录 W10。它仍是唯一正式发布门禁。操作步骤见唯一的[人工投稿操作手册](UPSTREAM_RELEASE.md)。 |
 
 ## W1：原文缓存与视觉素材清单
@@ -96,6 +96,8 @@ W5 不再要求所有项目手写章节/模块映射表。按真实学习主线�
 
 ## W6–W9：实现与评审
 
+W6/W8 浏览器视觉检查默认覆盖普通桌面窗口（1440×900）与全屏尺度布局（1920×1080）；后者仅为模拟。按 `VISUAL_QA.md` 记录实际窗口内尺寸、`FULLSCREEN_LAYOUT` 与真实 F11 的 `FULLSCREEN_REAL`，不可实测时后者为 NOT_RUN。Agent 必须在同阶段主动定位、修复基础排版缺陷，复测两个桌面布局并实际查看截图；移动/平板仅在专项触发时运行，保留既有响应式、触屏、键盘与无障碍能力。
+
 W6 只实现计划中的首个真实切片；模板已提供正式源码入口。切片要形成可真实体验的认知推进闭环，范围通常为 2–3 个阶段但可按内容调整。`tools/paper.py stage ... W6 complete` 检查结构覆盖和源码入口，不会执行依赖安装、构建、浏览器或上游检查。切片可构建后，Agent 用 `paths.publish_source` 绝对路径直接运行相邻 PaperSkill 检出中的官方 `syntax-check.js --require-parser` 和 `validate-output.js`，并单独检查交互和浏览器。真实 partial-slice warning 应解释，不得伪造未来章节或注册项；当前上游版本或解析器无法核实时，将受影响的 `UPSTREAM_SYNTAX` / `UPSTREAM_OUTPUT` 分别记为 NOT_RUN，W8 须在最终源码上补跑。交付时列出四项独立状态、实际命令/退出码、上游 revision/工具版本、证据、浏览器状态/视口范围和 NOT_RUN 原因。检查报告和关键截图后，将结论记入现有 implementation-plan，再用 Visual QA runner 的显式入口清理本轮单个 run 目录；失败证据保留到诊断/复测完成。无需新建报告，使用现有 implementation-plan、Visual QA 产物和任务交付说明。
 
 W6/W8 的上游校验器版本必须可复核：检查相邻 PaperSkill `git remote -v`、工作区状态、HEAD 和两个目标脚本；仅在 `upstream` 明确指向官方 `ReductTech/PaperSkill` 且工作树干净时尝试 `git fetch upstream main`。Fetch 失败就记录网络/远端错误，缓存的 `upstream/main` SHA 不得称为当前版本。个人分支不需要切换或覆盖，但其本地实际执行脚本必须与成功更新的 `upstream/main` 对应文件逐字一致；缺文件、内容不一致或无法验证时，当前官方兼容状态为 NOT_RUN。本项目依赖按其锁文件安装后才能运行 `--require-parser`，不得接受缺少解析器时自动跳过。SHA、命令、退出码、版本和 warning 记在既有 implementation-plan/final-check，不创建历史日志。
@@ -104,7 +106,7 @@ W7 是独立的人类学习效果门禁，分别审阅机制引入理由、关�
 
 W8 完成计划覆盖。复杂流程按可独立验证的真实状态片段推进，以同一项目级数据/计算模型派生算法输出、对象身份、状态转移、公式和动画；教学可见状态只呈现论文状态与推导结果，不改变其语义。重要状态应可定位、复现、暂停核对，并检查初态、中间态、跨段交接、终态和必要的连续运动；不能以降低复杂度为由砍掉真实语义，也不能用整张静态画面替换伪装连续计算。普通样式修复不得删除已批准的文字推演、公式映射或动画关键状态；改变既定教学逻辑前请求用户决策。`tools/paper.py stage ... W8 complete` 只检查实现覆盖和素材文件条件，结构完成不等于工程质量 PASS，也不会执行项目测试、构建、DOM 断言、浏览器或上游检查。Agent 必须在 `paths.publish_source` 指向的最终发布源上重跑官方语法/输出校验（若不可用须分别说明 NOT_RUN）、项目测试、实际生产构建、DOM/数据不变量，以及按 VISUAL_QA.md 检查的子路径产物与浏览器网络；只记录 `UPSTREAM_SYNTAX`、`UPSTREAM_OUTPUT`、`SOURCE_BUILD`、`SUBPATH_ASSETS` 四项 PASS / FAIL / NOT_RUN，并在现有计划中写实际命令、退出码、已核实的 PaperSkill `upstream/main` SHA、工具版本、证据和 NOT_RUN 原因。任何源码后续变化都要重跑受影响检查；存在必需的 FAIL 或 NOT_RUN 时不得笼统宣称 W8 质量 QA 全通过。检查记录沿用 implementation-plan、Visual QA 产物和 W9 final-check，不以 CLI 或构建替代视觉、语义或人工学习验收。检查报告及关键截图后，结论写入现有 implementation-plan，再清理本轮单个 runner 目录；失败诊断和所需复审结束前保留必要证据。
 
-W9 由人审阅最终学习效果、证据和呈现，记录于现有 `audit/final-check.md`。确认 W8 四项状态与证据对应于最终 `paths.publish_source`，并实际操作最终桌面及移动端页面；如源有变化，重跑受影响检查并重新查看相关页面。存在必需 FAIL/NOT_RUN 时，不能把总体 QA 写为全通过。分别记录源码兼容预检、人工学习/证据验收及尚待 W10 证明的官方 Import/Validate/Preflight，不能相互冒充。检查并记录截图结论后，只清理本次确切 runner 目录；需要诊断或复审的证据先保留，清理后不引用已失效截图路径。各阶段具体步骤见对应 Skill 和 [`VISUAL_QA.md`](VISUAL_QA.md)。
+W9 由人审阅最终学习效果、证据和呈现，记录于现有 `audit/final-check.md`。确认 W8 四项状态与证据对应于最终 `paths.publish_source`，并实际操作最终普通桌面浏览器及真实浏览器 F11 全屏；真实 F11 不可执行时写 NOT_RUN/PENDING，不以 1920 模拟冒充；如源有变化，重跑受影响检查并重新查看相关页面。存在必需 FAIL/NOT_RUN 时，不能把总体 QA 写为全通过。分别记录源码兼容预检、人工学习/证据验收及尚待 W10 证明的官方 Import/Validate/Preflight，不能相互冒充。检查并记录截图结论后，只清理本次确切 runner 目录；需要诊断或复审的证据先保留，清理后不引用已失效截图路径。各阶段具体步骤见对应 Skill 和 [`VISUAL_QA.md`](VISUAL_QA.md)。
 
 ## W10：一次正式上游预检
 
