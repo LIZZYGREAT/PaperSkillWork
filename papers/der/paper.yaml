@@ -17,7 +17,7 @@ paper:
   source_hash: e7dcafb05e9fd77e0524be8b98578cd884a9fe6455322beb2f4a6c4a383cd72e
 workflow:
   version: 3
-  current_stage: W3
+  current_stage: W4
   stages:
     W0_source_intake:
       status: complete
@@ -30,7 +30,8 @@ workflow:
       reviewed_by: 用户
       note: 用户确认 W2 论文理解模型通过，批准继续 W3 与 W4。
     W3_evidence_assets:
-      status: pending
+      status: complete
+      completed_by: automation
     W4_learning_spine:
       status: pending
     W5_interaction_plan:

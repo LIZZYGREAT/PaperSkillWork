@@ -1,22 +1,167 @@
-# Each important tutorial claim gets one stable ID and a source boundary.
-claims: {}
-results: {}
-author_interpretations: {}
-our_interpretations: {}
-implementation_mappings: {}
+claims:
+  C01:
+    claim: 'GCL 的主要要求包括训练不依赖任务边界、测试不依赖任务 oracle，以及有限记忆。'
+    type: PAPER_FACT
+    source_locator: 'Sections 1–2, pp. 1–2; Table 1 p. 2; Appendix A'
+    conditions: '论文定义的 General Continual Learning setting。'
+    allowed_wording: '按论文的 GCL 设定，训练不依赖任务边界，测试不使用任务 oracle，并限制记忆规模。不要将这些条件泛化为每个标准 benchmark 的实际训练协议。'
+  C02:
+    claim: 'DER 将当前样本分类损失与记忆样本上的历史 logits 平方距离组合。'
+    type: PAPER_FACT
+    source_locator: 'Section 3.1, p. 3, Eq. (5)'
+    conditions: '论文 Eq. (5) 定义的 DER 目标；alpha 取实验设置中的值。'
+    allowed_wording: 'DER 的目标由当前标签分类项和对记忆历史 logits 的平方距离项组成。'
+  C03:
+    claim: 'DER++ 在 DER 输出匹配项之外增加回放样本的真实标签分类损失。'
+    type: PAPER_FACT
+    source_locator: 'Section 3.1, p. 3, Eq. (6); Algorithm 2 p. 4'
+    conditions: 'DER++ 模式；标签项按 beta 加权。'
+    allowed_wording: 'DER++ 增加历史样本标签 CE；这不是 DER 原目标内含的组成部分。'
+  C04:
+    claim: 'Algorithms 1–2 先从已有记忆采样并计算损失，再更新参数，随后处理当前输入并将候选记录交给 reservoir。'
+    type: PAPER_FACT
+    source_locator: 'Algorithms 1–2, p. 4'
+    conditions: '按论文印刷算法顺序解释；具体批次实现细节仍依实验设置。'
+    allowed_wording: '本步训练先读旧记忆，在一次联合优化后再写入当前样本；不得写成先写当前样本再回放或刷新旧目标。'
+  C05:
+    claim: 'DER++ 的历史输出匹配与标签分类来自两次独立的记忆采样调用，所采样集合可能重叠。'
+    type: PAPER_FACT
+    source_locator: 'Algorithm 2, p. 4'
+    conditions: '两次 sample 调用均从同一现有记忆读取。'
+    allowed_wording: 'DER++ 有两次采样调用，不能保证两组 replay 样本互斥。'
+  C06:
+    claim: '容量 K 的 reservoir 在处理第 n 个流样本后，对任一流位置样本的边际留存概率为 K/n（n 大于等于 K）。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3; Appendix D, Algorithm 3 and proof, p. 15'
+    conditions: '按数据项逐项处理的标准 reservoir sampling，记忆容量 K 固定。'
+    allowed_wording: '在固定容量和逐项处理条件下，前 n 项各自有 K/n 的边际留存概率；该结论不等于类别均衡或永久保留保证。'
+  C07:
+    claim: '标准 Class-IL、Task-IL 与 Domain-IL 实验的测试信息约束不同；Task-IL 测试允许使用任务身份。'
+    type: PAPER_FACT
+    source_locator: 'Section 4, pp. 4–5; Table 2 p. 6'
+    conditions: '论文的标准持续学习 benchmark 协议。'
+    allowed_wording: 'Task-IL 的测试阶段可以使用任务身份限定候选类别；这项协议例外不能套用于 Class-IL、Domain-IL 或 GCL。'
+  C08:
+    claim: 'MNIST-360 每张图像只呈现一次，包含变化旋转的连续流，并在整个流训练完成后评估。'
+    type: PAPER_FACT
+    source_locator: 'Section 4.3, pp. 6–7; Figure 1 p. 7; Appendix B.2 p. 13'
+    conditions: '论文定义的 MNIST-360 流和其测试协议。'
+    allowed_wording: 'MNIST-360 的结果是整段训练结束后的评估；不能据此声称论文每步测试。'
+  C09:
+    claim: '实验骨干和每任务训练轮数随数据集变化：MNIST 使用 2×100 ReLU MLP 且每任务 1 epoch，CIFAR-10 使用非预训练 ResNet18 且 50 epochs，Tiny ImageNet 使用非预训练 ResNet18 且 100 epochs。'
+    type: PAPER_FACT
+    source_locator: 'Section 4.1, p. 5; Appendix G.1, p. 20; Table 9, pp. 21–23'
+    conditions: '仅指论文列出的对应标准 benchmark 配置。'
+    allowed_wording: '描述结果时一并注明数据集、骨干和训练轮数；不同协议的结果不能只比较数值。'
+results:
+  R01:
+    claim: 'S-CIFAR-10 Class-IL、K=500、ResNet18、50 epochs/task 的最终平均准确率为 ER 57.74±0.27、DER 70.51±1.67、DER++ 72.70±1.36。'
+    type: PAPER_RESULT
+    source_locator: 'Section 4.2 p. 5; Table 2 p. 6'
+    conditions: 'S-CIFAR-10；5×2 类；Class-IL；K=500；非预训练 ResNet18；50 epochs/task；最终平均准确率；Table 2 报告 10 次运行。'
+    allowed_wording: '仅可说在上述设置及该表报告值下 DER、DER++ 高于 ER；保留 ± 原样，不解释其统计含义。'
+  R02:
+    claim: 'S-CIFAR-10 Task-IL、K=500 的最终平均准确率为 ER 93.61±0.27、DER 93.40±0.39、DER++ 93.88±0.50。'
+    type: PAPER_RESULT
+    source_locator: 'Table 2, p. 6; Section 4.2 p. 5'
+    conditions: 'S-CIFAR-10；5×2 类；Task-IL 测试可用任务身份；K=500；非预训练 ResNet18；50 epochs/task；最终平均准确率。'
+    allowed_wording: '本设置下 DER 没有超过 ER；不得与 Class-IL 指标混为同一协议。'
+  R03:
+    claim: 'S-Tiny ImageNet Class-IL、K=500 的最终平均准确率为 ER 9.99±0.29、DER 17.75±1.14、DER++ 19.38±1.41。'
+    type: PAPER_RESULT
+    source_locator: 'Table 2, p. 6; Section 4.1–4.2, pp. 5–6'
+    conditions: 'S-Tiny ImageNet；10×20 类；Class-IL；K=500；非预训练 ResNet18；100 epochs/task；最终平均准确率。'
+    allowed_wording: '仅可描述该数据集、容量、协议和训练设置中的表格结果；保留 ± 原样。'
+  R04:
+    claim: 'MNIST-360、K=500 的整流结束准确率为 ER 65.04±1.53、DER 69.11±1.66、DER++ 69.62±1.59。'
+    type: PAPER_RESULT
+    source_locator: 'Section 4.3 pp. 6–7; Table 3 p. 7; Appendix B.2 p. 13'
+    conditions: 'MNIST-360；数字 0–8；九组连续类别对重复三轮；每图像只呈现一次；2×100 ReLU MLP；整流结束后评估；MNIST-360 当前/回放 batch 大小经搜索。'
+    allowed_wording: '注明这是 MNIST-360 的整流结束指标及其特定搜索设置；不能泛化为所有 GCL 流。'
+  R05:
+    claim: 'DER++ 并非每个设置都超过 DER 或 ER：K=200 的 Tiny ImageNet Class-IL 中 DER 高于 DER++；K=5120 的 CIFAR Task-IL 中 ER 高于 DER++；K=200 的 MNIST-360 中 DER 高于 DER++。'
+    type: PAPER_RESULT
+    source_locator: 'Table 2 p. 6; Table 3 p. 7'
+    conditions: '分别为 S-Tiny ImageNet Class-IL、S-CIFAR-10 Task-IL、MNIST-360；容量和完整数值见 paper-model.md 的 Results 表。'
+    allowed_wording: '可用这些表项反驳 DER++ 在每个配置必然更优；须逐项保留协议、数据集和容量。'
+  R06:
+    claim: 'Figure 3 展示 Section 4 与 Appendix F.1 的准确率和记忆分配关系；图注说明准确率较低或记忆消耗过高的方法可能未展示。'
+    type: PAPER_RESULT
+    source_locator: 'Appendix C, Figure 3, pp. 14–15'
+    conditions: '论文图中所列方法和 memory allocation；后续点表示同一方法增大缓冲区。'
+    allowed_wording: '可描述图中展示的趋势和纳入范围；不能把省略的方法当作不存在。'
+  R07:
+    claim: 'Table 5 报告单 epoch Class-IL 设置，作者讨论指出部分结果受欠拟合影响。'
+    type: PAPER_RESULT
+    source_locator: 'Appendix F.3, p. 17, Table 5'
+    conditions: '附录中特定单 epoch Class-IL 比较。'
+    allowed_wording: '将其作为训练时长影响结果解释的限制；不能据此概括所有在线或单遍学习算法。'
+author_interpretations:
+  AI01:
+    claim: '作者将 S-CIFAR-10 的参数扰动损失和经验 Fisher 迹观察解释为 DER 解具有较平坦的局部区域。'
+    type: AUTHOR_INTERPRETATION
+    source_locator: 'Section 5, pp. 7–9; Figure 2(a–b), p. 8'
+    conditions: '论文报告的模型、数据集、容量和局部扰动/经验 Fisher 分析。'
+    allowed_wording: '应称为作者基于特定实验的解释，不是对所有模型或方向的定理。'
+  AI02:
+    claim: '作者依据 S-Tiny ImageNet 校准图与 ECE 比较，报告 DER 类方法相较若干基线较少过度自信。'
+    type: AUTHOR_INTERPRETATION
+    source_locator: 'Section 5, pp. 7–9; Figure 2(c–d), p. 8'
+    conditions: 'S-Tiny ImageNet、图中所列方法及相应评估设置。'
+    allowed_wording: '只能报告图中条件下的校准观察，不得写成可靠性保证。'
+  AI03:
+    claim: '作者提出极小 reservoir 可能遗漏类别，并推测非最大 logits 或许保留 ghost class 信息。'
+    type: AUTHOR_INTERPRETATION
+    source_locator: 'Appendix F.2, p. 17; Figure 4 p. 16'
+    conditions: '论文讨论的低记忆对比与作者提出的解释。'
+    allowed_wording: '必须保留“可能/推测”语气；不能写成类别覆盖保证或已证实机制。'
+our_interpretations:
+  I01:
+    claim: '均匀 reservoir 对流样本位置做抽样，不会自行保证每类在 M 中均衡。'
+    type: OUR_INTERPRETATION
+    source_locator: 'Section 3 p. 3; Appendix D, Algorithm 3 and proof, p. 15'
+    conditions: '由按样本位置均匀留存规则推出；不额外假定流类别分布。'
+    allowed_wording: '写作“均匀保留不等于类别均衡”，并区分概率性质与具体样本实现。'
+  I02:
+    claim: 'Table 2/3 的 ± 记号在本文对应表格中没有明示为标准差或标准误。'
+    type: OUR_INTERPRETATION
+    source_locator: 'Table 2 p. 6; Table 3 p. 7 and their captions'
+    conditions: '仅按当前 arXiv v2 表格与图注核对。'
+    allowed_wording: '照录 ± 数值，不擅自称其为 SD、SE 或置信区间。'
+implementation_mappings:
+  M01:
+    claim: '教学伪代码在 M 为空时跳过两种回放损失，只计算当前标签分类损失；原论文印刷算法没有明示空池分支。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Algorithms 1–2 initialization and sampling, p. 4; Eq. (5)–(6), p. 3'
+    conditions: '本项目为可执行讲解补齐的空记忆起始分支，不宣称是原文逐字步骤。'
+    allowed_wording: '明确标作教学/实现补全；不要归因于作者明文规定。'
+  M02:
+    claim: 'W2 采用 DER 记录 (x,z)、DER++ 记录 (x,z,y) 的一致模型，并保留 Algorithm 1 取样解包三元组却写入二元组的印刷不一致。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Algorithms 1–2, p. 4; Eq. (5)–(6), p. 3'
+    conditions: '按两种目标实际使用的变量消歧；source cache 保留原印刷内容。'
+    allowed_wording: '解释正规化数据结构时同时披露 DER 原算法的变量不一致。'
+  M03:
+    claim: '本项目用 K 表示固定容量、M 表示容器、N 表示已处理项数，并用包含端点的整数抽样 [0,N] 表达 Algorithm 3 的计数逻辑。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Appendix D, Algorithm 3 and proof, p. 15'
+    conditions: '这是对原算法容量/计数符号和未展开计数递增的规范化表达。'
+    allowed_wording: '必须标注为本项目消歧；不把符号 K、计数更新或整理后的伪代码说成原文原样。'
+  M04:
+    claim: 'W2 的联合梯度下降采用减号，同时保留原 Algorithm 1–2 的加号印刷及其与最小化/SGD 叙述不一致。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Algorithms 1–2, p. 4; Section 3.1 Eq. (5)–(6), p. 3; Section 4.1, p. 5'
+    conditions: '本项目将目标按最小化解释，照常以下降方向更新参数。'
+    allowed_wording: '并列报告原文印刷形式与本项目的下降式整理；不要静默改写原文。'
+  M05:
+    claim: 'W2 将预测入口整理为对当前训练后网络求分数并按评测允许类别取 argmax；这不是论文单列的预测算法。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Section 3 function definition, p. 3; Section 4 protocol, pp. 4–5; Appendix B.2 p. 13'
+    conditions: '基于论文模型和评测协议的接口整理；Task-IL 根据协议使用任务身份，其余相应协议不读取该信息。'
+    allowed_wording: '预测只读模型是本项目为教学整理的接口；不要称它为论文 Algorithm。'
 background: {}
 teaching_examples: {}
-
-# W3 may complete automatically only when all these lists are empty.
 review:
   unresolved_source_conflicts: []
   unresolved_evidence_conflicts: []
   unsafe_claim_wording: []
-
-# Entry shape:
-# C01:
-#   claim: ""
-#   type: PAPER_FACT
-#   source_locator: "section/page/figure/equation"
-#   conditions: ""
-#   allowed_wording: ""
