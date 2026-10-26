@@ -18,11 +18,11 @@ claims:
     conditions: 'DER++ 模式；标签项按 beta 加权。'
     allowed_wording: 'DER++ 增加历史样本标签 CE；这不是 DER 原目标内含的组成部分。'
   C04:
-    claim: 'Algorithms 1–2 先从已有记忆采样并计算损失，再更新参数，随后处理当前输入并将候选记录交给 reservoir。'
+    claim: 'Algorithms 1–2 按读取已有记忆、计算当前与回放输出及损失、更新参数、再将当前候选写入 reservoir 的顺序执行。'
     type: PAPER_FACT
     source_locator: 'Algorithms 1–2, p. 4'
     conditions: '按论文印刷算法顺序解释；具体批次实现细节仍依实验设置。'
-    allowed_wording: '本步训练先读旧记忆，在一次联合优化后再写入当前样本；不得写成先写当前样本再回放或刷新旧目标。'
+    allowed_wording: '本步先读取已有记忆并计算当前/回放损失，一次联合参数更新后再写入当前样本；不得写成先写当前样本再回放或刷新旧目标。'
   C05:
     claim: 'DER++ 的历史输出匹配与标签分类来自两次分开的记忆采样调用，所采样集合可能重叠。'
     type: PAPER_FACT
