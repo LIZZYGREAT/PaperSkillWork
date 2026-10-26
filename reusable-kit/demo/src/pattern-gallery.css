@@ -120,7 +120,6 @@
 .pg-opening__wide-scene .pg-model-composition { gap: 8px; padding-block: 4px; }
 .pg-opening__wide-scene .pg-model-composition > header { display: none; }
 .pg-opening__wide-scene .pg-model-paths { gap: clamp(16px, 3vw, 36px); margin-inline: clamp(14px, 5vw, 64px); }
-.pg-opening__wide-scene .pg-model-composition[data-density="compact"] .pg-shared-input .rk-sample-token { width: 52px; }
 .pg-opening__wide-scene .pg-model-composition[data-density="compact"] .pg-model-paths { gap: clamp(12px, 2vw, 24px); }
 .pg-opening__wide-scene .pg-model-composition[data-density="compact"] .pg-model { padding: 8px; }
 .pg-opening__wide-scene .pg-model-composition[data-density="compact"] .pg-model .rk-mini-network > svg { max-width: 260px; }

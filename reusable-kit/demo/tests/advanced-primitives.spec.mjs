@@ -81,10 +81,18 @@ test("both Gallery hero candidates use the same connected model example at deskt
       const opening = page.locator("#gallery-opening");
       await expect(opening).toHaveAttribute("data-hero-candidate", candidate);
       await expect(opening.locator(".pg-model-composition")).toBeVisible();
-      await expect(opening.locator("[data-shared-input='x']")).toHaveCount(1);
+      const sharedInput = opening.locator("[data-shared-input='x']");
+      await expect(sharedInput).toHaveCount(1);
       await expect(opening.locator("[data-model-path]")).toHaveCount(2);
       await expect(opening.locator("[data-model='teacher'] .rk-mini-network")).toHaveCount(1);
       await expect(opening.locator("[data-model='student'] .rk-mini-network")).toHaveCount(1);
+      const inputSpacing = await sharedInput.evaluate(node => {
+        const image = node.querySelector(".rk-sample-token__image").getBoundingClientRect();
+        const labels = [node.querySelector(".pg-network-kicker"), node.querySelector(":scope > strong"), node.lastElementChild]
+          .map(label => label.getBoundingClientRect());
+        return { imageRight: image.right, firstLabelLeft: Math.min(...labels.map(label => label.left)) };
+      });
+      expect(inputSpacing.firstLabelLeft).toBeGreaterThanOrEqual(inputSpacing.imageRight);
       const branch = await opening.locator(".pg-model-paths").evaluate(node => ({
         columns: getComputedStyle(node).gridTemplateColumns.split(" ").length,
         busDisplay: getComputedStyle(node, "::before").display,
