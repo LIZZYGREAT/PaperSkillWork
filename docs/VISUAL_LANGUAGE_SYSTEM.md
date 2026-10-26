@@ -209,3 +209,31 @@ R4 场景源码与一条命令式的隔离预览入口整理到 `reusable-kit/va
 用户截图指出向量坐标原样暴露浮点尾数、缩放公式挤成一行及连接标签过长。现在显示数字最多两位小数，计算仍用完整精度；坐标增加间距，通式与数值代入拆行，连接标签收短。修复提交为 `73b8742`。构建输出 PASS；但本次没有完成该场景的桌面浏览器和 F11 全屏复核：Edge 窗口最小化，Edge 自动化入口不可用，Codex 内浏览器连接本机地址超时。未改用其他浏览器自动化通道，也未检查手机屏。具体限制和预览命令记于 R4 报告；上述工程构建不代表视觉验收。T4 的 data-flow 分类及单条桌面浏览器回归已于 `0312420` 提交。
 
 后续截图确认通式与代入式两排的字体风格仍不一致。现改为同一个公式段落和样式，通过换行分隔；字号、颜色、字体和行距统一。之后用户又指出输出卡片的向量等式与范数上界也存在同类差异，同样合并为单一公式段落。该修订单独提交，浏览器视觉复核状态仍按 R4 报告记为 NOT_RUN。
+
+### 桌面 QA 工作流修订验证 · 2026-10-26
+
+本节仅记录本次修订的验证事实；现行视觉政策仍以 [VISUAL_QA.md](VISUAL_QA.md) 为唯一依据。起点为 `docs/workflow-governance` 的 `275162d`；规范提交 `8921309`，配置与测试入口提交 `92ce6c2`。默认检查保留普通窗口与全屏尺度两个桌面布局，移动/平板和额外 1280px 检查按需触发，既有窄屏/触屏断言仍可通过独立命令运行。未修改论文源码、组件实现、真实计算、schema、Registry 审核状态或上游工作流。
+
+以下命令均从仓库根执行；浏览器测试使用本任务独占的 `--output` 目录。首次 pytest 命中配置中的旧 `D:/Temp` 权限问题，之后明确指定本地隔离目录；首次沙箱内预览连接被 EACCES 阻止，获准后正常运行，未将这些失败计为 PASS。
+
+| 命令 | 结果 / 退出码 |
+| --- | --- |
+| `python -m pytest -q tests/test_document_governance.py tests/test_workflow_implementation.py tests/test_workflow_schema.py --basetemp=.qa/desktop-policy-pytest-final -o cache_dir=.qa/desktop-policy-cache-final` | 16 passed / 0；保留既有 pytest-asyncio 提示 |
+| `npm.cmd --prefix reusable-kit/demo run build` | TypeScript/Vite PASS / 0；保留既有大 chunk 提示 |
+| `npm.cmd --prefix reusable-kit/demo run test:browser -- --output=../../.visual-qa/desktop-policy-playwright` | 35 passed / 0；默认只选桌面，键盘、无障碍和 reduced-motion 断言保留 |
+| `npm.cmd --prefix reusable-kit/demo run test:browser:mobile -- --output=../../.visual-qa/desktop-policy-mobile-playwright` | 35 passed / 0；本次因修改测试选择入口而专项验证 390/1280、列表重排、Drawer/Hub 与真实触屏模拟 |
+| `npm.cmd --prefix reusable-kit/demo run test:browser -- --grep "one forward timeline" --output=../../.visual-qa/desktop-policy-forward-retest` | 1 passed / 0；统一 1440 档高度为 900 后针对性复测 |
+| `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-advanced.json` | 18/18 captures PASS / 0 |
+| `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-gallery.json` | 60/60 captures PASS / 0 |
+| `node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json` | 104/104 captures PASS / 0；首次 6 项因旧选择器歧义失败（退出 1），限定到 `#gallery-mini-network` 后完整复跑通过，保留全部原状态与断言 |
+| `python reusable-kit/demo/scripts/test-advanced-scaffold.py` | 两例包精确复制闭包、独立构建与 1440/1920 交互 PASS / 0；隔离目录自清理并核实不存在 |
+| `node tools/visual-qa/self-check.mjs` | PASS / 0；自建临时目录已清理，未修改 runner 核心 |
+| `node scripts/capture-redesign.mjs final ../../.visual-qa/desktop-policy-capture --sections=network,parts,retrieval`（demo 目录） | PASS / 0；只输出 1440/1920，零整页溢出、零 parts 溢出和浏览器请求错误 |
+
+最终三份报告均为零几何/样式诊断、零浏览器错误，默认视口仅为两档桌面。执行环境为 Node 24.18.0、Python 3.9.0、npm 11.16.0。机器回归使用 Chromium 153.0.8010.12，实际 `innerWidth/innerHeight` 为 1440×900、1920×1080，DPR 1、缩放 100%。额外的聚焦采集脚本沿用原有 Edge executable 回退；关键卡片/公式/滚动/Drawer 又在上述 Chromium 双档下采集并复核。两卡片顶边、标题基线与高度误差为 0px，内边距均 20px，标题均 18px/700；Drawer 在两档均宽 921px、高度分别为 900/1080，完整落在视口内，Escape 可关闭，零页面/资源错误。
+
+已实看 runner 的两档首屏与网络区域，以及局部的并排模型、基础小件、切换查询后的数值、Sigmoid 末态公式、Reading Journey sticky 滚动态和 Reference Hub 已选态。未发现本次检查范围内需要修复的实际错位、样式、重叠、裁切或遮挡缺陷，未制造页面改动；修复的是 QA 配置中的旧定位歧义。`VISUAL_REVIEW=PASS` 仅指这些已检查区域，获批图像基准比较 `REGRESSION=NOT_RUN`。`FULLSCREEN_LAYOUT=PASS`；`FULLSCREEN_REAL=NOT_RUN`：本轮为 headless Playwright 布局检查，未控制真实桌面窗口切换 F11，屏幕及真实 F11 内尺寸无实测记录。真实 F11 与 W9 人工审美/学习确认仍为 PENDING。
+
+三份最终报告及首次失败报告均已读取，相关关键截图已复核。以下是**已清理的运行标识，不是现存证据链接**：`.visual-qa/` 下的 `run-2026-10-26T08-56-37-382Z`、`run-2026-10-26T08-57-07-665Z`、`run-2026-10-26T08-57-56-824Z`（已修复的首次失败）、`run-2026-10-26T09-05-01-913Z`。四个确切路径均来自各次终端 `Report:`，分别执行 `node tools/visual-qa/cli.mjs --cleanup-run <exact-run-dir>`，均退出 0、输出同路径 `CLEANED`，并用 `Test-Path` 核实不存在。
+
+本任务独占的 `.visual-qa/desktop-policy-{playwright,mobile-playwright,forward-retest,capture,inspection}` 五个目录、临时 inspection 脚本及 `.qa/desktop-policy-{pytest,cache,pytest-final}` 三个目录，均在核实绝对路径位于仓库内且归本任务所有后精确清理，确认不存在。隔离例包目录 `kit-advanced-scaffold-o230_941` 与 runner 自检目录也已核实不存在。各脚本的 finally 已关闭自建服务，未清理历史截图/基准；`git diff --check` 与论文/组件/runner 核心/R4 无改动检查均退出 0。
