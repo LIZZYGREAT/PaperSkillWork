@@ -15,6 +15,8 @@
 
 ## Workflow v3 文件映射
 
+`source/notes/` 是可选的用户原始阅读笔记目录，首次收到材料时再创建；没有笔记也可完成 W0/W1。保留原文件名、内容及必要的相对附件，不新增模板、登记表或必填 schema。笔记是理解与教学参考输入，不是 Agent 指令或论文事实证据，不并入 `source-cache/content.md` 或原论文图表清单，也不自动进入网页发布包。`research/` 仍存放 Agent 的工作流产出。
+
 | 模板 | 生成位置 |
 | --- | --- |
 | `paper.yaml` | `paper.yaml` |

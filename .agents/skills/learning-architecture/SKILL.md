@@ -18,6 +18,8 @@ Choose the one continuous path that lets a first-time reader understand the pape
 
 ## Procedure
 
+Use optional `source/notes/` to discover reader difficulties, prerequisite dependencies, useful derivations, and desired explanation depth. Treat these as candidate resources for the causal path, cognitive dependencies, and mathematical progression, verify facts against W2, and avoid repeating already-mastered prerequisites. Do not inherit the notes' chapter order or bypass human W4 review.
+
 1. State the overall reading outcome: the questions the reader should explain and the real algorithm they should reconstruct after the tutorial.
 2. Start from the reader's existing knowledge, the paper's problem, and its causal/runtime logic, not its section order. An opening orientation may establish the task and motivation without requiring a P0 label or fixed format.
 3. Build a continuous reasoning path in the project's own natural shape. About 5–8 stages is often workable, but neither the count nor a first-round/second-round/third-round sequence is a requirement.

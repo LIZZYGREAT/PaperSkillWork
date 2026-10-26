@@ -18,6 +18,8 @@ Make sure each important tutorial statement has a defensible source boundary and
 
 ## Procedure
 
+Reading notes in optional `source/notes/` may suggest claims or explanations, but cannot serve alone as paper-fact evidence. Resolve each important claim, equation, or execution detail to the declared original paper and a real source locator, separating our explanation from the authors' statements. Notes' external images are not paper figures; verify their provenance and rights independently. Do not modify the source cache to make notes appear to be original text.
+
 1. Audit important paper claims, equations, architecture, results, limitations, and interpretations. Include the W2 core pseudocode, key state transitions, and the division between training/update and prediction/inference.
 2. Give each claim a unique ID, exact claim, type, source locator, conditions, and allowed wording.
 3. Keep `PAPER_FACT`, `PAPER_RESULT`, `AUTHOR_INTERPRETATION`, `OUR_INTERPRETATION`, `IMPLEMENTATION_MAPPING`, `GENERAL_BACKGROUND`, and `TEACHING_EXAMPLE` distinct.

@@ -19,6 +19,8 @@ Translate the reviewed spine into the smallest useful visual plan, then expose t
 
 ## Procedure
 
+When useful, consult optional `source/notes/` for numerical examples, equation expansions, or diagram intuitions, verifying them before reuse. Choose expression and Kit composition from approved W4 learning tasks and W2 real data/state; keep reuse boundaries in the existing plan, without a separate notes-to-page mapping or automatic publication of original notes and attachments.
+
 Use the confirmed project W4 design and W2 Algorithm Execution Model as inputs, not as requests to redesign their learning order or real algorithm. W5 decides whether each teaching task is expressed through prose, graphics, formulas, pseudocode, interaction, animation, or a whole-system scene. Read the relevant sections of `docs/TEACHING_DESIGN_STANDARD.md`; use `docs/VISUAL_QA.md` to choose observable states and viewports. In the existing implementation plan, record the text/visual/interaction task, key states, protected invariants, safe local adjustments, shared/adjacent areas that may be affected, and unresolved decisions. Keep confirmed design separate from rendered-page acceptance and keep these notes outside the machine-readable YAML. Read the matching Reusable Kit Recipe/example and actual source only when the current design problem calls for it; do not load every Recipe by default.
 
 1. Choose how prose, graphics, formulas, pseudocode, paper figures, and interactions work together for the teaching goal. A graphic may communicate a spatial, temporal, or state relationship more directly even when prose can explain it; avoid decorative visuals without a learning purpose.
