@@ -57,7 +57,7 @@ python tools/paper.py check $PaperId
 
 先完成 W0–W5 的来源、完整阅读、论文模型、证据、学习主线和实现规划，再进入 W6 首个真实切片；W7 人审通过后完成 W8，W9 接受后进入 W10。W2/W4/W7/W9 需要真实人工评审。阶段命令见 [工作流](WORKFLOW.md)，生成目录与六份研究/设计/审计文档见 [模板约定](TEMPLATE_CONTRACT.md)。
 
-原文和图表清单留在 `source-cache/`；W3 核对原图用途、来源与使用权，W6/W8 再制作网页衍生素材。Kit 选择和复制见 [使用入口](reusable-kit.md)，不另建重复的设计文档。
+原文和图表清单留在 `source-cache/`；W3 核对原图用途、来源与使用权，W6/W8 再制作网页衍生素材。Kit 选择和复制见 [使用入口](REUSABLE-KIT.md)，不另建重复的设计文档。
 
 ## 三、按成果提交与本地查看
 

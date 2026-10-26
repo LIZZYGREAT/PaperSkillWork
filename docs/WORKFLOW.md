@@ -86,7 +86,7 @@ W5 把已确认的 W4 学习主线和 W2 执行模型交接为现有 `design/imp
 
 `implementation:` 下的 YAML 代码块仍是唯一机器可读计划：每个 CORE 恰好映射一次，每个 SUPPORTING 有精简位置，REFERENCE 位于主线之外，DELETE 不进入实现；证据与阶段引用必须能解析。不新增复杂场景 schema。
 
-`vertical_slice.stages` 与 `required_core_items` 定义 W6 覆盖范围；选用的素材须映射到 Learning Spine 阶段或 Reference Hub 并指定渲染方式。可复用模式名称必须登记于 `reusable-kit/registry.yaml`，使用和复制边界见 [`docs/reusable-kit.md`](reusable-kit.md)。
+`vertical_slice.stages` 与 `required_core_items` 定义 W6 覆盖范围；选用的素材须映射到 Learning Spine 阶段或 Reference Hub 并指定渲染方式。可复用模式名称必须登记于 `reusable-kit/registry.yaml`，使用和复制边界见 [`docs/REUSABLE-KIT.md`](REUSABLE-KIT.md)。
 
 ### 上游要求处理
 

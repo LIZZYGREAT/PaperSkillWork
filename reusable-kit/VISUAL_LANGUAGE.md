@@ -1,6 +1,6 @@
 # Reusable Kit 视觉语言
 
-Kit 统一文字、图元与状态的视觉语言；每篇论文根据教学目标安排构图、数据和计算。工作流使用入口见 [Reusable Kit](../docs/reusable-kit.md)，资产、成熟度与源码路径以 [Registry](registry.yaml) 为准。
+Kit 统一文字、图元与状态的视觉语言；每篇论文根据教学目标安排构图、数据和计算。工作流使用入口见 [Reusable Kit](../docs/REUSABLE-KIT.md)，资产、成熟度与源码路径以 [Registry](registry.yaml) 为准。
 
 ## 样式真源
 
@@ -32,4 +32,4 @@ Kit 统一文字、图元与状态的视觉语言；每篇论文根据教学目�
 
 [Demo 使用说明](demo/README.md) 提供 Gallery、Lab 与场景入口；[R4 复现入口](validation/README.md) 提供独立复制场景，其当前结果以 [R4 报告](validation/r4/REPORT.md) 为准。日常浏览器范围按唯一的 [Visual QA 规范](../docs/VISUAL_QA.md) 执行：普通窗口布局 1440×900、全屏尺度布局 1920×1080；后者是模拟，真实 F11 需单独实测。移动视觉检查仅按该规范的专项触发条件运行。
 
-当前 Gallery 默认采用用户选定的 B 开场构图；这项构图选择不等于逐项批准资产。Registry 资产仍为 candidate，自动化与 Agent 视觉复核不代填人工批准。Kit V1 的能力和限制见 [工作流使用入口](../docs/reusable-kit.md#v1-当前能力与限制)。
+当前 Gallery 默认采用用户选定的 B 开场构图；这项构图选择不等于逐项批准资产。Registry 资产仍为 candidate，自动化与 Agent 视觉复核不代填人工批准。Kit V1 的能力和限制见 [工作流使用入口](../docs/REUSABLE-KIT.md#v1-当前能力与限制)。

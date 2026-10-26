@@ -29,7 +29,7 @@ W7 acceptance is required before full implementation. Human review gates are W2,
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md): W0–W10 responsibilities, gates, and document authority.
 - [`docs/TEACHING_DESIGN_STANDARD.md`](docs/TEACHING_DESIGN_STANDARD.md): authoritative teaching logic, cognitive sequencing, mathematical explanation, and expression rules.
 - [`docs/VISUAL_QA.md`](docs/VISUAL_QA.md): browser-based rendering, interaction, and regression checks.
-- [`docs/reusable-kit.md`](docs/reusable-kit.md): how to find and copy reusable patterns.
+- [`docs/REUSABLE-KIT.md`](docs/REUSABLE-KIT.md): how to find and copy reusable patterns.
 - [`docs/TEMPLATE_CONTRACT.md`](docs/TEMPLATE_CONTRACT.md): template names and generated workspace paths.
 - [`docs/PAPERSKILL_SETUP.md`](docs/PAPERSKILL_SETUP.md): new-paper setup, work branches, and the initial PaperSkill sibling checkout.
 

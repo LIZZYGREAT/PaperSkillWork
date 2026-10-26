@@ -10,8 +10,8 @@ Start with this file for repository-wide boundaries. Read the stage contract in 
 | W2 paper model | `.agents/skills/paper-review/SKILL.md` and its listed inputs |
 | W3 claims and source assets | `.agents/skills/evidence-audit/SKILL.md` and its listed inputs |
 | W4 learning spine | `.agents/skills/learning-architecture/SKILL.md`, `docs/TEACHING_DESIGN_STANDARD.md` |
-| W5–W7 implementation plan and slice review | `.agents/skills/implementation-plan/SKILL.md`; for reuse follow `docs/reusable-kit.md` → Registry → matching Recipe/example and actual source |
-| W6–W8 page implementation or UI repair | `.agents/skills/enhanced-implementation/SKILL.md`, the paper's `design/implementation-plan.md`, `docs/VISUAL_QA.md`; for Kit selection use `docs/reusable-kit.md` → Registry → Recipe/example and source |
+| W5–W7 implementation plan and slice review | `.agents/skills/implementation-plan/SKILL.md`; for reuse follow `docs/REUSABLE-KIT.md` → Registry → matching Recipe/example and actual source |
+| W6–W8 page implementation or UI repair | `.agents/skills/enhanced-implementation/SKILL.md`, the paper's `design/implementation-plan.md`, `docs/VISUAL_QA.md`; for Kit selection use `docs/REUSABLE-KIT.md` → Registry → Recipe/example and source |
 | W9 learning/evidence audit | `.agents/skills/final-audit/SKILL.md`, `docs/VISUAL_QA.md` |
 | W10 release | `docs/UPSTREAM_RELEASE.md` after W9 acceptance; the user runs the official preflight |
 | Workflow, skill, template, or shared QA-tool changes | `docs/WORKFLOW.md`, `docs/TEMPLATE_CONTRACT.md`, relevant tests |

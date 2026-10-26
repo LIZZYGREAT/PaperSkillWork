@@ -8,7 +8,7 @@ import type { StepNavItem } from "../../compositions/step-nav";
  * These specs are scene data, not Kit API: a new paper writes its own figures with
  * the same Foundation primitives (`DiagramFlow`, `StepNav`). Nothing below is a
  * reusable composition, and none of the notation has been checked against the paper
- * PDF — see `docs/reusable-kit.md` before quoting any of it in a tutorial.
+ * PDF — see `docs/REUSABLE-KIT.md` before quoting any of it in a tutorial.
  */
 
 /** Inline symbol: italic variables and real subscript markup. */
