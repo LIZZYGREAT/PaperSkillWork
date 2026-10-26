@@ -58,22 +58,22 @@ python tools/paper.py scaffold-kit <paper-id> --select ResponseMeter --allow-una
 
 ## 验证与签收
 
+依赖缺失时先执行 `npm --prefix reusable-kit/demo ci`。本地发现与预览可运行 `npm --prefix reusable-kit/demo run dev -- --host 127.0.0.1`，打开终端显示的地址（默认 `http://127.0.0.1:5173/?demo=gallery`）。按本次改动范围选择检查；一般 Kit 交付回归使用：
+
 ```sh
-npm --prefix reusable-kit/demo ci
 npm --prefix reusable-kit/demo run build
 npm --prefix reusable-kit/demo run test:browser
-python -m pytest -q tests/test_paper_cli.py tests/test_kit_copy.py tests/test_workflow_implementation.py tests/test_document_governance.py
+python -m pytest -q tests/test_document_governance.py tests/test_kit_copy.py tests/test_paper_cli.py tests/test_workflow_implementation.py tests/test_workflow_schema.py
 python reusable-kit/demo/scripts/test-advanced-scaffold.py
-node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-advanced.json
 node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-gallery.json
-node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json
-node tools/visual-qa/self-check.mjs
 ```
 
-Windows 可设置 PAPERWORK_PLAYWRIGHT_EXECUTABLE 指向 Chromium/Edge。按 [Visual QA](VISUAL_QA.md) 选择受影响的桌面状态、检查报告与真实截图并清理本轮产物；上列命令按改动范围选用，不要求每次运行所有配置或 runner 自检。数据/几何/交互测试不能代替视觉判断。Kit 特有画风见 [视觉语言](../reusable-kit/VISUAL_LANGUAGE.md)，独立场景的当前验收见 [R4 报告](../reusable-kit/validation/r4/REPORT.md)。
+Windows 可使用 `npm.cmd`；既有 pytest 临时目录不可写时，为本次运行指定独占 `--basetemp` 和 `-o cache_dir=...`。可设置 PAPERWORK_PLAYWRIGHT_EXECUTABLE 指向 Chromium/Edge。按 [Visual QA](VISUAL_QA.md) 选择受影响的桌面状态、检查报告与真实截图并清理本轮产物。聚焦网络/时间线或共享路由时选用对应已有 QA 配置；修改 runner 核心才补其 self-check，不每次重复全部配置。移动专项使用 `npm --prefix reusable-kit/demo run test:browser:mobile`，仅按 Visual QA 的条件触发。
+
+数据/几何/交互测试不能代替视觉判断。Kit 特有画风见 [视觉语言](../reusable-kit/VISUAL_LANGUAGE.md)，独立场景的当前验收见 [R4 报告](../reusable-kit/validation/r4/REPORT.md)。
 
 ## V1 当前能力与限制
 
-Registry 检索、精确源码/CSS 闭包、安全追加、Final-first 目标解析及两个完整示例包已有源码与测试覆盖，并可独立构建和交互。R4 网络与向量裁剪的当前浏览器状态以唯一 [R4 报告](../reusable-kit/validation/r4/REPORT.md) 为准；未实测项保持 NOT_RUN。48 个 Registry 条目仍为 candidate，需显式 `--allow-unapproved`；只有逐项明确的人类认可及完整 `approved_by`、`approved_at`、`evidence` 才可批准，整体画风评价不构成批量批准。
+Registry 检索、精确源码/CSS 闭包、安全追加、Final-first 目标解析及两个完整示例包已有源码与测试覆盖，并可独立构建和交互。R4 网络与向量裁剪已完成独立构建、1440×900 / 1920×1080 浏览器交互和截图复核，真实 F11 仍为 NOT_RUN；具体范围以唯一 [R4 报告](../reusable-kit/validation/r4/REPORT.md) 为准。48 个 Registry 条目仍为 candidate，需显式 `--allow-unapproved`；只有逐项明确的人类认可及完整 `approved_by`、`approved_at`、`evidence` 才可批准，整体画风评价不构成批量批准。
 
 V1 收口后，下一阶段是在一篇真实新论文完成 W0–W5 后检索、复制、组合或拒绝 Kit，形成 W6 教学切片并观察复用成本与教学质量；首次真实新论文复用尚待该阶段验证。

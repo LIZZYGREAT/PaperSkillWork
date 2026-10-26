@@ -66,3 +66,22 @@ Both runner reports were read and key screenshots inspected before exact cleanup
 ## Boundaries
 
 All R4 scenes are synthetic. Registry assets remain `candidate`; this work does not approve them. No file under `papers/**` or the upstream PaperSkill repository was changed. The earlier Demo/CLI/Visual QA runs are available through Git history; they do not establish R4 post-repair browser acceptance. Current Kit principles live in [VISUAL_LANGUAGE.md](../../VISUAL_LANGUAGE.md).
+
+## V1 closeout regression · 2026-10-26
+
+From repository root, the final document/CLI/copy checks and existing Demo regressions produced:
+
+| Actual command | Result / exit code |
+| --- | --- |
+| `python -m pytest -q tests/test_document_governance.py tests/test_kit_copy.py tests/test_paper_cli.py tests/test_workflow_implementation.py tests/test_workflow_schema.py --basetemp=.qa/v1-closeout-regression -o cache_dir=.qa/v1-closeout-regression-cache` | 63 passed / 0 |
+| `npm.cmd --prefix reusable-kit/demo run build` | TypeScript/Vite PASS / 0; existing large-chunk notice retained |
+| `npm.cmd --prefix reusable-kit/demo run test:browser -- --output=../../.visual-qa/v1-closeout-playwright` | 35 desktop tests passed / 0 |
+| `python reusable-kit/demo/scripts/test-advanced-scaffold.py` | Exact example copy, isolated build and 1440/1920 interactions PASS / 0; own isolated directory self-cleaned and absence verified |
+| `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-gallery.json` | 60 captures PASS / 0, zero geometry/style diagnostics and browser errors |
+| `git diff --check`; protected paper/Registry/component/CLI/runner source diff against `e9df6f1` | PASS / 0 |
+
+General Markdown/Skill checks remain active; only the retired case-library checks were removed. Relative links in the new Kit visual guide, Demo README, validation README and this report were also checked with the existing link-resolution helper. The initial general-link check caught an invalid link in the pre-existing setup draft; the revised setup guide and release-guide anchor resolved it, and the final suite passed.
+
+Gallery screenshots were actually inspected for the opening and selected Reference Hub at both desktop sizes. This Agent review is separate from the runner's automatic statuses; approved pixel-baseline comparison remains NOT_RUN and human acceptance remains PENDING. Only this Gallery config was run for closeout; the unchanged runner core did not require another self-check, and no mobile visual trigger applied. The Gallery report path returned by this invocation was `.visual-qa/run-2026-10-26T14-14-39-020Z/report.md`; exact post-review cleanup is recorded below.
+
+The Gallery `--cleanup-run` exited 0, printed `CLEANED` for that exact run, and absence was verified. Task-owned review crops, native Playwright output, pytest/cache directories and temporary R4 config/check files were also removed by their verified exact paths; the retained matrix screenshot and other historical evidence were preserved. The two preview commands stopped their temporary services, and no task listener remained on 4173/4178/4179. No additional permanent status/history document or screenshot baseline was created.
