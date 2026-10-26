@@ -87,11 +87,17 @@ test("both Gallery hero candidates use the same connected model example at deskt
       await expect(opening.locator("[data-model='teacher'] .rk-mini-network")).toHaveCount(1);
       await expect(opening.locator("[data-model='student'] .rk-mini-network")).toHaveCount(1);
       const inputSpacing = await sharedInput.evaluate(node => {
+        const group = node.getBoundingClientRect();
         const image = node.querySelector(".rk-sample-token__image").getBoundingClientRect();
         const labels = [node.querySelector(".pg-network-kicker"), node.querySelector(":scope > strong"), node.lastElementChild]
           .map(label => label.getBoundingClientRect());
-        return { imageRight: image.right, firstLabelLeft: Math.min(...labels.map(label => label.left)) };
+        return {
+          imageCenterOffset: Math.abs(image.left + image.width / 2 - (group.left + group.width / 2)),
+          imageRight: image.right,
+          firstLabelLeft: Math.min(...labels.map(label => label.left)),
+        };
       });
+      expect(inputSpacing.imageCenterOffset).toBeLessThan(1);
       expect(inputSpacing.firstLabelLeft).toBeGreaterThanOrEqual(inputSpacing.imageRight);
       const branch = await opening.locator(".pg-model-paths").evaluate(node => ({
         columns: getComputedStyle(node).gridTemplateColumns.split(" ").length,
