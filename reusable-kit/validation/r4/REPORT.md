@@ -13,7 +13,9 @@ Date: 2026-10-26, with vector-clipping display repair recorded after review of t
 
 ## Vector-clipping screenshot repair
 
-The supplied image showed raw floating-point digits running together in the output vector, a long scale equation overflowing its card, and connector labels colliding with nearby content. The scene now rounds visible values to at most two decimal places, keeps full precision in the calculation, adds space between the displayed vector coordinates, puts the general scale formula and numeric substitution on separate lines, and shortens the connector labels to `norm`, `scale`, and `apply α`. The scene README records this display rule. No shared Kit component CSS was changed.
+The supplied image showed raw floating-point digits running together in the output vector, a long scale equation overflowing its card, and connector labels colliding with nearby content. The scene now rounds visible values to at most two decimal places, keeps full precision in the calculation, adds space between the displayed vector coordinates, puts the general scale formula and numeric substitution on separate lines in the same equation style, and shortens the connector labels to `norm`, `scale`, and `apply α`. The scene README records this display rule. No shared Kit component CSS was changed.
+
+A follow-up image showed that the first repair gave the two equation rows different typography. Both rows now share one paragraph and therefore use the same font, size, color, and line-height. Only a line break separates the formula from its numeric substitution.
 
 For the screenshot values `g = (1, 4)` and `c = 2.5`, the full-precision calculations are `‖g‖₂ = √17`, `α = 2.5 / √17`, and `g′ = (2.5 / √17, 10 / √17)`. The display rounds these to `4.12`, `0.61`, and `(0.61, 2.43)`; the clipped norm displays as `2.5`. This is formatting only; the component calculations continue to use unrounded numbers.
 

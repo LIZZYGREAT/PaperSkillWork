@@ -43,8 +43,7 @@ body { min-width: 320px; margin: 0; }
 .clip-card__vector .rk-representation-vector { width: 100%; }
 .clip-card--vector .rk-representation-vector__coordinates { gap: 12px; }
 .clip-card__equation { margin: 0; color: #2e4939; font: 12px/1.6 ui-monospace, "Cascadia Mono", monospace; text-align: left; overflow-wrap: anywhere; }
-.clip-card__formula { display: grid; gap: 4px; width: 100%; min-width: 0; }
-.clip-card__substitution { margin: 0; color: #43564a; font: 11px/1.5 ui-monospace, "Cascadia Mono", monospace; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.clip-card__formula { width: 100%; min-width: 0; }
 .clip-card__result { margin: 16px 0 0; color: var(--clip-green); font: 500 50px/.95 Georgia, "Times New Roman", serif; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
 .clip-card__detail { margin: auto 0 0; color: var(--clip-muted); font-size: 12px; line-height: 1.55; }
 .clip-card__meter { width: 100%; margin-top: 15px; }

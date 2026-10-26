@@ -75,8 +75,14 @@ export function App() {
           <p className="clip-card__meta">03 <span>SHARED SCALE</span></p>
           <div className="clip-card__meter" data-value="scale"><ResponseMeter value={result.scale} min={0} max={1} label="Scale factor α" /></div>
           <div className="clip-card__formula" aria-label="Scale factor calculation">
-            <p className="clip-card__equation">α = min(1, c / ‖g‖₂)</p>
-            <p className="clip-card__substitution">{result.norm === 0 ? 'Zero vector: α = 1' : `= min(1, ${format(inputs.threshold)} / ${format(result.norm)}) = ${format(result.scale)}`}</p>
+            {result.norm === 0 ? (
+              <p className="clip-card__equation">α = 1 (zero vector)</p>
+            ) : (
+              <p className="clip-card__equation">
+                α = min(1, c / ‖g‖₂)<br />
+                = min(1, {format(inputs.threshold)} / {format(result.norm)}) = {format(result.scale)}
+              </p>
+            )}
           </div>
           <p className="clip-card__detail">One factor multiplies both coordinates</p>
         </article>
