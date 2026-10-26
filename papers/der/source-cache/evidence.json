@@ -1,0 +1,44 @@
+{
+  "source_notes": [
+    {
+      "locator": "Title page, p. 1",
+      "note": "Identity confirmed locally: arXiv:2004.07211v2 [stat.ML], 22 Oct 2020; NeurIPS 2020; five authors. Local PDF SHA-256 matches paper.yaml."
+    },
+    {
+      "locator": "Section 3, p. 3, Eq. (1)–(6)",
+      "note": "h is pre-softmax output, f=softmax(h). Eq. (2)–(4) motivate output distillation; Eq. (5) is squared-logit DER, Eq. (6) adds replay label CE. Do not treat the KL-to-Euclidean relationship as unconditional equality."
+    },
+    {
+      "locator": "Algorithms 1–2, p. 4, source-cache/figures/P04.png",
+      "note": "Sample existing memory first (twice for DER++), augment, compute current z before parameter update, compute regularization, update theta, then reservoir insert original x with retained z (and y for DER++). Printed update uses a plus sign despite minimization/SGD in text. Algorithm 1 unpacks y but stores (x,z). Empty-buffer handling is omitted by the printed pseudocode. Preserve these source facts and explicitly label any normalization in W2."
+    },
+    {
+      "locator": "Appendix D, Algorithm 3, p. 15, source-cache/figures/P15.png",
+      "note": "Original prints if M > N, M[N] assignment, randomInteger(min=0,max=N), replacement if j<|M|. Capacity/counter normalization and counter increment must be disclosed in the execution model."
+    },
+    {
+      "locator": "Section 4 and 4.1, pp. 4–5; Appendix G.1 p. 20",
+      "note": "Task-IL permits task identity at testing; Class-IL/Domain-IL do not. MNIST backbone 2x100 ReLU MLP; CIFAR/Tiny ImageNet non-pretrained ResNet18. SGD; 1/50/100 epochs per task for MNIST/CIFAR/Tiny. Random crops/flips for current and buffer images on CIFAR/Tiny. Fixed standard batch and replay sizes: Seq-MNIST 10, CIFAR/Tiny 32, P/R-MNIST 128. Validation split 10%; dataset/protocol-specific search."
+    },
+    {
+      "locator": "Section 4.2 p. 5; Table 2 p. 6, source-cache/figures/P06.png",
+      "note": "Standard final average accuracies averaged over ten initializations. At buffer 500 S-CIFAR-10 Class-IL ER 57.74±0.27, DER 70.51±1.67, DER++ 72.70±1.36; corresponding Task-IL ER 93.61±0.27, DER 93.40±0.39, DER++ 93.88±0.50. Not universal dominance: buffer 200 Tiny Class-IL DER 11.87±0.78 > DER++ 10.96±1.17; buffer 5120 CIFAR Task-IL ER 96.98±0.17 > DER++ 96.12±0.21. The meaning of ± is not explicitly defined here; retain as reported."
+    },
+    {
+      "locator": "Section 4.3 pp. 6–7; Table 3 p. 7; Appendix B p. 13",
+      "note": "MNIST-360: digits 0–8, nine consecutive pairs repeated for three rounds, changing rotations, single presentation of each image. Pseudo-task boundaries are hidden. B.2 explicitly places evaluation after complete training. At buffer 500 ER 65.04±1.53, DER 69.11±1.66, DER++ 69.62±1.59. G.1/Table 9 searches batch/replay size for MNIST-360, so do not claim all table-3 methods share batch size."
+    },
+    {
+      "locator": "Section 5 pp. 7–9; Figure 2 p. 8; Appendix C pp. 14–15",
+      "note": "Analysis covers perturbation sensitivity and empirical Fisher trace, calibration, fresh network trained on final buffer and later fine-tuning with ten test examples per class, time, and total memory. These are empirical comparisons/author interpretations, not a theorem linking DER to all-task nonforgetting or guaranteed calibration."
+    },
+    {
+      "locator": "Appendix F.1–F.4 pp. 16–20; Tables 4–8 and Figure 4",
+      "note": "Supplementary Seq-MNIST, replay variants at tiny memory, single-epoch results, and transfer/forgetting metrics included in complete extraction. Ghost-class recovery is the authors’ conjecture (p. 17), not a class-coverage guarantee."
+    },
+    {
+      "locator": "Appendix G pp. 20–24; Tables 9–10",
+      "note": "Selected hyperparameters and full search grids retained. Formula footnote alpha=beta=0.5 is a stability observation, not a universally selected optimum. Full multipart tables are captured and indexed."
+    }
+  ]
+}

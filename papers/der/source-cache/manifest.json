@@ -1,0 +1,157 @@
+{
+  "paper": {
+    "title": "Dark Experience for General Continual Learning: a Strong, Simple Baseline",
+    "authors": [
+      "Pietro Buzzega",
+      "Matteo Boschini",
+      "Angelo Porrello",
+      "Davide Abati",
+      "Simone Calderara"
+    ],
+    "venue": "NeurIPS 2020",
+    "year": 2020,
+    "source_type": "arXiv v2 (2020-10-22, main paper and appendices)",
+    "source_location": "https://arxiv.org/pdf/2004.07211v2",
+    "source_hash": "e7dcafb05e9fd77e0524be8b98578cd884a9fe6455322beb2f4a6c4a383cd72e"
+  },
+  "cache_status": "complete",
+  "extraction": "Complete systematic read of all 24 pages of user-supplied arXiv:2004.07211v2 (22 Oct 2020), including references and appendices A–G. PyMuPDF raw per-page text plus PDF-verified transcription of core equations and algorithms; 17 original page captures at 1.6x for all 4 figures, 10 tables, and 3 algorithms (multipart locations recorded). PDF pp. 3, 4, 6, 7, 15 inspected individually and all source-asset pages inspected in a contact sheet. Page images retain context and are internal originals, not web-ready assets or reuse-rights approval.",
+  "figures": [
+    {
+      "id": "T01",
+      "locator": "Table 1, p. 2",
+      "caption": "Continual learning approaches and their compatibility with the General Continual Learning major requirements [11]. For an exhaustive discussion, please refer to supplementary materials.",
+      "type": "LOW_VALUE",
+      "candidate_role": "GCL compatibility; corroborating explanations in Appendix A.",
+      "image_path": "source-cache/figures/P02.png"
+    },
+    {
+      "id": "A01",
+      "locator": "Algorithm 1, p. 4, left column",
+      "caption": "Dark Experience Replay",
+      "type": "ALGORITHM",
+      "candidate_role": "Original DER training order; full source page also includes Algorithm 2.",
+      "image_path": "source-cache/figures/P04.png"
+    },
+    {
+      "id": "A02",
+      "locator": "Algorithm 2, p. 4, right column",
+      "caption": "Dark Experience Replay ++",
+      "type": "ALGORITHM",
+      "candidate_role": "DER++ with two independent sample calls.",
+      "image_path": "source-cache/figures/P04.png"
+    },
+    {
+      "id": "T02",
+      "locator": "Table 2, p. 6",
+      "caption": "Classification results for standard CL benchmarks, averaged across 10 runs. “-” indicates experiments we were unable to run, because of compatibility issues (e.g. between PNN, iCaRL and LwF in Domain-IL) or intractable training time (e.g. GEM, HAL or GSS on Tiny ImageNet).",
+      "type": "RESULT",
+      "candidate_role": "All datasets, protocols, capacities and reported uncertainties retained in the source capture.",
+      "image_path": "source-cache/figures/P06.png"
+    },
+    {
+      "id": "F01",
+      "locator": "Figure 1, p. 7",
+      "caption": "Example batches of the MNIST-360 stream.",
+      "type": "DATASET_EXAMPLE",
+      "candidate_role": "Stream examples, not an architecture diagram.",
+      "image_path": "source-cache/figures/P07.png"
+    },
+    {
+      "id": "T03",
+      "locator": "Table 3, p. 7",
+      "caption": "Accuracy on the test set for MNIST-360.",
+      "type": "RESULT",
+      "candidate_role": "GCL final evaluation; protocol in Appendix B.",
+      "image_path": "source-cache/figures/P07.png"
+    },
+    {
+      "id": "F02",
+      "locator": "Figure 2(a–f), p. 8; discussion pp. 7–9",
+      "caption": "Results for the model analysis. [↑] higher is better, [↓] lower is better (best seen in color).",
+      "type": "RESULT",
+      "candidate_role": "Six panels: perturbation, Fisher trace, calibration error, reliability diagram, buffer fitting/fine-tuning, training times.",
+      "image_path": "source-cache/figures/P08.png"
+    },
+    {
+      "id": "F03",
+      "locator": "Figure 3, pp. 14–15, Appendix C",
+      "caption": "Performance vs. memory allocation for the experiments of Section 4 and F.1. Successive points of the same method indicate increasing buffer size. Methods with lower accuracy or excessive memory consumption may be omitted (best viewed in color).",
+      "type": "RESULT",
+      "candidate_role": "Multipart original: source-cache/figures/P14.png and continuation source-cache/figures/P15.png; caption on p. 15.",
+      "image_path": "source-cache/figures/P14.png"
+    },
+    {
+      "id": "A03",
+      "locator": "Algorithm 3, p. 15, Appendix D",
+      "caption": "Reservoir Sampling",
+      "type": "ALGORITHM",
+      "candidate_role": "Original buffer insertion pseudocode with its printed capacity notation preserved.",
+      "image_path": "source-cache/figures/P15.png"
+    },
+    {
+      "id": "T04",
+      "locator": "Table 4, p. 16, Appendix F.1",
+      "caption": "Results for the Sequential-MNIST dataset.",
+      "type": "RESULT",
+      "candidate_role": "Additional Class-IL and Task-IL benchmark.",
+      "image_path": "source-cache/figures/P16.png"
+    },
+    {
+      "id": "F04",
+      "locator": "Figure 4, p. 16, Appendix F.2; discussion p. 17",
+      "caption": "A comparison between our proposal (DER++) and the variants of Experience Replay presented in [10].",
+      "type": "ABLATION",
+      "candidate_role": "P-MNIST and S-CIFAR-100, low-memory comparisons.",
+      "image_path": "source-cache/figures/P16.png"
+    },
+    {
+      "id": "T05",
+      "locator": "Table 5, p. 17, Appendix F.3",
+      "caption": "Single-epoch evaluation setting (Class-IL).",
+      "type": "RESULT",
+      "candidate_role": "Separates single-epoch underfitting from forgetting.",
+      "image_path": "source-cache/figures/P17.png"
+    },
+    {
+      "id": "T06",
+      "locator": "Table 6, p. 18, Appendix F.4",
+      "caption": "Forward Transfer results for the Experiments of Sec. 4.2 and F.1.",
+      "type": "RESULT",
+      "candidate_role": "Additional FWT metrics with protocol conditions.",
+      "image_path": "source-cache/figures/P18.png"
+    },
+    {
+      "id": "T07",
+      "locator": "Table 7, p. 19, Appendix F.4",
+      "caption": "Backward Transfer results for the Experiments of Sec. 4.2 and F.1.",
+      "type": "RESULT",
+      "candidate_role": "Additional BWT metrics with protocol conditions.",
+      "image_path": "source-cache/figures/P19.png"
+    },
+    {
+      "id": "T08",
+      "locator": "Table 8, p. 20, Appendix F.4",
+      "caption": "Forgetting results for the Experiments of Sec. 4.2 and F.1.",
+      "type": "RESULT",
+      "candidate_role": "Additional forgetting metrics; prose caveats pp. 17–18.",
+      "image_path": "source-cache/figures/P20.png"
+    },
+    {
+      "id": "T09",
+      "locator": "Table 9, pp. 21–23, Appendix G.1",
+      "caption": "Hyperparameters selected for our experiments.",
+      "type": "LOW_VALUE",
+      "candidate_role": "Complete original spans source-cache/figures/P21.png, P22.png, P23.png; caption on p. 23. Fixed standard batch sizes in prose p. 20; MNIST-360 batch sizes searched.",
+      "image_path": "source-cache/figures/P21.png"
+    },
+    {
+      "id": "T10",
+      "locator": "Table 10, pp. 23–24, Appendix G.2",
+      "caption": "Hyperparameter space for Grid-Search",
+      "type": "LOW_VALUE",
+      "candidate_role": "Complete original spans source-cache/figures/P23.png and P24.png; caption on p. 24.",
+      "image_path": "source-cache/figures/P23.png"
+    }
+  ]
+}

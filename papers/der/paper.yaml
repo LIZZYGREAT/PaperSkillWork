@@ -1,0 +1,64 @@
+schema_version: 3
+id: der
+title: 'Dark Experience for General Continual Learning: a Strong, Simple Baseline'
+paper:
+  url: https://arxiv.org/abs/2004.07211v2
+  arxiv_id: '2004.07211'
+  authors:
+  - Pietro Buzzega
+  - Matteo Boschini
+  - Angelo Porrello
+  - Davide Abati
+  - Simone Calderara
+  venue: NeurIPS 2020
+  year: 2020
+  source_type: arXiv v2 (2020-10-22, main paper and appendices)
+  source_location: https://arxiv.org/pdf/2004.07211v2
+  source_hash: e7dcafb05e9fd77e0524be8b98578cd884a9fe6455322beb2f4a6c4a383cd72e
+workflow:
+  version: 3
+  current_stage: W2
+  stages:
+    W0_source_intake:
+      status: complete
+      completed_by: automation
+    W1_source_cache:
+      status: complete
+      completed_by: automation
+    W2_paper_model:
+      status: in_progress
+    W3_evidence_assets:
+      status: pending
+    W4_learning_spine:
+      status: pending
+    W5_interaction_plan:
+      status: pending
+    W6_vertical_slice:
+      status: pending
+    W7_human_review:
+      status: pending
+    W8_full_implementation:
+      status: pending
+    W9_final_audit:
+      status: pending
+    W10_upstream_preflight:
+      status: pending
+artifacts:
+  source_cache: source-cache
+  paper_model: research/paper-model.md
+  evidence_registry: research/evidence-registry.yaml
+  learning_spine: design/learning-spine.md
+  asset_plan: design/asset-plan.md
+  implementation_plan: design/implementation-plan.md
+  final_check: audit/final-check.md
+  enhanced: web/enhanced
+web:
+  enhanced: web/enhanced
+release:
+  upstream_paper_name: ''
+  upstream_version: ''
+  output: ''
+paperskill:
+  tutorial_pr:
+    number: null
+    status: pending
