@@ -153,3 +153,51 @@ Demo 中 `node scripts/capture-redesign.mjs final ../../../.qa/kit-feedback-2026
 第十一部分（替代第十部分的跨层等距规则）：用户明确要求以协调的整体比例为准，不必让每层节点间距相同。此前修复虽然居中正确，却把三节点/四节点层压得过扁，视觉复核未及时拦截。现将公共坐标框宽度改为 320、基本高度 184，按可见节点数采用不同纵向展开范围：两节点保持收拢，三至五节点依次展开；六至七节点保持边距并增高。公共 CSS 缩短图形与层标签间距，未改节点/连接数据、身份、焦点或箭头。移除用户已否定的跨层等间距断言，保留稀疏层居中、收拢、双模型对齐、拓扑与可读性断言；同步 Recipe，不加页面专用外观规则。
 
 验证：生产构建 PASS（0）；`npm.cmd run test:browser -- --grep 'network focus|signed values|response labels|Pattern Gallery exposes|component interaction assertions'` 5 PASS（0）。实际采集 1440/1920/390 下 compact、standard、inspect、parallel、hero 五类画面，无页面溢出、页面或资源错误；逐张实看 compact 1440/390、standard 1440、inspect 1440、parallel 1920、hero 1920，复核完整轮廓、图文距离和大小层级。没有把测试通过当作视觉签收；人工状态保持待确认。必要画面保留 `.qa/kit-feedback-20261025/balanced-network/`；多余图和本轮原生 test-results 在复核后按确切路径清理。接口与依赖未变，本部分未重复独立复制检查。
+
+## Reuse audit follow-up · 2026-10-26
+
+按交接方案继续修复 Kit 复用入口与交付。`scaffold-kit` 和 `paths` 共用 Final-first / Enhanced-fallback 源码解析；dry-run 回报实际发布源码、目标目录、示例和文件闭包。精选资产与其余 Registry 条目均来自唯一 `registry.yaml`，搜索可按教学需求或能力进行，详情跟随当前命中项；源码区区分最小用法、源码/CSS 片段和完整交付命令。
+
+新增 `shared-input-models` 与 `vector-retrieval` 两个可单独复制的完整交付包，包含 Gallery 正在运行的 TSX、独立场景 CSS、入口、README 和 manifest；`--example` 与 `--select` / `--preset` 互斥。Gallery 包装组件现在从交付包导入实际实现。W5 在实施计划模板加入复用决定的自由文本清单，实施计划 Skill 与 Enhanced Implementation Skill 同步使用该记录；`implementation.stages[].reusable_pattern` 及 YAML schema 保持不变。
+
+Gallery 顶部准备了两种构图供并排浏览，均使用同一实际 `ParallelModelsExample` 场景：A 是左侧编辑式标题/入口、右侧机制图；B 是横向着色画布、标题说明、机制图和三步阅读顺序。两者在桌面和 390px 手机布局下保持同一输入分支、独立模型及响应事实。示例明确标注为合成教学数据，Teacher/Student、层数和冻结角色均为假设。
+
+### 本轮工程验证
+
+| 检查 | 结果 |
+| --- | --- |
+| Demo 生产构建 | PASS；TypeScript + Vite，222 modules；现有入口包仍有约 519 kB 的 Vite 提示 |
+| Python CLI / Kit / workflow / governance | `python -m pytest -q -o cache_dir=.qa/pytest-cache -o addopts= --basetemp=.qa/pytest-final-20261026 tests/test_kit_copy.py tests/test_paper_cli.py tests/test_workflow_implementation.py tests/test_document_governance.py`：62 PASS |
+| 完整浏览器回归 | `npm.cmd run test:browser`：38 PASS |
+| 独立例包交付 | `python reusable-kit/demo/scripts/test-advanced-scaffold.py`：两个包从精确 Registry 依赖闭包复制、独立构建、真实交互与 390/1440/1920 无溢出均 PASS；成功隔离目录由脚本清理 |
+| Advanced Visual QA | `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-advanced.json`：27/27 captures PASS；run `run-2026-10-26T01-36-59-558Z` |
+| Gallery Visual QA | `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-gallery.json`：90/90 captures PASS；run `run-2026-10-26T01-58-40-134Z` |
+| Visual QA 自检 | `node tools/visual-qa/self-check.mjs`：PASS，临时产物由脚本清理 |
+| 候选截图 | `node scripts/capture-redesign.mjs candidate-a|candidate-b ../../../.qa/kit-reuse-audit-20261026`：1440/1920/390 均 PASS，无页面/部件溢出 |
+
+用户于 2026-10-26 选择 B 作为 Gallery 首屏稳定构图。默认 `?demo=gallery` 现在显示 B：横向淡色画布，标题与说明并列，主体机制图居中，图下按共享输入、分成两路、分别输出阅读；手机端保留同一阅读顺序并让更多机制图进入首屏。A 仅保留为显式比较截图入口。该决定只确认 Gallery 首屏编排，不改变 Registry 资产的 candidate 状态。
+
+### R4 Agent 试用与最终回归
+
+两项试用均使用临时教学场景，没有创建或改动 `papers/**`。网络局部试用从 Registry 选择 `MiniNetworkGlyph`，用 `scaffold-kit --select MiniNetworkGlyph --allow-unapproved` 在隔离工程复制三文件闭包：组件 TSX、组件 CSS、`kit.css`。场景独立编写 2→3→1 合成网络、输入/输出文案及路径聚焦；组件源码哈希与 Registry 相符，没有修补组件内部样式。TypeScript/Vite 构建和 Node 计算 `0.6383015576 → 0.64` 通过。CUA 工具拒绝该隔离 localhost 地址，并明确禁止用其他浏览器表面重试，因此本项浏览器布局、溢出、错误、交互与截图状态为 **NOT_RUN**，不能视作完整通过。
+
+非相同场景试用从四像素矩阵 `[[1,3],[5,7]]` 推导行均值 `[2,6]`、全图均值 `4`、中心化行均值 `[-2,2]` 和均方值 `4`。Agent 检索并评估 `SampleToken` / `RepresentationVector` 后选择独立实现：前者的像素接口限定 `[0,1]`，后者不能表达按行运算与共享均值参照；因此未复制 Kit，也没有隐藏依赖或小件内部补丁。场景级矩阵、公式、步骤与响应由新页面拥有。浏览器用 Edge 在 390/768/1440 宽度验证数值、步骤交互、零横向溢出及零页面/控制台错误。相关报告、源码和截图保留于 `../../.qa/kit-reuse-audit-20261026/r4-agent-trials/`；网络场景报告中的未执行项也一并保留。
+
+用户接受的 B 首屏实图位于 `../../.qa/kit-reuse-audit-20261026/candidate-b/`；已实看 1440/1920/390 图，模型入口有真实分支箭头，移动端仍保留两条身份与输出归属。最终默认路由由浏览器回归断言为 B，A 仍只通过显式 `hero=a` 参数供比较。首屏构图选择不改变任何 Registry `candidate` 状态。
+
+最终回归命令与结果（全部退出码 0）：
+
+| 命令 | 结果 |
+| --- | --- |
+| `npm.cmd run build`（`reusable-kit/demo`） | TypeScript/Vite PASS；入口 chunk 519.20 kB，保留既有 Vite 提示 |
+| `python -m pytest -q -o cache_dir=.qa/pytest-cache -o addopts= --basetemp=.qa/pytest-r4-final-20261026 tests/test_kit_copy.py tests/test_paper_cli.py tests/test_workflow_implementation.py tests/test_document_governance.py` | 62 passed |
+| `npm.cmd run test:browser` | 38 passed；首屏定向回归 `npm.cmd run test:browser -- --grep 'Pattern Gallery exposes'` 另 1 passed |
+| `python reusable-kit/demo/scripts/test-advanced-scaffold.py` | 两个完整交付包在独立项目复制、构建、交互与 390/1440/1920 溢出检查 PASS；脚本确认并清理其隔离目录 |
+| `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-gallery.json` | run `run-2026-10-26T02-33-24-870Z`：90/90 captures PASS |
+| `node tools/visual-qa/cli.mjs --config reusable-kit/demo/visual-qa-advanced.json` | run `run-2026-10-26T02-44-40-698Z`：27/27 captures PASS |
+| `node tools/visual-qa/self-check.mjs` | PASS；runner 自建临时目录已清理 |
+| `git diff --check`; `git diff --exit-code HEAD -- papers` | 均 PASS |
+
+两份页面报告均记录零几何/样式诊断和零浏览器错误。已读取报告并实看当前 B 首屏及机制图；机器 QA 报告本身仍把 `HUMAN_ACCEPTANCE` 留在 PENDING，用户仅确认 B 的首屏编排。之后按规范清理这两个精确 Visual QA run 目录并验证不存在。
+
+两次早期 Visual QA 运行暴露的是重复示例和代码面板造成的旧定位歧义；配置改为精确区块后完整复跑通过，最终两份报告均记录 0 浏览器错误、0 几何/样式诊断。高级 QA 还促使开场眉题从 11px 调整到 12px；移动模型输出公式调整到与输入符号一致的 18px。Gallery 首屏的 B 构图已由用户确认；其余 Registry 条目仍为 candidate，未被本次选择批准。`git diff --exit-code HEAD -- papers` 退出 0；论文副本、上游和审批状态未改动。

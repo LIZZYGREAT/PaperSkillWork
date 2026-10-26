@@ -20,13 +20,20 @@ try {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('response', r => { if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`); });
+  const heroCandidate = stage === 'candidate-b' ? 'b' : stage === 'candidate-a' ? 'a' : null;
   for (const width of [1440, 1920, 390]) {
     await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
-    await page.goto('http://127.0.0.1:4186/?demo=gallery');
+    await page.goto(`http://127.0.0.1:4186/?demo=gallery${heroCandidate ? `&hero=${heroCandidate}` : ''}`);
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: resolve(directory, `hero-${width}.png`) });
+    if (heroCandidate) {
+      const opening = page.locator('#gallery-opening');
+      if (await opening.getAttribute('data-hero-candidate') !== heroCandidate) throw new Error(`Expected hero candidate ${heroCandidate} at ${width}px`);
+      await opening.screenshot({ path: resolve(directory, `opening-full-${width}.png`) });
+      await opening.locator('.pg-model-composition').screenshot({ path: resolve(directory, `mechanism-${width}.png`) });
+    }
     const positions = {};
-    for (const [name, selector] of [['network','[data-network-example="local"]'], ['parallel','[data-network-example="parallel"]'], ['forward','[data-timeline-example="forward"]'], ['specimen','#gallery-specimen'], ['parts','#gallery-parts'], ['catalog','#gallery-catalog'], ['retrieval','[data-retrieval-query]']]) {
+    for (const [name, selector] of [['network','#gallery-mini-network [data-network-example="local"]'], ['parallel','#gallery-mini-network [data-network-example="parallel"]'], ['forward','#gallery-timeline [data-timeline-example="forward"]'], ['specimen','#gallery-specimen'], ['parts','#gallery-parts'], ['catalog','#gallery-catalog'], ['retrieval','#gallery-retrieval [data-retrieval-query]']]) {
       const target = page.locator(selector);
       if (await target.count()) {
         positions[name] = await target.evaluate(el => { const b = el.getBoundingClientRect(); return { x:b.x, y:b.y+scrollY, width:b.width, height:b.height }; });
@@ -35,12 +42,12 @@ try {
     }
     await writeFile(resolve(directory, `positions-${width}.json`), JSON.stringify(positions));
     if (stage === 'final') {
-      await page.locator('[data-network-example="local"] button').click();
-      await page.locator('[data-network-example="local"]').screenshot({ path: resolve(directory, `focus-${width}.png`) });
+      await page.locator('#gallery-mini-network [data-network-example="local"] button').click();
+      await page.locator('#gallery-mini-network [data-network-example="local"]').screenshot({ path: resolve(directory, `focus-${width}.png`) });
       await page.locator('#gallery-parts summary').click();
       await page.locator('#gallery-parts details').screenshot({ path: resolve(directory, `inspect-${width}.png`) });
-      await page.locator('[data-retrieval-query] button').click();
-      await page.locator('[data-retrieval-query]').screenshot({ path: resolve(directory, `retrieval-changed-${width}.png`) });
+      await page.locator('#gallery-retrieval [data-retrieval-query] button').click();
+      await page.locator('#gallery-retrieval [data-retrieval-query]').screenshot({ path: resolve(directory, `retrieval-changed-${width}.png`) });
       await page.locator('[data-stage-target="responses"]').click();
       await page.locator('[data-timeline-example="forward"]').screenshot({ path: resolve(directory, `responses-${width}.png`) });
     }

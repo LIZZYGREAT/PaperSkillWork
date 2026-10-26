@@ -17,15 +17,16 @@ test('response labels share one line and parallel output symbols stay upright an
       });
       expect(offset).toBeLessThan(1);
     }
-    const symbols = page.locator('.pg-model-symbol');
+    const parallelModels = page.locator('.pg-opening');
+    const symbols = parallelModels.locator('.pg-model-symbol');
     await expect(symbols).toHaveText(['t(x1)', 's(x1)']);
-    const inputSymbol = page.locator('.pg-model-path > .rk-flow-connector .rk-diagram-symbol').first();
+    const inputSymbol = parallelModels.locator('.pg-model-path > .rk-flow-connector .rk-diagram-symbol').first();
     for (const symbol of await symbols.all()) {
       await expect(symbol).toHaveCSS('font-style', 'normal');
       await expect(symbol).toHaveCSS('font-size', await inputSymbol.evaluate(el => getComputedStyle(el).fontSize));
       await expect(symbol).toHaveCSS('font-family', await inputSymbol.evaluate(el => getComputedStyle(el).fontFamily));
     }
-    for (const output of await page.locator('.pg-model-output').all()) {
+    for (const output of await parallelModels.locator('.pg-model-output').all()) {
       await expect(output.locator('.rk-flow-connector')).toHaveAttribute('data-direction', 'down');
       expect(await output.evaluate(el => {
         const arrow = el.querySelector('svg').getBoundingClientRect();

@@ -14,9 +14,12 @@ import { GalleryCodePanel as CodePanel } from "./GalleryCodePanel";
 import { MiniNetworkGallerySection } from "./MiniNetworkGallerySection";
 import { TimelineGallerySection } from "./TimelineGallerySection";
 import { AssetCatalog } from "./AssetCatalog";
+import { GalleryOpening, type HeroCandidate } from "./GalleryOpening";
 import { VisualSpecimen } from "./examples/VisualSpecimen";
 import { PartsSpecimen } from "./examples/PartsSpecimen";
 import { RetrievalExample } from "./examples/RetrievalExample";
+import retrievalSource from "../../examples/vector-retrieval/RetrievalExample.tsx?raw";
+import retrievalStyle from "../../examples/vector-retrieval/retrieval-example.css?raw";
 import "./pattern-gallery.css";
 
 type DiagramCase = "branch" | "merge";
@@ -25,7 +28,8 @@ type DiagramFocus = "all" | "reference" | "learning";
 type EditorialLayout = "axis" | "stagger" | "asymmetric" | "overview";
 
 export const patternGallerySections = [
-  { id: "gallery-specimen", title: "视觉样张" },
+  { id: "gallery-opening", title: "机制场景" },
+  { id: "gallery-specimen", title: "视觉标本" },
   { id: "gallery-catalog", title: "查找资产" },
   { id: "gallery-parts", title: "视觉小件" },
   { id: "gallery-mini-network", title: "小型网络" },
@@ -403,6 +407,7 @@ const stickyRecipeCode = [
 ].join("\n");
 
 function PatternGallery() {
+  const heroCandidate: HeroCandidate = new URLSearchParams(window.location.search).get("hero") === "a" ? "a" : "b";
   const [diagramCase, setDiagramCase] = useState<DiagramCase>("branch");
   const [pathMode, setPathMode] = useState<PathMode>("smooth");
   const [focusMode, setFocusMode] = useState<DiagramFocus>("all");
@@ -422,12 +427,16 @@ function PatternGallery() {
         : undefined;
 
   return <div className="kit-demo__paper pattern-gallery" data-demo-view="pattern-gallery">
+    <GalleryOpening candidate={heroCandidate} />
     <VisualSpecimen />
     <AssetCatalog />
     <PartsSpecimen />
     <MiniNetworkGallerySection />
     <TimelineGallerySection />
     <div id="gallery-retrieval"><RetrievalExample /></div>
+    <CodePanel title="检索场景 TSX 源码（片段）" code={retrievalSource} source="reusable-kit/examples/vector-retrieval/RetrievalExample.tsx" level="fragment" notice="与展厅实际交互使用同一份源码；单独复制需要配套 CSS 与 SampleToken、RepresentationVector、ResponseMeter。" />
+    <CodePanel title="检索场景布局 CSS（独立文件）" code={retrievalStyle} source="reusable-kit/examples/vector-retrieval/retrieval-example.css" level="fragment" notice="场景排版样式与图元自身样式分开维护。" />
+    <CodePanel title="复制完整向量检索交付单元" code={'python tools/paper.py scaffold-kit <paper-id> --example vector-retrieval --allow-unapproved --dry-run\npython tools/paper.py scaffold-kit <paper-id> --example vector-retrieval --allow-unapproved'} source="reusable-kit/examples/vector-retrieval/README.md" level="command" notice="命令会复制 Gallery 运行的 TSX/CSS、入口文件、交接 README 与全部 Kit 依赖，README 提供直接可用的 import。" />
     <section id="gallery-diagrams" className="pattern-gallery__section" aria-labelledby="gallery-diagrams-title">
       <SectionHeader index="01" eyebrow="图形关系" title="分支、汇合与连接方向" lead="用分支区分不同职责，用汇合说明目标如何共同影响更新。切换结构、连线路径和聚焦范围，查看图形如何保持对象关系。" headingId="gallery-diagrams-title" />
       <div className="pattern-gallery__controls">
@@ -528,9 +537,9 @@ function PatternGallery() {
 
     <footer className="pattern-gallery__footer">
       <strong>如何复制 Kit 组件</strong>
-      <p>Registry 是组件成熟度的唯一来源；本页不复制或覆盖状态。首次复制 P0 基础组件时使用 preset；P1 才能通过 <code>--add</code> 选择。当前条目均为 candidate，<code>--allow-unapproved</code> 只表示接受复制候选组件，不代表批准。</p>
-      <pre><code>{'python3 tools/paper.py new kit-smoke-demo --title "Kit Smoke Demo" --url "https://example.org/kit-smoke"\n\n# 二选一：仅复制 P0 基础组件\npython3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --allow-unapproved\n\n# 或：首次复制 P0，并同时选择需要的 P1\npython3 tools/paper.py scaffold-kit kit-smoke-demo --preset continual-learning --add StepNav,FigureFrame,FormulaBlock,PullQuote,MiniNetworkGlyph,useAnimationTimeline --allow-unapproved'}</code></pre>
-      <p>以上命令用于隔离烟测；正式论文请填写真实来源。两条 scaffold 命令互斥，不能顺序用于同一工作区。P0 默认由 preset 复制；<code>--add</code> 只接受 P1，且应在首次命令中一次选好。命令只复制一次，若目标已有 <code>src/shared</code> 会拒绝覆盖；入口文件需添加一次 <code>import "./shared/foundation/styles/kit.css";</code>。</p>
+      <p>Registry 是组件与完整场景依赖的唯一来源；本页不复制或覆盖候选状态。当前条目均为 candidate，<code>--allow-unapproved</code> 表示允许复制候选，不代表人工批准。</p>
+      <pre><code>{'python3 tools/paper.py new kit-smoke-demo --title "Kit Smoke Demo" --url "https://example.org/kit-smoke"\n\n# 精确复制组件闭包\npython3 tools/paper.py scaffold-kit kit-smoke-demo --select MiniNetworkGlyph,RepresentationVector --allow-unapproved --dry-run\n\n# 或复制完整组合与其依赖\npython3 tools/paper.py scaffold-kit kit-smoke-demo --example shared-input-models --allow-unapproved --dry-run\npython3 tools/paper.py scaffold-kit kit-smoke-demo --example shared-input-models --allow-unapproved'}</code></pre>
+      <p>上面是两种不同交付语义：<code>--select</code> 复制通用部件，<code>--example</code> 复制带教学假设的完整组合；同一命令不能混用。运行 dry-run 核对实际发布源码、目标路径和依赖。复制后，入口文件仍需导入一次 <code>import "./shared/foundation/styles/kit.css";</code>。</p>
     </footer>
   </div>;
 }

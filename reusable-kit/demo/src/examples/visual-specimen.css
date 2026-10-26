@@ -1,8 +1,21 @@
-/* Recipe layout only. Glyph, typography and state marks own their appearance. */
-.visual-specimen { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(28px, 4vw, 72px); padding-block: 40px 64px; border-bottom: 1px solid var(--rk-line); scroll-margin-top: 100px; }
-.visual-specimen__copy { display: grid; gap: 28px; }
-.visual-specimen__copy > a { justify-self: start; color: var(--rk-accent-strong); font-size: 15px; font-weight: 600; text-underline-offset: 7px; }
-.visual-specimen__figure { display: grid; gap: 26px; min-width: 0; margin: 0; padding: clamp(18px, 2vw, 32px); background: var(--rk-surface); border: 1px solid var(--rk-line); border-radius: var(--rk-radius); }
-.visual-specimen__figure > figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; color: var(--rk-muted); font-size: 13px; }
-.visual-specimen__parts { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-around; gap: 18px; border-top: 1px solid var(--rk-line); padding-top: 20px; }
-@media (max-width: 1100px) { .visual-specimen { grid-template-columns: minmax(0, 1fr); } .visual-specimen__copy { max-width: 46rem; } }
+/* Material inventory only: entries share Kit tokens, not a data flow. */
+.visual-specimen { display: grid; gap: 22px; min-width: 0; padding-block: 34px 44px; border-bottom: 1px solid var(--rk-line); scroll-margin-top: 90px; }
+.visual-specimen__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-block: 1px solid var(--rk-line); }
+.visual-specimen__item { display: grid; align-content: start; gap: 14px; min-width: 0; margin: 0; padding: 18px clamp(12px, 1.4vw, 20px); border-right: 1px solid var(--rk-line); }
+.visual-specimen__item:last-child { border-right: 0; }
+.visual-specimen__item figcaption { display: grid; gap: 4px; }
+.visual-specimen__item figcaption span { color: var(--rk-muted); font: 11px/1.6 var(--rk-font-mono); letter-spacing: .04em; }
+.visual-specimen__item figcaption strong { color: var(--rk-ink); font-size: 15px; font-weight: 650; }
+.visual-specimen__item > p { margin: 0; color: var(--rk-muted); font-size: 12px; line-height: 1.65; }
+.visual-specimen__item > .rk-mini-network { align-self: center; }
+.visual-specimen__sample, .visual-specimen__features, .visual-specimen__vector { display: grid; min-height: 132px; place-items: center; }
+.visual-specimen__sample .rk-sample-token { width: min(100%, 112px); }
+.visual-specimen__features { justify-items: center; }
+.visual-specimen__features .rk-feature-blocks { max-width: 100%; }
+.visual-specimen__vector .rk-representation-vector { width: min(100%, 190px); }
+@media (max-width: 820px) {
+  .visual-specimen__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .visual-specimen__item:nth-child(2) { border-right: 0; }
+  .visual-specimen__item:nth-child(n + 3) { border-top: 1px solid var(--rk-line); }
+}
+@media (max-width: 560px) { .visual-specimen__item { padding-inline: 10px; } }

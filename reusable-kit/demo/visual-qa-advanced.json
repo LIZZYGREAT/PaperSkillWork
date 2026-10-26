@@ -48,7 +48,7 @@
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": "[data-network-example=\"local\"]"
+              "selector": "#gallery-mini-network [data-network-example=\"local\"]"
             }
           ]
         },
@@ -57,11 +57,11 @@
           "actions": [
             {
               "type": "click",
-              "selector": "[data-network-example=\"local\"] button"
+              "selector": "#gallery-mini-network [data-network-example=\"local\"] button"
             },
             {
               "type": "scrollIntoView",
-              "selector": "[data-network-example=\"local\"]"
+              "selector": "#gallery-mini-network [data-network-example=\"local\"]"
             }
           ]
         },
@@ -70,7 +70,7 @@
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": "[data-network-example=\"parallel\"]"
+              "selector": "#gallery-mini-network [data-network-example=\"parallel\"]"
             }
           ]
         },

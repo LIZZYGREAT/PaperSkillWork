@@ -73,6 +73,34 @@ test("network focus preserves geometry and independent parallel model ownership"
   }
 });
 
+test("both Gallery hero candidates use the same connected model example at desktop and mobile widths", async ({ page }) => {
+  for (const candidate of ["a", "b"]) {
+    for (const width of [1440, 1920, 390]) {
+      await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
+      await page.goto(`/?demo=gallery&hero=${candidate}`);
+      const opening = page.locator("#gallery-opening");
+      await expect(opening).toHaveAttribute("data-hero-candidate", candidate);
+      await expect(opening.locator(".pg-model-composition")).toBeVisible();
+      await expect(opening.locator("[data-shared-input='x']")).toHaveCount(1);
+      await expect(opening.locator("[data-model-path]")).toHaveCount(2);
+      await expect(opening.locator("[data-model='teacher'] .rk-mini-network")).toHaveCount(1);
+      await expect(opening.locator("[data-model='student'] .rk-mini-network")).toHaveCount(1);
+      const branch = await opening.locator(".pg-model-paths").evaluate(node => ({
+        columns: getComputedStyle(node).gridTemplateColumns.split(" ").length,
+        busDisplay: getComputedStyle(node, "::before").display,
+        busHeight: getComputedStyle(node, "::before").height,
+        sourceStemDisplay: getComputedStyle(node.parentElement.querySelector(".pg-shared-input"), "::after").display,
+      }));
+      expect(branch.columns).toBe(2);
+      expect(branch.busDisplay).not.toBe("none");
+      expect(branch.busHeight).toBe("1px");
+      expect(branch.sourceStemDisplay).not.toBe("none");
+      expect(await opening.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+  }
+});
+
 async function expectSynchronized(root, id) {
   await expect(root).toHaveAttribute("data-stage", id);
   await expect(root.locator(".pg-forward-nav [aria-current='step']")).toHaveAttribute("data-stage-target", id);

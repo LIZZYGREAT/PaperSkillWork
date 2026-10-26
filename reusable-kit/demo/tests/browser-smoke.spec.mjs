@@ -8,6 +8,10 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/?demo=gallery");
   await expect(page.locator("[data-demo-view='pattern-gallery']")).toBeVisible();
+  const opening = page.locator("#gallery-opening");
+  await expect(opening).toHaveAttribute("data-hero-candidate", "b");
+  await expect(opening.locator("h1")).toContainText("两个独立的响应");
+  await expect(opening.getByRole("list", { name: "图形阅读顺序" }).getByRole("listitem")).toHaveCount(3);
   const diagram = page.locator("#gallery-diagrams .rk-diagram");
   await expect(diagram).toHaveAttribute("data-diagram-mode", "grid");
   await expect(diagram.locator("[data-diagram-node]")).toHaveCount(11);
@@ -116,9 +120,15 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   await networkGallery.getByRole("button", { name: "聚焦局部连接" }).click();
   await expect(networkGallery.locator("[data-network-edge].is-focused")).toHaveCount(2);
   const networkCodePanel = networkGallery.locator(".pattern-gallery__code-panel");
-  await networkCodePanel.locator("summary").click();
-  await networkCodePanel.getByRole("button", { name: "复制可运行示例" }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('from "./shared/foundation/neural-network/MiniNetworkGlyph"');
+  const networkSourcePanel = networkCodePanel.filter({ has: page.getByText("网络场景 TSX 源码（片段）", { exact: true }) });
+  await networkSourcePanel.locator("summary").click();
+  await networkSourcePanel.getByRole("button", { name: "复制结构片段" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("MiniNetworkGlyph");
+  await expect(networkSourcePanel.locator(".pattern-gallery__code-notice")).toContainText("还需要 network-examples.css");
+  const networkDeliveryPanel = networkCodePanel.filter({ has: page.getByText("复制完整场景交付单元", { exact: true }) });
+  await networkDeliveryPanel.locator("summary").click();
+  await networkDeliveryPanel.getByRole("button", { name: "复制命令" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("--example shared-input-models");
 
   const timelineGallery = page.locator("#gallery-timeline");
   const forward = timelineGallery.locator("[data-timeline-example='forward']");
