@@ -10,13 +10,13 @@ Start with this file for repository-wide boundaries. Read the stage contract in 
 | W2 paper model | `.agents/skills/paper-review/SKILL.md` and its listed inputs |
 | W3 claims and source assets | `.agents/skills/evidence-audit/SKILL.md` and its listed inputs |
 | W4 learning spine | `.agents/skills/learning-architecture/SKILL.md`, `docs/TEACHING_DESIGN_STANDARD.md` |
-| W5–W7 implementation plan and slice review | `.agents/skills/implementation-plan/SKILL.md`; consult `docs/reusable-kit.md` and matching history cases when useful |
-| W6–W8 page implementation or UI repair | `.agents/skills/enhanced-implementation/SKILL.md`, the paper's `design/implementation-plan.md`, `docs/VISUAL_QA.md`; search `docs/ui-teaching-lessons.md` by matching symptom |
+| W5–W7 implementation plan and slice review | `.agents/skills/implementation-plan/SKILL.md`; for reuse follow `docs/reusable-kit.md` → Registry → matching Recipe/example and actual source |
+| W6–W8 page implementation or UI repair | `.agents/skills/enhanced-implementation/SKILL.md`, the paper's `design/implementation-plan.md`, `docs/VISUAL_QA.md`; for Kit selection use `docs/reusable-kit.md` → Registry → Recipe/example and source |
 | W9 learning/evidence audit | `.agents/skills/final-audit/SKILL.md`, `docs/VISUAL_QA.md` |
 | W10 release | `docs/UPSTREAM_RELEASE.md` after W9 acceptance; the user runs the official preflight |
 | Workflow, skill, template, or shared QA-tool changes | `docs/WORKFLOW.md`, `docs/TEMPLATE_CONTRACT.md`, relevant tests |
 
-Historical cases are diagnostic clues, not current policy. Apply only an active case that matches the observed issue and the paper's approved design. `docs/WORKFLOW.md` owns stage responsibilities; `docs/TEACHING_DESIGN_STANDARD.md` owns teaching logic and expression rules; `docs/VISUAL_QA.md` owns rendered browser checks. Project-specific W4/W5 decisions remain authoritative within those global boundaries.
+`docs/WORKFLOW.md` owns stage responsibilities; `docs/TEACHING_DESIGN_STANDARD.md` owns teaching logic and expression rules; `docs/VISUAL_QA.md` owns rendered browser checks. Project-specific W4/W5 decisions remain authoritative within those global boundaries. Fix verified root causes and use existing regression checks; keep paper-specific decisions in the current implementation plan. Update the relevant authoritative standard only when a new general rule is established.
 
 ## W0–W10 workflow
 

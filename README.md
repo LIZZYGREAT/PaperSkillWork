@@ -31,6 +31,6 @@ W7 acceptance is required before full implementation. Human review gates are W2,
 - [`docs/VISUAL_QA.md`](docs/VISUAL_QA.md): browser-based rendering, interaction, and regression checks.
 - [`docs/reusable-kit.md`](docs/reusable-kit.md): how to find and copy reusable patterns.
 - [`docs/TEMPLATE_CONTRACT.md`](docs/TEMPLATE_CONTRACT.md): template names and generated workspace paths.
-- [`docs/PAPERSKILL_SETUP.md`](docs/PAPERSKILL_SETUP.md): initial PaperSkill sibling checkout and sparse setup.
+- [`docs/PAPERSKILL_SETUP.md`](docs/PAPERSKILL_SETUP.md): new-paper setup, work branches, and the initial PaperSkill sibling checkout.
 
 PaperSkillWork supports Workflow v3 only. Historical workflow versions remain available through Git history, not as runtime compatibility targets.

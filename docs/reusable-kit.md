@@ -50,7 +50,7 @@ python tools/paper.py scaffold-kit <paper-id> --select ResponseMeter --allow-una
 | 输入、特征块、向量与响应 | [Visual Parts](../reusable-kit/recipes/visual-parts.md) | 调用方给 ID、数据和尺度；组件不计算算法 |
 | 五阶段训练响应 | useAnimationTimeline；[Recipe](../reusable-kit/recipes/animation-timeline.md) | 一个时钟；训练响应不等于预测 |
 | 信号类型与方向 | FlowConnector / DiagramFlow | 局部连接或复杂多对象图；方向必须明确 |
-| 标题、公式与图文 | EditorialTypography / MathTypography / FormulaBlock | [视觉规范](VISUAL_LANGUAGE_SYSTEM.md)，统一语言，不固定页面 |
+| 标题、公式与图文 | EditorialTypography / MathTypography / FormulaBlock | [Kit 视觉语言](../reusable-kit/VISUAL_LANGUAGE.md)，统一语言，不固定页面 |
 | 滚动解释同一系统 | StickySystemView | 不增加第二个计算引擎 |
 | LwF / EWC / iCaRL | papers 只读参考与 Demo 参考路由 | 不搬整篇事实，不为 Kit 改动已批准论文 |
 
@@ -70,4 +70,10 @@ node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo
 node tools/visual-qa/self-check.mjs
 ```
 
-Windows 可设置 PAPERWORK_PLAYWRIGHT_EXECUTABLE 指向 Chromium/Edge。按 [Visual QA](VISUAL_QA.md) 检查报告和真实截图，清理本轮临时产物。数据/几何/交互测试不能代替视觉判断。S1/S4/S6 及最终 A/B/D/F 画面供人签收，未获同意保持 candidate。实际记录见 [视觉语言与执行记录](VISUAL_LANGUAGE_SYSTEM.md)。
+Windows 可设置 PAPERWORK_PLAYWRIGHT_EXECUTABLE 指向 Chromium/Edge。按 [Visual QA](VISUAL_QA.md) 选择受影响的桌面状态、检查报告与真实截图并清理本轮产物；上列命令按改动范围选用，不要求每次运行所有配置或 runner 自检。数据/几何/交互测试不能代替视觉判断。Kit 特有画风见 [视觉语言](../reusable-kit/VISUAL_LANGUAGE.md)，独立场景的当前验收见 [R4 报告](../reusable-kit/validation/r4/REPORT.md)。
+
+## V1 当前能力与限制
+
+Registry 检索、精确源码/CSS 闭包、安全追加、Final-first 目标解析及两个完整示例包已有源码与测试覆盖，并可独立构建和交互。R4 网络与向量裁剪的当前浏览器状态以唯一 [R4 报告](../reusable-kit/validation/r4/REPORT.md) 为准；未实测项保持 NOT_RUN。48 个 Registry 条目仍为 candidate，需显式 `--allow-unapproved`；只有逐项明确的人类认可及完整 `approved_by`、`approved_at`、`evidence` 才可批准，整体画风评价不构成批量批准。
+
+V1 收口后，下一阶段是在一篇真实新论文完成 W0–W5 后检索、复制、组合或拒绝 Kit，形成 W6 教学切片并观察复用成本与教学质量；首次真实新论文复用尚待该阶段验证。

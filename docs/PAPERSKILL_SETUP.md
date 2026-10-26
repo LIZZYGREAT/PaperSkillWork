@@ -1,149 +1,154 @@
-# PaperSkill 首次轻量克隆与 Sparse Checkout 初始化
+# 新论文工作区与 PaperSkill 准备
 
-适用于 Windows PowerShell，以及同级存放的 PaperSkillWork 和 PaperSkill 仓库。本指南只负责 PaperSkill 的首次克隆、远端核对和轻量检出初始化；论文导入、贡献分支、提交、Push 和 PR 均按[W10 投稿手册](UPSTREAM_RELEASE.md)操作。
+本指南说明 Windows PowerShell 下开始新论文、建立工作分支和首次准备相邻 PaperSkill 检出的步骤。阶段责任以 [WORKFLOW.md](WORKFLOW.md) 为准；正式投稿统一见 [W10 投稿手册](UPSTREAM_RELEASE.md)。
 
-git clone --sparse 后只看到 .gitignore、package.json、package-lock.json、README.md 等根目录文件是正常现象。后续的 git sparse-checkout set 才会展开需要的子目录。
+## 一、开始新论文
 
-## 一、检查 PaperSkill 是否已存在
+`PaperSkillWork` 保存来源、研究、证据、教学设计和教程源码；相邻的 `PaperSkill` 运行官方 Import 并保存上游贡献分支。两者是独立仓库，不互相合并或 cherry-pick 历史。
 
-在 PowerShell 中设置 PaperWork 父目录，并判断 PaperSkill 是否为 Git 检出：
+在 PaperSkillWork 根目录核对仓库、分支与未提交工作：
 
-~~~powershell
+```powershell
+Set-Location 'C:\path\to\PaperWork\PaperSkillWork'
+git status --short
+git remote -v
+git branch -vv
+git branch --show-current
+```
+
+确认没有待保留的其他工作后，从实际开发基线创建论文分支。需要同步基线时，先核实真实分支与 remote，再使用 `git pull --ff-only`，不要假定默认分支名。
+
+```powershell
+$PaperId = 'short-paper-id'
+git switch -c "work/$PaperId"
+```
+
+已有同名分支时先核对并继续既有工作。PaperSkill 的 `paper/<id>` 贡献分支在 W9 接受后的 W10 流程中建立。
+
+## 二、创建论文工作区
+
+填写真实元数据；`--author` 可重复：
+
+```powershell
+python tools/paper.py new $PaperId `
+  --title 'Full Paper Title' `
+  --url 'https://arxiv.org/abs/0000.00000' --arxiv-id '0000.00000' `
+  --author 'First Author' --author 'Second Author' `
+  --venue 'Venue' --year 2026 --source-type arXiv
+```
+
+用户提供本地 PDF 时可省略 URL，用来源位置识别：
+
+```powershell
+python tools/paper.py new $PaperId `
+  --title 'Full Paper Title' --author 'First Author' `
+  --source-type 'User-provided PDF' --source-location 'user-provided PDF'
+```
+
+查看阶段与实际源码路径：
+
+```powershell
+python tools/paper.py status $PaperId
+python tools/paper.py paths $PaperId --json
+python tools/paper.py check $PaperId
+```
+
+`new` 只生成脚手架，初始检查提示未填写内容是待完成工作。新建工程默认使用 `web/enhanced/`，后续以 `paths.publish_source` 的 Final-first / Enhanced-fallback 结果为准。配置了 Final 却缺失时须修正目录或配置，不静默回退。内部 paper-id、上游 paper-name 与官方 Import 选择的版本各有用途，不当作同一目录名。
+
+先完成 W0–W5 的来源、完整阅读、论文模型、证据、学习主线和实现规划，再进入 W6 首个真实切片；W7 人审通过后完成 W8，W9 接受后进入 W10。W2/W4/W7/W9 需要真实人工评审。阶段命令见 [工作流](WORKFLOW.md)，生成目录与六份研究/设计/审计文档见 [模板约定](TEMPLATE_CONTRACT.md)。
+
+原文和图表清单留在 `source-cache/`；W3 核对原图用途、来源与使用权，W6/W8 再制作网页衍生素材。Kit 选择和复制见 [使用入口](reusable-kit.md)，不另建重复的设计文档。
+
+## 三、按成果提交与本地查看
+
+每完成可独立审阅的成果，检查差异并只提交相关文件：
+
+```powershell
+git status --short
+git diff --check
+git diff -- <本阶段文件>
+git add -- <本阶段明确文件或目录>
+git diff --cached --check
+git diff --cached --name-only
+git commit -m "docs($PaperId): describe the completed work"
+```
+
+人工评审记录随对应成果提交，不虚构评审人或手动改状态绕过评审门。结构 `check` 不代表构建、交互、视觉或学习验收通过；各阶段按现行 Skill 和 [Visual QA](VISUAL_QA.md) 检查并记录真实结果。
+
+已有教程可用 `python tools/paper.py open $PaperId` 安装依赖并启动本地预览；具体参数见 `python tools/paper.py open --help`。普通窗口及真实 F11 检查需实际操作，停止服务按终端提示执行。
+
+## 四、首次准备相邻 PaperSkill 检出
+
+在 PaperWork 父目录设置路径并检查已有检出：
+
+```powershell
 $PaperWork = 'C:\path\to\PaperWork'
 $PaperSkillRepo = Join-Path $PaperWork 'PaperSkill'
 Test-Path (Join-Path $PaperSkillRepo '.git')
-~~~
+```
 
-- 返回 True：复用现有检出，继续第三节核对远端和稀疏范围。不要再次克隆或删除。
-- 返回 False 且目录不存在：按第二节首次克隆。
-- 目录存在但没有 .git：先人工核对目录内容，不要覆盖式克隆或强制删除。
+已有 Git 检出就复用；目标目录存在但不是 Git 检出时先核对内容。仅当目标目录不存在时克隆：
 
-## 二、首次轻量克隆（仅首次执行）
-
-在 PaperWork 父目录运行：
-
-~~~powershell
+```powershell
 Set-Location $PaperWork
 git clone --filter=blob:none --sparse --depth=1 --branch main --single-branch git@github.com:ReductTech/PaperSkill.git PaperSkill
-
-if ($LASTEXITCODE -ne 0) { throw 'Clone failed; do not continue' }
-$PaperSkillRepo = Join-Path $PaperWork 'PaperSkill'
-Set-Location $PaperSkillRepo
-~~~
-
-若当前网络无法连接 SSH 22、但 SSH 443 可用，只替换 Clone 命令的 GitHub 地址：
-
-~~~text
-ssh://git@ssh.github.com:443/ReductTech/PaperSkill.git
-~~~
-
-不要因此修改全局 SSH、代理或其他仓库配置。不要改用完整克隆来代替轻量克隆。
-
-## 三、核对远端
-
-先只读检查：
-
-~~~powershell
-Set-Location $PaperSkillRepo
-git remote -v
-~~~
-
-期望 origin 指向个人 Fork、upstream 指向 ReductTech/PaperSkill。首次克隆时 origin 默认指向官方仓库；确认远端确实如此且尚无 upstream 后，只执行一次：
-
-~~~powershell
-git remote rename origin upstream
-if ($LASTEXITCODE -ne 0) { throw 'Failed to rename the official remote' }
-
-git remote add origin git@github.com:OWNER/PaperSkill.git
-if ($LASTEXITCODE -ne 0) { throw 'Failed to add the personal Fork remote' }
-~~~
-
-若当前需要 SSH 443，可只为这个仓库设置远端地址：
-
-~~~powershell
-git remote set-url upstream ssh://git@ssh.github.com:443/ReductTech/PaperSkill.git
-git remote set-url origin ssh://git@ssh.github.com:443/OWNER/PaperSkill.git
-~~~
-
-如果已经有正确的 origin 和 upstream，跳过添加步骤。远端不符合预期时先查明指向，不要盲目改名或覆盖。最后再次运行 git remote -v 确认。
-
-## 四、首次展开基础目录
-
-在首次稀疏克隆中确认没有待保留改动：
-
-~~~powershell
-git status --short
-git diff --cached --name-only
-git diff --name-only
-~~~
-
-逐项确认输出为空后，展开日常投稿所需的五类基础目录：
-
-~~~powershell
-git -c core.longpaths=true sparse-checkout set --cone catalog docs paper-skill schemas scripts
-
-if ($LASTEXITCODE -ne 0) { throw 'Sparse Checkout failed; stop and inspect errors' }
-~~~
-
-这一步不会展开整套 html_output/。出现下载进度表示 Partial Clone 正在按需取得新增范围的文件。遇到网络或长路径错误时停止排查，不要反复删除或重新克隆。
-
-## 五、安全收敛已有稀疏检出
-
-只在确认当前没有需要保留的已跟踪改动、暂存内容或尚未完成的 paper/* 分支后，才收敛已有范围。先检查：
-
-~~~powershell
-git -C $PaperSkillRepo branch --show-current
+if ($LASTEXITCODE -ne 0) { throw 'Clone failed; stop and inspect errors' }
 git -C $PaperSkillRepo remote -v
-git -C $PaperSkillRepo config --bool core.sparseCheckout
-git -C $PaperSkillRepo sparse-checkout list
+```
+
+SSH 22 不通而 443 可用时，将地址替换为 `ssh://git@ssh.github.com:443/ReductTech/PaperSkill.git`，无需更改全局 SSH/代理。`--sparse` 初次只显示根文件是正常现象。
+
+期望 `upstream` 指向官方 ReductTech/PaperSkill，`origin` 指向自己的 Fork。仅在首次克隆后确认 origin 是官方且尚无 upstream 时执行，将 OWNER 替换为自己的账户：
+
+```powershell
+git -C $PaperSkillRepo remote rename origin upstream
+if ($LASTEXITCODE -ne 0) { throw 'Could not name the official remote' }
+git -C $PaperSkillRepo remote add origin git@github.com:OWNER/PaperSkill.git
+if ($LASTEXITCODE -ne 0) { throw 'Could not add the personal Fork' }
+git -C $PaperSkillRepo remote -v
+```
+
+已有正确配置就跳过；需要 443 时仅调整本仓库 remote URL，不盲目改名或覆盖。
+
+## 五、安全展开或收敛稀疏范围
+
+先核对当前分支、稀疏配置和所有待保留文件：
+
+```powershell
+git -C $PaperSkillRepo branch --show-current
 git -C $PaperSkillRepo status --short
-git -C $PaperSkillRepo status --short --untracked-files=no
 git -C $PaperSkillRepo diff --cached --name-only
 git -C $PaperSkillRepo diff --name-only
-~~~
+git -C $PaperSkillRepo config --bool core.sparseCheckout
+git -C $PaperSkillRepo sparse-checkout list
+```
 
-如果有已跟踪修改或暂存内容，先检查并保留所需工作。若发现未跟踪文件（尤其 html_output/ 下的内容），逐项核对；稀疏设置不会授权删除它们。处于未完成的贡献分支时，不要切换或重置分支。
+首次克隆或确认既有检出无待保留修改、暂存内容和未完成贡献分支后，设置基础目录：
 
-确认可继续后，明确将范围设置为基础目录；set 会覆盖旧规则，core.longpaths=true 只作用于这条命令：
-
-~~~powershell
+```powershell
 git -c core.longpaths=true -C $PaperSkillRepo sparse-checkout set --cone catalog docs paper-skill schemas scripts
-if ($LASTEXITCODE -ne 0) { throw 'Sparse reset failed; stop and inspect current state' }
-
+if ($LASTEXITCODE -ne 0) { throw 'Sparse Checkout failed; stop and inspect errors' }
 git -C $PaperSkillRepo sparse-checkout list
-~~~
+```
 
-预期只列出 catalog、docs、paper-skill、schemas、scripts。如果仍报告长路径，停止；不要继续 switch、reset --hard 或强制清理。PaperSkillWork 内历史生成的 /html_output/ 也不要自动删除。
+`set` 会替换旧规则。未跟踪文件尤其是 html_output 中的内容须逐项核对保留，不因此获得删除权限。遇到长路径、网络错误或未完成的 `paper/*` 分支时停止核对，不执行 reset、覆盖或强制清理。基础范围无需展开整个 `html_output/`；W10 再加入单篇目录。
 
-## 六、确认初始化并安装依赖
+## 六、确认准备并衔接 W10
 
-~~~powershell
-git -C $PaperSkillRepo sparse-checkout list
+```powershell
 git -C $PaperSkillRepo rev-parse --is-shallow-repository
 git -C $PaperSkillRepo config --get remote.upstream.partialclonefilter
-git -C $PaperSkillRepo branch --show-current
 git -C $PaperSkillRepo status --short
-
 Test-Path (Join-Path $PaperSkillRepo 'paper-skill')
-Test-Path (Join-Path $PaperSkillRepo 'scripts')
-Test-Path (Join-Path $PaperSkillRepo 'schemas')
-Test-Path (Join-Path $PaperSkillRepo 'docs')
 Test-Path (Join-Path $PaperSkillRepo 'catalog')
-Test-Path (Join-Path $PaperSkillRepo 'html_output')
-~~~
+```
 
-首次浅克隆预期 --is-shallow-repository 为 true，partialclonefilter 为 blob:none，基础目录均存在，未遗留本地改动。若复用旧检出，这两个 Git 属性可能不同；无需仅因此重建仓库。html_output 不应作为整目录稀疏展开；若它存在，先查看稀疏列表和内容，不要直接删除。
+首次克隆预期 shallow 为 true、filter 为 blob:none；复用旧检出的属性可能不同，无需因此重建。仅在首次或依赖缺失时安装根依赖：
 
-安装根目录依赖仅在首次或 node_modules 缺失时执行：
-
-~~~powershell
+```powershell
 Set-Location $PaperSkillRepo
-node --version
-npm --version
-npm ci
-if ($LASTEXITCODE -ne 0) { throw 'PaperSkill npm ci failed' }
-~~~
+npm.cmd ci
+if ($LASTEXITCODE -ne 0) { throw 'PaperSkill dependency installation failed' }
+```
 
-node_modules/ 只用于本地安装，不应提交。
-
-初始化后即可停止。不必拉取全部论文目录，也不要在 main 开始投稿。W10 中同步官方、创建贡献分支、展开单篇目录并运行正式投稿命令，统一见[W10 投稿手册](UPSTREAM_RELEASE.md)。
+准备到此即可。W9 接受后，由用户按唯一 [W10 投稿手册](UPSTREAM_RELEASE.md) 在既有 PaperSkill 检出运行官方 Import、validate、catalog 检查和 preflight，成功后才记录 W10。当前 PaperSkillWork 没有 `upstream-check` 命令，也不生成独立导出/哈希预检报告；贡献者信息、版本选择、提交范围和 Push/PR 以该手册为准。

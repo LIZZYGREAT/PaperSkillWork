@@ -81,7 +81,7 @@ $CatalogStatus = @(git -C $PaperSkillRepo status --porcelain -- catalog/papers.j
 if ($LASTEXITCODE -ne 0 -or $CatalogStatus.Count -ne 0) { throw 'catalog/papers.json has pre-existing changes; preserve them and stop' }
 ```
 
-若状态有改动、`catalog/papers.json` 不存在/未跟踪/已有修改、当前处于尚未完成的 paper/* 分支，或稀疏范围包含整个 html_output/，先停下核对。目录文件必须在整个 W10 流程开始时就确认干净，后续不得用 `git restore` 清理任何预存改动。不要 reset、删除文件或覆盖分支。检查后按[初始化指南的安全收敛步骤](PAPERSKILL_SETUP.md#五安全收敛已有稀疏检出)恢复基础稀疏范围。PaperSkillWork 中可能遗留的 /html_output/ 不在本次流程中清理。
+若状态有改动、`catalog/papers.json` 不存在/未跟踪/已有修改、当前处于尚未完成的 paper/* 分支，或稀疏范围包含整个 html_output/，先停下核对。目录文件必须在整个 W10 流程开始时就确认干净，后续不得用 `git restore` 清理任何预存改动。不要 reset、删除文件或覆盖分支。检查后按[初始化指南的安全收敛步骤](PAPERSKILL_SETUP.md#五安全展开或收敛稀疏范围)恢复基础稀疏范围。PaperSkillWork 中可能遗留的 /html_output/ 不在本次流程中清理。
 
 ## B. 同步官方主线、建分支并仅展开当前论文
 

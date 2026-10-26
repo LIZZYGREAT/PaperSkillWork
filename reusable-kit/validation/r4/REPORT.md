@@ -31,4 +31,4 @@ To finish the visual check locally, start one scene using the commands in `../RE
 
 ## Boundaries
 
-All R4 scenes are synthetic. Registry assets remain `candidate`; this work does not approve them. No file under `papers/**` or the upstream PaperSkill repository was changed. The full Demo, CLI, and Visual QA regressions recorded earlier in `docs/VISUAL_LANGUAGE_SYSTEM.md` were not rerun after this validation-only typography repair.
+All R4 scenes are synthetic. Registry assets remain `candidate`; this work does not approve them. No file under `papers/**` or the upstream PaperSkill repository was changed. The earlier Demo/CLI/Visual QA runs are available through Git history; they do not establish R4 post-repair browser acceptance. Current Kit principles live in [VISUAL_LANGUAGE.md](../../VISUAL_LANGUAGE.md).
