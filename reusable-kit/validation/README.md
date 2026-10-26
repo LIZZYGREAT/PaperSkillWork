@@ -24,4 +24,4 @@ Each launch creates a new `reusable-kit/demo/r4-<scene>-<random>/` directory so 
 - `matrix-reference`: a retained local calculation toy. The earlier trial correctly found that no Kit component expressed row-wise reduction and a shared mean reference. It is an example of choosing not to reuse.
 - `vector-clipping`: positive reuse of `RepresentationVector`, `ResponseMeter`, and `FlowConnector` for vector norm clipping. The scene owns its calculation and layout. Displayed values use at most two decimal places while internal calculations retain full precision.
 
-See [the R4 report](r4/REPORT.md) for the Registry closures, current build/browser results, screenshot provenance, and the real F11 and human approval checks that remain outstanding.
+See [the R4 report](r4/REPORT.md) for the Registry closures, current build/browser results, screenshot provenance, user-confirmed F11/visual review, and the separate per-asset Registry approval status.

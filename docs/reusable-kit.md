@@ -74,6 +74,6 @@ Windows 可使用 `npm.cmd`；既有 pytest 临时目录不可写时，为本次
 
 ## V1 当前能力与限制
 
-Registry 检索、精确源码/CSS 闭包、安全追加、Final-first 目标解析及两个完整示例包已有源码与测试覆盖，并可独立构建和交互。R4 网络与向量裁剪已完成独立构建、1440×900 / 1920×1080 浏览器交互和截图复核，真实 F11 仍为 NOT_RUN；具体范围以唯一 [R4 报告](../reusable-kit/validation/r4/REPORT.md) 为准。48 个 Registry 条目仍为 candidate，需显式 `--allow-unapproved`；只有逐项明确的人类认可及完整 `approved_by`、`approved_at`、`evidence` 才可批准，整体画风评价不构成批量批准。
+Registry 检索、精确源码/CSS 闭包、安全追加、Final-first 目标解析及两个完整示例包已有源码与测试覆盖，并可独立构建和交互。R4 网络与向量裁剪已完成独立构建、1440×900 / 1920×1080 浏览器交互和截图复核；真实 F11 与人工视觉复核已核查（用户确认，2026-10-26），具体范围以唯一 [R4 报告](../reusable-kit/validation/r4/REPORT.md) 为准。48 个 Registry 条目仍为 candidate，需显式 `--allow-unapproved`；只有逐项明确的人类认可及完整 `approved_by`、`approved_at`、`evidence` 才可批准，整体画风评价不构成批量批准。
 
 V1 收口后，下一阶段是在一篇真实新论文完成 W0–W5 后检索、复制、组合或拒绝 Kit，形成 W6 教学切片并观察复用成本与教学质量；首次真实新论文复用尚待该阶段验证。
