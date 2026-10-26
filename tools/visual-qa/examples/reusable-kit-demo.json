@@ -18,18 +18,8 @@
     "startupTimeoutMs": 30000
   },
   "viewports": [
-    {
-      "width": 1280,
-      "height": 900
-    },
-    {
-      "width": 1440,
-      "height": 900
-    },
-    {
-      "width": 1920,
-      "height": 1080
-    }
+    { "id": "desktop-window", "width": 1440, "height": 900 },
+    { "id": "fullscreen-layout", "width": 1920, "height": 1080 }
   ],
   "pages": [
     {
@@ -237,7 +227,7 @@
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": "[data-network-example=\"local\"]"
+              "selector": "#gallery-mini-network [data-network-example=\"local\"]"
             }
           ]
         },
@@ -246,11 +236,11 @@
           "actions": [
             {
               "type": "click",
-              "selector": "[data-network-example=\"local\"] button"
+              "selector": "#gallery-mini-network [data-network-example=\"local\"] button"
             },
             {
               "type": "scrollIntoView",
-              "selector": "[data-network-example=\"local\"]"
+              "selector": "#gallery-mini-network [data-network-example=\"local\"]"
             }
           ]
         },
@@ -259,7 +249,7 @@
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": "[data-network-example=\"parallel\"]"
+              "selector": "#gallery-mini-network [data-network-example=\"parallel\"]"
             }
           ]
         },

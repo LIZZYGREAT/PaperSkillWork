@@ -1,3 +1,4 @@
+import { mobileQa, layoutWidths, layoutViewports } from "./qa-scope.mjs";
 import { expect, test } from "@playwright/test";
 
 test("Pattern Gallery exposes connector variants, editorial recipes, and synchronized scroll states", async ({ page }) => {
@@ -151,32 +152,34 @@ test("Pattern Gallery exposes connector variants, editorial recipes, and synchro
   expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
   expect(errors).toEqual([]);
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(diagram).toHaveAttribute("data-diagram-mode", "list");
-  await expect(sticky.locator(".rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
-  await expect(sticky.locator(".rk-sticky-system__visual")).toHaveCSS("position", "static");
-  expect(await networkGallery.locator(".pg-model-branches").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
-  expect(await timelineGallery.locator(".pg-forward-system").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
-  const pageOverflow = await page.evaluate(() => ({
-    fits: document.documentElement.scrollWidth <= innerWidth,
-    viewport: innerWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-    offenders: [...document.querySelectorAll("body *")].filter((node) => {
-      const rect = node.getBoundingClientRect();
-      let ancestor = node.parentElement;
-      let clippedByScroller = false;
-      while (ancestor && ancestor !== document.body) {
-        if (["auto", "scroll"].includes(getComputedStyle(ancestor).overflowX)) { clippedByScroller = true; break; }
-        ancestor = ancestor.parentElement;
-      }
-      return !clippedByScroller && (rect.right > innerWidth + 1 || rect.left < -1);
-    }).slice(0, 12).map((node) => {
-      const rect = node.getBoundingClientRect();
-      const parent = node.parentElement;
-      return `${node.tagName.toLowerCase()}.${node.className} [${rect.left},${rect.right}] parent=${parent?.className} overflow=${parent ? getComputedStyle(parent).overflowX : ""}`;
-    }),
-  }));
-  expect(pageOverflow, JSON.stringify(pageOverflow)).toMatchObject({ fits: true });
+  if (mobileQa) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(diagram).toHaveAttribute("data-diagram-mode", "list");
+    await expect(sticky.locator(".rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
+    await expect(sticky.locator(".rk-sticky-system__visual")).toHaveCSS("position", "static");
+    expect(await networkGallery.locator(".pg-model-branches").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+    expect(await timelineGallery.locator(".pg-forward-system").evaluate(node => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+    const pageOverflow = await page.evaluate(() => ({
+      fits: document.documentElement.scrollWidth <= innerWidth,
+      viewport: innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      offenders: [...document.querySelectorAll("body *")].filter((node) => {
+        const rect = node.getBoundingClientRect();
+        let ancestor = node.parentElement;
+        let clippedByScroller = false;
+        while (ancestor && ancestor !== document.body) {
+          if (["auto", "scroll"].includes(getComputedStyle(ancestor).overflowX)) { clippedByScroller = true; break; }
+          ancestor = ancestor.parentElement;
+        }
+        return !clippedByScroller && (rect.right > innerWidth + 1 || rect.left < -1);
+      }).slice(0, 12).map((node) => {
+        const rect = node.getBoundingClientRect();
+        const parent = node.parentElement;
+        return `${node.tagName.toLowerCase()}.${node.className} [${rect.left},${rect.right}] parent=${parent?.className} overflow=${parent ? getComputedStyle(parent).overflowX : ""}`;
+      }),
+    }));
+    expect(pageOverflow, JSON.stringify(pageOverflow)).toMatchObject({ fits: true });
+  }
 });
 
 test("Reference Hub filters and reading columns share both boundaries", async ({ page }, testInfo) => {
@@ -186,8 +189,8 @@ test("Reference Hub filters and reading columns share both boundaries", async ({
     await page.getByRole("button", { name: "Reference Hub", exact: false }).first().click();
     const drawer = page.getByRole("dialog", { name: "Reference Hub" });
     const hub = drawer.locator(".rk-reference-hub");
-    for (const width of [1280, 1440, 1920]) {
-      await page.setViewportSize({ width, height: 900 });
+    for (const width of (mobileQa ? [1280] : layoutWidths)) {
+      await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
       const offsets = await hub.evaluate(root => {
         const box = selector => root.querySelector(selector).getBoundingClientRect();
         const search = box('input[type="search"]'), list = box('.rk-reference-hub__list');
@@ -203,11 +206,13 @@ test("Reference Hub filters and reading columns share both boundaries", async ({
     await hub.getByRole("searchbox").fill("no-matching-reference-123");
     await expect(hub.getByText("No references match this search.")).toBeVisible();
     await hub.getByRole("searchbox").fill("");
-    await page.setViewportSize({ width: 390, height: 844 });
-    await hub.getByRole("button", { name: "Back to reference list" }).click();
-    await expect(hub.locator(".rk-reference-hub__list")).toBeVisible();
-    expect(await drawer.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
-    if (process.env.HUB_REVIEW_CAPTURE && demo === "journey") await drawer.screenshot({ path: testInfo.outputPath("hub-mobile.png") });
+    if (mobileQa) {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await hub.getByRole("button", { name: "Back to reference list" }).click();
+      await expect(hub.locator(".rk-reference-hub__list")).toBeVisible();
+      expect(await drawer.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+      if (process.env.HUB_REVIEW_CAPTURE && demo === "journey") await drawer.screenshot({ path: testInfo.outputPath("hub-mobile.png") });
+    }
     await page.keyboard.press("Escape");
     await expect(drawer).toBeHidden();
   }
@@ -284,7 +289,7 @@ test("reading journey keeps the canonical graph, comparison ownership and task b
   expect(errors).toEqual([]);
 });
 
-for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
+for (const viewport of layoutViewports) {
   test(`reading journey reflows and stays legible at ${viewport.width}`, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -473,7 +478,7 @@ test("editorial compositions reflow at every requested viewport with readable ma
   await expect(page.locator("#ed-c-title")).toBeInViewport();
   await page.goto("/");
   await page.getByRole("button", { name: "Editorial studies", exact: true }).click();
-  for (const [width, height] of [[1280, 900], [1440, 900], [1920, 1080], [390, 844]]) {
+  for (const [width, height] of layoutViewports.map(({ width, height }) => [width, height])) {
     await page.setViewportSize({ width, height });
     await page.evaluate(() => document.fonts.ready);
     for (const id of ["ed-a", "ed-b", "ed-c"]) {
@@ -590,7 +595,7 @@ test("C candidates preserve the baseline and explain one student update across v
   expect(await page.locator("#ed-c").evaluate(n => n.outerHTML)).toBe(baseline);
 
   for (const variant of ["c1", "c2"]) {
-    for (const [width, height] of [[1280, 900], [1440, 900], [1920, 1080], [390, 844]]) {
+    for (const [width, height] of layoutViewports.map(({ width, height }) => [width, height])) {
       await page.setViewportSize({ width, height });
       await page.goto(`/?demo=editorial&c=${variant}#ed-c`);
       await page.evaluate(() => document.fonts.ready);
@@ -675,24 +680,26 @@ test("component interaction assertions pass in a real browser", async ({ page })
   expect(await page.locator("#summary + ol li").count()).toBe(passed);
   expect(pageErrors).toEqual([]);
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  const glyphs = page.locator(".rk-mini-network");
-  await expect(glyphs).toHaveCount(2);
-  expect(await glyphs.evaluateAll((nodes) => nodes.every((node) => {
-    const bounds = node.getBoundingClientRect();
-    const labels = node.querySelector(".rk-mini-network__labels");
-    return bounds.left >= -1 && bounds.right <= innerWidth + 1
-      && [...labels.querySelectorAll('[data-network-label]')].every(label => {
-        const layer = node.querySelector(`[data-network-layer="${label.dataset.networkLabel}"] circle`);
-        const a = layer.getBoundingClientRect(), b = label.getBoundingClientRect();
-        return Math.abs(a.left + a.width / 2 - b.left - b.width / 2) < 6 && label.scrollWidth <= label.clientWidth;
-      })
-      && [...node.querySelectorAll("strong, span, small, figcaption")].every((label) => parseFloat(getComputedStyle(label).fontSize) >= 12);
-  }))).toBe(true);
+  if (mobileQa) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const glyphs = page.locator(".rk-mini-network");
+    await expect(glyphs).toHaveCount(2);
+    expect(await glyphs.evaluateAll((nodes) => nodes.every((node) => {
+      const bounds = node.getBoundingClientRect();
+      const labels = node.querySelector(".rk-mini-network__labels");
+      return bounds.left >= -1 && bounds.right <= innerWidth + 1
+        && [...labels.querySelectorAll('[data-network-label]')].every(label => {
+          const layer = node.querySelector(`[data-network-layer="${label.dataset.networkLabel}"] circle`);
+          const a = layer.getBoundingClientRect(), b = label.getBoundingClientRect();
+          return Math.abs(a.left + a.width / 2 - b.left - b.width / 2) < 6 && label.scrollWidth <= label.clientWidth;
+        })
+        && [...node.querySelectorAll("strong, span, small, figcaption")].every((label) => parseFloat(getComputedStyle(label).fontSize) >= 12);
+    }))).toBe(true);
+  }
 });
 
 test("Component Lab exposes typography, button states, and responsive reading overlays", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: mobileQa ? 1280 : 1440, height: 900 });
   await page.goto("/?demo=lab");
   await expect(page.locator("[data-demo-view='component-lab']")).toBeVisible();
   await expect(page.locator(".kit-shell")).toHaveAttribute("data-visual-direction", "warm");
@@ -722,16 +729,18 @@ test("Component Lab exposes typography, button states, and responsive reading ov
   await expect(drawer).toBeHidden();
   await expect(page.getByRole("button", { name: "Open reading Drawer" })).toBeFocused();
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Open reading Drawer" }).click();
-  await expect(drawer).toBeVisible();
-  const narrowDrawer = await drawer.boundingBox();
-  expect(narrowDrawer.width).toBeLessThanOrEqual(390);
-  expect(await drawer.locator(".kit-lab__reading-grid").evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+  if (mobileQa) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("button", { name: "Open reading Drawer" }).click();
+    await expect(drawer).toBeVisible();
+    const narrowDrawer = await drawer.boundingBox();
+    expect(narrowDrawer.width).toBeLessThanOrEqual(390);
+    expect(await drawer.locator(".kit-lab__reading-grid").evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length)).toBe(1);
+  }
 });
 
 test("LwF opening keeps the title compact and the causal figure complete", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: mobileQa ? 1280 : 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page.getByRole("button", { name: "LwF scenario" }).click();
@@ -832,17 +841,19 @@ test("LwF opening keeps the title compact and the causal figure complete", async
   const mergeFractions = await page.locator("#lwf-loss .rk-diagram [data-diagram-node='merge'] math mfrac").count();
   expect(mergeFractions).toBe(2);
 
-  // Narrow screens reflow the same spec into an ordered, fully labelled list.
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator(".kit-lwf-panel .rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
-  await expect(page.locator(".kit-lwf-panel [data-diagram-node='lOld']")).toContainText("输入 ← 旧响应目标 · 旧类输出");
-  await expect(page.locator(".kit-lwf-panel [data-diagram-node='update']")).toContainText("更新 Student 参数");
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await expect(page.locator(".kit-lwf-panel .rk-diagram")).toHaveAttribute("data-diagram-mode", "grid");
+  if (mobileQa) {
+    // Narrow screens reflow the same spec into an ordered, fully labelled list.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator(".kit-lwf-panel .rk-diagram")).toHaveAttribute("data-diagram-mode", "list");
+    await expect(page.locator(".kit-lwf-panel [data-diagram-node='lOld']")).toContainText("输入 ← 旧响应目标 · 旧类输出");
+    await expect(page.locator(".kit-lwf-panel [data-diagram-node='update']")).toContainText("更新 Student 参数");
+    await page.setViewportSize({ width: mobileQa ? 1280 : 1440, height: 900 });
+    await expect(page.locator(".kit-lwf-panel .rk-diagram")).toHaveAttribute("data-diagram-mode", "grid");
+  }
 });
 
 test("scroll sections synchronize LwF steps and EWC reuses the same system view", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: mobileQa ? 1280 : 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page.getByRole("button", { name: "LwF scenario" }).click();
@@ -887,14 +898,16 @@ test("scroll sections synchronize LwF steps and EWC reuses the same system view"
   await expect(page.locator(".kit-ewc-panel [data-diagram-node='penalty']")).not.toHaveClass(/is-dimmed/);
   await expect(page.locator(".kit-ewc-panel [data-diagram-node='thetaB']")).toHaveClass(/is-dimmed/);
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator("#ewc-stored").evaluate((node) => window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.35, behavior: "instant" }));
-  await expect(system).toHaveAttribute("data-active-step-id", "store");
-  await expect.poll(() => page.locator(".rk-sticky-system__visual").evaluate((node) => getComputedStyle(node).position)).toBe("static");
+  if (mobileQa) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator("#ewc-stored").evaluate((node) => window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.35, behavior: "instant" }));
+    await expect(system).toHaveAttribute("data-active-step-id", "store");
+    await expect.poll(() => page.locator(".rk-sticky-system__visual").evaluate((node) => getComputedStyle(node).position)).toBe("static");
+  }
 });
 
 test("sidebar selection and keyboard focus stay separate states", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: mobileQa ? 1280 : 1440, height: 900 });
   await page.goto("/");
   const active = page.locator(".kit-sidebar__course.is-active");
   await expect(active).toHaveAttribute("aria-current", "page");
@@ -936,7 +949,7 @@ test("sidebar selection and keyboard focus stay separate states", async ({ page 
 test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavior", async ({ page, browser }) => {
   // Fail fast and name the step instead of hanging on a locator that never resolves.
   page.setDefaultTimeout(6000);
-  const viewport = { width: 390, height: 844 };
+  const viewport = mobileQa ? { width: 390, height: 844 } : { width: 1440, height: 900 };
   const panelFor = async (trigger) => {
     const panelId = await trigger.getAttribute("aria-controls");
     expect(panelId).toBeTruthy();
@@ -1023,36 +1036,38 @@ test("TermRef shares viewport-safe placement, hover, keyboard, and touch behavio
   await expect(page.locator("body")).toHaveAttribute("data-reference", "term-a");
   await expect(keyboardPanel).toBeHidden();
 
-  const mobileContext = await browser.newContext({ viewport, isMobile: true, hasTouch: true });
-  try {
-    const mobilePage = await mobileContext.newPage();
-    mobilePage.setDefaultTimeout(6000);
-    await mobilePage.goto(new URL("/tests.html", page.url()).toString());
-    await expect(mobilePage.locator("#summary")).toHaveAttribute("data-result", "pass", { timeout: 15_000 });
-    await mobilePage.getByRole("dialog", { name: "Demo figure" }).getByRole("button", { name: "Close" }).click();
-    await expect(mobilePage.getByRole("dialog", { name: "Demo figure" })).toBeHidden();
-    const mobileWrapper = mobilePage.locator(".rk-term-ref-wrap").first();
-    await mobileWrapper.evaluate((node) => Object.assign(node.style, { position: "fixed", zIndex: "1200", left: "350px", top: "790px" }));
-    const mobileTrigger = mobileWrapper.locator(".rk-term-ref");
-    const mobilePanelId = await mobileTrigger.getAttribute("aria-controls");
-    const mobilePanel = mobilePage.locator(`[id="${mobilePanelId}"]`);
-    await mobilePage.tap(".rk-term-ref");
-    await expect(mobilePanel).toBeVisible();
-    const mobileBounds = await mobilePanel.boundingBox();
-    expect(mobileBounds.x).toBeGreaterThanOrEqual(12);
-    expect(mobileBounds.y).toBeGreaterThanOrEqual(12);
-    expect(mobileBounds.x + mobileBounds.width).toBeLessThanOrEqual(viewport.width - 12);
-    expect(mobileBounds.y + mobileBounds.height).toBeLessThanOrEqual(viewport.height - 12);
-    await mobilePage.tap(".rk-term-ref");
-    await expect(mobilePanel).toBeHidden();
-    await expect(mobileTrigger).toHaveAttribute("aria-expanded", "false");
-  } finally {
-    await mobileContext.close();
+  if (mobileQa) {
+    const mobileContext = await browser.newContext({ viewport, isMobile: true, hasTouch: true });
+    try {
+      const mobilePage = await mobileContext.newPage();
+      mobilePage.setDefaultTimeout(6000);
+      await mobilePage.goto(new URL("/tests.html", page.url()).toString());
+      await expect(mobilePage.locator("#summary")).toHaveAttribute("data-result", "pass", { timeout: 15_000 });
+      await mobilePage.getByRole("dialog", { name: "Demo figure" }).getByRole("button", { name: "Close" }).click();
+      await expect(mobilePage.getByRole("dialog", { name: "Demo figure" })).toBeHidden();
+      const mobileWrapper = mobilePage.locator(".rk-term-ref-wrap").first();
+      await mobileWrapper.evaluate((node) => Object.assign(node.style, { position: "fixed", zIndex: "1200", left: "350px", top: "790px" }));
+      const mobileTrigger = mobileWrapper.locator(".rk-term-ref");
+      const mobilePanelId = await mobileTrigger.getAttribute("aria-controls");
+      const mobilePanel = mobilePage.locator(`[id="${mobilePanelId}"]`);
+      await mobilePage.tap(".rk-term-ref");
+      await expect(mobilePanel).toBeVisible();
+      const mobileBounds = await mobilePanel.boundingBox();
+      expect(mobileBounds.x).toBeGreaterThanOrEqual(12);
+      expect(mobileBounds.y).toBeGreaterThanOrEqual(12);
+      expect(mobileBounds.x + mobileBounds.width).toBeLessThanOrEqual(viewport.width - 12);
+      expect(mobileBounds.y + mobileBounds.height).toBeLessThanOrEqual(viewport.height - 12);
+      await mobilePage.tap(".rk-term-ref");
+      await expect(mobilePanel).toBeHidden();
+      await expect(mobileTrigger).toHaveAttribute("aria-expanded", "false");
+    } finally {
+      await mobileContext.close();
+    }
   }
 });
 
 test("Chinese hover opens the exact English Hub entry without changing the paper anchor", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.setViewportSize({ width: mobileQa ? 1280 : 1440, height: 900 });
   await page.goto("/");
   await page.getByRole("button", { name: "EWC scenario" }).click();
   await page.locator("#ewc-update").scrollIntoViewIfNeeded();
@@ -1082,11 +1097,13 @@ test("Chinese hover opens the exact English Hub entry without changing the paper
   await hub.getByRole("button", { name: "Stored earlier-task optimum θ*" }).last().click();
   await expect(hub.getByRole("heading", { name: "Stored earlier-task optimum θ*" })).toBeVisible();
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(hub.locator(".rk-reference-hub__list")).toBeHidden();
-  await hub.getByRole("button", { name: "Back to reference list" }).click();
-  await expect(hub.locator(".rk-reference-hub__list")).toBeVisible();
-  await expect(hub.locator(".rk-reference-hub__detail")).toBeHidden();
+  if (mobileQa) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(hub.locator(".rk-reference-hub__list")).toBeHidden();
+    await hub.getByRole("button", { name: "Back to reference list" }).click();
+    await expect(hub.locator(".rk-reference-hub__list")).toBeVisible();
+    await expect(hub.locator(".rk-reference-hub__detail")).toBeHidden();
+  }
 
   await page.keyboard.press("Escape");
   await expect(drawer).toBeHidden();
@@ -1364,7 +1381,7 @@ test("Editorial Reveal staggers the comparison rows and trims unused gaps", asyn
   expect(geometry.result.width).toBeLessThan(180);
 });
 
-for (const viewport of [{ width: 1280, height: 900 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
+for (const viewport of layoutViewports) {
   test(`Reading Journey candidates stay legible at ${viewport.width}`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize(viewport);

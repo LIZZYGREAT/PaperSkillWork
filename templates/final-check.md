@@ -45,12 +45,14 @@ PaperSkill checker revision / tool version:
 
 ## W9 Visual QA Record
 
-Record the actual commands, pages, states, desktop/mobile viewports or devices, screenshot/report locations, and findings. Use NOT_RUN when a check was unavailable.
+Follow docs/VISUAL_QA.md. Record actual commands, pages, affected states, Desktop Window 1440×900 / Fullscreen Layout 1920×1080, observed inner dimensions, screenshot/report locations, and findings. The latter is simulation only. For actual browser F11, record inner dimensions, zoom, screen and operating mode; unavailable real F11 is NOT_RUN and human confirmation stays PENDING. Record mobile/tablet checks only with their explicit trigger and separate outcome.
 
 | Status | Result | Evidence / notes |
 | --- | --- | --- |
 | BUILD | PASS / FAIL / NOT_RUN |  |
 | GEOMETRY_QA | PASS / FAIL / NOT_RUN |  |
+| FULLSCREEN_LAYOUT | PASS / FAIL / NOT_RUN |  |
+| FULLSCREEN_REAL | PASS / FAIL / NOT_RUN |  |
 | VISUAL_REVIEW | PASS / FAIL / NOT_RUN |  |
 | REGRESSION | PASS / FAIL / NOT_RUN |  |
 | HUMAN_ACCEPTANCE | PENDING / PASS / REVISE |  |
@@ -61,12 +63,12 @@ For a complex integration scene, record algorithm/state assertions and actual in
 
 Record the exact build command and exit result. Geometry evidence names the pages, states, and viewports checked. Visual review requires screenshot paths and findings from screenshots actually inspected. Regression requires an approved baseline or before/after evidence and its interpretation. If evidence is missing, record BUILD, GEOMETRY_QA, VISUAL_REVIEW, or REGRESSION as NOT_RUN; keep HUMAN_ACCEPTANCE as PENDING until the user reviews the rendered result. A machine report cannot set visual review or human acceptance to PASS.
 
-## Engineering, Accessibility, and Mobile
+## Engineering, Accessibility, and Triggered Checks
 
 - [ ] Build and project checks were run; actual outcomes are recorded.
 - [ ] Implementation coverage, project tests, production build, W8 official source compatibility checks, and Visual QA outcomes are recorded for the actual source. These early source checks are not the official W10 Import, repository Validate, or Preflight.
-- [ ] Final-page navigation and key interactions were actually operated on desktop and mobile where supported; subpath production resource loading was checked separately from a root-path preview.
-- [ ] Keyboard/focus, touch/non-drag alternatives, reduced-motion, and mobile behavior were reviewed where applicable.
+- [ ] Final-page navigation and key interactions were actually operated in a normal desktop browser and actual browser fullscreen F11; unperformed F11 remains NOT_RUN/PENDING. Subpath production resource loading was checked separately from a root-path preview.
+- [ ] Keyboard/focus, touch/non-drag alternatives, reduced-motion and responsive capabilities were preserved; mobile/tablet visual review ran only on the triggers in docs/VISUAL_QA.md, with its reason and outcome recorded when applicable.
 - [ ] Export is self-contained and has no external shared runtime dependency or local machine path.
 
 ## W10 Official PaperSkill Release

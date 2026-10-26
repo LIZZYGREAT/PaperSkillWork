@@ -18,18 +18,8 @@
     "startupTimeoutMs": 30000
   },
   "viewports": [
-    {
-      "width": 1440,
-      "height": 900
-    },
-    {
-      "width": 1920,
-      "height": 1080
-    },
-    {
-      "width": 390,
-      "height": 844
-    }
+    { "id": "desktop-window", "width": 1440, "height": 900 },
+    { "id": "fullscreen-layout", "width": 1920, "height": 1080 }
   ],
   "pages": [
     {

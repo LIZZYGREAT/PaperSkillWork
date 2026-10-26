@@ -2,6 +2,10 @@ import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 
 const baseUrl = "http://127.0.0.1:4173";
+const args = process.argv.slice(2);
+const mobileQa = args.includes("--mobile");
+const runnerArgs = args.filter(arg => arg !== "--mobile");
+console.log(`QA_SCOPE=${mobileQa ? "mobile/narrow专项" : "desktop-window/fullscreen-layout"}`);
 const server = spawn(process.execPath, [
   "./node_modules/vite/bin/vite.js", "preview", "--configLoader", "bundle",
   "--host", "127.0.0.1", "--port", "4173", "--strictPort",
@@ -23,8 +27,8 @@ try {
   if (!ready) throw new Error("Demo preview did not start. Run `npm run build` before the browser smoke test.");
 
   const runner = spawn(process.execPath, [
-    "./node_modules/@playwright/test/cli.js", "test", "--config=playwright.config.mjs", ...process.argv.slice(2),
-  ], { stdio: "inherit" });
+    "./node_modules/@playwright/test/cli.js", "test", "--config=playwright.config.mjs", ...runnerArgs,
+  ], { stdio: "inherit", env: { ...process.env, PAPERWORK_MOBILE_QA: mobileQa ? "1" : "0" } });
   result = await new Promise((resolve, reject) => {
     runner.once("error", reject);
     runner.once("exit", (code) => resolve(code ?? 1));

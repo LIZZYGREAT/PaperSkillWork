@@ -7,7 +7,8 @@
     "dev": "vite --configLoader bundle",
     "build": "tsc && vite build --configLoader bundle",
     "preview": "vite preview --configLoader bundle",
-    "test:browser": "node ./scripts/test-browser.mjs"
+    "test:browser": "node ./scripts/test-browser.mjs",
+    "test:browser:mobile": "node ./scripts/test-browser.mjs --mobile"
   },
   "dependencies": {
     "react": "^18.3.1",

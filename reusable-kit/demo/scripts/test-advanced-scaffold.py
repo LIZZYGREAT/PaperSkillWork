@@ -105,11 +105,11 @@ try {
  assert.equal(await retrieval.getAttribute('data-retrieval-query'),'1');
  assert.deepEqual(await retrieval.locator('meter').evaluateAll(ns=>ns.map(n=>n.value)),[-1,1.5]);
  assert.match(await retrieval.locator('p[role="status"]').innerText(),/候选 b，1\.5/);
- for(const width of [1440,1920,390]){await page.setViewportSize({width,height:900});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${width}`);}
+ for(const width of __WIDTHS__){await page.setViewportSize({width,height:width===1920?1080:900});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${width}`);}
  assert.deepEqual(errors,[]);
- console.log('EXAMPLE_DELIVERY=PASS: exact package source/CSS, resolved copy target, shared input reaches both model paths, interactive dot-product retrieval, 390/1440/1920 and no Gallery CSS');
+ console.log('EXAMPLE_DELIVERY=PASS: exact package source/CSS, resolved copy target, shared input reaches both model paths, interactive dot-product retrieval, viewports='+JSON.stringify(__WIDTHS__)+' and no Gallery CSS');
 }finally{await browser?.close(); server.kill();}
-'''.replace('__PLAYWRIGHT__', json.dumps((REPO / 'reusable-kit/demo/node_modules/playwright/index.mjs').as_uri())).replace('__WEB__', json.dumps(str(web)))
+'''.replace('__WIDTHS__', '[1440,1920,390]' if '--mobile' in sys.argv else '[1440,1920]').replace('__PLAYWRIGHT__', json.dumps((REPO / 'reusable-kit/demo/node_modules/playwright/index.mjs').as_uri())).replace('__WEB__', json.dumps(str(web)))
         (root / 'check-browser.mjs').write_text(script, encoding='utf-8')
         run([node, root / 'check-browser.mjs'], root)
         succeeded = True

@@ -4,6 +4,8 @@ This config-driven Chromium runner captures the two approved wide viewports (144
 
 ## Run the Kit demo example
 
+The routine baselines are Desktop Window 1440×900 and Fullscreen Layout 1920×1080 CSS pixels, at 100% zoom and DPR 1. Config viewport IDs `desktop-window` / `fullscreen-layout` name layouts only. Playwright's fixed viewport does not establish actual browser F11. Record `FULLSCREEN_LAYOUT` separately from `FULLSCREEN_REAL`; real F11 evidence includes observed inner dimensions, zoom, screen and operating mode, otherwise report `FULLSCREEN_REAL=NOT_RUN` with the reason. W9 human F11 review stays pending until actually performed. Follow the sole policy in [docs/VISUAL_QA.md](../../docs/VISUAL_QA.md); mobile/tablet or extra 1280px captures are explicit, triggered checks.
+
 From the repository root, install the already locked Playwright dependency and browser if needed, build the demo, then run:
 
 ```powershell

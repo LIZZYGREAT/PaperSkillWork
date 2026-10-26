@@ -1,3 +1,4 @@
+import { layoutWidths } from "./qa-scope.mjs";
 import { test, expect } from '@playwright/test';
 
 test('one catalogue supports teaching needs, capability names and truthful runnable source', async ({ page }) => {
@@ -37,8 +38,8 @@ test('one catalogue supports teaching needs, capability names and truthful runna
   await expect(catalog.locator('[data-asset]')).toHaveAttribute('data-asset', 'ResponseMeter');
   await catalog.locator('.asset-catalog__registry > summary').click();
   await expect(catalog.locator('.asset-catalog__registry')).toContainText('当前未进入精选交互目录');
-  for (const width of [1440, 1920, 390]) {
-    await page.setViewportSize({ width, height: 900 });
+  for (const width of layoutWidths) {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
 });

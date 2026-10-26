@@ -1,3 +1,4 @@
+import { layoutWidths } from "./qa-scope.mjs";
 import { test, expect } from '@playwright/test';
 
 test('response labels share one line and parallel output symbols stay upright and level', async ({ page }) => {
@@ -7,8 +8,8 @@ test('response labels share one line and parallel output symbols stay upright an
     await expect(group.locator('.pg-output-heading small')).toHaveText(text);
     await expect(group.locator('.rk-response-meter small')).toHaveCount(0);
   }
-  for (const width of [1440, 1920, 390]) {
-    await page.setViewportSize({ width, height: 900 });
+  for (const width of layoutWidths) {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
     for (const row of await page.locator('.pg-head-response').all()) {
       const offset = await row.evaluate(el => {
         const a = el.querySelector('.pg-sigmoid-mark').getBoundingClientRect();
@@ -61,8 +62,8 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
   await shelf.getByRole('slider', { name: '改变原始得分' }).fill('3');
   await expect(meter).toHaveAttribute('value', '3');
   await expect(shelf.locator('output')).toHaveText('3');
-  for (const width of [1440, 1920, 390]) {
-    await page.setViewportSize({ width, height: 900 });
+  for (const width of layoutWidths) {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
     expect(await shelf.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     for (const glyph of await page.locator('#gallery-specimen .rk-mini-network, #gallery-parts .parts-specimen__network .rk-mini-network').all()) {
       expect(await glyph.evaluate(g => [...g.querySelectorAll('[data-network-label]')].every(label => {
@@ -82,8 +83,8 @@ test('signed values, explicit scales and responsive default parts', async ({ pag
 test('raw score bars preserve zero, sign and magnitude on a shared scale', async ({ page }) => {
   await page.goto('/?demo=gallery');
   const scores = page.locator('.pg-class-scores');
-  for (const width of [1440, 1920, 390]) {
-    await page.setViewportSize({ width, height: 900 });
+  for (const width of layoutWidths) {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
     const rows = await scores.locator('.rk-response-meter').evaluateAll(nodes => nodes.map(el => {
       const track = el.querySelector('.rk-response-meter__track').getBoundingClientRect();
       const fill = el.querySelector('.rk-response-meter__fill').getBoundingClientRect();
@@ -114,6 +115,8 @@ test('independent retrieval composition derives every score and the winner from 
     await expect(root.locator('p[role="status"]')).toContainText(expected[0] > expected[1] ? '候选 a' : '候选 b');
     await root.getByRole('button').click();
   }
-  await page.setViewportSize({ width: 390, height: 900 });
-  expect(await root.evaluate(n => n.scrollWidth <= n.clientWidth)).toBe(true);
+  for (const width of layoutWidths) {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
+    expect(await root.evaluate(n => n.scrollWidth <= n.clientWidth)).toBe(true);
+  }
 });

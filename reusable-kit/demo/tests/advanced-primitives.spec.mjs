@@ -1,3 +1,4 @@
+import { layoutWidths } from "./qa-scope.mjs";
 import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -37,7 +38,7 @@ test("network focus preserves geometry and independent parallel model ownership"
   await expect(root.locator("[data-model='student']")).toHaveCSS("border-top-style", "solid");
   const labels = await root.locator("svg[aria-labelledby]").evaluateAll(nodes => nodes.map(n => n.getAttribute("aria-labelledby")));
   expect(new Set(labels).size).toBe(3);
-  for (const width of [1440, 1920, 390]) {
+  for (const width of layoutWidths) {
     await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
     const modelGeometry = await paths.evaluateAll(nodes => nodes.map(path => {
       const model = path.querySelector('.pg-model');
@@ -73,9 +74,9 @@ test("network focus preserves geometry and independent parallel model ownership"
   }
 });
 
-test("both Gallery hero candidates use the same connected model example at desktop and mobile widths", async ({ page }) => {
+test("both Gallery hero candidates use the same connected model example at selected QA widths", async ({ page }) => {
   for (const candidate of ["a", "b"]) {
-    for (const width of [1440, 1920, 390]) {
+    for (const width of layoutWidths) {
       await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
       await page.goto(`/?demo=gallery&hero=${candidate}`);
       const opening = page.locator("#gallery-opening");
@@ -176,8 +177,8 @@ test("one forward timeline synchronizes navigation, objects, narrative and compu
   await root.getByRole("button", { name: "上一阶段", exact: true }).click();
   await expectSynchronized(root, "scores");
   await expect(root).toHaveAttribute("data-status", "paused");
-  for (const width of [1440, 1920, 390]) {
-    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 844 });
+  for (const width of layoutWidths) {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : width === 390 ? 844 : 900 });
     expect(await root.evaluate(n => n.scrollWidth <= n.clientWidth)).toBe(true);
     expect(await root.locator("button, h4, .pg-forward-system strong").evaluateAll(nodes => nodes.every(n => n.scrollWidth <= n.clientWidth && getComputedStyle(n).textOverflow !== "ellipsis"))).toBe(true);
     expect(await root.locator(".pg-forward-object").evaluateAll(nodes => nodes.every(n => n.scrollHeight <= n.clientHeight + 1))).toBe(true);
