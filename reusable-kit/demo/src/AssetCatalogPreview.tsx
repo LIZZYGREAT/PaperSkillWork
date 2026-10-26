@@ -21,7 +21,7 @@ const relationSpec: DiagramSpec = {
   ],
   edges: [
     { id: 'sample-to-representation', from: 'sample', to: 'representation', kind: 'data', label: '提取特征' },
-    { id: 'representation-to-score', from: 'representation', to: 'score', kind: 'gradient', label: '计算得分' },
+    { id: 'representation-to-score', from: 'representation', to: 'score', kind: 'data', label: '计算得分' },
   ],
   note: '数值和关系仅用于说明图形接口。',
 };

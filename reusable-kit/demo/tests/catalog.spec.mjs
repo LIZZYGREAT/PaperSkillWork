@@ -67,3 +67,14 @@ test('teaching search indexes relationships, intermediate values and validated s
   await expect(catalog.locator('nav')).toContainText('没有匹配资产');
   await expect(catalog.locator('[data-asset]')).toHaveCount(0);
 });
+
+test('catalog preview uses a data edge from representation to score', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/?demo=gallery');
+  const catalog = page.locator('#gallery-catalog');
+  await catalog.getByRole('searchbox').fill('梯度关系');
+  await catalog.locator('nav button[data-asset-name="DiagramFlow"]').click();
+  const scoringEdge = catalog.locator('.asset-catalog__preview [data-diagram-edge="representation-to-score"]');
+  await expect(scoringEdge).toHaveClass(/is-data/);
+  await expect(scoringEdge).not.toHaveClass(/is-gradient/);
+});
