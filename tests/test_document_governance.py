@@ -42,6 +42,20 @@ def test_markdown_links_in_repository_guidance_resolve():
     assert not broken, "Broken local Markdown links:\n" + "\n".join(broken)
 
 
+def test_reading_note_relative_links_resolve_unicode_names_and_attachments(tmp_path):
+    notes = tmp_path / "source" / "notes"
+    attachments = notes / "attachments"
+    attachments.mkdir(parents=True)
+    source = notes / "DER论文笔记.md"
+    source.write_text("![示意图](attachments/example%20plot.png)\n[前置知识](DER前置知识.md#推导)\n", encoding="utf-8")
+    image = attachments / "example plot.png"
+    image.write_bytes(b"attachment")
+    prerequisite = notes / "DER前置知识.md"
+    prerequisite.write_text("# 推导\n", encoding="utf-8")
+    assert _local_target(source, "attachments/example%20plot.png") == image
+    assert _local_target(source, "DER前置知识.md#推导") == prerequisite
+
+
 def test_skills_reference_existing_repository_documents_and_templates():
     missing = []
     root_paths = re.compile(r"(?:docs|templates|tools|reusable-kit|\.agents)/[^\s`<>]+")

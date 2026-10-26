@@ -1,6 +1,8 @@
 import json
 
-from workflow_helpers import load_config, make_project
+import pytest
+
+from workflow_helpers import invoke, load_config, make_project
 
 
 def test_new_creates_workflow_v3_workspace_without_legacy_scaffolds(tmp_path):
@@ -55,3 +57,38 @@ def test_w1_source_cache_pending_and_manifest_mismatch_fail_but_complete_cache_p
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     _manifest, problems = module.v3_cache_data(paper)
     assert problems == []
+
+
+@pytest.mark.parametrize("with_notes", [False, True])
+def test_optional_notes_preserve_source_cache_and_w0_w1_contract(tmp_path, with_notes):
+    root, paper, _config_path, _module = make_project(tmp_path)
+    notes = paper / "source/notes"
+    assert not notes.exists()
+    original_note = "# 用户笔记\n\n这些是个人理解，不是论文原文。\n"
+    if with_notes:
+        notes.mkdir()
+        (notes / "DER论文笔记.md").write_text(original_note, encoding="utf-8")
+    cache = {path.name: path.read_bytes() for path in (paper / "source-cache").glob("*.*")}
+    for stage in ("W0", "W1"):
+        result = invoke(root, "stage", "demo-paper", stage, "complete")
+        assert result.returncode == 0, result.stderr
+    assert cache == {path.name: path.read_bytes() for path in (paper / "source-cache").glob("*.*")}
+    if with_notes:
+        assert (notes / "DER论文笔记.md").read_text(encoding="utf-8") == original_note
+    else:
+        assert not notes.exists()
+
+
+def test_reading_notes_cannot_substitute_for_pending_original_cache(tmp_path):
+    root, paper, _config_path, module = make_project(tmp_path)
+    notes = paper / "source/notes"
+    notes.mkdir()
+    (notes / "paper-notes.md").write_text("Detailed personal reading notes.\n", encoding="utf-8")
+    (paper / "source-cache/content.md").write_text("SOURCE CACHE STATUS: PENDING\n", encoding="utf-8")
+    assert invoke(root, "stage", "demo-paper", "W0", "complete").returncode == 0
+    result = invoke(root, "stage", "demo-paper", "W1", "complete")
+    assert result.returncode != 0
+    assert "pending scaffold" in result.stderr
+    config = load_config(paper / "paper.yaml")
+    assert config["workflow"]["stages"]["W1_source_cache"]["status"] == "pending"
+    assert module.v3_cache_data(paper)[1]
