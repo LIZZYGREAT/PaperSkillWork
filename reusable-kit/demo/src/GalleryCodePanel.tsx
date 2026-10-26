@@ -5,11 +5,11 @@ export function GalleryCodePanel({ title, code, source, level, notice }: {
   title: string;
   code: string;
   source: string;
-  level: "runnable" | "fragment";
+  level: "runnable" | "fragment" | "command";
   notice: string;
 }) {
   const [message, setMessage] = useState("");
-  const copyLabel = level === "runnable" ? "可运行示例" : "结构片段";
+  const copyLabel = level === "runnable" ? "可运行示例" : level === "command" ? "命令" : "结构片段";
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(code);
