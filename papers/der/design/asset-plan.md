@@ -176,7 +176,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'Supplementary results are preserved for citation checks; public reuse rights are unverified.'
     processing: 'No public derivative; cite rows as needed.'
-    evidence_refs: [C07]
+    evidence_refs: [R09]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -210,7 +210,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'Retained to qualify the one-epoch comparisons; no public reuse rights verified.'
     processing: 'No public derivative; cite the measured setting and discuss its limits.'
-    evidence_refs: [R07]
+    evidence_refs: [R08]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -227,7 +227,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'A secondary evaluation table, retained for source completeness; public image reuse rights are unverified.'
     processing: 'No public derivative; include only if a later narrative needs this metric.'
-    evidence_refs: [R07]
+    evidence_refs: [R08]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -244,7 +244,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'A secondary evaluation table, retained for source completeness; public image reuse rights are unverified.'
     processing: 'No public derivative; include only if a later narrative needs this metric.'
-    evidence_refs: [R07]
+    evidence_refs: [R08]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'

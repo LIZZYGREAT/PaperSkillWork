@@ -24,7 +24,7 @@ claims:
     conditions: '按论文印刷算法顺序解释；具体批次实现细节仍依实验设置。'
     allowed_wording: '本步训练先读旧记忆，在一次联合优化后再写入当前样本；不得写成先写当前样本再回放或刷新旧目标。'
   C05:
-    claim: 'DER++ 的历史输出匹配与标签分类来自两次独立的记忆采样调用，所采样集合可能重叠。'
+    claim: 'DER++ 的历史输出匹配与标签分类来自两次分开的记忆采样调用，所采样集合可能重叠。'
     type: PAPER_FACT
     source_locator: 'Algorithm 2, p. 4'
     conditions: '两次 sample 调用均从同一现有记忆读取。'
@@ -53,6 +53,12 @@ claims:
     source_locator: 'Section 4.1, p. 5; Appendix G.1, p. 20; Table 9, pp. 21–23'
     conditions: '仅指论文列出的对应标准 benchmark 配置。'
     allowed_wording: '描述结果时一并注明数据集、骨干和训练轮数；不同协议的结果不能只比较数值。'
+  C10:
+    claim: '论文从教师输出间的 KL 目标，过渡到有限记忆样本上的目标，再用单一 reservoir 形成 Eq. (5) 的函数输出约束动机。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3, Eq. (2)–(5)'
+    conditions: '论文从任务末尾蒸馏动机发展为在线记忆方案的理论叙述。'
+    allowed_wording: '可用作从旧函数行为到记忆 logits 的推导动机；不能说 DER 训练时永久保存历史教师网络。'
 results:
   R01:
     claim: 'S-CIFAR-10 Class-IL、K=500、ResNet18、50 epochs/task 的最终平均准确率为 ER 57.74±0.27、DER 70.51±1.67、DER++ 72.70±1.36。'
@@ -96,6 +102,18 @@ results:
     source_locator: 'Appendix F.3, p. 17, Table 5'
     conditions: '附录中特定单 epoch Class-IL 比较。'
     allowed_wording: '将其作为训练时长影响结果解释的限制；不能据此概括所有在线或单遍学习算法。'
+  R08:
+    claim: 'Appendix Tables 6–8 分别报告 Section 4.2 与 F.1 实验的前向迁移、后向迁移和遗忘指标。'
+    type: PAPER_RESULT
+    source_locator: 'Appendix F.4, Tables 6–8, pp. 18–20'
+    conditions: '使用附录定义的 FWT、BWT、FRG 指标及各表对应实验协议。'
+    allowed_wording: '作为附加迁移/遗忘指标引用时保留对应协议；不要将它们与最终平均准确率互换。'
+  R09:
+    claim: 'Appendix Table 4 报告 Sequential-MNIST 的 Class-IL 与 Task-IL 结果。'
+    type: PAPER_RESULT
+    source_locator: 'Appendix F.1, p. 16, Table 4'
+    conditions: '论文的 Sequential-MNIST 补充实验及各自评测协议。'
+    allowed_wording: '作为补充 benchmark 结果时注明 Sequential-MNIST 和 Class-IL/Task-IL 协议。'
 author_interpretations:
   AI01:
     claim: '作者将 S-CIFAR-10 的参数扰动损失和经验 Fisher 迹观察解释为 DER 解具有较平坦的局部区域。'
