@@ -16,10 +16,12 @@ The script recreates the selected scene in a disposable project, runs TypeScript
 
 The disposable project reuses the installed dependencies under `reusable-kit/demo/node_modules`; install the Demo dependencies with `npm.cmd ci --prefix reusable-kit/demo` if they are missing. The script does not use the old `.qa` trial directories, modify `papers/**`, or import Gallery CSS.
 
+Each launch creates a new `reusable-kit/demo/r4-<scene>-<random>/` directory so the real CLI can copy and build an independent scene without collisions. It stays present while the preview runs and is removed when the script exits normally or handles Ctrl+C. Its location allows the disposable project to resolve the Demo's existing dependencies. If the process is forcibly terminated or cleanup fails, inspect only that invocation's exact printed temporary directory before removing it; do not batch-delete older trials.
+
 ## Scenes
 
 - `network`: exact `MiniNetworkGlyph` Registry closure in a synthetic 2→3→1 sensor network, with a focus/restore interaction.
 - `matrix-reference`: a retained local calculation toy. The earlier trial correctly found that no Kit component expressed row-wise reduction and a shared mean reference. It is an example of choosing not to reuse.
 - `vector-clipping`: positive reuse of `RepresentationVector`, `ResponseMeter`, and `FlowConnector` for vector norm clipping. The scene owns its calculation and layout. Displayed values use at most two decimal places while internal calculations retain full precision.
 
-See [the R4 report](r4/REPORT.md) for the Registry closures, build results, screenshot provenance, and browser/full-screen checks that remain outstanding.
+See [the R4 report](r4/REPORT.md) for the Registry closures, current build/browser results, screenshot provenance, and the real F11 and human approval checks that remain outstanding.
