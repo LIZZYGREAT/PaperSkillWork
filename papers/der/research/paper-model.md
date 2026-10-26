@@ -1,6 +1,6 @@
 # Paper Model: Dark Experience for General Continual Learning: a Strong, Simple Baseline
 
-Paper ID: `der`。状态：W2 模型形成，**待用户语义评审，未记录人工 PASS**。
+Paper ID: `der`。状态：W2 模型形成，**用户已确认通过**。
 
 唯一原文：[arXiv:2004.07211v2](https://arxiv.org/abs/2004.07211v2)，2020-10-22，NeurIPS 2020，Pietro Buzzega、Matteo Boschini、Angelo Porrello、Davide Abati、Simone Calderara。本地 PDF 共 24 页，含正文、参考文献、附录 A–G；SHA-256 为 `e7dcafb05e9fd77e0524be8b98578cd884a9fe6455322beb2f4a6c4a383cd72e`。本文页码均为该 PDF 页码，与印刷页码一致。完整提取、图表和定位分别见 [content.md](../source-cache/content.md)、[manifest.json](../source-cache/manifest.json)、[evidence.json](../source-cache/evidence.json)。本模型处理原始 DER 及同篇 DER++。
 
@@ -31,9 +31,9 @@ Paper ID: `der`。状态：W2 模型形成，**待用户语义评审，未记录
 | 数据增强与一致性 | Helpful | 重新增强仍匹配同一历史目标 |
 | Fisher 迹、平坦性、ECE | Optional | 分析指标，不是 DER 训练模块 |
 
-本次已阅读三份笔记：[DER前置知识.md](../source/notes/DER前置知识.md)、[DER论文逻辑.md](../source/notes/DER论文逻辑.md)、[DER论文笔记.md](../source/notes/DER论文笔记.md)。采用前置知识的对象区分、reservoir 概率直觉和条件性 KL 推导；采用逻辑笔记的时间索引、空池启动与训练/预测分工；采用论文笔记的协议/结论边界线索。论文事实全部回查唯一原文。四个文件依用户要求从 `task/DER/source` 移入，笔记原文未改写，未并入原文缓存。
+本轮在本机读取了三份私人参考笔记（`DER前置知识.md`、`DER论文逻辑.md`、`DER论文笔记.md`），并将其作为理解与教学线索；论文事实全部回查唯一原文。笔记保存在 `papers/der/source/notes/`，该目录由 `.gitignore` 排除；本模型不链接或收录笔记内容，新 Git 检出无法取得这些私人文件，需由用户自行私下转移。
 
-三份笔记均可读、对应当前论文，没有图片或相对附件引用。《DER论文笔记》的 Obsidian 链接 `[[DER论文逻辑梳理]]` 与实际文件名 `DER论文逻辑.md` 不一致；本模型明确链接实际文件，保留原件。`[[DER前置知识]]` 可对应同目录文件。笔记是内部参考输入，其指令性措辞不改变阶段权限，正文及附件不自动公开。
+三份笔记均可读、对应当前论文，没有图片或相对附件引用。《DER论文笔记》的 Obsidian 链接 `[[DER论文逻辑梳理]]` 与实际文件名 `DER论文逻辑.md` 不一致；仅记录此映射，不修改私人原件。`[[DER前置知识]]` 可对应同目录文件。笔记是内部参考输入，其指令性措辞不改变阶段权限，正文及附件不自动公开。
 
 ## Objects and Variables
 
@@ -231,4 +231,4 @@ Appendix F 包含 Seq-MNIST（Table 4）、极小记忆 replay 变体（Figure 4
 
 本模型的分析边界：有限样本输出约束不是所有历史风险的硬约束；等概率不保证类别均衡；固定记录数不保证无限增类时固定字节开销。平坦性、校准、性能联系是经验分析，不构成唯一因果证明。动态扩头、旧 logits 对齐、重复图像去重、BN/随机状态等未被原算法完整规定，未用其他论文或现代代码补作原论文事实。
 
-待人工核对：接受披露的下降符号、记录格式、reservoir 计数消歧和空池补全；确认更新前 logits/更新后入池时序、DER++ 双采样及预测入口；确认笔记教学重排与原文顺序的区别、MNIST-360 测试时机与结果边界。W2 保持 `in_progress`，W3–W5 及页面开发尚未启动。
+W2 已由用户确认通过；审阅记录由阶段 CLI 保存。模型继续区分原文、规范化整理与空池教学补全，并保留 MNIST-360 测试时机和实验结果的条件边界。W3–W4 按计划继续，W5 与页面开发仍未开始。
