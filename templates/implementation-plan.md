@@ -37,6 +37,35 @@ For each confirmed page/state, record the approved effect or screenshot referenc
 
 For substantial motion, record the initial, key intermediate, and final states and the required object connections. Do not duplicate the same page contract in a new document.
 
+### Reusable Asset Composition Notes (W5 free text)
+
+Use this section for a scene that combines multiple Kit assets or an official example package. Keep `implementation.stages[].reusable_pattern` unchanged: it remains one existing Registry pattern ID or `null`, and must not be stretched into a description of a multi-asset composition. Record these notes here, in this existing plan, only when they help another implementer start without guessing.
+
+For each complex reusable scene, record:
+
+- Scene and teaching contract: goal; input; persistent and derived state; output; lifecycle; semantic, calculation, ordering, and connection invariants to protect.
+- Kit selection: every selected asset's exact Registry ID and responsibility; the matching Recipe or official `--example` package ID; what is composed locally for this paper.
+- Delivery evidence: the exact `scaffold-kit` command with `--dry-run`, the resolved publish source and copy destination, and the reported example files / asset dependency closure. Record the corresponding copy command after the dry-run is reviewed. For an official package use `--example <id>`; for independently selected parts use `--select AssetA,AssetB`. Those modes are mutually exclusive, so do not imply they can be combined in one invocation.
+- Exclusions: relevant Kit assets or Recipes considered but not used, with the reason; describe any custom implementation instead.
+- Change classification: mark each adaptation as scene layout, paper-data/semantic adaptation, or a suspected shared component defect. Keep scene changes local; verify a suspected shared defect against the asset's default use before changing Kit internals.
+
+Example handoff (replace every placeholder with real values and command output):
+
+```text
+Scene: <stage/page and short name>
+Goal / input / state / output: <...>
+Protected semantics and connections: <...>
+Assets: <RegistryID — role>; <RegistryID — role>
+Recipe or package: <Recipe path or --example ID>; local composition: <files/responsibilities>
+Dry run: python tools/paper.py scaffold-kit <paper-id> --select <RegistryID,...> --dry-run
+Resolved source / destination / closure: <exact paths and reported files>
+Copy: <same command without --dry-run>
+Considered but excluded: <asset or Recipe — reason>
+Adaptations: <layout | data/semantics | suspected shared defect — evidence>
+```
+
+For a complete package, replace the `--select` commands with the package's actual `--example` command and record both the example files and Kit asset closure. Do not copy Gallery-only styles or leave CSS, imports, or other dependencies implicit.
+
 ### Critical Teaching and Integration Scenes
 
 Use this section only for scenes whose algorithmic meaning depends on coordinated text, graphics, formulas, data, or motion. Ordinary prose pages do not need a frame contract.
