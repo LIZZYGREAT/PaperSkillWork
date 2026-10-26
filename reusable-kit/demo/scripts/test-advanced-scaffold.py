@@ -1,4 +1,4 @@
-"""Compile and operate real recipes and every Registry minimal usage in isolation."""
+"""Copy, compile and operate the documented Kit example deliveries in isolation."""
 import json
 import os
 from pathlib import Path
@@ -7,73 +7,72 @@ import subprocess
 import sys
 import tempfile
 
-import yaml
 
 REPO = Path(__file__).resolve().parents[3]
 
 
 def run(args, cwd):
-    print('COMMAND:', subprocess.list2cmdline([str(a) for a in args]), flush=True)
-    subprocess.run([str(a) for a in args], cwd=cwd, check=True)
+    print('COMMAND:', subprocess.list2cmdline([str(arg) for arg in args]), flush=True)
+    subprocess.run([str(arg) for arg in args], cwd=cwd, check=True)
+
+
+def output(args, cwd):
+    print('COMMAND:', subprocess.list2cmdline([str(arg) for arg in args]), flush=True)
+    return subprocess.run([str(arg) for arg in args], cwd=cwd, text=True, capture_output=True, check=True)
 
 
 def main():
-    parent = Path(tempfile.gettempdir()).resolve()
-    root = Path(tempfile.mkdtemp(prefix='kit-advanced-scaffold-', dir=parent)).resolve()
+    qa = REPO / '.qa'
+    qa.mkdir(exist_ok=True)
+    root = Path(tempfile.mkdtemp(prefix='kit-advanced-scaffold-', dir=qa)).resolve()
     print('ISOLATED_ROOT:', root, flush=True)
     succeeded = False
     try:
         for name in ('tools', 'templates', 'reusable-kit'):
-            shutil.copytree(REPO / name, root / name, ignore=shutil.ignore_patterns('node_modules', 'dist', 'test-results', '__pycache__', 'demo'))
+            shutil.copytree(REPO / name, root / name, ignore=shutil.ignore_patterns('node_modules', 'dist', 'test-results', 'playwright-report', '__pycache__', 'demo'))
+        shutil.copy2(REPO / '.gitignore', root / '.gitignore')
         (root / 'papers').mkdir()
         cli = [sys.executable, root / 'tools/paper.py']
-        run([*cli, 'new', 'copy-check', '--title', 'Independent source copy check', '--url', 'https://example.org/copy-check'], root)
-        run([*cli, 'scaffold-kit', 'copy-check', '--select', 'MiniNetworkGlyph', '--allow-unapproved'], root)
+        run([*cli, 'new', 'copy-check', '--title', 'Independent example delivery check', '--url', 'https://example.org/copy-check'], root)
         web = root / 'papers/copy-check/web/enhanced'
         shared = web / 'src/shared'
-        assert len([p for p in shared.rglob('*') if p.is_file()]) == 5, 'Minimal Glyph copied excess source'
-        css = shared / 'foundation/styles/kit.css'
-        css.write_text(css.read_text(encoding='utf-8') + '\n/* paper-owned local edit */\n', encoding='utf-8')
-        owned_css = css.read_bytes()
-        selected = 'SampleToken,FeatureBlocks,FeatureAggregation,RepresentationVector,ResponseMeter,FlowConnector,SemanticMark,useAnimationTimeline,MathTypography,EditorialTypography'
-        run([*cli, 'scaffold-kit', 'copy-check', '--select', selected, '--allow-unapproved'], root)
-        assert css.read_bytes() == owned_css, 'Incremental copy overwrote a local edit'
-        assert not (shared / 'foundation/controls/Button.tsx').exists()
 
-        exports = []
-        for recipe, filename, style, names in [
-            ('mini-network-glyph', 'NetworkExamples', 'network-examples', ['LocalNetworkExample', 'ParallelModelsExample']),
-            ('animation-timeline', 'ForwardTimelineExample', 'forward-timeline-example', ['ForwardTimelineExample']),
-            (None, 'RetrievalExample', 'retrieval-example', ['RetrievalExample']),
-            (None, 'PartsSpecimen', 'parts-specimen', ['PartsSpecimen']),
-            (None, 'VisualSpecimen', 'visual-specimen', ['VisualSpecimen']),
-        ]:
-            actual = (REPO / f'reusable-kit/demo/src/examples/{filename}.tsx').read_text(encoding='utf-8').replace('../../../foundation/', './shared/foundation/')
-            style_source = (REPO / f'reusable-kit/demo/src/examples/{style}.css').read_text(encoding='utf-8')
-            if recipe:
-                text = (REPO / f'reusable-kit/recipes/{recipe}.md').read_text(encoding='utf-8')
-                assert text.split('```tsx\n', 1)[1].split('```', 1)[0] == actual, f'{recipe} TSX drift'
-                assert text.split('```css\n', 1)[1].split('```', 1)[0] == style_source, f'{recipe} CSS drift'
-            (web / f'src/{filename}.tsx').write_text(actual, encoding='utf-8')
-            (web / f'src/{style}.css').write_text(style_source, encoding='utf-8')
-            exports.append((filename, names))
-        registry = yaml.safe_load((root / 'reusable-kit/registry.yaml').read_text(encoding='utf-8'))['components']
-        snippets, imports = [], []
-        for name, entry in registry.items():
-            if 'usage' in entry:
-                source = entry['source'].rsplit('.', 1)[0]
-                imports.append(f'import {{ {name} }} from "./shared/{source}";')
-                snippets.append(entry['usage'])
-        (web / 'src/RegistryExamples.tsx').write_text('\n'.join(imports) + '\nexport function RegistryExamples(){return <div data-registry-examples>' + ''.join(snippets) + '</div>}', encoding='utf-8')
-        exports.append(('RegistryExamples', ['RegistryExamples']))
-        imports = '\n'.join(f'import {{ {", ".join(names)} }} from "./{file}";' for file, names in exports)
-        components = ''.join(f'<{name} />' for _, names in exports for name in names)
-        (web / 'src/App.tsx').write_text(imports + '\nimport "./shared/foundation/styles/kit.css";\nexport default function App(){return <main style={{maxWidth:1160, margin:"24px auto", padding:20, fontFamily:"var(--rk-font-body)"}}>' + components + '</main>}', encoding='utf-8')
+        for example in ('shared-input-models', 'vector-retrieval'):
+            preview = output([*cli, 'scaffold-kit', 'copy-check', '--example', example, '--allow-unapproved', '--dry-run'], root)
+            plan = json.loads(preview.stdout)
+            assert plan['examples'] == [example]
+            assert plan['destination'] == str(shared.resolve())
+            assert f'examples/{example}/README.md' in plan['example_files']
+            assert f'examples/{example}/index.ts' in plan['example_files']
+            run([*cli, 'scaffold-kit', 'copy-check', '--example', example, '--allow-unapproved'], root)
+            for relative in plan['files']:
+                assert (shared / relative).is_file(), f'Missing copied delivery file: {relative}'
+                if relative.startswith(f'examples/{example}/'):
+                    assert (shared / relative).read_bytes() == (root / 'reusable-kit' / relative).read_bytes(), f'Delivery source drift: {relative}'
+
+        manifest = json.loads((shared / 'KIT_SELECTION.json').read_text(encoding='utf-8'))
+        assert set(manifest['examples']) == {'shared-input-models', 'vector-retrieval'}
+        assert {'MiniNetworkGlyph', 'SampleToken', 'FlowConnector', 'SemanticMark', 'RepresentationVector', 'ResponseMeter'}.issubset(set(manifest['components']))
+        assert not (shared / 'foundation/controls/Button.tsx').exists()
+        assert not (shared / 'pattern-gallery.css').exists()
+        assert (shared / 'examples/shared-input-models/network-examples.css').is_file()
+        assert (shared / 'examples/vector-retrieval/retrieval-example.css').is_file()
+
+        app = '''import './shared/foundation/styles/kit.css';
+import { ParallelModelsExample } from './shared/examples/shared-input-models';
+import { RetrievalExample } from './shared/examples/vector-retrieval';
+
+export default function App() {
+  return <main><ParallelModelsExample /><RetrievalExample /></main>;
+}
+'''
+        (web / 'src/App.tsx').write_text(app, encoding='utf-8')
         npm = shutil.which('npm.cmd' if os.name == 'nt' else 'npm')
         node = shutil.which('node')
         assert npm and node
         run([npm, 'ci', '--prefer-offline', '--no-audit', '--no-fund'], web)
         run([npm, 'run', 'build'], web)
+
         script = r'''
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
@@ -85,51 +84,38 @@ const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','
 let browser;
 try {
  const url=`http://127.0.0.1:${port}/`;
- for(let i=0;i<100;i++){try{if((await fetch(url)).ok)break;}catch{} await delay(100);}
+ let ready=false;
+ for(let i=0;i<100;i++){try{if((await fetch(url)).ok){ready=true;break;}}catch{} await delay(100);}
+ assert(ready,'isolated preview server did not become ready');
  browser=await chromium.launch({headless:true,...(process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE?{executablePath:process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE}:{})});
  const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});
  const errors=[]; page.on('pageerror',e=>errors.push(e.message)); page.on('response',r=>{if(r.status()>=400)errors.push(r.url());});
  await page.goto(url);
- const local=page.locator('[data-network-example="local"]');
- assert.equal(await local.locator('[data-network-edge]').count(),30);
- await local.getByRole('button').click();
- assert.equal(await local.locator('[data-network-edge].is-focused').count(),2);
- const forward=page.locator('[data-timeline-example="forward"]');
- for(const id of ['sample','extractor','representation','scores','responses']){
-  await forward.locator(`[data-stage-target="${id}"]`).click();
-  for(const selector of ['.pg-forward-system','.pg-forward-note','.pg-forward-output']) assert.equal(await forward.locator(selector).getAttribute('data-stage'),id);
- }
- assert.deepEqual(await forward.locator('.pg-class-scores meter').evaluateAll(ns=>ns.map(n=>n.value)),[2,0,-1]);
- assert.deepEqual(await forward.locator('.pg-class-responses meter').evaluateAll(ns=>ns.map(n=>n.value)),[2,0,-1].map(v=>1/(1+Math.exp(-v))));
- // A copied paper can theme the shared palette without any Gallery overrides.
- await page.evaluate(()=>{const el=document.documentElement;
-  el.style.setProperty('--rk-accent-soft','rgb(220, 234, 214)');
-  el.style.setProperty('--rk-warn-soft','rgb(250, 237, 211)');
- });
- for(const selector of ['.rk-vector-coordinate__positive i','.pg-class-scores [data-value="2"] .rk-response-meter__fill','.pg-class-responses .rk-response-meter__fill']){
-  assert.equal(await page.locator(selector).first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(220, 234, 214)');
- }
- assert.equal(await page.locator('.rk-feature-aggregation__bar').first().evaluate(el=>getComputedStyle(el).fill),'rgb(220, 234, 214)');
- for(const selector of ['.rk-vector-coordinate__negative i','.pg-class-scores [data-value="-1"] .rk-response-meter__fill']){
-  assert.equal(await page.locator(selector).first().evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(250, 237, 211)');
- }
- await page.evaluate(()=>{const el=document.documentElement;el.style.removeProperty('--rk-accent-soft');el.style.removeProperty('--rk-warn-soft');});
+ const models=page.locator('[data-network-example="parallel"]');
+ assert.equal(await models.locator('[data-model-path="teacher"][data-from="x"]').count(),1);
+ assert.equal(await models.locator('[data-model-path="student"][data-from="x"]').count(),1);
+ assert.equal(await models.locator('.pg-model[data-model-identity="frozen"] .rk-mini-network').count(),1);
+ assert.equal(await models.locator('.pg-model[data-model-identity="trainable"] .rk-mini-network').count(),1);
+ assert.equal(await models.locator('.pg-model-output').count(),2);
+ assert.equal(await models.locator('.pg-shared-input').evaluate(el=>getComputedStyle(el,'::after').height),'18px');
+ assert.equal(await models.locator('.pg-model-paths').evaluate(el=>getComputedStyle(el,'::before').height),'1px');
  const retrieval=page.locator('[data-retrieval-query]');
- await retrieval.getByRole('button').click();
+ assert.deepEqual(await retrieval.locator('meter').evaluateAll(ns=>ns.map(n=>n.value)),[2,-0.5]);
+ await retrieval.getByRole('button',{name:'切换查询向量'}).click();
+ assert.equal(await retrieval.getAttribute('data-retrieval-query'),'1');
  assert.deepEqual(await retrieval.locator('meter').evaluateAll(ns=>ns.map(n=>n.value)),[-1,1.5]);
- assert.equal(await page.locator('[data-registry-examples] > *').count(),__SNIPPETS__);
- assert.equal(await page.locator('[role="alert"]').count(),0);
+ assert.match(await retrieval.locator('p[role="status"]').innerText(),/候选 b，1\.5/);
  for(const width of [1440,1920,390]){await page.setViewportSize({width,height:900});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${width}`);}
  assert.deepEqual(errors,[]);
- console.log('SCAFFOLD_BROWSER=PASS: exact three-file Glyph, incremental edits, Registry usages, real scenes, shared palette theming, synchronized state, signed retrieval, 390/1440/1920 and no Gallery stylesheet');
+ console.log('EXAMPLE_DELIVERY=PASS: exact package source/CSS, resolved copy target, shared input reaches both model paths, interactive dot-product retrieval, 390/1440/1920 and no Gallery CSS');
 }finally{await browser?.close(); server.kill();}
-'''.replace('__PLAYWRIGHT__', json.dumps((REPO / 'reusable-kit/demo/node_modules/playwright/index.mjs').as_uri())).replace('__WEB__', json.dumps(str(web))).replace('__SNIPPETS__', str(len(snippets)))
+'''.replace('__PLAYWRIGHT__', json.dumps((REPO / 'reusable-kit/demo/node_modules/playwright/index.mjs').as_uri())).replace('__WEB__', json.dumps(str(web)))
         (root / 'check-browser.mjs').write_text(script, encoding='utf-8')
         run([node, root / 'check-browser.mjs'], root)
         succeeded = True
     finally:
         if succeeded:
-            assert root.parent == parent and root.name.startswith('kit-advanced-scaffold-') and not root.is_symlink()
+            assert root.parent == qa.resolve() and root.name.startswith('kit-advanced-scaffold-') and not root.is_symlink()
             shutil.rmtree(root)
             assert not root.exists()
             print('SCAFFOLD_CLEANED:', root, flush=True)

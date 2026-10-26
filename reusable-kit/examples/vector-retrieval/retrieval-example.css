@@ -1,0 +1,11 @@
+.retrieval-example { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(24px, 5vw, 72px); align-items: center; padding-block: 48px; border-block: 1px solid var(--rk-line); }
+.retrieval-example__copy { display: grid; gap: 24px; }
+.retrieval-example__copy button { justify-self: start; padding: 12px 18px; border: 1px solid var(--rk-accent); border-radius: 6px; color: var(--rk-accent-strong); background: var(--rk-surface); font: inherit; cursor: pointer; }
+.retrieval-example__copy button:focus-visible { outline: 2px solid var(--rk-focus); outline-offset: 3px; }
+.retrieval-example__comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; padding: 24px; background: var(--rk-surface); }
+.retrieval-example__query { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 36px; align-items: center; justify-content: center; padding-bottom: 24px; border-bottom: 1px solid var(--rk-line); }
+.retrieval-example__result { display: grid; gap: 24px; min-width: 0; }
+.retrieval-example__comparison > p { grid-column: 1 / -1; font-size: 14px; }
+.retrieval-example__scale { margin: 0; color: var(--rk-muted); text-align: center; }
+@media (max-width: 900px) { .retrieval-example { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 500px) { .retrieval-example__comparison { grid-template-columns: minmax(0, 1fr); } }

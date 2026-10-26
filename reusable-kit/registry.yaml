@@ -123,6 +123,16 @@ components:
     dependencies:
     - foundation/styles/kit.css
     purpose: 滚动解释同一系统
+    catalog: featured
+    capabilities:
+    - sticky system view
+    - synchronized story and system focus
+    teaching:
+      inputs: [多个叙事段落, 同一组系统对象]
+      outputs: [随滚动更新的当前步骤]
+      relations: [正文步骤与持久系统图形]
+      mechanisms: [滚动同步, 手动步骤选择]
+      keywords: [滚动同步, 滚动联动, 叙事阶段]
     use_when: 多个叙事段落指向同一组系统对象。
     avoid_when: 不把所有页面强行变成粘性长叙事。
     demo_anchor: gallery-scroll
@@ -138,6 +148,16 @@ components:
     dependencies:
     - foundation/styles/kit.css
     purpose: 分支与汇合 · 明确数据和梯度方向
+    catalog: featured
+    capabilities:
+    - measured multi-node arrows
+    - branch and convergence diagrams
+    teaching:
+      inputs: [多个对象, 有向连接]
+      outputs: [标记类型与端点的关系图]
+      relations: [分支, 汇合, 数据流, 梯度流]
+      mechanisms: [箭头方向, 端口定位, 窄屏关系列表]
+      keywords: [梯度关系, 多节点连接, 分支关系]
     use_when: 多个对象的有向关系，需要端点和窄屏语义列表。
     avoid_when: 不要把并列装饰元素随意画成算法关系。
     demo_anchor: gallery-diagrams
@@ -354,6 +374,16 @@ components:
     - foundation/styles/kit.css
     - foundation/math/mathml-jsx.d.ts
     purpose: 文字与公式逐项对应
+    catalog: featured
+    capabilities:
+    - interactive equation terms
+    - linked formula definitions
+    teaching:
+      inputs: [公式, 符号解释]
+      outputs: [可逐项查看的符号含义]
+      relations: [公式符号与正文解释]
+      mechanisms: [符号聚焦, 逐项联动]
+      keywords: [公式解释, 符号对应]
     use_when: 公式符号需要与解释联动。
     avoid_when: 单行静态数学可直接使用 MathML。
     demo_anchor: gallery-typography
@@ -377,6 +407,16 @@ components:
     dependencies:
     - foundation/styles/kit.css
     purpose: 聚焦神经网络某条连接 · 并行模型
+    catalog: featured
+    capabilities:
+    - small neural network topology
+    - layer, node and edge emphasis
+    teaching:
+      inputs: [层, 节点, 指定连接]
+      outputs: [标注关系的局部网络图]
+      relations: [层间连接, 共享输入与并行模型]
+      mechanisms: [连接聚焦, 稀疏层布局, 冻结与可训练模型身份]
+      keywords: [网络局部连接, 冻结与训练模型, 共享输入]
     use_when: 呈现小型拓扑，保留层、节点和边 ID；共享输入的独立模型由 Recipe 组合。
     avoid_when: 不能替代 CNN 特征图或整篇论文的机制场景。
     demo_anchor: gallery-mini-network
@@ -393,6 +433,16 @@ components:
     dependencies:
     - foundation/styles/kit.css
     purpose: 从输入图像到分类响应做阶段讲解
+    catalog: featured
+    capabilities:
+    - one synchronized animation clock
+    - step, pause and replay controls
+    teaching:
+      inputs: [有序阶段, 调用方计算]
+      outputs: [同步的图形, 文案, 公式与导航]
+      relations: [阶段顺序, 输入到响应]
+      mechanisms: [单一时间源, 暂停, 单步与重播]
+      keywords: [样本到得分, 阶段讲解, 时间同步]
     use_when: 一个时钟同步图形、说明、公式与导航；调用方拥有计算。
     avoid_when: 不作为论文计算引擎；不要每个视图各自建立时钟。
     demo_anchor: gallery-timeline
@@ -406,6 +456,16 @@ components:
     - foundation/styles/kit.css
     category: visual-part
     purpose: 输入对象与样本身份
+    catalog: featured
+    capabilities:
+    - sample identity marker
+    - pixel or caller-provided input tile
+    teaching:
+      inputs: [样本 ID, 输入内容]
+      outputs: [身份明确的输入对象]
+      relations: [同一样本与后续中间量]
+      mechanisms: [样本身份标记, 输入图块]
+      keywords: [输入样本, 样本到特征表示]
     use_when: 独立输入图块，或为场景中的调用方内容标注 ID。
     avoid_when: 不内置数据集；其他模态应由调用方提供内容。
     demo_anchor: gallery-parts
@@ -420,6 +480,16 @@ components:
     - foundation/styles/kit.css
     category: visual-part
     purpose: 卷积与深层特征
+    catalog: featured
+    capabilities:
+    - feature extraction blocks
+    - active processing emphasis
+    teaching:
+      inputs: [样本或上一步表示]
+      outputs: [特征处理示意]
+      relations: [输入与中间特征表示]
+      mechanisms: [局部特征处理路径]
+      keywords: [样本到特征表示, 卷积特征]
     use_when: 说明特征处理路径，或独立标记特征块。
     avoid_when: 不能从堆叠数推断真实层数或通道数。
     demo_anchor: gallery-parts
@@ -434,6 +504,16 @@ components:
     - foundation/styles/kit.css
     category: visual-part
     purpose: 特征聚合
+    catalog: featured
+    capabilities:
+    - feature aggregation glyph
+    - active step emphasis
+    teaching:
+      inputs: [多个特征响应]
+      outputs: [聚合步骤示意]
+      relations: [特征到聚合表示]
+      mechanisms: [聚合阶段标记]
+      keywords: [特征聚合, 中间量]
     use_when: 为调用方的聚合步骤提供独立图元。
     avoid_when: 不推断池化算子或输出维度。
     demo_anchor: gallery-parts
@@ -448,6 +528,16 @@ components:
     - foundation/styles/kit.css
     category: visual-part
     purpose: 呈现中间表示
+    catalog: featured
+    capabilities:
+    - signed vector coordinates
+    - comparable representation values
+    teaching:
+      inputs: [带符号的有限数值]
+      outputs: [逐维显示的向量表示]
+      relations: [特征与向量得分]
+      mechanisms: [正负坐标, 显式数值尺度]
+      keywords: [样本到特征表示, 向量得分, 中间表示]
     use_when: 查看带符号向量，比较不同状态的坐标值。
     avoid_when: 不计算向量，不擅自归一化；大向量应选择有意义的投影。
     demo_anchor: gallery-parts
@@ -462,6 +552,16 @@ components:
     - foundation/styles/kit.css
     category: visual-part
     purpose: 原始得分与响应尺度
+    catalog: featured
+    capabilities:
+    - signed numeric score meter
+    - caller-defined value range
+    teaching:
+      inputs: [原始分数, 显式数值范围]
+      outputs: [带零点的得分位置]
+      relations: [向量与线性得分]
+      mechanisms: [负分显示, 零点定位, 数值更新]
+      keywords: [向量得分, 内积得分, 原始响应]
     use_when: 在明确尺度内展示数值；支持负得分和动态输入。
     avoid_when: 不假定概率、sigmoid、softmax 或最终预测。
     demo_anchor: gallery-parts
@@ -476,6 +576,16 @@ components:
     - foundation/styles/kit.css
     category: visual-part
     purpose: 区分信号方向
+    catalog: featured
+    capabilities:
+    - local directional connector
+    - data, control, gradient and reference signal styles
+    teaching:
+      inputs: [连接两侧的内容, 信号类别, 方向]
+      outputs: [带方向与类型的局部连接]
+      relations: [输入输出, 控制信号, 梯度关系]
+      mechanisms: [右向, 左向与向下箭头]
+      keywords: [梯度关系, 局部连接, 数据流方向]
     use_when: 连接局部步骤，以文字与线型区分数据、控制、梯度、参照。
     avoid_when: 多节点复杂关系用 DiagramFlow；方向须由场景明确给出。
     demo_anchor: gallery-parts
@@ -490,6 +600,15 @@ components:
     - foundation/styles/kit.css
     category: visual-part
     purpose: 标记模型身份
+    catalog: featured
+    capabilities:
+    - frozen, trainable and reference identity labels
+    teaching:
+      inputs: [模型或参数的训练身份]
+      outputs: [可见的冻结, 可训练或参照标签]
+      relations: [模型身份与内部网络]
+      mechanisms: [冻结模型标记, 训练模型标记, 参数继承说明]
+      keywords: [冻结与训练模型, 参数冻结, 参数可训练, 参数继承]
     use_when: 为模型外层标记冻结、可训练或参照身份。
     avoid_when: 不要把训练身份当作当前 focus。
     demo_anchor: gallery-parts
@@ -505,6 +624,16 @@ components:
     - foundation/math/mathml-jsx.d.ts
     category: typography
     purpose: 编辑式标题与图文编排
+    catalog: featured
+    capabilities:
+    - editorial headline and annotation styles
+    - asymmetric text and figure composition
+    teaching:
+      inputs: [标题, 正文, 图形]
+      outputs: [层级明确的图文编排]
+      relations: [结论与视觉主体, 主文与侧注]
+      mechanisms: [字级, 留白, 标题强调]
+      keywords: [编辑式页面, 标题层次, 图文关系]
     use_when: 需要标题强调、侧注和非对称图文关系。
     avoid_when: 不固定整页结构，也不要求每节重复 Hero。
     demo_anchor: gallery-specimen

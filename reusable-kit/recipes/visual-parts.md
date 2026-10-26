@@ -23,6 +23,13 @@ python tools/paper.py scaffold-kit <paper-id> --select SampleToken,Representatio
 python tools/paper.py scaffold-kit <paper-id> --select SampleToken,RepresentationVector,ResponseMeter --allow-unapproved
 ```
 
-查看新场景：`demo/src/examples/RetrievalExample.tsx` 与 `retrieval-example.css`。这是合成向量的原始内积检索，查询、候选、最大值归场景所有；它不使用分类输出头。将这两个文件复制到使用方的 src 中，把 `../../../foundation/` 全部替换成 `./shared/foundation/`。同时选择 `EditorialTypography` 以使用图文排版语言。渲染 `<RetrievalExample />` 即可运行；隔离复制检查实际编译并操作此源码。
+单独复制这些图元时，使用上方 `--select` 命令和精确依赖闭包。需要一个完整的非分类计算组合时，使用 Gallery 实际运行的 `vector-retrieval` 交付单元：
 
-另有 PartsSpecimen：需要全部七种小件与 MiniNetworkGlyph，其 CSS 是样张布局；三个密度的网络分别使用 Glyph 的 compact / standard / inspect，无内部 override。
+```sh
+python tools/paper.py scaffold-kit <paper-id> --example vector-retrieval --allow-unapproved --dry-run
+python tools/paper.py scaffold-kit <paper-id> --example vector-retrieval --allow-unapproved
+```
+
+它把同一份 TSX、独立场景 CSS、入口文件、README 和 `SampleToken`、`RepresentationVector`、`ResponseMeter` 依赖一起复制到 `src/shared/examples/vector-retrieval/` 与 `src/shared/foundation/`。在 App 入口导入 Kit 样式，再从 `./shared/examples/vector-retrieval` 导入 `RetrievalExample`。包 README 列出查询向量、候选向量、标签和分数定义的替换位置。样例仅演示合成向量的原始内积与最大值选择，不归一化，也不表示分类概率或论文结果。
+
+另有 PartsSpecimen：需要全部七种小件与 MiniNetworkGlyph，其 CSS 是展厅材质样张布局，并非交付单元。七件分别使用各自 Registry 源码和复制闭包；三个密度的网络分别使用 Glyph 的 compact / standard / inspect。
