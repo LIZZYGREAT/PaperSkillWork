@@ -92,8 +92,10 @@ export function App() {
         <article className="clip-card clip-card--vector clip-card--output" data-stage="clipped">
           <p className="clip-card__meta">04 <span>CLIPPED GRADIENT</span></p>
           <div className="clip-card__vector"><RepresentationVector values={result.clipped.map(number)} extent={5} label="Clipped gradient g′" /></div>
-          <p className="clip-card__equation">g′ = αg = ({signed(result.clipped[0])}, {signed(result.clipped[1])})</p>
-          <p className="clip-card__detail">‖g′‖₂ = {number(result.clippedNorm)} ≤ c = {number(inputs.threshold)}</p>
+          <p className="clip-card__equation">
+            g′ = αg = ({signed(result.clipped[0])}, {signed(result.clipped[1])})<br />
+            ‖g′‖₂ = {number(result.clippedNorm)} ≤ c = {number(inputs.threshold)}
+          </p>
         </article>
       </div>
 
