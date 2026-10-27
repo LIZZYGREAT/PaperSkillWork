@@ -30,15 +30,15 @@
       {"selector": ".review-page .equation math", "property": "font-size", "equals": "22px"}
     ],
     "states": [
-      {"id": "kl-default", "actions": [{"type": "scrollIntoView", "selector": ".kl-workspace"}], "animations": "disabled"},
-      {"id": "kl-negative", "actions": [{"type": "click", "selector": "[data-kl-category='1']"}, {"type": "click", "selector": "[data-formula-select='2']"}, {"type": "click", "selector": "[data-kl-step='2']"}, {"type": "scrollIntoView", "selector": ".kl-workspace"}], "animations": "disabled"},
-      {"id": "kl-sum", "actions": [{"type": "click", "selector": "[data-formula-select='3']"}, {"type": "scrollIntoView", "selector": ".kl-workspace"}], "animations": "disabled"},
-      {"id": "score-differences", "actions": [{"type": "click", "selector": "[data-logit-step='1']"}, {"type": "scrollIntoView", "selector": ".score-workspace"}], "animations": "disabled"},
-      {"id": "score-common-shift", "actions": [{"type": "click", "selector": "[data-review-a='shifted']"}, {"type": "click", "selector": "[data-logit-step='3']"}, {"type": "scrollIntoView", "selector": ".score-workspace"}], "animations": "disabled"},
-      {"id": "freeze-before", "actions": [{"type": "scrollIntoView", "selector": ".freeze-workspace"}], "animations": "disabled"},
-      {"id": "freeze-updated", "actions": [{"type": "click", "selector": "[data-freeze-step='2']"}, {"type": "scrollIntoView", "selector": ".freeze-workspace"}], "animations": "disabled"},
-      {"id": "freeze-candidate", "actions": [{"type": "click", "selector": "[data-freeze-step='3']"}, {"type": "scrollIntoView", "selector": ".freeze-workspace"}], "animations": "disabled"},
-      {"id": "softmax-reference", "actions": [{"type": "click", "selector": ".site-header .text-button"}, {"type": "click", "selector": "[data-reference-term='softmax']"}], "animations": "disabled"}
+      {"id": "kl-default", "actions": [{"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},
+      {"id": "kl-negative", "actions": [{"type": "selectOption", "selector": "[data-scene=\"kl\"] select", "value": "4"}, {"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},
+      {"id": "kl-sum", "actions": [{"type": "selectOption", "selector": "[data-scene=\"kl\"] select", "value": "5"}, {"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},
+      {"id": "score-differences", "actions": [{"type": "selectOption", "selector": "[data-scene=\"logits\"] select", "value": "1"}, {"type": "scrollIntoView", "selector": "[data-scene=\"logits\"] .motion-canvas"}]},
+      {"id": "score-common-shift", "actions": [{"type": "click", "selector": "[data-scene=\"logits\"] [data-case=\"shifted\"]"}, {"type": "selectOption", "selector": "[data-scene=\"logits\"] select", "value": "3"}, {"type": "scrollIntoView", "selector": "[data-scene=\"logits\"] .motion-canvas"}]},
+      {"id": "freeze-before", "actions": [{"type": "scrollIntoView", "selector": "[data-scene=\"freeze\"] .motion-canvas"}]},
+      {"id": "freeze-updated", "actions": [{"type": "selectOption", "selector": "[data-scene=\"freeze\"] select", "value": "2"}, {"type": "scrollIntoView", "selector": "[data-scene=\"freeze\"] .motion-canvas"}]},
+      {"id": "freeze-candidate", "actions": [{"type": "selectOption", "selector": "[data-scene=\"freeze\"] select", "value": "3"}, {"type": "scrollIntoView", "selector": "[data-scene=\"freeze\"] .motion-canvas"}]},
+      {"id": "softmax-reference", "actions": [{"type": "click", "selector": ".site-header .text-button"}, {"type": "click", "selector": "[data-reference-term=\"softmax\"]"}]}
     ]
   }],
   "geometry": {

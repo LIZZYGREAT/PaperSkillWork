@@ -47,5 +47,3 @@ export function freezeSceneAt(clip: number, progress: number) {
     outputCount: Math.floor(clamp((forward - .45) / .55) * 3 + 1e-9),
     recordId: "x2@t", z: HISTORY_Z, inMemory: false };
 }
-
-

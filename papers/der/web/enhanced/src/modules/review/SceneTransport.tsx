@@ -16,7 +16,8 @@ export function useSceneTimeline(clips: readonly TimelineClip[]) {
       timeline.controls.goToClip(state.clipIndex < clips.length - 1 ? state.clipIndex + 1 : 0, { autoPlay: true });
     } else timeline.controls.toggle();
   };
-  return { state, reducedMotion, jump, reset, toggle,
+  const elapsedSeconds = (clips.slice(0, state.clipIndex).reduce((sum, clip) => sum + timelineClipTotal(clip), 0) + state.elapsedMs) / 1000;
+  return { state, elapsedSeconds, reducedMotion, jump, reset, toggle,
     replay: () => { setInspect(false); timeline.controls.goToClip(0, { autoPlay: true }); } };
 }
 export type SceneTimeline = ReturnType<typeof useSceneTimeline>;

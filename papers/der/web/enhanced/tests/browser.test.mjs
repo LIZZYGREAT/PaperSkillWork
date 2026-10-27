@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { spawn } from "node:child_process";
-import { mkdir } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
+import { createServer } from "node:http";
+import { mkdir, readFile } from "node:fs/promises";
+import { resolve, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { reviewPrototypeChecks } from "./review-prototypes.mjs";
 
@@ -14,22 +14,25 @@ const source = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const base = "http://127.0.0.1:4196/der-review/";
 const executablePath = process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE || "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
 const output = process.env.DER_REVIEW_DIR;
-const server = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "preview", "--configLoader", "runner", "--host", "127.0.0.1", "--port", "4196", "--strictPort", "--base", "/der-review/"], { cwd: source, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
-let serverLog = "";
-server.stdout.on("data", (data) => { serverLog += data; });
-server.stderr.on("data", (data) => { serverLog += data; });
+// Serve the exact production dist in this process; no cross-sandbox child service.
+const dist = resolve(source, "dist");
+const server = createServer(async (req, res) => {
+  try {
+    const pathname = decodeURIComponent(new URL(req.url, base).pathname);
+    if (!pathname.startsWith("/der-review/")) { res.writeHead(404); res.end(); return; }
+    const file = resolve(dist, pathname.slice("/der-review/".length) || "index.html");
+    if (!file.startsWith(dist + sep)) { res.writeHead(403); res.end(); return; }
+    const data = await readFile(file);
+    res.setHeader("Content-Type", file.endsWith(".js") ? "application/javascript" : file.endsWith(".css") ? "text/css" : file.endsWith(".svg") ? "image/svg+xml" : "text/html");
+    res.end(data);
+  } catch { res.writeHead(404); res.end(); }
+});
 let browser;
 let assertions = 0;
 const check = (condition, message) => { assertions += 1; assert.ok(condition, message); };
 
 async function ready() {
-  const until = Date.now() + 30000;
-  while (Date.now() < until) {
-    if (server.exitCode !== null) throw new Error(serverLog);
-    try { if ((await fetch(base)).ok) return; } catch { /* Wait for this owned server. */ }
-    await new Promise((done) => setTimeout(done, 250));
-  }
-  throw new Error(`Preview not ready: ${serverLog}`);
+  await new Promise((done, reject) => { server.once("error", reject); server.listen(4196, "127.0.0.1", done); });
 }
 
 try {
@@ -127,5 +130,5 @@ try {
   console.log(`BROWSER_ASSERTIONS_PASS: ${assertions}; evidence=${output ?? "not retained"}`);
 } finally {
   await browser?.close();
-  server.kill();
+  server.close();
 }

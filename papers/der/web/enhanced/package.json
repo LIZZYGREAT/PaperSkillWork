@@ -7,7 +7,7 @@
     "dev": "vite --configLoader runner",
     "build": "tsc && vite build --configLoader runner",
     "preview": "vite preview --configLoader runner",
-    "test": "node --test tests/math.test.mjs",
+    "test": "node --test tests/math.test.mjs tests/animation.test.mjs",
     "test:browser": "node tests/browser.test.mjs"
   },
   "dependencies": {
