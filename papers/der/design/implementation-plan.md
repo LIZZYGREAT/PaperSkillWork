@@ -24,6 +24,8 @@ Hover/Reference 最小复用：核读 Kit `TermRef`、`usePopoverPosition`、`Kn
 
 ### W7 REVISE · D0 单样本生命周期设计（2026-10-27，本轮有效提案）
 
+**后续人工反馈：** 用户认可整体页面效果，明确授权进入 D1；同时指出文字凌乱、线条乱跑与排版重叠，要求在实现时解决。D0 的构图方向因此获得确认，D1 优先修正文字和路径的空间关系。后续 D0 PENDING 描述保留为当时交接历史；当前方向为 CONFIRMED，D1 实施中，D2 动画教学评审尚未进行，W7 保持 pending。
+
 本轮用户要求阅读 `task/DER/PaperSkillWork_DER_Animation_First_Workflow_Redesign_Plan.md`、了解工作流后修订并分部分 commit。该文档作为设计输入；本节记录核对后的具体提案，不把文档中的“用户已确认”转记为新的人工批准。起点 `839e67bacbe14dab0216f4ca0534abb9e624765d` / `der`，工作区干净。W2/W4/W5/W6 已完成，W7 pending。本轮先交付 D0，方向待用户确认；旧 P0 工程测试只说明旧三个原型的技术性质，不能证明本轮生命周期场景或教学效果通过。
 
 #### 已核对的依据与试点范围
