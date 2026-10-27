@@ -17,10 +17,10 @@
   }
 }
 
-/* Give the single network block the marked center position and connect it with long arrows. */
+/* Center the single network between the sample and output, with arrows meeting its edges. */
 @media (min-width: 1280px) {
   .freeze-model-track {
-    grid-template-columns: 125px 131px 426px 142px minmax(0, 1fr);
+    grid-template-columns: 125px 167px 447px 142px minmax(0, 1fr);
   }
 
   .freeze-model-track > span {
@@ -51,12 +51,14 @@
   }
 
   .freeze-model-track > span:nth-of-type(2) {
+    width: calc(100% + 17px);
     margin-left: -10px;
+    transform: translate(17px, -10px);
   }
 
   .freeze-network {
-    width: 426px;
-    min-height: 158px;
+    width: 447px;
+    min-height: 166px;
     transform: translateY(-10px);
   }
 }
