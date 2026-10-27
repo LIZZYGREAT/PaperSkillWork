@@ -1,4 +1,4 @@
-import LogitPrototype from "./review/LogitPrototype";
+import LogitPrototype from "./review/LegacyLogit";
 
 export default function LogitMatching() {
   return <LogitPrototype />;

@@ -1,4 +1,4 @@
-import FreezePrototype from "./review/FreezePrototype";
+import FreezePrototype from "./review/LegacyFreeze";
 
 export default function MemorySnapshot() {
   return <FreezePrototype />;

@@ -457,6 +457,18 @@ Vertical Slice Review: REVISE → 修订已实现，等待用户再次评审（W
 
 本次增量检查：`npm run build --prefix papers/der/web/enhanced` PASS；`npm test --prefix papers/der/web/enhanced` PASS（7/7）。浏览器截图回归未能完成：Vite 已启动并报告本地预览地址，但测试进程访问回环地址时被当前环境拒绝，不能据此记录视觉 PASS。W7 学习验收仍待用户。
 
+### W7 动画重做 · P0 执行范围（2026-10-27）
+
+用户要求阅读 `task/DER/PaperSkillWork_DER_W7_Animation_Redesign.md` 后修订，分部分 commit。起点为 `der` 分支 `e6fa73e`，工作区干净。本轮将该文档作为修订设计输入；以仓库 W7 REVISE 流程执行，先交付 P0 三个连续播放原型，等待方向确认后才进行 P1 正式主线/U1 整合。W7 不代签，W8/U4–U7 不启动。
+
+保护：既有暖白/浅绿、字体、文章导航、W4 顺序、固定 p/z、KL 带符号贡献、同源 softmax、更新前复制/更新后候选的 W2 时序。允许重构 review 局部 SVG 主画布、控制与公式编排；主线暂用 LegacyKL/LegacyLogit/LegacyFreeze 保留可操作对照，确认后移除过渡副本。共享 Kit 与其它论文不修改。
+
+精确复用：`python tools/paper.py paths der --json` 解析到 `C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\papers\der\web\enhanced`。`scaffold-kit der --select useAnimationTimeline --allow-unapproved --dry-run` 已核对闭包：仅新增 `foundation/animation/useAnimationTimeline.ts`、`foundation/accessibility/useReducedMotion.ts`，保留已有 kit.css。随后同参数实际复制。Recipe 为 `reusable-kit/recipes/animation-timeline.md`。每场景一个 Hook 时钟；DER 局部纯函数派生数据与位置，不跨仓库运行时导入，不新建 RAF/interval。
+
+语义镜头：KL 建立固定 p → q 归一化合成插值 → 猫/狗配对 → 带符号贡献生长 → 汇总/固定熵对照；Logits 对齐 → 合成移动/差值伸缩 → 平方块形成 → 汇总，平移模式用同一 a(t) 派生概率；冻结 x₂ 进入 → 当前输出留存且复制出独立 x₂@t → θ 更新/新输出未知 → 候选移交等待区（未进入 M）。各镜头末尾停留，整段可播放、暂停、恢复、重播、前后单步和切换例子；reduced motion 显示完整镜头并手动推进。
+
+验收计划：原有数学/主线与参考资料回归；纯函数中间值核验；真实浏览器连续播放与暂停恢复/重播/换例；25/50/75% 的坐标、线长、贡献宽度；1440×900 与 1920×1080 截图目视、子路径资源。保存本地短视频与时间点截图供方向评审，不提交视频；FULLSCREEN_REAL 无实际 F11 时记 NOT_RUN。具体命令、结果与证据在本节追加。
+
 ## Full Implementation (W8)
 
 仅记录后续边界：W7 通过首切片之后才覆盖 S4–S8、紧凑 supporting 和主线外 reference。S7 需独立整合设计与状态核对。此处不提前实施、不记录任何 W8 PASS。

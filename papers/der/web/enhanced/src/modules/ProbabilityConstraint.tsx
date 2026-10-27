@@ -1,4 +1,4 @@
-import KLPrototype from "./review/KLPrototype";
+import KLPrototype from "./review/LegacyKL";
 
 export default function ProbabilityConstraint() {
   return <KLPrototype />;

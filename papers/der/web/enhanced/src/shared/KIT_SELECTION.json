@@ -7,7 +7,8 @@
     "RepresentationVector",
     "ResponseMeter",
     "SampleToken",
-    "TermRef"
+    "TermRef",
+    "useAnimationTimeline"
   ],
   "examples": [],
   "files": {
@@ -20,6 +21,8 @@
     "foundation/visual-parts/visual-parts.css": "3bcd833c5a6307d78b14e8bc6e8ad0b70211d0211d4e51fa57df91a9756e100e",
     "core/reference/TermRef.tsx": "1572a0274850cc8ffe09f462802bae9ac3323ba1d28589b9a695efcbf2707fe2",
     "core/reference/types.ts": "75592aad9d564ba37a62b960b656335868fecd77f97e2a65171338af964ac4db",
-    "foundation/overlay/Popover.tsx": "ee88c59b4f9f55587f5f3e6fea2ad69daf1d164febc187a7813688904541cbc3"
+    "foundation/overlay/Popover.tsx": "ee88c59b4f9f55587f5f3e6fea2ad69daf1d164febc187a7813688904541cbc3",
+    "foundation/accessibility/useReducedMotion.ts": "7ef0de2a050d9bb9c0975f1bf89b4b3fa690e333b582bb65b6029e571e47206e",
+    "foundation/animation/useAnimationTimeline.ts": "ac58c43af81ff08f1023e42c28f7bb5d08608b22ea45e9c1fafa94600c73a9bb"
   }
 }
