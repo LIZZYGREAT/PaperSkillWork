@@ -1,4 +1,4 @@
-.lifecycle-scene{padding-top:16px;--lc-stage-width:min(100%,calc((100dvh - 400px) * 1.75))}
+.lifecycle-scene{padding-top:16px;--lc-stage-width:100%}
 .lifecycle-scene>header{max-width:none;margin-bottom:4px}
 .lifecycle-scene>header .eyebrow{margin-bottom:7px}
 .lifecycle-scene>header h1{font-size:30px;line-height:1.45;margin-bottom:10px}

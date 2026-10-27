@@ -30,6 +30,9 @@
       {"selector": ".review-page .equation math", "property": "font-size", "equals": "22px"}
     ],
     "states": [
+      {"id": "lifecycle-frozen", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "2"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
+      {"id": "lifecycle-stored", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "4"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
+      {"id": "lifecycle-compared", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "6"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
       {"id": "kl-default", "actions": [{"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},
       {"id": "kl-negative", "actions": [{"type": "selectOption", "selector": "[data-scene=\"kl\"] select", "value": "4"}, {"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},
       {"id": "kl-sum", "actions": [{"type": "selectOption", "selector": "[data-scene=\"kl\"] select", "value": "5"}, {"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},

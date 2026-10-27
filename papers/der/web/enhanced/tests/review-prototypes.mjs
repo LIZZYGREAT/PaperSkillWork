@@ -1,4 +1,5 @@
 import { animationBrowserChecks } from "./animation-browser.mjs";
+import { lifecycleBrowserChecks } from "./lifecycle-browser.mjs";
 // Semantic regressions for the proposals, plus term-specific content and real geometry.
 export async function reviewPrototypeChecks({ page, base, check, shot }) {
   const expected = {
@@ -44,4 +45,5 @@ export async function reviewPrototypeChecks({ page, base, check, shot }) {
     await page.locator(".site-header .text-button").focus();
   }
   await animationBrowserChecks({ page, base, check, shot });
+  await lifecycleBrowserChecks({ page, base, check, shot });
 }

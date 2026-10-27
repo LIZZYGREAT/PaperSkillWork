@@ -5,6 +5,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import { resolve, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { reviewPrototypeChecks } from "./review-prototypes.mjs";
+import { lifecycleBrowserChecks } from "./lifecycle-browser.mjs";
 
 // Development checks use the repository's single pinned browser toolchain.
 // None of this is imported by the tutorial runtime.
@@ -40,14 +41,28 @@ try {
   browser = await chromium.launch({ headless: true, executablePath });
   console.log(`Browser ${browser.version()}, Node ${process.version}`);
   if (output) await mkdir(output, { recursive: true });
-  for (const width of [1440, 1920]) {
-    const height = width === 1440 ? 900 : 1080;
-    const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
+  const viewports = [{width:1440,height:900,deviceScaleFactor:1},{width:1920,height:1080,deviceScaleFactor:1},
+    // Reported short-window/zoom regression: CSS viewport equivalent to ~1912x872 at 125%.
+    {width:1530,height:698,deviceScaleFactor:1.25}];
+  for (const {width,height,deviceScaleFactor} of viewports) {
+    const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor });
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("requestfailed", (request) => errors.push(`${request.url()}: ${request.failure()?.errorText}`));
     page.on("response", (response) => { if (response.status() >= 400 && response.url().startsWith(base)) errors.push(`${response.status()} ${response.url()}`); });
+    const shot = async (name, selector) => {
+      if (!output) return;
+      if (selector) await page.locator(selector).screenshot({ path: resolve(output, `${name}-${width}.png`), animations: "disabled" });
+      else await page.screenshot({ path: resolve(output, `${name}-${width}.png`), animations: "disabled" });
+    };
+    if(deviceScaleFactor!==1){
+      await page.clock.install();
+      await lifecycleBrowserChecks({page,base,check,shot});
+      check(errors.length===0,"No browser errors at the reported short-window/zoom equivalent");
+      console.log(`${width}x${height}, DPR ${deviceScaleFactor}: lifecycle size and motion regression PASS`);
+      await context.close();continue;
+    }
     await page.goto(base, { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
     check(page.url() === base, "Production preview must stay below the deploy subpath");
@@ -58,11 +73,6 @@ try {
       check(await page.locator(selector).first().evaluate((el) => !el.closest("dialog,details")), `${selector} cannot be hidden in reference`);
       check(await page.locator(selector).first().evaluate((el) => el.getBoundingClientRect().width > 150), "Math must be typeset as a real expression");
     }
-    const shot = async (name, selector) => {
-      if (!output) return;
-      if (selector) await page.locator(selector).screenshot({ path: resolve(output, `${name}-${width}.png`), animations: "disabled" });
-      else await page.screenshot({ path: resolve(output, `${name}-${width}.png`), animations: "disabled" });
-    };
     await shot("opening");
     await shot("label-contrast", ".label-question");
     for (const [id, expected] of [["near", .09151622184943578], ["equal", 0], ["reversed", .8317766166719343]]) {

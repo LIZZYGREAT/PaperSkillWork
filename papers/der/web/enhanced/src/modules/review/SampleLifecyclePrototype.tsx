@@ -82,7 +82,7 @@ export default function SampleLifecyclePrototype() {
         </g>
 
         <text x="430" y="133" textAnchor="middle" opacity={1 - camera} className="lc-model-heading" data-layout-label>唯一当前网络 · <tspan data-parameter>{s.parameter}</tspan></text>
-        <text x="185" y="474" textAnchor="middle" opacity={camera} className="lc-small" data-layout-label>同一模型 · {s.parameter}</text>
+        <text x="185" y="474" textAnchor="middle" opacity={windowAt(camera, .9, 1)} className="lc-small" data-layout-label>同一模型 · {s.parameter}</text>
         <g data-current-model transform={`translate(${mix(0, -8.5, camera)},${mix(0, 272.5, camera)}) scale(${networkScale})`}>
           <path d="M282 370H560L600 340H322Z" className="lc-network-floor" />
           {[300, 385, 470].map((x, layer) => <g key={layer}>
