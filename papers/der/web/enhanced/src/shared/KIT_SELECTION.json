@@ -1,0 +1,20 @@
+{
+  "kit_version": "3.0.0",
+  "components": [
+    "FigureFrame",
+    "MathTypography",
+    "RepresentationVector",
+    "ResponseMeter",
+    "SampleToken"
+  ],
+  "examples": [],
+  "files": {
+    "compositions/figure-frame/FigureFrame.tsx": "ce1c8e67454394305f2f96ebdc857a9bf307adcd1601da10af6e7ac18e85a9e9",
+    "foundation/math/mathml-jsx.d.ts": "8dd340970eaf63f6337bc688f3d597ee32b9e862aae27e751e3fd086974ae59c",
+    "foundation/styles/kit.css": "7882f7581a5147ef56a63b45c3226adc50f6f94a22508cdb9fc7cf49bb9c87c6",
+    "foundation/visual-parts/RepresentationVector.tsx": "d16dc495a8dfc5f0c40d15c1af9596025a7d23fd949351a5c88decc76051ce63",
+    "foundation/visual-parts/ResponseMeter.tsx": "8f136baeb9a344c87d321fa1e1b69ae504c390aea81a0e6d46cbbd22fcca9ed9",
+    "foundation/visual-parts/SampleToken.tsx": "cda17013a662af3586260e9b57867a93282d4f798900e96b3ac2d30d1187e37a",
+    "foundation/visual-parts/visual-parts.css": "3bcd833c5a6307d78b14e8bc6e8ad0b70211d0211d4e51fa57df91a9756e100e"
+  }
+}

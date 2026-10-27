@@ -1,0 +1,12 @@
+import { useState } from "react";
+import { RepresentationVector } from "../shared/foundation/visual-parts/RepresentationVector";
+import { SampleToken } from "../shared/foundation/visual-parts/SampleToken";
+import { CatMark } from "./ReplayEntry";
+import { HISTORY_Z, SNAPSHOT_STEPS } from "./math-model";
+import { ReferenceButton, Term } from "./Reference";
+
+export default function MemorySnapshot() {
+  const [phase, setPhase] = useState(0);
+  const step = SNAPSHOT_STEPS[phase];
+  return <section className="snapshot-lesson" data-core-items="I05" data-snapshot-phase={phase} aria-labelledby="snapshot-title"><div className="snapshot-heading"><div><p className="eyebrow">最后还要决定：在什么时候记录？</p><h3 id="snapshot-title">留下沿途的响应，<br />不用等一个任务结束。</h3></div><p>DER 在训练途中的不同步采集输出。每条目标可以来自不同参数时刻，不必等待任务终点确定统一教师，也不用把旧网络保留下来。</p></div><div className="snapshot-controls" role="group" aria-label="检查历史 logits 的生成时机">{SNAPSHOT_STEPS.map((item, index) => <button key={item.title} type="button" aria-pressed={phase === index} data-snapshot-step={index} onClick={() => setPhase(index)}><span>0{index + 1}</span>{item.title}</button>)}</div><div className="snapshot-figure" data-vqa-stable-frame><div className="snapshot-input"><SampleToken sampleId="x2" label="x₂ · 对应训练视图"><CatMark /></SampleToken></div><span className="snapshot-arrow" aria-label="输入进入唯一当前网络">→</span><div className="one-network"><span className="figure-label">唯一当前网络</span><strong>{step.parameter}</strong><small>{phase === 2 ? "本步参数已更新" : "本步更新前"}</small></div><span className="snapshot-arrow" aria-label={phase === 0 ? "前向产生输出" : "此前复制的目标保持不变"}>→</span><div className={`frozen-vector ${phase > 0 ? "is-frozen" : ""}`} data-frozen-z={HISTORY_Z.join(',')}><span className="frozen-label">{phase === 0 ? "待复制的输出" : "z · 已复制，数值冻结"}</span><RepresentationVector label="(2, 1, 0) · 同一份目标值" values={[...HISTORY_Z]} extent={3} /></div></div><div className="snapshot-reading" aria-live="polite"><strong>{step.title}</strong><p>{step.text}</p></div><p className="caption">这是一段保存时序示意，不执行真实网络训练。原文 Algorithm 1–2：先使用旧记忆学习，参数更新后再写入原图与更新前的 logits。</p><div className="snapshot-takeaway"><p>后面回放时，当前网络改变，<Term id="z">历史 z</Term> 仍是固定值。约束来自过去的数值，<strong>没有第二台常驻教师</strong>。</p><ReferenceButton term="z">查看原文时序与边界</ReferenceButton></div><div className="next-question"><span className="eyebrow">下一问题 · 有限记忆怎样管理？</span><p>现在知道要保存 <strong>(x, z)</strong>，但数据流还会继续到来。<br />空间只有有限个位置，哪些记录能够留下？</p><span className="next-topic">下一单元将用 Reservoir Sampling 回答</span></div></section>;
+}

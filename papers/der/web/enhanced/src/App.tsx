@@ -1,59 +1,7 @@
-import { useState } from "react";
 import { tutorial } from "./data/tutorial";
 import { widgetRegistry } from "./modules/registry";
+import { ReferenceButton, ReferenceProvider } from "./modules/Reference";
 
 export default function App() {
-  const [activeChapterId, setActiveChapterId] = useState(tutorial.chapters[0]?.id ?? "");
-  const activeChapter = tutorial.chapters.find((chapter) => chapter.id === activeChapterId);
-
-  if (tutorial.chapters.length === 0) {
-    return (
-      <main className="page-shell">
-        <section className="empty-state" aria-labelledby="empty-state-title">
-          <p className="eyebrow">Paper Tutorial</p>
-          <h1 id="empty-state-title">论文教程项目已初始化</h1>
-          <p>完成论文阅读与教学设计后，从首个真实学习切片开始添加章节和交互解释。</p>
-        </section>
-      </main>
-    );
-  }
-
-  return (
-    <main className="page-shell">
-      <nav className="chapter-nav" aria-label="教程章节">
-        {tutorial.chapters.map((chapter) => (
-          <button
-            key={chapter.id}
-            type="button"
-            aria-pressed={chapter.id === activeChapterId}
-            onClick={() => setActiveChapterId(chapter.id)}
-          >
-            {chapter.title}
-          </button>
-        ))}
-      </nav>
-
-      {activeChapter && (
-        <article className="chapter-content">
-          <p className="eyebrow">{activeChapter.id}</p>
-          <h1>{activeChapter.title}</h1>
-          {(activeChapter.summary || activeChapter.bridge) && (
-            <p>{activeChapter.summary || activeChapter.bridge}</p>
-          )}
-          <div className="module-list">
-            {activeChapter.modules.map((module) => {
-              const Widget = module.componentId ? widgetRegistry[module.componentId] : undefined;
-              return (
-                <section className="module-card" key={module.id}>
-                  <h2>{module.title}</h2>
-                  {(module.desc || module.summary) && <p>{module.desc || module.summary}</p>}
-                  {Widget && <Widget chapterId={activeChapter.id} moduleId={module.id} />}
-                </section>
-              );
-            })}
-          </div>
-        </article>
-      )}
-    </main>
-  );
+  return <ReferenceProvider><a className="skip-link" href="#reading">跳到正文</a><header className="site-header"><div className="site-header-inner"><a href="#U1-replay-entry" className="site-brand" aria-label="DER 教程开头"><span className="brand-mark">DER</span><span>持续学习笔记<small>NEURIPS 2020</small></span></a><nav aria-label="阅读单元">{tutorial.chapters.map((chapter, index) => <a key={chapter.id} href={`#${chapter.id}`}><span>0{index + 1}</span>{String(chapter.navTitle)}</a>)}</nav><ReferenceButton>参考资料</ReferenceButton></div></header><main id="reading" className="reading-layout"><div className="paper-line"><span>DARK EXPERIENCE REPLAY</span><span>用有限记忆，保留历史预测</span></div>{tutorial.chapters.map((chapter, index) => <article key={chapter.id} id={chapter.id} className={`lesson-section lesson-${index + 1}`} aria-labelledby={`${chapter.id}-title`}><header className="lesson-heading"><p className="eyebrow"><span className="unit-number">0{index + 1}</span>{index === 0 ? "从问题开始" : index === 1 ? "概率空间的约束" : "分数空间的约束"}</p>{index === 0 ? <h1 id={`${chapter.id}-title`}>{chapter.title}</h1> : <h2 id={`${chapter.id}-title`}>{chapter.title}</h2>}<p className="chapter-summary">{chapter.summary}</p></header>{chapter.modules.map((module) => { const Widget = module.componentId ? widgetRegistry[module.componentId] : undefined; return Widget ? <section key={module.id} id={module.id} aria-label={module.title} className="teaching-module"><Widget chapterId={chapter.id} moduleId={module.id} /></section> : null; })}</article>)}</main><footer className="site-footer"><div><span className="brand-mark">DER</span><p>保持历史行为，不意味着历史行为一定正确。<br /><span>本切片到“确定历史记录内容”为止，下一步讨论有限记忆的选留。</span></p></div><a href={String(tutorial.meta?.paperUrl)} target="_blank" rel="noreferrer">阅读原论文 · arXiv v2 ↗</a></footer></ReferenceProvider>;
 }
