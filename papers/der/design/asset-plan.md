@@ -6,6 +6,10 @@ Paper ID: der
 
 The source manifest contains 4 figures, 10 tables, and 3 algorithms. All 17 entries are inventoried below. The cached PNGs are contextual page captures. No public image reuse permission was independently verified, so each source visual is REFERENCE_ONLY. A01/A02/A03, T02/T03, and F02 are especially useful for checking the method, reservoir, and evidence, but usefulness does not grant reuse rights. A later tutorial may commission an independently composed explanation after separate provenance and rights review; this plan does not authorize publishing source screenshots or derivatives.
 
+2026-10-27 W3 复核：已重新读取本机三份更新笔记及用户提供的《修改意见》，并核对原文 §1、§3–4.1、Algorithm 1–3 和附录实验定位。笔记只提供教学线索，不进入原文缓存，也不作为论文事实的唯一证据。本轮补齐 ER/软监督比较、沿途 logits、概率与 logits 的选择、增强/一致性、历史偏置和冻结时序的证据；KL 的短推导、平移反例和四样本轨迹分别登记为背景或教学例子。
+
+17 项均重新与 manifest 对照，保留为内部引用素材；没有待公开使用但权利未定的选中图片。A01/A02 用来校验完整执行顺序，A03 校验在线记忆；F01 说明非平稳流，T02/T03 支持有条件的性能结论，F02 支持经验分析。修正 T05→R07、T08→R08 两处原有引用错配，以及 Eq. (5)/(6) 所在章节应为 §3 的定位。另核实 Appendix D 只有插入算法，等概率性质在 §3 陈述，教学归纳证明不能归为附录原文。W3 的历史完成记录保留，本轮重新验证其产物，不重置状态。
+
 ## Inventory, Selection, and Provenance
 
 Source version: arXiv:2004.07211v2 (2020-10-22), NeurIPS 2020. Source location: https://arxiv.org/pdf/2004.07211v2. The source_path is the internal contextual page capture listed in source-cache/manifest.json; multipart originals retain their additional pages in that cache. No derivative or release web path is planned for a reference-only item.
@@ -23,7 +27,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'Retained for internal source verification; it is a comparison table rather than a necessary explanation of the DER update, and public image reuse rights are unverified.'
     processing: 'No public derivative; retain the contextual page capture as local source evidence.'
-    evidence_refs: [C01]
+    evidence_refs: [C01, C17]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -40,7 +44,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'Essential for source checking but the printed algorithm has notation and sign issues already disclosed in W2; public reuse rights are unverified.'
     processing: 'No public derivative; cite the algorithm and author a fresh explanation only after later-stage review.'
-    evidence_refs: [C02, C04, M02, M04]
+    evidence_refs: [C02, C04, C12, C14, M02, M04, M06]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -57,7 +61,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'Useful for a source-grounded comparison with DER, but direct image reuse rights are unverified.'
     processing: 'No public derivative; explain the added loss using a separately authored diagram if approved later.'
-    evidence_refs: [C03, C05, C04]
+    evidence_refs: [C03, C05, C04, C15, M06]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -91,7 +95,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'Retained as a source example; public reuse rights for the source images are unverified.'
     processing: 'No public derivative; any future data-stream example should be recreated from appropriately licensed data.'
-    evidence_refs: [C08]
+    evidence_refs: [C08, C16]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -155,7 +159,7 @@ assets:
     source_path: source-cache/figures/P15.png
     source_locator: 'Algorithm 3, p. 15, Appendix D'
     type: ALGORITHM
-    teaching_role: 'Check the reservoir insertion rule, notation, and inclusion-probability proof.'
+    teaching_role: 'Check the reservoir insertion rule and notation; the equal-inclusion claim is stated in Section 3, p. 3. Appendix D provides the algorithm, not a separate proof.'
     decision: REFERENCE_ONLY
     reason: 'The source algorithm’s capacity notation needs the disclosed W2 normalization, and public reuse rights are unverified.'
     processing: 'No public derivative; later teaching can use separately authored pseudocode with the source locator.'
@@ -210,7 +214,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'Retained to qualify the one-epoch comparisons; no public reuse rights verified.'
     processing: 'No public derivative; cite the measured setting and discuss its limits.'
-    evidence_refs: [R08]
+    evidence_refs: [R07]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -261,7 +265,7 @@ assets:
     decision: REFERENCE_ONLY
     reason: 'A secondary evaluation table, retained for source completeness; public image reuse rights are unverified.'
     processing: 'No public derivative; include only if a later narrative needs this metric.'
-    evidence_refs: [R07]
+    evidence_refs: [R08]
     source_paper_version: 'arXiv:2004.07211v2 (2020-10-22)'
     source_location: 'https://arxiv.org/pdf/2004.07211v2'
     attribution: 'Pietro Buzzega et al., NeurIPS 2020, arXiv:2004.07211v2'
@@ -306,3 +310,9 @@ assets:
 ## Scene Placement
 
 No public source visual is assigned to a spine scene at W3. The source captures remain local evidence. The later learning spine should teach the update and reservoir with newly composed material if approved, and should use text citations or newly authored plots for results. Any selection for publication requires a separate provenance and rights decision at the later implementation-planning stage.
+
+## Verification (2026-10-27)
+
+本轮 evidence registry 共 45 条，原有 IDs 保留，新增 16 条；W3/W4 阶段校验均无问题。核对 17/17 项 manifest 对应关系与原图路径，独立复算 KL、平方距离、softmax 平移反例及 K=2 四样本轨迹，均通过。`python tools/paper.py check der` 和 `git diff --check` 退出码均为 0。W4 随后由用户确认，通过 CLI 记录；确认后的复查仍为 CHECK PASS，提示 W5 的实现覆盖和切片尚未填写，这是下一阶段待规划的 warning，不是 W3/W4 失败。
+
+既有回归范围为 `test_workflow_learning_spine.py`、`test_workflow_assets.py`、`test_document_governance.py`、`test_paper_cli.py`、`test_workflow_schema.py`。默认 pytest 临时目录因已有文件权限失败（退出 1）；改用本次独立的工作区临时目录后，45 项通过，1 项 Kit 临时目录重命名遇到 WinError 5（退出 1）。仅对该失败项换新临时目录重跑，1 项通过（退出 0），未修改测试或 Kit。没有网页源码变更，浏览器/构建/发布检查不在本轮范围。本次测试临时目录与缓存在交付前清理。
