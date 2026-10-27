@@ -1,26 +1,33 @@
 {
-  "baseUrl": "http://127.0.0.1:4173",
+  "baseUrl": "http://127.0.0.1:4197/der-review/",
   "server": {
     "command": "node",
-    "args": ["node_modules/vite/bin/vite.js", "preview", "--host", "127.0.0.1", "--port", "4173", "--strictPort"],
+    "args": ["node_modules/vite/bin/vite.js", "preview", "--configLoader", "runner", "--host", "127.0.0.1", "--port", "4197", "--strictPort", "--base", "/der-review/"],
     "cwd": ".",
-    "readyPath": "/"
+    "readyPath": "/der-review/",
+    "startupTimeoutMs": 30000
   },
-  "pages": [
-    {
-      "id": "paper-template-home",
-      "path": "/",
-      "states": [
-        {
-          "id": "initial",
-          "actions": [
-            { "type": "waitFor", "selector": "h1", "state": "visible" }
-          ]
-        }
-      ],
-      "computedStyles": [
-        { "selector": ":root", "property": "--color-accent", "equals": "#276b54" }
-      ]
-    }
-  ]
+  "viewports": [
+    {"id": "desktop-window", "width": 1440, "height": 900},
+    {"id": "fullscreen-layout", "width": 1920, "height": 1080}
+  ],
+  "pages": [{
+    "id": "der-slice",
+    "path": "./",
+    "states": [
+      {"id": "opening", "animations": "disabled"},
+      {"id": "probability-equal", "actions": [{"type": "click", "selector": "[data-q-case='equal']"}], "animations": "disabled"},
+      {"id": "probability-reversed", "actions": [{"type": "click", "selector": "[data-q-case='reversed']"}], "animations": "disabled"},
+      {"id": "logits-shifted", "actions": [{"type": "click", "selector": "[data-a-case='shifted']"}], "animations": "disabled"},
+      {"id": "snapshot-frozen", "actions": [{"type": "click", "selector": "[data-snapshot-step='1']"}], "animations": "disabled"},
+      {"id": "snapshot-updated", "actions": [{"type": "click", "selector": "[data-snapshot-step='2']"}], "animations": "disabled"},
+      {"id": "reference", "actions": [{"type": "click", "selector": ".site-header .text-button"}], "animations": "disabled"}
+    ]
+  }],
+  "geometry": {
+    "checkPageHorizontalOverflow": true,
+    "minSemanticFontSizePx": 12,
+    "clippingSelectors": ["[data-vqa-check-clipping]"],
+    "stableAcrossStates": []
+  }
 }

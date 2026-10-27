@@ -6,12 +6,12 @@ Paper ID: `der`
 
 本稿是用户确认方向后的 W5 实现计划。依据已确认 W4 的 S1–S8，把“问题为何引出机制”翻译为可观察的图文关系，再决定哪里需要交互。读者应从有限 ER 的不足，走到概率/KL、logits、在线记忆、增强和标签监督，并最终沿同一组状态重建 DER / DER++。
 
-本轮只改设计文档与 CLI 阶段状态；不写 React/CSS、不复制 Kit、不运行 DER 网页、Import 或 Preflight。个人笔记不作为事实来源，17 项原图表保持 REFERENCE_ONLY。I24–I26 不实施；I21–I23 留在主线外，I12–I20 采用紧凑放置。行间数学使用独立的两组 `$$`，加粗结束标记后留空格。
+W5 定稿时只改设计与 CLI 阶段状态；当前按用户新增方案推进 W6 首切片，执行记录见下方。个人笔记不作为事实来源，17 项原图表保持 REFERENCE_ONLY。I24–I26 不实施；I21–I23 留在主线外，I12–I20 采用紧凑放置。行间数学使用独立的两组 `$$`，加粗结束标记后留空格。
 
 ## Design Handoff, Invariants, and Change Scope
 
 - Design confirmation: CONFIRMED（2026-10-27）。用户选择“采用推荐方向”和“采用 S1–S3（推荐）”；确认 S3 两段计算、S4 选留/训练分段、S7 独立工作台及展开区可复算小模型，首切片为 S1–S3 / I01–I05。
-- Rendered-page acceptance: PENDING。本轮没有新的网页或效果图验收。
+- Rendered-page acceptance: PENDING。W6 已有可运行切片和 Agent 桌面检查，尚无用户 W7 学习评审。
 - W5 CLI structural completion: COMPLETE，由 `paper.yaml` 的 `completed_by: automation` 独立记录；设计方向有上方用户确认，真实页面仍未验收。
 - 基准：第一轮起点为 `381d369ae7d12d3530bfd527179214a2eb141df1`；确认后定稿从 `19cdc5b` 继续，分支 `der`，工作区干净。
 - 已确认边界：W2 决定真实先读后写顺序；W3 决定事实与素材边界；W4 决定 S1–S8 顺序、数学首讲、CORE 及独立贯通任务。本稿不修改三者。
@@ -365,17 +365,54 @@ implementation:
 
 用户已确认 S1–S3，对应 U1–U3，CORE 为 I01–I05。认知闭环为：不能完整保存历史→有限 ER→标签未记录整组响应→概率/KL 可优化→logits 匹配的区别→记录更新前历史 z→引出 S4 的在线留存。S1/S2 合为一个开放图文单元，S3 的两个计算任务各有足够解释空间。
 
-范围已确定，本轮仍只完成 W5。首切片不实施 reservoir、DER++、四轮完整系统或结果页，不用未来占位组件凑验收；下一阶段问题以正文衔接即可。S7 小模型只在本计划固定计算依据，不提前实现为 W6 隐藏组件。之后若改变首切片范围，必须同步覆盖和确认记录，不能静默删 I01。
+范围已确定，W5 完成后按此执行 W6。首切片不实施 reservoir、DER++、四轮完整系统或结果页，不用未来占位组件凑验收；下一阶段问题以正文衔接即可。S7 小模型只在本计划固定计算依据，不提前实现为 W6 隐藏组件。之后若改变首切片范围，必须同步覆盖和确认记录，不能静默删 I01。
 
 SUPPORTING 的具体落点：U1 原位短回忆 I12/I13；U2 的 I14 紧邻梯度结论可展开；U4 的 I15 概率归纳可展开、I16 iCaRL 比较一短段；U5 的 I17 增强均值/方差推导可展开、I18 权衡系数紧邻三项损失；U6 的 I19 原文消歧作为算法旁说明；U7 的 I20 分析含义一短段。I21–I23 在主线之后的参考/证据区，主线对必要结论本身不依赖点开；I24–I26 排除。
 
-本轮没有 W6 执行结果：UPSTREAM_SYNTAX、UPSTREAM_OUTPUT、SOURCE_BUILD、SUBPATH_ASSETS 均为 NOT_RUN（设计阶段尚无本轮页面实现，不调用这些源码质量检查）。真正 W6 执行时，按同一实际 publish_source 分别记录命令/退出码、官方脚本版本、构建与浏览器状态；不以本次 W5 覆盖检查替代。
+W5 定稿时四项源码检查均未运行；当前 W6 的实际命令、状态与限制记录如下，W5 的结构通过不作为 W6 质量依据。
+
+### W6 实施与回归记录（2026-10-27）
+
+起点为 `2a794cb`、分支 `der`、工作区干净；用户要求数学呈现修订和首切片实施，未授权跳过 W7。`python tools/paper.py paths der --json` 退出 0，实际 publish_source 为 `C:/Users/lenovo/Desktop/Projects/PaperWork/PaperSkillWork/papers/der/web/enhanced`。`578b807` 已提交数学分层修订；`c7ee74a` 已提交可运行 U1–U3。W4、W5 原审批、S7 fixture 与 implementation YAML 保留。
+
+U1 用数据流/有限记忆进入 ER，再用同图同标签的两组响应说明未保存的行为。U2 把固定 p 与可变 q 对齐，默认展示 KL 定义、k/C/逐类权重、对数比拆成 H(p,q)−H(p) 及其优化意义；三种 q 的图、总量和结论由同一计算结果生成。U3 默认展示同类 logits 对齐、平方距离定义与一次展开，用共同平移说明 softmax 分子分母约去同一倍数；之后仅用唯一当前网络和复制值演示参数更新前的冻结时序，并把问题交给有限记忆选留。证明、梯度与逐项精算进入 Reference；主线不依赖其开启。
+
+Registry 的 `SampleToken,RepresentationVector,ResponseMeter,MathTypography,FigureFrame` 用 `scaffold-kit der --select SampleToken,RepresentationVector,ResponseMeter,MathTypography,FigureFrame --allow-unapproved --dry-run` 检查，再执行相同命令去掉 `--dry-run`。闭包为 FigureFrame.tsx、mathml-jsx.d.ts、kit.css、RepresentationVector.tsx、ResponseMeter.tsx、SampleToken.tsx、visual-parts.css，复制到实际源码 `src/shared/`，另有 KIT_VERSION/KIT_SELECTION.json。候选身份不变，组件内部未改；数据/计算/MathML/场景/Hub 均在 DER 本地。首次复制目录重命名遇到 WinError 5 并回滚，同命令重试退出 0；没有保留半成品。
+
+实际测试与构建：
+
+- 在 publish_source 执行 `npm ci`，受限环境首次 DNS ENOTFOUND；主机环境重试退出 0，按原 lockfile 安装 71 包。未修改依赖版本。npm 报既有两项 high audit 提示；本任务未执行依赖升级。
+- `npm test` 退出 0，7/7：稳定 softmax、三组 KL 与熵关系、q−p 有限差分、平方损失与梯度、共同平移、同硬标签对照、非法支持集/维度。完整精度留在计算核与测试。
+- `npm run build`（tsc + vite build）退出 0，44 modules；最终 dist/index.html 实际引用 `./assets/index-BuInSw-6.css` 和 `./assets/index-GDzSN9T2.js`。Vite base 为 `./`；无论文图片、动态外部媒体或远程字体请求。
+- 仓库根目录 `python -m pytest -q --basetemp=C:/Users/lenovo/Desktop/Projects/PaperWork/.tmp-der-w6-20261027 -o cache_dir=C:/Users/lenovo/Desktop/Projects/PaperWork/.tmp-der-w6-cache-20261027 tests/test_workflow_implementation.py tests/test_workflow_schema.py tests/test_document_governance.py` 退出 0，18 passed。
+- `npm run test:browser` 主机环境退出 0，104 条断言通过；受限环境的首次本机预览连接超时不计为通过。两个实际 inner viewport 为 1440×900、1920×1080，DPR 1，默认缩放100%；访问生产 URL `http://127.0.0.1:4196/der-review/`，三组 q、两组 a、快照 0→1→2→1、Enter/Space、焦点恢复、短释义、Hub 切换/滚动/关闭/重开、reduced motion 均实际操作。固定 p/z 与共同尺度、主线公式可见、无意外横向溢出、无公式裁切与无本地资源错误均有断言。
+
+当前官方来源核验：相邻 `../PaperSkill` 的 upstream 为 `git@github.com:ReductTech/PaperSkill.git`，工作区干净，main behind 83；`git fetch upstream main` 在受限环境权限错误，主机重试退出 0。fetch 前后 HEAD 均为 `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`，未切换/重置/覆盖该仓库；成功 fetch 后 upstream/main=`7f70497dcc10c32b33ba2abacba52a90cda834ba`。语法脚本工作区/最新上游 blob 同为 `2bcfa6f815054ee498574c51cef05f0c315b4298`。输出脚本本地 blob=`1a58ca06bd9fa47b6730904f1622189011cc32fe`，最新上游 blob=`9ec76b6974f262fca7b9611c4a485dd2275fe76c`，不相同。分别记录受影响状态，不复制或伪装最新检查器。
+
+| 源码检查 | 状态 | 实际依据 |
+| --- | --- | --- |
+| UPSTREAM_SYNTAX | PASS | `node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser` 退出 0，真实 TypeScript parser 检查19个源码文件；被执行脚本内容与已成功刷新的最新官方 main 相同 |
+| UPSTREAM_OUTPUT | NOT_RUN | 当前 checkout 的输出检查器与最新 main 不匹配。直接执行本地旧 `validate-output.js <publish_source>` 的诊断退出1，仅报3章小于旧6章门槛；实际4模块/1复合章/注册检查通过。不是最新官方兼容结论，不造未实现章节满足旧门槛 |
+| SOURCE_BUILD | PASS | 实际 publish_source 的上述生产构建退出0 |
+| SUBPATH_ASSETS | PASS | 相对 base 的本次构建在 `/der-review/` 实际加载、操作；104断言与共享runner均无相关本地资源错误，检查范围仅为本切片已触发资源 |
+
+工具版本：Node v24.18.0，TypeScript 5.9.3，Vite 6.4.3，Playwright 1.63.0，Edge 156.0.4314.50，Python 3.9.0。Import/Preflight 未运行。UPSTREAM_OUTPUT 未完成，不能将 W6 结构完成或浏览器通过描述为全部质量门禁通过。
+
+视觉检查：`$env:PAPERWORK_PLAYWRIGHT_EXECUTABLE='C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'; node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json` 退出 0，实际 URL=`http://127.0.0.1:4197/der-review/`。本次终端输出 Report 路径为 `.visual-qa/run-2026-10-27T11-20-45-159Z/report.md`。已阅读 report.md/report.json：14 captures，GEOMETRY_QA/BROWSER_ERRORS PASS，无诊断；runner 自身 BUILD/STYLE_QA/VISUAL_REVIEW/REGRESSION 为 NOT_RUN、HUMAN_ACCEPTANCE PENDING，不能把 runner 的 PASS 当作这些项目通过。
+
+Agent 已分别查看两个桌面尺寸的整页布局、首屏、硬标签对照、全部三组 q、两组 a、KL 定义/拆解、平方公式、共同平移、全部三步快照、Hub 默认和 logits 长详情。发现并修复了 MathML 括号因未分组而被整体求和拉高、论文外框与 FigureFrame 双重包框、首屏额外垂直间距三个普通缺陷；保留公式/因果文字/对象语义和 Kit 内部。修复后重新构建、104断言和双桌面截图复核通过，图框、标签和数值无拥挤或漂移，有限记忆为首屏主要学习对象。局部图文仍有刻意的非对称与留白；未以删数学换空间。
+
+DESKTOP_WINDOW=PASS；FULLSCREEN_LAYOUT=PASS（布局模拟）；FULLSCREEN_REAL=NOT_RUN（本轮通过 headless Edge 检查，没有操作用户物理浏览器 F11，无法据此声称真实全屏）。STYLE_QA 无固定属性基线，REGRESSION 无获批截图基线，均不伪报；Agent 的上述人工截图复核只覆盖本切片。移动端未触发专项。供 W7 复审的命名截图保留在 `C:/Users/lenovo/.codex/visualizations/2026/10/27/01a17c72-19f1-7ba0-89fd-33c1eb6af343/der-w6`；这是交付证据，不是论文素材或正式发布资产。
+
+本轮清理：已使用本次 Report 的确切父目录执行 `node tools/visual-qa/cli.mjs --cleanup-run C:/Users/lenovo/Desktop/Projects/PaperWork/PaperSkillWork/.visual-qa/run-2026-10-27T11-20-45-159Z`，退出0，输出 `CLEANED: <同路径>`，随后 Test-Path=False。独占 `.tmp-der-w6-20261027` 和 `.tmp-der-w6-cache-20261027` 已核对为工作区直属目录后删除，均确认不存在。4196/4197 检查服务由各自 runner 关闭；仅保留供 W7 的5188生产预览。图像交付证据保留于上方明确路径，不清理历史/未知输出。
+
+W7 预览 `http://127.0.0.1:5188/`，由 publish_source 下 `npm run preview -- --host 127.0.0.1 --port 5188 --strictPort` 提供本次生产构建；开发复现及测试命令见同目录 README。此服务只供本地评审，不是发布或上游接收操作。
 
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING
 
-本轮尚无实际切片，未指定 reviewer、未记录 PASS。后续让读者解释：为什么 ER 的旧标签仍不足；固定 p 与当前 q 如何计算 KL；logits 共同平移为什么出现不同惩罚；z 来自何时以及为什么不保存旧网络；有限容量又引出什么问题。还要判断文字与图形能否共同得到这些结论。
+实际切片已有，尚未指定 reviewer、未记录用户 PASS。请用户只读主线、不进入 Reference Hub，判断能否解释 KL 与平方匹配的变量、公式、最小推演及图中现象；同时解释为什么 ER 的旧标签仍不足、共同平移为何受到不同惩罚、z 来自何时以及有限容量又引出什么问题。还要判断文字与图形能否共同得到这些结论。W7 保持 PENDING，不推进 U4–U7/W8。
 
 ## Full Implementation (W8)
 
