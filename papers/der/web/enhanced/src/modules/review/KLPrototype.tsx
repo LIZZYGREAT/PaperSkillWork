@@ -1,43 +1,57 @@
 import { useState } from "react";
-import { ResponseMeter } from "../../shared/foundation/visual-parts/ResponseMeter";
-import { Equation, KLDefinition, KLDecomposition } from "../MathNotation";
-import { REFERENCE_P, PROBABILITY_CASES, probabilityComparison, formatValue } from "../math-model";
+import { KLDefinition, KLDecomposition } from "../MathNotation";
+import { PROBABILITY_CASES, formatValue as f } from "../math-model";
 import { Term, ReferenceButton } from "../Reference";
+import { KL_CLIPS, klSceneAt, lerp } from "./animation-model";
+import SceneTransport, { useSceneTimeline } from "./SceneTransport";
+import "./animation.css";
 
-const stages = ["观察分布", "同类比较", "加权贡献", "汇总 KL"];
-const parts = ["pₖ · 旧概率", "qₖ · 当前概率", "log(pₖ/qₖ) · 比较方向", "Σ · 所有类别"];
+const guidance = [
+  "先在同一把尺上建立旧分布 p。它固定不动，q 从同一分布出发。",
+  "只有 q 在改变；两根概率条始终非负且相加为 1。这里是合成分布比较，不是参数训练轨迹。",
+  "沿猫这一行配对：旧概率 p₁ 是权重，p₁/q₁ 的对数决定贡献的方向。",
+  "再看狗这一行：q₂ 大于 p₂ 时，对数比为负；这一类可以给出负贡献。",
+  "连接线把每类的概率比较交给下方贡献轴。条形从零生长，负值留在零线左边。",
+  "保留符号后求和，得到完整 KL。H(p) 固定，因此减小 H(p,q) 就会减小 KL。",
+];
 export default function KLPrototype() {
   const [selected, setSelected] = useState(0);
-  const [stage, setStage] = useState(0);
-  const [category, setCategory] = useState(0);
-  const [part, setPart] = useState(0);
-  const result = probabilityComparison(REFERENCE_P, PROBABILITY_CASES[selected].values);
-  const ratio = result.p[category] / result.q[category];
-  const choosePart = (index: number) => { setPart(index); setStage(index === 3 ? 3 : 1); };
-  const goToStage = (next: number) => { setStage(next); setPart((current) => next === 3 ? 3 : current === 3 ? 0 : current); };
-  return <section id="review-kl" className="review-scene" data-core-items="I03" data-kl-stage={stage} data-formula-part={part}>
-    <header><p className="eyebrow">U2 · 概率比较工作区</p><h1>两组概率的差异，怎样汇成一个 KL？</h1><p>计算 <Term id="kl">KL 散度</Term>：固定旧行为 <Term id="p">p</Term>，观察当前预测 <Term id="q">q</Term>。先比较同一类，再看它对整组差异的贡献。</p><p className="caption">p=(0.8,0.2) 与三个 q 是独立的两类合成例；DER 实际保留的是历史 logits。</p></header>
-    <div className="review-stage-controls" role="group" aria-label="KL 计算阶段">{stages.map((name, index) => <button key={name} data-kl-step={index} aria-pressed={stage === index} onClick={() => goToStage(index)}><small>0{index + 1}</small>{name}</button>)}</div>
-    <div className="kl-workspace">
-      <div className="distribution-plot"><div className="plot-heading"><span>同一类别 · 点击聚焦</span><span>p 固定 / q 当前 · 统一尺度 0—1</span></div>
-        {["猫", "狗"].map((label, index) => <div key={label} className="distribution-row" data-category={index} data-focused={stage > 0 && (stage === 3 || category === index)}>
-          <button aria-pressed={category === index} data-kl-category={index} onClick={() => { setCategory(index); setStage(1); if (part === 3) setPart(0); }}>{label}<small>k={index + 1}</small></button>
-          <div data-probability-object="p" data-linked={stage > 0 && (stage === 3 || category === index) && (part === 0 || part > 1)}><ResponseMeter label={`p${index + 1} · 旧`} value={result.p[index]} min={0} max={1} showScale={false} /></div>
-          <div data-probability-object="q" data-linked={stage > 0 && (stage === 3 || category === index) && part > 0}><ResponseMeter label={`q${index + 1} · 当前`} value={result.q[index]} min={0} max={1} showScale={false} /></div>
-        </div>)}
-        <div className="case-controls" role="group" aria-label="原型切换当前概率">{PROBABILITY_CASES.map((item, index) => <button key={item.id} data-review-q={item.id} aria-pressed={selected === index} onClick={() => { setSelected(index); setStage(0); setPart(0); setCategory(0); }}>{item.label}</button>)}</div>
-        <div className="contribution-chart" aria-label="带符号的类别贡献，统一尺度负 1.2 至正 1.2" data-revealed={stage >= 2}>
-          <p className="figure-label">{stage < 2 ? "下一步：将每类比较变成带符号的贡献" : "每类贡献 pₖ log(pₖ/qₖ) · 中线为 0"}</p>
-          {stage >= 2 && result.terms.map((value, index) => <div className="contribution-line" key={index} data-contribution={value}><span>{["猫", "狗"][index]}</span><div className="signed-track"><i className={value < 0 ? "negative" : "positive"} style={{ left: `${50 + Math.min(0, value) / 2.4 * 100}%`, width: `${Math.abs(value) / 2.4 * 100}%` }} /></div><output>{value > 0 ? "+" : ""}{formatValue(value)}</output></div>)}
-        </div>
-      </div>
-      <div className="calculation-focus" aria-live="polite"><p className="eyebrow">{stages[stage]}</p>
-        <KLDefinition focus={stage > 0 ? part : undefined} onSelect={choosePart} /><p>k 为类别编号；C 为共同类别数，本例 C=2。</p>
-        <div className="formula-parts" role="group" aria-label="选择 KL 公式项">{parts.map((label, index) => <button key={label} data-formula-select={index} aria-pressed={part === index && stage > 0} onClick={() => choosePart(index)}>{label}</button>)}</div>
-        {stage === 0 ? <p>p=(0.8, 0.2) 是参照。两次都判猫，也可能分配不同的概率。选一个类别，沿着公式观察。</p> : stage === 3 ? <><p>保留各项符号，再把所有类别相加。</p><Equation label="两个类别的贡献相加得到 KL"><mn>{formatValue(result.terms[0])}</mn><mo>+</mo><mo>(</mo><mn>{formatValue(result.terms[1])}</mn><mo>)</mo><mo>≈</mo><mn>{formatValue(result.kl)}</mn></Equation><output className="review-total" data-review-kl={result.kl}>KL ≈ {formatValue(result.kl)}</output><p>显示值保留三位小数。单项可负，完整 KL 非负。{PROBABILITY_CASES[selected].conclusion}</p></> : <><h3>{["猫", "狗"][category]} · 第 {category + 1} 类</h3><p data-comparison-direction>pₖ={result.p[category]}，qₖ={result.q[category]}。{part === 0 ? "旧概率是这一项的权重，切换 q 时保持不变。" : part === 1 ? "当前概率是比较对象，来自当前预测。" : `比值为 ${formatValue(ratio)}，对数为 ${formatValue(Math.log(ratio))}；${ratio < 1 ? "q 分得更多，这一项为负。" : ratio > 1 ? "q 分得更少，这一项为正。" : "相等时这一项为 0。"}`}</p>{stage >= 2 && <><Equation label="当前类别的旧概率乘以对数比，得到带符号贡献"><mn>{result.p[category]}</mn><mo>×</mo><mi mathvariant="normal">log</mi><mfrac><mn>{result.p[category]}</mn><mn>{result.q[category]}</mn></mfrac><mo>≈</mo><mn>{formatValue(result.terms[category])}</mn></Equation><p>这是该类别的贡献，还不是完整 KL。{result.terms[category] < 0 ? "负贡献不会单独作为一个非负惩罚。" : "还需要和另一类一起求和。"}</p></>}</>}
-      </div>
-    </div>
-    <div className="review-transport"><button onClick={() => { setStage(0); setPart(0); setCategory(0); }}>重置过程</button><button disabled={stage === 0} onClick={() => goToStage(stage - 1)}>上一步</button><button disabled={stage === 3} onClick={() => goToStage(stage + 1)}>下一步</button><span>单步观察 · 无自动播放</span></div>
-    <section className="review-derivation"><h3>为什么可以把它当训练目标？</h3><p>拆开 log(pₖ/qₖ)，就能分出当前网络可改变的部分和固定基准。k 是类别编号；C 是共同类别数，本例为 2。</p><KLDecomposition /><div className="entropy-explanation"><p><span>H(p,q)</span>按旧概率加权的交叉熵，随 q 改变：{formatValue(result.crossEntropy)}。</p><p><span>H(p)</span>仅由固定 p 决定的熵：{formatValue(result.entropy)}，切换时不变。</p></div><p>因此，降低 KL 等价于降低 H(p,q)。这里 p 是历史软目标，并不是新的真实标签。</p><ReferenceButton term="kl">查看 KL 的证明与梯度</ReferenceButton></section>
+  const [part, setPart] = useState<number | undefined>();
+  const timeline = useSceneTimeline(KL_CLIPS);
+  const { clipIndex: clip, progress } = timeline.state;
+  const s = klSceneAt(clip, progress, selected);
+  const focus = part ?? (clip < 2 ? undefined : clip < 4 ? 2 : clip === 4 ? 0 : 3);
+  const selectPart = (index: number) => { setPart(index); timeline.jump(index === 3 ? 5 : 2); };
+  return <section id="review-kl" className="review-scene motion-scene" data-scene="kl" data-clip={clip} data-progress={progress} data-status={timeline.state.status}>
+    <header><p className="eyebrow">U2 · 概率到贡献</p><h1>看见每一类，怎样贡献到 KL。</h1><p>固定参考 <Term id="p">p</Term>，观察当前概率 <Term id="q">q</Term>。同类比较产生带符号项，所有类别共同组成 <Term id="kl">KL 散度</Term>。</p></header>
+    <div className="case-controls" role="group" aria-label="选择概率例子">{PROBABILITY_CASES.map((item, index) => <button key={item.id} data-case={item.id} aria-pressed={selected === index} onClick={() => { setSelected(index); setPart(undefined); timeline.reset(); }}>{item.label}</button>)}</div>
+    <div className="motion-drawing"><svg className="motion-canvas" viewBox="0 0 1080 475" role="img" aria-label={`固定 p=${s.p}，当前 q=${s.q}；KL=${f(s.kl)}。${guidance[clip]}`}>
+      <text x="30" y="34">01 / 同类概率 · 同一尺度 0—1</text><text x="700" y="34" className="small-label">灰绿 p 固定　深绿 q 当前</text>
+      {[0, .25, .5, .75, 1].map((v) => <g key={v}><line className="grid" x1={160 + 650 * v} x2={160 + 650 * v} y1="55" y2="229" /><text className="small-label" x={160 + 650 * v} y="249" textAnchor="middle">{v}</text></g>)}
+      {["猫", "狗"].map((label, i) => {
+        const y = 75 + i * 85;
+        return <g key={label} data-probability-row={i} data-p={s.p[i]} data-q={s.q[i]}>
+          {clip >= 2 && clip <= 3 && s.category === i && <rect x="20" y={y - 19} width="1038" height="77" rx="4" className="focus-wash" />}
+          <text x="35" y={y + 14}>{label} · k={i + 1}</text>
+          <rect className="old" x="160" y={y - 9} height="16" width={650 * s.p[i] * s.referenceGrowth} data-p-bar={i} /><rect className="now" x="160" y={y + 16} height="16" width={650 * s.q[i] * s.referenceGrowth} data-q-bar={i} />
+          <text x="850" y={y + 2} className="numeric">p={f(s.p[i])}</text><text x="850" y={y + 28} className="numeric">q={f(s.q[i])}</text>
+          {clip >= 2 && <path className="flow" data-ratio-line={i} d={`M ${160 + 650 * s.p[i]} ${y + 1} L ${lerp(160 + 650 * s.p[i], 160 + 650 * s.q[i], clip > 3 || s.category !== i ? 1 : s.comparison)} ${y + 25}`} />}
+          {clip >= 2 && (clip > 3 || s.category === i) && <text x="1015" y={y + 15} textAnchor="middle" className="small-label">log 比值<tspan x="1015" dy="20">{f(Math.log(s.p[i] / s.q[i]))}</tspan></text>}
+          {clip >= 4 && <path className="flow" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - s.contributionGrowth} d={`M ${160 + 650 * s.q[i]} ${y + 35} Q ${160 + 650 * s.q[i]} 275, ${420 + (i ? -20 : 20)} ${313 + i * 55}`} />}
+        </g>;
+      })}
+      <text x="30" y="288">02 / pₖ log(pₖ/qₖ)</text><line x1="420" x2="420" y1="300" y2="405" className="grid" /><text x="420" y="423" textAnchor="middle" className="small-label">0 · 带符号贡献</text>
+      {s.terms.map((v, i) => <g key={i} data-term={v} data-reveal={s.contributionGrowth}>
+        <text x="35" y={329 + i * 55}>{["猫", "狗"][i]}</text><rect data-term-bar={i} className={v < 0 ? "negative" : "now"} x={420 + Math.min(0, v) * 230 * s.contributionGrowth} y={310 + i * 55} width={Math.abs(v) * 230 * s.contributionGrowth} height="25" />
+        <text x="690" y={329 + i * 55} className="numeric">{clip >= 4 ? `${v >= 0 ? "+" : ""}${f(v)}` : "待比较"}</text>
+        {clip >= 5 && <path className="flow" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - s.sumGrowth} d={`M 775 ${324 + i * 55} Q 815 ${324 + i * 55}, 830 350`} />}
+      </g>)}
+      <text x="850" y="324" className="small-label">03 / 所有类别相加</text><text x="850" y="365" className="large-value" data-total={s.kl}>{clip >= 5 ? `KL=${f(s.kl)}` : "KL 待汇总"}</text>
+      <text x="30" y="456" className="small-label">两类合成例 · 条形 / 公式 / 总量均由同一 q(t) 计算 · 贡献条的生长表示展开，不表示改变贡献值</text>
+    </svg></div>
+    <div className="motion-formula"><KLDefinition focus={focus} onSelect={selectPart} /><div className="formula-parts" aria-label="聚焦公式项">{["pₖ 权重", "qₖ 当前", "log 比值", "Σ 求和"].map((label, i) => <button key={label} aria-pressed={focus === i} onClick={() => selectPart(i)}>{label}</button>)}</div></div>
+    <div className="motion-narration" aria-live="polite"><strong>{KL_CLIPS[clip].id}</strong><p>{guidance[clip]}{clip === 5 && ` 单项可负，完整 KL 非负。${PROBABILITY_CASES[selected].conclusion}`}</p></div>
+    <SceneTransport timeline={timeline} clips={KL_CLIPS} label="KL" />
+    <section className="review-derivation"><h3>当前网络能改变哪一部分？</h3><p>k 为类别编号，C 为共同类别数（本例 2）；p 是固定软目标。拆开对数比可得：</p><KLDecomposition /><div className="entropy-explanation"><p><span>H(p,q) · 随 q 改变</span><meter min="0" max="1.5" value={s.crossEntropy} /> {f(s.crossEntropy)}</p><p><span>H(p) · 固定基准</span><meter min="0" max="1.5" value={s.entropy} /> {f(s.entropy)}</p></div><p>两者之差为 {f(s.kl)}。优化时 p 不变，降低交叉熵也就降低 KL。</p><ReferenceButton term="kl">证明与梯度</ReferenceButton></section>
   </section>;
 }
