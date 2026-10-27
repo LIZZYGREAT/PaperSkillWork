@@ -67,11 +67,13 @@ x2 是 S2–S7 的追踪锚：S2 看它的类别与整组响应，S3 确定历�
 
 `python tools/paper.py paths der --json` 已执行，退出 0。解析目标为 `C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\papers\der\web\enhanced`，无 Final 覆盖。后续复制目的地为该目录的 `src/shared/`；本轮没有复制。
 
-已读真实入口：`index.html`→`src/main.tsx`→`App.tsx`，React 18 + TypeScript + Vite 6；`src/data/tutorial.ts` 当前只有空 chapters，`src/modules/registry.tsx` 为空，`TutorialData.meta` 可表达 titleEn/titleZh，现有页面按 componentId 选模块。这些是待 W6 填充的脚手架状态，不是假定已有教程。W6 需提供真实题名/模块注册，保留入口，按实际教学内容扩展局部布局，不借元数据修改 W4。
+已读真实入口：`index.html`→`src/main.tsx`→`App.tsx`，React 18 + TypeScript + Vite 6；`src/data/tutorial.ts` 当前只有空 chapters，`src/modules/registry.tsx` 为空，`TutorialData.meta` 可表达 titleEn/titleZh，现有页面按 componentId 选模块。这些是待 W6 填充的脚手架状态，不是假定已有教程。W6 保留入口，按实际教学内容扩展局部布局，不借元数据修改 W4。
+
+W6 元数据使用完整英文题名 `Dark Experience for General Continual Learning: a Strong, Simple Baseline`、中文题名“DER / DER++：用有限记忆保留历史预测”，首页短标识为 DER / DER++。概率计算、logits 比较和目标快照分别使用本地组件 ID `der-probability-constraint`、`der-logit-matching`、`der-memory-snapshot`，在 tutorial.ts 声明并在真实 widgetRegistry 中逐项注册；普通问题正文仍是普通图文。componentId 名称可作同义的局部工程调整，但必须同时修改引用和注册，不新增空注册项占位。MathML 的 d.ts 应被实际 tsconfig 包含；静态图形、类别坐标与数据计算由 DER 模块拥有，不从 Kit 或另一篇论文借入事实。
 
 `vite.config.ts` 的 `base: './'` 支持相对子路径产物；新增本地资源须通过相对模块导入或 Vite base 解析，禁止硬编码 `/images/`。不新增外部服务、CDN、远程字体或训练服务；原生 MathML/Kit 类型声明是数学排版候选，不必增加运行时数学依赖。S7 教学数值若采用小模型，浏览器本地计算，不加载真实论文模型权重。
 
-相邻 PaperSkill 检出 HEAD 为 `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`，工作树干净，upstream 指向官方 `ReductTech/PaperSkill`。已读 `scripts/import-paper.js`、`scripts/validate-repository.js`、`paper-skill/scripts/validate-output.js` 与本地 contract；未同步远端，因此不能称其为当前官方版本的兼容证明。本轮不运行 Import/Preflight。
+相邻 PaperSkill 检出 HEAD 为 `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`，工作树干净，upstream 指向官方 `ReductTech/PaperSkill`。已读 `scripts/import-paper.js`、`scripts/validate-repository.js`、`paper-skill/scripts/validate-output.js` 与本地 contract；定稿时尝试 `git -C ../PaperSkill fetch upstream main`，退出 1：本机 MSYS SSH 的 NtCreateDirectoryObject 返回 0xC0000022，随后 Git 报无法读取远端。未取得成功刷新的官方版本，不能将当前本地检查称为最新官方兼容证明。此失败不改动上游源码，不以此改动已确认的教学结构。本轮不运行 Import/Preflight。
 
 已证实的接收关系：本地 `validate-repository.js` 会调用 `validate-output.js`，后者确实检查 `tutorial.ts` 的 kind 数量及 componentId 注册，并非所有生成器约定都只停留在文档。该本地版本读取 contract 的 6–10 chapters、至少 4 modules、至少 1 个双 module chapter；它没有据此强制八阶段一页一章或每章交互。候选七单元与 U4 的两个真实教学任务在完整内容阶段可以自然适配，不能为了数字新增假模块。首切片只有 U1–U3，届时可能出现真实阶段不足的校验失败/提示，要如实分别记录，不篡改数据凑满；W8 再核对完整内容。
 
@@ -119,7 +121,7 @@ foundation/animation/useAnimationTimeline.ts
 foundation/accessibility/useReducedMotion.ts
 ```
 
-W6 只需第一组首切片部件，待方案确认后才执行相同 `--select` 命令去掉 `--dry-run`；第二组等 U4/U6 真正开工时按需要追加。入口只引一次 `shared/foundation/styles/kit.css`，图元和 Glyph 自带各自 CSS 导入；MathML d.ts 需要被 tsconfig 读取。所有场景 CSS 留在 DER 本地，不复制 Gallery 样式。当前没有必须修改 Kit 内部样式的证据；适配分类为局部布局与教学数据/语义，不是共享缺陷修复。
+已确认首切片 W6 只需第一组部件，实际开工时才执行相同 `--select` 命令去掉 `--dry-run`；第二组等 U4/U6 真正开工时按需要追加。入口只引一次 `shared/foundation/styles/kit.css`，图元和 Glyph 自带各自 CSS 导入；MathML d.ts 需要被 tsconfig 读取。所有场景 CSS 留在 DER 本地，不复制 Gallery 样式。当前没有必须修改 Kit 内部样式的证据；适配分类为局部布局与教学数据/语义，不是共享缺陷修复。
 
 第三组是对照候选，不实施复制：FormulaBlock 会带 FormulaTerm/MathTypography；BenchmarkExplorer 会带 SegmentedControl；四者合计闭包为 7 文件（controls/SegmentedControl.tsx、layout/StickySystemView.tsx、math/mathml-jsx.d.ts、styles/kit.css、optional/benchmark-explorer/BenchmarkExplorer.tsx、optional/evidence-viewer/EvidenceViewer.tsx、optional/formula/FormulaBlock.tsx，前三类均位于 foundation/）。FormulaBlock 的符号交互非当前主任务，静态 MathML 更直接；StickySystemView 使用滚动阅读线与手动覆盖，可能和 U6 显式训练步竞争，故先不用；EvidenceViewer/BenchmarkExplorer 的源码有硬编码英文 UI 且 U7 暂无需大筛选，先采用本地中文协议表和原位详情。
 
@@ -215,8 +217,8 @@ U3 默认 z=(2,1,0)、a=(1,2,0)，切换 a=(3,2,1) 时，两组柱使用相同�
 │ 当前原图 xi   │ ───→ │ 唯一当前网络 θ  │ ────→ │ 当前 Z / Zsave     │
 │ 标签 yi→CE    │      │ 所有路径共享参数│       │ Lcurrent(yi,概率)  │
 │ 候选托盘 vi   │      │                 │       │                    │
-├──────────────┤      │ 本步只更新一次  │       │ Ldark + α          │
-│ 记忆 M       │ ─取→ │                 │ ────→ │ Llabel + β [++]    │
+├──────────────┤      │ 本步只更新一次  │       │ α·Ldark            │
+│ 记忆 M       │ ─取→ │                 │ ────→ │ β·Llabel [++]      │
 │ 槽 0 / 槽 1 │ Rd,Ry└─────────────────┘       │ 合成 L / 梯度详情 │
 └──────────────┘            ↑ 联合梯度             └────────────────────┘
       ↑ 参数更新后才写       └──────────────────────────────┘
@@ -230,7 +232,56 @@ U3 默认 z=(2,1,0)、a=(1,2,0)，切换 a=(3,2,1) 时，两组柱使用相同�
 
 唯一计算源拟为 DER 本地纯函数 `trainStep(state,batch,choices)` 产生的不可变操作轨迹。它承担真实教学计算；时间线只决定揭示哪一项结果，不能另算一份损失或另维护副本 M。选择预设教学轨迹时显式记录 Rd/Ry 与 j，回退恢复已有轨迹快照，不再抽签或训练一次。进入预测只计算查询输出，θ/M/N 保持逐值一致。更换 DER/DER++ 模式会从 θ0 重建整条轨迹，禁止在 θ3 上偷偷补标签路径后沿用旧结果。
 
-数值分两层：默认主图明确 θ 的版本、记录身份、损失来源与 reservoir 的 E03 决策，不伪造 ResNet 的实测参数；展开计算若需要给出真实 θ 数值，推荐采用清楚定义的三类小型线性分类器 h_W(u)=Wu，用固定二维合成输入和解析 CE/L2 梯度逐轮重算。u 是教学图片标记的合成特征，不声称来自论文 CNN；S7 中第一次引入其简化计算须在旁注明。此举是实现方式提案，不改 E03 的四轮读写语义，不与 S3 的独立 E01/E02 向量冒充同一训练轨迹。小模型的固定输入、初值、学习率和结果需在定稿时明确并验证；未确认前不提交手设 θ 或三组互不一致的 logits。
+数值分两层：默认主图明确 θ 的版本、记录身份、损失来源与 reservoir 的 E03 决策，不伪造 ResNet 的实测参数；展开计算使用已确认的三类小型线性分类器 h_W(u)=Wu。u 是教学记录的二维合成表示，不声称来自论文 CNN；主图的样本 ID 与展开区的数据项对应，但不声称计算出了真实图片的特征。当前输出、冻结 z、损失和参数更新均由下方固定设定计算，不与 S3 的独立 E01/E02 向量冒充同一训练轨迹。
+
+##### S7 小模型的固定计算设定
+
+这是本项目对 W4 E03 四轮状态轨迹的数值展开；参数和视图由 W5 合成，计算规则依据 B01/B02 与 W2 联合训练顺序，不是论文训练数据、准确率或新的方法模块。固定三类坐标依次为猫、狗、狐狸，单条当前输入、单条每次回放；无 bias、无 momentum、无 dropout/BN、无动态扩头。参数 θ=W，初态 M=[]、N=0、K=2，η=0.1、α=0.5；DER++ 的 β=0.5，DER 不计算标签回放项。这些系数只是此合成算例配置，不是论文全实验唯一最优值。
+
+$$
+W_0=\begin{pmatrix}0.2&-0.1\\0&0.1\\-0.1&0\end{pmatrix},
+\qquad h_W(u)=Wu,
+\qquad A_s(u)=(u_1+0.1s,\ u_2),\quad s\in\{-1,+1\}.
+$$
+
+A_s 是二维教学数据的微小视图变化，标签按 fixture 保持；不将它说成真实图像裁剪的计算，也不声称任意变换都保持类别。可视层区分原始 u、视图标记 s 和结果 A_s(u)，原始 u 才入池，z 来自本次当前视图的更新前网络。Fixture 的全表只用于教学配置和重播；训练函数每轮只读取当前项、旧 M 及本轮选择，不能借全表恢复已淘汰样本参与回放。
+
+| 轮次 / 当前项 | 原始 u / 真实 y | 当前视图 s | Rd / 回放视图 s | DER++ 的 Ry / 回放视图 s | 参数更新后的 reservoir |
+| --- | --- | --- | --- | --- | --- |
+| 1 / x1 | (1,0) / 猫 | +1 | 无 | 无 | 追加 v1；N=1 |
+| 2 / x2 | (0,1) / 狗 | −1 | v1 / −1 | v1 / +1 | 追加 v2；N=2 |
+| 3 / x3 | (1,1) / 狐狸 | +1 | v1 / +1 | v2 / −1 | j=0，替换 v1；N=3 |
+| 4 / x4 | (1,−1) / 猫 | −1 | v2 / −1 | v3 / +1 | j=3，拒收 v4；N=4 |
+
+这些是预设的合法教学选择，不称为一次真实随机抽样；三、四轮 j 分别属于 [0,2]、[0,3]。需要随机探索时另开明示模式并从头计算，不能沿用下面核对值。DER 与 DER++ 各从同一 W0 开始，记录池身份相同，但第三轮起响应和后续参数可以不同。
+
+对当前视图 v，q=softmax(Wv)；真实标签 y 采用同一三类坐标，e_y 为其 one-hot。v_d、z_d 属于 Rd 的增强输入与冻结目标；v_l、y_l 属于 Ry 的增强输入与真实标签。当前 CE 梯度、历史匹配梯度、标签回放梯度和一次联合更新为：
+
+$$
+g_c=(q-e_y)v^\top,\qquad
+g_d=2(Wv_d-z_d)v_d^\top,\qquad
+g_l=(\operatorname{softmax}(Wv_l)-e_{y_l})v_l^\top,
+\qquad W^+=W-\eta(g_c+\alpha g_d+\beta g_l).
+$$
+
+DER 的最后一项省略；空池两种回放项均省略。所有梯度在进入本轮的同一个 W 上计算；先将当前 z=WA_s(u) 复制为数值，再更新 W，最后根据表中选择入池。Softmax 用减去最大值的稳定实现；计算保留浮点精度，只在显示时舍入。
+
+下表是本轮独立复算的核对值，保留九位小数。Ldark/Llabel 是未乘系数的值；总损失是 Lcurrent+0.5Ldark（DER）或再加 0.5Llabel（DER++）。界面应使用公式计算，不能反过来把此舍入表当作动画数据源。
+
+| 模式 / 轮次 | Lcurrent | Ldark | Llabel | 总损失 | 终态池身份 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| DER / 1 | 0.924831171 | 0 | 不计算 | 0.924831171 | [v1] |
+| DER / 2 | 0.996218307 | 0.001450076 | 不计算 | 0.996943345 | [v1,v2] |
+| DER / 3 | 1.320544135 | 0.008208513 | 不计算 | 1.324648391 | [v3,v2] |
+| DER / 4 | 0.795830653 | 0.005751480 | 不计算 | 0.798706393 | [v3,v2] |
+| DER++ / 1 | 0.924831171 | 0 | 无样本 | 0.924831171 | [v1] |
+| DER++ / 2 | 0.996218307 | 0.001450076 | 0.860131109 | 1.427008899 | [v1,v2] |
+| DER++ / 3 | 1.339471793 | 0.017769232 | 0.935701131 | 1.816206974 | [v3,v2] |
+| DER++ / 4 | 0.763913071 | 0.010760951 | 1.173231484 | 1.355909289 | [v3,v2] |
+
+首轮 z1=(0.22,0,−0.11)，第二轮候选 z2≈(−0.126637418,0.103501054,0.013136364)，这两个时刻两模式尚相同；之后须分别从各模式 W 计算，不能共享旧结果。DER 的 W4 三行为 (0.266925345,−0.215478335)、(−0.096221826,0.149995574)、(−0.069122901,0.065498583)；DER++ 为 (0.274097285,−0.245087785)、(−0.130273778,0.159440379)、(−0.042242889,0.085663228)。
+
+只读查询固定 u_query=(1,0.5)，评测视图为恒等映射；两模式都在三类中取 argmax。DER 查询 logits≈(0.159186177,−0.021224039,−0.036373610)，DER++≈(0.151553393,−0.050553588,0.000588725)，均输出猫。该结果只演示预测入口，不是方法性能比较；同一步查询前后 W/M/N 深比较必须相同。记录 z1/z2/z3 需与各自产生步的更新前数值逐值相等，槽位替换时整条记录退出；按前后步执行轨迹检查跨轮交接。
 
 | W2 操作 / 高风险时刻 | 进入状态 / 计算 | 离开状态与图文同步 | 必须固定 / 可复算断言 |
 | --- | --- | --- | --- |
@@ -268,12 +319,12 @@ U3 默认 z=(2,1,0)、a=(1,2,0)，切换 a=(3,2,1) 时，两组柱使用相同�
 implementation:
   stages:
     - {id: S1, page: U1-replay-entry, core_items: [I01], evidence_refs: [C01, C11, C16], primary_vehicle: '问题正文与有限回放静态对照', reusable_pattern: null, reason: '先建立旧数据不可完整取得的缺口，再给出有限 ER'}
-    - {id: S2, page: U1-replay-entry, core_items: [I02], evidence_refs: [C11, C10, B03], primary_vehicle: '同图同标签与整组响应对照', reusable_pattern: null, reason: '直接承接 ER，并揭示标签没有保存的历史行为'}
+    - {id: S2, page: U1-replay-entry, core_items: [I02], evidence_refs: [C11, C10, B01, B03], primary_vehicle: '同图同标签与整组响应对照', reusable_pattern: null, reason: '直接承接 ER，并揭示标签没有保存的历史行为'}
     - {id: S3, page: 'U2-probability / U3-logit-memory', core_items: [I03, I04, I05], evidence_refs: [C10, C02, C13, C12, M02, M06, B01, B02, B03, E01, E02], primary_vehicle: '先概率 KL 再 logits 平方匹配的两段可计算对照', reusable_pattern: null, reason: '先验证概率监督可行，再比较表示空间，最后决定目标采集时机'}
-    - {id: S4, page: U4-reservoir-and-step, core_items: [I06, I07], evidence_refs: [C06, M03, I01, C02, C04, M04, M06], primary_vehicle: '槽位抽签与单步读写顺序演示', reusable_pattern: null, reason: '记录内容确定后解决在线选留，再闭合基本 DER'}
+    - {id: S4, page: U4-reservoir-and-step, core_items: [I06, I07], evidence_refs: [C06, M03, I01, C02, C04, M04, M06, E02], primary_vehicle: '槽位抽签与单步读写顺序演示', reusable_pattern: null, reason: '记录内容确定后解决在线选留，再闭合基本 DER'}
     - {id: S5, page: U5-consistency-and-correction, core_items: [I08], evidence_refs: [C14, M06], primary_vehicle: '同一原图的两种增强视图与固定目标对照', reusable_pattern: null, reason: '恢复前段暂固定视图的真实训练条件'}
     - {id: S6, page: U5-consistency-and-correction, core_items: [I09], evidence_refs: [C03, C05, C15, E04], primary_vehicle: '错误历史引出标签监督与三损失同网络图', reusable_pattern: null, reason: '从一致但可能错误的目标自然引出 DER++'}
-    - {id: S7, page: U6-complete-system, core_items: [I10], evidence_refs: [C04, C05, C06, M01, M02, M03, M04, M05, M06, E03], primary_vehicle: '独立系统级四轮连续执行与只读预测', reusable_pattern: null, reason: '核查空池、回放、更新、写入及跨轮交接，不拼接局部演示'}
+    - {id: S7, page: U6-complete-system, core_items: [I10], evidence_refs: [C02, C03, C04, C05, C06, C14, M01, M02, M03, M04, M05, M06, B01, B02, E03], primary_vehicle: '独立系统级四轮连续执行与只读预测', reusable_pattern: null, reason: '核查空池、回放、更新、写入及跨轮交接，不拼接局部演示'}
     - {id: S8, page: U7-evidence-and-limits, core_items: [I11], evidence_refs: [R01, R02, R04, R05, C07, C08, C09, I01, I02], primary_vehicle: '协议先行的精炼结果对照与反例', reusable_pattern: null, reason: '运行闭环后用实验证据检验效果，不从机制直觉断言优越'}
   assets: []
   supporting:
