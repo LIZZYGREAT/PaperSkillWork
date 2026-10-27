@@ -38,12 +38,15 @@ export function lifecycleSceneAt(clip: number, progress: number) {
   const stored = store >= .92;
   const copyMotion = smooth(copy);
   const storeMotion = windowAt(store, .2, .92);
+  // Separate columns before collapsing rows so value labels never converge.
+  const packingColumns = windowAt(store, .2, .65);
+  const packingRows = windowAt(store, .65, .92);
   const targetOrigin = store > 0
     ? curve(storeMotion, { x: 730, y: 375 }, { x: 730, y: 450 }, { x: 800, y: 475 }, { x: 800, y: 555 })
     : curve(copyMotion, { x: 730, y: 205 }, { x: 1000, y: 205 }, { x: 1000, y: 375 }, { x: 730, y: 375 });
   const targetPoints = HISTORY_Z.map((v, k) => ({
-    x: mix(v * mix(55, 48, copyMotion), k * 42, storeMotion),
-    y: mix(k * mix(55, 36, copyMotion), 0, storeMotion),
+    x: mix(v * mix(55, 48, copyMotion), k * 42, packingColumns),
+    y: mix(k * mix(55, 36, copyMotion), 0, packingRows),
   }));
   const input = { x: mix(105, 305, windowAt(enter, .25, 1)), y: 250 };
   const currentInput = curve(windowAt(replay, .05, .32), { x: 105, y: 180 }, { x: 190, y: 180 }, { x: 240, y: 225 }, { x: 305, y: 250 });
