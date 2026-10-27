@@ -99,6 +99,42 @@ D1 默认完整播放一次并停在终态，提供暂停/继续、重播、上�
 - `git diff --check`：退出 0。源码构建、生产子路径检查、官方上游源码检查、连续播放、真实 F11、Reduced Motion 实现测试：NOT_RUN，本轮仅 D0 设计，未改变发布源码，D1 再执行相应范围。
 - **D0 图稿已交付，方向确认 PENDING；D1/D2 未开始，D3/D4 未开始，W7 仍 pending。** 需要用户评审的是本节的具体空间、复制分离、槽位读取与比较运动方向，不能将静态图稿通过推断成动画或学习效果通过。
 
+### D1 实施、尺寸返修与 D2 交接（2026-10-27–28）
+
+用户认可 D0 整体页面方向并授权 D1，同时要求解决文字凌乱、线条乱跑和重叠。实施中用户又提供真实浏览器截图，指出画布被压得过小；这是 D1 的明确返修意见，不记为动画验收或 W7 PASS。
+
+**已实现的画面：** `SampleLifecyclePrototype.tsx` 在既有 `?review=1` 的首个场景呈现约 45 秒连续生命周期。原图/视图分离，视图进入三层抽象计算空间并形成整组响应；源圆点保留，方形数值副本从源位置分离冻结；当前 CE 更新模型后，原图与副本装配并合法追加空槽；下一步从该槽读出引用、重新增强、穿过同一模型，历史方标与新圆点在共同坐标比较；差值形成平方面积并汇总为 2，两种损失汇合后只作一次联合更新。无优化后预测数字，结尾尚未写入 x₂ 候选。
+
+**布局返修的根因和处理：**
+
+- 初版 `max-width: calc((100dvh - 400px) * 1.75)` 将宽度绑在窗口高度上，短窗口/浏览器缩放时会把主体压成小图。已删除该规则，画布、控制和同步说明按现有阅读区宽度展开，纵向正常滚动；保留局部窄屏滚动能力。用户截图的等效布局用 CSS 1530×698 / DPR 1.25 模拟，实体图宽为约 1550 物理像素；这是缩放等效布局检查，不冒充实际操作了浏览器缩放或 F11。
+- 文字集中在固定标题区、类别区和画布下方的说明/公式区；移动对象不携带长段解释。候选由纵向三类响应变成横向存储时，先分开列再收拢行，避免数字中途挤在一起。记录外沿留出完整标题内边距。
+- 数据运动、数值复制和参数约束分别表达；梯度只有一条汇合后路径，并沿预留的上方/外沿通道到模型。比较转场时，缩略模型标签等回放路径退出后才出现。原图装配引用从下方抵达槽位，退场的增强视图说明不再占用通道，样本不经过记忆标题。
+- 历史参考方标填充透明；差值为零时保留内部当前圆点，避免被方标底色遮住。原槽内的历史记录不因读取而消失或更新。
+
+**状态与复用：** `lifecycle-model.ts` 是确定性场景纯函数；时间只决定几何、显现和事件，固定 fixture 与 `math-model.ts` 的计算决定数字。记录 `record:x1:i` 及冻结目标 `target:x1:i` 从出生到终态持续存在；K=2，首步 N=0→1，下步回放保持 N=1。复用已在 DER 内的 Registry candidate `useAnimationTimeline`、依赖的 `useReducedMotion` 与局部 `SceneTransport`；核读 Registry、animation-timeline Recipe 和实际 Hook 源码，没有新复制闭包或更改候选审批。仅为 `useSceneTimeline` 增加默认 false 的可选自动播放参数、为控制区增加可选说明，旧三个场景默认行为由回归覆盖。样本像素、网络切片、数值分离/装配、记忆槽、比较与镜头几何均为 DER 局部创作，不导入 iCaRL 业务图形或跨论文运行时。
+
+| 检查 | 实际命令、范围与结果 |
+| --- | --- |
+| 计算/状态 | `npm --prefix papers/der/web/enhanced test`，退出 0，12 项通过；覆盖更新前复制、更新后写入、固定 z、跨步记录来源、一次联合更新和几何连续性。 |
+| SOURCE_BUILD | `npm --prefix papers/der/web/enhanced run build`，退出 0；TypeScript 5.9.3 / Vite 6.4.3，63 modules；最终 bundle `index-CO8L0XA-.js`、`index-Clf8P-o_.css`。 |
+| 浏览器回归 | `DER_REVIEW_DIR=<absolute evidence>/browser` 后运行 `npm --prefix papers/der/web/enhanced run test:browser`：完整旧切片/三个原型及新生命周期回归 2055 项通过；局部路径与标记修正后以 `DER_BROWSER_LIFECYCLE_ONLY=1` 定向重跑三布局，1842 项通过，退出 0。覆盖每阶段 10%/25%/40%/50%/60%/70%/75%/90%/终态，文字相交/越界、路径穿字、移动图像遮字、暂停、继续、回退、重播、键盘和 Reduced Motion。 |
+| SUBPATH_ASSETS | 上述浏览器从实际生产 dist 提供 `/der-review/`，覆盖 1440×900、1920×1080、用户反馈触发的 1530×698 / DPR 1.25；原切片仍为三个真实单元，观察到的同源资源和浏览器错误为 0，退出 0。 |
+| 标准视觉 QA | `node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json`，退出 0，38 状态；新增冻结、入池、比较三个状态。最终布局报告 `.visual-qa/run-2026-10-27T16-03-15-754Z/report.md` 的 GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS 均 PASS；随后零差值标记的透明填充修正由上述定向检查及最终实录覆盖。实际查看新场景截图和连续中间帧，未将 runner 的 VISUAL_REVIEW=NOT_RUN 改写成人审。 |
+| 连续实播 | `DER_ANIMATION_SCENES=lifecycle DER_ANIMATION_VIEWPORTS=1920 DER_RECORD_VIDEO=1 DER_ANIMATION_EVIDENCE=<absolute evidence>/final` 后从仓库根目录运行 `node papers/der/web/enhanced/tests/record-animation.mjs`，真实 requestAnimationFrame、无虚拟时钟，实际 45829ms、采集 111 帧并生成完整视频；视频与元数据见下方，退出 0，无页面错误。 |
+| UPSTREAM_SYNTAX | `node ../PaperSkill/paper-skill/scripts/syntax-check.js <absolute-publish-source> --require-parser`，退出 0，36 源文件，TypeScript parser，PASS。 |
+| UPSTREAM_OUTPUT | NOT_RUN；fetch 后当前官方输出检查器 blob 与相邻工作树不同，不执行陈旧版本冒充通过。 |
+| 工作流 / diff / 清理 | `python tools/paper.py check der`、`git diff --check`，退出 0。W7 pending 警告与已记录的本机绝对路径提示属实。没有再次执行 W6 complete。三份标准 runner run 目录由 `--cleanup-run` 确认此前已不存在；临时浏览器/逐帧/中间播放证据及第二处意外输出目录已按仓库内精确路径移除，最终录像、元数据、三张阶段图和尺寸图仍留在忽略目录供用户复看。 |
+| FULLSCREEN_LAYOUT / FULLSCREEN_REAL / HUMAN_ACCEPTANCE | PASS / NOT_RUN（未实际操作 F11）/ PENDING。缩放等效布局和录制不代替人审。 |
+
+上游核验：官方 upstream `git@github.com:ReductTech/PaperSkill.git`；相邻检出工作区干净，HEAD 前后均 `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`。沙箱内 fetch 因 SSH 命名对象权限失败，获准的沙箱外 `git -C ../PaperSkill fetch upstream main` 退出 0，upstream/main `7f70497dcc10c32b33ba2abacba52a90cda834ba`。syntax 本地/官方 blob 均 `2bcfa6f815054ee498574c51cef05f0c315b4298`；output 本地 `1a58ca06bd9fa47b6730904f1622189011cc32fe`、官方 `9ec76b6974f262fca7b9611c4a485dd2275fe76c`。Node v24.18.0 / npm 11.16.0；未切换或覆盖相邻检出。
+
+**观看入口：** 当前已存在的本机预览服务从此生产 dist 读文件，入口 `http://127.0.0.1:4194/?review=1#lifecycle-player`。刷新后自动播放一次；可用“重播整段”重新看全程，或选择八个关键阶段观察完整结果。若服务未运行，从仓库根目录执行 `npm --prefix papers/der/web/enhanced run preview -- --host 127.0.0.1 --port 4194 --strictPort`；已有服务时直接使用，不覆盖或结束用户进程。4198 的服务归属未用于交付。
+
+本轮证据根目录 `.visual-qa/der-lifecycle-d1/final/` 保留最终 `playback-1920.webm`、`playback-lifecycle.json`、三个阶段 viewport 截图及短窗口等效布局截图；录像是完整播放，截图仅辅助说明。逐帧 PNG、迭代录像、重复浏览器输出和第二处意外产生的浏览器输出在复核后已删除，不提交 Git，也不当作获批基线。标准 runner 的三条清理命令均报告 `Already absent; nothing removed` 并再次确认目标路径不存在。
+
+**交接状态：D1 可播放原型已交付；D2 待用户观看并评价运动、语义与学习效果。** W7 继续 pending，D3 正文整合和 D4 全局规范回写等待 D2 明确认可；原型没有代替整段 S1–S3 正式复审。
+
 ## Design Handoff, Invariants, and Change Scope
 
 - Design confirmation: CONFIRMED（2026-10-27）。用户选择“采用推荐方向”和“采用 S1–S3（推荐）”；确认 S3 两段计算、S4 选留/训练分段、S7 独立工作台及展开区可复算小模型，首切片为 S1–S3 / I01–I05。
