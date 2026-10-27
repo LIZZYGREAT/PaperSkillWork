@@ -408,6 +408,8 @@ DESKTOP_WINDOW=PASS；FULLSCREEN_LAYOUT=PASS（布局模拟）；FULLSCREEN_REAL
 
 W7 预览 `http://127.0.0.1:5188/`，由 publish_source 下 `npm run preview -- --host 127.0.0.1 --port 5188 --strictPort` 提供本次生产构建；开发复现及测试命令见同目录 README。此服务只供本地评审，不是发布或上游接收操作。
 
+收尾：`ed4b9a7` 已提交排版修复、104断言浏览器回归、视觉检查配置及本记录。随后 `python tools/paper.py stage der W6 complete` 退出0，CLI 自动记录 W6 complete；`check der` 和 `status der` 退出0、当前阶段 W7。check 的 W7 warning 提醒尚无人工 PASS，符合等待用户的状态；绝对路径 warning 来自本机源码/证据记录，不是运行时引用。`git diff --check` 退出0。W6 的完成仅代表真实入口和 I01–I05 覆盖成立，不覆盖 UPSTREAM_OUTPUT 的 NOT_RUN，更不代替用户学习验收。
+
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING

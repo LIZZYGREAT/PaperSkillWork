@@ -17,7 +17,7 @@ paper:
   source_hash: e7dcafb05e9fd77e0524be8b98578cd884a9fe6455322beb2f4a6c4a383cd72e
 workflow:
   version: 3
-  current_stage: W6
+  current_stage: W7
   stages:
     W0_source_intake:
       status: complete
@@ -40,7 +40,8 @@ workflow:
       status: complete
       completed_by: automation
     W6_vertical_slice:
-      status: in_progress
+      status: complete
+      completed_by: automation
     W7_human_review:
       status: pending
     W8_full_implementation:
