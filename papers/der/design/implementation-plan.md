@@ -469,6 +469,30 @@ Vertical Slice Review: REVISE → 修订已实现，等待用户再次评审（W
 
 验收计划：原有数学/主线与参考资料回归；纯函数中间值核验；真实浏览器连续播放与暂停恢复/重播/换例；25/50/75% 的坐标、线长、贡献宽度；1440×900 与 1920×1080 截图目视、子路径资源。保存本地短视频与时间点截图供方向评审，不提交视频；FULLSCREEN_REAL 无实际 F11 时记 NOT_RUN。具体命令、结果与证据在本节追加。
 
+#### P0 交付与实际核验
+
+分段提交：`36d647d` 范围/旧主线对照/精确复制时钟；`b47db81` KL；`fedc5ec` Logits；`8a3a6f6` 独立历史复制与候选交接；`5877708` 运动回归、标签修复、时间进度与本地实录工具。新原型位于 `?review=1`，原主线暂保留对照；P1 正式整合与 U1 动效等待本次动画方向确认。未修改其它论文、Kit 原件或阶段状态。
+
+| 检查 | 实际命令 / 证据 | 结果 |
+| --- | --- | --- |
+| SOURCE_BUILD | `npm.cmd run build --prefix papers/der/web/enhanced`；TypeScript + Vite 6.4.3，Node v24.18.0 | PASS，退出 0 |
+| 数学与纯场景 | `npm.cmd test --prefix papers/der/web/enhanced`；原有数学 7 项与新场景 3 项，覆盖每种预设 101 个插值样本、KL 带符号项/熵恒等式、平方/softmax、复制生命周期 | PASS，10/10，退出 0 |
+| 动态与交互 | `DER_REVIEW_DIR=<repo>/.visual-qa/der-w7-animation/regression` 后 `node papers/der/web/enhanced/tests/browser.test.mjs`；Edge 156.0.4314.50 | PASS，最终构建 458 项；实际 inner 1440×900 / 1920×1080、DPR 1。包含原主线/Reference、25/50/75% 坐标与条宽、暂停后几何静止/恢复、单步末态、整段结束/重播、换例、reduced motion、独立副本 DOM 身份与候选未入 M |
+| 真实连续播放 | `node papers/der/web/enhanced/tests/record-animation.mjs`；最终 Logits 标签调整后再设 `DER_ANIMATION_SCENES=logits` 重录 | PASS，两个视口分别从开始运行至 finished，不使用虚拟时钟。KL 约 17.7/17.5 秒，最终 Logits 约 13.6/13.4 秒，冻结约 15.7/15.3 秒；每镜头有末端停留。1440 实录 61/43/54 帧编码为本地循环 GIF，画布含秒数/镜头/百分比 |
+| SUBPATH_ASSETS | 浏览器回归从生产 dist 提供 `/der-review/`，检查实际 URL、同源响应/请求失败 | PASS，两尺寸均无页面或资源错误；主线仍 3 单元，未造后续章节 |
+| 标准视觉 QA | `node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json` | PASS，32 个状态；GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS 均 PASS。报告 `.visual-qa/run-2026-10-27T14-29-07-749Z/report.md`；随后最终 Logits 标签由上述浏览器回归与实录复测 |
+| Agent 视觉检查 | 实际查看连续实录的中间帧序列、两尺寸 viewport 图、主画布与主线截图；重点检查共同平移/冻结复制中途与候选交接 | PASS（本轮检查范围）。修正 Logits 差值标签与分数/圆点拥挤、冻结目标区标题与移动副本相交；控制栏移至画布上方，时间进度随画布可见。动态教学价值仍待用户判断 |
+| UPSTREAM_SYNTAX | `node ../PaperSkill/paper-skill/scripts/syntax-check.js <absolute-publish-source> --require-parser` | PASS，34 源文件，TypeScript parser，退出 0 |
+| UPSTREAM_OUTPUT | 精确校验当前上游脚本版本后不执行陈旧版本 | NOT_RUN；本地输出检查器 blob 与当前官方 upstream/main 不同，不能冒充官方通过 |
+| 工作流 / diff | `python tools/paper.py check der`；`git diff --check` | PASS；W7 提示等待人工 PASS、本机绝对路径提示属于真实路径记录 |
+| FULLSCREEN_LAYOUT / FULLSCREEN_REAL / REGRESSION / HUMAN_ACCEPTANCE | 两桌面自动布局 / 真实 F11 / 已批准截图基准 / 学习评审 | PASS / NOT_RUN（无真实 F11 操作）/ NOT_RUN（无获批基准）/ PENDING |
+
+官方来源核验：相邻 PaperSkill 的 upstream 为 `git@github.com:ReductTech/PaperSkill.git`，工作区干净；沙箱内 fetch 的 SSH 命名对象访问被拒，沙箱外 `git -C ../PaperSkill fetch upstream main` 退出 0。前后 HEAD 均 `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`，当前 upstream/main 为 `7f70497dcc10c32b33ba2abacba52a90cda834ba`。语法脚本本地/上游 blob 同为 `2bcfa6f815054ee498574c51cef05f0c315b4298`；输出脚本上游 `9ec76b6974f262fca7b9611c4a485dd2275fe76c`，本地 `1a58ca06bd9fa47b6730904f1622189011cc32fe`。没有切换/覆盖相邻检出、运行 Import/Preflight 或发布。
+
+浏览器限制已实际解决：初次在沙箱内启动 Edge 失败；跨沙箱 Vite 回环地址也超时。最终 browser.test 在同一沙箱外进程提供真实生产 dist，由 Edge 访问，获得上述结果，不把失败尝试计为 PASS。标准 runner 初次因本任务早先 dev 服务占用 4197 而退出 1，报告 `.visual-qa/run-2026-10-27T14-28-35-549Z/report.md`；停止自建服务后重跑 PASS。
+
+本地复审证据保留在 `.visual-qa/der-w7-animation/playback/`：`kl-continuous.gif`、`logits-continuous.gif`、`freeze-continuous.gif`，以及少量 `*-viewport.png` 和播放元数据（最终 Logits 以 `playback-logits.json` 为准）。未提交或上传媒体；临时逐帧 PNG、重复回归截图和 runner 两次输出在复核后清理。保留的 `preview.cjs` 在本机 4194 提供生产预览 `http://127.0.0.1:4194/?review=1`，供本轮方向复审。W7 保持 PENDING，不把工程检查等同于人类 PASS。
+
 ## Full Implementation (W8)
 
 仅记录后续边界：W7 通过首切片之后才覆盖 S4–S8、紧凑 supporting 和主线外 reference。S7 需独立整合设计与状态核对。此处不提前实施、不记录任何 W8 PASS。
