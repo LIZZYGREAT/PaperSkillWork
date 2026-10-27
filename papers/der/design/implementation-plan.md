@@ -57,11 +57,61 @@ x2 是 S2–S7 的追踪锚：S2 看它的类别与整组响应，S3 确定历�
 
 `vite.config.ts` 的 `base: './'` 支持相对子路径产物；新增本地资源须通过相对模块导入或 Vite base 解析，禁止硬编码 `/images/`。不新增外部服务、CDN、远程字体或训练服务；原生 MathML/Kit 类型声明是数学排版候选，不必增加运行时数学依赖。S7 教学数值若采用小模型，浏览器本地计算，不加载真实论文模型权重。
 
-相邻 PaperSkill 检出 HEAD 为 `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`，工作树干净，upstream 指向官方 `ReductTech/PaperSkill`。已读本地接收脚本的入口、kind 和 componentId 注册规则，但未同步远端，因此不能称其为当前官方版本的兼容证明。本轮不运行 Import/Preflight。生成器的章节/模块数量校验不能成为新增冗余交互的理由；确认接收路径与自定义表达的适用范围留在本计划，不另建冲突文档。
+相邻 PaperSkill 检出 HEAD 为 `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`，工作树干净，upstream 指向官方 `ReductTech/PaperSkill`。已读 `scripts/import-paper.js`、`scripts/validate-repository.js`、`paper-skill/scripts/validate-output.js` 与本地 contract；未同步远端，因此不能称其为当前官方版本的兼容证明。本轮不运行 Import/Preflight。
+
+已证实的接收关系：本地 `validate-repository.js` 会调用 `validate-output.js`，后者确实检查 `tutorial.ts` 的 kind 数量及 componentId 注册，并非所有生成器约定都只停留在文档。该本地版本读取 contract 的 6–10 chapters、至少 4 modules、至少 1 个双 module chapter；它没有据此强制八阶段一页一章或每章交互。候选七单元与 U4 的两个真实教学任务在完整内容阶段可以自然适配，不能为了数字新增假模块。首切片只有 U1–U3，届时可能出现真实阶段不足的校验失败/提示，要如实分别记录，不篡改数据凑满；W8 再核对完整内容。
+
+未发现要求改变 W4 的确定硬冲突。待 W6 前核实最新官方脚本及配置；若该版本对自定义页面出现实际硬冲突，把命令、失败项和取舍记在本节再决策。`paper.json` 由 W10 的官方 Import 根据用户信息生成，本轮不编造；网页 meta 和 componentId 则由 W6 实际内容填充。MD 的 `$$` 是本设计文档格式，网页拟用 MathML，二者不能混称。
 
 ### Reusable Asset Composition Notes (W5 free text)
 
-第一部分已完成 Registry/Recipe 发现；下一部分将把 S3/S4/S7 的具体构图与真实 dry-run 闭包记录在此。每个资产仍为 candidate；不依据本稿自动批准，不先执行复制。
+已检查 Registry、对应 Recipe、实际 TSX/CSS/Hook。以下是设计可行性选型，不是复制记录或批准记录。所有资产仍为 candidate；下面三组 dry-run 均退出 0，目标中仍无 `src/shared/`。公开 DER 页面未创建。
+
+| Registry ID / 使用决定 | 具体用途 / 场景责任 | 实际尺寸或 API 约束 / 预计占用 | Recipe / 内部样式边界 |
+| --- | --- | --- | --- |
+| SampleToken / 选用 | U1/U3–U6 的稳定原图 ID；图像内容由 DER 提供 | 默认图块 76px、min-height 76px；含图注拟留 96–128px 宽 | visual-parts；原生 children/pixels API，无内部样式改动 |
+| RepresentationVector / 选用 | U3 分数与 U4/U6 的 z 详情；不替代逐类计算表 | 每坐标 min-width 34px，正/负区各 44px；三维拟留 140–220px，显式 extent=3 用于 E02 | visual-parts；坐标名/对齐由局部场景负责，不把 z 标成特征向量 |
+| ResponseMeter / 选用 | U2 的概率条；明确 min=0、max=1 | 轨道 min-width 48px、高 8px，另有标签和值；每组拟留 200–300px，统一在组上标尺度 | visual-parts；只传计算值，不把组件当 softmax 计算器 |
+| MathTypography / 选用 | U2/U3 和后续损失公式的 MathML JSX 类型 | 实际是 d.ts 与 Kit 样式，无独立交互或 DOM 组件；公式宽度随正文 | typography-formula；W6 核对 tsconfig include，不加运行时数学库 |
+| FigureFrame / 选用 | 只包真实教学主图，提供标题/图注/当前步 | 无固定尺寸，主图按单元决定；不把全部自然段卡片化 | typography/editorial 语义 + 实际 source；不改内部样式 |
+| MiniNetworkGlyph / 后续选用 | U6 表达唯一当前网络；若数值层采用线性教学网络，拓扑为 2→3 | compact max-width 232px、standard 360px、inspect 560px；viewBox 宽 320、高至少184；U6 拟用 220–232px | mini-network-glyph；不沿用示例 Teacher/Student 或 3–5–3 假 CNN |
+| FlowConnector / 局部选用 | 邻接数据/参照/梯度的明确连接 | 横向 SVG 44×16px，向下 16×40px；标签另占空间；短关系拟留 56–100px | visual-parts；只有 right/down/left，不假定任意曲线端点能力 |
+| useAnimationTimeline / 可选播放时选用 | U4/U6 只有拥有者调用一次，驱动揭示，不计算 θ/M | 无固定尺寸；输入稳定 clip 列表；默认暂停；replayClip 只重播当前 clip | animation-timeline；从 state 派生所有视图，单独实现“重播本轮/从头开始”的轨迹定位 |
+
+S3 组合由 DER 本地负责 p/q 和 softmax/KL/L2 计算、固定类别坐标、逐项代入、解释与例子切换；Kit 只画输入/数值并提供数学类型和图框。S4 的槽位、读写锁、候选托盘、整数抽签及消息由 DER 本地负责。S7 的唯一执行函数、操作轨迹、参数/记录身份和整体布线均属论文局部；不把组件代码改成 DER 算法引擎。
+
+真实命令（均从仓库根执行）：
+
+```text
+python tools/paper.py scaffold-kit der --select SampleToken,RepresentationVector,ResponseMeter,MathTypography,FigureFrame --allow-unapproved --dry-run
+python tools/paper.py scaffold-kit der --select MiniNetworkGlyph,FlowConnector,useAnimationTimeline --allow-unapproved --dry-run
+python tools/paper.py scaffold-kit der --select FormulaBlock,StickySystemView,EvidenceViewer,BenchmarkExplorer --allow-unapproved --dry-run
+```
+
+三次均解析到上节 publish_source，复制目的地是其 `src/shared/`。首两组是拟选的 8 项资产，共用依赖去重后实际闭包如下（相对于 `src/shared/`，共12文件）：
+
+```text
+compositions/figure-frame/FigureFrame.tsx
+foundation/math/mathml-jsx.d.ts
+foundation/styles/kit.css
+foundation/visual-parts/SampleToken.tsx
+foundation/visual-parts/RepresentationVector.tsx
+foundation/visual-parts/ResponseMeter.tsx
+foundation/visual-parts/FlowConnector.tsx
+foundation/visual-parts/visual-parts.css
+foundation/neural-network/MiniNetworkGlyph.tsx
+foundation/neural-network/mini-network-glyph.css
+foundation/animation/useAnimationTimeline.ts
+foundation/accessibility/useReducedMotion.ts
+```
+
+W6 只需第一组首切片部件，待方案确认后才执行相同 `--select` 命令去掉 `--dry-run`；第二组等 U4/U6 真正开工时按需要追加。入口只引一次 `shared/foundation/styles/kit.css`，图元和 Glyph 自带各自 CSS 导入；MathML d.ts 需要被 tsconfig 读取。所有场景 CSS 留在 DER 本地，不复制 Gallery 样式。当前没有必须修改 Kit 内部样式的证据；适配分类为局部布局与教学数据/语义，不是共享缺陷修复。
+
+第三组是对照候选，不实施复制：FormulaBlock 会带 FormulaTerm/MathTypography；BenchmarkExplorer 会带 SegmentedControl；四者合计闭包为 7 文件（controls/SegmentedControl.tsx、layout/StickySystemView.tsx、math/mathml-jsx.d.ts、styles/kit.css、optional/benchmark-explorer/BenchmarkExplorer.tsx、optional/evidence-viewer/EvidenceViewer.tsx、optional/formula/FormulaBlock.tsx，前三类均位于 foundation/）。FormulaBlock 的符号交互非当前主任务，静态 MathML 更直接；StickySystemView 使用滚动阅读线与手动覆盖，可能和 U6 显式训练步竞争，故先不用；EvidenceViewer/BenchmarkExplorer 的源码有硬编码英文 UI 且 U7 暂无需大筛选，先采用本地中文协议表和原位详情。
+
+`shared-input-models` 及 `vector-retrieval` 已看 README/Recipe 的职责，不选整个 example：前者是两个独立模型，后者是内积检索，都不符合本篇训练语义。FlowConnector 不足以连接复杂图时只拒绝那段布线复用，不因此引入整套旧论文系统。没有复制 Gallery 场景文件，也没有跨论文 runtime import。
+
+Gallery 实际查看状态：尝试启动现有 Demo 并通过浏览器打开 `http://127.0.0.1:5187/?demo=gallery#gallery-parts`，Vite 已就绪，但浏览器两次连接均超时，未取得可复核的部件画面。此项为 NOT_RUN，不称视觉通过；预览服务已关闭。当前尺寸结论依据上方真实 CSS/API，W6 必须在实际切片复核。此限制不影响本轮文档覆盖、计算和 dry-run 证据。
 
 ### Critical Teaching and Integration Scenes
 
@@ -117,9 +167,9 @@ U3 默认 z=(2,1,0)、a=(1,2,0)，切换 a=(3,2,1) 时，两组柱使用相同�
       j=0 → 槽 0 替换；j=1 → 槽 1 替换；j=2 → 候选不入池
       结果区：M 的新内容，N=3；候选不入池也不等于没训练。
 
-下半：已存在的 M [只读] ──取 Rd──→ 当前网络 θ ←──当前输入 B
+下半：已存在的 M [只读] ──取 Rd──→ 当前网络 θ ←──当前原图 X
                                              │ 同一组参数前向
-                                      当前 CE + α·历史平方匹配
+                               当前 CE(y,概率) + α·历史平方匹配
                                              │ 一次联合梯度更新
                                             θ+
                                              │ 之后才允许写 M
@@ -148,8 +198,9 @@ U3 默认 z=(2,1,0)、a=(1,2,0)，切换 a=(3,2,1) 时，两组柱使用相同�
 ```text
 本步进入：第 i 轮        θ_(i−1) / N / K       模式 DER 或 DER++ [重置后切换]
 ┌──────────────┐      ┌─────────────────┐       ┌────────────────────┐
-│ 当前输入 xi,yi│ ───→ │ 唯一当前网络 θ  │ ────→ │ 当前 Z / Zsave     │
-│ 候选托盘 vi   │      │ 所有路径共享参数│       │ Lcurrent           │
+│ 当前原图 xi   │ ───→ │ 唯一当前网络 θ  │ ────→ │ 当前 Z / Zsave     │
+│ 标签 yi→CE    │      │ 所有路径共享参数│       │ Lcurrent(yi,概率)  │
+│ 候选托盘 vi   │      │                 │       │                    │
 ├──────────────┤      │ 本步只更新一次  │       │ Ldark + α          │
 │ 记忆 M       │ ─取→ │                 │ ────→ │ Llabel + β [++]    │
 │ 槽 0 / 槽 1 │ Rd,Ry└─────────────────┘       │ 合成 L / 梯度详情 │
@@ -161,7 +212,7 @@ U3 默认 z=(2,1,0)、a=(1,2,0)，切换 a=(3,2,1) 时，两组柱使用相同�
 当前说明紧邻主图下沿；上一语义步 / 下一语义步 / 本轮重播 / 展开状态检查
 ```
 
-线框表达布局与归属，不赋予所有箭头相同语义。实际图中，数据为实线，历史目标为带“固定 z”的参照线，梯度为反向虚线，写 M 为更新结束后才激活的独立路径。屏幕较宽时图面使用可用宽度但限制对象间距；1440×900 起点约 1200px 内容宽，左列 220px、中列 240px、右列 300px，其余留给连接和边距。主图与控制优先可见，完整数值检查放其后原位展开，不能靠缩小字号塞满视口。1920×1080 保持同一局部关系，允许增大留白，不把关系拉散到屏幕四角。实际值由 W6/W8 渲染再调整。
+线框表达布局与归属，不赋予所有箭头相同语义。原图 x 才进入网络，y 从样本归属区旁路直达 CE，不能沿图中原图箭头一起进入模型；历史标签同理。实际图中，数据为实线，历史目标为带“固定 z”的参照线，梯度为反向虚线，写 M 为更新结束后才激活的独立路径。屏幕较宽时图面使用可用宽度但限制对象间距；1440×900 起点约 1200px 内容宽，左列 220px、中列 240px、右列 300px，其余留给连接和边距。主图与控制优先可见，完整数值检查放其后原位展开，不能靠缩小字号塞满视口。1920×1080 保持同一局部关系，允许增大留白，不把关系拉散到屏幕四角。实际值由 W6/W8 渲染再调整。
 
 唯一计算源拟为 DER 本地纯函数 `trainStep(state,batch,choices)` 产生的不可变操作轨迹。它承担真实教学计算；时间线只决定揭示哪一项结果，不能另算一份损失或另维护副本 M。选择预设教学轨迹时显式记录 Rd/Ry 与 j，回退恢复已有轨迹快照，不再抽签或训练一次。进入预测只计算查询输出，θ/M/N 保持逐值一致。更换 DER/DER++ 模式会从 θ0 重建整条轨迹，禁止在 θ3 上偷偷补标签路径后沿用旧结果。
 
@@ -183,7 +234,17 @@ U3 默认 z=(2,1,0)、a=(1,2,0)，切换 a=(3,2,1) 时，两组柱使用相同�
 
 ## Visual QA State Plan
 
-本轮无新页面，DER 浏览器验收 NOT_RUN。W6 仅对首切片执行普通桌面 1440×900 与全屏布局模拟 1920×1080，真实 F11 另外记录，不能由模拟替代；无移动专项触发。不运行 Kit 全量回归。
+本轮无新页面，DER 浏览器验收 NOT_RUN。以下均是后续观测计划，未填写 PASS。首切片只检查 U1–U3，其余状态随实际实现进入对应阶段。每一代表态在普通桌面 1440×900 与全屏布局模拟 1920×1080 观察；真实 F11 另记实际尺寸和结果，不能由模拟替代。无移动专项触发，不运行 Kit 全量回归。
+
+| 单元 / 受影响状态 | 两种桌面布局都需观察的内容 | 语义/几何断言与保留信息 |
+| --- | --- | --- |
+| U1 入口及响应对照 | 首屏对象、段落密度、从 ER 到软目标的桥接 | y 不充作模型输入；类名和向量对应；无页面横向溢出 |
+| U2 初态、q=p、q 反转、返回 | 固定 p、负 KL 单项、和、梯度及键盘选例 | p 不漂移；q 归一化；图/代入/结果同步；不只靠颜色 |
+| U3 E02 两种 a、快照结束态 | 共用 extent、完整三列及平方项、冻结标记与生成步 | 换例不自动缩放；softmax/L2 结论可同屏核对；旧模型不常驻 |
+| U4 旧池读取、更新后写入、j=2 拒收 | 槽位端点、候选托盘、合成与更新顺序 | 更新前无写；N 与 K 含义不混淆；读写线型清楚 |
+| U5 增强/错误历史与 DER++ 路径 | 同一原图身份、两个视图、z/y 的不同职责 | z 不刷新；只新增标签损失和第二采样，不新增模型 |
+| U6 空池、第2轮、第3轮写入前后、第4轮拒收、预测、回退 | 全图稳定、局部数值展开、单步/重播及 reduced motion | 对应语义帧断言；控制不遮主图；回退不重复训练；预测不读池 |
+| U7 协议比较与反例、证据详情展开 | 条件与数值靠近、±原样、反例不被折叠隐藏 | 不混协议；无超出证据的通用优越声明 |
 
 ## Primary Spine Mapping
 
@@ -224,13 +285,17 @@ implementation:
 
 ## Reusable Pattern Library
 
-暂以场景局部实现作为覆盖字段的 null；部件可分别选用，不能把多个资产串写进一个 reusable_pattern。后续部分依据实际源码与 dry-run 定案，候选身份不变。
+结构化 `reusable_pattern: null` 表示没有采用一个整套 Kit 交互模式来负责该阶段；上方图元仍可按真实闭包组合，不串写多个 ID。Architecture Explorer/双模型 example 不用于唯一当前网络；Flow Stepper 的抽象循环不替代真实 θ/M/N；StickySystemView 暂不用于手动训练；公式和结果模式均已查源码并记录不采用理由。Term Hover/Reference Hub 后续只负责短定义和外部于主线的 I21–I23，不能承载本该在正文的推理。
 
 ## Vertical Slice (W6)
 
 推荐 S1–S3，对应 U1–U3，CORE 为 I01–I05。认知闭环为：不能完整保存历史→有限 ER→标签未记录整组响应→概率/KL 可优化→logits 匹配的区别→记录更新前历史 z→引出 S4 的在线留存。S1/S2 合为一个开放图文单元，S3 的两个计算任务各有足够解释空间。
 
 这是待确认范围，不是 W6 开工指令。首切片不实施 reservoir、DER++、四轮完整系统或结果页，不用未来占位组件凑验收；下一阶段问题以正文衔接即可。若用户选择收缩为 S2–S3，须保留短问题入口并同步 YAML，不擅自删 I01 覆盖。
+
+SUPPORTING 的具体落点：U1 原位短回忆 I12/I13；U2 的 I14 紧邻梯度结论可展开；U4 的 I15 概率归纳可展开、I16 iCaRL 比较一短段；U5 的 I17 增强均值/方差推导可展开、I18 权衡系数紧邻三项损失；U6 的 I19 原文消歧作为算法旁说明；U7 的 I20 分析含义一短段。I21–I23 在主线之后的参考/证据区，主线对必要结论本身不依赖点开；I24–I26 排除。
+
+本轮没有 W6 执行结果：UPSTREAM_SYNTAX、UPSTREAM_OUTPUT、SOURCE_BUILD、SUBPATH_ASSETS 均为 NOT_RUN（设计阶段尚无本轮页面实现，不调用这些源码质量检查）。真正 W6 执行时，按同一实际 publish_source 分别记录命令/退出码、官方脚本版本、构建与浏览器状态；不以本次 W5 覆盖检查替代。
 
 ### Vertical Slice Review (W7)
 
@@ -245,3 +310,13 @@ Vertical Slice Review: PENDING
 ## Human Acceptance Record
 
 2026-10-27：W4 已获用户确认；用户本轮要求按 W5 方案执行并每部分 commit。按该方案“先向用户展示三个决定性场景的结构/视觉提案”，本轮交付第一轮提案后等待针对构图和切片范围的反馈，再做第二轮定稿。当前不能将 W5 提案或 CLI 结构检查误写为人已批准视觉设计。
+
+待确认的具体建议是：A 的两个连续计算单元、B 的“先选留解释再训练整合”双段、C 的稳定整体工作台与可展开合成小模型，以及 W6 的 S1–S3 / I01–I05 范围。普通页面目前仅完成职责与覆盖提案，确认三个关键方向后才细化余下内容并定稿；不提前写完网页。已通过异步问题向用户提交这些取舍，本轮没有收到确认时保持 DRAFT / W5 in_progress。
+
+### 本轮核验（2026-10-27）
+
+- `python tools/paper.py paths der --json`、三组 `scaffold-kit ... --dry-run`、`python tools/paper.py check der` 与 `git diff --check` 均退出 0。check 唯一 warning 为文档含本机绝对路径；这是按 W5 要求真实记录 publish_source 和复制目的地，不是网页运行时依赖。
+- 直接调用现有 W5 校验并审阅映射：CORE 11/11 仅分配一次，SUPPORTING 9/9，REFERENCE 3/3，DELETE 未混入；证据引用可解析；只有一份 implementation YAML；无选中公开页图，无 Kit 实际复制，W6 保持 pending。
+- 独立复算 S3 的 KL 两个带符号项、三种总和和 E02 平方差；枚举 K=2 前四个流项的 reservoir 留存概率，四项最终均为 1/2。这里只核对提案算例，不声称已经实现或验证了 S7 小模型、页面动画或浏览器状态。
+- 指定回归命令为 `python -m pytest -q --basetemp=C:/Users/lenovo/Desktop/Projects/PaperWork/.tmp-der-w5-20261027 -o cache_dir=C:/Users/lenovo/Desktop/Projects/PaperWork/.tmp-der-w5-cache-20261027 tests/test_workflow_implementation.py tests/test_workflow_schema.py tests/test_document_governance.py`，结果 18 passed，退出 0。使用独占工作区临时目录，避免此前默认目录权限问题；本轮临时目录/缓存交付前清理。
+- DER 页面构建、交互、桌面/F11、上游 Import/Preflight 均未运行，符合本轮规划范围；Kit Gallery 只尝试查看但连接超时，NOT_RUN，不能当作视觉签收。预览服务和本次失败预览标签已关闭。W5 结构检查、设计确认和实际页面验收仍分别记录。
