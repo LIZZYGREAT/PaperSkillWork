@@ -20,6 +20,8 @@ W5 定稿时只改设计与 CLI 阶段状态；当前按用户新增方案推进
 
 验证记录随各部分完成后更新；此处不代表人工方向确认或 W7 PASS。
 
+Hover/Reference 最小复用：核读 Kit `TermRef`、`usePopoverPosition`、`KnowledgeEntry`、`ReferenceHub` 及 FormulaBlock。经 `scaffold-kit ... --select TermRef --allow-unapproved --dry-run` 后精确追加 TermRef/Popover/types 三份源码，既有 kit.css 原样复用，候选身份不变。保留 Kit 固定定位、边缘避让、焦点、Escape、点按保持机制；浅暖表面是 DER 的项目样式。统一 `term-data.tsx` 的九个 canonical ID、定义/本场景职责/混淆点/中文深入解释/出处/相关导航。只将 hover 字段适配给 Kit，英文 reference 字段保留英文；中文深读独立由 DER Drawer 使用，未声称已统一通用 Hub 内容模型，未修改 Kit 或其他论文。
+
 ## Design Handoff, Invariants, and Change Scope
 
 - Design confirmation: CONFIRMED（2026-10-27）。用户选择“采用推荐方向”和“采用 S1–S3（推荐）”；确认 S3 两段计算、S4 选留/训练分段、S7 独立工作台及展开区可复算小模型，首切片为 S1–S3 / I01–I05。
