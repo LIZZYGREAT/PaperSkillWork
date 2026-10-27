@@ -1,17 +1,5 @@
-import { useState } from "react";
-import { FigureFrame } from "../shared/compositions/figure-frame/FigureFrame";
-import { SquaredDefinition, ShiftIdentity } from "./MathNotation";
-import { CLASSES, HISTORY_Z, logitComparison, LOGIT_CASES } from "./math-model";
-import { ReferenceButton, Term } from "./Reference";
+import LogitPrototype from "./review/LogitPrototype";
 
 export default function LogitMatching() {
-  const [selected, setSelected] = useState(0);
-  const scenario = LOGIT_CASES[selected];
-  const result = logitComparison(HISTORY_Z, scenario.values);
-  return <div data-core-items="I04" data-logit-case={scenario.id} className="logit-lesson"><p className="lesson-intro">这次比较 <Term id="logits" />：softmax 之前的类别分数。<Term id="z">z</Term> 是曾经保存的冻结目标；<Term id="a">a = hθ(x)</Term> 是当前网络的输出。它们有相同的类别坐标，但不要求是概率。</p><p className="caption">这里使用独立的三类合成分数例子，与上一单元的两类概率不是同一次前向输出。</p>
-    <div className="logit-grid"><div className="score-figure" data-vqa-stable-frame><FigureFrame label="比较分数空间" title="对齐同一个类别，才知道哪里变了" note="所有条形共享分数尺度 0—3；切换例子不会自动缩放。"><div className="score-legend"><span className="old-score-key">z · 冻结历史</span><span className="new-score-key">a · 当前输出</span><span>0—3</span></div><div className="score-chart" role="img" aria-label={`旧 logits ${result.z.join(', ')}；当前 logits ${result.a.join(', ')}；类别猫、狗、狐狸。`}>{CLASSES.map((label, index) => <div className="score-class" key={label}><div className="score-pair"><div className="score-column is-old"><span>{result.z[index]}</span><i style={{ height: `${result.z[index] / 3 * 132}px` }} /></div><div className="score-column is-new"><span>{result.a[index]}</span><i style={{ height: `${result.a[index] / 3 * 132}px` }} /></div></div><strong>{label}</strong></div>)}</div><div className="case-controls" role="group" aria-label="切换当前 logits a">{LOGIT_CASES.map((item, index) => <button type="button" key={item.id} data-a-case={item.id} aria-pressed={selected === index} onClick={() => setSelected(index)}>{item.label}</button>)}</div><div className="distance-readout" aria-live="polite"><span>平方匹配损失</span><output data-squared-value={result.squaredDistance}>{result.squaredDistance}</output><p>{scenario.conclusion}</p></div></FigureFrame></div>
-      <div className="score-explanation"><p className="eyebrow">把分数偏离变成损失</p><h3>相减看偏移，<br />平方再求和。</h3><ol><li><strong>逐类相减</strong>：aₖ−zₖ，比较当前和历史在同一类上的分数。</li><li><strong>平方</strong>：正负偏移都产生惩罚，偏离越大代价越高。</li><li><strong>求和</strong>：汇总 C 个类别，得到整个输出的匹配损失。</li></ol><p>这叫 <Term id="squared" /> 匹配。它比较两组分数，<strong>不是对历史标签再做一次 CE</strong>。</p></div></div>
-    <section className="math-story squared-story"><SquaredDefinition /><p className="single-expansion">{selected === 0 ? "一次代入：(1−2)² + (2−1)² + (0−0)² = 2。猫和狗的分数发生偏移，狐狸不变。" : "一次代入：(3−2)² + (2−1)² + (1−0)² = 3。三个类别都偏移了 1。"}</p><p>这个损失可通过当前网络反向传播，推动 a 接近冻结的 z；α 在完整 DER 目标中控制它与当前分类损失的权重。</p></section>
-    <section className="shift-reason" aria-labelledby="shift-title"><div><p className="eyebrow">一个必要的反例</p><h3 id="shift-title">概率没变，原始分数仍然可以变。</h3><p>选择“全部分数增加 1”。softmax 的每个分子和整个分母都乘上相同的 eᶜ，比例不变：</p><ShiftIdentity /><p>但 logits 的每个坐标确实偏移了 c，所以平方匹配仍会惩罚。<strong>KL 与 logits 平方距离不是同一个约束</strong>；概率依然保留相对偏好，不能因此说概率监督没有价值。</p></div><div className="space-verdict" aria-live="polite"><span>当前例子的两种比较</span><dl><div><dt>概率空间 KL</dt><dd data-probability-kl={result.probabilityKL}>{result.probabilityKL < 1e-12 ? "0 · 概率相同" : `${result.probabilityKL.toFixed(3)} · 概率改变`}</dd></div><div><dt>分数空间平方和</dt><dd>{result.squaredDistance} · 分数有偏移</dd></div></dl><small>两项计算都来自上方同一组 z、a</small><ReferenceButton term="squared">梯度与 KL 局部近似</ReferenceButton></div></section>
-  </div>;
+  return <LogitPrototype />;
 }

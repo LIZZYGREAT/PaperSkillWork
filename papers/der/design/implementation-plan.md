@@ -10,7 +10,7 @@ W5 定稿时只改设计与 CLI 阶段状态；当前按用户新增方案推进
 
 ### W7 REVISE · 2026-10-27 定向原型修订
 
-用户要求依据 `task/DER/PaperSkillWork_DER_W7_Deep_Audit_and_Redesign.md` 修订并分部分 commit。起点 `bfcb87c` / `der`，工作区干净。该文档作为本轮设计审核输入；不修改 W2/W3/W4、证据及阶段审批。先在同一 React 运行时的 `?review=1` 提供真实交互提案，原切片保留作对照。用户确认方向后才将新场景落实到 U2/U3；W7 仍 pending，不实现 U4–U7 / W8，不同步 Kit API。
+用户依据 `task/DER/PaperSkillWork_DER_W7_Deep_Audit_and_Redesign.md` 要求 W7 定向返修；该文件是页面设计审核输入，不能替代用户这次自然语言授权。用户随后明确“继续执行”，授权把已运行验证的 KL、Logit、冻结时序提案落实为主线。起点 `bfcb87c` / `der`，分支 `der`，工作区干净。保留 W2/W3/W4、证据、W6 和人工阶段门禁；不做 U4–U7、W8 或 Kit 回灌。
 
 | 设计—运行—验证 | 对象、操作和结论 | 复用与边界 |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ W5 定稿时只改设计与 CLI 阶段状态；当前按用户新增方案推进
 | Logit | 对齐坐标→a−z 区段→逐类平方→求和。共同平移时同时保留历史基线、当前分数位移及 softmax 后三对重合概率。 | DER SVG/状态机；ResponseMeter 只画同源概率，保留平方公式与 softmax 约分。 |
 | 冻结 | 输出→复制→θ 更新→候选等待入池。复制前无 z；复制后的同一 DOM 记录 x2@t 与数值跨参数更新持续存在；末态不冒充入池。 | 复用 SampleToken / RepresentationVector。概念示意不计算训练结果，更新后输出明确为未计算；只保留一台当前网络。 |
 
-验证记录随各部分完成后更新；此处不代表人工方向确认或 W7 PASS。
+方向批准后，三场景已接入原 U2/U3/Snapshot 正文；`?review=1` 仅保留可直接检视的原型工作区。KL 明示 C/k 与两类合成例，Logit 标注独立三类合成例；数值、公式、图形由 DER 的同一计算状态驱动。主线没有移除 KL 定义/熵拆解、平方距离定义或共同平移解释。当前页面已修订，等待用户再次进行 W7 学习评审；未记录 PASS。
 
 Hover/Reference 最小复用：核读 Kit `TermRef`、`usePopoverPosition`、`KnowledgeEntry`、`ReferenceHub` 及 FormulaBlock。经 `scaffold-kit ... --select TermRef --allow-unapproved --dry-run` 后精确追加 TermRef/Popover/types 三份源码，既有 kit.css 原样复用，候选身份不变。保留 Kit 固定定位、边缘避让、焦点、Escape、点按保持机制；浅暖表面是 DER 的项目样式。统一 `term-data.tsx` 的九个 canonical ID、定义/本场景职责/混淆点/中文深入解释/出处/相关导航。只将 hover 字段适配给 Kit，英文 reference 字段保留英文；中文深读独立由 DER Drawer 使用，未声称已统一通用 Hub 内容模型，未修改 Kit 或其他论文。
 
@@ -426,9 +426,32 @@ W7 预览 `http://127.0.0.1:5188/`，由 publish_source 下 `npm run preview -- 
 
 ### Vertical Slice Review (W7)
 
-Vertical Slice Review: PENDING
+Vertical Slice Review: REVISE → 修订已实现，等待用户再次评审（W7 工作流状态仍为 PENDING）
 
-实际切片已有，尚未指定 reviewer、未记录用户 PASS。请用户只读主线、不进入 Reference Hub，判断能否解释 KL 与平方匹配的变量、公式、最小推演及图中现象；同时解释为什么 ER 的旧标签仍不足、共同平移为何受到不同惩罚、z 来自何时以及有限容量又引出什么问题。还要判断文字与图形能否共同得到这些结论。W7 保持 PENDING，不推进 U4–U7/W8。
+审核来源：用户提供的 W7 定向审核文件，给出 REVISE 结论和问题定位；本轮范围仍是原 W6 的 I01–I05。保留 W1–W6 和 W4/W5 原审批，不借此重写 U1 或提前进入 U4–U7。
+
+修订后的主线复评问题：读者能否从同图跟随 KL 的 p/q、单类带符号项和汇总；能否解释 KL 与平方匹配各自约束的空间，以及为什么共同平移对 logits 和概率造成不同结果；能否看出更新前输出何时被复制、θ 更新后 z 如何保持原值、候选何时才等待记忆选留；文字与图形是否共同支持这些结论。请在页面查看时同时核对参考条目相关性、公式可读性、回退和减少动效状态。Agent 完成源代码/数学/构建/桌面 QA，不代替该人工判断。当前仍没有新版 W7 人工 PASS，`paper.yaml` W7 保持 pending，不推进 U4–U7/W8。
+
+### W7 定向修订执行与 QA 记录（2026-10-27）
+
+**实现**：主线 U2 为固定 p/q 的同类别聚焦、逐类带符号贡献与 KL 汇总，公式符号和类别选择均能定位到当前数据；回退会清除旧的求和焦点。保留 KL 定义和两步熵拆解。U3 将同类 z/a 的数轴差值、平方项和及 L_dark 连接，并把同一数据的概率投影置于旁侧；平移反例在图上显示概率重合但分数变动。快照为“输出→复制→θₜ₊₁→候选等待入池”，复制前无 z，更新后保留 x₂@t 的同一记录 ID 与原值；不计算未有来源的更新输出，不宣称候选已入池。
+
+**术语与排印**：九个 ID 的 Hover、Reference 来自 `term-data.tsx` 单条目；从软最大值、p/q、CE、logits、a/z、KL、平方距离均进入对应中文深读与出处。Kit `TermRef`/Popover 只承担成熟定位、边缘避让、焦点/按点保持行为；Kit 英文字段保留英文。暖色外观及侧栏是 DER 的局部设计。KL 熵拆解由两个真实 MathML 等式和并列释义组成，避免双重 under 排得过宽。
+
+**实际检查**：
+
+| 检查 | 命令与范围 | 结果 |
+| --- | --- | --- |
+| 数学单测 | `npm test --prefix papers/der/web/enhanced` | PASS（现有 7 项，KL、交叉熵恒等式、梯度、平移和平方距离） |
+| 项目构建 | `npm run build --prefix papers/der/web/enhanced` | PASS；TypeScript 与 Vite production build |
+| 浏览器交互 | `npm run test:browser --prefix papers/der/web/enhanced`；Edge、1440×900 与 1920×1080 | PASS（400 项断言）；覆盖已接入主线的交互、九个参考 ID、键盘及 reduced motion。保留截图见 `.visual-qa/der-w7-final/` |
+| 共享 Visual QA | `node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json` | PASS；报告 `run-2026-10-27T13-03-24-253Z`：总体、几何、样式和浏览器错误均 PASS；检查了主线及 `?review=1` 的桌面窗与全屏布局模拟截图 |
+| 官方源语法 | PaperSkill `syntax-check.js <publish_source> --require-parser`，target 真实 Enhanced source | PASS；工具版本 v24.18.0 Node；成功 fetch 得知 `upstream/main=7f70497dcc10c32b33ba2abacba52a90cda834ba`，工作树 HEAD `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`；语法 checker 工作树 blob 与 current upstream 相同 |
+| 官方当前输出校验 | PaperSkill `validate-output.js <publish_source>` | NOT_RUN（官方 current-upstream 文件是不同 blob，不能把陈旧本地拷贝结果算作官方通过）。仅本地诊断版返回 FAIL：切片保留 3 章，完整教程校验要求 6–10 章；不加假章消除真实限制。 |
+| 工作流结构 | `python tools/paper.py check der` | PASS；W7 PENDING、W8 PENDING。允许报告其 W7 等待人工 PASS 的提示。 |
+| 视觉与接受 | 查看受影响状态截图；检查公式框、SVG 标注和两种桌面尺寸布局 | Agent 截图目视检查 PASS：`.visual-qa/der-w7-final/review-kl-sum-1440.png`、`review-logit-shifted-1440.png`、`review-freeze-3-1440.png`、`review-softmax-reference-1440.png`；另核对主线对应状态。全屏布局为 runner 模拟，真实 F11 未操作（FULLSCREEN_REAL=NOT_RUN）；无获批基准图（REGRESSION=NOT_RUN）；用户学习评审未完成（HUMAN_ACCEPTANCE=PENDING）。 |
+
+自动化通过与截图检查只说明实现和布局达到本轮检查范围，不代表学习效果已验收；未把 `paper.yaml` W7 改成完成。W7 仍等待用户复评，U4–U7 和 W8 未启动。
 
 ## Full Implementation (W8)
 

@@ -1,14 +1,19 @@
 import type { ReactNode } from "react";
 
-function Sum({ upper = false, index = "k" }: { upper?: boolean; index?: string }) {
-  return upper ? <munderover><mo>∑</mo><mrow><mi>{index}</mi><mo>=</mo><mn>1</mn></mrow><mi>C</mi></munderover> : <munder><mo>∑</mo><mi>{index}</mi></munder>;
+function Sum({ upper = false, index = "k", className }: { upper?: boolean; index?: string; className?: string }) {
+  return upper ? <munderover className={className}><mo>∑</mo><mrow><mi>{index}</mi><mo>=</mo><mn>1</mn></mrow><mi>C</mi></munderover> : <munder className={className}><mo>∑</mo><mi>{index}</mi></munder>;
 }
-const Sub = ({ value, index = "k" }: { value: string; index?: string }) => <msub><mi>{value}</mi><mi>{index}</mi></msub>;
+const Sub = ({ value, index = "k", className }: { value: string; index?: string; className?: string }) => <msub className={className}><mi>{value}</mi><mi>{index}</mi></msub>;
 export function Equation({ label, children, id }: { label: string; children: ReactNode; id?: string }) {
   return <div className="equation" data-vqa-check-clipping id={id}><math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label={label}>{children}</math></div>;
 }
-export function KLDefinition({ identified = true }: { identified?: boolean } = {}) {
-  return <Equation id={identified ? "kl-definition" : undefined} label="KL 散度等于从类别 1 到 C，旧概率 p k 乘以 p k 与 q k 比值的对数之和。"><mrow><msub><mi>D</mi><mtext>KL</mtext></msub><mo>(</mo><mi>p</mi><mo>∥</mo><mi>q</mi><mo>)</mo></mrow><mo>=</mo><Sum upper /><Sub value="p" /><mi mathvariant="normal">log</mi><mfrac><Sub value="p" /><Sub value="q" /></mfrac></Equation>;
+export function KLDefinition({ identified = true, focus, onSelect }: { identified?: boolean; focus?: number; onSelect?: (part: number) => void } = {}) {
+  const mark = (part: number, name: string) => onSelect ? `kl-symbol kl-${name}${focus === part ? " is-linked-symbol" : ""}` : undefined;
+  return <div className={onSelect ? "linked-formula" : undefined} onClick={onSelect ? (event) => {
+    const target = event.target as Element;
+    const symbol = target.closest(".kl-symbol");
+    if (symbol) onSelect(symbol.classList.contains("kl-p") ? 0 : symbol.classList.contains("kl-q") ? 1 : symbol.classList.contains("kl-log") ? 2 : 3);
+  } : undefined}><Equation id={identified ? "kl-definition" : undefined} label="KL 散度等于从类别 1 到 C，旧概率 p k 乘以 p k 与 q k 比值的对数之和。"><mrow><msub><mi>D</mi><mtext>KL</mtext></msub><mo>(</mo><mi>p</mi><mo>∥</mo><mi>q</mi><mo>)</mo></mrow><mo>=</mo><Sum upper className={mark(3, "sum")} /><Sub value="p" className={mark(0, "p")} /><mrow className={mark(2, "log")}><mi mathvariant="normal">log</mi><mfrac><Sub value="p" className={mark(0, "p")} /><Sub value="q" className={mark(1, "q")} /></mfrac></mrow></Equation></div>;
 }
 export function KLDecomposition({ identified = true }: { identified?: boolean } = {}) {
   return <div id={identified ? "kl-decomposition" : undefined}><Equation label="拆开对数比：KL 等于负的 p 加权 log q 的和，加上 p 加权 log p 的和。"><msub><mi>D</mi><mtext>KL</mtext></msub><mo>=</mo><mo>−</mo><Sum /><Sub value="p" /><mi mathvariant="normal">log</mi><Sub value="q" /><mo>+</mo><Sum /><Sub value="p" /><mi mathvariant="normal">log</mi><Sub value="p" /></Equation><Equation label="即交叉熵 H p q 减去固定熵 H p。"><mo>=</mo><mi>H</mi><mo>(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo>)</mo><mo>−</mo><mi>H</mi><mo>(</mo><mi>p</mi><mo>)</mo></Equation></div>;

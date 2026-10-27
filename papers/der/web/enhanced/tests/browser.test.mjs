@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { reviewPrototypeChecks } from "./review-prototypes.mjs";
 
 // Development checks use the repository's single pinned browser toolchain.
 // None of this is imported by the tutorial runtime.
@@ -50,9 +51,9 @@ try {
     check(await page.locator(".lesson-section").count() === 3, "Only three real reading units");
     check(await page.locator("[data-core-items]").count() === 4, "Real components cover I01–I05");
     for (const selector of ["#kl-definition math", "#kl-decomposition math", "#squared-definition math"]) {
-      check(await page.locator(selector).isVisible(), `${selector} must be in the mainline, outside Reference`);
-      check(await page.locator(selector).evaluate((el) => !el.closest("dialog,details")), `${selector} cannot be hidden in reference`);
-      check(await page.locator(selector).evaluate((el) => el.getBoundingClientRect().width > 150), "Math must be typeset as a real expression");
+      check(await page.locator(selector).first().isVisible(), `${selector} must be in the mainline, outside Reference`);
+      check(await page.locator(selector).first().evaluate((el) => !el.closest("dialog,details")), `${selector} cannot be hidden in reference`);
+      check(await page.locator(selector).first().evaluate((el) => el.getBoundingClientRect().width > 150), "Math must be typeset as a real expression");
     }
     const shot = async (name, selector) => {
       if (!output) return;
@@ -62,42 +63,45 @@ try {
     await shot("opening");
     await shot("label-contrast", ".label-question");
     for (const [id, expected] of [["near", .09151622184943578], ["equal", 0], ["reversed", .8317766166719343]]) {
-      const button = page.locator(`[data-q-case='${id}']`);
+      const button = page.locator(`[data-review-q='${id}']`);
       await button.focus(); await button.press("Enter");
       check(await button.getAttribute("aria-pressed") === "true", "Keyboard changes q selection");
-      const value = Number(await page.locator("[data-kl-value]").getAttribute("data-kl-value"));
+      await page.locator("[data-formula-select='3']").click();
+      const value = Number(await page.locator("[data-review-kl]").getAttribute("data-review-kl"));
       check(Math.abs(value - expected) < 1e-12, "Displayed state comes from exact KL calculation");
-      const meters = await page.locator(".probability-rows meter").evaluateAll((nodes) => nodes.map((node) => node.value));
+      const meters = await page.locator(".kl-workspace meter").evaluateAll((nodes) => nodes.map((node) => node.value));
       check(meters[0] === .8 && meters[2] === .2, "Changing q never changes p");
       check(Math.abs(meters[1] + meters[3] - 1) < 1e-12, "Current q remains normalized");
-      await shot(`probability-${id}`, ".probability-grid");
+      await shot(`probability-${id}`, "#review-kl .kl-workspace");
     }
-    await shot("kl-mainline", ".probability-lesson > .math-story");
+    await shot("kl-mainline", "#review-kl .review-derivation");
     for (const [id, expected] of [["swapped", 2], ["shifted", 3]]) {
-      const button = page.locator(`[data-a-case='${id}']`); await button.focus(); await button.press("Space");
-      check(Number(await page.locator("[data-squared-value]").getAttribute("data-squared-value")) === expected, "Squared distance follows the selected logits");
-      check(await page.locator(".score-chart .is-old i").evaluateAll((nodes) => nodes.map((el) => el.style.height).join(",")) === "88px,44px,0px", "Old logits and their fixed scale do not change");
-      if (id === "shifted") check(Number(await page.locator("[data-probability-kl]").getAttribute("data-probability-kl")) === 0, "Common shift leaves probabilities unchanged");
-      await shot(`logits-${id}`, ".logit-grid");
+      const button = page.locator(`[data-review-a='${id}']`); await button.focus(); await button.press("Space");
+      await page.locator("[data-logit-step='3']").click();
+      check(Number(await page.locator("[data-review-squared]").getAttribute("data-review-squared")) === expected, "Squared distance follows the selected logits");
+      check(await page.locator(".history-stem").evaluateAll((nodes) => nodes.map((el) => el.getAttribute("y2")).join(",")) === "110,162,214", "Old logits stay at their fixed coordinates");
+      if (id === "shifted") check(Number(await page.locator("[data-review-probability-kl]").getAttribute("data-review-probability-kl")) === 0, "Common shift leaves probabilities unchanged");
+      await shot(`logits-${id}`, ".score-workspace");
     }
-    await shot("squared-mainline", ".squared-story");
-    await shot("shift-reason", ".shift-reason");
-    for (const index of [0, 1, 2, 1]) {
-      await page.locator(`[data-snapshot-step='${index}']`).click();
-      check(await page.locator("[data-snapshot-phase]").getAttribute("data-snapshot-phase") === String(index), "Snapshot controls update the same phase");
-      check(await page.locator("[data-frozen-z]").getAttribute("data-frozen-z") === "2,1,0", "History target stays frozen through parameter-version changes");
-      if (index === 2) check((await page.locator(".one-network strong").innerText()) === "θₜ₊₁", "Only the current parameter version advances");
-      await shot(`snapshot-${index}`, ".snapshot-lesson");
+    await shot("squared-mainline", ".logit-formula-result");
+    await shot("shift-reason", "#review-logits .review-derivation");
+    for (const index of [0, 1, 2, 3, 2, 1]) {
+      await page.locator(`[data-freeze-step='${index}']`).click();
+      check(await page.locator("[data-freeze-stage]").getAttribute("data-freeze-stage") === String(index), "Snapshot controls update the same phase");
+      check(await page.locator("[data-history-z]").count() === (index > 0 ? 1 : 0), "History only exists after the copy action");
+      if (index > 0) check(await page.locator("[data-history-z]").getAttribute("data-history-z") === "2,1,0", "Copied target stays fixed");
+      if (index >= 2) check((await page.locator("[data-current-parameter]").innerText()) === "θₜ₊₁", "Only the current parameter version advances");
+      await shot(`snapshot-${index}`, ".freeze-workspace");
     }
-    const term = page.locator(".concept-copy .term").first();
-    await term.hover(); check(await page.locator("[role=tooltip]").isVisible(), "Contextual short definition is available");
+    const term = page.locator(".review-scene .rk-term-ref").first();
+    await term.hover(); check(await page.locator(".rk-term-popover").isVisible(), "Contextual short definition is available");
     const referenceButton = page.locator(".site-header .text-button");
     await referenceButton.click(); check(await page.locator("dialog").isVisible(), "Reference opens as a modal");
     await shot("reference", "dialog");
     await page.keyboard.press("Tab");
     check(await page.evaluate(() => Boolean(document.activeElement?.closest("dialog"))), "Modal keyboard focus stays inside Reference");
     await page.locator("dialog nav").getByRole("button", { name: "logits", exact: true }).click();
-    check(await page.locator("dialog .reference-table").innerText().then((value) => value.includes("平方和")), "Reference switches to the current representation detail");
+    check(await page.locator("dialog article").innerText().then((value) => value.includes("不是概率") && value.includes("同一个类别坐标")), "Logits detail is about scores, not a generic distance article");
     await page.locator("dialog .source-note").scrollIntoViewIfNeeded();
     check(await page.locator("dialog .source-note a").isVisible(), "Long reference content and source remain reachable by scrolling");
     await shot("reference-logits", "dialog");
@@ -108,13 +112,14 @@ try {
     await page.getByRole("button", { name: "关闭参考资料", exact: true }).click();
     check(!await page.locator("dialog").isVisible(), "The visible close control closes the modal");
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.locator("[data-q-case='equal']").click();
-    await page.locator("[data-a-case='shifted']").click();
-    check((await page.locator("[data-kl-value]").innerText()) === "0.000", "Reduced motion retains full semantic interaction");
-    check(await page.locator(".score-column i").first().evaluate((el) => getComputedStyle(el).transitionDuration) === "0s", "Reduced motion disables decorative transitions");
+    await page.locator("[data-review-q='equal']").click();
+    await page.locator("[data-review-a='shifted']").click();
+    check(await page.locator("[data-review-kl]").count() === 0, "Changing q remains available with reduced motion");
+    check(await page.locator(".aligned-logits .current-stem").first().evaluate((el) => getComputedStyle(el).transitionDuration) === "0s", "Reduced motion disables decorative transitions");
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "No page-wide horizontal overflow");
     const overflows = await page.locator("[data-vqa-check-clipping]").evaluateAll((nodes) => nodes.filter((el) => el.scrollWidth > el.clientWidth + 2).map((el) => el.id));
     check(overflows.length === 0, `Mainline formulas fit: ${overflows}`);
+    await reviewPrototypeChecks({ page, base, check, shot });
     check(errors.length === 0, `No browser or subpath resource errors: ${errors.join("; ")}`);
     console.log(`${width}x${height}: q/a states, snapshot, math visibility, keyboard, Reference, reduced motion, subpath assets PASS`);
     await context.close();

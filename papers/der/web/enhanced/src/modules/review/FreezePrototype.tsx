@@ -9,7 +9,7 @@ const stages = ["输出", "复制数值", "参数更新", "候选等待入池"];
 const descriptions = ["同一训练视图进入当前网络 θₜ，产生更新前输出。此时还没有独立的历史 z。", "复制输出数值为 z，给这份候选标记样本 x₂ 和生成时刻 t；不复制旧网络。", "联合损失更新唯一当前网络为 θₜ₊₁。复制出的 z 不再依赖当前参数，不重新前向计算。", "参数更新后，将原图 x₂ 与更新前复制的 z 作为候选等待 reservoir 决定去留；这里尚未入池。"];
 export default function FreezePrototype() {
   const [stage, setStage] = useState(0);
-  return <section id="review-freeze" className="review-scene" data-freeze-stage={stage}>
+  return <section id="review-freeze" className="review-scene" data-core-items="I05" data-freeze-stage={stage}>
     <header><p className="eyebrow">提案 02B · 同一个值，跨过参数更新</p><h2>当前 θ 已变，历史 z 没变。</h2><p>沿着 x₂ 的一次输出观察身份变化。这里是概念性时序示意，不执行网络训练，也不编造更新后的输出值。</p></header>
     <div className="review-stage-controls" role="group" aria-label="历史冻结阶段">{stages.map((label, index) => <button key={label} data-freeze-step={index} aria-pressed={stage === index} onClick={() => setStage(index)}><small>0{index + 1}</small>{label}</button>)}</div>
     <div className="freeze-workspace"><div className="freeze-model-track"><SampleToken sampleId="x2" label="x₂ · 同一训练视图"><CatMark /></SampleToken><span aria-hidden="true">→</span><div className="freeze-network"><small>唯一当前网络</small><strong data-current-parameter>{stage >= 2 ? "θₜ₊₁" : "θₜ"}</strong><span>{stage >= 2 ? "参数已更新" : "参数更新前"}</span></div><span aria-hidden="true">→</span><div className="live-output" data-output-time={stage >= 2 ? "after" : "before"}>{stage < 2 ? <><small>本步更新前输出</small><RepresentationVector label="(2, 1, 0)" values={[...HISTORY_Z]} extent={3} /></> : <><small>更新后的输出</small><strong>hθₜ₊₁(x₂)</strong><p>本示意未计算<br />不据此刷新历史值</p></>}</div></div>

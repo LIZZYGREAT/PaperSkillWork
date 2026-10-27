@@ -16,12 +16,29 @@
     "path": "./",
     "states": [
       {"id": "opening", "animations": "disabled"},
-      {"id": "probability-equal", "actions": [{"type": "click", "selector": "[data-q-case='equal']"}], "animations": "disabled"},
-      {"id": "probability-reversed", "actions": [{"type": "click", "selector": "[data-q-case='reversed']"}], "animations": "disabled"},
-      {"id": "logits-shifted", "actions": [{"type": "click", "selector": "[data-a-case='shifted']"}], "animations": "disabled"},
-      {"id": "snapshot-frozen", "actions": [{"type": "click", "selector": "[data-snapshot-step='1']"}], "animations": "disabled"},
-      {"id": "snapshot-updated", "actions": [{"type": "click", "selector": "[data-snapshot-step='2']"}], "animations": "disabled"},
+      {"id": "probability-equal", "actions": [{"type": "click", "selector": "[data-review-q='equal']"}, {"type": "click", "selector": "[data-formula-select='3']"}], "animations": "disabled"},
+      {"id": "probability-reversed", "actions": [{"type": "click", "selector": "[data-review-q='reversed']"}, {"type": "click", "selector": "[data-formula-select='3']"}], "animations": "disabled"},
+      {"id": "logits-shifted", "actions": [{"type": "click", "selector": "[data-review-a='shifted']"}, {"type": "click", "selector": "[data-logit-step='3']"}], "animations": "disabled"},
+      {"id": "snapshot-frozen", "actions": [{"type": "click", "selector": "[data-freeze-step='1']"}], "animations": "disabled"},
+      {"id": "snapshot-updated", "actions": [{"type": "click", "selector": "[data-freeze-step='2']"}], "animations": "disabled"},
       {"id": "reference", "actions": [{"type": "click", "selector": ".site-header .text-button"}], "animations": "disabled"}
+    ]
+  }, {
+    "id": "der-w7-proposals",
+    "path": "./?review=1",
+    "computedStyles": [
+      {"selector": ".review-page .equation math", "property": "font-size", "equals": "22px"}
+    ],
+    "states": [
+      {"id": "kl-default", "actions": [{"type": "scrollIntoView", "selector": ".kl-workspace"}], "animations": "disabled"},
+      {"id": "kl-negative", "actions": [{"type": "click", "selector": "[data-kl-category='1']"}, {"type": "click", "selector": "[data-formula-select='2']"}, {"type": "click", "selector": "[data-kl-step='2']"}, {"type": "scrollIntoView", "selector": ".kl-workspace"}], "animations": "disabled"},
+      {"id": "kl-sum", "actions": [{"type": "click", "selector": "[data-formula-select='3']"}, {"type": "scrollIntoView", "selector": ".kl-workspace"}], "animations": "disabled"},
+      {"id": "score-differences", "actions": [{"type": "click", "selector": "[data-logit-step='1']"}, {"type": "scrollIntoView", "selector": ".score-workspace"}], "animations": "disabled"},
+      {"id": "score-common-shift", "actions": [{"type": "click", "selector": "[data-review-a='shifted']"}, {"type": "click", "selector": "[data-logit-step='3']"}, {"type": "scrollIntoView", "selector": ".score-workspace"}], "animations": "disabled"},
+      {"id": "freeze-before", "actions": [{"type": "scrollIntoView", "selector": ".freeze-workspace"}], "animations": "disabled"},
+      {"id": "freeze-updated", "actions": [{"type": "click", "selector": "[data-freeze-step='2']"}, {"type": "scrollIntoView", "selector": ".freeze-workspace"}], "animations": "disabled"},
+      {"id": "freeze-candidate", "actions": [{"type": "click", "selector": "[data-freeze-step='3']"}, {"type": "scrollIntoView", "selector": ".freeze-workspace"}], "animations": "disabled"},
+      {"id": "softmax-reference", "actions": [{"type": "click", "selector": ".site-header .text-button"}, {"type": "click", "selector": "[data-reference-term='softmax']"}], "animations": "disabled"}
     ]
   }],
   "geometry": {
