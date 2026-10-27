@@ -44,11 +44,20 @@ export async function lifecycleBrowserChecks({page,base,check,shot}) {
           if(label){crossed.push(label.text);break;}
         }
       }
-      return {outside,pairs,crossed};
+      const imageCrossings=[];
+      for(const sample of svg.querySelectorAll("[data-sample-object]")){
+        if(!visible(sample))continue;
+        const b=sample.getBoundingClientRect();
+        for(const a of labels){
+          if(Math.min(a.x+a.w,b.right-root.x)-Math.max(a.x,b.left-root.x)>2&&Math.min(a.y+a.h,b.bottom-root.y)-Math.max(a.y,b.top-root.y)>2)imageCrossings.push([sample.dataset.sampleObject,a.text]);
+        }
+      }
+      return {outside,pairs,crossed,imageCrossings};
     });
     check(result.outside.length===0,`Lifecycle labels remain inside canvas: ${JSON.stringify(result.outside)}`);
     check(result.pairs.length===0,`Lifecycle labels do not overlap: ${JSON.stringify(result.pairs)}`);
     check(result.crossed.length===0,`Data/gradient corridors avoid labels at ${JSON.stringify(await state())}: ${JSON.stringify(result.crossed)}`);
+    check(result.imageCrossings.length===0,`Moving samples avoid labels at ${JSON.stringify(await state())}: ${JSON.stringify(result.imageCrossings)}`);
   };
   check((await state()).status==="playing","Lifecycle starts a complete playback automatically");
   await scene.locator("[data-replay]").click();
@@ -81,6 +90,7 @@ export async function lifecycleBrowserChecks({page,base,check,shot}) {
   check(await scene.getAttribute("data-update-count")==="2","Exactly one update per shown training step");
   check(await scene.getAttribute("data-loss-sources")==="current-ce,historical-squared","Two sources enter one later update");
   check(await scene.locator("[data-loss]").getAttribute("data-loss")==="2","Live comparison has the computed squared loss");
+  check(await scene.locator("[data-history-reference='2']").evaluate(el=>getComputedStyle(el).fill==="none"),"Coincident zero-difference marks show both the historical outline and current dot");
   await scene.locator("[data-replay]").click();await at(2,.5);
   await scene.locator("[data-play]").focus();await page.keyboard.press("Enter");
   const paused=await scene.locator("svg").innerHTML();await tick(800);

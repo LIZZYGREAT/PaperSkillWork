@@ -56,10 +56,10 @@ try {
       if (selector) await page.locator(selector).screenshot({ path: resolve(output, `${name}-${width}.png`), animations: "disabled" });
       else await page.screenshot({ path: resolve(output, `${name}-${width}.png`), animations: "disabled" });
     };
-    if(deviceScaleFactor!==1){
+    if(deviceScaleFactor!==1||process.env.DER_BROWSER_LIFECYCLE_ONLY==="1"){
       await page.clock.install();
       await lifecycleBrowserChecks({page,base,check,shot});
-      check(errors.length===0,"No browser errors at the reported short-window/zoom equivalent");
+      check(errors.length===0,"No browser errors during targeted lifecycle inspection");
       console.log(`${width}x${height}, DPR ${deviceScaleFactor}: lifecycle size and motion regression PASS`);
       await context.close();continue;
     }

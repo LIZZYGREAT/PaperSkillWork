@@ -51,7 +51,7 @@ export function lifecycleSceneAt(clip: number, progress: number) {
   const input = { x: mix(105, 305, windowAt(enter, .25, 1)), y: 250 };
   const currentInput = curve(windowAt(replay, .05, .32), { x: 105, y: 180 }, { x: 190, y: 180 }, { x: 240, y: 225 }, { x: 305, y: 250 });
   const replayInput = curve(windowAt(replay, .35, .78), { x: 735, y: 555 }, { x: 125, y: 535 }, { x: 125, y: 390 }, { x: 305, y: 270 });
-  const samplePacking = curve(windowAt(store, 0, .6), { x: 105, y: 250 }, { x: 105, y: 445 }, { x: 520, y: 485 }, { x: targetOrigin.x - 65, y: targetOrigin.y });
+  const samplePacking = curve(windowAt(store, 0, .92), { x: 105, y: 250 }, { x: 105, y: 530 }, { x: 520, y: 555 }, { x: 735, y: 555 });
   const camera = windowAt(compare, 0, .25);
   const difference = windowAt(compare, .28, .55);
   const squares = windowAt(compare, .55, .85);

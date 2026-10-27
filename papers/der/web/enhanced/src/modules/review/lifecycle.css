@@ -29,6 +29,7 @@
 .lc-score-axis{fill:none;stroke:var(--rk-line-strong);stroke-width:1}
 .lc-current-mark{fill:var(--rk-accent)}
 .lc-history-mark{fill:var(--rk-canvas);stroke:var(--rk-accent);stroke-width:2}
+.lc-history-reference{fill:none}
 .lc-slot{fill:var(--rk-surface);stroke:var(--rk-line-strong);stroke-width:1}
 .lc-record-outline{fill:none;stroke:var(--rk-accent);stroke-width:1.5}
 .lc-gradient{fill:none;stroke:var(--rk-warn);stroke-width:2.5;stroke-dasharray:6 5}

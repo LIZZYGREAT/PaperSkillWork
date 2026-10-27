@@ -65,10 +65,10 @@ export default function SampleLifecyclePrototype() {
           {!s.later && <>
             <text x="105" y="185" textAnchor="middle" data-layout-label>原图 x₁</text>
             <Sample x={105} y={250} id={s.sampleId} />
-            <text x="105" y="318" textAnchor="middle" className="lc-small" data-layout-label>原图身份保留</text>
+            {clip < 4 && <text x="105" y="318" textAnchor="middle" className="lc-small" data-layout-label>原图身份保留</text>}
             <path d="M140 250H300" className="lc-data-guide" />
             {s.enter > .05 && clip <= 1 && <Sample {...s.input} scale={.65} view opacity={1 - windowAt(s.forward, .05, .45)} id="view:x1:i" />}
-            <text x="205" y="350" textAnchor="middle" className="lc-small" data-layout-label>本次增强视图</text>
+            {clip <= 1 && <text x="205" y="350" textAnchor="middle" className="lc-small" data-layout-label>本次增强视图</text>}
           </>}
           {s.later && <>
             <text x="105" y="125" textAnchor="middle" data-layout-label>当前 x₂ / y₂</text>
@@ -114,7 +114,7 @@ export default function SampleLifecyclePrototype() {
               <circle cx={point.x} cy={point.y} r={6 * reveal} className="lc-current-mark" data-current-point data-reveal={reveal} />
               {camera < .1 && reveal > .98 && <text x={point.x} y={point.y - 17} textAnchor="middle" className="lc-value" data-layout-label>{value}</text>}
               {compare && <>
-                <rect x={s.referencePoints[k].x - 7} y={s.referencePoints[k].y - 7} width="14" height="14" className="lc-history-mark" opacity={oldReferenceOpacity} data-history-reference={k} />
+                <rect x={s.referencePoints[k].x - 7} y={s.referencePoints[k].y - 7} width="14" height="14" className="lc-history-mark lc-history-reference" opacity={oldReferenceOpacity} data-history-reference={k} />
                 {s.difference > 0 && <>
                   <path d={`M${580 + s.z[k] * 100} ${point.y - 12}v-12H${mix(580 + s.z[k] * 100, point.x, s.difference)}v12`} className="lc-difference" />
                   <text x="858" y={point.y + 6} className="lc-difference-value" opacity={s.difference} data-layout-label>{s.match.differences[k] > 0 ? "+" : ""}{s.match.differences[k]}</text>
@@ -151,7 +151,7 @@ export default function SampleLifecyclePrototype() {
           </g>)}
         </g>}
         {packet && <Sample {...packet} scale={.55} id="record-original:x1" />}
-        {clip === 4 && <text x="80" y="450" className="lc-small" data-layout-label>{s.stored ? "追加完成，N → 1" : s.store < .2 ? "先装配原图与冻结目标" : "N=0 < K=2 · 直接追加"}</text>}
+        {clip === 4 && <text x="80" y="590" className="lc-small" data-layout-label>{s.stored ? "追加完成，N → 1" : s.store < .2 ? "先装配原图与冻结目标" : "N=0 < K=2 · 直接追加"}</text>}
         {compare && <>
           <text x="900" y="441" textAnchor="middle" className="lc-total" opacity={s.sum} data-loss={s.match.squaredDistance} data-layout-label>Ldark = 1 + 1 + 0 = 2</text>
           {clip === 7 && <g data-joint-update>
