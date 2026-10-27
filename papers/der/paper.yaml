@@ -17,7 +17,7 @@ paper:
   source_hash: e7dcafb05e9fd77e0524be8b98578cd884a9fe6455322beb2f4a6c4a383cd72e
 workflow:
   version: 3
-  current_stage: W5
+  current_stage: W6
   stages:
     W0_source_intake:
       status: complete
@@ -37,7 +37,8 @@ workflow:
       reviewed_by: 用户
       note: 用户确认整体内容 ok，认可本轮因果主线及内容取舍；已按反馈统一行间公式为两组 $$，并在强调结束标记后补空格。
     W5_interaction_plan:
-      status: in_progress
+      status: complete
+      completed_by: automation
     W6_vertical_slice:
       status: pending
     W7_human_review:

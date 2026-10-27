@@ -12,7 +12,7 @@ Paper ID: `der`
 
 - Design confirmation: CONFIRMED（2026-10-27）。用户选择“采用推荐方向”和“采用 S1–S3（推荐）”；确认 S3 两段计算、S4 选留/训练分段、S7 独立工作台及展开区可复算小模型，首切片为 S1–S3 / I01–I05。
 - Rendered-page acceptance: PENDING。本轮没有新的网页或效果图验收。
-- W5 CLI structural completion: IN_PROGRESS，由 `paper.yaml` 独立记录，不能据提案结构检查通过代替设计确认。
+- W5 CLI structural completion: COMPLETE，由 `paper.yaml` 的 `completed_by: automation` 独立记录；设计方向有上方用户确认，真实页面仍未验收。
 - 基准：第一轮起点为 `381d369ae7d12d3530bfd527179214a2eb141df1`；确认后定稿从 `19cdc5b` 继续，分支 `der`，工作区干净。
 - 已确认边界：W2 决定真实先读后写顺序；W3 决定事实与素材边界；W4 决定 S1–S8 顺序、数学首讲、CORE 及独立贯通任务。本稿不修改三者。
 - 保护对象：同一输入 x 与标签 y；更新前生成并冻结的历史 z；唯一可训练网络 θ；固定容量 K、持久记忆 M 和计数 N。禁止用两个网络图暗示常驻 Teacher/Student。
@@ -378,10 +378,22 @@ Vertical Slice Review: PENDING
 
 这份确认只接受设计与范围；Rendered-page acceptance 和 W7 均保持 PENDING。W5 在结构与引用核验通过后由 CLI 自动完成；本轮不实施 W6，也不将确认设计说成人已看过真实页面。
 
-### 本轮核验（2026-10-27）
+### 第一轮提案核验（2026-10-27）
 
 - `python tools/paper.py paths der --json`、三组 `scaffold-kit ... --dry-run`、`python tools/paper.py check der` 与 `git diff --check` 均退出 0。check 唯一 warning 为文档含本机绝对路径；这是按 W5 要求真实记录 publish_source 和复制目的地，不是网页运行时依赖。
 - 直接调用现有 W5 校验并审阅映射：CORE 11/11 仅分配一次，SUPPORTING 9/9，REFERENCE 3/3，DELETE 未混入；证据引用可解析；只有一份 implementation YAML；无选中公开页图，无 Kit 实际复制，W6 保持 pending。
 - 独立复算 S3 的 KL 两个带符号项、三种总和和 E02 平方差；枚举 K=2 前四个流项的 reservoir 留存概率，四项最终均为 1/2。这里只核对提案算例，不声称已经实现或验证了 S7 小模型、页面动画或浏览器状态。
 - 指定回归命令为 `python -m pytest -q --basetemp=C:/Users/lenovo/Desktop/Projects/PaperWork/.tmp-der-w5-20261027 -o cache_dir=C:/Users/lenovo/Desktop/Projects/PaperWork/.tmp-der-w5-cache-20261027 tests/test_workflow_implementation.py tests/test_workflow_schema.py tests/test_document_governance.py`，结果 18 passed，退出 0。使用独占工作区临时目录，避免此前默认目录权限问题；本轮临时目录/缓存交付前清理。
 - DER 页面构建、交互、桌面/F11、上游 Import/Preflight 均未运行，符合本轮规划范围；Kit Gallery 只尝试查看但连接超时，NOT_RUN，不能当作视觉签收。预览服务和本次失败预览标签已关闭。W5 结构检查、设计确认和实际页面验收仍分别记录。
+
+### 确认后定稿核验（2026-10-27）
+
+用户两项确认已落实，U1/U5/U7 的普通图文、场景 A/B/C、元数据与局部组件注册计划、Kit 精确闭包和首切片范围已完整记录。W4、W2、W3 原文件、网页源码与 Kit 未改动。仅当前计划及 CLI 管理的 paper.yaml 产生正式变更，不新增第二套契约或运行时。
+
+定稿再次执行 `test_workflow_implementation.py`、`test_workflow_schema.py`、`test_document_governance.py`，采用 `--basetemp=C:/Users/lenovo/Desktop/Projects/PaperWork/.tmp-der-w5-final-20261027 -o cache_dir=C:/Users/lenovo/Desktop/Projects/PaperWork/.tmp-der-w5-final-cache-20261027`，18 passed，退出 0。现有 W5 校验/引用检查、首切片覆盖与 Markdown 公式/强调间距检查通过；paths 解析仍为同一 Enhanced 源。结构化覆盖为 CORE 11/11、SUPPORTING 9/9、REFERENCE 3/3，DELETE 均排除。
+
+独立计算逐项复核两种模式的四轮损失及冻结记录，表中八行数值与重算结果误差小于 1e−9。解析联合梯度用 ε=1e−6 的中心有限差分验证每步全部六个参数，最大绝对误差小于 1.6e−10。U1 的同标签配对 CE≈0.407605964，两组相同；这验证数学设定，不宣称已实现浏览器教学引擎或实测论文网络。
+
+`python tools/paper.py stage der W5 complete` 已执行，退出 0，自动记录 W5 complete；W6 仍为 pending，未开始网页。完成后的 `check der` 为 CHECK PASS、退出 0，`git diff --check` 退出 0；五条 W6 warning 指 I01–I05 尚未进入实现 manifest，符合首切片尚未实施的状态，未造占位覆盖。包含 publish_source 的本机路径提示不表示跨论文运行时依赖。首切片实际构建、交互、两个桌面布局、真实 F11，以及四项源码质量状态仍须在 W6 真实实现后验证；最新官方来源刷新和 Gallery 实际查看的未完成原因保留在上文，不能据 W5 完成推断视觉或接收兼容已 PASS。
+
+本轮独占测试目录和缓存交付前删除；最终按用户要求提交，保留可复核的正式文档与 Git 历史。
