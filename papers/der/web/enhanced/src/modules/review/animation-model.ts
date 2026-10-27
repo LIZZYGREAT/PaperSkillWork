@@ -42,8 +42,10 @@ export function freezeSceneAt(clip: number, progress: number) {
   const update = phase(clip, progress, 2);
   const handoff = phase(clip, progress, 3);
   return { forward, copy, update, handoff, hasRecord: copy > 0, updated: update >= .5,
-    recordX: lerp(780, 470, copy) + 350 * handoff,
-    recordY: lerp(144, 365, copy), inputX: lerp(80, 360, clamp(forward * 2)),
+    recordX: 780 - 310 * copy * copy + 350 * handoff,
+    recordY: (1-copy)**2 * 144 + 2*(1-copy)*copy*300 + copy**2*365, inputX: lerp(80, 290, clamp(forward * 2)),
     outputCount: Math.floor(clamp((forward - .45) / .55) * 3 + 1e-9),
     recordId: "x2@t", z: HISTORY_Z, inMemory: false };
 }
+
+
