@@ -5,6 +5,7 @@ import "./styles/tokens.css";
 import "./styles/components.css";
 import "./shared/foundation/styles/kit.css";
 import "./styles/paper.css";
+import "./styles/diagram-placement.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing application root element");

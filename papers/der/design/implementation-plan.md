@@ -453,6 +453,10 @@ Vertical Slice Review: REVISE → 修订已实现，等待用户再次评审（W
 
 自动化通过与截图检查只说明实现和布局达到本轮检查范围，不代表学习效果已验收；未把 `paper.yaml` W7 改成完成。W7 仍等待用户复评，U4–U7 和 W8 未启动。
 
+**按用户截图调整位置（2026-10-27）**：首屏回放记忆图在桌面布局中右移并上移，与标题区对齐；冻结时序图将唯一当前网络移至输入与输出之间的目标位置，延长两侧连线，并同步上移连线以对准网络框中心。窄屏继续使用原单列/弹性布局。
+
+本次增量检查：`npm run build --prefix papers/der/web/enhanced` PASS；`npm test --prefix papers/der/web/enhanced` PASS（7/7）。浏览器截图回归未能完成：Vite 已启动并报告本地预览地址，但测试进程访问回环地址时被当前环境拒绝，不能据此记录视觉 PASS。W7 学习验收仍待用户。
+
 ## Full Implementation (W8)
 
 仅记录后续边界：W7 通过首切片之后才覆盖 S4–S8、紧凑 supporting 和主线外 reference。S7 需独立整合设计与状态核对。此处不提前实施、不记录任何 W8 PASS。
