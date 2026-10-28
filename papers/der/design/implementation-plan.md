@@ -190,6 +190,32 @@ D1 默认完整播放一次并停在终态，提供暂停/继续、重播、上�
 - `BROWSER_RENDER = NOT_RUN`（沙箱禁止启动本机 Edge，原因同 R1）；`npm test`／`npm run build`：NOT_RUN，未改发布源码。
 - **R2 已交付，等待用户对五张关键帧与空间构图的明确认可；在得到认可前不进入 R3 动画重写。W7 保持 pending。**
 
+### W7 REVISE · 生命周期 v2 实现（R3，2026-10-28）
+
+用户认可 R1/R2 主体与构图，并指出网络节点图需“同列不等距、首列 3 个、整体更均衡”，要求所有同类节点图统一调整后继续 R3。图稿已按此重排（`d6925a7`），R3 在同一套几何上重建场景。
+
+**实现范围**
+
+- `lifecycle-model.ts`：新增 `LIFECYCLE_GEOMETRY`（1120×640 舞台、模型 250,104,340×336、锚点 156×154、响应坐标 700/114、比较构图 360/130、冻结块 240×92、记录 324×104、槽位 340×108、两条预留通道）；保留八拍时间线与既有状态字段，新增 `lens`（比较构图开合）、`copyPoints`（三个方块离开圆点的轨迹）、`recordVisible`、`copyMotion`、`assembly`。
+- `SampleLifecyclePrototype.tsx`：按图稿重建 DOM 舞台——网络卡（3/5/3 不等距节点 + 最近邻连线）、响应坐标（共享刻度、实心圆、数值贴标记）、冻结块（斜纹数值区、方块副本）、记忆带（两槽 + N 列 + 记录）、损失通道（标签/CE/反传状态/梯度虚线）、比较构图（差值括号、平方块、求和、联合损失、模型锚点）。播放仍复用 `useSceneTimeline`/`SceneTransport`/`useReducedMotion`，未重建播放器。
+- `lifecycle.css`：舞台视觉语言（卡片、节点、轨道、冻结斜纹、比较构图），用 Kit token 取色；未改共享样式表。
+
+**保留的不变量**（单测逐条覆盖）：更新前复制 `z=(2,1,0)`、更新后才写记录、`N:0→1`、记录 = 原图 + z 且不含 y、回放读同一 `record:x1:i`、两条损失只更新一次、结束停在 x₂ 候选写入之前。
+
+**实际检查**
+
+| 检查 | 结果 |
+| --- | --- |
+| `npx tsc --noEmit -p papers/der/web/enhanced` | 通过（0 错误） |
+| `node tests/lifecycle.test.mjs` | 4/4 通过：状态时序、方块的起止与连续位移、块本身不移动、几何有限且在舞台内、跨拍连续性、比较坐标同尺度、记录在比较后仍在 |
+| `node tests/math.test.mjs`、`node tests/animation.test.mjs` | 通过 |
+| `npm run build`（vite） | NOT_RUN：沙箱内 Vite 的 `execFile` 触发 `spawn EPERM`，无法完成打包 |
+| `npm test`（node --test） | NOT_RUN：同上（测试运行器需要 spawn 子进程）；已改为逐文件直接运行 |
+| 浏览器回归 / 两档桌面视觉 / 连续录制 | NOT_RUN：沙箱无法启动本机 Edge。需在沙箱外 `npm run dev` 或 `npm run build` 后复核 |
+
+**状态：R3 代码已完成，尚未经过真实浏览器目视复核；W7 保持 pending。** 复核要点：五张关键帧对应的阶段能否连续播放、冻结块入记录的过程、比较构图的镜头收放、以及 reduced-motion 下每阶段是否保有完整语义。
+
+
 
 
 ## Design Handoff, Invariants, and Change Scope
