@@ -1,0 +1,242 @@
+{
+  "baseUrl": "http://127.0.0.1:5193/",
+  "server": {
+    "command": "node",
+    "args": [
+      "../../../web/enhanced/node_modules/vite/bin/vite.js",
+      "preview",
+      "--config",
+      "vite.config.mjs",
+      "--configLoader",
+      "runner",
+      "--port",
+      "5193",
+      "--strictPort"
+    ],
+    "cwd": ".",
+    "readyPath": "/"
+  },
+  "viewports": [
+    {
+      "id": "desktop-window",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "id": "fullscreen-layout",
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "pages": [
+    {
+      "id": "s2-kl",
+      "path": "./?scene=kl",
+      "computedStyles": [
+        {
+          "selector": ".calculation-steps span",
+          "property": "font-size",
+          "equals": "12px"
+        }
+      ],
+      "states": [
+        {
+          "id": "opening"
+        },
+        {
+          "id": "claude-math",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-frame=\"2\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2000
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            }
+          ]
+        },
+        {
+          "id": "gpt-transfer",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-frame=\"3\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3900
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            }
+          ]
+        },
+        {
+          "id": "sum",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-frame=\"4\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2400
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s2-logits",
+      "path": "./?scene=logits",
+      "computedStyles": [
+        {
+          "selector": ".difference-row>span",
+          "property": "font-size",
+          "equals": "12px"
+        }
+      ],
+      "states": [
+        {
+          "id": "opening"
+        },
+        {
+          "id": "score-moving",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-frame=\"1\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1800
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            }
+          ]
+        },
+        {
+          "id": "square-unfold",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-frame=\"2\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2500
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            }
+          ]
+        },
+        {
+          "id": "shift-projection",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-case=\"shifted\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-frame=\"1\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1800
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            }
+          ]
+        },
+        {
+          "id": "shift-result",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-case=\"shifted\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-frame=\"3\"]"
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3200
+            },
+            {
+              "type": "click",
+              "selector": "[data-play]"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "geometry": {
+    "checkPageHorizontalOverflow": true,
+    "minSemanticFontSizePx": 12,
+    "clippingSelectors": [
+      ".scene-heading",
+      ".mainline-math",
+      ".narration",
+      ".score-sum-columns"
+    ],
+    "stableAcrossStates": [
+      {
+        "selector": ".stage",
+        "properties": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "tolerancePx": 2
+      }
+    ]
+  }
+}

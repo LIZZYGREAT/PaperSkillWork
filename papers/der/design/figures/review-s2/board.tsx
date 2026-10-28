@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { LIFECYCLE_CLIPS } from "../../../web/enhanced/src/modules/review/lifecycle-model";
 import { KLBoard, ScoreBoard } from "./MechanismScenes";
@@ -103,7 +103,7 @@ function Board() {
   const initial = new URLSearchParams(location.search).get('scene');
   const [scene, setScene] = useState(initial === 'logits' || initial === 'freeze' ? initial : 'kl');
   const choose = (id: string) => { setScene(id); const url = new URL(location.href); url.searchParams.set('scene', id); history.replaceState({}, '', url); };
-  return <><header className="board-top"><div className="wordmark"><b>DER</b><span>教学场景 / 设计评审</span></div><div className="review-status"><i />S2 · R2 重新设计 · 待审</div></header><main className={`s2-board scene-board-${scene}`}>
+  return <><header className="board-top"><div className="wordmark"><b>DER</b><span>教学场景 / 设计评审</span></div><div className="review-status"><i />S2 · R3 场景精修 · 待复评</div></header><main className={`s2-board scene-board-${scene}`}>
     <nav className="scene-tabs" role="tablist" aria-label="三个设计提案">{[['kl','概率与 KL'],['logits','Logit Matching'],['freeze','冻结 / 回放入口']].map(([id, label], i) => <button key={id} role="tab" data-tab={id} aria-selected={scene === id} onClick={() => choose(id)}><span>0{i + 1}</span>{label}</button>)}</nav>
     {scene === 'kl' ? <KLBoard /> : scene === 'logits' ? <ScoreBoard /> : <FreezeBoard />}
   </main></>;

@@ -220,6 +220,32 @@ D1 默认完整播放一次并停在终态，提供暂停/继续、重播、上�
 
 ## Design Handoff, Invariants, and Change Scope
 
+### 当前执行 · S2 R3 精修（2026-10-29，优先于下方历史布局约定）
+
+用户要求理解流程、核对 commit 后执行 `PaperSkillWork_DER_S2_Polish_And_Next_Phase.md`。起点 `c44412e` / `der`，工作区干净，与任务基准一致。仅修订 `design/figures/review-s2` 的 KL / Logits 可播放评审场景；正式 `/` 仍为旧切片，生命周期专注版为受保护基线，W7/W8 pending。完成本轮后交用户复评，再决定正式整合。
+
+| 场景与阶段 | 本轮动作与可核验状态 | 保护边界 |
+| --- | --- | --- |
+| KL 分配→Claude→GPT→汇总→重合 | 同类区域/数值与取值签同步聚焦；依次读取 p/q、求 ln 比、乘旧权重；保留每类带符号结果，结果副本短程进入同一汇总区；q 回到 p 时同步归零。 | p=(.8,.2)、三个 q、自然对数、带符号项与熵关系不变。面积只表示概率，非 KL；运动是合成对照。 |
+| Logits 对齐→移动→平方→求和 | 三卡同尺度轨道，固定方标 z 与移动圆标 a；差距展开为真实比例面积，再按类别汇总。下方三组概率投影与相同 z/a 同源；共同平移全程概率重合。 | z=(2,1,0)、默认 a=(1,2,0)、平移 a=(3,2,1)；同一类、同一时钟、相同固定尺度；不表示真实 SGD。 |
+
+复用核对：已读 Kit Registry、animation-timeline / visual-parts Recipe 与当前 `useAnimationTimeline`、`useSceneTimeline`、MathNotation 源码。直接复用既有时钟、减少动态、MathML、像素身份与 math-model；ResponseMeter 的单值条不承担双标记/差距折面积，因此核心轨道和概率聚焦在评审板局部创作，无新增 Kit 副本、共享 Hook 改动或计算引擎。只测两个指定桌面布局，覆盖初态、两种中间态、跨段交接、终态、切换案例、暂停/续播、前后步和 reduced motion；生命周期运行原有专注回归。评审板独立构建与验证，不以正式 build 证明设计板可用。真实 F11 未执行时单独记 NOT_RUN。
+
+本轮设计取舍：保留暖白、浅橙/浅绿与三类像素身份，负贡献独立用紫色和负号编码；概率改为连续水平分界，方格仅作面积尺度。两条类别计算通道先后展开并保留结果，减少跨阶段换卡；数值副本沿实测锚点进入下方，同类接收位置尽量直接位于来源下方。三卡共享 0–3 刻度，差距逐类展开成平方面积；下方共享 0–1 的概率刻度始终可见。去除默认秒数/设计者说明，保留必要背景折叠解释；播放控件在画布上方，核心标签至少 12px，允许纵向滚动，覆盖历史“一屏压缩”约定。实看发现的轨道重复标签和结果副本/接收值重字已修复，后者新增逐帧断言；不以自动断言代替人的教学判断。
+
+| 核验面 | 本轮实际命令与结果（仓库根目录） |
+| --- | --- |
+| 数学 / 受保护语义 | `npm --prefix papers/der/web/enhanced test`：PASS，17 项，退出 0。原 p/q、z/a 与生命周期 fixture 保持不变。 |
+| 独立评审板类型与构建 | `node papers/der/web/enhanced/node_modules/typescript/bin/tsc -p papers/der/design/figures/review-s2/tsconfig.json`：PASS；`node papers/der/web/enhanced/node_modules/vite/bin/vite.js build --config papers/der/design/figures/review-s2/vite.config.mjs --configLoader runner`：PASS，35 modules，最终 `index-DU0r5j4H.js` / `index-pzkHSEqy.css`。默认 config bundler 曾尝试写用户目录而失败，改用项目既有 runner loader；失败尝试不计通过。 |
+| S2 生产产物、交互与真实播放 | `$env:DER_S2_RECORD='1'; node papers/der/design/figures/review-s2/browser.test.mjs`：PASS，最终 2047 项断言、退出 0。Edge 156.0.4314.50 / Node v24.18.0；独立静态服务直接读取设计板构建，实际 inner=1440×900 / 1920×1080、DPR1。覆盖所有概率预设、两种 logits 模式、暂停/续播/回退/跳段/重置、归一化、同源数值、持续 DOM 标记、轨道标签无相交、reduced motion 和副本/接收值不重字；页面/资源错误 0。三段真实 rAF 录像无虚拟时钟，KL 26434ms、交换 18051ms、平移 17924ms，共 269 次采样，均到 finished；实看开头、中间、交接与结果帧，完整录像交用户复评。 |
+| 生命周期基线回归 | `$env:DER_BROWSER_FOCUS_ONLY='1'; $env:DER_REVIEW_DIR='<repo>/.visual-qa/der-s2-r3/lifecycle'; node papers/der/web/enhanced/tests/browser.test.mjs`：PASS，291 项、退出 0。两档桌面及既有短窗口专项均通过；与原 `.visual-qa/der-s2-r2/navigation/` 中 0/5/6/8 四个阶段的两档截图比较，8 张逐像素一致。`git diff --exit-code -- papers/der/web/enhanced` 退出 0，发布源码/生命周期/共享基础全部未改。 |
+| 共享 Visual QA | `node tools/visual-qa/cli.mjs --config papers/der/design/figures/review-s2/visual-qa.json`：最终 PASS，18 状态、退出 0，实际 URL 为独立生产预览 `http://127.0.0.1:5193/?scene=kl` / `?scene=logits`。GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS / FULLSCREEN_LAYOUT=PASS；Agent 实看两档公式/分界/展开/平移/汇总截图，VISUAL_REVIEW=PASS（Agent 复核范围），HUMAN_ACCEPTANCE=PENDING。runner 的 VISUAL_REVIEW=NOT_RUN 不改写为人工接受。最终报告 `.visual-qa/run-2026-10-28T16-18-17-123Z/report.md`；前次报告 `.visual-qa/run-2026-10-28T16-15-35-528Z/report.md` 为交接修复前记录，两者在读取和实看后按官方精确清理入口清除。 |
+| 正式发布范围 / 未执行项 | `npm --prefix papers/der/web/enhanced run build`：SOURCE_BUILD=PASS，66 modules，`index-DbP7vu1u.js` / `index-PCyuSUv3.css`，退出 0。UPSTREAM_SYNTAX / UPSTREAM_OUTPUT / SUBPATH_ASSETS=NOT_RUN：本轮只精修独立评审板，未整合 `/`，未运行当前上游检查器或重新验证正式子路径，不沿用历史 PASS 冒充本轮。FULLSCREEN_REAL=NOT_RUN（未操作真实 F11）；正式整合、W7 人工结论与 W8 均 PENDING。 |
+
+最终证据仅保留 `.visual-qa/der-s2-r3/review/` 的三段 WebM、同名 playback JSON、最终 report.json、两档代表性中间/结果 PNG 与少量实播帧，及 `lifecycle/` 中基线回归截图和 pixel-comparison.json；均为本地忽略产物。共享 runner 两个确切 run 目录清理均须返回 `CLEANED` 并确认不存在；不清理旧基线或用户 5188/5192 服务。可复跑测试、tsconfig 和 Visual QA 配置纳入版本控制。
+
+**本轮交接：** [KL](http://127.0.0.1:5192/?scene=kl) / [Logit Matching](http://127.0.0.1:5192/?scene=logits)，选择案例后点“重播整段”。已有 5192 服务保留；重开命令为 `node papers/der/web/enhanced/node_modules/vite/bin/vite.js --config papers/der/design/figures/review-s2/vite.config.mjs --configLoader runner`。本轮完成任务文档“提交 1”的精修，停在两场景用户复评；确认后才迁入真实发布源码、收敛旧原型并提交 W7 整体再审，不预签 W7、不提前进入 W8。
+
 ### 当前生效决策 · 版本收敛 S0 / S1（2026-10-28）
 
 起点 `9f49da746adc6637a97ad5c20012440cbdf6257b`，`der` 分支、工作区干净；近期 `d25dd92` → `9f49da7` 完成分数卡片、完整 3→5→3 网络和专注布局。发布源码经 `python tools/paper.py paths der --json` 确认为 `C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\papers\der\web\enhanced`。本节覆盖前后历史提案中的过时视觉约定，历史记录不追溯改写。
