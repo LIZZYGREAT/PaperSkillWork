@@ -153,7 +153,7 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
   await tick(120);
   check((await state()).p > before, "Continue resumes the same copy position");
   await scene.locator("select").selectOption("6");
-  check((await state()).p < .02 && (await state()).status === "playing", "Stage selection starts at the selected clip beginning");
+  check((await state()).p === 0 && (await state()).status === "paused", "Stage selection pauses at the selected clip beginning");
   await scene.locator("[data-back]").click();
   check((await state()).clip === 5 && await scene.getAttribute("data-memory-count") === "1", "Back restores the stored record");
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -178,7 +178,7 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
   await scene.locator('[role=combobox]').click();
   await shot('lifecycle-stage-menu', '[data-scene=lifecycle] [role=listbox]');
   await page.keyboard.press('Home'); await page.keyboard.press('Enter');
-  check((await state()).clip === 0 && (await state()).p < .02 && (await state()).status === 'playing', "Choosing stage one starts from zero seconds instead of its completed frame");
+  check((await state()).clip === 0 && (await state()).p === 0 && (await state()).status === 'paused', "Choosing stage one pauses at zero seconds instead of its completed frame");
   const readout = await scene.locator('[data-time-readout]').innerText();
   check(readout.startsWith('0.0 /'), "Stage one readout starts at 0.0 seconds");
   await scene.locator('[data-play]').click();
@@ -187,6 +187,36 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
 
 /** Layout-only focus player checks; the accepted animation stays on the same clock. */
 export async function lifecycleFocusBrowserChecks({ page, base, check, shot }) {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(`${base}?review=1&focus=lifecycle#lifecycle-player`, { waitUntil: "networkidle" });
+  const navScene = page.locator('[data-scene=lifecycle]');
+  const navState = () => navScene.evaluate(el => ({ clip:Number(el.dataset.clip), p:Number(el.dataset.progress), status:el.dataset.status }));
+  check(await navScene.locator('[data-back]').isEnabled(), 'Previous is available while stage 01 is running');
+  await navScene.locator('[data-back]').click();
+  let nav = await navState();
+  check(nav.clip===0 && nav.p===0 && nav.status==='paused', 'Previous first restarts and pauses the current stage at 0.0s');
+  check(await navScene.locator('[data-back]').isDisabled(), 'Previous is disabled only at the paused first-stage start');
+  check((await navScene.locator('[data-time-readout]').innerText()).startsWith('0.0 /'), 'Stage 01 start is 0.0s, never 7.2s');
+  await navScene.locator('select').selectOption('1');
+  check((await navScene.locator('[data-time-readout]').innerText()).startsWith('7.2 /'), 'The paused start of stage 02 is exactly 7.2s');
+  check(await navScene.locator('[data-back]').isEnabled(), 'Previous is available at the paused 7.2s boundary');
+  await navScene.locator('[data-back]').click();
+  check((await navScene.locator('[data-time-readout]').innerText()).startsWith('0.0 /') && (await navState()).status==='paused', 'Previous from the paused 7.2s boundary reaches the paused 0.0s start');
+  await navScene.locator('select').selectOption('2');
+  nav = await navState();
+  check(nav.clip===2 && nav.p===0 && nav.status==='paused', 'Stage selection uses a paused start, not the previous stage end');
+  await navScene.locator('[data-play]').click(); await page.waitForTimeout(180);
+  check((await navState()).p>0, 'The selected stage can play from its start');
+  await navScene.locator('[data-back]').click(); nav = await navState();
+  check(nav.clip===2 && nav.p===0 && nav.status==='paused', 'Previous during playback restarts this stage before moving back');
+  await navScene.locator('[data-back]').click(); nav = await navState();
+  check(nav.clip===1 && nav.p===0 && nav.status==='paused', 'Previous at a paused start moves to the previous paused start');
+  await navScene.locator('[data-next]').click(); nav = await navState();
+  check(nav.clip===2 && nav.p===0 && nav.status==='paused', 'Next also preserves stage-start navigation');
+  await navScene.locator('[data-play]').click(); await page.waitForTimeout(100); await navScene.locator('[data-play]').click();
+  check((await navState()).p>0 && (await navState()).status==='paused', 'A stage may also be paused midway');
+  await navScene.locator('[data-back]').click(); nav = await navState();
+  check(nav.clip===2 && nav.p===0 && nav.status==='paused', 'Previous from a paused middle also returns to the current start');
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`${base}?review=1&focus=lifecycle#lifecycle-player`, { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);

@@ -134,7 +134,7 @@ function ScoreTiles({ s }: { s: Scene }) {
         <text x={760} y={140} className="lc-plot-title">当前 x₂ · bⱼ</text>
         <text x={1080} y={140} textAnchor="end" className="lc-output-purpose">用于 L_current</text>
         {s.currentTarget.map((v, k) => <g key={k} data-current-output-tile={k}>
-          <rect x={760 + k * 110} y={164} width="100" height="104" rx="14" className="lc-score-tile" />
+          <rect x={760 + k * 110} y={164} width={k === 2 ? 112 : 100} height="104" rx="14" className="lc-score-tile" />
           <TileHeader x={760 + k * 110} y={164} k={k} />
           <text x={760 + k * 110 + 16} y={238} className="lc-logit-label">logit</text>
           <text x={760 + k * 110 + 82} y={240} textAnchor="end" className="lc-symbol-value" opacity={s.currentOutputReveal[k]} data-current-x2-value={v}>{v}</text>
@@ -147,7 +147,7 @@ function ScoreTiles({ s }: { s: Scene }) {
       </>}
     </g>
     {values.map((v, k) => <g key={k} data-score-tile={k}>
-      <rect x={tileX(k)} y={tiles.y} width={tiles.w} height={tiles.h} rx="14" className="lc-score-tile" />
+      <rect x={tileX(k)} y={tiles.y} width={tiles.w + (k === 2 ? 12 * (1 - s.lens) : 0)} height={tiles.h} rx="14" className="lc-score-tile" />
       <TileHeader x={tileX(k)} y={tiles.y} k={k} />
       <g opacity={s.outputReveal[k] * Math.max(0, 1 - s.lens * 3)}>
         <text x={tileX(k) + 16} y={tiles.y + (short ? 73 : 84)} className="lc-logit-label">logit</text>
@@ -368,7 +368,7 @@ export default function SampleLifecyclePrototype() {
     <header><p className="eyebrow">D1 · 单样本生命周期</p><h1>留下的是过去的响应，约束的是现在的网络。</h1><p>跟踪同一份 x₁：更新前生成 → 复制冻结 → 更新后入池 → 未来回放 → 匹配与联合更新。</p><button className="lifecycle-focus-button" onClick={() => changeFocus(true)}>专注播放 ↗</button></header>
     <div className="lifecycle-shell"><aside className="lifecycle-sidebar" aria-label="播放控制与阶段说明">
       <div className="lifecycle-focus-heading"><div><span>DER</span><h2>样本生命周期</h2></div><button className="lifecycle-exit-focus" onClick={() => changeFocus(false)}>返回阅读</button></div>
-    <div id="lifecycle-player" className="lifecycle-player"><SceneTransport timeline={timeline} clips={LIFECYCLE_CLIPS} label="样本生命周期" stageSelection="start" caption="自动完整播放一次。选择阶段从该阶段起点播放；前后单步查看完整结果。" /></div>
+    <div id="lifecycle-player" className="lifecycle-player"><SceneTransport timeline={timeline} clips={LIFECYCLE_CLIPS} label="样本生命周期" stageSelection="start" caption="自动完整播放一次。选择阶段停在起点；上一步先回本阶段起点，再回上一阶段起点。" /></div>
     <div className="lifecycle-context">
     <div className="lifecycle-reading" aria-live="polite"><strong>{LIFECYCLE_CLIPS[clip].id}</strong>{focused ? <FocusedNarration clip={clip} /> : <p>{NARRATION[clip]}</p>}</div>
     <div className="lifecycle-equation" data-vqa-check-clipping>{clip >= 6

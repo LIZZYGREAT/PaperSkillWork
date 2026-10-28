@@ -42,3 +42,5 @@ SampleToken、RepresentationVector、ResponseMeter、MathTypography、FigureFram
 九阶段包含第二次更新后的 `(x₂,z₂)` 写入。`z₂=(u₁,u₂,u₃)` 为当前 x₂ 的更新前响应符号，绝不复用旧图的回放输出 `aⱼ=(1,2,0)`；容量2的第二个空位按0编号显示为 `slot 1`。读写及冻结时序依据 `research/paper-model.md` 的执行整理。前向/反向传播与更新进度同钟连续驱动；阶段菜单支持鼠标与键盘。完整检查记录见 `../../design/implementation-plan.md`，W7等待用户复审。
 
 专注播放入口：`?review=1&focus=lifecycle#lifecycle-player`。左栏包含控制、阶段讲解和公式；右侧等比显示整幅舞台，模型、输出与记忆可同屏观看。示例说明可展开。普通页“专注播放”进入，返回阅读或Escape退出，保留当前播放位置；这不是浏览器F11全屏。
+
+阶段选择停在起点暂停：01 为 `0.0s`，02 为 `7.2s`。“上一步”在当前阶段已有进度时先回该阶段起点；已在起点暂停时，再回上一阶段起点。第一阶段播放中也能回到 `0.0s`；reduced motion 仍显示完整语义帧。DeepSeek 输出卡按用户反馈略加宽，算法和数值未变。

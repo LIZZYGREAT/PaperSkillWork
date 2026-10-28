@@ -8,6 +8,7 @@ export function useSceneTimeline(clips: readonly TimelineClip[], autoPlay = fals
   const [inspect, setInspect] = useState(false);
   const state = inspect ? { ...timeline.state, progress: 1, elapsedMs: timelineClipTotal(clips[timeline.state.clipIndex]), isHolding: false } : timeline.state;
   const jump = (index: number) => { timeline.controls.goToClip(index); setInspect(true); };
+  const start = (index: number) => { setInspect(false); timeline.controls.goToClip(index, { autoPlay: false }); };
   const seek = (index: number) => { if (reducedMotion) jump(index); else { setInspect(false); timeline.controls.goToClip(index, { autoPlay: true }); } };
   const reset = () => { setInspect(false); timeline.controls.goToClip(0); };
   const toggle = () => {
@@ -17,7 +18,7 @@ export function useSceneTimeline(clips: readonly TimelineClip[], autoPlay = fals
     } else timeline.controls.toggle();
   };
   const elapsedSeconds = (clips.slice(0, state.clipIndex).reduce((sum, clip) => sum + timelineClipTotal(clip), 0) + state.elapsedMs) / 1000;
-  return { state, elapsedSeconds, reducedMotion, jump, seek, reset, toggle,
+  return { state, elapsedSeconds, reducedMotion, jump, start, seek, reset, toggle,
     replay: () => { setInspect(false); timeline.controls.goToClip(0, { autoPlay: true }); } };
 }
 export type SceneTimeline = ReturnType<typeof useSceneTimeline>;
@@ -58,11 +59,16 @@ function StagePicker({ clips, value, onChange, label }: { clips: readonly Timeli
 
 export default function SceneTransport({ timeline, clips, label, caption, stageSelection = "result" }: { timeline: SceneTimeline; clips: readonly TimelineClip[]; label: string; caption?: string; stageSelection?: "start" | "result" }) {
   const { state, reducedMotion, jump } = timeline;
+  const starts = stageSelection === "start" && !reducedMotion;
+  const atPausedStart = state.status === "paused" && state.elapsedMs === 0;
+  const canGoBack = state.hasPrevious || (starts && !atPausedStart);
+  const previous = () => starts ? timeline.start(atPausedStart ? state.clipIndex - 1 : state.clipIndex) : jump(state.clipIndex - 1);
+  const next = () => starts ? timeline.start(state.clipIndex + 1) : jump(state.clipIndex + 1);
   const total = clips.reduce((n, c) => n + timelineClipTotal(c), 0);
   const elapsed = clips.slice(0, state.clipIndex).reduce((n, c) => n + timelineClipTotal(c), 0) + state.elapsedMs;
   return <div className="motion-transport" role="group" aria-label={`${label}播放控制`}>
     <div className="motion-progress"><progress max={total} value={elapsed} aria-label="整段进度" /><span data-time-readout>{(elapsed / 1000).toFixed(1)} / {(total / 1000).toFixed(1)} 秒 · {state.isHolding ? "停留观察" : state.status === "finished" ? "播放结束" : state.status === "playing" ? "播放中" : "已暂停"}</span></div>
-    <div className="motion-buttons"><button data-play onClick={timeline.toggle} disabled={reducedMotion && !state.hasNext}>{reducedMotion ? "下一语义步骤" : state.status === "playing" ? "暂停" : state.status === "finished" ? "再次播放" : "播放 / 继续"}</button><button data-back disabled={!state.hasPrevious} onClick={() => jump(state.clipIndex - 1)}>上一步</button><button data-next disabled={!state.hasNext} onClick={() => jump(state.clipIndex + 1)}>下一步</button><button data-replay onClick={timeline.replay}>重播整段</button><StagePicker clips={clips} value={state.clipIndex} onChange={stageSelection === "start" ? timeline.seek : jump} label={label} /></div>
+    <div className="motion-buttons"><button data-play onClick={timeline.toggle} disabled={reducedMotion && !state.hasNext}>{reducedMotion ? "下一语义步骤" : state.status === "playing" ? "暂停" : state.status === "finished" ? "再次播放" : "播放 / 继续"}</button><button data-back disabled={!canGoBack} onClick={previous}>上一步</button><button data-next disabled={!state.hasNext} onClick={next}>下一步</button><button data-replay onClick={timeline.replay}>重播整段</button><StagePicker clips={clips} value={state.clipIndex} onChange={starts ? timeline.start : jump} label={label} /></div>
     <p className="motion-caption">{reducedMotion ? "减少动态：显示每一阶段的完整语义，使用前后步骤阅读。" : caption ?? "默认暂停。点击播放可完整看完；前后单步停在所选阶段末态。"}</p>
   </div>;
 }
