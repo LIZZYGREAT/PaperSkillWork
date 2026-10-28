@@ -58,6 +58,7 @@ export async function fullW8Checks({page,base,check,shot}){
    check(+(await wb.getAttribute("data-seen"))===expected.state.N,"Every phase inherits exact N");
    check(+(await wb.getAttribute("data-updates"))===expected.state.updates,"Only one update per round");
    check(await wb.getAttribute("data-memory")===expected.state.M.map(r=>r.id).join(","),"Every memory snapshot follows shared model");
+   check(await wb.locator("text").filter({hasText:/slot [01] · 空/}).count()===2-expected.state.M.length,"Only genuinely empty slots carry an empty label");
    if(c===13)check(await wb.getAttribute("data-memory")==="x₁,x₂","Round 3 trains from old memory before replacement");
    if(c===14)check(await wb.getAttribute("data-memory")==="x₃,x₂","Round 3 replaces only after update");
    if(c===18)check(+(await wb.getAttribute("data-updates"))===4&&+(await wb.getAttribute("data-seen"))===3,"Rejected item still trains before reservoir");
@@ -84,6 +85,7 @@ export async function fullW8Checks({page,base,check,shot}){
  await evidence.getByRole("button",{name:/深入分析与证据边界/}).click();check(await page.locator("dialog").isVisible(),"Reference analyses open");
  check(await page.locator("[data-reference-detail='evidence-analysis'] math").count()>0,"ECE uses mathematical layout");
  await page.keyboard.press("Escape");await page.goto(base);
+ await shot("article-final-opening");
  check(await page.locator(".lesson-section").count()===7,"All seven reading units are real");
  const bad=await page.locator(".site-header nav a,.scene-equation math,.wb-rounds button").evaluateAll(nodes=>nodes.filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>el.textContent));
  check(!bad.length,"Navigation and mainline math fit: "+bad);

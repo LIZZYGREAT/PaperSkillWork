@@ -210,7 +210,7 @@ implementation_mappings:
   M03:
     claim: '本项目用 K 表示固定容量、M 表示容器、N 表示已处理项数，并用包含端点的整数抽样 [0,N] 表达 Algorithm 3 的计数逻辑。'
     type: IMPLEMENTATION_MAPPING
-    source_locator: 'Appendix D, Algorithm 3 and proof, p. 15'
+    source_locator: 'Appendix D, Algorithm 3, p. 15; Section 3, p. 3 (uniform retention statement)'
     conditions: '这是对原算法容量/计数符号和未展开计数递增的规范化表达。'
     allowed_wording: '必须标注为本项目消歧；不把符号 K、计数更新或整理后的伪代码说成原文原样。'
   M04:

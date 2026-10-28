@@ -20,7 +20,8 @@ export default function Workbench(){
 const [mode,setMode]=useState<Mode>("DER"),steps=useMemo(()=>runTraining(mode),[mode]),timeline=useSceneTimeline(WORKBENCH_CLIPS),{clipIndex:c,progress:p}=timeline.state,{step,round,phase,prediction,state}=trainingSceneAt(steps,c,p);
 const completed=(i:number)=>phase>i?1:phase<i?0:windowAt(p,.08,.85),write=phase===4?windowAt(p,.18,.88):0,reading=phase===0?windowAt(p,.06,.82):1;
 const result=predict(steps[3].after),records=[...step.before.M,step.candidate],dest=step.insertion.slot,slotY=(slot:number)=>413+slot*99;
-const candidatePos=phase===4?curve(write,{x:67,y:180},{x:380,y:195},{x:365,y:slotY(dest??0)},{x:67,y:dest===null?180:slotY(dest)}):{x:67,y:180};
+const candidatePos=phase===4?(dest===null?{x:mix(67,17,write),y:180}:curve(write,{x:67,y:180},{x:67,y:280},{x:67,y:slotY(dest)-90},{x:67,y:slotY(dest)})):{x:67,y:180};
+const currentViewPos=curve(windowAt(p,.04,.65),{x:130,y:100},{x:340,y:100},{x:375,y:110},{x:395,y:205});
 const forward=phase===1?windowAt(p,.1,.8):phase===2?windowAt(p,.1,.8):prediction?windowAt(p,.1,.8):0;
 const replayPos=curve(reading,{x:337,y:step.rd?slotY(step.before.M.indexOf(step.rd))+16:430},{x:320,y:420},{x:350,y:278},{x:416,y:278});
 const narr=prediction?"训练已结束。查询 u=(1,0.5) 只经 θ₄ 产生 logits 和 argmax；不采样 M、不求训练损失，不更新 θ 或 N。Task-IL 测试时的任务身份属于另一种评测协议，不进入这里的普通预测。":
@@ -36,12 +37,12 @@ return <section className="teaching-scene workbench" data-scene="workbench" data
 <div className="wb-state"><span>同一 θ <b>{state.updates}</b></span><span>已处理 N <b>{state.N}</b></span><span>固定 K <b>2</b></span><span>记录数 |M| <b>{state.M.length}</b></span><button onClick={()=>timeline.start(round*5)} data-replay-round>回到本轮起点</button></div>
 <div className="teaching-stage"><svg viewBox="0 0 1200 648" className="teaching-canvas" role="img" aria-label="当前输入、唯一网络、持久记忆、联合计算与预测">
 <text x="47" y="39" className="tg-title">{prediction?"查询输入 · 恒等评测视图":`第 ${round+1} 轮 · 当前 ${step.input.id}`}</text><text x="47" y="66" className="tg-small">{prediction?"u_query=(1,0.5) · 不需要任务身份":`原始 u=${vectorText(step.input.u,1)} · y=${MODEL_CLASSES[step.input.y]}`}</text>
-<SampleGlyph x={57} y={91} size={64} model={prediction?0:step.input.model} id={prediction?"query":step.input.id+" original"}/><path d="M130 123C275 123 325 228 445 228" className="tg-path" opacity={prediction?1:completed(1)}/>
-{phase===1&&p>.05&&p<.86&&<SampleGlyph x={mix(130,395,windowAt(p,.04,.65))} y={mix(100,205,windowAt(p,.04,.65))} size={44} model={step.input.model} id={step.input.id+" view"} view={step.input.s}/>}
+<SampleGlyph x={57} y={91} size={64} model={prediction?0:step.input.model} id={prediction?"query":step.input.id+" original"}/><path d="M130 123H340C410 123 400 228 445 228" className="tg-path" opacity={prediction?1:completed(1)}/>
+{phase===1&&p>.05&&p<.86&&<SampleGlyph x={currentViewPos.x} y={currentViewPos.y} size={44} model={step.input.model} id={step.input.id+" view"} view={step.input.s}/>}
 <NetworkGlyph x={445} y={171} version={`θ${state.updates}`} forward={forward} backward={phase===3?windowAt(p,.1,.8):0}/>
 <g opacity={prediction?windowAt(p,.3,.85):completed(1)}><ScoreGlyph x={795} y={126} label={prediction?"查询输出 · θ₄":`当前 ${step.input.id} · 更新前 logits`} values={prediction?result.logits:step.currentLogits} reveal={prediction?windowAt(p,.15,.75):completed(1)}/></g>
 <path d="M671 245H758V157H795" className="tg-path" opacity={prediction?windowAt(p,.1,.8):completed(1)}/>
-<g opacity={prediction?.35:1} data-workbench-memory><rect x="47" y="365" width="310" height="255" rx="16" className="tg-memory"/><text x="67" y="393" className="tg-title">持久记忆 M · K=2</text>{[0,1].map(slot=><g key={slot}><rect x="64" y={slotY(slot)-3} width="277" height="94" rx="11" className="tg-slot"/><text x="78" y={slotY(slot)+50} className="tg-small">slot {slot} · 空</text></g>)}</g>
+<g opacity={prediction?.35:1} data-workbench-memory><rect x="47" y="365" width="310" height="265" rx="16" className="tg-memory"/><text x="67" y="622" className="tg-title">持久记忆 M · K=2</text>{[0,1].map(slot=><g key={slot}><rect x="64" y={slotY(slot)-3} width="277" height="94" rx="11" className="tg-slot"/>{!state.M[slot]&&<text x="78" y={slotY(slot)+50} className="tg-small">slot {slot} · 空</text>}</g>)}</g>
 {records.map(r=>{
 const isCandidate=r.id===step.candidate.id,oldSlot=step.before.M.findIndex(q=>q.id===r.id),leaves=!isCandidate&&phase===4&&step.insertion.evicted?.id===r.id;
 const x=isCandidate?candidatePos.x:67-(leaves?write*50:0),y=isCandidate?candidatePos.y:slotY(oldSlot);
@@ -49,7 +50,7 @@ const opacity=prediction?(step.after.M.some(q=>q.id===r.id)?.35:0):isCandidate?(
 return <StoredRecord key={r.id} record={r} x={x} y={y} opacity={opacity} mode={mode}/>;
 })}
 {phase===1&&p>.48&&p<.85&&<g transform={`translate(${mix(970,300,windowAt(p,.48,.85))} ${mix(90,160,windowAt(p,.48,.85))})`}><text className="tg-small">□ 冻结数值副本</text></g>}
-<text x="67" y="300" className="tg-small">{prediction?"记忆保留，但预测不读取它":phase===4?`Reservoir：${step.insertion.j===undefined?"无需抽签":"教学预设 j="+step.insertion.j}`:"本步候选在池外，更新前冻结"}</text>
+<text x={prediction?67:795} y={prediction?300:490} className="tg-small" data-transition-note>{prediction?"记忆保留，但预测不读取它":phase===4?`Reservoir：${step.insertion.j===undefined?"无需抽签":"教学预设 j="+step.insertion.j}`:"本步候选在池外，更新前冻结"}</text>
 {!prediction&&step.rd&&<><MotionPath d={`M337 ${slotY(step.before.M.indexOf(step.rd))+44}C400 ${slotY(step.before.M.indexOf(step.rd))+44} 405 310 445 310`} progress={completed(0)}/>{phase===0&&p>.05&&p<.85&&<SampleGlyph x={replayPos.x} y={replayPos.y} size={38} id={step.rd.id+" replay read"} model={step.rd.model}/>}</>}
 {!prediction&&<g opacity={completed(2)}><rect x="780" y="261" width="367" height="200" rx="13" className="tg-loss"/><text x="801" y="291" className="tg-title">本轮监督 · 同一更新前 θ</text><text x="801" y="322">L<tspan baselineShift="sub" fontSize="12">current</tspan> = {fmt(step.losses.current)}</text><text x="801" y="354">α·L<tspan baselineShift="sub" fontSize="12">dark</tspan> = 0.5 × {fmt(step.losses.dark)}</text><text x="801" y="377" className="tg-small">{step.rd?`Rd=${step.rd.id}，a=${vectorText(step.replayLogits!,2)}`:"空池，无历史目标"}</text>{mode==="DER++"&&<><text x="801" y="408">β·L<tspan baselineShift="sub" fontSize="12">replay-CE</tspan> = 0.5 × {fmt(step.losses.label)}</text><text x="801" y="433" className="tg-small">{step.ry?`Ry=${step.ry.id}，y=${MODEL_CLASSES[step.ry.y!]}`:"空池，无标签回放"}</text></>}</g>}
 {!prediction&&<g opacity={completed(3)}><path d="M1147 360H1165V541H700" className="tg-path"/><rect x="433" y="507" width="267" height="79" rx="13" className="tg-total"/><text x="454" y="538" className="tg-title">总损失 {fmt(step.losses.total)}</text><text x="454" y="565" className="tg-small">一次 θ 更新，随后才允许写 M</text><MotionPath d="M558 507V415" progress={phase===3?windowAt(p,.3,.8):1} kind="gradient"/></g>}

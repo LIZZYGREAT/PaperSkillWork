@@ -8,7 +8,9 @@
     "build": "tsc && vite build --configLoader runner",
     "preview": "vite preview --configLoader runner",
     "test": "node --test tests/math.test.mjs tests/lifecycle.test.mjs tests/reservoir.test.mjs tests/training.test.mjs tests/evidence.test.mjs",
-    "test:browser": "node tests/browser.test.mjs"
+    "test:browser": "node tests/browser.test.mjs",
+    "test:playback": "node tests/playback.test.mjs",
+    "test:workbench-layout": "node tests/workbench-layout.test.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -4,6 +4,8 @@ Paper ID: `der`
 
 ## 当前执行与授权（2026-10-29）
 
+当前状态：W7 complete，W8 complete；W9等待用户最终审查。完整检查、限制和最终证据见文末及 audit/final-check.md。
+
 起点 fa3257b / der，原工作区干净。用户要求依据 W7_Approval_W8_Execution_Plan.md 执行，直接确认“W7我认为是通过的”，随后要求不再逐批询问，执行全文、自查后交最终审查，完成部分及时 commit。本次授权解除批次间反馈停止点，继续 W8-A–E；W9 仍待用户最终验收，不执行 W10 Import/Preflight、推送或 PR。
 
 ### Vertical Slice Review (W7)
@@ -25,14 +27,14 @@ Kit 沿用下文已核实的 Registry/Recipe/source：useAnimationTimeline、Sce
 - npm test 17/17，build 退出0；定向 test:browser -- --reservoir-only 114断言通过（1440×900/1920×1080、生产 /der-review/），含中间运动、暂停/恢复、回退、完整播放、reduced motion、冻结值及资源错误。KL/Logits/生命周期已跑过1440回归；最终整篇回归待补全。
 - 已实看 .visual-qa/der-w8-batch1/review 的替换中间态1440、拒收结果1920，以及正式 Logits 与生命周期截图；最终布局还会复查。
 - SOURCE_BUILD=PASS：Node24.18.0、Vite6.4.3，tsc + vite build 退出0。SUBPATH_ASSETS=PASS：上述已执行场景 /der-review/ 的生产资源，无浏览器/资源错误。
-- UPSTREAM_SYNTAX / UPSTREAM_OUTPUT=NOT_RUN：相邻 PaperSkill HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，upstream=git@github.com:ReductTech/PaperSkill.git；git fetch upstream main 退出128，SSH 权限失败，无法核实当前官方脚本一致性。后续再尝试；不称为 W10 通过。
+- UPSTREAM_SYNTAX / UPSTREAM_OUTPUT=NOT_RUN：相邻 PaperSkill HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，upstream=git@github.com:ReductTech/PaperSkill.git；git fetch upstream main 终端退出1（原生git码未单独采集），SSH 权限失败，无法核实当前官方脚本一致性。后续再尝试；不称为 W10 通过。
 - FULLSCREEN_REAL=NOT_RUN：上轮 Computer Use 因无法可靠识别当前 URL 终止；headless 尺寸不冒充 F11。W9 HUMAN_ACCEPTANCE=PENDING。
 
 ## 已确认设计与计算依据
 
 保留 W4/W5 数学分层、页面组织、语义帧、来源、Kit 选型、S7 数值 fixture 与唯一 implementation YAML。重复历史 REVISE/调试流水由 Git 保留。
 
-### W6 数学呈现边界（2026-10-27 用户新增要求）
+### 数学呈现边界（沿用已确认的W5/W6约定）
 
 本轮执行《W5 数学表达修订与 W6 首个教学切片实施任务》。保留 W4/W5 因果链、七单元、S1–S3 / I01–I05、固定算例、S7 fixture、唯一 implementation YAML 与既有审批；W5 已 complete，不重复提交完成命令。本次只调整数学呈现层并实现首切片。
 
@@ -321,7 +323,7 @@ DER 的最后一项省略；空池两种回放项均省略。所有梯度在进�
 
 ## Visual QA State Plan
 
-本轮无新页面，DER 浏览器验收 NOT_RUN。以下均是后续观测计划，未填写 PASS。首切片只检查 U1–U3，其余状态随实际实现进入对应阶段。每一代表态在普通桌面 1440×900 与全屏布局模拟 1920×1080 观察；真实 F11 另记实际尺寸和结果，不能由模拟替代。无移动专项触发，不运行 Kit 全量回归。
+下列为已确认的观测范围；实际W8结果见本文件末尾及audit/final-check.md。首切片只检查 U1–U3，其余状态随实际实现进入对应阶段。每一代表态在普通桌面 1440×900 与全屏布局模拟 1920×1080 观察；真实 F11 另记实际尺寸和结果，不能由模拟替代。无移动专项触发，不运行 Kit 全量回归。
 
 | 单元 / 受影响状态 | 两种桌面布局都需观察的内容 | 语义/几何断言与保留信息 |
 | --- | --- | --- |
@@ -396,3 +398,19 @@ W5 定稿时四项源码检查均未运行；当前 W6 的实际命令、状态�
 - 实看代表图后修正：增强分支端点缺口、文字交叉；工作台回放源改从实际旧槽边缘发出；DER++ 不同 Ry 时明确第二旧记录；Reservoir 专注页压缩头部留白、将固定候选说明移出运动路径。公式仍用 MathML，图内损失下标用 SVG tspan。
 - 相邻旧检查器本地诊断（非当前官方验收）：syntax-check.js <publish_source> --require-parser / validate-output.js <publish_source> 均退出0，无占位项，7 chapters/10注册模块。HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c；缓存 upstream/main=c096ab528186f754ca3f8680ace8b12f6d1cf341；脚本 Git blobs=2bcfa6f815054ee498574c51cef05f0c315b4298 / 1a58ca06bd9fa47b6730904f1622189011cc32fe。HTTPS fetch亦失败（连接被重置），当前官方 UPSTREAM_SYNTAX/UPSTREAM_OUTPUT 仍为 NOT_RUN。
 - 真实F11再次尝试失败：Windows UI 工具无法可靠识别当前浏览器 URL，安全终止；停止操作个人浏览器。FULLSCREEN_REAL=NOT_RUN，保持最终人审明确待核。
+
+## W8 最终自检与 W9 交接（2026-10-29）
+
+全部 S4–S8 / I06–I11 已实现。最终无过滤浏览器2364断言通过；随后工作台局部几何修正再跑新增场景764断言，以及候选/旁注/网络避让24断言。21项数学/状态/证据测试全部通过。SOURCE_BUILD=PASS（最终 tsc/Vite退出0，71 modules，index-phdlzviR.js / index-DpXOBddT.css）；SUBPATH_ASSETS=PASS（生产 /der-review/，无浏览器/资源错误）。
+
+公共 Visual QA 40状态、两个桌面布局通过；报告run为 .visual-qa/run-2026-10-28T17-33-55-233Z，已核读actualUrl与诊断并实看必要截图。其后仅改工作台：候选沿空白列下降，拒收向侧边退出，M标题与旁注避开运动，已占槽不显示“空”。两档末次定向几何/截图通过。上述检查 scope 与未执行项详记 audit/final-check.md。
+
+真实连续播放127532ms、21阶段、508样本逐值匹配；未模拟时间。受保护生命周期核心TSX/model/CSS相对fa3257b完全无改动；1440的0/8阶段前后截图SHA256相同：87e4375130aa1ff678be7c45886e885609f5d3c2b365c85d7b361ba2d3f3eb45 / ebfc413a4f28cd73c2f6903a0c0f5cd48dd7270e5c5b65f0d1ac06d0d6b8f973。
+
+UPSTREAM_SYNTAX / UPSTREAM_OUTPUT 仍 NOT_RUN（两次fetch终端退出1，原生git码未单独采集，无法核实当前官方版本）；相邻旧脚本的本地诊断都PASS，不冒称当前官方检查。FULLSCREEN_REAL=NOT_RUN（Windows UI URL安全识别失败）；FULLSCREEN_LAYOUT=PASS；W9 HUMAN_ACCEPTANCE=PENDING。
+
+已校正M03的证明定位：Appendix D只有Algorithm 3，等概率陈述在§3，本教程归纳不是附录证明。未改既有论文理解或因果主线。
+
+审阅入口：正式 /；?focus=reservoir；?focus=der-step；?focus=augmentation；?focus=der-plus；?focus=workbench；?focus=evidence；受保护 ?review=1&focus=lifecycle#lifecycle-player。生产预览由本轮启动于 http://127.0.0.1:5195/，保留供用户审查。最后交接在现有 audit/final-check.md；不新增平行报告、不进行W10。
+
+最终收尾：CLI 已登记 W8 complete，当前 W9 pending。公共 runner 清理输出 CLEANED: <上述同一run>，Test-Path=False；本轮三处自建测试输出目录均验证在工作区内、非链接后精确删除。13个必要文件（关键PNG、最终录像、采样JSON和原机器报告JSON）保留于最终证据目录；归档JSON保留原run相对路径，实际保留画面以命名PNG为准。未触碰其他历史QA目录。

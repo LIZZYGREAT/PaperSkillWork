@@ -17,7 +17,7 @@ paper:
   source_hash: e7dcafb05e9fd77e0524be8b98578cd884a9fe6455322beb2f4a6c4a383cd72e
 workflow:
   version: 3
-  current_stage: W8
+  current_stage: W9
   stages:
     W0_source_intake:
       status: complete
@@ -47,7 +47,8 @@ workflow:
       reviewed_by: 用户
       note: 用户于2026-10-29在本聊天明确确认：W7我认为是通过的。登记S1–S3首切片人工验收通过；浏览器、迁移视觉与真实F11工程补验仍独立记录；不含Reservoir新场景验收。
     W8_full_implementation:
-      status: pending
+      status: complete
+      completed_by: automation
     W9_final_audit:
       status: pending
     W10_upstream_preflight:
