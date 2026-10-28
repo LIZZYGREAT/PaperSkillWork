@@ -23,7 +23,7 @@ export default function KLPrototype() {
   const s = klSceneAt(clip, progress, selected);
   const autoFocus = clip < 2 ? undefined : clip < 4 ? (progress < .33 ? 0 : progress < .66 ? 1 : 2) : clip === 4 ? 0 : 3;
   const focus = timeline.state.status === "playing" ? autoFocus : part ?? autoFocus;
-  const selectPart = (index: number) => { setPart(index); timeline.jump(index === 3 ? 5 : 2); };
+  const selectPart = (index: number) => { setPart(index); timeline.start(index === 3 ? 5 : 2); };
   return <section id="review-kl" className="review-scene motion-scene" data-scene="kl" data-clip={clip} data-progress={progress} data-status={timeline.state.status}>
     <header><p className="eyebrow">U2 · 概率到贡献</p><h1>看见每一类，怎样贡献到 KL。</h1><p>固定参考 <Term id="p">p</Term>，观察当前概率 <Term id="q">q</Term>。此处只取 Claude / GPT 两类独立合成概率，同类比较产生带符号项，所有类别共同组成 <Term id="kl">KL 散度</Term>。</p></header>
     <div className="case-controls" role="group" aria-label="选择概率例子">{PROBABILITY_CASES.map((item, index) => <button key={item.id} data-case={item.id} aria-pressed={selected === index} onClick={() => { setSelected(index); setPart(undefined); timeline.reset(); }}>{item.label}</button>)}</div>

@@ -368,7 +368,7 @@ export default function SampleLifecyclePrototype() {
     <header><p className="eyebrow">D1 · 单样本生命周期</p><h1>留下的是过去的响应，约束的是现在的网络。</h1><p>跟踪同一份 x₁：更新前生成 → 复制冻结 → 更新后入池 → 未来回放 → 匹配与联合更新。</p><button className="lifecycle-focus-button" onClick={() => changeFocus(true)}>专注播放 ↗</button></header>
     <div className="lifecycle-shell"><aside className="lifecycle-sidebar" aria-label="播放控制与阶段说明">
       <div className="lifecycle-focus-heading"><div><span>DER</span><h2>样本生命周期</h2></div><button className="lifecycle-exit-focus" onClick={() => changeFocus(false)}>返回阅读</button></div>
-    <div id="lifecycle-player" className="lifecycle-player"><SceneTransport timeline={timeline} clips={LIFECYCLE_CLIPS} label="样本生命周期" stageSelection="start" caption="自动完整播放一次。选择阶段停在起点；上一步先回本阶段起点，再回上一阶段起点。" /></div>
+    <div id="lifecycle-player" className="lifecycle-player"><SceneTransport timeline={timeline} clips={LIFECYCLE_CLIPS} label="样本生命周期" caption="自动完整播放一次。选择阶段停在起点；上一步先回本阶段起点，再回上一阶段起点。" /></div>
     <div className="lifecycle-context">
     <div className="lifecycle-reading" aria-live="polite"><strong>{LIFECYCLE_CLIPS[clip].id}</strong>{focused ? <FocusedNarration clip={clip} /> : <p>{NARRATION[clip]}</p>}</div>
     <div className="lifecycle-equation" data-vqa-check-clipping>{clip >= 6

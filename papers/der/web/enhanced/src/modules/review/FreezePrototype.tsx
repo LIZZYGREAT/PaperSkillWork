@@ -18,7 +18,7 @@ export default function FreezePrototype() {
   const s = freezeSceneAt(clip, progress);
   return <section id="review-freeze" className="review-scene motion-scene" data-scene="freeze" data-clip={clip} data-progress={progress} data-status={timeline.state.status}>
     <header><p className="eyebrow">U3 收尾 · 输出的生命周期</p><h2>网络继续变，复制的历史值留下。</h2><p>沿同一个 x₂ 看清：输出 → 独立 <Term id="z">历史 z</Term> → 参数更新 → 候选等待。这里只有一个网络；分数依次对应 Claude / GPT / DeepSeek，样本像素为独立合成例。</p></header>
-    <div className="case-controls" role="group" aria-label="选择观察入口">{[["whole","从输入完整观看"],["copy","从复制前观看"]].map(([id,label])=><button key={id} data-case={id} aria-pressed={example===id} onClick={()=>{setExample(id);timeline.reset(); if(id==="copy")timeline.jump(0);}}>{label}</button>)}</div>
+    <div className="case-controls" role="group" aria-label="选择观察入口">{[["whole","从输入完整观看"],["copy","从复制前观看"]].map(([id,label])=><button key={id} data-case={id} aria-pressed={example===id} onClick={()=>{setExample(id);timeline.start(id==="copy"?1:0);}}>{label}</button>)}</div>
     <SceneTransport timeline={timeline} clips={FREEZE_CLIPS} label="冻结" />
     <div className="motion-drawing"><svg className="motion-canvas" viewBox="0 0 1080 485" role="img" aria-label={`${FREEZE_CLIPS[clip].id}。${guidance[clip]}`}>
       <text x="1045" y="58" textAnchor="end" className="small-label" data-canvas-time>t={timeline.elapsedSeconds.toFixed(1)}s · {clip+1} / {timeline.state.totalClips} · {Math.round(progress*100)}%</text>

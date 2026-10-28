@@ -271,21 +271,24 @@ S2 现已交付下方高保真设计板，等待人工检查点 A；方向确认
 
 **04 起点配色修复（本次反馈）**：旧图谱以整格绿色作底，再覆盖半透明橙色；聚焦 GPT 时橙色淡化透出绿色，造成类别混色。改为中性底上的相邻类别分段，共用图例的浅橙／浅绿变量；非焦点透明度为 0.58，保持可辨色相，部分格仍按实际概率连续分配。仅修订评审图谱，不改变计算、阶段或生命周期。
 
-**阶段控制的明确规则（用户新增）**：普通动画模式选择阶段停在该阶段起点；评审入口默认停在 01 / 0.0s。01 为 0.0s，02 为 7.2s；处于播放中或暂停中途时，“上一步”先回当前阶段起点并暂停；已在起点暂停则回上一阶段起点并暂停。第一阶段运行时允许回退到 0.0s，仅第一阶段起点暂停时禁用。下一步同样前往下一阶段起点暂停。reduced motion 继续保留完整语义帧与手动前进。评审外层不再用“下一阶段＋上一步”模拟关键帧结果，直接调用同一阶段控件；播放、内部回退后顶部高亮跟随权威阶段。评审生产预览设置 no-store，并更新 iframe 入口版本，防止已打开的旧控件继续留在评审页。
+**阶段控制的明确规则（用户新增，统一到所有场景）**：从 `73ddb10` 继续，用户要求第一页及全部场景使用相同语义。普通动画模式选择阶段停在该阶段起点暂停，播放继续该阶段；KL、Logit 设计板默认停在 01 / 0.0s，切换算例回到同一起点。生命周期 01 为 0.0s，02 为 7.2s；处于播放中或暂停中途时，“上一步”先回当前阶段起点并暂停，已在起点暂停则回上一阶段起点并暂停。第一阶段运行时允许回退到 0.0s，仅第一阶段起点暂停时禁用。下一步前往下一阶段起点暂停，设计板补齐相同按钮。删除 `useSceneTimeline` 的末态 `inspect` 与播放器的 start/result 分支，全部入口调用同一个 `start`；旧冻结原型的“从复制前观看”明确到复制阶段起点，源响应已经生成而副本尚不存在。reduced motion 继续由既有时间轴提供完整语义帧与手动前进。评审外层调用原播放器控件并观察权威阶段高亮；保留 no-store，iframe 版本更新为 `unified-start-r3`。
+
+**连续衔接（同次用户授权）**：KL 图谱的类别强调在新阶段前 16% 进度内从上一阶段连续过渡；所有概率格保留相邻色段，不重新混色。KL 计算区、KL/Logit 阶段说明在同一时间窗内先淡出旧内容、再淡入新内容，避免两个类别的公式和文字叠字。上述过渡直接派生于现有播放进度，暂停可停在中间；手动定位暂停时仅用短 CSS 淡化与几何过渡收拢显示。没有新增计时器、Store 或第二套算法模型，生命周期主舞台和算法状态不变。
 
 **复用边界**：`MechanismScenes.tsx` 和 `review-r2.css` 为 paper-local 设计稿，替换首稿实现；不保留不可达的旧圆环/坐标绘制代码。继续直接用原 `useSceneTimeline`、已复制 Kit `useAnimationTimeline` / `useReducedMotion`、`ModelPixel`、类别源、数学纯函数与既有 fixture。没有新 Store、第二套计算引擎或 Kit API；通用 Hook 内核未改。生命周期布局与字体试稿只在 5192 iframe 注入，源 `lifecycle.css`、`lifecycle-model.ts` 未变；S3 再按人工方向确认整合。
 
 | 验证面 | 本轮实际结果 |
 | --- | --- |
-| 04 配色追加复测 | `node .visual-qa/der-s2-color/check.mjs`：退出 0，真实 Edge 1440×900 / 1920×1080，从 03 末态继续至 04 起点、04 中段、05 汇总，共 8 帧；图例颜色、聚焦透明度、固定 p 与当前 q、概率面积一致，无页面错误。Pillow 对 32 个实际截图色块取样通过；04 橙色为 RGB(244,232,219)，绿色为 RGB(220,235,220)，代表帧已实看。设计板 Vite build 退出 0、35 modules；正式源码未改。专项脚本、JSON 与截图保留在本次自有忽略目录 `.visual-qa/der-s2-color/`。 |
-| 数学与构建 | `npm --prefix papers/der/web/enhanced test`：17 项通过；`npm --prefix papers/der/web/enhanced run build`：退出 0、66 modules，最终 `index-DVw_2zVC.js` / `index-PCyuSUv3.css`。设计板 Vite build：退出 0、35 modules，仅输出忽略目录 `.visual-qa/der-s2/design-build/`。 |
-| 正式源码回归 / SUBPATH_ASSETS | `DER_REVIEW_DIR=<repo>/.visual-qa/der-s2-r2/source-regression npm --prefix papers/der/web/enhanced run test:browser`：退出 0，2417 项通过。覆盖原切片、三个旧原型、生命周期连续中间态、数学、键盘、Reference、reduced motion、两档桌面与既有短窗口专项，实际生产 `/der-review/` 资源无错误；SUBPATH_ASSETS=PASS。 |
-| 起点与回退 | `DER_BROWSER_FOCUS_ONLY=1 DER_REVIEW_DIR=<repo>/.visual-qa/der-s2-r2/navigation npm --prefix papers/der/web/enhanced run test:browser`：退出 0，291 项通过；新增真实 UI 断言覆盖第一阶段运行时回退、阶段起点暂停、7.2s→0.0s、运行/中途暂停先回本阶段、再回上阶段、下一步、重新播放和菜单。 |
+| 配色修复基线（73ddb10） | `node .visual-qa/der-s2-color/check.mjs`：退出 0，两档桌面 8 帧、32 个实际色块取样通过。浅橙／浅绿同图例、概率面积一致，已实看。该修复的后续统一导航与渐变复测见下一行，旧专项证据保留在 `.visual-qa/der-s2-color/`。 |
+| 统一导航与渐变（本次） | `node .visual-qa/der-s2-unified/check.mjs`：退出 0，真实 Edge 1440×900 / 1920×1080 / 1646×802，KL 全六阶段、Logit 全四阶段和生命周期全九个外层入口均停在对应起点；覆盖播放不跳段、上一步两级回退、下一步、切换算例、减少动态、全部阶段连续交接、概率面积与损失同源、说明及控制一屏内、无横向溢出或页面错误。03→04 多次采样验证颜色连续、公式不叠字及暂停保留中间帧，代表截图已实看。另 `node .visual-qa/der-s2-unified/real-playback.mjs`：真实 rAF 完整播放 23959ms、157 次采样，正常结束，无叠字／页面错误，真实中间帧已实看。 |
+| 数学与构建 | `npm --prefix papers/der/web/enhanced test`：17 项通过；`npm --prefix papers/der/web/enhanced run build`：退出 0、66 modules，最终 `index-DbP7vu1u.js` / `index-PCyuSUv3.css`。设计板 Vite build：退出 0、35 modules，最终 `index-D-HpoT-r.js` / `index-BBTAKUwc.css`，仅输出忽略目录 `.visual-qa/der-s2/design-build/`。 |
+| 正式源码回归 / SUBPATH_ASSETS（本次） | `DER_REVIEW_DIR=<repo>/.visual-qa/der-s2-unified/source node papers/der/web/enhanced/tests/browser.test.mjs`：退出 0，2551 项通过。新增三个旧原型全部阶段起点／准确起始时间、播放不跳段、回退／下一步及复制前入口断言；原切片、生命周期连续中间态、数学、键盘、Reference、reduced motion、两档桌面与既有短窗口专项均通过，实际生产 `/der-review/` 资源无错误；SUBPATH_ASSETS=PASS。 |
+| 生命周期专注回退基线 | 前轮 `DER_BROWSER_FOCUS_ONLY=1 DER_REVIEW_DIR=<repo>/.visual-qa/der-s2-r2/navigation npm --prefix papers/der/web/enhanced run test:browser`：退出 0，291 项通过；真实 UI 断言覆盖第一阶段运行时回退、阶段起点暂停、7.2s→0.0s、运行/中途暂停先回本阶段、再回上阶段、下一步、重新播放和菜单。本次共享入口及完整回归见上一行。 |
 | 当前评审页 | 1440×900 / 1920×1080 / 1646×802 真实 Edge 检查主体与主线公式无溢出、控件与讲解同屏、浅橙配色、全部九个入口、7.2s 暂停回到 0.0s 暂停、外层高亮同步，以及 DeepSeek 卡宽 112（其余 100），无页面错误。代表截图已实看。 |
-| 连续草案 | 最终紧凑布局下真实 rAF（无虚拟时钟）完整播放：1440 / 1920 的 KL 23684 / 23992ms，Logit 15558 / 15523ms；350 次实际 DOM 采样保持固定参照、合法 q 与损失同源，共同平移时概率 KL 始终为 0，无页面错误；关键中间帧已实看。 |
+| 紧凑布局播放基线（8a09865） | 真实 rAF（无虚拟时钟）完整播放：1440 / 1920 的 KL 23684 / 23992ms，Logit 15558 / 15523ms；350 次实际 DOM 采样保持固定参照、合法 q 与损失同源，共同平移时概率 KL 始终为 0，无页面错误；关键中间帧已实看。最终渐变的真实播放复测见本次统一导航行。 |
 | 当前官方检查器 | fetch 后官方 `upstream/main=c096ab528186f754ca3f8680ace8b12f6d1cf341`，相邻检出 `HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c` 未切换/覆盖；syntax 本地/官方 blob 均 `2bcfa6f815054ee498574c51cef05f0c315b4298`。直接执行 `node ../PaperSkill/paper-skill/scripts/syntax-check.js <absolute-publish-source> --require-parser`，39 文件、TypeScript parser、退出 0，UPSTREAM_SYNTAX=PASS。output 本地 `1a58ca06bd9fa47b6730904f1622189011cc32fe` 与官方 `9ec76b6974f262fca7b9611c4a485dd2275fe76c` 不同，UPSTREAM_OUTPUT=NOT_RUN。 |
 
-最新必要截图、数值检查与导航证据在本轮自有 `.visual-qa/der-s2-r2/final-review/`、`navigation/`，最终连续播放草案在其 `playback/`；这些是本地忽略的审核证据，不等同于人工审美通过。本轮 `browser/`、`source-regression/` 的中间临时截图已核实绝对路径和归属后精确清理。FULLSCREEN_LAYOUT=PASS，FULLSCREEN_REAL=NOT_RUN（未操作 F11），HUMAN_ACCEPTANCE=PENDING。S0/S1 获认可基线、用户原图、未知历史 QA 目录和预览服务未清理。
+统一导航与渐变的最新证据在本次自有 `.visual-qa/der-s2-unified/`：脚本、断言日志、两档桌面与短窗口的渐变／终态截图、连续播放采样，以及 `source-key/` 的必要源码代表帧；本次 `source/` 临时批量截图在复核后精确清理。前轮紧凑布局及专注导航证据保留于 `.visual-qa/der-s2-r2/final-review/`、`navigation/`、`playback/`。这些本地忽略产物不等同于人工审美通过。FULLSCREEN_LAYOUT=PASS，FULLSCREEN_REAL=NOT_RUN（未操作 F11），HUMAN_ACCEPTANCE=PENDING。S0/S1 获认可基线、用户原图、未知历史 QA 目录和预览服务未清理。
 
 
 - Design confirmation: CONFIRMED（2026-10-27）。用户选择“采用推荐方向”和“采用 S1–S3（推荐）”；确认 S3 两段计算、S4 选留/训练分段、S7 独立工作台及展开区可复算小模型，首切片为 S1–S3 / I01–I05。

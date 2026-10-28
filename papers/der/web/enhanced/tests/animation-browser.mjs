@@ -1,4 +1,5 @@
 import { probabilityComparison, logitComparison } from "../src/modules/math-model.ts";
+import { KL_CLIPS, LOGIT_CLIPS, FREEZE_CLIPS } from "../src/modules/review/animation-model.ts";
 
 export async function animationBrowserChecks({ page, base, check, shot }) {
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -32,6 +33,32 @@ export async function animationBrowserChecks({ page, base, check, shot }) {
   };
   for(const [id,last,moveClip] of [["kl",5,1],["logits",3,1],["freeze",3,1]]) {
     check(await scene(id).getAttribute("data-status")==="paused","Scene opens paused");
+    if(id==='freeze') {
+      await scene(id).locator('[data-case=copy]').click();
+      check(await clipOf(id)==='1' && await progress(id)===0,'Copy entry means the beginning of copying, with generation already complete');
+      check(await scene(id).locator('[data-source-output] [data-output-value]').count()===3 && await scene(id).locator('[data-record-id]').count()===0,'Copy entry retains the full source and has no copied record yet');
+      await scene(id).locator('[data-case=whole]').click();
+    }
+    const clips = {kl:KL_CLIPS,logits:LOGIT_CLIPS,freeze:FREEZE_CLIPS}[id];
+    for(let index=0;index<clips.length;index++) {
+      await jump(id,index);
+      check(await progress(id)===0 && await scene(id).getAttribute('data-status')==='paused',`${id}: selecting stage ${index+1} pauses at its beginning`);
+      const seconds=clips.slice(0,index).reduce((sum,c)=>sum+c.durationMs+(c.holdMs??0),0)/1000;
+      check((await scene(id).locator('[data-time-readout]').innerText()).startsWith(`${seconds.toFixed(1)} /`),`${id}: selected stage time is its start rather than its end`);
+      if(index>0) {
+        await scene(id).locator('[data-back]').click();
+        check(await clipOf(id)===String(index-1) && await progress(id)===0,`${id}: previous at a paused start selects the preceding start`);
+        await scene(id).locator('[data-next]').click();
+        check(await clipOf(id)===String(index) && await progress(id)===0,`${id}: next selects the following start`);
+      }
+    }
+    await jump(id,0);
+    check(await scene(id).locator('[data-back]').isDisabled(),`${id}: previous is disabled at paused zero`);
+    await scene(id).locator('[data-play]').click();await tick(160);
+    check(await clipOf(id)==='0' && await progress(id)>0,`${id}: play begins in the selected stage instead of skipping it`);
+    check(await scene(id).locator('[data-back]').isEnabled(),`${id}: previous is available while stage one runs`);
+    await scene(id).locator('[data-back]').click();
+    check(await clipOf(id)==='0' && await progress(id)===0 && await scene(id).getAttribute('data-status')==='paused',`${id}: previous during playback restarts and pauses the current stage`);
     await scene(id).locator("[data-play]").focus();
     await page.keyboard.press("Enter");
     await waitTick(id,moveClip,.25);
@@ -74,7 +101,9 @@ export async function animationBrowserChecks({ page, base, check, shot }) {
     }
     await shot(`animation-${id}-end`, `[data-scene='${id}'] .motion-canvas`);
     await scene(id).locator("[data-back]").click();
-    check(await progress(id)===1 && await clipOf(id)===String(last-1),"Manual back shows complete prior semantic step");
+    check(await progress(id)===0 && await clipOf(id)===String(last),"Previous at the completed end first returns to this stage start");
+    await scene(id).locator("[data-back]").click();
+    check(await progress(id)===0 && await clipOf(id)===String(last-1),"Previous at a paused start returns to the preceding stage start");
     await replay(id);await tick(80);
     check(await clipOf(id)==="0" && await progress(id)<.1,"Replay rebuilds initial path");
     if(id==="freeze") check(await scene(id).locator("[data-record-id]").count()===0,"Replay has no history before copying");

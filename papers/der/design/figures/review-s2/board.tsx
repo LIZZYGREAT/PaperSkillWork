@@ -88,7 +88,7 @@ function FreezeBoard() {
     <div className="freeze-header"><div><h2>冻结与回放，回到同一份真实记录。</h2><p>每个入口都定位到原生命周期播放器。完整舞台、九阶段、样本、槽位与冻结值继续属于同一个动画。</p></div><button onClick={() => setExpanded(true)}>展开原播放器 ↗</button></div>
     <div className={expanded ? 'lens-overlay' : 'lens-inline'}>
       <div className="lens-bar"><div className="lens-list" aria-label="生命周期观察入口">{LENSES.map((lens, i) => <button key={lens.clip} data-lens={lens.clip} aria-pressed={selected === i} onClick={() => seek(i)}><small>{String(lens.clip + 1).padStart(2, '0')}</small>{lens.title}</button>)}</div>{expanded && <button onClick={() => setExpanded(false)}>收起，回到设计板</button>}</div>
-      <iframe ref={frame} className="live-frame" title="原生命周期专注播放器 · 同一组件与状态" src="/lifecycle/?review=1&focus=lifecycle&controls=paused-start-r2#lifecycle-player" onLoad={ready} />
+      <iframe ref={frame} className="live-frame" title="原生命周期专注播放器 · 同一组件与状态" src="/lifecycle/?review=1&focus=lifecycle&controls=unified-start-r3#lifecycle-player" onLoad={ready} />
     </div>
     <div className="freeze-meta"><p><strong>{LENSES[selected].title}</strong> · {LENSES[selected].text}<br />选择阶段停在起点；上一步先回本阶段起点，再回上一阶段起点。</p><div className="cases"><button data-play-lens onClick={() => seek(selected, true)}>从此处连续播放</button><a href="http://127.0.0.1:5188/?review=1&focus=lifecycle#lifecycle-player" target="_blank" rel="noreferrer">原 5188 入口 ↗</a></div></div>
     <details className="design-note"><summary>查看入口方案、复用边界与后续整合</summary><div className="spec-grid">

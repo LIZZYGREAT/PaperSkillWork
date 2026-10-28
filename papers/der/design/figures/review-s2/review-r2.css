@@ -90,3 +90,14 @@ math[display="block"]{margin-block:0}
  .paired-scores{min-height:84px}.score-total-tray{margin:10px -18px 0;padding:9px 18px;min-height:50px}
  .card-probabilities{margin-top:9px;padding-top:9px}
 }
+
+/* Stage handoffs are derived from timeline progress; no extra playback clock. */
+.calculation-stack,.narration-stack{display:grid}
+.calculation-layer,.narration-layer{grid-area:1 / 1;min-width:0}
+.calculation-layer[aria-hidden=true],.narration-layer[aria-hidden=true]{pointer-events:none;user-select:none}
+.narration-layer{display:flex;align-items:baseline;gap:16px}
+[data-status=paused] .calculation-layer,[data-status=paused] .narration-layer{transition:opacity .14s ease}
+[data-status=paused] .calculation-layer[data-shown=true],[data-status=paused] .narration-layer[data-shown=true]{transition-delay:.14s}
+[data-status=paused] .probability-field rect{transition:opacity .28s ease,width .28s ease,x .28s ease}
+@media(max-width:900px){.narration-layer{flex-direction:column;gap:10px}}
+@media(prefers-reduced-motion:reduce){.calculation-layer,.narration-layer,.probability-field rect{transition:none!important}}
