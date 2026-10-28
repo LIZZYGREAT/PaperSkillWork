@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import ModelPixel, { type ModelClass } from "../../../web/enhanced/src/modules/review/ModelPixel";
 import { MODEL_CLASSES, PROBABILITY_CLASSES } from "../../../web/enhanced/src/data/model-classes";
 import { REFERENCE_P, PROBABILITY_CASES, HISTORY_Z, LOGIT_CASES, probabilityComparison, logitComparison } from "../../../web/enhanced/src/modules/math-model";
@@ -42,13 +42,16 @@ function Transport({ timeline, frames }: { timeline: SceneTimeline; frames: type
 
 /** A continuous 100-unit probability field: fractional cells preserve exact total mass. */
 function ProbabilityField({ values, focus }: { values: readonly number[]; focus?: number }) {
+  const cellClip = `probability-cell-${useId().replace(/:/g, '')}`;
   return <svg className="probability-field" viewBox="0 0 218 218" role="img" aria-label={`概率图谱 ${values.map(v => fmt(v, 2)).join(' / ')}`}>
+    <defs><clipPath id={cellClip}><rect width="20" height="20" rx="3" /></clipPath></defs>
     {Array.from({ length: 100 }, (_, i) => {
       const x = i % 10 * 22, y = Math.floor(i / 10) * 22;
       const part = Math.max(0, Math.min(1, values[0] * 100 - i));
-      return <g key={i}>
-        <rect x={x} y={y} width="20" height="20" rx="3" fill="#dcebe4" opacity={focus === 0 ? .28 : 1} />
-        {part > 0 && <rect x={x} y={y} width={20 * part} height="20" rx={part === 1 ? 3 : 0} fill="#f2ddc9" opacity={focus === 1 ? .28 : 1} />}
+      return <g key={i} transform={`translate(${x} ${y})`} clipPath={`url(#${cellClip})`}>
+        <rect width="20" height="20" fill="#f7f8f4" />
+        {part > 0 && <rect width={20 * part} height="20" fill="var(--category-claude)" opacity={focus === 1 ? .58 : 1} data-probability-category="Claude" data-mass={part / 100} />}
+        {part < 1 && <rect x={20 * part} width={20 * (1 - part)} height="20" fill="var(--category-gpt)" opacity={focus === 0 ? .58 : 1} data-probability-category="GPT" data-mass={(1 - part) / 100} />}
       </g>;
     })}
   </svg>;

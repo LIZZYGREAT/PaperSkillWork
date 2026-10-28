@@ -269,12 +269,15 @@ S2 现已交付下方高保真设计板，等待人工检查点 A；方向确认
 
 **布局与配色**：KL/Logit 最大版心 1320，浅橙 `#f2ddc9`、浅绿 `#dcebdc`；原品牌像素仅保留作身份标识。减小大数字和公式，删去重复的概率数值展示，并用 MathML compact 样式收拢求和上下标；未删除定义或必要短推导。实测 1440×900、1920×1080 和用户截图触发的 1646×802 窗口，主体、主线公式、控制、关键帧导航、当前讲解均在一屏内；展开设计说明仍在其下。1646×802 下 KL 当前讲解底边约 764px，Logit 约 793px，无整体横向溢出。生命周期独立维持大版心和放大字级。
 
+**04 起点配色修复（本次反馈）**：旧图谱以整格绿色作底，再覆盖半透明橙色；聚焦 GPT 时橙色淡化透出绿色，造成类别混色。改为中性底上的相邻类别分段，共用图例的浅橙／浅绿变量；非焦点透明度为 0.58，保持可辨色相，部分格仍按实际概率连续分配。仅修订评审图谱，不改变计算、阶段或生命周期。
+
 **阶段控制的明确规则（用户新增）**：普通动画模式选择阶段停在该阶段起点；评审入口默认停在 01 / 0.0s。01 为 0.0s，02 为 7.2s；处于播放中或暂停中途时，“上一步”先回当前阶段起点并暂停；已在起点暂停则回上一阶段起点并暂停。第一阶段运行时允许回退到 0.0s，仅第一阶段起点暂停时禁用。下一步同样前往下一阶段起点暂停。reduced motion 继续保留完整语义帧与手动前进。评审外层不再用“下一阶段＋上一步”模拟关键帧结果，直接调用同一阶段控件；播放、内部回退后顶部高亮跟随权威阶段。评审生产预览设置 no-store，并更新 iframe 入口版本，防止已打开的旧控件继续留在评审页。
 
 **复用边界**：`MechanismScenes.tsx` 和 `review-r2.css` 为 paper-local 设计稿，替换首稿实现；不保留不可达的旧圆环/坐标绘制代码。继续直接用原 `useSceneTimeline`、已复制 Kit `useAnimationTimeline` / `useReducedMotion`、`ModelPixel`、类别源、数学纯函数与既有 fixture。没有新 Store、第二套计算引擎或 Kit API；通用 Hook 内核未改。生命周期布局与字体试稿只在 5192 iframe 注入，源 `lifecycle.css`、`lifecycle-model.ts` 未变；S3 再按人工方向确认整合。
 
 | 验证面 | 本轮实际结果 |
 | --- | --- |
+| 04 配色追加复测 | `node .visual-qa/der-s2-color/check.mjs`：退出 0，真实 Edge 1440×900 / 1920×1080，从 03 末态继续至 04 起点、04 中段、05 汇总，共 8 帧；图例颜色、聚焦透明度、固定 p 与当前 q、概率面积一致，无页面错误。Pillow 对 32 个实际截图色块取样通过；04 橙色为 RGB(244,232,219)，绿色为 RGB(220,235,220)，代表帧已实看。设计板 Vite build 退出 0、35 modules；正式源码未改。专项脚本、JSON 与截图保留在本次自有忽略目录 `.visual-qa/der-s2-color/`。 |
 | 数学与构建 | `npm --prefix papers/der/web/enhanced test`：17 项通过；`npm --prefix papers/der/web/enhanced run build`：退出 0、66 modules，最终 `index-DVw_2zVC.js` / `index-PCyuSUv3.css`。设计板 Vite build：退出 0、35 modules，仅输出忽略目录 `.visual-qa/der-s2/design-build/`。 |
 | 正式源码回归 / SUBPATH_ASSETS | `DER_REVIEW_DIR=<repo>/.visual-qa/der-s2-r2/source-regression npm --prefix papers/der/web/enhanced run test:browser`：退出 0，2417 项通过。覆盖原切片、三个旧原型、生命周期连续中间态、数学、键盘、Reference、reduced motion、两档桌面与既有短窗口专项，实际生产 `/der-review/` 资源无错误；SUBPATH_ASSETS=PASS。 |
 | 起点与回退 | `DER_BROWSER_FOCUS_ONLY=1 DER_REVIEW_DIR=<repo>/.visual-qa/der-s2-r2/navigation npm --prefix papers/der/web/enhanced run test:browser`：退出 0，291 项通过；新增真实 UI 断言覆盖第一阶段运行时回退、阶段起点暂停、7.2s→0.0s、运行/中途暂停先回本阶段、再回上阶段、下一步、重新播放和菜单。 |
