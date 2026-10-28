@@ -1,6 +1,6 @@
 /** Hand-authored pixel interpretations for the synthetic three-class example. */
-export const MODEL_CLASSES = ["Claude", "GPT", "DeepSeek"] as const;
-export type ModelClass = 0 | 1 | 2;
+import { MODEL_CLASSES, type ModelClass } from "../../data/model-classes";
+export { MODEL_CLASSES, type ModelClass } from "../../data/model-classes";
 
 const GLYPHS = [
   [

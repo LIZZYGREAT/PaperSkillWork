@@ -1,3 +1,4 @@
+import ModelPixel from "./ModelPixel";
 import { useState } from "react";
 import { Term, ReferenceButton } from "../Reference";
 import { FREEZE_CLIPS, freezeSceneAt } from "./animation-model";
@@ -16,7 +17,7 @@ export default function FreezePrototype() {
   const { clipIndex: clip, progress } = timeline.state;
   const s = freezeSceneAt(clip, progress);
   return <section id="review-freeze" className="review-scene motion-scene" data-scene="freeze" data-clip={clip} data-progress={progress} data-status={timeline.state.status}>
-    <header><p className="eyebrow">U3 收尾 · 输出的生命周期</p><h2>网络继续变，复制的历史值留下。</h2><p>沿同一个 x₂ 看清：输出 → 独立 <Term id="z">历史 z</Term> → 参数更新 → 候选等待。这里只有一个网络。</p></header>
+    <header><p className="eyebrow">U3 收尾 · 输出的生命周期</p><h2>网络继续变，复制的历史值留下。</h2><p>沿同一个 x₂ 看清：输出 → 独立 <Term id="z">历史 z</Term> → 参数更新 → 候选等待。这里只有一个网络；分数依次对应 Claude / GPT / DeepSeek，样本像素为独立合成例。</p></header>
     <div className="case-controls" role="group" aria-label="选择观察入口">{[["whole","从输入完整观看"],["copy","从复制前观看"]].map(([id,label])=><button key={id} data-case={id} aria-pressed={example===id} onClick={()=>{setExample(id);timeline.reset(); if(id==="copy")timeline.jump(0);}}>{label}</button>)}</div>
     <SceneTransport timeline={timeline} clips={FREEZE_CLIPS} label="冻结" />
     <div className="motion-drawing"><svg className="motion-canvas" viewBox="0 0 1080 485" role="img" aria-label={`${FREEZE_CLIPS[clip].id}。${guidance[clip]}`}>
@@ -25,7 +26,7 @@ export default function FreezePrototype() {
       <path className="guide" d="M 100 144 H 355 M 565 144 H 780" />
       <path className="flow" data-input-path pathLength="1" strokeDasharray="1" strokeDashoffset={1-Math.min(1,s.forward*2)} d="M 100 144 H 355" />
       <path className="flow" pathLength="1" strokeDasharray="1" strokeDashoffset={1-Math.max(0,(s.forward-.4)/.6)} d="M 565 144 H 780" />
-      <g transform={`translate(${s.inputX},144)`} data-input-token><rect x="-36" y="-32" width="72" height="64" rx="6" className="paper" /><text textAnchor="middle" y="6">x₂</text></g>
+      <g transform={`translate(${s.inputX},144)`} data-input-token><rect x="-36" y="-32" width="72" height="64" rx="6" className="paper" /><ModelPixel model={0} x={-28} y={-16} size={30} /><text textAnchor="middle" x={18} y="6">x₂</text></g>
       <text x="80" y="210" textAnchor="middle" className="small-label">训练视图</text>
       <rect x="355" y="86" width="210" height="116" rx="6" className="paper" /><text x="460" y="114" textAnchor="middle" className="small-label">唯一当前网络</text><text x="460" y="157" textAnchor="middle" className="large-value" data-parameter>{s.updated?"θₜ₊₁":"θₜ"}</text><text x="460" y="186" textAnchor="middle" className="small-label">{s.updated?"参数已更新":"参数更新前"}</text>
       {clip===2 && <rect x="355" y="86" width="210" height={116*s.update} rx="6" className="focus-ring" data-update-outline />}

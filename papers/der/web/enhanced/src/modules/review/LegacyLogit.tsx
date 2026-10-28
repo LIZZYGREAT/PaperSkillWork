@@ -1,3 +1,4 @@
+import ModelPixel, { type ModelClass } from "./ModelPixel";
 import { useState } from "react";
 import { ResponseMeter } from "../../shared/foundation/visual-parts/ResponseMeter";
 import { SquaredDefinition, ShiftIdentity, Equation } from "../MathNotation";
@@ -11,7 +12,7 @@ export default function LogitPrototype() {
   const result = logitComparison(HISTORY_Z, LOGIT_CASES[selected].values);
   const y = (value: number) => 214 - value * 52;
   return <section id="review-logits" className="review-scene" data-core-items="I04" data-logit-stage={stage}>
-    <header><p className="eyebrow">U3 · 同一类别的分数与概率</p><h2>先看偏差，再让平方形成损失。</h2><p>在 <Term id="logits">logits</Term> 空间，<Term id="z">历史 z</Term> 固定为 (2, 1, 0)，<Term id="a">当前 a</Term> 与它逐类对齐。切换共同平移，可同时观察原始分数与 <Term id="softmax" /> 概率。</p><p className="caption">三类 logits 是独立合成对照，不是论文实验值或网络更新轨迹；与 U2 两类概率不属于同一次前向。</p></header>
+    <header><p className="eyebrow">U3 · 同一类别的分数与概率</p><h2>先看偏差，再让平方形成损失。</h2><p>在 <Term id="logits">logits</Term> 空间，<Term id="z">历史 z</Term> 固定为 (2, 1, 0)，<Term id="a">当前 a</Term> 与它逐类对齐。切换共同平移，可同时观察原始分数与 <Term id="softmax" /> 概率。</p><p className="caption">Claude / GPT / DeepSeek 三类 logits 是独立合成对照，不是论文实验值或网络更新轨迹；与 U2 两类概率不属于同一次前向。</p></header>
     <div className="case-controls" role="group" aria-label="原型切换当前分数">{LOGIT_CASES.map((item, index) => <button key={item.id} data-review-a={item.id} aria-pressed={selected === index} onClick={() => { setSelected(index); setStage(0); }}>{item.label}</button>)}</div>
     <div className="review-stage-controls" role="group" aria-label="平方匹配阶段">{stages.map((label, index) => <button key={label} data-logit-step={index} aria-pressed={stage === index} onClick={() => setStage(index)}><small>0{index + 1}</small>{label}</button>)}</div>
     <div className="score-workspace"><div className="score-main"><div className="plot-heading"><span>分数坐标 · 共用基线 0</span><span>○ 历史 z　● 当前 a</span></div>
@@ -22,7 +23,7 @@ export default function LogitPrototype() {
           <circle cx={x - 24} cy={y(result.z[index])} r="7" className="history-dot" /><circle cx={x + 24} cy={y(result.a[index])} r="7" className="current-dot" />
           <text x={x - 44} y={y(result.z[index]) - 16} textAnchor="middle">z={result.z[index]}</text><text x={x + 43} y={y(result.a[index]) - 16} textAnchor="middle">a={result.a[index]}</text>
           {stage >= 1 && <g data-delta={result.differences[index]}><line x1={x + 62} x2={x + 62} y1={y(result.z[index])} y2={y(result.a[index])} className="delta-line" />{result.differences[index] !== 0 && <path d={`M ${x + 57} ${y(result.a[index]) + (result.differences[index] < 0 ? -7 : 7)} L ${x + 62} ${y(result.a[index])} L ${x + 67} ${y(result.a[index]) + (result.differences[index] < 0 ? -7 : 7)}`} className="delta-line" />}<text x={x + 78} y={(y(result.z[index]) + y(result.a[index])) / 2 + 5} className="delta-label">{result.differences[index] > 0 ? "+" : ""}{result.differences[index]}</text></g>}
-          <text x={x} y="246" textAnchor="middle">{label}</text>
+          <ModelPixel model={index as ModelClass} x={x - 63} y={228} size={22} /><text x={x + 6} y="246" textAnchor="middle">{label}</text>
           {stage >= 2 && <g data-square={result.squares[index]}><rect x={x - 52} y="267" width="104" height="40" rx="4" className="square-tile" /><text x={x} y="293" textAnchor="middle">({result.differences[index]})² = {result.squares[index]}</text></g>}
         </g>; })}
       </svg><p className="score-operation" aria-live="polite">{stage === 0 ? "同一类别共用纵轴；历史圆点保持原位，当前实心点可以移动。" : stage === 1 ? "区段连接 z 与 a，标出 a−z。下降为负，上升为正，重合为 0。" : stage === 2 ? "把偏差平方：−1 与 +1 都贡献 1，零偏差仍贡献 0。" : "相同类别先比较，再将非负的平方贡献求和。"}</p>

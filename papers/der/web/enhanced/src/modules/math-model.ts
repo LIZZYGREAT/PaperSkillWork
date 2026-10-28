@@ -1,18 +1,20 @@
 /** Synthetic teaching inputs. All views derive values from these definitions. */
-export const CLASSES = ["猫", "狗", "狐狸"] as const;
+import { MODEL_CLASSES } from "../data/model-classes.ts";
+export const CLASSES = MODEL_CLASSES;
+export { PROBABILITY_CLASSES } from "../data/model-classes.ts";
 export const LABEL_OLD = [2, 1, 0] as const;
 export const LABEL_CURRENT = [2, 0, 1] as const;
 export const REFERENCE_P = [0.8, 0.2] as const;
 export const HISTORY_Z = [2, 1, 0] as const;
 
 export const PROBABILITY_CASES = [
-  { id: "near", label: "稍有偏离", values: [0.6, 0.4], conclusion: "两次都更倾向猫，但概率分配已经改变。历史约束仍然有必要。" },
+  { id: "near", label: "稍有偏离", values: [0.6, 0.4], conclusion: `两次都更倾向 ${CLASSES[0]}，但概率分配已经改变。历史约束仍然有必要。` },
   { id: "equal", label: "与旧分布相同", values: [0.8, 0.2], conclusion: "q 与固定的 p 完全相同，KL 为 0：没有需要惩罚的分布偏离。" },
-  { id: "reversed", label: "偏好反转", values: [0.2, 0.8], conclusion: "当前分布转而更倾向狗，对固定旧分布的偏离更大，KL 随之增大。" },
+  { id: "reversed", label: "偏好反转", values: [0.2, 0.8], conclusion: `当前分布转而更倾向 ${CLASSES[1]}，对固定旧分布的偏离更大，KL 随之增大。` },
 ] as const;
 
 export const LOGIT_CASES = [
-  { id: "swapped", label: "猫、狗分数交换", values: [1, 2, 0], conclusion: "猫的分数下降，狗的分数上升。平方匹配逐类累计这些偏离。" },
+  { id: "swapped", label: `${CLASSES[0]}、${CLASSES[1]} 分数交换`, values: [1, 2, 0], conclusion: `${CLASSES[0]} 的分数下降，${CLASSES[1]} 的分数上升。平方匹配逐类累计这些偏离。` },
   { id: "shifted", label: "全部分数增加 1", values: [3, 2, 1], conclusion: "每类分数都增加 1，概率却完全不变。概率匹配与 logits 平方匹配约束的对象不同。" },
 ] as const;
 

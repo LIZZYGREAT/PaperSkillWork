@@ -15,7 +15,9 @@ npm run build
 
 预览入口为 <http://127.0.0.1:5188/>。三个阅读单元在同一长页，顶部导航可直达；按需点击术语或“参考资料”。核心数学不依赖展开：KL 的定义、变量和交叉熵拆解，以及平方匹配定义与共同平移的原因都在主线。
 
-W7 定向修订已接入主线 U2、U3 和快照演示，等待用户学习评审。可在 <http://127.0.0.1:5188/?review=1> 单独查看交互工作区：KL 按“观察→同类比较→带符号贡献→汇总”推进，可点公式符号或类别；logit 按“对齐→偏差→平方→求和”推进，并显示同源 softmax 概率；冻结演示区分“输出→复制→参数更新→候选等待入池”。顶部可返回主线。该对照入口不改变 W7 的人工 PENDING 状态。
+当前 `/` 仍为旧正式切片（U2/U3/Snapshot 的 wrapper 调用 `LegacyKL` / `LegacyLogit` / `LegacyFreeze`）。`?review=1` 是待审原型工作区；生命周期请直接使用[获认可的专注播放器](http://127.0.0.1:5188/?review=1&focus=lifecycle#lifecycle-player)。两种生命周期显示共享同一组件与时钟，返回阅读保留进度。其余场景需先提交高保真设计，再进行动画重做与正式页整合；W7 保持 PENDING。
+
+展示类别由 `src/data/model-classes.ts` 统一，三类坐标为 `[Claude, GPT, DeepSeek]`；U2 只取 Claude / GPT 两类独立正概率例，不属于 U3 的同一次前向。`ModelPixel.tsx` 的手工像素图通过 `ModelMark.tsx` 复用于原图和旧正式页。这些是合成分类标签，不是品牌模型参与论文实验或性能对比。
 
 `npm run test:browser` 使用仓库 `reusable-kit/demo` 已锁定的 Playwright 测试工具链，自动启动并关闭本项目的生产预览，访问 `/der-review/` 子路径，验证两个桌面尺寸的交互、数学可见性、键盘、参考资料与 reduced motion。默认浏览器为本机 Edge；其他环境可用 `PAPERWORK_PLAYWRIGHT_EXECUTABLE` 指定 Chromium 可执行文件。设置 `DER_REVIEW_DIR` 可保留命名截图。该测试工具链只供开发验证，网页运行时和独立构建不引用仓库外部路径。
 

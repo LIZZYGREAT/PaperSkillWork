@@ -1,9 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { softmax, probabilityComparison, logitComparison, REFERENCE_P, PROBABILITY_CASES, HISTORY_Z, LOGIT_CASES, LABEL_OLD, LABEL_CURRENT } from "../src/modules/math-model.ts";
+import { softmax, probabilityComparison, logitComparison, CLASSES, PROBABILITY_CLASSES, REFERENCE_P, PROBABILITY_CASES, HISTORY_Z, LOGIT_CASES, LABEL_OLD, LABEL_CURRENT } from "../src/modules/math-model.ts";
+import { MODEL_CLASSES } from "../src/data/model-classes.ts";
 
 const near = (actual, expected, tolerance = 1e-12) => assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
 test("softmax is stable and preserves normalized class coordinates", () => {
+  assert.equal(CLASSES, MODEL_CLASSES);
+  assert.deepEqual(CLASSES, ["Claude", "GPT", "DeepSeek"]);
+  assert.deepEqual(PROBABILITY_CLASSES, CLASSES.slice(0, REFERENCE_P.length));
+  assert.equal(CLASSES[HISTORY_Z.indexOf(Math.max(...HISTORY_Z))], "Claude");
+  assert.equal(CLASSES[LOGIT_CASES[0].values.indexOf(Math.max(...LOGIT_CASES[0].values))], "GPT");
   const small = softmax([2, 1, 0]); const large = softmax([1002, 1001, 1000]);
   near(small.reduce((a,b) => a+b), 1); small.forEach((value,i) => near(value,large[i]));
   assert.ok(small.every((value) => value > 0));

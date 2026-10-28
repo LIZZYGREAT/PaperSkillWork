@@ -1,4 +1,4 @@
-import { probabilityComparison, logitComparison, REFERENCE_P, PROBABILITY_CASES, HISTORY_Z, LOGIT_CASES } from "../math-model.ts";
+import { PROBABILITY_CLASSES, probabilityComparison, logitComparison, REFERENCE_P, PROBABILITY_CASES, HISTORY_Z, LOGIT_CASES } from "../math-model.ts";
 
 // Teaching comparison paths, never optimizer trajectories. No timers or mutable model state.
 export const clamp = (t: number) => Math.max(0, Math.min(1, t));
@@ -7,8 +7,8 @@ export const phase = (clip: number, progress: number, index: number) => clip > i
 export const KL_CLIPS = [
   { id: "建立参考", durationMs: 1200, holdMs: 700 },
   { id: "观察偏离", durationMs: 2200, holdMs: 900 },
-  { id: "比较猫", durationMs: 1400, holdMs: 1100 },
-  { id: "比较狗", durationMs: 1400, holdMs: 1100 },
+  { id: `比较 ${PROBABILITY_CLASSES[0]}`, durationMs: 1400, holdMs: 1100 },
+  { id: `比较 ${PROBABILITY_CLASSES[1]}`, durationMs: 1400, holdMs: 1100 },
   { id: "形成贡献", durationMs: 2200, holdMs: 1200 },
   { id: "汇总与优化", durationMs: 1800, holdMs: 1800 },
 ];

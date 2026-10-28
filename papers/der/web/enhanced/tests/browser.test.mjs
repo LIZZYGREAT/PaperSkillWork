@@ -6,6 +6,7 @@ import { resolve, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { reviewPrototypeChecks } from "./review-prototypes.mjs";
 import { lifecycleBrowserChecks, lifecycleFocusBrowserChecks } from "./lifecycle-browser.mjs";
+import { MODEL_CLASSES, PROBABILITY_CLASSES } from "../src/data/model-classes.ts";
 
 // Development checks use the repository's single pinned browser toolchain.
 // None of this is imported by the tutorial runtime.
@@ -81,6 +82,11 @@ try {
     }
     await shot("opening");
     await shot("label-contrast", ".label-question");
+    const rankings = await page.locator('.ranking-row>span:first-child').allTextContents();
+    check(rankings.join(',') === [...MODEL_CLASSES, ...MODEL_CLASSES].join(','), 'Both hard-label comparisons retain the shared class coordinate order');
+    check(await page.locator('.input-stream [data-model-pixel="Claude"]').count() === 1, 'The original sample reuses the lifecycle Claude pixels');
+    check(!(await page.locator('main').innerText()).match(/猫|狗|狐狸/), 'The active reading route has no stale animal categories');
+    check((await page.locator('[data-kl-category]').allTextContents()).every((label, i) => label.startsWith(PROBABILITY_CLASSES[i])), 'The two probability coordinates use the shared subset');
     for (const [id, expected] of [["near", .09151622184943578], ["equal", 0], ["reversed", .8317766166719343]]) {
       const button = page.locator(`[data-review-q='${id}']`);
       await button.focus(); await button.press("Enter");

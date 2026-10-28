@@ -4,6 +4,7 @@ import { CLASSES, LOGIT_CASES, formatValue as f } from "../math-model";
 import { Term, ReferenceButton } from "../Reference";
 import { LOGIT_CLIPS, logitSceneAt, lerp } from "./animation-model";
 import SceneTransport, { useSceneTimeline } from "./SceneTransport";
+import ModelPixel, { type ModelClass } from "./ModelPixel";
 import "./animation.css";
 
 const guidance = [
@@ -34,7 +35,8 @@ export default function LogitPrototype() {
           <circle data-history-point={i} cx={x-18} cy={y(s.z[i])} r="7" fill="var(--rk-surface)" stroke="var(--motion-old)" strokeWidth="2" /><circle data-current-point={i} cx={currentX} cy={y(s.a[i])} r="7" className="now" />
           <text x={x-40} y={y(s.z[i])-16} textAnchor="end" className="numeric">z={f(s.z[i],1)}</text><text x={x+40} y={y(s.a[i])-16} className="numeric">a={f(s.a[i],1)}</text>
           {clip>=1 && <g><path data-difference-line={i} className="flow" d={`M ${x+55} ${y(s.z[i])} h 9 v ${y(s.a[i])-y(s.z[i])} h -9`} /><text x={x} y="310" textAnchor="middle" className="numeric">Δ={s.differences[i]>0?"+":""}{f(s.differences[i],1)}</text></g>}
-          <text x={x} y="284" textAnchor="middle">{label}</text>
+          <ModelPixel model={i as ModelClass} x={x - 65} y={265} size={22} />
+          <text x={x + 6} y="284" textAnchor="middle">{label}</text>
           {clip>=2 && <><path className="flow" pathLength="1" strokeDasharray="1" strokeDashoffset={1-s.squareGrowth} d={`M ${x+60} ${y(s.a[i])+12} Q ${x+95} 300, ${x} 330`} /><rect data-square-block={i} x={x-46} y={393-48*s.squares[i]*s.squareGrowth} width="92" height={48*s.squares[i]*s.squareGrowth} className="focus-wash" /><line x1={x-46} x2={x+46} y1="393" y2="393" className="grid" /><text x={x} y="422" textAnchor="middle" className="numeric">({f(s.differences[i],1)})²={f(s.squares[i],1)}</text></>}
           {clip>=3 && <path className="flow" pathLength="1" strokeDasharray="1" strokeDashoffset={1-s.sumGrowth} d={`M ${x+46} 375 Q ${x+95} 320, 760 375`} />}
         </g>;
