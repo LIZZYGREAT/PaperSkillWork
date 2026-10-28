@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DER · 生命周期视觉重设计 v2 · R1 视觉系统</title>
+<title>DER · 单样本生命周期 · 视觉重设计 v2（R1+R2）</title>
 <style>
   :root{
     --canvas:#f7f7f2; --surface:#fff; --soft:#eff2eb; --ink:#182a22; --muted:#586a5d;
@@ -16,6 +16,7 @@
   main{max-width:1180px;margin:0 auto;padding:0 24px 96px}
   a{color:var(--accent-strong)}
   a:focus-visible{outline:3px solid var(--warn);outline-offset:3px}
+  code{font:13px/1.5 var(--mono);padding:1px 5px;border-radius:5px;background:#eef1e9;color:#2c4438}
   .top{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:22px 0 14px;border-bottom:1px solid var(--line)}
   .brand{font-weight:700;letter-spacing:.01em}
   .brand span{margin-left:14px;font-weight:400;color:var(--muted);font-size:13px}
@@ -48,7 +49,7 @@
   .card li b{color:var(--ink);font-weight:650}
   table{width:100%;border-collapse:collapse;margin-top:22px;font-size:14px;line-height:1.6}
   th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
-  th{font:600 12px/1.4 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line-strong);width:auto}
+  th{font:600 12px/1.4 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line-strong)}
   tbody tr:hover{background:#fbfcf8}
   td b{font-weight:650}
   td .tag{display:inline-block;margin-right:6px;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-strong);font:600 11.5px/1.5 var(--mono);letter-spacing:.02em;white-space:nowrap}
@@ -59,6 +60,20 @@
   .spec div{padding:14px 18px 14px 0;border-bottom:1px solid var(--line)}
   .spec dt{font:600 11.5px/1.4 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
   .spec dd{margin:0;font-size:14px}
+  /* keyframe blocks */
+  .frame{padding-top:56px}
+  .frame-head{display:grid;gap:6px;margin-bottom:16px}
+  .frame-head .k{font:600 12px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--warn)}
+  .frame-head h3{margin:0;font-size:23px;letter-spacing:-.02em;font-weight:730}
+  .frame-head .sub{margin:0;color:var(--muted);font-size:14.5px}
+  .frame img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+  .frame-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:18px}
+  .frame-meta .box{padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  .frame-meta h4{margin:0 0 6px;font:600 11.5px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .frame-meta ul{margin:0;padding-left:17px;font-size:14px;line-height:1.72}
+  .frame-meta li{margin-bottom:3px}
+  .frame-meta p{margin:0;font-size:14px;line-height:1.72;color:#26382e}
+  .frame-meta .handoff{border-left:3px solid var(--accent)}
   footer{margin-top:80px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.7}
   .status{display:inline-flex;gap:8px;align-items:center;padding:4px 10px;border:1px dashed var(--line-strong);border-radius:999px;font:600 12px/1.5 var(--mono);color:var(--muted)}
   .status i{display:block;width:7px;height:7px;border-radius:50%;background:var(--warn)}
@@ -66,17 +81,21 @@
 <main>
   <div class="top">
     <div class="brand">DER <span>Dark Experience Replay · 单样本生命周期</span></div>
-    <div class="meta">R1 · 视觉系统与整体构图<br>2026-10-28 · W7 REVISE</div>
+    <div class="meta">R1 视觉系统 · R2 五张关键帧<br>2026-10-28 · W7 REVISE</div>
   </div>
 
   <header class="hero">
     <p class="eyebrow">D1 生命周期 · 视觉重设计 v2</p>
     <h1>同一份样本的一生，<br>重新画成一张可以读的舞台。</h1>
-    <p class="lead">这轮不再给旧流程图打补丁：先重建网络、样本、冻结目标、响应坐标与记忆槽的视觉主体，再用同一套几何编排关键帧。评审只看一件小事——暂停在任何一帧，能不能直接认出“谁是谁、从哪来、去了哪”。</p>
+    <p class="lead">这轮不再给旧流程图打补丁：先重建网络、样本、冻结目标、响应坐标与记忆槽的视觉主体，再用同一套几何编排五张关键帧。评审只看一件小事——暂停在任何一帧，能不能直接认出“谁是谁、从哪来、去了哪”。</p>
     <div class="demo">
-      <a class="primary" href="assets.svg">打开资产样张</a>
-      <a href="composition.svg">打开整体构图</a>
-      <a href="assets.svg" download>下载样张 SVG</a>
+      <a class="primary" href="assets.svg">资产样张</a>
+      <a href="composition.svg">整体构图</a>
+      <a href="f1-forward.svg">F1 前向</a>
+      <a href="f2-copy-freeze.svg">F2 复制冻结</a>
+      <a href="f3-update-write.svg">F3 更新写入</a>
+      <a href="f4-replay.svg">F4 回放</a>
+      <a href="f5-match-update.svg">F5 匹配更新</a>
     </div>
   </header>
 
@@ -152,6 +171,163 @@
     </table>
   </section>
 
+  <section id="r2-frames">
+    <div class="sec-head">
+      <div class="row"><span class="idx">R2</span><span class="kicker">五张高保真关键帧</span><span class="rule"></span></div>
+      <h2>每一帧都回答：上一阶段留下了什么</h2>
+      <p>五帧共享同一套对象、同一坐标与同一材质，但每帧重新组织主次：复制时看响应下方，写入时看槽位，比较时把镜头让给坐标。下面每帧都附“必须直接看出的信息”和“运动与交接”，供 R3 实现对照。</p>
+    </div>
+
+    <div class="frame">
+      <div class="frame-head">
+        <span class="k">F1 · 前向与响应 · 第 i 步 更新之前</span>
+        <h3>一个输入，长出整组判断</h3>
+        <p class="sub">样本进入唯一当前网络，三类 logit 逐类形成；标签 y 在图像之外，属于另一条监督关系。</p>
+      </div>
+      <img src="f1-forward.svg" alt="F1：原图与增强视图、当前网络、三条响应轨道与损失通道。">
+      <div class="frame-meta">
+        <div class="box">
+          <h4>必须直接看出</h4>
+          <ul>
+            <li>一张图产生的是<b>整组</b>三个分数，不只一个类别答案。</li>
+            <li>标签 y₁ = 猫 是虚线框，独立于图像与记录。</li>
+            <li>θ 标签仍是 θᵢ，CE 上写着“未反传”。</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h4>运动</h4>
+          <p>视图从原图右侧沿弧线进入左输入端口；网络列级高亮从左向右传递；三条轨道依次长出实心圆，数值贴在标记右侧；最后 CE 节点与标签框就位。</p>
+        </div>
+        <div class="box handoff">
+          <h4>交接</h4>
+          <p>三个圆点停在原坐标不动——它们是下一帧复制动作的起点。视图停在轨道起点上方，不再移动。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="frame-head">
+        <span class="k">F2 · 复制与冻结 · 同一时刻</span>
+        <h3>源输出留下，数值副本独立出来</h3>
+        <p class="sub">在相同坐标复制出空心方块，再让它离开响应轨成为冻结块；网络与 θ 完全没动。</p>
+      </div>
+      <img src="f2-copy-freeze.svg" alt="F2：响应轨上的圆点与其下方冻结块中的空心方块。">
+      <div class="frame-meta">
+        <div class="box">
+          <h4>必须直接看出</h4>
+          <ul>
+            <li>方块与圆点<b>同坐标、同数值</b>，只是形状不同。</li>
+            <li>源圆点仍在原处，副本有自己的载体（虚线 + 斜纹）。</li>
+            <li>θ 未变，所以“冻结”不是模型停止学习。</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h4>运动</h4>
+          <p>方块先在圆点位置以零位移描边，然后整组向右下移动约 90px 进入冻结块；块边框由虚线补齐，斜纹淡入。全程网络、轨道刻度、数值都不变。</p>
+        </div>
+        <div class="box handoff">
+          <h4>交接</h4>
+          <p>冻结块停在响应下方。下一帧它要和原图缩略图合并成一条记录——两者尺寸已经匹配，不需要缩放。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="frame-head">
+        <span class="k">F3 · 更新后写入 · 第 i 步结束</span>
+        <h3>先更新网络，再把候选放进空槽</h3>
+        <p class="sub">一条梯度虚线进入参数端口，θᵢ → θᵢ₊₁；随后记录写入 slot 0，N 从 0 变 1。</p>
+      </div>
+      <img src="f3-update-write.svg" alt="F3：模型带更新外环，记录已在槽 0 内，N=1。">
+      <div class="frame-meta">
+        <div class="box">
+          <h4>必须直接看出</h4>
+          <ul>
+            <li>更新只有<b>一条</b>路径（∇θ），发生在写入之前。</li>
+            <li>记录 = 原图缩略 + 冻结块，尺寸正好放进槽。</li>
+            <li>响应轨变淡：本步不重算新输出，不编造优化后数值。</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h4>运动</h4>
+          <p>CE 沿虚线向模型顶部端口发出一次脉冲 → 模型外环亮起、θ 标签变为 θᵢ₊₁ → 缩略图从数据列滑下与冻结块合拢成记录 → 记录沿短弧落入空槽 → N 由 0 翻到 1，槽号旁出现“刚写入”。</p>
+        </div>
+        <div class="box handoff">
+          <h4>交接</h4>
+          <p>记录留在槽内，N=1；模型保持更新后状态。下一帧从这条记录读取，而不是重新造一份。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="frame-head">
+        <span class="k">F4 · 未来回放 · 第 j = i+1 步</span>
+        <h3>后来，回放从这份记忆真实出发</h3>
+        <p class="sub">下一步先采样既有记录：槽内记录不动，读出引用重新增强后进入同一模型，得到由当前参数计算的新输出 aⱼ。</p>
+      </div>
+      <img src="f4-replay.svg" alt="F4：当前 x₂ 进入模型、回放视图从槽位沿左侧通道进入第二端口，响应轨显示 aⱼ。">
+      <div class="frame-meta">
+        <div class="box">
+          <h4>必须直接看出</h4>
+          <ul>
+            <li>回放有<b>可追踪的来源</b>：槽 0 标着“读取中”，读出视图从槽左缘出发。</li>
+            <li>两个输入端口不同：上方是当前 x₂，下方是回放 x₁@i。</li>
+            <li>θ 已变为 θⱼ，新输出 aⱼ 由当前参数计算。</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h4>运动</h4>
+          <p>x₂ 从上方沿弧线进入当前输入端口；槽内记录出现一圈虚线“读出轮廓” → 视图沿左侧通道上移 → 模型第二次前向 → 回放轨道逐类长出 (1,2,0)；记录与槽号始终不动。</p>
+        </div>
+        <div class="box handoff">
+          <h4>交接</h4>
+          <p>冻结方块还在记录里。下一帧它们会被搬到同一坐标，与新的圆点直接比较。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="frame-head">
+        <span class="k">F5 · 匹配与联合更新 · 同一步</span>
+        <h3>差异变成贡献，然后只更新一次</h3>
+        <p class="sub">同一坐标比较、差值平方求和得到 L_dark = 2；它与当前 CE 合并后只产生一次参数更新，记忆不变。</p>
+      </div>
+      <img src="f5-match-update.svg" alt="F5：比较区三行圆点与方块、差值括号、平方贡献、联合损失与模型锚点。">
+      <div class="frame-meta">
+        <div class="box">
+          <h4>必须直接看出</h4>
+          <ul>
+            <li>比较在同一类别坐标、同一尺度上完成，方块 = 冻结值。</li>
+            <li>差值 → 平方 → 1+1+0=2，与公式一一对应。</li>
+            <li>两条损失汇入<b>一次</b>更新；记录、z₁、N 都不变，未写 x₂。</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h4>运动</h4>
+          <p>镜头把比较区放到主位，模型缩为左侧锚点；三个方块从记录中被“取出”并沿轨道滑到对应圆点旁 → 差值括号张开 → 平方块按 |d| 生成 → 求和 → 与 CE 汇入联合损失 → 一条 ∇θ 进入模型锚点。</p>
+        </div>
+        <div class="box handoff">
+          <h4>交接</h4>
+          <p>停在“尚未写入 x₂ 候选”。下一单元从这里接着讲记忆怎样在某条候选到来时被选中或被替换。</p>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>真实操作</th><th>关键帧</th><th>必须成立的状态</th></tr></thead>
+      <tbody>
+        <tr><td>更新前前向，整组响应形成</td><td>F1</td><td>θ = θᵢ；aᵢ=(2,1,0)；标签只在损失通道，无回放</td></tr>
+        <tr><td>复制并冻结旧数值</td><td>F2</td><td>方块与圆点同坐标同值；源输出仍在；θ 仍为 θᵢ</td></tr>
+        <tr><td>当前 CE 反传一次</td><td>F3</td><td>只有一条 ∇θ；θᵢ → θᵢ₊₁；不显示更新后预测值</td></tr>
+        <tr><td>更新后写入空槽</td><td>F3</td><td>记录 = 原图 + z；N：0 → 1；写入发生在更新之后</td></tr>
+        <tr><td>下一步采样既有记忆</td><td>F4</td><td>从 slot 0 读取；记录不消失；N 保持 1</td></tr>
+        <tr><td>回放前向</td><td>F4</td><td>同一模型 θⱼ；aⱼ=(1,2,0)；与 z₁ 同尺度</td></tr>
+        <tr><td>匹配、平方、求和</td><td>F5</td><td>差值 (−1,1,0)；平方 (1,1,0)；L_dark = 2</td></tr>
+        <tr><td>联合更新</td><td>F5</td><td>CE + α·L_dark 只更新一次；记录与 z₁ 不变；未写 x₂</td></tr>
+      </tbody>
+    </table>
+  </section>
+
   <section id="r1-reuse">
     <div class="sec-head">
       <div class="row"><span class="idx">R1 · C</span><span class="kicker">复用判定</span><span class="rule"></span></div>
@@ -192,12 +368,12 @@
       <div><dt>高亮</dt><dd>当前操作对象：底色 + 描边加深；其余对象降到 42–60% 不透明度，不移除</dd></div>
       <div><dt>节奏</dt><dd>位移 ≤ 160px；复制/回放/更新各留 ≥ 1.2s 可观察中段</dd></div>
     </dl>
-    <div class="note"><strong>这一轮只完成 R1。</strong> 五张关键帧与运动交接在 R2 补齐后才会做动画实现；在视觉构图被确认之前，不改 <code>SampleLifecyclePrototype.tsx</code>，也不把样张说成动画验收。</div>
+    <div class="note"><strong>本轮停在 R2。</strong> 五张关键帧与运动交接已交付；在视觉构图被确认之前，不改 <code>SampleLifecyclePrototype.tsx</code>，也不把关键帧说成动画验收。确认后再按同一套对象与几何实现连续播放。</div>
   </section>
 
   <footer>
     <span class="status"><i></i>W7 保持 pending · 等待视觉评审</span>
-    <p style="margin:14px 0 0">旧 D0 设计板保留在 <code>../lifecycle-d0/</code> 作为历史对照，不再充当现行设计真源。本页只评审静态设计品质，不代表动画、教学效果或 W7 通过。</p>
+    <p style="margin:14px 0 0">旧 D0 设计板保留在 <code>../lifecycle-d0/</code> 作为历史对照，不再充当现行设计真源。本页只评审静态设计品质：数值与事件顺序沿用已核对的 DER fixture，动画、教学效果与 W7 PASS 都不由本页代替。</p>
   </footer>
 </main>
 </html>
