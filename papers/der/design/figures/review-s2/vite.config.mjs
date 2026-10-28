@@ -22,6 +22,7 @@ export default defineConfig({
           const path = resolve(dist, decodeURIComponent(url.pathname.slice(11)) || "index.html");
           if (!path.startsWith(dist + sep)) throw new Error("Outside production preview");
           const data = await readFile(path);
+          res.setHeader("Cache-Control", "no-store");
           res.setHeader("Content-Type", ({ ".html": "text/html; charset=utf-8", ".js": "application/javascript", ".css": "text/css", ".svg": "image/svg+xml" })[extname(path)] || "application/octet-stream");
           res.end(data);
         } catch { res.statusCode = 404; res.end("Build the existing enhanced project before opening the lifecycle lens."); }

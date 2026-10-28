@@ -255,25 +255,35 @@ S2 现已交付下方高保真设计板，等待人工检查点 A；方向确认
 
 证据保留：`.visual-qa/der-convergence-baseline/` 保存用户认可原图副本、修改前专注帧及两段完整播放；`.visual-qa/der-convergence-s1/` 保存 20 张修改后代表截图、15 张配对 focus 帧与像素比较 JSON，均为本地忽略产物。标准 runner 的本轮确切 run 目录在报告与截图复核后通过 `--cleanup-run` 清理，返回 `CLEANED: <same-path>`，`Test-Path=False`；本轮临时产物已清理，保留上述必要基线及验收证据。未清理旧基线、未知目录或用户预览服务。
 
-### S2 · 高保真关键帧与连续运动提案（2026-10-28，待人工检查点 A）
+### S2 · R2 重新设计与播放器定向修订（2026-10-28，待人工检查点 A）
 
-用户在 S0/S1 后明确“继续 S2”。起点 `54a8c27`、`der`、工作区干净。本轮只新增 [S2 设计板](figures/review-s2/index.html) 及本节；`web/enhanced/**`、阶段状态、原生命周期及其几何、时间线完全未改。以下是方向提案，不是 S3 最终动画或 W7 PASS。
+起点 `334cf88` / `der`，工作区干净。用户否决首稿的圆环、坐标图、公式位置和拖尾，随后明确：**只放大生命周期；KL/Logit 缩回一屏；统一浅橙与浅绿；修复阶段起点／上一步；略加宽 DeepSeek 输出卡。** 这些反馈授权本节列出的外围控制和卡宽例外，不改变生命周期的算法、数值、九阶段顺序、网络、增强或槽位身份。S2 尚未获方向通过，W7 保持 pending，未进入 S3/S4/W8。
 
-**实际预览**：[KL](http://127.0.0.1:5192/?scene=kl) / [Logit Matching](http://127.0.0.1:5192/?scene=logits) / [冻结与回放入口](http://127.0.0.1:5192/?scene=freeze)。每页提供完整尺寸的关键帧、播放草案与可展开的运动／数学衔接说明。预览为本轮独立的 5192 Vite 进程，保留供用户本次审核，无自启动或常驻服务配置；不占用、重启或清理用户 5188 服务。若进程已结束，从仓库根运行 `node papers/der/web/enhanced/node_modules/vite/bin/vite.js --config papers/der/design/figures/review-s2/vite.config.mjs`；冻结预览读取现有 `web/enhanced/dist`，缺失时先运行该工程的已有 build。
+**实际预览**：[KL](http://127.0.0.1:5192/?scene=kl) / [Logit Matching](http://127.0.0.1:5192/?scene=logits) / [生命周期／冻结入口](http://127.0.0.1:5192/?scene=freeze)。仍用同一个 5192 独立评审站点，保留本次预览进程供用户审阅，无自启动配置，不重启用户 5188 服务。重开命令为 `node papers/der/web/enhanced/node_modules/vite/bin/vite.js --config papers/der/design/figures/review-s2/vite.config.mjs`；冻结入口加载当前 `web/enhanced/dist`，缺失时先运行已有 build。
 
-| 场景 | 主舞台与连续对象 | 关键帧／动作／进入与离开 | 数学与知识衔接 |
-| --- | --- | --- | --- |
-| A · KL | 1120×480 舞台，以两个完整概率圆为主体；左 p 保持 0.8/0.2，右 q 的扇区分界连续移动。颜色表示 Claude/GPT 类别，p 的虚线内圈表示固定身份；类别像素从始至终可追踪。 | 六镜：固定 p → q 重分配 → Claude 同类取值 → GPT 同类取值 → 带符号项汇总 → q=p 归零。概率值副本从各自来源移到中央，先显示比值、再对数、再加权，贡献数值进入下方汇总。同一批贡献只重排位置，不另造损失。出镜保留完整 KL 与固定熵基准。 | 由 U1 的“最高类相同仍可偏离”进入。定义式及 p/q/k/C 来源默认可见，H(p,q)−H(p) 和当帧数值默认可见；完整分解放设计说明，证明与梯度仍规划在 Reference。q 严格为正且归一化、单项可负、总和非负；方向不对称。归零路径明确是合成比较，非真实优化轨迹。 |
-| B · Logit | 一把共用分数尺、三个类别身份；固定 z 用空心方块，当前 a 用实心圆。右侧内 p / 外 q 的同类扇区由同一组分数派生，不引入网络或独立概率数组。 | 四镜：同类/同尺度 → 当前点分开并出现有向差值 → 数值复制到下方形成平方面 → 同一批贡献进入求和。默认固定 z=(2,1,0)、a=(1,2,0)，贡献 1/1/0、和 2。第二对照 a=z+c，三个点用 3 秒共同移动；分数距离改变而概率分界保持原位，c=1 后平方和 3、概率 KL=0。 | 承接概率约束可行，转而检查原始分数约束的差别。平方定义默认可见，负值明确写成 (−1)²；共同平移条件 a=z+c、softmax 公因子消去、Cc² 同样默认可见。该对照不能说明 logits 在所有任务上更优。 |
-| C · 冻结／回放 | 原生命周期完整播放器作为唯一舞台，保留原侧栏、网络、样本、增强视图、数值、记忆槽。设计板通过同源 iframe 实载当前生产构建，不用截图替身、不复制渲染器或状态模型。 | 六个观察入口定位真实阶段 02/03/04/05/06/09：更新前输出 → 复制 → 参数继续更新 → 更新后入槽 → 后来读取回放 → x₂ 独立快照。入口先定格真实阶段结果，也可从该处连续播放。展开/收起保留同一个 iframe 和记录 DOM。 | 保持 z₁ / aⱼ / z₂ 三份身份；候选不等于入池，DER 只存 (x,z)。正式 S3 应把观察导航接到原 React 播放器的外围入口，避免 iframe 成为正式架构；仍调用已有时钟，受保护 SVG/几何无需改写。 |
+| 场景 | 重新构思后的主体与过程 | 必须保护的计算与表达 |
+| --- | --- | --- |
+| KL | 两份柔色概率图谱，左 p 固定、右 q 连续重分配；每格表示 1% 总质量，部分格连续填充。按 Claude/GPT 聚焦，在独立区域取比值、对数、乘固定权重，带符号贡献进入汇总。取消圆环、飞行数字和虚线拖尾。 | 沿用 p=(0.8,0.2) 与三个既有 q。定义、p/q/k/C 来源及 H(p,q)−H(p) 默认可见；取值、代入、结果分行排版。单项可负、总和非负、方向不对称，回到 p 的路径是合成比较而非真实优化。 |
+| Logit | 三张类别响应卡，保留固定 z、当前 a，逐层展开相减、带括号的平方和同批求和；每卡直接显示同源 softmax p/q，取消坐标图和右侧圆环。共同平移时当前标记同步移动，p/q 数字保持一致。 | 固定 z=(2,1,0)，默认 a=(1,2,0)，平方贡献 1/1/0、总和 2；平移至 (3,2,1) 得平方和 3、概率 KL=0。主线保留平方定义和 a=z+c 条件、公因子相消的解释；不与 U2 两类概率冒充同一次前向。 |
+| 生命周期 | 继续实载原播放器，顶部从 `LIFECYCLE_CLIPS` 派生全部九阶段。仅在评审 iframe 增大字级、收紧画布空白；展开/收起保留同一个实例。外层高亮观察原播放器的阶段属性，不维护第二个时钟。 | 当前／回放／冻结值和两个槽位身份不变。原播放器只落实用户指定的暂停起点与回退逻辑、DeepSeek 输出卡 +12 舞台单位的留白，比较镜头原宽保持不变；算法模型与原样式文件未改。 |
 
-**复用与局部创作**：直接使用 DER 已有 `useSceneTimeline` 及其已复制 Kit `useAnimationTimeline` / `useReducedMotion`，核读 Registry、animation-timeline Recipe 和真实 Hook；没有新复制闭包，没有第二个 Store 或计算引擎。类别与像素直接来自 `model-classes.ts` / `ModelPixel.tsx`，公式来自现有 `MathNotation.tsx`；所有数字调用真实 `probabilityComparison` / `logitComparison`，沿用原 p/q/z/a fixture。设计板的概率质量圆、取值路径、分数空间与平方面是 paper-local 构图，不照搬 ResponseMeter 条形，也不升级为 Kit API。暖白/浅绿、细线、冻结方标、对象比例和数字层级取自受保护场景；其他场景没有套它的整页双栏布局。
+**布局与配色**：KL/Logit 最大版心 1320，浅橙 `#f2ddc9`、浅绿 `#dcebdc`；原品牌像素仅保留作身份标识。减小大数字和公式，删去重复的概率数值展示，并用 MathML compact 样式收拢求和上下标；未删除定义或必要短推导。实测 1440×900、1920×1080 和用户截图触发的 1646×802 窗口，主体、主线公式、控制、关键帧导航、当前讲解均在一屏内；展开设计说明仍在其下。1646×802 下 KL 当前讲解底边约 764px，Logit 约 793px，无整体横向溢出。生命周期独立维持大版心和放大字级。
 
-**运动约定**：KL 草案 21.1 秒，Logit 草案 15.2 秒；重要步骤末尾停留约 1–1.8 秒。播放／暂停／从头播放／关键帧跳转均使用同一个现有时钟；切换场景卸载旧草案。冻结只用原播放器自己的时钟，入口调用其现有阶段控件。reduced motion 定格完整语义帧并手动前进。此轮确认空间构图、持续身份、计算显现和节奏，S3 仍需正式入口、Reference/Hover 与完整播放的独立验收。
+**阶段控制的明确规则（用户新增）**：普通动画模式选择阶段停在该阶段起点；评审入口默认停在 01 / 0.0s。01 为 0.0s，02 为 7.2s；处于播放中或暂停中途时，“上一步”先回当前阶段起点并暂停；已在起点暂停则回上一阶段起点并暂停。第一阶段运行时允许回退到 0.0s，仅第一阶段起点暂停时禁用。下一步同样前往下一阶段起点暂停。reduced motion 继续保留完整语义帧与手动前进。评审外层不再用“下一阶段＋上一步”模拟关键帧结果，直接调用同一阶段控件；播放、内部回退后顶部高亮跟随权威阶段。评审生产预览设置 no-store，并更新 iframe 入口版本，防止已打开的旧控件继续留在评审页。
 
-**实际检查**：设计板 Vite build 退出 0，34 modules，产物仅在忽略目录 `.visual-qa/der-s2/design-build/`。两档 Edge 1440×900 / 1920×1080 实际查看 KL 六帧、Logit 四帧与共同平移、原播放器展开画面及连续中间帧；已修复圆内标签挤压、负差值平方括号和主线短推导的可见位置。浏览器核对固定 p、合法 q、三个既有 KL 例、平方结果、shift KL=0、reduced motion，六个冻结入口及展开/收起的同一记录 DOM，均通过，无页面／资源错误。真实 rAF（无虚拟时钟）连续录制两档：KL 21273 / 21268ms、Logit 15390 / 15246ms，共 247 个数值采样；每个采样保持 p/q 和算式一致，共同平移时概率 KL 始终为 0。不是最终 S3 动画的验收证据。
+**复用边界**：`MechanismScenes.tsx` 和 `review-r2.css` 为 paper-local 设计稿，替换首稿实现；不保留不可达的旧圆环/坐标绘制代码。继续直接用原 `useSceneTimeline`、已复制 Kit `useAnimationTimeline` / `useReducedMotion`、`ModelPixel`、类别源、数学纯函数与既有 fixture。没有新 Store、第二套计算引擎或 Kit API；通用 Hook 内核未改。生命周期布局与字体试稿只在 5192 iframe 注入，源 `lifecycle.css`、`lifecycle-model.ts` 未变；S3 再按人工方向确认整合。
 
-必要审核证据保留于 `.visual-qa/der-s2/browser/` 和 `.visual-qa/der-s2/playback/`（命名关键帧、两段 `motion-drafts-<width>.webm`、检查和采样 JSON），均为本地忽略产物。`git diff --exit-code HEAD -- papers/der/web/enhanced` 为 0，正式播放器无改动；`python tools/paper.py check der` 通过，W7 pending / 本机路径提示仍如实保留。FULLSCREEN_LAYOUT=PASS（布局模拟），FULLSCREEN_REAL=NOT_RUN（未操作 F11）；HUMAN_ACCEPTANCE=PENDING。本轮设计提案不重新声称 W6 的官方兼容性检查或整体视觉已获人审通过。
+| 验证面 | 本轮实际结果 |
+| --- | --- |
+| 数学与构建 | `npm --prefix papers/der/web/enhanced test`：17 项通过；`npm --prefix papers/der/web/enhanced run build`：退出 0、66 modules，最终 `index-DVw_2zVC.js` / `index-PCyuSUv3.css`。设计板 Vite build：退出 0、35 modules，仅输出忽略目录 `.visual-qa/der-s2/design-build/`。 |
+| 正式源码回归 / SUBPATH_ASSETS | `DER_REVIEW_DIR=<repo>/.visual-qa/der-s2-r2/source-regression npm --prefix papers/der/web/enhanced run test:browser`：退出 0，2417 项通过。覆盖原切片、三个旧原型、生命周期连续中间态、数学、键盘、Reference、reduced motion、两档桌面与既有短窗口专项，实际生产 `/der-review/` 资源无错误；SUBPATH_ASSETS=PASS。 |
+| 起点与回退 | `DER_BROWSER_FOCUS_ONLY=1 DER_REVIEW_DIR=<repo>/.visual-qa/der-s2-r2/navigation npm --prefix papers/der/web/enhanced run test:browser`：退出 0，291 项通过；新增真实 UI 断言覆盖第一阶段运行时回退、阶段起点暂停、7.2s→0.0s、运行/中途暂停先回本阶段、再回上阶段、下一步、重新播放和菜单。 |
+| 当前评审页 | 1440×900 / 1920×1080 / 1646×802 真实 Edge 检查主体与主线公式无溢出、控件与讲解同屏、浅橙配色、全部九个入口、7.2s 暂停回到 0.0s 暂停、外层高亮同步，以及 DeepSeek 卡宽 112（其余 100），无页面错误。代表截图已实看。 |
+| 连续草案 | 最终紧凑布局下真实 rAF（无虚拟时钟）完整播放：1440 / 1920 的 KL 23684 / 23992ms，Logit 15558 / 15523ms；350 次实际 DOM 采样保持固定参照、合法 q 与损失同源，共同平移时概率 KL 始终为 0，无页面错误；关键中间帧已实看。 |
+| 当前官方检查器 | fetch 后官方 `upstream/main=c096ab528186f754ca3f8680ace8b12f6d1cf341`，相邻检出 `HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c` 未切换/覆盖；syntax 本地/官方 blob 均 `2bcfa6f815054ee498574c51cef05f0c315b4298`。直接执行 `node ../PaperSkill/paper-skill/scripts/syntax-check.js <absolute-publish-source> --require-parser`，39 文件、TypeScript parser、退出 0，UPSTREAM_SYNTAX=PASS。output 本地 `1a58ca06bd9fa47b6730904f1622189011cc32fe` 与官方 `9ec76b6974f262fca7b9611c4a485dd2275fe76c` 不同，UPSTREAM_OUTPUT=NOT_RUN。 |
+
+最新必要截图、数值检查与导航证据在本轮自有 `.visual-qa/der-s2-r2/final-review/`、`navigation/`，最终连续播放草案在其 `playback/`；这些是本地忽略的审核证据，不等同于人工审美通过。本轮 `browser/`、`source-regression/` 的中间临时截图已核实绝对路径和归属后精确清理。FULLSCREEN_LAYOUT=PASS，FULLSCREEN_REAL=NOT_RUN（未操作 F11），HUMAN_ACCEPTANCE=PENDING。S0/S1 获认可基线、用户原图、未知历史 QA 目录和预览服务未清理。
+
 
 - Design confirmation: CONFIRMED（2026-10-27）。用户选择“采用推荐方向”和“采用 S1–S3（推荐）”；确认 S3 两段计算、S4 选留/训练分段、S7 独立工作台及展开区可复算小模型，首切片为 S1–S3 / I01–I05。
 - Rendered-page acceptance: REVISE / W7 PENDING。生命周期专注版单项受保护；KL / Logit / 冻结与正式主线尚未获本轮认可。
