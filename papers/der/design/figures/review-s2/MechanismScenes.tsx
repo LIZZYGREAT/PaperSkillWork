@@ -50,7 +50,7 @@ function StageNarration({ timeline, frames, notes }: { timeline: SceneTimeline; 
 
 /** A value copy travels between measured anchors. The original stays visible.
  * Geometry only: ResizeObserver never owns playback, numbers, or animation time. */
-function ResultTransfer({ from, to, progress, label, children, reduced }: { from: string; to: string; progress: number; label: string; children: React.ReactNode; reduced: boolean }) {
+function ResultTransfer({ from, to, progress, label, children, reduced, tone }: { from: string; to: string; progress: number; label: string; children: React.ReactNode; reduced: boolean; tone?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [points, setPoints] = useState<number[] | null>(null);
   useLayoutEffect(() => {
@@ -64,7 +64,7 @@ function ResultTransfer({ from, to, progress, label, children, reduced }: { from
     return () => observer.disconnect();
   }, [from, to]);
   const p = windowAt(progress, .72, .96), active = !reduced && progress > .72 && progress < .98 && points;
-  return <span ref={ref} className="result-transfer" data-transfer={label} aria-hidden="true" style={{ opacity: active ? Math.min(windowAt(progress, .72, .76), 1 - windowAt(progress, .94, .98)) : 0,
+  return <span ref={ref} className={`result-transfer${tone === undefined ? "" : ` tone-${tone}`}`} data-transfer={label} aria-hidden="true" style={{ opacity: active ? Math.min(windowAt(progress, .72, .76), 1 - windowAt(progress, .94, .98)) : 0,
     left: points ? mix(points[0], points[2], p) : 0, top: points ? mix(points[1], points[3], p) - Math.sin(p * Math.PI) * 14 : 0 }}>{children}</span>;
 }
 
@@ -102,13 +102,13 @@ function KLLane({ k, result, progress, active }: { k: number; result: ReturnType
       <div style={{ opacity: log }}><span>① 比值 → 自然对数</span><math display="block"><mi mathvariant="normal">ln</mi><mfrac><mn>{fmt(p, 2)}</mn><mn>{fmt(q, 2)}</mn></mfrac><mo>=</mo><mn>{signed(Math.log(p / q))}</mn></math></div>
       <div style={{ opacity: weight }}><span>② 乘固定旧权重</span><math display="block"><mn>{fmt(p, 2)}</mn><mo>×</mo><mo>(</mo><mn>{signed(Math.log(p / q))}</mn><mo>)</mo></math></div>
     </div>
-    <div className={`contribution-answer ${value < -1e-12 ? 'is-negative' : ''}`} style={{ opacity: answer }}><span>带符号贡献</span><strong data-origin-kl={k} data-focused-contribution={value}>{signed(value)}</strong></div>
+    <div className="contribution-answer" style={{ opacity: answer }}><span>带符号贡献</span><strong data-origin-kl={k} data-focused-contribution={value}>{signed(value)}</strong></div>
   </div>;
 }
 function KLSum({ result, clip, t }: { result: ReturnType<typeof probabilityComparison>; clip: number; t: number }) {
   const sum = phase(clip, t, 4);
   return <div className="kl-total-tray"><div className="total-label"><span className="sheet-code">同一组贡献</span><strong>单项保留正负，总和量化偏离</strong></div>
-    <div className="sum-terms">{result.terms.map((v, k) => <React.Fragment key={k}>{k > 0 && <span className="operator" style={{ opacity: sum }}>+</span>}<div data-target-kl={k} className={`contribution-cell ${v < -1e-12 ? 'is-negative' : ''}`} style={{ opacity: windowAt(local(clip, t, k + 2), .98, 1) }}><span>{PROBABILITY_CLASSES[k]}</span><strong data-term={v}>{v < 0 ? `(${signed(v)})` : signed(v)}</strong></div></React.Fragment>)}</div>
+    <div className="sum-terms">{result.terms.map((v, k) => <React.Fragment key={k}>{k > 0 && <span className="operator" style={{ opacity: sum }}>+</span>}<div data-target-kl={k} className={`contribution-cell tone-${k}`} style={{ opacity: windowAt(local(clip, t, k + 2), .98, 1) }}><span>{PROBABILITY_CLASSES[k]}</span><strong data-term={v}>{v < 0 ? `(${signed(v)})` : signed(v)}</strong></div></React.Fragment>)}</div>
     <div className="sum-answer" style={{ opacity: sum }}><span className="operator">=</span><div><span>完整 KL ≥ 0</span><strong data-kl-total={result.kl}>{fmt(result.kl)}</strong></div></div>
   </div>;
 }
@@ -131,7 +131,7 @@ export function KLBoard() {
     <div className="stage kl-stage"><div className="scene-canvas kl-composition" data-p={r.p.join(',')} data-q={r.q.join(',')} data-loss={r.kl}>
       <div className="probability-pair"><DistributionSheet values={r.p} emphasis={emphasis} /><DistributionSheet values={r.q} current emphasis={emphasis} /><p className="pair-caption">Claude / GPT 两类合成例 · 同色签对应同一类别<br />每格为总面积的 1%；分界可连续经过格子。</p></div>
       <article className="calculation-surface"><div className="calculation-intro"><h3>取值 → 对数比 → 旧概率加权</h3><p>色签对应左侧来源；计算结果保留到下一类。</p></div>{[0, 1].map(k => <KLLane key={k} k={k} result={r} progress={local(clip, t, k + 2)} active={clip === k + 2} />)}</article>
-    </div><KLSum result={r} clip={clip} t={t} />{[0, 1].map(k => <ResultTransfer key={k} from={`[data-origin-kl="${k}"]`} to={`[data-target-kl="${k}"]`} progress={local(clip, t, k + 2)} label={PROBABILITY_CLASSES[k]} reduced={timeline.reducedMotion}><span>{PROBABILITY_CLASSES[k]}</span><b>{signed(r.terms[k])}</b></ResultTransfer>)}</div>
+    </div><KLSum result={r} clip={clip} t={t} />{[0, 1].map(k => <ResultTransfer key={k} from={`[data-origin-kl="${k}"]`} to={`[data-target-kl="${k}"]`} progress={local(clip, t, k + 2)} label={PROBABILITY_CLASSES[k]} tone={k} reduced={timeline.reducedMotion}><span>{PROBABILITY_CLASSES[k]}</span><b>{signed(r.terms[k])}</b></ResultTransfer>)}</div>
     <div className="mainline-math"><div className="definition-block" data-formula-focus={clip === 2 || clip === 3 ? PROBABILITY_CLASSES[clip - 2] : 'sum'}><KLDefinition identified={false} /><p>p：固定旧概率；q：当前概率；k：同一类别；C=2。此处 log 为自然对数。</p></div><div className="short-derivation"><math display="block"><msub><mi>D</mi><mtext>KL</mtext></msub><mo>=</mo><mi>H</mi><mo>(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo>)</mo><mo>−</mo><mi>H</mi><mo>(</mo><mi>p</mi><mo>)</mo></math><p>{fmt(r.crossEntropy)} − {fmt(r.entropy)} = {fmt(r.kl)}；固定 p 即固定 H(p)。</p></div></div>
     <StageNarration timeline={timeline} frames={KL_FRAMES} notes={notes} />
     <details className="background-note"><summary>为什么负贡献不会破坏整体非负？</summary><p>对每个正数 u，−ln u ≥ 1−u。令 u=qₖ/pₖ，再按 pₖ 加权求和：KL ≥ Σₖ(pₖ−qₖ)=0。只有所有 qₖ/pₖ=1 时取等号。单项可以为负，不能用单项判断整体偏离；交换 p 与 q 一般也不同。</p><KLDecomposition identified={false} /></details>
@@ -140,11 +140,11 @@ export function KLBoard() {
 
 function ScoreTrack({ z, a, reveal }: { z: number; a: number; reveal: number }) {
   const x = (v: number) => 30 + v * 84, delta = a - z;
-  return <svg className="score-track" viewBox="0 0 312 154" role="img" aria-label={`共同刻度 0 至 3，固定 z ${fmt(z, 0)}，当前 a ${fmt(a, 2)}`} data-history-position={z} data-current-position={a}>
-    <line x1="30" x2="282" y1="126" y2="126" className="track-axis" />{[0, 1, 2, 3].map(n => <g key={n}><line x1={x(n)} x2={x(n)} y1="121" y2="130" className="track-axis" /><text x={x(n)} y="149" textAnchor="middle">{n}</text></g>)}
-    <line x1={x(z)} x2={x(z)} y1="43" y2="119" className="history-guide" /><text x={x(z)} y="26" textAnchor="middle">z = {fmt(z, 0)}</text><rect data-history-marker x={x(z) - 7} y="41" width="14" height="14" rx="2" className="history-point" />
-    <g style={{ opacity: reveal }}><rect data-score-gap x={Math.min(x(z), x(a))} y="58" width={Math.abs(delta) * 84} height="8" rx="3" className="gap-band" /><path d={`M${x(a)} 62l${-Math.sign(delta) * 7} -5v10Z`} className="gap-tip" opacity={Math.abs(delta) > .03 ? 1 : 0} /></g>
-    <circle data-current-marker cx={x(a)} cy="78" r="7" className="current-point" /><text x={x(a)} y="104" textAnchor="middle" className="a-label">a = {fmt(a, 1)}</text>
+  return <svg className="score-track" viewBox="0 0 312 128" role="img" aria-label={`共同刻度 0 至 3，固定 z ${fmt(z, 0)}，当前 a ${fmt(a, 2)}`} data-history-position={z} data-current-position={a}>
+    <line x1="30" x2="282" y1="108" y2="108" className="track-axis" />{[0, 1, 2, 3].map(n => <g key={n}><line x1={x(n)} x2={x(n)} y1="103" y2="112" className="track-axis" /><text x={x(n)} y="127" textAnchor="middle">{n}</text></g>)}
+    <line x1={x(z)} x2={x(z)} y1="33" y2="101" className="history-guide" /><text x={x(z)} y="20" textAnchor="middle">z = {fmt(z, 0)}</text><rect data-history-marker x={x(z) - 7} y="31" width="14" height="14" rx="2" className="history-point" />
+    <g style={{ opacity: reveal }}><rect data-score-gap x={Math.min(x(z), x(a))} y="49" width={Math.abs(delta) * 84} height="8" rx="3" className="gap-band" /><path d={`M${x(a)} 53l${-Math.sign(delta) * 7} -5v10Z`} className="gap-tip" opacity={Math.abs(delta) > .03 ? 1 : 0} /></g>
+    <circle data-current-marker cx={x(a)} cy="65" r="7" className="current-point" /><text x={x(a)} y="88" textAnchor="middle" className="a-label">a = {fmt(a, 1)}</text>
   </svg>;
 }
 function SquareReceipt({ delta, value, reveal, k }: { delta: number; value: number; reveal: number; k: number }) {
@@ -172,7 +172,7 @@ export function ScoreBoard() {
   const notes = [
     '三类共用 0 至 3 的分数刻度。空心方标 z 固定，实心圆标 a 从相同位置开始；下方是同一组分数的概率投影。',
     selected ? '三个当前圆标同步向右移动，旧方标不动。下方 p/q 全程重合：共同平移改变 logits，却不改变 softmax 概率。' : 'Claude 的圆标向左，GPT 向右，DeepSeek 留在原处。下方概率由同一组当前分数实时计算。',
-    '逐类把差距展开成面积：−1 与 +1 都形成单位正方形；零差距没有面积。先相减再平方，正负偏离不会抵消。',
+    selected ? '三个差值都为 +1，各自展开成相同的单位正方形。概率投影保持重合，分数空间却累积了三份平方偏离。' : '逐类把差距展开成面积：−1 与 +1 都形成单位正方形；零差距没有面积。先相减再平方，正负偏离不会抵消。',
     `三项带着类别身份汇入一次求和：${r.squares.map(v => fmt(v, 0)).join('+')}=${fmt(r.squaredDistance, 0)}。${selected ? '概率 KL=0，分数平方距离=3，两个目标约束不同空间。' : '历史 z 始终固定；合成插值只用于观察比较，不代表真实 SGD。'}`,
   ];
   return <section data-design="logits" data-clip={clip} data-progress={t} data-status={timeline.state.status}>

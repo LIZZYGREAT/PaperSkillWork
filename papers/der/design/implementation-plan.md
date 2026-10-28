@@ -231,7 +231,7 @@ D1 默认完整播放一次并停在终态，提供暂停/继续、重播、上�
 
 复用核对：已读 Kit Registry、animation-timeline / visual-parts Recipe 与当前 `useAnimationTimeline`、`useSceneTimeline`、MathNotation 源码。直接复用既有时钟、减少动态、MathML、像素身份与 math-model；ResponseMeter 的单值条不承担双标记/差距折面积，因此核心轨道和概率聚焦在评审板局部创作，无新增 Kit 副本、共享 Hook 改动或计算引擎。只测两个指定桌面布局，覆盖初态、两种中间态、跨段交接、终态、切换案例、暂停/续播、前后步和 reduced motion；生命周期运行原有专注回归。评审板独立构建与验证，不以正式 build 证明设计板可用。真实 F11 未执行时单独记 NOT_RUN。
 
-本轮设计取舍：保留暖白、浅橙/浅绿与三类像素身份，负贡献独立用紫色和负号编码；概率改为连续水平分界，方格仅作面积尺度。两条类别计算通道先后展开并保留结果，减少跨阶段换卡；数值副本沿实测锚点进入下方，同类接收位置尽量直接位于来源下方。三卡共享 0–3 刻度，差距逐类展开成平方面积；下方共享 0–1 的概率刻度始终可见。去除默认秒数/设计者说明，保留必要背景折叠解释；播放控件在画布上方，核心标签至少 12px，允许纵向滚动，覆盖历史“一屏压缩”约定。实看发现的轨道重复标签和结果副本/接收值重字已修复，后者新增逐帧断言；不以自动断言代替人的教学判断。
+本轮设计取舍：保留暖白、浅橙/浅绿与三类像素身份，贡献条、移动副本和汇总项按类别统一为 Claude 浅橙 / GPT 浅绿，正负用符号及括号区分；概率改为连续水平分界，方格仅作面积尺度。两条类别计算通道先后展开并保留结果，减少跨阶段换卡；数值副本沿实测锚点进入下方，同类接收位置尽量直接位于来源下方。三卡共享 0–3 刻度，差距逐类展开成平方面积；下方共享 0–1 的概率刻度始终可见。去除默认秒数/设计者说明，保留必要背景折叠解释；播放控件在画布上方，核心标签至少 12px，允许纵向滚动，覆盖历史“一屏压缩”约定。实看发现的轨道重复标签和结果副本/接收值重字已修复，后者新增逐帧断言；不以自动断言代替人的教学判断。
 
 | 核验面 | 本轮实际命令与结果（仓库根目录） |
 | --- | --- |
@@ -243,6 +243,10 @@ D1 默认完整播放一次并停在终态，提供暂停/继续、重播、上�
 | 正式发布范围 / 未执行项 | `npm --prefix papers/der/web/enhanced run build`：SOURCE_BUILD=PASS，66 modules，`index-DbP7vu1u.js` / `index-PCyuSUv3.css`，退出 0。UPSTREAM_SYNTAX / UPSTREAM_OUTPUT / SUBPATH_ASSETS=NOT_RUN：本轮只精修独立评审板，未整合 `/`，未运行当前上游检查器或重新验证正式子路径，不沿用历史 PASS 冒充本轮。FULLSCREEN_REAL=NOT_RUN（未操作真实 F11）；正式整合、W7 人工结论与 W8 均 PENDING。 |
 
 最终证据仅保留 `.visual-qa/der-s2-r3/review/` 的三段 WebM、同名 playback JSON、最终 report.json、两档代表性中间/结果 PNG 与少量实播帧，及 `lifecycle/` 中基线回归截图和 pixel-comparison.json；均为本地忽略产物。共享 runner 两个确切 run 目录清理均须返回 `CLEANED` 并确认不存在；不清理旧基线或用户 5188/5192 服务。可复跑测试、tsconfig 和 Visual QA 配置纳入版本控制。
+
+**2026-10-29 截图反馈修订：** Claude 浅橙 `#f2ddc9`（深橙文字）、GPT 浅绿 `#dcebdc`（深绿文字）贯穿源贡献、运动副本和汇总项。Logits 按“画面偏空”反馈收紧版心至 1320px、卡片内边距和卡间距，轨道改为 312×128 的局部构图，保持字号；平方回执和汇总预留高度相应收紧，概率投影靠近分数空间，保留共同刻度、方/圆身份与同一时钟。共同平移阶段的说明同步明确三项均为 +1。本轮仍属 S2 局部精修，W7 人工复评 PENDING。
+
+类型检查、独立 build（35 modules，`index-gOK9aWCw.js` / `index-BCF11du7.css`）与 `git diff --check` PASS。`DER_S2_OUTPUT=.visual-qa/der-s2-density/review node papers/der/design/figures/review-s2/browser.test.mjs`：两档桌面最终 1694 项断言 PASS，包含全部案例、同源数据/数学、暂停/回退/阶段跳转、reduced motion、轨道标签不相交与副本/接收值交接。未改生命周期或正式发布源码。定向共享 QA 的 `.visual-qa/der-s2-color-alignment/config.json`（4 状态）和 `.visual-qa/der-s2-density/config.json`（8 状态）均 PASS；贡献条/副本/汇总的背景和文字实际计算样式一致，两档截图已实看，无新增裁切/重叠。报告 `.visual-qa/run-2026-10-28T16-33-39-174Z/report.md`、`.visual-qa/run-2026-10-28T16-42-25-936Z/report.md` 在实看后按精确路径清理；代表截图保留 `.visual-qa/der-s2-density/review/`。原 R3 录像为本次密度/配色调整前的历史证据，本轮未重录；真实 F11 NOT_RUN。
 
 **本轮交接：** [KL](http://127.0.0.1:5192/?scene=kl) / [Logit Matching](http://127.0.0.1:5192/?scene=logits)，选择案例后点“重播整段”。已有 5192 服务保留；重开命令为 `node papers/der/web/enhanced/node_modules/vite/bin/vite.js --config papers/der/design/figures/review-s2/vite.config.mjs --configLoader runner`。本轮完成任务文档“提交 1”的精修，停在两场景用户复评；确认后才迁入真实发布源码、收敛旧原型并提交 W7 整体再审，不预签 W7、不提前进入 W8。
 
