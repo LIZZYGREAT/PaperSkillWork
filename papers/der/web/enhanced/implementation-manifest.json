@@ -1,17 +1,56 @@
 {
   "implemented_core": {
-    "I01": {"stage": "S1", "component": "der-replay-entry", "status": "complete"},
-    "I02": {"stage": "S2", "component": "der-replay-entry", "status": "complete"},
-    "I03": {"stage": "S3", "component": "der-probability-constraint", "status": "complete"},
-    "I04": {"stage": "S3", "component": "der-logit-matching", "status": "complete"},
-    "I05": {"stage": "S3", "component": "der-memory-snapshot", "status": "complete"}
+    "I01": {
+      "stage": "S1",
+      "component": "der-replay-entry",
+      "status": "complete"
+    },
+    "I02": {
+      "stage": "S2",
+      "component": "der-replay-entry",
+      "status": "complete"
+    },
+    "I03": {
+      "stage": "S3",
+      "component": "der-probability-constraint",
+      "status": "complete"
+    },
+    "I04": {
+      "stage": "S3",
+      "component": "der-logit-matching",
+      "status": "complete"
+    },
+    "I05": {
+      "stage": "S3",
+      "component": "der-memory-snapshot",
+      "status": "complete"
+    },
+    "I06": {
+      "stage": "S4",
+      "component": "der-reservoir",
+      "status": "complete"
+    }
   },
   "supporting": {
-    "I12": {"placement": "compact-inline"},
-    "I13": {"placement": "compact-inline"},
-    "I14": {"placement": "expandable"}
+    "I12": {
+      "placement": "compact-inline"
+    },
+    "I13": {
+      "placement": "compact-inline"
+    },
+    "I14": {
+      "placement": "expandable"
+    },
+    "I15": {
+      "placement": "expandable"
+    },
+    "I16": {
+      "placement": "compact-inline"
+    }
   },
   "reference": {
-    "I21": {"placement": "Advanced details"}
+    "I21": {
+      "placement": "Advanced details"
+    }
   }
 }

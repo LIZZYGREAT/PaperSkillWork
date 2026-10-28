@@ -54,12 +54,12 @@ function StagePicker({ clips, value, onChange, label }: { clips: readonly Timeli
   </div>;
 }
 
-export default function SceneTransport({ timeline, clips, label, caption }: { timeline: SceneTimeline; clips: readonly TimelineClip[]; label: string; caption?: string }) {
+export default function SceneTransport({ timeline, clips, label, caption, showTiming = true }: { timeline: SceneTimeline; clips: readonly TimelineClip[]; label: string; caption?: string; showTiming?: boolean }) {
   const { state, reducedMotion, start, previous, next, canGoBack } = timeline;
   const total = clips.reduce((n, c) => n + timelineClipTotal(c), 0);
   const elapsed = clips.slice(0, state.clipIndex).reduce((n, c) => n + timelineClipTotal(c), 0) + state.elapsedMs;
   return <div className="motion-transport" role="group" aria-label={`${label}播放控制`}>
-    <div className="motion-progress"><progress max={total} value={elapsed} aria-label="整段进度" /><span data-time-readout>{(elapsed / 1000).toFixed(1)} / {(total / 1000).toFixed(1)} 秒 · {state.isHolding ? "停留观察" : state.status === "finished" ? "播放结束" : state.status === "playing" ? "播放中" : "已暂停"}</span></div>
+    <div className="motion-progress"><progress max={total} value={elapsed} aria-label="整段进度" /><span data-time-readout>{showTiming && <>{(elapsed / 1000).toFixed(1)} / {(total / 1000).toFixed(1)} 秒 · </>}{state.isHolding ? "停留观察" : state.status === "finished" ? "播放结束" : state.status === "playing" ? "播放中" : "已暂停"}</span></div>
     <div className="motion-buttons"><button data-play onClick={timeline.toggle} disabled={reducedMotion && !state.hasNext}>{reducedMotion ? "下一语义步骤" : state.status === "playing" ? "暂停" : state.status === "finished" ? "再次播放" : "播放 / 继续"}</button><button data-back disabled={!canGoBack} onClick={previous}>上一步</button><button data-next disabled={!state.hasNext} onClick={next}>下一步</button><button data-replay onClick={timeline.replay}>重播整段</button><StagePicker clips={clips} value={state.clipIndex} onChange={start} label={label} /></div>
     <p className="motion-caption">{reducedMotion ? "减少动态：显示每一阶段的完整语义，使用前后步骤阅读。" : caption ?? "选择阶段停在起点；上一步先回本阶段起点，再回上一阶段起点。"}</p>
   </div>;
