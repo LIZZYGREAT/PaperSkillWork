@@ -15,102 +15,161 @@
 .lifecycle-equation math{font:22px var(--rk-font-math);margin:0}
 .lifecycle-equation p,.lifecycle-equation span{font-size:15px;margin:0}
 .lifecycle-provenance{font-size:13px;color:var(--rk-muted);margin:14px auto 0;max-width:var(--lc-stage-width)}
-@media(max-width:900px){.lifecycle-scene{--lc-stage-width:100%}.lifecycle-scene>header h1{font-size:26px}.lifecycle-reading{grid-template-columns:1fr;gap:6px}.lifecycle-equation{flex-wrap:wrap;padding:12px 0}.lifecycle-viewport{overflow-x:auto}.lifecycle-canvas{min-width:780px}}
 
-/* ---------------------------------------------------------------- stage text */
+/* Type stays at its intended size; the network lens changes geometry, never scales text. */
 .lifecycle-canvas text{font-family:var(--rk-font-body);fill:var(--rk-ink);font-size:15px}
-.lifecycle-canvas .lc-small{font-size:12px;fill:var(--rk-muted)}
-.lifecycle-canvas .lc-object-title{font-size:15.5px;font-weight:600}
-.lifecycle-canvas .lc-model-title{font-size:15.5px;font-weight:600}
-.lifecycle-canvas .lc-col-label{font-size:11px;fill:var(--rk-muted)}
-.lifecycle-canvas .lc-theta-label{font:13px var(--rk-font-mono)}
-.lifecycle-canvas .lc-plot-title,.lifecycle-canvas .lc-compare-title{font-size:16.5px;font-weight:600}
-.lifecycle-canvas .lc-class-label{font-size:12.5px;fill:var(--rk-muted)}
-.lifecycle-canvas .lc-bar-value{font:18px var(--rk-font-mono);font-weight:600}
-.lifecycle-canvas .lc-legend-label{font-size:12px;fill:var(--rk-muted)}
-.lifecycle-canvas .lc-tick-label,.lifecycle-canvas .lc-step-label{font:10.5px var(--rk-font-mono);fill:var(--rk-muted)}
-.lifecycle-canvas .lc-frozen-title{font-size:11px;font-weight:600;fill:#55665f}
-.lifecycle-canvas .lc-frozen-note{font:9.5px var(--rk-font-mono);fill:var(--rk-muted)}
-.lifecycle-canvas .lc-frozen-class{font-size:9.5px;fill:var(--rk-muted)}
-.lifecycle-canvas .lc-frozen-value{font:15px var(--rk-font-mono);font-weight:600}
-.lifecycle-canvas .lc-band-title{font-size:15.5px;font-weight:600}
-.lifecycle-canvas .lc-slot-label{font:9.5px var(--rk-font-mono);fill:var(--rk-muted)}
-.lifecycle-canvas .lc-slot-note{font-size:9.5px;fill:var(--rk-muted)}
-.lifecycle-canvas .lc-slot-note.is-accent{fill:var(--rk-accent)}
-.lifecycle-canvas .lc-counter-label{font-size:10.5px;fill:var(--rk-muted);letter-spacing:.08em}
-.lifecycle-canvas .lc-counter{font:34px var(--rk-font-mono);font-weight:600}
-.lifecycle-canvas .lc-counter-unit{font:10.5px var(--rk-font-mono);fill:var(--rk-muted)}
-.lifecycle-canvas .lc-record-id{font:10.5px var(--rk-font-mono);fill:var(--rk-muted)}
-.lifecycle-canvas .lc-record-note{font-size:9.5px;fill:var(--rk-muted)}
-.lifecycle-canvas .lc-label-chip-title{font-size:12.5px;font-weight:600}
-.lifecycle-canvas .lc-label-chip-note{font-size:9.5px;fill:var(--rk-warn)}
-.lifecycle-canvas .lc-ce-node-title{font:14px var(--rk-font-math)}
-.lifecycle-canvas .lc-state{font-size:11.5px;fill:var(--rk-muted)}
-.lifecycle-canvas .lc-state.is-updated{fill:var(--rk-warn)}
-.lifecycle-canvas .lc-gradient-label{font-size:10.5px;font-weight:600;fill:var(--rk-warn)}
-.lifecycle-canvas .lc-diff-value{font:12px var(--rk-font-mono);font-weight:600;fill:var(--rk-warn)}
-.lifecycle-canvas .lc-square-value{font:13px var(--rk-font-mono);fill:var(--rk-muted)}
-.lifecycle-canvas .lc-ldark{font:16px var(--rk-font-math);font-weight:600}
-.lifecycle-canvas .lc-join-title{font:14.5px var(--rk-font-math);font-weight:500}
-.lifecycle-canvas .lc-join-note{font-size:9.5px;fill:var(--rk-warn)}
-.lifecycle-canvas .lc-anchor-title{font-size:11px;fill:var(--rk-muted);letter-spacing:.06em}
-.lifecycle-canvas .lc-anchor-theta{font:17px var(--rk-font-math);font-weight:600}
+.lifecycle-canvas .lc-small{font-size:11.5px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-object-title,.lifecycle-canvas .lc-model-title,.lifecycle-canvas .lc-band-title{font-size:15px;font-weight:650}
+.lifecycle-canvas .lc-col-label{font-size:10.5px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-theta-label{font:600 18px var(--rk-font-math)}
+.lifecycle-canvas .lc-plot-title,.lifecycle-canvas .lc-compare-title{font-size:17px;font-weight:650;letter-spacing:-.02em}
+.lifecycle-canvas .lc-symbol{font:16px var(--rk-font-math);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-tile-class{font:600 11px var(--rk-font-body);letter-spacing:-.025em}
+.lifecycle-canvas .lc-logit-label{font:10px var(--rk-font-mono);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-tile-value{font:600 30px var(--rk-font-mono);letter-spacing:-.06em}
+.lifecycle-canvas .lc-row-label{font-size:12px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-tile-row{font:500 21px var(--rk-font-mono);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-tile-row.is-current{fill:var(--rk-ink);font-weight:650}
+.lifecycle-canvas .lc-delta-label{font:11px var(--rk-font-math);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-tile-delta{font:600 13px var(--rk-font-mono);fill:#8a6438}
+.lifecycle-canvas .lc-contrib{font:12px var(--rk-font-math)}
+.lifecycle-canvas .lc-contrib-note{font-size:9px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-total-label{font-size:12px;font-weight:600;fill:var(--rk-accent)}
+.lifecycle-canvas .lc-ldark{font:20px var(--rk-font-math)}
+.lifecycle-canvas .lc-join-title{font:14px var(--rk-font-math)}
+.lifecycle-canvas .lc-join-note{font-size:10px;fill:#8a6438}
+.lifecycle-canvas .lc-frozen-title{font-size:10px;font-weight:600;fill:var(--rk-accent)}
+.lifecycle-canvas .lc-frozen-note{font:9px var(--rk-font-mono);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-frozen-class{font-size:9px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-frozen-value{font:600 14px var(--rk-font-mono)}
+.lifecycle-canvas .lc-slot-label{font:9px var(--rk-font-mono);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-slot-note{font-size:9px;fill:var(--rk-accent)}
+.lifecycle-canvas .lc-counter-label{font-size:10px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-counter{font:500 32px var(--rk-font-mono)}
+.lifecycle-canvas .lc-counter-unit{font:10px var(--rk-font-mono);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-record-id{font:9.5px var(--rk-font-mono);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-record-note{font-size:9px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-label-chip-title{font-size:11.5px;font-weight:600}
+.lifecycle-canvas .lc-label-chip-note{font-size:9px;fill:#8a6438}
+.lifecycle-canvas .lc-ce-node-title{font:16px var(--rk-font-math)}
+.lifecycle-canvas .lc-state{font-size:11px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-gradient-label{font-size:10px;font-weight:600;fill:#8a6438}
 
-/* ---------------------------------------------------------------- shapes */
-.lc-card-surface{fill:var(--rk-surface);stroke:#cfd9c9;stroke-width:1;filter:drop-shadow(0 2px 6px rgb(24 42 34 / 7%))}
-.lc-pixel{fill:var(--rk-accent);opacity:.92}
-.lc-crop{fill:none;stroke:var(--rk-warn);stroke-width:1.7;stroke-linecap:round;opacity:.85}
-.lc-model-card{fill:var(--rk-surface);stroke:var(--rk-line);stroke-width:1;filter:drop-shadow(0 2px 7px rgb(24 42 34 / 7%))}
-.lc-model-card.is-updated{stroke:#c9ab7e;stroke-width:1.4}
-.lc-update-ring{fill:none;stroke:var(--rk-warn);stroke-width:1.6;stroke-dasharray:6 5;opacity:.55}
-.lc-theta{fill:var(--rk-accent-soft);stroke:var(--rk-accent);stroke-width:1}
-.lc-theta.is-updated{fill:var(--rk-warn-soft);stroke:#c9ab7e}
-.lc-rule{stroke:var(--rk-line);stroke-width:1}
-.lc-edge{stroke:#9aa8a1;stroke-width:.9;opacity:.24}
-.lc-edge.is-hot{stroke:var(--rk-accent);stroke-width:1.4;opacity:.4}
-.lc-node{fill:var(--rk-surface);stroke:var(--rk-accent);stroke-width:1.4}
-.lc-node.is-lit{fill:#eef4ea;stroke-width:1.9}
-.lc-port{fill:var(--rk-surface);stroke:var(--rk-accent);stroke-width:1.6}
-.lc-port.is-update{stroke:var(--rk-warn)}
-.lc-socket{fill:var(--rk-canvas);stroke:var(--rk-accent);stroke-width:1.2}
-.lc-socket.is-docked{fill:var(--rk-accent-soft)}
-.lc-socket-slit{stroke:var(--rk-accent);stroke-width:1.6;stroke-linecap:round}
-/* Motion trail: only drawn while a view is travelling, never as a standing arrow. */
-.lc-trail{fill:none;stroke:var(--rk-accent);stroke-width:1.6;stroke-dasharray:2 7;stroke-linecap:round}
-.lc-score-tile{fill:var(--rk-surface);stroke:var(--rk-line);stroke-width:1;filter:drop-shadow(0 2px 6px rgb(24 42 34 / 6%))}
-.lc-score-tile.is-compare{rx:14}
-.lc-tile-class{font-size:12.5px;fill:var(--rk-muted)}
-.lc-tile-value{font:30px var(--rk-font-mono);font-weight:600}
-.lc-level{fill:var(--rk-surface);stroke:var(--rk-line-strong);stroke-width:1.2}
-.lc-level.is-on{fill:var(--rk-accent);stroke:var(--rk-accent)}
-.lc-tile-row{font:22px var(--rk-font-mono);font-weight:600;fill:var(--rk-muted)}
-.lc-tile-row.is-current{fill:var(--rk-ink)}
-.lc-tile-delta{font:14px var(--rk-font-mono);font-weight:600;fill:var(--rk-warn)}
-.lc-tile-delta.is-zero{font-size:10.5px;fill:var(--rk-muted)}
-.lc-contrib{font:13px var(--rk-font-mono);fill:var(--rk-muted)}
-.lc-bead{fill:var(--rk-accent)}
-.lc-bead-halo{fill:var(--rk-accent);opacity:.08}
-.lc-step-chip{fill:var(--rk-surface-soft);stroke:var(--rk-line);stroke-width:1}
-.lc-history-mark{fill:var(--rk-surface);stroke:var(--rk-accent);stroke-width:2}
-.lc-copy-mark{fill:var(--rk-surface);stroke:var(--rk-accent);stroke-width:2}
-.lc-frozen-block{fill:var(--rk-surface);stroke:#93a49b;stroke-width:1.3;stroke-dasharray:5 4}
-.lc-frozen-hatch{fill:url(#lc-hatch)}
-.lc-band{fill:var(--rk-surface);stroke:var(--rk-line);stroke-width:1;filter:drop-shadow(0 2px 7px rgb(24 42 34 / 7%))}
-.lc-slot{fill:#eff2eb;stroke:#cfd9c9;stroke-width:1}
-.lc-slot.is-filled{stroke:var(--rk-accent)}
-.lc-record-card{fill:var(--rk-surface);stroke:#cfd9c9;stroke-width:1;filter:drop-shadow(0 2px 6px rgb(24 42 34 / 7%))}
-.lc-thumb{fill:var(--rk-surface);stroke:#cfd9c9;stroke-width:1}
-.lc-label-chip{fill:var(--rk-warn-soft);stroke:#c9ab7e;stroke-width:1;stroke-dasharray:5 3}
-.lc-ce-node{fill:var(--rk-surface);stroke:#c9ab7e;stroke-width:1.2}
-.lc-state-pill{fill:var(--rk-surface);stroke:var(--rk-line);stroke-width:1;stroke-dasharray:4 3}
-.lc-state-pill.is-updated{fill:var(--rk-warn-soft);stroke:#c9ab7e;stroke-dasharray:none}
-.lc-gradient{fill:none;stroke:var(--rk-warn);stroke-width:1.8;stroke-dasharray:6 4}
-.lc-diff-bracket{fill:none;stroke:var(--rk-warn);stroke-width:1.5;stroke-linecap:round}
-.lc-square{fill:var(--rk-accent-soft);stroke:var(--rk-accent);stroke-width:1.4}
-.lc-zero-square{stroke:var(--rk-accent);stroke-width:2.4;stroke-linecap:round}
-.lc-join-chip{fill:var(--rk-warn-soft);stroke:#c9ab7e;stroke-width:1.2}
-.lc-anchor-ring{fill:none;stroke:#c9ab7e;stroke-width:1.3;stroke-dasharray:6 5;opacity:.55}
+/* Quiet surfaces, crisp strokes and brand colour only where identity matters. */
+.lc-card-surface{fill:#fff;stroke:#d7ded5;stroke-width:1;filter:drop-shadow(0 3px 5px rgb(27 44 35 / 4%))}
+.lc-model-pixel.lc-brand-0{fill:#c37a59}
+.lc-model-pixel.lc-brand-1{fill:#377b65}
+.lc-model-pixel.lc-brand-2{fill:#577bd0}
+.lc-crop{fill:none;stroke:#a67840;stroke-width:1.2;stroke-linecap:round}
+.lc-model-card{fill:#fff;stroke:#d7e0d9;stroke-width:1;filter:drop-shadow(0 4px 7px rgb(27 44 35 / 4%))}
+.lc-model-card.is-updated{stroke:#c9aa7c}
+.lc-update-ring{fill:none;stroke:#b69263;stroke-width:1;stroke-dasharray:4 5;opacity:.5}
+.lc-theta{fill:#edf3ed;stroke:#93b09d;stroke-width:.8}
+.lc-theta.is-updated{fill:#f8efdf;stroke:#c9aa7c}
+.lc-rule{stroke:#dfe5df;stroke-width:.8}
+.lc-edge{stroke:#9baea3;stroke-width:.8;opacity:.24}
+.lc-edge.is-hot{stroke:var(--rk-accent);stroke-width:1.3;opacity:.5}
+.lc-node{fill:#fff;stroke:#39775c;stroke-width:1.3}
+.lc-node.is-lit{fill:#e2eee4;stroke-width:1.8}
+.lc-update-port{fill:#fff;stroke:#a67840;stroke-width:1.3}
+.lc-socket{fill:#eef1eb;stroke:#d7dfd5;stroke-width:1}
+.lc-socket-connector{stroke:#9bb39f;stroke-width:1.4}
+.lc-socket-arrow{fill:none;stroke:#9bb39f;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.lc-port{fill:#fff;stroke:#9bb39f;stroke-width:1.2}
+.lc-port.is-docked{fill:#39775c;stroke:#39775c}
+.lc-trail{fill:none;stroke:#83a08e;stroke-width:1.5;stroke-dasharray:2 5;stroke-linecap:round}
+.lc-score-tile{fill:#fff;stroke:#d7e0d9;stroke-width:1;filter:drop-shadow(0 3px 5px rgb(27 44 35 / 4%))}
+.lc-level{fill:#e9eee8}
+.lc-level.is-on{fill:#4b8167}
+.lc-bead{fill:#39775c}
+.lc-history-mark,.lc-copy-mark{fill:#fff;stroke:#39775c;stroke-width:1.5}
+.lc-frozen-block{fill:#fbfcfa;stroke:#a5baab;stroke-width:1;stroke-dasharray:4 3}
+.lc-frozen-divider{stroke:#e1e7df;stroke-width:.8}
+.lc-band{fill:#fff;stroke:#d7e0d9;stroke-width:1;filter:drop-shadow(0 3px 6px rgb(27 44 35 / 3%))}
+.lc-slot{fill:#f2f4ef;stroke:#dce3d7;stroke-width:1}
+.lc-slot.is-filled{fill:#eef3ed;stroke:#8bab94}
+.lc-record-card{fill:#fff;stroke:#d7dfd2;stroke-width:.8}
+.lc-label-chip{fill:#f8f2e7;stroke:#d5bc96;stroke-width:.8}
+.lc-ce-node{fill:#fffdf9;stroke:#d5bc96;stroke-width:.9}
+.lc-status-dot{fill:#bdc8bd}
+.lc-status-dot.is-updated{fill:#b28a56}
+.lc-gradient{fill:none;stroke:#a67840;stroke-width:1.3;stroke-dasharray:4 4;stroke-linecap:round;stroke-linejoin:round}
+.lc-delta-band{fill:#f5f6f1}
+.lc-total-band{fill:#eaf1e8;stroke:#ccdbca;stroke-width:.8}
+.lc-join-chip{fill:#f8f1e5;stroke:#d5bc96;stroke-width:.8}
+@media(max-width:900px){.lifecycle-scene{--lc-stage-width:100%}.lifecycle-scene>header h1{font-size:26px}.lifecycle-reading{grid-template-columns:1fr;gap:6px}.lifecycle-equation{flex-wrap:wrap;padding:12px 0}.lifecycle-viewport{overflow-x:auto}.lifecycle-canvas{min-width:780px}}
+@media(prefers-reduced-motion:reduce){.lifecycle-canvas *{transition:none}}
+.lc-signal{stroke:#528c6b;stroke-width:1.5;fill:none}
+.lc-signal.is-backward{stroke:#b18a53}
+.lc-signal-dot{fill:#528c6b}.lc-signal-dot.is-backward{fill:#b18a53}
+.lc-update-progress{stroke:#b18a53;stroke-width:2;stroke-linecap:round}
+.lc-candidate-card{fill:#fcfdf9;stroke:#a8bdab;stroke-width:1;stroke-dasharray:4 3}
+.lifecycle-canvas .lc-candidate-title{font-size:10px;fill:var(--rk-accent);font-weight:600}
+.lifecycle-canvas .lc-candidate-vector{font:13px var(--rk-font-math);fill:var(--rk-ink)}
+.lifecycle-canvas .lc-output-purpose{font:10.5px var(--rk-font-math);fill:var(--rk-muted)}
+.lifecycle-canvas .lc-symbol-value{font:27px var(--rk-font-math)}
+.lc-augmentation-panel{fill:#f0f4ed;stroke:#d8e2d4;stroke-width:1}
+.lc-augmentation-placeholder{fill:none;stroke:#cbd9c5;stroke-dasharray:3 4;stroke-width:.8}
+.lifecycle-canvas .lc-augmentation-title{font-size:10px;font-weight:600;fill:var(--rk-accent)}
+.lifecycle-canvas .lc-augmentation-caption{font-size:9.5px;fill:var(--rk-muted)}
+.lifecycle-canvas .lc-sum-term{font:600 20px var(--rk-font-math);fill:var(--rk-accent)}
+.lifecycle-canvas .lc-sum-term.is-total{fill:var(--rk-ink)}
+.lc-thumb-morph{fill:#fff;stroke:#d7ded5;stroke-width:.8}
+.lifecycle-context .lifecycle-reading{min-height:0;padding:10px 0 6px}
+.lifecycle-context .lifecycle-equation{min-height:60px}
+.lifecycle-context .lifecycle-provenance{margin:8px auto 12px}
 
-@media (prefers-reduced-motion: reduce) {
-  .lifecycle-canvas *{transition:none}
-}
+.lifecycle-canvas .lc-contrib-result{font:600 12px var(--rk-font-math);fill:var(--rk-accent)}
+
+/* Focus player: a readable rail beside a full-height, aspect-preserving stage. */
+.lifecycle-shell,.lifecycle-sidebar{display:contents}
+.lifecycle-focus-heading{display:none}
+.lifecycle-scene>header{position:relative;padding-right:140px}
+.lifecycle-focus-button,.lifecycle-exit-focus{font:13px var(--rk-font-body);color:var(--rk-accent);background:#fff;border:1px solid #cbd8cd;border-radius:8px;padding:8px 12px;cursor:pointer}
+.lifecycle-focus-button{position:absolute;right:0;top:28px}
+.lifecycle-scene.is-focused{position:fixed;inset:0;z-index:1000;margin:0!important;padding:16px;max-width:none;background:var(--rk-canvas);overflow:hidden}
+.lifecycle-scene.is-focused>header{display:none}
+.lifecycle-scene.is-focused .lifecycle-shell{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;width:100%;height:100%;min-height:0}
+.lifecycle-scene.is-focused .lifecycle-sidebar{display:flex;flex-direction:column;gap:0;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:16px;background:#fff;border:1px solid #dce4d9;border-radius:14px}
+.lifecycle-scene.is-focused .lifecycle-focus-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.lifecycle-focus-heading>div>span{display:block;font:10px var(--rk-font-mono);letter-spacing:.1em;color:var(--rk-accent);margin-bottom:3px}
+.lifecycle-scene.is-focused .lifecycle-focus-heading h2{font:600 17px var(--rk-font-body);margin:0;line-height:1.4}
+.lifecycle-exit-focus{font-size:12px;padding:6px 8px;white-space:nowrap}
+.lifecycle-scene.is-focused .motion-transport{padding:0 0 12px;max-width:none}
+.lifecycle-scene.is-focused .motion-progress{flex-direction:column;align-items:stretch;gap:5px;margin:0 0 9px;font-size:11px}
+.lifecycle-scene.is-focused .motion-progress span{min-width:0;white-space:nowrap}
+.lifecycle-scene.is-focused .motion-progress progress{width:100%;min-width:0;flex:none;height:4px}
+.lifecycle-scene.is-focused .motion-buttons{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"play replay" "back next" "stages stages";gap:6px}
+.lifecycle-scene.is-focused .motion-buttons>button{min-width:0;margin:0;padding:7px 6px;font-size:13px;border-radius:7px}
+.lifecycle-scene.is-focused [data-play]{grid-area:play}.lifecycle-scene.is-focused [data-replay]{grid-area:replay}.lifecycle-scene.is-focused [data-back]{grid-area:back}.lifecycle-scene.is-focused [data-next]{grid-area:next}
+.lifecycle-scene.is-focused .motion-stage-picker{grid-area:stages;min-width:0;width:100%;margin:3px 0 0}
+.lifecycle-scene.is-focused .motion-stage-label{display:none}
+.lifecycle-scene.is-focused .motion-stage-trigger{width:100%;min-width:0;padding:8px 9px;gap:7px;font-size:12px}
+.lifecycle-scene.is-focused .motion-stage-menu{width:100%;max-height:min(410px,calc(100dvh - 280px))}
+.lifecycle-scene.is-focused .motion-stage-menu button{font-size:12px;gap:8px;padding:7px}
+.lifecycle-scene.is-focused .motion-caption{display:none}
+.lifecycle-scene.is-focused .lifecycle-reading{display:block;min-height:0;padding:12px 0 10px;border-top:1px solid var(--rk-line)}
+.lifecycle-scene.is-focused .lifecycle-reading strong{display:block;font-size:16px;line-height:1.5;margin-bottom:7px}
+.lifecycle-scene.is-focused .lifecycle-reading p{font-size:14px;line-height:1.75}
+.lifecycle-scene.is-focused .lifecycle-equation{display:block;min-height:0;padding:10px 0}
+.lifecycle-scene.is-focused .lifecycle-equation math{font-size:18px;max-width:100%;margin:0 0 7px}
+.lifecycle-scene.is-focused .lifecycle-equation p{font-size:13px;line-height:1.65}
+.lifecycle-scene.is-focused .lifecycle-equation span{display:block;font-size:12px;line-height:1.8}
+.lifecycle-example-note{margin-top:12px;font-size:12px;color:var(--rk-muted)}
+.lifecycle-example-note summary{cursor:pointer;color:var(--rk-accent);line-height:1.6}
+.lifecycle-scene.is-focused .lifecycle-provenance{font-size:12px;line-height:1.7;margin:10px 0 0}
+.lifecycle-scene.is-focused .lifecycle-viewport{width:100%;height:100%;max-width:none;min-width:0;min-height:0;overflow:hidden;display:grid;place-items:center}
+.lifecycle-scene.is-focused .lifecycle-canvas{width:100%;height:100%;min-width:0;max-height:100%;overflow:visible}
+@media(max-height:760px) and (min-width:901px){.lifecycle-scene.is-focused{padding:12px}.lifecycle-scene.is-focused .lifecycle-shell{grid-template-columns:270px minmax(0,1fr);gap:12px}.lifecycle-scene.is-focused .lifecycle-sidebar{padding:12px}.lifecycle-scene.is-focused .lifecycle-focus-heading{margin-bottom:10px}.lifecycle-scene.is-focused .lifecycle-reading{padding-block:9px}.lifecycle-scene.is-focused .lifecycle-reading p{line-height:1.65}}
+@media(max-width:900px){.lifecycle-scene>header{padding-right:0}.lifecycle-focus-button{position:static;margin-top:8px}.lifecycle-scene.is-focused .lifecycle-shell{grid-template-columns:230px minmax(560px,1fr);overflow-x:auto}.lifecycle-scene.is-focused .lifecycle-sidebar{padding:12px}}
+
+/* Short, ordered sidebar explanations with unbroken mathematical identifiers. */
+.lc-reading-steps{margin:0;padding-left:19px}
+.lc-reading-steps>li{padding-left:3px;margin:0 0 10px}
+.lc-reading-steps>li:last-child{margin-bottom:0}
+.lc-reading-steps>li::marker{font:12px var(--rk-font-mono);color:var(--rk-accent)}
+.lifecycle-scene.is-focused .lc-reading-steps strong{display:block;font-size:14px;line-height:1.55;margin:0 0 3px}
+.lifecycle-scene.is-focused .lc-reading-steps p{margin:0;font-size:14px;line-height:1.65}
+.lc-inline-math{font:15px var(--rk-font-math);white-space:nowrap}
+.lc-inline-math sub{font-size:.76em;font-style:normal}
+.lifecycle-scene.is-focused .lifecycle-reading .lc-reading-note{font-size:13px;line-height:1.6;color:var(--rk-muted);margin:10px 0 0;padding-top:8px;border-top:1px solid #edf1eb}

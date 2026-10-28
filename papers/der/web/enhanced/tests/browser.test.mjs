@@ -5,7 +5,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import { resolve, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { reviewPrototypeChecks } from "./review-prototypes.mjs";
-import { lifecycleBrowserChecks } from "./lifecycle-browser.mjs";
+import { lifecycleBrowserChecks, lifecycleFocusBrowserChecks } from "./lifecycle-browser.mjs";
 
 // Development checks use the repository's single pinned browser toolchain.
 // None of this is imported by the tutorial runtime.
@@ -56,6 +56,12 @@ try {
       if (selector) await page.locator(selector).screenshot({ path: resolve(output, `${name}-${width}.png`), animations: "disabled" });
       else await page.screenshot({ path: resolve(output, `${name}-${width}.png`), animations: "disabled" });
     };
+    if(process.env.DER_BROWSER_FOCUS_ONLY==="1"){
+      await lifecycleFocusBrowserChecks({page,base,check,shot});
+      check(errors.length===0,"No browser errors in focused player");
+      console.log(`${width}x${height}, DPR ${deviceScaleFactor}: focus layout PASS`);
+      await context.close();continue;
+    }
     if(deviceScaleFactor!==1||process.env.DER_BROWSER_LIFECYCLE_ONLY==="1"){
       await page.clock.install();
       await lifecycleBrowserChecks({page,base,check,shot});

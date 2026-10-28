@@ -30,9 +30,9 @@
       {"selector": ".review-page .equation math", "property": "font-size", "equals": "22px"}
     ],
     "states": [
-      {"id": "lifecycle-frozen", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "2"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
-      {"id": "lifecycle-stored", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "4"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
-      {"id": "lifecycle-compared", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "6"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
+      {"id": "lifecycle-frozen", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "1"}, {"type": "click", "selector": "[data-scene=\"lifecycle\"] [data-next]"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
+      {"id": "lifecycle-stored", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "3"}, {"type": "click", "selector": "[data-scene=\"lifecycle\"] [data-next]"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
+      {"id": "lifecycle-compared", "actions": [{"type": "selectOption", "selector": "[data-scene=\"lifecycle\"] select", "value": "5"}, {"type": "click", "selector": "[data-scene=\"lifecycle\"] [data-next]"}, {"type": "scrollIntoView", "selector": "#lifecycle-player"}]},
       {"id": "kl-default", "actions": [{"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},
       {"id": "kl-negative", "actions": [{"type": "selectOption", "selector": "[data-scene=\"kl\"] select", "value": "4"}, {"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},
       {"id": "kl-sum", "actions": [{"type": "selectOption", "selector": "[data-scene=\"kl\"] select", "value": "5"}, {"type": "scrollIntoView", "selector": "[data-scene=\"kl\"] .motion-canvas"}]},
@@ -42,6 +42,77 @@
       {"id": "freeze-updated", "actions": [{"type": "selectOption", "selector": "[data-scene=\"freeze\"] select", "value": "2"}, {"type": "scrollIntoView", "selector": "[data-scene=\"freeze\"] .motion-canvas"}]},
       {"id": "freeze-candidate", "actions": [{"type": "selectOption", "selector": "[data-scene=\"freeze\"] select", "value": "3"}, {"type": "scrollIntoView", "selector": "[data-scene=\"freeze\"] .motion-canvas"}]},
       {"id": "softmax-reference", "actions": [{"type": "click", "selector": ".site-header .text-button"}, {"type": "click", "selector": "[data-reference-term=\"softmax\"]"}]}
+    ]
+  },
+  {
+    "id": "der-lifecycle-focus",
+    "path": "./?review=1&focus=lifecycle",
+    "states": [
+      {
+        "id": "focus-input",
+        "actions": [
+          {
+            "type": "selectOption",
+            "selector": "[data-scene=\"lifecycle\"] select",
+            "value": "1"
+          },
+          {
+            "type": "click",
+            "selector": "[data-scene=\"lifecycle\"] [data-back]"
+          }
+        ]
+      },
+      {
+        "id": "focus-two-forwards",
+        "actions": [
+          {
+            "type": "selectOption",
+            "selector": "[data-scene=\"lifecycle\"] select",
+            "value": "4"
+          },
+          {
+            "type": "click",
+            "selector": "[data-scene=\"lifecycle\"] [data-next]"
+          }
+        ]
+      },
+      {
+        "id": "focus-sum",
+        "actions": [
+          {
+            "type": "selectOption",
+            "selector": "[data-scene=\"lifecycle\"] select",
+            "value": "5"
+          },
+          {
+            "type": "click",
+            "selector": "[data-scene=\"lifecycle\"] [data-next]"
+          }
+        ]
+      },
+      {
+        "id": "focus-stored",
+        "actions": [
+          {
+            "type": "selectOption",
+            "selector": "[data-scene=\"lifecycle\"] select",
+            "value": "7"
+          },
+          {
+            "type": "click",
+            "selector": "[data-scene=\"lifecycle\"] [data-next]"
+          }
+        ]
+      },
+      {
+        "id": "focus-menu",
+        "actions": [
+          {
+            "type": "click",
+            "selector": "[data-scene=\"lifecycle\"] [role=\"combobox\"]"
+          }
+        ]
+      }
     ]
   }],
   "geometry": {

@@ -4,7 +4,7 @@ export async function animationBrowserChecks({ page, base, check, shot }) {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto(`${base}?review=1`, { waitUntil: "networkidle" });
   await page.clock.install();
-  await page.clock.pauseAt(Date.now());
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   const scene = id => page.locator(`[data-scene='${id}']`);
   const jump = (id, clip) => scene(id).locator("select").selectOption(String(clip));
   const replay = id => scene(id).locator("[data-replay]").click();

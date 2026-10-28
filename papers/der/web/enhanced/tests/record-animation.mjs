@@ -17,12 +17,12 @@ try{
   const height=width===1440?900:1080;
   const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,...(process.env.DER_RECORD_VIDEO?{recordVideo:{dir:output,size:{width,height}}}:{})});
   const page=await context.newPage();
-  const errors=[];page.on("pageerror",e=>errors.push(e.message));await page.goto("http://127.0.0.1:4195/?review=1");await page.evaluate(()=>document.fonts.ready);
+  const errors=[];page.on("pageerror",e=>errors.push(e.message));await page.goto(`http://127.0.0.1:4195/?review=1${process.env.DER_RECORD_FOCUS ? "&focus=lifecycle" : ""}`);await page.evaluate(()=>document.fonts.ready);
   for(const id of (process.env.DER_ANIMATION_SCENES || "kl,logits,freeze").split(",")){
    const scene=page.locator(`[data-scene='${id}']`),canvas=scene.locator(".motion-canvas, .lifecycle-canvas");
    if(id==="logits")await scene.locator("[data-case=shifted]").click();
-   if(id==="lifecycle")await scene.locator("#lifecycle-player").evaluate(el=>window.scrollTo(0,el.getBoundingClientRect().top+scrollY-100));
-   else{await canvas.scrollIntoViewIfNeeded();await page.evaluate(el=>window.scrollTo(0,el.getBoundingClientRect().top+scrollY-270),await canvas.elementHandle());}
+   if(id==="lifecycle"&&!process.env.DER_RECORD_FOCUS)await scene.locator("#lifecycle-player").evaluate(el=>window.scrollTo(0,el.getBoundingClientRect().top+scrollY-100));
+   else if(!process.env.DER_RECORD_FOCUS){await canvas.scrollIntoViewIfNeeded();await page.evaluate(el=>window.scrollTo(0,el.getBoundingClientRect().top+scrollY-270),await canvas.elementHandle());}
    await scene.locator("[data-replay]").click();
    const frames=[],start=Date.now();let n=0;const dir=resolve(output,`${id}-${width}`);await mkdir(dir,{recursive:true});
    const deadline=Math.max(30000,Number(await scene.locator("progress").getAttribute("max"))+12000);
@@ -30,14 +30,14 @@ try{
    while(true){
     const state=await scene.evaluate(el=>({clip:Number(el.dataset.clip),progress:Number(el.dataset.progress),status:el.dataset.status,time:el.querySelector('[data-time-readout]').textContent}));
     const name=`${String(n++).padStart(4,'0')}.png`;
-    if(width===widths[0]){await canvas.screenshot({path:resolve(dir,name)});frames.push({file:name,ms:Date.now()-start,...state});}
+    if(width===widths[0]){await (process.env.DER_RECORD_FOCUS ? page.screenshot({path:resolve(dir,name)}) : canvas.screenshot({path:resolve(dir,name)}));frames.push({file:name,ms:Date.now()-start,...state});}
     if(!seen.has(state.clip)&&state.progress>.4){seen.add(state.clip);await page.screenshot({path:resolve(output,`${id}-${width}-clip-${state.clip}-viewport.png`)});}
     if(state.status==="finished")break;
     if(Date.now()-start>deadline)throw new Error(`${id} failed to finish`);
     await page.waitForTimeout(width===widths[0]?130:60);
    }
    await writeFile(resolve(dir,"frames.json"),JSON.stringify(frames,null,2));
-   await scene.screenshot({path:resolve(output,`${id}-${width}-complete.png`)});
+   await (process.env.DER_RECORD_FOCUS ? page.screenshot({path:resolve(output,`${id}-${width}-complete.png`)}) : scene.screenshot({path:resolve(output,`${id}-${width}-complete.png`)}));
    report.runs.push({id,width,height,inner:await page.evaluate(()=>[innerWidth,innerHeight]),elapsed:Date.now()-start,frames:frames.length,errors});
    console.log(`REAL_PLAYBACK_PASS ${id} ${width}x${height} ${Date.now()-start}ms frames=${frames.length}`);
   }
