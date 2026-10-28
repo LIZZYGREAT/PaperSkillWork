@@ -238,7 +238,7 @@ D1 默认完整播放一次并停在终态，提供暂停/继续、重播、上�
 
 旧文本的猫/狗/狐狸仅为曾用教学名词，现行展示分别映射为 Claude/GPT/DeepSeek；下方旧构图说明和历史验收记录不能覆盖此决定。W4 因果链、W2 算法和证据事实不受影响，不改已批准研究文档或阶段状态。
 
-下一轮 S2 先交 KL、Logit、冻结聚焦入口的高保真关键帧与连续运动草案，经人工检查点 A 确认后才实施 S3；冻结优先从受保护播放器派生入口。路由收敛、Legacy 清理留到新版验收后 S4，W5–W7 规范回写留到实际验证后 S5。S1 的名称统一不是三个新场景的动画重做成果。
+S2 现已交付下方高保真设计板，等待人工检查点 A；方向确认后才实施 S3，冻结优先从受保护播放器派生入口。路由收敛、Legacy 清理留到新版验收后 S4，W5–W7 规范回写留到实际验证后 S5。S1 的名称统一不是三个新场景的动画重做成果。
 
 #### S0 / S1 实际验证（本轮）
 
@@ -254,6 +254,26 @@ D1 默认完整播放一次并停在终态，提供暂停/继续、重播、上�
 | 阶段 / 差异 | `python tools/paper.py check der` 与 `git diff --check` 退出 0；W7 pending 与本机绝对路径提示如实保留。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（未操作 F11）；HUMAN_ACCEPTANCE=PENDING。未改 paper.yaml、未重记 W6、未执行 W8 / Import / Preflight。 |
 
 证据保留：`.visual-qa/der-convergence-baseline/` 保存用户认可原图副本、修改前专注帧及两段完整播放；`.visual-qa/der-convergence-s1/` 保存 20 张修改后代表截图、15 张配对 focus 帧与像素比较 JSON，均为本地忽略产物。标准 runner 的本轮确切 run 目录在报告与截图复核后通过 `--cleanup-run` 清理，返回 `CLEANED: <same-path>`，`Test-Path=False`；本轮临时产物已清理，保留上述必要基线及验收证据。未清理旧基线、未知目录或用户预览服务。
+
+### S2 · 高保真关键帧与连续运动提案（2026-10-28，待人工检查点 A）
+
+用户在 S0/S1 后明确“继续 S2”。起点 `54a8c27`、`der`、工作区干净。本轮只新增 [S2 设计板](figures/review-s2/index.html) 及本节；`web/enhanced/**`、阶段状态、原生命周期及其几何、时间线完全未改。以下是方向提案，不是 S3 最终动画或 W7 PASS。
+
+**实际预览**：[KL](http://127.0.0.1:5192/?scene=kl) / [Logit Matching](http://127.0.0.1:5192/?scene=logits) / [冻结与回放入口](http://127.0.0.1:5192/?scene=freeze)。每页提供完整尺寸的关键帧、播放草案与可展开的运动／数学衔接说明。预览为本轮独立的 5192 Vite 进程，保留供用户本次审核，无自启动或常驻服务配置；不占用、重启或清理用户 5188 服务。若进程已结束，从仓库根运行 `node papers/der/web/enhanced/node_modules/vite/bin/vite.js --config papers/der/design/figures/review-s2/vite.config.mjs`；冻结预览读取现有 `web/enhanced/dist`，缺失时先运行该工程的已有 build。
+
+| 场景 | 主舞台与连续对象 | 关键帧／动作／进入与离开 | 数学与知识衔接 |
+| --- | --- | --- | --- |
+| A · KL | 1120×480 舞台，以两个完整概率圆为主体；左 p 保持 0.8/0.2，右 q 的扇区分界连续移动。颜色表示 Claude/GPT 类别，p 的虚线内圈表示固定身份；类别像素从始至终可追踪。 | 六镜：固定 p → q 重分配 → Claude 同类取值 → GPT 同类取值 → 带符号项汇总 → q=p 归零。概率值副本从各自来源移到中央，先显示比值、再对数、再加权，贡献数值进入下方汇总。同一批贡献只重排位置，不另造损失。出镜保留完整 KL 与固定熵基准。 | 由 U1 的“最高类相同仍可偏离”进入。定义式及 p/q/k/C 来源默认可见，H(p,q)−H(p) 和当帧数值默认可见；完整分解放设计说明，证明与梯度仍规划在 Reference。q 严格为正且归一化、单项可负、总和非负；方向不对称。归零路径明确是合成比较，非真实优化轨迹。 |
+| B · Logit | 一把共用分数尺、三个类别身份；固定 z 用空心方块，当前 a 用实心圆。右侧内 p / 外 q 的同类扇区由同一组分数派生，不引入网络或独立概率数组。 | 四镜：同类/同尺度 → 当前点分开并出现有向差值 → 数值复制到下方形成平方面 → 同一批贡献进入求和。默认固定 z=(2,1,0)、a=(1,2,0)，贡献 1/1/0、和 2。第二对照 a=z+c，三个点用 3 秒共同移动；分数距离改变而概率分界保持原位，c=1 后平方和 3、概率 KL=0。 | 承接概率约束可行，转而检查原始分数约束的差别。平方定义默认可见，负值明确写成 (−1)²；共同平移条件 a=z+c、softmax 公因子消去、Cc² 同样默认可见。该对照不能说明 logits 在所有任务上更优。 |
+| C · 冻结／回放 | 原生命周期完整播放器作为唯一舞台，保留原侧栏、网络、样本、增强视图、数值、记忆槽。设计板通过同源 iframe 实载当前生产构建，不用截图替身、不复制渲染器或状态模型。 | 六个观察入口定位真实阶段 02/03/04/05/06/09：更新前输出 → 复制 → 参数继续更新 → 更新后入槽 → 后来读取回放 → x₂ 独立快照。入口先定格真实阶段结果，也可从该处连续播放。展开/收起保留同一个 iframe 和记录 DOM。 | 保持 z₁ / aⱼ / z₂ 三份身份；候选不等于入池，DER 只存 (x,z)。正式 S3 应把观察导航接到原 React 播放器的外围入口，避免 iframe 成为正式架构；仍调用已有时钟，受保护 SVG/几何无需改写。 |
+
+**复用与局部创作**：直接使用 DER 已有 `useSceneTimeline` 及其已复制 Kit `useAnimationTimeline` / `useReducedMotion`，核读 Registry、animation-timeline Recipe 和真实 Hook；没有新复制闭包，没有第二个 Store 或计算引擎。类别与像素直接来自 `model-classes.ts` / `ModelPixel.tsx`，公式来自现有 `MathNotation.tsx`；所有数字调用真实 `probabilityComparison` / `logitComparison`，沿用原 p/q/z/a fixture。设计板的概率质量圆、取值路径、分数空间与平方面是 paper-local 构图，不照搬 ResponseMeter 条形，也不升级为 Kit API。暖白/浅绿、细线、冻结方标、对象比例和数字层级取自受保护场景；其他场景没有套它的整页双栏布局。
+
+**运动约定**：KL 草案 21.1 秒，Logit 草案 15.2 秒；重要步骤末尾停留约 1–1.8 秒。播放／暂停／从头播放／关键帧跳转均使用同一个现有时钟；切换场景卸载旧草案。冻结只用原播放器自己的时钟，入口调用其现有阶段控件。reduced motion 定格完整语义帧并手动前进。此轮确认空间构图、持续身份、计算显现和节奏，S3 仍需正式入口、Reference/Hover 与完整播放的独立验收。
+
+**实际检查**：设计板 Vite build 退出 0，34 modules，产物仅在忽略目录 `.visual-qa/der-s2/design-build/`。两档 Edge 1440×900 / 1920×1080 实际查看 KL 六帧、Logit 四帧与共同平移、原播放器展开画面及连续中间帧；已修复圆内标签挤压、负差值平方括号和主线短推导的可见位置。浏览器核对固定 p、合法 q、三个既有 KL 例、平方结果、shift KL=0、reduced motion，六个冻结入口及展开/收起的同一记录 DOM，均通过，无页面／资源错误。真实 rAF（无虚拟时钟）连续录制两档：KL 21273 / 21268ms、Logit 15390 / 15246ms，共 247 个数值采样；每个采样保持 p/q 和算式一致，共同平移时概率 KL 始终为 0。不是最终 S3 动画的验收证据。
+
+必要审核证据保留于 `.visual-qa/der-s2/browser/` 和 `.visual-qa/der-s2/playback/`（命名关键帧、两段 `motion-drafts-<width>.webm`、检查和采样 JSON），均为本地忽略产物。`git diff --exit-code HEAD -- papers/der/web/enhanced` 为 0，正式播放器无改动；`python tools/paper.py check der` 通过，W7 pending / 本机路径提示仍如实保留。FULLSCREEN_LAYOUT=PASS（布局模拟），FULLSCREEN_REAL=NOT_RUN（未操作 F11）；HUMAN_ACCEPTANCE=PENDING。本轮设计提案不重新声称 W6 的官方兼容性检查或整体视觉已获人审通过。
 
 - Design confirmation: CONFIRMED（2026-10-27）。用户选择“采用推荐方向”和“采用 S1–S3（推荐）”；确认 S3 两段计算、S4 选留/训练分段、S7 独立工作台及展开区可复算小模型，首切片为 S1–S3 / I01–I05。
 - Rendered-page acceptance: REVISE / W7 PENDING。生命周期专注版单项受保护；KL / Logit / 冻结与正式主线尚未获本轮认可。
