@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DER · 生命周期视觉重设计 v2 · R1 视觉系统</title>
+<style>
+  :root{
+    --canvas:#f7f7f2; --surface:#fff; --soft:#eff2eb; --ink:#182a22; --muted:#586a5d;
+    --line:#dce3d9; --line-strong:#a7b6a6; --accent:#2e6b4e; --accent-strong:#1b4a34;
+    --accent-soft:#e2ebdc; --warn:#8a5a25; --warn-soft:#f8efdc; --warn-line:#c9ab7e;
+    --mono:"Cascadia Mono","Consolas","Segoe UI Mono",monospace;
+    --body:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--canvas);color:var(--ink);font:16px/1.7 var(--body);-webkit-font-smoothing:antialiased}
+  main{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+  a{color:var(--accent-strong)}
+  a:focus-visible{outline:3px solid var(--warn);outline-offset:3px}
+  .top{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:22px 0 14px;border-bottom:1px solid var(--line)}
+  .brand{font-weight:700;letter-spacing:.01em}
+  .brand span{margin-left:14px;font-weight:400;color:var(--muted);font-size:13px}
+  .top .meta{font:12px/1.5 var(--mono);color:var(--muted);text-align:right}
+  header.hero{padding:56px 0 8px}
+  .eyebrow{margin:0 0 14px;font:600 12px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  h1{margin:0 0 18px;font-size:clamp(34px,4vw,52px);line-height:1.18;letter-spacing:-.03em;font-weight:760;text-wrap:balance}
+  .lead{max-width:60ch;margin:0;color:var(--muted);font-size:17px;line-height:1.8}
+  .demo{display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 0}
+  .demo a{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);font-size:14px;font-weight:600;text-decoration:none}
+  .demo a:hover{border-color:var(--accent);color:var(--accent-strong)}
+  .demo a.primary{border-color:var(--accent-strong);background:var(--accent-strong);color:#fff}
+  section{padding-top:64px}
+  .sec-head{display:grid;gap:10px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .sec-head .row{display:flex;align-items:center;gap:14px}
+  .sec-head .idx{font:700 12px/1 var(--mono);color:var(--warn);letter-spacing:.1em}
+  .sec-head .kicker{font:600 12px/1.4 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+  .sec-head .rule{flex:1;height:0;border-top:1px solid var(--line)}
+  .sec-head h2{margin:0;font-size:27px;line-height:1.28;letter-spacing:-.02em;font-weight:730}
+  .sec-head p{margin:0;max-width:74ch;color:var(--muted);font-size:15px}
+  figure{margin:26px 0 0}
+  figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+  figcaption{margin-top:12px;color:var(--muted);font-size:13.5px;line-height:1.65}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:24px}
+  .card{padding:20px 22px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+  .card h3{margin:0 0 8px;font-size:16.5px;font-weight:700;letter-spacing:-.01em}
+  .card p{margin:0;color:var(--muted);font-size:14px;line-height:1.7}
+  .card ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:14px;line-height:1.75}
+  .card li{margin-bottom:4px}
+  .card li b{color:var(--ink);font-weight:650}
+  table{width:100%;border-collapse:collapse;margin-top:22px;font-size:14px;line-height:1.6}
+  th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+  th{font:600 12px/1.4 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line-strong);width:auto}
+  tbody tr:hover{background:#fbfcf8}
+  td b{font-weight:650}
+  td .tag{display:inline-block;margin-right:6px;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-strong);font:600 11.5px/1.5 var(--mono);letter-spacing:.02em;white-space:nowrap}
+  td .tag.warn{background:var(--warn-soft);color:var(--warn)}
+  .note{margin-top:22px;padding:16px 18px;border-left:3px solid var(--warn-line);background:var(--warn-soft);color:#5f4520;font-size:14px;line-height:1.7;border-radius:0 10px 10px 0}
+  .note strong{color:#402d12}
+  .spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0;margin-top:24px;border-top:1px solid var(--line)}
+  .spec div{padding:14px 18px 14px 0;border-bottom:1px solid var(--line)}
+  .spec dt{font:600 11.5px/1.4 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .spec dd{margin:0;font-size:14px}
+  footer{margin-top:80px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.7}
+  .status{display:inline-flex;gap:8px;align-items:center;padding:4px 10px;border:1px dashed var(--line-strong);border-radius:999px;font:600 12px/1.5 var(--mono);color:var(--muted)}
+  .status i{display:block;width:7px;height:7px;border-radius:50%;background:var(--warn)}
+</style>
+<main>
+  <div class="top">
+    <div class="brand">DER <span>Dark Experience Replay · 单样本生命周期</span></div>
+    <div class="meta">R1 · 视觉系统与整体构图<br>2026-10-28 · W7 REVISE</div>
+  </div>
+
+  <header class="hero">
+    <p class="eyebrow">D1 生命周期 · 视觉重设计 v2</p>
+    <h1>同一份样本的一生，<br>重新画成一张可以读的舞台。</h1>
+    <p class="lead">这轮不再给旧流程图打补丁：先重建网络、样本、冻结目标、响应坐标与记忆槽的视觉主体，再用同一套几何编排关键帧。评审只看一件小事——暂停在任何一帧，能不能直接认出“谁是谁、从哪来、去了哪”。</p>
+    <div class="demo">
+      <a class="primary" href="assets.svg">打开资产样张</a>
+      <a href="composition.svg">打开整体构图</a>
+      <a href="assets.svg" download>下载样张 SVG</a>
+    </div>
+  </header>
+
+  <section id="r1-assets">
+    <div class="sec-head">
+      <div class="row"><span class="idx">R1 · A</span><span class="kicker">资产样张</span><span class="rule"></span></div>
+      <h2>五组对象，先各自长大，再谈编排</h2>
+      <p>样张按真实尺寸绘制，不是缩略示意图。网络、样本、响应坐标、冻结目标、记忆槽各自有固定材质与比例；页面缝合时不重新发明。</p>
+    </div>
+    <figure>
+      <img src="assets.svg" alt="R1 资产样张：网络三种状态、样本与视图、冻结目标、响应坐标、记忆槽与五种连接语义。">
+      <figcaption>A 网络三态（静息 / 前向中 / 参数更新后）· B 原图、本次视图、未来样本与记录 · C 响应坐标与冻结分离 · D 记忆槽与记录 · E 五种连接语义。切分与说明文字属于设计板，不进正式图。</figcaption>
+    </figure>
+    <div class="grid2">
+      <div class="card">
+        <h3>网络不再是三块斜板</h3>
+        <p>三层节点列 + 稀疏层间连线，平面、无透视、无虚构激活值。模型卡只有一张：结构、位置、尺寸在更新前后完全不变。</p>
+        <ul>
+          <li><b>前向</b>：列级高亮带 + 连线转绿，表示焦点传递，不画游走箭头。</li>
+          <li><b>更新</b>：只有虚线外环 + θ 标签变色 + 顶部参数端口，一个信号就够。</li>
+          <li><b>输入 / 输出 / 参数</b>是三个不同端口，位置固定。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>样本只留身份，视图只是临时</h3>
+        <p>原图是留存的图卡，增强视图是带裁剪角标的小卡；两者像素相同但外观不同，运动中不会误读成三张图。</p>
+        <ul>
+          <li>记录里只用<b>缩略图</b>作身份引用，不再重复整张图。</li>
+          <li>标签 y 永远在图像之外：虚线框 + “独立监督”。</li>
+          <li>未来样本 x₂ 换个纹理，一眼可区分先后。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>响应坐标：一个刻度尺，三个读数</h3>
+        <p>顶部一条 0·1·2 的刻度轴，三条水平轨道共享同一尺度；实心圆是当前输出，数值贴在标记右侧，0 也留在轴上。</p>
+        <ul>
+          <li>冻结副本是<b>空心方块</b>，同形、同坐标、不同填充。</li>
+          <li>比较阶段直接把方块搬到圆点旁，差值用括号量出来。</li>
+          <li>平方贡献是真实方块面积，零项退化成一条线。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>记忆是平面容器，不是透视托盘</h3>
+        <p>两个 340×108 的槽位并排，槽号贴在槽上沿；记录 324×104 内嵌 8px 边距，尺寸真实匹配，不做缩放。</p>
+        <ul>
+          <li>N 计数独立成列，只在合法写入时 0 → 1。</li>
+          <li>记录 = 原图缩略 + 冻结数值块（斜纹虚线，明确不更新）。</li>
+          <li>读取时记录不动，只多一个读出引用。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="r1-composition">
+    <div class="sec-head">
+      <div class="row"><span class="idx">R1 · B</span><span class="kicker">整体构图</span><span class="rule"></span></div>
+      <h2>一条损失通道，三列舞台，一条记忆带</h2>
+      <p>1120×640 的舞台分成可预期的几个区：顶部损失通道、左侧数据、中部唯一网络、右侧唯一响应坐标、底部记忆带。参考线标出实际比例，避免实现时又缩成一张全景小图。</p>
+    </div>
+    <figure>
+      <img src="composition.svg" alt="整体构图：顶部损失通道、当前模型、响应坐标与底部记忆带的相对位置与尺寸标注。">
+      <figcaption>虚线为构图参考：网络 340×336，响应坐标 340×222，记忆带 1052×156（两个 340 槽位 + 计数列）。前向阶段不出现任何跨画布长线。</figcaption>
+    </figure>
+    <table>
+      <thead><tr><th>区域</th><th>承担什么</th><th>不承担什么</th></tr></thead>
+      <tbody>
+        <tr><td><b>顶部损失通道</b></td><td>标签、当前 CE、是否已反传；参数更新只有一条虚线走这里</td><td>不放解释段落，不放秒数或阶段编号</td></tr>
+        <tr><td><b>数据列</b></td><td>原图留存、本次视图、未来 x₂、回放引用</td><td>不显示标签进入图像，不放长说明</td></tr>
+        <tr><td><b>网络列</b></td><td>唯一可训练模型、输入/输出/参数端口、焦点传递</td><td>不复制第二台模型，不画优化后的猜测数值</td></tr>
+        <tr><td><b>响应列</b></td><td>3 类 logit 的共同尺度、冻结副本、差值平方</td><td>不用柱状图冒充训练曲线，不显示绝对秒数</td></tr>
+        <tr><td><b>记忆带</b></td><td>K=2、N、两个槽位、记录与读取状态</td><td>不画透视纵深，不让记录与标题互相压叠</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="r1-reuse">
+    <div class="sec-head">
+      <div class="row"><span class="idx">R1 · C</span><span class="kicker">复用判定</span><span class="rule"></span></div>
+      <h2>每一类对象，为什么这样画</h2>
+      <p>按 Kit 的“直接复用 / 组合并适配 / 借鉴成熟设计重绘 / 完全独立实现”逐一判定，记录原因与最终归属，避免又滑向“全部手写”或“全部拼 Kit”。</p>
+    </div>
+    <table>
+      <thead><tr><th>对象</th><th>判定</th><th>原因与归属</th></tr></thead>
+      <tbody>
+        <tr><td><b>网络</b></td><td><span class="tag">借鉴重绘</span></td><td>参考 <code>MiniNetworkGlyph</code> 的“层列 + 节点 + 稀疏连线”设计经验，但舞台需要在一张卡内表达前向焦点与参数更新端口，DOM 组件无法在 SVG 舞台内随镜头移动。DER 自绘，保留 Kit 的节点配色与语义高亮规则。</td></tr>
+        <tr><td><b>样本 / 视图</b></td><td><span class="tag">借鉴重绘</span></td><td>沿用 <code>SampleToken</code> 的像素网格与卡片材质；增加“裁剪角标”区分临时视图。记录里的缩略图是同一像素网格的缩尺版，属于 DER 记录卡的一部分。</td></tr>
+        <tr><td><b>响应坐标</b></td><td><span class="tag warn">独立实现</span></td><td>需要“同坐标、可比较、可分离”的轨道语义，<code>ResponseMeter</code> 的水平条无法承载方块分离与差值平方。复用其正/负填充与描边配对规则。</td></tr>
+        <tr><td><b>冻结目标</b></td><td><span class="tag">组合适配</span></td><td>形状/虚线/斜纹来自 Kit 的 frozen 角色（<code>data-state="frozen"</code>）；数值块是 DER 记录卡的内部结构，不另造公共组件。</td></tr>
+        <tr><td><b>记忆槽</b></td><td><span class="tag warn">独立实现</span></td><td>K=2 的固定容量、槽号、记录尺寸匹配属于 DER 舞台几何，不是通用列表；不升级成公共资产。</td></tr>
+        <tr><td><b>播放器</b></td><td><span class="tag">直接复用</span></td><td><code>useAnimationTimeline</code> + <code>SceneTransport</code> 已验证暂停/回退/重播/键盘/reduced-motion；只改舞台与文案，不重建第二套播放器。</td></tr>
+        <tr><td><b>公式</b></td><td><span class="tag">直接复用</span></td><td>舞台外的 <code>L<sub>dark</sub></code> 用真实 MathML；图内只放短符号与数值，避免 SVG 里的伪公式。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="r1-spec">
+    <div class="sec-head">
+      <div class="row"><span class="idx">R1 · D</span><span class="kicker">样式约束</span><span class="rule"></span></div>
+      <h2>一套尺度，避免实现时各自为政</h2>
+      <p>下面按 1120 宽舞台给出实际像素；页面在 1240 左右渲染，等效放大约 1.1 倍，最小字号仍然 ≥ 12px。</p>
+    </div>
+    <dl class="spec">
+      <div><dt>对象标题</dt><dd>16–17px / 600，如「当前模型」「本步输出 aᵢ」</dd></div>
+      <div><dt>对象名称</dt><dd>15.5px / 600，如「原图 x₁」</dd></div>
+      <div><dt>图内标签</dt><dd>10.5–12px / 400，颜色 <code>#586a5d</code></dd></div>
+      <div><dt>数值</dt><dd>18px 等宽 600（logit），15px（记录内）</dd></div>
+      <div><dt>公式</dt><dd>13.5–14.5px Cambria Math，<code>tspan</code> 上下标</dd></div>
+      <div><dt>行 / 轨道</dt><dd>轨道 3.5px 圆头；填充 4.5px；刻度 1px</dd></div>
+      <div><dt>连接线</dt><dd>数据 1.8px 实线；复制 1.2px 短虚线；更新 1.8px 长虚线；监督 1.4px 点线</dd></div>
+      <div><dt>端点</dt><dd>开口箭头（8px）；方块端口 9×9；读取起点 3.5px 空心圆</dd></div>
+      <div><dt>表面</dt><dd>圆角 16（舞台卡）/ 11（数值块）/ 6（标签）；1px <code>#cfd9c9</code> 描边 + 2px 软阴影</dd></div>
+      <div><dt>强调色</dt><dd>深绿只表“当前、可算”；暖褐只表“监督、更新”；冻结用中性灰绿 + 斜纹</dd></div>
+      <div><dt>高亮</dt><dd>当前操作对象：底色 + 描边加深；其余对象降到 42–60% 不透明度，不移除</dd></div>
+      <div><dt>节奏</dt><dd>位移 ≤ 160px；复制/回放/更新各留 ≥ 1.2s 可观察中段</dd></div>
+    </dl>
+    <div class="note"><strong>这一轮只完成 R1。</strong> 五张关键帧与运动交接在 R2 补齐后才会做动画实现；在视觉构图被确认之前，不改 <code>SampleLifecyclePrototype.tsx</code>，也不把样张说成动画验收。</div>
+  </section>
+
+  <footer>
+    <span class="status"><i></i>W7 保持 pending · 等待视觉评审</span>
+    <p style="margin:14px 0 0">旧 D0 设计板保留在 <code>../lifecycle-d0/</code> 作为历史对照，不再充当现行设计真源。本页只评审静态设计品质，不代表动画、教学效果或 W7 通过。</p>
+  </footer>
+</main>
+</html>
