@@ -8,15 +8,18 @@ const PIXELS = ["01100110", "11111111", "10111101", "11111111", "01111110", "001
 const NEW_PIXELS = ["00111100", "01111110", "11011011", "11111111", "01111110", "00111100", "00100100", "00000000"];
 
 const NARRATION = [
-  "原图 x₁ 留在数据来源处，本次增强视图沿预留通道进入唯一当前网络。标签 y₁ 另行提供分类监督。",
-  "信号按层传递，三类 logit 逐类形成：猫 2、狗 1、狐狸 0。这发生在任何参数更新之前。",
-  "在源响应的同一坐标复制出空心方块，再交给独立的冻结块。源圆点仍在原处；θ 没有变化。",
-  "用当前 CE 反传一次：一条梯度虚线进入参数端口，θᵢ 变为 θᵢ₊₁。冻结块全程保持 (2,1,0)。",
+  "原图 x₁ 留在数据来源处，本次增强视图沿虚线通道滑入网络左侧的输入插槽。标签 y₁ 另行提供分类监督。",
+  "信号按层传递，三根分数柱依次升起：猫 2、狗 1、狐狸 0。这发生在任何参数更新之前。",
+  "在每个柱顶复制出空心方块，方块下落到独立的冻结块；柱顶的圆点仍在原处，θ 没有变化。",
+  "用当前 CE 反传一次：一条梯度虚线进入顶部参数端口，θᵢ 变为 θᵢ₊₁。冻结块全程保持 (2,1,0)。",
   "更新完成后，原图缩略与冻结块装配成候选记录，落入空槽 slot 0，N 从 0 变为 1。",
-  "下一步先从已有记忆读取 x₁@i：槽内记录不动，读出的视图重新增强，进入第二个输入端口。",
-  "历史方块与当前圆点在同一类别、同一尺度上对齐；差值折成平方贡献 1、1、0，总和为 2。",
+  "下一步先从已有记忆读取 x₁@i：槽内记录不动，读出的视图重新增强，滑入第二个输入插槽。",
+  "历史方块落到各自柱顶，与当前圆点在同一刻度上对齐；差值折成平方贡献 1、1、0，总和为 2。",
   "当前 CE 与 α 倍历史匹配损失合并为一次联合更新。历史记录保持原样；这里停在 x₂ 候选写入之前。",
 ];
+
+const pathD = (points: readonly { x: number; y: number }[]) =>
+  `M${points[0].x} ${points[0].y}C${points[1].x} ${points[1].y} ${points[2].x} ${points[2].y} ${points[3].x} ${points[3].y}`;
 
 function pixelRects(pattern: string[], x: number, y: number, size: number, pad: number, key: string) {
   const cell = (size - pad * 2) / 8;
@@ -38,29 +41,21 @@ function SampleCard({ size, pattern = PIXELS, crop = false, opacity = 1, id }: {
 }
 
 // ---------------------------------------------------------------- network
-const LAYER_COUNTS = [3, 5, 3];
-const NODE_OFFSETS: Record<number, number[]> = { 3: [0, -9, 0], 5: [0, 7, -4, 8, 0] };
-
-function glyphGeometry(x: number, y: number, w: number, h: number) {
-  const gap = 26;
-  const lw = (w - gap * (LAYER_COUNTS.length - 1)) / LAYER_COUNTS.length;
-  const centers = LAYER_COUNTS.map((_, i) => x + i * (lw + gap) + lw / 2);
-  const offScale = Math.min(1, Math.max(0.34, h / 220));
-  const ys = LAYER_COUNTS.map(count => {
-    const span = h * (0.84 + 0.032 * count);
-    const top = y + (h - span) / 2;
-    const step = count > 1 ? span / (count - 1) : 0;
-    const offs = NODE_OFFSETS[count] || NODE_OFFSETS[3];
-    return Array.from({ length: count }, (_, k) => top + k * step + (offs[k] || 0) * offScale);
-  });
-  return { centers, ys };
-}
+const COLUMN_COUNTS = [3, 5, 3];
+const COLUMN_SPACING = [84, 45, 68];
 
 function Network({ theta, updated, active, lens, showPort }: {
   theta: string; updated: boolean; active: number; lens: number; showPort: boolean;
 }) {
   const { x, y, w, h } = G.model;
-  const { centers, ys } = glyphGeometry(x + 32, y + 72, w - 64, h - 122);
+  const gap = 26;
+  const lw = (w - 64 - gap * 2) / 3;
+  const centers = [0, 1, 2].map(i => x + 32 + i * (lw + gap) + lw / 2);
+  const middle = y + 72 + (h - 122) / 2;
+  const ys = COLUMN_COUNTS.map((count, i) => {
+    const step = COLUMN_SPACING[i];
+    return Array.from({ length: count }, (_, k) => middle + (k - (count - 1) / 2) * step);
+  });
   const edges: React.ReactNode[] = [];
   const seen = new Set<string>();
   for (let i = 0; i < ys.length - 1; i++) {
@@ -76,10 +71,11 @@ function Network({ theta, updated, active, lens, showPort }: {
       }
     });
   }
+  const headOpacity = Math.max(0, 1 - lens * 1.3);
   return <g data-current-model>
     {updated && <rect x={x - 6} y={y - 6} width={w + 12} height={h + 12} rx="22" className="lc-update-ring" />}
     <rect x={x} y={y} width={w} height={h} rx="16" className={updated ? "lc-model-card is-updated" : "lc-model-card"} />
-    <g opacity={Math.max(0, 1 - lens * 1.3)}>
+    <g opacity={headOpacity}>
       <text x={x + 22} y={y + 32} className="lc-model-title">当前模型</text>
       <text x={x + 96} y={y + 32} className="lc-small">结构示意</text>
       <rect x={x + w - 88} y={y + 15} width="66" height="26" rx="8" className={updated ? "lc-theta is-updated" : "lc-theta"} />
@@ -95,40 +91,38 @@ function Network({ theta, updated, active, lens, showPort }: {
   </g>;
 }
 
-// ---------------------------------------------------------------- response plot
-function ResponsePlot({ plot, data, header, subline, step, reveal, dim, values, lens }: {
-  plot: { x0: number; unit: number; rows: number[] }; data: { name: string; v: number }[]; header: string; subline: string;
-  step: string; reveal: number[]; dim: number; values: boolean; lens: number;
+function Sockets({ current, replay, lens }: { current: number; replay: number; lens: number }) {
+  const socket = (y: number, docked: number) => <g key={y} opacity={1 - lens}>
+    <rect x={G.model.x - 8} y={y - 11} width="16" height="22" rx="6" className={docked > 0.5 ? "lc-socket is-docked" : "lc-socket"} />
+    <path d={`M${G.model.x - 2} ${y - 6}v12`} className="lc-socket-slit" opacity={0.35 + docked * 0.5} />
+  </g>;
+  return <g data-input-sockets>{socket(G.ports.current, current)}{socket(G.ports.replay, replay)}</g>;
+}
+
+// ---------------------------------------------------------------- score tiles
+function ScoreTiles({ s, data, header, subline, step, reveal }: {
+  s: ReturnType<typeof lifecycleSceneAt>; data: { name: string; v: number }[]; header: string; subline: string;
+  step: string; reveal: number[];
 }) {
-  const { x0, unit, rows } = plot;
-  const axisEnd = x0 + unit * 2.9;
+  const { tiles, tileX, lens } = s;
   const headOpacity = Math.max(0, 1 - lens * 1.4);
-  return <g opacity={1 - dim} data-response-plot>
+  return <g data-response-plot>
     <g opacity={headOpacity}>
-      <text x={x0} y={rows[0] - 68} className="lc-plot-title">{header}</text>
-      <rect x={x0 + header.length * 16 + 6} y={rows[0] - 82} width="26" height="20" rx="5" className="lc-step-chip" />
-      <text x={x0 + header.length * 16 + 19} y={rows[0] - 68} textAnchor="middle" className="lc-step-label">{step}</text>
-      <text x={x0} y={rows[0] - 47} className="lc-small">{subline}</text>
-      <path d={`M${x0} ${rows[0] - 26}H${axisEnd}`} className="lc-ruler" />
+      <text x={G.tiles.x} y={132} className="lc-plot-title">{header}</text>
+      <rect x={G.tiles.x + header.length * 16 + 6} y={118} width="26" height="20" rx="5" className="lc-step-chip" />
+      <text x={G.tiles.x + header.length * 16 + 19} y={132} textAnchor="middle" className="lc-step-label">{step}</text>
+      <text x={G.tiles.x} y={152} className="lc-small">{subline}</text>
     </g>
-    <g opacity={headOpacity}>
-      {[0, 1, 2].map(v => <g key={`t-${v}`}>
-        <path d={`M${x0 + v * unit} ${rows[0] - 26}v5`} className="lc-tick" />
-        <text x={x0 + v * unit} y={rows[0] - 34} textAnchor="middle" className="lc-tick-label">{v}</text>
-        {v > 0 && <path d={`M${x0 + v * unit} ${rows[0] - 20}V${rows[2] + 12}`} className="lc-gridline" />}
-      </g>)}
-      <path d={`M${x0} ${rows[0] - 20}V${rows[2] + 12}`} className="lc-zero-line" />
-    </g>
-    {rows.map((ry, k) => <g key={`row-${k}`}>
-      <text x={x0 - 16} y={ry + 6} textAnchor="end" className="lc-row-label">{data[k].name}</text>
-      <path d={`M${x0} ${ry}H${axisEnd}`} className="lc-track" />
-      {reveal[k] > 0.01 && <g opacity={reveal[k]}>
-        <path d={`M${x0} ${ry}H${x0 + data[k].v * unit}`} className="lc-track-fill" />
-        <circle cx={x0 + data[k].v * unit} cy={ry} r={15} className="lc-bead-halo" />
-        <circle cx={x0 + data[k].v * unit} cy={ry} r="6.5" className="lc-bead" data-current-point={k} data-a={data[k].v} />
-        {values && <text x={x0 + data[k].v * unit + 22} y={ry + 7} className="lc-value" data-layout-label>{data[k].v}</text>}
-      </g>}
-    </g>)}
+    {data.map((row, k) => {
+      const x = tileX(k), y = tiles.y, w = tiles.w, h = tiles.h;
+      return <g key={`tile-${k}`}>
+        <rect x={x} y={y} width={w} height={h} rx="12" className="lc-score-tile" opacity={0.35 + reveal[k] * 0.65} />
+        <text x={x + w / 2} y={y + 22} textAnchor="middle" className="lc-tile-class">{row.name}</text>
+        <text x={x + w / 2} y={y + 62} textAnchor="middle" className="lc-tile-value" data-current-point={k} data-a={row.v} opacity={reveal[k]}>{row.v}</text>
+        {[0, 1].map(i => <circle key={i} cx={x + w / 2 - 9 + i * 18} cy={y + h - 18} r="4"
+          className={i < row.v ? "lc-level is-on" : "lc-level"} opacity={0.4 + reveal[k] * 0.6} />)}
+      </g>;
+    })}
   </g>;
 }
 
@@ -177,10 +171,10 @@ function MemoryBand({ count, hasRecord, record, block, recordNote, dim, slotNote
     <text x={1046} y={G.band.y + 98} textAnchor="end" className="lc-counter-unit">K = 2</text>
     {hasRecord && <g transform={`translate(${record.x} ${record.y})`} data-in-memory="true" data-record-id="record:x1:i" data-history-z="2,1,0">
       <rect width={G.record.w} height={G.record.h} rx="10" className="lc-record-card" />
-      <rect x="12" y="36" width="48" height="48" rx="6" className="lc-thumb" />
-      {pixelRects(PIXELS, 12, 36, 48, 6, "thumb")}
       <text x="12" y="20" className="lc-record-id">x₁ @ i</text>
       <text x={G.record.w - 12} y="20" textAnchor="end" className="lc-record-note">{recordNote}</text>
+      <rect x="12" y="36" width="44" height="44" rx="6" className="lc-thumb" />
+      {pixelRects(PIXELS, 12, 36, 44, 5, "thumb")}
       <g transform={`translate(${block.x - record.x} ${block.y - record.y})`}>
         <FrozenBlock rect={{ x: 0, y: 0, w: block.w, h: block.h }} z={z} note="x₁ @ i" label="z₁ 冻结" inRecord />
       </g>
@@ -190,54 +184,44 @@ function MemoryBand({ count, hasRecord, record, block, recordNote, dim, slotNote
 
 // ---------------------------------------------------------------- comparison extras
 function Comparison({ s }: { s: ReturnType<typeof lifecycleSceneAt> }) {
-  const { plot, squares, sum, difference, match, joint } = s;
-  const { x0, unit, rows } = plot;
-  const sqX = x0 + 2.9 * unit + 34;
+  const { tiles, tileX } = s;
+  const { squares, sum, difference, match, joint } = s;
   return <g opacity={s.lens} data-comparison>
     <g opacity={s.lens}>
       <text x={300} y={82} className="lc-compare-title">同类、同尺度比较</text>
       <text x={300} y={102} className="lc-small">冻结值保持原值；可反传的是当前输出</text>
       <circle cx={880} cy={78} r="6.5" className="lc-bead" />
       <text x={894} y={83} className="lc-legend-label">本次 aⱼ</text>
-      <rect x={962} y={71.5} width="13" height="13" rx="1.5" className="lc-history-mark" />
+      <rect x={962} y="71.5" width="13" height="13" rx="1.5" className="lc-history-mark" />
       <text x={982} y={83} className="lc-legend-label">历史 z₁ 冻结</text>
     </g>
-    {rows.map((ry, k) => {
-      const ax = s.currentPoints[k].x, zx = s.referencePoints[k].x;
-      const lo = Math.min(ax, zx), hi = Math.max(ax, zx);
+    {[0, 1, 2].map(k => {
+      const x = tileX(k), y = tiles.y, w = tiles.w, h = tiles.h;
       const d = match.differences[k];
-      const side = Math.abs(d);
       return <g key={`cmp-${k}`}>
-        <rect x={zx - 7} y={ry - 7} width="14" height="14" rx="1.5" className="lc-history-mark" />
-        {side !== 0 && <g opacity={difference}>
-          <path d={`M${lo} ${ry - 17}V${ry - 11}H${hi}V${ry - 17}`} className="lc-diff-bracket" />
-          <text x={(lo + hi) / 2} y={ry - 24} textAnchor="middle" className="lc-diff-value">{d > 0 ? `+${d}` : `−${Math.abs(d)}`}</text>
-        </g>}
-        {side === 0 && <text x={lo + 12} y={ry - 22} className="lc-small">重合</text>}
-        {squares > 0.01 && (side !== 0
-          ? <g opacity={squares}>
-            <rect x={sqX} y={ry - (22 * side) / 2} width={22 * side} height={22 * side} rx="2" className="lc-square" data-square-contribution={match.squares[k]} />
-            <text x={sqX + 22 * side + 12} y={ry + 6} className="lc-square-value">{`(${d > 0 ? d : `−${Math.abs(d)}`})² = ${match.squares[k]}`}</text>
-          </g>
-          : <g opacity={squares}>
-            <path d={`M${sqX} ${ry}H${sqX + 22}`} className="lc-zero-square" />
-            <text x={sqX + 34} y={ry + 6} className="lc-square-value is-muted">0² = 0</text>
-          </g>)}
+        <rect x={x} y={y} width={w} height={h} rx="14" className="lc-score-tile is-compare" />
+        <text x={x + w / 2} y={y + 24} textAnchor="middle" className="lc-tile-class">{["猫", "狗", "狐狸"][k]}</text>
+        <rect x={x + 16} y={y + 46} width="16" height="16" rx="1.5" className="lc-history-mark" />
+        <text x={x + 42} y={y + 62} className="lc-tile-row">{match.z[k]}</text>
+        <circle cx={x + 24} cy={y + 94} r="6.5" className="lc-bead" />
+        <text x={x + 42} y={y + 102} className="lc-tile-row is-current">{match.a[k]}</text>
+        {d !== 0
+          ? <g opacity={difference}><text x={x + w - 16} y={y + 86} textAnchor="end" className="lc-tile-delta">{d > 0 ? `+${d}` : `−${Math.abs(d)}`}</text></g>
+          : <text x={x + w - 16} y={y + 86} textAnchor="end" className="lc-tile-delta is-zero">重合</text>}
+        {squares > 0.01 && <text x={x + w / 2} y={y + h + 26} textAnchor="middle" className="lc-contrib" opacity={squares}>
+          {d === 0 ? "0² = 0" : `(${d > 0 ? d : `−${Math.abs(d)}`})² = ${match.squares[k]}`}
+        </text>}
       </g>;
     })}
     <g opacity={sum}>
-      <text x={1040} y={350} textAnchor="end" className="lc-sum">1 + 1 + 0 = 2</text>
-      <text x={1040} y={390} textAnchor="end" className="lc-ldark" data-loss={match.squaredDistance}>L<tspan baselineShift="sub" fontSize="0.62em">dark</tspan> = 2</text>
-      <text x={1040} y={408} textAnchor="end" className="lc-small">冻结值与当前输出之差</text>
+      <text x={1000} y={306} textAnchor="end" className="lc-ldark" data-loss={match.squaredDistance}>L<tspan baselineShift="sub" fontSize="0.62em">dark</tspan> = 1 + 1 + 0 = 2</text>
     </g>
     <g opacity={windowAt(joint, 0.05, 0.5)}>
-      <rect x={300} y={344} width={148} height={42} rx="9" className="lc-ce-chip" />
-      <text x={374} y={362} textAnchor="middle" className="lc-ce-chip-title">CE(x₂, y₂)</text>
-      <text x={374} y={377} textAnchor="middle" className="lc-small">当前监督</text>
-      <rect x={300} y={396} width={400} height={46} rx="10" className="lc-join-chip" />
-      <text x={500} y={424} textAnchor="middle" className="lc-join-title">L<tspan baselineShift="sub" fontSize="0.62em">j</tspan> = CE(x₂, y₂) + α · L<tspan baselineShift="sub" fontSize="0.62em">dark</tspan></text>
-      <path d="M300 419H250V346H196" className="lc-gradient" />
-      <text x={258} y={409} className="lc-gradient-label">一次更新</text>
+      <rect x={300} y={396} width={400} height="44" rx="10" className="lc-join-chip" />
+      <text x={500} y={419} textAnchor="middle" className="lc-join-title">L<tspan baselineShift="sub" fontSize="0.62em">j</tspan> = CE(x₂, y₂) + α · L<tspan baselineShift="sub" fontSize="0.62em">dark</tspan></text>
+      <text x={500} y={434} textAnchor="middle" className="lc-join-note">两条损失只反传一次</text>
+      <path d="M300 419C272 419 232 384 190 330" className="lc-gradient" />
+      <text x={248} y={404} className="lc-gradient-label">∇θ</text>
     </g>
   </g>;
 }
@@ -250,7 +234,6 @@ export default function SampleLifecyclePrototype() {
   const tx = mix(0, G.anchor.x - G.model.x * scale, s.lens);
   const ty = mix(0, G.anchor.y - G.model.y * scale, s.lens);
   const updateRing = clip === 3 || (clip === 7 && s.updated > 0.5);
-  const theta = s.parameter;
   const plotData = s.later
     ? [{ name: "猫", v: 1 }, { name: "狗", v: 2 }, { name: "狐狸", v: 0 }]
     : [{ name: "猫", v: 2 }, { name: "狗", v: 1 }, { name: "狐狸", v: 0 }];
@@ -289,7 +272,7 @@ export default function SampleLifecyclePrototype() {
           </g>}
         </g>
 
-        {/* data column */}
+        {/* data column: trails only appear while the view is travelling */}
         <g opacity={1 - s.lens} data-data-column>
           {!s.later && <>
             <g transform={`translate(${G.sample.x} ${G.sample.y})`}>
@@ -297,11 +280,10 @@ export default function SampleLifecyclePrototype() {
             </g>
             <text x={G.sample.x + 48} y={G.sample.y + 122} textAnchor="middle" className="lc-object-title">原图 x₁</text>
             <text x={G.sample.x + 48} y={G.sample.y + 141} textAnchor="middle" className="lc-small">留存 · 不参与更新</text>
-            <path d="M130 198C176 198 196 300 244 300" className="lc-data-guide" opacity={s.enter} />
-            {s.enter > 0.02 && s.enter < 0.999 && <g transform={`translate(${s.input.x - 32} ${s.input.y - 32})`}>
+            {s.trailEnter > 0.01 && <path d={pathD(G.path.enter)} className="lc-trail" opacity={s.trailEnter} />}
+            {s.enter < 0.999 && <g transform={`translate(${s.input.x - 32} ${s.input.y - 32})`}>
               <SampleCard size={64} crop id="view:x1:i" />
             </g>}
-            <text x={182} y={296} textAnchor="middle" className="lc-small">本次增强视图</text>
           </>}
           {s.later && <>
             <g transform="translate(34 120)">
@@ -309,39 +291,38 @@ export default function SampleLifecyclePrototype() {
             </g>
             <text x={82} y={242} textAnchor="middle" className="lc-object-title">当前 x₂</text>
             <text x={82} y={261} textAnchor="middle" className="lc-small">本步的新数据</text>
-            <path d="M130 168C176 168 196 300 244 300" className="lc-data-guide" />
+            {s.replay < 0.34 && <path d={pathD([{ x: 130, y: 168 }, { x: 186, y: 170 }, { x: 150, y: 296 }, { x: 218, y: 300 }])} className="lc-trail" opacity={windowAt(s.replay, 0.02, 0.14)} />}
             <g transform={`translate(${s.currentInput.x - 29} ${s.currentInput.y - 29})`}>
               <SampleCard size={58} pattern={NEW_PIXELS} crop id="view:x2:j" />
             </g>
-            <path d="M206 530H178V366H244" className="lc-data-guide" />
-            {s.replay > 0.34 && s.replay < 0.87 && <g transform={`translate(${s.replayInput.x - 27} ${s.replayInput.y - 27})`}>
+            {s.trailReplay > 0.01 && <path d={pathD(G.path.replay)} className="lc-trail" opacity={s.trailReplay} />}
+            {s.replay > 0.28 && s.replay < 0.8 && <g transform={`translate(${s.replayInput.x - 27} ${s.replayInput.y - 27})`}>
               <SampleCard size={54} crop id="replay:x1:j" />
             </g>}
-            <text x={142} y={438} textAnchor="end" className="lc-small">回放 x₁@i</text>
           </>}
         </g>
 
-        {/* model */}
+        {/* model + input sockets */}
+        <Sockets current={s.enterDocked} replay={s.replayDocked} lens={s.lens} />
         <g transform={`translate(${tx} ${ty}) scale(${scale})`}>
-          <Network theta={theta} updated={updateRing} lens={s.lens}
+          <Network theta={s.parameter} updated={updateRing} lens={s.lens}
             active={clip === 1 ? Math.min(2, Math.floor(s.forward * 3)) : -1} showPort={clip === 3} />
         </g>
         {s.lens > 0.01 && <g opacity={s.lens}>
           <rect x={G.anchor.x} y={G.anchor.y} width={G.anchor.w} height={G.anchor.h} rx="14" className="lc-anchor-ring" />
           <text x={G.anchor.x + 14} y={G.anchor.y + 22} className="lc-anchor-title">同一模型</text>
-          <text x={G.anchor.x + 14} y={G.anchor.y + 48} className="lc-anchor-theta">{theta}</text>
+          <text x={G.anchor.x + 14} y={G.anchor.y + 48} className="lc-anchor-theta">{s.parameter}</text>
           <text x={G.anchor.x + 14} y={G.anchor.y + 66} className="lc-small">唯一可训练参数</text>
         </g>}
 
-        {/* response plot */}
-        <ResponsePlot plot={s.plot} data={plotData} header={s.later ? "本次回放输出 aⱼ" : "本步输出 aᵢ"}
+        {/* response chart */}
+        <ScoreTiles s={s} data={plotData} header={s.later ? "本次回放输出 aⱼ" : "本步输出 aᵢ"}
           subline={s.later ? "由更新后的 θ 计算；与 z₁ 同尺度" : "3 类 logit · 在更新前计算"}
-          step={s.later ? "j" : "i"} reveal={s.outputReveal}
-          dim={clip === 3 ? 1 - windowAt(s.update, 0.2, 0.9) : s.lens * 0.85} values={s.lens < 0.4} lens={s.lens} />
+          step={s.later ? "j" : "i"} reveal={s.outputReveal} />
 
-        {/* frozen block: first on its own, then travelling into the record */}
+        {/* frozen block + the squares travelling into it */}
         {s.hasTarget && s.lens < 0.99 && s.recordVisible < 0.6 && <g opacity={1 - s.lens}>
-          {s.copy > 0.02 && <text x={s.blockNow.x} y={s.blockNow.y - 12} className="lc-small" opacity={1 - s.assembly}>复制此刻数值，成为独立副本</text>}
+          {s.copy > 0.02 && <text x={s.blockNow.x} y={s.blockNow.y + s.blockNow.h + 18} className="lc-small" opacity={(1 - s.assembly) * (1 - s.lens)}>柱顶复制 → 独立冻结块</text>}
           <FrozenBlock rect={s.blockNow} z={s.z} note="x₁ @ i" label="z₁ 冻结"
             opacity={1 - s.lens} markersOpacity={windowAt(s.copy, 0.86, 1)} />
           {s.copy > 0.02 && s.copyPoints.map((p, k) => (

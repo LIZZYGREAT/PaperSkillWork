@@ -69,12 +69,13 @@ test("replay reads the stored record and the comparison keeps one shared coordin
   const replay = at(5, 0.5);
   assert.equal(replay.replaySource, fixture.recordId);
   assert.equal(replay.memoryCount, 1);
-  assert.ok(replay.replayInput.x >= 150 && replay.replayInput.y > 300, "replay view travels the left corridor");
+  assert.ok(replay.replayInput.x > 110 && replay.replayInput.y > 330, "replay view travels the left corridor");
   const compare = at(6, 1);
   assert.ok(compare.lens > 0.99, "comparison opens the focused composition");
   compare.referencePoints.forEach((point, k) => {
-    assert.ok(Math.abs(point.y - compare.currentPoints[k].y) < 0.01, "both marks sit on the same row");
-    assert.ok(Math.abs(point.x - (compare.plot.x0 + fixture.z[k] * compare.plot.unit)) < 0.01);
+    assert.ok(Math.abs(point.x - compare.currentPoints[k].x) < 0.01, "frozen and current rows share the tile column");
+    assert.ok(Math.abs(point.y - (compare.tiles.y + 54)) < 0.01, "frozen row sits above the current row");
+    assert.ok(Math.abs(compare.currentPoints[k].y - (compare.tiles.y + 96)) < 0.01);
   });
   assert.equal(at(6, 1).memoryCount, 1, "the stored record survives the comparison");
   assert.equal(at(7, 1).seen, 1, "the later candidate is not written yet");
