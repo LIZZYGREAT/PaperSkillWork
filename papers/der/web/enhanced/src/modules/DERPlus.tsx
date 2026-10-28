@@ -1,0 +1,30 @@
+import {useState} from "react";
+import SceneTransport,{useSceneTimeline} from "./review/SceneTransport";
+import {windowAt,mix} from "./review/lifecycle-model";
+import {SampleGlyph,NetworkGlyph,MotionPath} from "./LearningGlyphs";
+import {MODEL_CLASSES} from "../data/model-classes";
+import type {Mode} from "./training-model";
+import "./learning-scenes.css";
+const clips=[{id:"旧判断可能出错",durationMs:4500,holdMs:1800},{id:"分别读取两种监督",durationMs:5000,holdMs:1800},{id:"合并损失，一次更新",durationMs:6000,holdMs:2200}],old=[.5,2,0];
+export default function DERPlus(){
+const [mode,setMode]=useState<Mode>("DER++"),[overlap,setOverlap]=useState(true),timeline=useSceneTimeline(clips),{clipIndex:c,progress:p}=timeline.state,done=(i:number)=>c>i?1:c<i?0:windowAt(p,.08,.86),plus=mode==="DER++",read=done(1),update=done(2),point=mix(354,396,read);
+const notes=["合成例中 x₁ 的真实类别是 Claude，旧 z 最高分却是 GPT。匹配 z 鼓励保留旧行为，无法自动判断它错了。保持一致与变得正确并不相同。",plus?`DER++ 保存 (x,z,y)。第一次抽 Rd 做输出匹配，第二次抽 Ry 做标签 CE。本例两批次${overlap?"恰好重合":"选择了不同旧记录"}；这两种选择都合法。`:"DER 保存 (x,z)，历史监督只匹配输出；旧标签不参与 DER 的回放损失。",plus?"当前分类、历史 logits 匹配、历史标签分类合成一个目标，再对唯一 θ 更新一次。两种历史监督可能竞争；标签提供纠偏依据，不保证一步成功。":"当前分类与历史 logits 匹配合成后，更新同一 θ 一次。没有常驻教师，也没有第二次顺序更新。"];
+return <section className="teaching-scene" data-scene="der-plus" data-clip={c} data-progress={p} data-status={timeline.state.status} data-mode={mode} data-rd="x₁" data-ry={plus?(overlap?"x₁":"x₂"):"none"} data-updates={c===2&&p>=.85?1:0}>
+<header><div><p className="eyebrow">DER++ / 历史标签补上什么</p><h3>历史响应稳定，也可能稳定地错。</h3><p>旧 logits 是当时模型的判断。DER++ 在保持整组判断之外，再引入旧样本真实标签的独立监督。</p></div><div className="scene-options">{(["DER","DER++"] as Mode[]).map(m=><button key={m} aria-pressed={mode===m} onClick={()=>{setMode(m);timeline.reset()}}>{m}</button>)}</div></header>
+<SceneTransport timeline={timeline} clips={clips} label="DER++ 三项监督" showTiming={false}/>
+<div className="teaching-stage"><svg viewBox="0 0 1120 585" className="teaching-canvas" role="img" aria-label="错误旧目标、真实标签与联合更新">
+<rect x="48" y="57" width="306" height="440" rx="15" className="tg-memory"/><text x="68" y="87" className="tg-title">同一份旧记忆 M</text><SampleGlyph x={73} y={108} size={62} id="x₁ stored" model={0}/><text x="150" y="133" className="tg-title">x₁ · 真实类别 Claude</text><text x="150" y="159" className="tg-small">{plus?"记录 (x,z,y)":"记录 (x,z)"}</text><text x="70" y="210" className="tg-small">旧 z 最高分：GPT ≠ 真实类别</text>
+{old.map((v,k)=><g key={k}><rect x={70+k*89} y="228" width="80" height="78" rx="8" className={`tg-score tg-tone-${k}`}/><text x={80+k*89} y="249" className="tg-small">{MODEL_CLASSES[k]}</text><text x={110+k*89} y="284" textAnchor="middle" className="tg-number">{v}</text></g>)}<text x="70" y="343" className="tg-small">固定 z 提供行为，真实 y 提供类别依据。</text><SampleGlyph x={73} y={385} size={48} id="x₂ stored" model={1}/><text x="135" y="406">x₂ · 另一条已有记录</text><text x="135" y="433" className="tg-small">z₂ 保留 {plus?"，y₂=GPT":"，不存标签"}</text>
+<SampleGlyph x={605} y={14} size={42} id="current new input" model={2}/><text x="420" y="37" className="tg-small">当前新样本 (x,y) → CE</text><path d="M626 56V96" className="tg-path"/><NetworkGlyph x={440} y={96} version={c===2&&p>=.85?"θ⁺":"θ"} forward={c===1?read:0} backward={c===2?windowAt(p,.2,.85):0}/>
+<g opacity={read}><MotionPath d="M354 145H440" progress={read}/><text x="366" y="130" className="tg-small">Rd</text>{plus&&<><MotionPath d={overlap?"M354 171C385 171 400 277 440 277":"M354 410C415 410 400 277 440 277"} progress={read}/><text x="367" y="303" className="tg-small">Ry</text></>}</g>
+{c===1&&p>.08&&p<.86&&<><SampleGlyph x={point} y={150} size={38} id="Rd x₁" model={0}/>{plus&&<SampleGlyph x={point} y={mix(overlap?150:390,259,read)} size={38} id="Ry record" model={overlap?0:1}/>}</>}
+<g opacity={done(0)}><rect x="760" y="72" width="300" height="74" rx="10" className="tg-loss"/><text x="780" y="101" className="tg-title">L<tspan baselineShift="sub" fontSize="12">current</tspan> · 现在的新数据</text><text x="780" y="127" className="tg-small">当前真实标签 y → 分类 CE</text></g>
+<g opacity={read}><rect x="760" y="191" width="300" height="74" rx="10" className="tg-loss"/><text x="780" y="220" className="tg-title">α·L<tspan baselineShift="sub" fontSize="12">dark</tspan> · 保持旧行为</text><text x="780" y="246" className="tg-small">Rd=x₁ · 整组 a 匹配固定 z</text>{plus&&<><rect x="760" y="310" width="300" height="74" rx="10" className="tg-loss"/><text x="780" y="339" className="tg-title">β·L<tspan baselineShift="sub" fontSize="12">replay-CE</tspan> · 历史标签</text><text x="780" y="365" className="tg-small">Ry={overlap?"x₁":"x₂"} · 提高其真实类别概率</text></>}</g>
+<path d="M666 217H720V107H760M720 217V226H760" className="tg-path" opacity={read}/>{plus&&<path d="M720 226V348H760" className="tg-path" opacity={read}/>}
+<g opacity={update}><path d={plus?"M1070 110H1082V438H678M1070 226H1082M1070 347H1082":"M1070 110H1082V438H678M1070 226H1082"} className="tg-path"/><rect x="415" y="413" width="263" height="85" rx="13" className="tg-total"/><text x="436" y="447" className="tg-title">一次联合参数更新</text><text x="436" y="477" className="tg-small">{plus?"三个损失一起约束 θ":"两个损失一起约束 θ"}</text><MotionPath d="M552 413V340" progress={windowAt(p,.3,.85)} kind="gradient"/></g>
+<text x="56" y="550" className="tg-small">合成反例只说明监督职责，不声称一次更新后的类别或效果。</text>
+</svg></div><div className="scene-options"><button disabled={!plus} aria-pressed={overlap} onClick={()=>{setOverlap(!overlap);timeline.start(1)}}>{overlap?"Rd / Ry 重合：切换不同记录":"Rd / Ry 不同：切换重合"}</button></div>
+<div className="scene-explanation" aria-live="polite"><strong>{clips[c].id}</strong><p>{notes[c]}</p></div>
+<div className="scene-equation"><math display="block"><msub><mi>L</mi><mtext>DER++</mtext></msub><mo>=</mo><msub><mi>L</mi><mtext>current</mtext></msub><mo>+</mo><mi>α</mi><msub><mi>L</mi><mtext>dark</mtext></msub><mo>+</mo><mi>β</mi><msub><mi>L</mi><mtext>replay-CE</mtext></msub></math><p>α 权衡整组历史行为，β 权衡历史真实标签。二者有时竞争，DER++ 不保证在所有数据集、容量或训练设置中更优。</p></div>
+<p className="quiet-note">E04 合成例 z=(0.5,2,0)；不是论文失败案例数据。两次回放均从写入前 M 分别采样；模式切换不编造训练结果。§3.1、Algorithm 2、Eq. (6)，C03/C05/C15。</p></section>;
+}

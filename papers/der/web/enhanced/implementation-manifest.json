@@ -29,6 +29,31 @@
       "stage": "S4",
       "component": "der-reservoir",
       "status": "complete"
+    },
+    "I07": {
+      "stage": "S4",
+      "component": "der-training-step",
+      "status": "complete"
+    },
+    "I08": {
+      "stage": "S5",
+      "component": "der-augmentation",
+      "status": "complete"
+    },
+    "I09": {
+      "stage": "S6",
+      "component": "der-plus",
+      "status": "complete"
+    },
+    "I10": {
+      "stage": "S7",
+      "component": "der-workbench",
+      "status": "complete"
+    },
+    "I11": {
+      "stage": "S8",
+      "component": "der-evidence",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -46,11 +71,29 @@
     },
     "I16": {
       "placement": "compact-inline"
+    },
+    "I17": {
+      "placement": "expandable"
+    },
+    "I18": {
+      "placement": "compact-inline"
+    },
+    "I19": {
+      "placement": "compact-inline"
+    },
+    "I20": {
+      "placement": "compact-inline"
     }
   },
   "reference": {
     "I21": {
       "placement": "Advanced details"
+    },
+    "I22": {
+      "placement": "Evidence details"
+    },
+    "I23": {
+      "placement": "Evidence details"
     }
   }
 }

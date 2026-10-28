@@ -384,3 +384,15 @@ SUPPORTING 的具体落点：U1 原位短回忆 I12/I13；U2 的 I14 紧邻梯�
 
 W5 定稿时四项源码检查均未运行；当前 W6 的实际命令、状态与限制记录如下，W5 的结构通过不作为 W6 质量依据。
 
+### W8-B–E · 全篇实施与首轮回归
+
+用户已直接要求执行全文、自查后交最终审查，不再停于批次间询问。新增 DER 单步、增强、DER++、独立四轮工作台与实验证据，沿原 W4 的 U4–U7 接入。
+
+- 唯一 training-model.ts 按 W5 固定二维模型、η=0.1、α=β=0.5 复算两模式；八组损失、两组预测与 W5 九位小数表一致，联合梯度有限差分通过。空池、分别采样可重合/不同、旧 M 先读、冻结值、一次更新后写入、替换和拒收都有状态测试。
+- DER 单步与四轮台共用 trainStep；增强用同一 first-record / W1 计算视图输出，固定 z 不刷新。DER++ 合成错误例不编造优化后的类别，画面显示旧 z 与 y 的独立职责。
+- 工作台从 θ0/M空/N0/K2 到四轮连续继承，选择阶段只读取不可变快照；预测只读 θ4，参数/记忆/计数不改。提供完整视图、目标、联合梯度和参数矩阵查看。模式切换从同一 W0 重算全轨迹。
+- 实验数据取 W3 R01/R02/R04/R05 与 W2 Results，主线显示两种 CIFAR 协议、MNIST容量差异与三项反例；按条件重绘，不发布原表截图；补充结果及 Fisher/ECE/ghost-class 边界进入 Reference。
+- npm test 20/20；SOURCE_BUILD=PASS（71 modules、Node24.18.0、Vite6.4.3，退出0）。新增场景 test:browser -- --w8-only 共680断言通过，两档桌面、全阶段参数/计数/池身份、完整结果、暂停/回退、reduced motion、预测、模式切换、证据与几何。最后端点与第二旧记录来源的修正将随整篇回归复核，不声称已过最终 W8。
+- 实看代表图后修正：增强分支端点缺口、文字交叉；工作台回放源改从实际旧槽边缘发出；DER++ 不同 Ry 时明确第二旧记录；Reservoir 专注页压缩头部留白、将固定候选说明移出运动路径。公式仍用 MathML，图内损失下标用 SVG tspan。
+- 相邻旧检查器本地诊断（非当前官方验收）：syntax-check.js <publish_source> --require-parser / validate-output.js <publish_source> 均退出0，无占位项，7 chapters/10注册模块。HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c；缓存 upstream/main=c096ab528186f754ca3f8680ace8b12f6d1cf341；脚本 Git blobs=2bcfa6f815054ee498574c51cef05f0c315b4298 / 1a58ca06bd9fa47b6730904f1622189011cc32fe。HTTPS fetch亦失败（连接被重置），当前官方 UPSTREAM_SYNTAX/UPSTREAM_OUTPUT 仍为 NOT_RUN。
+- 真实F11再次尝试失败：Windows UI 工具无法可靠识别当前浏览器 URL，安全终止；停止操作个人浏览器。FULLSCREEN_REAL=NOT_RUN，保持最终人审明确待核。

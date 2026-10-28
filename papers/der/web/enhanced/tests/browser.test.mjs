@@ -1,3 +1,4 @@
+import {fullW8Checks} from "./w8-browser.mjs";
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 import {createServer} from "node:http";
@@ -34,6 +35,7 @@ try{
   page.on("pageerror",e=>errors.push(e.message));page.on("requestfailed",r=>errors.push(r.url()));page.on("response",r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`)});
   await page.clock.install();await page.clock.pauseAt(new Date());
   const shot=async(name,selector)=>{if(!output)return;const target=selector?page.locator(selector):page;await target.screenshot({path:resolve(output,`${name}-${width}.png`)});};
+  if(process.argv.includes("--w8-only")){await fullW8Checks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`W8_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   await page.goto(base);await page.evaluate(()=>document.fonts.ready);
   check(await page.locator("[data-design]").count()===2,"Approved scenes are in real reading source");
   check(await page.locator("iframe").count()===0,"Production does not bridge local services");
@@ -106,6 +108,7 @@ try{
   }
   await scene.locator("[data-back]").focus();const focus=await scene.locator("[data-back]").evaluate(el=>({style:getComputedStyle(el).outlineStyle,width:parseFloat(getComputedStyle(el).outlineWidth)}));check(focus.style!=="none"&&focus.width>=2,"Keyboard focus is visible");
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),"No page overflow in desktop layouts");
+  if(!process.argv.includes("--reservoir-only"))await fullW8Checks({page,base,check,shot});
   check(!errors.length,`No production or subpath resource errors: ${errors}`);
   console.log(`BROWSER_PASS ${width}x${height}, assertions=${count}`);await context.close();
  }

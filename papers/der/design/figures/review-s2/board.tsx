@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { LIFECYCLE_CLIPS } from "../../../web/enhanced/src/modules/review/lifecycle-model";
-import { KLBoard, ScoreBoard } from "./MechanismScenes";
+import { KLBoard, ScoreBoard } from "../../../web/enhanced/src/modules/MechanismScenes";
 import "./review-r2.css";
 
 const LENS_NOTES = [
