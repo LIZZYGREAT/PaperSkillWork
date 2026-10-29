@@ -507,3 +507,7 @@ Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwrigh
 用户追加要求将第二幅增强视图中的原合成小鸟替换为其示例中的鹈鹕形象。SourceIllustration 现以同一原图身份绘制戴蓝帽、白色羽身、长橙喙及喉囊的鹈鹕骑青绿色自行车；采用日落背景色回应参考图。写入视图、中心裁剪、水平翻转仍共享同一 SVG 与 x₁ 身份；冻结 logits、回放 logits、计算和增强交互均未改，其他两个方向也未动。
 
 修订后生产构建 PASS（TypeScript、Vite 75 modules）。公共 Visual QA 仍为两个视口 20/20 PASS、几何与浏览器错误 PASS、0 浏览器错误。实看原图、写入裁剪、回放中心裁剪和水平翻转，并复核 1920×1080；主体在两种变换中仍可辨识。截图与报告归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/pelican-revision-20261029/run-2026-10-29T05-37-14-832Z`。该方向的最终选择与 W9 人工验收仍待用户。
+
+#### P1 用户通过与 P2 启动（2026-10-29）
+
+用户回复“我通过了，你继续按方案执行P2”，据当前会话上下文确认 P1 三方向及 Reservoir、鹈鹕两项返修均获阶段通过，并授权启动 P2。此通过仅对应 P1 方向审核；P2 完成后仍须按方案停下进行下一次人工复评。W9 总验收保持 `pending`，不启动 W10，不修改 `paper.yaml`。
