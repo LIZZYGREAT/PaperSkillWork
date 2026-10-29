@@ -544,3 +544,13 @@ DER++ 主图以 E04 合成错例开场：同一旧记忆 `x₁` 的真实标签�
 构建 PASS（TypeScript 与 Vite，77 modules），`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 `--w8-only` 两桌面视口各 390 项、合计 780 项 PASS，包括首幕冲突、DER/DER++ 分支、同条/异条读取、单一联合目标、三项只更新一次、暂停/回退、reduced motion 和画布边界。`--formula-only` 两档各 60 项、合计 120 项 PASS，当前独立阅读公式模块为 3 个，DER++ 联合目标留在机制旁。已审看 1440×900 与 1920×1080 冲突首幕、异条采样和三监督合流图；真实 F11 `NOT_RUN`。截图在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-plus`。
 
 P2 四项（Reservoir、DER 单步、增强、DER++）已完成。现停止等待用户对 P2 进行人工复审；不推进 P3/P4/W10，W9 总验收保持 `PENDING`，`paper.yaml` 未改。
+
+## P3 完成：S7 持续系统与 S8 实验证据（2026-10-29）
+
+S7 以同一网络、参数 θ、容量 K、计数 N 与有身份的记忆 M 连续呈现四轮训练；每轮结束状态直接由 `training-model.ts` 生成并用于下一轮，轮次账本可回退检查。DER / DER++ 分支显示相应读取和损失；第三轮先训练、后替换同一槽，第四轮先训练、后拒收但递增 N。训练后的只读预测明确不读取记忆、不回放、不更新参数。细节矩阵和梯度可按需展开；合成模型边界保留。
+
+S8 同屏对照四项论文结果，分别保留 Class-IL、Task-IL、MNIST-360 与容量、实验条件、表中均值及原表 ±；条长只表示均值，不把 ± 解释为置信区间或显著性。页内突出条件化发现和 R05 反例，完整结果表/分析入口与来源定位仍可查。实验值、协议事实与 Registry ID 均由 W2 源表及证据登记测试核对。
+
+验证：`npm test` 24/24 PASS；`npm run build`（TypeScript + Vite，76 modules）PASS；生产构建子路径浏览器回归 `node tests/browser.test.mjs --w8-only` 在 Edge 156.0.4314.50 两个尺寸各 436 项、共 872 项 PASS，包含跨轮 θ/M/N/身份继承、DER/DER++、替换/拒收、暂停回退、只读预测、完整实验值/协议/来源和页面几何。最终生产构建的 `node tests/playback.test.mjs` 使用真实播放时钟完整播放 21 个阶段：500 个状态采样，127,576 ms，结束状态 `N=4`、updates=4、`M=x₃,x₂`，无浏览器错误。结构检查 `python tools/paper.py check der` 为 PASS；`status` 仍显示 W9/W10 PENDING，未改阶段元数据。
+
+人工图像复核为 Agent 的 W8 视觉 QA，不是用户验收。关键帧和双视口截图位于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p3/workbench-v7`；完整生产播放视频、`playback.json` 和关键帧位于 `.../der-p3/production-playback-final`。真实 F11 `NOT_RUN`。训练/Reservoir 计算模型、论文源表、证据 Registry、W2/W4 与 `paper.yaml` 均无差异；W9 最终人工验收仍待用户确认，W10 未启动。

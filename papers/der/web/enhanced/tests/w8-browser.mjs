@@ -69,6 +69,13 @@ export async function fullW8Checks({page,base,check,shot}){
  for(const mode of ["DER","DER++"]){
   await wb.locator("[data-mode="+(mode==="DER"?"DER":'"DER++"')+"]").click();
   const steps=runTraining(mode);
+  for(let i=0;i<steps.length;i++){
+   const handoff=wb.locator("[data-handoff-round='"+(i+1)+"']"),after=steps[i].after;
+   check(+(await handoff.getAttribute("data-updates"))===after.updates,"Handoff ledger inherits the exact round-end parameter version");
+   check(+(await handoff.getAttribute("data-seen"))===after.N,"Handoff ledger inherits exact processed count");
+   check(await handoff.getAttribute("data-memory")===after.M.map(r=>r.id).join(","),"Handoff ledger preserves record identity and order");
+   check(await handoff.getAttribute("data-weights")===JSON.stringify(after.W),"Handoff ledger is derived from the computed model, not a hand-entered diagram");
+  }
   await page.emulateMedia({reducedMotion:"reduce"});
   for(let c=0;c<21;c++){
    await wb.locator("select").selectOption(String(c));const expected=trainingSceneAt(steps,c,1);
@@ -80,6 +87,11 @@ export async function fullW8Checks({page,base,check,shot}){
    if(c===13)check(await wb.getAttribute("data-memory")==="x₁,x₂","Round 3 trains from old memory before replacement");
    if(c===14)check(await wb.getAttribute("data-memory")==="x₃,x₂","Round 3 replaces only after update");
    if(c===18)check(+(await wb.getAttribute("data-updates"))===4&&+(await wb.getAttribute("data-seen"))===3,"Rejected item still trains before reservoir");
+   if(c===20){
+    check(await wb.locator(".wb-exit-bay,.wb-objective").count()===0,"Read-only prediction removes training loss and reservoir exit branches");
+    check(await wb.locator("[data-read-d=true],[data-read-y=true]").count()===0,"Prediction does not imply a replay read");
+    check(await wb.locator("[data-query-result]").count()===1,"Prediction has one distinct output state");
+   }
    if([0,7,13,14,19,20].includes(c)){await geometry(wb);await shot("workbench-"+mode.replace("++","plus")+"-"+c,"[data-scene=workbench]");}
   }
   const before=await wb.getAttribute("data-weights"),seen=await wb.getAttribute("data-seen");
@@ -94,13 +106,21 @@ export async function fullW8Checks({page,base,check,shot}){
  check(await network.evaluate(el=>el===document.querySelector("[data-network]")),"The same network DOM object persists through rounds and mode resets");
  check(await memory.evaluate(el=>el===document.querySelector("[data-workbench-memory]")),"The same memory container persists");
  await page.goto(base+"?focus=evidence");const evidence=page.locator("[data-scene=evidence]");
- for(let i=0;i<EXPERIMENTS.length;i++){
-  await evidence.locator("[data-experiment-select='"+i+"']").click();
-  const e=EXPERIMENTS[i];check(await evidence.getAttribute("data-experiment")===e.id,"Evidence protocol switch selects correct setting");
-  for(const v of e.values){const row=evidence.locator("[data-method='"+v.method+"']");check(+(await row.getAttribute("data-mean"))===v.mean,"Real paper value retained");check(+(await row.getAttribute("data-spread"))===v.spread,"Paper ± retained");}
-  check(await evidence.locator(".counterexamples article").count()===3,"All negative examples remain visible");await shot("evidence-"+e.id);
+ check(+(await evidence.getAttribute("data-experiment-count"))===EXPERIMENTS.length,"All source-checked settings are visible together");
+ for(const e of EXPERIMENTS){
+  const card=evidence.locator("[data-experiment='"+e.id+"']");
+  check(await card.getAttribute("data-evidence-id")===e.evidence,"Each result keeps its evidence registry ID");
+  check(await card.getAttribute("data-source-locator")===e.locator,"Each result keeps its complete table/source locator");
+  check((await card.locator(".evidence-protocol").innerText())===e.protocol,"Protocol is explicit beside the plotted values");
+  for(const v of e.values){const row=card.locator("[data-method='"+v.method+"']");check(+(await row.getAttribute("data-mean"))===v.mean,"Real paper value retained");check(+(await row.getAttribute("data-spread"))===v.spread,"Paper ± retained");}
  }
- await evidence.getByRole("button",{name:/深入分析与证据边界/}).click();check(await page.locator("dialog").isVisible(),"Reference analyses open");
+ await shot("evidence-top");
+ await shot("evidence-results","[data-scene=evidence] .evidence-grid");
+ check(await evidence.locator(".counterexamples article").count()===3,"All R05 counterexamples remain visible");
+ check(await evidence.locator(".counterexamples").getAttribute("data-evidence-id")==="R05","Counterexamples point to R05");
+ await shot("evidence-counterexamples","[data-scene=evidence] .counterexamples");
+ check(await evidence.locator(".evidence-error").count()===0,"± notation is not recast as a statistical interval");
+ await evidence.getByRole("button",{name:/查看分析与局限/}).click();check(await page.locator("dialog").isVisible(),"Reference analyses open");
  check(await page.locator("[data-reference-detail='evidence-analysis'] math").count()>0,"ECE uses mathematical layout");
  await page.keyboard.press("Escape");await page.goto(base);
  await shot("article-final-opening");

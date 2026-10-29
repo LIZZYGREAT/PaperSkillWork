@@ -170,3 +170,8 @@ U4 单步画面现呈现当前与历史两路共享更新前 θ、各自的标�
 生产构建 PASS（TypeScript、Vite 77 modules）；`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50：`--w8-only` 两档各 390、合计 780 项 PASS；`--formula-only` 两档各 60、合计 120 项 PASS。覆盖冲突、两次独立采样/是否重合、两种训练模式的监督分支、一个合并目标/单次更新、阶段播放/回退、reduced motion 和实际画布范围。已实看两档冲突首幕、不同记录读取及三监督合流状态。检查为无头 Edge，真实 F11 `NOT_RUN`。截图归档：`C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-plus`。
 
 **P2 阶段结果：四项（Reservoir、DER 单步、增强、DER++）已完成，现依返修方案停止等待用户人工复审。** W9 总验收仍为 `PENDING`；未启动 P3/P4/W10，未修改 `paper.yaml`。无头布局检查不冒充真实 F11 或用户视觉验收。
+## P3 工程完成记录（2026-10-29）
+
+S7/S8 的 W8 工程实现和 Agent 视觉复核已完成：双视口生产浏览器回归 872/872 通过，24/24 单测和 TypeScript/Vite 生产构建（76 modules）通过。最终生产构建完整播放 21 阶段，真实播放时钟运行 127,576 ms、500 个状态采样，四次训练更新和记忆/计数终态均符合模型，浏览器错误为 0。S7 替换、拒收、DER/DER++ 与只读预测的关键状态，以及 S8 全部结果卡、来源和反例均已实看。视频、JSON 及关键帧见 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p3/production-playback-final`；两档截图见 `.../der-p3/workbench-v7`。
+
+此记录是 Agent 工程与画面检查，不是 W9 人工验收。真实浏览器 F11 `NOT_RUN`；用户的整体学习/证据审查仍待完成，`Overall: PENDING`，W10 未启动，`paper.yaml` 未改。

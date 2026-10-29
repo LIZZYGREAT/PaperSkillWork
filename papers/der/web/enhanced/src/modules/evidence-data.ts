@@ -6,7 +6,7 @@ export const EXPERIMENTS: readonly Experiment[]=[
 {id:"mnist200",title:"MNIST-360",protocol:"同一整流结束指标 · 小容量反例",capacity:200,metric:"整条流训练结束后的准确率 (%)",setup:"同一 MNIST-360 数据流与 MLP；K=200。展示经 W3 核对的 DER / DER++ 表项。",locator:"Table 3, p.7",evidence:"R05",values:[{method:"DER",mean:55.22,spread:1.67},{method:"DER++",mean:54.16,spread:3.02}],conclusion:"在 K=200 时，DER++ 的表中均值低于 DER。额外标签监督不保证每个容量设置更优。"}
 ];
 export const COUNTEREXAMPLES=[
-{setting:"S-Tiny ImageNet · Class-IL · K=200",text:"DER 11.87±0.78 > DER++ 10.96±1.17",source:"Table 2, p.6"},
-{setting:"S-CIFAR-10 · Task-IL · K=5120",text:"ER 96.98±0.17 > DER++ 96.12±0.21",source:"Table 2, p.6"},
-{setting:"MNIST-360 · K=200",text:"DER 55.22±1.67 > DER++ 54.16±3.02",source:"Table 3, p.7"},
+{setting:"S-Tiny ImageNet · Class-IL · K=200",text:"DER 11.87±0.78 > DER++ 10.96±1.17",source:"Table 2, p.6",evidence:"R05"},
+{setting:"S-CIFAR-10 · Task-IL · K=5120",text:"ER 96.98±0.17 > DER++ 96.12±0.21",source:"Table 2, p.6",evidence:"R05"},
+{setting:"MNIST-360 · K=200",text:"DER 55.22±1.67 > DER++ 54.16±3.02",source:"Table 3, p.7",evidence:"R05"},
 ] as const;
