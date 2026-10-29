@@ -217,4 +217,4 @@ S7/S8 的 W8 工程实现和 Agent 视觉复核已完成：双视口生产浏览
 
 先前全量配置的诊断也保留在本次记录范围内：初次 runner 在沙箱内无法连接本地预览服务，未生成截图；授权本地 Chromium 预览连接后，全量配置完成 40 项截图，但未改动页面的旧 selector 使 augmentation `shared-target`、DER++ `separate-replay`、evidence `task-il/mnist200` 在两视口失败（augmentation SVG 多匹配，另外两项选择器找不到）。这些页面不受本次代码改动影响，未在定向复核中重试；不把结果表述成全站 PASS。相应报告目录为 `.visual-qa/run-2026-10-29T16-14-32-663Z` 和 `.visual-qa/run-2026-10-29T16-16-07-906Z`。
 
-本轮 runner 截图已审阅，待提交 QA 文档后按仓库流程对该精确 run 目录执行清理并核对不存在。W9 `Overall=PENDING`、`HUMAN_ACCEPTANCE=PENDING`；W10 未启动、`paper.yaml` 未改。
+本轮三份 runner run 目录均在报告与诊断记录后用 CLI 按精确路径清理，返回 `CLEANED` 且逐一核对 `Test-Path=False`；临时定向配置也已移除。W9 `Overall=PENDING`、`HUMAN_ACCEPTANCE=PENDING`；W10 未启动、`paper.yaml` 未改。
