@@ -1,5 +1,7 @@
 import {runTraining,trainingSceneAt,WORKBENCH_CLIPS} from "../src/modules/training-model.ts";
-import {EXPERIMENTS} from "../src/modules/evidence-data.ts";
+import {EXPERIMENTS,COUNTEREXAMPLES} from "../src/modules/evidence-data.ts";
+const MAIN_EXPERIMENT_IDS=new Set(["cifar-class","mnist500","mnist200"]);
+const MAIN_EXPERIMENTS=EXPERIMENTS.filter(e=>MAIN_EXPERIMENT_IDS.has(e.id));
 export async function fullW8Checks({page,base,check,shot}){
  const geometry=async scene=>{
  const result=await scene.locator(".teaching-canvas").evaluate(svg=>{
@@ -106,8 +108,9 @@ export async function fullW8Checks({page,base,check,shot}){
  check(await network.evaluate(el=>el===document.querySelector("[data-network]")),"The same network DOM object persists through rounds and mode resets");
  check(await memory.evaluate(el=>el===document.querySelector("[data-workbench-memory]")),"The same memory container persists");
  await page.goto(base+"?focus=evidence");const evidence=page.locator("[data-scene=evidence]");
- check(+(await evidence.getAttribute("data-experiment-count"))===EXPERIMENTS.length,"All source-checked settings are visible together");
- for(const e of EXPERIMENTS){
+  check(+(await evidence.getAttribute("data-experiment-count"))===MAIN_EXPERIMENTS.length,"The mainline selects three evidence settings");
+  check(await evidence.locator(".evidence-card").count()===MAIN_EXPERIMENTS.length,"Only selected comparisons occupy the mainline");
+  for(const e of MAIN_EXPERIMENTS){
   const card=evidence.locator("[data-experiment='"+e.id+"']");
   check(await card.getAttribute("data-evidence-id")===e.evidence,"Each result keeps its evidence registry ID");
   check(await card.getAttribute("data-source-locator")===e.locator,"Each result keeps its complete table/source locator");
@@ -116,9 +119,11 @@ export async function fullW8Checks({page,base,check,shot}){
  }
  await shot("evidence-top");
  await shot("evidence-results","[data-scene=evidence] .evidence-grid");
- check(await evidence.locator(".counterexamples article").count()===3,"All R05 counterexamples remain visible");
- check(await evidence.locator(".counterexamples").getAttribute("data-evidence-id")==="R05","Counterexamples point to R05");
- await shot("evidence-counterexamples","[data-scene=evidence] .counterexamples");
+  await evidence.getByRole("button",{name:/查看完整主表、反例与来源/}).click();
+  const resultReference=page.locator("[data-reference-detail='evidence-results']");
+  const referenceRows=EXPERIMENTS.reduce((n,e)=>n+e.values.length,0)+COUNTEREXAMPLES.length;
+  check(await resultReference.locator("table tbody tr").count()===referenceRows,"The Reference retains the complete table and additional counterexamples");
+  await shot("evidence-full-reference");await page.keyboard.press("Escape");
  check(await evidence.locator(".evidence-error").count()===0,"± notation is not recast as a statistical interval");
  await evidence.getByRole("button",{name:/查看分析与局限/}).click();check(await page.locator("dialog").isVisible(),"Reference analyses open");
  check(await page.locator("[data-reference-detail='evidence-analysis'] math").count()>0,"ECE uses mathematical layout");
