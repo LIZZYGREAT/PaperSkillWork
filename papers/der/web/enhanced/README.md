@@ -41,3 +41,5 @@ npm run test:workbench-layout
 DER_REVIEW_DIR / DER_PLAYBACK_DIR 可指定内部证据目录。通用视觉检查从仓库根运行 node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json。读取报告、实际查看截图并归档必要证据后，再按输出的确切 run 路径清理。
 
 检查：21项数学/状态/证据测试、2364整篇浏览器断言、后续764项新增场景与24项避让复测通过；两档桌面40状态公共视觉检查通过；真实连续播放21阶段约127.5秒。具体命令、版本、来源、受保护区域、限制与审查问题见 ../../design/implementation-plan.md 和 ../../audit/final-check.md。当前官方上游检查器版本网络核实与真实 F11 仍 NOT_RUN；本地旧脚本诊断通过，不等于正式 W10。
+
+2026-10-29截图反馈：普通正文生命周期直接显示已有侧栏；标题对齐正文。可运行 npm run test:browser -- --review-feedback 快速复核公式前置/无内部滚动、图注和mark、误差区间、正常侧栏和专注切换；默认完整浏览器回归也包含这些断言。

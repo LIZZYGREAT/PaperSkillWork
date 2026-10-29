@@ -420,3 +420,18 @@ UPSTREAM_SYNTAX / UPSTREAM_OUTPUT 仍 NOT_RUN（两次fetch终端退出1，原�
 用户明确要求四处修订：KL定义/熵拆解前置并修复内部滚动；同标签对照图注等宽、mark突出划线句并删除划掉的品牌实验句；结果图误差标记改为协调的柔和区间；正式正文生命周期启用既有侧栏讲解/公式。此授权包括正文侧栏布局调整，不重新申请已授权的视觉变化。保护类别、同源数学、九阶段、图内对象、冻结/读写时序、同一播放状态和专注入口；共享样式/控制受影响范围须针对回归。W7/W8保留既有完成记录，W9仍PENDING。
 
 追加截图反馈：生命周期标题/引导文字对齐普通正文栏；只让舞台和侧栏突破正文宽度。正常标题的左右边界须与 reading-layout 精确一致。
+
+### 本轮截图反馈的已执行检查
+
+实现提交 a45fae9。普通生命周期直接复用已认可的侧栏：控制、分段文字、公式与示例说明都在左侧，保持同一组件/时钟；标题和引导文字回到 reading-layout 对齐线，下方舞台局部加宽。math-model.ts / lifecycle-model.ts 没有改动。
+
+- BUILD：npm.cmd --prefix papers/der/web/enhanced run build，退出0；Node24.18.0、Vite6.4.3，71 modules；index-D99Hv4HX.js / index-C5JYbR8T.css。
+- 数学/状态/证据测试：npm test 21/21通过。
+- 五项反馈定向回归：test:browser -- --review-feedback，1440×900与1920×1080共42断言，退出0。覆盖公式在动画/控件之前、公式容器无滚动/裁切、图注边界、mark/删除文案、四协议区间样式和数值位置、侧栏布局、正文标题边线、同一网络DOM与阶段在专注切换中保持。
+- 公共 Visual QA：node tools/visual-qa/cli.mjs --config .visual-qa/feedback-config-20261029.json，退出0；run-2026-10-29T00-58-22-881Z共14状态，两档桌面Geometry/BrowserErrors均PASS；STYLE仅显式背景基线PASS。actualUrl均为 /der-review/。
+- 已实看两档最终KL、图注、误差区间、普通侧栏与标题边线、原专注版的代表截图。公式没有靠裁切或隐藏滚动条处理；旧overflow-x:auto让MathML字形外延触发内部纵向滚动，现改自然高度与必要留白。接入侧栏时发现新字号覆盖挤压紧凑冻结块，已撤销不匹配的覆盖、恢复原版局部字号。
+- 回归契约按用户要求从旧“文字在图上方/单段16px”改为原版“侧栏多段14px”，并检查全部段落；没有删除冻结/读写/暂停/键盘/对象身份断言。专注版1440的阶段0/8截图与上轮归档SHA256完全相同（87e437...3eb45 / ebfc413...8f973）。
+- 最终必要画面与机器报告归档：C:/Users/lenovo/.codex/visualizations/2026/10/28/01a1836d-f85f-7e31-b7b3-3847b946b36b/der-feedback-20261029。原run截图路径用于追溯，实际保留画面以归档命名PNG为准。
+- FULLSCREEN_LAYOUT=PASS（布局模拟），FULLSCREEN_REAL=NOT_RUN（延用UI安全识别限制）；不将本轮反馈当作W9最终人工PASS，不执行W10。
+
+本轮收尾：无过滤test:browser最终2490断言通过，两档各1245，退出0；包括本轮反馈检查和原有全流程。公共runner的确切run清理输出CLEANED、Test-Path=False；必要证据已归档，两个本轮自建测试截图目录随后精确清理。工作流仍W9 PENDING，未代签人工终审。

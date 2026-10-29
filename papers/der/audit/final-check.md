@@ -17,7 +17,7 @@ Node24.18.0 / Vite6.4.3 / Edge156.0.4314.50。相邻 PaperSkill HEAD=c6d30defb90
 | --- | --- | --- |
 | UPSTREAM_SYNTAX | NOT_RUN | 无法核实当前官方脚本。git fetch upstream main 的 SSH 失败；临时 HTTPS URL 重写的 fetch 亦因连接重置失败（两次终端退出1，未独立采集原生 git 码）。未把缓存 SHA 当当前。 |
 | UPSTREAM_OUTPUT | NOT_RUN | 同上。相邻旧版本仅作本地诊断。 |
-| SOURCE_BUILD | PASS | npm.cmd --prefix papers/der/web/enhanced run build，退出0；tsc 与 Vite，71 modules，index-phdlzviR.js / index-DpXOBddT.css。 |
+| SOURCE_BUILD | PASS | npm.cmd --prefix papers/der/web/enhanced run build，退出0；tsc 与 Vite，71 modules，index-D99Hv4HX.js / index-C5JYbR8T.css（2026-10-29截图反馈修订后）。 |
 | SUBPATH_ASSETS | PASS | 真 dist 由测试服务加载于 /der-review/，两档桌面全部机制、公式、Reference 和实验切换均无 page/resource errors；最终工作台布局另经生产预览复核。此 QA 子路径不是尚未登记的正式 W10 目录。 |
 
 本地旧脚本诊断：node ../PaperSkill/paper-skill/scripts/syntax-check.js <上述绝对源码> --require-parser 与 validate-output.js <同源码> 均 PASS/退出0。41源文件解析，7章节、10模块，无占位内容。它们不代表“当前官方兼容”或 W10 Import/Preflight 已通过。
@@ -84,3 +84,9 @@ NOT_RUN。W9 用户通过后再按 docs/UPSTREAM_RELEASE.md，由用户在既有
 3. 未发现其余阻塞性的本地构建、数学、状态、资源或已检桌面布局缺陷。
 
 Overall: PENDING
+
+## W9 截图反馈复核（2026-10-29）
+
+用户指定的四处修订及追加标题对齐已落实于a45fae9：KL公式前置、修复MathML内部滚动；图注等宽/mark及删除指定句；误差区间为柔和圆角带与均值点；正文直接采用既有侧栏，标题对齐正文。定向42断言、两档14状态公共视觉检查、21项数学测试和生产构建均通过。已实看代表截图，证据在der-feedback-20261029目录。计算/生命周期纯模型未改，原专注版1440两关键帧逐字节一致。完整浏览器回归2490断言通过（两档各1245），含九阶段中间态、冻结/读写、暂停恢复、reduced motion、键盘/菜单、普通侧栏与原专注版切换；W9最终人工验收仍PENDING。
+
+本轮公共runner已按确切路径清理，CLEANED与Test-Path=False均确认；两个本轮原生测试截图目录在归档必要画面后精确清理。
