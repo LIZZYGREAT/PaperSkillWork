@@ -143,3 +143,11 @@ P1 Agent 范围的截图复核已完成，方向选择等待用户；`HUMAN_ACCE
 ## P1 用户通过与 P2 启动授权（2026-10-29）
 
 用户明确回复“我通过了，你继续按方案执行P2”。按紧接此前的 P1 方向稿及两项返修语境，记录为 P1 阶段人工通过并授权启动 P2。该结论不代表 S4–S8/W9 全篇人工验收通过；P2 完成后按附文停止复评，W9 总状态保持 PENDING，W10 不启动，`paper.yaml` 不改。
+
+## P2 进行中：Reservoir 生产主线（2026-10-29）
+
+S4 Reservoir 已接入通过的 P1 方向。规则贴近主图显示；保留输入训练已完成、冻结 `z`、固定槽位、满池抽签、同槽替换，以及拒收仍递增 `N` 的既有模型事实。移出旧记录与拒收候选分别进入池外框，避免动画期间重复显示同一记录。未改 `reservoir-model.ts`、训练/论文数据、U1–U3、D1 生命周期或 P1 审批范围。
+
+构建 PASS（75 modules）；`npm test` 24/24 PASS；`node tests/browser.test.mjs --reservoir-only` 两档各 57 项，合计 114 项 PASS。测试检查连续播放、各阶段回退、状态与冻结值、暂停位置、reduced motion 和实际画布边界。因为本机 Playwright Chromium 文件缺失，经已记录的 Windows 回退以 Playwright/Edge 156.0.4314.50 运行；实际查看了替换中段、替换落定、拒收中段和两档落定截图。无头检查不等于真实 F11。证据：`C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/reservoir`。
+
+这只是 P2 的第一部分。其余 S4–S6 生产场景待重建；P2 全部完成后停止等待用户复审。`HUMAN_ACCEPTANCE=PENDING`、W9 `Overall=PENDING`，W10 未启动，`paper.yaml` 未改。

@@ -1,62 +1,180 @@
-import { ReservoirFormulaLesson } from "./FormulaLessons";
+import { useId } from "react";
 import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
 import ModelPixel from "./review/ModelPixel";
-import { windowAt, curve } from "./review/lifecycle-model";
+import { curve, mix, windowAt } from "./review/lifecycle-model";
 import { RESERVOIR_CLIPS, RESERVOIR_INPUTS, reservoirSceneAt, type MemoryRecord } from "./reservoir-model";
-import { Term } from "./Reference";
 import "./reservoir.css";
 
-function Record({ record, x, y, opacity = 1 }: { record: MemoryRecord; x: number; y: number; opacity?: number }) {
+function RecordTile({ record, x, y, opacity = 1 }: { record: MemoryRecord; x: number; y: number; opacity?: number }) {
   return <g transform={`translate(${x} ${y})`} opacity={opacity} data-record={record.id} data-frozen={record.z.join(",")} data-origin={record.origin}>
-    <rect width="264" height="106" rx="12" className="rv-record"/><rect x="12" y="14" width="64" height="64" rx="9" className="rv-image"/>
-    <ModelPixel model={record.model} x={23} y={25} size={42}/><text x="44" y="96" textAnchor="middle" className="rv-id">{record.id}</text>
-    <text x="92" y="25" className="rv-caption">□ 冻结 z · {record.origin}</text>
-    {record.z.map((v,k) => <g key={k}><rect x={92+k*50} y="37" width="43" height="38" rx="4" className={`rv-tile rv-tone-${k}`}/><text x={113+k*50} y="64" textAnchor="middle" className="rv-value">{v}</text></g>)}
-    <text x="92" y="94" className="rv-caption">原图与数值一起存取</text>
+    <rect width="278" height="88" rx="11" className="rv-record-card" />
+    <rect x="8" y="11" width="42" height="42" rx="8" className="rv-image" />
+    <ModelPixel model={record.model} x={13} y={16} size={32} />
+    <text x="58" y="24" className="rv-record-label">{record.id} · 原图随记录保留</text>
+    <text x="58" y="45" className="rv-record-title">冻结响应 z</text>
+    {record.z.map((value, index) => <g key={index}>
+      <rect x={58 + index * 67} y="56" width="59" height="24" rx="5" className={`rv-tone rv-tone-${index}`} />
+      <text x={87 + index * 67} y="73" textAnchor="middle" className="rv-value">{value}</text>
+    </g>)}
   </g>;
 }
-export default function Reservoir({focused=false}: {focused?:boolean;chapterId?:string;moduleId?:string}) {
+
+function ReservoirToken({ record, x, y, label, detail, rejected = false }: {
+  record: MemoryRecord;
+  x: number;
+  y: number;
+  label: string;
+  detail: string;
+  rejected?: boolean;
+}) {
+  return <g transform={`translate(${x} ${y})`} className={`rv-token${rejected ? " is-rejected" : ""}`} data-record={record.id}>
+    <rect width="154" height="52" rx="10" />
+    <ModelPixel model={record.model} x={8} y={10} size={32} />
+    <text x="47" y="22" className="rv-token-title">{label}</text>
+    <text x="47" y="39" className="rv-token-detail">{detail}</text>
+  </g>;
+}
+
+export default function Reservoir({ focused = false }: { focused?: boolean; chapterId?: string; moduleId?: string }) {
   const timeline = useSceneTimeline(RESERVOIR_CLIPS);
-  const { clipIndex: clip, progress: p } = timeline.state, s = reservoirSceneAt(clip,p);
-  const arrive = windowAt(p,.02,.28), travel = windowAt(p,.52,.9), draw = windowAt(p,.3,.47);
-  const start = {x:60+clip*126,y:24}, candidate = {x:180,y:180};
-  const dest = s.slot === null ? {x:822,y:175} : {x:174+s.slot*510,y:402};
-  const a = curve(arrive,start,{x:start.x,y:130},{x:150,y:180},candidate);
-  const b = curve(travel,candidate,{x:440,y:180},{x:dest.x,y:330},dest);
-  const pos = p < .52 ? a : b;
-  const titles = ["有空位，直接留下。","第二条记录，进入另一个空槽。","抽到槽 0，旧记录离开，新记录进入。","抽到容量以外的位置，候选离开，记忆保留。"];
+  const { clipIndex: clip, progress: p } = timeline.state;
+  const s = reservoirSceneAt(clip, p);
+  const defsId = useId().replace(/:/g, "");
+  const slotX = [250, 590] as const;
+  const slotY = 324;
+  const slotWidth = 300;
+  const slotCenter = [400, 740] as const;
+  const streamX = [132, 352, 572, 792] as const;
+  const gate = { x: 410, y: 157, width: 300, height: 102 };
+  const exitBay = { x: 24, y: 340, width: 180, height: 108 };
+  const rejectBay = { x: 916, y: 340, width: 180, height: 108 };
+  const gateCenter = gate.x + gate.width / 2;
+  const accepted = s.slot !== null;
+  const destinationCenter = s.slot === null ? null : slotCenter[s.slot];
+  const committed = s.committed;
+  const visibleMemory = s.state.M;
+  const seen = s.state.N;
+  const drawn = s.j !== undefined && p > .1;
+  const replacementExit = windowAt(p, .3, .54);
+  const candidateFlight = windowAt(p, .42, .88);
+  const sourceX = streamX[clip];
+  const feedX = sourceX < gate.x ? gate.x : sourceX > gate.x + gate.width ? gate.x + gate.width : sourceX;
+  const feedPath = `M${sourceX} 94 C${mix(sourceX, feedX, .42)} 132 ${mix(sourceX, feedX, .78)} 145 ${feedX} ${gate.y}`;
+  const outputPath = destinationCenter === null
+    ? null
+    : `M${gateCenter} ${gate.y + gate.height} C${mix(gateCenter, destinationCenter, .28)} 284 ${mix(gateCenter, destinationCenter, .76)} 294 ${destinationCenter} ${slotY}`;
+  const rejectPath = `M${gate.x + gate.width} ${gate.y + 62} C790 228 916 236 ${rejectBay.x + 21} ${rejectBay.y}`;
+  const evictPath = `M${slotX[0]} ${slotY + 66} C238 390 220 398 ${exitBay.x + exitBay.width} ${exitBay.y + 66}`;
+  const exitScale = mix(1, .57, replacementExit);
+  const exitCenter = curve(replacementExit,
+    { x: slotCenter[0], y: slotY + 66 },
+    { x: 342, y: 349 },
+    { x: 245, y: 408 },
+    { x: exitBay.x + exitBay.width / 2, y: exitBay.y + 66 });
+  const exitX = exitCenter.x - 139 * exitScale;
+  const exitY = exitCenter.y - 44 * exitScale;
+  const acceptedOrigin = destinationCenter === null ? null : curve(candidateFlight,
+    { x: gateCenter - 77, y: gate.y + gate.height - 8 },
+    { x: gateCenter - 77, y: gate.y + gate.height + 25 },
+    { x: destinationCenter - 77, y: slotY - 28 },
+    { x: destinationCenter - 77, y: slotY + 60 });
+  const rejectedOrigin = curve(candidateFlight,
+    { x: gate.x + gate.width - 80, y: gate.y + 46 },
+    { x: 760, y: gate.y + 63 },
+    { x: 950, y: gate.y + 53 },
+    { x: rejectBay.x + 13, y: rejectBay.y + 42 });
+  const titles = ["空槽先接收；从第二项起再抽签。", "第二项进入另一槽；容量保持不变。", "抽到槽 0：旧记录离开，新记录占同一槽。", "抽到 3：候选离池，记忆内容保持不变。"];
   const notes = [
-    "x₁ 已完成当前训练。把原图与更新前冻结的 z₁ 作为一个候选，直接放进 slot 0；写入完成后 N 从 0 变成 1。",
-    "K 始终为 2。x₂ 写入 slot 1，x₁ 的原图、冻结值和生成时刻继续保留；N 从 1 变成 2。",
-    "插入前 N=2，从 0、1、2 等概率抽取。本例预设 j=0<K，x₁ 离开 slot 0，x₃ 接替；N 变为 3。",
-    "插入前 N=3，从 0、1、2、3 等概率抽取。本例预设 j=3≥K，x₄ 不入池，已有 x₃/x₂ 不变；N 仍变为 4。x₄ 此前已参与当前训练。",
+    "x₁ 已完成当前训练，连同更新前冻结的 z₁ 写入 slot 0；写入后 N 从 0 变为 1。",
+    "x₂ 写入 slot 1。x₁ 的图像、冻结响应与生成时刻一起保留；N 从 1 变为 2。",
+    "插入前 N=2，预设 j=0<K；x₁ 离开 slot 0，x₃ 接替，slot 1 不动；N 变为 3。",
+    "插入前 N=3，预设 j=3≥K；x₄ 不入池，但它此前已参与当前训练；N 仍增加到 4。",
   ];
-  return <section id="reservoir-player" className="reservoir-scene" data-scene="reservoir" data-clip={clip} data-progress={p} data-status={timeline.state.status} data-seen={s.state.N} data-memory={s.state.M.map(r=>r.id).join(",")} data-decision={s.decision} data-committed={s.committed}>
-    {!focused && <p className="lesson-intro">已经知道一条记录要保存原图与 <Term id="z">冻结响应</Term>。但流不会停止，空间只有 K 条。Reservoir 逐项决定谁留下；下面从空池开始，看四项候选如何改变同一份记忆。</p>}
-    <div className="rv-heading"><div><p className="eyebrow">RESERVOIR / 在线选留</p><h3>流继续来，记忆保持两格。</h3></div><div className="rv-state" aria-label="记忆状态"><span>K <b>2</b><small>固定容量</small></span><span>N <b data-count>{s.state.N}</b><small>已处理流项</small></span><span>|M| <b>{s.state.M.length}</b><small>当前记录数</small></span></div></div>
-    <ReservoirFormulaLesson/>
-    <SceneTransport timeline={timeline} clips={RESERVOIR_CLIPS} label="Reservoir" showTiming={false} caption="四次输入连续播放；选择阶段可回到该次输入前。抽签使用教学预设随机结果。" />
-    <div className="rv-stage"><svg viewBox="0 0 1120 556" role="img" aria-label="四项流输入、候选判断与两个固定记忆槽" className="rv-canvas">
-      <path d="M60 78H600" className="rv-stream-line"/><text x="642" y="65" className="rv-title">每次：当前训练已完成 → 再选留候选</text><text x="642" y="91" className="rv-caption">冻结 z 来自对应更新前网络，选留时不重新计算。</text>
-      {RESERVOIR_INPUTS.map((r,i)=><g key={r.id} transform={`translate(${60+i*126} 24)`} opacity={i<clip?.35:i===clip?1:.65}>
-        <rect width="60" height="62" rx="9" className="rv-image"/><ModelPixel model={r.model} x={13} y={8} size={34}/><text x="30" y="55" textAnchor="middle" className="rv-id">{r.id}</text>
-        <text x="30" y="86" textAnchor="middle" className="rv-caption">{i<clip?"已处理":i===clip?"本次输入":"稍后到达"}</text>
-      </g>)}
-      <rect x="152" y="155" width="320" height="158" rx="15" className="rv-candidate-place"/><text x="180" y="148" className="rv-caption">本次候选 · (x,z) 的身份始终一起移动</text>
-      <g className="rv-decision"><rect x="630" y="146" width="430" height="178" rx="14" className="rv-decision-bg"/>
-        <text x="654" y="178" className="rv-title">{s.j===undefined?"N < K：无需抽签":`N = ${s.before.N}：从 [0,N] 等概率抽整数`}</text>
-        {s.j===undefined?<><text x="654" y="224" className="rv-decision-large">直接追加到 slot {s.slot}</text><text x="654" y="294" className="rv-caption">有空位，记录无需竞争。</text></>:
-        <>{Array.from({length:s.before.N+1},(_,j)=><g key={j}><rect x={654+j*78} y="196" width="56" height="48" rx="8" className={j===s.j&&draw>.8?"rv-draw-chosen":"rv-draw"}/><text x={682+j*78} y="228" textAnchor="middle" className="rv-number">{j}</text><text x={682+j*78} y="267" textAnchor="middle" className="rv-caption">{j<2?`槽 ${j}`:"不入池"}</text></g>)}<text x="654" y="298" className="rv-caption" opacity={draw}>教学预设随机结果 j={s.j} · {s.slot===null?"拒收当前候选":`替换 slot ${s.slot}`}</text></>}
-      </g>
-      {[0,1].map(slot=><g key={slot}><rect x={100+slot*510} y="366" width="410" height="166" rx="15" className="rv-slot"/><text x={122+slot*510} y="391" className="rv-slot-label">M / slot {slot}</text><text x={305+slot*510} y="391" className="rv-caption">{s.state.M[slot]?"记录保留至下一次替换":"等待记录"}</text>{!s.before.M[slot]&&!s.committed&&<text x={305+slot*510} y="468" textAnchor="middle" className="rv-empty">空槽</text>}</g>)}
-      {s.before.M.map((r,slot)=>{
-        const leaving=s.evicted?.id===r.id;
-        return <Record key={r.id} record={r} x={174+slot*510-(leaving?travel*150:0)} y={402} opacity={leaving?1-travel:1}/>;
-      })}
-      <Record record={s.candidate} x={pos.x} y={pos.y} opacity={s.slot===null?1-travel:Math.min(1,arrive*3)}/>
-      {s.evicted&&<text x="68" y="351" className="rv-caption" opacity={Math.sin(travel*Math.PI)}>{s.evicted.id} 离开记忆 · 原冻结值未改写</text>}
-    </svg></div>
-    <div className="rv-narration" aria-live="polite"><strong>{titles[clip]}</strong><p>{notes[clip]}</p></div>
-    <p className="quiet-note">与 iCaRL 的局部区别：iCaRL 在任务结束时按类别分配配额，用 Herding 选择代表图；这里逐流项在线选留，不需要稳定任务边界，也不保证类别均衡。</p><p className="quiet-note">本场景是独立的合成入池序列，z 为给定的更新前输出；没有模拟网络优化。它只放大训练结束后的选留动作。未入池 ≠ 未参与当前训练。</p>
+
+  return <section id="reservoir-player" className={`reservoir-scene${focused ? " is-focused" : ""}`} data-scene="reservoir" data-clip={clip} data-progress={p} data-status={timeline.state.status} data-seen={s.state.N} data-memory={s.state.M.map(record => record.id).join(",")} data-decision={s.decision} data-committed={committed}>
+    <div className="rv-heading">
+      <div><p className="eyebrow">S4 / RESERVOIR · 在线选留</p><h3>流继续来，有限记忆只保留两个槽。</h3><p>每个候选先完成本步训练，再决定是否进入同一份记忆。</p></div>
+      <div className="rv-state" aria-label="记忆状态">
+        <span><small>固定容量</small><b>K <i>2</i></b></span>
+        <span><small>处理流项</small><b>N <i data-count>{seen}</i></b></span>
+        <span><small>已存记录</small><b>|M| <i>{visibleMemory.length}</i></b></span>
+      </div>
+    </div>
+    <SceneTransport timeline={timeline} clips={RESERVOIR_CLIPS} label="有限记忆 Reservoir" showTiming={false} caption="沿同一条流前进；选择阶段可回到该项处理前。抽签使用教学预设结果。" />
+    <div className="rv-stage">
+      <svg className="rv-canvas" viewBox="0 0 1120 500" role="img" aria-label="候选经过选留决策后写入固定记忆槽；被替换的记录与拒收候选分别离池">
+        <defs>
+          <linearGradient id={`${defsId}-stream`} x1="0" x2="1"><stop offset="0" stopColor="#d5dfd6"/><stop offset=".52" stopColor="#8ba58e"/><stop offset="1" stopColor="#d5dfd6"/></linearGradient>
+          <marker id={`${defsId}-stream-arrow`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#849a88"/></marker>
+          <marker id={`${defsId}-feed-arrow`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#6d9576"/></marker>
+          <marker id={`${defsId}-store-arrow`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#397554"/></marker>
+          <marker id={`${defsId}-away-arrow`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#ad7c4e"/></marker>
+        </defs>
+        <text x="54" y="34" className="rv-flow-heading">持续输入流</text>
+        <g transform="translate(850 25)" className="rv-flow-legend">
+          <path d="M0 8H36" className="rv-legend-store" markerEnd={`url(#${defsId}-store-arrow)`}/><text x="45" y="12">写入</text>
+          <path d="M94 8H130" className="rv-legend-away" markerEnd={`url(#${defsId}-away-arrow)`}/><text x="139" y="12">离池 / 替换</text>
+        </g>
+        <path d="M74 94H1040" className="rv-stream-track" markerEnd={`url(#${defsId}-stream-arrow)`} />
+        {RESERVOIR_INPUTS.map((record, index) => <g key={record.id} className={`rv-stream-item${index === clip ? " is-current" : index < clip ? " is-past" : ""}`} transform={`translate(${streamX[index]} 94)`}>
+          <text y="-42" textAnchor="middle" className="rv-stream-id">{record.id}</text>
+          <circle r="28" className="rv-stream-orbit" />
+          <ModelPixel model={record.model} x={-18} y={-18} size={36} />
+          {index === clip ? <text x="34" y="4" className="rv-stream-status is-current">本次</text> : <text y="48" textAnchor="middle" className="rv-stream-status">{index < clip ? "已处理" : "待到达"}</text>}
+        </g>)}
+        <path d={feedPath} className="rv-candidate-feed" markerEnd={`url(#${defsId}-feed-arrow)`} />
+        {outputPath && <path d={outputPath} className="rv-route-accepted" markerEnd={`url(#${defsId}-store-arrow)`} />}
+        {s.slot === null && <path d={rejectPath} className="rv-route-away" markerEnd={`url(#${defsId}-away-arrow)`} />}
+        {s.evicted && <path d={evictPath} className="rv-route-away" markerEnd={`url(#${defsId}-away-arrow)`} />}
+
+        <g transform={`translate(${gate.x} ${gate.y})`} className="rv-decision-card">
+          <rect width={gate.width} height={gate.height} rx="13" />
+          <path d={`M0 34H${gate.width}`} className="rv-decision-divider" />
+          <text x="18" y="23" className="rv-decision-kicker">{s.j === undefined ? "空槽优先" : "满池后抽签"}</text>
+          <text x="18" y="65" className="rv-decision-result">{s.j === undefined ? `直接写入 slot ${s.slot}` : `j = ${drawn ? s.j : "…"}`}</text>
+          <text x="18" y="86" className="rv-decision-note">{s.j === undefined ? "当前有空槽" : `等概率选择 0—${s.before.N}`}</text>
+          {s.j !== undefined && Array.from({ length: s.before.N + 1 }, (_, choice) => <g key={choice} transform={`translate(${158 + choice * 31} 49)`}>
+            <rect width="25" height="26" rx="7" className={`rv-draw-choice${drawn && choice === s.j ? s.slot === null ? " is-away" : " is-selected" : ""}`} />
+            <text x="12.5" y="17" textAnchor="middle" className="rv-draw-number">{choice}</text>
+          </g>)}
+        </g>
+
+        <text x="250" y="300" className="rv-memory-heading">M · 固定容量 K = 2</text>
+        {[0, 1].map(slot => {
+          const record = visibleMemory[slot];
+          const isTarget = accepted && s.slot === slot;
+          const isLeaving = !committed && Boolean(s.evicted && record?.id === s.evicted.id && replacementExit > .04);
+          const status = record ? isLeaving ? "移出中" : isTarget && committed ? "刚写入" : "保留" : isTarget ? "等待写入" : "空槽";
+          return <g key={slot} transform={`translate(${slotX[slot]} ${slotY})`}>
+            <rect width={slotWidth} height="122" rx="14" className={`rv-memory-slot${record ? " is-occupied" : ""}${isTarget ? " is-target" : ""}`} />
+            <text x="15" y="21" className="rv-slot-label">MEMORY · SLOT {slot}</text>
+            <text x={slotWidth - 14} y="21" textAnchor="end" className={`rv-slot-status${isTarget ? " is-target" : ""}`}>{status}</text>
+            {!record && <g transform={`translate(${slotWidth / 2} 74)`} className="rv-empty-slot"><circle r="12"/><path d="M-5 0H5M0 -5V5"/><text x="20" y="4">候选到达后写入</text></g>}
+          </g>;
+        })}
+        <g transform={`translate(${exitBay.x} ${exitBay.y})`} className="rv-sink rv-sink-evicted">
+          <rect width={exitBay.width} height={exitBay.height} rx="12" />
+          <text x="13" y="20" className="rv-sink-title">移出记忆池</text><text x={exitBay.width - 13} y="20" textAnchor="end" className="rv-sink-mark">M OUT</text>
+          {!s.evicted && <text x="13" y="68" className="rv-sink-empty">本步没有旧记录离开</text>}
+          {s.evicted && committed && <ReservoirToken record={s.evicted} x={13} y={42} label={`${s.evicted.id} 离池`} detail={`原 slot ${s.slot}`} />}
+        </g>
+        <g transform={`translate(${rejectBay.x} ${rejectBay.y})`} className="rv-sink rv-sink-rejected">
+          <rect width={rejectBay.width} height={rejectBay.height} rx="12" />
+          <text x="13" y="20" className="rv-sink-title">未写入记忆</text><text x={rejectBay.width - 13} y="20" textAnchor="end" className="rv-sink-mark">POOL OUT</text>
+          {accepted && <text x="13" y="68" className="rv-sink-empty">没有拒收候选</text>}
+          {s.slot === null && committed && <ReservoirToken record={s.candidate} x={13} y={42} label={`${s.candidate.id} 拒收`} detail={`j = ${s.j} ≥ K`} rejected />}
+        </g>
+
+        {visibleMemory.map((record, slot) => {
+          if (s.evicted?.id === record.id && !committed) return <g key={`leaving-${record.id}`} transform={`translate(${exitX} ${exitY}) scale(${exitScale})`} className="rv-moving-evicted"><RecordTile record={record} x={0} y={0} /></g>;
+          return <RecordTile key={`${record.id}-${slot}`} record={record} x={slotX[slot] + 11} y={slotY + 29} />;
+        })}
+        {accepted && !committed && candidateFlight > 0 && acceptedOrigin && <g transform={`translate(${acceptedOrigin.x} ${acceptedOrigin.y})`}><ReservoirToken record={s.candidate} x={0} y={0} label={`${s.candidate.id} 新记录`} detail="准备写入同一槽" /></g>}
+        {s.slot === null && !committed && candidateFlight > 0 && <g transform={`translate(${rejectedOrigin.x} ${rejectedOrigin.y})`}><ReservoirToken record={s.candidate} x={0} y={0} label={`${s.candidate.id} 候选`} detail="离开记忆流" rejected /></g>}
+      </svg>
+    </div>
+    <div className="rv-caption" aria-live="polite"><strong>{titles[clip]}</strong><span>{notes[clip]}</span></div>
+    <div className="rv-inline-rule"><strong>满池时</strong><code>j ∼ Uniform&#123;0, …, N&#125;</code><span><code>j &lt; K</code> → 替换 <code>slot j</code>；否则拒收。</span><b>每项处理后 N ← N + 1</b></div>
+    <p className="quiet-note">与 iCaRL 的局部区别：iCaRL 在任务结束时按类别分配配额并用 Herding 选代表图；这里逐流项在线选留，不依赖任务边界，也不保证类别均衡。z 是更新前给定值，本图不模拟网络优化。</p>
   </section>;
 }

@@ -511,3 +511,11 @@ Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwrigh
 #### P1 用户通过与 P2 启动（2026-10-29）
 
 用户回复“我通过了，你继续按方案执行P2”，据当前会话上下文确认 P1 三方向及 Reservoir、鹈鹕两项返修均获阶段通过，并授权启动 P2。此通过仅对应 P1 方向审核；P2 完成后仍须按方案停下进行下一次人工复评。W9 总验收保持 `pending`，不启动 W10，不修改 `paper.yaml`。
+
+### P2 / S4 Reservoir 生产主线（2026-10-29）
+
+将 P1 通过的 Reservoir 构图接入正式阅读模块：连续输入流进入抽签门，再分别流向两个固定记忆槽、替换出口或拒收出口。替换和拒收使用琥珀色虚线，写入使用绿色实线；冻结响应与原图身份继续随记录同行。移出记录缩小后停留在出口，候选落槽后才交接；拒收候选沿记忆槽上方到池外。主线规则移至机制图下方，长 `K/n` 证明留在旁支参考。播放状态、阶段选择、回退、冻结数据及计数继续由既有时间线与 `reservoir-model.ts` 驱动。
+
+生产构建 PASS（TypeScript 与 Vite，75 modules），`npm test` 24/24 PASS。`node tests/browser.test.mjs --reservoir-only` 经 Playwright/Edge 156.0.4314.50 在 1440×900 和 1920×1080 各 57 项通过，合计 114；包括四步全程播放、替换/拒收中间态、暂停/回退、状态模型一致、减少动态与实际画布边界。内置 Playwright Chromium 可执行文件缺失，Edge 使用仓库记录的 Windows 回退路径；截图为无头浏览器，不声称真实 F11。已实看替换动画、替换落定及拒收动画/落定两档画面。截图归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/reservoir`。
+
+此处仅完成 P2 的 Reservoir 子项；DER 单步、增强、DER++ 尚待处理。P2 全部结束后依方案停止交用户复审，W9 保持 `PENDING`，不启动 P3/P4，不改 `paper.yaml`。
