@@ -206,3 +206,13 @@ S7/S8 的 W8 工程实现和 Agent 视觉复核已完成：双视口生产浏览
 本轮按四张截图修订网络结构示意、Reservoir/增强箭头及 Reservoir 空状态排版；代码分别提交为 `3ad80cd`、`448e217`、`a3dcf1f`。网络图展示 3×5 示意但注明实际计算维度仍为 2D→3 类；样本流箭头从图标圆边界出发，增强分支连接到图像边缘；两个槽位提示与两侧出口空状态文字居中。未修改训练模型、Reservoir 状态转移或论文数据。
 
 本版本仅通过源码检查与逐次 `git diff --check`。BUILD、单元测试、浏览器回归、生产播放和本轮截图目视复核均为 `NOT_RUN`，旧 QA 记录不能代替本次检查。`HUMAN_ACCEPTANCE=PENDING`，`Overall: PENDING`；W10 未启动，`paper.yaml` 未改。
+
+## W9 用户截图追加返修复核（2026-10-30）
+
+提交：`d866a23` 移除 Reservoir/工作台长路线，统一成 D1 同款短运动拖尾并清除过大的工作台眉题样式；`944ec6d` 将 DER 单步冻结向量拆行并调至 12px。网络图标注为 3×5×3。训练及 Reservoir 计算、模型数据与阶段时序没有改动。
+
+- 定向 Chromium runner：`.visual-qa/der-targeted-qa.json`，6 状态 × 2 桌面视口；12/12 目标截图、几何检查通过，浏览器错误 0。逐张实看截图后 Agent 范围视觉复核通过。完整报告：`.visual-qa/run-2026-10-29T16-32-00-402Z/report.md`；runner 原始 `STYLE_QA/VISUAL_REVIEW=NOT_RUN`、`HUMAN_ACCEPTANCE=PENDING`。
+- `FULLSCREEN_LAYOUT=PASS`（1920×1080 布局模拟）；真实 F11 与连续播放检查 `NOT_RUN`。此次 QA 仅覆盖以上目标状态，不代表全站视觉复核。
+- `node node_modules/vite/bin/vite.js build --configLoader runner`：78 modules，PASS。`npm.cmd run build`：FAIL，仍报未修改的 `src/modules/MechanismScenes.tsx:168` 上 `<mspace width="1em" />` 的 React MathML 类型错误。未运行测试套件。
+
+本轮 runner 截图已审阅，待提交 QA 文档后按仓库流程对该精确 run 目录执行清理并核对不存在。W9 `Overall=PENDING`、`HUMAN_ACCEPTANCE=PENDING`；W10 未启动、`paper.yaml` 未改。

@@ -574,3 +574,13 @@ P4 只更新现有两份规范、两份 Skills 及既有计划/审计，无新 s
 依据本轮四张用户截图完成三组修改，并分别提交：`3ad80cd` 将共享网络图改为 3×5 示意，同时标注计算仍为 2D→3 类；`448e217` 让 Reservoir 候选流从样本圆边界起步、平滑接入决策卡，并让增强分支箭头贴近目标图像边缘且使用连续细线；`a3dcf1f` 将 Reservoir 槽位占位内容和两侧空状态文案居中。训练模型、状态顺序和样本数值未改。
 
 本轮仅做源码与 `git diff --check` 检查；构建、单元/浏览器测试、生产播放和截图实看均未运行。此前 W8/W9 的 PASS 不覆盖上述三个提交；W9 仍待用户终审，W10 未启动，`paper.yaml` 未改。
+
+## W9 用户截图追加返修与复核（2026-10-30）
+
+按用户更正将工作台与单步场景的网络示意统一写为 **3×5×3**（仅为 2D 输入、3 类输出的结构示意）。Reservoir 与四轮工作台移除整段渐进路线和路线箭头，改为复用 D1 同款短点状运动拖尾；Reservoir 入槽改为先水平离开决策卡、再沿槽位边侧垂直落下，避免拖尾或候选卡经过槽标题。工作台的 `AFTER UPDATE · RESERVOIR` 不再继承会放大眉题的规则；DER 单步冻结向量拆到独立一行并提高到 12px，防止说明串出卡片。训练/Reservoir 模型、数值及阶段时序未改。
+
+代码分两部分及时提交：`d866a23`（D1 样式短拖尾与去除长路线）和 `944ec6d`（冻结向量文字可读性）。
+
+定向 Chromium Visual QA 配置 `.visual-qa/der-targeted-qa.json` 检查 Reservoir 替换/拒收、DER 单步联合更新/更新后写入、工作台第 3 轮写入/第 4 轮 DER++ 拒收，共 6 状态 × 1440×900、1920×1080 = 12 张截图。报告 `.visual-qa/run-2026-10-29T16-32-00-402Z/report.md`：`GEOMETRY_QA=PASS`、`BROWSER_ERRORS=PASS`（0）、所有目标截图结果 PASS；无整页横向溢出、已登记裁切或小于 12px 的语义文本。逐张实看两档的 12 张截图后，Agent 范围 `VISUAL_REVIEW=PASS`：3×5×3 图和向量行落在卡片内；槽位标题与入槽候选分离；仅见 D1 同款短尾；工作台眉题完整。runner 报告自身仍将 `STYLE_QA/VISUAL_REVIEW=NOT_RUN`，这里的视觉结论来自人工查看，不扩大为全站断言。`FULLSCREEN_LAYOUT=PASS`（1920×1080 模拟），真实 F11 与连续播放检查 `NOT_RUN`。
+
+`node node_modules/vite/bin/vite.js build --configLoader runner`：Vite 生产打包 PASS（78 modules）。项目命令 `npm.cmd run build` 仍失败于未修改的 `src/modules/MechanismScenes.tsx:168`：`<mspace width="1em" />` 的 `width` 不属于当前 React `MathMLCoreAttributes` 类型；不将单独 Vite 打包记作 TypeScript 构建通过。未运行测试套件。该记录只覆盖上述三个目标场景和 6 个状态；W9 用户终审仍 `PENDING`，W10 未启动，`paper.yaml` 未改。
