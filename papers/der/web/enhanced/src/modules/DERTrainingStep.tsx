@@ -74,7 +74,8 @@ export default function DERTrainingStep() {
             <SampleGlyph x={43} y={304} size={62} id={`${step.rd.id} replay`} model={step.rd.model} view={step.input.sd} />
             <text x="119" y="312" className="ds-lane-title">从 M 读取旧样本</text>
             <text x="119" y="339" className="ds-lane-detail">{step.rd.id} · 原图保留</text>
-            <text x="119" y="365" className="ds-lane-note">□ 冻结 z = {vectorText(step.rd.z, 2)}</text>
+            <text x="119" y="365" className="ds-lane-note">□ 冻结 z</text>
+            <text x="119" y="384" className="ds-vector-note">{vectorText(step.rd.z, 2)}</text>
           </> : <>
             <circle cx="75" cy="338" r="22" className="ds-empty-mark" />
             <path d="M65 338H85M75 328V348" className="ds-empty-plus" />
