@@ -62,8 +62,8 @@ export default function Augmentation() {
       <text x="35" y="361" className="tg-small">按需生成保存时与回放时的视图</text>
       <path d="M327 228C338 228 338 273 350 273" className="aug-source-stem" />
       <circle cx="350" cy="273" r="4" className="aug-source-node" />
-      <path d="M350 273C368 273 374 174 392 174" className="aug-source-path" markerEnd={`url(#${defsId}-source-arrow)`} />
-      <path d="M350 273C368 273 374 373 392 373" className="aug-source-path" markerEnd={`url(#${defsId}-source-arrow)`} />
+      <path d="M350 273C380 273 372 174 399 174" className="aug-source-path" markerEnd={`url(#${defsId}-source-arrow)`} />
+      <path d="M350 273C380 273 372 373 399 373" className="aug-source-path" markerEnd={`url(#${defsId}-source-arrow)`} />
 
       <g opacity={done(0)}>
         <text x="400" y="84" className="tg-title">保存时 · A₀(x₁)</text>

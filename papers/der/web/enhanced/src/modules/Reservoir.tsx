@@ -61,8 +61,16 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
   const replacementExit = windowAt(p, .3, .54);
   const candidateFlight = windowAt(p, .42, .88);
   const sourceX = streamX[clip];
-  const feedX = sourceX < gate.x ? gate.x : sourceX > gate.x + gate.width ? gate.x + gate.width : sourceX;
-  const feedPath = `M${sourceX} 94 C${mix(sourceX, feedX, .42)} 132 ${mix(sourceX, feedX, .78)} 145 ${feedX} ${gate.y}`;
+  const feedTarget = sourceX < gate.x
+    ? { x: gate.x, y: gate.y + 20 }
+    : sourceX > gate.x + gate.width
+      ? { x: gate.x + gate.width, y: gate.y + 20 }
+      : { x: sourceX, y: gate.y };
+  const feedDx = feedTarget.x - sourceX;
+  const feedDy = feedTarget.y - 94;
+  const feedLength = Math.hypot(feedDx, feedDy) || 1;
+  const feedStart = { x: sourceX + feedDx / feedLength * 28, y: 94 + feedDy / feedLength * 28 };
+  const feedPath = `M${feedStart.x} ${feedStart.y} C${feedStart.x + feedDx * .34} ${feedStart.y + feedDy * .34} ${feedTarget.x - feedDx * .18} ${feedTarget.y - feedDy * .22} ${feedTarget.x} ${feedTarget.y}`;
   const acceptedPoints = destinationCenter === null ? null : [
     { x: gateCenter, y: gate.y + gate.height + 18 },
     { x: gateCenter + (destinationCenter < gateCenter ? -160 : 160), y: gate.y + gate.height + 18 },

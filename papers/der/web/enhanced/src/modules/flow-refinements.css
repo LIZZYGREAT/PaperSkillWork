@@ -38,6 +38,7 @@
 .reservoir-scene .rv-arrow-feed{stroke:#6d9576}
 .reservoir-scene .rv-arrow-store{stroke:#397554}
 .reservoir-scene .rv-arrow-away{stroke:#ad7c4e}
+.reservoir-scene .rv-candidate-feed{stroke-width:1.55}
 .reservoir-scene .rv-motion-trail{fill:none;stroke-width:1.5;stroke-dasharray:2 5;stroke-linecap:round;stroke-linejoin:round}
 .reservoir-scene .rv-motion-trail.is-store{stroke:#83a08e}
 .reservoir-scene .rv-motion-trail.is-away{stroke:#bd9668}
@@ -46,7 +47,7 @@
 .aug-view-controls{margin:12px 0}
 .aug-stage{padding:8px 0 5px}
 .aug-canvas .aug-source-stem{fill:none;stroke:#9aab98;stroke-width:1.35;stroke-linecap:round}
-.aug-canvas .aug-source-path{stroke-width:1.45;stroke-dasharray:2 5;stroke-linecap:round;stroke-linejoin:round}
+.aug-canvas .aug-source-path{stroke-width:1.55;stroke-dasharray:none;stroke-linecap:round;stroke-linejoin:round}
 .aug-canvas .aug-forward-path{stroke-width:1.35}
 .aug-canvas .aug-target-path{stroke-width:1.35;stroke-dasharray:2 5}
 .aug-canvas .aug-current-path{stroke-width:1.35}
