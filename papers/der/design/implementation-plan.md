@@ -483,3 +483,15 @@ UPSTREAM_SYNTAX / UPSTREAM_OUTPUT 仍 NOT_RUN（两次fetch终端退出1，原�
 `FormulaLesson` 的固定三段 DOM 模板已拆成中性的 `ReadingUnit` 容器和由各阅读模块自行组合的片段。各模块当前仍显式保留既有显示顺序，后续重排留在其自己的设计/实现中；共享组件和浏览器测试不再强制七个模块统一“公式先行”。测试仍核对七个阅读单元各自保有公式、解释与机制入口，MathML 尺寸/边界、公式数值/曲线交互、数据一致性及 D1 侧栏回归。此 P0 只撤销模板/测试门禁，不代表 W9 接受当前公式页的构图。
 
 源仓库已通过其 README 规定的共享 Playwright 锁定版本运行两档 Chromium；截图和交互回归保存在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p0` 与 `.../der-p0-formulas`。自动回归为两档公式专项 122 项、两档截图反馈专项 42 项、单元测试 24/24 与生产构建 PASS；实际查看了七个公式关键片段及 KL/D1 代表画面。截图测试为 headless Chromium；真实浏览器 F11 未运行。完整页面重做、S4–S6 的高保真方向审阅与 W9 复审仍在后续阶段。
+
+### P1 方向稿与短动态预览（2026-10-29）
+
+P1 只提供 Reservoir、增强视图、DER++ 三个方向供用户审阅。入口是 Vite 开发预览专用的 `web/enhanced/p1-review.html`，不改正式 `App.tsx` 路由，生产构建也不包含该入口。原有 `reservoir-model.ts`、`training-model.ts`、D1 已认可生命周期和论文数据均未修改。
+
+- Reservoir 直接显示既有预设轨迹的连续流、两个固定槽、同槽替换和拒收；动画的中间帧表现旧记录离槽，提交帧显示 x₃ 占据原槽，拒收后 N=4、M 保持不变。
+- 增强方向用同一合成原图身份展示保存时视图和可切换的裁剪/翻转回放视图；冻结 z 与当前 a 并列。图像为合成 SVG，logits/损失来自既有 W5 二维小模型，画面已标出二者边界。
+- DER++ 方向沿用 E04 合成错例（真实 y=Claude、旧 z 将 GPT 排第一），独立展示 Rd/Ry 可重合或抽到不同记录，以及当前 CE、dark 匹配和标签 CE 汇入一次 θ 更新；不承诺更新后必定纠错。
+
+P1 复核：`npm.cmd --prefix papers/der/web/enhanced run build` PASS（tsc、Vite 75 modules），生产 `dist` 不含 `p1-review.html`。仓库公共 Visual QA runner 经本机 Edge 156.0.4314.50 在 1440×900 和 1920×1080 捕获 20 个状态，20/20 PASS；`GEOMETRY_QA`、`BROWSER_ERRORS` PASS、浏览器错误为 0、无横向溢出/裁切/12px 以下语义文本。实际截图已审阅三种方向的静态/动态关键帧。该 runner 将 `STYLE_QA`、`REGRESSION`、其自身的 `BUILD`、`VISUAL_REVIEW` 留作 NOT_RUN；构建和人工图像复核分别另行完成。页面内容在较小窗口中可纵向滚动，截图为完整页面。
+
+Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwright.dev`）；按照已实跑的 `docs/VISUAL_QA.md` Windows 回退流程，使用本机 Edge 完成同一 runner 的预览。这支持流程可用，不代表 Chromium 下载成功。报告和 20 张截图归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1`。P1 的 Agent 视觉复核完成；方向选择、P2–P4 和 W9 最终人工验收仍待用户审阅，本阶段不启动它们。

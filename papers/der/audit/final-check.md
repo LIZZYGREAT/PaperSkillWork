@@ -110,3 +110,14 @@ P0 结果：`npm --prefix papers/der/web/enhanced test` 24/24 PASS；`npm --pref
 Windows Codex 的公共 Visual QA 回退流程已实跑：Playwright Chromium 下载因 `getaddrinfo ENOTFOUND cdn.playwright.dev` 失败，故 Chromium 默认 runner 本次 `NOT_RUN`；Edge 在沙箱启动也遇到权限限制后，按文档以提升权限启动 Edge 156.0.4314.50。两档 40 个状态全部实际截图，`GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS=PASS`，40/40 结果 PASS、浏览器错误为 0，每项 `actualUrl` 均在 `/der-review/` 下。首跑发现 Reservoir 的 `[data-scene=reservoir] svg` 同时命中概率图和场景画布，导致四个状态动作失败；配置已改为唯一的 `.rv-canvas`，完整复跑通过。已实看文章、工作台预测、Reservoir 替换/拒收、增强和 DER++ 的代表截图；公共报告自身仍将 `VISUAL_REVIEW=NOT_RUN`，没有由此代签设计审查或 W9，`HUMAN_ACCEPTANCE=PENDING`。首跑与复跑报告路径分别为 `.visual-qa/run-2026-10-29T02-25-11-819Z`、`.visual-qa/run-2026-10-29T02-30-36-142Z`，完成诊断、复测、截图查看和记录后均按精确目录清理，并验证路径不存在。
 
 当前仍 `Overall=PENDING`：P1 的 Reservoir、增强和 DER++ 关键帧/连续动态原型及真实浏览器预览尚未完成；P1 人工方向审阅、P2–P4、最终 W9 用户复审均待后续完成。算法内核、W2/W4、证据数据与 `paper.yaml` 阶段值本轮未改。
+
+## W9 P1 方向预览复核（2026-10-29）
+
+本节更新上段所述的 P1 待办：P1 的三种隔离方向稿已完成并可交用户审阅；前述“P1 预览尚未完成”是实施前记录。Reservoir、增强视图、DER++ 的实现边界和用户需决定的方向见 `design/implementation-plan.md` 的“P1 方向稿与短动态预览”。新入口只在 Vite 开发预览提供，生产构建 dist 不包含 `p1-review.html`；未改正式文章路由、受保护 D1/算法模型、训练计算或 `paper.yaml`。
+
+- `npm.cmd --prefix papers/der/web/enhanced run build`：PASS；tsc 与 Vite 75 modules，且检查生产 `dist/p1-review.html` 不存在。
+- 公共 Visual QA runner `p1-visual-qa.json`：Edge 156.0.4314.50，两个尺寸共 20 状态全部 PASS，actualUrl 均在独立 `/p1-review.html?scene=...` 入口；几何和浏览器错误 PASS，零浏览器错误，零横向溢出、裁切与小于 12px 的语义文本。运行器原生 `BUILD/STYLE_QA/VISUAL_REVIEW/REGRESSION` 仍按其定义保留 `NOT_RUN`，构建与人工图像复核另有上述记录，不能将运行器状态扩大解释。
+- 第一轮实看发现两条眉题为 11px，已调至 12px；并确认稳定阶段数组后播放不会中断，Reservoir 替换/拒收可到达已提交停留帧。最终公共报告为 `.visual-qa/run-2026-10-29T03-01-45-514Z/report.md`。最终截图、JSON 和报告归档至 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1`。
+- Chromium CDN 本轮 DNS 解析失败，Playwright Chromium 默认浏览器不可用；`docs/VISUAL_QA.md` 的 Windows Edge 回退流程已实际执行并成功运行同一公共 runner。真实 F11 仍 `NOT_RUN`。
+
+P1 Agent 范围的截图复核已完成，方向选择等待用户；`HUMAN_ACCEPTANCE=PENDING`、W9 `Overall=PENDING`。未启动 P2–P4、W10，也未代填 `paper.yaml` 或用户验收结果。

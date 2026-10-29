@@ -1,0 +1,446 @@
+import { useId, useState } from "react";
+import ModelPixel, { MODEL_CLASSES, type ModelClass } from "./ModelPixel";
+import SceneTransport, { useSceneTimeline } from "./SceneTransport";
+import { RESERVOIR_INPUTS, RESERVOIR_STEPS, reservoirSceneAt, type MemoryRecord } from "../reservoir-model";
+import { forward, runTraining, viewOf } from "../training-model";
+import { curve, windowAt } from "./lifecycle-model";
+import "./animation.css";
+import "./p1-review.css";
+
+type SceneId = "reservoir" | "augmentation" | "der-plus";
+const AUGMENTATION_STEPS = runTraining("DER");
+const SCENES: readonly { id: SceneId; number: string; label: string; summary: string }[] = [
+  { id: "reservoir", number: "01", label: "有限记忆", summary: "一条流 · 两个槽 · 同槽替换或离开" },
+  { id: "augmentation", number: "02", label: "增强视图", summary: "同一原图 · 不同视图 · 冻结目标" },
+  { id: "der-plus", number: "03", label: "DER++", summary: "两次读取 · 三种监督 · 一次更新" },
+];
+const RESERVOIR_P1_CLIPS = [
+  { id: "x₁ 进入空槽", durationMs: 1600, holdMs: 700 },
+  { id: "x₂ 填满两格", durationMs: 1600, holdMs: 700 },
+  { id: "x₃ 替换同一槽", durationMs: 1900, holdMs: 800 },
+  { id: "x₄ 拒收但继续计数", durationMs: 1900, holdMs: 800 },
+] as const;
+const AUGMENTATION_P1_CLIPS = [
+  { id: "保留同一原图", durationMs: 1500, holdMs: 600 },
+  { id: "保存视图并冻结 z", durationMs: 1600, holdMs: 650 },
+  { id: "未来回放生成新视图", durationMs: 1800, holdMs: 650 },
+  { id: "换视图，对照同一目标", durationMs: 1800, holdMs: 800 },
+] as const;
+
+function parseScene(value: string | null | undefined): SceneId {
+  return SCENES.some((scene) => scene.id === value) ? value as SceneId : "reservoir";
+}
+
+function SampleMark({ model, size = 34, x = 0, y = 0 }: { model: ModelClass; size?: number; x?: number; y?: number }) {
+  return <svg className="p1-sample-mark" x={x} y={y} width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={`${MODEL_CLASSES[model]} 合成样本图标`}>
+    <ModelPixel model={model} x={8} y={8} size={48} />
+  </svg>;
+}
+
+function P1ReviewPrototype({ initialScene }: { initialScene?: string | null }) {
+  const active = parseScene(initialScene);
+  const scene = SCENES.find((item) => item.id === active)!;
+  return <div className="p1-review">
+    <header className="p1-review-header">
+      <a className="p1-wordmark" href="./" aria-label="返回 DER 正文"><span>DER</span><small>W9 · P1 REVIEW</small></a>
+      <div className="p1-heading-copy"><p className="p1-kicker">VISUAL DIRECTION / {scene.number}</p><h1>{scene.summary}</h1></div>
+      <nav className="p1-scene-nav" aria-label="三个待审方向">
+        {SCENES.map((item) => <a key={item.id} href={`./p1-review.html?scene=${item.id}`} aria-current={active === item.id ? "page" : undefined}>
+          <span>{item.number}</span>{item.label}
+        </a>)}
+      </nav>
+    </header>
+    <main className={`p1-review-main p1-review-${active}`}>
+      <div className="p1-review-banner"><span>独立设计原型 · 不改发布主线</span><span>1440 × 900 / 1920 × 1080</span></div>
+      {active === "reservoir" ? <ReservoirPrototype /> : active === "augmentation" ? <AugmentationPrototype /> : <DERPlusPrototype />}
+      <footer className="p1-review-footer">方向稿只验证画面与教学顺序。计算内核、论文数值与已认可场景保持原样；合成视觉和小模型数值均明确标注。</footer>
+    </main>
+  </div>;
+}
+
+function RecordTile({ record, x, y, opacity = 1 }: { record: MemoryRecord; x: number; y: number; opacity?: number }) {
+  return <g transform={`translate(${x} ${y})`} opacity={opacity} data-p1-record={record.id} data-frozen-z={record.z.join(",")}>
+    <rect className="p1-record-card" width="278" height="88" rx="11" />
+    <SampleMark model={record.model} size={42} x={8} y={12} />
+    <text x="58" y="25" className="p1-svg-overline">{record.id} · 原图随记录保留</text>
+    <text x="58" y="47" className="p1-svg-title">冻结响应 z</text>
+    {record.z.map((value, index) => <g key={index}>
+      <rect x={58 + index * 67} y="56" width="59" height="24" rx="5" className={`p1-svg-tone p1-svg-tone-${index}`} />
+      <text x={87 + index * 67} y="73" textAnchor="middle" className="p1-svg-value">{value}</text>
+    </g>)}
+  </g>;
+}
+
+function ReservoirPrototype() {
+  const clips = RESERVOIR_P1_CLIPS;
+  const timeline = useSceneTimeline(clips);
+  const { clipIndex: index, progress } = timeline.state;
+  const step = RESERVOIR_STEPS[index];
+  const scene = reservoirSceneAt(index, progress);
+  const slotX = [86, 437] as const;
+  const streamX = [158, 374, 590, 806] as const;
+  const gate = { x: 858, y: 198 };
+  const accepted = step.slot !== null;
+  const destination = accepted
+    ? { x: slotX[step.slot ?? 0] + 21, y: 354 }
+    : { x: 862, y: 394 };
+  const start = { x: streamX[index] - 139, y: 119 };
+  const firstLeg = curve(windowAt(progress, .04, .48), start, { x: start.x, y: 202 }, { x: gate.x - 86, y: 190 }, { x: gate.x - 128, y: gate.y });
+  const secondLeg = curve(windowAt(progress, .48, .88), { x: gate.x - 128, y: gate.y }, { x: gate.x - 5, y: gate.y + 30 }, { x: destination.x + 50, y: destination.y - 20 }, destination);
+  const direct = curve(windowAt(progress, .05, .88), start, { x: start.x + 20, y: 220 }, { x: destination.x + 45, y: 250 }, destination);
+  const candidatePoint = step.j === undefined || progress < .49 ? firstLeg : secondLeg;
+  const candidate = step.candidate;
+  const committed = scene.committed;
+  const visibleMemory = committed ? step.after.M : step.before.M;
+  const seen = committed ? step.after.N : step.before.N;
+  const drawn = step.j !== undefined && progress > .1;
+  const replacementExit = windowAt(progress, .34, .79);
+
+  return <section className="p1-scene p1-reservoir" data-p1-scene="reservoir" data-clip={index} data-progress={progress} data-decision={step.decision} data-committed={committed}>
+    <div className="p1-scene-heading">
+      <div><p className="p1-kicker">S4 / RESERVOIR</p><h2>新记录沿流而来；有限记忆只开两个槽。</h2><p>每个候选先完成本步训练，再参加选留。抽中的槽决定谁离开，拒收只改变计数，不撤销本步训练。</p></div>
+      <div className="p1-metric-strip" aria-label="当前记忆状态">
+        <span><small>固定容量</small><b>K <i>2</i></b></span>
+        <span><small>处理流项</small><b>N <i data-p1-count>{seen}</i></b></span>
+        <span><small>已存记录</small><b>|M| <i data-p1-size>{visibleMemory.length}</i></b></span>
+      </div>
+    </div>
+    <SceneTransport timeline={timeline} clips={clips} label="有限记忆 Reservoir" showTiming={false} caption="沿同一条流前进；记忆槽保持固定身份，选留之后继续下一项。" />
+    <div className="p1-reservoir-frame">
+      <svg className="p1-reservoir-svg" viewBox="0 0 1120 500" role="img" aria-label="同一数据流进入两个固定记忆槽，发生替换或拒收">
+        <defs>
+          <linearGradient id="p1-stream-gradient" x1="0" x2="1"><stop offset="0" stopColor="#c8d9ca"/><stop offset=".55" stopColor="#3d795f"/><stop offset="1" stopColor="#d7dfd1"/></linearGradient>
+          <marker id="p1-stream-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#55816a"/></marker>
+        </defs>
+        <path d="M80 94H1022" className="p1-stream-track" markerEnd="url(#p1-stream-arrow)" />
+        <text x="82" y="41" className="p1-svg-overline">一条持续输入流</text>
+        {RESERVOIR_INPUTS.map((record, itemIndex) => <g key={record.id} className={`p1-stream-item${itemIndex === index ? " is-current" : itemIndex < index ? " is-past" : ""}`} transform={`translate(${streamX[itemIndex]} 96)`}>
+          <circle r="29" className="p1-stream-orbit" />
+          <SampleMark model={record.model} size={38} x={-19} y={-19} />
+          <text y="50" textAnchor="middle" className="p1-svg-label">{record.id}</text>
+          <text y="68" textAnchor="middle" className="p1-svg-micro">{itemIndex < index ? "已处理" : itemIndex === index ? "本次候选" : "稍后到达"}</text>
+        </g>)}
+
+        <path d="M112 155C188 180 346 162 526 177C644 188 731 200 800 221" className="p1-candidate-guide" />
+        <g className="p1-draw-gate" transform="translate(800 153)">
+          <path d="M0 17C0 -5 33 -16 74 -16S148 -5 148 17V95H0Z" className="p1-gate-shape" />
+          <text x="74" y="13" textAnchor="middle" className="p1-svg-overline">Reservoir</text>
+          <text x="74" y="38" textAnchor="middle" className="p1-svg-title">{step.j === undefined ? "空位直接进入" : `抽签 j = ${drawn ? step.j : "?"}`}</text>
+          {step.j !== undefined && Array.from({ length: step.before.N + 1 }, (_, choice) => <g key={choice} transform={`translate(${18 + choice * 30} 57)`}>
+            <circle r="10" className={drawn && choice === step.j ? "p1-draw-dot is-chosen" : "p1-draw-dot"} />
+            <text y="4" textAnchor="middle" className="p1-draw-number">{choice}</text>
+          </g>)}
+        </g>
+
+        <text x="86" y="302" className="p1-svg-overline">M · 固定记忆槽</text>
+        {[0, 1].map((slot) => <g key={slot} transform={`translate(${slotX[slot]} 324)`}>
+          <rect width="326" height="128" rx="17" className={`p1-memory-slot${visibleMemory[slot] ? " is-occupied" : ""}`} />
+          <text x="19" y="25" className="p1-slot-label">SLOT {slot}</text>
+          <text x="306" y="25" textAnchor="end" className="p1-slot-status">{visibleMemory[slot]
+            ? step.evicted?.id === visibleMemory[slot]?.id && !committed && replacementExit > .08 ? "旧记录离开中" : "记录保留"
+            : "留空"}</text>
+          {!visibleMemory[slot] && <g transform="translate(20 49)"><path d="M0 12H282" className="p1-empty-rule"/><text x="141" y="43" textAnchor="middle" className="p1-svg-micro">空位：新记录无需竞争</text></g>}
+        </g>)}
+        {step.before.M.map((record, slot) => {
+          const exits = step.evicted?.id === record.id && !committed;
+          const x = slotX[slot] + 24 - (exits ? 142 * replacementExit : 0);
+          const y = 350 + (exits ? 28 * replacementExit : 0);
+          return <RecordTile key={`${record.id}-${slot}`} record={record} x={x} y={y} opacity={exits ? 1 - replacementExit : 1} />;
+        })}
+        {committed && step.after.M.map((record, slot) => record.id === candidate.id
+          ? <RecordTile key={`committed-${record.id}`} record={record} x={slotX[slot] + 24} y={350} /> : null)}
+
+        <path d={accepted ? `M${gate.x} 250C${gate.x - 40} 282 ${destination.x + 142} 288 ${destination.x + 142} 344` : `M${gate.x + 36} 250C${gate.x + 77} 281 980 302 986 342`} className={accepted ? "p1-route-accepted" : "p1-route-rejected"} />
+        <g className="p1-reject-bay" transform="translate(854 362)">
+          <path d="M6 0V31Q6 45 20 45H218Q232 45 232 31V0" className="p1-reject-outline" />
+          <text x="122" y="70" textAnchor="middle" className="p1-svg-overline">j ≥ K</text>
+          <text x="122" y="91" textAnchor="middle" className="p1-reject-label">拒收区 · M 不变</text>
+          {step.slot === null && <text x="122" y="113" textAnchor="middle" className="p1-svg-micro">N 仍递增；当前训练已完成</text>}
+        </g>
+        {step.evicted && !committed && <g opacity={Math.sin(progress * Math.PI)}>
+          <path d="M118 463H320" className="p1-exit-rule" />
+          <text x="118" y="485" className="p1-exit-label">旧 {step.evicted.id} 从 slot {step.slot} 离开</text>
+        </g>}
+        {!committed && progress > .02 && progress < .93 && <g transform={`translate(${step.j === undefined ? direct.x : candidatePoint.x} ${step.j === undefined ? direct.y : candidatePoint.y})`} className="p1-moving-candidate" data-p1-moving-record={candidate.id}>
+          <RecordTile record={candidate} x={0} y={0} />
+        </g>}
+      </svg>
+    </div>
+    <div className="p1-reservoir-caption" aria-live="polite"><strong>{clips[index].id}</strong><span>{[
+      "空槽直接收下 x₁，处理计数从 0 变成 1。",
+      "第二条进入另一槽；K 固定为 2，x₁ 与其冻结 z 保持原样。",
+      "抽到 j=0，x₁ 离开 slot 0，x₃ 接替同一个槽；slot 1 不动。",
+      "抽到 j=3≥K，x₄ 离开记忆流；本步训练已完成，N 从 3 变成 4。",
+    ][index]}</span></div>
+    <div className="p1-reservoir-rule"><span>满池时</span><code>j ∼ Uniform{`{0, …, N}`}</code><span>只有 <code>j &lt; K</code> 才替换 slot <code>j</code>；否则拒收。</span></div>
+  </section>;
+}
+
+type ImageView = "original" | "saved" | "center" | "flip";
+function SourceIllustration({ view, label }: { view: ImageView; label: string }) {
+  const clipId = useId().replace(/:/g, "");
+  const transforms: Record<ImageView, { scale: number; x: number; y: number }> = {
+    original: { scale: 1, x: 0, y: 0 },
+    saved: { scale: 1.08, x: -9, y: -5 },
+    center: { scale: 1.34, x: -40, y: -21 },
+    flip: { scale: 1.23, x: -28, y: -12 },
+  };
+  const transform = transforms[view];
+  return <svg className="p1-source-art" viewBox="0 0 320 190" role="img" aria-label={label} data-image-identity="synthetic-source-x1" data-image-view={view}>
+    <defs><clipPath id={clipId}><rect width="320" height="190" rx="9" /></clipPath></defs>
+    <g clipPath={`url(#${clipId})`}>
+      <g transform={view === "flip" ? "translate(320 0) scale(-1 1)" : undefined}>
+        <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.scale})`}>
+          <rect width="320" height="190" fill="#dfe9e4" />
+          <path d="M0 0H320V83C278 73 248 67 206 82C158 101 122 75 75 86C47 93 23 108 0 111Z" fill="#d2e0e0" />
+          <circle cx="264" cy="40" r="20" fill="#e8c98f" />
+          <path d="M0 130C58 106 88 116 143 127S245 110 320 121V190H0Z" fill="#a7c1a3" />
+          <path d="M0 158C60 140 116 151 163 146C219 139 266 151 320 139V190H0Z" fill="#789b79" />
+          <path d="M0 168C69 164 117 171 165 158C213 146 269 155 320 148" fill="none" stroke="#d2bd8d" strokeWidth="7" />
+          <path d="M37 154C77 126 106 122 148 131" fill="none" stroke="#596f50" strokeWidth="7" strokeLinecap="round" />
+          <path d="M77 130C66 111 52 109 42 117C48 131 62 137 77 130ZM115 127C115 108 128 98 141 101C139 117 130 126 115 127Z" fill="#86a57c" />
+          <g className="p1-bird-illustration">
+            <path d="M115 103C108 89 96 82 84 81C93 98 96 110 93 122Z" fill="#b55e3f" />
+            <ellipse cx="154" cy="112" rx="48" ry="31" fill="#cf7950" />
+            <path d="M136 99C150 84 177 83 190 101C177 116 153 122 135 115Z" fill="#e5a16f" />
+            <circle cx="190" cy="79" r="24" fill="#d98558" />
+            <path d="M211 80L237 87L211 94Z" fill="#c18a42" />
+            <circle cx="197" cy="73" r="3.2" fill="#273a33" />
+            <circle cx="198" cy="72" r="1" fill="#fff" />
+            <path d="M139 136L135 151M166 137L169 151M128 151H140M164 151H176" fill="none" stroke="#73523b" strokeWidth="3" strokeLinecap="round" />
+            <path d="M126 153C151 157 172 156 191 151" fill="none" stroke="#596f50" strokeWidth="5" strokeLinecap="round" />
+            <path d="M144 111C153 99 169 99 178 108C167 119 155 123 144 111Z" fill="#f1c48d" opacity=".9" />
+          </g>
+          <path d="M246 156C253 134 261 123 277 109M267 132C282 127 291 130 296 140M255 147C242 137 234 137 225 145" fill="none" stroke="#587650" strokeWidth="5" strokeLinecap="round" />
+          <path d="M279 110C275 98 282 91 292 94C293 104 287 109 279 110ZM249 139C237 127 228 130 226 140C235 146 243 145 249 139Z" fill="#7e9e73" />
+        </g>
+      </g>
+    </g>
+    <rect x=".75" y=".75" width="318.5" height="188.5" rx="9" className="p1-image-border" />
+    <path d="M12 28V12H31M289 12H308V28M12 162V178H31M289 178H308V162" className="p1-crop-corners" />
+  </svg>;
+}
+
+function ResponseRail({ label, values, kind }: { label: string; values: readonly number[]; kind: "frozen" | "current" }) {
+  const min = -0.5, max = 1.4;
+  return <div className={`p1-response-rail is-${kind}`} data-response-kind={kind}>
+    <div className="p1-response-title"><span>{kind === "frozen" ? "□" : "●"} {label}</span><small>{kind === "frozen" ? "保存后不再更新" : "随回放视图变化"}</small></div>
+    <div className="p1-response-classes">{MODEL_CLASSES.map((name, index) => {
+      const value = values[index];
+      const at = Math.max(3, Math.min(97, ((value - min) / (max - min)) * 100));
+      return <div className={`p1-response-class tone-${index}`} key={name}>
+        <span>{name}</span><div className="p1-response-track"><i style={{ left: `${at}%` }} /><b className="p1-response-value">{value.toFixed(2)}</b></div>
+      </div>;
+    })}</div>
+  </div>;
+}
+
+function AugmentationPrototype() {
+  const clips = AUGMENTATION_P1_CLIPS;
+  const timeline = useSceneTimeline(clips);
+  const { clipIndex: index, progress } = timeline.state;
+  const [view, setView] = useState<"center" | "flip">("center");
+  const saved = AUGMENTATION_STEPS[0].candidate;
+  const replayWeights = AUGMENTATION_STEPS[1].before.W;
+  const replayS = view === "center" ? -1 : 1;
+  const replayLogits = forward(replayWeights, viewOf(saved.u, replayS));
+  const darkLoss = replayLogits.reduce((sum, value, classId) => sum + (value - saved.z[classId]) ** 2, 0);
+  const savedReveal = index > 0 ? 1 : windowAt(progress, .12, .8);
+  const replayReveal = index > 2 ? 1 : index < 2 ? 0 : windowAt(progress, .1, .85);
+  const compareReveal = index > 3 ? 1 : index < 3 ? 0 : windowAt(progress, .12, .85);
+  const imageView = view;
+
+  return <section className="p1-scene p1-augmentation" data-p1-scene="augmentation" data-clip={index} data-progress={progress} data-view={view} data-target={saved.z.join(",")} data-loss={darkLoss}>
+    <div className="p1-scene-heading">
+      <div><p className="p1-kicker">S5 / AUGMENTATION</p><h2>原图身份不变；保存视图、回放视图可以不同。</h2><p>把图像中的裁剪与翻转直接展示出来，再看两次前向如何对齐同一份冻结目标。</p></div>
+      <div className="p1-augmentation-key"><span className="p1-freeze-square" />旧目标 <b>z</b><span className="p1-current-dot" />当前输出 <b>a</b></div>
+    </div>
+    <SceneTransport timeline={timeline} clips={clips} label="增强视图与冻结目标" showTiming={false} caption="播放展示写入时和未来回放时的不同视图；可手动切换回放裁剪。" />
+    <div className="p1-augmentation-stage">
+      <aside className="p1-source-column">
+        <div className="p1-source-index"><span>MEMORY ITEM</span><b>x₁</b></div>
+        <SourceIllustration view="original" label="同一原图 x₁：橙色小鸟停在枝条上" />
+        <strong>同一个原图 x₁</strong>
+        <p>记忆保留原图身份；增强结果不会覆盖它。</p>
+      </aside>
+      <div className="p1-view-tracks">
+        <div className="p1-view-track is-past" style={{ opacity: savedReveal }} data-p1-view-track="saved">
+          <div className="p1-track-heading"><span>01 · 写入时</span><strong>旧网络 θᵢ</strong><small>保存视图 A₀(x₁)</small></div>
+          <SourceIllustration view="saved" label="写入时轻微裁剪后的同一只小鸟 A0(x1)" />
+          <div className="p1-track-arrow" aria-hidden="true">→</div>
+          <div className="p1-target-column"><span>更新前输出</span><b>z · 冻结副本</b><ResponseRail label="目标 z" values={saved.z} kind="frozen" /></div>
+        </div>
+        <div className="p1-view-track is-replay" style={{ opacity: replayReveal }} data-p1-view-track="replay">
+          <div className="p1-track-heading"><span>02 · 未来回放</span><strong>当前网络 θₜ</strong><small>重新生成 A₁(x₁)</small></div>
+          <div className="p1-current-image">
+            <SourceIllustration view={imageView} label={view === "center" ? "当前视图：中心裁剪后的同一只小鸟 A1(x1)" : "当前视图：水平翻转后的同一只小鸟 A1(x1)"} />
+            <span>{view === "center" ? "中心裁剪" : "水平翻转 · 裁剪"}</span>
+          </div>
+          <div className="p1-track-arrow" aria-hidden="true">→</div>
+          <div className="p1-current-output"><span>本次前向</span><b>a · 当前输出</b><ResponseRail label="回放输出 a" values={replayLogits} kind="current" /></div>
+        </div>
+        <div className="p1-view-controls" aria-label="切换未来回放视图">
+          <span>改变回放变换</span>
+          <button data-view-choice="center" aria-pressed={view === "center"} onClick={() => setView("center")}>中心裁剪 A₁(x)</button>
+          <button data-view-choice="flip" aria-pressed={view === "flip"} onClick={() => setView("flip")}>水平翻转 A₁(x)</button>
+        </div>
+        <div className="p1-augmentation-equation" style={{ opacity: compareReveal }}>
+          <div><small>两种视图，共用一个旧目标</small><strong>L<sub>dark</sub>(A₁) = ‖a − z‖²</strong></div>
+          <span className="p1-loss-value">{darkLoss.toFixed(4)}</span>
+          <span className="p1-fixed-target-note">z 不变 · a 与匹配损失随回放视图改变</span>
+        </div>
+      </div>
+    </div>
+    <div className="p1-augmentation-boundary"><strong>数值边界</strong><span>插图是可见的合成裁剪/翻转示意；下方 logits 与损失来自既有 W5 二维小模型，不是这只插图的 CNN 推理，也不是论文实验。</span></div>
+  </section>;
+}
+
+const PLUS_MEMORY = [
+  { id: "x₁", model: 0 as ModelClass, label: "Claude", z: [.5, 2, 0] as const, source: "E04 合成错例" },
+  { id: "x₂", model: 1 as ModelClass, label: "GPT", z: [1, .8, .2] as const, source: "合成记忆项" },
+] as const;
+const PLUS_CLIPS = [
+  { id: "先看见错位", durationMs: 1500, holdMs: 700 },
+  { id: "从同一份 M 独立读取", durationMs: 1900, holdMs: 700 },
+  { id: "三种监督合成，一次更新", durationMs: 2100, holdMs: 850 },
+] as const;
+
+function DERPlusPrototype() {
+  const timeline = useSceneTimeline(PLUS_CLIPS);
+  const { clipIndex: index, progress } = timeline.state;
+  const [sameSample, setSameSample] = useState(true);
+  const readReveal = index > 1 ? 1 : index < 1 ? 0 : windowAt(progress, .08, .82);
+  const lossReveal = index > 2 ? 1 : index < 2 ? 0 : windowAt(progress, .08, .75);
+  const updateReveal = index > 2 ? 1 : index < 2 ? 0 : windowAt(progress, .46, .92);
+  const ry = sameSample ? PLUS_MEMORY[0] : PLUS_MEMORY[1];
+  const defsId = useId().replace(/:/g, "");
+  const rdFlight = curve(readReveal, { x: 318, y: 157 }, { x: 342, y: 157 }, { x: 365, y: 196 }, { x: 398, y: 196 });
+  const ryStart = sameSample ? { x: 318, y: 157 } : { x: 318, y: 287 };
+  const ryFlight = curve(readReveal, ryStart, { x: 345, y: ryStart.y }, { x: 361, y: 326 }, { x: 398, y: 326 });
+
+  return <section className="p1-scene p1-der-plus" data-p1-scene="der-plus" data-clip={index} data-progress={progress} data-rd="x₁" data-ry={ry.id} data-same-sample={sameSample} data-updates={updateReveal > .86 ? 1 : 0}>
+    <div className="p1-scene-heading">
+      <div><p className="p1-kicker">S6 / DER++</p><h2>旧响应与真实标签冲突；两次读取各司其职。</h2><p>一个回放保留旧行为，另一个回放用真实类别提供监督。三项损失共用更新前的 θ，只触发一次联合更新。</p></div>
+      <div className="p1-plus-update-label"><span>本步写入时序</span><b>读取 M → 联合更新 → 才考虑写入 x₃</b></div>
+    </div>
+    <div className="p1-plus-conflict-strip" data-p1-conflict>
+      <div className="p1-plus-sample"><SampleMark model={0} size={44} /><span><small>回放记录 x₁</small><b>真实 y = Claude</b></span></div>
+      <div className="p1-conflict-arrow"><span>旧 logits z 的最高项</span><b>GPT</b><i>≠</i><span>真实标签</span><b>Claude</b></div>
+      <div className="p1-conflict-vector"><span>z = (0.5, 2, 0)</span><small>□ 冻结 · 历史判断可能是错的</small></div>
+      <p>匹配 z 会维持旧判断；标签 CE 才提供另一方向。</p>
+    </div>
+    <div className="p1-plus-controls">
+      <div className="p1-plus-read-choice" role="group" aria-label="选择两次独立回放是否抽到同一条">
+        <span>本轮两次独立抽样</span>
+        <button data-overlap-choice="same" aria-pressed={sameSample} onClick={() => { setSameSample(true); timeline.start(1); }}>恰好重合 · x₁ / x₁</button>
+        <button data-overlap-choice="different" aria-pressed={!sameSample} onClick={() => { setSameSample(false); timeline.start(1); }}>抽到不同项 · x₁ / x₂</button>
+      </div>
+    </div>
+    <SceneTransport timeline={timeline} clips={PLUS_CLIPS} label="DER++ 两次回放与联合更新" showTiming={false} caption="Rᴅ 与 Rʏ 是两次独立读取；可能重合，也可能读到不同记录。M 在读取期间不变。" />
+    <div className="p1-plus-frame">
+      <svg className="p1-plus-svg" viewBox="0 0 1200 430" role="img" aria-label="当前分类、历史 logit 匹配和历史标签 CE 汇合到同一次参数更新">
+        <defs>
+          <marker id={`${defsId}-current`} markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#46815e"/></marker>
+          <marker id={`${defsId}-dark`} markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5c7e91"/></marker>
+          <marker id={`${defsId}-label`} markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#b27c4a"/></marker>
+        </defs>
+        <rect x="26" y="35" width="306" height="357" rx="17" className="p1-plus-memory" />
+        <text x="48" y="67" className="p1-plus-overline">M · 本步开始前的同一份记忆</text>
+        <text x="48" y="88" className="p1-plus-small">读取只复制记录；此时 M、N 不变。</text>
+        {PLUS_MEMORY.map((record, recordIndex) => {
+          const y = recordIndex === 0 ? 105 : 244;
+          const hasRd = record.id === "x₁";
+          const hasRy = record.id === ry.id;
+          return <g key={record.id} data-p1-memory-record={record.id}>
+            <rect x="43" y={y} width="272" height="126" rx="12" className={`p1-plus-record${record.id === "x₁" ? " is-wrong-target" : ""}`} />
+            <SampleMark model={record.model} size={38} x={54} y={y + 14} />
+            <text x="102" y={y + 28} className="p1-plus-record-title">{record.id} · 真实 y = {record.label}</text>
+            <text x="102" y={y + 47} className="p1-plus-small">旧 z {record.id === "x₁" ? "最高为 GPT" : "最高为 GPT"}</text>
+            {record.z.map((value, classId) => <g key={classId}>
+              <rect x={55 + classId * 82} y={y + 69} width="72" height="38" rx="6" className={`p1-plus-score tone-${classId}`} />
+              <text x={91 + classId * 82} y={y + 84} textAnchor="middle" className="p1-plus-score-name">{MODEL_CLASSES[classId]}</text>
+              <text x={91 + classId * 82} y={y + 101} textAnchor="middle" className="p1-plus-score-value">{value.toFixed(1)}</text>
+            </g>)}
+            {hasRd && readReveal > .04 && <g className="p1-read-tag is-rd" opacity={readReveal} transform={`translate(278 ${y + 15})`}><rect width="27" height="21" rx="6"/><text x="13.5" y="14" textAnchor="middle">Rᴅ</text></g>}
+            {hasRy && readReveal > .04 && <g className="p1-read-tag is-ry" opacity={readReveal} transform={`translate(278 ${y + (hasRd ? 41 : 15)})`}><rect width="27" height="21" rx="6"/><text x="13.5" y="14" textAnchor="middle">Rʏ</text></g>}
+          </g>;
+        })}
+        <text x="365" y="43" className="p1-plus-overline">当前新样本</text>
+        <path d="M355 79H555" className="p1-plus-flow is-current" markerEnd={`url(#${defsId}-current)`} />
+        <g transform="translate(366 56)"><circle r="17" className="p1-plus-new-sample"/><SampleMark model={2} size={29} x={-14.5} y={-14.5}/></g>
+        <text x="392" y="65" className="p1-plus-record-title">x₃ · y = DeepSeek</text>
+        <g opacity={lossReveal} transform="translate(570 45)">
+          <circle cx="21" cy="31" r="19" className="p1-current-ce-mark" />
+          <text x="21" y="35" textAnchor="middle" className="p1-current-ce-text">CE</text>
+          <text x="52" y="26" className="p1-plus-loss-name">Lcurrent · 新数据分类</text>
+          <text x="52" y="46" className="p1-plus-loss-note">CE(y₃, q₃) · 当前标签监督</text>
+          <path d="M52 60H218" className="p1-current-ce-rule" />
+        </g>
+
+        <path d="M332 166C358 166 361 192 393 204" className="p1-plus-flow is-dark" markerEnd={`url(#${defsId}-dark)`} />
+        <path d={sameSample ? "M332 166C365 188 364 304 393 324" : "M332 305C359 305 368 324 393 324"} className="p1-plus-flow is-label" markerEnd={`url(#${defsId}-label)`} />
+        <path d="M392 204H548" className="p1-plus-flow is-dark" markerEnd={`url(#${defsId}-dark)`} opacity={readReveal} />
+        <path d="M392 324H548" className="p1-plus-flow is-label" markerEnd={`url(#${defsId}-label)`} opacity={readReveal} />
+        <g opacity={readReveal} transform="translate(396 171)">
+          <path d="M0 8Q0 0 8 0H128Q136 0 136 8V57H0Z" className="p1-read-lane is-dark" />
+          <text x="12" y="22" className="p1-plus-loss-name">Rᴅ · {PLUS_MEMORY[0].id}</text>
+          <text x="12" y="43" className="p1-plus-loss-note">输出匹配读取</text>
+        </g>
+        <g opacity={readReveal} transform="translate(396 291)">
+          <path d="M0 8Q0 0 8 0H128Q136 0 136 8V57H0Z" className="p1-read-lane is-label" />
+          <text x="12" y="22" className="p1-plus-loss-name">Rʏ · {ry.id}</text>
+          <text x="12" y="43" className="p1-plus-loss-note">真实标签读取</text>
+        </g>
+        <g transform={`translate(${rdFlight.x} ${rdFlight.y})`} opacity={readReveal} className="p1-reading-token is-dark"><circle r="14"/><SampleMark model={PLUS_MEMORY[0].model} size={21} x={-10.5} y={-10.5}/></g>
+        <g transform={`translate(${ryFlight.x} ${ryFlight.y})`} opacity={readReveal} className="p1-reading-token is-label"><circle r="14"/><SampleMark model={ry.model} size={21} x={-10.5} y={-10.5}/></g>
+        <g opacity={lossReveal} transform="translate(568 172)">
+          <text x="0" y="17" className="p1-plus-loss-name">α Ldark · 保持旧行为</text>
+          <text x="218" y="17" textAnchor="end" className="p1-plus-loss-note">‖a − z‖²</text>
+          <path d="M4 36H210" className="p1-dark-comparison-rule" />
+          {MODEL_CLASSES.map((name, classId) => <g key={name} transform={`translate(${10 + classId * 69} 45)`}>
+            <rect x="0" y="0" width="64" height="21" rx="5" className={`p1-dark-class tone-${classId}`} />
+            <text x="32" y="15" textAnchor="middle" className="p1-dark-class-label">{name}</text>
+            <rect x="9" y="27" width="9" height="9" rx="2" className="p1-dark-target-mark" />
+            <text x="22" y="36" className="p1-dark-mark-label">zᵢ</text>
+            <circle cx="41" cy="31" r="4.5" className="p1-dark-current-mark" />
+            <text x="49" y="36" className="p1-dark-mark-label">aᵢ</text>
+          </g>)}
+        </g>
+        <g opacity={lossReveal} transform="translate(568 292)">
+          <circle cx="21" cy="24" r="17" className="p1-label-target-ring" />
+          <circle cx="21" cy="24" r="5" className="p1-label-target-core" />
+          <path d="M21 2V9M21 39V46M0 24H7M35 24H42" className="p1-label-target-rays" />
+          <text x="54" y="20" className="p1-plus-loss-name">β Lreplay-CE · 类别监督</text>
+          <text x="54" y="41" className="p1-plus-loss-note">CE(b, yᵣ) · 来自真实标签</text>
+          <path d="M54 53H214" className="p1-label-ce-rule" />
+        </g>
+
+        <path d="M788 77C837 77 851 147 906 193" className="p1-plus-flow is-current" markerEnd={`url(#${defsId}-current)`} opacity={updateReveal} />
+        <path d="M788 204H903" className="p1-plus-flow is-dark" markerEnd={`url(#${defsId}-dark)`} opacity={updateReveal} />
+        <path d="M788 324C843 324 851 271 906 237" className="p1-plus-flow is-label" markerEnd={`url(#${defsId}-label)`} opacity={updateReveal} />
+        <g className={`p1-parameter-hub${updateReveal > .45 && updateReveal < .98 ? " is-updating" : ""}`} opacity={Math.max(.45, updateReveal)}>
+          <circle cx="960" cy="218" r="64" className="p1-parameter-halo" />
+          <path d="M922 197L960 178L996 197M922 197L960 236L996 197M960 178V236" className="p1-parameter-edges" />
+          {[{x:922,y:197},{x:960,y:178},{x:960,y:236},{x:996,y:197}].map((point, nodeIndex) => <circle key={nodeIndex} cx={point.x} cy={point.y} r="8" className="p1-parameter-node" />)}
+          <text x="960" y="282" textAnchor="middle" className="p1-parameter-label">同一个 θ</text>
+        </g>
+        <path d="M1025 218H1071" className="p1-parameter-update" markerEnd={`url(#${defsId}-current)`} opacity={updateReveal} />
+        <g opacity={updateReveal}>
+          <circle cx="1101" cy="218" r="26" className="p1-parameter-next" />
+          <text x="1101" y="224" textAnchor="middle" className="p1-parameter-next-label">θ′</text>
+          <text x="1101" y="272" textAnchor="middle" className="p1-parameter-small">一次更新</text>
+        </g>
+        <text x="572" y="392" className="p1-plus-direction-note" opacity={lossReveal}>旧 z 指向 GPT · 真实标签 y₁ 指向 Claude；方向可能竞争，不保证一步纠正。</text>
+        <text x="572" y="414" className="p1-plus-direction-note" opacity={readReveal}>Rᴅ 与 Rʏ 可读同一条，也可读不同记录；当前 x₃ 在这一步仍未入池。</text>
+      </svg>
+    </div>
+    <div className="p1-plus-reading" aria-live="polite"><strong>{PLUS_CLIPS[index].id}</strong><span>{[
+      "x₁ 的真实标签是 Claude，历史 z 却把 GPT 排第一。维持过去的响应并不等于标签正确。",
+      `Rᴅ=${PLUS_MEMORY[0].id} 读取冻结输出；Rʏ=${ry.id} 读取真实标签。两次抽样独立，所以可重合或不同。`,
+      "当前 CE、历史响应匹配和历史标签 CE 都基于更新前参数，一起作用于唯一的 θ。这里不展示或保证更新后的分类结果。",
+    ][index]}</span></div>
+    <div className="p1-plus-boundary"><span>合成边界</span><p>旧 z=(0.5, 2, 0) 是 E04 解释性反例，不是论文失败数据；x₂ 为另一条合成记忆。方向箭头只说明三种监督的职责，不模拟优化结果。</p></div>
+  </section>;
+}
+
+export default P1ReviewPrototype;
