@@ -26,9 +26,9 @@
 .reservoir-scene .rv-canvas text{font-family:var(--rk-font-body);fill:#25352e}
 .reservoir-scene .rv-flow-heading{font-size:13px;font-weight:650;fill:#596d5e}
 .reservoir-scene .rv-flow-legend{font-size:11px;fill:#68756c}
-.reservoir-scene .rv-legend-store,.reservoir-scene .rv-legend-away{fill:none;stroke-linecap:round}
+.reservoir-scene .rv-legend-store{fill:none;stroke-linecap:round}
 .reservoir-scene .rv-legend-store{stroke:#397554;stroke-width:2.4}
-.reservoir-scene .rv-legend-away{stroke:#ad7c4e;stroke-width:1.9;stroke-dasharray:5 5}
+.reservoir-scene .rv-legend-trail circle{fill:#ad7c4e}
 .reservoir-scene .rv-stream-track{fill:none;stroke:#cbd7ce;stroke-width:2.1;stroke-linecap:round}
 .reservoir-scene .rv-stream-item{transition:opacity .25s}
 .reservoir-scene .rv-stream-item.is-past{opacity:.48}
@@ -38,12 +38,8 @@
 .reservoir-scene .rv-stream-item:not(.is-current) .rv-stream-orbit{fill:#fff;stroke:#d5dfd5;stroke-width:1.4}
 .reservoir-scene .rv-stream-status{font-size:11px;fill:#78847a}
 .reservoir-scene .rv-stream-item.is-current .rv-stream-status{fill:#397554;font-weight:650}
-.reservoir-scene .rv-candidate-feed,.reservoir-scene .rv-route-accepted,.reservoir-scene .rv-route-away{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.reservoir-scene .rv-candidate-feed{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .reservoir-scene .rv-candidate-feed{stroke:#72967a;stroke-width:2}
-.reservoir-scene .rv-route-accepted{stroke:#397554;stroke-width:2.5}
-.reservoir-scene .rv-route-away{stroke:#ad7c4e;stroke-width:2;stroke-dasharray:5 6}
-.reservoir-scene[data-committed="false"] .rv-route-away{animation:rv-route-dash 1.8s linear infinite}
-@keyframes rv-route-dash{to{stroke-dashoffset:-22}}
 .reservoir-scene .rv-decision-card>rect{fill:#fff;stroke:#cbd8cb;stroke-width:1.4;filter:drop-shadow(0 3px 7px rgb(37 53 46 / 8%))}
 .reservoir-scene .rv-decision-divider{stroke:#e7ece5;stroke-width:1}
 .reservoir-scene .rv-decision-kicker{font-size:11px;letter-spacing:.045em;fill:#6a7b6e}
@@ -80,6 +76,7 @@
 .reservoir-scene .rv-token>rect{fill:#fff;stroke:#cfdbce;stroke-width:1.1;filter:drop-shadow(0 2px 4px rgb(37 53 46 / 7%))}
 .reservoir-scene .rv-token.is-rejected>rect{fill:#fffaf3;stroke:#dcc5a8}
 .reservoir-scene .rv-token-title{font-size:11px;font-weight:650;fill:#354a3b}
+.reservoir-scene .rv-token.is-compact .rv-token-title{font-size:10px}
 .reservoir-scene .rv-token-detail{font-size:10px;fill:#768178}
 .reservoir-scene .rv-moving-evicted{filter:drop-shadow(0 4px 6px rgb(37 53 46 / 10%))}
 .reservoir-scene .rv-caption{display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:baseline;padding:12px 4px 7px}
@@ -92,4 +89,3 @@
 .reservoir-scene.is-focused .rv-heading{margin-top:14px}
 @media(max-width:1050px){.reservoir-scene .rv-heading{align-items:flex-start;flex-direction:column}.reservoir-scene .rv-state{border-left:0;border-top:1px solid var(--rk-line);padding:10px 0 0}.reservoir-scene .rv-caption{grid-template-columns:1fr;gap:4px}.reservoir-scene .motion-stage-picker{margin-left:0}}
 @media(max-width:900px){.reservoir-scene .rv-stage{overflow-x:auto}.reservoir-scene .rv-canvas{min-width:900px}}
-@media(prefers-reduced-motion:reduce){.reservoir-scene .rv-route-away{animation:none!important}}

@@ -2,7 +2,7 @@ import { useId } from "react";
 import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
 import ModelPixel from "./review/ModelPixel";
 import { curve, mix, windowAt } from "./review/lifecycle-model";
-import { GradientRoute, MotionTrail } from "./review/MotionTrail";
+import { MotionTrail } from "./review/MotionTrail";
 import { RESERVOIR_CLIPS, RESERVOIR_INPUTS, reservoirSceneAt, type MemoryRecord } from "./reservoir-model";
 import { ReferenceButton } from "./Reference";
 import "./reservoir.css";
@@ -22,19 +22,25 @@ function RecordTile({ record, x, y, opacity = 1 }: { record: MemoryRecord; x: nu
   </g>;
 }
 
-function ReservoirToken({ record, x, y, label, detail, rejected = false }: {
+function ReservoirToken({ record, x, y, label, detail, rejected = false, compact = false }: {
   record: MemoryRecord;
   x: number;
   y: number;
   label: string;
   detail: string;
   rejected?: boolean;
+  compact?: boolean;
 }) {
-  return <g transform={`translate(${x} ${y})`} className={`rv-token${rejected ? " is-rejected" : ""}`} data-record={record.id}>
-    <rect width="154" height="52" rx="10" />
-    <ModelPixel model={record.model} x={8} y={10} size={32} />
-    <text x="47" y="22" className="rv-token-title">{label}</text>
-    <text x="47" y="39" className="rv-token-detail">{detail}</text>
+  const width = compact ? 108 : 154;
+  const height = compact ? 36 : 52;
+  const imageSize = compact ? 22 : 32;
+  const imageOffset = compact ? 6 : 8;
+  const textOffset = compact ? 36 : 47;
+  return <g transform={`translate(${x} ${y})`} className={`rv-token${rejected ? " is-rejected" : ""}${compact ? " is-compact" : ""}`} data-record={record.id}>
+    <rect width={width} height={height} rx={compact ? 8 : 10} />
+    <ModelPixel model={record.model} x={imageOffset} y={compact ? 7 : 10} size={imageSize} />
+    <text x={textOffset} y="22" className="rv-token-title">{label}</text>
+    {!compact && <text x={textOffset} y="39" className="rv-token-detail">{detail}</text>}
   </g>;
 }
 
@@ -71,29 +77,35 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
   const feedLength = Math.hypot(feedDx, feedDy) || 1;
   const feedStart = { x: sourceX + feedDx / feedLength * 28, y: 94 + feedDy / feedLength * 28 };
   const feedPath = `M${feedStart.x} ${feedStart.y} C${feedStart.x + feedDx * .34} ${feedStart.y + feedDy * .34} ${feedTarget.x - feedDx * .18} ${feedTarget.y - feedDy * .22} ${feedTarget.x} ${feedTarget.y}`;
-  const acceptedPoints = destinationCenter === null ? null : [
-    { x: gateCenter, y: gate.y + gate.height + 18 },
-    { x: gateCenter + (destinationCenter < gateCenter ? -160 : 160), y: gate.y + gate.height + 18 },
-    { x: destinationCenter, y: slotY + 24 },
-    { x: destinationCenter, y: slotY + 86 },
-  ] as const;
-  const outputPath = acceptedPoints
-    ? `M${acceptedPoints[0].x} ${acceptedPoints[0].y} C${acceptedPoints[1].x} ${acceptedPoints[1].y} ${acceptedPoints[2].x} ${acceptedPoints[2].y} ${acceptedPoints[3].x} ${acceptedPoints[3].y}`
-    : null;
+  const acceptedStart = { x: gateCenter, y: gate.y + gate.height + 18 };
+  const acceptedStaging = destinationCenter === null ? null : {
+    x: destinationCenter < gateCenter ? gateCenter - 160 : gateCenter + 200,
+    y: acceptedStart.y,
+  };
+  const acceptedGatePoints = acceptedStaging ? [
+    acceptedStart,
+    { x: mix(acceptedStart.x, acceptedStaging.x, 1 / 3), y: acceptedStart.y },
+    { x: mix(acceptedStart.x, acceptedStaging.x, 2 / 3), y: acceptedStart.y },
+    acceptedStaging,
+  ] as const : null;
+  const acceptedSlotPoints = acceptedStaging && destinationCenter !== null ? [
+    acceptedStaging,
+    { x: acceptedStaging.x, y: slotY + 12 },
+    { x: acceptedStaging.x, y: slotY + 96 },
+    { x: acceptedStaging.x, y: slotY + 73 },
+  ] as const : null;
   const rejectedPoints = [
     { x: gate.x + gate.width - 3, y: gate.y + 72 },
     { x: 837, y: gate.y + 89 },
     { x: 1027, y: gate.y + 79 },
     { x: rejectBay.x + 90, y: rejectBay.y + 68 },
   ] as const;
-  const rejectedPath = `M${rejectedPoints[0].x} ${rejectedPoints[0].y} C${rejectedPoints[1].x} ${rejectedPoints[1].y} ${rejectedPoints[2].x} ${rejectedPoints[2].y} ${rejectedPoints[3].x} ${rejectedPoints[3].y}`;
   const evictedPoints = [
     { x: slotCenter[0], y: slotY + 73 },
     { x: 342, y: 349 },
     { x: 245, y: 408 },
     { x: exitBay.x + exitBay.width / 2, y: exitBay.y + 66 },
   ] as const;
-  const evictedPath = `M${evictedPoints[0].x} ${evictedPoints[0].y} C${evictedPoints[1].x} ${evictedPoints[1].y} ${evictedPoints[2].x} ${evictedPoints[2].y} ${evictedPoints[3].x} ${evictedPoints[3].y}`;
   const exitScale = mix(1, .57, replacementExit);
   const exitCenter = curve(replacementExit,
     { x: slotCenter[0], y: slotY + 73 },
@@ -102,16 +114,18 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
     { x: exitBay.x + exitBay.width / 2, y: exitBay.y + 66 });
   const exitX = exitCenter.x - 139 * exitScale;
   const exitY = exitCenter.y - 44 * exitScale;
-  const acceptedOrigin = acceptedPoints ? curve(candidateFlight,
-    { x: acceptedPoints[0].x - 77, y: acceptedPoints[0].y - 26 },
-    { x: acceptedPoints[1].x - 77, y: acceptedPoints[1].y - 26 },
-    { x: acceptedPoints[2].x - 77, y: acceptedPoints[2].y - 26 },
-    { x: acceptedPoints[3].x - 77, y: acceptedPoints[3].y - 26 }) : null;
+  const acceptedFlightPoints = candidateFlight < .28 ? acceptedGatePoints : acceptedSlotPoints;
+  const acceptedFlightProgress = candidateFlight < .28 ? candidateFlight / .28 : (candidateFlight - .28) / .72;
+  const acceptedOrigin = acceptedFlightPoints ? curve(acceptedFlightProgress,
+    { x: acceptedFlightPoints[0].x - 54, y: acceptedFlightPoints[0].y - 18 },
+    { x: acceptedFlightPoints[1].x - 54, y: acceptedFlightPoints[1].y - 18 },
+    { x: acceptedFlightPoints[2].x - 54, y: acceptedFlightPoints[2].y - 18 },
+    { x: acceptedFlightPoints[3].x - 54, y: acceptedFlightPoints[3].y - 18 }) : null;
   const rejectedOrigin = curve(candidateFlight,
-    { x: rejectedPoints[0].x - 77, y: rejectedPoints[0].y - 26 },
-    { x: rejectedPoints[1].x - 77, y: rejectedPoints[1].y - 26 },
-    { x: rejectedPoints[2].x - 77, y: rejectedPoints[2].y - 26 },
-    { x: rejectedPoints[3].x - 77, y: rejectedPoints[3].y - 26 });
+    { x: rejectedPoints[0].x - 54, y: rejectedPoints[0].y - 18 },
+    { x: rejectedPoints[1].x - 54, y: rejectedPoints[1].y - 18 },
+    { x: rejectedPoints[2].x - 54, y: rejectedPoints[2].y - 18 },
+    { x: rejectedPoints[3].x - 54, y: rejectedPoints[3].y - 18 });
   const titles = ["空槽先接收；从第二项起再抽签。", "第二项进入另一槽；容量保持不变。", "抽到槽 0：旧记录离开，新记录占同一槽。", "抽到 3：候选离池，记忆内容保持不变。"];
   const notes = [
     "x₁ 已完成当前训练，连同更新前冻结的 z₁ 写入 slot 0；写入后 N 从 0 变为 1。",
@@ -137,12 +151,11 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
           <marker id={`${defsId}-stream-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="rv-arrow-stream"/></marker>
           <marker id={`${defsId}-feed-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="rv-arrow-feed"/></marker>
           <marker id={`${defsId}-store-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="rv-arrow-store"/></marker>
-          <marker id={`${defsId}-away-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="rv-arrow-away"/></marker>
         </defs>
         <text x="54" y="34" className="rv-flow-heading">持续输入流</text>
         <g transform="translate(850 6)" className="rv-flow-legend">
           <path d="M0 8H36" className="rv-legend-store" markerEnd={`url(#${defsId}-store-arrow)`}/><text x="45" y="12">写入</text>
-          <path d="M94 8H130" className="rv-legend-away" markerEnd={`url(#${defsId}-away-arrow)`}/><text x="139" y="12">离池 / 替换</text>
+          <g className="rv-legend-trail" aria-hidden="true"><circle cx="99" cy="8" r="1" opacity=".28"/><circle cx="109" cy="8" r="1.25" opacity=".42"/><circle cx="119" cy="8" r="1.5" opacity=".64"/><circle cx="129" cy="8" r="1.8" opacity=".9"/></g><text x="139" y="12">离池 / 替换</text>
         </g>
         <path d="M74 94H1040" className="rv-stream-track" markerEnd={`url(#${defsId}-stream-arrow)`} />
         {RESERVOIR_INPUTS.map((record, index) => <g key={record.id} className={`rv-stream-item${index === clip ? " is-current" : index < clip ? " is-past" : ""}`} transform={`translate(${streamX[index]} 94)`}>
@@ -152,10 +165,11 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
           {index === clip ? <text x="34" y="4" className="rv-stream-status is-current">本次</text> : <text y="48" textAnchor="middle" className="rv-stream-status">{index < clip ? "已处理" : "待到达"}</text>}
         </g>)}
         <path d={feedPath} className="rv-candidate-feed" markerEnd={`url(#${defsId}-feed-arrow)`} />
-        {outputPath && <GradientRoute d={outputPath} progress={committed ? 0 : candidateFlight} className="rv-route-accepted" markerEnd={`url(#${defsId}-store-arrow)`} width={1120} height={500} />}
-        {s.slot === null && <GradientRoute d={rejectedPath} progress={committed ? 0 : candidateFlight} className="rv-route-away" markerEnd={`url(#${defsId}-away-arrow)`} width={1120} height={500} />}
-        {s.evicted && <GradientRoute d={evictedPath} progress={committed ? 0 : replacementExit} className="rv-route-away rv-route-exit" markerEnd={`url(#${defsId}-away-arrow)`} width={1120} height={500} />}
-        {outputPath && !committed && accepted && <MotionTrail points={acceptedPoints!} progress={candidateFlight} className="rv-motion-trail is-store" />}
+        {!committed && accepted && acceptedGatePoints && acceptedSlotPoints && <MotionTrail
+          points={candidateFlight < .28 ? acceptedGatePoints : acceptedSlotPoints}
+          progress={candidateFlight < .28 ? candidateFlight / .28 : (candidateFlight - .28) / .72}
+          className="rv-motion-trail is-store"
+        />}
         {s.slot === null && !committed && <MotionTrail points={rejectedPoints} progress={candidateFlight} className="rv-motion-trail is-away" />}
         {s.evicted && !committed && <MotionTrail points={evictedPoints} progress={replacementExit} className="rv-motion-trail is-exit" />}
 
@@ -201,8 +215,8 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
           if (s.evicted?.id === record.id && !committed) return <g key={`leaving-${record.id}`} transform={`translate(${exitX} ${exitY}) scale(${exitScale})`} className="rv-moving-evicted"><RecordTile record={record} x={0} y={0} /></g>;
           return <RecordTile key={`${record.id}-${slot}`} record={record} x={slotX[slot] + 11} y={slotY + 29} />;
         })}
-        {accepted && !committed && candidateFlight > 0 && acceptedOrigin && <g transform={`translate(${acceptedOrigin.x} ${acceptedOrigin.y})`}><ReservoirToken record={s.candidate} x={0} y={0} label={`${s.candidate.id} 新记录`} detail="准备写入同一槽" /></g>}
-        {s.slot === null && !committed && candidateFlight > 0 && <g transform={`translate(${rejectedOrigin.x} ${rejectedOrigin.y})`}><ReservoirToken record={s.candidate} x={0} y={0} label={`${s.candidate.id} 候选`} detail="离开记忆流" rejected /></g>}
+        {accepted && !committed && candidateFlight > 0 && acceptedOrigin && <g transform={`translate(${acceptedOrigin.x} ${acceptedOrigin.y})`}><ReservoirToken record={s.candidate} x={0} y={0} label={`${s.candidate.id} 新记录`} detail="准备写入同一槽" compact /></g>}
+        {s.slot === null && !committed && candidateFlight > 0 && <g transform={`translate(${rejectedOrigin.x} ${rejectedOrigin.y})`}><ReservoirToken record={s.candidate} x={0} y={0} label={`${s.candidate.id} 候选`} detail="离开记忆流" rejected compact /></g>}
       </svg>
     </div>
     <div className="rv-caption" aria-live="polite"><strong>{titles[clip]}</strong><span>{notes[clip]}</span></div>

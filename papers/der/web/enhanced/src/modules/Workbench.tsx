@@ -11,6 +11,7 @@ import {
   type TrainingRecord,
 } from "./training-model";
 import { curve, mix, windowAt } from "./review/lifecycle-model";
+import { MotionTrail } from "./review/MotionTrail";
 import { MotionPath, NetworkGlyph, SampleGlyph, ScoreGlyph, fmt, vectorText } from "./LearningGlyphs";
 import { MODEL_CLASSES } from "../data/model-classes";
 import { Equation } from "./MathNotation";
@@ -231,22 +232,38 @@ export default function Workbench() {
   const candidateGateProgress = phase === 4 ? windowAt(p, candidateStart, candidateGateEnd) : 0;
   const candidatePlaceProgress = phase === 4 ? windowAt(p, candidateSlotStart, 0.88) : 0;
   const candidateExitProgress = phase === 4 && decision === "reject" ? windowAt(p, 0.32, 0.84) : 0;
+  const candidateGatePoints = [
+    CANDIDATE_HOME, { x: 521.33, y: CANDIDATE_HOME.y }, { x: 628.67, y: CANDIDATE_HOME.y }, SELECTOR,
+  ] as const;
+  const candidateStoreCurvePoints = [
+    { x: SELECTOR.x, y: CANDIDATE_HOME.y }, { x: 790, y: 344 }, { x: 390, y: 344 }, { x: 390, y: slotY(selectedSlot ?? 0) },
+  ] as const;
+  const candidateStoreLinePoints = [
+    { x: 390, y: slotY(selectedSlot ?? 0) }, { x: 282, y: slotY(selectedSlot ?? 0) },
+    { x: 174, y: slotY(selectedSlot ?? 0) }, { x: SLOT_X, y: slotY(selectedSlot ?? 0) },
+  ] as const;
+  const candidateRejectPoints = [
+    { x: SELECTOR.x, y: CANDIDATE_HOME.y }, { x: 830, y: 350 }, { x: 930, y: 355 }, EXIT,
+  ] as const;
+  const retiredRecordPoints = (slot: number) => [
+    { x: SLOT_X, y: slotY(slot) }, { x: 230, y: 350 }, { x: 850, y: 350 }, { x: EXIT.x, y: EXIT.y + 42 },
+  ] as const;
   const candidateAt = (() => {
     if (!candidateVisible || phase !== 4) return CANDIDATE_HOME;
     if (p >= 0.88 && decision !== "reject" && selectedSlot !== null) return { x: SLOT_X, y: slotY(selectedSlot) };
     if (decision === "reject") {
       if (p < 0.32) return { x: mix(CANDIDATE_HOME.x, SELECTOR.x, candidateGateProgress), y: CANDIDATE_HOME.y };
-      return curve(candidateExitProgress, { x: SELECTOR.x, y: CANDIDATE_HOME.y }, { x: 830, y: 350 }, { x: 930, y: 355 }, EXIT);
+      return curve(candidateExitProgress, ...candidateRejectPoints);
     }
     if (p < candidateGateEnd) return { x: mix(CANDIDATE_HOME.x, SELECTOR.x, candidateGateProgress), y: CANDIDATE_HOME.y };
     if (candidatePlaceProgress < 0.5) {
-      return curve(candidatePlaceProgress * 2, { x: SELECTOR.x, y: CANDIDATE_HOME.y }, { x: 790, y: 344 }, { x: 390, y: 344 }, { x: 390, y: slotY(selectedSlot ?? 0) });
+      return curve(candidatePlaceProgress * 2, ...candidateStoreCurvePoints);
     }
     return { x: mix(390, SLOT_X, (candidatePlaceProgress - 0.5) * 2), y: slotY(selectedSlot ?? 0) };
   })();
   const movingRecordAt = (slot: number) => {
     if (phase === 4 && step.insertion.evicted?.id === step.before.M[slot]?.id) {
-      return curve(retireProgress, { x: SLOT_X, y: slotY(slot) }, { x: 230, y: 350 }, { x: 850, y: 350 }, { x: EXIT.x, y: EXIT.y + 42 });
+      return curve(retireProgress, ...retiredRecordPoints(slot));
     }
     return { x: SLOT_X, y: slotY(slot) };
   };
@@ -440,16 +457,18 @@ export default function Workbench() {
               const position = movingRecordAt(slot);
               const opacity = prediction ? 0.74 : isEvicted && phase === 4 ? 1 - retireProgress : 1;
               return (
-                <StoredRecord
-                  key={record.id}
-                  record={record}
-                  x={position.x}
-                  y={position.y}
-                  opacity={opacity}
-                  mode={mode}
-                  readD={!prediction && step.rd?.id === record.id}
-                  readY={!prediction && mode === "DER++" && step.ry?.id === record.id}
-                />
+                <g key={record.id}>
+                  {isEvicted && phase === 4 && <MotionTrail points={retiredRecordPoints(slot)} progress={retireProgress} className="wb-motion-trail is-exit" />}
+                  <StoredRecord
+                    record={record}
+                    x={position.x}
+                    y={position.y}
+                    opacity={opacity}
+                    mode={mode}
+                    readD={!prediction && step.rd?.id === record.id}
+                    readY={!prediction && mode === "DER++" && step.ry?.id === record.id}
+                  />
+                </g>
               );
             })}
           </g>
@@ -457,6 +476,10 @@ export default function Workbench() {
           {!prediction && (
             <>
               <text x="418" y="392" className="wb-candidate-heading">写入前候选 · z 固定自更新前输出</text>
+              {phase === 4 && candidateGateProgress > 0 && candidateGateProgress < 1 && <MotionTrail points={candidateGatePoints} progress={candidateGateProgress} className="wb-motion-trail is-write" />}
+              {phase === 4 && decision !== "reject" && candidatePlaceProgress < 0.5 && <MotionTrail points={candidateStoreCurvePoints} progress={candidatePlaceProgress * 2} className="wb-motion-trail is-write" />}
+              {phase === 4 && decision !== "reject" && candidatePlaceProgress >= 0.5 && candidatePlaceProgress < 1 && <MotionTrail points={candidateStoreLinePoints} progress={(candidatePlaceProgress - 0.5) * 2} className="wb-motion-trail is-write" />}
+              {phase === 4 && decision === "reject" && <MotionTrail points={candidateRejectPoints} progress={candidateExitProgress} className="wb-motion-trail is-exit" />}
               <g opacity={candidateVisible ? (decision === "reject" && phase === 4 ? 1 - candidateExitProgress : 1) : 0}>
                 <StoredRecord
                   record={step.candidate}
@@ -499,27 +522,6 @@ export default function Workbench() {
                   </>
                 )}
               </g>
-              {decision !== "reject" && (
-                <MotionPath
-                  d={"M" + SELECTOR.x + " 454 C 805 351 245 351 205 " + (slotY(selectedSlot ?? 0) + 1)}
-                  progress={phase === 4 && p < 0.88 ? candidatePlaceProgress : 0}
-                  kind="write"
-                />
-              )}
-              {decision === "reject" && (
-                <MotionPath
-                  d={"M" + SELECTOR.x + " 454 C 820 370 922 370 1000 450"}
-                  progress={phase === 4 && p < 0.84 ? candidateExitProgress : 0}
-                  kind="reject"
-                />
-              )}
-              {decision === "replace" && (
-                <MotionPath
-                  d={"M" + (SLOT_X + 270) + " " + (slotY(step.before.M.findIndex(record => record.id === step.insertion.evicted?.id)) + 40) + " C 375 349 860 349 1000 458"}
-                  progress={phase === 4 && p < 0.36 ? retireProgress : 0}
-                  kind="reject"
-                />
-              )}
             </>
           )}
 

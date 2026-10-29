@@ -22,22 +22,13 @@
 
 .reservoir-scene .rv-stream-track{stroke-width:1.35}
 .reservoir-scene .rv-legend-store{stroke-width:1.45}
-.reservoir-scene .rv-legend-away{stroke-width:1.35;stroke-dasharray:3 5}
 .reservoir-scene .rv-candidate-feed{stroke-width:1.45}
-.reservoir-scene .rv-route-accepted,
-.reservoir-scene .rv-route-away{stroke-width:1.35;stroke-dasharray:3 5}
-.reservoir-scene[data-committed="false"] .rv-route-away{animation:none}
-.reservoir-scene .rv-route-accepted{stroke:#85a58b}
-.reservoir-scene .rv-route-away{stroke:#c19a69}
-.reservoir-scene .rv-route-exit{stroke:#a98761}
 .reservoir-scene .rv-arrow-stream,
 .reservoir-scene .rv-arrow-feed,
-.reservoir-scene .rv-arrow-store,
-.reservoir-scene .rv-arrow-away{fill:none;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
+.reservoir-scene .rv-arrow-store{fill:none;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
 .reservoir-scene .rv-arrow-stream{stroke:#849a88}
 .reservoir-scene .rv-arrow-feed{stroke:#6d9576}
 .reservoir-scene .rv-arrow-store{stroke:#397554}
-.reservoir-scene .rv-arrow-away{stroke:#ad7c4e}
 .reservoir-scene .rv-candidate-feed{stroke-width:1.55}
 .reservoir-scene .rv-motion-trail{fill:none;stroke-width:1.5;stroke-dasharray:2 5;stroke-linecap:round;stroke-linejoin:round}
 .reservoir-scene .rv-motion-trail.is-store{stroke:#83a08e}

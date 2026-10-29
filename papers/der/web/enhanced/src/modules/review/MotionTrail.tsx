@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { curve, mix, type Point } from "./lifecycle-model";
 
 /** A short, already-travelled section behind a moving object, matching D1. */
@@ -15,22 +14,4 @@ export function MotionTrail({ points, progress, className }: {
   }).join(" ");
   return <path d={path} className={className} aria-hidden="true" data-trail-progress={progress}
     opacity={Math.min(1, progress * 6, (1 - progress) * 8)} />;
-}
-
-/** Reveal a fine route along with an object's entry or exit; only finish with a small open arrow. */
-export function GradientRoute({ d, progress, className, markerEnd, width, height }: {
-  d: string;
-  progress: number;
-  className: string;
-  markerEnd: string;
-  width: number;
-  height: number;
-}) {
-  const maskId = useId().replace(/:/g, "");
-  return <g data-gradient-progress={progress} aria-hidden="true">
-    <defs><mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width={width} height={height}>
-      <path d={d} pathLength="1" fill="none" stroke="white" strokeWidth="8" strokeDasharray="1" strokeDashoffset={1 - progress} />
-    </mask></defs>
-    <path d={d} className={className} mask={`url(#${maskId})`} markerEnd={progress > .99 ? markerEnd : undefined} />
-  </g>;
 }

@@ -299,11 +299,10 @@
 .wb-canvas .tg-path-label { stroke: #b6854e; stroke-dasharray: 4 5 !important; }
 .wb-canvas .tg-path-freeze { stroke: #718c8d; stroke-dasharray: 4 4 !important; }
 .wb-canvas .tg-path-gradient { stroke: #ad8554; stroke-dasharray: 7 5 !important; }
-.wb-canvas .tg-path-write { stroke: #49805d; stroke-width: 2.5; }
-.wb-canvas .tg-path-reject { stroke: #b6844b; stroke-dasharray: 6 5 !important; }
+.wb-canvas .wb-motion-trail { fill: none; stroke: #83a08e; stroke-width: 1.5; stroke-dasharray: 2 5; stroke-linecap: round; stroke-linejoin: round; }
+.wb-canvas .wb-motion-trail.is-exit { stroke: #bd9668; }
 .wb-canvas .wb-canvas-kicker,
 .wb-canvas .wb-canvas-mode,
-.wb-canvas .wb-panel-kicker,
 .wb-canvas .wb-panel-note,
 .wb-canvas .wb-network-caption,
 .wb-canvas .wb-memory-count,
