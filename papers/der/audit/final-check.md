@@ -36,7 +36,7 @@ Node24.18.0 / Vite6.4.3 / Edge156.0.4314.50。相邻 PaperSkill HEAD=c6d30defb90
 
 ## W9 Evidence Audit
 
-Agent 核对：主要数值由 evidence-data.ts 单一数据表供图和 Reference 使用，evidence.test.mjs 与 W2 已核对 Results 表逐值比对通过。Class-IL、Task-IL、MNIST-360 的容量、训练和评测时机分开；三项不占优反例默认可见。± 原样保留，不声称显著性；合成动画不是论文实验。平坦性/校准/ghost class 明确经验与推测边界。
+Agent 核对：主要数值由 evidence-data.ts 单一数据表供图和 Reference 使用，evidence.test.mjs 与 W2 已核对 Results 表逐值比对通过。当前主线精选 S-CIFAR-10 Class-IL、MNIST-360 K=500 和 K=200 三组结果；完整表格、Task-IL 与额外反例放在 Reference。Class-IL、Task-IL、MNIST-360 的容量、训练和评测时机分开；± 原样保留，不声称显著性；合成动画不是论文实验。平坦性/校准/ghost class 明确经验与推测边界。上述测试通过结果适用于当时记录的源码版本，不自动覆盖本次返修。
 
 M03 的 source_locator 移除原先误写的“Algorithm 3 and proof”：附录只有算法，等概率陈述见 §3，归纳证明是教学推导。未改论文原文、W2/W4 接受状态或笔记。
 
@@ -46,6 +46,8 @@ M03 的 source_locator 移除原先误写的“Algorithm 3 and proof”：附录
 - [ ] 用户确认最终教学效果与证据表述。
 
 ## W9 Visual QA Record
+
+下表中的 PASS 是先前 W8/箭头返修版本的历史记录，不代表 `f96be8f` 之后的当前源码已重验。当前重组版本的检查状态见文末“W9 全篇内容重组进度”。
 
 | Status | Result | Evidence / scope |
 | --- | --- | --- |
@@ -187,3 +189,14 @@ S7/S8 的 W8 工程实现和 Agent 视觉复核已完成：双视口生产浏览
 用户指出 DER++、Reservoir 与增强图中的大实心箭头遮挡内容，轨迹线过粗/转折不协调，Reservoir 对齐和增强图间距也需修正。三个组件已改为细线小空心箭头；动态对象后使用 D1 样式点状拖尾。Reservoir 的入槽、离槽渐进路线与实际 token 路径同源，离槽与入槽线分左右镜像绕开居中的记忆标题；四个流样本、两槽和两侧出口围绕同一中心对齐。增强视图的分叉改为曲线，说明文字移出连线区域，并在时间控制和画布间留下清楚间隔。未修改训练/Reservoir 模型、时序、D1 源场景或论文数据。
 
 最终生产构建通过（TypeScript、Vite 78 modules）。Edge 156.0.4314.50 headless 浏览器检查：`--reservoir-only` 1440×900 与 1920×1080 共 114 项 PASS；`--w8-only` 两视口共 872 项 PASS。实看入槽与替换运动、拒收落定、DER++ 监督汇合、增强未来视图；截图在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-arrow-revision`。`git diff --check` PASS。F11 真实浏览器检查 `NOT_RUN`；该工程 QA 不构成 W9 用户验收，W9 `PENDING`、W10 未启动、`paper.yaml` 未改。
+## W9 全篇内容重组进度（2026-10-29）
+
+本轮按用户附带的最终重组方案完成源码内容整理，并按单元及时提交：35572a9（U1–U3）、150f0c2（U4）、a720adc（U5）、d3632e2（U6）、6d7901f（U7）、f96be8f（旧讲义与样式清理）。
+
+- U1–U3：KL 定义、固定 p 与交叉熵分解、平方 logits 匹配及共同平移要点留在主线场景；曲线、证明、梯度与复算表由现有 Reference 提供。
+- U4–U5：Reservoir/DER 单步、原图跨视图固定 z、DER++ 历史标签监督使用短场景说明与章节交接；K/n 概率说明、增强均值—方差推导及类别梯度进入按需内容。
+- U6：保留同一个 θ/M/N 状态贯穿四轮及训练后的只读预测；更新按需矩阵梯度关系，结尾交接到实验问题。
+- U7：主线选择 S-CIFAR-10 Class-IL、MNIST-360 K=500 与 MNIST-360 K=200 三组条件化结果；完整表格、Task-IL 与额外反例留在 Reference。同步调整既有证据测试断言以匹配主线/Reference 分层。
+- T4：全仓调用检查确认旧 FormulaLessons.tsx、TrainingFormulaLessons.tsx 与其专属 CSS 没有生产入口；硬标签 CE 梯度迁入 CE Reference，线性模型矩阵梯度留在工作台按需详情。formula-model.ts 仍供 Reference 探索器与数值测试使用，未删除。视觉 QA 选择器已改指向现有 KL/平方主线公式。
+
+当前源码检查：git diff --check PASS。BUILD、单元测试、浏览器回归、真实播放、Visual QA 与人工截图复核均为 NOT_RUN；既有 W8/W9 记录中的 PASS 不覆盖本轮新源码。W9 人工意见仍记录为 REVISE，最终用户验收 PENDING；W10 未启动，未改 paper.yaml，未推送或创建 PR。此状态只记录源码返修，不代表教学或视觉验收通过。
