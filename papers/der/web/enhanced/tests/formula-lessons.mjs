@@ -22,10 +22,12 @@ export async function formulaLessonChecks({page,base,check,shot}){
   await shot(name+"-formula","[data-formula-lesson="+name+"] .formula-first");
   await shot(name+"-reading","[data-formula-lesson="+name+"] .lesson-reading > .lesson-columns:first-of-type");
  }
+ for(const [name,selector] of [["kl-gradient","[data-formula-lesson=kl-math] .lesson-reading > .lesson-derivation:last-child"],["kl-nonnegative","[data-formula-lesson=kl-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-gradient","[data-formula-lesson=logit-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-shift-proof","[data-formula-lesson=logit-math] .lesson-reading > .lesson-derivation:last-child"]])await shot(name,selector);
  check(await page.locator("[data-scene=lifecycle] [data-formula-lesson]").count()===0,"D1 retains its existing sidebar formula");
  const kl=page.locator("[data-math-explorer=kl]"),point=kl.locator("[data-plot-x]"),algorithm=page.locator("[data-design=kl]"),phase=await algorithm.getAttribute("data-progress");
  for(const q of [.02,.6,.8,.98]){
   await setRange(kl.locator("input[type=range]"),q);const r=binaryKL(.8,q);
+  check(await point.evaluate(el=>!el.closest("[clip-path]")),"Selected endpoint remains fully visible outside the curve clip");
   near(+(await point.getAttribute("data-plot-x")),q,"Slider and plotted probability agree");
   near(+(await point.getAttribute("data-plot-y")),r.kl,"Curve point is the computed full KL");
   near(+(await point.getAttribute("data-plot-slope")),r.slope,"Tangent uses constrained derivative");

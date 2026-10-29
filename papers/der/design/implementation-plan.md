@@ -442,3 +442,14 @@ UPSTREAM_SYNTAX / UPSTREAM_OUTPUT 仍 NOT_RUN（两次fetch终端退出1，原�
 用户直接授权：除 D1 单样本生命周期外，所有含公式模块先呈现公式，再单独详细解释，再进入机制动画。KL 增加散度曲线、方向性、非负性与梯度；Logit Matching 增加平方函数、逐坐标梯度、参数链式求导与共同平移。Reservoir、DER 单步、增强、DER++、四轮工作台同步调整公式顺序与讲解。保留原核心单元顺序、动画状态/计算引擎、合成示例边界及结果数据。D1 的 TSX/CSS/model 不改动；W7 既有通过记录保留，W9 人工终审仍 PENDING。新增图像为同源数学探索，不代替算法训练轨迹；局部样式避免影响 D1 与 Reference Hub。验证包括数学差分、公式顺序/交互、既有全流程、两档桌面截图。此节记录本轮范围，结果收尾追加。
 
 本轮实现与首轮检查：七个主线模块已采用公式→独立讲解→原机制动画；新增 KL 正反向曲线/切线、二类受约束导数与 log-softmax 推导，平方函数/标量梯度步，Reservoir 离散留存曲线与归纳。讲解公式使用原生 MathML；局部 CSS 使用独有 lesson-reading / lesson-derivation，避免旧全局类名冲突，保留 block math 排版。24 项单元测试通过；公式定向浏览器 114 断言通过；生产构建退出 0（Node 24.18.0、Vite 6.4.3，75 modules），最终排版公共 Visual QA 14 状态 GEOMETRY/STYLE/BROWSER_ERRORS PASS（STYLE 仅配置主线 MathML display 断言；其余靠截图复核）。完整全流程正在运行，最终结果在收尾追加。D1 源码、生命周期模型及训练引擎均无差异。最初试运行发现并修复 Node .ts 导入后缀、MathML display 和旧类名冲突；一次未成功构建后的预启动回归已中断，不计入最终通过结果。
+
+本轮收尾复核：
+
+- 七单元计数回归发现 DER 单步、增强、DER++ 三处遗留 `lesson-section`，已改为专用 `lesson-derivation`，保持原七单元断言；三模块两档公共视觉复测 6 状态通过。曲线端点的选中圆点移出曲线裁切层，曲线/切线仍按绘图区裁切，新增端点完整可见检查。
+- `npm --prefix papers/der/web/enhanced test`：24/24 PASS，退出 0；含二类归一化 KL 曲线有限差分、平方梯度与一步下降、Reservoir 留存归纳，原生命周期/训练/实验数据测试保留。
+- 无过滤 `npm --prefix papers/der/web/enhanced run test:browser`：两档各 1301，总 2602 断言 PASS，退出 0。覆盖原 KL/Logit 动画、D1 九阶段/侧栏/专注切换、Reservoir、DER/增强/DER++、四轮两模式、预测只读、键盘、减少动态、Reference、图注和误差带。该全回归后只移动绘图端点的选中圆点；最终构建的 `--formula-only` 专项两档各 61，总 122 断言 PASS，另检查曲线扫描、暂停、标量一步更新、端点、原生 MathML 与七模块公式→讲解→动画顺序。没有为通过而降低既有断言。
+- SOURCE_BUILD=PASS：最终 `npm --prefix papers/der/web/enhanced run build` 退出 0，75 modules；Node 24.18.0、Vite 6.4.3。产物引用 `index-Dp06vX94.js` / `index-CKpmrUfX.css`。SUBPATH_ASSETS=PASS：生产 dist 在 `/der-review/` 提供，完整和最终专项均无请求/页面错误；Vite base=`./`。
+- 公共 runner 首次 14 状态、局部修正后 6 状态：GEOMETRY_QA / BROWSER_ERRORS 均 PASS；首次仅主线配置了 MathML display 样式断言并 PASS，其余样式依实际截图复核，不将未配置项说成自动 PASS。已查看两档公式条、正文/曲线、非负性、梯度推导、共同平移、训练讲解与原动画交界及关键动态截图，VISUAL_REVIEW=PASS（本轮检查范围）。D1 源码/CSS/模型无改动，已对照原专注图审看主图；不将本轮截图声称为旧基准的逐字节一致。
+- 相邻现有 PaperSkill 检查器本地诊断：`node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser`（44 文件）和 `validate-output.js <publish_source>` 均退出 0 / PASS。当前官方检查器仍受上文网络核实限制，UPSTREAM_SYNTAX / UPSTREAM_OUTPUT=NOT_RUN；本地诊断不替代当前官方验证。
+- Desktop Window=PASS（1440×900），FULLSCREEN_LAYOUT=PASS（1920×1080），DPR=1；FULLSCREEN_REAL=NOT_RUN（本轮为 headless Edge 156.0.4314.50，未操作真实 F11）。W9 用户最终审查维持 PENDING。
+- 必要证据 33 文件归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/28/01a1836d-f85f-7e31-b7b3-3847b946b36b/der-formulas-20261029/`（各模块两档、数学推导/曲线边界和中间态、D1 对照及两份 runner JSON）。两个已完成公共 run 按终端报告的确切路径执行 cleanup，均 CLEANED 且 Test-Path=False；本轮原生测试目录与中断 run 的部分截图在归档、诊断复测结束后精确清理。保留用户审查用 5195 预览，HTTP 200 已确认。

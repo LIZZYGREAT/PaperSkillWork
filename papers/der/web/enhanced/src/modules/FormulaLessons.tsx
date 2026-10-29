@@ -53,8 +53,8 @@ function FunctionPlot({kind,x,reverse=false}:{kind:"kl"|"square"|"retention";x:n
    {minimum!==undefined&&<line x1={X(minimum)} x2={X(minimum)} y1="49" y2="258" className="plot-guide"/>}
    <line x1={X(x)} x2={X(x)} y1={Y(value(x))} y2="258" className="plot-guide"/>
    {kind!=="retention"&&<line x1={X(x)-45} x2={X(x)+45} y1={Y(value(x)-slope*(xmax-xmin)*45/408)} y2={Y(value(x)+slope*(xmax-xmin)*45/408)} className="plot-tangent"/>}
-   <circle cx={X(x)} cy={Y(value(x))} r="6" className="plot-point" data-plot-x={x} data-plot-y={value(x)} data-plot-slope={slope}/>
   </g>
+  <circle cx={X(x)} cy={Y(value(x))} r="6" className="plot-point" data-plot-x={x} data-plot-y={value(x)} data-plot-slope={slope}/>
  </svg>;
 }
 export function KLFormulaLesson(){
