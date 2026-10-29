@@ -1,13 +1,13 @@
 export async function reviewFeedbackChecks({page,base,check,shot}){
  await page.emulateMedia({reducedMotion:"reduce"});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
  const kl=page.locator("[data-design=kl]");
- const formula=kl.locator(".formula-spot");
- check(await kl.locator("[data-reading-unit=kl-math]").count()===1,"KL content owns its composition independently of the shared reading-unit wrapper");
+ const formula=kl.locator(".kl-main-equation");
+ check(await kl.locator("[data-reading-unit]").count()===0&&await formula.locator(".equation math").count()===1,"KL mainline keeps its defining formula beside the calculation without a separate formula lecture");
  for(const id of ["near","equal","reversed"]){
   await kl.locator("[data-case="+id+"]").click();await kl.locator("[data-frame='4']").click();
   const boxes=await formula.locator(".equation,math").evaluateAll(nodes=>nodes.map(el=>({kind:el.tagName,scrollY:el.scrollHeight-el.clientHeight,scrollX:el.scrollWidth-el.clientWidth,ox:getComputedStyle(el).overflowX,oy:getComputedStyle(el).overflowY})));
   // MathML scrollHeight includes glyph ink beyond its line box; only a padded wrapper is a scroll container.
-  check(boxes.every(b=>(b.kind==="math"||b.scrollY<=1)&&b.scrollX<=1&&b.ox==="visible"&&b.oy==="visible"),"Formula is naturally sized with no internal scrolling or clipping: "+JSON.stringify(boxes));
+  check(boxes.every(b=>(b.kind==="math"||b.scrollY<=1)&&b.scrollX<=1&&b.ox==="visible"&&b.oy==="visible"),"Mainline formula is naturally sized with no internal scrolling or clipping: "+JSON.stringify(boxes));
  }
  await shot("feedback-kl","[data-design=kl]");
  const caption=page.locator(".label-question>.caption"),ranking=page.locator(".rankings");

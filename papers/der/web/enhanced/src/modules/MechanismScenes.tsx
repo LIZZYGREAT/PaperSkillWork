@@ -2,7 +2,8 @@ import React, { useId, useLayoutEffect, useRef, useState } from "react";
 import ModelPixel, { type ModelClass } from "./review/ModelPixel";
 import { MODEL_CLASSES, PROBABILITY_CLASSES } from "../data/model-classes";
 import { REFERENCE_P, PROBABILITY_CASES, HISTORY_Z, LOGIT_CASES, probabilityComparison, logitComparison } from "./math-model";
-import { KLFormulaLesson, LogitFormulaLesson } from "./FormulaLessons";
+import { KLDefinition, SquaredDefinition } from "./MathNotation";
+import { ReferenceButton } from "./Reference";
 import { useSceneTimeline, type SceneTimeline } from "./review/SceneTransport";
 import { mix, windowAt } from "./review/lifecycle-model";
 
@@ -128,13 +129,15 @@ export function KLBoard() {
   ];
   return <section className="mechanism-scenes" data-design="kl" data-clip={clip} data-progress={t} data-status={timeline.state.status}>
     <div className="scene-heading"><div><p className="eyebrow">01 / 概率约束</p><h2>跟随同一类别，从概率走到 KL。</h2></div><div className="cases" aria-label="KL 合成例">{PROBABILITY_CASES.map((c, i) => <button key={c.id} data-case={c.id} aria-pressed={i === selected} onClick={() => { setSelected(i); timeline.reset(); }}>{c.label}</button>)}</div></div>
-    <KLFormulaLesson />
     <Transport timeline={timeline} frames={KL_FRAMES} />
     <div className="stage kl-stage"><div className="scene-canvas kl-composition" data-p={r.p.join(',')} data-q={r.q.join(',')} data-loss={r.kl}>
       <div className="probability-pair"><DistributionSheet values={r.p} emphasis={emphasis} /><DistributionSheet values={r.q} current emphasis={emphasis} /><p className="pair-caption">Claude / GPT 两类合成例 · 同色签对应同一类别<br />每格为总面积的 1%；分界可连续经过格子。</p></div>
-      <article className="calculation-surface"><div className="calculation-intro"><h3>取值 → 对数比 → 旧概率加权</h3><p>色签对应左侧来源；计算结果保留到下一类。</p></div>{[0, 1].map(k => <KLLane key={k} k={k} result={r} progress={local(clip, t, k + 2)} active={clip === k + 2} />)}</article>
-    </div><KLSum result={r} clip={clip} t={t} />{[0, 1].map(k => <ResultTransfer key={k} from={`[data-origin-kl="${k}"]`} to={`[data-target-kl="${k}"]`} progress={local(clip, t, k + 2)} label={PROBABILITY_CLASSES[k]} tone={k} reduced={timeline.reducedMotion}><span>{PROBABILITY_CLASSES[k]}</span><b>{signed(r.terms[k])}</b></ResultTransfer>)}</div>
+      <article className="calculation-surface"><div className="calculation-intro"><h3>取值 → 对数比 → 旧概率加权</h3><div className="kl-main-equation"><KLDefinition identified={false}/><p>k 对齐同一类别；p 是固定旧概率，q 随当前分配变化。完整求和比较两组分布，单项可以为负。</p><ReferenceButton term="kl">非负证明、方向与梯度</ReferenceButton></div></div>{[0, 1].map(k => <KLLane key={k} k={k} result={r} progress={local(clip, t, k + 2)} active={clip === k + 2} />)}</article>
+    </div><KLSum result={r} clip={clip} t={t} />{[0, 1].map(k => <ResultTransfer key={k} from={`[data-origin-kl="${k}"]`} to={`[data-target-kl="${k}"]`} progress={local(clip, t, k + 2)} label={PROBABILITY_CLASSES[k]} tone={k} reduced={timeline.reducedMotion}><span>{PROBABILITY_CLASSES[k]}</span><b>{signed(r.terms[k])}</b></ResultTransfer>)}
+      <div className="kl-objective-note"><span>固定旧分布 p 时</span><math display="block" aria-label="KL 等于交叉熵 H p q 减去固定熵 H p"><mi>D</mi><mo>(</mo><mi>p</mi><mo>∥</mo><mi>q</mi><mo>)</mo><mo>=</mo><mi>H</mi><mo>(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo>)</mo><mo>−</mo><mi>H</mi><mo>(</mo><mi>p</mi><mo>)</mo></math><p>H(p) 不随 q 改变，因此最小化 KL 等价于最小化交叉熵 H(p,q)。</p></div>
+    </div>
     <StageNarration timeline={timeline} frames={KL_FRAMES} notes={notes} />
+    <div className="scene-handoff"><span>下一问</span><p>KL 已给概率偏离一个可优化的尺度；但 softmax 看不见分数的共同平移。若要保留原始响应，直接比较 logits 会发生什么？</p></div>
   </section>;
 }
 
@@ -162,6 +165,7 @@ function ProbabilityProjection({ result, shifted }: { result: ReturnType<typeof 
       <line x1="22" x2="290" y1="20" y2="20" className="track-axis" /><text x="22" y="49" textAnchor="middle">0</text><text x="290" y="49" textAnchor="middle">1</text>
       <rect data-projection-p={result.p[k]} x={22 + result.p[k] * 268 - 8} y="12" width="16" height="16" rx="2" className="history-point" /><circle data-projection-q={result.q[k]} cx={22 + result.q[k] * 268} cy="20" r="4.5" className="current-point" />
     </svg></div>)}</div><div className="probability-verdict"><span>方框是旧概率，圆点是当前概率；重合表示两者相同。</span><strong data-probability-kl={result.probabilityKL}>概率 KL = {fmt(result.probabilityKL)}</strong></div>
+    {shifted && <div className="shift-identity-note"><math display="block" aria-label="softmax z 加 c 乘全一向量等于 softmax z；平方距离为 C c 平方"><mi>softmax</mi><mo>(</mo><mi>z</mi><mo>+</mo><mi>c</mi><mi mathvariant="bold">1</mi><mo>)</mo><mo>=</mo><mi>softmax</mi><mo>(</mo><mi>z</mi><mo>)</mo><mo>;</mo><mspace width="1em"/><msub><mi>L</mi><mtext>dark</mtext></msub><mo>=</mo><mi>C</mi><msup><mi>c</mi><mn>2</mn></msup></math><span>本例 C=3、c=1：概率 KL=0，logit 平方距离=3。</span></div>}
   </div>;
 }
 export function ScoreBoard() {
@@ -177,10 +181,10 @@ export function ScoreBoard() {
   ];
   return <section className="mechanism-scenes" data-design="logits" data-clip={clip} data-progress={t} data-status={timeline.state.status}>
     <div className="scene-heading"><div><p className="eyebrow">02 / 分数约束</p><h2>看见分数的距离，也看见概率的投影。</h2></div><div className="cases" aria-label="Logit 对照">{LOGIT_CASES.map((c, i) => <button key={c.id} data-case={c.id} aria-pressed={selected === i} onClick={() => { setSelected(i); timeline.reset(); }}>{i ? '共同平移 +1' : 'Claude / GPT 分数交换'}</button>)}</div></div>
-    <LogitFormulaLesson />
     <Transport timeline={timeline} frames={SCORE_FRAMES} />
     <div className="stage score-stage"><div className="scene-canvas" data-z={r.z.join(',')} data-a={r.a.join(',')} data-loss={r.squaredDistance}>
       <div className="score-space-label"><strong>分数空间</strong><span><i className="frozen-mark" />历史 z 固定</span><span><i className="current-mark" />当前 a 移动</span><small>三卡共同刻度 · 0 → 3</small></div>
+      <div className="score-main-equation"><SquaredDefinition identified={false}/><p>a 是当前 logits，z 是保存时冻结的历史 logits；按同一类别对齐。先观察分数偏差，再看每项平方怎样组成损失。</p><ReferenceButton term="squared">梯度、共同平移与深入推导</ReferenceButton></div>
       <div className="score-cards">{MODEL_CLASSES.map((name, k) => <article key={name} className="response-card" data-coordinate={k} data-delta={r.differences[k]} data-square={r.squares[k]}>
         <header><Brand k={k} size={34} /><h3>{name}</h3><span className="sheet-code">0{k + 1}</span></header>
         <ScoreTrack z={r.z[k]} a={r.a[k]} reveal={move} />
@@ -191,5 +195,6 @@ export function ScoreBoard() {
       <ProbabilityProjection result={r} shifted={selected === 1} />
     </div>{[0, 1, 2].map(k => <ResultTransfer key={k} from={`[data-origin-square="${k}"]`} to={`[data-target-square="${k}"]`} progress={windowAt(local(clip, t, 3), k * .18, .5 + k * .18)} label={MODEL_CLASSES[k]} reduced={timeline.reducedMotion}><span>{MODEL_CLASSES[k]}</span><b>{fmt(r.squares[k], 0)}</b></ResultTransfer>)}</div>
     <StageNarration timeline={timeline} frames={SCORE_FRAMES} notes={notes} />
+    <div className="scene-handoff"><span>下一问</span><p>平方匹配保留了共同平移也会改变的原始分数信息。现在沿同一条样本记录，看看网络在什么时候复制并冻结这组 logits，留给未来回放。</p></div>
   </section>;
 }

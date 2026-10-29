@@ -125,7 +125,7 @@ export async function fullW8Checks({page,base,check,shot}){
  await page.keyboard.press("Escape");await page.goto(base);
  await shot("article-final-opening");
  check(await page.locator(".lesson-section").count()===7,"All seven reading units are real");
- const bad=await page.locator(".site-header nav a,.formula-lesson math,.wb-rounds button").evaluateAll(nodes=>nodes.filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>el.textContent));
+ const bad=await page.locator(".site-header nav a,.kl-main-equation math,.score-main-equation math,.wb-rounds button").evaluateAll(nodes=>nodes.filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>el.textContent));
  check(!bad.length,"Navigation and mainline math fit: "+bad);
  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),"Full article has no horizontal overflow");
 }

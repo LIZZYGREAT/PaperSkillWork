@@ -30,6 +30,11 @@
 .calculation-surface{min-width:0}
 .calculation-intro h3{font-size:18px;font-weight:500;margin:0}
 .calculation-intro p{margin:7px 0 16px;font-size:13px;color:var(--muted)}
+.kl-main-equation{margin:8px 0 14px;padding:10px 12px;background:#f7f9f4;border-left:2px solid #b9cbb0}
+.kl-main-equation .equation{padding:0;margin:0;overflow-x:auto}
+.kl-main-equation .equation math{font-size:19px;width:max-content;max-width:100%;margin:0}
+.kl-main-equation p{margin:6px 0 3px;font-size:12px;line-height:1.65}
+.kl-main-equation .text-button{font-size:12px;padding:3px 0}
 .calculation-lane{border:1px solid #e2e7df;border-left:3px solid var(--tone);border-radius:11px;padding:13px 16px;margin-top:12px;background:#fcfdfa;min-width:0}
 .calculation-lane[data-active=true]{border-color:var(--tone-line);background:#fff}
 .calculation-lane>header{display:flex;gap:10px;align-items:center}
@@ -59,6 +64,11 @@
 .sum-answer{display:flex;align-items:center;gap:20px}
 .sum-answer>div{display:grid;gap:7px;min-width:125px}
 .sum-answer strong{font:500 30px var(--mono)}
+.kl-objective-note{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:12px 16px;padding:12px 24px 16px;border-top:1px solid #e3e9df;color:var(--muted);font-size:13px}
+.kl-objective-note>span{font-weight:600;color:#526f59}
+.kl-objective-note .equation{padding:0;margin:0}
+.kl-objective-note math{font-size:18px}
+.kl-objective-note p{margin:0;line-height:1.6}
 .result-transfer{position:absolute;z-index:3;pointer-events:none;transform:translate(-50%,-50%);padding:9px 12px;background:var(--tone,#fff);border:1px solid var(--tone-line,#afc2a9);color:var(--tone-ink,var(--ink));border-radius:9px;box-shadow:0 4px 12px #2e473315;display:flex;align-items:center;gap:10px;white-space:nowrap}
 .result-transfer>span{font-size:12px}
 .result-transfer b{font:500 21px var(--mono)}
@@ -75,6 +85,11 @@ math[display="block"]{margin-block:0}
 .score-space-label strong{font-size:16px;font-weight:500;color:var(--ink)}
 .score-space-label>span{display:flex;gap:7px;align-items:center}
 .score-space-label small{font-size:12px;margin-left:auto}
+.score-main-equation{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;padding:4px 0 12px;border-bottom:1px solid #e4ebe0;margin-bottom:12px}
+.score-main-equation .equation{padding:0;margin:0;overflow-x:auto;flex:0 1 auto}
+.score-main-equation .equation math{font-size:20px;width:max-content;max-width:100%;margin:0}
+.score-main-equation p{flex:1 1 360px;margin:0;font-size:12px;line-height:1.65;color:var(--muted)}
+.score-main-equation .text-button{font-size:12px;padding:3px 0}
 .score-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .response-card{min-width:0;border:1px solid #dbe4d8;border-radius:12px;padding:12px 16px;background:#fdfefb}
 .response-card>header{display:flex;align-items:center;gap:12px;padding-bottom:8px}
@@ -123,6 +138,11 @@ math[display="block"]{margin-block:0}
 .projection-cell svg{display:block;width:100%;height:54px}
 .probability-verdict{display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:13px;color:var(--muted);margin-top:8px}
 .probability-verdict strong{font:17px var(--mono);color:#4d7054}
+.shift-identity-note{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;margin-top:9px;padding:9px 14px;background:#f5f8f1;border-left:2px solid #9fb492;color:var(--muted);font-size:12px}
+.shift-identity-note math{font-size:17px}
+.scene-handoff{display:grid;grid-template-columns:76px minmax(0,1fr);gap:16px;align-items:start;margin-top:26px;padding:17px 0 0;border-top:1px solid #dce4da}
+.scene-handoff>span{font-size:11px;letter-spacing:.08em;color:#6b8064;text-transform:uppercase;padding-top:3px}
+.scene-handoff p{max-width:880px;margin:0;font-size:15px;line-height:1.8;color:#43574d}
 
 .transport{display:flex;align-items:center;gap:9px;margin:0 0 14px}
 .transport button{font-size:14px;padding:10px 14px;border:1px solid #c6d6c0;border-radius:8px;background:#fff}
@@ -220,7 +240,11 @@ math[display="block"]{margin-block:0}
 .score-space-label{flex-wrap:wrap}
 .probability-verdict{flex-wrap:wrap}
 .probability-projection>header{align-items:start;flex-direction:column;gap:12px}
+.kl-objective-note{grid-template-columns:auto 1fr;align-items:start}
+.kl-objective-note p{grid-column:1/-1}
 }
+
+@media(max-width:620px){.score-main-equation{align-items:flex-start;flex-direction:column}.score-main-equation p{flex-basis:auto}.score-main-equation .equation math{font-size:17px}.kl-main-equation .equation math{font-size:17px}.kl-objective-note{padding-inline:14px}.shift-identity-note{align-items:flex-start;flex-direction:column}.shift-identity-note math{font-size:14px}.scene-handoff{grid-template-columns:1fr;gap:5px}.scene-handoff p{font-size:14px}}
 
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}
 .result-transfer{display:none}

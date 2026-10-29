@@ -61,7 +61,7 @@ try{
      if(c===(name==="kl"?"near":"shifted")&&[1,2,3].includes(i))await shot(`${name}-${i}`,`[data-design=${name}]`);
     }
    }
-   const bad=await scene.evaluate(el=>[...el.querySelectorAll(".frames button,.stage math,.formula-lesson math,.source-tag,.narration")].filter(e=>e.scrollWidth>e.clientWidth+2).map(e=>e.className||e.tagName));
+   const bad=await scene.evaluate(el=>[...el.querySelectorAll(".frames button,.stage math,.kl-main-equation math,.score-main-equation math,.source-tag,.narration")].filter(e=>e.scrollWidth>e.clientWidth+2).map(e=>e.className||e.tagName));
    check(!bad.length,`Core math and labels fit ${name}: ${bad}`);
    await scene.locator("[data-frame='0']").click();await scene.locator("[data-play]").click();await page.clock.runFor(600);await scene.locator("[data-play]").click();
    const paused=await scene.getAttribute("data-progress");await page.clock.runFor(500);check(paused===await scene.getAttribute("data-progress"),"Pause holds exact frame");
