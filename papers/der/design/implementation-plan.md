@@ -554,3 +554,9 @@ S8 同屏对照四项论文结果，分别保留 Class-IL、Task-IL、MNIST-360 
 验证：`npm test` 24/24 PASS；`npm run build`（TypeScript + Vite，76 modules）PASS；生产构建子路径浏览器回归 `node tests/browser.test.mjs --w8-only` 在 Edge 156.0.4314.50 两个尺寸各 436 项、共 872 项 PASS，包含跨轮 θ/M/N/身份继承、DER/DER++、替换/拒收、暂停回退、只读预测、完整实验值/协议/来源和页面几何。最终生产构建的 `node tests/playback.test.mjs` 使用真实播放时钟完整播放 21 个阶段：500 个状态采样，127,576 ms，结束状态 `N=4`、updates=4、`M=x₃,x₂`，无浏览器错误。结构检查 `python tools/paper.py check der` 为 PASS；`status` 仍显示 W9/W10 PENDING，未改阶段元数据。
 
 人工图像复核为 Agent 的 W8 视觉 QA，不是用户验收。关键帧和双视口截图位于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p3/workbench-v7`；完整生产播放视频、`playback.json` 和关键帧位于 `.../der-p3/production-playback-final`。真实 F11 `NOT_RUN`。训练/Reservoir 计算模型、论文源表、证据 Registry、W2/W4 与 `paper.yaml` 均无差异；W9 最终人工验收仍待用户确认，W10 未启动。
+
+## P4 完成：工作流与两份 Skill 校正（2026-10-29）
+
+将 W5 的视觉构图/状态关系先于 Kit 选择，以及关键动态场景先审高保真关键帧和短动态（或准确分镜）的顺序写入 `docs/WORKFLOW.md`、`docs/TEACHING_DESIGN_STANDARD.md` 和 W5–W7 `implementation-plan` Skill。W6/W8 在必要时先实现由同一模型驱动的核心动作和身份/状态交接，再单独精修视觉并复核端点/节奏，写入两份规范和 W6–W8 `enhanced-implementation` Skill。W7/W9 人审区分运动表达、算法语义/证据、教学因果/读者理解，再综合判断；不设动画配额，不加入机器人评分表。W9 明确须在真正的生产构建上完整播放关键连续场景；静态图不能代替。
+
+P4 只更新现有两份规范、两份 Skills 及既有计划/审计，无新 schema、清单、评分框架或论文内容。`git diff --check` PASS。仓库 `python -m pytest` 使用工作区临时目录运行：123 passed，1 项 Kit CLI 测试在沙箱拒绝原子目录改名时失败；随后该单项在本机权限下定向复跑 1/1 PASS。W5–W9 文档/流程用例通过。生产页面构建及完整 21 阶段播放已在紧接的 P3 完成，P4 没有改页面源码。`python tools/paper.py check der` 保持 PASS；W9/W10 仍 PENDING，未经用户确认不启动 W10。

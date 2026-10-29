@@ -107,6 +107,8 @@ Present the slice for a person to judge why the mechanism is introduced, whether
 
 ## W8: Full Implementation
 
+Keep the W5-approved composition and visual direction. When motion is needed to explain time or state, implement the model-driven core action, identity continuity, and handoff first; verify those behaviors before a separate pass on layout, typography, linework, color, and decoration. Recheck motion endpoints and pacing after visual refinement. Use a static explanation when it communicates the mechanism more clearly; there is no animation quota.
+
 Actively locate, repair and retest misalignment, unintended overlap, obscured content, inconsistent fonts/colors, squeezed formulas/long numbers and poor text/figure proportions. Record route, window/state and screenshot; find the real style/layout cause, fix shared defects in the owning part and scene defects locally, then inspect fresh screenshots in both desktop layouts and targeted regressions. Do not stop at reporting a defect or a passing automated check. Preserve approved W4/W5 teaching logic, core composition, computations and formula meaning; obtain a user decision before changing protected design or semantics.
 
 After each page or complete interaction, inspect its relevant states. When a shared style or component changes, expand regression to affected pages and overlays. Preserve confirmed design invariants; pause for the user's decision if implementation would change an approved semantic or structural choice.
