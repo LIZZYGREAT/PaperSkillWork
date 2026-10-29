@@ -200,3 +200,9 @@ S7/S8 的 W8 工程实现和 Agent 视觉复核已完成：双视口生产浏览
 - T4：全仓调用检查确认旧 FormulaLessons.tsx、TrainingFormulaLessons.tsx 与其专属 CSS 没有生产入口；硬标签 CE 梯度迁入 CE Reference，线性模型矩阵梯度留在工作台按需详情。formula-model.ts 仍供 Reference 探索器与数值测试使用，未删除。视觉 QA 选择器已改指向现有 KL/平方主线公式。
 
 当前源码检查：git diff --check PASS。BUILD、单元测试、浏览器回归、真实播放、Visual QA 与人工截图复核均为 NOT_RUN；既有 W8/W9 记录中的 PASS 不覆盖本轮新源码。W9 人工意见仍记录为 REVISE，最终用户验收 PENDING；W10 未启动，未改 paper.yaml，未推送或创建 PR。此状态只记录源码返修，不代表教学或视觉验收通过。
+
+## W9 用户截图局部返修（2026-10-29）
+
+本轮按四张截图修订网络结构示意、Reservoir/增强箭头及 Reservoir 空状态排版；代码分别提交为 `3ad80cd`、`448e217`、`a3dcf1f`。网络图展示 3×5 示意但注明实际计算维度仍为 2D→3 类；样本流箭头从图标圆边界出发，增强分支连接到图像边缘；两个槽位提示与两侧出口空状态文字居中。未修改训练模型、Reservoir 状态转移或论文数据。
+
+本版本仅通过源码检查与逐次 `git diff --check`。BUILD、单元测试、浏览器回归、生产播放和本轮截图目视复核均为 `NOT_RUN`，旧 QA 记录不能代替本次检查。`HUMAN_ACCEPTANCE=PENDING`，`Overall: PENDING`；W10 未启动，`paper.yaml` 未改。
