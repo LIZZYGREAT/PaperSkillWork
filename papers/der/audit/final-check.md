@@ -130,3 +130,12 @@ P1 Agent 范围的截图复核已完成，方向选择等待用户；`HUMAN_ACCE
 - 公共 Visual QA：Edge 156.0.4314.50；两个桌面视口、10 个状态 × 2 尺寸共 20/20 PASS；几何和浏览器错误 PASS、浏览器错误 0。
 - 已实际审看 1440×900 的 replacement-mid-motion、replacement-settled、reject-and-count，并复核 1920×1080 布局。最终图中离池箭头停在收纳框边缘，中段动画不再出现旧卡遮住池外标记的重叠。
 - 截图与报告：`C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/reservoir-revision-20261029/run-2026-10-29T03-41-46-385Z`。运行器的 `VISUAL_REVIEW` 和 `HUMAN_ACCEPTANCE` 按定义不由机器置为通过；用户方向反馈与 W9 最终复审仍待完成。
+
+## 增强视图鹈鹕样本插画（2026-10-29）
+
+用户提供插画参考并要求第二幅中的鸟替换为示例鹈鹕。将隔离 P1 增强场景的源 SVG 改为白色长喙鹈鹕骑青绿色自行车的日落图；原图、写入时视图和回放中心裁剪/水平翻转仍对应同一个 x₁。未修改训练步骤、增强变换定义、冻结目标与 logits，也未改 Reservoir、DER++ 或正式页面。
+
+- 生产构建 PASS（TypeScript 与 Vite，75 modules）。
+- 公共 Visual QA：Edge 156.0.4314.50；两种桌面视口共 20/20 PASS，几何与浏览器错误 PASS、0 浏览器错误。
+- 已查看 1440×900 的原图/写入视图、中心裁剪、水平翻转，以及 1920×1080 的中心裁剪画面；鹈鹕的长喙、喉囊和骑行主体在视图变换后仍辨识清楚。
+- 截图与报告：`C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/pelican-revision-20261029/run-2026-10-29T05-37-14-832Z`。这属于 Agent 图像复核，不代表用户已通过该方向；`HUMAN_ACCEPTANCE` 与 W9 最终状态仍 PENDING。

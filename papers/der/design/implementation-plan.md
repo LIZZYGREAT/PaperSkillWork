@@ -501,3 +501,9 @@ Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwrigh
 用户指出原 Reservoir 画面的箭头、虚线、动画节奏和抽签控件不协调。本轮重排该方向稿：将抽签移到输入流与固定槽之间，统一“写入”绿色实线箭头和“离池”琥珀色虚线；替换与拒收各自落到明确的池外收纳区。旧记录移出和新候选写入分段运动，到站后淡出交接；固定槽只显示最终留存，满池选择值在收紧的决策卡中突出。没有修改算法、轨迹、正式页面或增强/DER++ 场景。
 
 修订后 `npm.cmd --prefix papers/der/web/enhanced run build` PASS（75 modules）。公共 Visual QA 用 Edge 156.0.4314.50 在 1440×900 与 1920×1080 的 20 状态全部 PASS，几何、浏览器错误均 PASS，0 浏览器错误；实看替换中段、替换完成、拒收三个 Reservoir 关键帧，确认箭头落点、抽签卡、动画交接及两档布局。最终报告为 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/reservoir-revision-20261029/run-2026-10-29T03-41-46-385Z/report.md`，同目录保留截图。人工方向选择与 W9 最终验收仍待用户。
+
+#### 增强视图鹈鹕样本插画（2026-10-29）
+
+用户追加要求将第二幅增强视图中的原合成小鸟替换为其示例中的鹈鹕形象。SourceIllustration 现以同一原图身份绘制戴蓝帽、白色羽身、长橙喙及喉囊的鹈鹕骑青绿色自行车；采用日落背景色回应参考图。写入视图、中心裁剪、水平翻转仍共享同一 SVG 与 x₁ 身份；冻结 logits、回放 logits、计算和增强交互均未改，其他两个方向也未动。
+
+修订后生产构建 PASS（TypeScript、Vite 75 modules）。公共 Visual QA 仍为两个视口 20/20 PASS、几何与浏览器错误 PASS、0 浏览器错误。实看原图、写入裁剪、回放中心裁剪和水平翻转，并复核 1920×1080；主体在两种变换中仍可辨识。截图与报告归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/pelican-revision-20261029/run-2026-10-29T05-37-14-832Z`。该方向的最终选择与 W9 人工验收仍待用户。
