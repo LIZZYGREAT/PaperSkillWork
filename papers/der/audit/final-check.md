@@ -105,6 +105,8 @@ Overall: PENDING
 
 本轮从 Git 记录确认的范围：`07db1fd` 首次加入完整 S4–S8 场景、四轮工作台与实验页；`7d94b55` 新增七个公式讲义及独立数学曲线；`33f3dbb` 将统一公式/讲解/动画顺序固化进测试。返修不撤销 `efc08b9` 的 W7 审批，也不推翻 D1 专注版与后来的用户侧栏修订。当前仅 P0：阅读组件与测试已经取消统一顺序契约；还未重写线上机制场景，不将此项写成视觉验收通过。
 
-P0 结果：`npm --prefix papers/der/web/enhanced test` 24/24 PASS；`npm --prefix papers/der/web/enhanced run build` PASS；使用共享 Playwright/Chromium 153.0.8010.12 的 `test:browser -- --formula-only` 两档共 122 项 PASS，`test:browser -- --review-feedback` 两档共 42 项 PASS。实际截图位于工作区可视化归档 `.../der-p0` 和 `.../der-p0-formulas`，已抽查七个公式片段、KL 与 D1 代表图。`FULLSCREEN_REAL=NOT_RUN`（headless Chromium 不能代替真实 F11）；公共 Visual QA CLI 本轮未运行。截图路径按任务 Visualizations 根目录保存，源码仓库中不加入截图。
+P0 结果：`npm --prefix papers/der/web/enhanced test` 24/24 PASS；`npm --prefix papers/der/web/enhanced run build` PASS；使用共享 Playwright/Chromium 153.0.8010.12 的 `test:browser -- --formula-only` 两档共 122 项 PASS，`test:browser -- --review-feedback` 两档共 42 项 PASS。实际截图位于工作区可视化归档 `.../der-p0` 和 `.../der-p0-formulas`，已抽查七个公式片段、KL 与 D1 代表图。`FULLSCREEN_REAL=NOT_RUN`（headless Chromium 不能代替真实 F11）。截图路径按任务 Visualizations 根目录保存，源码仓库中不加入截图。
+
+Windows Codex 的公共 Visual QA 回退流程已实跑：Playwright Chromium 下载因 `getaddrinfo ENOTFOUND cdn.playwright.dev` 失败，故 Chromium 默认 runner 本次 `NOT_RUN`；Edge 在沙箱启动也遇到权限限制后，按文档以提升权限启动 Edge 156.0.4314.50。两档 40 个状态全部实际截图，`GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS=PASS`，40/40 结果 PASS、浏览器错误为 0，每项 `actualUrl` 均在 `/der-review/` 下。首跑发现 Reservoir 的 `[data-scene=reservoir] svg` 同时命中概率图和场景画布，导致四个状态动作失败；配置已改为唯一的 `.rv-canvas`，完整复跑通过。已实看文章、工作台预测、Reservoir 替换/拒收、增强和 DER++ 的代表截图；公共报告自身仍将 `VISUAL_REVIEW=NOT_RUN`，没有由此代签设计审查或 W9，`HUMAN_ACCEPTANCE=PENDING`。首跑与复跑报告路径分别为 `.visual-qa/run-2026-10-29T02-25-11-819Z`、`.visual-qa/run-2026-10-29T02-30-36-142Z`，完成诊断、复测、截图查看和记录后均按精确目录清理，并验证路径不存在。
 
 当前仍 `Overall=PENDING`：P1 的 Reservoir、增强和 DER++ 关键帧/连续动态原型及真实浏览器预览尚未完成；P1 人工方向审阅、P2–P4、最终 W9 用户复审均待后续完成。算法内核、W2/W4、证据数据与 `paper.yaml` 阶段值本轮未改。

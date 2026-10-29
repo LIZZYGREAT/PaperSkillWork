@@ -176,7 +176,7 @@
             },
             {
               "type": "scrollIntoView",
-              "selector": "[data-scene=reservoir] svg"
+              "selector": "[data-scene=reservoir] .rv-canvas"
             }
           ]
         },
@@ -202,7 +202,7 @@
             },
             {
               "type": "scrollIntoView",
-              "selector": "[data-scene=reservoir] svg"
+              "selector": "[data-scene=reservoir] .rv-canvas"
             }
           ]
         }
