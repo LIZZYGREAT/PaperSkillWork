@@ -4,6 +4,7 @@ import ModelPixel from "./review/ModelPixel";
 import { curve, mix, windowAt } from "./review/lifecycle-model";
 import { GradientRoute, MotionTrail } from "./review/MotionTrail";
 import { RESERVOIR_CLIPS, RESERVOIR_INPUTS, reservoirSceneAt, type MemoryRecord } from "./reservoir-model";
+import { ReferenceButton } from "./Reference";
 import "./reservoir.css";
 import "./flow-refinements.css";
 
@@ -198,6 +199,8 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
     </div>
     <div className="rv-caption" aria-live="polite"><strong>{titles[clip]}</strong><span>{notes[clip]}</span></div>
     <div className="rv-inline-rule"><strong>满池时</strong><code>j ∼ Uniform&#123;0, …, N&#125;</code><span><code>j &lt; K</code> → 替换 <code>slot j</code>；否则拒收。</span><b>每项处理后 N ← N + 1</b></div>
-    <p className="quiet-note">与 iCaRL 的局部区别：iCaRL 在任务结束时按类别分配配额并用 Herding 选代表图；这里逐流项在线选留，不依赖任务边界，也不保证类别均衡。z 是更新前给定值，本图不模拟网络优化。</p>
+    <ReferenceButton term="reservoir">查看留存概率与 iCaRL 对照</ReferenceButton>
+    <p className="quiet-note">本例抽签值是教学预设；类别不会因此获得固定配额。</p>
+    <div className="scene-handoff"><span>下一问</span><p>候选已经完成当前训练；选留只决定未来能回放谁。下面把旧池接回训练：先读旧记录，再形成一次联合更新，最后才交回 Reservoir。</p></div>
   </section>;
 }

@@ -4,7 +4,6 @@ import { runTraining, TRAIN_PHASES, trainingSceneAt } from "./training-model";
 import { windowAt } from "./review/lifecycle-model";
 import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
 import { SampleGlyph, NetworkGlyph, fmt, vectorText } from "./LearningGlyphs";
-import { Term } from "./Reference";
 import "./learning-scenes.css";
 
 const steps = runTraining("DER");
@@ -48,7 +47,7 @@ export default function DERTrainingStep() {
 
   return <section className="teaching-scene" data-scene="der-step" data-clip={phase} data-progress={p} data-status={timeline.state.status} data-updates={state.updates} data-seen={state.N} data-memory={state.M.map(record => record.id).join(",")} data-loss={step.losses.total}>
     <header>
-      <div><p className="eyebrow">DER / 单步闭环</p><h3>当前标签与历史响应，共用一次更新。</h3><p>先读取旧记忆；两路前向都用更新前同一个 θ，分别依靠真实标签与 <Term id="z">冻结响应</Term>。合并后更新一次，最后才选留当前候选。</p></div>
+      <div><p className="eyebrow">DER / 单步闭环</p><h3>当前标签与历史响应，共用一次更新。</h3><p>当前 (x,y) 提供分类 CE，旧 (x′,z′) 提供加权匹配 L_dark；α 调整旧响应的权重。两路都使用更新前的 θ，合并后更新一次，再决定当前候选是否入池。</p></div>
       <div className="scene-options" role="group" aria-label="选择本步记忆状态">
         <button aria-pressed={!empty} onClick={() => { setEmpty(false); timeline.reset(); }}>有旧记忆</button>
         <button aria-pressed={empty} onClick={() => { setEmpty(true); timeline.reset(); }}>空池首轮</button>
@@ -159,6 +158,7 @@ export default function DERTrainingStep() {
       </svg>
     </div>
     <div className="scene-explanation" aria-live="polite"><strong>{TRAIN_PHASES[phase]}</strong><p>{notes[phase]}</p></div>
-    <p className="quiet-note">数值来自后文同一 2→3 线性教学模型；α=0.5，η=0.1。图像身份与二维输入是合成示例，不是论文 CNN 特征或实验轨迹；拒收候选也已参与当前训练。</p>
+    <p className="quiet-note">图像身份与数值来自合成教学例，不是论文 CNN 特征或实验轨迹。候选未入池也已经完成本步训练。</p>
+    <div className="scene-handoff"><span>下一问</span><p>这一步仍假设回放看到相同像素。真实训练会重新裁剪或翻转原图；视图变了，旧的 z 还应该跟着变吗？</p></div>
   </section>;
 }

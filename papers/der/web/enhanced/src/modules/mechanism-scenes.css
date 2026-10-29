@@ -140,9 +140,6 @@ math[display="block"]{margin-block:0}
 .probability-verdict strong{font:17px var(--mono);color:#4d7054}
 .shift-identity-note{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;margin-top:9px;padding:9px 14px;background:#f5f8f1;border-left:2px solid #9fb492;color:var(--muted);font-size:12px}
 .shift-identity-note math{font-size:17px}
-.scene-handoff{display:grid;grid-template-columns:76px minmax(0,1fr);gap:16px;align-items:start;margin-top:26px;padding:17px 0 0;border-top:1px solid #dce4da}
-.scene-handoff>span{font-size:11px;letter-spacing:.08em;color:#6b8064;text-transform:uppercase;padding-top:3px}
-.scene-handoff p{max-width:880px;margin:0;font-size:15px;line-height:1.8;color:#43574d}
 
 .transport{display:flex;align-items:center;gap:9px;margin:0 0 14px}
 .transport button{font-size:14px;padding:10px 14px;border:1px solid #c6d6c0;border-radius:8px;background:#fff}
