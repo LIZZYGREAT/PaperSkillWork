@@ -2,8 +2,10 @@ import { useId } from "react";
 import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
 import ModelPixel from "./review/ModelPixel";
 import { curve, mix, windowAt } from "./review/lifecycle-model";
+import { GradientRoute, MotionTrail } from "./review/MotionTrail";
 import { RESERVOIR_CLIPS, RESERVOIR_INPUTS, reservoirSceneAt, type MemoryRecord } from "./reservoir-model";
 import "./reservoir.css";
+import "./flow-refinements.css";
 
 function RecordTile({ record, x, y, opacity = 1 }: { record: MemoryRecord; x: number; y: number; opacity?: number }) {
   return <g transform={`translate(${x} ${y})`} opacity={opacity} data-record={record.id} data-frozen={record.z.join(",")} data-origin={record.origin}>
@@ -40,11 +42,11 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
   const { clipIndex: clip, progress: p } = timeline.state;
   const s = reservoirSceneAt(clip, p);
   const defsId = useId().replace(/:/g, "");
-  const slotX = [250, 590] as const;
+  const slotX = [230, 590] as const;
   const slotY = 324;
   const slotWidth = 300;
-  const slotCenter = [400, 740] as const;
-  const streamX = [132, 352, 572, 792] as const;
+  const slotCenter = [380, 740] as const;
+  const streamX = [140, 420, 700, 980] as const;
   const gate = { x: 410, y: 157, width: 300, height: 102 };
   const exitBay = { x: 24, y: 340, width: 180, height: 108 };
   const rejectBay = { x: 916, y: 340, width: 180, height: 108 };
@@ -60,29 +62,47 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
   const sourceX = streamX[clip];
   const feedX = sourceX < gate.x ? gate.x : sourceX > gate.x + gate.width ? gate.x + gate.width : sourceX;
   const feedPath = `M${sourceX} 94 C${mix(sourceX, feedX, .42)} 132 ${mix(sourceX, feedX, .78)} 145 ${feedX} ${gate.y}`;
-  const outputPath = destinationCenter === null
-    ? null
-    : `M${gateCenter} ${gate.y + gate.height} C${mix(gateCenter, destinationCenter, .28)} 284 ${mix(gateCenter, destinationCenter, .76)} 294 ${destinationCenter} ${slotY}`;
-  const rejectPath = `M${gate.x + gate.width} ${gate.y + 62} C790 228 916 236 ${rejectBay.x + 21} ${rejectBay.y}`;
-  const evictPath = `M${slotX[0]} ${slotY + 66} C238 390 220 398 ${exitBay.x + exitBay.width} ${exitBay.y + 66}`;
+  const acceptedPoints = destinationCenter === null ? null : [
+    { x: gateCenter, y: gate.y + gate.height + 18 },
+    { x: gateCenter + (destinationCenter < gateCenter ? -160 : 160), y: gate.y + gate.height + 18 },
+    { x: destinationCenter, y: slotY + 24 },
+    { x: destinationCenter, y: slotY + 86 },
+  ] as const;
+  const outputPath = acceptedPoints
+    ? `M${acceptedPoints[0].x} ${acceptedPoints[0].y} C${acceptedPoints[1].x} ${acceptedPoints[1].y} ${acceptedPoints[2].x} ${acceptedPoints[2].y} ${acceptedPoints[3].x} ${acceptedPoints[3].y}`
+    : null;
+  const rejectedPoints = [
+    { x: gate.x + gate.width - 3, y: gate.y + 72 },
+    { x: 837, y: gate.y + 89 },
+    { x: 1027, y: gate.y + 79 },
+    { x: rejectBay.x + 90, y: rejectBay.y + 68 },
+  ] as const;
+  const rejectedPath = `M${rejectedPoints[0].x} ${rejectedPoints[0].y} C${rejectedPoints[1].x} ${rejectedPoints[1].y} ${rejectedPoints[2].x} ${rejectedPoints[2].y} ${rejectedPoints[3].x} ${rejectedPoints[3].y}`;
+  const evictedPoints = [
+    { x: slotCenter[0], y: slotY + 73 },
+    { x: 342, y: 349 },
+    { x: 245, y: 408 },
+    { x: exitBay.x + exitBay.width / 2, y: exitBay.y + 66 },
+  ] as const;
+  const evictedPath = `M${evictedPoints[0].x} ${evictedPoints[0].y} C${evictedPoints[1].x} ${evictedPoints[1].y} ${evictedPoints[2].x} ${evictedPoints[2].y} ${evictedPoints[3].x} ${evictedPoints[3].y}`;
   const exitScale = mix(1, .57, replacementExit);
   const exitCenter = curve(replacementExit,
-    { x: slotCenter[0], y: slotY + 66 },
+    { x: slotCenter[0], y: slotY + 73 },
     { x: 342, y: 349 },
     { x: 245, y: 408 },
     { x: exitBay.x + exitBay.width / 2, y: exitBay.y + 66 });
   const exitX = exitCenter.x - 139 * exitScale;
   const exitY = exitCenter.y - 44 * exitScale;
-  const acceptedOrigin = destinationCenter === null ? null : curve(candidateFlight,
-    { x: gateCenter - 77, y: gate.y + gate.height - 8 },
-    { x: gateCenter - 77, y: gate.y + gate.height + 25 },
-    { x: destinationCenter - 77, y: slotY - 28 },
-    { x: destinationCenter - 77, y: slotY + 60 });
+  const acceptedOrigin = acceptedPoints ? curve(candidateFlight,
+    { x: acceptedPoints[0].x - 77, y: acceptedPoints[0].y - 26 },
+    { x: acceptedPoints[1].x - 77, y: acceptedPoints[1].y - 26 },
+    { x: acceptedPoints[2].x - 77, y: acceptedPoints[2].y - 26 },
+    { x: acceptedPoints[3].x - 77, y: acceptedPoints[3].y - 26 }) : null;
   const rejectedOrigin = curve(candidateFlight,
-    { x: gate.x + gate.width - 80, y: gate.y + 46 },
-    { x: 760, y: gate.y + 63 },
-    { x: 950, y: gate.y + 53 },
-    { x: rejectBay.x + 13, y: rejectBay.y + 42 });
+    { x: rejectedPoints[0].x - 77, y: rejectedPoints[0].y - 26 },
+    { x: rejectedPoints[1].x - 77, y: rejectedPoints[1].y - 26 },
+    { x: rejectedPoints[2].x - 77, y: rejectedPoints[2].y - 26 },
+    { x: rejectedPoints[3].x - 77, y: rejectedPoints[3].y - 26 });
   const titles = ["空槽先接收；从第二项起再抽签。", "第二项进入另一槽；容量保持不变。", "抽到槽 0：旧记录离开，新记录占同一槽。", "抽到 3：候选离池，记忆内容保持不变。"];
   const notes = [
     "x₁ 已完成当前训练，连同更新前冻结的 z₁ 写入 slot 0；写入后 N 从 0 变为 1。",
@@ -105,13 +125,13 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
       <svg className="rv-canvas" viewBox="0 0 1120 500" role="img" aria-label="候选经过选留决策后写入固定记忆槽；被替换的记录与拒收候选分别离池">
         <defs>
           <linearGradient id={`${defsId}-stream`} x1="0" x2="1"><stop offset="0" stopColor="#d5dfd6"/><stop offset=".52" stopColor="#8ba58e"/><stop offset="1" stopColor="#d5dfd6"/></linearGradient>
-          <marker id={`${defsId}-stream-arrow`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#849a88"/></marker>
-          <marker id={`${defsId}-feed-arrow`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#6d9576"/></marker>
-          <marker id={`${defsId}-store-arrow`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#397554"/></marker>
-          <marker id={`${defsId}-away-arrow`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#ad7c4e"/></marker>
+          <marker id={`${defsId}-stream-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="rv-arrow-stream"/></marker>
+          <marker id={`${defsId}-feed-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="rv-arrow-feed"/></marker>
+          <marker id={`${defsId}-store-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="rv-arrow-store"/></marker>
+          <marker id={`${defsId}-away-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="rv-arrow-away"/></marker>
         </defs>
         <text x="54" y="34" className="rv-flow-heading">持续输入流</text>
-        <g transform="translate(850 25)" className="rv-flow-legend">
+        <g transform="translate(850 6)" className="rv-flow-legend">
           <path d="M0 8H36" className="rv-legend-store" markerEnd={`url(#${defsId}-store-arrow)`}/><text x="45" y="12">写入</text>
           <path d="M94 8H130" className="rv-legend-away" markerEnd={`url(#${defsId}-away-arrow)`}/><text x="139" y="12">离池 / 替换</text>
         </g>
@@ -123,9 +143,12 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
           {index === clip ? <text x="34" y="4" className="rv-stream-status is-current">本次</text> : <text y="48" textAnchor="middle" className="rv-stream-status">{index < clip ? "已处理" : "待到达"}</text>}
         </g>)}
         <path d={feedPath} className="rv-candidate-feed" markerEnd={`url(#${defsId}-feed-arrow)`} />
-        {outputPath && <path d={outputPath} className="rv-route-accepted" markerEnd={`url(#${defsId}-store-arrow)`} />}
-        {s.slot === null && <path d={rejectPath} className="rv-route-away" markerEnd={`url(#${defsId}-away-arrow)`} />}
-        {s.evicted && <path d={evictPath} className="rv-route-away" markerEnd={`url(#${defsId}-away-arrow)`} />}
+        {outputPath && <GradientRoute d={outputPath} progress={committed ? 0 : candidateFlight} className="rv-route-accepted" markerEnd={`url(#${defsId}-store-arrow)`} width={1120} height={500} />}
+        {s.slot === null && <GradientRoute d={rejectedPath} progress={committed ? 0 : candidateFlight} className="rv-route-away" markerEnd={`url(#${defsId}-away-arrow)`} width={1120} height={500} />}
+        {s.evicted && <GradientRoute d={evictedPath} progress={committed ? 0 : replacementExit} className="rv-route-away rv-route-exit" markerEnd={`url(#${defsId}-away-arrow)`} width={1120} height={500} />}
+        {outputPath && !committed && accepted && <MotionTrail points={acceptedPoints!} progress={candidateFlight} className="rv-motion-trail is-store" />}
+        {s.slot === null && !committed && <MotionTrail points={rejectedPoints} progress={candidateFlight} className="rv-motion-trail is-away" />}
+        {s.evicted && !committed && <MotionTrail points={evictedPoints} progress={replacementExit} className="rv-motion-trail is-exit" />}
 
         <g transform={`translate(${gate.x} ${gate.y})`} className="rv-decision-card">
           <rect width={gate.width} height={gate.height} rx="13" />
@@ -139,7 +162,7 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
           </g>)}
         </g>
 
-        <text x="250" y="300" className="rv-memory-heading">M · 固定容量 K = 2</text>
+        <text x="560" y="300" textAnchor="middle" className="rv-memory-heading">M · 固定容量 K = 2</text>
         {[0, 1].map(slot => {
           const record = visibleMemory[slot];
           const isTarget = accepted && s.slot === slot;

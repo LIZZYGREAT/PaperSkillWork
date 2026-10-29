@@ -1,11 +1,13 @@
 import { useId, useState } from "react";
 import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
 import { curve, windowAt } from "./review/lifecycle-model";
+import { MotionTrail } from "./review/MotionTrail";
 import { NetworkGlyph, SampleGlyph, fmt } from "./LearningGlyphs";
 import { MODEL_CLASSES } from "../data/model-classes";
 import { DER_PLUS_MEMORY } from "./der-plus-example";
 import type { Mode } from "./training-model";
 import "./learning-scenes.css";
+import "./flow-refinements.css";
 
 const clips = [
   { id: "旧响应可能错；先看冲突", durationMs: 4500, holdMs: 1800 },
@@ -30,9 +32,11 @@ export default function DERPlus() {
   const update = windowAt(supervision, .48, .96);
   const plus = mode === "DER++";
   const ryRecord = overlap ? rdRecord : alternativeRecord;
-  const rdFlight = curve(reading, { x: 383, y: 203 }, { x: 397, y: 203 }, { x: 400, y: 174 }, { x: 422, y: 174 });
+  const rdPoints = [{ x: 383, y: 203 }, { x: 397, y: 203 }, { x: 400, y: 174 }, { x: 422, y: 174 }] as const;
+  const rdFlight = curve(reading, ...rdPoints);
   const ryStart = overlap ? { x: 383, y: 203 } : { x: 383, y: 414 };
-  const ryFlight = curve(reading, ryStart, { x: 400, y: ryStart.y }, { x: 398, y: 318 }, { x: 422, y: 318 });
+  const ryPoints = [ryStart, { x: 400, y: ryStart.y }, { x: 398, y: 318 }, { x: 422, y: 318 }] as const;
+  const ryFlight = curve(reading, ...ryPoints);
   const notes = [
     "这条记忆的真实标签是 Claude，但冻结 z=(0.5,2,0) 把 GPT 排第一。匹配旧响应会保留过去的判断；它本身无法知道这个判断错了。",
     plus
@@ -60,10 +64,10 @@ export default function DERPlus() {
     <SceneTransport timeline={timeline} clips={clips} label="DER++ 两次读取与一次联合更新" showTiming={false} caption="Rᴅ 与 Rʏ 是两次独立抽样；两者可能读到同一条，也可能不同。" />
     <div className="teaching-stage dp-stage"><svg viewBox="0 0 1440 620" className="teaching-canvas dp-canvas" role="img" aria-label="真实标签与旧 logits 冲突，两次独立回放与当前分类汇入一次参数更新">
       <defs>
-        <marker id={`${defsId}-memory`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" className="dp-arrow-memory" /></marker>
-        <marker id={`${defsId}-dark`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" className="dp-arrow-dark" /></marker>
-        <marker id={`${defsId}-label`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" className="dp-arrow-label" /></marker>
-        <marker id={`${defsId}-update`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" className="dp-arrow-update" /></marker>
+        <marker id={`${defsId}-memory`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="dp-arrow-memory" /></marker>
+        <marker id={`${defsId}-dark`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="dp-arrow-dark" /></marker>
+        <marker id={`${defsId}-label`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="dp-arrow-label" /></marker>
+        <marker id={`${defsId}-update`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="dp-arrow-update" /></marker>
       </defs>
 
       <g className="dp-memory" data-memory-record={rdRecord.id}>
@@ -114,8 +118,8 @@ export default function DERPlus() {
         <text x="482" y="382" className="dp-conflict-summary">同一条 x₁：保持旧响应与符合真实标签，提出不同要求</text>
       </g>
       <g opacity={reading}>
-        <path d="M384 205C400 205 399 174 420 174" className="dp-read-path is-dark" markerEnd={`url(#${defsId}-dark)`} />
-        <path d={overlap ? "M384 205C410 222 398 318 420 318" : "M384 416C402 416 399 318 420 318"} className="dp-read-path is-label" markerEnd={`url(#${defsId}-label)`} />
+        <MotionTrail points={rdPoints} progress={reading} className="dp-motion-trail is-dark" />
+        <MotionTrail points={ryPoints} progress={reading} className="dp-motion-trail is-label" />
         <g className="dp-read-card is-dark"><path d="M426 128H608Q620 128 620 140V206Q620 218 608 218H426Z"/><text x="445" y="159" className="dp-lane-title">Rᴅ · {rdRecord.id}</text><text x="445" y="187" className="tg-small">复制冻结 logits z</text></g>
         <g className="dp-read-card is-label"><path d="M426 272H608Q620 272 620 284V350Q620 362 608 362H426Z"/><text x="445" y="303" className="dp-lane-title">Rʏ · {ryRecord.id}</text><text x="445" y="331" className="tg-small">读取真实 y = {ryRecord.label}</text></g>
         <g transform={`translate(${rdFlight.x - 11} ${rdFlight.y - 11})`} className="dp-flight-token is-dark"><SampleGlyph x={0} y={0} size={22} id="R-d read copy" model={rdRecord.model} /></g>

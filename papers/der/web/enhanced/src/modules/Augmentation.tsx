@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
 import { windowAt } from "./review/lifecycle-model";
 import { ScoreGlyph, fmt, vectorText } from "./LearningGlyphs";
 import { PelicanIllustration, type ImageView } from "./PelicanIllustration";
 import { runTraining, forward, viewOf } from "./training-model";
 import "./learning-scenes.css";
+import "./flow-refinements.css";
 
 const clips = [
   { id: "原图与保存时视图", durationMs: 4500, holdMs: 1500 },
@@ -21,6 +22,7 @@ type ReplayView = "center" | "flip";
 export default function Augmentation() {
   const timeline = useSceneTimeline(clips);
   const [view, setView] = useState<ReplayView>("center");
+  const defsId = useId().replace(/:/g, "");
   const { clipIndex: c, progress: p } = timeline.state;
   const done = (i: number) => c > i ? 1 : c < i ? 0 : windowAt(p, .08, .85);
   const modelView = view === "center" ? -1 : 1;
@@ -49,35 +51,37 @@ export default function Augmentation() {
     </div>
     <div className="teaching-stage aug-stage"><svg viewBox="0 0 1280 500" role="img" className="teaching-canvas aug-canvas" aria-label="白色鹈鹕原图分别生成保存视图与回放视图，回放输出和冻结目标匹配">
       <defs>
-        <marker id="aug-arrow-source" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" className="aug-arrow-head" /></marker>
-        <marker id="aug-arrow-current" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" className="aug-arrow-current-head" /></marker>
+        <marker id={`${defsId}-source-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="aug-arrow-head" /></marker>
+        <marker id={`${defsId}-current-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="aug-arrow-current-head" /></marker>
       </defs>
 
       <text x="35" y="125" className="tg-title">同一张原图 x₁</text>
       <PelicanIllustration view="original" label="原图 x1：戴蓝帽、骑青绿色自行车的白色鹈鹕" x={35} y={142} width={292} height={173} className="aug-pelican-art" />
       <text x="35" y="337" className="tg-small">保留原图身份；增强结果不覆盖它</text>
-      <circle cx="340" cy="228" r="5" className="aug-source-node" />
-      <path d="M340 228H365V174H392M365 228V373H392" className="aug-source-path" markerEnd="url(#aug-arrow-source)" />
-      <text x="348" y="210" className="tg-small aug-path-label">按需生成视图</text>
+      <text x="35" y="361" className="tg-small">按需生成保存时与回放时的视图</text>
+      <path d="M327 228C338 228 338 273 350 273" className="aug-source-stem" />
+      <circle cx="350" cy="273" r="4" className="aug-source-node" />
+      <path d="M350 273C368 273 374 174 392 174" className="aug-source-path" markerEnd={`url(#${defsId}-source-arrow)`} />
+      <path d="M350 273C368 273 374 373 392 373" className="aug-source-path" markerEnd={`url(#${defsId}-source-arrow)`} />
 
       <g opacity={done(0)}>
         <text x="400" y="84" className="tg-title">保存时 · A₀(x₁)</text>
         <PelicanIllustration view="saved" label="保存时轻微裁剪的同一只白色鹈鹕 A0(x1)" x={400} y={96} width={232} height={138} className="aug-pelican-art" />
         <text x="400" y="258" className="tg-small">首次训练时的合理裁剪</text>
-        <path d="M638 165H654" className="aug-forward-path" markerEnd="url(#aug-arrow-source)" />
+        <path d="M638 165H654" className="aug-forward-path" markerEnd={`url(#${defsId}-source-arrow)`} />
         <rect x="662" y="105" width="306" height="150" rx="14" className="aug-score-card aug-score-frozen" />
         <ScoreGlyph x={673} y={153} label="更新前输出 z" values={record.z} reveal={done(1)} frozen />
-        <path d="M968 177H992V215H1007" className="aug-target-path" markerEnd="url(#aug-arrow-source)" />
+        <path d="M968 180C987 180 988 216 1007 216" className="aug-target-path" markerEnd={`url(#${defsId}-source-arrow)`} />
       </g>
 
       <g opacity={done(2)}>
         <text x="400" y="283" className="tg-title">未来回放 · A₁(x₁)</text>
         <PelicanIllustration view={replayImageView} label={view === "center" ? "未来回放中心裁剪视图：同一只白色鹈鹕 A1(x1)" : "未来回放水平翻转视图：同一只白色鹈鹕 A1(x1)"} x={400} y={295} width={232} height={138} className="aug-pelican-art" />
         <text x="400" y="457" className="tg-small">{view === "center" ? "中心裁剪" : "水平翻转"} · 仍是同一个 x₁</text>
-        <path d="M638 364H654" className="aug-forward-path" markerEnd="url(#aug-arrow-source)" />
+        <path d="M638 364H654" className="aug-forward-path" markerEnd={`url(#${defsId}-source-arrow)`} />
         <rect x="662" y="300" width="306" height="150" rx="14" className="aug-score-card aug-score-current" />
         <ScoreGlyph x={673} y={348} label="当前输出 a" values={current} reveal={done(2)} />
-        <path d="M968 374H991V294H1007" className="aug-current-path" markerEnd="url(#aug-arrow-current)" />
+        <path d="M968 375C987 375 988 295 1007 295" className="aug-current-path" markerEnd={`url(#${defsId}-current-arrow)`} />
       </g>
 
       <rect x="1007" y="171" width="240" height="156" rx="15" className="aug-match-card" />

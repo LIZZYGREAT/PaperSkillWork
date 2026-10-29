@@ -560,3 +560,9 @@ S8 同屏对照四项论文结果，分别保留 Class-IL、Task-IL、MNIST-360 
 将 W5 的视觉构图/状态关系先于 Kit 选择，以及关键动态场景先审高保真关键帧和短动态（或准确分镜）的顺序写入 `docs/WORKFLOW.md`、`docs/TEACHING_DESIGN_STANDARD.md` 和 W5–W7 `implementation-plan` Skill。W6/W8 在必要时先实现由同一模型驱动的核心动作和身份/状态交接，再单独精修视觉并复核端点/节奏，写入两份规范和 W6–W8 `enhanced-implementation` Skill。W7/W9 人审区分运动表达、算法语义/证据、教学因果/读者理解，再综合判断；不设动画配额，不加入机器人评分表。W9 明确须在真正的生产构建上完整播放关键连续场景；静态图不能代替。
 
 P4 只更新现有两份规范、两份 Skills 及既有计划/审计，无新 schema、清单、评分框架或论文内容。`git diff --check` PASS。仓库 `python -m pytest` 使用工作区临时目录运行：123 passed，1 项 Kit CLI 测试在沙箱拒绝原子目录改名时失败；随后该单项在本机权限下定向复跑 1/1 PASS。W5–W9 文档/流程用例通过。生产页面构建及完整 21 阶段播放已在紧接的 P3 完成，P4 没有改页面源码。`python tools/paper.py check der` 保持 PASS；W9/W10 仍 PENDING，未经用户确认不启动 W10。
+
+## 三幅机制图的箭头与轨迹返修（2026-10-29）
+
+针对用户反馈统一精修 S4 Reservoir、增强视图与 S6 DER++ 的连接线：结构箭头改为细线小空心箭头；真正随对象移动的路线改用与 D1 同采样窗口、点划线与淡出的短拖尾。Reservoir 入槽与离槽路线按对象运动进度渐进显露，最终态撤去路线；图中输入项、决策卡、双槽与池外区域共用中心轴，左右槽的进入路线镜像绕开记忆标题。增强图的双分支使用柔和曲线；原图身份说明移到连线外，时间控制、视图选择与插图区之间保留明确间距。DER++ 的读样本 token 增加 D1 风格拖尾，其他监督与更新连接同步收细。计算模型、阶段顺序、D1 本体与论文数据未改。
+
+验证：TypeScript/Vite 生产构建 PASS（78 modules）；生产浏览器 `--reservoir-only` 最终双视口共 114 项通过；`--w8-only` 双视口共 872 项通过，覆盖 DER++/增强页画布几何、播放/暂停、视图切换与语义回归。Edge 156.0.4314.50 headless；真实 F11 `NOT_RUN`。已实际查看 Reservoir 替换中段/拒收画面、DER++ 三监督汇合、增强回放画面。截图归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-arrow-revision`。W9 人工验收仍为 `PENDING`，W10 未启动，`paper.yaml` 未改。
