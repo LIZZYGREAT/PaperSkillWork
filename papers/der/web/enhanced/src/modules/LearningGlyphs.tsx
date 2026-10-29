@@ -8,12 +8,18 @@ export function SampleGlyph({x,y,size=64,model=0,id,view=0}:{x:number;y:number;s
 return <g transform={`translate(${x} ${y})`} data-sample={id}><rect width={size} height={size} rx="10" className="tg-sample"/><g transform={`translate(${size/2} ${size/2}) rotate(${view*12}) scale(${1+Math.abs(view)*.08}) translate(${-size/2} ${-size/2})`}><ModelPixel model={model} x={size*.2} y={size*.2} size={size*.6}/></g></g>;
 }
 export function NetworkGlyph({x,y,version,forward=0,backward=0}:{x:number;y:number;version:string;forward?:number;backward?:number}){
-const left=[60,120,180],right=[35,72.5,110,147.5,185],reverse=backward>0&&backward<1,t=reverse?backward:forward;
+const layers=[[60,120,180],[42,78,114,150,186],[60,120,180]],layerX=[38,113,188],reverse=backward>0&&backward<1,t=reverse?backward:forward;
+const moving=t>0&&t<1,stage=Math.min(1,Math.floor(t*2)),local=t*2-stage,edgeLayer=reverse?1-stage:stage;
 return <g transform={`translate(${x} ${y})`} data-network data-version={version}>
 <rect width="226" height="244" rx="17" className={`tg-network ${reverse?"is-updating":""}`}/><text x="17" y="28" className="tg-title">当前网络</text><text x="209" y="28" textAnchor="end" className="tg-theta">{version}</text><path d="M17 42H209" className="tg-rule"/>
-<text x="17" y="56" className="tg-small">3×5 示意 · 计算 2D→3 类</text>
-{left.flatMap((a,i)=>right.map((b,j)=><g key={i+"-"+j}><path d={`M52 ${a+30}L173 ${b+30}`} className="tg-edge"/>{t>0&&t<1&&<circle cx={mix(52,173,reverse?1-t:t)} cy={mix(a+30,b+30,reverse?1-t:t)} r="3" className={reverse?"tg-gradient-dot":"tg-forward-dot"}/>}</g>))}
-{left.map((v,i)=><circle key={i} cx="52" cy={v+30} r="7" className="tg-node"/>)}{right.map((v,i)=><circle key={i} cx="173" cy={v+30} r="7" className="tg-node"/>)}<text x="52" y="232" textAnchor="middle" className="tg-small">输入层</text><text x="173" y="232" textAnchor="middle" className="tg-small">输出层</text></g>;
+<text x="17" y="56" className="tg-small">3×5×3 示意 · 计算 2D→3 类</text>
+{layers.slice(0,-1).flatMap((from,layerIndex)=>from.flatMap((a,i)=>layers[layerIndex+1].map((b,j)=>{
+const fromX=layerX[reverse?layerIndex+1:layerIndex],toX=layerX[reverse?layerIndex:layerIndex+1];
+const fromY=(reverse?b:a)+30,toY=(reverse?a:b)+30;
+return <g key={`${layerIndex}-${i}-${j}`}><path d={`M${layerX[layerIndex]} ${fromY}L${layerX[layerIndex+1]} ${toY}`} className="tg-edge"/>{moving&&layerIndex===edgeLayer&&<circle cx={mix(fromX,toX,local)} cy={mix(fromY,toY,local)} r="3" className={reverse?"tg-gradient-dot":"tg-forward-dot"}/>}</g>;
+})))}
+{layers.map((layer,layerIndex)=>layer.map((v,i)=><circle key={`${layerIndex}-${i}`} cx={layerX[layerIndex]} cy={v+30} r="7" className="tg-node"/>))}
+<text x="38" y="232" textAnchor="middle" className="tg-small">输入层</text><text x="113" y="232" textAnchor="middle" className="tg-small">隐藏层</text><text x="188" y="232" textAnchor="middle" className="tg-small">输出层</text></g>;
 }
 export function ScoreGlyph({x,y,values,label,reveal=1,frozen=false,note}:{x:number;y:number;values:Vec;label:string;reveal?:number;frozen?:boolean;note?:string}){
 return <g transform={`translate(${x} ${y})`} data-score={label}><text x="0" y="-12" className="tg-title">{label}</text>{values.map((v,k)=><g key={k} opacity={windowAt(reveal,k*.15,k*.15+.5)}><rect x={k*99} width="91" height="72" rx="9" className={`tg-score tg-tone-${k}`}/><text x={k*99+10} y="22" className="tg-small">{MODEL_CLASSES[k]}</text><text x={k*99+45} y="52" textAnchor="middle" className="tg-number">{fmt(v)}</text></g>)}<text x="0" y="93" className="tg-small">{note??(frozen?"□ 固定历史值，不随 θ 更新":"● 本次前向结果，与当前 θ 同源")}</text></g>;
