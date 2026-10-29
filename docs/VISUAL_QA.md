@@ -333,6 +333,63 @@ node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo
 
 首次运行前，按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 安装 Kit demo 锁定的 Playwright 依赖和 Chromium，并先执行目标项目自己的构建命令。默认产物写入忽略目录 `.visual-qa/`。工具会生成 JSON 和 Markdown 报告，但不会替代对截图的实际查看，也不会自动更新已批准基准图。
 
+### Windows Codex 中的 Edge 启动回退
+
+Codex 的 Windows 沙箱可能无法启动系统 Edge（例如进程启动时报 `Access is denied`、Edge named-pipe / IPC 权限错误）；这不等于没有截图工具。公共 runner 从 `reusable-kit/demo` 的锁定依赖加载 Playwright，默认启动 Playwright Chromium，也支持通过 `PAPERWORK_PLAYWRIGHT_EXECUTABLE` 指定本机 Chromium 兼容浏览器。先辨别错误发生在哪一层：
+
+1. 若报 Playwright Chromium 可执行文件不存在，先按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 检查/安装该 demo 的锁定依赖和 Chromium。网络不允许下载时，检查本机是否已有 Edge，再走下方显式路径。
+2. 若 Edge 文件不存在，先用下面的候选路径检查；不要把“未安装 Edge”和“沙箱不允许启动 Edge”混为一谈。
+3. 若 Edge 文件存在、但在默认沙箱中启动时报访问拒绝或命名管道/IPC 错误，保留原始错误，并通过 Codex 执行工具把**同一条本地截图命令**重跑一次，设置 `sandbox_permissions: "require_escalated"`，说明目的是在沙箱外启动已安装的本机 Edge 以执行本地 Playwright 截图检查。构建可先在普通沙箱内完成，升级权限只用于浏览器 runner。若自动审批拒绝/超时或重试仍失败，停止重试，记录确切错误并将相应浏览器/截图检查标记 `NOT_RUN`；不得称为“没有截图工具”，也不得把页面未实际打开时的 HTTP 200 当成截图通过。
+
+以下 PowerShell 示例从 PaperSkillWork 仓库根目录运行。它解析论文配置中的真实 `publish_source`，构建后调用该项目现有的 `visual-qa.json`。首次运行不设置浏览器覆盖变量，让公共 runner 使用锁定的 Playwright Chromium。若报 Chromium 可执行文件缺失，先按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 安装锁定依赖和 Chromium；只有无法安装/启动 Chromium、且需要改用已安装 Edge 时，才设置显式路径。若 Edge 在沙箱内报访问拒绝或 named-pipe / IPC 错误，再按下方完整的提升权限重试块执行。
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$PaperId = 'der' # 换成当前任务的 paper_id
+$PathsOutput = & python tools/paper.py paths $PaperId --json
+if ($LASTEXITCODE -ne 0) { throw "Could not resolve publish_source (exit $LASTEXITCODE)" }
+$Paths = ($PathsOutput -join [Environment]::NewLine) | ConvertFrom-Json
+$Source = [System.IO.Path]::GetFullPath($Paths.publish_source)
+$Config = Join-Path $Source 'visual-qa.json'
+if (!(Test-Path -LiteralPath $Config -PathType Leaf)) { throw "Missing project QA config: $Config" }
+
+Push-Location $Source
+try {
+    npm.cmd run build
+    if ($LASTEXITCODE -ne 0) { throw "Production build failed (exit $LASTEXITCODE)" }
+} finally {
+    Pop-Location
+}
+
+node tools/visual-qa/cli.mjs --config $Config
+```
+
+若不能安装/启动 Chromium、需要改用已安装的 Edge，可在普通沙箱内运行下面的完整回退块。构建已通过时不用重跑构建：
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$PaperId = 'der' # 换成当前任务的 paper_id
+$PathsOutput = & python tools/paper.py paths $PaperId --json
+if ($LASTEXITCODE -ne 0) { throw "Could not resolve publish_source (exit $LASTEXITCODE)" }
+$Paths = ($PathsOutput -join [Environment]::NewLine) | ConvertFrom-Json
+$Source = [System.IO.Path]::GetFullPath($Paths.publish_source)
+$Config = Join-Path $Source 'visual-qa.json'
+if (!(Test-Path -LiteralPath $Config -PathType Leaf)) { throw "Missing project QA config: $Config" }
+
+$EdgeCandidates = @(
+    (Join-Path $env:ProgramFiles 'Microsoft\Edge\Application\msedge.exe'),
+    (Join-Path ${env:ProgramFiles(x86)} 'Microsoft\Edge\Application\msedge.exe')
+)
+$Edge = $EdgeCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+if (!$Edge) { throw 'No installed Microsoft Edge executable found in the standard Windows locations.' }
+$env:PAPERWORK_PLAYWRIGHT_EXECUTABLE = $Edge
+node tools/visual-qa/cli.mjs --config $Config
+```
+
+如果 Edge 在普通沙箱内启动时报访问拒绝或 named-pipe / IPC 错误，将上面的**整段回退块**原样作为一次新的 `exec_command` 调用重跑，并设置 `sandbox_permissions: "require_escalated"`，说明仅为启动本机 Edge 执行本地截图检查。提升权限调用会启动新进程，之前 shell 中的 `$Config`、`$Edge` 或环境变量不会自动保留；整段重跑会在同一调用内重新解析路径、设置环境变量并启动 runner。若自动审批拒绝/超时或重试仍失败，停止重试并报告 `NOT_RUN`。环境变量只作用于该 PowerShell 进程，不要留给其他任务。runner 自己创建预览服务、启动 Playwright 并在结束时关闭它们。若改用项目自带的 Playwright 浏览器检查脚本，也在同一调用内设置环境变量并启动该脚本；需按脚本说明先构建，并在支持时设置该脚本自己的截图输出目录。
+
+成功运行后，从本次终端输出复制 `Report: <path>`，打开对应 `report.md` / `report.json`，实际查看报告列出的 PNG 截图并核对每项 `actualUrl`、页面错误和资源错误。把截图与状态的实际检查结果记录到已有 implementation-plan/final-check。最后只用该输出路径的父目录作为本次准确 run 目录，按本文件第 4 节清理并确认目录确已消失；失败或待复查证据先保留。若要检查动画过程，单独用真实连续播放录制或确定性中间状态截图；静态终态截图不证明动画时序正确。
+
 项目可在 `pages[]` 中声明 `computedStyles`，对生产预览里的真实计算样式作精确断言：
 
 ```json
