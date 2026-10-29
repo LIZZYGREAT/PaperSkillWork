@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { PelicanIllustration } from "../PelicanIllustration";
+import { DER_PLUS_MEMORY as PLUS_MEMORY } from "../der-plus-example";
 import ModelPixel, { MODEL_CLASSES, type ModelClass } from "./ModelPixel";
 import SceneTransport, { useSceneTimeline } from "./SceneTransport";
 import { RESERVOIR_INPUTS, RESERVOIR_STEPS, reservoirSceneAt, type MemoryRecord } from "../reservoir-model";
@@ -321,10 +322,7 @@ function AugmentationPrototype() {
   </section>;
 }
 
-const PLUS_MEMORY = [
-  { id: "x₁", model: 0 as ModelClass, label: "Claude", z: [.5, 2, 0] as const, source: "E04 合成错例" },
-  { id: "x₂", model: 1 as ModelClass, label: "GPT", z: [1, .8, .2] as const, source: "合成记忆项" },
-] as const;
+
 const PLUS_CLIPS = [
   { id: "先看见错位", durationMs: 1500, holdMs: 700 },
   { id: "从同一份 M 独立读取", durationMs: 1900, holdMs: 700 },
@@ -381,7 +379,7 @@ function DERPlusPrototype() {
             <rect x="43" y={y} width="272" height="126" rx="12" className={`p1-plus-record${record.id === "x₁" ? " is-wrong-target" : ""}`} />
             <SampleMark model={record.model} size={38} x={54} y={y + 14} />
             <text x="102" y={y + 28} className="p1-plus-record-title">{record.id} · 真实 y = {record.label}</text>
-            <text x="102" y={y + 47} className="p1-plus-small">旧 z {record.id === "x₁" ? "最高为 GPT" : "最高为 GPT"}</text>
+            <text x="102" y={y + 47} className="p1-plus-small">旧 z 最高项 {MODEL_CLASSES[Array.from(record.z).findIndex((value) => value === Math.max(...record.z))]}</text>
             {record.z.map((value, classId) => <g key={classId}>
               <rect x={55 + classId * 82} y={y + 69} width="72" height="38" rx="6" className={`p1-plus-score tone-${classId}`} />
               <text x={91 + classId * 82} y={y + 84} textAnchor="middle" className="p1-plus-score-name">{MODEL_CLASSES[classId]}</text>

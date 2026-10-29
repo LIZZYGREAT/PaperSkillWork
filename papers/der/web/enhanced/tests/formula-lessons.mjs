@@ -3,8 +3,8 @@ export async function formulaLessonChecks({page,base,check,shot}){
  const near=(a,b,label)=>check(Math.abs(a-b)<1e-7,label+": "+a+" / "+b);
  const setRange=async(locator,value)=>locator.fill(String(value));
  await page.emulateMedia({reducedMotion:"no-preference"});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
- const names=["kl-math","logit-math","der-plus-math","workbench-math"];
- check(await page.locator("[data-reading-unit]").count()===4,"Only modules with a separate math exploration retain a reading unit");
+ const names=["kl-math","logit-math","workbench-math"];
+ check(await page.locator("[data-reading-unit]").count()===3,"Only modules with a separate math exploration retain a reading unit");
  for(const name of names){
   const lesson=page.locator('[data-reading-unit="'+name+'"]');
   const structure=await lesson.evaluate(el=>{
@@ -30,6 +30,9 @@ export async function formulaLessonChecks({page,base,check,shot}){
  const augmentation=page.locator("[data-scene=augmentation]");
  check(await augmentation.locator("[data-reading-unit]").count()===0,"Augmentation opens on the shared-image mechanism rather than a separate formula lesson");
  check((await augmentation.locator(".aug-match-formula").textContent()).includes("L_match"),"Augmentation keeps the concise matching rule beside its outputs");
+ const derPlus=page.locator("[data-scene=der-plus]");
+ check(await derPlus.locator("[data-reading-unit]").count()===0,"DER++ opens on the conflict and shared-update mechanism, not a separate formula lesson");
+ check((await derPlus.locator("[data-total-formula]").textContent()).includes("L_current + α L_dark + β L_replay-CE"),"DER++ keeps its three-term objective beside the single update");
  for(const [name,selector] of [["kl-gradient","[data-reading-unit=kl-math] .lesson-reading > .lesson-derivation:last-child"],["kl-nonnegative","[data-reading-unit=kl-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-gradient","[data-reading-unit=logit-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-shift-proof","[data-reading-unit=logit-math] .lesson-reading > .lesson-derivation:last-child"]])await shot(name,selector);
  check(await page.locator("[data-scene=lifecycle] [data-reading-unit]").count()===0,"D1 retains its existing sidebar formula");
  const kl=page.locator("[data-math-explorer=kl]"),point=kl.locator("[data-plot-x]"),algorithm=page.locator("[data-design=kl]"),phase=await algorithm.getAttribute("data-progress");

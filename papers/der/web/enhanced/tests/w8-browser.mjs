@@ -20,7 +20,7 @@ export async function fullW8Checks({page,base,check,shot}){
   await page.goto(base+"?focus="+name);await page.evaluate(()=>document.fonts.ready);const scene=page.locator("[data-scene="+name+"]");
   for(let i=0;i<durations.length;i++){
    await seek(scene,i,durations[i],.6);check(await scene.getAttribute("data-status")==="paused","Mid-process pause is real");await geometry(scene);
-   if([1,2,4].includes(i))await shot(name+"-"+i,"[data-scene="+name+"]");
+   if(name==="der-plus"&&i===0||[1,2,4].includes(i))await shot(name+"-"+i,"[data-scene="+name+"]");
    const snapshot=await scene.locator(".teaching-canvas").innerHTML();await page.clock.fastForward(1200);check(snapshot===await scene.locator(".teaching-canvas").innerHTML(),"Pause holds all geometry and values");
    await scene.locator("[data-back]").click();check(+(await scene.getAttribute("data-progress"))===0,"Back restores stage start");
   }
@@ -42,13 +42,25 @@ export async function fullW8Checks({page,base,check,shot}){
    check(await scene.getByRole("button",{name:"水平翻转",exact:true}).getAttribute("aria-pressed")==="true","Selected replay view is exposed to assistive technology");
   }
   if(name==="der-plus"){
-   await scene.getByRole("button",{name:"DER",exact:true}).click();check(await scene.getAttribute("data-ry")==="none","DER has no historical label branch");
+   const conflict=await scene.locator('[data-memory-record="x₁"]').evaluate(el=>el.textContent||"");
+   check(conflict.includes("真实 y = Claude")&&conflict.includes("旧 z 最高：GPT"),"DER++ opens with the E04 label/logit conflict visible");
+   check(await scene.locator(".dp-z-wrong").count()===1,"The historical top logit is singled out inside the frozen vector");
+   await scene.getByRole("button",{name:"DER",exact:true}).click();
+   check(await scene.getAttribute("data-ry")==="none"&&await scene.getAttribute("data-supervision-count")==="2","DER removes the historical-label branch");
    await scene.getByRole("button",{name:"DER++",exact:true}).click();
-   check(await scene.getAttribute("data-rd")===await scene.getAttribute("data-ry"),"Separate samples may overlap");
-   await scene.locator(".scene-options").last().getByRole("button").click();check(await scene.getAttribute("data-rd")!==await scene.getAttribute("data-ry"),"Separate samples may differ");
+   check(await scene.getAttribute("data-rd")==await scene.getAttribute("data-ry"),"Independent reads can happen to overlap");
+   await scene.locator('[data-overlap-choice="different"]').click();
+   check(await scene.getAttribute("data-rd")==="x₁"&&await scene.getAttribute("data-ry")==="x₂","R-d and R-y can independently read different records");
+   check(await scene.getAttribute("data-supervision-count")==="3","DER++ adds replay CE beside current CE and dark matching");
+   await seek(scene,1,5000,.6);await shot("der-plus-different-read","[data-scene=der-plus]");
   }
   await page.emulateMedia({reducedMotion:"reduce"});await scene.locator("select").selectOption(String(durations.length-1));
   check(await scene.getAttribute("data-progress")==="1","Reduced motion shows whole semantic result");
+  if(name==="der-plus"){
+   check(await scene.getAttribute("data-updates")==="1","All DER++ signals reach exactly one completed parameter update");
+   check(await scene.locator(".dp-update-hub").count()===1&&await scene.locator(".dp-updated-parameter").count()===1,"The joint objective has one shared theta hub and no claimed corrective prediction");
+   check((await scene.locator("[data-total-formula]").textContent()).includes("β L_replay-CE"),"The historical-label term appears in the one joint objective");
+  }
   const stable=await scene.locator(".teaching-canvas").innerHTML();await page.clock.fastForward(2000);check(stable===await scene.locator(".teaching-canvas").innerHTML(),"Reduced motion is static");
   await page.emulateMedia({reducedMotion:"no-preference"});
  }

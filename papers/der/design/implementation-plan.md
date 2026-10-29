@@ -526,7 +526,7 @@ Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwrigh
 
 生产构建 PASS（75 modules），`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 的 `--w8-only` 在 1440×900 与 1920×1080 各 382 项 PASS，覆盖单步连续阶段、暂停/回退、空池分支、更新先于写入、记忆值、减少动态及几何；更新后的 `--formula-only` 两档各 60 项 PASS，核对当前主线只在 Reservoir/DER 单步旁显示必要短公式。已实际查看当前前向、回放、联合更新/候选写入三阶段的两档截图。检查为无头 Edge；真实 F11 未运行。证据归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-step`。
 
-目前 P2 已完成 Reservoir、DER 单步和增强视图；DER++ 仍待处理。完成整个 P2 后停下等待用户复审；W9 继续 `PENDING`，P3/P4 与 W10 不启动。
+P2 的 Reservoir、DER 单步、增强视图与 DER++ 四项均已完成。现按方案停下等待用户对 P2 进行人工复审；W9 总验收继续 `PENDING`，不推进 P3/P4/W10，不改 `paper.yaml`。
 
 ### P2 / S5 增强视图生产主线（2026-10-29）
 
@@ -534,4 +534,13 @@ Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwrigh
 
 构建 PASS（TypeScript 与 Vite，76 modules）；`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 `--w8-only` 两档各 384 项、合计 768 项 PASS；覆盖连续阶段、暂停/回退、同一固定目标、中心裁剪/水平翻转交互、即时损失变化、reduced motion 及几何边界。`--formula-only` 两档各 60 项、合计 120 项 PASS，确认主线只留短匹配规则。已查看 1440×900 与 1920×1080 的原图/保存视图/回放视图截图，插图变换后主体清晰，图像与二维模型数值的边界可见。无头 Edge 检查；真实 F11 `NOT_RUN`。证据位于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/augmentation`。
 
-目前 P2 已完成 Reservoir、DER 单步和增强视图；DER++ 尚待处理。完成整个 P2 后停下交用户复审；W9 保持 `PENDING`，不启动 P3/P4/W10，不改 `paper.yaml`。
+S5 增强视图已完成；P2 最终状态见下方 S6 记录。
+### P2 / S6 DER++ 生产主线（2026-10-29）
+
+DER++ 主图以 E04 合成错例开场：同一旧记忆 `x₁` 的真实标签为 Claude，冻结向量 `z=(0.5,2,0)` 却将 GPT 排第一。暗知识匹配显示为逐类 `aᵢ ↔ zᵢ`；真实标签分支提供另一类方向。`Rᴅ` 与 `Rʏ` 是分开的读取事件，控件可查看它们恰好重合或分别抽到 `x₁/x₂`；两次读取均从本步更新前的 M 取值。当前样本分类、历史输出匹配和（DER++ 模式下）历史标签 CE 用不同颜色/图形汇入一个 θ 枢纽，再执行唯一一次更新；不显示或承诺更新后必然纠错。DER 模式会移除历史标签读取和第三项损失。总公式贴近合流主图，独立 DER++ 公式讲义移出主线。
+
+为确保原型与正式页面共享同一份合成记忆向量，E04 `x₁/x₂` 常量已从 P1 组件提取为共用数据；P1 中 `x₂` 的旧 logits 最高项说明改为由该向量动态读取，修正原有错误标签，不改 P1 构图。P1 增强方向以开发预览回归：Edge 两档均加载三张鹈鹕视图、三张保有同一 `x₁` 身份且无浏览器错误；截图在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/p1-augmentation-1440.png` 与 `.../p1-augmentation-1920.png`。算法、训练模型、论文事实和 W2/W4 未修改。
+
+构建 PASS（TypeScript 与 Vite，77 modules），`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 `--w8-only` 两桌面视口各 390 项、合计 780 项 PASS，包括首幕冲突、DER/DER++ 分支、同条/异条读取、单一联合目标、三项只更新一次、暂停/回退、reduced motion 和画布边界。`--formula-only` 两档各 60 项、合计 120 项 PASS，当前独立阅读公式模块为 3 个，DER++ 联合目标留在机制旁。已审看 1440×900 与 1920×1080 冲突首幕、异条采样和三监督合流图；真实 F11 `NOT_RUN`。截图在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-plus`。
+
+P2 四项（Reservoir、DER 单步、增强、DER++）已完成。现停止等待用户对 P2 进行人工复审；不推进 P3/P4/W10，W9 总验收保持 `PENDING`，`paper.yaml` 未改。
