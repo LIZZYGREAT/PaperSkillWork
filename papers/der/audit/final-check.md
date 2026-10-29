@@ -98,3 +98,13 @@ Overall: PENDING
 自检：24 单元测试通过；两档完整浏览器回归 2602 断言通过（各1301），最后仅修正选中端点的裁切，最终构建再经公式专项 122 断言通过（各61）。公共视觉 14 状态与三个修正区复测6状态通过，已实看两档关键区域及中间态；原章节计数断言发现的旧类名冲突已根治，未降低断言。生产构建与非根子路径资源通过；相邻现有检查器对44文件的语法和输出结构本地诊断通过。
 
 必要画面和报告位于 `der-formulas-20261029` 归档（完整路径见 implementation-plan）；已完成公共 run 和本轮原生临时截图在归档后精确清理。D1 源码/CSS/model无差异，九阶段及侧栏/专注模式回归通过，主图已对照审看。当前官方检查器版本未能联网核实、真实F11未执行，继续分别记 NOT_RUN；未代签 W9，Overall 仍 PENDING，等待用户最终审查。
+
+## W9 人工复审结论与返修启动（2026-10-29）
+
+`HUMAN_ACCEPTANCE=REVISE`。用户提供的 W9 返修审查说明已将 W8 新增公式讲义及 S4–S8 场景评为需要结构性返工；本项是当前 W9 人工意见，不是 Agent 自动判断。W7 首切片通过保留，W8 的结构完成历史保留；`paper.yaml` 中 `W9_final_audit.status` 仍为 `pending`，返修完成前等待用户复审，不代签 PASS。当前工作依附件先执行 P0 和 Reservoir、增强、DER++ 的 P1 关键帧/短原型；P1 交用户审阅后才进入完整 P2–P3，P4 工作流规范最后修订，W10 不启动。
+
+本轮从 Git 记录确认的范围：`07db1fd` 首次加入完整 S4–S8 场景、四轮工作台与实验页；`7d94b55` 新增七个公式讲义及独立数学曲线；`33f3dbb` 将统一公式/讲解/动画顺序固化进测试。返修不撤销 `efc08b9` 的 W7 审批，也不推翻 D1 专注版与后来的用户侧栏修订。当前仅 P0：阅读组件与测试已经取消统一顺序契约；还未重写线上机制场景，不将此项写成视觉验收通过。
+
+P0 结果：`npm --prefix papers/der/web/enhanced test` 24/24 PASS；`npm --prefix papers/der/web/enhanced run build` PASS；使用共享 Playwright/Chromium 153.0.8010.12 的 `test:browser -- --formula-only` 两档共 122 项 PASS，`test:browser -- --review-feedback` 两档共 42 项 PASS。实际截图位于工作区可视化归档 `.../der-p0` 和 `.../der-p0-formulas`，已抽查七个公式片段、KL 与 D1 代表图。`FULLSCREEN_REAL=NOT_RUN`（headless Chromium 不能代替真实 F11）；公共 Visual QA CLI 本轮未运行。截图路径按任务 Visualizations 根目录保存，源码仓库中不加入截图。
+
+当前仍 `Overall=PENDING`：P1 的 Reservoir、增强和 DER++ 关键帧/连续动态原型及真实浏览器预览尚未完成；P1 人工方向审阅、P2–P4、最终 W9 用户复审均待后续完成。算法内核、W2/W4、证据数据与 `paper.yaml` 阶段值本轮未改。

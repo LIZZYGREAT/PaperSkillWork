@@ -2,11 +2,11 @@
   --lesson-ink:#203c35;--lesson-green:#39694f;--lesson-muted:#697a6b;
   margin:26px 0 42px;color:var(--lesson-ink);border-top:1px solid #cbd8c7;
 }
-.formula-lesson .formula-first{padding:24px 28px;background:#eef2e8;border-bottom:1px solid #d4dece}
-.formula-lesson .formula-first>.eyebrow{margin:0 0 10px;font-size:12px;letter-spacing:.12em;color:#557056}
+.formula-lesson .formula-spot{padding:24px 28px;background:#eef2e8;border-bottom:1px solid #d4dece}
+.formula-lesson .formula-spot>.eyebrow{margin:0 0 10px;font-size:12px;letter-spacing:.12em;color:#557056}
 .formula-lesson .equation{padding:10px 0;margin:0;min-width:0;overflow:visible;line-height:normal}
 .formula-lesson math{display:block math;width:max-content;max-width:none;overflow:visible;line-height:normal;margin:0;font-size:24px;math-style:normal}
-.formula-lesson .formula-first p:last-child{margin:14px 0 0;color:#526952;font-size:15px;line-height:1.85;max-width:none}
+.formula-lesson .formula-spot p:last-child{margin:14px 0 0;color:#526952;font-size:15px;line-height:1.85;max-width:none}
 .formula-lesson .lesson-reading{padding:28px 0 0}
 .formula-lesson .lesson-reading>header{margin-bottom:24px}
 .formula-lesson .lesson-reading h3{font-size:23px;margin:0 0 8px;line-height:1.5}
@@ -47,7 +47,7 @@
 .formula-lesson .lesson-reading .compact-equation math{font-size:22px}
 @media(max-width:900px){
  .formula-lesson .lesson-columns{grid-template-columns:1fr;gap:22px}
- .formula-lesson .formula-first{padding:20px 16px}
+ .formula-lesson .formula-spot{padding:20px 16px}
  .formula-lesson math{font-size:21px}
  .formula-lesson .lesson-reading .compact-equation math{font-size:19px}
 }

@@ -1,8 +1,8 @@
 export async function reviewFeedbackChecks({page,base,check,shot}){
  await page.emulateMedia({reducedMotion:"reduce"});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
  const kl=page.locator("[data-design=kl]");
- const formula=kl.locator(".formula-first");
- check(await formula.evaluate(el=>!!(el.compareDocumentPosition(el.closest("[data-design]").querySelector(".transport"))&Node.DOCUMENT_POSITION_FOLLOWING)),"KL definitions precede transport and animation");
+ const formula=kl.locator(".formula-spot");
+ check(await kl.locator("[data-reading-unit=kl-math]").count()===1,"KL content owns its composition independently of the shared reading-unit wrapper");
  for(const id of ["near","equal","reversed"]){
   await kl.locator("[data-case="+id+"]").click();await kl.locator("[data-frame='4']").click();
   const boxes=await formula.locator(".equation,math").evaluateAll(nodes=>nodes.map(el=>({kind:el.tagName,scrollY:el.scrollHeight-el.clientHeight,scrollX:el.scrollWidth-el.clientWidth,ox:getComputedStyle(el).overflowX,oy:getComputedStyle(el).overflowY})));

@@ -4,26 +4,25 @@ export async function formulaLessonChecks({page,base,check,shot}){
  const setRange=async(locator,value)=>locator.fill(String(value));
  await page.emulateMedia({reducedMotion:"no-preference"});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
  const names=["kl-math","logit-math","reservoir-math","der-step-math","augmentation-math","der-plus-math","workbench-math"];
- check(await page.locator("[data-formula-lesson]").count()===7,"Every formula-bearing main module has a dedicated lesson");
+ check(await page.locator("[data-reading-unit]").count()===7,"Every formula-bearing module has an independently composed reading unit");
  for(const name of names){
-  const lesson=page.locator('[data-formula-lesson="'+name+'"]');
+  const lesson=page.locator('[data-reading-unit="'+name+'"]');
   const structure=await lesson.evaluate(el=>{
-   const formula=el.querySelector(".formula-first"),reading=el.querySelector(".lesson-reading"),scene=el.parentElement,transport=scene.querySelector(".transport,.motion-transport");
-   const after=(a,b)=>!!(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING);
+   const formula=el.querySelector(".formula-spot"),reading=el.querySelector(".lesson-reading"),scene=el.parentElement,transport=scene.querySelector(".transport,.motion-transport");
    const equations=[...el.querySelectorAll(".equation")].map(eq=>{
     const box=eq.getBoundingClientRect(),m=eq.querySelector("math"),mb=m.getBoundingClientRect();
     return {fits:mb.x>=box.x-1&&mb.right<=box.right+1,display:getComputedStyle(m).display,ox:getComputedStyle(eq).overflowX,oy:getComputedStyle(eq).overflowY,scroll:eq.scrollHeight-eq.clientHeight};
    });
-   return {ordered:after(formula,reading)&&after(reading,transport),equations};
+   return {hasFormula:!!formula,hasReading:!!reading,hasMechanism:!!transport,equations};
   });
-  check(structure.ordered,name+" orders formula, explanation, then mechanism transport");
+  check(structure.hasFormula&&structure.hasReading&&structure.hasMechanism,name+" keeps math, explanation, and mechanism available without prescribing their order");
   check(structure.equations.every(e=>e.display.includes("math")&&e.fits&&e.ox==="visible"&&e.oy==="visible"&&e.scroll<=1),name+" formulas have natural height and fit their columns: "+JSON.stringify(structure.equations));
-  await shot(name,"[data-formula-lesson="+name+"]");
-  await shot(name+"-formula","[data-formula-lesson="+name+"] .formula-first");
-  await shot(name+"-reading","[data-formula-lesson="+name+"] .lesson-reading > .lesson-columns:first-of-type");
+  await shot(name,"[data-reading-unit="+name+"]");
+  await shot(name+"-formula","[data-reading-unit="+name+"] .formula-spot");
+  await shot(name+"-reading","[data-reading-unit="+name+"] .lesson-reading > .lesson-columns:first-of-type");
  }
- for(const [name,selector] of [["kl-gradient","[data-formula-lesson=kl-math] .lesson-reading > .lesson-derivation:last-child"],["kl-nonnegative","[data-formula-lesson=kl-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-gradient","[data-formula-lesson=logit-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-shift-proof","[data-formula-lesson=logit-math] .lesson-reading > .lesson-derivation:last-child"]])await shot(name,selector);
- check(await page.locator("[data-scene=lifecycle] [data-formula-lesson]").count()===0,"D1 retains its existing sidebar formula");
+ for(const [name,selector] of [["kl-gradient","[data-reading-unit=kl-math] .lesson-reading > .lesson-derivation:last-child"],["kl-nonnegative","[data-reading-unit=kl-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-gradient","[data-reading-unit=logit-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-shift-proof","[data-reading-unit=logit-math] .lesson-reading > .lesson-derivation:last-child"]])await shot(name,selector);
+ check(await page.locator("[data-scene=lifecycle] [data-reading-unit]").count()===0,"D1 retains its existing sidebar formula");
  const kl=page.locator("[data-math-explorer=kl]"),point=kl.locator("[data-plot-x]"),algorithm=page.locator("[data-design=kl]"),phase=await algorithm.getAttribute("data-progress");
  for(const q of [.02,.6,.8,.98]){
   await setRange(kl.locator("input[type=range]"),q);const r=binaryKL(.8,q);

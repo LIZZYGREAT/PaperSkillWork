@@ -29,7 +29,9 @@ const server=createServer(async(req,res)=>{
 try{
  await new Promise((r,j)=>{server.once("error",j);server.listen(0,"127.0.0.1",r)});
  const base=`http://127.0.0.1:${server.address().port}/der-review/`;
- browser=await chromium.launch({headless:true,executablePath:process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE||"C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"});
+ const launchOptions={headless:true};
+ if(process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE)launchOptions.executablePath=process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE;
+ browser=await chromium.launch(launchOptions);
  console.log(`Browser ${browser.version()} Node ${process.version}`);
  if(output)await mkdir(output,{recursive:true});
  for(const [width,height] of [[1440,900],[1920,1080]]){
