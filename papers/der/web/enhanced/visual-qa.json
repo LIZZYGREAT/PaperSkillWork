@@ -506,7 +506,8 @@
     "checkPageHorizontalOverflow": true,
     "minSemanticFontSizePx": 12,
     "clippingSelectors": [
-      ".formula-lesson .equation"
+      ".kl-main-equation .equation",
+      ".score-main-equation .equation"
     ],
     "stableAcrossStates": []
   }

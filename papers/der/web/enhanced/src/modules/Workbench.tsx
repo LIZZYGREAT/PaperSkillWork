@@ -13,6 +13,7 @@ import {
 import { curve, mix, windowAt } from "./review/lifecycle-model";
 import { MotionPath, NetworkGlyph, SampleGlyph, ScoreGlyph, fmt, vectorText } from "./LearningGlyphs";
 import { MODEL_CLASSES } from "../data/model-classes";
+import { Equation } from "./MathNotation";
 import "./learning-scenes.css";
 import "./workbench.css";
 
@@ -81,9 +82,10 @@ function StepDetails({ step }: { step: ReturnType<typeof runTraining>[number] })
     <details className="local-detail" data-numeric-details>
       <summary>展开本轮可复算状态、前向视图与联合梯度</summary>
       <p>
-        这是 W5 的二维线性合成模型 h<sub>W</sub>(u)=Wu；无 bias/momentum。η={CONFIG.eta}，α={CONFIG.alpha}，β={CONFIG.beta}（仅 DER++）。
-        图中类别标识用于稳定身份，u 不是从真实图片计算的特征。
+        这是 W5 的二维线性合成模型 h<sub>W</sub>(u)=Wu；无 bias/momentum。各支路用自己的输入把输出梯度转成矩阵梯度，再按目标权重合并。
+        η={CONFIG.eta}，α={CONFIG.alpha}，β={CONFIG.beta}（仅 DER++）。图中类别标识用于稳定身份，u 不是从真实图片计算的特征。
       </p>
+      <Equation label="线性模型把输出梯度转换为权重矩阵梯度"><msub><mi>∇</mi><mi>W</mi></msub><mi>L</mi><mo>=</mo><mo>(</mo><msub><mi>∇</mi><mi>a</mi></msub><mi>L</mi><mo>)</mo><msup><mi>u</mi><mi mathvariant="normal">T</mi></msup></Equation>
       <div className="table-scroll">
         <table>
           <thead>
