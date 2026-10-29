@@ -55,7 +55,7 @@ M03 的 source_locator 移除原先误写的“Algorithm 3 and proof”：附录
 | FULLSCREEN_LAYOUT | PASS | 1920×1080、DPR1、100%缩放的布局模拟。 |
 | FULLSCREEN_REAL | NOT_RUN | Windows UI 工具因无法可靠识别当前浏览器 URL 安全终止；不以 headless 尺寸或专注模式冒充 F11。 |
 | VISUAL_REVIEW | PASS (Agent范围) | 已实看两档代表状态：正式首屏、KL/Logits、生命周期、Reservoir替换/拒收、单步更新/写入、增强、DER++不同来源、四轮写入/拒收/预测、证据协议与反例。已修复端点缺口、线穿文字、候选擦过网络和占用槽透出“空槽”等缺陷。 |
-| REGRESSION | PASS (限定范围) | 生命周期三个核心源码文件相对 fa3257b 无差异；1440下阶段0/8整屏截图前后SHA256逐字节相同。两档保护场景功能回归通过；未配置全站批准像素基线。 |
+| REGRESSION | PASS (原W8记录) | 原W8时核心源码/两个关键帧无差异的结论仅适用于b78cb55。2026-10-29用户追加截图反馈明确授权正文侧栏与版式修订；本轮不再宣称布局源码未改，计算模型与九阶段时序保持不变，结果见下方追加记录。 |
 | HUMAN_ACCEPTANCE | PENDING | W9 留给用户，不由机器/Agent代签。 |
 
 实际浏览器：

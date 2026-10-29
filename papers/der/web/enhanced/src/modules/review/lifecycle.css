@@ -129,47 +129,66 @@
 .lifecycle-focus-button{position:absolute;right:0;top:28px}
 .lifecycle-scene.is-focused{position:fixed;inset:0;z-index:1000;margin:0!important;padding:16px;max-width:none;background:var(--rk-canvas);overflow:hidden}
 .lifecycle-scene.is-focused>header{display:none}
-.lifecycle-scene.is-focused .lifecycle-shell{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;width:100%;height:100%;min-height:0}
-.lifecycle-scene.is-focused .lifecycle-sidebar{display:flex;flex-direction:column;gap:0;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:16px;background:#fff;border:1px solid #dce4d9;border-radius:14px}
-.lifecycle-scene.is-focused .lifecycle-focus-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-shell{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;width:100%;height:100%;min-height:0}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-sidebar{display:flex;flex-direction:column;gap:0;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:16px;background:#fff;border:1px solid #dce4d9;border-radius:14px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-focus-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
 .lifecycle-focus-heading>div>span{display:block;font:10px var(--rk-font-mono);letter-spacing:.1em;color:var(--rk-accent);margin-bottom:3px}
-.lifecycle-scene.is-focused .lifecycle-focus-heading h2{font:600 17px var(--rk-font-body);margin:0;line-height:1.4}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-focus-heading h2{font:600 17px var(--rk-font-body);margin:0;line-height:1.4}
 .lifecycle-exit-focus{font-size:12px;padding:6px 8px;white-space:nowrap}
-.lifecycle-scene.is-focused .motion-transport{padding:0 0 12px;max-width:none}
-.lifecycle-scene.is-focused .motion-progress{flex-direction:column;align-items:stretch;gap:5px;margin:0 0 9px;font-size:11px}
-.lifecycle-scene.is-focused .motion-progress span{min-width:0;white-space:nowrap}
-.lifecycle-scene.is-focused .motion-progress progress{width:100%;min-width:0;flex:none;height:4px}
-.lifecycle-scene.is-focused .motion-buttons{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"play replay" "back next" "stages stages";gap:6px}
-.lifecycle-scene.is-focused .motion-buttons>button{min-width:0;margin:0;padding:7px 6px;font-size:13px;border-radius:7px}
-.lifecycle-scene.is-focused [data-play]{grid-area:play}.lifecycle-scene.is-focused [data-replay]{grid-area:replay}.lifecycle-scene.is-focused [data-back]{grid-area:back}.lifecycle-scene.is-focused [data-next]{grid-area:next}
-.lifecycle-scene.is-focused .motion-stage-picker{grid-area:stages;min-width:0;width:100%;margin:3px 0 0}
-.lifecycle-scene.is-focused .motion-stage-label{display:none}
-.lifecycle-scene.is-focused .motion-stage-trigger{width:100%;min-width:0;padding:8px 9px;gap:7px;font-size:12px}
-.lifecycle-scene.is-focused .motion-stage-menu{width:100%;max-height:min(410px,calc(100dvh - 280px))}
-.lifecycle-scene.is-focused .motion-stage-menu button{font-size:12px;gap:8px;padding:7px}
-.lifecycle-scene.is-focused .motion-caption{display:none}
-.lifecycle-scene.is-focused .lifecycle-reading{display:block;min-height:0;padding:12px 0 10px;border-top:1px solid var(--rk-line)}
-.lifecycle-scene.is-focused .lifecycle-reading strong{display:block;font-size:16px;line-height:1.5;margin-bottom:7px}
-.lifecycle-scene.is-focused .lifecycle-reading p{font-size:14px;line-height:1.75}
-.lifecycle-scene.is-focused .lifecycle-equation{display:block;min-height:0;padding:10px 0}
-.lifecycle-scene.is-focused .lifecycle-equation math{font-size:18px;max-width:100%;margin:0 0 7px}
-.lifecycle-scene.is-focused .lifecycle-equation p{font-size:13px;line-height:1.65}
-.lifecycle-scene.is-focused .lifecycle-equation span{display:block;font-size:12px;line-height:1.8}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-transport{padding:0 0 12px;max-width:none}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-progress{flex-direction:column;align-items:stretch;gap:5px;margin:0 0 9px;font-size:11px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-progress span{min-width:0;white-space:nowrap}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-progress progress{width:100%;min-width:0;flex:none;height:4px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-buttons{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"play replay" "back next" "stages stages";gap:6px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-buttons>button{min-width:0;margin:0;padding:7px 6px;font-size:13px;border-radius:7px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) [data-play]{grid-area:play}.lifecycle-scene:is(.is-focused,.has-sidebar) [data-replay]{grid-area:replay}.lifecycle-scene:is(.is-focused,.has-sidebar) [data-back]{grid-area:back}.lifecycle-scene:is(.is-focused,.has-sidebar) [data-next]{grid-area:next}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-stage-picker{grid-area:stages;min-width:0;width:100%;margin:3px 0 0}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-stage-label{display:none}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-stage-trigger{width:100%;min-width:0;padding:8px 9px;gap:7px;font-size:12px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-stage-menu{width:100%;max-height:min(410px,calc(100dvh - 280px))}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-stage-menu button{font-size:12px;gap:8px;padding:7px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .motion-caption{display:none}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-reading{display:block;min-height:0;padding:12px 0 10px;border-top:1px solid var(--rk-line)}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-reading strong{display:block;font-size:16px;line-height:1.5;margin-bottom:7px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-reading p{font-size:14px;line-height:1.75}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-equation{display:block;min-height:0;padding:10px 0}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-equation math{font-size:18px;max-width:100%;margin:0 0 7px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-equation p{font-size:13px;line-height:1.65}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-equation span{display:block;font-size:12px;line-height:1.8}
 .lifecycle-example-note{margin-top:12px;font-size:12px;color:var(--rk-muted)}
 .lifecycle-example-note summary{cursor:pointer;color:var(--rk-accent);line-height:1.6}
-.lifecycle-scene.is-focused .lifecycle-provenance{font-size:12px;line-height:1.7;margin:10px 0 0}
-.lifecycle-scene.is-focused .lifecycle-viewport{width:100%;height:100%;max-width:none;min-width:0;min-height:0;overflow:hidden;display:grid;place-items:center}
-.lifecycle-scene.is-focused .lifecycle-canvas{width:100%;height:100%;min-width:0;max-height:100%;overflow:visible}
-@media(max-height:760px) and (min-width:901px){.lifecycle-scene.is-focused{padding:12px}.lifecycle-scene.is-focused .lifecycle-shell{grid-template-columns:270px minmax(0,1fr);gap:12px}.lifecycle-scene.is-focused .lifecycle-sidebar{padding:12px}.lifecycle-scene.is-focused .lifecycle-focus-heading{margin-bottom:10px}.lifecycle-scene.is-focused .lifecycle-reading{padding-block:9px}.lifecycle-scene.is-focused .lifecycle-reading p{line-height:1.65}}
-@media(max-width:900px){.lifecycle-scene>header{padding-right:0}.lifecycle-focus-button{position:static;margin-top:8px}.lifecycle-scene.is-focused .lifecycle-shell{grid-template-columns:230px minmax(560px,1fr);overflow-x:auto}.lifecycle-scene.is-focused .lifecycle-sidebar{padding:12px}}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-provenance{font-size:12px;line-height:1.7;margin:10px 0 0}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-viewport{width:100%;height:100%;max-width:none;min-width:0;min-height:0;overflow:hidden;display:grid;place-items:center}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-canvas{width:100%;height:100%;min-width:0;max-height:100%;overflow:visible}
+@media(max-height:760px) and (min-width:901px){.lifecycle-scene.is-focused{padding:12px}.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-shell{grid-template-columns:270px minmax(0,1fr);gap:12px}.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-sidebar{padding:12px}.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-focus-heading{margin-bottom:10px}.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-reading{padding-block:9px}.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-reading p{line-height:1.65}}
+@media(max-width:900px){.lifecycle-scene>header{padding-right:0}.lifecycle-focus-button{position:static;margin-top:8px}.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-shell{grid-template-columns:230px minmax(560px,1fr);overflow-x:auto}.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-sidebar{padding:12px}}
 
 /* Short, ordered sidebar explanations with unbroken mathematical identifiers. */
 .lc-reading-steps{margin:0;padding-left:19px}
 .lc-reading-steps>li{padding-left:3px;margin:0 0 10px}
 .lc-reading-steps>li:last-child{margin-bottom:0}
 .lc-reading-steps>li::marker{font:12px var(--rk-font-mono);color:var(--rk-accent)}
-.lifecycle-scene.is-focused .lc-reading-steps strong{display:block;font-size:14px;line-height:1.55;margin:0 0 3px}
-.lifecycle-scene.is-focused .lc-reading-steps p{margin:0;font-size:14px;line-height:1.65}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lc-reading-steps strong{display:block;font-size:14px;line-height:1.55;margin:0 0 3px}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lc-reading-steps p{margin:0;font-size:14px;line-height:1.65}
 .lc-inline-math{font:15px var(--rk-font-math);white-space:nowrap}
 .lc-inline-math sub{font-size:.76em;font-style:normal}
-.lifecycle-scene.is-focused .lifecycle-reading .lc-reading-note{font-size:13px;line-height:1.6;color:var(--rk-muted);margin:10px 0 0;padding-top:8px;border-top:1px solid #edf1eb}
+.lifecycle-scene:is(.is-focused,.has-sidebar) .lifecycle-reading .lc-reading-note{font-size:13px;line-height:1.6;color:var(--rk-muted);margin:10px 0 0;padding-top:8px;border-top:1px solid #edf1eb}
+
+/* The accepted sidebar is also the normal reading layout. Fullscreen uses the same rail. */
+.lifecycle-scene.has-sidebar:not(.is-focused)>header{padding-right:0}
+.lifecycle-scene.has-sidebar:not(.is-focused) .lifecycle-focus-button{position:static;font-size:12px;padding:6px 8px}
+@media(min-width:901px){
+  .lifecycle-scene.has-sidebar:not(.is-focused){width:min(calc(100vw - 48px),1660px);max-width:none;margin-left:calc((100% - min(calc(100vw - 48px),1660px))/2)}
+  .lifecycle-scene.has-sidebar:not(.is-focused) .lifecycle-shell{height:720px}
+  .lifecycle-scene.has-sidebar:not(.is-focused) .lifecycle-viewport{overflow:visible}
+  .lifecycle-scene.has-sidebar:not(.is-focused) .lifecycle-canvas .lc-label-chip-title{font-size:13px}
+}
+@media(max-width:900px){
+  .lifecycle-scene.has-sidebar:not(.is-focused) .lifecycle-shell{grid-template-columns:minmax(0,1fr);height:auto}
+  .lifecycle-scene.has-sidebar:not(.is-focused) .lifecycle-sidebar{overflow:visible}
+  .lifecycle-scene.has-sidebar:not(.is-focused) .lifecycle-viewport{overflow-x:auto;display:block}
+  .lifecycle-scene.has-sidebar:not(.is-focused) .lifecycle-canvas{height:auto;min-width:780px}
+}
+
+/* Keep the title on the article measure while the player spans the wider stage. */
+@media(min-width:1001px){.lifecycle-scene.has-sidebar:not(.is-focused)>header{width:min(1240px,calc(100vw - 96px));max-width:none;margin-inline:auto}}

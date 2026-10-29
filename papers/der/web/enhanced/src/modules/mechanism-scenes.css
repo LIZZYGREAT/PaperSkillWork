@@ -64,8 +64,8 @@
 .result-transfer b{font:500 21px var(--mono)}
 
 .mainline-math{display:grid;grid-template-columns:1.2fr 1fr;gap:30px;padding:22px 5px 18px}
-.mainline-math .equation{padding:0;margin:0}
-.mainline-math math{font-size:24px;max-width:100%;font-family:"Cambria Math","STIX Two Math",serif;math-style:compact}
+.mainline-math .equation{padding:8px 0;margin:0;min-width:0;overflow:visible}
+.mainline-math math{font-size:24px;width:max-content;max-width:none;overflow:visible;line-height:normal;font-family:"Cambria Math","STIX Two Math",serif;math-style:normal}
 .mainline-math p{margin:10px 0 0;font-size:13px;color:var(--muted);line-height:1.7}
 .short-derivation{border-left:1px solid var(--line);padding-left:26px}
 math[display="block"]{margin-block:0}

@@ -414,3 +414,9 @@ UPSTREAM_SYNTAX / UPSTREAM_OUTPUT 仍 NOT_RUN（两次fetch终端退出1，原�
 审阅入口：正式 /；?focus=reservoir；?focus=der-step；?focus=augmentation；?focus=der-plus；?focus=workbench；?focus=evidence；受保护 ?review=1&focus=lifecycle#lifecycle-player。生产预览由本轮启动于 http://127.0.0.1:5195/，保留供用户审查。最后交接在现有 audit/final-check.md；不新增平行报告、不进行W10。
 
 最终收尾：CLI 已登记 W8 complete，当前 W9 pending。公共 runner 清理输出 CLEANED: <上述同一run>，Test-Path=False；本轮三处自建测试输出目录均验证在工作区内、非链接后精确删除。13个必要文件（关键PNG、最终录像、采样JSON和原机器报告JSON）保留于最终证据目录；归档JSON保留原run相对路径，实际保留画面以命名PNG为准。未触碰其他历史QA目录。
+
+## W9 截图反馈修订（2026-10-29）
+
+用户明确要求四处修订：KL定义/熵拆解前置并修复内部滚动；同标签对照图注等宽、mark突出划线句并删除划掉的品牌实验句；结果图误差标记改为协调的柔和区间；正式正文生命周期启用既有侧栏讲解/公式。此授权包括正文侧栏布局调整，不重新申请已授权的视觉变化。保护类别、同源数学、九阶段、图内对象、冻结/读写时序、同一播放状态和专注入口；共享样式/控制受影响范围须针对回归。W7/W8保留既有完成记录，W9仍PENDING。
+
+追加截图反馈：生命周期标题/引导文字对齐普通正文栏；只让舞台和侧栏突破正文宽度。正常标题的左右边界须与 reading-layout 精确一致。

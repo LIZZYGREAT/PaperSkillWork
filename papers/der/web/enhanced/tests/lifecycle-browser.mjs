@@ -1,4 +1,3 @@
-import assert from "node:assert/strict";
 
 /** Browser checks for the v2 lifecycle stage. The five keyframes group as 1 | 2 | 3–4 | 5–6 | 7–8. */
 export async function lifecycleBrowserChecks({ page, base, check, shot }) {
@@ -8,14 +7,11 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
   await page.reload({ waitUntil: "networkidle" });
   const scene = page.locator("[data-scene=lifecycle]");
   const canvasBox = await scene.locator("svg").boundingBox(), readingBox = await page.locator(".reading-layout").boundingBox();
-  check(canvasBox.width >= readingBox.width * 0.95, "Scene uses the reading width even in short windows");
+  check(canvasBox.width >= 1000 && (await scene.boundingBox()).width >= readingBox.width, "Sidebar layout preserves a large stage and spans at least the reading width");
   const labelPx = await scene.locator("svg text").first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) * Math.hypot(el.getScreenCTM().a, el.getScreenCTM().b));
   check(labelPx >= 12, "Diagram labels retain a readable screen size instead of shrinking with viewport height");
-  const contextAbove = await scene.evaluate(el => {
-    const chartTop = el.querySelector('.lifecycle-viewport').getBoundingClientRect().top;
-    return ['.lifecycle-reading','.lifecycle-equation','.lifecycle-provenance'].every(selector => el.querySelector(selector).getBoundingClientRect().bottom <= chartTop + .1);
-  });
-  check(contextAbove, "Narration, formula and example note are above the canvas");
+  const contextBeside = await scene.evaluate(el => { const stage=el.querySelector(".lifecycle-viewport").getBoundingClientRect(); return [".lifecycle-reading",".lifecycle-equation"].every(selector=>el.querySelector(selector).getBoundingClientRect().right<=stage.left+1)&&!!el.querySelector(".lifecycle-example-note"); });
+  check(contextBeside, "Narration, formula and expandable example share the accepted sidebar");
   const tick = ms => page.clock.runFor(ms);
   const state = () => scene.evaluate(el => ({ clip: Number(el.dataset.clip), p: Number(el.dataset.progress), status: el.dataset.status }));
   const at = async (clip, p) => {
@@ -165,8 +161,8 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
   }
   check(await scene.locator('[data-record-id="record:x1:i"]').getAttribute("data-history-z") === "2,1,0", "Reduced motion retains the historical record");
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Lifecycle has no page horizontal overflow");
-  const fontSize = await scene.locator(".lifecycle-reading p").evaluate(el => parseFloat(getComputedStyle(el).fontSize));
-  assert.ok(fontSize >= 16);
+  const fontSizes = await scene.locator(".lifecycle-reading p").evaluateAll(nodes => nodes.map(el => parseFloat(getComputedStyle(el).fontSize)));
+  check(fontSizes.length >= 2 && fontSizes.every(size => size >= 14), "Accepted sidebar explanations retain their readable 14px multi-paragraph type");
   await page.emulateMedia({ reducedMotion: "no-preference" }); await tick(50);
   await scene.locator('[role=combobox]').click();
   check(await scene.locator('[role=listbox]').isVisible(), "Custom stage menu opens");

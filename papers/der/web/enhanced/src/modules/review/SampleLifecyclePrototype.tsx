@@ -361,20 +361,20 @@ export default function SampleLifecyclePrototype() {
     return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", keys); previousFocus?.focus({ preventScroll: true }); };
   }, [focused]);
   const { clipIndex: clip, progress } = timeline.state, s = lifecycleSceneAt(clip, progress);
-  return <section ref={sectionRef} id="review-lifecycle" className={`review-scene motion-scene lifecycle-scene${focused ? " is-focused" : ""}`} data-scene="lifecycle" role={focused ? "dialog" : undefined} aria-modal={focused ? true : undefined} aria-label={focused ? "样本生命周期专注播放" : undefined}
+  return <section ref={sectionRef} id="review-lifecycle" className={`review-scene motion-scene lifecycle-scene has-sidebar${focused ? " is-focused" : ""}`} data-scene="lifecycle" role={focused ? "dialog" : undefined} aria-modal={focused ? true : undefined} aria-label={focused ? "样本生命周期专注播放" : undefined}
     data-clip={clip} data-progress={progress} data-status={timeline.state.status} data-memory-count={s.memoryCount}
     data-seen={s.seen} data-update-count={s.updateCount} data-replay-source={s.replaySource ?? "none"}
     data-loss-sources={s.lossSources.join(",")} data-compare={s.lens > .5 ? "on" : "off"}>
-    <header><p className="eyebrow">D1 · 单样本生命周期</p><h1>留下的是过去的响应，约束的是现在的网络。</h1><p>跟踪同一份 x₁：更新前生成 → 复制冻结 → 更新后入池 → 未来回放 → 匹配与联合更新。</p><button className="lifecycle-focus-button" onClick={() => changeFocus(true)}>专注播放 ↗</button></header>
+    <header><p className="eyebrow">D1 · 单样本生命周期</p><h1>留下的是过去的响应，约束的是现在的网络。</h1><p>跟踪同一份 x₁：更新前生成 → 复制冻结 → 更新后入池 → 未来回放 → 匹配与联合更新。</p></header>
     <div className="lifecycle-shell"><aside className="lifecycle-sidebar" aria-label="播放控制与阶段说明">
-      <div className="lifecycle-focus-heading"><div><span>DER</span><h2>样本生命周期</h2></div><button className="lifecycle-exit-focus" onClick={() => changeFocus(false)}>返回阅读</button></div>
+      <div className="lifecycle-focus-heading"><div><span>DER</span><h2>样本生命周期</h2></div><button className={focused ? "lifecycle-exit-focus" : "lifecycle-focus-button"} onClick={() => changeFocus(!focused)}>{focused ? "返回阅读" : "专注播放 ↗"}</button></div>
     <div id="lifecycle-player" className="lifecycle-player"><SceneTransport timeline={timeline} clips={LIFECYCLE_CLIPS} label="样本生命周期" caption="自动完整播放一次。选择阶段停在起点；上一步先回本阶段起点，再回上一阶段起点。" /></div>
     <div className="lifecycle-context">
-    <div className="lifecycle-reading" aria-live="polite"><strong>{LIFECYCLE_CLIPS[clip].id}</strong>{focused ? <FocusedNarration clip={clip} /> : <p>{NARRATION[clip]}</p>}</div>
+    <div className="lifecycle-reading" aria-live="polite"><strong>{LIFECYCLE_CLIPS[clip].id}</strong><FocusedNarration clip={clip} /></div>
     <div className="lifecycle-equation" data-vqa-check-clipping>{clip >= 6
       ? <><math display="block" aria-label="历史匹配损失等于各类当前分数与冻结历史分数之差的平方和"><msub><mi>L</mi><mtext>dark</mtext></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>C</mi></munderover><msup><mrow><mo>(</mo><msub><mi>a</mi><mrow><mi>j</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>z</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>)</mo></mrow><mn>2</mn></msup><mo>=</mo><mn>2</mn></math><span>□ 历史 z₁ 冻结　● 本次 aⱼ 可反传</span></>
       : <p>原图 x₁ 与数值 z₁ 保持同源身份。DER 记录为 (x₁,z₁)，其中不保存标签。</p>}</div>
-    {focused ? <details className="lifecycle-example-note"><summary>合成例 · 示例与数值说明</summary><p className="lifecycle-provenance">Claude、GPT、DeepSeek 像素标识作为本例的三个图像类别。两次给定教学输出为 z₁=(2,1,0)、aⱼ=(1,2,0)，不表示三个模型的性能。x₂ 的更新前输出 z₂=(u₁,u₂,u₃) 仅作符号表示，与旧图的回放输出 aⱼ 区分。网络为结构示意，不执行数值训练。</p></details> : <p className="lifecycle-provenance">Claude、GPT、DeepSeek 像素标识作为本例的三个图像类别。两次给定教学输出为 z₁=(2,1,0)、aⱼ=(1,2,0)，不表示三个模型的性能。x₂ 的更新前输出 z₂=(u₁,u₂,u₃) 仅作符号表示，与旧图的回放输出 aⱼ 区分。网络为结构示意，不执行数值训练。</p>}
+    <details className="lifecycle-example-note"><summary>合成例 · 示例与数值说明</summary><p className="lifecycle-provenance">Claude、GPT、DeepSeek 像素标识作为本例的三个图像类别。两次给定教学输出为 z₁=(2,1,0)、aⱼ=(1,2,0)，不表示三个模型的性能。x₂ 的更新前输出 z₂=(u₁,u₂,u₃) 仅作符号表示，与旧图的回放输出 aⱼ 区分。网络为结构示意，不执行数值训练。</p></details>
     </div>
     </aside><div className="lifecycle-viewport"><svg className="lifecycle-canvas" viewBox="0 0 1120 640" role="img" aria-labelledby="lc-title lc-description">
       <defs><marker id="lc-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 7 4 1 7" fill="none" stroke="#a67840" strokeWidth="1.4" /></marker></defs>
