@@ -435,3 +435,10 @@ UPSTREAM_SYNTAX / UPSTREAM_OUTPUT 仍 NOT_RUN（两次fetch终端退出1，原�
 - FULLSCREEN_LAYOUT=PASS（布局模拟），FULLSCREEN_REAL=NOT_RUN（延用UI安全识别限制）；不将本轮反馈当作W9最终人工PASS，不执行W10。
 
 本轮收尾：无过滤test:browser最终2490断言通过，两档各1245，退出0；包括本轮反馈检查和原有全流程。公共runner的确切run清理输出CLEANED、Test-Path=False；必要证据已归档，两个本轮自建测试截图目录随后精确清理。工作流仍W9 PENDING，未代签人工终审。
+
+
+### 2026-10-29 · 用户要求公式先行与独立数学讲解
+
+用户直接授权：除 D1 单样本生命周期外，所有含公式模块先呈现公式，再单独详细解释，再进入机制动画。KL 增加散度曲线、方向性、非负性与梯度；Logit Matching 增加平方函数、逐坐标梯度、参数链式求导与共同平移。Reservoir、DER 单步、增强、DER++、四轮工作台同步调整公式顺序与讲解。保留原核心单元顺序、动画状态/计算引擎、合成示例边界及结果数据。D1 的 TSX/CSS/model 不改动；W7 既有通过记录保留，W9 人工终审仍 PENDING。新增图像为同源数学探索，不代替算法训练轨迹；局部样式避免影响 D1 与 Reference Hub。验证包括数学差分、公式顺序/交互、既有全流程、两档桌面截图。此节记录本轮范围，结果收尾追加。
+
+本轮实现与首轮检查：七个主线模块已采用公式→独立讲解→原机制动画；新增 KL 正反向曲线/切线、二类受约束导数与 log-softmax 推导，平方函数/标量梯度步，Reservoir 离散留存曲线与归纳。讲解公式使用原生 MathML；局部 CSS 使用独有 lesson-reading / lesson-derivation，避免旧全局类名冲突，保留 block math 排版。24 项单元测试通过；公式定向浏览器 114 断言通过；生产构建退出 0（Node 24.18.0、Vite 6.4.3，75 modules），最终排版公共 Visual QA 14 状态 GEOMETRY/STYLE/BROWSER_ERRORS PASS（STYLE 仅配置主线 MathML display 断言；其余靠截图复核）。完整全流程正在运行，最终结果在收尾追加。D1 源码、生命周期模型及训练引擎均无差异。最初试运行发现并修复 Node .ts 导入后缀、MathML display 和旧类名冲突；一次未成功构建后的预启动回归已中断，不计入最终通过结果。

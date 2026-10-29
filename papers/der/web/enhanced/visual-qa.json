@@ -506,8 +506,7 @@
     "checkPageHorizontalOverflow": true,
     "minSemanticFontSizePx": 12,
     "clippingSelectors": [
-      ".scene-equation math",
-      ".mainline-math math"
+      ".formula-lesson .equation"
     ],
     "stableAcrossStates": []
   }

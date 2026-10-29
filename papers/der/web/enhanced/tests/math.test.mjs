@@ -52,3 +52,40 @@ test("invalid probability support, dimensions, or nonfinite values cannot silent
   assert.throws(()=>probabilityComparison([.8,.2],[1,0]));assert.throws(()=>probabilityComparison([.8,.2],[.4,.4]));
   assert.throws(()=>logitComparison([1],[1,2]));assert.throws(()=>softmax([Infinity]));
 });
+
+import {binaryKL,coordinateStep,squaredCoordinate,retentionProbability} from "../src/modules/formula-model.ts";
+test("binary curve differentiates the constrained probability, not independent coordinates",()=>{
+ const e=1e-6;
+ for(const q of [.02,.2,.6,.8,.95,.98]){
+  const r=binaryKL(.8,q);
+  near((binaryKL(.8,q+e).kl-binaryKL(.8,q-e).kl)/(2*e),r.slope,1e-6);
+  near(r.kl,probabilityComparison([.8,.2],[q,1-q]).kl);
+  near(r.reverse,probabilityComparison([q,1-q],[.8,.2]).kl);
+  assert.ok(r.kl>=-1e-12);
+  assert.equal(Math.sign(r.slope),Math.sign(q-.8));
+ }
+ near(binaryKL(.8,.8).kl,0);near(binaryKL(.8,.8).slope,0);
+ near(binaryKL(.8,.2).kl,binaryKL(.8,.2).reverse);
+ // Noncomplementary probabilities exhibit the asymmetry hidden by the swapped .8/.2 pair.
+ assert.ok(Math.abs(binaryKL(.8,.6).kl-binaryKL(.8,.6).reverse)>1e-3);
+ assert.ok(binaryKL(.8,.00001).kl>binaryKL(.8,.02).kl);
+ assert.throws(()=>binaryKL(.8,0));assert.throws(()=>binaryKL(.8,1));
+});
+test("single-coordinate gradient step agrees with derivatives and moves down the parabola",()=>{
+ const e=1e-6;
+ for(const d of [-2,-1,0,.5,2]){
+  const r=squaredCoordinate(d);
+  near((squaredCoordinate(d+e).loss-squaredCoordinate(d-e).loss)/(2*e),r.slope,1e-8);
+  near(coordinateStep(d),.6*d);
+  assert.ok(squaredCoordinate(coordinateStep(d)).loss<=r.loss);
+ }
+ assert.throws(()=>coordinateStep(1,-.2));
+});
+test("reservoir teaching curve matches inclusion induction and the initial full-retention branch",()=>{
+ for(let K=1;K<=5;K++)for(let n=1;n<30;n++){
+  const p=retentionProbability(K,n);
+  if(n<=K)near(p,1);
+  else {near(p,K/n);near(retentionProbability(K,n-1)*(1-1/n),p);}
+ }
+ assert.throws(()=>retentionProbability(0,2));assert.throws(()=>retentionProbability(2,2.5));
+});

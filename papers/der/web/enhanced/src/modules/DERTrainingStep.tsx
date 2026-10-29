@@ -1,3 +1,4 @@
+import { TrainingFormulaLesson } from "./TrainingFormulaLessons";
 import {useState} from "react";
 import {runTraining,TRAIN_PHASES,trainingSceneAt} from "./training-model";
 import {windowAt,curve} from "./review/lifecycle-model";
@@ -18,7 +19,8 @@ export default function DERTrainingStep(){
  "更新结束，才把当前原图与它自己的冻结目标交给 Reservoir。本例有空槽，直接追加；终态交给下一轮。"];
  return <section className="teaching-scene" data-scene="der-step" data-clip={phase} data-progress={p} data-status={timeline.state.status} data-updates={state.updates} data-seen={state.N} data-loss={step.losses.total}>
  <header><div><p className="eyebrow">DER / 单步闭环</p><h3>两条监督，只更新同一个网络一次。</h3><p>选留解决未来留下谁。训练先读旧 M，用当前标签与 <Term id="z">历史响应</Term> 约束现在的参数，最后才尝试写入当前候选。</p></div><div className="scene-options"><button aria-pressed={!empty} onClick={()=>{setEmpty(false);timeline.reset()}}>有旧记忆</button><button aria-pressed={empty} onClick={()=>{setEmpty(true);timeline.reset()}}>空池首轮</button></div></header>
- <SceneTransport timeline={timeline} clips={clips} label="DER 单步" showTiming={false}/>
+ <TrainingFormulaLesson/>
+<SceneTransport timeline={timeline} clips={clips} label="DER 单步" showTiming={false}/>
  <div className="teaching-stage"><svg viewBox="0 0 1120 630" className="teaching-canvas" role="img" aria-label="当前分类、旧记忆回放与一次联合更新">
  <text x="52" y="37" className="tg-title">当前输入支路</text><text x="52" y="65" className="tg-small">{step.input.id} · y={["Claude","GPT","DeepSeek"][step.input.y]}</text>
  <SampleGlyph x={72} y={140} id={step.input.id} model={step.input.model}/><text x="52" y="231" className="tg-small">原图保留 · 训练视图前向</text>
@@ -33,6 +35,5 @@ export default function DERTrainingStep(){
  <MotionPath d="M900 287V305H710V550H647M900 533V550H647" progress={done(3)}/><g opacity={done(3)}><rect x="410" y="525" width="237" height="60" rx="11" className="tg-total"/><text x="428" y="551" className="tg-title">合并为一个总损失</text><text x="428" y="575">L_DER = {fmt(step.losses.total)}</text></g><MotionPath d="M528 525V379" progress={phase===3?windowAt(p,.25,.8):phase>3?1:0} kind="gradient"/>
  <g opacity={done(4)}><rect x="70" y="303" width="275" height="65" rx="10" className="tg-frozen"/><text x="86" y="329">当前候选 {step.candidate.id} → 写入 M</text><text x="86" y="351" className="tg-small">z = {vectorText(step.candidate.z)}</text><MotionPath d="M206 368V450" progress={done(4)}/></g>
  </svg></div><div className="scene-explanation" aria-live="polite"><strong>{TRAIN_PHASES[phase]}</strong><p>{notes[phase]}</p></div>
- <div className="scene-equation"><math display="block"><msub><mi>L</mi><mtext>DER</mtext></msub><mo>=</mo><msub><mi>L</mi><mtext>current</mtext></msub><mo>+</mo><mi>α</mi><msub><mi>L</mi><mtext>dark</mtext></msub></math><p>当前真实标签提供 L_current，旧图的新响应与冻结 z 提供 L_dark。α 是软约束权重，不能保证旧行为完全不变。<a href="#logit-matching">回看平方匹配 ↑</a></p></div>
  <p className="quiet-note">数值来自后文同一 2→3 线性教学模型；α=0.5，η=0.1。原图类别是合成身份，二维输入用于可复算说明，不是论文 CNN 特征。下一单元展开训练视图的区别。</p></section>;
 }

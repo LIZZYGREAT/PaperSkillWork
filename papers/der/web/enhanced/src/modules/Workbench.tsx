@@ -1,3 +1,4 @@
+import { WorkbenchFormulaLesson } from "./TrainingFormulaLessons";
 import {useMemo,useState} from "react";
 import SceneTransport,{useSceneTimeline} from "./review/SceneTransport";
 import {runTraining,trainingSceneAt,WORKBENCH_CLIPS,TRAIN_PHASES,predict,CONFIG,STREAM,type Mode,type TrainingRecord} from "./training-model";
@@ -32,6 +33,7 @@ phase===3?`损失合并为 ${fmt(step.losses.total)}，对 θ 只更新一次。
 `更新后才选留：${step.insertion.decision==="append"?"有空槽，追加 "+step.input.id:step.insertion.decision==="replace"?"预设 j=0，替换 x₁ 为 x₃":"预设 j=3≥K，拒收 x₄，但它已参与当前训练"}。结束 N=${step.after.N}，该终态交给下一轮。`;
 return <section className="teaching-scene workbench" data-scene="workbench" data-mode={mode} data-clip={c} data-progress={p} data-status={timeline.state.status} data-round={round+1} data-phase={phase} data-seen={state.N} data-updates={state.updates} data-memory={state.M.map(r=>r.id).join(",")} data-weights={JSON.stringify(state.W)}>
 <header><div><p className="eyebrow">ALGORITHM / 四轮连续执行</p><h3>从空池开始，沿同一组状态走到预测。</h3><p>每轮继承上一轮的 θ、M、N。可以回到任一轮检查前后状态；回退只改变观察位置，不会再次训练。</p></div><div className="mode-switch" aria-label="算法模式">{(["DER","DER++"] as Mode[]).map(m=><button key={m} data-mode={m} aria-pressed={mode===m} onClick={()=>{setMode(m);timeline.reset()}}>{m}</button>)}</div></header>
+<WorkbenchFormulaLesson plus={mode==="DER++"}/>
 <div className="wb-rounds" aria-label="轮次导航">{STREAM.map((item,i)=><button key={item.id} data-round-select={i} aria-pressed={!prediction&&round===i} onClick={()=>timeline.start(i*5)}><span>0{i+1} / {item.id}</span>{["空池起步","开始回放","先用后替换","训练后拒收"][i]}</button>)}<button data-predict aria-pressed={prediction} onClick={()=>timeline.start(20)}><span>05 / 查询</span>只读预测</button></div>
 <SceneTransport timeline={timeline} clips={WORKBENCH_CLIPS} label="四轮工作台" showTiming={false}/>
 <div className="wb-state"><span>同一 θ <b>{state.updates}</b></span><span>已处理 N <b>{state.N}</b></span><span>固定 K <b>2</b></span><span>记录数 |M| <b>{state.M.length}</b></span><button onClick={()=>timeline.start(round*5)} data-replay-round>回到本轮起点</button></div>

@@ -2,7 +2,7 @@ import React, { useId, useLayoutEffect, useRef, useState } from "react";
 import ModelPixel, { type ModelClass } from "./review/ModelPixel";
 import { MODEL_CLASSES, PROBABILITY_CLASSES } from "../data/model-classes";
 import { REFERENCE_P, PROBABILITY_CASES, HISTORY_Z, LOGIT_CASES, probabilityComparison, logitComparison } from "./math-model";
-import { KLDefinition, KLDecomposition, ShiftIdentity, SquaredDefinition } from "./MathNotation";
+import { KLFormulaLesson, LogitFormulaLesson } from "./FormulaLessons";
 import { useSceneTimeline, type SceneTimeline } from "./review/SceneTransport";
 import { mix, windowAt } from "./review/lifecycle-model";
 
@@ -128,14 +128,13 @@ export function KLBoard() {
   ];
   return <section className="mechanism-scenes" data-design="kl" data-clip={clip} data-progress={t} data-status={timeline.state.status}>
     <div className="scene-heading"><div><p className="eyebrow">01 / 概率约束</p><h2>跟随同一类别，从概率走到 KL。</h2></div><div className="cases" aria-label="KL 合成例">{PROBABILITY_CASES.map((c, i) => <button key={c.id} data-case={c.id} aria-pressed={i === selected} onClick={() => { setSelected(i); timeline.reset(); }}>{c.label}</button>)}</div></div>
-    <div className="mainline-math"><div className="definition-block" data-formula-focus={clip === 2 || clip === 3 ? PROBABILITY_CLASSES[clip - 2] : 'sum'}><KLDefinition identified={false} /><p>p：固定旧概率；q：当前概率；k：同一类别；C=2。此处 log 为自然对数。</p></div><div className="short-derivation"><math display="block"><msub><mi>D</mi><mtext>KL</mtext></msub><mo>=</mo><mi>H</mi><mo>(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo>)</mo><mo>−</mo><mi>H</mi><mo>(</mo><mi>p</mi><mo>)</mo></math><p>{fmt(r.crossEntropy)} − {fmt(r.entropy)} = {fmt(r.kl)}；固定 p 即固定 H(p)。</p></div></div>
+    <KLFormulaLesson />
     <Transport timeline={timeline} frames={KL_FRAMES} />
     <div className="stage kl-stage"><div className="scene-canvas kl-composition" data-p={r.p.join(',')} data-q={r.q.join(',')} data-loss={r.kl}>
       <div className="probability-pair"><DistributionSheet values={r.p} emphasis={emphasis} /><DistributionSheet values={r.q} current emphasis={emphasis} /><p className="pair-caption">Claude / GPT 两类合成例 · 同色签对应同一类别<br />每格为总面积的 1%；分界可连续经过格子。</p></div>
       <article className="calculation-surface"><div className="calculation-intro"><h3>取值 → 对数比 → 旧概率加权</h3><p>色签对应左侧来源；计算结果保留到下一类。</p></div>{[0, 1].map(k => <KLLane key={k} k={k} result={r} progress={local(clip, t, k + 2)} active={clip === k + 2} />)}</article>
     </div><KLSum result={r} clip={clip} t={t} />{[0, 1].map(k => <ResultTransfer key={k} from={`[data-origin-kl="${k}"]`} to={`[data-target-kl="${k}"]`} progress={local(clip, t, k + 2)} label={PROBABILITY_CLASSES[k]} tone={k} reduced={timeline.reducedMotion}><span>{PROBABILITY_CLASSES[k]}</span><b>{signed(r.terms[k])}</b></ResultTransfer>)}</div>
     <StageNarration timeline={timeline} frames={KL_FRAMES} notes={notes} />
-    <details className="background-note"><summary>为什么负贡献不会破坏整体非负？</summary><p>对每个正数 u，−ln u ≥ 1−u。令 u=qₖ/pₖ，再按 pₖ 加权求和：KL ≥ Σₖ(pₖ−qₖ)=0。只有所有 qₖ/pₖ=1 时取等号。单项可以为负，不能用单项判断整体偏离；交换 p 与 q 一般也不同。</p><KLDecomposition identified={false} /></details>
   </section>;
 }
 
@@ -178,6 +177,7 @@ export function ScoreBoard() {
   ];
   return <section className="mechanism-scenes" data-design="logits" data-clip={clip} data-progress={t} data-status={timeline.state.status}>
     <div className="scene-heading"><div><p className="eyebrow">02 / 分数约束</p><h2>看见分数的距离，也看见概率的投影。</h2></div><div className="cases" aria-label="Logit 对照">{LOGIT_CASES.map((c, i) => <button key={c.id} data-case={c.id} aria-pressed={selected === i} onClick={() => { setSelected(i); timeline.reset(); }}>{i ? '共同平移 +1' : 'Claude / GPT 分数交换'}</button>)}</div></div>
+    <LogitFormulaLesson />
     <Transport timeline={timeline} frames={SCORE_FRAMES} />
     <div className="stage score-stage"><div className="scene-canvas" data-z={r.z.join(',')} data-a={r.a.join(',')} data-loss={r.squaredDistance}>
       <div className="score-space-label"><strong>分数空间</strong><span><i className="frozen-mark" />历史 z 固定</span><span><i className="current-mark" />当前 a 移动</span><small>三卡共同刻度 · 0 → 3</small></div>
@@ -190,8 +190,6 @@ export function ScoreBoard() {
       <div className="score-total-tray"><div className="score-sum-heading"><div className="total-label"><span className="sheet-code">同一批平方贡献</span><strong>平方后，一次求和。</strong></div><div className="score-final" style={{ opacity: windowAt(local(clip, t, 3), .96, 1) }}><math display="block"><msub><mi>L</mi><mtext>dark</mtext></msub><mo>=</mo><mn data-score-total={r.squaredDistance}>{fmt(r.squaredDistance, 0)}</mn></math></div></div><div className="score-sum-columns">{r.squares.map((v, k) => <div key={k} className="score-sum-cell"><div data-target-square={k} style={{ opacity: windowAt(local(clip, t, 3), .5 + k * .18, .6 + k * .18) }}><span>{MODEL_CLASSES[k]}</span><math display="block"><mn data-sum-term={v}>{fmt(v, 0)}</mn></math></div>{k < 2 && <span className="sum-plus" style={{ opacity: sum }}>+</span>}</div>)}</div></div>
       <ProbabilityProjection result={r} shifted={selected === 1} />
     </div>{[0, 1, 2].map(k => <ResultTransfer key={k} from={`[data-origin-square="${k}"]`} to={`[data-target-square="${k}"]`} progress={windowAt(local(clip, t, 3), k * .18, .5 + k * .18)} label={MODEL_CLASSES[k]} reduced={timeline.reducedMotion}><span>{MODEL_CLASSES[k]}</span><b>{fmt(r.squares[k], 0)}</b></ResultTransfer>)}</div>
-    <div className="mainline-math"><div className="definition-block"><SquaredDefinition identified={false} /><p>三类合成例：z=(2,1,0) 固定；本场景与 KL 两类示例相互独立。插值只展示比较状态。</p></div><div className="short-derivation"><math display="block"><mtext>若 a=z+c：</mtext><msub><mi>L</mi><mtext>dark</mtext></msub><mo>=</mo><mi>C</mi><msup><mi>c</mi><mn>2</mn></msup></math><p>softmax(z+c)=softmax(z)；分子分母的公共因子 eᶜ 相消。</p></div></div>
     <StageNarration timeline={timeline} frames={SCORE_FRAMES} notes={notes} />
-    <details className="background-note"><summary>共同平移为什么不改变概率？</summary><p>任意时刻，三个当前分数都增加相同的 c，因此每个指数项同时乘以 eᶜ。归一化后这个公共因子相消；历史方框与当前圆点全程重合。平方距离则累加三份 c²。</p><ShiftIdentity /></details>
   </section>;
 }

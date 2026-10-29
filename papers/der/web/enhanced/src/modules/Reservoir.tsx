@@ -1,8 +1,9 @@
+import { ReservoirFormulaLesson } from "./FormulaLessons";
 import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
 import ModelPixel from "./review/ModelPixel";
 import { windowAt, curve } from "./review/lifecycle-model";
 import { RESERVOIR_CLIPS, RESERVOIR_INPUTS, reservoirSceneAt, type MemoryRecord } from "./reservoir-model";
-import { ReferenceButton, Term } from "./Reference";
+import { Term } from "./Reference";
 import "./reservoir.css";
 
 function Record({ record, x, y, opacity = 1 }: { record: MemoryRecord; x: number; y: number; opacity?: number }) {
@@ -33,6 +34,7 @@ export default function Reservoir({focused=false}: {focused?:boolean;chapterId?:
   return <section id="reservoir-player" className="reservoir-scene" data-scene="reservoir" data-clip={clip} data-progress={p} data-status={timeline.state.status} data-seen={s.state.N} data-memory={s.state.M.map(r=>r.id).join(",")} data-decision={s.decision} data-committed={s.committed}>
     {!focused && <p className="lesson-intro">已经知道一条记录要保存原图与 <Term id="z">冻结响应</Term>。但流不会停止，空间只有 K 条。Reservoir 逐项决定谁留下；下面从空池开始，看四项候选如何改变同一份记忆。</p>}
     <div className="rv-heading"><div><p className="eyebrow">RESERVOIR / 在线选留</p><h3>流继续来，记忆保持两格。</h3></div><div className="rv-state" aria-label="记忆状态"><span>K <b>2</b><small>固定容量</small></span><span>N <b data-count>{s.state.N}</b><small>已处理流项</small></span><span>|M| <b>{s.state.M.length}</b><small>当前记录数</small></span></div></div>
+    <ReservoirFormulaLesson/>
     <SceneTransport timeline={timeline} clips={RESERVOIR_CLIPS} label="Reservoir" showTiming={false} caption="四次输入连续播放；选择阶段可回到该次输入前。抽签使用教学预设随机结果。" />
     <div className="rv-stage"><svg viewBox="0 0 1120 556" role="img" aria-label="四项流输入、候选判断与两个固定记忆槽" className="rv-canvas">
       <path d="M60 78H600" className="rv-stream-line"/><text x="642" y="65" className="rv-title">每次：当前训练已完成 → 再选留候选</text><text x="642" y="91" className="rv-caption">冻结 z 来自对应更新前网络，选留时不重新计算。</text>
@@ -55,7 +57,6 @@ export default function Reservoir({focused=false}: {focused?:boolean;chapterId?:
       {s.evicted&&<text x="68" y="351" className="rv-caption" opacity={Math.sin(travel*Math.PI)}>{s.evicted.id} 离开记忆 · 原冻结值未改写</text>}
     </svg></div>
     <div className="rv-narration" aria-live="polite"><strong>{titles[clip]}</strong><p>{notes[clip]}</p></div>
-    <div className="rv-rule"><div><h4>规则只看已处理数量与抽签</h4><p>N 是插入前已处理项数；槽位从 0 编号。空位直接追加；满池时抽 j∈[0,N]，仅当 j&lt;K 替换槽 j。无论是否入池，处理后 N←N+1。</p></div><div><h4>公平针对流项，不按类别分配</h4><math display="block" aria-label="处理 n 项后，每项留存概率为 K 除以 n，当 n 至少为 K"><mi>P</mi><mo>(</mo><msub><mi>v</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>M</mi><mi>n</mi></msub><mo>)</mo><mo>=</mo><mfrac><mi>K</mi><mi>n</mi></mfrac><mspace/><mo>(</mo><mi>n</mi><mo>≥</mo><mi>K</mi><mo>)</mo></math><p>不保证每类等配额，也不保证某一条旧记录永远留下。<ReferenceButton term="reservoir">查看归纳解释与 Algorithm 3 出处</ReferenceButton></p></div></div>
     <p className="quiet-note">与 iCaRL 的局部区别：iCaRL 在任务结束时按类别分配配额，用 Herding 选择代表图；这里逐流项在线选留，不需要稳定任务边界，也不保证类别均衡。</p><p className="quiet-note">本场景是独立的合成入池序列，z 为给定的更新前输出；没有模拟网络优化。它只放大训练结束后的选留动作。未入池 ≠ 未参与当前训练。</p>
   </section>;
 }

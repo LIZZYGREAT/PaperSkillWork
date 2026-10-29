@@ -1,3 +1,4 @@
+import { PlusFormulaLesson } from "./TrainingFormulaLessons";
 import {useState} from "react";
 import SceneTransport,{useSceneTimeline} from "./review/SceneTransport";
 import {windowAt,mix} from "./review/lifecycle-model";
@@ -11,6 +12,7 @@ const [mode,setMode]=useState<Mode>("DER++"),[overlap,setOverlap]=useState(true)
 const notes=["合成例中 x₁ 的真实类别是 Claude，旧 z 最高分却是 GPT。匹配 z 鼓励保留旧行为，无法自动判断它错了。保持一致与变得正确并不相同。",plus?`DER++ 保存 (x,z,y)。第一次抽 Rd 做输出匹配，第二次抽 Ry 做标签 CE。本例两批次${overlap?"恰好重合":"选择了不同旧记录"}；这两种选择都合法。`:"DER 保存 (x,z)，历史监督只匹配输出；旧标签不参与 DER 的回放损失。",plus?"当前分类、历史 logits 匹配、历史标签分类合成一个目标，再对唯一 θ 更新一次。两种历史监督可能竞争；标签提供纠偏依据，不保证一步成功。":"当前分类与历史 logits 匹配合成后，更新同一 θ 一次。没有常驻教师，也没有第二次顺序更新。"];
 return <section className="teaching-scene" data-scene="der-plus" data-clip={c} data-progress={p} data-status={timeline.state.status} data-mode={mode} data-rd="x₁" data-ry={plus?(overlap?"x₁":"x₂"):"none"} data-updates={c===2&&p>=.85?1:0}>
 <header><div><p className="eyebrow">DER++ / 历史标签补上什么</p><h3>历史响应稳定，也可能稳定地错。</h3><p>旧 logits 是当时模型的判断。DER++ 在保持整组判断之外，再引入旧样本真实标签的独立监督。</p></div><div className="scene-options">{(["DER","DER++"] as Mode[]).map(m=><button key={m} aria-pressed={mode===m} onClick={()=>{setMode(m);timeline.reset()}}>{m}</button>)}</div></header>
+<PlusFormulaLesson plus={plus}/>
 <SceneTransport timeline={timeline} clips={clips} label="DER++ 三项监督" showTiming={false}/>
 <div className="teaching-stage"><svg viewBox="0 0 1120 585" className="teaching-canvas" role="img" aria-label="错误旧目标、真实标签与联合更新">
 <rect x="48" y="57" width="306" height="440" rx="15" className="tg-memory"/><text x="68" y="87" className="tg-title">同一份旧记忆 M</text><SampleGlyph x={73} y={108} size={62} id="x₁ stored" model={0}/><text x="150" y="133" className="tg-title">x₁ · 真实类别 Claude</text><text x="150" y="159" className="tg-small">{plus?"记录 (x,z,y)":"记录 (x,z)"}</text><text x="70" y="210" className="tg-small">旧 z 最高分：GPT ≠ 真实类别</text>
@@ -25,6 +27,5 @@ return <section className="teaching-scene" data-scene="der-plus" data-clip={c} d
 <text x="56" y="550" className="tg-small">合成反例只说明监督职责，不声称一次更新后的类别或效果。</text>
 </svg></div><div className="scene-options"><button disabled={!plus} aria-pressed={overlap} onClick={()=>{setOverlap(!overlap);timeline.start(1)}}>{overlap?"Rd / Ry 重合：切换不同记录":"Rd / Ry 不同：切换重合"}</button></div>
 <div className="scene-explanation" aria-live="polite"><strong>{clips[c].id}</strong><p>{notes[c]}</p></div>
-<div className="scene-equation"><math display="block"><msub><mi>L</mi><mtext>DER++</mtext></msub><mo>=</mo><msub><mi>L</mi><mtext>current</mtext></msub><mo>+</mo><mi>α</mi><msub><mi>L</mi><mtext>dark</mtext></msub><mo>+</mo><mi>β</mi><msub><mi>L</mi><mtext>replay-CE</mtext></msub></math><p>α 权衡整组历史行为，β 权衡历史真实标签。二者有时竞争，DER++ 不保证在所有数据集、容量或训练设置中更优。</p></div>
 <p className="quiet-note">E04 合成例 z=(0.5,2,0)；不是论文失败案例数据。两次回放均从写入前 M 分别采样；模式切换不编造训练结果。§3.1、Algorithm 2、Eq. (6)，C03/C05/C15。</p></section>;
 }

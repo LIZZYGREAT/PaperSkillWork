@@ -2,7 +2,7 @@ import {runTraining,trainingSceneAt,WORKBENCH_CLIPS} from "../src/modules/traini
 import {EXPERIMENTS} from "../src/modules/evidence-data.ts";
 export async function fullW8Checks({page,base,check,shot}){
  const geometry=async scene=>{
- const result=await scene.locator("svg").first().evaluate(svg=>{
+ const result=await scene.locator(".teaching-canvas").evaluate(svg=>{
   const frame=svg.getBoundingClientRect(),outside=[],small=[];
   const visible=el=>{for(let n=el;n&&n!==svg;n=n.parentElement)if(+getComputedStyle(n).opacity<.02)return false;return true;};
   for(const el of svg.querySelectorAll("text,rect,circle,path")){
@@ -87,7 +87,7 @@ export async function fullW8Checks({page,base,check,shot}){
  await page.keyboard.press("Escape");await page.goto(base);
  await shot("article-final-opening");
  check(await page.locator(".lesson-section").count()===7,"All seven reading units are real");
- const bad=await page.locator(".site-header nav a,.scene-equation math,.wb-rounds button").evaluateAll(nodes=>nodes.filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>el.textContent));
+ const bad=await page.locator(".site-header nav a,.formula-lesson math,.wb-rounds button").evaluateAll(nodes=>nodes.filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>el.textContent));
  check(!bad.length,"Navigation and mainline math fit: "+bad);
  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),"Full article has no horizontal overflow");
 }

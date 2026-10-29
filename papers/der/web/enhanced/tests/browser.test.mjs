@@ -1,3 +1,4 @@
+import {formulaLessonChecks} from "./formula-lessons.mjs";
 import {reviewFeedbackChecks} from "./review-feedback.mjs";
 import {fullW8Checks} from "./w8-browser.mjs";
 import assert from "node:assert/strict";
@@ -36,6 +37,7 @@ try{
   page.on("pageerror",e=>errors.push(e.message));page.on("requestfailed",r=>errors.push(r.url()));page.on("response",r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`)});
   await page.clock.install();await page.clock.pauseAt(new Date());
   const shot=async(name,selector)=>{if(!output)return;const target=selector?page.locator(selector):page;await target.screenshot({path:resolve(output,`${name}-${width}.png`)});};
+  if(process.argv.includes("--formula-only")){await formulaLessonChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`FORMULA_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   if(process.argv.includes("--review-feedback")){await reviewFeedbackChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`FEEDBACK_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   if(process.argv.includes("--w8-only")){await fullW8Checks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`W8_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   await page.goto(base);await page.evaluate(()=>document.fonts.ready);
@@ -57,7 +59,7 @@ try{
      if(c===(name==="kl"?"near":"shifted")&&[1,2,3].includes(i))await shot(`${name}-${i}`,`[data-design=${name}]`);
     }
    }
-   const bad=await scene.evaluate(el=>[...el.querySelectorAll(".frames button,.stage math,.mainline-math math,.source-tag,.narration")].filter(e=>e.scrollWidth>e.clientWidth+2).map(e=>e.className||e.tagName));
+   const bad=await scene.evaluate(el=>[...el.querySelectorAll(".frames button,.stage math,.formula-lesson math,.source-tag,.narration")].filter(e=>e.scrollWidth>e.clientWidth+2).map(e=>e.className||e.tagName));
    check(!bad.length,`Core math and labels fit ${name}: ${bad}`);
    await scene.locator("[data-frame='0']").click();await scene.locator("[data-play]").click();await page.clock.runFor(600);await scene.locator("[data-play]").click();
    const paused=await scene.getAttribute("data-progress");await page.clock.runFor(500);check(paused===await scene.getAttribute("data-progress"),"Pause holds exact frame");
@@ -97,7 +99,7 @@ try{
   check(await scene.getAttribute("data-status")==="finished","Whole four-item sequence plays through and stops");
   check(await scene.getAttribute("data-seen")==="4","Whole sequence increments N exactly four times");
   check(await scene.locator("[data-time-readout]").innerText()==="播放结束","Reservoir omits debug times by default");
-  const geometry=await scene.locator("svg").evaluate(svg=>{
+  const geometry=await scene.locator(".rv-canvas").evaluate(svg=>{
    const outer=svg.getBoundingClientRect();
    return [...svg.querySelectorAll("text,rect")].filter(el=>{if(+getComputedStyle(el).opacity===0)return false;const b=el.getBoundingClientRect();return b.x<outer.x-1||b.right>outer.right+1||b.y<outer.y-1||b.bottom>outer.bottom+1}).map(el=>el.textContent||el.tagName);
   });check(!geometry.length,`Reservoir graphics stay inside actual canvas ${geometry}`);
@@ -110,7 +112,7 @@ try{
   }
   await scene.locator("[data-back]").focus();const focus=await scene.locator("[data-back]").evaluate(el=>({style:getComputedStyle(el).outlineStyle,width:parseFloat(getComputedStyle(el).outlineWidth)}));check(focus.style!=="none"&&focus.width>=2,"Keyboard focus is visible");
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),"No page overflow in desktop layouts");
-  if(!process.argv.includes("--reservoir-only")){await fullW8Checks({page,base,check,shot});await reviewFeedbackChecks({page,base,check,shot});}
+  if(!process.argv.includes("--reservoir-only")){await formulaLessonChecks({page,base,check,shot});await fullW8Checks({page,base,check,shot});await reviewFeedbackChecks({page,base,check,shot});}
   check(!errors.length,`No production or subpath resource errors: ${errors}`);
   console.log(`BROWSER_PASS ${width}x${height}, assertions=${count}`);await context.close();
  }
