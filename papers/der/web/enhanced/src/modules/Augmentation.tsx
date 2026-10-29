@@ -1,9 +1,10 @@
 import { useId, useState } from "react";
 import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
 import { windowAt } from "./review/lifecycle-model";
-import { ScoreGlyph, fmt, vectorText } from "./LearningGlyphs";
+import { ScoreGlyph, fmt } from "./LearningGlyphs";
 import { PelicanIllustration, type ImageView } from "./PelicanIllustration";
 import { runTraining, forward, viewOf } from "./training-model";
+import { ReferenceButton } from "./Reference";
 import "./learning-scenes.css";
 import "./flow-refinements.css";
 
@@ -40,7 +41,7 @@ export default function Augmentation() {
     <header><div>
       <p className="eyebrow">AUGMENTATION / 恢复真实视图</p>
       <h3>记忆保存原图，回放时重新取视图。</h3>
-      <p>对同一张图做保持类别语义的裁剪或翻转；保存时产生的目标固定不变。两次视图共用同一个鹈鹕原图身份。</p>
+      <p>原图 x₁ 先经保存视图 A₀(x₁) 产生并冻结 z；未来再经 A₁(x₁) 得到当前 a。视图可以变化，匹配始终对准同一个 z。</p>
     </div></header>
     <SceneTransport timeline={timeline} clips={clips} label="增强与一致性" showTiming={false} />
     <div className="aug-view-controls" role="group" aria-label="选择未来回放时的图像视图">
@@ -92,6 +93,8 @@ export default function Augmentation() {
       <text x="35" y="489" className="tg-small aug-boundary">合成鹈鹕插图用于解释视图身份；输出数值来自 W5 二维小模型，不是图像分类器。</text>
     </svg></div>
     <div className="scene-explanation" aria-live="polite"><strong>{clips[c].id}</strong><p>{notes[c]}</p></div>
-    <p className="quiet-note">视图切换时，模型输入按 uₛ=(u₁+0.1s,u₂) 改变，s={modelView}；目标 z={vectorText(record.z)} 来自同一训练状态。这里展示的是增强一致性机制，不新增一项 DER 训练损失。</p>
+    <p className="quiet-note">鹈鹕插图说明原图身份与视图变换；当前分数来自二维线性教学模型，不是像素分类器输出。</p>
+    <ReferenceButton term="augmentation">展开均值—方差解释</ReferenceButton>
+    <div className="scene-handoff"><span>下一问</span><p>同一个目标能让不同视图继续对齐，却不能判断旧响应是否正确。下一节让历史标签提供独立的分类信号。</p></div>
   </section>;
 }

@@ -51,7 +51,7 @@ export default function DERPlus() {
     <header><div>
       <p className="eyebrow">DER++ / 历史标签补上什么</p>
       <h3>旧响应可以保留错误；真实标签提供另一种方向。</h3>
-      <p>先看真实类别与冻结 logits 的冲突。DER++ 再从同一份旧记忆独立抽取标签监督；两种历史信号和当前分类共用一次参数更新。</p>
+      <p>例中真实标签为 Claude，冻结 z 却把 GPT 排第一。DER++ 从旧记忆另取真实标签作分类监督，与当前 CE、旧响应匹配一起更新同一个 θ。</p>
     </div><div className="scene-options dp-mode-switch" role="group" aria-label="选择训练方法">
       {(["DER", "DER++"] as Mode[]).map((item) => <button key={item} type="button" aria-pressed={mode === item} onClick={() => { setMode(item); timeline.reset(); }}>{item}</button>)}
     </div></header>
@@ -158,6 +158,7 @@ export default function DERPlus() {
       <text x="34" y="590" className="tg-small dp-boundary">E04 / x₂ 是解释监督职责的合成记忆，不是论文实验数据。方向会竞争；图中不模拟或承诺更新后必定纠错。</text>
     </svg></div>
     <div className="scene-explanation" aria-live="polite"><strong>{clips[c].id}</strong><p>{notes[c]}</p></div>
-    <p className="quiet-note">DER 记录 (x,z)；DER++ 记录 (x,z,y)。Rᴅ / Rʏ 都从写入前的 M 读取；当前 CE、历史 logits 匹配与可选历史标签 CE 使用同一个更新前参数 θ，共同形成一次更新。E04 为解释性错例，更新方向不表示必然纠错。</p>
+    <p className="quiet-note">α 权衡旧响应匹配，β 权衡历史标签 CE；这两种监督可能竞争。</p>
+    <div className="scene-handoff"><span>下一问</span><p>现在各个部件都已出现。下一节从空池开始，让同一个 θ、M、N 连续走完四轮训练，并在训练后单独做只读预测。</p></div>
   </section>;
 }
