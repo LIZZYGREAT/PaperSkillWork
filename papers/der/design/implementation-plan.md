@@ -495,3 +495,9 @@ P1 只提供 Reservoir、增强视图、DER++ 三个方向供用户审阅。入�
 P1 复核：`npm.cmd --prefix papers/der/web/enhanced run build` PASS（tsc、Vite 75 modules），生产 `dist` 不含 `p1-review.html`。仓库公共 Visual QA runner 经本机 Edge 156.0.4314.50 在 1440×900 和 1920×1080 捕获 20 个状态，20/20 PASS；`GEOMETRY_QA`、`BROWSER_ERRORS` PASS、浏览器错误为 0、无横向溢出/裁切/12px 以下语义文本。实际截图已审阅三种方向的静态/动态关键帧。该 runner 将 `STYLE_QA`、`REGRESSION`、其自身的 `BUILD`、`VISUAL_REVIEW` 留作 NOT_RUN；构建和人工图像复核分别另行完成。页面内容在较小窗口中可纵向滚动，截图为完整页面。
 
 Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwright.dev`）；按照已实跑的 `docs/VISUAL_QA.md` Windows 回退流程，使用本机 Edge 完成同一 runner 的预览。这支持流程可用，不代表 Chromium 下载成功。报告和 20 张截图归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1`。P1 的 Agent 视觉复核完成；方向选择、P2–P4 和 W9 最终人工验收仍待用户审阅，本阶段不启动它们。
+
+#### Reservoir 视觉反馈返修（2026-10-29）
+
+用户指出原 Reservoir 画面的箭头、虚线、动画节奏和抽签控件不协调。本轮重排该方向稿：将抽签移到输入流与固定槽之间，统一“写入”绿色实线箭头和“离池”琥珀色虚线；替换与拒收各自落到明确的池外收纳区。旧记录移出和新候选写入分段运动，到站后淡出交接；固定槽只显示最终留存，满池选择值在收紧的决策卡中突出。没有修改算法、轨迹、正式页面或增强/DER++ 场景。
+
+修订后 `npm.cmd --prefix papers/der/web/enhanced run build` PASS（75 modules）。公共 Visual QA 用 Edge 156.0.4314.50 在 1440×900 与 1920×1080 的 20 状态全部 PASS，几何、浏览器错误均 PASS，0 浏览器错误；实看替换中段、替换完成、拒收三个 Reservoir 关键帧，确认箭头落点、抽签卡、动画交接及两档布局。最终报告为 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/reservoir-revision-20261029/run-2026-10-29T03-41-46-385Z/report.md`，同目录保留截图。人工方向选择与 W9 最终验收仍待用户。

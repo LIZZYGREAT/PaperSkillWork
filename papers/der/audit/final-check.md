@@ -121,3 +121,12 @@ Windows Codex 的公共 Visual QA 回退流程已实跑：Playwright Chromium �
 - Chromium CDN 本轮 DNS 解析失败，Playwright Chromium 默认浏览器不可用；`docs/VISUAL_QA.md` 的 Windows Edge 回退流程已实际执行并成功运行同一公共 runner。真实 F11 仍 `NOT_RUN`。
 
 P1 Agent 范围的截图复核已完成，方向选择等待用户；`HUMAN_ACCEPTANCE=PENDING`、W9 `Overall=PENDING`。未启动 P2–P4、W10，也未代填 `paper.yaml` 或用户验收结果。
+
+## Reservoir 方向截图反馈返修（2026-10-29）
+
+用户认为 Reservoir 原图的箭头、虚线、动画与抽签组件不协调。本次只修改隔离的 Reservoir 原型：抽签卡移至流程中央；绿色实线表示候选写入，琥珀虚线表示旧记录/拒收候选离池；两条路径各自连接到独立池外区域。替换动画依次移出旧记录、写入新记录，并在到站处淡出交接。Reservoir 模型与预设数据、正式页面及其他方向均未改。
+
+- 生产构建 PASS（TypeScript 与 Vite，75 modules）。
+- 公共 Visual QA：Edge 156.0.4314.50；两个桌面视口、10 个状态 × 2 尺寸共 20/20 PASS；几何和浏览器错误 PASS、浏览器错误 0。
+- 已实际审看 1440×900 的 replacement-mid-motion、replacement-settled、reject-and-count，并复核 1920×1080 布局。最终图中离池箭头停在收纳框边缘，中段动画不再出现旧卡遮住池外标记的重叠。
+- 截图与报告：`C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/reservoir-revision-20261029/run-2026-10-29T03-41-46-385Z`。运行器的 `VISUAL_REVIEW` 和 `HUMAN_ACCEPTANCE` 按定义不由机器置为通过；用户方向反馈与 W9 最终复审仍待完成。

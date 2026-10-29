@@ -3,7 +3,7 @@ import ModelPixel, { MODEL_CLASSES, type ModelClass } from "./ModelPixel";
 import SceneTransport, { useSceneTimeline } from "./SceneTransport";
 import { RESERVOIR_INPUTS, RESERVOIR_STEPS, reservoirSceneAt, type MemoryRecord } from "../reservoir-model";
 import { forward, runTraining, viewOf } from "../training-model";
-import { curve, windowAt } from "./lifecycle-model";
+import { curve, mix, windowAt } from "./lifecycle-model";
 import "./animation.css";
 import "./p1-review.css";
 
@@ -71,30 +71,72 @@ function RecordTile({ record, x, y, opacity = 1 }: { record: MemoryRecord; x: nu
   </g>;
 }
 
+function ReservoirToken({ record, x, y, label, detail, rejected = false }: {
+  record: MemoryRecord;
+  x: number;
+  y: number;
+  label: string;
+  detail: string;
+  rejected?: boolean;
+}) {
+  return <g transform={`translate(${x} ${y})`} className={`p1-reservoir-token${rejected ? " is-rejected" : ""}`}>
+    <rect width="154" height="52" rx="10" />
+    <SampleMark model={record.model} size={32} x={8} y={10} />
+    <text x="47" y="22" className="p1-token-title">{label}</text>
+    <text x="47" y="39" className="p1-token-detail">{detail}</text>
+  </g>;
+}
+
 function ReservoirPrototype() {
   const clips = RESERVOIR_P1_CLIPS;
   const timeline = useSceneTimeline(clips);
   const { clipIndex: index, progress } = timeline.state;
   const step = RESERVOIR_STEPS[index];
   const scene = reservoirSceneAt(index, progress);
-  const slotX = [86, 437] as const;
-  const streamX = [158, 374, 590, 806] as const;
-  const gate = { x: 858, y: 198 };
+  const slotX = [250, 590] as const;
+  const slotY = 324;
+  const slotWidth = 300;
+  const slotCenter = [400, 740] as const;
+  const streamX = [132, 352, 572, 792] as const;
+  const gate = { x: 420, y: 157, width: 300, height: 102 };
+  const exitBay = { x: 24, y: 340, width: 180, height: 108 };
+  const rejectBay = { x: 916, y: 340, width: 180, height: 108 };
+  const gateCenter = gate.x + gate.width / 2;
   const accepted = step.slot !== null;
-  const destination = accepted
-    ? { x: slotX[step.slot ?? 0] + 21, y: 354 }
-    : { x: 862, y: 394 };
-  const start = { x: streamX[index] - 139, y: 119 };
-  const firstLeg = curve(windowAt(progress, .04, .48), start, { x: start.x, y: 202 }, { x: gate.x - 86, y: 190 }, { x: gate.x - 128, y: gate.y });
-  const secondLeg = curve(windowAt(progress, .48, .88), { x: gate.x - 128, y: gate.y }, { x: gate.x - 5, y: gate.y + 30 }, { x: destination.x + 50, y: destination.y - 20 }, destination);
-  const direct = curve(windowAt(progress, .05, .88), start, { x: start.x + 20, y: 220 }, { x: destination.x + 45, y: 250 }, destination);
-  const candidatePoint = step.j === undefined || progress < .49 ? firstLeg : secondLeg;
+  const destinationCenter = step.slot === null ? null : slotCenter[step.slot];
   const candidate = step.candidate;
   const committed = scene.committed;
   const visibleMemory = committed ? step.after.M : step.before.M;
   const seen = committed ? step.after.N : step.before.N;
   const drawn = step.j !== undefined && progress > .1;
-  const replacementExit = windowAt(progress, .34, .79);
+  const replacementExit = windowAt(progress, .3, .54);
+  const candidateFlight = windowAt(progress, .42, .88);
+  const sourceX = streamX[index];
+  const feedX = sourceX < gate.x ? gate.x : sourceX > gate.x + gate.width ? gate.x + gate.width : sourceX;
+  const feedPath = `M${sourceX} 124 C${mix(sourceX, feedX, .42)} 137 ${mix(sourceX, feedX, .78)} 145 ${feedX} ${gate.y}`;
+  const outputPath = destinationCenter === null
+    ? null
+    : `M${gateCenter} ${gate.y + gate.height} C${mix(gateCenter, destinationCenter, .28)} 284 ${mix(gateCenter, destinationCenter, .76)} 294 ${destinationCenter} ${slotY}`;
+  const rejectPath = `M${gate.x + gate.width} ${gate.y + 63} C790 244 866 278 ${rejectBay.x + 21} ${rejectBay.y}`;
+  const evictPath = `M${slotX[0]} ${slotY + 66} C238 390 220 398 ${exitBay.x + exitBay.width} ${exitBay.y + 66}`;
+  const exitScale = mix(1, .57, replacementExit);
+  const exitCenter = curve(replacementExit,
+    { x: slotCenter[0], y: slotY + 66 },
+    { x: 342, y: 349 },
+    { x: 245, y: 408 },
+    { x: exitBay.x + exitBay.width / 2, y: exitBay.y + 66 });
+  const exitX = exitCenter.x - 139 * exitScale;
+  const exitY = exitCenter.y - 44 * exitScale;
+  const acceptedOrigin = destinationCenter === null ? null : curve(candidateFlight,
+    { x: gateCenter - 77, y: gate.y + gate.height - 8 },
+    { x: gateCenter - 77, y: gate.y + gate.height + 25 },
+    { x: destinationCenter - 77, y: slotY - 28 },
+    { x: destinationCenter - 77, y: slotY + 26 });
+  const rejectedOrigin = curve(candidateFlight,
+    { x: gate.x + gate.width - 80, y: gate.y + 46 },
+    { x: 778, y: gate.y + 58 },
+    { x: 880, y: rejectBay.y + 8 },
+    { x: rejectBay.x + 13, y: rejectBay.y + 42 });
 
   return <section className="p1-scene p1-reservoir" data-p1-scene="reservoir" data-clip={index} data-progress={progress} data-decision={step.decision} data-committed={committed}>
     <div className="p1-scene-heading">
@@ -107,62 +149,90 @@ function ReservoirPrototype() {
     </div>
     <SceneTransport timeline={timeline} clips={clips} label="有限记忆 Reservoir" showTiming={false} caption="沿同一条流前进；记忆槽保持固定身份，选留之后继续下一项。" />
     <div className="p1-reservoir-frame">
-      <svg className="p1-reservoir-svg" viewBox="0 0 1120 500" role="img" aria-label="同一数据流进入两个固定记忆槽，发生替换或拒收">
+      <svg className="p1-reservoir-svg" viewBox="0 0 1120 500" role="img" aria-label="候选经过选留决策后写入固定记忆槽，替换的旧记录和拒收候选分别离池">
         <defs>
-          <linearGradient id="p1-stream-gradient" x1="0" x2="1"><stop offset="0" stopColor="#c8d9ca"/><stop offset=".55" stopColor="#3d795f"/><stop offset="1" stopColor="#d7dfd1"/></linearGradient>
-          <marker id="p1-stream-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#55816a"/></marker>
+          <marker id="p1-stream-arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#849a88"/></marker>
+          <marker id="p1-feed-arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#4f8062"/></marker>
+          <marker id="p1-store-arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#397554"/></marker>
+          <marker id="p1-away-arrow" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#ad7c4e"/></marker>
         </defs>
-        <path d="M80 94H1022" className="p1-stream-track" markerEnd="url(#p1-stream-arrow)" />
-        <text x="82" y="41" className="p1-svg-overline">一条持续输入流</text>
-        {RESERVOIR_INPUTS.map((record, itemIndex) => <g key={record.id} className={`p1-stream-item${itemIndex === index ? " is-current" : itemIndex < index ? " is-past" : ""}`} transform={`translate(${streamX[itemIndex]} 96)`}>
-          <circle r="29" className="p1-stream-orbit" />
-          <SampleMark model={record.model} size={38} x={-19} y={-19} />
-          <text y="50" textAnchor="middle" className="p1-svg-label">{record.id}</text>
-          <text y="68" textAnchor="middle" className="p1-svg-micro">{itemIndex < index ? "已处理" : itemIndex === index ? "本次候选" : "稍后到达"}</text>
+        <text x="54" y="34" className="p1-flow-heading">持续输入流</text>
+        <g transform="translate(850 25)" className="p1-flow-legend">
+          <path d="M0 8H36" className="p1-legend-store" markerEnd="url(#p1-store-arrow)"/><text x="45" y="12">写入</text>
+          <path d="M94 8H130" className="p1-legend-away" markerEnd="url(#p1-away-arrow)"/><text x="139" y="12">离池</text>
+        </g>
+        <path d="M74 93H1040" className="p1-stream-track" markerEnd="url(#p1-stream-arrow)" />
+        {RESERVOIR_INPUTS.map((record, itemIndex) => <g key={record.id} className={`p1-stream-item${itemIndex === index ? " is-current" : itemIndex < index ? " is-past" : ""}`} transform={`translate(${streamX[itemIndex]} 94)`}>
+          <text y="-42" textAnchor="middle" className="p1-stream-id">{record.id}</text>
+          <circle r="28" className="p1-stream-orbit" />
+          <SampleMark model={record.model} size={36} x={-18} y={-18} />
         </g>)}
 
-        <path d="M112 155C188 180 346 162 526 177C644 188 731 200 800 221" className="p1-candidate-guide" />
-        <g className="p1-draw-gate" transform="translate(800 153)">
-          <path d="M0 17C0 -5 33 -16 74 -16S148 -5 148 17V95H0Z" className="p1-gate-shape" />
-          <text x="74" y="13" textAnchor="middle" className="p1-svg-overline">Reservoir</text>
-          <text x="74" y="38" textAnchor="middle" className="p1-svg-title">{step.j === undefined ? "空位直接进入" : `抽签 j = ${drawn ? step.j : "?"}`}</text>
-          {step.j !== undefined && Array.from({ length: step.before.N + 1 }, (_, choice) => <g key={choice} transform={`translate(${18 + choice * 30} 57)`}>
-            <circle r="10" className={drawn && choice === step.j ? "p1-draw-dot is-chosen" : "p1-draw-dot"} />
-            <text y="4" textAnchor="middle" className="p1-draw-number">{choice}</text>
+        <path d={feedPath} className="p1-candidate-feed" markerEnd="url(#p1-feed-arrow)" />
+        {outputPath && <path d={outputPath} className="p1-route-accepted" markerEnd="url(#p1-store-arrow)" />}
+        {step.slot === null && <path d={rejectPath} className="p1-route-away" markerEnd="url(#p1-away-arrow)" />}
+        {step.evicted && <path d={evictPath} className="p1-route-away" markerEnd="url(#p1-away-arrow)" />}
+
+        <g transform={`translate(${gate.x} ${gate.y})`} className="p1-decision-card">
+          <rect width={gate.width} height={gate.height} rx="13" />
+          <path d={`M0 34H${gate.width}`} className="p1-decision-divider" />
+          <text x="18" y="23" className="p1-decision-kicker">{step.j === undefined ? "空槽优先" : "满池后抽签"}</text>
+          <text x="18" y="65" className="p1-decision-result">{step.j === undefined ? `直写 SLOT ${step.slot}` : `j = ${drawn ? step.j : "…"}`}</text>
+          <text x="18" y="86" className="p1-decision-note">{step.j === undefined ? "无需抽签" : `候选范围 0—${step.before.N}`}</text>
+          {step.j !== undefined && Array.from({ length: step.before.N + 1 }, (_, choice) => <g key={choice} transform={`translate(${158 + choice * 31} 49)`}>
+            <rect width="25" height="26" rx="7" className={`p1-draw-choice${drawn && choice === step.j ? step.slot === null ? " is-away" : " is-selected" : ""}`} />
+            <text x="12.5" y="17" textAnchor="middle" className="p1-draw-number">{choice}</text>
           </g>)}
         </g>
 
-        <text x="86" y="302" className="p1-svg-overline">M · 固定记忆槽</text>
-        {[0, 1].map((slot) => <g key={slot} transform={`translate(${slotX[slot]} 324)`}>
-          <rect width="326" height="128" rx="17" className={`p1-memory-slot${visibleMemory[slot] ? " is-occupied" : ""}`} />
-          <text x="19" y="25" className="p1-slot-label">SLOT {slot}</text>
-          <text x="306" y="25" textAnchor="end" className="p1-slot-status">{visibleMemory[slot]
-            ? step.evicted?.id === visibleMemory[slot]?.id && !committed && replacementExit > .08 ? "旧记录离开中" : "记录保留"
-            : "留空"}</text>
-          {!visibleMemory[slot] && <g transform="translate(20 49)"><path d="M0 12H282" className="p1-empty-rule"/><text x="141" y="43" textAnchor="middle" className="p1-svg-micro">空位：新记录无需竞争</text></g>}
-        </g>)}
-        {step.before.M.map((record, slot) => {
-          const exits = step.evicted?.id === record.id && !committed;
-          const x = slotX[slot] + 24 - (exits ? 142 * replacementExit : 0);
-          const y = 350 + (exits ? 28 * replacementExit : 0);
-          return <RecordTile key={`${record.id}-${slot}`} record={record} x={x} y={y} opacity={exits ? 1 - replacementExit : 1} />;
+        <text x={slotX[0]} y="300" className="p1-memory-heading">M · 固定容量 K = 2</text>
+        {[0, 1].map((slot) => {
+          const record = visibleMemory[slot];
+          const isTarget = accepted && step.slot === slot;
+          const isLeaving = !committed && Boolean(step.evicted && record?.id === step.evicted.id && replacementExit > .04);
+          const status = record ? isLeaving ? "移出中" : isTarget && committed ? "刚写入" : "保留" : isTarget ? "等待写入" : "空槽";
+          return <g key={slot} transform={`translate(${slotX[slot]} ${slotY})`}>
+            <rect width={slotWidth} height="122" rx="14" className={`p1-memory-slot${record ? " is-occupied" : ""}${isTarget ? " is-target" : ""}`} />
+            <text x="15" y="21" className="p1-slot-label">MEMORY · SLOT {slot}</text>
+            <text x={slotWidth - 14} y="21" textAnchor="end" className={`p1-slot-status${isTarget ? " is-target" : ""}`}>{status}</text>
+            {!record && <g transform={`translate(${slotWidth / 2} 74)`} className="p1-empty-slot">
+              <circle r="12" /><path d="M-5 0H5M0 -5V5" />
+              <text x="20" y="4">候选到达后写入</text>
+            </g>}
+          </g>;
         })}
-        {committed && step.after.M.map((record, slot) => record.id === candidate.id
-          ? <RecordTile key={`committed-${record.id}`} record={record} x={slotX[slot] + 24} y={350} /> : null)}
-
-        <path d={accepted ? `M${gate.x} 250C${gate.x - 40} 282 ${destination.x + 142} 288 ${destination.x + 142} 344` : `M${gate.x + 36} 250C${gate.x + 77} 281 980 302 986 342`} className={accepted ? "p1-route-accepted" : "p1-route-rejected"} />
-        <g className="p1-reject-bay" transform="translate(854 362)">
-          <path d="M6 0V31Q6 45 20 45H218Q232 45 232 31V0" className="p1-reject-outline" />
-          <text x="122" y="70" textAnchor="middle" className="p1-svg-overline">j ≥ K</text>
-          <text x="122" y="91" textAnchor="middle" className="p1-reject-label">拒收区 · M 不变</text>
-          {step.slot === null && <text x="122" y="113" textAnchor="middle" className="p1-svg-micro">N 仍递增；当前训练已完成</text>}
+        <g transform={`translate(${exitBay.x} ${exitBay.y})`} className="p1-sink p1-sink-evicted">
+          <rect width={exitBay.width} height={exitBay.height} rx="12" />
+          <text x="13" y="20" className="p1-sink-title">移出记忆池</text>
+          <text x={exitBay.width - 13} y="20" textAnchor="end" className="p1-sink-mark">M OUT</text>
+          {!step.evicted && <text x="13" y="68" className="p1-sink-empty">本步没有旧记录离开</text>}
+          {step.evicted && <g opacity={committed ? 1 : windowAt(progress, .43, .62)}>
+            <ReservoirToken record={step.evicted} x={13} y={42} label={`${step.evicted.id} 离池`} detail={`原 slot ${step.slot}`} />
+          </g>}
         </g>
-        {step.evicted && !committed && <g opacity={Math.sin(progress * Math.PI)}>
-          <path d="M118 463H320" className="p1-exit-rule" />
-          <text x="118" y="485" className="p1-exit-label">旧 {step.evicted.id} 从 slot {step.slot} 离开</text>
+        <g transform={`translate(${rejectBay.x} ${rejectBay.y})`} className="p1-sink p1-sink-rejected">
+          <rect width={rejectBay.width} height={rejectBay.height} rx="12" />
+          <text x="13" y="20" className="p1-sink-title">未写入记忆</text>
+          <text x={rejectBay.width - 13} y="20" textAnchor="end" className="p1-sink-mark">POOL OUT</text>
+          {step.slot !== null && <text x="13" y="68" className="p1-sink-empty">没有拒收候选</text>}
+          {step.slot === null && <g opacity={committed ? 1 : candidateFlight}>
+            <ReservoirToken record={candidate} x={13} y={42} label={`${candidate.id} 拒收`} detail={`j = ${step.j} ≥ K`} rejected />
+          </g>}
+        </g>
+
+        {visibleMemory.map((record, slot) => {
+          if (step.evicted?.id === record.id && !committed) {
+            return <g key={`leaving-${record.id}`} transform={`translate(${exitX} ${exitY}) scale(${exitScale})`} opacity={1 - replacementExit} className="p1-moving-evicted">
+              <RecordTile record={record} x={0} y={0} />
+            </g>;
+          }
+          return <RecordTile key={`${record.id}-${slot}`} record={record} x={slotX[slot] + 11} y={slotY + 29} />;
+        })}
+        {accepted && !committed && candidateFlight > 0 && acceptedOrigin && <g transform={`translate(${acceptedOrigin.x} ${acceptedOrigin.y})`}>
+          <ReservoirToken record={candidate} x={0} y={0} label={`${candidate.id} 新记录`} detail="准备写入同一槽" />
         </g>}
-        {!committed && progress > .02 && progress < .93 && <g transform={`translate(${step.j === undefined ? direct.x : candidatePoint.x} ${step.j === undefined ? direct.y : candidatePoint.y})`} className="p1-moving-candidate" data-p1-moving-record={candidate.id}>
-          <RecordTile record={candidate} x={0} y={0} />
+        {step.slot === null && !committed && candidateFlight > 0 && <g transform={`translate(${rejectedOrigin.x} ${rejectedOrigin.y})`}>
+          <ReservoirToken record={candidate} x={0} y={0} label={`${candidate.id} 候选`} detail="离开记忆流" rejected />
         </g>}
       </svg>
     </div>
