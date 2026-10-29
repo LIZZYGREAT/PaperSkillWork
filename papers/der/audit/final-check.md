@@ -157,3 +157,9 @@ S4 Reservoir 已接入通过的 P1 方向。规则贴近主图显示；保留输
 U4 单步画面现呈现当前与历史两路共享更新前 θ、各自的标签 CE/冻结 logits 匹配、一次联合更新、之后才选留当前候选。空池模式没有伪造回放；数值和顺序仍使用 `training-model.ts`。
 
 生产构建 PASS（75 modules）；24/24 单测 PASS。`--w8-only` 两视口各 382 项、共 764 项 PASS；`--formula-only` 两视口各 60 项、共 120 项 PASS。已查看两档当前前向、历史回放和更新后选留截图。运行 Playwright 时本机 Chromium 文件缺失，按仓库回退用无头 Edge 156.0.4314.50；真实 F11 `NOT_RUN`。截图归档在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-step`。Reservoir 和 DER 单步已完成，增强、DER++ 尚待；P2 完成前不进 P3/P4，W9 保持 PENDING。
+
+### P2 / 增强视图生产主线（2026-10-29）
+
+正式增强场景用同一鹈鹕原图身份展示保存时 `A₀(x₁)` 与未来回放 `A₁(x₁)`；中心裁剪和水平翻转是可操作选择。保存输出复制成不变历史目标 `z`，当前视图输出 `a` 与其匹配；视图变换会更新当前 logits/损失，不重写目标。独立增强公式讲义已退出主线，仅保留贴近图像/输出的 `L_match`。图内注明鹈鹕为合成 SVG，数值来自 W5 二维模型。通过共享插图组件复用 P1 鹈鹕资产，未更改 P1 视觉、训练模型或增强计算。
+
+生产构建 PASS（TypeScript、Vite 76 modules），单元测试 24/24 PASS。Playwright/Edge 156.0.4314.50：`--w8-only` 两档各 384、合计 768 项 PASS；`--formula-only` 两档各 60、合计 120 项 PASS。断言涵盖阶段播放/暂停/回退、图形边界、reduced motion、手动选图、目标固定与损失随视图更新。已查看 1440×900 和 1920×1080 代表画面。真实 F11 未运行（`NOT_RUN`）。截图在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/augmentation`。D1、训练模型/论文数值、`paper.yaml`、W9 验收值均未改；DER++ 是 P2 剩余项，P2 完成后停下复审。

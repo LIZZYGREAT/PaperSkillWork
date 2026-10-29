@@ -21,7 +21,7 @@ export async function fullW8Checks({page,base,check,shot}){
   for(let i=0;i<durations.length;i++){
    await seek(scene,i,durations[i],.6);check(await scene.getAttribute("data-status")==="paused","Mid-process pause is real");await geometry(scene);
    if([1,2,4].includes(i))await shot(name+"-"+i,"[data-scene="+name+"]");
-   const snapshot=await scene.locator("svg").innerHTML();await page.clock.fastForward(1200);check(snapshot===await scene.locator("svg").innerHTML(),"Pause holds all geometry and values");
+   const snapshot=await scene.locator(".teaching-canvas").innerHTML();await page.clock.fastForward(1200);check(snapshot===await scene.locator(".teaching-canvas").innerHTML(),"Pause holds all geometry and values");
    await scene.locator("[data-back]").click();check(+(await scene.getAttribute("data-progress"))===0,"Back restores stage start");
   }
   if(name==="der-step"){
@@ -32,8 +32,14 @@ export async function fullW8Checks({page,base,check,shot}){
    check(await scene.locator("[data-sample*='replay']").count()===0,"Empty pool never invents replay");
   }
   if(name==="augmentation"){
-   const target=await scene.getAttribute("data-target");await seek(scene,3,5500,.3);const loss=await scene.getAttribute("data-loss");await seek(scene,3,5500,.8);
-   check(target===await scene.getAttribute("data-target"),"Augmentation never rewrites historical target");check(loss!==await scene.getAttribute("data-loss"),"View changes actually recompute logits and loss");
+   const target=await scene.getAttribute("data-target");
+   await scene.getByRole("button",{name:"中心裁剪",exact:true}).click();
+   const centerLoss=await scene.getAttribute("data-loss");
+   await scene.getByRole("button",{name:"水平翻转",exact:true}).click();
+   check(await scene.getAttribute("data-view")==="flip","Replay view control selects the flipped pelican illustration");
+   check(target===await scene.getAttribute("data-target"),"Augmentation never rewrites historical target when changing the view");
+   check(centerLoss!==await scene.getAttribute("data-loss"),"Choosing a new image view recomputes logits and matching loss");
+   check(await scene.getByRole("button",{name:"水平翻转",exact:true}).getAttribute("aria-pressed")==="true","Selected replay view is exposed to assistive technology");
   }
   if(name==="der-plus"){
    await scene.getByRole("button",{name:"DER",exact:true}).click();check(await scene.getAttribute("data-ry")==="none","DER has no historical label branch");
@@ -43,7 +49,7 @@ export async function fullW8Checks({page,base,check,shot}){
   }
   await page.emulateMedia({reducedMotion:"reduce"});await scene.locator("select").selectOption(String(durations.length-1));
   check(await scene.getAttribute("data-progress")==="1","Reduced motion shows whole semantic result");
-  const stable=await scene.locator("svg").innerHTML();await page.clock.fastForward(2000);check(stable===await scene.locator("svg").innerHTML(),"Reduced motion is static");
+  const stable=await scene.locator(".teaching-canvas").innerHTML();await page.clock.fastForward(2000);check(stable===await scene.locator(".teaching-canvas").innerHTML(),"Reduced motion is static");
   await page.emulateMedia({reducedMotion:"no-preference"});
  }
  await page.goto(base+"?focus=workbench");const wb=page.locator("[data-scene=workbench]");

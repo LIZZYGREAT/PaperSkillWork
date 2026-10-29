@@ -526,4 +526,12 @@ Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwrigh
 
 生产构建 PASS（75 modules），`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 的 `--w8-only` 在 1440×900 与 1920×1080 各 382 项 PASS，覆盖单步连续阶段、暂停/回退、空池分支、更新先于写入、记忆值、减少动态及几何；更新后的 `--formula-only` 两档各 60 项 PASS，核对当前主线只在 Reservoir/DER 单步旁显示必要短公式。已实际查看当前前向、回放、联合更新/候选写入三阶段的两档截图。检查为无头 Edge；真实 F11 未运行。证据归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-step`。
 
-目前 P2 已完成 Reservoir 与 DER 单步；增强和 DER++ 仍待处理。完成整个 P2 后停下等待用户复审；W9 继续 `PENDING`，P3/P4 与 W10 不启动。
+目前 P2 已完成 Reservoir、DER 单步和增强视图；DER++ 仍待处理。完成整个 P2 后停下等待用户复审；W9 继续 `PENDING`，P3/P4 与 W10 不启动。
+
+### P2 / S5 增强视图生产主线（2026-10-29）
+
+增强主线从重复小图标改为同一鹈鹕原图的实际可视视图：左侧固定身份的 x₁ 分流到保存时 `A₀(x₁)` 与回放时 `A₁(x₁)`；回放可切换中心裁剪或水平翻转。保存视图生成冻结 `z`，未来视图由当前模型生成 `a`，两者汇入一个紧凑匹配区。切换只重算当前 logits 与 `L_match`，不会写回 `z`。复用同一共享 SVG 鹈鹕资产，保持已通过 P1 画面一致；短公式贴近机制，独立增强公式讲义已移出主线。图像是合成插图、输出数值来自 W5 二维玩具模型的边界也在图中说明。训练模型与增强定义未改。
+
+构建 PASS（TypeScript 与 Vite，76 modules）；`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 `--w8-only` 两档各 384 项、合计 768 项 PASS；覆盖连续阶段、暂停/回退、同一固定目标、中心裁剪/水平翻转交互、即时损失变化、reduced motion 及几何边界。`--formula-only` 两档各 60 项、合计 120 项 PASS，确认主线只留短匹配规则。已查看 1440×900 与 1920×1080 的原图/保存视图/回放视图截图，插图变换后主体清晰，图像与二维模型数值的边界可见。无头 Edge 检查；真实 F11 `NOT_RUN`。证据位于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/augmentation`。
+
+目前 P2 已完成 Reservoir、DER 单步和增强视图；DER++ 尚待处理。完成整个 P2 后停下交用户复审；W9 保持 `PENDING`，不启动 P3/P4/W10，不改 `paper.yaml`。
