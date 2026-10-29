@@ -181,19 +181,19 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
             <rect width={slotWidth} height="122" rx="14" className={`rv-memory-slot${record ? " is-occupied" : ""}${isTarget ? " is-target" : ""}`} />
             <text x="15" y="21" className="rv-slot-label">MEMORY · SLOT {slot}</text>
             <text x={slotWidth - 14} y="21" textAnchor="end" className={`rv-slot-status${isTarget ? " is-target" : ""}`}>{status}</text>
-            {!record && <g transform={`translate(${slotWidth / 2} 74)`} className="rv-empty-slot"><circle r="12"/><path d="M-5 0H5M0 -5V5"/><text x="20" y="4">候选到达后写入</text></g>}
+            {!record && <g transform={`translate(${slotWidth / 2} 74)`} className="rv-empty-slot"><circle cy="-14" r="12"/><path d="M-5 -14H5M0 -19V-9"/><text x="0" y="20" textAnchor="middle">候选到达后写入</text></g>}
           </g>;
         })}
         <g transform={`translate(${exitBay.x} ${exitBay.y})`} className="rv-sink rv-sink-evicted">
           <rect width={exitBay.width} height={exitBay.height} rx="12" />
           <text x="13" y="20" className="rv-sink-title">移出记忆池</text><text x={exitBay.width - 13} y="20" textAnchor="end" className="rv-sink-mark">M OUT</text>
-          {!s.evicted && <text x="13" y="68" className="rv-sink-empty">本步没有旧记录离开</text>}
+          {!s.evicted && <text x={exitBay.width / 2} y="68" textAnchor="middle" className="rv-sink-empty">本步没有旧记录离开</text>}
           {s.evicted && committed && <ReservoirToken record={s.evicted} x={13} y={42} label={`${s.evicted.id} 离池`} detail={`原 slot ${s.slot}`} />}
         </g>
         <g transform={`translate(${rejectBay.x} ${rejectBay.y})`} className="rv-sink rv-sink-rejected">
           <rect width={rejectBay.width} height={rejectBay.height} rx="12" />
           <text x="13" y="20" className="rv-sink-title">未写入记忆</text><text x={rejectBay.width - 13} y="20" textAnchor="end" className="rv-sink-mark">POOL OUT</text>
-          {accepted && <text x="13" y="68" className="rv-sink-empty">没有拒收候选</text>}
+          {accepted && <text x={rejectBay.width / 2} y="68" textAnchor="middle" className="rv-sink-empty">没有拒收候选</text>}
           {s.slot === null && committed && <ReservoirToken record={s.candidate} x={13} y={42} label={`${s.candidate.id} 拒收`} detail={`j = ${s.j} ≥ K`} rejected />}
         </g>
 
