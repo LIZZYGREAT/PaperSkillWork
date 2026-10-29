@@ -542,9 +542,9 @@ export default function Workbench() {
       </div>
       <StepDetails step={step} />
       <p className="quiet-note">
-        执行顺序依据 Algorithms 1–3；空池分支、DER 二元记录、容量与计数符号、下降方向按 W2 M01–M06 消歧。
-        普通预测独立读取 θ₄，不触发回放或训练；原文未定义额外的任务末尾操作。
+        执行顺序依据 Algorithms 1–3；二维数值来自 W5 合成教学模型，只用于追踪状态，不是论文实验输出。
       </p>
+      <div className="scene-handoff"><span>下一问</span><p>四轮执行说明算法怎样运转，却不能单独证明它更有效。接下来在各自的数据集、测试协议与容量下比较论文结果。</p></div>
     </section>
   );
 }
