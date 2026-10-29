@@ -519,3 +519,11 @@ Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwrigh
 生产构建 PASS（TypeScript 与 Vite，75 modules），`npm test` 24/24 PASS。`node tests/browser.test.mjs --reservoir-only` 经 Playwright/Edge 156.0.4314.50 在 1440×900 和 1920×1080 各 57 项通过，合计 114；包括四步全程播放、替换/拒收中间态、暂停/回退、状态模型一致、减少动态与实际画布边界。内置 Playwright Chromium 可执行文件缺失，Edge 使用仓库记录的 Windows 回退路径；截图为无头浏览器，不声称真实 F11。已实看替换动画、替换落定及拒收动画/落定两档画面。截图归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/reservoir`。
 
 此处仅完成 P2 的 Reservoir 子项；DER 单步、增强、DER++ 尚待处理。P2 全部结束后依方案停止交用户复审，W9 保持 `PENDING`，不启动 P3/P4，不改 `paper.yaml`。
+
+### P2 / U4 DER 单步生产主线（2026-10-29）
+
+生产版单步场景改为两条输入共用一个更新前网络：当前 `(x,y)` 支路呈现 logits 与当前 CE；从 `M` 读取的旧 `(x,z)` 支路呈现当前 `a` 与冻结 `z` 的逐类对照及历史匹配。两项损失在旁边合并为 `L_DER`，再显示唯一一次 `θ → θ⁺` 更新。画面底部保留更新前复制出的当前候选，并只在更新完成后把它交给 Reservoir；空池模式没有历史输入、回放样本或历史损失。阶段、值、回放身份和写入次序继续来自 `training-model.ts`；没有更改纯计算模型或复算表。顶部独立 DER 数学讲义已移出主线，完整推导只在旁支查阅，联合目标紧贴机制展示。
+
+生产构建 PASS（75 modules），`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 的 `--w8-only` 在 1440×900 与 1920×1080 各 382 项 PASS，覆盖单步连续阶段、暂停/回退、空池分支、更新先于写入、记忆值、减少动态及几何；更新后的 `--formula-only` 两档各 60 项 PASS，核对当前主线只在 Reservoir/DER 单步旁显示必要短公式。已实际查看当前前向、回放、联合更新/候选写入三阶段的两档截图。检查为无头 Edge；真实 F11 未运行。证据归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-step`。
+
+目前 P2 已完成 Reservoir 与 DER 单步；增强和 DER++ 仍待处理。完成整个 P2 后停下等待用户复审；W9 继续 `PENDING`，P3/P4 与 W10 不启动。

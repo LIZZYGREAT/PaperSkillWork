@@ -151,3 +151,9 @@ S4 Reservoir 已接入通过的 P1 方向。规则贴近主图显示；保留输
 构建 PASS（75 modules）；`npm test` 24/24 PASS；`node tests/browser.test.mjs --reservoir-only` 两档各 57 项，合计 114 项 PASS。测试检查连续播放、各阶段回退、状态与冻结值、暂停位置、reduced motion 和实际画布边界。因为本机 Playwright Chromium 文件缺失，经已记录的 Windows 回退以 Playwright/Edge 156.0.4314.50 运行；实际查看了替换中段、替换落定、拒收中段和两档落定截图。无头检查不等于真实 F11。证据：`C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/reservoir`。
 
 这只是 P2 的第一部分。其余 S4–S6 生产场景待重建；P2 全部完成后停止等待用户复审。`HUMAN_ACCEPTANCE=PENDING`、W9 `Overall=PENDING`，W10 未启动，`paper.yaml` 未改。
+
+### P2 / DER 单步生产主线
+
+U4 单步画面现呈现当前与历史两路共享更新前 θ、各自的标签 CE/冻结 logits 匹配、一次联合更新、之后才选留当前候选。空池模式没有伪造回放；数值和顺序仍使用 `training-model.ts`。
+
+生产构建 PASS（75 modules）；24/24 单测 PASS。`--w8-only` 两视口各 382 项、共 764 项 PASS；`--formula-only` 两视口各 60 项、共 120 项 PASS。已查看两档当前前向、历史回放和更新后选留截图。运行 Playwright 时本机 Chromium 文件缺失，按仓库回退用无头 Edge 156.0.4314.50；真实 F11 `NOT_RUN`。截图归档在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-step`。Reservoir 和 DER 单步已完成，增强、DER++ 尚待；P2 完成前不进 P3/P4，W9 保持 PENDING。

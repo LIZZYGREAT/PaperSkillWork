@@ -1,10 +1,10 @@
-import {binaryKL,squaredCoordinate,retentionProbability} from "../src/modules/formula-model.ts";
+import {binaryKL,squaredCoordinate} from "../src/modules/formula-model.ts";
 export async function formulaLessonChecks({page,base,check,shot}){
  const near=(a,b,label)=>check(Math.abs(a-b)<1e-7,label+": "+a+" / "+b);
  const setRange=async(locator,value)=>locator.fill(String(value));
  await page.emulateMedia({reducedMotion:"no-preference"});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
- const names=["kl-math","logit-math","reservoir-math","der-step-math","augmentation-math","der-plus-math","workbench-math"];
- check(await page.locator("[data-reading-unit]").count()===7,"Every formula-bearing module has an independently composed reading unit");
+ const names=["kl-math","logit-math","augmentation-math","der-plus-math","workbench-math"];
+ check(await page.locator("[data-reading-unit]").count()===5,"Only modules with a separate math exploration retain a reading unit");
  for(const name of names){
   const lesson=page.locator('[data-reading-unit="'+name+'"]');
   const structure=await lesson.evaluate(el=>{
@@ -21,6 +21,12 @@ export async function formulaLessonChecks({page,base,check,shot}){
   await shot(name+"-formula","[data-reading-unit="+name+"] .formula-spot");
   await shot(name+"-reading","[data-reading-unit="+name+"] .lesson-reading > .lesson-columns:first-of-type");
  }
+ const reservoir=page.locator("[data-scene=reservoir]"),derStep=page.locator("[data-scene=der-step]");
+ check(await reservoir.locator("[data-reading-unit]").count()===0,"Reservoir opens on its mechanism rather than a separate formula lesson");
+ const reservoirRule=await reservoir.locator(".rv-inline-rule").innerText();
+ check(reservoirRule.includes("Uniform")&&reservoirRule.includes("N ← N + 1"),"Reservoir keeps its concise rule beside the mechanism");
+ check(await derStep.locator("[data-reading-unit]").count()===0,"DER single-step opens on its mechanism rather than a separate formula lesson");
+ check((await derStep.locator(".ds-total-formula").textContent()).includes("L_DER"),"DER keeps the joint objective beside the shared network");
  for(const [name,selector] of [["kl-gradient","[data-reading-unit=kl-math] .lesson-reading > .lesson-derivation:last-child"],["kl-nonnegative","[data-reading-unit=kl-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-gradient","[data-reading-unit=logit-math] .lesson-reading > .lesson-columns.lesson-derivation"],["logit-shift-proof","[data-reading-unit=logit-math] .lesson-reading > .lesson-derivation:last-child"]])await shot(name,selector);
  check(await page.locator("[data-scene=lifecycle] [data-reading-unit]").count()===0,"D1 retains its existing sidebar formula");
  const kl=page.locator("[data-math-explorer=kl]"),point=kl.locator("[data-plot-x]"),algorithm=page.locator("[data-design=kl]"),phase=await algorithm.getAttribute("data-progress");
@@ -50,8 +56,6 @@ export async function formulaLessonChecks({page,base,check,shot}){
  await square.getByRole("button",{name:"暂停",exact:true}).click();const d=await sp.getAttribute("data-plot-x");await page.clock.runFor(700);check(d===await sp.getAttribute("data-plot-x"),"Scalar update pauses");
  await square.locator("[data-math-step]").click();await page.clock.runFor(3600);near(+(await sp.getAttribute("data-plot-x")),-.6,"One scalar step ends at the computed negative-gradient update");
  await square.getByRole("button",{name:"恢复起始差值",exact:true}).click();near(+(await sp.getAttribute("data-plot-x")),-1,"Reset restores original coordinate");
- const retention=page.locator("[data-math-explorer=retention]");
- await setRange(retention.locator("input"),20);near(+(await retention.locator("[data-plot-x]").getAttribute("data-plot-y")),retentionProbability(2,20),"Retention graph uses the correct integer count");
  await page.emulateMedia({reducedMotion:"reduce"});await page.goto(base);
  check(await page.locator("[data-math-sweep]").isDisabled(),"Reduced motion prevents automatic sweep");
  check(await page.locator("[data-math-step]").isDisabled(),"Reduced motion uses complete scalar state");
