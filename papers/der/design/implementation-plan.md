@@ -626,3 +626,15 @@ P5 定向检查与已修复问题：新增 teaching-front 浏览器检查、真�
 前半程及顶栏明确采用 Microsoft YaHei 优先的同一正文栈，强调/列表/按钮使用同一字体族，数学排版和受保护 SVG 字体保持原职责。CDP CSS.getPlatformFontsForNode 实测：修复前同段调用 Segoe UI 与 Microsoft YaHei；修复后正文中英文字与按钮均为 Microsoft YaHei（少量 Unicode 下标由系统符号字形补足）。新增共同左边线、正文/强调/列表/控件字体族一致、流程宽度与无溢出的浏览器断言。
 
 TypeScript/Vite build PASS；front-only 两档198项 PASS（含新增6项排版回归）。已实看修复后的桥接与两轮预讲解；最终完整回归、定向公共 QA 与证据刷新继续执行。此前整篇2652项和公共56状态PASS仅覆盖截图返修之前，不把它们冒称为返修后的最终结果。
+
+### 本轮最终结果与证据（2026-10-30）
+
+截图返修提交 c6cf540 后，未过滤 npm run test:browser 双视口共2658项PASS；公共全篇56状态PASS，返修影响范围（阅读+生命周期）另28状态PASS，GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS 均通过。来源/字体与 Agent 阅读复核、真实播放、四项兼容状态及证据路径统一见 audit/final-check.md 的本轮最终审查。上游当前输出检查器与真实F11仍NOT_RUN，不扩大为W9人审通过。
+
+Agent 逐段阅读与截图检查后，保留最终双视口阅读图、S2双态、S3三态、两轮预讲解、D1关键帧/专注/菜单，以及播放状态采样。因原公共runner整页截图过长不适于文字审查，另使用文档坐标截取各完整教学段落，实际查看更新后的布局。用户反馈前的视觉结果不会代替本轮返修复核。
+
+清理：已读报告并查看代表截图后，将轻量报告复制到当前会话 visualizations 的 der-front-qa。按本次输出的确切路径清理三批公共runner产物：run-2026-10-30T08-33-50-764Z、run-2026-10-30T08-43-42-005Z、run-2026-10-30T08-54-41-392Z；三次均返回 CLEANED，随后 Test-Path 均为False。保留可交接的必要截图/状态JSON于visualizations，不放入Git或冒充获批基线。临时脚本与视频在最后收尾时按确切路径清理。
+
+最终微调：为避免13px工作台眉题的额外字距把 AFTER UPDATE · RESERVOIR 挤出局部框，仅将 wb-panel-kicker 字距设为0；不改文本、坐标、字号或训练逻辑。对该变化只重跑 build 与 W8/工作台布局的受影响检查，结果见审计补充。
+
+最终字距微调后的 build、W8 854项、工作台避让24项均PASS；已实看刷新关键帧。十个临时脚本/配置和临时视频已清理，必要报告、截图及播放JSON留在当前会话visualizations；本任务5195预览已停止，复看命令见README。最终源码/文档提交后检查git status，不留本轮临时产物。

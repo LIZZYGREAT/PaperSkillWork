@@ -9,7 +9,7 @@ PASS。2026-10-29 用户在本聊天直接确认“W7我认为是通过的”。
 Final source path (paths.publish_source):
 C:/Users/lenovo/Desktop/Projects/PaperWork/PaperSkillWork/papers/der/web/enhanced
 
-与 implementation-plan.md、实际 React/Vite 生产构建一致。页面为 7 个阅读单元 / 10 个注册模块，I01–I11 全部实现；支持项和 Reference 按原计划覆盖。
+与 implementation-plan.md、实际 React/Vite 生产构建一致。页面当前为 7 个阅读单元 / 9 个注册模块（2026-10-30 重构后），I01–I11 全部实现；支持项和 Reference 按原计划覆盖。
 
 Node24.18.0 / Vite6.4.3 / Edge156.0.4314.50。相邻 PaperSkill HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，缓存 upstream/main=c096ab528186f754ca3f8680ace8b12f6d1cf341。syntax/output 脚本 Git blobs 分别为 2bcfa6f815054ee498574c51cef05f0c315b4298、1a58ca06bd9fa47b6730904f1622189011cc32fe。
 
@@ -218,3 +218,47 @@ S7/S8 的 W8 工程实现和 Agent 视觉复核已完成：双视口生产浏览
 先前全量配置的诊断也保留在本次记录范围内：初次 runner 在沙箱内无法连接本地预览服务，未生成截图；授权本地 Chromium 预览连接后，全量配置完成 40 项截图，但未改动页面的旧 selector 使 augmentation `shared-target`、DER++ `separate-replay`、evidence `task-il/mnist200` 在两视口失败（augmentation SVG 多匹配，另外两项选择器找不到）。这些页面不受本次代码改动影响，未在定向复核中重试；不把结果表述成全站 PASS。相应报告目录为 `.visual-qa/run-2026-10-29T16-14-32-663Z` 和 `.visual-qa/run-2026-10-29T16-16-07-906Z`。
 
 本轮三份 runner run 目录均在报告与诊断记录后用 CLI 按精确路径清理，返回 `CLEANED` 且逐一核对 `Test-Path=False`；临时定向配置也已移除。W9 `Overall=PENDING`、`HUMAN_ACCEPTANCE=PENDING`；W10 未启动、`paper.yaml` 未改。
+
+## 本轮最终审查：S1–S3 + D1 重构与截图返修（2026-10-30）
+
+本节为当前状态，覆盖上方历史双动画、自动播放与侧栏记录。用户已授权本轮正式重构及四张截图的排版返修；仅完成实施和 Agent 自检，W9 人工学习验收仍 PENDING，W10 未启动，paper.yaml 未改。
+
+实际改动：S1 用普通训练、阶梯推导和最小 ER 关系说明 GCL 约束；S2 先显示两个正确预测，点击后才呈现同一 x₁ 的完整响应和解释；S3 用同一三类数据、单个双表示实验台呈现 KL/L2 三态及必要梯度。ER/蒸馏/DER 对照与冻结时间轴接到完整两轮预讲解。D1 改为居中无侧栏、首次暂停、紧凑控制条和一句提示。旧 KL/Score 两套大型演出及专用 CSS 已移除，完整数学背景留在已有 Reference；没有新增 Kit 抽象或批准资产。
+
+截图返修取消 GCL、桥接和第二轮各自的居中偏移，章节/正文/D1标题共用左边线，第一轮右侧改为窄流程轴，收紧导语与入口留白。前半程正文中英文字、强调、列表和控件统一使用微软雅黑优先的字体栈；用 CDP 实测字体，避免仅核对 CSS 声明。数学和主 SVG 仍保留各自字体职责。
+
+| 检查 | 实际结果 |
+| --- | --- |
+| SOURCE_BUILD | PASS：npm.cmd run build，tsc + Vite 6.4.3，80 modules，退出0 |
+| 数学/状态/证据 | PASS：npm test，25/25，含新增三态损失与有限差分梯度；原生命周期/训练/Reservoir/论文源表检查保留 |
+| 完整浏览器 | PASS：最终前半程字体与排版修复后 npm run test:browser，1440×900 / 1920×1080，共2658项；Edge156.0.4314.56、Node24.18.0 |
+| 定向前半程 | PASS：front-only 两视口198项，含共同左边线、字体族一致、流程宽度、揭示顺序、三态和 Reference |
+| D1 动画保护 | PASS：与 c256cdf 比对，主 SVG 和内部绘图组件完全一致；lifecycle-model.ts / SceneTransport.tsx 无差异。九段浏览器定向1494项PASS |
+| 真实时钟播放 | PASS：D1九阶段/310次采样/67348ms；四轮工作台21阶段/458次采样/127478ms。未模拟或加速时钟 |
+| 后续定向 | PASS：w8-only 两视口854项；workbench-layout 两视口24项。原整篇断言发现的两处字体可读性问题仅局部修复 |
+| SUBPATH_ASSETS | PASS：完整测试从 /der-review/ 生产子路径加载，无资源/页面错误；公共56状态报告保留实际URL |
+| 公共视觉 | PASS：全篇56状态，GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS；截图返修后受影响阅读与D1另28状态PASS。均为1440×900、1920×1080、DPR1 |
+| Agent 视觉与阅读复核 | 已查看完整阅读、S2双态、S3三态、桥接/两轮、D1初始/冻结/联合更新/入池/专注/菜单。此为Agent检查，不代替用户学习验收 |
+| FULLSCREEN_LAYOUT | PASS；1920×1080仅布局模拟 |
+| FULLSCREEN_REAL | NOT_RUN：Computer Use 无法可靠识别当前浏览器URL而停止，已停止桌面输入 |
+| 当前官方上游检查 | NOT_RUN：相邻检查器未全部匹配当前官方版本；本地 syntax/output 诊断均PASS，不能冒称当前官方全通过 |
+| 结构 | python tools/paper.py check der：PASS；W9/W10仍PENDING |
+
+三态计算：z=(2,1,0) 固定；a=(2,1,0) 时 KL=0、L2=0；a=(2,0,1) 时 KL≈0.154698、L2=2、L2梯度=(0,−2,2)；a=(3,2,1) 时 KL=0、L2=3。D1 独立未来响应 aⱼ=(1,2,0) 与比较时刻明确区分。
+
+上游诊断记录：相邻 PaperSkill HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c；官方 upstream/main 经本机 git fetch 成功更新至99e8bf597ab764871d7251a952e2752eb91764dc（沙箱SSH最初失败，本机重跑退出0）。syntax-check 工作文件与官方 blob 同为2bcfa6f815054ee498574c51cef05f0c315b4298；validate-output 本地1a58ca06bd9fa47b6730904f1622189011cc32fe，官方9ec76b6974f262fca7b9611c4a485dd2275fe76c，不一致。未改邻仓工作文件；分别直接运行已有 syntax-check.js <publish_source> --require-parser 和 validate-output.js <publish_source>，均退出0、48源码解析、7单元9模块。两项当前官方状态保守记NOT_RUN。本仓根无 package.json，不机械执行 validate/catalog/validate:pr/build:paper；未运行 Import/Preflight/PR/发布。
+
+证据根目录：C:/Users/lenovo/.codex/visualizations/2026/10/30/01a18bd5-6730-78e3-8ecd-803b82b63c34/。
+
+- der-front/：最终双视口逐段阅读图（s1-s2、s2-closed/open、s3-equal/preference/shifted、s3-reading、bridge、u3-reading、d1-prelesson），D1起始/冻结/联合更新/入池/专注/菜单；文档坐标采集避免长元素自动滚动的顶栏伪影。
+- der-front-playback/lifecycle/playback.json、phase-*.png：九阶段真实播放；der-front-playback/playback.json 与 phase-*.png 为四轮真实播放。临时视频清理后仍保留时钟/状态采样证据。
+- der-front-workbench/：两档避让关键帧。
+- der-front-qa/：first-run-fail.md（旧选择器诊断）、full-pass.md/json、typography-pass.md/json。报告原截图路径清理后，以 der-front/ 的刷新阅读证据为准。
+
+公共runner曾因四种旧选择器失败（增强嵌套SVG、DER++旧按钮、证据旧切换器）；保留覆盖并修正后全通过，没有整体跳过。报告的4项11px警告均在未重构的证据页眉题/来源行，主要正文/数值保持可读，本轮不重设计证据页。整体几何通过不能消除人工阅读发现的问题；用户截图返修已另行实施与复测。
+
+Agent 阅读复核：有限回放自然引出标签的信息缺口；同一输入对照引出整组监督；数学正文给出目标与优化变量；共同平移只说明约束差异；蒸馏来源不被泛化为依赖任务边界；两轮说明明确先冻结、再更新、再入池及同网一次联合更新。仍需用户结合阅读体验确认这些表达；不自动登记人审PASS。
+
+收尾补充：最后仅调整工作台眉题字距，build PASS；w8-only 双视口854项、workbench-layout双视口24项复跑PASS，已看刷新截图，眉题落在局部框内。此前完整2658项覆盖 c6cf540 的前半程排版修复；这项后续局部字距变化按影响范围验证。保护比对最终仍为主SVG/内部组件与 c256cdf 一致。
+
+三批公共runner临时目录均已按报告精确路径清理并确认不存在；本轮十个临时脚本/配置和工作台临时视频已按确切路径删除，播放JSON与必要关键帧保留。只停止本任务启动的5195预览；未结束用户已有服务。可按 README 的 npm run preview -- --host 127.0.0.1 --port 5195 --strictPort 重新打开正式 / 阅读路径和 ?review=1&focus=lifecycle#lifecycle-player。

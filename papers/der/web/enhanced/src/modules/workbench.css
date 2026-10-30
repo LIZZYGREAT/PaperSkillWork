@@ -233,7 +233,7 @@
 .wb-canvas .wb-panel-kicker {
   fill: #78867b;
   font: 13px var(--rk-font-mono);
-  letter-spacing: .065em;
+  letter-spacing: 0;
 }
 .wb-canvas .wb-panel-title { fill: #304b3a; font-size: 15px; font-weight: 650; }
 .wb-canvas .wb-panel-value { fill: #42594a; font: 14px var(--rk-font-mono); }
