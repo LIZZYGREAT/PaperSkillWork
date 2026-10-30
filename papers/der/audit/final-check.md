@@ -262,3 +262,5 @@ Agent 阅读复核：有限回放自然引出标签的信息缺口；同一输�
 收尾补充：最后仅调整工作台眉题字距，build PASS；w8-only 双视口854项、workbench-layout双视口24项复跑PASS，已看刷新截图，眉题落在局部框内。此前完整2658项覆盖 c6cf540 的前半程排版修复；这项后续局部字距变化按影响范围验证。保护比对最终仍为主SVG/内部组件与 c256cdf 一致。
 
 三批公共runner临时目录均已按报告精确路径清理并确认不存在；本轮十个临时脚本/配置和工作台临时视频已按确切路径删除，播放JSON与必要关键帧保留。只停止本任务启动的5195预览；未结束用户已有服务。可按 README 的 npm run preview -- --host 127.0.0.1 --port 5195 --strictPort 重新打开正式 / 阅读路径和 ?review=1&focus=lifecycle#lifecycle-player。
+
+2026-10-30 S2柱条局部返修：按用户要求统一类别标签列和数值列，三类柱条左边线一致。build PASS；生产浏览器两档桌面均测得每卡三条轨道左偏移88px、宽427.984375px，已看截图，无页面溢出。仅该布局变化，未重跑无关算法/动画套件。证据：当前会话visualizations/der-bar-alignment/aligned-1440.png、aligned-1920.png。

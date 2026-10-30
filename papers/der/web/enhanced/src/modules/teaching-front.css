@@ -32,7 +32,7 @@
 .prediction-pair{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin:24px 0}
 .prediction-sheet{border:1px solid var(--rk-line);border-radius:12px;padding:28px 32px;background:#fff}
 .prediction-sheet:nth-child(2){background:#f6f8f3}.prediction-answer{font-size:21px;margin:0!important}.prediction-answer strong{font-size:29px;margin-left:14px}.prediction-answer>span{float:right;font-size:15px;color:var(--rk-accent);padding-top:6px}
-.response-reveal{margin-top:24px}.response-reveal .rk-response-meter{margin-block:12px}
+.response-reveal{margin-top:24px}.response-reveal .rk-response-meter{margin-block:12px;grid-template-columns:6em minmax(48px,1fr) 2ch}
 .response-toggle{border:1px solid #b7cab8;background:#eef4eb;color:var(--rk-accent);font:600 16px var(--rk-font-body);padding:12px 22px;border-radius:8px;cursor:pointer}
 .response-finding{margin-top:28px;max-width:880px;border-left:3px solid #b7cab8;padding:6px 0 0 24px}
 .label-investigation>.caption{margin-top:24px}.front-handoff{margin-top:36px;padding-top:24px;border-top:1px solid var(--rk-line);font-size:20px}.front-handoff a{font-size:16px;color:var(--rk-accent)}

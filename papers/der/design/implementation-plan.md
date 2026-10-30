@@ -638,3 +638,9 @@ Agent 逐段阅读与截图检查后，保留最终双视口阅读图、S2双态
 最终微调：为避免13px工作台眉题的额外字距把 AFTER UPDATE · RESERVOIR 挤出局部框，仅将 wb-panel-kicker 字距设为0；不改文本、坐标、字号或训练逻辑。对该变化只重跑 build 与 W8/工作台布局的受影响检查，结果见审计补充。
 
 最终字距微调后的 build、W8 854项、工作台避让24项均PASS；已实看刷新关键帧。十个临时脚本/配置和临时视频已清理，必要报告、截图及播放JSON留在当前会话visualizations；本任务5195预览已停止，复看命令见README。最终源码/文档提交后检查git status，不留本轮临时产物。
+
+### S2 柱条左边线修复（2026-10-30）
+
+按用户截图，将 S2 两卡的响应行改为统一标签列与数值列，避免各行按 Claude/GPT/DeepSeek 的文字长度分别决定柱条起点。仅修改 DER 局部 response-reveal 布局，不动 Kit、数值或 D1。
+
+build PASS；生产 Edge 双视口1440×900/1920×1080核对：两卡各三条柱条相对左偏移均88px、轨道宽均427.984375px，无页面溢出；已实看两张截图。证据在当前会话 visualizations/der-bar-alignment/aligned-1440.png、aligned-1920.png。临时浏览器/HTTP服务已退出，检查脚本随后清理。
