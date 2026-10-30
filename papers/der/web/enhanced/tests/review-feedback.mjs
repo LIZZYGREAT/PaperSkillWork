@@ -16,8 +16,8 @@ export async function reviewFeedbackChecks({page,base,check,shot}){
  check(ranges.every(r=>r.meanError<1&&r.spread===r.expected),'Exact mean markers align and source uncertainty remains literal text: '+JSON.stringify(ranges));
  await shot('feedback-evidence','[data-scene=evidence]');
  const lifecycle=page.locator('[data-scene=lifecycle]');await lifecycle.locator('select').selectOption('2');
- const heading=await lifecycle.locator(':scope > header').boundingBox(),stage=await lifecycle.locator('.lifecycle-viewport').boundingBox();
- check(Math.abs(heading.x-stage.x)<1&&Math.abs(heading.width-stage.width)<1,'Lifecycle heading matches the centered stage measure');
+ const heading=await lifecycle.locator(':scope > header').boundingBox(),reading=await page.locator('.reading-layout').boundingBox();
+ check(Math.abs(heading.x-reading.x)<1&&Math.abs(heading.width-reading.width)<1,'Lifecycle heading shares the main prose alignment');
  const network=await lifecycle.locator('[data-current-model]').elementHandle();
  for(const clip of [2,5,8]){
   await lifecycle.locator('select').selectOption(String(clip));

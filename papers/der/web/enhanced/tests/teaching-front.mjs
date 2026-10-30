@@ -25,6 +25,16 @@ export async function teachingFrontChecks({page,base,check,shot}) {
   await shot('s3-'+RESPONSE_CASES[i].id,'.response-lab');
  }
  await shot('s3-reading','#U2-probability');await shot('bridge','.supervision-bridge');await shot('d1-prelesson','.lifecycle-prelesson');
+ const alignment=await page.evaluate(()=>{
+  const left=document.querySelector('.reading-layout').getBoundingClientRect().left;
+  const selectors=['.gcl-context','.supervision-bridge','.lifecycle-prelesson','.second-round','.lifecycle-prelesson>.front-question','.lifecycle-scene>header'];
+  return selectors.map(selector=>({selector,error:Math.abs(document.querySelector(selector).getBoundingClientRect().left-left)}));
+ });
+ check(alignment.every(item=>item.error<2),'Section headings and prose share one left edge: '+JSON.stringify(alignment));
+ const type=await page.evaluate(()=>['.gcl-context p','.gcl-context strong','.first-round p','.round-state li','.second-round p','.lifecycle-start'].map(selector=>getComputedStyle(document.querySelector(selector)).fontFamily));
+ check(type.every(family=>family===type[0]&&family.startsWith('"Microsoft YaHei"')),'Body, emphasis, lists and controls share the same prose font');
+ const round=await page.locator('.first-round').evaluate(el=>{const flow=el.querySelector('.round-state').getBoundingClientRect(),text=el.firstElementChild.getBoundingClientRect();return {flow:flow.width,text:text.width,outside:el.scrollWidth>el.clientWidth+1};});
+ check(round.flow<round.text&&!round.outside,'The compact flow leaves sufficient width for causal prose without an oversized empty panel');
  const pre=await page.locator('.lifecycle-prelesson').boundingBox(),d1=await page.locator('[data-scene=lifecycle]').boundingBox();
  check(pre.y+pre.height<=d1.y+1,'Both full training rounds precede D1');
  const scene=page.locator('[data-scene=lifecycle]');
