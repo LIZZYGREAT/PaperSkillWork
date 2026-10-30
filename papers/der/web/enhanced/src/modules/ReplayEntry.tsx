@@ -19,7 +19,7 @@ function Prediction({ current, revealed }: { current?: boolean; revealed: boolea
 }
 
 export default function ReplayEntry() {
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState(true);
   return <div className="front-teaching" data-core-items="I01 I02">
     <section className="training-origin" aria-labelledby="training-origin-title">
       <div><p className="eyebrow">S1 · 先从熟悉的训练开始</p><h3 id="training-origin-title">数据向前走，参数也在改变。</h3>
@@ -42,7 +42,7 @@ export default function ReplayEntry() {
     <p className="front-question">有限回放已经让旧样本可以重新参与训练。<br /><strong>但一张旧图片与一个真实标签，究竟保存了多少过去的模型知识？</strong></p>
     <section className="label-investigation" data-label-revealed={revealed} aria-labelledby="label-investigation-title">
       <div className="same-input"><SampleToken sampleId="x1" label="同一旧输入 x₁"><ModelMark /></SampleToken><p>真实标签 y₁ = Claude<br /><small>合成分类示例 · Claude / GPT / DeepSeek</small></p></div>
-      <p className="eyebrow">S2 · 先只看最终答案</p><h3 id="label-investigation-title">两次都预测正确，判断就没有变吗？</h3>
+      <p className="eyebrow">S2 · 最终答案与整组响应</p><h3 id="label-investigation-title">两次都预测正确，判断就没有变吗？</h3>
       <div className="prediction-pair"><Prediction revealed={revealed} /><Prediction current revealed={revealed} /></div>
       <button className="response-toggle" aria-expanded={revealed} aria-controls="response-finding" onClick={() => setRevealed(!revealed)}>{revealed ? "收起整组响应" : "查看整组响应"}</button>
       {revealed && <div id="response-finding" className="response-finding" aria-live="polite"><h4>最高类别相同，另外两类的排序却交换了。</h4><p>真实标签规定了正确类别，却不记录旧模型对其他类别的完整判断。训练分类<Term id="ce">交叉熵</Term>会影响所有输出，但没有要求恢复曾经的那组具体分数。</p><p>如果想保留过去对各类别的响应，就需要额外记录一组输出作为历史监督。它可以是 <Term id="softmax" /> 后的概率，也可以是原始 <Term id="logits" />。这些超出单个类别答案的响应信息，常被称为 <strong>Dark Knowledge（暗知识）</strong>；记录的整组输出可用作软目标。</p></div>}

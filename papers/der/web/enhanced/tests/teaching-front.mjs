@@ -2,9 +2,10 @@ import {responseComparison,RESPONSE_CASES,LABEL_OLD,LABEL_CURRENT} from '../src/
 export async function teachingFrontChecks({page,base,check,shot}) {
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
  const label=page.locator('.label-investigation'),button=label.locator('.response-toggle');
- check(await button.getAttribute('aria-expanded')==='false'&&await label.locator('[data-response]').count()===0,'S2 initially shows predictions without detailed responses');
- check(await label.locator('.prediction-answer').count()===2&&await label.locator('.response-finding').count()===0&&!(await label.innerText()).includes('(2,0,1)'),'Two correct predictions precede the conclusion');
- await shot('s1-s2-reading','#U1-replay-entry');await shot('s2-closed','.label-investigation');
+ check(await button.getAttribute('aria-expanded')==='true'&&await label.locator('[data-response]').count()===2,'S2 initially expands both full responses');
+ check(await label.locator('.prediction-answer').count()===2&&await label.locator('.response-finding').isVisible(),'Predictions and their explanation are visible on first entry');
+ await shot('s1-s2-reading','#U1-replay-entry');await shot('s2-default-expanded','.label-investigation');
+ await button.click();check(await button.getAttribute('aria-expanded')==='false'&&await label.locator('[data-response]').count()===0,'The initially open responses can still be collapsed');await shot('s2-closed','.label-investigation');
  await button.focus();await page.keyboard.press('Enter');
  check(await button.getAttribute('aria-expanded')==='true','Response reveal works by keyboard');
  for(const [id,values] of [['history',LABEL_OLD],['current',LABEL_CURRENT]]) {
