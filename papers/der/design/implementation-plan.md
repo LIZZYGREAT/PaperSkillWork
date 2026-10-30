@@ -339,14 +339,14 @@ DER 的最后一项省略；空池两种回放项均省略。所有梯度在进�
 
 ## Primary Spine Mapping
 
-以下是已确认方向的实现覆盖。S3 虽分两单元，结构化阶段只登记一次；I03 主讲 U2，I04/I05 主讲 U3。S1/S2、S5/S6 分别共用阅读单元，CORE 不重复分配。
+以下为当前实现覆盖：S3 的 I03/I04 在 U2 单一实验台讲解，I05 在 U3 桥接与 D1；结构化阶段仅登记一次。S1/S2、S5/S6 分别共用阅读单元，CORE 不重复分配。
 
 ```yaml
 implementation:
   stages:
     - {id: S1, page: U1-replay-entry, core_items: [I01], evidence_refs: [C01, C11, C16], primary_vehicle: '问题正文与有限回放静态对照', reusable_pattern: null, reason: '先建立旧数据不可完整取得的缺口，再给出有限 ER'}
     - {id: S2, page: U1-replay-entry, core_items: [I02], evidence_refs: [C11, C10, B01, B03], primary_vehicle: '同图同标签与整组响应对照', reusable_pattern: null, reason: '直接承接 ER，并揭示标签没有保存的历史行为'}
-    - {id: S3, page: 'U2-probability / U3-logit-memory', core_items: [I03, I04, I05], evidence_refs: [C10, C02, C13, C12, M02, M06, B01, B02, B03, E01, E02], primary_vehicle: '先概率 KL 再 logits 平方匹配的两段可计算对照', reusable_pattern: null, reason: '先验证概率监督可行，再比较表示空间，最后决定目标采集时机'}
+    - {id: S3, page: 'U2-probability / U3-logit-memory', core_items: [I03, I04, I05], evidence_refs: [C10, C02, C13, C12, M02, M06, B01, B02, B03, E01, E02], primary_vehicle: '分层数学正文与单一双表示实验台、机制桥接及 D1 预讲解', reusable_pattern: null, reason: '先验证概率监督可行，再比较表示空间，最后决定目标采集时机'}
     - {id: S4, page: U4-reservoir-and-step, core_items: [I06, I07], evidence_refs: [C06, M03, I01, C02, C04, M04, M06, E02], primary_vehicle: '槽位抽签与单步读写顺序演示', reusable_pattern: null, reason: '记录内容确定后解决在线选留，再闭合基本 DER'}
     - {id: S5, page: U5-consistency-and-correction, core_items: [I08], evidence_refs: [C14, M06], primary_vehicle: '同一原图的两种增强视图与固定目标对照', reusable_pattern: null, reason: '恢复前段暂固定视图的真实训练条件'}
     - {id: S6, page: U5-consistency-and-correction, core_items: [I09], evidence_refs: [C03, C05, C15, E04], primary_vehicle: '错误历史引出标签监督与三损失同网络图', reusable_pattern: null, reason: '从一致但可能错误的目标自然引出 DER++'}
@@ -612,3 +612,9 @@ P4 已实施：正常/专注均采用居中且保持 1120:640 比例的舞台，
 保护比对：主 SVG 字符串、type Scene 至内部绘图组件与起点 c256cdf 完全一致（换行规范化），lifecycle-model.ts 与 SceneTransport.tsx 未改。npm test 25/25、build PASS；更新布局与初次暂停断言后，lifecycle-only 两视口共 1,494 项 PASS，保留九段几何/身份/冻结/写入顺序及键盘、reduced motion、DOM 身份回归。已审看 1440 普通起始、专注终态与两轮预讲解；修正 review.css 对标题宽度的覆盖。截图器长元素自动滚动会让 sticky 顶栏进入局部截图，最终阅读证据将用文档坐标截图避免这个采集伪影。
 
 真实 F11：Computer Use 初始化及窗口定位后，工具因无法可靠识别当前浏览器 URL 而终止，已停止桌面输入；FULLSCREEN_REAL=NOT_RUN，不能以 headless 双视口替代。整篇与最终视觉仍在 P5 继续。
+
+P5 定向检查与已修复问题：新增 teaching-front 浏览器检查、真实 D1 播放检查；保留原生命周期、数学、工作台与证据检查。旧侧栏/自动播放/双实验台断言已迁移。Reference 平方匹配表改用同一 RESPONSE_CASES；历史 z 与 S2 旧响应共用同一常量。S2 未展开时不再在图注泄露当前向量。保留 #logit-matching 深链，公式面板取消继承的 overflow:auto。
+
+整篇回归发现此前基线遗留的两处实际字号问题：DER 单步 ds-vector-note 12→13px（原缩放后11.606px）、工作台 wb-panel-kicker 10→13px（原9.547px）。只改这两个局部规则，布局/数值/状态/运动不改。旧证据页测试仍寻找已移除的切换器与误差带，已改为核对现有三幅静态卡片的均值标记与原表 ± 文本，不恢复旧 UI。W8 几何诊断增加场景/类名/实际字号，阈值未放宽。
+
+最新定向结果：front-only 双视口192项 PASS；w8-only 双视口854项 PASS。公共 QA 首轮本轮阅读与 D1 全通过，整体 FAIL 来自四种旧选择器（增强嵌套svg、DER++旧按钮、证据页旧切换器），已修正原 visual-qa.json 并重跑，未删除状态覆盖。真实连续播放：D1 9阶段、310次采样、67,348ms PASS；原工作台21阶段、458次采样、127,478ms PASS。最终整篇回归及公共报告待下方收尾记录。

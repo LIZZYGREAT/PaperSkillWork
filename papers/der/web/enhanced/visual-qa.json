@@ -47,11 +47,99 @@
           "id": "opening"
         },
         {
-          "id": "s2",
+          "id": "s1-reasoning",
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": "[data-design=kl]"
+              "selector": ".reasoning-stair"
+            }
+          ]
+        },
+        {
+          "id": "s2-closed",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".label-investigation"
+            }
+          ]
+        },
+        {
+          "id": "s2-open",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".response-toggle"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".label-investigation"
+            }
+          ]
+        },
+        {
+          "id": "s3-equal",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-response-case=equal]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".response-lab"
+            }
+          ]
+        },
+        {
+          "id": "s3-preference",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-response-case=preference]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".response-lab"
+            }
+          ]
+        },
+        {
+          "id": "s3-shifted",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-response-case=shifted]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".response-lab"
+            }
+          ]
+        },
+        {
+          "id": "bridge",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".supervision-bridge"
+            }
+          ]
+        },
+        {
+          "id": "two-rounds",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".lifecycle-prelesson"
+            }
+          ]
+        },
+        {
+          "id": "d1-start",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-scene=lifecycle]"
             }
           ]
         },
@@ -292,7 +380,7 @@
             },
             {
               "type": "scrollIntoView",
-              "selector": "[data-scene=augmentation] svg"
+              "selector": "[data-scene=augmentation] .aug-canvas"
             }
           ]
         }
@@ -333,7 +421,7 @@
           "actions": [
             {
               "type": "click",
-              "selector": "[data-scene=der-plus] .scene-options button:has-text('切换不同记录')"
+              "selector": "[data-scene=der-plus] [data-overlap-choice=different]"
             },
             {
               "type": "selectOption",
@@ -479,14 +567,20 @@
       "path": "./?focus=evidence",
       "states": [
         {
-          "id": "class-il"
-        },
-        {
-          "id": "task-il",
+          "id": "cifar-class",
           "actions": [
             {
-              "type": "click",
-              "selector": "[data-experiment-select='1']"
+              "type": "scrollIntoView",
+              "selector": "[data-experiment=cifar-class]"
+            }
+          ]
+        },
+        {
+          "id": "mnist500",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-experiment=mnist500]"
             }
           ]
         },
@@ -494,8 +588,8 @@
           "id": "mnist200",
           "actions": [
             {
-              "type": "click",
-              "selector": "[data-experiment-select='3']"
+              "type": "scrollIntoView",
+              "selector": "[data-experiment=mnist200]"
             }
           ]
         }
@@ -506,8 +600,8 @@
     "checkPageHorizontalOverflow": true,
     "minSemanticFontSizePx": 12,
     "clippingSelectors": [
-      ".kl-main-equation .equation",
-      ".score-main-equation .equation"
+      ".response-lesson .math-panel .equation",
+      ".response-losses"
     ],
     "stableAcrossStates": []
   }

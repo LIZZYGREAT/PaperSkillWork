@@ -2,10 +2,11 @@
 import { MODEL_CLASSES } from "../data/model-classes.ts";
 export const CLASSES = MODEL_CLASSES;
 export { PROBABILITY_CLASSES } from "../data/model-classes.ts";
-export const LABEL_OLD = [2, 1, 0] as const;
+export const HISTORY_Z = [2, 1, 0] as const;
+export const LABEL_OLD = HISTORY_Z;
 export const LABEL_CURRENT = [2, 0, 1] as const;
 export const REFERENCE_P = [0.8, 0.2] as const;
-export const HISTORY_Z = [2, 1, 0] as const;
+
 
 /** S2/S3 share x₁ and class coordinates. D1 has a separate, given later response. */
 export const RESPONSE_CASES = [

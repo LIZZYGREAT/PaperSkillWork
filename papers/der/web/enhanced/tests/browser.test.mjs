@@ -1,3 +1,4 @@
+import {teachingFrontChecks} from "./teaching-front.mjs";
 import {formulaLessonChecks} from "./formula-lessons.mjs";
 import {reviewFeedbackChecks} from "./review-feedback.mjs";
 import {fullW8Checks} from "./w8-browser.mjs";
@@ -39,34 +40,17 @@ try{
   page.on("pageerror",e=>errors.push(e.message));page.on("requestfailed",r=>errors.push(r.url()));page.on("response",r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`)});
   await page.clock.install();await page.clock.pauseAt(new Date());
   const shot=async(name,selector)=>{if(!output)return;const target=selector?page.locator(selector):page;await target.screenshot({path:resolve(output,`${name}-${width}.png`)});};
+  if(process.argv.includes("--lifecycle-only")){await lifecycleBrowserChecks({page,base,check,shot});await lifecycleFocusBrowserChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`LIFECYCLE_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
+  if(process.argv.includes("--front-only")){await teachingFrontChecks({page,base,check,shot});await formulaLessonChecks({page,base,check,shot});await reviewFeedbackChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`FRONT_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   if(process.argv.includes("--formula-only")){await formulaLessonChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`FORMULA_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   if(process.argv.includes("--review-feedback")){await reviewFeedbackChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`FEEDBACK_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   if(process.argv.includes("--w8-only")){await fullW8Checks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`W8_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   await page.goto(base);await page.evaluate(()=>document.fonts.ready);
-  check(await page.locator("[data-design]").count()===2,"Approved scenes are in real reading source");
+  check(await page.locator("[data-design=response-comparison]").count()===1,"One comparison lab is in the reading source");
   check(await page.locator("iframe").count()===0,"Production does not bridge local services");
   check(await page.locator("#reservoir").count()===1,"Reservoir is in reading spine");
   if(!process.argv.includes("--reservoir-only")){
-  for(const name of ["kl","logits"]){
-   const scene=page.locator(`[data-design=${name}]`);
-   check(await scene.getAttribute("data-status")==="paused","Initial scene is paused");
-   for(const c of name==="kl"?["near","equal","reversed"]:["swapped","shifted"]){
-    await scene.locator(`[data-case=${c}]`).click();
-    for(let i=0;i<(name==="kl"?6:4);i++){
-     await scene.locator(`[data-frame="${i}"]`).click();
-     await scene.locator("[data-play]").click();await page.clock.runFor(1900);await scene.locator("[data-play]").click();
-     const data=await scene.locator(".scene-canvas").evaluate(el=>({...el.dataset}));
-     if(name==="kl"){const p=data.p.split(",").map(Number),q=data.q.split(",").map(Number);near(+data.loss,probabilityComparison(p,q).kl,"KL source math remains equal");}
-     else{const result=logitComparison(data.z.split(",").map(Number),data.a.split(",").map(Number));near(+data.loss,result.squaredDistance,"Scores and displayed sum share model");if(c==="shifted")near(result.probabilityKL,0,"Common shift preserves probabilities");}
-     if(c===(name==="kl"?"near":"shifted")&&[1,2,3].includes(i))await shot(`${name}-${i}`,`[data-design=${name}]`);
-    }
-   }
-   const bad=await scene.evaluate(el=>[...el.querySelectorAll(".frames button,.stage math,.kl-main-equation math,.score-main-equation math,.source-tag,.narration")].filter(e=>e.scrollWidth>e.clientWidth+2).map(e=>e.className||e.tagName));
-   check(!bad.length,`Core math and labels fit ${name}: ${bad}`);
-   await scene.locator("[data-frame='0']").click();await scene.locator("[data-play]").click();await page.clock.runFor(600);await scene.locator("[data-play]").click();
-   const paused=await scene.getAttribute("data-progress");await page.clock.runFor(500);check(paused===await scene.getAttribute("data-progress"),"Pause holds exact frame");
-   await scene.locator("[data-back]").click();near(+(await scene.getAttribute("data-progress")),0,"Back first reaches current stage start");
-  }
+  await teachingFrontChecks({page,base,check,shot});
   await page.locator(".site-header .text-button").click();
   await page.locator("[data-reference-term=reservoir]").click();
   check((await page.locator("[data-reference-detail]").innerText()).includes("K/n"),"Probability explanation lives in Reference");

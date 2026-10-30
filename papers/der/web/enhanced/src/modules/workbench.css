@@ -232,7 +232,7 @@
 .wb-canvas .wb-input-panel { fill: #fdfefb; }
 .wb-canvas .wb-panel-kicker {
   fill: #78867b;
-  font: 10px var(--rk-font-mono);
+  font: 13px var(--rk-font-mono);
   letter-spacing: .065em;
 }
 .wb-canvas .wb-panel-title { fill: #304b3a; font-size: 15px; font-weight: 650; }

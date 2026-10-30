@@ -10,7 +10,7 @@ export async function fullW8Checks({page,base,check,shot}){
   for(const el of svg.querySelectorAll("text,rect,circle,path")){
    if(!visible(el))continue;const r=el.getBoundingClientRect();
    if(r.width&&r.height&&(r.left<frame.left-2||r.right>frame.right+2||r.top<frame.top-2||r.bottom>frame.bottom+2))outside.push(el.textContent||el.tagName);
-   if(el.tagName==="text"&&parseFloat(getComputedStyle(el).fontSize)*Math.hypot(el.getScreenCTM().a,el.getScreenCTM().b)<12)small.push(el.textContent);
+   if(el.tagName==="text"&&parseFloat(getComputedStyle(el).fontSize)*Math.hypot(el.getScreenCTM().a,el.getScreenCTM().b)<12)small.push(`${svg.closest("[data-scene]").dataset.scene} / ${el.getAttribute("class")} / ${el.textContent} / ${parseFloat(getComputedStyle(el).fontSize)*Math.hypot(el.getScreenCTM().a,el.getScreenCTM().b)}px`);
   }return {outside,small};
  });check(!result.outside.length,"All semantic shapes fit the canvas: "+result.outside);check(!result.small.length,"Diagram text retains >=12px actual size: "+result.small);
  };

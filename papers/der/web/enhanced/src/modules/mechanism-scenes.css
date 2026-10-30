@@ -1,7 +1,7 @@
 /* A single S3 comparison surface; no timed calculation scenes. */
 .math-explanation{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-top:44px}
 .math-panel{padding:24px 28px;background:#f3f6f0;border-radius:10px;min-width:0}
-.math-panel .equation{padding:12px 0;margin:0 0 16px;border:0;background:none}
+.response-lesson .math-panel .equation{overflow:visible;padding:12px 0;margin:0 0 16px;border:0;background:none}
 .math-panel .equation math{font-size:25px}
 .math-panel p{font-size:16px;line-height:1.8}
 .math-derivation{padding:18px 0;border-block:1px solid var(--rk-line);font-size:16px;margin:24px 0 44px}

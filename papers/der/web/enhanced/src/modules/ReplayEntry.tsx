@@ -46,7 +46,7 @@ export default function ReplayEntry() {
       <div className="prediction-pair"><Prediction revealed={revealed} /><Prediction current revealed={revealed} /></div>
       <button className="response-toggle" aria-expanded={revealed} aria-controls="response-finding" onClick={() => setRevealed(!revealed)}>{revealed ? "收起整组响应" : "查看整组响应"}</button>
       {revealed && <div id="response-finding" className="response-finding" aria-live="polite"><h4>最高类别相同，另外两类的排序却交换了。</h4><p>真实标签规定了正确类别，却不记录旧模型对其他类别的完整判断。训练分类<Term id="ce">交叉熵</Term>会影响所有输出，但没有要求恢复曾经的那组具体分数。</p><p>如果想保留过去对各类别的响应，就需要额外记录一组输出作为历史监督。它可以是 <Term id="softmax" /> 后的概率，也可以是原始 <Term id="logits" />。这些超出单个类别答案的响应信息，常被称为 <strong>Dark Knowledge（暗知识）</strong>；记录的整组输出可用作软目标。</p></div>}
-      <p className="caption">本节比较时刻的 a=(2,0,1) 将沿用到下一节。类别名称和像素图案仅用于合成分类教学。</p>
+      <p className="caption">{revealed && <>本节比较时刻的 a=(2,0,1) 将沿用到下一节。</>}类别名称和像素图案仅用于合成分类教学。</p>
     </section>
     <div className="front-handoff"><p>如果希望当前模型保持过去的整组响应，<br /><strong>怎样把“偏离了多少”定义成可计算、可优化的损失？</strong></p><a href="#U2-probability">比较两种表示空间 ↓</a></div>
   </div>;
