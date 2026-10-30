@@ -606,3 +606,9 @@ P2 已实施：正式 U2 单次挂载 ResponseComparison，U3 专责历史监督
 新增三态与有限差分核验后 npm test 25/25 PASS；npm run build 的 TypeScript/Vite PASS（80 modules），原 mspace 类型错误随旧演出移除而消失。npm install --ignore-scripts 在本机权限恢复依赖成功，lockfile 无语义差异；npm ci 的 EPERM 原因保留记录。双视口截图检查进行中。
 
 P3 已实施：用小型教师—学生关系、ER/DER 记录对照与 θ₀→θ₁→θ₂ 时间轴桥接历史监督来源；正文明确蒸馏不必然依赖边界，候选不必留池。D1 前完整呈现空记忆第一轮与同一当前网络的第二轮，强调先冻结/再更新/再入池、一次联合更新与旧 z 固定；给定未来 aⱼ 与 S2/S3 比较时刻就地区分。npm run build PASS；P1/P2 双视口截图已生成，已实看 1440 的完整 S1/S2、展开响应与偏好变化实验台，未见布局溢出。播放器本体尚待 P4。
+
+P4 已实施：正常/专注均采用居中且保持 1120:640 比例的舞台，下方水平紧凑控制区，一句观察提示及可展开来源；撤除 sidebar、has-sidebar、旧多段旁白和布局覆盖。首次暂停，舞台前增加“播放完整生命周期”入口。专注与退出使用同一舞台与同一时钟。
+
+保护比对：主 SVG 字符串、type Scene 至内部绘图组件与起点 c256cdf 完全一致（换行规范化），lifecycle-model.ts 与 SceneTransport.tsx 未改。npm test 25/25、build PASS；更新布局与初次暂停断言后，lifecycle-only 两视口共 1,494 项 PASS，保留九段几何/身份/冻结/写入顺序及键盘、reduced motion、DOM 身份回归。已审看 1440 普通起始、专注终态与两轮预讲解；修正 review.css 对标题宽度的覆盖。截图器长元素自动滚动会让 sticky 顶栏进入局部截图，最终阅读证据将用文档坐标截图避免这个采集伪影。
+
+真实 F11：Computer Use 初始化及窗口定位后，工具因无法可靠识别当前浏览器 URL 而终止，已停止桌面输入；FULLSCREEN_REAL=NOT_RUN，不能以 headless 双视口替代。整篇与最终视觉仍在 P5 继续。

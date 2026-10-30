@@ -6,12 +6,9 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
   await page.goto(`${base}?review=1#review-lifecycle`, { waitUntil: "networkidle" });
   await page.reload({ waitUntil: "networkidle" });
   const scene = page.locator("[data-scene=lifecycle]");
-  const canvasBox = await scene.locator("svg").boundingBox(), readingBox = await page.locator(".reading-layout").boundingBox();
-  check(canvasBox.width >= 1000 && (await scene.boundingBox()).width >= readingBox.width, "Sidebar layout preserves a large stage and spans at least the reading width");
-  const labelPx = await scene.locator("svg text").first().evaluate(el => parseFloat(getComputedStyle(el).fontSize) * Math.hypot(el.getScreenCTM().a, el.getScreenCTM().b));
-  check(labelPx >= 12, "Diagram labels retain a readable screen size instead of shrinking with viewport height");
-  const contextBeside = await scene.evaluate(el => { const stage=el.querySelector(".lifecycle-viewport").getBoundingClientRect(); return [".lifecycle-reading",".lifecycle-equation"].every(selector=>el.querySelector(selector).getBoundingClientRect().right<=stage.left+1)&&!!el.querySelector(".lifecycle-example-note"); });
-  check(contextBeside, "Narration, formula and expandable example share the accepted sidebar");
+  const layout = await scene.evaluate(el=>{const stage=el.querySelector('.lifecycle-viewport').getBoundingClientRect(),bar=el.querySelector('.motion-transport').getBoundingClientRect();return {w:stage.width,h:stage.height,center:Math.abs(stage.x+stage.width/2-innerWidth/2),below:bar.top>=stage.bottom-1,side:!!el.querySelector('.lifecycle-sidebar')};});
+  check(layout.w>=1000 && Math.abs(layout.w/layout.h-1.75)<.01 && layout.center<2, 'Normal D1 stage is centered and keeps the 1120/640 ratio');
+  check(layout.below&&!layout.side,'Controls follow the stage without a sidebar');
   const tick = ms => page.clock.runFor(ms);
   const state = () => scene.evaluate(el => ({ clip: Number(el.dataset.clip), p: Number(el.dataset.progress), status: el.dataset.status }));
   const at = async (clip, p) => {
@@ -63,7 +60,7 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
     check(result.crossed.length === 0, `Data/gradient corridors avoid labels at ${JSON.stringify(await state())}: ${JSON.stringify(result.crossed)}`);
     check(result.imageCrossings.length === 0, `Moving samples avoid labels at ${JSON.stringify(await state())}: ${JSON.stringify(result.imageCrossings)}`);
   };
-  check((await state()).status === "playing", "Lifecycle starts a complete playback automatically");
+  check((await state()).status === "paused" && (await state()).p === 0, "Lifecycle initially pauses at the first frame for reading");
   await scene.locator("[data-replay]").click();
   const inspectNetwork = async () => {
     const graph = await scene.locator("[data-current-model]").evaluate(el => ({
@@ -162,7 +159,7 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
   check(await scene.locator('[data-record-id="record:x1:i"]').getAttribute("data-history-z") === "2,1,0", "Reduced motion retains the historical record");
   check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Lifecycle has no page horizontal overflow");
   const fontSizes = await scene.locator(".lifecycle-reading p").evaluateAll(nodes => nodes.map(el => parseFloat(getComputedStyle(el).fontSize)));
-  check(fontSizes.length >= 2 && fontSizes.every(size => size >= 14), "Accepted sidebar explanations retain their readable 14px multi-paragraph type");
+  check(fontSizes.length === 1 && fontSizes.every(size => size >= 14), "The single observation sentence retains readable type");
   await page.emulateMedia({ reducedMotion: "no-preference" }); await tick(50);
   await scene.locator('[role=combobox]').click();
   check(await scene.locator('[role=listbox]').isVisible(), "Custom stage menu opens");
@@ -187,6 +184,8 @@ export async function lifecycleFocusBrowserChecks({ page, base, check, shot }) {
   await page.goto(`${base}?review=1&focus=lifecycle#lifecycle-player`, { waitUntil: "networkidle" });
   const navScene = page.locator('[data-scene=lifecycle]');
   const navState = () => navScene.evaluate(el => ({ clip:Number(el.dataset.clip), p:Number(el.dataset.progress), status:el.dataset.status }));
+  check((await navState()).status==='paused' && await navScene.locator('[data-back]').isDisabled(), 'Direct focus entry initially pauses at stage 01');
+  await navScene.locator('[data-play]').click(); await page.waitForTimeout(100);
   check(await navScene.locator('[data-back]').isEnabled(), 'Previous is available while stage 01 is running');
   await navScene.locator('[data-back]').click();
   let nav = await navState();
@@ -221,15 +220,15 @@ export async function lifecycleFocusBrowserChecks({ page, base, check, shot }) {
   for (let clip = 0; clip < 9; clip++) {
     await scene.locator('select').selectOption(String(clip));
     const layout = await scene.evaluate(el => {
-      const sidebar = el.querySelector('.lifecycle-sidebar'), stage = el.querySelector('.lifecycle-viewport'), svg = el.querySelector('svg');
-      const frame = el.getBoundingClientRect(), drawing = stage.getBoundingClientRect(), rail = sidebar.getBoundingClientRect();
+      const controls = el.querySelector('.motion-transport'), stage = el.querySelector('.lifecycle-viewport'), svg = el.querySelector('svg');
+      const frame = el.getBoundingClientRect(), drawing = stage.getBoundingClientRect(), rail = controls.getBoundingClientRect();
       const objects = ['[data-current-model]','[data-memory-band]','[data-response-plot]'].map(selector => {
         const b = el.querySelector(selector).getBoundingClientRect(); return {x:b.x,y:b.y,right:b.right,bottom:b.bottom};
       });
       const title = el.querySelector('.lc-model-title');
       return { frame:{x:frame.x,y:frame.y,w:frame.width,h:frame.height}, inner:[innerWidth,innerHeight],
         stage:{x:drawing.x,y:drawing.y,right:drawing.right,bottom:drawing.bottom},
-        sidebar:{x:rail.x,right:rail.right,bottom:rail.bottom,scroll:sidebar.scrollHeight,client:sidebar.clientHeight}, objects,
+        controls:{x:rail.x,y:rail.y,right:rail.right,bottom:rail.bottom,scroll:controls.scrollHeight,client:controls.clientHeight}, ratio:svg.getBoundingClientRect().width/svg.getBoundingClientRect().height, noSidebar:!el.querySelector(".lifecycle-sidebar"), objects,
         parameterFont:parseFloat(getComputedStyle(el.querySelector(".lc-theta-label")).fontSize) * Math.hypot(el.querySelector(".lc-theta-label").getScreenCTM().a,el.querySelector(".lc-theta-label").getScreenCTM().b),
         majorFont:parseFloat(getComputedStyle(title).fontSize) * Math.hypot(title.getScreenCTM().a,title.getScreenCTM().b),
         overflow:document.documentElement.scrollWidth>innerWidth+1, locked:document.body.style.overflow==='hidden',
@@ -237,12 +236,12 @@ export async function lifecycleFocusBrowserChecks({ page, base, check, shot }) {
     });
     check(Math.abs(layout.frame.x)<1 && Math.abs(layout.frame.y)<1 && Math.abs(layout.frame.w-layout.inner[0])<1 && Math.abs(layout.frame.h-layout.inner[1])<1, 'Focus workspace fills the actual browser content viewport');
     check(layout.objects.every(b => b.x >= layout.stage.x-2 && b.right <= layout.stage.right+2 && b.y >= layout.stage.y-2 && b.bottom <= layout.stage.bottom+2), `Network, outputs and memory are simultaneously inside the stage at clip ${clip}`);
-    check(layout.stage.right<=layout.inner[0]+1 && layout.stage.bottom<=layout.inner[1]+1 && layout.sidebar.bottom<=layout.inner[1]+1, 'Canvas and sidebar stay within one screen');
-    check(layout.sidebar.scroll <= layout.sidebar.client + 2, `Core sidebar content fits without scrolling at clip ${clip}: ${JSON.stringify(layout.sidebar)}`);
+    check(layout.stage.right<=layout.inner[0]+1 && layout.stage.bottom<=layout.inner[1]+1 && layout.controls.bottom<=layout.inner[1]+1 && layout.controls.y>=layout.stage.bottom-1, 'Stage and horizontal controls fit one screen without overlap');
+    check(layout.noSidebar && Math.abs(layout.ratio-1.75)<.01, 'Focus has no sidebar and preserves canvas ratio');
     check(layout.majorFont>=13, 'The complete diagram retains readable primary labels');
     check(layout.parameterFont>=16, 'The network parameter badge has a clearly readable enlarged label');
-    check(await scene.locator('.lc-reading-steps>li').count()>=2, 'Sidebar explains the phase as distinct short steps');
-    if (clip===5) check(!(await scene.locator('.lifecycle-reading').innerText()).includes('L_') && await scene.locator('.lc-reading-steps sub').count()>=4, 'Current and replay losses use intact mathematical subscripts instead of broken underscore strings');
+    check(await scene.locator('.lifecycle-reading>p').count()===1, 'Only one observation sentence accompanies the stage');
+
     check(!layout.overflow && layout.locked, 'Focus view avoids whole-page overflow and background scrolling');
     if ([0,5,6,8].includes(clip)) await shot(`lifecycle-focus-${clip}`);
   }

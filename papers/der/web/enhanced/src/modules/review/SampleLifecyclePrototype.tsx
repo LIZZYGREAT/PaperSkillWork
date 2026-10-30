@@ -18,6 +18,18 @@ const NARRATION = [
   "联合更新完成后，将 (x₂,z₂) 写入第二个空槽 slot 1；K=2 的记忆现有两条记录，旧 z₁ 保持不变。",
 ];
 
+const OBSERVATION = [
+  "观察原图保持身份，增强视图进入网络。",
+  "观察这组分数在参数更新之前产生。",
+  "观察数值副本组成独立的冻结 z₁。",
+  "观察参数改变时，冻结 z₁ 仍保持原值。",
+  "观察记录在更新完成之后进入第一个空槽。",
+  "观察新输入与旧输入共享同一个当前网络。",
+  "观察当前 aⱼ 与固定 z₁ 的逐类平方匹配。",
+  "观察两项损失只触发一次联合更新。",
+  "观察 x₂ 候选进入第二个空槽，旧 z₁ 未刷新。",
+];
+
 type Scene = ReturnType<typeof lifecycleSceneAt>;
 function SampleCard({ size, model = 0, crop = false, id, augmentation = 0, cropProgress = augmentation, rotateSign = -1 }: { size: number; model?: ModelClass; crop?: boolean; id: string; augmentation?: number; cropProgress?: number; rotateSign?: number }) {
   const clipId = useId();
@@ -281,59 +293,8 @@ function CurrentCandidate({ s }: { s: Scene }) {
   </g>;
 }
 
-function InlineMath({ symbol, sub }: { symbol: string; sub?: string }) {
-  return <span className="lc-inline-math"><i>{symbol}</i>{sub && <sub>{sub}</sub>}</span>;
-}
-
-function FocusedNarration({ clip }: { clip: number }) {
-  const steps: { title: React.ReactNode; body: React.ReactNode }[][] = [
-    [
-      { title: "复制原图", body: <>保留 x₁，取一份视图用于训练。</> },
-      { title: "生成增强视图", body: <>依次旋转像素、裁切取景；矩形外框保持不变。</> },
-      { title: "送入网络", body: <>增强完成后，视图进入上方输入位。</> },
-    ],
-    [
-      { title: "逐层前向", body: <>信号通过同一个网络，得到输出 <InlineMath symbol="a" sub="i" />。</> },
-      { title: "得到整组分数", body: <>Claude 2、GPT 1、DeepSeek 0；此时尚未更新参数。</> },
-    ],
-    [
-      { title: "保留当前输出", body: <>原来的三个分数留在输出端。</> },
-      { title: "复制并冻结", body: <>副本组成 z₁ = (2, 1, 0)，作为独立的历史目标。</> },
-    ],
-    [
-      { title: "计算当前损失", body: <>用本次输出与标签 y₁ 计算分类损失。</> },
-      { title: "只更新一次", body: <>梯度回传，θᵢ 变为 θᵢ₊₁；已经冻结的 z₁ 保持原值。</> },
-    ],
-    [
-      { title: "组成记录", body: <>把原图 x₁ 与冻结响应 z₁ 配对。</> },
-      { title: "更新后写入", body: <>记录进入 slot 0，已存数量从 0 变为 1。</> },
-    ],
-    [
-      { title: <>当前样本 x₂</>, body: <>先增强并前向，得到 <InlineMath symbol="b" sub="j" />。<br />计算当前分类损失 <InlineMath symbol="L" sub="current" />。</> },
-      { title: <>回放样本 x₁</>, body: <>读出并重新增强，再前向得到 <InlineMath symbol="a" sub="j" />。<br />与固定 z₁ 比较，计算 <InlineMath symbol="L" sub="dark" />。</> },
-    ],
-    [
-      { title: "按类别对齐", body: <>比较当前 <InlineMath symbol="a" sub="j" /> 与历史 z₁。</> },
-      { title: "相减后平方", body: <>三个类别分别贡献 1、1、0。</> },
-      { title: "复制数字，组成总和", body: <>副本依次进入公式，得到 <InlineMath symbol="L" sub="dark" /> = 2。</> },
-    ],
-    [
-      { title: "合并两项损失", body: <>当前分类损失，加上 α 倍历史匹配损失。</> },
-      { title: "一次联合更新", body: <>只反传一次，得到 θⱼ₊₁；z₁ 与本步快照 z₂ 均不重算。</> },
-    ],
-    [
-      { title: "保留更新前快照", body: <>原图 x₂ 与本步冻结响应 z₂ 组成记录。</> },
-      { title: "写入第二个空槽", body: <>记录进入 slot 1，已存数量变为 2；旧 z₁ 保持不变。</> },
-    ],
-  ];
-  return <>
-    <ol className="lc-reading-steps">{steps[clip].map((step, k) => <li key={k}><strong>{step.title}</strong><p>{step.body}</p></li>)}</ol>
-    {clip === 5 && <p className="lc-reading-note">两次前向共享同一组参数 θⱼ。</p>}
-  </>;
-}
-
 export default function SampleLifecyclePrototype() {
-  const timeline = useSceneTimeline(LIFECYCLE_CLIPS, true);
+  const timeline = useSceneTimeline(LIFECYCLE_CLIPS);
   const [focused, setFocused] = useState(() => new URLSearchParams(window.location.search).get("focus") === "lifecycle");
   const sectionRef = useRef<HTMLElement>(null);
   const changeFocus = (next: boolean) => {
@@ -361,22 +322,12 @@ export default function SampleLifecyclePrototype() {
     return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", keys); previousFocus?.focus({ preventScroll: true }); };
   }, [focused]);
   const { clipIndex: clip, progress } = timeline.state, s = lifecycleSceneAt(clip, progress);
-  return <section ref={sectionRef} id="review-lifecycle" className={`review-scene motion-scene lifecycle-scene has-sidebar${focused ? " is-focused" : ""}`} data-scene="lifecycle" role={focused ? "dialog" : undefined} aria-modal={focused ? true : undefined} aria-label={focused ? "样本生命周期专注播放" : undefined}
+  return <section ref={sectionRef} id="review-lifecycle" className={`review-scene motion-scene lifecycle-scene${focused ? " is-focused" : ""}`} data-scene="lifecycle" role={focused ? "dialog" : undefined} aria-modal={focused ? true : undefined} aria-label={focused ? "样本生命周期专注播放" : undefined}
     data-clip={clip} data-progress={progress} data-status={timeline.state.status} data-memory-count={s.memoryCount}
     data-seen={s.seen} data-update-count={s.updateCount} data-replay-source={s.replaySource ?? "none"}
     data-loss-sources={s.lossSources.join(",")} data-compare={s.lens > .5 ? "on" : "off"}>
-    <header><p className="eyebrow">D1 · 单样本生命周期</p><h1>留下的是过去的响应，约束的是现在的网络。</h1><p>跟踪同一份 x₁：更新前生成 → 复制冻结 → 更新后入池 → 未来回放 → 匹配与联合更新。</p></header>
-    <div className="lifecycle-shell"><aside className="lifecycle-sidebar" aria-label="播放控制与阶段说明">
-      <div className="lifecycle-focus-heading"><div><span>DER</span><h2>样本生命周期</h2></div><button className={focused ? "lifecycle-exit-focus" : "lifecycle-focus-button"} onClick={() => changeFocus(!focused)}>{focused ? "返回阅读" : "专注播放 ↗"}</button></div>
-    <div id="lifecycle-player" className="lifecycle-player"><SceneTransport timeline={timeline} clips={LIFECYCLE_CLIPS} label="样本生命周期" caption="自动完整播放一次。选择阶段停在起点；上一步先回本阶段起点，再回上一阶段起点。" /></div>
-    <div className="lifecycle-context">
-    <div className="lifecycle-reading" aria-live="polite"><strong>{LIFECYCLE_CLIPS[clip].id}</strong><FocusedNarration clip={clip} /></div>
-    <div className="lifecycle-equation" data-vqa-check-clipping>{clip >= 6
-      ? <><math display="block" aria-label="历史匹配损失等于各类当前分数与冻结历史分数之差的平方和"><msub><mi>L</mi><mtext>dark</mtext></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>C</mi></munderover><msup><mrow><mo>(</mo><msub><mi>a</mi><mrow><mi>j</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>z</mi><mrow><mn>1</mn><mo>,</mo><mi>k</mi></mrow></msub><mo>)</mo></mrow><mn>2</mn></msup><mo>=</mo><mn>2</mn></math><span>□ 历史 z₁ 冻结　● 本次 aⱼ 可反传</span></>
-      : <p>原图 x₁ 与数值 z₁ 保持同源身份。DER 记录为 (x₁,z₁)，其中不保存标签。</p>}</div>
-    <details className="lifecycle-example-note"><summary>合成例 · 示例与数值说明</summary><p className="lifecycle-provenance">Claude、GPT、DeepSeek 像素标识作为本例的三个图像类别。两次给定教学输出为 z₁=(2,1,0)、aⱼ=(1,2,0)，不表示三个模型的性能。x₂ 的更新前输出 z₂=(u₁,u₂,u₃) 仅作符号表示，与旧图的回放输出 aⱼ 区分。网络为结构示意，不执行数值训练。</p></details>
-    </div>
-    </aside><div className="lifecycle-viewport"><svg className="lifecycle-canvas" viewBox="0 0 1120 640" role="img" aria-labelledby="lc-title lc-description">
+    <header><div><p className="eyebrow">D1 · 完整生命周期</p><h3>用动画核对刚才的执行顺序。</h3></div><div className="lifecycle-entry-actions">{timeline.elapsedSeconds === 0 && timeline.state.status === "paused" && !timeline.reducedMotion && <button className="lifecycle-start" onClick={timeline.toggle}>播放完整生命周期</button>}<button className={focused ? "lifecycle-exit-focus" : "lifecycle-focus-button"} onClick={() => changeFocus(!focused)}>{focused ? "返回阅读" : "专注播放 ↗"}</button></div></header>
+    <div className="lifecycle-shell"><div className="lifecycle-viewport"><svg className="lifecycle-canvas" viewBox="0 0 1120 640" role="img" aria-labelledby="lc-title lc-description">
       <defs><marker id="lc-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 7 4 1 7" fill="none" stroke="#a67840" strokeWidth="1.4" /></marker></defs>
       <title id="lc-title">一份样本的历史响应怎样产生、保存并约束未来训练</title><desc id="lc-description">{NARRATION[clip]} 网络为结构抽象，两次输出为给定教学数据。</desc>
       <g opacity={Math.max(0, 1 - s.lens * 3)} data-loss-lane>
@@ -418,7 +369,11 @@ export default function SampleLifecyclePrototype() {
       {s.lens > .01 && <g opacity={windowAt(s.compare, .32, .39)} data-carried-target>
         {s.targetPoints.map((p, k) => <rect key={k} x={p.x - 5.5} y={p.y - 5.5} width="11" height="11" rx="2" className="lc-history-mark" data-comparison-history={k} />)}
       </g>}
-    </svg></div></div>
+    </svg></div>
+    <div id="lifecycle-player" className="lifecycle-player"><SceneTransport timeline={timeline} clips={LIFECYCLE_CLIPS} label="样本生命周期" caption="先阅读两轮流程，再播放完整生命周期。选择阶段停在起点；上一步先回本阶段起点。" /></div>
+    <div className="lifecycle-reading" aria-live="polite"><strong>{LIFECYCLE_CLIPS[clip].id}</strong><p>{OBSERVATION[clip]}</p></div>
+    <details className="lifecycle-example-note"><summary>合成例 · 示例与数值说明</summary><p className="lifecycle-provenance">z₁=(2,1,0)、未来回放 aⱼ=(1,2,0)，平方匹配为 2；与 S2/S3 比较时刻 a=(2,0,1) 区分。x₂ 的更新前快照 z₂=(u₁,u₂,u₃) 用符号表示。像素标识为合成类别，动画不执行真实训练求值。依据 DER Algorithm 1，先冻结、再更新、再处理入池。</p></details>
+    </div>
 
   </section>;
 }
