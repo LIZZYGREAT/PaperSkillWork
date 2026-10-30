@@ -12,12 +12,12 @@
     },
     "I03": {
       "stage": "S3",
-      "component": "der-probability-constraint",
+      "component": "der-response-comparison",
       "status": "complete"
     },
     "I04": {
       "stage": "S3",
-      "component": "der-logit-matching",
+      "component": "der-response-comparison",
       "status": "complete"
     },
     "I05": {

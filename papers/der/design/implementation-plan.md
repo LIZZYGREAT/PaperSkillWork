@@ -600,3 +600,7 @@ D1 保护：主 SVG、内部组件、几何/时序模型与九阶段不改；只
 P0 验证：原数学测试 10/10 PASS。导航合并随 P2 原子提交，避免暂时留下空章节。
 
 P1 已实施：S1 交错图文、三步阶梯、GCL 因果说明与最小 ER 关系；S2 同一 x₁ 的双正确预测，用户操作后才挂载响应条与结论，复用 ResponseMeter。数学测试 10/10、diff --check PASS。npm ci 在沙箱与本机权限下均因原有 node_modules 原生二进制被占用而 EPERM；正在恢复依赖，完整构建及双视口视觉随 P2/P5 验证，不将当前源码检查记为视觉通过。
+
+P2 已实施：正式 U2 单次挂载 ResponseComparison，U3 专责历史监督与生命周期；registry、manifest、导航及 review 入口同步。旧 KL/Score 两套计时演出及其专用 CSS 已替换为统一双表示、三态实验台，正文包含固定/可训练角色、两种输出梯度及可展开求导。原 LOGIT_CASES 保留给已批准 D1 与 Reference，未改其给定值。
+
+新增三态与有限差分核验后 npm test 25/25 PASS；npm run build 的 TypeScript/Vite PASS（80 modules），原 mspace 类型错误随旧演出移除而消失。npm install --ignore-scripts 在本机权限恢复依赖成功，lockfile 无语义差异；npm ci 的 EPERM 原因保留记录。双视口截图检查进行中。

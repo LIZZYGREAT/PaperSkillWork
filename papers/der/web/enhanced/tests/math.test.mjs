@@ -89,3 +89,23 @@ test("reservoir teaching curve matches inclusion induction and the initial full-
  }
  assert.throws(()=>retentionProbability(0,2));assert.throws(()=>retentionProbability(2,2.5));
 });
+
+import { RESPONSE_CASES, responseComparison } from "../src/modules/math-model.ts";
+test("S2/S3 share three class coordinates and both representation losses", () => {
+  assert.deepEqual(RESPONSE_CASES.map(c=>c.id),["equal","preference","shifted"]);
+  assert.equal(RESPONSE_CASES[1].values,LABEL_CURRENT);
+  for(let i=0;i<3;i++) {
+    const r=responseComparison(i);
+    assert.deepEqual(r.z,[2,1,0]);
+    near(r.squaredDistance,[0,2,3][i]);
+    near(r.probabilityKL,probabilityComparison(softmax(r.z),softmax(r.a)).kl);
+    assert.deepEqual(r.klGradient,r.q.map((v,k)=>v-r.p[k]));
+    if(i===1){assert.ok(r.probabilityKL>0);assert.deepEqual(r.differences,[0,-1,1]);assert.deepEqual(r.gradient,[0,-2,2]);}
+    else near(r.probabilityKL,0);
+    const epsilon=1e-6;
+    r.a.forEach((_,k)=>{const plus=[...r.a],minus=[...r.a];plus[k]+=epsilon;minus[k]-=epsilon;
+      near((logitComparison(r.z,plus).probabilityKL-logitComparison(r.z,minus).probabilityKL)/(2*epsilon),r.klGradient[k],1e-9);
+    });
+  }
+  assert.throws(()=>responseComparison(-1));
+});
