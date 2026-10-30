@@ -56,20 +56,7 @@
           ]
         },
         {
-          "id": "s2-closed",
-          "actions": [
-            {
-              "selector": ".response-toggle",
-              "type": "click"
-            },
-            {
-              "selector": ".label-investigation",
-              "type": "scrollIntoView"
-            }
-          ]
-        },
-        {
-          "id": "s2-open",
+          "id": "s2-response",
           "actions": [
             {
               "selector": ".label-investigation",

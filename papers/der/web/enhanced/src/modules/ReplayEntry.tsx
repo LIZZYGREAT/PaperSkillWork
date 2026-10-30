@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { SampleToken } from "../shared/foundation/visual-parts/SampleToken";
 import { ResponseMeter } from "../shared/foundation/visual-parts/ResponseMeter";
 import { CLASSES, LABEL_CURRENT, LABEL_OLD } from "./math-model";
@@ -6,20 +5,19 @@ import ModelMark from "./review/ModelMark";
 import { Term } from "./Reference";
 import "./teaching-front.css";
 
-function Prediction({ current, revealed }: { current?: boolean; revealed: boolean }) {
+function Prediction({ current }: { current?: boolean }) {
   const values = current ? LABEL_CURRENT : LABEL_OLD;
   return <article className="prediction-sheet">
     <p className="eyebrow">{current ? "比较时刻 · 当前判断" : "保存时刻 · 历史判断"}</p>
     <p className="prediction-answer">预测 <strong>Claude</strong><span>✓ 正确</span></p>
-    {revealed && <div className="response-reveal" data-response={current ? "current" : "history"}>
+    <div className="response-reveal" data-response={current ? "current" : "history"}>
       <p className="caption">原始 logits · 共同尺度 0–3</p>
       {CLASSES.map((label, k) => <ResponseMeter key={label} label={label} value={values[k]} min={0} max={3} showScale={false} />)}
-    </div>}
+    </div>
   </article>;
 }
 
 export default function ReplayEntry() {
-  const [revealed, setRevealed] = useState(true);
   return <div className="front-teaching" data-core-items="I01 I02">
     <section className="training-origin" aria-labelledby="training-origin-title">
       <div><p className="eyebrow">S1 · 先从熟悉的训练开始</p><h3 id="training-origin-title">数据向前走，参数也在改变。</h3>
@@ -40,13 +38,12 @@ export default function ReplayEntry() {
       <figcaption>新旧数据都参与分类训练；这里先关注回放的作用。</figcaption>
     </figure>
     <p className="front-question">有限回放已经让旧样本可以重新参与训练。<br /><strong>但一张旧图片与一个真实标签，究竟保存了多少过去的模型知识？</strong></p>
-    <section className="label-investigation" data-label-revealed={revealed} aria-labelledby="label-investigation-title">
+    <section className="label-investigation" data-label-revealed="true" aria-labelledby="label-investigation-title">
       <div className="same-input"><SampleToken sampleId="x1" label="同一旧输入 x₁"><ModelMark /></SampleToken><p>真实标签 y₁ = Claude<br /><small>合成分类示例 · Claude / GPT / DeepSeek</small></p></div>
       <p className="eyebrow">S2 · 最终答案与整组响应</p><h3 id="label-investigation-title">两次都预测正确，判断就没有变吗？</h3>
-      <div className="prediction-pair"><Prediction revealed={revealed} /><Prediction current revealed={revealed} /></div>
-      <button className="response-toggle" aria-expanded={revealed} aria-controls="response-finding" onClick={() => setRevealed(!revealed)}>{revealed ? "收起整组响应" : "查看整组响应"}</button>
-      {revealed && <div id="response-finding" className="response-finding" aria-live="polite"><h4>最高类别相同，另外两类的排序却交换了。</h4><p>真实标签规定了正确类别，却不记录旧模型对其他类别的完整判断。训练分类<Term id="ce">交叉熵</Term>会影响所有输出，但没有要求恢复曾经的那组具体分数。</p><p>如果想保留过去对各类别的响应，就需要额外记录一组输出作为历史监督。它可以是 <Term id="softmax" /> 后的概率，也可以是原始 <Term id="logits" />。这些超出单个类别答案的响应信息，常被称为 <strong>Dark Knowledge（暗知识）</strong>；记录的整组输出可用作软目标。</p></div>}
-      <p className="caption">{revealed && <>本节比较时刻的 a=(2,0,1) 将沿用到下一节。</>}类别名称和像素图案仅用于合成分类教学。</p>
+      <div className="prediction-pair"><Prediction /><Prediction current /></div>
+      <div id="response-finding" className="response-finding" aria-live="polite"><h4>最高类别相同，另外两类的排序却交换了。</h4><p>真实标签规定了正确类别，却不记录旧模型对其他类别的完整判断。训练分类<Term id="ce">交叉熵</Term>会影响所有输出，但没有要求恢复曾经的那组具体分数。</p><p>如果想保留过去对各类别的响应，就需要额外记录一组输出作为历史监督。它可以是 <Term id="softmax" /> 后的概率，也可以是原始 <Term id="logits" />。这些超出单个类别答案的响应信息，常被称为 <strong>Dark Knowledge（暗知识）</strong>；记录的整组输出可用作软目标。</p></div>
+      <p className="caption">本节比较时刻的 a=(2,0,1) 将沿用到下一节。类别名称和像素图案仅用于合成分类教学。</p>
     </section>
     <div className="front-handoff"><p>如果希望当前模型保持过去的整组响应，<br /><strong>怎样把“偏离了多少”定义成可计算、可优化的损失？</strong></p><a href="#U2-probability">比较两种表示空间 ↓</a></div>
   </div>;

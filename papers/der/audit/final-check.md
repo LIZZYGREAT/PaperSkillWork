@@ -266,3 +266,5 @@ Agent 阅读复核：有限回放自然引出标签的信息缺口；同一输�
 2026-10-30 S2柱条局部返修：按用户要求统一类别标签列和数值列，三类柱条左边线一致。build PASS；生产浏览器两档桌面均测得每卡三条轨道左偏移88px、宽427.984375px，已看截图，无页面溢出。仅该布局变化，未重跑无关算法/动画套件。证据：当前会话visualizations/der-bar-alignment/aligned-1440.png、aligned-1920.png。
 
 2026-10-30 S2默认展开：首次进入显示两侧完整响应与说明，保留收起/键盘展开；按用户最新指示覆盖旧的默认隐藏要求。build PASS，front-only 两档桌面共200项PASS，已看两档默认展开截图；无浏览器资源错误。证据位于当前会话visualizations/der-default-expanded/s2-default-expanded-1440.png、s2-default-expanded-1920.png。未改D1或算法数值。
+
+2026-10-30 删除S2展开/收起按钮：控件、状态与条件渲染已移除，柱条及说明直接常驻显示。build PASS；front-only 两档桌面198项PASS，包含按钮不存在与内容始终显示的断言。已看生产截图，证据为当前会话visualizations/der-response-static/s2-response-1440.png、s2-response-1920.png。

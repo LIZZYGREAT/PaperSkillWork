@@ -1,18 +1,16 @@
 import {responseComparison,RESPONSE_CASES,LABEL_OLD,LABEL_CURRENT} from '../src/modules/math-model.ts';
 export async function teachingFrontChecks({page,base,check,shot}) {
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
- const label=page.locator('.label-investigation'),button=label.locator('.response-toggle');
- check(await button.getAttribute('aria-expanded')==='true'&&await label.locator('[data-response]').count()===2,'S2 initially expands both full responses');
- check(await label.locator('.prediction-answer').count()===2&&await label.locator('.response-finding').isVisible(),'Predictions and their explanation are visible on first entry');
- await shot('s1-s2-reading','#U1-replay-entry');await shot('s2-default-expanded','.label-investigation');
- await button.click();check(await button.getAttribute('aria-expanded')==='false'&&await label.locator('[data-response]').count()===0,'The initially open responses can still be collapsed');await shot('s2-closed','.label-investigation');
- await button.focus();await page.keyboard.press('Enter');
- check(await button.getAttribute('aria-expanded')==='true','Response reveal works by keyboard');
+ const label=page.locator('.label-investigation');
+ check(await label.locator('.response-toggle').count()===0,'S2 has no expand/collapse button');
+ check(await label.locator('[data-response]').count()===2,'Both full responses are always shown');
+ check(await label.locator('.prediction-answer').count()===2&&await label.locator('.response-finding').isVisible(),'Predictions and their explanation are directly visible');
+ await shot('s1-s2-reading','#U1-replay-entry');await shot('s2-response','.label-investigation');
  for(const [id,values] of [['history',LABEL_OLD],['current',LABEL_CURRENT]]) {
   const seen=await label.locator(`[data-response=${id}] .rk-response-meter`).evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.value)));
   check(JSON.stringify(seen)===JSON.stringify(values),'S2 detailed responses use shared math inputs: '+id);
  }
- check(await label.locator('.response-finding').isVisible(),'Observation and conclusion appear after the action');await shot('s2-open','.label-investigation');
+ check(await label.locator('.response-finding').isVisible(),'Observation and conclusion remain visible without an action');await shot('s2-open','.label-investigation');
  const lab=page.locator('[data-design=response-comparison]');
  check(await lab.count()===1&&await page.locator('[data-design=kl],[data-design=logits]').count()===0,'Only one dual representation lab is mounted');
  for(let i=0;i<3;i++) {

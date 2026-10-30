@@ -18,7 +18,7 @@ npm run test:playback
 
 | 入口 | 内容 |
 | --- | --- |
-| /#U1-replay-entry | S1 普通训练→GCL→有限 ER；S2 默认展开同一 x₁ 的响应，可手动收起 |
+| /#U1-replay-entry | S1 普通训练→GCL→有限 ER；S2 直接展示同一 x₁ 的完整响应 |
 | /#U2-probability | S3 单一概率/logits 三态实验台，含正文定义与输出梯度 |
 | /#logit-matching | S3 原始 logits 的数学解释（保留原深链） |
 | /#U3-logit-memory | ER/蒸馏/DER 桥接、冻结时间轴、完整两轮预讲解、居中 D1 |
