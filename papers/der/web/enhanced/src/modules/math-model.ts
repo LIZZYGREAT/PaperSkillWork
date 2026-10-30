@@ -7,6 +7,20 @@ export const LABEL_CURRENT = [2, 0, 1] as const;
 export const REFERENCE_P = [0.8, 0.2] as const;
 export const HISTORY_Z = [2, 1, 0] as const;
 
+/** S2/S3 share x₁ and class coordinates. D1 has a separate, given later response. */
+export const RESPONSE_CASES = [
+  { id: "equal", label: "完全一致", values: HISTORY_Z, conclusion: "当前响应与历史目标完全一致，两种损失都为 0。" },
+  { id: "preference", label: "类别偏好变化", values: LABEL_CURRENT, conclusion: "Claude 仍最高，但 GPT 与 DeepSeek 的排序交换了。KL 与平方距离都检测到偏离。" },
+  { id: "shifted", label: "所有 logit 同加 1", values: [3, 2, 1], conclusion: "softmax 不区分统一加常数的变化，因此 KL 为 0；原始 logits 改变，平方距离为 3。两种约束各有含义。" },
+] as const;
+
+export function responseComparison(index: number) {
+  const item = RESPONSE_CASES[index];
+  if (!item) throw new Error("未知响应比较状态。");
+  const result = logitComparison(HISTORY_Z, item.values);
+  return { ...result, klGradient: probabilityComparison(result.p, result.q).gradient };
+}
+
 export const PROBABILITY_CASES = [
   { id: "near", label: "稍有偏离", values: [0.6, 0.4], conclusion: `两次都更倾向 ${CLASSES[0]}，但概率分配已经改变。历史约束仍然有必要。` },
   { id: "equal", label: "与旧分布相同", values: [0.8, 0.2], conclusion: "q 与固定的 p 完全相同，KL 为 0：没有需要惩罚的分布偏离。" },

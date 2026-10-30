@@ -584,3 +584,17 @@ P4 只更新现有两份规范、两份 Skills 及既有计划/审计，无新 s
 定向 Chromium Visual QA 配置 `.visual-qa/der-targeted-qa.json` 检查 Reservoir 替换/拒收、DER 单步联合更新/更新后写入、工作台第 3 轮写入/第 4 轮 DER++ 拒收，共 6 状态 × 1440×900、1920×1080 = 12 张截图。报告 `.visual-qa/run-2026-10-29T16-32-00-402Z/report.md`：`GEOMETRY_QA=PASS`、`BROWSER_ERRORS=PASS`（0）、所有目标截图结果 PASS；无整页横向溢出、已登记裁切或小于 12px 的语义文本。逐张实看两档的 12 张截图后，Agent 范围 `VISUAL_REVIEW=PASS`：3×5×3 图和向量行落在卡片内；槽位标题与入槽候选分离；仅见 D1 同款短尾；工作台眉题完整。runner 报告自身仍将 `STYLE_QA/VISUAL_REVIEW=NOT_RUN`，这里的视觉结论来自人工查看，不扩大为全站断言。`FULLSCREEN_LAYOUT=PASS`（1920×1080 模拟），真实 F11 与连续播放检查 `NOT_RUN`。
 
 `node node_modules/vite/bin/vite.js build --configLoader runner`：Vite 生产打包 PASS（78 modules）。项目命令 `npm.cmd run build` 仍失败于未修改的 `src/modules/MechanismScenes.tsx:168`：`<mspace width="1em" />` 的 `width` 不属于当前 React `MathMLCoreAttributes` 类型；不将单独 Vite 打包记作 TypeScript 构建通过。未运行测试套件。该记录只覆盖上述三个目标场景和 6 个状态；W9 用户终审仍 `PENDING`，W10 未启动，`paper.yaml` 未改。
+
+## S1–S3 + D1 教学重构（2026-10-30，当前执行契约）
+
+用户授权按本轮执行方案正式重构并逐部分 commit。起点 HEAD c256cdf，高于方案基线 fa1cb77；后续场景的既有修复保留。此节替代历史记录中 U2/U3 双动画、D1 侧栏和自动播放的设计；paper.yaml 人工阶段状态不改。
+
+P0 统一 S2/S3：x₁、Claude/GPT/DeepSeek，z=(2,1,0)，a=(2,0,1)。RESPONSE_CASES / responseComparison 为三态入口，复用 softmax / probabilityComparison / logitComparison。D1 是独立未来情境：给定 aⱼ=(1,2,0)，Ldark=2。已核对缓存 §3 Eq.(2)–(5)、Algorithm 1、registry、manifest 和导航；FormulaLessons.tsx 已不存在，不恢复。
+
+实施顺序：P0 数据/契约；P1 S1 推导和 S2 按需揭示；P2 单一 S3 实验台及导航；P3 机制桥接与 D1 两轮预讲解；P4 居中无侧栏播放器；P5 测试/视觉/文档。每部分提交，不创建 PR、不发布。
+
+Kit：已查 Registry、visual-parts Recipe 与现有副本。直接复用 ResponseMeter、SampleToken、Reference/TermRef、MathNotation、SceneTransport/useSceneTimeline 和 reduced motion。正文阶梯与机制时间轴属于 DER 局部构图，无需扩充 Kit，不批准 candidate。原两类概率仅留作 Reference 独立数学背景。
+
+D1 保护：主 SVG、内部组件、几何/时序模型与九阶段不改；只调整外部 DOM、CSS、旁白及首次播放状态。邻接风险：review 入口、浏览器旧侧栏/自动播放断言、公式测试与 visual-qa。视觉计划覆盖 1440×900、1920×1080 的完整阅读、S2 双态、S3 三态、D1 初始/冻结/联合更新/入池、专注/菜单。真实 F11 单独记录。审查仅写本计划与 audit/final-check.md。
+
+P0 验证：原数学测试 10/10 PASS。导航合并随 P2 原子提交，避免暂时留下空章节。
