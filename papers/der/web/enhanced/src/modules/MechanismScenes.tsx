@@ -87,6 +87,6 @@ export default function ResponseComparison() {
     </section>
     <details className="math-derivation"><summary>为什么 KL 对当前 logits 的梯度是 q−p？</summary><KLGradientDerivation /></details>
     <p className="comparison-conclusion">softmax 对统一加常数不敏感：每类同加 1 时，概率不变，原分数却改变了。两个损失保留的信息不同；这个反例不说明 KL 永远更差，也不说明两者恒等。</p>
-    <div className="front-handoff"><p>DER 选择直接比较 logits。<strong>这份过去的 logits 从哪里获得？是否必须保存整个旧模型？</strong></p><a href="#U3-logit-memory">追踪历史监督的来源 ↓</a></div>
+
   </div>;
 }

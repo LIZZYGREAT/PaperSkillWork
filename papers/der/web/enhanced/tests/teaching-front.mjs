@@ -8,7 +8,7 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  const sampleOrder=await label.evaluate(el=>el.querySelector('h3').getBoundingClientRect().bottom<=el.querySelector('.same-input').getBoundingClientRect().top);
  check(sampleOrder,'S2 shared sample sits below its title');
  check(await page.locator('.stream-sample .model-mark').count()===3,'S1 stream uses the three shared pixel identities');
- check((await page.locator('.stream-sample>span:not(.stream-id)').allTextContents()).join(',')==='Claude,GPT,DeepSeek','S1 pixel samples retain the shared class order');
+ check((await page.locator('.stream-sample>span:not(.stream-id):not(.parameter-state)').allTextContents()).join(',')==='Claude,GPT,DeepSeek','S1 pixel samples retain the shared class order');
  check((await page.locator('.stream-id').allTextContents()).join(',')==='x1,x2,x3','S1 preserves sample identifiers alongside pixels');
  const widths=await page.evaluate(()=>['.response-finding','.lesson-2 .chapter-summary','.math-derivation'].map(selector=>{const el=document.querySelector(selector);return {selector,width:el.getBoundingClientRect().width,parent:el.parentElement.getBoundingClientRect().width};}));
  check(widths.every(w=>Math.abs(w.width-w.parent)<2),'Reading blocks use their available horizontal space: '+JSON.stringify(widths));
@@ -17,6 +17,16 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  await page.locator('.math-derivation>summary').click();
  check(await page.locator('.kl-proof .equation math').count()===3&&await page.locator('.kl-proof mfrac').count()===1,'KL proof uses three properly typeset equations');
  await shot('s3-proof','.math-derivation');await page.locator('.math-derivation>summary').click();
+ const states=await page.locator('.stream-sample').evaluateAll(nodes=>nodes.map(el=>{const sample=el.querySelector('.model-mark').getBoundingClientRect(),theta=el.querySelector('.parameter-state').getBoundingClientRect();return {aligned:Math.abs(sample.x+sample.width/2-theta.x-theta.width/2)<2,ordered:sample.bottom<theta.top};}));
+ check(states.length===3&&states.every(s=>s.aligned&&s.ordered),'Each sample aligns vertically with its own parameter state');
+ check(await page.locator('.stream-arrow').count()===2,'Two arrows connect the three complete state columns');
+ check(await page.locator('.chapter-handoff').count()===6,'Every chapter boundary has one shared handoff card');
+ const targets=await page.locator('.handoff-link').evaluateAll(nodes=>nodes.map(el=>!!document.querySelector(el.getAttribute('href'))));
+ check(targets.length===6&&targets.every(Boolean),'All transition cards link to real next chapters');
+ const typeRhythm=await page.evaluate(()=>['.second-round>p:not(.round-number)','.teaching-note summary','.lifecycle-prelesson>.front-question'].map(selector=>{const style=getComputedStyle(document.querySelector(selector));return {size:style.fontSize,font:style.fontFamily,weight:style.fontWeight};}));
+ check(typeRhythm.every(t=>t.size==='17px'&&t.font===typeRhythm[0].font&&t.weight==='400'),'Pre-D1 prose, numerical note and watching guide share one typography rhythm');
+ await shot('er-records','.er-relation');for(let i=1;i<=6;i++)await shot('chapter-handoff-'+i,'.lesson-'+i+' .chapter-handoff');
+ await shot('second-round-reading','.second-round');
  await shot('s1-stream','.parameter-stream');
  await shot('s1-s2-reading','#U1-replay-entry');await shot('s2-response','.label-investigation');
  for(const [id,values] of [['history',LABEL_OLD],['current',LABEL_CURRENT]]) {

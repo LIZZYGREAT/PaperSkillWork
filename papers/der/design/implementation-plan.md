@@ -684,3 +684,17 @@ FULLSCREEN_LAYOUT=PASS（实际1440×900与1920×1080、DPR1、Chromium153.0.801
 公共QA：本次临时聚焦配置 type-repair-config.json，在生产 /der-review/ 下覆盖1440×900与1920×1080的S1数据流、S2布局、展开推导、S3共同平移，共8状态 PASS；GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS PASS。报告仍有原S8四个11px眉题警告，本次不改该区。已实看两档相关局部截图，无挤压、裁切或额外限宽，标题下方的样本信息与新增像素/原编号均可见。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless）；HUMAN_ACCEPTANCE=PENDING，不代填S3方向签收。
 
 证据保留在当前会话 visualizations/der-type-repair：s1-stream、s2-response、s3-proof、s3-firstscreen、s3-intermediate两档代表图。报告已读取；准确run-2026-10-31T14-44-27-142Z经cleanup-run返回CLEANED、Test-Path=False。临时配置与无用回归截图已清理，5196服务由runner自行关闭。
+
+### 用户截图构图、章节过渡与字体节奏修复（2026-10-31）
+
+接续7e448cc。按标注将S1改为三列完整状态：每列在同一框中纵向排列像素图、类别名、x编号与θ编号，两条箭头连接整列。ER图增加当前/记忆的像素记录和标签，短汇合线连接同一小网络，旧记录保持在虚线记录位；仅展示ER的(x,y)。最后微调汇合路径与记录中心对齐，并将共同监督的解释归入图注。
+
+新增论文局部ChapterHandoff，在App的六个实际章节边界统一挂载。每张卡以本节所得、下一问、对应的小视觉对象和真实锚点形成过渡，替换三个模块中原有纯文本front-handoff，不叠加两套衔接。S4–S8只增外部章节卡片，内部场景/数值不变；D1内部源码、几何、播放时钟不改。冻结出处的Reference入口保留在D1之后。
+
+字体与阅读检查覆盖S1状态图、ER、S2/S3、桥接、两轮预讲解、D1入口和六个章节边界。用户图四的更新说明、数值条件与观看提示统一17px、常规字重与同一字体；完整数值条件保留在可展开注释中，观看提示用小型阅读面板承接D1，不再额外放大正文。章节卡片使用同一组14px定位、16px回收、20px下一问、15px入口层级。保留标题、正文、图形对象的必要区别，避免相邻正文随机换样式。
+
+验证：npm.cmd --prefix papers/der/web/enhanced run build PASS；全篇test:browser双视口2712项PASS。最终ER路径/槽位示意微调后，browser.test.mjs --front-only两档252项PASS。新增断言覆盖样本/θ的纵向对齐、两条箭头、六个唯一过渡及有效锚点、D1前三类文字的同字号/字体/字重。原有数学三态、暂停/继续、Reference、D1居中/身份与全篇机制回归均通过。math-model与D1内部源码无diff；本次未改播放逻辑，不重复实时全程播放检查。
+
+公共QA使用本次临时配置，覆盖三列状态、ER、D1前提示、六个章节过渡，两档18状态PASS；最终ER连线及两槽位示意另4状态PASS。首份report的GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS均PASS，最终定向runner返回PASS；已实看双视口相关局部图与六卡拼图，无新增横向溢出或遮挡。首份报告仍包含原S8的四条11px眉题警告，本次不改其源码。9个状态已同步加入正式visual-qa.json。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless）；HUMAN_ACCEPTANCE=PENDING，不代填S3方向签收。
+
+证据保留在当前会话visualizations/der-composition-repair：s1-stream、er-records、chapter-handoff-1至6、six-handoffs-1920、second-round-reading及D1前后代表图。公共临时run目录15-02-06-915Z与15-07-43-833Z均按本次准确路径cleanup-run返回CLEANED，并各自Test-Path=False；临时配置、无用途回归截图与debug.log已清理。未保留公共完整报告文件，必要结论记录于本节；公共runner创建的预览服务已退出。

@@ -20,11 +20,11 @@ export default function MemorySnapshot() {
       <article className="second-round"><p className="round-number">第二轮 · x₂ 到来</p><h4>旧记录现在才成为历史监督。</h4><p>当前 x₂ 用真实标签形成分类损失。与此同时，记忆中已有 (x₁,z₁)：把旧输入重新送入<strong>同一个当前网络 θ₁</strong>，得到现在的输出 aⱼ，再与固定 z₁ 逐类平方匹配。两项合成后，只对当前模型做<strong>一次联合参数更新</strong>。</p>
         <div className="joint-round" aria-label="第二轮同一参数上的两项损失合并"><p className="state-edge">起点　θ₁ · M=[(x₁,z₁)] · N=1</p><div className="joint-branches"><p><strong>当前 x₂ + y₂</strong><span>当前分类 → L_current</span></p><p><strong>记忆 x₁ + 固定 z₁</strong><span>同一 θ₁ 前向 → aⱼ → L_dark</span></p></div><p className="joint-target">L_DER = L_current + αL_dark<br /><strong>一次联合更新 θ₁ → θ₂</strong></p><p>更新后处理 x₂ 的冻结候选 (x₂,z₂)</p><p className="state-edge">终点　θ₂ · 两条记忆 · N=2 · z₁ 未改变</p></div>
         <p>本步 x₂ 的<strong>更新前输出</strong>也复制为新候选 z₂，完成更新后才尝试入池。本例第二个槽位仍空，因而写入成功。已经保存的 z₁ 始终不会刷新。</p>
-        <p className="caption">D1 是给定数值的合成演示：未来回放取 aⱼ=(1,2,0)，与 z₁ 匹配的平方损失为 2；它区别于 S2/S3 比较时刻的 a=(2,0,1)。x₂ 的快照 z₂ 用符号表示，动画不执行真实训练求值。</p>
+        <details className="teaching-note"><summary>教学数值与比较时刻</summary><p>D1 是给定数值的合成演示：未来回放取 aⱼ=(1,2,0)，与 z₁ 匹配的平方损失为 2；它区别于 S2/S3 比较时刻的 a=(2,0,1)。x₂ 的快照 z₂ 用符号表示，动画不执行真实训练求值。</p></details>
       </article>
-      <p className="front-question">现在执行顺序已经明确。下面请集中观察：同一份 x₁ 如何生成并冻结 z₁；参数更新后 z₁ 为何保持不变；以及未来 x₂ 到来时，它怎样参与一次联合训练。</p>
+      <p className="front-question">观看完整动画时，沿同一份记录追踪三个动作：复制并冻结 z₁ → 参数改变而 z₁ 不变 → 新旧样本汇成一次联合更新。</p>
     </section>
     <SampleLifecyclePrototype />
-    <div className="front-handoff"><p>一条历史记录已经走完了生成、冻结、更新后写入和未来匹配。但是数据流不会停止：每次训练都可能产生新的候选，而记忆只有有限的槽位。<br /><strong>哪些记录能留下，哪些需要被替换？</strong></p><ReferenceButton term="z">核对冻结时序与出处</ReferenceButton><br /><a href="#U4-reservoir-and-step">观察有限记忆如何选留 ↓</a></div>
+    <div className="snapshot-reference"><ReferenceButton term="z">核对冻结时序与出处</ReferenceButton></div>
   </div>;
 }

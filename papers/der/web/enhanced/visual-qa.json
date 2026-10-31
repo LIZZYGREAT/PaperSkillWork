@@ -150,6 +150,87 @@
               "selector": "#U7-evidence-and-limits"
             }
           ]
+        },
+        {
+          "id": "stream-states",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".parameter-stream"
+            }
+          ]
+        },
+        {
+          "id": "er-records",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".er-relation"
+            }
+          ]
+        },
+        {
+          "id": "pre-d1-typography",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".lifecycle-prelesson>.front-question"
+            }
+          ]
+        },
+        {
+          "id": "handoff-1",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".lesson-1 .chapter-handoff"
+            }
+          ]
+        },
+        {
+          "id": "handoff-2",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".lesson-2 .chapter-handoff"
+            }
+          ]
+        },
+        {
+          "id": "handoff-3",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".lesson-3 .chapter-handoff"
+            }
+          ]
+        },
+        {
+          "id": "handoff-4",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".lesson-4 .chapter-handoff"
+            }
+          ]
+        },
+        {
+          "id": "handoff-5",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".lesson-5 .chapter-handoff"
+            }
+          ]
+        },
+        {
+          "id": "handoff-6",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".lesson-6 .chapter-handoff"
+            }
+          ]
         }
       ]
     },
