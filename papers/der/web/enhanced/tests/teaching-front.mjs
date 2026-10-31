@@ -1,4 +1,5 @@
 import {responseComparison,RESPONSE_CASES,LABEL_OLD,LABEL_CURRENT} from '../src/modules/math-model.ts';
+import {frontMotionChecks} from './front-motion-checks.mjs';
 export async function teachingFrontChecks({page,base,check,shot}) {
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
  const label=page.locator('.label-investigation');
@@ -42,16 +43,16 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  const ranks=await page.locator('.rank-row').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('b')].map(el=>+el.textContent)));
  check(JSON.stringify(ranks)===JSON.stringify([[1,1],[2,3],[3,2]]),'Rank objects derive the same historical/current preference swap');
  check(await page.locator('.reasoning-stair article').count()===3&&await page.locator('.gcl-constraints>span').count()===3,'Finite-memory reasoning has three object scenes and a compact constraints strip');
- check(await page.locator('.snapshot-time-axis [data-frozen-vector="2,1,0"]').count()===3,'Frozen values retain their identity across parameter snapshots');
+ check(await page.locator('[data-front-scene=snapshot-origin]').count()===1,'A single copy-and-freeze origin scene replaces repeated snapshots');
  const objects=await page.locator('.reasoning-stair article,.response-ranks,.frozen-response,.teacher-relation,.record-comparison>div,.joint-branches>div').evaluateAll(nodes=>nodes.map(el=>({class:el.className,clipped:el.scrollWidth>el.clientWidth+1})));
  check(objects.every(o=>!o.clipped),'New teaching objects and their labels fit without clipping: '+JSON.stringify(objects));
  check(await page.locator('.chapter-handoff').count()===6,'Every chapter boundary has one shared handoff card');
  const targets=await page.locator('.handoff-link').evaluateAll(nodes=>nodes.map(el=>!!document.querySelector(el.getAttribute('href'))));
  check(targets.length===6&&targets.every(Boolean),'All transition cards link to real next chapters');
- const typeRhythm=await page.evaluate(()=>['.second-round>p:not(.round-number)','.teaching-note summary','.lifecycle-prelesson>.front-question'].map(selector=>{const style=getComputedStyle(document.querySelector(selector));return {size:style.fontSize,font:style.fontFamily,weight:style.fontWeight};}));
+ const typeRhythm=await page.evaluate(()=>['.two-round-preview .mini-event','.teaching-note summary','.lifecycle-prelesson>.front-question'].map(selector=>{const style=getComputedStyle(document.querySelector(selector));return {size:style.fontSize,font:style.fontFamily,weight:style.fontWeight};}));
  check(typeRhythm.every(t=>t.size==='17px'&&t.font===typeRhythm[0].font&&t.weight==='400'),'Pre-D1 prose, numerical note and watching guide share one typography rhythm');
  await shot('er-records','.er-relation');for(let i=1;i<=6;i++)await shot('chapter-handoff-'+i,'.lesson-'+i+' .chapter-handoff');
- await shot('second-round-reading','.second-round');
+ await shot('two-round-preview','.two-round-preview');
  await shot('s1-stream','.parameter-stream');
  await shot('s1-s2-reading','#U1-replay-entry');await shot('s2-response','.label-investigation');
  for(const [id,values] of [['history',LABEL_OLD],['current',LABEL_CURRENT]]) {
@@ -94,11 +95,11 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  await shot('s3-reading','#U2-probability');await shot('bridge','.supervision-bridge');await shot('d1-prelesson','.lifecycle-prelesson');
  const alignment=await page.evaluate(()=>{
   const left=document.querySelector('.reading-layout').getBoundingClientRect().left;
-  const selectors=['.gcl-context','.supervision-bridge','.lifecycle-prelesson','.second-round','.lifecycle-prelesson>.front-question','.lifecycle-scene>header'];
+  const selectors=['.gcl-context','.supervision-bridge','.lifecycle-prelesson','.two-round-preview','.lifecycle-prelesson>.front-question','.lifecycle-scene>header'];
   return selectors.map(selector=>({selector,error:Math.abs(document.querySelector(selector).getBoundingClientRect().left-left)}));
  });
  check(alignment.every(item=>item.error<2),'Section headings and prose share one left edge: '+JSON.stringify(alignment));
- const type=await page.evaluate(()=>['.gcl-context p','.gcl-context strong','.first-round p','.round-state li','.second-round p','.lifecycle-start'].map(selector=>getComputedStyle(document.querySelector(selector)).fontFamily));
+ const type=await page.evaluate(()=>['.gcl-context p','.gcl-context strong','.lifecycle-prelesson>p:not(.eyebrow)','.two-round-preview .mini-event','.teaching-note summary','.lifecycle-start'].map(selector=>getComputedStyle(document.querySelector(selector)).fontFamily));
  check(type.every(family=>family===type[0]&&family.startsWith('"Microsoft YaHei"')),'Body, emphasis, lists and controls share the same prose font');
  const cdp=await page.context().newCDPSession(page);await cdp.send('DOM.enable');await cdp.send('CSS.enable');
  const {root}=await cdp.send('DOM.getDocument');
@@ -110,13 +111,13 @@ export async function teachingFrontChecks({page,base,check,shot}) {
   check(fonts.some(f=>f.familyName===expected),'Actual rendered font for '+selector+' is '+expected+': '+JSON.stringify(fonts));
  }
  await cdp.detach();await page.locator('.math-derivation>summary').click();
- const round=await page.locator('.first-round').evaluate(el=>{const flow=el.querySelector('.round-state').getBoundingClientRect(),text=el.firstElementChild.getBoundingClientRect();return {flow:flow.width,text:text.width,outside:el.scrollWidth>el.clientWidth+1};});
- check(round.flow<round.text&&!round.outside,'The compact flow leaves sufficient width for causal prose without an oversized empty panel');
+ check(await page.locator('.two-round-preview [data-station]').count()===1&&await page.locator('.first-round,.joint-round,.round-state').count()===0,'One stable preview replaces duplicated round lists and final-state panels');
  const pre=await page.locator('.lifecycle-prelesson').boundingBox(),d1=await page.locator('[data-scene=lifecycle]').boundingBox();
  check(pre.y+pre.height<=d1.y+1,'Both full training rounds precede D1');
  const scene=page.locator('[data-scene=lifecycle]');
  check(await scene.getAttribute('data-status')==='paused'&&+(await scene.getAttribute('data-progress'))===0,'Normal reading D1 waits for user playback');
  await shot('d1-start','[data-scene=lifecycle]');
+ await frontMotionChecks({page,check,shot});
  await page.emulateMedia({reducedMotion:'reduce'});await lab.locator('[data-response-case=preference]').click();
  check(await lab.locator('.rk-response-meter__fill').first().evaluate(el=>getComputedStyle(el).transitionDuration)==='0s','Reduced motion removes response transitions');
  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'New reading content has no desktop page overflow');
