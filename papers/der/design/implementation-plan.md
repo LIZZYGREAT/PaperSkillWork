@@ -698,3 +698,9 @@ FULLSCREEN_LAYOUT=PASS（实际1440×900与1920×1080、DPR1、Chromium153.0.801
 公共QA使用本次临时配置，覆盖三列状态、ER、D1前提示、六个章节过渡，两档18状态PASS；最终ER连线及两槽位示意另4状态PASS。首份report的GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS均PASS，最终定向runner返回PASS；已实看双视口相关局部图与六卡拼图，无新增横向溢出或遮挡。首份报告仍包含原S8的四条11px眉题警告，本次不改其源码。9个状态已同步加入正式visual-qa.json。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless）；HUMAN_ACCEPTANCE=PENDING，不代填S3方向签收。
 
 证据保留在当前会话visualizations/der-composition-repair：s1-stream、er-records、chapter-handoff-1至6、six-handoffs-1920、second-round-reading及D1前后代表图。公共临时run目录15-02-06-915Z与15-07-43-833Z均按本次准确路径cleanup-run返回CLEANED，并各自Test-Path=False；临时配置、无用途回归截图与debug.log已清理。未保留公共完整报告文件，必要结论记录于本节；公共runner创建的预览服务已退出。
+
+### 状态列间距与ER纵向比例（2026-10-31）
+
+按最新两张截图：S1主视觉列加宽，三列间距26→56px，短字符箭头替换为50px SVG路径，保持样本/θ对应。ER两条记录各112px高、行间距56px；汇合SVG改为160×280，端点y=56/224对齐记录中心，中点y=140对齐同一模型。增加纵向呼吸空间，未改变(x,y)与标签监督语义。
+
+build PASS；front-only双视口252项PASS，实看两档代表图，状态列、记录、箭头无裁切/重叠。证据在当前会话visualizations/der-objects-polish的s1-stream与er-records。此部分先提交；接着完成用户要求的01–03卡片与视觉对象检查。
