@@ -2,6 +2,7 @@ import { SampleToken } from "../shared/foundation/visual-parts/SampleToken";
 import { ResponseMeter } from "../shared/foundation/visual-parts/ResponseMeter";
 import { CLASSES, LABEL_CURRENT, LABEL_OLD } from "./math-model";
 import ModelMark from "./review/ModelMark";
+import type { ModelClass } from "./review/ModelPixel";
 import { Term } from "./Reference";
 import "./teaching-front.css";
 
@@ -24,7 +25,7 @@ export default function ReplayEntry() {
         <p className="front-lead">分类模型根据当前数据调整参数。持续学习时，新的样本不断到来，模型继续使用<strong>同一组参数</strong>训练。</p>
         <p>可是过去的数据未必还在眼前。如果只根据新数据更新，模型对旧输入的判断可能变差，这便产生了<strong>灾难性遗忘</strong>问题。</p>
       </div>
-      <figure className="parameter-stream"><p className="figure-label">数据不断到来</p><div className="stream-symbols"><span>x₁</span><span>x₂</span><span>x₃</span><span>…</span></div><div className="parameter-thread"><span>θ₀</span><i>→</i><span>θ₁</span><i>→</i><span>θ₂</span></div><figcaption>同一个模型持续学习。<br />旧输入的判断，也可能随参数一起改变。</figcaption></figure>
+      <figure className="parameter-stream"><p className="figure-label">数据不断到来</p><div className="stream-symbols">{CLASSES.map((name,k) => <span className="stream-sample" key={name}><ModelMark model={k as ModelClass} /><span>{name}</span><span className="stream-id">x<sub>{k+1}</sub></span></span>)}<span aria-label="后续样本">…</span></div><div className="parameter-thread"><span>θ<sub>0</sub></span><i>→</i><span>θ<sub>1</sub></span><i>→</i><span>θ<sub>2</sub></span></div><figcaption>同一个模型持续学习。<br />旧输入的判断，也可能随参数一起改变。</figcaption></figure>
     </section>
     <section className="reasoning-stair" aria-label="从完整历史到有限回放的推导">
       <p><span>一个自然想法</span>如果全部历史一直可用，就能把新旧数据混在一起训练。</p>
@@ -39,10 +40,10 @@ export default function ReplayEntry() {
     </figure>
     <p className="front-question">有限回放已经让旧样本可以重新参与训练。<br /><strong>但一张旧图片与一个真实标签，究竟保存了多少过去的模型知识？</strong></p>
     <section className="label-investigation" data-label-revealed="true" aria-labelledby="label-investigation-title">
-      <div className="same-input"><SampleToken sampleId="x1" label="同一旧输入 x₁"><ModelMark /></SampleToken><p>真实标签 y₁ = Claude<br /><small>合成分类示例 · Claude / GPT / DeepSeek</small></p></div>
       <p className="eyebrow">S2 · 最终答案与整组响应</p><h3 id="label-investigation-title">两次都预测正确，判断就没有变吗？</h3>
+      <div className="same-input"><SampleToken sampleId="x1" label="同一旧输入 x₁"><ModelMark /></SampleToken><p>真实标签 y₁ = Claude<br /><small>合成分类示例 · Claude / GPT / DeepSeek</small></p></div>
       <div className="prediction-pair"><Prediction /><Prediction current /></div>
-      <div id="response-finding" className="response-finding" aria-live="polite"><h4>最高类别相同，另外两类的排序却交换了。</h4><p>真实标签规定了正确类别，却不记录旧模型对其他类别的完整判断。训练分类<Term id="ce">交叉熵</Term>会影响所有输出，但没有要求恢复曾经的那组具体分数。</p><p>如果想保留过去对各类别的响应，就需要额外记录一组输出作为历史监督。它可以是 <Term id="softmax" /> 后的概率，也可以是原始 <Term id="logits" />。这些超出单个类别答案的响应信息，常被称为 <strong>Dark Knowledge（暗知识）</strong>；记录的整组输出可用作软目标。</p></div>
+      <div id="response-finding" className="response-finding" aria-live="polite"><h4>最高类别相同，另外两类的排序却交换了。</h4><p>真实标签指定正确类别；分类<Term id="ce">交叉熵</Term>会影响所有输出，却不要求恢复过去的整组分数。</p><p>要保留旧响应，就额外记录 <Term id="softmax" /> 概率或原始 <Term id="logits" />，作为未来匹配的软目标。这些超出单个类别答案的响应信息称为 <strong>Dark Knowledge（暗知识）</strong>。</p></div>
       <p className="caption">本节比较时刻的 a=(2,0,1) 将沿用到下一节。类别名称和像素图案仅用于合成分类教学。</p>
     </section>
     <div className="front-handoff"><p>如果希望当前模型保持过去的整组响应，<br /><strong>怎样把“偏离了多少”定义成可计算、可优化的损失？</strong></p><a href="#U2-probability">比较两种表示空间 ↓</a></div>

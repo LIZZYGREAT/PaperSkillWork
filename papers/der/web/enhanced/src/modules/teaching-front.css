@@ -12,8 +12,8 @@
 .front-lead{font-size:21px;line-height:1.85}
 .parameter-stream{padding:28px 32px;border-block:1px solid var(--rk-line)}
 .stream-symbols,.parameter-thread{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.stream-symbols{font:26px var(--rk-font-math);padding:18px 0 28px;color:var(--rk-muted)}
-.parameter-thread{font:30px var(--rk-font-math);border-top:2px solid #cbd8cb;padding:22px 0}
+.stream-symbols{font:15px var(--der-prose-font);padding:18px 0 28px;color:var(--rk-muted)}
+.parameter-thread{font:28px var(--der-prose-font);border-top:2px solid #cbd8cb;padding:22px 0}
 .parameter-thread i{font:18px var(--rk-font-body);color:var(--rk-muted)}
 .parameter-stream figcaption{font-size:15px;line-height:1.8;color:var(--rk-muted)}
 .reasoning-stair{margin:65px 0 55px;max-width:1000px}
@@ -33,7 +33,7 @@
 .prediction-sheet{border:1px solid var(--rk-line);border-radius:12px;padding:28px 32px;background:#fff}
 .prediction-sheet:nth-child(2){background:#f6f8f3}.prediction-answer{font-size:21px;margin:0!important}.prediction-answer strong{font-size:29px;margin-left:14px}.prediction-answer>span{float:right;font-size:15px;color:var(--rk-accent);padding-top:6px}
 .response-reveal{margin-top:24px}.response-reveal .rk-response-meter{margin-block:12px;grid-template-columns:6em minmax(48px,1fr) 2ch}
-.response-finding{margin-top:28px;max-width:880px;border-left:3px solid #b7cab8;padding:6px 0 0 24px}
+.response-finding{margin-top:28px;max-width:none;border-left:3px solid #b7cab8;padding:6px 0 0 24px}
 .label-investigation>.caption{margin-top:24px}.front-handoff{margin-top:36px;padding-top:24px;border-top:1px solid var(--rk-line);font-size:20px}.front-handoff a{font-size:16px;color:var(--rk-accent)}
 @media(max-width:800px){.training-origin{grid-template-columns:1fr;gap:24px}.prediction-pair{gap:14px}.prediction-sheet{padding:20px 16px}.prediction-answer>span{float:none;display:block}.er-relation{grid-template-columns:1fr}.er-relation figcaption{grid-column:1}.reasoning-stair p:nth-child(n){margin-left:0}.front-teaching h3,.response-lesson h3,.snapshot-lesson h3{font-size:23px}}
 .supervision-bridge{max-width:none;margin:0 0 40px}.supervision-bridge>p,.second-round>p{max-width:1000px}.teacher-relation{display:flex;gap:28px;align-items:center;justify-content:center;padding:22px 0;margin:26px 0;border-block:1px solid var(--rk-line)}
@@ -45,3 +45,13 @@
 @media(max-width:800px){.teacher-relation{gap:12px;flex-wrap:wrap}.record-comparison,.first-round,.snapshot-time-axis{grid-template-columns:1fr;gap:20px}.joint-round{padding:18px}.joint-branches{gap:16px}.joint-target{font-size:20px}}
 
 .lesson-3>.lesson-heading{margin-bottom:32px}.lesson-3 .teaching-module{padding-top:0}.snapshot-lesson .lifecycle-scene{padding-top:12px}.snapshot-lesson .lifecycle-scene.lifecycle-scene>header{max-width:none;margin-bottom:12px}.snapshot-lesson .lifecycle-scene.is-focused>header{max-width:1120px}.front-teaching strong,.response-lesson strong,.snapshot-lesson strong{font-weight:600}
+
+/* Screenshot feedback: one prose face; full-width reading within each composition. */
+.front-teaching,.response-lesson,.supervision-bridge,.lifecycle-prelesson,.snapshot-lesson>.front-handoff{--rk-font-body:var(--der-prose-font)}
+.front-teaching :is(p,figcaption,summary,small),.response-lesson :is(p,summary,small){font-family:var(--der-prose-font)}
+.stream-sample{display:grid;justify-items:center;gap:8px}.stream-sample .model-mark{width:52px;height:52px}.parameter-thread sub{font-size:.6em}
+.parameter-stream .figure-label{font-size:14px}.parameter-thread i{font-family:var(--der-prose-font);font-style:normal}
+.lesson-1 .chapter-summary,.lesson-2 .chapter-summary,.lesson-3 .chapter-summary,.gcl-context p,.supervision-bridge>p,.second-round>p,.front-teaching .front-question,.lifecycle-prelesson>.front-question{max-width:none}
+.same-input{margin:24px 0 28px}.response-finding p:last-child{margin-bottom:0}
+
+.stream-id{font-size:18px;color:var(--rk-ink)}.stream-id sub{font-size:.7em}

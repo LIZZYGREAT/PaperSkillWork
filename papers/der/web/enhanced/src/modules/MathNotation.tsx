@@ -24,3 +24,13 @@ export function SquaredDefinition({ identified = true }: { identified?: boolean 
 export function ShiftIdentity() {
   return <Equation label="所有 logits 增加同一个 c，softmax 分子分母同时乘 e 的 c 次方，概率不变。"><mfrac><msup><mi>e</mi><mrow><Sub value="z" /><mo>+</mo><mi>c</mi></mrow></msup><mrow><Sum index="j" /><msup><mi>e</mi><mrow><Sub value="z" index="j" /><mo>+</mo><mi>c</mi></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mrow><msup><mi>e</mi><mi>c</mi></msup><msup><mi>e</mi><Sub value="z" /></msup></mrow><mrow><msup><mi>e</mi><mi>c</mi></msup><Sum index="j" /><msup><mi>e</mi><Sub value="z" index="j" /></msup></mrow></mfrac><mo>=</mo><mfrac><msup><mi>e</mi><Sub value="z" /></msup><mrow><Sum index="j" /><msup><mi>e</mi><Sub value="z" index="j" /></msup></mrow></mfrac></Equation>;
 }
+
+/** Keep prose out of math fonts and typeset the derivation as actual mathematics. */
+export function KLGradientDerivation() {
+  return <div className="kl-proof">
+    <div><p>展开当前概率的对数：</p><Equation label="log q k 等于 a k 减去 log 求和 exp a j"><mi mathvariant="normal">log</mi><Sub value="q" /><mo>=</mo><Sub value="a" /><mo>−</mo><mi mathvariant="normal">log</mi><mrow><Sum index="j" /><msup><mi>e</mi><Sub value="a" index="j" /></msup></mrow></Equation></div>
+    <div><p>代入 KL，分离固定项：</p><Equation label="KL 等于 p log p 的和，减去 p a 的和，加上 log 求和 exp a j"><msub><mi>D</mi><mtext>KL</mtext></msub><mo>=</mo><Sum /><Sub value="p" /><mi mathvariant="normal">log</mi><Sub value="p" /><mo>−</mo><Sum /><Sub value="p" /><Sub value="a" /><mo>+</mo><mi mathvariant="normal">log</mi><mrow><Sum index="j" /><msup><mi>e</mi><Sub value="a" index="j" /></msup></mrow></Equation></div>
+    <div><p>历史概率固定且归一化，对当前分数求导：</p><Equation label="KL 对当前 a k 的偏导数等于 q k 减 p k"><mfrac><mrow><mo>∂</mo><msub><mi>D</mi><mtext>KL</mtext></msub></mrow><mrow><mo>∂</mo><Sub value="a" /></mrow></mfrac><mo>=</mo><Sub value="q" /><mo>−</mo><Sub value="p" /></Equation></div>
+    <p>等价地，KL 是交叉熵 H(p,q) 减去历史熵 H(p)。H(p) 不随 q 改变，因此最小化 KL 与最小化软标签交叉熵等价；交换 p、q 通常会改变结果。</p>
+  </div>;
+}

@@ -3,7 +3,7 @@ import { ResponseMeter } from "../shared/foundation/visual-parts/ResponseMeter";
 import ModelMark from "./review/ModelMark";
 import type { ModelClass } from "./review/ModelPixel";
 import { CLASSES, HISTORY_Z, RESPONSE_CASES, logitComparison, probabilityComparison, formatValue } from "./math-model";
-import { KLDefinition, SquaredDefinition, Equation } from "./MathNotation";
+import { KLDefinition, SquaredDefinition, Equation, KLGradientDerivation } from "./MathNotation";
 import { ReferenceButton } from "./Reference";
 import "./teaching-front.css";
 import "./mechanism-scenes.css";
@@ -50,7 +50,7 @@ export default function ResponseComparison() {
     media.addEventListener("change", settle); return () => media.removeEventListener("change", settle);
   }, [selected]);
   return <div className="response-lesson" data-core-items="I03 I04">
-    <p className="front-lead">同一输入 x₁，固定历史 z=(2, 1, 0)。改变当前响应，先看哪些类别偏离，再把偏离变成可优化的损失。</p>
+    <p className="front-lead">固定历史响应，切换当前分数，观察每一类的偏离怎样形成损失。</p>
     <section className="response-lab" data-design="response-comparison" data-case={RESPONSE_CASES[selected].id} data-z={r.z.join(",")} data-a={r.a.join(",")} data-p={r.p.join(",")} data-q={r.q.join(",")} data-kl={r.probabilityKL} data-l2={r.squaredDistance} data-progress={progress} data-playing={playing}>
       <header className="lab-heading"><div><p className="eyebrow">同一条记录 · 固定过去，改变现在</p><h3>分数的变化，两种观察镜头。</h3></div><div className="lab-input"><ModelMark /><span>x₁<small>同一个输入</small></span></div></header>
       <div className="lab-controls"><div className="response-cases" role="group" aria-label="响应比较情形">{RESPONSE_CASES.map((item, i) => <button key={item.id} data-response-case={item.id} aria-pressed={i === selected} onClick={() => begin(i)}>{item.label}</button>)}</div><div className="lab-transport"><button data-response-replay onClick={() => begin(selected, true)}>重播变化</button><button data-response-play disabled={progress === 1} onClick={() => setPlaying(!playing)}>{playing ? "暂停" : "继续"}</button></div></div>
@@ -85,7 +85,7 @@ export default function ResponseComparison() {
       </div>
       <div className="lab-verdict"><h4>两个约束在哪里不同？</h4><p className="response-verdict" aria-live="polite">{progress < 1 ? "正在比较不同的当前响应；历史目标保持固定。可暂停观察每一类的差值与贡献。" : RESPONSE_CASES[selected].conclusion}</p><small>合成教学响应；此处演示比较，不是优化器训练过程。</small></div>
     </section>
-    <details className="math-derivation"><summary>为什么 KL 对当前 logits 的梯度是 q−p？</summary><p>展开 log qₖ=aₖ−log Σⱼ exp(aⱼ)，得到 KL=Σₖ pₖ log pₖ−Σₖ pₖaₖ+log Σⱼ exp(aⱼ)。第一项固定，且 Σₖpₖ=1，所以对 aₖ 求导为 −pₖ+qₖ。</p><p>也就是 KL=H(p,q)−H(p)。H(p) 不随 q 改变，优化当前参数时，最小化 KL 与最小化软标签交叉熵等价。交换 p、q 通常改变结果。</p></details>
+    <details className="math-derivation"><summary>为什么 KL 对当前 logits 的梯度是 q−p？</summary><KLGradientDerivation /></details>
     <p className="comparison-conclusion">softmax 对统一加常数不敏感：每类同加 1 时，概率不变，原分数却改变了。两个损失保留的信息不同；这个反例不说明 KL 永远更差，也不说明两者恒等。</p>
     <div className="front-handoff"><p>DER 选择直接比较 logits。<strong>这份过去的 logits 从哪里获得？是否必须保存整个旧模型？</strong></p><a href="#U3-logit-memory">追踪历史监督的来源 ↓</a></div>
   </div>;

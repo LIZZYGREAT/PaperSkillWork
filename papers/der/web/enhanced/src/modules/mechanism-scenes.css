@@ -1,6 +1,6 @@
 /* S3: one shared logit stage feeds two distinct observation lenses. */
 .response-lesson{--history:#648671;--current:#b8834f}
-.response-lesson>.front-lead,.comparison-conclusion{max-width:46em}
+.response-lesson>.front-lead,.comparison-conclusion{max-width:none}
 .response-lab{margin:24px 0 28px;padding:28px 32px;background:#fcfdf9;border:1px solid #d5ded1;border-radius:14px}
 .lab-heading{display:flex;justify-content:space-between;align-items:center;gap:24px}.lab-heading h3{font-size:26px;margin:0}.lab-heading .eyebrow{margin-bottom:8px}
 .lab-input{display:flex;gap:10px;align-items:center;flex-shrink:0}.lab-input .model-mark{width:52px;height:52px}.lab-input span{font-size:20px}.lab-input small{display:block;font-size:13px;color:var(--rk-muted)}
@@ -17,8 +17,13 @@
 .contribution-paths{display:block;width:100%;height:70px}.contribution-paths path{fill:none;stroke:#bca489;stroke-width:1.5}.square-total{margin-top:0;background:#f5f2e9;padding-inline:14px}
 .response-lesson .equation{padding:14px 0;margin:0;overflow:visible}.response-lesson .equation math{font-size:22px}.square-gradient{margin:14px 0;font-size:14px}.square-gradient summary{cursor:pointer;color:var(--rk-accent)}
 .lab-verdict{border-top:1px solid var(--rk-line);margin-top:24px;padding-top:20px}.lab-verdict h4{font-size:18px;margin:0 0 8px}.response-lab .response-verdict{font-size:16px;max-width:52em;margin:0 0 8px;min-height:56px}.lab-verdict small{font-size:13px;color:var(--rk-muted)}
-.math-derivation{padding:18px 0;border-block:1px solid var(--rk-line);font-size:16px;margin:24px 0}.math-derivation summary{cursor:pointer;color:var(--rk-accent);font-weight:600}.math-derivation p{max-width:46em;margin:18px 0 0}
+.math-derivation{padding:18px 0;border-block:1px solid var(--rk-line);font-size:16px;margin:24px 0}.math-derivation summary{cursor:pointer;color:var(--rk-accent);font-weight:600}.math-derivation p{max-width:none;margin:18px 0 0}
 @media(max-width:800px){.response-lab{padding:20px}.lab-heading{align-items:start}.lab-heading h3{font-size:22px}.lab-input{display:none}.logit-stage{gap:12px}.class-focus{flex-direction:column}.response-legend{flex-wrap:wrap;gap:12px}.response-legend small{width:100%;margin:0}.observation-lenses{grid-template-columns:1fr;gap:28px}.squared-explanation{border-top:1px solid var(--rk-line);padding-top:22px}.response-lab .rk-response-meter{grid-template-columns:14px minmax(0,1fr) 38px;gap:4px}.probability-pairs .rk-response-meter{grid-template-columns:12px minmax(0,1fr) 38px}}
 @media(prefers-reduced-motion:reduce){.contribution-copy{display:none}}
 
 .contribution-copy rect{fill:#f7ecdf;stroke:#bca489}.contribution-copy text{font:12px var(--rk-font-mono);fill:var(--rk-ink)}
+
+.response-lesson .equation math{font-family:"Cambria Math",math}
+.response-lesson :is(.delta-label,.lens-result>strong,.difference-source,.square-contribution,.contribution-copy text,.rk-response-meter output){font-family:var(--der-prose-font);font-variant-numeric:tabular-nums}
+.kl-proof{padding-top:4px}.kl-proof>div{display:grid;grid-template-columns:minmax(240px,.8fr) minmax(0,1.6fr);align-items:center;gap:24px;border-bottom:1px solid var(--rk-line);padding:12px 0}.kl-proof>div>p{margin:0}.kl-proof .equation{padding:12px 0}.kl-proof .equation math{margin:0;font-size:23px}.kl-proof>p{margin-top:20px}
+@media(max-width:800px){.kl-proof>div{grid-template-columns:1fr;gap:8px}.kl-proof .equation math{font-size:20px}}

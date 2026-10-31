@@ -672,3 +672,15 @@ FULLSCREEN_LAYOUT=PASS（实际1440×900与1920×1080、DPR1、Chromium153.0.801
 代表证据保存在 `C:/Users/lenovo/.codex/visualizations/2026/10/31/01a1923c-865b-7811-827d-df3b90e90dc8/der-s3/`：s3-firstscreen-{1440,1920}.png、s3-{equal,preference,shifted,intermediate}-{1440,1920}.png、s3-late-intermediate-1440.png 及 full-report/final-s3-report。连续播放 JSON 与关键帧在同级 der-s3-playback。截图仅为待签收证据，不是获批基准；请先确认 S3 的观察工作台方向，再继续 S2 → S1 → 桥接与两轮预览。
 
 清理与交接：已读取两份公共报告并实看代表图，轻量报告与必要截图已提取至上述证据目录。本次两个准确 run 目录（14-01-49-620Z、14-05-46-630Z）均通过公共 cleanup-run 返回 CLEANED，并逐一 Test-Path=False；临时配置、采集脚本、无关回归截图与浏览器 debug.log 已清理。本次5195生产预览已停止，其余runner服务已自行退出。
+
+### 用户截图字体与排版修复（2026-10-31）
+
+接续 ad3ae7d，按用户五张截图修复。用户补充明确要求保留 x₁–x₃ 并添加像素图：S1 保留编号，并展示对应 Claude/GPT/DeepSeek 像素图与名称；θ 用正文无衬线字体与 HTML 下标。S2 样本/真实标签移到标题之后；压缩重复说明，保留标签监督影响所有输出但不重建旧分数、软目标和暗知识的因果。取消 S2 结论、前半程章节摘要、S3 导语/总结/推导和桥接正文的任意局部限宽，使用各自现有构图内的完整宽度。
+
+字体根因：Kit 正文默认优先 Aptos/Segoe UI，论文前半程优先 Microsoft YaHei，控件和响应条仍走 Kit 字体。仅在前半程局部绑定统一正文变量，数值也用同一字体与 tabular-nums，D1 SVG/内部字体不改。KL 推导原先将 Unicode 下标和长公式混入段落，现改为三步 MathML：展开 log q、代入 KL、求梯度 q−p。正文与数学分开，数学字体统一 Cambria Math；保留 H(p) 固定、交叉熵等价及 KL 方向说明。math-model 与训练逻辑不改。
+
+验证：npm.cmd --prefix papers/der/web/enhanced run build PASS；node papers/der/web/enhanced/tests/browser.test.mjs --front-only 两档242项 PASS。新增断言覆盖像素图/编号并存、标题→样本顺序、可用宽度、正文/控件字体、三步数学结构和真实字形。CDP CSS.getPlatformFontsForNode 实测图注/S2正文/推导正文为 Microsoft YaHei，公式为 Cambria Math。已有三态损失、暂停/回放、Reference、D1居中/身份检查保留通过；此次不重复未改动的D1全程实时时钟播放。
+
+公共QA：本次临时聚焦配置 type-repair-config.json，在生产 /der-review/ 下覆盖1440×900与1920×1080的S1数据流、S2布局、展开推导、S3共同平移，共8状态 PASS；GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS PASS。报告仍有原S8四个11px眉题警告，本次不改该区。已实看两档相关局部截图，无挤压、裁切或额外限宽，标题下方的样本信息与新增像素/原编号均可见。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless）；HUMAN_ACCEPTANCE=PENDING，不代填S3方向签收。
+
+证据保留在当前会话 visualizations/der-type-repair：s1-stream、s2-response、s3-proof、s3-firstscreen、s3-intermediate两档代表图。报告已读取；准确run-2026-10-31T14-44-27-142Z经cleanup-run返回CLEANED、Test-Path=False。临时配置与无用回归截图已清理，5196服务由runner自行关闭。

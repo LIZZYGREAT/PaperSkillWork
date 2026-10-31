@@ -5,6 +5,19 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  check(await label.locator('.response-toggle').count()===0,'S2 has no expand/collapse button');
  check(await label.locator('[data-response]').count()===2,'Both full responses are always shown');
  check(await label.locator('.prediction-answer').count()===2&&await label.locator('.response-finding').isVisible(),'Predictions and their explanation are directly visible');
+ const sampleOrder=await label.evaluate(el=>el.querySelector('h3').getBoundingClientRect().bottom<=el.querySelector('.same-input').getBoundingClientRect().top);
+ check(sampleOrder,'S2 shared sample sits below its title');
+ check(await page.locator('.stream-sample .model-mark').count()===3,'S1 stream uses the three shared pixel identities');
+ check((await page.locator('.stream-sample>span:not(.stream-id)').allTextContents()).join(',')==='Claude,GPT,DeepSeek','S1 pixel samples retain the shared class order');
+ check((await page.locator('.stream-id').allTextContents()).join(',')==='x1,x2,x3','S1 preserves sample identifiers alongside pixels');
+ const widths=await page.evaluate(()=>['.response-finding','.lesson-2 .chapter-summary','.math-derivation'].map(selector=>{const el=document.querySelector(selector);return {selector,width:el.getBoundingClientRect().width,parent:el.parentElement.getBoundingClientRect().width};}));
+ check(widths.every(w=>Math.abs(w.width-w.parent)<2),'Reading blocks use their available horizontal space: '+JSON.stringify(widths));
+ const fonts=await page.evaluate(()=>['.parameter-stream figcaption','.parameter-stream .figure-label','.response-finding p','.response-finding .term-ref','.prediction-sheet .rk-response-meter label','.response-cases button','.lesson-2 .chapter-summary'].filter(selector=>document.querySelector(selector)).map(selector=>({selector,font:getComputedStyle(document.querySelector(selector)).fontFamily})));
+ check(fonts.length>=6&&fonts.every(f=>f.font===fonts[0].font),'Front prose, labels and controls share one typeface: '+JSON.stringify(fonts));
+ await page.locator('.math-derivation>summary').click();
+ check(await page.locator('.kl-proof .equation math').count()===3&&await page.locator('.kl-proof mfrac').count()===1,'KL proof uses three properly typeset equations');
+ await shot('s3-proof','.math-derivation');await page.locator('.math-derivation>summary').click();
+ await shot('s1-stream','.parameter-stream');
  await shot('s1-s2-reading','#U1-replay-entry');await shot('s2-response','.label-investigation');
  for(const [id,values] of [['history',LABEL_OLD],['current',LABEL_CURRENT]]) {
   const seen=await label.locator(`[data-response=${id}] .rk-response-meter`).evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.value)));
@@ -52,6 +65,16 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  check(alignment.every(item=>item.error<2),'Section headings and prose share one left edge: '+JSON.stringify(alignment));
  const type=await page.evaluate(()=>['.gcl-context p','.gcl-context strong','.first-round p','.round-state li','.second-round p','.lifecycle-start'].map(selector=>getComputedStyle(document.querySelector(selector)).fontFamily));
  check(type.every(family=>family===type[0]&&family.startsWith('"Microsoft YaHei"')),'Body, emphasis, lists and controls share the same prose font');
+ const cdp=await page.context().newCDPSession(page);await cdp.send('DOM.enable');await cdp.send('CSS.enable');
+ const {root}=await cdp.send('DOM.getDocument');
+ await page.locator('.math-derivation>summary').click();
+ for(const selector of ['.parameter-stream figcaption','.response-finding p','.kl-proof>p','.kl-proof math mi']){
+  const {nodeId}=await cdp.send('DOM.querySelector',{nodeId:root.nodeId,selector});
+  const {fonts}=await cdp.send('CSS.getPlatformFontsForNode',{nodeId});
+  const expected=selector.endsWith(' mi')?'Cambria Math':'Microsoft YaHei';
+  check(fonts.some(f=>f.familyName===expected),'Actual rendered font for '+selector+' is '+expected+': '+JSON.stringify(fonts));
+ }
+ await cdp.detach();await page.locator('.math-derivation>summary').click();
  const round=await page.locator('.first-round').evaluate(el=>{const flow=el.querySelector('.round-state').getBoundingClientRect(),text=el.firstElementChild.getBoundingClientRect();return {flow:flow.width,text:text.width,outside:el.scrollWidth>el.clientWidth+1};});
  check(round.flow<round.text&&!round.outside,'The compact flow leaves sufficient width for causal prose without an oversized empty panel');
  const pre=await page.locator('.lifecycle-prelesson').boundingBox(),d1=await page.locator('[data-scene=lifecycle]').boundingBox();
