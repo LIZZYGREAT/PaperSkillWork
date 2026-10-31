@@ -718,3 +718,9 @@ Agent视觉复核：用生产整页截图按文档坐标裁出两档的开场、
 证据在当前会话visualizations/der-objects-polish，保留read-opening/reasoning/constraints/replay/prediction/math/bridge/rounds两档图与objects-qa/rounds-qa轻量报告。全篇浏览器首跑在DER++选择器超时，恰逢生产dist重建；不将该次记为PASS，正在使用不再变化的最终构建重跑。D1实时播放此次未重跑，受保护源码diff为空。
 
 最终全篇重跑：最终dist保持不变后，npm.cmd --prefix papers/der/web/enhanced run test:browser两档2724项PASS，未再出现DER++选择器超时。首跑失败及构建时间重叠的记录保留，不删除/放宽原断言。最终264项前半程检查、25项模型测试与build结果均覆盖当前源码。两次公共run均准确返回CLEANED并Test-Path=False，报告与必要截图已提取；临时采集脚本/配置和大幅整页中间图已清理，本次5195预览已停止。
+
+### 方案继续执行 · W2（2026-10-31）
+
+用户“整体还行，继续按文档执行”确认当前方向，继续剩余W2–W5，不代填paper.yaml人审阶段。W2以最新执行方案为准恢复真正的逐步揭示：首屏只见两次Claude正确预测；历史先展开，再将当前响应从同一参照连续变到(2,0,1)，最后出现排序观察与Dark Knowledge解释。提供分类答案/完整响应两个观察模式及暂停、重播；与此前删除旧收起按钮的界面分开，当前控件承担方案要求的揭示任务。小头像、类别顺序、柱条对齐与此前字体/卡片修复保留。复用既有useSceneTimeline，reduced-motion一键读完整结果，仍可返回只看答案。
+
+build PASS；front-only双视口270项PASS，含历史先于当前、暂停中间态、重播一致与共享最终数据。已实看1440初态/历史展开中帧和1920最终态；证据在当前会话visualizations/der-execution。最终占位区域最小高度随展开进度变化，避免初态保留整组分数的空白。

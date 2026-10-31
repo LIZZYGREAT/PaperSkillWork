@@ -59,6 +59,14 @@
           "id": "s2-response",
           "actions": [
             {
+              "type": "click",
+              "selector": "[data-label-mode=full]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 5000
+            },
+            {
               "selector": ".label-investigation",
               "type": "scrollIntoView"
             }
@@ -236,6 +244,14 @@
           "id": "rank-exchange",
           "actions": [
             {
+              "type": "click",
+              "selector": "[data-label-mode=full]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 5000
+            },
+            {
               "type": "scrollIntoView",
               "selector": ".response-ranks"
             }
@@ -256,6 +272,19 @@
             {
               "type": "scrollIntoView",
               "selector": ".snapshot-time-axis"
+            }
+          ]
+        },
+        {
+          "id": "s2-answer",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-label-mode=answer]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".label-investigation"
             }
           ]
         }

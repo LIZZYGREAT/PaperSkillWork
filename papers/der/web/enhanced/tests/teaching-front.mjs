@@ -3,8 +3,16 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
  const label=page.locator('.label-investigation');
  check(await label.locator('.response-toggle').count()===0,'S2 has no expand/collapse button');
- check(await label.locator('[data-response]').count()===2,'Both full responses are always shown');
- check(await label.locator('.prediction-answer').count()===2&&await label.locator('.response-finding').isVisible(),'Predictions and their explanation are directly visible');
+ check(await label.locator('.prediction-answer').count()===2,'Both predictions are visible before the reveal');
+ check(await label.getAttribute('data-current-progress')==='0'&&!await label.locator('.response-finding').isVisible(),'Detailed responses and dark knowledge wait for observation');
+ await shot('s2-answer','.label-investigation');
+ await label.locator('[data-label-mode=full]').click();await page.clock.runFor(700);
+ check(+(await label.getAttribute('data-history-progress'))>0&&+(await label.getAttribute('data-history-progress'))<1&&await label.getAttribute('data-current-progress')==='0','History expands first while current scores remain covered');
+ await label.locator('[data-label-play]').click();const frozen=await label.getAttribute('data-history-progress');await page.clock.runFor(600);
+ check(await label.getAttribute('data-history-progress')===frozen,'Reveal pauses without losing its intermediate state');
+ await shot('s2-history-motion','.label-investigation');
+ await label.locator('[data-label-replay]').click();await page.clock.runFor(5000);
+ check(await label.getAttribute('data-current-progress')==='1'&&await label.locator('.response-finding').isVisible(),'Full reveal ends with the preference observation');
  const sampleOrder=await label.evaluate(el=>el.querySelector('h3').getBoundingClientRect().bottom<=el.querySelector('.same-input').getBoundingClientRect().top);
  check(sampleOrder,'S2 shared sample sits below its title');
  check(await page.locator('.stream-sample .model-mark').count()===3,'S1 stream uses the three shared pixel identities');
@@ -43,7 +51,7 @@ export async function teachingFrontChecks({page,base,check,shot}) {
   const seen=await label.locator(`[data-response=${id}] .rk-response-meter`).evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.value)));
   check(JSON.stringify(seen)===JSON.stringify(values),'S2 detailed responses use shared math inputs: '+id);
  }
- check(await label.locator('.response-finding').isVisible(),'Observation and conclusion remain visible without an action');await shot('s2-open','.label-investigation');
+ check(await label.locator('.response-finding').isVisible(),'Observation stays visible after the reveal');await shot('s2-open','.label-investigation');
  const lab=page.locator('[data-design=response-comparison]');
  check(await lab.count()===1&&await page.locator('[data-design=kl],[data-design=logits]').count()===0,'Only one dual representation lab is mounted');
  for(let i=0;i<3;i++) {
