@@ -1,4 +1,5 @@
 import { SampleToken } from "../shared/foundation/visual-parts/SampleToken";
+import { StreamMotion, ReplayReadMotion } from "./FrontMotion";
 import { useState } from "react";
 import { useSceneTimeline } from "./review/SceneTransport";
 import { ResponseMeter } from "../shared/foundation/visual-parts/ResponseMeter";
@@ -34,7 +35,7 @@ export default function ReplayEntry() {
         <p className="front-lead">分类模型根据当前数据调整参数。持续学习时，新的样本不断到来，模型继续使用<strong>同一组参数</strong>训练。</p>
         <p>可是过去的数据未必还在眼前。如果只根据新数据更新，模型对旧输入的判断可能变差，这便产生了<strong>灾难性遗忘</strong>问题。</p>
       </div>
-      <figure className="parameter-stream"><p className="figure-label">数据不断到来</p><div className="stream-states">{CLASSES.map((name,k) => <div className="stream-step" key={name}><div className="stream-sample"><ModelMark model={k as ModelClass} /><span>{name}</span><span className="stream-id">x<sub>{k+1}</sub></span><span className="parameter-state">θ<sub>{k}</sub></span></div>{k < CLASSES.length-1 && <svg className="stream-arrow" viewBox="0 0 64 24" role="img" aria-label="持续更新"><path d="M3 12 H59 M51 5 L59 12 L51 19" /></svg>}</div>)}</div><figcaption>数据依次进入同一模型，参数持续更新。<br />旧输入的判断，也可能随之改变。</figcaption></figure>
+      <StreamMotion />
     </section>
     <section className="reasoning-stair" aria-label="从完整历史到有限回放的推导">
       <article><div className="archive-object archive-all" aria-hidden="true">{Array.from({length:6},(_,i)=><i key={i} />)}<b>…</b></div><h4>全部历史都在？</h4><p>如果历史一直可用，就能把新旧数据混在一起训练。</p></article>
@@ -46,6 +47,7 @@ export default function ReplayEntry() {
       <div className="er-sources"><div className="er-source"><p><strong>当前数据</strong><span>新输入与真实标签</span></p><div className="er-record"><ModelMark model={2} /><span>x<sub>t</sub><small>y<sub>t</sub> = DeepSeek</small></span></div></div><div className="er-source"><p><strong>记忆记录</strong><span>少量旧输入与真实标签</span></p><div className="er-record er-memory-record"><ModelMark /><span>x′<small>y′ = Claude</small></span></div></div></div>
       <div className="er-join"><svg viewBox="0 0 160 280" role="img" aria-label="新旧样本汇合为同一个分类目标"><path d="M2 56 H52 Q72 56 72 76 V120 Q72 140 92 140 H154 M2 224 H52 Q72 224 72 204 V160 Q72 140 92 140 M145 132 L154 140 L145 148" /></svg></div><div className="er-model"><svg className="er-network" viewBox="0 0 80 64" aria-hidden="true"><path d="M10 16L40 10L70 20M10 16L40 32L70 20M10 48L40 32L70 44M10 48L40 54L70 44M10 16L40 54M10 48L40 10M40 10L70 44M40 54L70 20" />{[[10,16],[10,48],[40,10],[40,32],[40,54],[70,20],[70,44]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="5" />)}</svg><div><strong>当前模型 θ</strong><span>学习新数据，也复习旧数据</span></div></div>
       <figcaption>新旧样本共同提供标签监督，训练同一个当前模型。</figcaption>
+      <ReplayReadMotion />
     </figure>
     <p className="front-question">有限回放已经让旧样本可以重新参与训练。<br /><strong>但一张旧图片与一个真实标签，究竟保存了多少过去的模型知识？</strong></p>
     <section className="label-investigation" data-label-revealed={currentProgress===1} data-history-progress={historyProgress} data-current-progress={currentProgress} aria-labelledby="label-investigation-title">
