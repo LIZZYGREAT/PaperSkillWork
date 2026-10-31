@@ -704,3 +704,17 @@ FULLSCREEN_LAYOUT=PASS（实际1440×900与1920×1080、DPR1、Chromium153.0.801
 按最新两张截图：S1主视觉列加宽，三列间距26→56px，短字符箭头替换为50px SVG路径，保持样本/θ对应。ER两条记录各112px高、行间距56px；汇合SVG改为160×280，端点y=56/224对齐记录中心，中点y=140对齐同一模型。增加纵向呼吸空间，未改变(x,y)与标签监督语义。
 
 build PASS；front-only双视口252项PASS，实看两档代表图，状态列、记录、箭头无裁切/重叠。证据在当前会话visualizations/der-objects-polish的s1-stream与er-records。此部分先提交；接着完成用户要求的01–03卡片与视觉对象检查。
+
+### 01–03卡片与教学对象深化（2026-10-31）
+
+接续8ab89e7。按用户要求逐段检查并改善01–03，不只增加背景框。01用历史堆叠、容量K框、从M读回样本三个局部对象承接有限回放，GCL三项要求作为紧凑约束条；开场导语21→18px，正文17px，辅助说明15px。02在结论旁增加像素类别的历史/当前名次对照：Claude 1→1、GPT 2→3、DeepSeek 3→2，名次直接由LABEL_OLD/LABEL_CURRENT求得，不维护第二套分数。正文与可观察差异相邻，整块保持章节宽度。
+
+03新增论文局部TeachingObjects：教师/学生小网络明确固定与可训练角色；ER与DER卡片各自包含标签记录/冻结数值记录；参数时刻卡片重复展示同一z₁，直观看到θ改变而z₁不变。FrozenResponse所有值读取HISTORY_Z，不影响原math-model。第一轮使用冻结对象与紧凑状态卡，微调两栏比例及列表间距，减少右卡过高导致的左侧空白；第二轮给当前样本与旧记录各自可辨认的对象，联合目标改为MathML，保留一次联合更新和更新后入池的时序。D1播放器内部SVG/时钟/九阶段与S4–S8源码不改。
+
+检查：build PASS，npm test 25/25 PASS；最终front-only双视口264项PASS（新增记录中心/花括号端点对齐、长箭头与列间距、三类名次实算、固定向量跨时刻不变、新对象不裁切等断言）。公共QA覆盖开场/推导卡/ER/名次/教师/记录/冻结时刻/两轮预讲解，共16状态PASS；第一轮高度微调后再跑两轮2状态PASS，GEOMETRY_QA、STYLE_QA、BROWSER_ERRORS均PASS。仅有原S8四条11px眉题警告。正式visual-qa.json补充rank-exchange、teacher-output、frozen-targets三状态，以后可持续回归。
+
+Agent视觉复核：用生产整页截图按文档坐标裁出两档的开场、推导卡、约束、ER、S2、S3实验台、桥接和两轮预讲解，避免element screenshot自动滚动时顶栏混入长区域的采集伪影。已实际查看两档代表区域，检查对象身份、正文比例、字号和公式、边界与间隔；发现并修复时轴中frozen-cells的旧display样式覆盖，以及第一轮状态卡过高。截图仅是审查证据，不是人审基准。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless）；HUMAN_ACCEPTANCE仍PENDING。
+
+证据在当前会话visualizations/der-objects-polish，保留read-opening/reasoning/constraints/replay/prediction/math/bridge/rounds两档图与objects-qa/rounds-qa轻量报告。全篇浏览器首跑在DER++选择器超时，恰逢生产dist重建；不将该次记为PASS，正在使用不再变化的最终构建重跑。D1实时播放此次未重跑，受保护源码diff为空。
+
+最终全篇重跑：最终dist保持不变后，npm.cmd --prefix papers/der/web/enhanced run test:browser两档2724项PASS，未再出现DER++选择器超时。首跑失败及构建时间重叠的记录保留，不删除/放宽原断言。最终264项前半程检查、25项模型测试与build结果均覆盖当前源码。两次公共run均准确返回CLEANED并Test-Path=False，报告与必要截图已提取；临时采集脚本/配置和大幅整页中间图已清理，本次5195预览已停止。

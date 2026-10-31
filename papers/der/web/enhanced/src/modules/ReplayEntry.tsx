@@ -5,6 +5,7 @@ import ModelMark from "./review/ModelMark";
 import type { ModelClass } from "./review/ModelPixel";
 import { Term } from "./Reference";
 import "./teaching-front.css";
+import "./teaching-objects.css";
 
 function Prediction({ current }: { current?: boolean }) {
   const values = current ? LABEL_CURRENT : LABEL_OLD;
@@ -28,11 +29,11 @@ export default function ReplayEntry() {
       <figure className="parameter-stream"><p className="figure-label">数据不断到来</p><div className="stream-states">{CLASSES.map((name,k) => <div className="stream-step" key={name}><div className="stream-sample"><ModelMark model={k as ModelClass} /><span>{name}</span><span className="stream-id">x<sub>{k+1}</sub></span><span className="parameter-state">θ<sub>{k}</sub></span></div>{k < CLASSES.length-1 && <svg className="stream-arrow" viewBox="0 0 64 24" role="img" aria-label="持续更新"><path d="M3 12 H59 M51 5 L59 12 L51 19" /></svg>}</div>)}</div><figcaption>数据依次进入同一模型，参数持续更新。<br />旧输入的判断，也可能随之改变。</figcaption></figure>
     </section>
     <section className="reasoning-stair" aria-label="从完整历史到有限回放的推导">
-      <p><span>一个自然想法</span>如果全部历史一直可用，就能把新旧数据混在一起训练。</p>
-      <p><span>但空间有上限</span>数据流的长度未知，记忆容量固定，历史不能无限保存。</p>
-      <p><span>因此，留下少量历史</span>之后再抽出来复习——这就是<strong>经验回放（ER）</strong>。</p>
+      <article><div className="archive-object archive-all" aria-hidden="true">{Array.from({length:6},(_,i)=><i key={i} />)}<b>…</b></div><h4>全部历史都在？</h4><p>如果历史一直可用，就能把新旧数据混在一起训练。</p></article>
+      <article><div className="archive-object archive-limit" aria-hidden="true"><i /><i /><b>容量 K</b></div><h4>空间有上限。</h4><p>数据流长度未知，记忆容量固定，无法无限保存。</p></article>
+      <article><div className="archive-replay" aria-hidden="true"><ModelMark /><span>↗</span><span>M</span></div><h4>留下少量，再复习。</h4><p>从小记忆中读回旧样本，这就是<strong>经验回放（ER）</strong>。</p></article>
     </section>
-    <section className="gcl-context"><h3>让这个办法适用于真实的数据流。</h3><p>分布可能逐渐漂移，也可能突然改变，未必按 Task A → Task B 整齐切换。论文将这种现实要求概括为<strong>通用持续学习（GCL）</strong>：训练不依赖任务边界，预测不需要额外的任务编号，历史记忆容量有界。</p><p>有限回放符合这些要求：它让部分旧输入重新参与当前训练，无须等到一个任务结束。</p></section>
+    <section className="gcl-context"><h3>让这个办法适用于真实的数据流。</h3><p>分布可能渐变，也可能突变，未必按 Task A → Task B 整齐切换。论文用<strong>通用持续学习（GCL）</strong>概括三项要求：</p><div className="gcl-constraints"><span><b>训练</b>不依赖任务边界</span><span><b>预测</b>不需要任务编号</span><span><b>记忆</b>容量有界</span></div><p>有限回放让部分旧输入重新参与训练，无须等到一个任务结束。</p></section>
     <figure className="er-relation" aria-label="当前数据与记忆旧数据共同监督同一个当前模型">
       <div className="er-sources"><div className="er-source"><p><strong>当前数据</strong><span>新输入与真实标签</span></p><div className="er-record"><ModelMark model={2} /><span>x<sub>t</sub><small>y<sub>t</sub> = DeepSeek</small></span></div></div><div className="er-source"><p><strong>记忆记录</strong><span>少量旧输入与真实标签</span></p><div className="er-record er-memory-record"><ModelMark /><span>x′<small>y′ = Claude</small></span></div></div></div>
       <div className="er-join"><svg viewBox="0 0 160 280" role="img" aria-label="新旧样本汇合为同一个分类目标"><path d="M2 56 H52 Q72 56 72 76 V120 Q72 140 92 140 H154 M2 224 H52 Q72 224 72 204 V160 Q72 140 92 140 M145 132 L154 140 L145 148" /></svg></div><div className="er-model"><svg className="er-network" viewBox="0 0 80 64" aria-hidden="true"><path d="M10 16L40 10L70 20M10 16L40 32L70 20M10 48L40 32L70 44M10 48L40 54L70 44M10 16L40 54M10 48L40 10M40 10L70 44M40 54L70 20" />{[[10,16],[10,48],[40,10],[40,32],[40,54],[70,20],[70,44]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="5" />)}</svg><div><strong>当前模型 θ</strong><span>学习新数据，也复习旧数据</span></div></div>
@@ -43,7 +44,7 @@ export default function ReplayEntry() {
       <p className="eyebrow">S2 · 最终答案与整组响应</p><h3 id="label-investigation-title">两次都预测正确，判断就没有变吗？</h3>
       <div className="same-input"><SampleToken sampleId="x1" label="同一旧输入 x₁"><ModelMark /></SampleToken><p>真实标签 y₁ = Claude<br /><small>合成分类示例 · Claude / GPT / DeepSeek</small></p></div>
       <div className="prediction-pair"><Prediction /><Prediction current /></div>
-      <div id="response-finding" className="response-finding" aria-live="polite"><h4>最高类别相同，另外两类的排序却交换了。</h4><p>真实标签指定正确类别；分类<Term id="ce">交叉熵</Term>会影响所有输出，却不要求恢复过去的整组分数。</p><p>要保留旧响应，就额外记录 <Term id="softmax" /> 概率或原始 <Term id="logits" />，作为未来匹配的软目标。这些超出单个类别答案的响应信息称为 <strong>Dark Knowledge（暗知识）</strong>。</p></div>
+      <div id="response-finding" className="response-finding" aria-live="polite"><div><h4>答案没变，偏好已经交换。</h4><p>真实标签指定正确类别；分类<Term id="ce">交叉熵</Term>会影响所有输出，却不要求恢复过去的整组分数。</p><p>要保留旧响应，就额外记录 <Term id="softmax" /> 概率或原始 <Term id="logits" />，作为未来匹配的软目标。这些超出单个类别答案的响应信息称为 <strong>Dark Knowledge（暗知识）</strong>。</p></div><div className="response-ranks"><div className="rank-heading"><span>类别偏好</span><span>历史名次</span><span /><span>当前名次</span></div>{CLASSES.map((name,k)=><div className="rank-row" key={name}><span><ModelMark model={k as ModelClass} />{name}</span><b>{LABEL_OLD.filter(value=>value>LABEL_OLD[k]).length+1}</b><span className="rank-direction" aria-hidden="true">{LABEL_OLD[k]===LABEL_CURRENT[k] ? "＝" : "→"}</span><b>{LABEL_CURRENT.filter(value=>value>LABEL_CURRENT[k]).length+1}</b></div>)}</div></div>
       <p className="caption">本节比较时刻的 a=(2,0,1) 将沿用到下一节。类别名称和像素图案仅用于合成分类教学。</p>
     </section>
 

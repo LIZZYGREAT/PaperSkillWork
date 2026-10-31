@@ -20,6 +20,16 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  const states=await page.locator('.stream-sample').evaluateAll(nodes=>nodes.map(el=>{const sample=el.querySelector('.model-mark').getBoundingClientRect(),theta=el.querySelector('.parameter-state').getBoundingClientRect();return {aligned:Math.abs(sample.x+sample.width/2-theta.x-theta.width/2)<2,ordered:sample.bottom<theta.top};}));
  check(states.length===3&&states.every(s=>s.aligned&&s.ordered),'Each sample aligns vertically with its own parameter state');
  check(await page.locator('.stream-arrow').count()===2,'Two arrows connect the three complete state columns');
+ const streamSpace=await page.locator('.stream-states').evaluate(el=>({gap:parseFloat(getComputedStyle(el).columnGap),arrows:[...el.querySelectorAll('.stream-arrow')].map(a=>a.getBoundingClientRect().width)}));
+ check(streamSpace.gap>=50&&streamSpace.arrows.every(w=>w>=45),'State columns and their arrows have deliberate breathing room');
+ const merge=await page.locator('.er-relation').evaluate(el=>{const svg=el.querySelector('.er-join svg'),records=[...el.querySelectorAll('.er-record')];return {height:svg.getBoundingClientRect().height,errors:records.map((r,i)=>{const p=new DOMPoint(2,i===0?56:224).matrixTransform(svg.getScreenCTM()),b=r.getBoundingClientRect();return Math.abs(p.y-b.y-b.height/2);})};});
+ check(merge.height>=280&&merge.errors.every(e=>e<2),'Tall replay brace endpoints align with the actual record centers: '+JSON.stringify(merge));
+ const ranks=await page.locator('.rank-row').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('b')].map(el=>+el.textContent)));
+ check(JSON.stringify(ranks)===JSON.stringify([[1,1],[2,3],[3,2]]),'Rank objects derive the same historical/current preference swap');
+ check(await page.locator('.reasoning-stair article').count()===3&&await page.locator('.gcl-constraints>span').count()===3,'Finite-memory reasoning has three object scenes and a compact constraints strip');
+ check(await page.locator('.snapshot-time-axis [data-frozen-vector="2,1,0"]').count()===3,'Frozen values retain their identity across parameter snapshots');
+ const objects=await page.locator('.reasoning-stair article,.response-ranks,.frozen-response,.teacher-relation,.record-comparison>div,.joint-branches>div').evaluateAll(nodes=>nodes.map(el=>({class:el.className,clipped:el.scrollWidth>el.clientWidth+1})));
+ check(objects.every(o=>!o.clipped),'New teaching objects and their labels fit without clipping: '+JSON.stringify(objects));
  check(await page.locator('.chapter-handoff').count()===6,'Every chapter boundary has one shared handoff card');
  const targets=await page.locator('.handoff-link').evaluateAll(nodes=>nodes.map(el=>!!document.querySelector(el.getAttribute('href'))));
  check(targets.length===6&&targets.every(Boolean),'All transition cards link to real next chapters');

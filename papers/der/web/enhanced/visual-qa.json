@@ -231,6 +231,33 @@
               "selector": ".lesson-6 .chapter-handoff"
             }
           ]
+        },
+        {
+          "id": "rank-exchange",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".response-ranks"
+            }
+          ]
+        },
+        {
+          "id": "teacher-output",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".teacher-relation"
+            }
+          ]
+        },
+        {
+          "id": "frozen-targets",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".snapshot-time-axis"
+            }
+          ]
         }
       ]
     },

@@ -12,10 +12,6 @@
 .front-lead{font-size:21px;line-height:1.85}
 .parameter-stream{padding:28px 32px;border-block:1px solid var(--rk-line)}
 .parameter-stream figcaption{font-size:15px;line-height:1.8;color:var(--rk-muted)}
-.reasoning-stair{margin:65px 0 55px;max-width:1000px}
-.reasoning-stair p{padding:10px 0 18px 26px;border-left:2px solid #cbd8cb;max-width:780px}
-.reasoning-stair p:nth-child(2){margin-left:9%}.reasoning-stair p:nth-child(3){margin-left:18%;border-color:#8ca78f}
-.reasoning-stair span{display:block;color:var(--rk-accent);font-size:14px;letter-spacing:.05em;margin-bottom:6px}
 .gcl-context{margin:0 0 32px;max-width:none}
 .gcl-context p{max-width:1000px}.gcl-context strong{white-space:nowrap}
 .er-relation{display:grid;grid-template-columns:minmax(0,1.2fr) 160px minmax(260px,.8fr);gap:24px;align-items:center;background:#f2f5ef;padding:28px 32px;border-radius:12px}
