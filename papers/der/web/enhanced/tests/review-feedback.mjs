@@ -3,7 +3,8 @@ export async function reviewFeedbackChecks({page,base,check,shot}){
  const lesson=page.locator('.response-lesson');
  for(const id of ['equal','preference','shifted']){
   await lesson.locator('[data-response-case='+id+']').click();
-  const boxes=await lesson.locator('.math-panel .equation').evaluateAll(nodes=>nodes.map(el=>({scrollY:el.scrollHeight-el.clientHeight,scrollX:el.scrollWidth-el.clientWidth,ox:getComputedStyle(el).overflowX,oy:getComputedStyle(el).overflowY})));
+  const boxes=await lesson.locator('.observation-lenses .equation').evaluateAll(nodes=>nodes.map(el=>({scrollY:el.scrollHeight-el.clientHeight,scrollX:el.scrollWidth-el.clientWidth,ox:getComputedStyle(el).overflowX,oy:getComputedStyle(el).overflowY})));
+  check(boxes.length>=2,'Both lens definitions are inspected');
   check(boxes.every(b=>b.scrollY<=1&&b.scrollX<=1&&b.ox==='visible'&&b.oy==='visible'),'Mainline equations have no internal scrolling or clipping: '+JSON.stringify(boxes));
  }
  await shot('feedback-comparison','.response-lab');

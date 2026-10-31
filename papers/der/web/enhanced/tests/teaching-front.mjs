@@ -14,7 +14,7 @@ export async function teachingFrontChecks({page,base,check,shot}) {
  const lab=page.locator('[data-design=response-comparison]');
  check(await lab.count()===1&&await page.locator('[data-design=kl],[data-design=logits]').count()===0,'Only one dual representation lab is mounted');
  for(let i=0;i<3;i++) {
-  await lab.locator(`[data-response-case=${RESPONSE_CASES[i].id}]`).click();await page.clock.runFor(300);
+  await lab.locator(`[data-response-case=${RESPONSE_CASES[i].id}]`).click();await page.clock.runFor(1600);
   const r=responseComparison(i),data=await lab.evaluate(el=>({...el.dataset}));
   check(data.z==='2,1,0'&&data.a===r.a.join(','),'Historical target stays fixed, current vector matches case');
   for(const k of ['p','q']) {const seen=data[k].split(',').map(Number);check(seen.every((v,j)=>Math.abs(v-r[k][j])<1e-12),'Probabilities derive from unrounded logits: '+k);}
@@ -23,6 +23,26 @@ export async function teachingFrontChecks({page,base,check,shot}) {
   check(+(await lab.locator('[data-l2-value]').innerText())===r.squaredDistance,'L2 visible total matches model');
   await shot('s3-'+RESPONSE_CASES[i].id,'.response-lab');
  }
+ const order=await lab.evaluate(el=>el.getBoundingClientRect().top < el.querySelector('.kl-explanation .equation').getBoundingClientRect().top);
+ check(order,'Shared comparison stage precedes formula explanations');
+ await lab.locator('[data-response-case=preference]').click();await page.clock.runFor(1600);
+ await lab.locator('[data-response-replay]').click();await page.clock.runFor(650);
+ check(+(await lab.getAttribute('data-progress'))>0&&+(await lab.getAttribute('data-progress'))<1,'Replay exposes an intermediate state');
+ const intermediate=await lab.evaluate(el=>({...el.dataset})),mid=responseComparison(1);
+ const {logitComparison}=await import('../src/modules/math-model.ts');
+ const exact=logitComparison([2,1,0],intermediate.a.split(',').map(Number));
+ check(Math.abs(+intermediate.kl-exact.probabilityKL)<1e-12&&Math.abs(+intermediate.l2-exact.squaredDistance)<1e-12,'Intermediate inputs and both losses are mathematically synchronized');
+ check(+intermediate.l2<mid.squaredDistance,'Replay passes through a genuine partial change');
+ await lab.locator('[data-response-play]').click();const paused=await lab.getAttribute('data-a');await page.clock.runFor(700);
+ check(await lab.getAttribute('data-a')===paused,'Pause freezes the exact comparison state');
+ await shot('s3-intermediate','.response-lab');
+ await lab.locator('[data-response-play]').click();await page.clock.runFor(1600);
+ check(await lab.getAttribute('data-a')==='2,0,1','Continue reaches exact target');
+ await lab.locator('.class-focus').nth(2).click();check((await lab.locator('.coordinate-insight').innerText()).includes('DeepSeek'),'Selecting a class tracks its probability contribution');
+ const geometry=await lab.locator('.equation,.logit-coordinate,.probability-pairs,.square-flow,.contribution-paths').evaluateAll(nodes=>nodes.map(el=>({name:el.className,overflow:el.scrollWidth>el.clientWidth+1})));
+ check(geometry.every(g=>!g.overflow),'Bars, formulas and contribution paths fit their containers: '+JSON.stringify(geometry));
+ await page.locator('#U2-probability').evaluate(el=>window.scrollTo(0,el.getBoundingClientRect().top+scrollY-80));
+ await shot('s3-firstscreen');
  await shot('s3-reading','#U2-probability');await shot('bridge','.supervision-bridge');await shot('d1-prelesson','.lifecycle-prelesson');
  const alignment=await page.evaluate(()=>{
   const left=document.querySelector('.reading-layout').getBoundingClientRect().left;

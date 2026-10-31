@@ -72,6 +72,10 @@
               "selector": "[data-response-case=equal]"
             },
             {
+              "type": "wait",
+              "milliseconds": 1600
+            },
+            {
               "type": "scrollIntoView",
               "selector": ".response-lab"
             }
@@ -85,6 +89,10 @@
               "selector": "[data-response-case=preference]"
             },
             {
+              "type": "wait",
+              "milliseconds": 1600
+            },
+            {
               "type": "scrollIntoView",
               "selector": ".response-lab"
             }
@@ -96,6 +104,10 @@
             {
               "type": "click",
               "selector": "[data-response-case=shifted]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1600
             },
             {
               "type": "scrollIntoView",

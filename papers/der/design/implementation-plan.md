@@ -652,3 +652,23 @@ build PASS；生产 Edge 双视口1440×900/1920×1080核对：两卡各三条�
 ### 移除 S2 展开/收起控件（2026-10-30）
 
 用户明确要求删除截图中的“收起整组响应”按钮。已彻底删除该按钮、React展开状态及条件渲染，响应柱条与解释作为普通正文始终显示；清理按钮样式，并同步现有浏览器断言、公共QA状态及README。此项覆盖上一条保留收起功能的处理。
+
+## S1–S3 / D1 视觉二次优化 · W1 S3 样板（2026-10-31）
+
+依据用户指定的 `task/DER/DER_S1-S3_D1_视觉教学二次优化执行方案.md` 开始执行，起点 `ed225ed`，分支 der。按方案第十节 W1 的明确边界，先实现、验证并提交 S3，视觉方向等待用户验收后再开展 W2–W5；不代填 W7/W9 人审状态。S2 旧的“始终展开”当前保持，后续按本方案恢复渐进揭示。
+
+W1 实际改动：MechanismScenes 将共用三类 logits 舞台前置；复用 D1 ModelMark 与已有 ResponseMeter，历史/当前同轴；概率镜头支持按类别追踪比值、KL 单项与 q−p；平方镜头从差值到平方贡献，再沿路径逐项移动数值副本至合计。切换 / 重播采用 1.4s 确定性插值，可暂停、继续；每帧都用 math-model 的 logitComparison / probabilityComparison 同步计算全部概率与损失，终态回到精确输入。中途显示约等号以说明小数舍入。reduced-motion 直接提交完整语义终态，推导和 Reference 入口保留。
+
+保护范围：math-model、S1/S2、机制桥接、D1 内部及 S4–S8 源码不改。D1 三个受保护文件 git diff 为空；ModelMark/ModelPixel 与 Kit 内部不改。本次只调整局部 mechanism-scenes.css、S3 摘要及对应浏览器/QA定位和过渡等待，不修改 shared/global 样式。沿用缓存 §3 Eq.(2)–(5) 与既有数学模型的含义，不重新解释为真实优化器训练。
+
+验证：`npm.cmd --prefix papers/der/web/enhanced run build` PASS；`npm.cmd --prefix papers/der/web/enhanced test` 25/25 PASS；`npm.cmd --prefix papers/der/web/enhanced run test:browser` 两档 2680 项 PASS（在最后数值副本避让微调前）；最后微调后 `node papers/der/web/enhanced/tests/browser.test.mjs --front-only` 两档 220 项 PASS，覆盖三态、逐帧数据一致、暂停/继续、replay、类别追踪、公式/条形边界、Reference、键盘与 reduced motion。三态 KL/L2=0/0、0.154697…/2、0/3。`git diff --check` PASS。
+
+公共 QA：`node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json` 全篇54状态 PASS；数值副本最终避让调整后，使用本次临时聚焦配置 `.visual-qa/s3-current-config.json` 补跑 S3 三终态与暂停帧，两档8状态 PASS。GEOMETRY_QA、STYLE_QA、BROWSER_ERRORS 均 PASS。报告中的4项11px眉题警告属于未改动的 S8 证据区，本次不扩展重构范围；无 S3 几何警告。报告未自动判断的 VISUAL_REVIEW 已由 Agent 实看两档首屏、三态和暂停帧/后半程贡献移动帧，无裁切、重叠或数字挤压。修复了中间平方值槽宽不足、三个副本同时汇合重叠和舍入合计误读。
+
+真实播放：首次 `test:playback` 因未启动5195服务 ERR_CONNECTION_REFUSED（未进入测试）失败，启动本次专用生产预览并设置 DER_PREVIEW_URL 后重跑 `npm.cmd --prefix papers/der/web/enhanced run test:playback` PASS：D1九阶段322采样/66,971ms；完整工作台21阶段501采样/127,583ms。不使用加速时钟冒充连续播放。
+
+FULLSCREEN_LAYOUT=PASS（实际1440×900与1920×1080、DPR1、Chromium153.0.8010.12）；FULLSCREEN_REAL=NOT_RUN（本次仅 headless 自动化，物理 F11 留待人审）。REGRESSION=PASS（限定本次 S3 与受保护D1源码不变和功能回归，不声称像素基准比对）；HUMAN_ACCEPTANCE=PENDING。UPSTREAM_SYNTAX/UPSTREAM_OUTPUT=NOT_RUN：相邻 PaperSkill checkout 的 Git 当前版本验证被 dubious ownership 阻止，未改全局 safe.directory，也未用未核实的脚本冒充当前官方检查。SOURCE_BUILD=PASS；SUBPATH_ASSETS=PASS（生产/der-review/下实际浏览器网络请求无错误）。
+
+代表证据保存在 `C:/Users/lenovo/.codex/visualizations/2026/10/31/01a1923c-865b-7811-827d-df3b90e90dc8/der-s3/`：s3-firstscreen-{1440,1920}.png、s3-{equal,preference,shifted,intermediate}-{1440,1920}.png、s3-late-intermediate-1440.png 及 full-report/final-s3-report。连续播放 JSON 与关键帧在同级 der-s3-playback。截图仅为待签收证据，不是获批基准；请先确认 S3 的观察工作台方向，再继续 S2 → S1 → 桥接与两轮预览。
+
+清理与交接：已读取两份公共报告并实看代表图，轻量报告与必要截图已提取至上述证据目录。本次两个准确 run 目录（14-01-49-620Z、14-05-46-630Z）均通过公共 cleanup-run 返回 CLEANED，并逐一 Test-Path=False；临时配置、采集脚本、无关回归截图与浏览器 debug.log 已清理。本次5195生产预览已停止，其余runner服务已自行退出。

@@ -33,7 +33,7 @@ export async function formulaLessonChecks({page,base,check,shot}){
  const score=page.locator(".response-lesson"),scoreFormula=score.locator(".squared-explanation .equation math").first();
  check(await scoreFormula.isVisible()&&(await scoreFormula.getAttribute("aria-label")).includes("平方欧氏距离"),"Squared logit-matching definition is visible beside the score scene");
  check((await score.locator(".squared-explanation").innerText()).includes("历史 z 始终作为常量"),"Current and frozen logits are identified in the mainline");
- await score.locator("[data-response-case=shifted]").click();
+ await score.locator("[data-response-case=shifted]").click();await page.clock.runFor(1600);
  check((await score.locator(".response-verdict").innerText()).includes("平方距离为 3"),"Common-shift comparison keeps its correct probability and squared-distance values");
  await shot("logit-mainline",".response-lesson");
  await score.locator(".squared-explanation .text-button").click();
