@@ -271,7 +271,7 @@
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": ".snapshot-time-axis"
+              "selector": ".snapshot-origin"
             }
           ]
         },
@@ -285,6 +285,203 @@
             {
               "type": "scrollIntoView",
               "selector": ".label-investigation"
+            }
+          ]
+        },
+        {
+          "id": "stream-update-mid",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-front-scene=stream] [data-mini-stage]",
+              "value": "1"
+            },
+            {
+              "type": "click",
+              "selector": "[data-front-scene=stream] [data-mini-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 900
+            },
+            {
+              "type": "click",
+              "selector": "[data-front-scene=stream] [data-mini-play]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-front-scene=stream]"
+            }
+          ]
+        },
+        {
+          "id": "er-copy-mid",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-front-scene=er-read] [data-mini-stage]",
+              "value": "0"
+            },
+            {
+              "type": "click",
+              "selector": "[data-front-scene=er-read] [data-mini-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 800
+            },
+            {
+              "type": "click",
+              "selector": "[data-front-scene=er-read] [data-mini-play]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": "[data-front-scene=er-read]"
+            }
+          ]
+        },
+        {
+          "id": "snapshot-copy-mid",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": ".snapshot-origin [data-mini-stage]",
+              "value": "1"
+            },
+            {
+              "type": "click",
+              "selector": ".snapshot-origin [data-mini-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 850
+            },
+            {
+              "type": "click",
+              "selector": ".snapshot-origin [data-mini-play]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".snapshot-origin"
+            }
+          ]
+        },
+        {
+          "id": "snapshot-after-update",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": ".snapshot-origin [data-mini-stage]",
+              "value": "2"
+            },
+            {
+              "type": "click",
+              "selector": ".snapshot-origin [data-mini-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3000
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".snapshot-origin"
+            }
+          ]
+        },
+        {
+          "id": "preview-round-1-done",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-preview-round=\"1\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".two-round-preview [data-mini-replay]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 13000
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".two-round-preview"
+            }
+          ]
+        },
+        {
+          "id": "preview-round-2-done",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-preview-round=\"2\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".two-round-preview [data-mini-replay]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 13000
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".two-round-preview"
+            }
+          ]
+        },
+        {
+          "id": "preview-read-mid",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-preview-round=\"2\"]"
+            },
+            {
+              "type": "click",
+              "selector": ".two-round-preview [data-mini-replay]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1900
+            },
+            {
+              "type": "click",
+              "selector": ".two-round-preview [data-mini-play]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".two-round-preview"
+            }
+          ]
+        },
+        {
+          "id": "preview-joint-mid",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "[data-preview-round=\"2\"]"
+            },
+            {
+              "type": "selectOption",
+              "selector": ".two-round-preview [data-mini-stage]",
+              "value": "2"
+            },
+            {
+              "type": "click",
+              "selector": ".two-round-preview [data-mini-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 900
+            },
+            {
+              "type": "click",
+              "selector": ".two-round-preview [data-mini-play]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".two-round-preview"
             }
           ]
         }

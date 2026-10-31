@@ -28,15 +28,15 @@ export function StreamMotion() {
   const drift=i===0?0:Math.max(0,i-1)+windowAt(p,.82,1);
   return <figure className="parameter-stream mini-motion" data-front-scene="stream" data-clip={i} data-progress={p} data-theta={theta} data-status={t.state.status}>
     <p className="figure-label">数据不断到来 · 固定模型站点</p>
-    <svg className="front-canvas stream-canvas" viewBox="0 0 650 400" role="img" aria-label="三类样本依次进入同一模型，参数改变，旧输入观察位保持固定">
+    <div className="front-scene-scroll"><svg className="front-canvas stream-canvas" viewBox="0 0 650 400" role="img" aria-label="三类样本依次进入同一模型，参数改变，旧输入观察位保持固定">
       {CLASSES.map((name,k)=><g className="stream-sample" data-stream-sample={k} key={name} transform={`translate(${8+k*230} 4)`}><rect className="fm-state-card" width="150" height="176" rx="10" data-active={i===k}/><ModelPixel model={k as ModelClass} x={53} y={22} size={44}/><text x="75" y="94" textAnchor="middle">{name}</text><text className="stream-id" x="75" y="121" textAnchor="middle">x<tspan baselineShift="sub" fontSize="12">{k+1}</tspan></text><path className="fm-divider" d="M12 134H138"/><text className="parameter-state" x="75" y="161" textAnchor="middle">θ<tspan baselineShift="sub" fontSize="12">{k}</tspan></text></g>)}
       {[0,1].map(k=><path key={k} className="stream-arrow fm-line" d={`M${166+k*230} 92h64m-10 -7 10 7 -10 7`}/>)}
       <path className="fm-route" d="M83 202 Q83 290 230 290 M313 202 Q313 235 230 290 M543 202 Q543 290 380 290"/>
       <ModelStation x={230} y={248} theta={theta}/>
-      <g transform="translate(465 243)" data-old-observer><rect className="fm-observer" width="170" height="112" rx="10"/><ModelPixel model={0} x={12} y={15} size={32}/><text x="55" y="38">旧 x₁</text><path className="fm-divider" d="M16 68H152"/><circle cx={55+drift*32} cy="68" r="7" className="fm-response-mark"/><text x="85" y="99" textAnchor="middle">响应可能漂移</text></g>
+      <g transform="translate(465 243)" data-old-observer><rect className="fm-observer" width="170" height="112" rx="10"/><ModelPixel model={0} x={12} y={15} size={32}/><text x="55" y="38">旧 x₁</text><path className="fm-divider" d="M16 68H152"/><circle cx="55" cy="68" r="10" className="fm-fixed-reference"/><circle cx={55+drift*32} cy="68" r="7" className="fm-response-mark"/><text x="85" y="99" textAnchor="middle">响应可能漂移</text></g>
       {move<1 && <SampleGlyph x={point.x} y={point.y} model={i as ModelClass} id={`stream:x${i+1}:read`} size={30}/>}
       {signal>0&&signal<1&&<circle className="fm-signal" cx={250+signal*90} cy={284} r="6"/>}
-    </svg>
+    </svg></div>
     <p className="mini-event" aria-live="polite">{i===0 ? "先让 x₁ 通过模型，建立固定的旧输入观察位。" : p<.55 ? `x${i+1} 进入同一个模型；旧 x₁ 留在观察位。` : p<.8 ? "更新信号经过当前网络。" : "参数变了，旧输入的响应也可能改变。"}</p>
     <MiniControls timeline={t} clips={STREAM_CLIPS} label="持续数据流"/><figcaption>合成概念演示：只说明变化关系，不给出虚构的准确率或训练数值。</figcaption>
   </figure>;

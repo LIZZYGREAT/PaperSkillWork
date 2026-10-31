@@ -19,7 +19,7 @@ function Prediction({ current, progress }: { current?: boolean; progress: number
     <div className="response-window" style={{minHeight:100+110*progress}}><div className="response-reveal" data-response={current ? "current" : "history"} aria-hidden={progress===0} style={{visibility:progress>0 ? "visible" : "hidden"}}>
       <p className="caption">原始 logits · 共同尺度 0–3</p>
       {CLASSES.map((label, k) => <div className="prediction-coordinate" key={label} data-changed={current && k>0 && progress===1}><ModelMark model={k as ModelClass} /><ResponseMeter label={label} value={values[k]} min={0} max={3} showScale={false} /></div>)}
-    </div>{progress===0 && <p className="response-covered">目前只看分类答案<span>整组响应尚未展开</span></p>}</div>
+    </div>{progress===0 && <div className="response-covered"><div className="sealed-response" aria-hidden="true"><i /><i /><i /><b>?</b></div><p>三类响应尚未展开</p></div>}</div>
   </article>;
 }
 

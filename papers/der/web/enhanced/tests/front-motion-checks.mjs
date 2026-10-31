@@ -1,5 +1,6 @@
 import {lifecycleSceneAt,LIFECYCLE_FIXTURE} from '../src/modules/review/lifecycle-model.ts';
 export async function frontMotionChecks({page,check,shot}){
+ const ribbon=await page.locator('.teacher-probability-ribbon').getAttribute('data-probabilities');const probabilities=ribbon.split(',').map(Number);check(probabilities.length===3&&Math.abs(probabilities.reduce((a,b)=>a+b,0)-1)<1e-12,'The bespoke soft-target ribbon encodes a normalized, computed distribution');
  const origin=page.locator('[data-front-scene=snapshot-origin]');
  await origin.locator('[data-mini-stage]').selectOption('1');await origin.locator('[data-mini-play]').click();await page.clock.runFor(850);
  const moving=origin.locator('[data-vector-id="snapshot:frozen-copy"]');
@@ -37,5 +38,7 @@ export async function frontMotionChecks({page,check,shot}){
  check(!boundaries.length,'Semantic labels and objects remain inside each mini stage: '+boundaries);
  await page.emulateMedia({reducedMotion:'reduce'});
  for(const round of [1,2]){await preview.locator(`[data-preview-round="${round}"]`).click();for(let i=0;i<4;i++){await preview.locator('[data-mini-stage]').selectOption(String(i));await verify();check(await preview.getAttribute('data-progress')==='1','Reduced motion exposes complete, manually selectable relay steps');}}
+ const label=page.locator('.label-investigation');await label.locator('[data-label-mode=answer]').click();check(await label.getAttribute('data-current-progress')==='0','Reduced motion still supports the answer-only observation');await label.locator('[data-label-mode=full]').click();check(await label.getAttribute('data-current-progress')==='1','Reduced motion reveals the complete response without timed interpolation');
+ const button=preview.locator('[data-mini-replay]');await button.focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');const focus=await button.evaluate(el=>({visible:el.matches(':focus-visible'),style:getComputedStyle(el).outlineStyle,width:parseFloat(getComputedStyle(el).outlineWidth)}));check(focus.visible&&focus.style!=='none'&&focus.width>=2,'New motion controls retain visible keyboard focus');
  await page.emulateMedia({reducedMotion:'no-preference'});
 }

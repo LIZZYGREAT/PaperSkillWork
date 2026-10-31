@@ -738,3 +738,23 @@ build PASS；front-only双视口270项PASS，含历史先于当前、暂停中�
 用TwoRoundPreview替换first-round/round-state/joint-round的重复正文列表和终态框。唯一模型、当前输入、两类损失、候选和K=2记忆槽位构成稳定舞台；两轮各4个短步骤，轮末停留。保留当前/读取副本的来源，旧槽0记录不会移动或刷新，当前和历史损失汇合后沿返回路径更新模型，更新后才写入槽位。每帧θ/M/N、损失来源、冻结时机与写入提交均直接投影原lifecycleSceneAt，不另建算法模型；z及z₂符号来自LIFECYCLE_FIXTURE。
 
 build PASS；双视口front-only418项PASS。新增front-motion-checks覆盖数值副本连续移动/暂停、模型改变而目标固定、两轮每步中帧的D1模型比对、记忆读取不消耗本体、轮末只增加一次更新与一次写入、画框内几何和reduced-motion逐步结果。已实看1440/1920的来源复制/冻结、两轮初中终态与联合更新中帧，最后补明确的总损失→唯一模型更新路径。D1内部代码未改。最终路径补充后在W5统一复验。
+
+### W5 全页收敛、差异化视觉与最终检查（2026-11-01）
+
+清理已被动态场景替换的snapshot-time-axis、first-round、round-state、joint-round等旧CSS；更新正式Visual QA定位器和新状态。用户进一步要求独立设计更多视觉对象，本轮新增封签式三层响应、按真实softmax分配的概率色带、折角候选记录与锁定印记、带空/占用状态的记忆架、双端口六边形损失汇合节点和固定历史参照环。它们分别编码未知响应、概率分配、冻结、容量和单次联合更新，不改变三类像素身份。实际复看后将封签旁提示精简为一句，避免两句挤在同一行。
+
+最终构建与公式：npm.cmd --prefix papers/der/web/enhanced run build PASS（TypeScript 5.9.3 / Vite6.4.3 / 87 modules）；npm test 25/25 PASS。最终造型的完整test:browser两档2886项PASS；最后一句提示精简与仅max-width:800px生效的容器修复后，front-only两档426项PASS。首轮新增键盘断言误用指针之后的programmatic focus，已修正为真实Tab/Shift+Tab输入并同时断言:focus-visible和3px描边；未放宽阈值。
+
+真实连续播放：test:playback PASS（DER_PREVIEW_URL=http://127.0.0.1:5195/der-review/）。D1九阶段324次采样、67,186ms；完整工作台21阶段492次采样、127,461ms。另用真实浏览器时钟播放新增两轮预览，90次采样均完成两轮各一次更新/写入；保留relay-real-playback.json。D1的SampleLifecyclePrototype.tsx、lifecycle-model.ts、lifecycle.css与ed225ed起点git diff为空，不扩大为重新认可其设计。
+
+公共QA：按正式visual-qa.json运行全站96状态PASS；用户最后追加的独立视觉造型完成后，针对S2初/终态、概率目标、S1更新、冻结中/终态及两轮读取/汇合/写入再检查20状态PASS。两份报告GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS均PASS，actualUrl均为预期/der-review/，仅保留原S8四项11px眉题警告。本次源码最后微调仅涉及一句提示和窄屏min-width，不改变这些桌面构图。代表性初、中、终态及两档整段正文均已实际查看，不以机器PASS替代视觉复核。
+
+窄屏检查由新SVG局部滚动触发，限定新增的三个motion阅读区。390×844首次发现S1网格项auto min-width将560px画布撑到外面；通过网格项min-width:0保留完整局部横向阅读，不缩小字、不裁掉对象。复验数据及范围见narrow-motion-containment.json，不宣称全站移动端已验收。桌面实际innerWidth/innerHeight为1440×900和1920×1080，DPR1，Playwright Chromium153.0.8010.12；连续播放Edge156.0.4314.58。
+
+当前官方检查器验证：相邻PaperSkill HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，worktree干净。正式upstream为git@github.com:ReductTech/PaperSkill.git；SSH fetch因known_hosts读取权限失败，改以相同官方仓库HTTPS只读fetch main，得到FETCH_HEAD=a777cc475fa5c7d10b1e15720eaa1817e945b7a6，未改分支、工作树或全局Git配置。syntax-check.js当前官方/本地blob均2bcfa6f815054ee498574c51cef05f0c315b4298，直接运行node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser，52个源文件PASS，UPSTREAM_SYNTAX=PASS。validate-output.js当前官方blob为9ec76b6974f262fca7b9611c4a485dd2275fe76c，本地为1a58ca06bd9fa47b6730904f1622189011cc32fe，版本不符，UPSTREAM_OUTPUT=NOT_RUN；未复制检查器或覆盖旁库。Node v24.18.0。SOURCE_BUILD=PASS，SUBPATH_ASSETS=PASS（生产/der-review/实际请求无错误）。
+
+FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN。使用computer-use技能尝试检查真实Edge窗口，helper在get_window_state阶段因无法可靠识别当前浏览器URL而停止，未执行任何桌面输入，已停止Computer Use，没有把布局模拟冒充F11。VISUAL_REVIEW=PASS（限定实际查看的01–03与D1外围及代表中帧）；REGRESSION=PASS（源码保护和功能回归，无获批像素基准重置）；HUMAN_ACCEPTANCE保持PENDING，本轮不代填W7/W9，不发布/推送/创建PR。
+
+最终证据保存在当前会话visualizations/der-execution-final：两档opening/replay/responses/answer-sealed/comparison/bridge/prelude/d1图、真实预览采样、轻量full-qa/final-objects报告。最终中帧在der-final-browser中保留S2历史展开、S1输入移动、ER读取、数值复制/冻结、两轮各步及终态；D1与工作台真实播放JSON在der-execution-playback。截图是待人审证据，不是批准基准。报告提取、临时文件和本次预览服务清理结果见本节最后补充。
+
+最终清理：两次公共QA运行目录run-2026-10-31T16-26-53-329Z、run-2026-10-31T16-41-11-615Z均已按本次准确路径cleanup-run返回CLEANED，随后Test-Path=False。已保留轻量报告与必要区域截图/中帧/播放JSON；原始整页采集中间图、定位JSON、临时脚本/配置、无用全篇截图、调试日志和临时视频清理。本次5195预览已停止，4197公共预览已由runner退出。最终提示文字和min-width修复后的build、官方当前语法检查、426项定向浏览器检查及窄窗口三个滚动区检查均PASS；该窄屏修复不影响已通过2886项回归的桌面媒体规则。
