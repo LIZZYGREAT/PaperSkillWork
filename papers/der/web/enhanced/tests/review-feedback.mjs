@@ -1,13 +1,12 @@
 export async function reviewFeedbackChecks({page,base,check,shot}){
  await page.emulateMedia({reducedMotion:"reduce"});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
- const lesson=page.locator('.response-lesson');
- for(const id of ['equal','preference','shifted']){
-  await lesson.locator('[data-response-case='+id+']').click();
-  const boxes=await lesson.locator('.observation-lenses .equation').evaluateAll(nodes=>nodes.map(el=>({scrollY:el.scrollHeight-el.clientHeight,scrollX:el.scrollWidth-el.clientWidth,ox:getComputedStyle(el).overflowX,oy:getComputedStyle(el).overflowY})));
-  check(boxes.length>=2,'Both lens definitions are inspected');
-  check(boxes.every(b=>b.scrollY<=1&&b.scrollX<=1&&b.ox==='visible'&&b.oy==='visible'),'Mainline equations have no internal scrolling or clipping: '+JSON.stringify(boxes));
+ const lesson=page.locator('.der-u2');
+ for(const name of ['概率空间 · KL','分数空间 · 平方差']){
+  await lesson.getByRole('button',{name,exact:true}).click();
+  const boxes=await lesson.locator('.der-lens .equation').evaluateAll(nodes=>nodes.map(el=>({x:el.scrollWidth-el.clientWidth,y:el.scrollHeight-el.clientHeight})));
+  check(boxes.length===1&&boxes.every(b=>b.x<=1&&b.y<=1),'Each focused lens typesets its definition without clipping');
  }
- await shot('feedback-comparison','.response-lab');
+ await shot('feedback-comparison','.der-lab');
  const ev=page.locator('[data-scene=evidence]');
  check(await ev.locator('[data-experiment]').count()===3,'Three current static evidence settings remain visible');
  const ranges=await ev.locator('.evidence-row').evaluateAll(rows=>rows.map(row=>{

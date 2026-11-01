@@ -44,19 +44,81 @@
       ],
       "states": [
         {
-          "id": "opening"
+          "id": "opening",
+          "actions": []
         },
         {
-          "id": "s1-reasoning",
+          "id": "u1-stream",
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": ".reasoning-stair"
+              "selector": ".der-stream"
             }
           ]
         },
         {
-          "id": "s2-response",
+          "id": "u1-update-mid",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-front-scene=stream] select",
+              "value": "1"
+            },
+            {
+              "type": "click",
+              "selector": "[data-front-scene=stream] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 900
+            },
+            {
+              "type": "click",
+              "selector": "[data-front-scene=stream] [data-play]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".der-stream"
+            }
+          ]
+        },
+        {
+          "id": "u1-memory-read",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-front-scene=stream] select",
+              "value": "3"
+            },
+            {
+              "type": "click",
+              "selector": "[data-front-scene=stream] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1200
+            },
+            {
+              "type": "click",
+              "selector": "[data-front-scene=stream] [data-play]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".der-stream"
+            }
+          ]
+        },
+        {
+          "id": "u1-answer",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".label-investigation"
+            }
+          ]
+        },
+        {
+          "id": "u1-responses",
           "actions": [
             {
               "type": "click",
@@ -67,13 +129,22 @@
               "milliseconds": 5000
             },
             {
-              "selector": ".label-investigation",
-              "type": "scrollIntoView"
+              "type": "scrollIntoView",
+              "selector": ".label-investigation"
             }
           ]
         },
         {
-          "id": "s3-equal",
+          "id": "u2-kl",
+          "actions": [
+            {
+              "type": "scrollIntoView",
+              "selector": ".der-lab"
+            }
+          ]
+        },
+        {
+          "id": "u2-equal",
           "actions": [
             {
               "type": "click",
@@ -81,33 +152,16 @@
             },
             {
               "type": "wait",
-              "milliseconds": 1600
+              "milliseconds": 1800
             },
             {
               "type": "scrollIntoView",
-              "selector": ".response-lab"
+              "selector": ".der-lab"
             }
           ]
         },
         {
-          "id": "s3-preference",
-          "actions": [
-            {
-              "type": "click",
-              "selector": "[data-response-case=preference]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 1600
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".response-lab"
-            }
-          ]
-        },
-        {
-          "id": "s3-shifted",
+          "id": "u2-shifted",
           "actions": [
             {
               "type": "click",
@@ -115,29 +169,76 @@
             },
             {
               "type": "wait",
-              "milliseconds": 1600
+              "milliseconds": 1800
+            },
+            {
+              "type": "click",
+              "selector": "button:has-text(\"分数空间 · 平方差\")"
             },
             {
               "type": "scrollIntoView",
-              "selector": ".response-lab"
+              "selector": ".der-lab"
             }
           ]
         },
         {
-          "id": "bridge",
+          "id": "u3-origin",
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": ".supervision-bridge"
+              "selector": ".der-origin"
             }
           ]
         },
         {
-          "id": "two-rounds",
+          "id": "u3-copy-mid",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": ".der-origin select",
+              "value": "1"
+            },
+            {
+              "type": "click",
+              "selector": ".der-origin [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1100
+            },
+            {
+              "type": "click",
+              "selector": ".der-origin [data-play]"
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".der-origin"
+            }
+          ]
+        },
+        {
+          "id": "u3-frozen",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".der-origin [data-replay]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 9000
+            },
+            {
+              "type": "scrollIntoView",
+              "selector": ".der-origin"
+            }
+          ]
+        },
+        {
+          "id": "u3-two-rounds",
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": ".lifecycle-prelesson"
+              "selector": ".der-round-guide"
             }
           ]
         },
@@ -147,42 +248,6 @@
             {
               "type": "scrollIntoView",
               "selector": "[data-scene=lifecycle]"
-            }
-          ]
-        },
-        {
-          "id": "s8",
-          "actions": [
-            {
-              "type": "scrollIntoView",
-              "selector": "#U7-evidence-and-limits"
-            }
-          ]
-        },
-        {
-          "id": "stream-states",
-          "actions": [
-            {
-              "type": "scrollIntoView",
-              "selector": ".parameter-stream"
-            }
-          ]
-        },
-        {
-          "id": "er-records",
-          "actions": [
-            {
-              "type": "scrollIntoView",
-              "selector": ".er-relation"
-            }
-          ]
-        },
-        {
-          "id": "pre-d1-typography",
-          "actions": [
-            {
-              "type": "scrollIntoView",
-              "selector": ".lifecycle-prelesson>.front-question"
             }
           ]
         },
@@ -241,247 +306,11 @@
           ]
         },
         {
-          "id": "rank-exchange",
-          "actions": [
-            {
-              "type": "click",
-              "selector": "[data-label-mode=full]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 5000
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".response-ranks"
-            }
-          ]
-        },
-        {
-          "id": "teacher-output",
+          "id": "s8",
           "actions": [
             {
               "type": "scrollIntoView",
-              "selector": ".teacher-relation"
-            }
-          ]
-        },
-        {
-          "id": "frozen-targets",
-          "actions": [
-            {
-              "type": "scrollIntoView",
-              "selector": ".snapshot-origin"
-            }
-          ]
-        },
-        {
-          "id": "s2-answer",
-          "actions": [
-            {
-              "type": "click",
-              "selector": "[data-label-mode=answer]"
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".label-investigation"
-            }
-          ]
-        },
-        {
-          "id": "stream-update-mid",
-          "actions": [
-            {
-              "type": "selectOption",
-              "selector": "[data-front-scene=stream] [data-mini-stage]",
-              "value": "1"
-            },
-            {
-              "type": "click",
-              "selector": "[data-front-scene=stream] [data-mini-play]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 900
-            },
-            {
-              "type": "click",
-              "selector": "[data-front-scene=stream] [data-mini-play]"
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": "[data-front-scene=stream]"
-            }
-          ]
-        },
-        {
-          "id": "er-copy-mid",
-          "actions": [
-            {
-              "type": "selectOption",
-              "selector": "[data-front-scene=er-read] [data-mini-stage]",
-              "value": "0"
-            },
-            {
-              "type": "click",
-              "selector": "[data-front-scene=er-read] [data-mini-play]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 800
-            },
-            {
-              "type": "click",
-              "selector": "[data-front-scene=er-read] [data-mini-play]"
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": "[data-front-scene=er-read]"
-            }
-          ]
-        },
-        {
-          "id": "snapshot-copy-mid",
-          "actions": [
-            {
-              "type": "selectOption",
-              "selector": ".snapshot-origin [data-mini-stage]",
-              "value": "1"
-            },
-            {
-              "type": "click",
-              "selector": ".snapshot-origin [data-mini-play]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 850
-            },
-            {
-              "type": "click",
-              "selector": ".snapshot-origin [data-mini-play]"
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".snapshot-origin"
-            }
-          ]
-        },
-        {
-          "id": "snapshot-after-update",
-          "actions": [
-            {
-              "type": "selectOption",
-              "selector": ".snapshot-origin [data-mini-stage]",
-              "value": "2"
-            },
-            {
-              "type": "click",
-              "selector": ".snapshot-origin [data-mini-play]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 3000
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".snapshot-origin"
-            }
-          ]
-        },
-        {
-          "id": "preview-round-1-done",
-          "actions": [
-            {
-              "type": "click",
-              "selector": "[data-preview-round=\"1\"]"
-            },
-            {
-              "type": "click",
-              "selector": ".two-round-preview [data-mini-replay]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 13000
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".two-round-preview"
-            }
-          ]
-        },
-        {
-          "id": "preview-round-2-done",
-          "actions": [
-            {
-              "type": "click",
-              "selector": "[data-preview-round=\"2\"]"
-            },
-            {
-              "type": "click",
-              "selector": ".two-round-preview [data-mini-replay]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 13000
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".two-round-preview"
-            }
-          ]
-        },
-        {
-          "id": "preview-read-mid",
-          "actions": [
-            {
-              "type": "click",
-              "selector": "[data-preview-round=\"2\"]"
-            },
-            {
-              "type": "click",
-              "selector": ".two-round-preview [data-mini-replay]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 1900
-            },
-            {
-              "type": "click",
-              "selector": ".two-round-preview [data-mini-play]"
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".two-round-preview"
-            }
-          ]
-        },
-        {
-          "id": "preview-joint-mid",
-          "actions": [
-            {
-              "type": "click",
-              "selector": "[data-preview-round=\"2\"]"
-            },
-            {
-              "type": "selectOption",
-              "selector": ".two-round-preview [data-mini-stage]",
-              "value": "2"
-            },
-            {
-              "type": "click",
-              "selector": ".two-round-preview [data-mini-play]"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 900
-            },
-            {
-              "type": "click",
-              "selector": ".two-round-preview [data-mini-play]"
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": ".two-round-preview"
+              "selector": "#U7-evidence-and-limits"
             }
           ]
         }
@@ -933,8 +762,10 @@
     "checkPageHorizontalOverflow": true,
     "minSemanticFontSizePx": 12,
     "clippingSelectors": [
-      ".response-lesson .math-panel .equation",
-      ".response-losses"
+      ".der-lab .equation",
+      ".der-lens",
+      ".der-score-window",
+      ".der-round-row"
     ],
     "stableAcrossStates": []
   }

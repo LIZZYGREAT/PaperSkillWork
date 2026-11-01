@@ -771,3 +771,28 @@ build PASS；实际Chromium生产渲染检查1440实验台。三状态核对平�
 ### U1–U3 重新设计 · U3（2026-11-01）
 U3删除旧教师/学生网络卡、ER/DER重复记录卡及完整TwoRoundPreview。新的SnapshotOrigin只承担更新前输出→独立数值副本→冻结后参数更新；候选明确尚未入池。两轮差异改为同构两行说明，强调空池/有旧记录、同一更新前参数与一次合并更新。D1作为唯一完整生命周期播放器，放在der-redesign样式作用域之外。
 清理已无引用的FrontMotion、TeachingObjects及三份旧前导/实验台CSS。build PASS；实际查看1440×900的U3生产图，来源/候选/时间关系和两轮正文无裁切。D1原TSX、lifecycle-model、SceneTransport、lifecycle.css未改，最终继续执行其原回归。
+
+### U1–U3 重新设计 · 最终回归与交付（2026-11-01）
+
+本轮按用户最新授权直接完成三章，不将附件中的旧只读/逐章等待提示当作新一轮停工要求；保留人审状态，不代填W7/W9。仅变更DER前三章和对应检查。三类图形直接复用原ModelPixel身份；D1主TSX、lifecycle-model、SceneTransport、lifecycle.css与32a83c0的git diff为空。外围恢复原D1标题的正文宽度对齐，未改变主舞台几何。
+
+最终收敛：修正旧样式继承造成的D1外标题回归与正文术语按钮尺寸；U1读取副本从实际旧记录出发，绕开标签文字，原记录保留；响应以clip-path和opacity逐步揭示，不引起高度跳变。U3候选明确“更新前冻结·尚未入池”，删除容易把左右位置误读为更新前/后的竖分界线。重用既有时间线与数学函数，未增加依赖。
+
+| 动作审查前 | 修正后 | 原因 |
+| --- | --- | --- |
+| 读取线穿过记录标签 | 从样本原位绕行至上方通路 | 对象来源可追踪，文字不被路径遮挡 |
+| 完整响应在第一帧突然出现 | 在固定观察区连续揭示 | 保留历史先展示、当前再变化的认识顺序 |
+| 旧前导与D1各演示一次完整两轮 | 轻量复制/冻结，外加两行差异说明 | D1保持唯一完整执行舞台 |
+
+实际验证（Node24.18.0 / TypeScript5.9.3 / Vite6.4.3 / Chromium153.0.8010.12）：
+- SOURCE_BUILD=PASS：`npm.cmd --prefix papers/der/web/enhanced run build`，最终80 modules，退出0。
+- `npm.cmd --prefix papers/der/web/enhanced test`：25/25数学、生命周期、reservoir、训练与证据测试PASS。
+- `node tests/browser.test.mjs`：1440×900、1920×1080全篇2688项PASS，含D1、参考区、U4–U7；最后仅U1揭示/读取与U3图注修改后，`node tests/browser.test.mjs --front-only`再次两档228项PASS。
+- `node tests/lifecycle-playback.mjs`：最终生产预览实速播放9阶段，323次采样，66,953ms，冻结目标/记忆/更新数均符合原模型；D1未加速。首次独立预览处于隔离网络，连接失败；改在可达的同机生产预览复跑通过，未放宽断言。
+- 公共Visual QA正式配置已更新为新场景，保留后续章节检查。76状态GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS均PASS；最终局部修订后追加10状态PASS。actualUrl为真实HTTP子路径`/der-review/`，本轮SUBPATH_ASSETS=PASS。最初sandbox内localhost被拒时使用的本地文件route渲染仅用于早期视觉观察，最终结果以上述真实HTTP检查为准。
+- Agent实际复看两档代表初态/读取中帧/响应终态、U2两镜头和共同平移、U3来源/复制/冻结及两轮引导；最后一条读取路径绕行后重新查看1440中帧，定向浏览器检查覆盖两档。截图是待人审证据，不是批准基准。
+- UPSTREAM_SYNTAX=PASS：官方仓库HTTPS只读fetch得当前main `ee99a421a083f6591fe23a19a10cd412cf34c85a`；相邻PaperSkill HEAD仍`c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`。本地syntax-check.js与当前官方blob均`2bcfa6f815054ee498574c51cef05f0c315b4298`；直接运行`node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser`，51文件PASS。
+- UPSTREAM_OUTPUT=NOT_RUN：当前官方validate-output.js blob `9ec76b6974f262fca7b9611c4a485dd2275fe76c`与本地`1a58ca06bd9fa47b6730904f1622189011cc32fe`不匹配；未覆盖旁库，未运行Import/Preflight、push或PR。
+- FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless不代表真实F11）；HUMAN_ACCEPTANCE=PENDING。
+
+证据保留在本会话`visualizations/der-redesign`：final-u1-1440、final-u2-1440、final-u3-1440/1920、final-stream-1440等局部PNG，qa-full.json/qa-final.json及playback/lifecycle/playback.json。原始长截图和报告目录已按本次准确路径清理：run-2026-11-01T14-58-03-398Z、run-2026-11-01T15-08-50-784Z均返回CLEANED，随后Test-Path=False；临时QA配置和本次debug.log已删除。保留5199生产预览供用户检查，停止5198临时开发服务。

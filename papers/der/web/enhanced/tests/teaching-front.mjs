@@ -1,125 +1,38 @@
 import {responseComparison,RESPONSE_CASES,LABEL_OLD,LABEL_CURRENT} from '../src/modules/math-model.ts';
-import {frontMotionChecks} from './front-motion-checks.mjs';
-export async function teachingFrontChecks({page,base,check,shot}) {
+export async function teachingFrontChecks({page,base,check,shot}){
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
- const label=page.locator('.label-investigation');
- check(await label.locator('.response-toggle').count()===0,'S2 has no expand/collapse button');
- check(await label.locator('.prediction-answer').count()===2,'Both predictions are visible before the reveal');
- check(await label.getAttribute('data-current-progress')==='0'&&!await label.locator('.response-finding').isVisible(),'Detailed responses and dark knowledge wait for observation');
- await shot('s2-answer','.label-investigation');
+ const label=page.locator('.label-investigation'),stream=page.locator('[data-front-scene=stream]');
+ check(await label.locator('.prediction-answer').count()===2,'Both classification answers precede the full response');
+ check(await label.getAttribute('data-current-progress')==='0'&&!await label.locator('.response-finding').isVisible(),'Dark knowledge conclusion waits for the response observation');
+ await shot('redesign-u1-answer','.label-investigation');
  await label.locator('[data-label-mode=full]').click();await page.clock.runFor(700);
- check(+(await label.getAttribute('data-history-progress'))>0&&+(await label.getAttribute('data-history-progress'))<1&&await label.getAttribute('data-current-progress')==='0','History expands first while current scores remain covered');
- await label.locator('[data-label-play]').click();const frozen=await label.getAttribute('data-history-progress');await page.clock.runFor(600);
- check(await label.getAttribute('data-history-progress')===frozen,'Reveal pauses without losing its intermediate state');
- await shot('s2-history-motion','.label-investigation');
+ check(+(await label.getAttribute('data-history-progress'))>0&&+(await label.getAttribute('data-history-progress'))<1&&await label.getAttribute('data-current-progress')==='0','History is revealed before changing the current response');
+ await label.locator('[data-label-play]').click();const held=await label.getAttribute('data-history-progress');await page.clock.runFor(500);check(held===await label.getAttribute('data-history-progress'),'Reveal pause preserves its intermediate frame');
  await label.locator('[data-label-replay]').click();await page.clock.runFor(5000);
- check(await label.getAttribute('data-current-progress')==='1'&&await label.locator('.response-finding').isVisible(),'Full reveal ends with the preference observation');
- const sampleOrder=await label.evaluate(el=>el.querySelector('h3').getBoundingClientRect().bottom<=el.querySelector('.same-input').getBoundingClientRect().top);
- check(sampleOrder,'S2 shared sample sits below its title');
- check(await page.locator('.stream-sample [data-model-pixel]').count()===3,'S1 stream uses the three shared pixel identities');
- check((await page.locator('.stream-sample>text:first-of-type').allTextContents()).join(',')==='Claude,GPT,DeepSeek','S1 pixel samples retain the shared class order');
- check((await page.locator('.stream-id').allTextContents()).join(',')==='x1,x2,x3','S1 preserves sample identifiers alongside pixels');
- const widths=await page.evaluate(()=>['.response-finding','.lesson-2 .chapter-summary','.math-derivation'].map(selector=>{const el=document.querySelector(selector);return {selector,width:el.getBoundingClientRect().width,parent:el.parentElement.getBoundingClientRect().width};}));
- check(widths.every(w=>Math.abs(w.width-w.parent)<2),'Reading blocks use their available horizontal space: '+JSON.stringify(widths));
- const fonts=await page.evaluate(()=>['.parameter-stream figcaption','.parameter-stream .figure-label','.response-finding p','.response-finding .term-ref','.prediction-sheet .rk-response-meter label','.response-cases button','.lesson-2 .chapter-summary'].filter(selector=>document.querySelector(selector)).map(selector=>({selector,font:getComputedStyle(document.querySelector(selector)).fontFamily})));
- check(fonts.length>=6&&fonts.every(f=>f.font===fonts[0].font),'Front prose, labels and controls share one typeface: '+JSON.stringify(fonts));
- await page.locator('.math-derivation>summary').click();
- check(await page.locator('.kl-proof .equation math').count()===3&&await page.locator('.kl-proof mfrac').count()===1,'KL proof uses three properly typeset equations');
- await shot('s3-proof','.math-derivation');await page.locator('.math-derivation>summary').click();
- const states=await page.locator('.stream-sample').evaluateAll(nodes=>nodes.map(el=>{const sample=el.querySelector('[data-model-pixel]').getBoundingClientRect(),theta=el.querySelector('.parameter-state').getBoundingClientRect();return {aligned:Math.abs(sample.x+sample.width/2-theta.x-theta.width/2)<3,ordered:sample.bottom<theta.top};}));
- check(states.length===3&&states.every(s=>s.aligned&&s.ordered),'Each sample aligns vertically with its own parameter state');
- check(await page.locator('.stream-arrow').count()===2,'Two arrows connect the three complete state columns');
- const streamSpace=await page.locator('.stream-canvas').evaluate(el=>{const cards=[...el.querySelectorAll('.fm-state-card')].map(n=>n.getBoundingClientRect());return {gap:cards[1].x-cards[0].right,arrows:[...el.querySelectorAll('.stream-arrow')].map(a=>a.getBoundingClientRect().width)};});
- check(streamSpace.gap>=50&&streamSpace.arrows.every(w=>w>=45),'State columns and their arrows have deliberate breathing room');
- const merge=await page.locator('.er-relation').evaluate(el=>{const svg=el.querySelector('.er-join svg'),records=[...el.querySelectorAll('.er-record')];return {height:svg.getBoundingClientRect().height,errors:records.map((r,i)=>{const p=new DOMPoint(2,i===0?56:224).matrixTransform(svg.getScreenCTM()),b=r.getBoundingClientRect();return Math.abs(p.y-b.y-b.height/2);})};});
- check(merge.height>=280&&merge.errors.every(e=>e<2),'Tall replay brace endpoints align with the actual record centers: '+JSON.stringify(merge));
- const stream=page.locator('[data-front-scene=stream]');await stream.locator('[data-mini-stage]').selectOption('1');await stream.locator('[data-mini-play]').click();await page.clock.runFor(900);
- check(+(await stream.getAttribute('data-progress'))>0&&await stream.getAttribute('data-theta')==='0','New input moves before the parameter commits');
- await shot('stream-moving','.parameter-stream');await stream.locator('[data-mini-play]').click();const held=await stream.getAttribute('data-progress');await page.clock.runFor(600);check(await stream.getAttribute('data-progress')===held,'Stream pauses in place');
- await stream.locator('[data-mini-play]').click();await page.clock.runFor(1600);check(await stream.getAttribute('data-theta')==='1','One model reaches the next parameter state');
- await stream.locator('[data-mini-replay]').click();await page.clock.runFor(10000);check(await stream.getAttribute('data-theta')==='2'&&await stream.getAttribute('data-status')==='finished','Three inputs end at theta 2 and stop');
- const er=page.locator('[data-front-scene=er-read]'),oldRecord=await page.locator('.er-memory-record').elementHandle();await er.locator('[data-mini-play]').click();await page.clock.runFor(800);
- check(await page.locator('[data-sample-id="er:old:read"]').count()===1,'Replay copy visibly starts from the old record');check(await oldRecord.evaluate(el=>el===document.querySelector('.er-memory-record')),'Reading preserves the original record identity');await shot('er-reading-copy','.er-relation');await er.locator('[data-mini-replay]').click();await page.clock.runFor(6000);
- const ranks=await page.locator('.rank-row').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('b')].map(el=>+el.textContent)));
- check(JSON.stringify(ranks)===JSON.stringify([[1,1],[2,3],[3,2]]),'Rank objects derive the same historical/current preference swap');
- check(await page.locator('.reasoning-stair article').count()===3&&await page.locator('.gcl-constraints>span').count()===3,'Finite-memory reasoning has three object scenes and a compact constraints strip');
- check(await page.locator('[data-front-scene=snapshot-origin]').count()===1,'A single copy-and-freeze origin scene replaces repeated snapshots');
- const objects=await page.locator('.reasoning-stair article,.response-ranks,.frozen-response,.teacher-relation,.record-comparison>div,.joint-branches>div').evaluateAll(nodes=>nodes.map(el=>({class:el.className,clipped:el.scrollWidth>el.clientWidth+1})));
- check(objects.every(o=>!o.clipped),'New teaching objects and their labels fit without clipping: '+JSON.stringify(objects));
- check(await page.locator('.chapter-handoff').count()===6,'Every chapter boundary has one shared handoff card');
- const targets=await page.locator('.handoff-link').evaluateAll(nodes=>nodes.map(el=>!!document.querySelector(el.getAttribute('href'))));
- check(targets.length===6&&targets.every(Boolean),'All transition cards link to real next chapters');
- const typeRhythm=await page.evaluate(()=>['.two-round-preview .mini-event','.teaching-note summary','.lifecycle-prelesson>.front-question'].map(selector=>{const style=getComputedStyle(document.querySelector(selector));return {size:style.fontSize,font:style.fontFamily,weight:style.fontWeight};}));
- check(typeRhythm.every(t=>t.size==='17px'&&t.font===typeRhythm[0].font&&t.weight==='400'),'Pre-D1 prose, numerical note and watching guide share one typography rhythm');
- await shot('er-records','.er-relation');for(let i=1;i<=6;i++)await shot('chapter-handoff-'+i,'.lesson-'+i+' .chapter-handoff');
- await shot('two-round-preview','.two-round-preview');
- await shot('s1-stream','.parameter-stream');
- await shot('s1-s2-reading','#U1-replay-entry');await shot('s2-response','.label-investigation');
- for(const [id,values] of [['history',LABEL_OLD],['current',LABEL_CURRENT]]) {
-  const seen=await label.locator(`[data-response=${id}] .rk-response-meter`).evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.value)));
-  check(JSON.stringify(seen)===JSON.stringify(values),'S2 detailed responses use shared math inputs: '+id);
- }
- check(await label.locator('.response-finding').isVisible(),'Observation stays visible after the reveal');await shot('s2-open','.label-investigation');
+ for(const [id,expected] of [['history',LABEL_OLD],['current',LABEL_CURRENT]]){const values=await label.locator(`[data-response=${id}] output`).allTextContents();check(JSON.stringify(values.map(Number))===JSON.stringify(expected),'Exact final response uses shared coordinates: '+id);}
+ check(await label.locator('.response-finding').isVisible(),'Completed observation explains the missing history');
+ await shot('redesign-u1-response','.label-investigation');
+ await stream.locator('[data-play]').click();await page.clock.runFor(900);check(+(await stream.getAttribute('data-progress'))>0&&await stream.getAttribute('data-theta')==='θ₀','Input arrives before a parameter update');
+ await stream.locator('[data-play]').click();const paused=await stream.getAttribute('data-progress');await page.clock.runFor(500);check(paused===await stream.getAttribute('data-progress'),'Stream pause holds all positions');
+ await stream.locator('[data-replay]').click();await page.clock.runFor(15000);check(await stream.getAttribute('data-theta')==='θ₂','Replay reaches the joint training result');
+ check(await stream.locator('[data-sample-id="stream:retained-x1"]').count()===1,'Reading a copy preserves the original memory record');
+ check(await page.locator('.der-constraints dl>div').count()===3,'GCL retains all three constraints');
+ await shot('redesign-u1-stream','.der-stream');
  const lab=page.locator('[data-design=response-comparison]');
- check(await lab.count()===1&&await page.locator('[data-design=kl],[data-design=logits]').count()===0,'Only one dual representation lab is mounted');
- for(let i=0;i<3;i++) {
-  await lab.locator(`[data-response-case=${RESPONSE_CASES[i].id}]`).click();await page.clock.runFor(1600);
-  const r=responseComparison(i),data=await lab.evaluate(el=>({...el.dataset}));
-  check(data.z==='2,1,0'&&data.a===r.a.join(','),'Historical target stays fixed, current vector matches case');
-  for(const k of ['p','q']) {const seen=data[k].split(',').map(Number);check(seen.every((v,j)=>Math.abs(v-r[k][j])<1e-12),'Probabilities derive from unrounded logits: '+k);}
-  check(Math.abs(+data.kl-r.probabilityKL)<1e-12&&+data.l2===r.squaredDistance,'Both losses share one calculation');
-  check(Math.abs(+(await lab.locator('[data-kl-value]').innerText())-r.probabilityKL)<.000051,'KL rounded display matches exact data');
-  check(+(await lab.locator('[data-l2-value]').innerText())===r.squaredDistance,'L2 visible total matches model');
-  await shot('s3-'+RESPONSE_CASES[i].id,'.response-lab');
- }
- const order=await lab.evaluate(el=>el.getBoundingClientRect().top < el.querySelector('.kl-explanation .equation').getBoundingClientRect().top);
- check(order,'Shared comparison stage precedes formula explanations');
- await lab.locator('[data-response-case=preference]').click();await page.clock.runFor(1600);
- await lab.locator('[data-response-replay]').click();await page.clock.runFor(650);
- check(+(await lab.getAttribute('data-progress'))>0&&+(await lab.getAttribute('data-progress'))<1,'Replay exposes an intermediate state');
- const intermediate=await lab.evaluate(el=>({...el.dataset})),mid=responseComparison(1);
- const {logitComparison}=await import('../src/modules/math-model.ts');
- const exact=logitComparison([2,1,0],intermediate.a.split(',').map(Number));
- check(Math.abs(+intermediate.kl-exact.probabilityKL)<1e-12&&Math.abs(+intermediate.l2-exact.squaredDistance)<1e-12,'Intermediate inputs and both losses are mathematically synchronized');
- check(+intermediate.l2<mid.squaredDistance,'Replay passes through a genuine partial change');
- await lab.locator('[data-response-play]').click();const paused=await lab.getAttribute('data-a');await page.clock.runFor(700);
- check(await lab.getAttribute('data-a')===paused,'Pause freezes the exact comparison state');
- await shot('s3-intermediate','.response-lab');
- await lab.locator('[data-response-play]').click();await page.clock.runFor(1600);
- check(await lab.getAttribute('data-a')==='2,0,1','Continue reaches exact target');
- await lab.locator('.class-focus').nth(2).click();check((await lab.locator('.coordinate-insight').innerText()).includes('DeepSeek'),'Selecting a class tracks its probability contribution');
- const geometry=await lab.locator('.equation,.logit-coordinate,.probability-pairs,.square-flow,.contribution-paths').evaluateAll(nodes=>nodes.map(el=>({name:el.className,overflow:el.scrollWidth>el.clientWidth+1})));
- check(geometry.every(g=>!g.overflow),'Bars, formulas and contribution paths fit their containers: '+JSON.stringify(geometry));
- await page.locator('#U2-probability').evaluate(el=>window.scrollTo(0,el.getBoundingClientRect().top+scrollY-80));
- await shot('s3-firstscreen');
- await shot('s3-reading','#U2-probability');await shot('bridge','.supervision-bridge');await shot('d1-prelesson','.lifecycle-prelesson');
- const alignment=await page.evaluate(()=>{
-  const left=document.querySelector('.reading-layout').getBoundingClientRect().left;
-  const selectors=['.gcl-context','.supervision-bridge','.lifecycle-prelesson','.two-round-preview','.lifecycle-prelesson>.front-question','.lifecycle-scene>header'];
-  return selectors.map(selector=>({selector,error:Math.abs(document.querySelector(selector).getBoundingClientRect().left-left)}));
- });
- check(alignment.every(item=>item.error<2),'Section headings and prose share one left edge: '+JSON.stringify(alignment));
- const type=await page.evaluate(()=>['.gcl-context p','.gcl-context strong','.lifecycle-prelesson>p:not(.eyebrow)','.two-round-preview .mini-event','.teaching-note summary','.lifecycle-start'].map(selector=>getComputedStyle(document.querySelector(selector)).fontFamily));
- check(type.every(family=>family===type[0]&&family.startsWith('"Microsoft YaHei"')),'Body, emphasis, lists and controls share the same prose font');
- const cdp=await page.context().newCDPSession(page);await cdp.send('DOM.enable');await cdp.send('CSS.enable');
- const {root}=await cdp.send('DOM.getDocument');
- await page.locator('.math-derivation>summary').click();
- for(const selector of ['.parameter-stream figcaption','.response-finding p','.kl-proof>p','.kl-proof math mi']){
-  const {nodeId}=await cdp.send('DOM.querySelector',{nodeId:root.nodeId,selector});
-  const {fonts}=await cdp.send('CSS.getPlatformFontsForNode',{nodeId});
-  const expected=selector.endsWith(' mi')?'Cambria Math':'Microsoft YaHei';
-  check(fonts.some(f=>f.familyName===expected),'Actual rendered font for '+selector+' is '+expected+': '+JSON.stringify(fonts));
- }
- await cdp.detach();await page.locator('.math-derivation>summary').click();
- check(await page.locator('.two-round-preview [data-station]').count()===1&&await page.locator('.first-round,.joint-round,.round-state').count()===0,'One stable preview replaces duplicated round lists and final-state panels');
- const pre=await page.locator('.lifecycle-prelesson').boundingBox(),d1=await page.locator('[data-scene=lifecycle]').boundingBox();
- check(pre.y+pre.height<=d1.y+1,'Both full training rounds precede D1');
- const scene=page.locator('[data-scene=lifecycle]');
- check(await scene.getAttribute('data-status')==='paused'&&+(await scene.getAttribute('data-progress'))===0,'Normal reading D1 waits for user playback');
- await shot('d1-start','[data-scene=lifecycle]');
- await frontMotionChecks({page,check,shot});
- await page.emulateMedia({reducedMotion:'reduce'});await lab.locator('[data-response-case=preference]').click();
- check(await lab.locator('.rk-response-meter__fill').first().evaluate(el=>getComputedStyle(el).transitionDuration)==='0s','Reduced motion removes response transitions');
- check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'New reading content has no desktop page overflow');
- await page.emulateMedia({reducedMotion:'no-preference'});
+ for(let i=0;i<3;i++){await lab.locator(`[data-response-case=${RESPONSE_CASES[i].id}]`).click();await page.clock.runFor(1800);const r=responseComparison(i),d=await lab.evaluate(el=>({...el.dataset}));check(d.z==='2,1,0'&&d.a===r.a.join(','),'Historical target fixed across case '+i);for(const k of ['p','q'])check(d[k].split(',').every((v,j)=>Math.abs(+v-r[k][j])<1e-12),'Unrounded probabilities share one calculation');check(Math.abs(+d.kl-r.probabilityKL)<1e-12&&+d.l2===r.squaredDistance,'Both losses agree with the shared model');check(Math.abs(+(await lab.locator('[data-kl-value]').innerText())-r.probabilityKL)<.000051,'Visible KL matches exact data');check(+(await lab.locator('[data-l2-value]').innerText())===r.squaredDistance,'Visible squared total matches exact data');}
+ await lab.locator('[data-response-case=preference]').click();await page.clock.runFor(700);await lab.locator('[data-response-play]').click();const mid=await lab.getAttribute('data-a');await page.clock.runFor(500);check(mid===await lab.getAttribute('data-a'),'Lab pauses vector and losses together');await shot('redesign-u2-mid','.der-lab');
+ // Retarget in flight, including a second click on the same case.
+ await lab.locator('[data-response-case=equal]').click();await page.clock.runFor(250);await lab.locator('[data-response-case=shifted]').click();await page.clock.runFor(250);await lab.locator('[data-response-case=shifted]').click();await page.clock.runFor(1800);check(await lab.getAttribute('data-a')==='3,2,1'&&await lab.getAttribute('data-kl')==='0','Rapid retargeting converges to the final selected case');
+ for(const name of ['概率空间 · KL','分数空间 · 平方差']){await lab.getByRole('button',{name,exact:true}).click();check(await lab.locator('table tbody tr').count()===3,'Each lens preserves the same three class coordinates');await shot(name.startsWith('概率')?'redesign-u2-kl':'redesign-u2-squared','.der-lab');}
+ const origin=page.locator('[data-front-scene=snapshot-origin]');await origin.locator('select').selectOption('1');await origin.locator('[data-play]').click();await page.clock.runFor(1100);const copy=origin.locator('[data-vector-id]');check(await origin.getAttribute('data-theta')==='0'&&await copy.count()===1,'Copy exists while the parameter is still pre-update');await origin.locator('[data-play]').click();const transform=await copy.innerHTML();await page.clock.runFor(500);check(transform===await copy.innerHTML(),'Frozen-copy motion can be paused');await shot('redesign-u3-copy','.der-origin');
+ await origin.locator('[data-replay]').click();await page.clock.runFor(9000);check(await origin.getAttribute('data-theta')==='1'&&await origin.getAttribute('data-frozen')==='true'&&await copy.getAttribute('data-values')==='2,1,0','Parameter updates after copying while the target remains unchanged');
+ check(await page.locator('.two-round-preview,.teacher-relation').count()===0&&await page.locator('.der-round-row').count()===2,'Two compact rows replace the duplicate complete player');
+ check(await page.locator('[data-scene=lifecycle]').count()===1&&await page.locator('.der-redesign [data-scene=lifecycle]').count()===0,'The sole original D1 stage is outside redesign styling');
+ await shot('redesign-u3-final','.der-u3');
+ for(const selector of ['.der-stream svg','.der-origin svg']){const outside=await page.locator(selector).evaluate(svg=>{const b=svg.getBoundingClientRect();return [...svg.querySelectorAll('text')].filter(el=>{const r=el.getBoundingClientRect();return r.x<b.x-1||r.right>b.right+1||r.y<b.y-1||r.bottom>b.bottom+1;}).map(el=>el.textContent)});check(!outside.length,'Diagram labels stay inside their canvas: '+outside);}
+ await page.emulateMedia({reducedMotion:'reduce'});await page.goto(base);await page.locator('[data-label-mode=full]').click();check(await page.locator('.label-investigation').getAttribute('data-current-progress')==='1','Reduced motion reaches the full response without running a timeline');
+ for(const [id,l2] of [['equal',0],['preference',2],['shifted',3]]){await page.locator(`[data-response-case=${id}]`).click();check(+(await page.locator('[data-design=response-comparison]').getAttribute('data-l2'))===l2,'Reduced motion keeps exact loss for '+id);}
+ const o=page.locator('[data-front-scene=snapshot-origin]');await o.locator('select').selectOption('2');check(await o.getAttribute('data-theta')==='1'&&await o.getAttribute('data-target')==='2,1,0','Reduced motion preserves the complete freeze sequence');
+ await page.locator('[data-label-mode=answer]').focus();await page.keyboard.press('Tab');check(await page.locator(':focus').evaluate(el=>getComputedStyle(el).outlineStyle!=='none'),'Keyboard focus has a visible outline');
+ check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No desktop page overflow');await page.emulateMedia({reducedMotion:'no-preference'});
 }
