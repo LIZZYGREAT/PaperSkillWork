@@ -27,6 +27,7 @@ export async function fullW8Checks({page,base,check,shot}){
    await scene.locator("[data-back]").click();check(+(await scene.getAttribute("data-progress"))===0,"Back restores stage start");
   }
   if(name==="der-step"){
+ const edgeAnchors=await scene.locator("[data-network]").evaluate(g=>{const points=[...g.querySelectorAll(".tg-node")].map(n=>[+n.getAttribute("cx"),+n.getAttribute("cy")]);return [...g.querySelectorAll(".tg-edge")].every(e=>{const v=e.getAttribute("d").match(/-?\d+(?:\.\d+)?/g).map(Number);return points.some(([x,y])=>x===v[0]&&y===v[1])&&points.some(([x,y])=>x===v[2]&&y===v[3]);});});check(edgeAnchors,"Static network edges remain attached to their nodes during reverse signalling");
    await page.emulateMedia({reducedMotion:"reduce"});await scene.locator("select").selectOption("3");
    check(await scene.getAttribute("data-updates")==="2"&&await scene.getAttribute("data-seen")==="1","One update precedes any memory write");
    await scene.locator("select").selectOption("4");check(await scene.getAttribute("data-seen")==="2","Write occurs only after update");
@@ -66,7 +67,15 @@ export async function fullW8Checks({page,base,check,shot}){
   const stable=await scene.locator(".teaching-canvas").innerHTML();await page.clock.fastForward(2000);check(stable===await scene.locator(".teaching-canvas").innerHTML(),"Reduced motion is static");
   await page.emulateMedia({reducedMotion:"no-preference"});
  }
+ await page.goto(base);const rv=page.locator('[data-scene=reservoir]');
+ check(await rv.getAttribute('data-clip')==='2'&&await rv.getAttribute('data-memory')==='x₁,x₂',"Main reservoir begins with the full old pool and third candidate");
+ await rv.getByRole('button',{name:'j = 1',exact:true}).click();
+ await page.emulateMedia({reducedMotion:'reduce'});await rv.locator('select').selectOption('1');
+ check(await rv.getAttribute('data-memory')==='x₁,x₃',"Manual legal replacement persists into the next rejected input");
+ await page.emulateMedia({reducedMotion:'no-preference'});
  await page.goto(base+"?focus=workbench");const wb=page.locator("[data-scene=workbench]");
+ check(!(await wb.locator('.wb-handoff-rounds').innerText()).includes('替换'),"Initial round navigation does not expose future reservoir outcomes");
+ const recordNodes=await wb.locator('[data-instance-id]').elementHandles();
  const network=await wb.locator("[data-network]").elementHandle(),memory=await wb.locator("[data-workbench-memory]").elementHandle();
  for(const mode of ["DER","DER++"]){
   await wb.locator("[data-mode="+(mode==="DER"?"DER":'"DER++"')+"]").click();
@@ -105,6 +114,13 @@ export async function fullW8Checks({page,base,check,shot}){
   await page.emulateMedia({reducedMotion:"no-preference"});
   for(const c of [1,5,13,14,19,20]){await seek(wb,c,WORKBENCH_CLIPS[c].durationMs,.5);await geometry(wb);await shot("workbench-motion-"+c,"[data-scene=workbench]");}
  }
+ await wb.locator('[data-round-select="2"]').click();
+ await wb.locator('[data-round-scrub]').fill('1.64');
+ check(await wb.getAttribute('data-clip')==='11'&&Math.abs(+(await wb.getAttribute('data-progress'))-.64)<.002,"Round scrub seeks a true paused intermediate frame");
+ check(await wb.getAttribute('data-status')==='paused',"Scrubbing never silently resumes playback");
+ const scrubFrame=await wb.locator('.teaching-canvas').innerHTML();await page.clock.fastForward(1800);
+ check(scrubFrame===await wb.locator('.teaching-canvas').innerHTML(),"Scrubbed objects stay at exact intermediate positions");
+ for(const node of recordNodes)check(await node.evaluate(el=>el.isConnected),"Record DOM objects persist through rounds and method resets");
  check(await network.evaluate(el=>el===document.querySelector("[data-network]")),"The same network DOM object persists through rounds and mode resets");
  check(await memory.evaluate(el=>el===document.querySelector("[data-workbench-memory]")),"The same memory container persists");
  await page.goto(base+"?focus=evidence");const evidence=page.locator("[data-scene=evidence]");
@@ -130,6 +146,7 @@ export async function fullW8Checks({page,base,check,shot}){
  await page.keyboard.press("Escape");await page.goto(base);
  await shot("article-final-opening");
  check(await page.locator(".lesson-section").count()===7,"All seven reading units are real");
+ check(await page.locator(".chapter-flourish").count()===14,"Each of the seven pages carries both small botanical motifs");
  const bad=await page.locator(".site-header nav a,.kl-main-equation math,.score-main-equation math,.wb-rounds button").evaluateAll(nodes=>nodes.filter(el=>el.scrollWidth>el.clientWidth+2).map(el=>el.textContent));
  check(!bad.length,"Navigation and mainline math fit: "+bad);
  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),"Full article has no horizontal overflow");

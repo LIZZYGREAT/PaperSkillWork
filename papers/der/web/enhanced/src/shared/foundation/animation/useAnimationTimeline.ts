@@ -31,7 +31,7 @@ export type TimelineControls = {
   replayClip: () => void;
   stepBack: () => void;
   stepForward: () => void;
-  goToClip: (index: number, options?: { autoPlay?: boolean }) => void;
+  goToClip: (index: number, options?: { autoPlay?: boolean; progress?: number }) => void;
 };
 
 type Snapshot = { clipIndex: number; elapsedMs: number; status: TimelineStatus };
@@ -164,11 +164,11 @@ export function useAnimationTimeline({
     return () => clock.cancel(handle);
   }, [clock, clip, clipTotal, clips.length, reducedMotion, runNonce, safeIndex, snapshot.status, usable]);
 
-  const setClip = useCallback((index: number, status: TimelineStatus) => {
+  const setClip = useCallback((index: number, status: TimelineStatus, progress = 0) => {
     if (!usable) return;
     stopCurrentRun();
     const next = boundedIndex(index, clips.length);
-    const elapsedMs = reducedMotion ? timelineClipTotal(clips[next]) : 0;
+    const elapsedMs = reducedMotion ? timelineClipTotal(clips[next]) : Math.max(0, Math.min(1, Number.isFinite(progress) ? progress : 0)) * clips[next].durationMs;
     elapsedRef.current = elapsedMs;
     setRunNonce(value => value + 1);
     setSnapshot({ clipIndex: next, elapsedMs, status: reducedMotion ? "paused" : status });
@@ -217,8 +217,8 @@ export function useAnimationTimeline({
     setClip(safeIndex + 1, "paused");
   }, [clipTotal, clips.length, reducedMotion, safeIndex, setClip, stopCurrentRun, usable]);
 
-  const goToClip = useCallback((index: number, options?: { autoPlay?: boolean }) => {
-    setClip(index, options?.autoPlay ? "playing" : "paused");
+  const goToClip = useCallback((index: number, options?: { autoPlay?: boolean; progress?: number }) => {
+    setClip(index, options?.autoPlay ? "playing" : "paused", options?.progress);
   }, [setClip]);
 
   const state = useMemo<TimelineState>(() => {

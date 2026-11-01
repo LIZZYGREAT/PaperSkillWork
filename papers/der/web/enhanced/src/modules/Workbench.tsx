@@ -11,18 +11,17 @@ import {
   type TrainingRecord,
 } from "./training-model";
 import { curve, mix, windowAt } from "./review/lifecycle-model";
-import { MotionTrail } from "./review/MotionTrail";
+
 import { MotionPath, NetworkGlyph, SampleGlyph, ScoreGlyph, fmt, vectorText } from "./LearningGlyphs";
 import { MODEL_CLASSES } from "../data/model-classes";
 import { Equation } from "./MathNotation";
 import "./learning-scenes.css";
 import "./workbench.css";
+import "./later-chapters.css";
 
 const SLOT_X = 66;
 const slotY = (slot: number) => 420 + slot * 86;
 const CANDIDATE_HOME = { x: 414, y: 416 };
-const SELECTOR = { x: 736, y: 412 };
-const EXIT = { x: 1000, y: 470 };
 
 function StoredRecord({
   record,
@@ -46,13 +45,14 @@ function StoredRecord({
       transform={"translate(" + x + " " + y + ")"}
       opacity={opacity}
       data-training-record={record.id}
+      data-instance-id={"workbench:" + record.id}
       data-target={record.z.join(",")}
       data-generated-by={record.origin}
       data-read-d={readD}
       data-read-y={readY}
     >
       <rect width="270" height="80" rx="12" className="wb-record-card" />
-      <SampleGlyph x={10} y={17} size={44} model={record.model} id={record.id} />
+      <SampleGlyph x={10} y={17} size={44} model={record.model} id={"workbench:" + record.id} />
       <text x="64" y="22" className="wb-record-title">
         {record.id} · 冻结 z
       </text>
@@ -143,412 +143,60 @@ function StepDetails({ step }: { step: ReturnType<typeof runTraining>[number] })
   );
 }
 
+
 function outcomeLabel(step: ReturnType<typeof runTraining>[number]) {
-  if (step.insertion.decision === "append") return "追加 " + step.input.id;
-  if (step.insertion.decision === "replace") return "替换 " + step.insertion.evicted?.id + " → " + step.input.id;
-  return "拒收 " + step.input.id + "；N 仍递增";
+ return step.insertion.decision==='append'?'追加 '+step.input.id:step.insertion.decision==='replace'?'替换 '+step.insertion.evicted?.id+' → '+step.input.id:'拒收 '+step.input.id+'；训练有效';
 }
+export default function Workbench(){
+ const [mode,setMode]=useState<Mode>('DER'),[jump,setJump]=useState('从空池开始');
+ const steps=useMemo(()=>runTraining(mode),[mode]),timeline=useSceneTimeline(WORKBENCH_CLIPS);
+ const {clipIndex:c,progress:p}=timeline.state,{step,round,phase,prediction,state}=trainingSceneAt(steps,c,p),result=predict(steps[3].after);
+ const stage=(i:number)=>prediction?0:phase>i?1:phase<i?0:windowAt(p,.08,.84);
+ const ending=!prediction&&phase===4?windowAt(p,.88,1):0;
+ const appear=prediction?windowAt(p,0,.18):phase===0?windowAt(p,0,.2):1;
+ const flow=stage(1),read=stage(0),loss=stage(2),update=!prediction&&phase===3?windowAt(p,.18,.8):0;
+ const freeze=stage(1)===1?1:phase===1?windowAt(p,.5,.84):0;
+ const retire=!prediction&&phase===4&&step.insertion.decision==='replace'?windowAt(p,.12,.36):0;
+ const placing=!prediction&&phase===4?windowAt(p,.4,.88):0;
+ const rejecting=!prediction&&phase===4&&step.insertion.decision==='reject'?windowAt(p,.3,.84):0;
+ const jumpTo=(index:number)=>{setJump('状态跳转：定位'+(index===20?'只读预测':'第 '+(Math.floor(index/5)+1)+' 轮'));timeline.start(index);};
+ const scrub=(value:number)=>{const event=Math.min(4,Math.floor(value));timeline.seek(round*5+event,value>=5?1:value-event);setJump('本轮时间定位：暂停检查中间状态');};
+ const candidateAt=phase===1?(freeze<.4?{x:650,y:mix(231,CANDIDATE_HOME.y,freeze/.4)}:{x:mix(650,CANDIDATE_HOME.x,(freeze-.4)/.6),y:CANDIDATE_HOME.y}):phase===4?(step.insertion.decision==='reject'?{x:CANDIDATE_HOME.x+rejecting*22,y:CANDIDATE_HOME.y+rejecting*34}:curve(placing,CANDIDATE_HOME,{x:370,y:slotY(step.insertion.slot??0)},{x:340,y:slotY(step.insertion.slot??0)},{x:SLOT_X,y:slotY(step.insertion.slot??0)})):CANDIDATE_HOME;
+ const completed=prediction?4:round+(phase===4&&p>=.88?1:0);
+ const note=prediction?'训练已经结束。查询只使用 θ₄ 前向与 argmax；M、N 不变，不回放、不计算训练损失。':phase===0?(step.rd?'从写入前旧池复制 Rd '+step.rd.id+(step.ry?'，另取 Ry '+step.ry.id:'')+'。原记录保持原位。':'空池没有回放记录，本轮只使用当前标签。'):phase===1?'当前 '+step.input.id+' 前向，用更新前 θ'+step.before.updates+' 的输出复制冻结候选。':phase===2?'所有来源使用同一组更新前参数；当前 CE、旧 logits 匹配'+(mode==='DER++'?'与历史标签 CE':'')+'分别形成梯度。':phase===3?'梯度加权汇合，只更新一次。此刻 M 与 N 尚未写入，候选 z 保持更新前数值。':outcomeLabel(step)+'。本轮 θ、M、N 在提交点同步交给下一轮。';
+ return <section className="der-redesign teaching-scene workbench later-lesson wb2-lesson" data-scene="workbench" data-mode={mode} data-clip={c} data-progress={p} data-status={timeline.state.status} data-round={round+1} data-phase={phase} data-seen={state.N} data-updates={state.updates} data-memory={state.M.map(r=>r.id).join(',')} data-weights={JSON.stringify(state.W)}>
+ <header className="later-scene-heading"><div><h3>让同一组 θ、M、N 连续走完四轮。</h3><p>从 θ₀、空池和 N=0 开始。读旧记忆、前向并冻结、合并更新，最后才在线选留。结束状态直接成为下一轮起点。</p></div><div className="mode-switch" aria-label="算法模式">{(['DER','DER++'] as Mode[]).map(m=><button key={m} data-mode={m} aria-pressed={mode===m} onClick={()=>{setMode(m);setJump('切换方法：从相同初态重新计算独立轨迹');timeline.reset();}}>{m}</button>)}</div></header>
+ <p className="wb2-event-order">读旧 M <span>→</span> 前向与冻结 <span>→</span> 计算监督 <span>→</span> 更新 θ 一次 <span>→</span> 在线选留 <span>→</span> 下一轮</p>
+ <div className="wb-handoff"><div className="wb-handoff-intro"><span>连续状态</span><p>θ₀ · M=∅ · N=0</p></div><ol className="wb-handoff-rounds">{steps.map((s,i)=><li key={s.input.id} data-handoff-round={i+1} data-active={!prediction&&round===i} data-updates={s.after.updates} data-seen={s.after.N} data-memory={s.after.M.map(r=>r.id).join(',')} data-weights={JSON.stringify(s.after.W)}><button data-round-select={i} aria-pressed={!prediction&&round===i} onClick={()=>jumpTo(i*5)}><span className="wb-handoff-kicker">0{i+1} · {s.input.id}</span><strong>{i<completed?outcomeLabel(s):i===round&&!prediction?'本轮进行中':'等待执行'}</strong><span className="wb-handoff-state">{i<completed?'θ'+s.after.updates+' · N='+s.after.N:'点击定位本轮起点'}</span><span className="wb-handoff-memory">{i<completed?'M = '+s.after.M.map(r=>r.id).join('，'):'结果在完成后显示'}</span></button></li>)}</ol><button className={'wb-query-node'+(prediction?' is-active':'')} data-predict aria-pressed={prediction} onClick={()=>jumpTo(20)}><span>之后 · 只读</span><strong>查询 θ₄</strong><small>M、N 不变</small></button></div>
+ <div className="wb-state"><span>当前参数 <b>θ{state.updates}</b></span><span>已处理 N <b>{state.N}</b></span><span>固定容量 K <b>2</b></span><span>记忆 |M| <b>{state.M.length}</b></span><button data-replay-round onClick={()=>jumpTo(round*5)}>回到本轮起点</button></div>
+ <div className="teaching-stage wb-stage"><svg viewBox="0 0 1280 640" className="teaching-canvas wb-canvas" role="img" aria-label="一套持续模型和双槽记忆，真实记录副本和冻结候选连续移动，四轮执行后只读预测">
+ <text x="42" y="35" className="wb-canvas-kicker">{prediction?'训练停止 · 只读查询':'持续状态 · 第 '+(round+1)+' 轮'}</text><text x="1235" y="35" textAnchor="end" className="wb-canvas-mode">{mode} · {prediction?'只读预测':TRAIN_PHASES[phase]}</text><path d="M42 48H1238" className="wb-canvas-rule"/>
+ <g opacity={appear*(1-ending)} transform={'translate('+(-12*(1-appear))+' 0)'} className="wb-current-input"><rect x="40" y="90" width="238" height="142" rx="16" className="wb-panel wb-input-panel"/><text x="57" y="114" className="wb-panel-kicker">{prediction?'QUERY · 普通预测':'CURRENT · 当前样本'}</text>{prediction?<g><rect x="56" y="133" width="58" height="58" rx="10" className="wb2-query-input"/><text x="85" y="171" textAnchor="middle" className="wb2-query-u">u</text></g>:<SampleGlyph x={56} y={133} size={58} model={step.input.model} id={'workbench:'+step.input.id+':source'}/>}<text x="126" y="156" className="wb-panel-title">{prediction?'查询 u':step.input.id+' · y='+MODEL_CLASSES[step.input.y]}</text><text x="126" y="181" className="wb-panel-value">{vectorText(prediction?result.u:step.input.u,1)}</text><text x="126" y="205" className="wb-panel-note">{prediction?'使用训练完成的 θ₄':'原始二维输入 · 标签监督'}</text></g>
+ <g opacity={1-ending}><MotionPath d="M278 161H350" progress={prediction?windowAt(p,.1,.8):flow} kind="current"/></g>
+ <g opacity={(prediction?appear:flow)*(1-ending)} data-current-copy>{prediction?<text x={mix(280,330,windowAt(p,.1,.8))} y="166" className="wb2-query-u">u</text>:<SampleGlyph x={mix(280,330,flow)} y={150} size={20} model={step.input.model} id="workbench:current-copy"/>}</g>
+ <NetworkGlyph x={355} y={78} version={'θ'+state.updates} forward={prediction?windowAt(p,.1,.8):flow} backward={update}/>
 
-function StateHandoff({
-  steps,
-  round,
-  prediction,
-  timeline,
-}: {
-  steps: ReturnType<typeof runTraining>;
-  round: number;
-  prediction: boolean;
-  timeline: ReturnType<typeof useSceneTimeline>;
-}) {
-  return (
-    <div className="wb-handoff" aria-label="同一训练状态在四轮间传递">
-      <div className="wb-handoff-intro">
-        <span>连续状态</span>
-        <p>初态 <b>θ₀</b> · <b>M=∅</b> · <b>N=0</b></p>
-      </div>
-      <ol className="wb-handoff-rounds">
-        {steps.map((step, index) => {
-          const next = step.after;
-          const active = !prediction && round === index;
-          return (
-            <li
-              key={step.input.id}
-              data-handoff-round={index + 1}
-              data-active={active}
-              data-updates={next.updates}
-              data-seen={next.N}
-              data-memory={next.M.map(record => record.id).join(",")}
-              data-weights={JSON.stringify(next.W)}
-            >
-              <button
-                type="button"
-                data-round-select={index}
-                aria-pressed={active}
-                onClick={() => timeline.start(index * TRAIN_PHASES.length)}
-              >
-                <span className="wb-handoff-kicker">0{index + 1} · {step.input.id}</span>
-                <strong>{outcomeLabel(step)}</strong>
-                <span className="wb-handoff-state">θ{next.updates} · N={next.N}</span>
-                <span className="wb-handoff-memory">M = {next.M.map(record => record.id).join("，") || "∅"}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-      <button
-        type="button"
-        className={"wb-query-node" + (prediction ? " is-active" : "")}
-        data-predict
-        aria-pressed={prediction}
-        onClick={() => timeline.start(20)}
-      >
-        <span>之后 · 只读</span>
-        <strong>查询 θ₄</strong>
-        <small>M、N 不变</small>
-      </button>
-    </div>
-  );
-}
-
-export default function Workbench() {
-  const [mode, setMode] = useState<Mode>("DER");
-  const steps = useMemo(() => runTraining(mode), [mode]);
-  const timeline = useSceneTimeline(WORKBENCH_CLIPS);
-  const { clipIndex: c, progress: p } = timeline.state;
-  const { step, round, phase, prediction, state } = trainingSceneAt(steps, c, p);
-  const result = predict(steps[3].after);
-  const selectedSlot = step.insertion.slot;
-  const decision = step.insertion.decision;
-  const currentDone = prediction ? windowAt(p, 0.1, 0.8) : phase > 1 ? 1 : phase === 1 ? windowAt(p, 0.08, 0.84) : 0;
-  const replayProgress = !prediction && phase === 0 ? windowAt(p, 0.08, 0.82) : 0;
-  const lossProgress = prediction ? 0 : phase > 2 ? 1 : phase === 2 ? windowAt(p, 0.08, 0.84) : 0;
-  const updateProgress = !prediction && phase === 3 ? windowAt(p, 0.18, 0.8) : 0;
-  const freezeProgress = !prediction && phase === 1 ? windowAt(p, 0.5, 0.84) : 0;
-  const retireProgress = phase === 4 && decision === "replace" ? windowAt(p, 0.08, 0.36) : 0;
-  const candidateVisible = !prediction && (phase > 1 || (phase === 1 && p > 0.48) || phase === 4);
-  const candidateStart = decision === "replace" ? 0.39 : 0.1;
-  const candidateGateEnd = decision === "replace" ? 0.54 : 0.28;
-  const candidateSlotStart = decision === "replace" ? 0.56 : 0.3;
-  const candidateGateProgress = phase === 4 ? windowAt(p, candidateStart, candidateGateEnd) : 0;
-  const candidatePlaceProgress = phase === 4 ? windowAt(p, candidateSlotStart, 0.88) : 0;
-  const candidateExitProgress = phase === 4 && decision === "reject" ? windowAt(p, 0.32, 0.84) : 0;
-  const candidateGatePoints = [
-    CANDIDATE_HOME, { x: 521.33, y: CANDIDATE_HOME.y }, { x: 628.67, y: CANDIDATE_HOME.y }, SELECTOR,
-  ] as const;
-  const candidateStoreCurvePoints = [
-    { x: SELECTOR.x, y: CANDIDATE_HOME.y }, { x: 790, y: 344 }, { x: 390, y: 344 }, { x: 390, y: slotY(selectedSlot ?? 0) },
-  ] as const;
-  const candidateStoreLinePoints = [
-    { x: 390, y: slotY(selectedSlot ?? 0) }, { x: 282, y: slotY(selectedSlot ?? 0) },
-    { x: 174, y: slotY(selectedSlot ?? 0) }, { x: SLOT_X, y: slotY(selectedSlot ?? 0) },
-  ] as const;
-  const candidateRejectPoints = [
-    { x: SELECTOR.x, y: CANDIDATE_HOME.y }, { x: 830, y: 350 }, { x: 930, y: 355 }, EXIT,
-  ] as const;
-  const retiredRecordPoints = (slot: number) => [
-    { x: SLOT_X, y: slotY(slot) }, { x: 230, y: 350 }, { x: 850, y: 350 }, { x: EXIT.x, y: EXIT.y + 42 },
-  ] as const;
-  const candidateAt = (() => {
-    if (!candidateVisible || phase !== 4) return CANDIDATE_HOME;
-    if (p >= 0.88 && decision !== "reject" && selectedSlot !== null) return { x: SLOT_X, y: slotY(selectedSlot) };
-    if (decision === "reject") {
-      if (p < 0.32) return { x: mix(CANDIDATE_HOME.x, SELECTOR.x, candidateGateProgress), y: CANDIDATE_HOME.y };
-      return curve(candidateExitProgress, ...candidateRejectPoints);
-    }
-    if (p < candidateGateEnd) return { x: mix(CANDIDATE_HOME.x, SELECTOR.x, candidateGateProgress), y: CANDIDATE_HOME.y };
-    if (candidatePlaceProgress < 0.5) {
-      return curve(candidatePlaceProgress * 2, ...candidateStoreCurvePoints);
-    }
-    return { x: mix(390, SLOT_X, (candidatePlaceProgress - 0.5) * 2), y: slotY(selectedSlot ?? 0) };
-  })();
-  const movingRecordAt = (slot: number) => {
-    if (phase === 4 && step.insertion.evicted?.id === step.before.M[slot]?.id) {
-      return curve(retireProgress, ...retiredRecordPoints(slot));
-    }
-    return { x: SLOT_X, y: slotY(slot) };
-  };
-  const activePredictionLabel = MODEL_CLASSES[result.label];
-  const phaseLabel = prediction ? "只读预测" : TRAIN_PHASES[phase];
-  const readNote = prediction
-    ? "只读预测 · 本步不读取 M"
-    : step.rd
-    ? "写入前读取 · Rd " + step.rd.id + (step.ry ? " / Ry " + step.ry.id : "")
-    : "空池 · 没有 Rd" + (mode === "DER++" ? " / Ry" : "") + " 回放";
-  const narration = prediction
-    ? "训练已结束。查询 u=(1,0.5) 只经 θ₄ 产生 logits 和 argmax；不读取 M、不采样回放、不计算训练损失，也不更新 θ 或 N。"
-    : phase === 0
-      ? readNote
-      : phase === 1
-        ? step.input.id + " 经当前 θ 前向；更新前 logits 被复制为候选 z，之后不会随 θ 改写。"
-        : phase === 2
-          ? step.rd
-            ? "Rd " + step.rd.id + " 的当前 a 与冻结 z 匹配" + (step.ry ? "；Ry " + step.ry.id + " 另读真实标签。" : "。") + "读取都发生在本轮入池前。"
-            : "记忆为空，只有当前标签监督；没有历史匹配项。"
-          : phase === 3
-            ? "各项在同一个更新前 θ 上形成；合并后只执行一次 θ 更新。候选 z 已冻结，M 与 N 尚未写入。"
-            : decision === "append"
-              ? "更新后有空槽，" + step.input.id + " 才进入 M；本轮结束的 θ、M、N 成为下一轮初态。"
-              : decision === "replace"
-                ? "更新后 j=" + step.insertion.j + "，" + step.insertion.evicted?.id + " 离开 slot " + selectedSlot + "，" + step.input.id + " 占据同一槽。"
-                : "j=" + step.insertion.j + "≥K，" + step.input.id + " 拒收；它已完成本轮训练，M 不变且 N 递增。";
-  const currentIds = state.M.map(record => record.id).join(",");
-  const memoryOpacity = 1;
-  const destinationText = decision === "append"
-    ? "写入 · slot " + selectedSlot
-    : decision === "replace"
-      ? "替换 · slot " + selectedSlot
-      : "拒收 · M 不变";
-  const destinationSubtext = decision === "reject"
-    ? "j=" + step.insertion.j + " ≥ K · N → " + step.after.N
-    : decision === "replace"
-      ? "j=" + step.insertion.j + " · N → " + step.after.N
-      : "空槽可用 · N → " + step.after.N;
-
-  return (
-    <section
-      className="teaching-scene workbench"
-      data-scene="workbench"
-      data-mode={mode}
-      data-clip={c}
-      data-progress={p}
-      data-status={timeline.state.status}
-      data-round={round + 1}
-      data-phase={phase}
-      data-seen={state.N}
-      data-updates={state.updates}
-      data-memory={currentIds}
-      data-weights={JSON.stringify(state.W)}
-    >
-      <header>
-        <div>
-          <p className="eyebrow">ALGORITHM / 四轮连续执行</p>
-          <h3>同一套状态，连续经过四轮与只读预测。</h3>
-          <p>每轮只展示本步发生的操作；上一轮的 θ、记忆槽与计数直接成为下一轮起点。可回退检查，不会重复训练。</p>
-        </div>
-        <div className="mode-switch" aria-label="算法模式">
-          {(["DER", "DER++"] as Mode[]).map(item => (
-            <button
-              key={item}
-              data-mode={item}
-              aria-pressed={mode === item}
-              onClick={() => { setMode(item); timeline.reset(); }}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <StateHandoff steps={steps} round={round} prediction={prediction} timeline={timeline} />
-      <SceneTransport timeline={timeline} clips={WORKBENCH_CLIPS} label="四轮工作台" showTiming={false} />
-
-      <div className="wb-state" aria-label="当前持续状态">
-        <span>当前参数 <b>θ{state.updates}</b></span>
-        <span>已处理 N <b>{state.N}</b></span>
-        <span>固定容量 K <b>{CONFIG.capacity}</b></span>
-        <span>记忆 |M| <b>{state.M.length}</b></span>
-        <button onClick={() => timeline.start(round * TRAIN_PHASES.length)} data-replay-round>回到本轮起点</button>
-      </div>
-
-      <div className="teaching-stage wb-stage">
-        <svg viewBox="0 0 1280 640" className="teaching-canvas wb-canvas" role="img" aria-label="同一当前网络、四轮继承的记忆状态、更新后 Reservoir 选留与只读预测">
-          <text x="42" y="35" className="wb-canvas-kicker">
-            {prediction ? "TRAINING STOPPED / QUERY ONLY" : "PERSISTENT TRAINING STATE / ROUND 0" + (round + 1)}
-          </text>
-          <text x="1235" y="35" textAnchor="end" className="wb-canvas-mode">{mode} · {phaseLabel}</text>
-          <path d="M42 48H1238" className="wb-canvas-rule" />
-
-          <g className="wb-current-input" opacity={prediction ? 1 : 1}>
-            <rect x="40" y="90" width="238" height="142" rx="16" className="wb-panel wb-input-panel" />
-            <text x="57" y="114" className="wb-panel-kicker">{prediction ? "QUERY · 普通预测" : "CURRENT · 当前样本"}</text>
-            <SampleGlyph x={56} y={133} size={58} model={prediction ? 0 : step.input.model} id={prediction ? "workbench query" : step.input.id + " original"} />
-            <text x="126" y="156" className="wb-panel-title">{prediction ? "查询 u" : step.input.id + " · y=" + MODEL_CLASSES[step.input.y]}</text>
-            <text x="126" y="181" className="wb-panel-value">{vectorText(prediction ? result.u : step.input.u, 1)}</text>
-            <text x="126" y="205" className="wb-panel-note">{prediction ? "不需要任务身份" : "进入当前训练批次"}</text>
-          </g>
-
-          <MotionPath d="M278 161H350" progress={prediction ? currentDone : phase === 1 ? currentDone : 0} kind="current" />
-          <NetworkGlyph
-            x={355}
-            y={78}
-            version={"θ" + state.updates}
-            forward={prediction || phase === 1 ? currentDone : 0}
-            backward={updateProgress}
-          />
-          <text x="468" y="351" textAnchor="middle" className="wb-network-caption">
-            {prediction ? "训练已停止" : updateProgress > 0.8 ? "单次更新完成" : "更新前使用同一 θ"}
-          </text>
-
-          <MotionPath d="M581 185H648" progress={prediction ? currentDone : phase === 1 ? currentDone : 0} kind="current" />
-          <g opacity={prediction ? windowAt(p, 0.16, 0.78) : currentDone}>
-            <ScoreGlyph
-              x={654}
-              y={139}
-              label={prediction ? "查询 logits · θ₄" : step.input.id + " 前向 · θ" + step.before.updates}
-              values={prediction ? result.logits : step.currentLogits}
-              reveal={prediction ? windowAt(p, 0.15, 0.78) : currentDone}
-              note={prediction ? "只读查询结果 · 不触发训练" : "更新前结果 · 本轮仅在 θ" + step.before.updates + " 上计算"}
-            />
-          </g>
-          <MotionPath d="M925 211H944V141H958" progress={prediction ? 0 : phase === 1 || phase === 2 ? lossProgress : 0} kind="current" />
-
-          {!prediction && step.rd && (
-            <g className="wb-replay-match" opacity={phase === 0 ? replayProgress : phase > 0 ? 1 : 0}>
-              <rect x="650" y="248" width="292" height="77" rx="12" className="wb-match-panel" />
-              <text x="666" y="271" className="wb-match-kicker">Rd {step.rd.id} · 当前输出对冻结目标</text>
-              <text x="666" y="296" className="wb-match-value">a = {vectorText(step.replayLogits!, 2)}</text>
-              <text x="666" y="316" className="wb-match-target">z = {vectorText(step.rd.z, 2)} · 原样保留</text>
-            </g>
-          )}
-
-          {!prediction && (
-            <g className="wb-objective" opacity={lossProgress}>
-              <rect x="960" y="83" width="278" height={mode === "DER++" ? 222 : 192} rx="15" className="wb-objective-panel" />
-              <text x="980" y="111" className="wb-panel-kicker">联合目标 · 单次更新</text>
-              <text x="980" y="142" className="wb-objective-title">当前标签 · Lcurrent</text>
-              <text x="1217" y="142" textAnchor="end" className="wb-objective-value">{fmt(step.losses.current)}</text>
-              <path d="M980 154H1218" className="wb-objective-rule" />
-              <text x="980" y="181" className="wb-objective-title wb-objective-dark">冻结输出 · α Ldark</text>
-              <text x="1217" y="181" textAnchor="end" className="wb-objective-value">{fmt(CONFIG.alpha * step.losses.dark)}</text>
-              <text x="980" y="201" className="wb-objective-note">{step.rd ? "Rd " + step.rd.id + " · ‖a−z‖²" : "空池 · 本项为 0"}</text>
-              {mode === "DER++" && (
-                <>
-                  <path d="M980 212H1218" className="wb-objective-rule" />
-                  <text x="980" y="239" className="wb-objective-title wb-objective-label">历史真实标签 · β Lreplay-CE</text>
-                  <text x="1217" y="239" textAnchor="end" className="wb-objective-value">{fmt(CONFIG.beta * step.losses.label)}</text>
-                  <text x="980" y="260" className="wb-objective-note">{step.ry ? "独立读取 Ry " + step.ry.id + " · y=" + MODEL_CLASSES[step.ry.y!] : "空池 · 本项为 0"}</text>
-                </>
-              )}
-              <text x="980" y={mode === "DER++" ? 286 : 261} className="wb-objective-total">总计 {fmt(step.losses.total)} · 所有项共用 θ</text>
-            </g>
-          )}
-
-          {!prediction && step.rd && (() => {
-            const index = step.before.M.findIndex(record => record.id === step.rd!.id);
-            const path = "M336 " + (slotY(index) + 39) + " C 365 " + (slotY(index) + 39) + " 355 349 421 349 L 455 322";
-            return <MotionPath d={path} progress={replayProgress} kind="replay" />;
-          })()}
-          {!prediction && mode === "DER++" && step.ry && (() => {
-            const index = step.before.M.findIndex(record => record.id === step.ry!.id);
-            const path = "M336 " + (slotY(index) + 45) + " C 374 " + (slotY(index) + 45) + " 368 359 429 359 L 466 322";
-            return <MotionPath d={path} progress={replayProgress} kind="label" />;
-          })()}
-
-          {!prediction && <MotionPath d="M948 234V356H690V405" progress={freezeProgress} kind="freeze" />}
-          {!prediction && <MotionPath d="M1070 305V328H590" progress={updateProgress} kind="gradient" />}
-
-          {!prediction && <g className="wb-exit-bay">
-            <rect x="985" y="385" width="253" height="205" rx="16" className="wb-exit-panel" />
-          </g>}
-
-          <g data-workbench-memory opacity={memoryOpacity}>
-            <rect x="39" y="366" width="325" height="238" rx="17" className="wb-memory-panel" />
-            <text x="57" y="391" className="wb-memory-title">持久记忆 · M / K={CONFIG.capacity}</text>
-            <text x="346" y="391" textAnchor="end" className="wb-memory-count">N={state.N}</text>
-            <text x="57" y="410" className="wb-memory-note">{readNote}</text>
-            {[0, 1].map(slot => (
-              <g key={slot}>
-                <rect x="54" y={slotY(slot) - 4} width="295" height="84" rx="13" className="wb-slot-outline" />
-                {!state.M[slot] && <text x="206" y={slotY(slot) + 48} textAnchor="middle" className="wb-empty-slot">slot {slot} · 空</text>}
-              </g>
-            ))}
-            {step.before.M.map((record, slot) => {
-              const isEvicted = decision === "replace" && step.insertion.evicted?.id === record.id;
-              const position = movingRecordAt(slot);
-              const opacity = prediction ? 0.74 : isEvicted && phase === 4 ? 1 - retireProgress : 1;
-              return (
-                <g key={record.id}>
-                  {isEvicted && phase === 4 && <MotionTrail points={retiredRecordPoints(slot)} progress={retireProgress} className="wb-motion-trail is-exit" />}
-                  <StoredRecord
-                    record={record}
-                    x={position.x}
-                    y={position.y}
-                    opacity={opacity}
-                    mode={mode}
-                    readD={!prediction && step.rd?.id === record.id}
-                    readY={!prediction && mode === "DER++" && step.ry?.id === record.id}
-                  />
-                </g>
-              );
-            })}
-          </g>
-
-          {!prediction && (
-            <>
-              <text x="418" y="392" className="wb-candidate-heading">写入前候选 · z 固定自更新前输出</text>
-              {phase === 4 && candidateGateProgress > 0 && candidateGateProgress < 1 && <MotionTrail points={candidateGatePoints} progress={candidateGateProgress} className="wb-motion-trail is-write" />}
-              {phase === 4 && decision !== "reject" && candidatePlaceProgress < 0.5 && <MotionTrail points={candidateStoreCurvePoints} progress={candidatePlaceProgress * 2} className="wb-motion-trail is-write" />}
-              {phase === 4 && decision !== "reject" && candidatePlaceProgress >= 0.5 && candidatePlaceProgress < 1 && <MotionTrail points={candidateStoreLinePoints} progress={(candidatePlaceProgress - 0.5) * 2} className="wb-motion-trail is-write" />}
-              {phase === 4 && decision === "reject" && <MotionTrail points={candidateRejectPoints} progress={candidateExitProgress} className="wb-motion-trail is-exit" />}
-              <g opacity={candidateVisible ? (decision === "reject" && phase === 4 ? 1 - candidateExitProgress : 1) : 0}>
-                <StoredRecord
-                  record={step.candidate}
-                  x={candidateAt.x}
-                  y={candidateAt.y}
-                  mode={mode}
-                />
-              </g>
-              <g className="wb-selector" opacity={phase === 4 ? windowAt(p, 0.05, 0.32) : phase > 4 ? 1 : 0.76}>
-                <rect x="736" y="405" width="220" height="105" rx="15" className="wb-selector-panel" />
-                <text x="756" y="432" className="wb-panel-kicker">AFTER UPDATE · RESERVOIR</text>
-                <text x="756" y="461" className="wb-selector-title">{destinationText}</text>
-                <text x="756" y="486" className="wb-selector-note">{destinationSubtext}</text>
-              </g>
-              <g className="wb-exit-bay">
-                <text x="1004" y="412" className="wb-panel-kicker">POOL EXIT · 池外结果</text>
-                {decision === "replace" ? (
-                  <>
-                    <text x="1004" y="445" className="wb-exit-title">离开原槽</text>
-                    <g opacity={phase === 4 && p < 0.36 ? 0 : 1}>
-                      <rect x="1004" y="463" width="215" height="42" rx="10" className="wb-exit-summary" />
-                      <text x="1112" y="490" textAnchor="middle" className="wb-exit-note">{step.insertion.evicted?.id} 离池 → {step.input.id} 同槽写入</text>
-                    </g>
-                    <text x="1004" y="557" className="wb-exit-note">另一槽不动 · |M| 仍为 {step.after.M.length}</text>
-                  </>
-                ) : decision === "reject" ? (
-                  <>
-                    <text x="1004" y="445" className="wb-exit-title">拒收候选</text>
-                    <g opacity={phase === 4 && p < 0.84 ? 0 : 1}>
-                      <rect x="1004" y="463" width="215" height="42" rx="10" className="wb-exit-summary" />
-                      <text x="1112" y="490" textAnchor="middle" className="wb-exit-note">{step.input.id} 离池 · j={step.insertion.j} ≥ K</text>
-                    </g>
-                    <text x="1004" y="557" className="wb-exit-note">已参与训练 · M 不变，N 递增</text>
-                  </>
-                ) : (
-                  <>
-                    <text x="1004" y="445" className="wb-exit-title">本轮没有离池记录</text>
-                    <text x="1004" y="469" className="wb-exit-note">空槽接收候选</text>
-                    <text x="1004" y="520" className="wb-exit-note">N 按输入数递增</text>
-                  </>
-                )}
-              </g>
-            </>
-          )}
-
-          {prediction && (
-            <g className="wb-query-result" data-query-result opacity={windowAt(p, 0.3, 0.82)}>
-              <rect x="961" y="293" width="277" height="105" rx="15" className="wb-query-panel" />
-              <text x="982" y="323" className="wb-panel-kicker">OUTPUT · NO TRAINING</text>
-              <text x="982" y="355" className="wb-query-label">argmax → {activePredictionLabel}</text>
-              <text x="982" y="380" className="wb-query-note">θ、M、N 均保持不变</text>
-            </g>
-          )}
-
-          <text x="41" y="628" className="wb-boundary" data-transition-note>
-            合成教学模型 · 读池 / 单次更新 / 后选留；数值由 trainStep 计算，不是论文实验输出。
-          </text>
-        </svg>
-      </div>
-
-      <div className="scene-explanation" aria-live="polite">
-        <strong>{phaseLabel}</strong>
-        <p>{narration}</p>
-      </div>
-      <StepDetails step={step} />
-      <p className="quiet-note">
-        执行顺序依据 Algorithms 1–3；二维数值来自 W5 合成教学模型，只用于追踪状态，不是论文实验输出。
-      </p>
-      <div className="scene-handoff"><span>下一问</span><p>四轮执行说明算法怎样运转，却不能单独证明它更有效。接下来在各自的数据集、测试协议与容量下比较论文结果。</p></div>
-    </section>
-  );
+ <g opacity={1-ending}><MotionPath d="M581 185H648" progress={prediction?windowAt(p,.1,.8):flow} kind="current"/></g>
+ <g opacity={(prediction?windowAt(p,.16,.78):flow)*(1-ending)}><ScoreGlyph x={654} y={139} label={prediction?'查询 logits · θ₄':step.input.id+' 更新前输出 · θ'+step.before.updates} values={prediction?result.logits:step.currentLogits} reveal={prediction?windowAt(p,.15,.78):flow} note={prediction?'只读查询；不产生训练候选':'复制当前数值为 z；随后保持冻结'}/></g>
+ {!prediction&&step.rd&&<g className="wb-replay-match" opacity={stage(2)*(1-ending)}><rect x="650" y="248" width="292" height="77" rx="12" className="wb-match-panel"/><text x="666" y="271" className="wb-match-kicker">Rd {step.rd.id} · 当前 a 对冻结 z</text><text x="666" y="296" className="wb-match-value">a = {vectorText(step.replayLogits!,2)}</text><text x="666" y="316" className="wb-match-target">z = {vectorText(step.rd.z,2)}</text></g>}
+ {!prediction&&<g className="wb-objective" opacity={loss*(1-ending)}><rect x="960" y="83" width="278" height={mode==='DER++'?222:192} rx="15" className="wb-objective-panel"/><text x="980" y="111" className="wb-panel-kicker">联合目标 · 同一组更新前 θ</text><text x="980" y="142" className="wb-objective-title">当前 CE</text><text x="1217" y="142" textAnchor="end" className="wb-objective-value">{fmt(step.losses.current)}</text><path d="M980 154H1218" className="wb-objective-rule"/><text x="980" y="181" className="wb-objective-title wb-objective-dark">α L_dark</text><text x="1217" y="181" textAnchor="end" className="wb-objective-value">{fmt(CONFIG.alpha*step.losses.dark)}</text><text x="980" y="201" className="wb-objective-note">{step.rd?'Rd '+step.rd.id+' · ‖a−z‖²':'空池 · 本项为 0'}</text>{mode==='DER++'&&<><path d="M980 212H1218" className="wb-objective-rule"/><text x="980" y="239" className="wb-objective-title wb-objective-label">β L_replay-CE</text><text x="1217" y="239" textAnchor="end" className="wb-objective-value">{fmt(CONFIG.beta*step.losses.label)}</text><text x="980" y="260" className="wb-objective-note">{step.ry?'Ry '+step.ry.id+' · y='+MODEL_CLASSES[step.ry.y!]:'空池 · 本项为 0'}</text></>}<text x="980" y={mode==='DER++'?286:261} className="wb-objective-total">总计 {fmt(step.losses.total)}</text></g>}
+ {!prediction&&<MotionPath d="M1070 310V334H585" progress={update} kind="gradient"/>}
+ <g data-workbench-memory><rect x="39" y="366" width="325" height="238" rx="17" className="wb-memory-panel"/><text x="57" y="391" className="wb-memory-title">持久记忆 M · K=2</text><text x="346" y="391" textAnchor="end" className="wb-memory-count">N={state.N}</text><text x="57" y="410" className="wb-memory-note">{prediction?'预测不读取 M':step.rd?'Rd '+step.rd.id+(step.ry?' / Ry '+step.ry.id:'')+' · 读取副本':'空池 · 无回放'}</text>{[0,1].map(slot=><g key={slot}><rect x="54" y={slotY(slot)-4} width="295" height="84" rx="13" className="wb-slot-outline"/>{!state.M[slot]&&<text x="206" y={slotY(slot)+48} textAnchor="middle" className="wb-empty-slot">slot {slot} · 空</text>}</g>)}</g>
+ {!prediction&&[step.rd,mode==='DER++'?step.ry:null].map((r,i)=>{if(!r)return null;const slot=step.before.M.findIndex(old=>old.id===r.id),start={x:337,y:slotY(slot)+40+i*7},end={x:440+i*22,y:322};const at=curve(read,start,{x:374,y:start.y},{x:370,y:349+i*10},end);return <g key={i} data-replay-copy={i?'Ry':'Rd'} opacity={read*(1-ending)}><MotionPath d={'M'+start.x+' '+start.y+'C374 '+start.y+' 370 '+(349+i*10)+' '+end.x+' 322'} progress={read} kind={i?'label':'replay'}/><circle cx={at.x} cy={at.y} r="8" className={i?'wb2-label-copy':'wb2-dark-copy'}/><text x={at.x+12} y={at.y+5} className="wb2-copy-label">{i?'Ry':'Rd'}</text></g>;})}
+ <g data-workbench-records>{steps.map((s,i)=>{const frozen=s.candidate;let x=SLOT_X,y=slotY(0),opacity=0;
+ if(prediction){const slot=state.M.findIndex(r=>r.id===frozen.id);if(slot>=0){y=slotY(slot);opacity=1;}}
+ else if(i<round){const slot=step.before.M.findIndex(r=>r.id===frozen.id);if(slot>=0){y=slotY(slot);opacity=1;if(phase===4&&step.insertion.evicted?.id===frozen.id){x+=retire*18;opacity=1-retire;}}}
+ else if(i===round){x=candidateAt.x;y=candidateAt.y;opacity=phase<1?0:phase===1?windowAt(p,.5,.6):step.insertion.decision==='reject'&&phase===4?1-rejecting:1;}
+ return <StoredRecord key={frozen.id} record={frozen} x={x} y={y} opacity={opacity} mode={mode} readD={!prediction&&step.rd?.id===frozen.id} readY={!prediction&&mode==='DER++'&&step.ry?.id===frozen.id}/>;
+ })}</g>
+ {!prediction&&<><text x="414" y="392" className="wb-candidate-heading" opacity={(freeze===1?1:0)*(1-ending)}>候选 z 已冻结 · 更新后才选留</text><g className="wb-exit-bay" opacity={phase===4?windowAt(p,.04,.25):0}><text x="770" y="420" className="wb-panel-kicker">更新后 · 在线选留</text><text x="770" y="458" className="wb-selector-title">{outcomeLabel(step)}</text><text x="770" y="490" className="wb-selector-note">{step.insertion.j===null?'空槽直接写入':'j='+step.insertion.j+' · K=2'}</text><text x="770" y="523" className="wb-exit-note">{p>=.88?'提交完成 · N='+state.N:'提交前 M、N 不变；移动结束再写入'}</text><text x="770" y="556" className="wb-exit-note">{step.insertion.decision==='reject'?'拒收候选已参与训练，N 仍增加 1':'其余记录与冻结 z 均保持不变'}</text></g></>}
+ {prediction&&<g className="wb-query-result" data-query-result opacity={windowAt(p,.3,.82)}><rect x="961" y="293" width="277" height="105" rx="15" className="wb-query-panel"/><text x="982" y="323" className="wb-panel-kicker">只读输出</text><text x="982" y="355" className="wb-query-label">argmax → {MODEL_CLASSES[result.label]}</text><text x="982" y="380" className="wb-query-note">θ、M、N 均保持不变</text></g>}
+ <text x="41" y="628" className="wb-boundary" data-transition-note>合成教学模型 · 读池 → 冻结 → 单次更新 → 后选留；数值由 trainStep 计算。</text>
+ </svg></div>
+ <p className="later-event" aria-live="polite">{note}</p>
+ <div className="wb2-scrub"><label htmlFor="workbench-round-time">{prediction?'预测过程':'本轮时间'} · {prediction?'只读':Math.round((phase+p)/5*100)+'%'}</label><input id="workbench-round-time" data-round-scrub type="range" min="0" max="5" step="0.001" value={prediction?5:phase+p} disabled={prediction||timeline.reducedMotion} onChange={e=>scrub(Number(e.target.value))}/><span aria-live="polite">{jump}</span></div>
+ <SceneTransport timeline={timeline} clips={WORKBENCH_CLIPS} label="四轮工作台" showTiming={false} teachingProgress/>
+ <div className="wb2-round-nav"><button disabled={round===0&&!prediction} onClick={()=>jumpTo((prediction?3:round-1)*5)}>上一轮起点</button><button disabled={prediction} onClick={()=>jumpTo(round===3?20:(round+1)*5)}>{round===3?'定位只读预测':'下一轮起点'}</button><small>跨轮定位是状态跳转；不会把未观看的过程标成已播放。</small></div>
+ <StepDetails step={step}/><p className="quiet-note">结构图保持 3–5–3 视觉示意，精确计算使用 W∈R³ˣ² 的线性模型；类别像素图仅标识身份。DER / DER++ 各自从相同初态重新计算，冻结 z 不随更新改写。</p>
+ </section>;
 }
