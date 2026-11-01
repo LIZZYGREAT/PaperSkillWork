@@ -84,7 +84,7 @@ function Network({ s }: { s: Scene }) {
   const w = mix(G.model.w, G.anchor.w, t), h = mix(G.model.h, G.anchor.h, t);
   const centers = [0, 1, 2].map(i => x + mix(64, 33, t) + i * mix((G.model.w - 128) / 2, (G.anchor.w - 66) / 2, t));
   const middle = mix(G.model.y + 169, G.anchor.y + 145, t);
-  const counts = [3, 5, 3], spacing = [84, 45, 84].map(v => mix(v, v * .44, t));
+  const counts = [3, 5, 3], spacing = [56, 45, 56].map(v => mix(v, v * .44, t));
   const ys = counts.map((n, i) => Array.from({ length: n }, (_, k) => middle + (k - (n - 1) / 2) * spacing[i]));
   const active = s.clip === 1 ? Math.min(2, Math.floor(s.forward * 3)) : -1;
   const updateProgress = s.clip === 3 ? windowAt(s.update, .06, .82) : s.clip >= 7 ? windowAt(s.joint, .06, .82) : 0;

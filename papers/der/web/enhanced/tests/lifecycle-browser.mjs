@@ -74,6 +74,7 @@ export async function lifecycleBrowserChecks({ page, base, check, shot }) {
       Array.from({length:layer === 0 ? 5 : 3}, (_, j) => `${layer}:${i}:${j}`)).flat());
     check(graph.edges.length === 30 && expected.every(e => graph.edges.includes(e)), "3→5→3 layers are fully connected, including the model thumbnail");
     check(Math.abs(graph.spans[0] - graph.spans[2]) < .01, "First and third neural columns have the same vertical span");
+    check(Math.abs(graph.spans[0] / graph.spans[1] - 112 / 180) < .0001, "Outer columns retain the requested two-thirds spacing while the middle column stays unchanged");
   };
   await inspectNetwork();
   const copySamples = [], sumSamples = [];
