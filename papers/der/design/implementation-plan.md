@@ -763,3 +763,7 @@ FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN。使用computer-use技能尝�
 用户明确授权直接重新设计、删除过时代码、独立分支逐部分提交；不等待额外图稿批准，不代填 W7/W9。分支 redesign/der-u1-u3，自32a83c0开始。保留原工作区未跟踪 docs/TEACHING_VISUAL_PHILOSOPHY.md，不纳入提交。
 U1重做为共享的数据流/有限记忆场景与同一输入双时刻响应对比。移除三卡推导与重复ER大图；使用D1既有ModelPixel类别身份，局部重新绘制3–4–3网络，节点与边明确对应。动画使用现有useSceneTimeline，支持暂停/继续/重播/步骤与reduced-motion；不改数学模型或D1文件。
 首轮build PASS。实际Chromium生产文件渲染1440×900、1920×1080；验证U1中间态暂停、整段重播、完整响应揭示和无页面横向溢出。浏览器sandbox禁止localhost网络，使用Playwright route从本地dist提供完整HTML/JS/CSS，未据此宣称真实HTTP子路径通过；最终需另行检查。发现旧CSS污染结论区与术语按钮后加局部修复；最终统一复查。截图位于会话visualizations/der-redesign。FULLSCREEN_REAL=NOT_RUN；人审PENDING。
+
+### U1–U3 重新设计 · U2（2026-11-01）
+U2改为单一比较实验台：固定x₁与z，左侧三类共用刻度的历史/当前标记，右侧在概率KL和原始分数平方差之间切换，底部保留两个总量。聚焦类别同步高亮逐类贡献；公式贴近计算表，保留KL方向、固定熵、输出梯度和共同平移的必要解释。复用原math-model计算真值；当前向量、p/q、贡献、总量随同一插值更新。
+build PASS；实际Chromium生产渲染检查1440实验台。三状态核对平方距离0/2/3、共同平移KL=0；右侧镜头切换有效。最终两档、暂停/快速切换及reduced-motion统一回归。D1未修改。
