@@ -796,3 +796,7 @@ U3删除旧教师/学生网络卡、ER/DER重复记录卡及完整TwoRoundPrevie
 - FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless不代表真实F11）；HUMAN_ACCEPTANCE=PENDING。
 
 证据保留在本会话`visualizations/der-redesign`：final-u1-1440、final-u2-1440、final-u3-1440/1920、final-stream-1440等局部PNG，qa-full.json/qa-final.json及playback/lifecycle/playback.json。原始长截图和报告目录已按本次准确路径清理：run-2026-11-01T14-58-03-398Z、run-2026-11-01T15-08-50-784Z均返回CLEANED，随后Test-Path=False；临时QA配置和本次debug.log已删除。保留5199生产预览供用户检查，停止5198临时开发服务。
+
+### 用户截图修订 · 数据流线（2026-11-01）
+用户指出第一幅图长线横穿x₁和前两个像素对象。将该线改为仅从当前样本右侧留白到模型端口的短连接，历史样本之间不再绘制穿心横线；保留回放的独立读取路径。浏览器回归新增实际SVG路径采样与三个静态样本边界的交叉检查，不按path字符串断言。D1未变更。
+回放线路也仅在实际读取阶段显示，空记忆时不再出现从空槽出发的长箭头。首轮构建及两档定向浏览器230项通过；初态截图已核对。

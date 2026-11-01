@@ -2,6 +2,12 @@ import {responseComparison,RESPONSE_CASES,LABEL_OLD,LABEL_CURRENT} from '../src/
 export async function teachingFrontChecks({page,base,check,shot}){
  await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(base);await page.evaluate(()=>document.fonts.ready);
  const label=page.locator('.label-investigation'),stream=page.locator('[data-front-scene=stream]');
+ const lineCrossings=await stream.locator('.der-current-route').evaluate(path=>{
+  const root=path.ownerSVGElement,ids=['stream:earlier','stream:earlier-2','stream:current'];
+  const boxes=ids.map(id=>root.querySelector(`[data-sample-id="${id}"]>rect`).getBoundingClientRect());
+  return Array.from({length:31},(_,i)=>{const p=path.getPointAtLength(path.getTotalLength()*i/30),q=new DOMPoint(p.x,p.y).matrixTransform(path.getScreenCTM());return boxes.some(b=>q.x>b.left&&q.x<b.right&&q.y>b.top&&q.y<b.bottom);}).some(Boolean);
+ });
+ check(!lineCrossings,'Current-input connector stays outside all stationary sample objects');
  check(await label.locator('.prediction-answer').count()===2,'Both classification answers precede the full response');
  check(await label.getAttribute('data-current-progress')==='0'&&!await label.locator('.response-finding').isVisible(),'Dark knowledge conclusion waits for the response observation');
  await shot('redesign-u1-answer','.label-investigation');
@@ -36,3 +42,4 @@ export async function teachingFrontChecks({page,base,check,shot}){
  await page.locator('[data-label-mode=answer]').focus();await page.keyboard.press('Tab');check(await page.locator(':focus').evaluate(el=>getComputedStyle(el).outlineStyle!=='none'),'Keyboard focus has a visible outline');
  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No desktop page overflow');await page.emulateMedia({reducedMotion:'no-preference'});
 }
+

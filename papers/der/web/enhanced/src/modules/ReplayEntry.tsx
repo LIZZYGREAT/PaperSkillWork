@@ -16,14 +16,14 @@ function StreamScene() {
     const readAt = read < .45 ? curve(read / .45, { x: 112, y: 342 }, { x: 20, y: 342 }, { x: 20, y: 225 }, { x: 150, y: 225 }) : { x: 150 + 540 * (read - .45) / .55, y: 225 };
     const theta = step === 3 && p === 1 ? 'θ₂' : step > 1 || (step === 1 && p === 1) ? 'θ₁' : 'θ₀';
     return <figure className="der-stream" data-front-scene="stream" data-step={step} data-progress={p} data-theta={theta}><div className="der-figure-top"><span>数据持续到来</span><span>同一组参数，持续学习</span></div><div className="der-diagram-scroll"><svg viewBox="0 0 1060 430" role="img" aria-label="新样本进入同一模型，少量旧记录保留在有限记忆中，读取副本参与后续训练">
- <path className="der-route" d="M55 130H690"/><path className="der-arrow" d="m680 123 10 7-10 7"/><text x="55" y="65">更早的样本</text><text x="412" y="65">当前到来的新样本</text>
+ <path className="der-route der-current-route" d="M460 130H690"/><path className="der-arrow" d="m680 123 10 7-10 7"/><text x="55" y="65">更早的样本</text><text x="412" y="65">当前到来的新样本</text>
  <Sample x={58} y={96} id="stream:earlier" muted/><Sample x={158} y={96} model={1} id="stream:earlier-2" muted/><text x="268" y="137" className="der-svg-muted">···</text><Sample x={380} y={96} model={step === 3 ? 2 : 1} id="stream:current"/>
  {input > 0 && input < 1 && <Sample x={388 + 277 * input} y={104} model={step === 3 ? 2 : 1} id="stream:current-read" size={50}/>}
  <text x="413" y="185" textAnchor="middle" className="der-svg-muted">xₜ, yₜ</text><text x="91" y="185" textAnchor="middle" className="der-svg-muted">x₁</text><Network x={700} y={66} theta={theta} active={step === 1 && p > 0 && p < 1 || step === 3 && p > .72}/><text x="809" y="317" textAnchor="middle" className="der-svg-muted">根据分类损失调整参数</text>
  <path className="der-memory-outline" d="M66 265H440V392H66Z"/><text x="82" y="292" className="der-svg-title">有限记忆 M</text><text x="425" y="292" textAnchor="end" className="der-svg-muted">容量 K</text><rect x="82" y="310" width="184" height="65" rx="8" className="der-slot"/><rect x="281" y="310" width="142" height="65" rx="8" className="der-empty-slot"/>
  {retained === 0 && <text x="174" y="350" textAnchor="middle" className="der-svg-muted">只留下少量记录</text>}<text x="352" y="350" textAnchor="middle" className="der-svg-muted">有限空位</text>
  {retained > 0 && <g opacity={retained}><Sample x={58 + 30 * retained} y={317 - (1 - retained) * 221} id="stream:retained-x1" size={50}/><text x="153" y="346">x₁, y₁</text></g>}
- <path className="der-read-route" d="M112 342C20 342 20 225 150 225H690"/><path className="der-arrow" d="m680 218 10 7-10 7"/><text x="502" y="390" className="der-svg-muted">读取旧记录的副本，原记录保留</text>
+ {step === 3 && <g><path className="der-read-route" d="M112 342C20 342 20 225 150 225H690"/><path className="der-arrow" d="m680 218 10 7-10 7"/></g>}<text x="502" y="390" className="der-svg-muted">读取旧记录的副本，原记录保留</text>
  {read > 0 && read < 1 && <Sample x={readAt.x - 24} y={readAt.y - 24} id="stream:old-read" size={48}/>}{step === 3 && read === 1 && <text x="809" y="351" textAnchor="middle" className="der-svg-emphasis">新旧数据，共同监督一次更新</text>}
  </svg></div><figcaption aria-live="polite">{['新样本沿数据流到来；过去的数据可能已经无法再次取得。', '仍是同一个模型。只适应新数据，可能改变对旧输入的判断。', '无法保存全部历史，就保留少量旧图与真实标签 (x,y)。', '从记忆读取副本，与当前样本一起训练同一模型。这就是经验回放（ER）。'][step]}</figcaption><SceneTransport timeline={t} clips={STREAM} label="持续学习与有限回放" showTiming={false}/></figure>;
 }
