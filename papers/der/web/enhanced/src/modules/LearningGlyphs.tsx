@@ -16,7 +16,7 @@ return <g transform={`translate(${x} ${y})`} data-network data-version={version}
 {layers.slice(0,-1).flatMap((from,layerIndex)=>from.flatMap((a,i)=>layers[layerIndex+1].map((b,j)=>{
 const fromX=layerX[reverse?layerIndex+1:layerIndex],toX=layerX[reverse?layerIndex:layerIndex+1];
 const fromY=(reverse?b:a)+30,toY=(reverse?a:b)+30;
-return <g key={`${layerIndex}-${i}-${j}`}><path d={`M${layerX[layerIndex]} ${fromY}L${layerX[layerIndex+1]} ${toY}`} className="tg-edge"/>{moving&&layerIndex===edgeLayer&&<circle cx={mix(fromX,toX,local)} cy={mix(fromY,toY,local)} r="3" className={reverse?"tg-gradient-dot":"tg-forward-dot"}/>}</g>;
+return <g key={`${layerIndex}-${i}-${j}`}><path d={`M${layerX[layerIndex]} ${a+30}L${layerX[layerIndex+1]} ${b+30}`} className="tg-edge"/>{moving&&layerIndex===edgeLayer&&<circle cx={mix(fromX,toX,local)} cy={mix(fromY,toY,local)} r="3" className={reverse?"tg-gradient-dot":"tg-forward-dot"}/>}</g>;
 })))}
 {layers.map((layer,layerIndex)=>layer.map((v,i)=><circle key={`${layerIndex}-${i}`} cx={layerX[layerIndex]} cy={v+30} r="7" className="tg-node"/>))}
 <text x="38" y="232" textAnchor="middle" className="tg-small">输入层</text><text x="113" y="232" textAnchor="middle" className="tg-small">隐藏层</text><text x="188" y="232" textAnchor="middle" className="tg-small">输出层</text></g>;

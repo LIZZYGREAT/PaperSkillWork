@@ -1,165 +1,47 @@
-import { useId, useState } from "react";
-import { MODEL_CLASSES } from "../data/model-classes";
-import { runTraining, TRAIN_PHASES, trainingSceneAt } from "./training-model";
-import { windowAt } from "./review/lifecycle-model";
-import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
-import { SampleGlyph, NetworkGlyph, fmt, vectorText } from "./LearningGlyphs";
-import "./learning-scenes.css";
-
-const steps = runTraining("DER");
+import { useId, useState } from 'react';
+import { MODEL_CLASSES } from '../data/model-classes';
+import { runTraining, TRAIN_PHASES, trainingSceneAt, CONFIG } from './training-model';
+import { curve, windowAt } from './review/lifecycle-model';
+import SceneTransport, { useSceneTimeline } from './review/SceneTransport';
+import { SampleGlyph, NetworkGlyph, fmt, vectorText } from './LearningGlyphs';
+import './learning-scenes.css';
+import './der-redesign.css';
+import './later-chapters.css';
+const steps = runTraining('DER');
 const clips = TRAIN_PHASES.map(id => ({ id, durationMs: 6000, holdMs: 1600 }));
 
-function FlowPath({ d, progress, marker, className = "is-current" }: { d: string; progress: number; marker: string; className?: string }) {
-  return <path d={d} className={`ds-flow ${className}`} pathLength="1" strokeDasharray="1" strokeDashoffset={1 - progress} opacity={progress > 0 ? 1 : 0} markerEnd={progress > .94 ? `url(#${marker})` : undefined} />;
-}
-
 export default function DERTrainingStep() {
-  const [empty, setEmpty] = useState(false);
-  const timeline = useSceneTimeline(clips);
-  const phase = timeline.state.clipIndex;
-  const p = timeline.state.progress;
-  const round = empty ? 0 : 1;
-  const { step, state } = trainingSceneAt(steps, round * 5 + phase, p);
-  const defsId = useId().replace(/:/g, "");
-  const done = (index: number) => phase > index ? 1 : phase < index ? 0 : windowAt(p, .08, .86);
-  const currentFlow = done(1);
-  const replayFlow = done(2);
-  const jointReveal = done(3);
-  const updateReveal = phase > 3 ? 1 : phase < 3 ? 0 : windowAt(p, .22, .84);
-  const writeReveal = done(4);
-  const candidateStored = state.M.some(record => record.id === step.candidate.id);
-  const writeNote = candidateStored
-    ? "本例 x₂ 与自己的冻结 z 一起写入 M"
-    : state.updates > step.before.updates
-      ? "参数已更新，当前候选尚未写入 M"
-      : "参数更新前，M 尚未接收当前候选";
-  const notes = [
-    empty
-      ? "首轮 M 为空，所以没有历史分支。本步先读取 M，再用当前 x₁ 和 y₁ 开始训练。"
-      : "先从已有 M 读取 x₁ 与冻结 z₁ 的副本；读操作不改变 M、N。当前 x₂ 仍未入池。",
-    "当前输入经过本步开始时的 θ，得到 logits 并计算 CE；同一份更新前输出也被复制为候选 z。",
-    empty
-      ? "空池没有可回放的旧样本，L_dark=0；本步仍会由当前标签完成一次分类更新。"
-      : "旧图从 M 读取后，经同一个更新前 θ 重新前向得到 a；与原记录固定的 z 比较，形成 L_dark。",
-    "当前 CE 与加权历史匹配先合成一个目标，再对 θ 做一次更新。更新前复制的候选 z 不随 θ⁺ 重算。",
-    "参数更新结束后才选留当前候选。本例此时有空槽，x₂ 与自己的冻结 z 一起进入 M。",
-  ];
-
-  return <section className="teaching-scene" data-scene="der-step" data-clip={phase} data-progress={p} data-status={timeline.state.status} data-updates={state.updates} data-seen={state.N} data-memory={state.M.map(record => record.id).join(",")} data-loss={step.losses.total}>
-    <header>
-      <div><p className="eyebrow">DER / 单步闭环</p><h3>当前标签与历史响应，共用一次更新。</h3><p>当前 (x,y) 提供分类 CE，旧 (x′,z′) 提供加权匹配 L_dark；α 调整旧响应的权重。两路都使用更新前的 θ，合并后更新一次，再决定当前候选是否入池。</p></div>
-      <div className="scene-options" role="group" aria-label="选择本步记忆状态">
-        <button aria-pressed={!empty} onClick={() => { setEmpty(false); timeline.reset(); }}>有旧记忆</button>
-        <button aria-pressed={empty} onClick={() => { setEmpty(true); timeline.reset(); }}>空池首轮</button>
-      </div>
-    </header>
-    <SceneTransport timeline={timeline} clips={clips} label="DER 单步" showTiming={false} caption="暂停查看当前阶段；最后一个阶段才把更新后的候选交给 Reservoir。" />
-    <div className="teaching-stage ds-stage">
-      <svg viewBox="0 0 1280 560" className="teaching-canvas ds-canvas" role="img" aria-label="当前样本和旧记忆在同一个更新前网络上分别前向，两种损失合并后只更新一次，最后才写入候选">
-        <defs>
-          <marker id={`${defsId}-current`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#477d5d" /></marker>
-          <marker id={`${defsId}-replay`} markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#66849a" /></marker>
-        </defs>
-        <text x="34" y="42" className="ds-overline">两条输入 · 一个共享的更新前网络 θ</text>
-        <g className="ds-input-card is-current">
-          <rect x="28" y="158" width="222" height="112" rx="13" />
-          <SampleGlyph x={43} y={181} size={62} id={`current ${step.input.id}`} model={step.input.model} view={step.input.s} />
-          <text x="119" y="188" className="ds-lane-title">当前训练样本</text>
-          <text x="119" y="215" className="ds-lane-detail">{step.input.id} · y = {MODEL_CLASSES[step.input.y]}</text>
-          <text x="119" y="241" className="ds-lane-note">本步分类监督</text>
-        </g>
-        <g className={`ds-input-card${step.rd ? " is-replay" : " is-empty"}`}>
-          <rect x="28" y="282" width="222" height="112" rx="13" />
-          {step.rd ? <>
-            <SampleGlyph x={43} y={304} size={62} id={`${step.rd.id} replay`} model={step.rd.model} view={step.input.sd} />
-            <text x="119" y="312" className="ds-lane-title">从 M 读取旧样本</text>
-            <text x="119" y="339" className="ds-lane-detail">{step.rd.id} · 原图保留</text>
-            <text x="119" y="365" className="ds-lane-note">□ 冻结 z</text>
-            <text x="119" y="384" className="ds-vector-note">{vectorText(step.rd.z, 2)}</text>
-          </> : <>
-            <circle cx="75" cy="338" r="22" className="ds-empty-mark" />
-            <path d="M65 338H85M75 328V348" className="ds-empty-plus" />
-            <text x="119" y="330" className="ds-lane-title">M 为空</text>
-            <text x="119" y="357" className="ds-lane-detail">没有历史样本可读</text>
-            <text x="119" y="377" className="ds-lane-note">本步 L_dark = 0</text>
-          </>}
-        </g>
-
-        <FlowPath d="M250 214C278 214 295 229 328 237" progress={currentFlow} marker={`${defsId}-current`} />
-        {step.rd && <FlowPath d="M250 338C284 338 299 324 328 313" progress={replayFlow} marker={`${defsId}-replay`} className="is-replay" />}
-        <NetworkGlyph x={276} y={125} version="θ（更新前）" forward={currentFlow} backward={phase === 3 ? windowAt(p, .18, .78) : 0} />
-        <FlowPath d="M449 195C484 184 505 159 532 159" progress={currentFlow} marker={`${defsId}-current`} />
-        {step.replayLogits && <FlowPath d="M449 315C482 320 508 326 532 326" progress={replayFlow} marker={`${defsId}-replay`} className="is-replay" />}
-
-        <g className="ds-output-panel is-current">
-          <rect x="532" y="88" width="354" height="132" rx="13" />
-          <text x="550" y="114" className="ds-panel-title">当前前向 b · CE(y,q)</text>
-          {step.currentLogits.map((value, index) => <g key={index}>
-            <rect x={550 + index * 105} y="128" width="96" height="52" rx="8" className={`ds-score-cell tone-${index}${index === step.input.y ? " is-label" : ""}`} />
-            <text x={598 + index * 105} y="149" textAnchor="middle" className="ds-score-name">{MODEL_CLASSES[index]}</text>
-            <text x={598 + index * 105} y="170" textAnchor="middle" className="ds-score-value">{fmt(value)}</text>
-          </g>)}
-          <text x="550" y="205" className="ds-panel-note">真实 y = {MODEL_CLASSES[step.input.y]} · L_current = {fmt(step.losses.current)}</text>
-        </g>
-        <g className={`ds-output-panel${step.replayLogits ? " is-replay" : " is-empty"}`}>
-          <rect x="532" y="248" width="354" height="152" rx="13" />
-          {step.replayLogits && step.rd ? <>
-            <text x="550" y="274" className="ds-panel-title">回放 {step.rd.id} · 当前 a 对比冻结 z</text>
-            {step.replayLogits.map((value, index) => <g key={index}>
-              <rect x={550 + index * 105} y="287" width="96" height="62" rx="8" className={`ds-score-cell tone-${index}`} />
-              <text x={598 + index * 105} y="306" textAnchor="middle" className="ds-score-name">{MODEL_CLASSES[index]}</text>
-              <text x={598 + index * 105} y="326" textAnchor="middle" className="ds-score-value">a {fmt(value)}</text>
-              <text x={598 + index * 105} y="343" textAnchor="middle" className="ds-score-target">□ z {fmt(step.rd!.z[index])}</text>
-            </g>)}
-            <text x="550" y="382" className="ds-panel-note">L_dark = {fmt(step.losses.dark)} · α = 0.5</text>
-          </> : <>
-            <text x="550" y="281" className="ds-panel-title">历史匹配支路</text>
-            <text x="550" y="317" className="ds-empty-copy">M 为空；没有回放前向，也没有历史损失。</text>
-            <text x="550" y="350" className="ds-panel-note">L_dark = 0</text>
-          </>}
-        </g>
-        <FlowPath d="M886 153C907 153 912 180 936 190" progress={jointReveal} marker={`${defsId}-current`} />
-        <FlowPath d="M886 326C910 326 918 263 936 247" progress={step.rd ? jointReveal : 0} marker={`${defsId}-replay`} className="is-replay" />
-        <g className="ds-joint-card" opacity={jointReveal}>
-          <rect x="936" y="110" width="314" height="206" rx="15" />
-          <text x="958" y="140" className="ds-joint-title">合并为一个总损失</text>
-          <path d="M958 153H1228" className="ds-joint-rule" />
-          <text x="958" y="181" className="ds-joint-part">当前 CE</text>
-          <text x="1228" y="181" textAnchor="end" className="ds-joint-value">{fmt(step.losses.current, 4)}</text>
-          <text x="958" y="210" className="ds-joint-part">α · 历史匹配</text>
-          <text x="1228" y="210" textAnchor="end" className="ds-joint-value">{fmt(.5 * step.losses.dark, 4)}</text>
-          <rect x="952" y="230" width="282" height="61" rx="9" className="ds-total-band" />
-          <text x="968" y="254" className="ds-total-formula">L_DER = L_current + αL_dark</text>
-          <text x="968" y="278" className="ds-total-value">L_DER = {fmt(step.losses.total, 4)}</text>
-        </g>
-        <g className="ds-update-card" opacity={updateReveal}>
-          <rect x="936" y="334" width="314" height="74" rx="13" />
-          <circle cx="970" cy="370" r="16" className="ds-update-node" />
-          <path d="M962 370H978M970 362V378" className="ds-update-cross" />
-          <text x="999" y="363" className="ds-update-title">θ → θ⁺ · 一次联合更新</text>
-          <text x="999" y="387" className="ds-update-note">由同一 L_DER 提供梯度</text>
-        </g>
-        <FlowPath d="M1093 316V334" progress={updateReveal} marker={`${defsId}-current`} />
-
-        <g className="ds-frozen-copy" opacity={currentFlow}>
-          <rect x="28" y="442" width="414" height="76" rx="12" />
-          <text x="48" y="469" className="ds-copy-title">当前候选 · 更新前复制</text>
-          <text x="48" y="497" className="ds-copy-value">{step.candidate.id} · z = {vectorText(step.candidate.z, 2)}</text>
-        </g>
-        <FlowPath d="M442 480H474" progress={writeReveal} marker={`${defsId}-current`} />
-        <g className="ds-memory-strip">
-          <rect x="474" y="442" width="776" height="76" rx="12" />
-          <text x="494" y="468" className="ds-memory-title">更新后才选留 · N = {state.N} / K = {state.K}</text>
-          {[0, 1].map(slot => <g key={slot}>
-            <rect x={738 + slot * 175} y="452" width="162" height="48" rx="8" className={`ds-memory-cell${state.M[slot] ? " is-filled" : ""}`} />
-            <text x={819 + slot * 175} y="482" textAnchor="middle" className="ds-memory-label">slot {slot} · {state.M[slot]?.id ?? "空"}</text>
-          </g>)}
-          <text x="494" y="495" className="ds-memory-note">{writeNote}</text>
-        </g>
-      </svg>
-    </div>
-    <div className="scene-explanation" aria-live="polite"><strong>{TRAIN_PHASES[phase]}</strong><p>{notes[phase]}</p></div>
-    <p className="quiet-note">图像身份与数值来自合成教学例，不是论文 CNN 特征或实验轨迹。候选未入池也已经完成本步训练。</p>
-    <div className="scene-handoff"><span>下一问</span><p>这一步仍假设回放看到相同像素。真实训练会重新裁剪或翻转原图；视图变了，旧的 z 还应该跟着变吗？</p></div>
+  const [empty, setEmpty] = useState(false), timeline = useSceneTimeline(clips);
+  const phase = timeline.state.clipIndex, p = timeline.state.progress;
+  const { step, state } = trainingSceneAt(steps, (empty ? 0 : 1) * 5 + phase, p);
+  const done = (i: number) => phase > i ? 1 : phase < i ? 0 : windowAt(p, .08, .86);
+  const current = done(1), replay = done(2), update = phase === 3 ? windowAt(p,.18,.8) : 0;
+  const reading = phase === 0 ? windowAt(p,.08,.82) : 1;
+  const frozen = phase > 1 || phase === 1 && p > .5;
+  const copy = phase === 1 ? windowAt(p,.5,.86) : phase > 1 ? 1 : 0;
+  const currentRead = curve(current,{x:300,y:153},{x:325,y:153},{x:334,y:153},{x:354,y:153});
+  const oldRead = curve(reading,{x:300,y:291},{x:330,y:291},{x:329,y:263},{x:354,y:263});
+  const id = useId().replace(/:/g,'');
+  const notes = [empty ? '空池首轮没有旧样本；当前分类监督仍可启动训练。' : '从本轮开始前的旧 M 读取 x₁ 副本，原记录保持不变；当前 x₂ 尚未入池。', '当前样本产生分类损失；同一份更新前输出被复制成冻结候选。', empty ? '没有历史回放，因此 L_dark=0。' : '旧输入通过同一个更新前 θ，当前响应与原记录的固定 z 比较。', '两项损失汇合，只更新同一个 θ 一次。M 和 N 此时尚未写入。', '完成参数更新后，候选才交给选留规则；本例空槽接收当前记录。'];
+  return <section className="der-redesign later-lesson step-lesson" data-scene="der-step" data-clip={phase} data-progress={p} data-status={timeline.state.status} data-updates={state.updates} data-seen={state.N} data-memory={state.M.map(r=>r.id).join(',')} data-loss={step.losses.total}>
+    <header className="later-scene-heading"><div><h3>先读旧记忆，再合成一次更新。</h3><p>选留改变的是未来的记忆。训练时，当前标签与旧响应共同监督同一组更新前参数；本轮候选要等更新完成后，才进入在线选留。</p></div><div className="scene-options"><button aria-pressed={!empty} onClick={()=>{setEmpty(false);timeline.reset();}}>有旧记忆</button><button aria-pressed={empty} onClick={()=>{setEmpty(true);timeline.reset();}}>空池首轮</button></div></header>
+    <div className="ds2-stage"><svg viewBox="0 0 1120 500" className="teaching-canvas ds-canvas" role="img" aria-label="从旧池读取副本，当前与历史监督共用一个更新前模型，两项损失合并后更新一次，最后写候选">
+      <defs><marker id={`${id}-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" className="later-arrowhead" /></marker></defs>
+      <text x="40" y="53" className="later-svg-title">两条来源，同一组参数</text>
+      <rect x="40" y="95" width="245" height="116" rx="12" className="ds2-source" /><SampleGlyph x={55} y={122} size={56} id={`current ${step.input.id}`} model={step.input.model} /><text x="126" y="128" className="later-svg-title">当前 {step.input.id}</text><text x="126" y="157" className="later-svg-note">y = {MODEL_CLASSES[step.input.y]}</text><text x="126" y="184" className="later-svg-note">本步标签监督</text>
+      <rect x="40" y="235" width="245" height="126" rx="12" className="ds2-memory" />{step.rd ? <><SampleGlyph x={55} y={267} size={56} id={`${step.rd.id} original memory`} model={step.rd.model} /><text x="126" y="265" className="later-svg-title">旧记忆 {step.rd.id}</text><text x="126" y="291" className="later-svg-note">读取副本，原记录保留</text><text x="126" y="323" className="ds2-vector ds2-old-vector">z = {vectorText(step.rd.z,2)}</text></> : <><text x="62" y="279" className="later-svg-title">M = ∅</text><text x="62" y="313" className="later-svg-note">无回放，历史损失为 0</text></>}
+      <path d="M285 153H355" className="later-connector" markerEnd={`url(#${id}-arrow)`} />{step.rd && <path d="M285 291C330 291 329 263 355 263" className="ds2-replay-link" markerEnd={`url(#${id}-arrow)`} />}
+      {phase===1&&current>0&&current<1&&<SampleGlyph x={currentRead.x-14} y={currentRead.y-14} size={28} id="current read copy" model={step.input.model} />}{step.rd&&phase===0&&reading>0&&reading<1&&<SampleGlyph x={oldRead.x-14} y={oldRead.y-14} size={28} id="replay read copy" model={step.rd.model} />}
+      <NetworkGlyph x={365} y={75} version={`θ${state.updates}`} forward={phase===1?current:phase===2?replay:0} backward={update} />
+      <path d="M591 151H633" className="later-connector" markerEnd={`url(#${id}-arrow)`} />
+      <g className="ds2-placeholders"><rect x="650" y="85" width="420" height="100" rx="12" className="ds2-readout"/><text x="671" y="124" className="later-svg-title">当前分类监督</text><text x="671" y="159" className="later-svg-note">等待当前输入前向</text><rect x="650" y="208" width="420" height="54" rx="8" className="ds2-candidate"/><text x="671" y="241" className="later-svg-note">更新前输出将复制为候选</text><rect x="650" y="285" width="420" height="100" rx="12" className="ds2-readout"/><text x="671" y="324" className="later-svg-title">旧响应匹配监督</text><text x="671" y="359" className="later-svg-note">等待旧输入通过同一模型</text></g><g opacity={current}><rect x="650" y="85" width="420" height="100" rx="12" className="ds2-readout" /><text x="671" y="112" className="later-svg-title">当前 CE = {fmt(step.losses.current,4)}</text>{step.currentLogits.map((v,k)=><text key={k} x={671+k*128} y="148" className="ds2-vector">{MODEL_CLASSES[k]} {fmt(v,2)}</text>)}<text x="671" y="172" className="later-svg-note">更新前输出 · 标签提供分类监督</text></g>
+      <g opacity={frozen?1:0}><path d="M860 185V201" className="ds2-freeze-link" markerEnd={`url(#${id}-arrow)`} /><rect x="650" y="208" width="420" height="54" rx="8" className="ds2-candidate" /><text x="671" y="241" className="ds2-vector">冻结候选 {step.candidate.id} · z = {vectorText(step.candidate.z,2)}</text></g>
+      {copy>0&&copy<1&&<g transform={`translate(790 ${155+80*copy})`} opacity={1-copy}><rect width="140" height="28" rx="6" className="ds2-candidate"/><text x="70" y="20" textAnchor="middle" className="later-svg-note">复制更新前输出</text></g>}
+      <g opacity={replay}><rect x="650" y="285" width="420" height="100" rx="12" className="ds2-readout" /><text x="671" y="312" className="later-svg-title">历史匹配 L_dark = {fmt(step.losses.dark,4)}</text>{step.replayLogits ? step.replayLogits.map((v,k)=><text key={k} x={671+k*128} y="348" className="ds2-vector">{MODEL_CLASSES[k]} {fmt(v,2)}</text>) : <text x="671" y="348" className="later-svg-note">空池没有历史响应</text>}<text x="671" y="374" className="later-svg-note">当前 a 与固定 z 逐类比较</text></g>
+      <g opacity={done(3)}><path d="M1080 151H1093V434H1070M1080 333H1105V460H1070" className="ds2-loss-link" /><rect x="365" y="414" width="705" height="64" rx="12" className="ds2-total" /><text x="385" y="440" className="ds-total-formula">L_DER = L_current + α L_dark</text><text x="385" y="465" className="ds2-vector">{fmt(step.losses.current,4)} + {CONFIG.alpha} × {fmt(step.losses.dark,4)} = {fmt(step.losses.total,4)}</text><text x="1046" y="452" textAnchor="end" className="later-svg-title">θ → θ⁺ · 仅一次更新</text><path d="M365 447H334V195H355" className="ds2-update-link" markerEnd={`url(#${id}-arrow)`} /></g>
+      <text x="40" y="415" className="later-svg-note">更新后才选留</text><text x="40" y="449" className="ds2-vector">M = [{state.M.map(r=>r.id).join(', ')}]</text><text x="40" y="478" className="later-svg-note">{phase===4&&p>=.88?'本轮写入已提交':'候选不提前进入旧池'}</text>
+    </svg></div>
+    <p className="later-event" aria-live="polite">{notes[phase]}</p><SceneTransport timeline={timeline} clips={clips} label="DER 单步" showTiming={false} teachingProgress />
+    <p className="der-footnote">单步机制示例 · 数值来自独立二维线性教学模型，像素图只标识类别；不是上方插入示例的真实网络求值。α={CONFIG.alpha}。</p>
   </section>;
 }

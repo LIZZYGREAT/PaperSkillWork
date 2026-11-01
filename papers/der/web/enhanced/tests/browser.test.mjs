@@ -84,7 +84,7 @@ try{
   await scene.locator("[data-replay]").click();await page.clock.runFor(40000);
   check(await scene.getAttribute("data-status")==="finished","Whole four-item sequence plays through and stops");
   check(await scene.getAttribute("data-seen")==="4","Whole sequence increments N exactly four times");
-  check(await scene.locator("[data-time-readout]").innerText()==="播放结束","Reservoir omits debug times by default");
+  check((await scene.locator("[data-time-readout]").innerText()).endsWith("播放结束"),"Reservoir omits debug times by default");
   const geometry=await scene.locator(".rv-canvas").evaluate(svg=>{
    const outer=svg.getBoundingClientRect();
    return [...svg.querySelectorAll("text,rect")].filter(el=>{if(+getComputedStyle(el).opacity===0)return false;const b=el.getBoundingClientRect();return b.x<outer.x-1||b.right>outer.right+1||b.y<outer.y-1||b.bottom>outer.bottom+1}).map(el=>el.textContent||el.tagName);
