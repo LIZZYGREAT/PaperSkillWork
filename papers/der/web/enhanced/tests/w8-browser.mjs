@@ -36,15 +36,15 @@ export async function fullW8Checks({page,base,check,shot}){
   if(name==="augmentation"){
    const target=await scene.getAttribute("data-target");
    await scene.getByRole("button",{name:"中心裁剪",exact:true}).click();
-   const centerLoss=await scene.getAttribute("data-loss");
+   const centerView=await scene.locator('.aug2-transformed').getAttribute('data-image-view');
    await scene.getByRole("button",{name:"水平翻转",exact:true}).click();
    check(await scene.getAttribute("data-view")==="flip","Replay view control selects the flipped pelican illustration");
    check(target===await scene.getAttribute("data-target"),"Augmentation never rewrites historical target when changing the view");
-   check(centerLoss!==await scene.getAttribute("data-loss"),"Choosing a new image view recomputes logits and matching loss");
+   check(centerView!==await scene.locator('.aug2-transformed').getAttribute('data-image-view'),"Choosing a new image view changes actual illustration transform"); check(await scene.locator('.tg-number').count()===0,"Pelican pixels are not assigned synthetic model logits");
    check(await scene.getByRole("button",{name:"水平翻转",exact:true}).getAttribute("aria-pressed")==="true","Selected replay view is exposed to assistive technology");
   }
   if(name==="der-plus"){
-   const conflict=await scene.locator('[data-memory-record="x₁"]').evaluate(el=>el.textContent||"");
+   const conflict=await scene.locator('[data-memory-record="xₑ"]').evaluate(el=>el.textContent||"");
    check(conflict.includes("真实 y = Claude")&&conflict.includes("旧 z 最高：GPT"),"DER++ opens with the E04 label/logit conflict visible");
    check(await scene.locator(".dp-z-wrong").count()===1,"The historical top logit is singled out inside the frozen vector");
    await scene.getByRole("button",{name:"DER",exact:true}).click();
@@ -52,7 +52,7 @@ export async function fullW8Checks({page,base,check,shot}){
    await scene.getByRole("button",{name:"DER++",exact:true}).click();
    check(await scene.getAttribute("data-rd")==await scene.getAttribute("data-ry"),"Independent reads can happen to overlap");
    await scene.locator('[data-overlap-choice="different"]').click();
-   check(await scene.getAttribute("data-rd")==="x₁"&&await scene.getAttribute("data-ry")==="x₂","R-d and R-y can independently read different records");
+   check(await scene.getAttribute("data-rd")==="xₑ"&&await scene.getAttribute("data-ry")==="x_f","R-d and R-y can independently read different records");
    check(await scene.getAttribute("data-supervision-count")==="3","DER++ adds replay CE beside current CE and dark matching");
    await seek(scene,1,5000,.6);await shot("der-plus-different-read","[data-scene=der-plus]");
   }

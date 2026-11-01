@@ -1,7 +1,7 @@
 import { useId } from "react";
 
 export type ImageView = "original" | "saved" | "center" | "flip";
-export function PelicanIllustration({ view, label, x, y, width, height, className = "p1-source-art" }: { view: ImageView; label: string; x?: number; y?: number; width?: number; height?: number; className?: string }) {
+export function PelicanIllustration({ view, label, x, y, width, height, amount = 1, className = "p1-source-art" }: { view: ImageView; label: string; x?: number; y?: number; width?: number; height?: number; amount?: number; className?: string }) {
   const clipId = useId().replace(/:/g, "");
   const transforms: Record<ImageView, { scale: number; x: number; y: number }> = {
     original: { scale: 1, x: 0, y: 0 },
@@ -9,7 +9,9 @@ export function PelicanIllustration({ view, label, x, y, width, height, classNam
     center: { scale: 1.34, x: -40, y: -21 },
     flip: { scale: 1.23, x: -28, y: -12 },
   };
-  const transform = transforms[view];
+  const target = transforms[view];
+  const t = Math.max(0, Math.min(1, amount));
+  const transform = { x: target.x * t, y: target.y * t, scale: 1 + (target.scale - 1) * t };
   return <svg className={className} x={x} y={y} width={width} height={height} viewBox="0 0 320 190" role="img" aria-label={label} data-image-identity="synthetic-source-x1" data-image-view={view}>
     <defs>
       <clipPath id={clipId}><rect width="320" height="190" rx="9" /></clipPath>
@@ -18,7 +20,7 @@ export function PelicanIllustration({ view, label, x, y, width, height, classNam
       <linearGradient id={`${clipId}-pouch`} x1="0" y1="0" x2=".8" y2="1"><stop offset="0" stopColor="#ffc05f"/><stop offset="1" stopColor="#e76f4f"/></linearGradient>
     </defs>
     <g clipPath={`url(#${clipId})`}>
-      <g transform={view === "flip" ? "translate(320 0) scale(-1 1)" : undefined}>
+      <g transform={view === "flip" ? `translate(${320 * t} 0) scale(${1 - 2 * t} 1)` : undefined}>
         <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.scale})`}>
           <rect width="320" height="190" fill={`url(#${clipId}-sky)`} />
           <circle cx="274" cy="78" r="47" fill={`url(#${clipId}-sun)`} />

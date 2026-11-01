@@ -1,100 +1,44 @@
-import { useId, useState } from "react";
-import SceneTransport, { useSceneTimeline } from "./review/SceneTransport";
-import { windowAt } from "./review/lifecycle-model";
-import { ScoreGlyph, fmt } from "./LearningGlyphs";
-import { PelicanIllustration, type ImageView } from "./PelicanIllustration";
-import { runTraining, forward, viewOf } from "./training-model";
-import { ReferenceButton } from "./Reference";
-import "./learning-scenes.css";
-import "./flow-refinements.css";
-
+import { useId, useState } from 'react';
+import SceneTransport, { useSceneTimeline } from './review/SceneTransport';
+import { windowAt, mix } from './review/lifecycle-model';
+import { PelicanIllustration, type ImageView } from './PelicanIllustration';
+import { ReferenceButton } from './Reference';
+import './learning-scenes.css';
+import './later-chapters.css';
 const clips = [
-  { id: "原图与保存时视图", durationMs: 4500, holdMs: 1500 },
-  { id: "生成并冻结 z", durationMs: 4500, holdMs: 1800 },
-  { id: "未来回放另一视图", durationMs: 5000, holdMs: 1800 },
-  { id: "多个视图，共用一个目标", durationMs: 5500, holdMs: 2200 },
+ {id:'从原图取得保存视图',durationMs:4500,holdMs:1500},
+ {id:'保存时复制并冻结 z',durationMs:4500,holdMs:1800},
+ {id:'未来重新裁剪或翻转',durationMs:5000,holdMs:1800},
+ {id:'多个视图，同一个历史目标',durationMs:5500,holdMs:2200},
 ];
-const steps = runTraining("DER");
-const record = steps[0].candidate;
-const W = steps[1].before.W;
-
-type ReplayView = "center" | "flip";
-
-export default function Augmentation() {
-  const timeline = useSceneTimeline(clips);
-  const [view, setView] = useState<ReplayView>("center");
-  const defsId = useId().replace(/:/g, "");
-  const { clipIndex: c, progress: p } = timeline.state;
-  const done = (i: number) => c > i ? 1 : c < i ? 0 : windowAt(p, .08, .85);
-  const modelView = view === "center" ? -1 : 1;
-  const current = forward(W, viewOf(record.u, modelView));
-  const loss = current.reduce((sum, value, k) => sum + (value - record.z[k]) ** 2, 0);
-  const notes = [
-    "记忆保留原图 x₁；首次训练从轻微裁剪的 A₀(x₁) 计算更新前输出。",
-    "保存时把更新前输出复制为 z。图像身份仍是 x₁，目标 z 随后冻结。",
-    "未来从同一 x₁ 重新生成 A₁(x₁)。中心裁剪或水平翻转只改变本次视图。",
-    "回放的当前输出 a 会随视图改变，并与原来冻结的 z 比较；z 本身不变。",
-  ];
-  const replayImageView: ImageView = view;
-
-  return <section className="teaching-scene" data-scene="augmentation" data-clip={c} data-progress={p} data-status={timeline.state.status} data-target={record.z.join(",")} data-view={view} data-loss={loss}>
-    <header><div>
-      <p className="eyebrow">AUGMENTATION / 恢复真实视图</p>
-      <h3>记忆保存原图，回放时重新取视图。</h3>
-      <p>原图 x₁ 先经保存视图 A₀(x₁) 产生并冻结 z；未来再经 A₁(x₁) 得到当前 a。视图可以变化，匹配始终对准同一个 z。</p>
-    </div></header>
-    <SceneTransport timeline={timeline} clips={clips} label="增强与一致性" showTiming={false} />
-    <div className="aug-view-controls" role="group" aria-label="选择未来回放时的图像视图">
-      <span>回放视图 A₁(x₁)</span>
-      <button type="button" aria-pressed={view === "center"} onClick={() => setView("center")}>中心裁剪</button>
-      <button type="button" aria-pressed={view === "flip"} onClick={() => setView("flip")}>水平翻转</button>
-      <span className="aug-fixed-target"><i aria-hidden="true" /> z 目标固定</span>
-    </div>
-    <div className="teaching-stage aug-stage"><svg viewBox="0 0 1280 500" role="img" className="teaching-canvas aug-canvas" aria-label="白色鹈鹕原图分别生成保存视图与回放视图，回放输出和冻结目标匹配">
-      <defs>
-        <marker id={`${defsId}-source-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="aug-arrow-head" /></marker>
-        <marker id={`${defsId}-current-arrow`} viewBox="0 0 8 8" markerWidth="5" markerHeight="5" refX="7" refY="4" orient="auto"><path d="M1 1 7 4 1 7" className="aug-arrow-current-head" /></marker>
-      </defs>
-
-      <text x="35" y="125" className="tg-title">同一张原图 x₁</text>
-      <PelicanIllustration view="original" label="原图 x1：戴蓝帽、骑青绿色自行车的白色鹈鹕" x={35} y={142} width={292} height={173} className="aug-pelican-art" />
-      <text x="35" y="337" className="tg-small">保留原图身份；增强结果不覆盖它</text>
-      <text x="35" y="361" className="tg-small">按需生成保存时与回放时的视图</text>
-      <path d="M327 228C338 228 338 273 350 273" className="aug-source-stem" />
-      <circle cx="350" cy="273" r="4" className="aug-source-node" />
-      <path d="M350 273C380 273 372 174 399 174" className="aug-source-path" markerEnd={`url(#${defsId}-source-arrow)`} />
-      <path d="M350 273C380 273 372 373 399 373" className="aug-source-path" markerEnd={`url(#${defsId}-source-arrow)`} />
-
-      <g opacity={done(0)}>
-        <text x="400" y="84" className="tg-title">保存时 · A₀(x₁)</text>
-        <PelicanIllustration view="saved" label="保存时轻微裁剪的同一只白色鹈鹕 A0(x1)" x={400} y={96} width={232} height={138} className="aug-pelican-art" />
-        <text x="400" y="258" className="tg-small">首次训练时的合理裁剪</text>
-        <path d="M638 165H654" className="aug-forward-path" markerEnd={`url(#${defsId}-source-arrow)`} />
-        <rect x="662" y="105" width="306" height="150" rx="14" className="aug-score-card aug-score-frozen" />
-        <ScoreGlyph x={673} y={153} label="更新前输出 z" values={record.z} reveal={done(1)} frozen />
-        <path d="M968 180C987 180 988 216 1007 216" className="aug-target-path" markerEnd={`url(#${defsId}-source-arrow)`} />
-      </g>
-
-      <g opacity={done(2)}>
-        <text x="400" y="283" className="tg-title">未来回放 · A₁(x₁)</text>
-        <PelicanIllustration view={replayImageView} label={view === "center" ? "未来回放中心裁剪视图：同一只白色鹈鹕 A1(x1)" : "未来回放水平翻转视图：同一只白色鹈鹕 A1(x1)"} x={400} y={295} width={232} height={138} className="aug-pelican-art" />
-        <text x="400" y="457" className="tg-small">{view === "center" ? "中心裁剪" : "水平翻转"} · 仍是同一个 x₁</text>
-        <path d="M638 364H654" className="aug-forward-path" markerEnd={`url(#${defsId}-source-arrow)`} />
-        <rect x="662" y="300" width="306" height="150" rx="14" className="aug-score-card aug-score-current" />
-        <ScoreGlyph x={673} y={348} label="当前输出 a" values={current} reveal={done(2)} />
-        <path d="M968 375C987 375 988 295 1007 295" className="aug-current-path" markerEnd={`url(#${defsId}-current-arrow)`} />
-      </g>
-
-      <rect x="1007" y="171" width="240" height="156" rx="15" className="aug-match-card" />
-      <text x="1027" y="202" className="tg-title">与同一个 z 比较</text>
-      <text x="1027" y="244" className="aug-match-formula">L_match = ‖a − z‖²</text>
-      <text x="1027" y="286" className="aug-match-value">{fmt(loss, 5)}</text>
-      <text x="1027" y="309" className="tg-small">当前视图变化 · 冻结目标不变</text>
-      <text x="35" y="489" className="tg-small aug-boundary">合成鹈鹕插图用于解释视图身份；输出数值来自 W5 二维小模型，不是图像分类器。</text>
-    </svg></div>
-    <div className="scene-explanation" aria-live="polite"><strong>{clips[c].id}</strong><p>{notes[c]}</p></div>
-    <p className="quiet-note">鹈鹕插图说明原图身份与视图变换；当前分数来自二维线性教学模型，不是像素分类器输出。</p>
-    <ReferenceButton term="augmentation">展开均值—方差解释</ReferenceButton>
-    <div className="scene-handoff"><span>下一问</span><p>同一个目标能让不同视图继续对齐，却不能判断旧响应是否正确。下一节让历史标签提供独立的分类信号。</p></div>
-  </section>;
+export default function Augmentation(){
+ const timeline=useSceneTimeline(clips), [view,setView]=useState<'center'|'flip'>('center');
+ const {clipIndex:c,progress:p}=timeline.state, id=useId().replace(/:/g,'');
+ const done=(i:number)=>c>i?1:c<i?0:windowAt(p,.08,.85);
+ const imageView:ImageView=c<2?'saved':view;
+ const amount=done(c<2?0:2), freeze=done(1), constrain=done(3);
+ const crop=imageView==='saved'?{x:9/1.08,y:5/1.08,w:320/1.08,h:190/1.08}:{x:40/1.34,y:21/1.34,w:320/1.34,h:190/1.34};
+ const notes=['原图一直保留。窗口框出同源区域，再放大到右侧训练视图；内容确实改变，样本身份没有改变。','保存时，用当时的更新前模型计算 A₀(x_img)，复制输出为固定 z；以后参数变化不会重算它。','未来从同一原图生成新的 A₁(x_img)。裁剪放大或水平镜像发生在图像内部，文字和边框保持正向。','不同视图的响应与同一个 z 匹配：既约束平均响应偏离，也抑制视图间波动。点的运动仅示意约束方向。'];
+ return <section className="der-redesign later-lesson aug2-lesson" data-scene="augmentation" data-clip={c} data-progress={p} data-status={timeline.state.status} data-target="fixed-symbolic-z" data-view={view}>
+ <header className="later-scene-heading"><div><h3>图像在变，原图身份与历史目标不变。</h3><p>合理的数据增强保留类别语义，却改变送入模型的视图。先看裁剪和翻转真正发生，再连接保存与回放两个时刻。</p></div></header>
+ <div className="aug-view-controls scene-options" role="group" aria-label="选择未来回放时的图像视图"><span>未来训练视图</span><button aria-pressed={view==='center'} onClick={()=>{setView('center');timeline.start(2);}}>中心裁剪</button><button aria-pressed={view==='flip'} onClick={()=>{setView('flip');timeline.start(2);}}>水平翻转</button><button onClick={()=>timeline.start(0)}>回到原图</button><small>播放观察变换 · 固定目标 z</small></div>
+ <div className="aug2-stage"><svg viewBox="0 0 1120 600" className="teaching-canvas aug-canvas" role="img" aria-label="同一幅鹈鹕原图的真实裁剪与翻转，保存时冻结输出，未来不同视图共同匹配固定历史目标">
+ <defs><marker id={id+'-a'} viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" className="later-arrowhead"/></marker></defs>
+ <text x="28" y="46" className="later-svg-title">示意原图 · x_img</text><text x="1040" y="46" textAnchor="end" className="later-svg-title">{c<2?'保存时视图 A₀(x_img)':view==='center'?'未来视图 A₁(x_img) · 中心裁剪':'未来视图 A₁(x_img) · 水平翻转'}</text>
+ <PelicanIllustration view="original" label="始终保留的鹈鹕原图" x={28} y={68} width={440} height={261.25} className="aug2-original"/>
+ {imageView!=='flip'&&<rect x={28+crop.x*1.375*amount} y={68+crop.y*1.375*amount} width={mix(440,crop.w*1.375,amount)} height={mix(261.25,crop.h*1.375,amount)} rx="3" className="aug2-crop" data-crop-window/>}
+ <path d="M490 198H557" className="later-connector" markerEnd={'url(#'+id+'-a)'}/><text x="524" y="178" textAnchor="middle" className="later-svg-note">取视图</text>
+ <PelicanIllustration view={imageView} amount={amount} label="实际变换后的同一只鹈鹕" x={580} y={68} width={440} height={261.25} className="aug2-transformed"/>
+ <text x="28" y="360" className="later-svg-note">保存的是原图；增强视图不会覆盖它。</text><text x="580" y="360" className="later-svg-note">{imageView==='flip'?'图像左右镜像；鹈鹕、自行车的相对朝向改变。':'框内内容被放大到同样大小的训练窗口。'}</text>
+ <path d="M28 389H1092" className="aug2-rule"/>
+ <text x="28" y="424" className="later-svg-title">保存时 · θ_old</text><text x="28" y="457" className="aug2-formula">z = stopgrad(h_θ_old(A₀(x)))</text><text x="28" y="485" className="later-svg-note">输出复制后冻结；随后不再随参数求值。</text>
+ <g opacity={freeze}><rect x="438" y="412" width="100" height="66" rx="10" className="ds2-candidate"/><text x="488" y="452" textAnchor="middle" className="aug2-z">固定 z</text></g>
+ <text x="580" y="424" className="later-svg-title">回放时 · 当前 θ</text><text x="580" y="457" className="aug2-formula">L_dark = ‖h_θ(A₁(x)) − z‖²</text><text x="580" y="485" className="later-svg-note">每个新视图都与保留的同一份 z 比较。</text>
+ <g className="aug2-response-space" opacity={done(2)}><path d="M690 565H1065M705 577V508" className="aug2-rule"/><circle cx="971" cy="540" r="7" className="aug2-target"/><text x="987" y="545" className="later-svg-note">z 固定</text>{[{x:745,y:520},{x:820,y:551},{x:875,y:516}].map((a,i)=><g key={i}><path d={'M'+a.x+' '+a.y+'L971 540'} className="aug2-tendency"/><circle cx={mix(a.x,971,constrain*.55)} cy={mix(a.y,540,constrain*.74)} r="5" className="aug2-response"/><text x={mix(a.x,971,constrain*.74)-8} y={mix(a.y,540,constrain*.74)-13} className="later-svg-note">a{i+1}</text></g>)}</g>
+ <text x="28" y="540" className="later-svg-title">隐式一致性</text><text x="28" y="569" className="later-svg-note">共同目标约束多种视图；并未额外添加视图之间的损失。</text>
+ </svg></div>
+ <p className="later-event" aria-live="polite">{notes[c]}</p><SceneTransport timeline={timeline} clips={clips} label="增强与一致性" showTiming={false} teachingProgress/>
+ <div className="later-reading-pair"><div><h4>平均响应与视图波动，都受约束。</h4><p>固定 z 时，期望平方误差可以拆成“平均响应到 z 的偏离”与“各视图围绕平均值的波动”。这解释了一种隐式一致性倾向，并不保证所有视图输出完全相同。</p><ReferenceButton term="augmentation">展开均值—方差解释</ReferenceButton></div><div><h4>稳定的历史目标，也可能是错的。</h4><p>合理变换需要保留类别语义，任意裁剪并不一定合理。即便多种视图都稳定匹配 z，z 也可能记录了一次错误判断。下一幕让历史真实标签提供独立监督。</p></div></div>
+ <p className="quiet-note">鹈鹕是自绘图像增强示例；本幕不从其像素计算三类 logits、损失或梯度。下方点的运动是方向示意，不是真实训练轨迹。</p>
+ </section>;
 }
