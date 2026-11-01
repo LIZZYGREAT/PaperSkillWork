@@ -31,21 +31,21 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
   const accepted = step.slot !== null, empty = step.before.N < state.K;
   const moving = windowAt(p, .42, .88), leaving = windowAt(p, .28, .53), rejecting = windowAt(p, .3, .84);
   const slotY = (slot: number) => 112 + slot * 130;
-  const candidateAt = accepted ? curve(moving, { x: 40, y: 130 }, { x: 340, y: 315 }, { x: 340, y: slotY(step.slot!) - 60 }, { x: 700, y: slotY(step.slot!) }) : { x: 40 + rejecting * 28, y: 130 + rejecting * 105 };
+  const candidateAt = accepted ? curve(moving, { x: 40, y: 130 }, { x: 340, y: 130 }, { x: 510, y: slotY(step.slot!) }, { x: 700, y: slotY(step.slot!) }) : { x: 40 + rejecting * 28, y: 130 + rejecting * 105 };
   const id = useId().replace(/:/g, '');
   const outcome = step.decision === 'append' ? `空槽 ${step.slot} 可用，直接追加` : accepted ? `j=${step.j} < K，替换 slot ${step.slot}` : `j=${step.j} ≥ K，拒收候选，旧池保留`;
   const choose = (j: number) => { setDraws(values => values.map((value, i) => i === clip - 2 ? j : value)); timeline.start(localClip); };
 
   return <section className="der-redesign later-lesson reservoir-lesson" data-scene="reservoir" data-clip={clip} data-progress={p} data-status={timeline.state.status} data-seen={state.N} data-memory={state.M.map(r => r.id).join(',')} data-committed={committed}>
     <header className="later-scene-heading"><div><h3>记忆已满，下一条该留给谁？</h3><p>两个槽位已经装下旧记录，新的冻结候选仍会到来。蓄水池抽样让每个流项获得公平的留存机会，不必预先知道数据流有多长。</p></div><dl className="later-state-strip"><div><dt>固定容量 K</dt><dd>{state.K}</dd></div><div><dt>已处理 N</dt><dd>{state.N}</dd></div><div><dt>池中记录</dt><dd>{state.M.length}</dd></div></dl></header>
-    <div className="rv2-stage"><svg className="rv-canvas" viewBox="0 0 1120 430" role="img" aria-label="冻结候选通过公平抽签，替换固定双槽中的记录或被拒收；拒收也递增已处理计数">
+    <div className="rv2-stage"><svg className="rv-canvas" viewBox="0 0 1120 500" role="img" aria-label="冻结候选通过公平抽签，替换固定双槽中的记录或被拒收；拒收也递增已处理计数">
       <defs><marker id={`${id}-arrow`} viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" className="later-arrowhead" /></marker></defs>
       <text x="40" y="77" className="later-svg-title">本轮候选 (x,z)</text><text x="40" y="105" className="later-svg-note">已经完成当前训练 · 等待选留</text>
-      <path d="M310 177H361" className="later-connector" markerEnd={`url(#${id}-arrow)`} />
-      <text x="388" y="104" className="later-svg-title">{empty ? '空槽直接写入' : '在 [0,N] 等概率抽取 j'}</text>
-      {!empty && Array.from({ length: step.before.N + 1 }, (_, j) => <g key={j} transform={`translate(${388 + j * 54} 134)`}><rect width="42" height="42" rx="8" className={j === step.j && p > .12 ? 'rv2-draw is-selected' : 'rv2-draw'} /><text x="21" y="28" textAnchor="middle" className="rv2-number">{j}</text></g>)}
-      <text x="388" y="215" className="later-svg-note">{p > .12 ? outcome : empty ? '槽位未满，无须抽签' : `${step.before.N + 1} 个号码，机会相同`}</text>
-      <path d="M607 155H652" className="later-connector" markerEnd={`url(#${id}-arrow)`} />
+
+      <text x="388" y="380" className="later-svg-title">{empty ? '空槽直接写入' : '在 [0,N] 等概率抽取 j'}</text>
+      {!empty && Array.from({ length: step.before.N + 1 }, (_, j) => <g key={j} transform={`translate(${388 + j * 54} 400)`}><rect width="42" height="42" rx="8" className={j === step.j && p > .12 ? 'rv2-draw is-selected' : 'rv2-draw'} /><text x="21" y="28" textAnchor="middle" className="rv2-number">{j}</text></g>)}
+      <text x="388" y="465" className="later-svg-note">{p > .12 ? outcome : empty ? '槽位未满，无须抽签' : `${step.before.N + 1} 个号码，机会相同`}</text>
+      <path d="M607 421H652V350H672" className="later-connector" markerEnd={`url(#${id}-arrow)`} />
       <rect x="674" y="43" width="402" height="334" rx="20" className="rv2-memory" /><text x="700" y="81" className="later-svg-title">记忆 M</text><text x="1048" y="81" textAnchor="end" className="later-svg-note">始终只有 K 个槽位</text>
       {[0, 1].map(slot => <g key={slot}><text x="700" y={slotY(slot) - 10} className="rv2-slot-label">slot {slot}</text><rect x="700" y={slotY(slot)} width="348" height="94" rx="12" className="rv2-slot" />{!state.M[slot] && <text x="874" y={slotY(slot) + 54} textAnchor="middle" className="later-svg-note">空位</text>}</g>)}
       {state.M.map((record, slot) => {
@@ -53,8 +53,8 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
         return <RecordTile key={record.id} record={record} x={700 + (retiring ? leaving * 24 : 0)} y={slotY(slot)} width={348} opacity={retiring ? 1 - leaving : 1} />;
       })}
       {!committed && <RecordTile record={step.candidate} x={candidateAt.x} y={candidateAt.y} width={accepted ? mix(258,348,moving) : 258} opacity={accepted ? 1 : 1 - rejecting} />}
-      <text x="388" y="362" className="rv2-outcome">{committed ? `已提交：N=${state.N}，M=[${state.M.map(r => r.id).join(', ')}]` : p > .3 && !accepted ? '候选未入池；本轮训练仍然有效' : '先作离散决定，再完成记录移动'}</text>
-      <text x="40" y="414" className="later-svg-note">独立插入示例 · z 为给定冻结值；本场景不重新执行优化器。</text>
+
+      <text x="40" y="493" className="later-svg-note">独立插入示例 · z 为给定冻结值；本场景不重新执行优化器。</text>
     </svg></div>
     {!empty && <div className="rv2-manual"><span>手动选择演示号码</span>{Array.from({ length: step.before.N + 1 }, (_, j) => <button key={j} aria-pressed={step.j === j} onClick={() => choose(j)}>j = {j}</button>)}<small>这是可复现的抽样结果演示。</small></div>}
     <p className="later-event" aria-live="polite">{committed ? `${outcome}。无论是否入池，N 都增加 1；参数更新已经完成，不会被撤销。` : `进入本步：N=${step.before.N}，M=[${step.before.M.map(r => r.id).join(', ')}]。${outcome}。`}</p>

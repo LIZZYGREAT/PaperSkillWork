@@ -852,3 +852,16 @@ build PASS。实际查看U4标题与纹样位置；最终全篇浏览器与截�
 - 增加轮内拖动暂停定位、上一轮/下一轮起点；跨轮与方法切换明确显示状态跳转，方法切换从相同初态独立重算。共享时间轴新增可选 progress 定位参数，默认行为保持；D1 回归两布局 1498 断言 PASS。
 - 验证：25 数学/状态测试 PASS；w8-only 两布局 880 断言 PASS（含主阅读满池、手动 j 继承、边端点、记录 DOM 持久性、轮内暂停定位及每页两处花纹）；front-only 两布局 270 断言 PASS；布局专项 24 断言 PASS。真实浏览器时钟 DER++ 连播 21 事件 PASS，500 次采样，127524ms，最终 θ4/N4/M=[x3,x2] 与权威模型一致。
 - 逐帧修复：冻结候选不再覆盖模型说明；U4 所有合法替换槽位的飞行区与抽签说明分开。统一正体 MathML（取消默认单字母自动斜体）及 SVG 符号。
+
+### 2026-11-02 全页复核与检查器边界
+- 全量 Visual QA：`node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json`，退出 0，74 个实际 HTTP 子路径捕获（两桌面布局）；GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS PASS。报告是自动几何与样式检查，未冒充人工学习验收。另实际查看 U4–U6 主场景及运动中间帧、七章标题/花纹与两布局复核图。发现并修复冻结候选遮挡说明、抽签文字被候选挡住、旧 CSS 白字与默认斜体；最新修改继续定向复测。
+- 正式报告保留轻量副本与复核拼图于 `C:/Users/lenovo/.codex/visualizations/2026/11/01/01a19781-0760-7eb1-af91-1834069e8367/der-u4-u6-review/`；细节运动截图与七章花纹见同级 der-final-feedback。完整自动截图在记录后清理。
+- 当前官方检查器核实：2026-11-02 `git -C ../PaperSkill fetch upstream main` 退出 0；remote 为 git@github.com:ReductTech/PaperSkill.git，工作树无修改。HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，upstream/main dad469a70d8e5cb8f2164cc18bbfa79f1e731ed7；Node v24.18.0。syntax-check.js 上游/工作树 blob 均为 2bcfa6f815054ee498574c51cef05f0c315b4298；官方当前语法检查 PASS，52 文件由 TypeScript 解析。validate-output.js 上游 9ec76b6974f262fca7b9611c4a485dd2275fe76c、工作树 1a58ca06bd9fa47b6730904f1622189011cc32fe 不一致：UPSTREAM_OUTPUT=NOT_RUN；本地旧脚本诊断执行退出 0，不计为当前官方结果。未覆盖或修改相邻 PaperSkill。
+- SOURCE_BUILD PASS；SUBPATH_ASSETS PASS（实际 dist 于 /der-review/ 的 CSS/JS/页面交互资源，无浏览器错误）。FULLSCREEN_LAYOUT 覆盖 1920×1080，FULLSCREEN_REAL NOT_RUN：本轮使用 headless Chromium，没有操作真实 F11。W9 人工验收仍待用户，未填写 reviewer 或调用发布流程。
+
+### 2026-11-02 最终定向复测与收尾
+- 最终定向 Visual QA 报告：`.visual-qa/run-2026-11-01T17-08-14-611Z/report.md`，20 捕获 / 两桌面布局，退出 0，无几何、基线或字号诊断，实际 URL 均在 /der-review/。已读取报告并放大查看对应 U4 移动、DER++ 联合监督与 U6 更新截图。
+- 放大复核再次发现更具体的旧 `.dp-canvas ... :first-of-type` 选择器仍覆盖 DER++ 更新说明，以及工作台高亮轮次按钮继承白字：移除新场景的旧 SVG 根类并给工作台选中态指定深色；补充浅底说明可读性断言。U6 联合梯度路径现真正接到网络底边并有正确向上的箭头。更新后的实际 1920×1080 截图确认修复，保留于 der-final-feedback/u5-white-caption-fixed.png、u6-active-round-fixed.png、u6-gradient-endpoint-fixed.png。
+- 最终 SOURCE_BUILD PASS（tsc + Vite）；语法检查 52 文件 PASS；reservoir-only 两布局 114 断言 PASS；front-only 两布局 270 PASS；D1 两布局 1498 PASS；W8 最终轮次回归的实际断言数见下方收尾记录。数值模型未修改。
+- 已按工具输出的确切路径清理首轮 run-2026-11-01T16-55-48-547Z，CLEANED 且 Test-Path=False；最终定向 run 在报告/截图阅读及轻量副本保留后同样清理。不清理历史目录或用户已有产物。保留用户预览 5199；未发布、推送或创建 PR。
+- 收尾实际结果：W8_BROWSER_PASS 1440×900=443 / 1920×1080累计=886；两布局共 886 断言，包含反向信号活跃时边端点检查、浅底文字可读性及轮内暂停；退出 0。定向 run 清理已得到 CLEANED 与 Test-Path=False。两次 runner 的轻量报告均已留在可交接目录，真实 F11 和 W9 人审仍未代作。

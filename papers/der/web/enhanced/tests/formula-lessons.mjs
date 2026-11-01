@@ -56,7 +56,7 @@ export async function formulaLessonChecks({page,base,check,shot}){
  check((await derStep.locator(".ds-total-formula").textContent()).includes("L_DER"),"DER keeps the joint objective beside the shared network");
  const augmentation=page.locator("[data-scene=augmentation]");
  check(await augmentation.locator("[data-reading-unit]").count()===0,"Augmentation opens on the shared-image mechanism rather than a separate formula lesson");
- check((await augmentation.locator(".aug-match-formula").textContent()).includes("L_match"),"Augmentation keeps the concise matching rule beside its outputs");
+ check((await augmentation.locator(".aug2-formula").last().textContent()).includes("L_dark"),"Augmentation keeps the concise matching rule beside its outputs");
  const derPlus=page.locator("[data-scene=der-plus]");
  check(await derPlus.locator("[data-reading-unit]").count()===0,"DER++ opens on the conflict and shared-update mechanism, not a separate formula lesson");
  check((await derPlus.locator("[data-total-formula]").textContent()).includes("L_current + α L_dark + β L_replay-CE"),"DER++ keeps its three-term objective beside the single update");

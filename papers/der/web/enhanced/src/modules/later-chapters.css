@@ -13,3 +13,7 @@
 @media(max-width:650px){.wb2-scrub{grid-template-columns:1fr}.wb2-scrub>span{grid-column:1}.wb2-event-order{gap:8px}}
 
 .wb2-lesson>header h3{font-family:var(--rk-font-math);font-size:31px;line-height:1.5;font-weight:700}.wb2-lesson .wb2-query-input{fill:#f5f5ed;stroke:#b5c6ad}.wb2-lesson .wb2-query-u{font:26px var(--rk-font-math);font-style:normal;fill:#476851}
+
+.dp2-lesson .dp-z-wrong{stroke:#a96e49;stroke-width:2.5}
+
+.wb2-lesson .wb-handoff button[aria-pressed=true]{color:var(--der-ink);background:#edf3e7;border-color:#6f9577}

@@ -27,6 +27,7 @@ export async function fullW8Checks({page,base,check,shot}){
    await scene.locator("[data-back]").click();check(+(await scene.getAttribute("data-progress"))===0,"Back restores stage start");
   }
   if(name==="der-step"){
+ await seek(scene,3,6000,.6);check(await scene.locator(".tg-network.is-updating").count()===1,"Edge attachment is checked while reverse signalling is active");
  const edgeAnchors=await scene.locator("[data-network]").evaluate(g=>{const points=[...g.querySelectorAll(".tg-node")].map(n=>[+n.getAttribute("cx"),+n.getAttribute("cy")]);return [...g.querySelectorAll(".tg-edge")].every(e=>{const v=e.getAttribute("d").match(/-?\d+(?:\.\d+)?/g).map(Number);return points.some(([x,y])=>x===v[0]&&y===v[1])&&points.some(([x,y])=>x===v[2]&&y===v[3]);});});check(edgeAnchors,"Static network edges remain attached to their nodes during reverse signalling");
    await page.emulateMedia({reducedMotion:"reduce"});await scene.locator("select").selectOption("3");
    check(await scene.getAttribute("data-updates")==="2"&&await scene.getAttribute("data-seen")==="1","One update precedes any memory write");
@@ -61,6 +62,7 @@ export async function fullW8Checks({page,base,check,shot}){
   check(await scene.getAttribute("data-progress")==="1","Reduced motion shows whole semantic result");
   if(name==="der-plus"){
    check(await scene.getAttribute("data-updates")==="1","All DER++ signals reach exactly one completed parameter update");
+   check(await scene.locator(".dp-updated-parameter text").evaluate(e=>getComputedStyle(e).fill!=="rgb(255, 255, 255)"),"Joint-update caption remains readable against its pale background");
    check(await scene.locator(".dp-update-hub").count()===1&&await scene.locator(".dp-updated-parameter").count()===1,"The joint objective has one shared theta hub and no claimed corrective prediction");
    check((await scene.locator("[data-total-formula]").textContent()).includes("β L_replay-CE"),"The historical-label term appears in the one joint objective");
   }
@@ -118,6 +120,7 @@ export async function fullW8Checks({page,base,check,shot}){
  await wb.locator('[data-round-scrub]').fill('1.64');
  check(await wb.getAttribute('data-clip')==='11'&&Math.abs(+(await wb.getAttribute('data-progress'))-.64)<.002,"Round scrub seeks a true paused intermediate frame");
  check(await wb.getAttribute('data-status')==='paused',"Scrubbing never silently resumes playback");
+ check(await wb.locator('.wb-handoff-rounds button[aria-pressed=true] strong').evaluate(e=>getComputedStyle(e).color!=="rgb(255, 255, 255)"),"Active round text stays readable on its pale surface");
  const scrubFrame=await wb.locator('.teaching-canvas').innerHTML();await page.clock.fastForward(1800);
  check(scrubFrame===await wb.locator('.teaching-canvas').innerHTML(),"Scrubbed objects stay at exact intermediate positions");
  for(const node of recordNodes)check(await node.evaluate(el=>el.isConnected),"Record DOM objects persist through rounds and method resets");

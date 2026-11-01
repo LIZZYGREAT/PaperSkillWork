@@ -26,3 +26,6 @@ body{font-size:17px;line-height:1.75}button,a{-webkit-tap-highlight-color:transp
 .scene-handoff p{max-width:880px;margin:0;font-size:15px;line-height:1.8;color:var(--rk-ink)}
 @media(max-width:760px){.scene-handoff{grid-template-columns:1fr;gap:5px}.scene-handoff p{font-size:14px}}
 .reference-shell .equation math{max-width:100%}
+
+/* Upright notation follows the requested tutorial typography, including MathML's automatic single-letter styling. */
+math mi{font-style:normal;text-transform:none}
