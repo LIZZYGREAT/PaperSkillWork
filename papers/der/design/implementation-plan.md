@@ -758,3 +758,8 @@ FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN。使用computer-use技能尝�
 最终证据保存在当前会话visualizations/der-execution-final：两档opening/replay/responses/answer-sealed/comparison/bridge/prelude/d1图、真实预览采样、轻量full-qa/final-objects报告。最终中帧在der-final-browser中保留S2历史展开、S1输入移动、ER读取、数值复制/冻结、两轮各步及终态；D1与工作台真实播放JSON在der-execution-playback。截图是待人审证据，不是批准基准。报告提取、临时文件和本次预览服务清理结果见本节最后补充。
 
 最终清理：两次公共QA运行目录run-2026-10-31T16-26-53-329Z、run-2026-10-31T16-41-11-615Z均已按本次准确路径cleanup-run返回CLEANED，随后Test-Path=False。已保留轻量报告与必要区域截图/中帧/播放JSON；原始整页采集中间图、定位JSON、临时脚本/配置、无用全篇截图、调试日志和临时视频清理。本次5195预览已停止，4197公共预览已由runner退出。最终提示文字和min-width修复后的build、官方当前语法检查、426项定向浏览器检查及窄窗口三个滚动区检查均PASS；该窄屏修复不影响已通过2886项回归的桌面媒体规则。
+
+### U1–U3 重新设计 · U1（2026-11-01）
+用户明确授权直接重新设计、删除过时代码、独立分支逐部分提交；不等待额外图稿批准，不代填 W7/W9。分支 redesign/der-u1-u3，自32a83c0开始。保留原工作区未跟踪 docs/TEACHING_VISUAL_PHILOSOPHY.md，不纳入提交。
+U1重做为共享的数据流/有限记忆场景与同一输入双时刻响应对比。移除三卡推导与重复ER大图；使用D1既有ModelPixel类别身份，局部重新绘制3–4–3网络，节点与边明确对应。动画使用现有useSceneTimeline，支持暂停/继续/重播/步骤与reduced-motion；不改数学模型或D1文件。
+首轮build PASS。实际Chromium生产文件渲染1440×900、1920×1080；验证U1中间态暂停、整段重播、完整响应揭示和无页面横向溢出。浏览器sandbox禁止localhost网络，使用Playwright route从本地dist提供完整HTML/JS/CSS，未据此宣称真实HTTP子路径通过；最终需另行检查。发现旧CSS污染结论区与术语按钮后加局部修复；最终统一复查。截图位于会话visualizations/der-redesign。FULLSCREEN_REAL=NOT_RUN；人审PENDING。

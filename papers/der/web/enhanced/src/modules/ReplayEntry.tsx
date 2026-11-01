@@ -1,64 +1,42 @@
-import { SampleToken } from "../shared/foundation/visual-parts/SampleToken";
-import { StreamMotion, ReplayReadMotion } from "./FrontMotion";
-import { useState } from "react";
-import { useSceneTimeline } from "./review/SceneTransport";
-import { ResponseMeter } from "../shared/foundation/visual-parts/ResponseMeter";
-import { CLASSES, LABEL_CURRENT, LABEL_OLD } from "./math-model";
-import ModelMark from "./review/ModelMark";
-import type { ModelClass } from "./review/ModelPixel";
-import { Term } from "./Reference";
-import "./teaching-front.css";
-import "./teaching-objects.css";
-
-const REVEAL_CLIPS = [{ id: "展开历史响应", durationMs: 1400, holdMs: 500 }, { id: "对照当前响应", durationMs: 1600, holdMs: 600 }] as const;
-function Prediction({ current, progress }: { current?: boolean; progress: number }) {
-  const values = current ? LABEL_CURRENT.map((value,k)=>LABEL_OLD[k]+(value-LABEL_OLD[k])*progress) : LABEL_OLD.map(value=>value*progress);
-  return <article className="prediction-sheet">
-    <p className="eyebrow">{current ? "比较时刻 · 当前判断" : "保存时刻 · 历史判断"}</p>
-    <p className="prediction-answer">预测 <strong>Claude</strong><span>✓ 正确</span></p>
-    <div className="response-window" style={{minHeight:100+110*progress}}><div className="response-reveal" data-response={current ? "current" : "history"} aria-hidden={progress===0} style={{visibility:progress>0 ? "visible" : "hidden"}}>
-      <p className="caption">原始 logits · 共同尺度 0–3</p>
-      {CLASSES.map((label, k) => <div className="prediction-coordinate" key={label} data-changed={current && k>0 && progress===1}><ModelMark model={k as ModelClass} /><ResponseMeter label={label} value={values[k]} min={0} max={3} showScale={false} /></div>)}
-    </div>{progress===0 && <div className="response-covered"><div className="sealed-response" aria-hidden="true"><i /><i /><i /><b>?</b></div><p>三类响应尚未展开</p></div>}</div>
-  </article>;
+import {useState} from 'react';
+import SceneTransport,{useSceneTimeline} from './review/SceneTransport';
+import ModelMark from './review/ModelMark';
+import {type ModelClass} from './review/ModelPixel';
+import {CLASSES,LABEL_CURRENT,LABEL_OLD} from './math-model';
+import {Term} from './Reference';
+import {Network,Sample} from './DerPrimitives';
+import './der-redesign.css';
+const STREAM=[{id:'新数据持续到来',durationMs:2000,holdMs:800},{id:'同一模型继续更新',durationMs:1800,holdMs:800},{id:'留下有限的旧样本',durationMs:1800,holdMs:800},{id:'读取副本，一起训练',durationMs:2600,holdMs:1000}] as const;
+const REVEAL=[{id:'展开历史响应',durationMs:1400,holdMs:500},{id:'对照当前响应',durationMs:1600,holdMs:700}] as const;
+const clamp=(v:number)=>Math.max(0,Math.min(1,v));
+function StreamScene(){
+ const t=useSceneTimeline(STREAM),{clipIndex:step,progress:p}=t.state;
+ const retained=step>2?1:step===2?p:0,read=step===3?clamp(p/.72):0,input=step===0?p:step===3?clamp(p/.72):1;
+ const theta=step===3&&p===1?'θ₂':step>1||(step===1&&p===1)?'θ₁':'θ₀';
+ return <figure className="der-stream" data-front-scene="stream" data-step={step} data-progress={p} data-theta={theta}><div className="der-figure-top"><span>数据持续到来</span><span>同一组参数，持续学习</span></div><div className="der-diagram-scroll"><svg viewBox="0 0 1060 430" role="img" aria-label="新样本进入同一模型，少量旧记录保留在有限记忆中，读取副本参与后续训练">
+ <path className="der-route" d="M55 130H690"/><path className="der-arrow" d="m680 123 10 7-10 7"/><text x="55" y="65">更早的样本</text><text x="412" y="65">当前到来的新样本</text>
+ <Sample x={58} y={96} id="stream:earlier" muted/><Sample x={158} y={96} model={1} id="stream:earlier-2" muted/><text x="268" y="137" className="der-svg-muted">···</text><Sample x={380} y={96} model={step===3?2:1} id="stream:current"/>
+ {input>0&&input<1&&<Sample x={380+282*input} y={104} model={step===3?2:1} id="stream:current-read" size={50}/>}
+ <Network x={700} y={66} theta={theta} active={step===1&&p>0&&p<1||step===3&&p>.72}/><text x="809" y="317" textAnchor="middle" className="der-svg-muted">根据分类损失调整参数</text>
+ <path className="der-memory-outline" d="M66 265H440V392H66Z"/><text x="82" y="292" className="der-svg-title">有限记忆 M</text><text x="425" y="292" textAnchor="end" className="der-svg-muted">容量 K</text><rect x="82" y="310" width="184" height="65" rx="8" className="der-slot"/><rect x="281" y="310" width="142" height="65" rx="8" className="der-empty-slot"/>
+ {retained===0&&<text x="174" y="350" textAnchor="middle" className="der-svg-muted">只留下少量记录</text>}<text x="352" y="350" textAnchor="middle" className="der-svg-muted">有限空位</text>
+ {retained>0&&<g opacity={retained}><Sample x={58+30*retained} y={317-(1-retained)*221} id="stream:retained-x1" size={50}/><text x="153" y="346">x₁, y₁</text></g>}
+ <path className="der-read-route" d="M268 342H555Q600 342 600 294V250Q600 225 626 225H690"/><path className="der-arrow" d="m680 218 10 7-10 7"/><text x="502" y="390" className="der-svg-muted">读取旧记录的副本，原记录保留</text>
+ {read>0&&read<1&&<Sample x={268+382*read} y={317-116*read} id="stream:old-read" size={48}/>}{step===3&&read===1&&<text x="809" y="351" textAnchor="middle" className="der-svg-emphasis">新旧数据，共同监督一次更新</text>}
+ </svg></div><figcaption aria-live="polite">{['新样本沿数据流到来；过去的数据可能已经无法再次取得。','仍是同一个模型。只适应新数据，可能改变对旧输入的判断。','无法保存全部历史，就保留少量旧图与真实标签 (x,y)。','从记忆读取副本，与当前样本一起训练同一模型。这就是经验回放（ER）。'][step]}</figcaption><SceneTransport timeline={t} clips={STREAM} label="持续学习与有限回放" showTiming={false}/></figure>;
+}
+function Prediction({current=false,progress}:{current?:boolean;progress:number}){
+ const values=current?LABEL_OLD.map((v,k)=>v+(LABEL_CURRENT[k]-v)*progress):LABEL_OLD;
+ return <div className="der-prediction prediction-sheet"><h4>{current?'现在的判断':'保存时的判断'}</h4><p className="prediction-answer"><strong>Claude</strong><span>预测正确</span></p><div className="der-score-window"><div data-response={current?'current':'history'} className="der-score-list" aria-hidden={progress===0} style={{opacity:progress===0?0:1}}><div className="der-scale"><span>原始分数 logits</span><span>0—3</span></div>{CLASSES.map((name,k)=><div className="der-score-row" key={name}><ModelMark model={k as ModelClass}/><span>{name}</span><div className="der-score-track"><i style={{transform:`scaleX(${values[k]/3})`}}/></div><output>{Number(values[k].toFixed(2))}</output></div>)}</div>{progress===0&&<p className="der-covered">分类答案背后，还有一整组响应。<br/><span>展开后比较三类分数</span></p>}</div></div>;
+}
+export default function ReplayEntry(){
+ const reveal=useSceneTimeline(REVEAL),[answerOnly,setAnswerOnly]=useState(true);
+ const historyProgress=answerOnly?0:reveal.state.clipIndex>0?1:reveal.state.progress,currentProgress=answerOnly||reveal.state.clipIndex===0?0:reveal.state.progress;
+ const show=()=>{setAnswerOnly(false);if(reveal.reducedMotion)reveal.start(1);else reveal.replay();};
+ return <div className="der-redesign der-u1" data-core-items="I01 I02"><section className="der-opening" aria-labelledby="training-origin-title"><div className="der-copy"><h3 id="training-origin-title">数据在流动，<br/>模型在更新。</h3><p>新数据不断到来，我们用<strong>同一个模型 θ</strong>持续学习。过去的数据却未必还能取回，旧输入的判断也可能逐渐退化。</p></div><div className="der-copy"><p>最直接的想法，是把全部历史留下来。但存储与计算都有上限，数据流的总长度也未必已知。</p><p><strong>留少量，再复习。</strong>经验回放保存少量旧图与标签，让它们在后续训练中重新参与学习。</p></div></section><StreamScene/>
+ <aside className="der-constraints" aria-label="通用持续学习的三个约束"><p>面向真实数据流，论文采用<br/><strong>通用持续学习（GCL）</strong>的约束</p><dl><div><dt>训练</dt><dd>无须知道任务边界</dd></div><div><dt>预测</dt><dd>无须提供任务编号</dd></div><div><dt>记忆</dt><dd>始终保持容量有界</dd></div></dl></aside>
+ <section className="label-investigation der-investigation" data-label-revealed={currentProgress===1} data-history-progress={historyProgress} data-current-progress={currentProgress} aria-labelledby="label-investigation-title"><div className="der-question"><h3 id="label-investigation-title">旧图和标签留下了，<br/>过去的判断也留下了吗？</h3><p>标签告诉模型“应该是哪一类”。但同一个正确答案，可能对应不同的完整响应。</p></div><div className="same-input der-shared-input"><ModelMark/><div><strong>同一张旧输入 x₁</strong><span>真实标签 y₁ = Claude</span></div><p>只改变观察时刻，<br/>输入与类别坐标保持不变。</p></div><div className="der-predictions"><Prediction progress={historyProgress}/><Prediction current progress={currentProgress}/></div>
+ <div className="der-reveal-controls" role="group" aria-label="观察分类答案或完整响应"><button data-label-mode="full" aria-pressed={!answerOnly} onClick={show}>显示完整响应</button><button data-label-mode="answer" aria-pressed={answerOnly} onClick={()=>{setAnswerOnly(true);reveal.reset();}}>只看分类答案</button><button data-label-replay onClick={show}>重播揭示</button>{!answerOnly&&!reveal.reducedMotion&&currentProgress<1&&<button data-label-play onClick={reveal.toggle}>{reveal.state.status==='playing'?'暂停':'继续'}</button>}</div><p className="der-observation" aria-live="polite">{answerOnly?'两次都预测正确。点击“显示完整响应”，再检查其他类别的偏好。':currentProgress<1?'先固定历史分数，再观察当前 GPT 与 DeepSeek 的分数变化。':'Claude 仍然最高；GPT 从第 2 降到第 3，DeepSeek 从第 3 升到第 2。'}</p>
+ <div className="response-finding der-finding" hidden={currentProgress<1}><h4>答案相同，整组响应已经不同。</h4><div><p>真实标签指定正确类别。分类<Term id="ce">交叉熵</Term>会影响所有输出，却没有记录过去那组分数，因而不要求恢复这份历史响应。</p><p>要约束这种变化，可以保存 <Term id="softmax"/> 概率或原始 <Term id="logits"/>。这些超出单个类别答案的响应信息，称为 <strong>Dark Knowledge（暗知识）</strong>。</p></div></div><p className="der-footnote">合成教学示例 · 类别顺序 Claude / GPT / DeepSeek；历史 z=(2,1,0)，当前 a=(2,0,1)。</p></section></div>;
 }
 
-export default function ReplayEntry() {
-  const reveal = useSceneTimeline(REVEAL_CLIPS);
-  const [answerOnly,setAnswerOnly] = useState(true);
-  const historyProgress = answerOnly ? 0 : reveal.state.clipIndex>0 ? 1 : reveal.state.progress;
-  const currentProgress = answerOnly || reveal.state.clipIndex===0 ? 0 : reveal.state.progress;
-  const showResponses = () => { setAnswerOnly(false); if(reveal.reducedMotion) reveal.start(1); else reveal.replay(); };
-  return <div className="front-teaching" data-core-items="I01 I02">
-    <section className="training-origin" aria-labelledby="training-origin-title">
-      <div><p className="eyebrow">S1 · 先从熟悉的训练开始</p><h3 id="training-origin-title">数据向前走，参数也在改变。</h3>
-        <p className="front-lead">分类模型根据当前数据调整参数。持续学习时，新的样本不断到来，模型继续使用<strong>同一组参数</strong>训练。</p>
-        <p>可是过去的数据未必还在眼前。如果只根据新数据更新，模型对旧输入的判断可能变差，这便产生了<strong>灾难性遗忘</strong>问题。</p>
-      </div>
-      <StreamMotion />
-    </section>
-    <section className="reasoning-stair" aria-label="从完整历史到有限回放的推导">
-      <article><div className="archive-object archive-all" aria-hidden="true">{Array.from({length:6},(_,i)=><i key={i} />)}<b>…</b></div><h4>全部历史都在？</h4><p>如果历史一直可用，就能把新旧数据混在一起训练。</p></article>
-      <article><div className="archive-object archive-limit" aria-hidden="true"><i /><i /><b>容量 K</b></div><h4>空间有上限。</h4><p>数据流长度未知，记忆容量固定，无法无限保存。</p></article>
-      <article><div className="archive-replay" aria-hidden="true"><ModelMark /><span>↗</span><span>M</span></div><h4>留下少量，再复习。</h4><p>从小记忆中读回旧样本，这就是<strong>经验回放（ER）</strong>。</p></article>
-    </section>
-    <section className="gcl-context"><h3>让这个办法适用于真实的数据流。</h3><p>分布可能渐变，也可能突变，未必按 Task A → Task B 整齐切换。论文用<strong>通用持续学习（GCL）</strong>概括三项要求：</p><div className="gcl-constraints"><span><b>训练</b>不依赖任务边界</span><span><b>预测</b>不需要任务编号</span><span><b>记忆</b>容量有界</span></div><p>有限回放让部分旧输入重新参与训练，无须等到一个任务结束。</p></section>
-    <figure className="er-relation" aria-label="当前数据与记忆旧数据共同监督同一个当前模型">
-      <div className="er-sources"><div className="er-source"><p><strong>当前数据</strong><span>新输入与真实标签</span></p><div className="er-record"><ModelMark model={2} /><span>x<sub>t</sub><small>y<sub>t</sub> = DeepSeek</small></span></div></div><div className="er-source"><p><strong>记忆记录</strong><span>少量旧输入与真实标签</span></p><div className="er-record er-memory-record"><ModelMark /><span>x′<small>y′ = Claude</small></span></div></div></div>
-      <div className="er-join"><svg viewBox="0 0 160 280" role="img" aria-label="新旧样本汇合为同一个分类目标"><path d="M2 56 H52 Q72 56 72 76 V120 Q72 140 92 140 H154 M2 224 H52 Q72 224 72 204 V160 Q72 140 92 140 M145 132 L154 140 L145 148" /></svg></div><div className="er-model"><svg className="er-network" viewBox="0 0 80 64" aria-hidden="true"><path d="M10 16L40 10L70 20M10 16L40 32L70 20M10 48L40 32L70 44M10 48L40 54L70 44M10 16L40 54M10 48L40 10M40 10L70 44M40 54L70 20" />{[[10,16],[10,48],[40,10],[40,32],[40,54],[70,20],[70,44]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="5" />)}</svg><div><strong>当前模型 θ</strong><span>学习新数据，也复习旧数据</span></div></div>
-      <figcaption>新旧样本共同提供标签监督，训练同一个当前模型。</figcaption>
-      <ReplayReadMotion />
-    </figure>
-    <p className="front-question">有限回放已经让旧样本可以重新参与训练。<br /><strong>但一张旧图片与一个真实标签，究竟保存了多少过去的模型知识？</strong></p>
-    <section className="label-investigation" data-label-revealed={currentProgress===1} data-history-progress={historyProgress} data-current-progress={currentProgress} aria-labelledby="label-investigation-title">
-      <p className="eyebrow">S2 · 从相同答案，发现不同响应</p><h3 id="label-investigation-title">两次都预测正确，判断就没有变吗？</h3>
-      <div className="same-input"><SampleToken sampleId="x1" label="同一旧输入 x₁"><ModelMark /></SampleToken><p>真实标签 y₁ = Claude<br /><small>合成分类示例 · Claude / GPT / DeepSeek</small></p></div>
-      <div className="reveal-controls" role="group" aria-label="观察分类答案或完整响应"><button data-label-mode="answer" aria-pressed={answerOnly} onClick={()=>{setAnswerOnly(true);reveal.reset();}}>只看分类答案</button><button data-label-mode="full" aria-pressed={!answerOnly} onClick={showResponses}>显示完整响应</button><button data-label-replay onClick={showResponses}>重播揭示</button>{!answerOnly && !reveal.reducedMotion && currentProgress<1 && <button data-label-play onClick={reveal.toggle}>{reveal.state.status==="playing" ? "暂停" : "继续"}</button>}</div>
-      <div className="prediction-pair"><Prediction progress={historyProgress} /><Prediction current progress={currentProgress} /></div>
-      {currentProgress<1 && <p className="reveal-observation" aria-live="polite">{answerOnly ? "答案一样，模型的完整判断也一样吗？点击“显示完整响应”继续观察。" : reveal.state.clipIndex===0 ? "先展开保存时刻的三类分数，固定这份历史参照。" : "历史响应保持不动；观察当前 GPT 与 DeepSeek 的分数交换。"}</p>}
-      <div id="response-finding" className="response-finding" hidden={currentProgress<1} aria-live="polite"><div><h4>答案没变，偏好已经交换。</h4><p>真实标签指定正确类别；分类<Term id="ce">交叉熵</Term>会影响所有输出，却不要求恢复过去的整组分数。</p><p>要保留旧响应，就额外记录 <Term id="softmax" /> 概率或原始 <Term id="logits" />，作为未来匹配的软目标。这些超出单个类别答案的响应信息称为 <strong>Dark Knowledge（暗知识）</strong>。</p></div><div className="response-ranks"><div className="rank-heading"><span>类别偏好</span><span>历史名次</span><span /><span>当前名次</span></div>{CLASSES.map((name,k)=><div className="rank-row" key={name}><span><ModelMark model={k as ModelClass} />{name}</span><b>{LABEL_OLD.filter(value=>value>LABEL_OLD[k]).length+1}</b><span className="rank-direction" aria-hidden="true">{LABEL_OLD[k]===LABEL_CURRENT[k] ? "＝" : "→"}</span><b>{LABEL_CURRENT.filter(value=>value>LABEL_CURRENT[k]).length+1}</b></div>)}</div></div>
-      {currentProgress===1 && <p className="caption">本节比较时刻的 a=(2,0,1) 将沿用到下一节。类别名称和像素图案仅用于合成分类教学。</p>}
-    </section>
-
-  </div>;
-}
