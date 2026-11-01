@@ -18,11 +18,3 @@ export function Sample({ x, y, model = 0, id, muted = false, size = 66 }: {
 }) {
     return <g transform={`translate(${x} ${y})`} className="der-sample" data-sample-id={id} opacity={muted ? .25 : 1}><rect width={size} height={size} rx="10"/><ModelPixel model={model} x={size * .16} y={size * .16} size={size * .68}/></g>;
 }
-export function Vector({ x, y, values, symbol = 'z₁' }: {
-    x: number;
-    y: number;
-    values: readonly (number | string)[];
-    symbol?: string;
-}) {
-    return <g transform={`translate(${x} ${y})`} className="der-vector"><text x="0" y="31" className="der-svg-math">{symbol}</text>{values.map((v, k) => <g key={k}><rect x={42 + k * 52} width="46" height="46" rx="6"/><text x={65 + k * 52} y="30" textAnchor="middle">{v}</text></g>)}</g>;
-}
