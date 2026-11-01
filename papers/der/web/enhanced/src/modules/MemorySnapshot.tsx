@@ -1,27 +1,11 @@
-import SampleLifecyclePrototype from "./review/SampleLifecyclePrototype";
-import { ReferenceButton } from "./Reference";
-import ModelMark from "./review/ModelMark";
-import { FrozenResponse, TeachingNetwork, TeacherTargetRibbon } from "./TeachingObjects";
-import { SnapshotOrigin, TwoRoundPreview } from "./MemoryPrelude";
-import "./teaching-front.css";
-
-export default function MemorySnapshot() {
-  return <div className="snapshot-lesson" data-core-items="I05">
-    <section className="supervision-bridge" aria-labelledby="supervision-title"><p className="eyebrow">机制桥接 · 过去的监督从哪里来？</p><h3 id="supervision-title">借用旧输出，不必一直保存旧模型。</h3>
-      <p>ER 已经提供了一个有效起点：回放 (x,y)，用真实标签做分类监督。若要维持更完整的历史响应，可以借鉴<strong>教师—学生蒸馏</strong>，让当前学生匹配旧模型给出的输出。</p>
-      <div className="teacher-relation" aria-label="教师输出作为学生匹配目标"><div className="teacher-end"><TeachingNetwork fixed /><div><strong>旧教师 · 固定</strong><span>提供参考输出</span></div></div><div className="teacher-target"><TeacherTargetRibbon /><span>软目标 →</span></div><div className="teacher-end"><TeachingNetwork /><div><strong>当前学生 · 可训练</strong><span>匹配参考输出</span></div></div></div>
-      <p>有些持续学习方法在任务末尾保存旧教师。但<strong>知识蒸馏本身不必然依赖任务边界</strong>；关键在于监督如何取得。DER 直接留下有限输入及其当时的 logits，未来让当前网络重新处理这些输入，无需持有完整的历史教师。</p>
-      <dl className="record-comparison"><div><dt>ER · 保存 (x,y)</dt><dd><div className="label-record"><ModelMark /><span>y = Claude</span><b>真实标签</b></div><span>旧输入与真实标签，回答“应该属于哪一类”。</span></dd></div><div><dt>DER · 保存 (x,z)</dt><dd><FrozenResponse symbol="z" /><span>旧输入与整组历史 logits，记录“曾经怎样响应”。</span></dd></div></dl>
-      <h4>从哪个参数时刻复制这组数值？</h4><p>每一步先用<strong>更新前</strong>的参数前向，再把输出复制为冻结 z。参数继续学习，这个副本保持原值；完成更新后，再把原图与副本作为候选交给记忆池。<strong>候选产生不等于一定留池。</strong></p>
-      <SnapshotOrigin />
-      <p className="caption">历史记录来自学习轨迹的不同瞬间；保存的是数值副本，不是每个历史时刻的网络。依据原文 §3 Eq.(2)–(5)、Algorithm 1。</p>
-    </section>
-    <section className="lifecycle-prelesson" aria-labelledby="two-rounds-title"><p className="eyebrow">播放之前 · 先理清两轮完整顺序</p><h3 id="two-rounds-title">先冻结，再更新，再入池。</h3><p>第一轮记忆为空，只有当前分类损失；第二轮才有旧记录可回放。当前样本与回放都用更新前同一组 θ 计算：先复制冻结候选，再合并损失、更新一次，最后才决定入池。</p>
-      <TwoRoundPreview />
-        <details className="teaching-note"><summary>教学数值与比较时刻</summary><p>D1 是给定数值的合成演示：未来回放取 aⱼ=(1,2,0)，与 z₁ 匹配的平方损失为 2；它区别于 S2/S3 比较时刻的 a=(2,0,1)。x₂ 的快照 z₂ 用符号表示，动画不执行真实训练求值。</p></details>
-      <p className="front-question">观看完整动画时，沿同一份记录追踪三个动作：复制并冻结 z₁ → 参数改变而 z₁ 不变 → 新旧样本汇成一次联合更新。</p>
-    </section>
-    <SampleLifecyclePrototype />
-    <div className="snapshot-reference"><ReferenceButton term="z">核对冻结时序与出处</ReferenceButton></div>
-  </div>;
+import SampleLifecyclePrototype from './review/SampleLifecyclePrototype';
+import {ReferenceButton} from './Reference';
+import {SnapshotOrigin} from './MemoryPrelude';
+import './der-redesign.css';
+export default function MemorySnapshot(){
+ return <div data-core-items="I05"><div className="der-redesign der-u3"><section className="der-freeze-intro"><div><h3>留下数值副本，<br/>模型继续向前。</h3><p>我们已经选定用 logits 匹配历史响应。现在还缺一个时间上的答案：<strong>这份历史分数，在什么时候产生？</strong></p></div><div><p>蒸馏用旧输出为当前模型提供软监督。DER 沿学习轨迹保留有限输入及其当时的输出，无须长期持有完整的旧教师。</p><p>在<strong>参数更新前</strong>取得输出，复制成冻结目标 z；模型可以继续学习，这份数值副本不再重算。</p></div></section><SnapshotOrigin/>
+ <section className="der-round-guide" aria-labelledby="two-rounds-title"><div className="der-question"><h3 id="two-rounds-title">先理清两轮的区别，<br/>再进入完整生命周期。</h3><p>两项损失在同一组更新前参数上计算，合并后只更新一次。候选生成与最终入池，是两个不同事件。</p></div><div className="der-round-table"><div className="der-round-row"><div><h4>第一轮</h4><span>θ₀ · M = ∅</span></div><div><strong>当前 (x₁,y₁)</strong><p>只有当前分类 CE；更新前复制并冻结 z₁。</p></div><div><strong>一次更新 θ₀ → θ₁</strong><p>更新后，空槽接收记录 (x₁,z₁)。</p></div></div><div className="der-round-row"><div><h4>第二轮</h4><span>θ₁ · M 有旧记录</span></div><div><strong>当前 CE ＋ 历史匹配</strong><p>读取旧 (x₁,z₁)，与当前 (x₂,y₂) 在同一 θ₁ 下计算。</p></div><div><strong>一次更新 θ₁ → θ₂</strong><p>本轮 z₂ 也先冻结；更新后再参与选留。</p></div></div></div><details className="der-numerical-note"><summary>核对本段与前两章的教学数值</summary><p>D1 是给定数值的合成演示：后续回放响应 aⱼ=(1,2,0)，与 z₁=(2,1,0) 的平方差为 2。它区别于 U1/U2 比较时刻的 a=(2,0,1)。x₂ 的冻结目标 z₂ 用符号表示，动画不运行真实优化器。</p></details></section>
+ <div className="der-d1-intro"><h3>沿同一份 x₁ 和 z₁，看完两轮。</h3><p>播放时观察三个交接：更新前复制冻结 → 参数改变、旧目标不变 → 读取旧记录，与新数据共同监督一次更新。</p></div></div>
+ <SampleLifecyclePrototype/>
+ <div className="der-redesign der-after-d1"><p>留下的是一份有时间来源的记录 (x,z)。但当记忆装满，谁还能继续留下？下一章把容量 K 和在线选留接进这个过程。</p><ReferenceButton term="z">冻结时序与原文出处</ReferenceButton></div></div>;
 }
