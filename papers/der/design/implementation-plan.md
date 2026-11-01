@@ -814,3 +814,8 @@ U3删除旧教师/学生网络卡、ER/DER重复记录卡及完整TwoRoundPrevie
 
 验证：最终build PASS（80 modules）；`node tests/browser.test.mjs --front-only`两档232项PASS，新增真实SVG路径与三个样本边界不相交、复制中点两侧记录不被遮挡的几何断言。原有冻结时序、暂停/重播、完整响应、公式参考区、D1标题/专注播放回归均保留。官方匹配版本的syntax-check.js --require-parser，51文件PASS。正式Visual QA按两图初态、读取/复制中帧、冻结终态共10状态PASS，actualUrl均为真实HTTP `/der-review/`，GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS为PASS。
 Agent实际查看两档复制中帧、冻结终态，以及最终1920初态；来源数值与目标副本相同，θ后更新，连接不穿正文。FULLSCREEN_REAL=NOT_RUN（headless），人审保持PENDING。证据在本会话visualizations/der-feedback，保留局部PNG和qa-report.json。公共run-2026-11-01T15-29-35-982Z已返回CLEANED，Test-Path=False；临时配置已删除。生产预览5199继续用于用户查看，不push/PR，不改原有未跟踪文档。
+
+### 用户追加：统一3–5–3并恢复记忆连接（2026-11-01）
+按用户截图，两处前导网络统一为3–5–3。DerPrimitives提供共享节点纵向比例，U1大模型和U3紧凑模型均使用该定义，避免再次独立漂移；每处11节点、30条相邻层连接。仅修改这两处前导，D1受保护源码未改。
+恢复有限记忆右侧端口到模型的常显曲线箭头，连接不穿过记录标签或历史像素；读取副本从该端口沿同一曲线移动，原记忆保留。省略号改为3个半径3的SVG圆点，尺寸不再依赖字体的小中点。
+验证：最终build PASS；两档`node tests/browser.test.mjs --front-only`244项PASS，新增共享3–5–3节点/30连接、初态记忆箭头可见、三个省略点显示尺寸的断言；原暂停、重播、冻结与D1外围回归保留。51文件官方匹配版本syntax-check --require-parser PASS；git diff --check通过，受保护review目录diff为空。已实际查看1440×900两处初态、1920×1080紧凑网络及读取中帧，记忆箭头/副本路径与端点一致。截图在本会话visualizations/der-network-353。未新增临时仓库产物；FULLSCREEN_REAL仍NOT_RUN，人审不代填，5199生产预览保留。

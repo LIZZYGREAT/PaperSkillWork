@@ -8,6 +8,15 @@ export async function teachingFrontChecks({page,base,check,shot}){
   return Array.from({length:31},(_,i)=>{const p=path.getPointAtLength(path.getTotalLength()*i/30),q=new DOMPoint(p.x,p.y).matrixTransform(path.getScreenCTM());return boxes.some(b=>q.x>b.left&&q.x<b.right&&q.y>b.top&&q.y<b.bottom);}).some(Boolean);
  });
  check(!lineCrossings,'Current-input connector stays outside all stationary sample objects');
+ for(const selector of ['.der-network','.origin-model']){
+  const counts=await page.locator(selector+' circle').evaluateAll(nodes=>Object.values(nodes.reduce((layers,node)=>{const x=node.getAttribute('cx');layers[x]=(layers[x]||0)+1;return layers;},{})));
+  check(JSON.stringify(counts)===JSON.stringify([3,5,3]),'Intro network has the shared 3–5–3 topology: '+selector);
+  check(await page.locator(selector+' line').count()===30,'Both adjacent layers have complete 3×5 and 5×3 connections');
+ }
+ check(await stream.locator('.der-memory-connector').isVisible(),'Memory-to-model arrow is visible from the initial explanatory state');
+ const dots=await stream.locator('.der-stream-ellipsis circle').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().width));
+ check(dots.length===3&&dots.every(w=>w>=6),'Stream omission is three visibly sized dots');
+
  check(await label.locator('.prediction-answer').count()===2,'Both classification answers precede the full response');
  check(await label.getAttribute('data-current-progress')==='0'&&!await label.locator('.response-finding').isVisible(),'Dark knowledge conclusion waits for the response observation');
  await shot('redesign-u1-answer','.label-investigation');

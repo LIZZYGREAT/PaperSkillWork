@@ -1,6 +1,7 @@
 import SceneTransport, { useSceneTimeline } from './review/SceneTransport';
 import { LIFECYCLE_FIXTURE as F } from './review/lifecycle-model';
 import { MODEL_CLASSES } from '../data/model-classes';
+import { NETWORK_NODE_FRACTIONS } from './DerPrimitives';
 
 const CLIPS = [
   { id: '更新前取得输出', durationMs: 1200, holdMs: 700 },
@@ -25,7 +26,7 @@ function ResponseSlip({ x, frozen = false, placeholder = false }: {
 }
 
 function CurrentModel({ updated, updating }: { updated: boolean; updating: boolean }) {
-  const layers = [[0, 23, 46], [0, 23, 46], [0, 23, 46]];
+  const layers = NETWORK_NODE_FRACTIONS.map(layer => layer.map(y => y * 46));
   return <g className="origin-model" data-updating={updating}>
     <rect x="48" y="106" width="210" height="128" rx="12" className="origin-model-surface" />
     <text x="153" y="146" textAnchor="middle" className="origin-theta">{updated ? 'θ₁' : 'θ₀'}</text>
