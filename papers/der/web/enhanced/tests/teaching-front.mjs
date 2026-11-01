@@ -8,6 +8,23 @@ export async function teachingFrontChecks({page,base,check,shot}){
   return Array.from({length:31},(_,i)=>{const p=path.getPointAtLength(path.getTotalLength()*i/30),q=new DOMPoint(p.x,p.y).matrixTransform(path.getScreenCTM());return boxes.some(b=>q.x>b.left&&q.x<b.right&&q.y>b.top&&q.y<b.bottom);}).some(Boolean);
  });
  check(!lineCrossings,'Current-input connector stays outside all stationary sample objects');
+ const identities=await stream.locator('[data-sample-id="stream:earlier"] [data-model-pixel],[data-sample-id="stream:earlier-2"] [data-model-pixel],[data-sample-id="stream:current"] [data-model-pixel]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-model-pixel')));
+ check(JSON.stringify(identities)===JSON.stringify(['Claude','GPT','DeepSeek']),'Historical x1 and x2 are Claude/GPT; current x3 is DeepSeek from the initial frame');
+ for(const selector of ['.der-stream','.der-origin']){
+  const scene=page.locator(selector),last=selector==='.der-stream'?3:2;
+  await scene.locator('select').selectOption(String(last));
+  check(await scene.locator('progress').evaluate(el=>el.value<el.max),'Last-stage start is distinguished from completed playback');
+  check((await scene.locator('[data-time-readout]').innerText()).includes('0%'),'Readout explains that the selected last step is at zero percent');
+  await scene.locator('[data-next]').click();
+  check(await scene.locator('progress').evaluate(el=>el.value===el.max),'Completing the last step fills the teaching progress bar');
+  await scene.locator('select').selectOption('0');
+  await scene.locator('[role=combobox]').click();
+  const boxes=await scene.evaluate(el=>{const a=el.querySelector('[role=combobox]').getBoundingClientRect(),b=el.querySelector('[role=listbox]').getBoundingClientRect();const options=[...el.querySelectorAll('[role=option]')];return {match:Math.abs(a.x-b.x)<1&&Math.abs(a.width-b.width)<1,visible:options.every(n=>{const r=n.getBoundingClientRect(),top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.top>=0&&r.bottom<=innerHeight&&top&&n.contains(top);})};});
+  check(boxes.match,'Stage menu matches trigger width and alignment');check(boxes.visible,'Every menu option is visible, unclipped and hit-testable');
+  await shot(selector==='.der-stream'?'stream-menu-fixed':'origin-menu-fixed',selector);
+  await page.keyboard.press('Escape');
+ }
+
  for(const selector of ['.der-network','.origin-model']){
   const counts=await page.locator(selector+' circle').evaluateAll(nodes=>Object.values(nodes.reduce((layers,node)=>{const x=node.getAttribute('cx');layers[x]=(layers[x]||0)+1;return layers;},{})));
   check(JSON.stringify(counts)===JSON.stringify([3,5,3]),'Intro network has the shared 3–5–3 topology: '+selector);
@@ -29,9 +46,14 @@ export async function teachingFrontChecks({page,base,check,shot}){
  await shot('redesign-u1-response','.label-investigation');
  await stream.locator('[data-play]').click();await page.clock.runFor(900);check(+(await stream.getAttribute('data-progress'))>0&&await stream.getAttribute('data-theta')==='θ₀','Input arrives before a parameter update');
  await stream.locator('[data-play]').click();const paused=await stream.getAttribute('data-progress');await page.clock.runFor(500);check(paused===await stream.getAttribute('data-progress'),'Stream pause holds all positions');
- await stream.locator('[data-replay]').click();await page.clock.runFor(15000);check(await stream.getAttribute('data-theta')==='θ₂','Replay reaches the joint training result');
+ await stream.locator('[data-replay]').click();await page.clock.runFor(15000);check(await stream.getAttribute('data-theta')==='θ₁','New x3 and replay x1 share exactly one final parameter update');
  check(await stream.locator('[data-sample-id="stream:retained-x1"]').count()===1,'Reading a copy preserves the original memory record');
  check(await page.locator('.der-constraints dl>div').count()===3,'GCL retains all three constraints');
+ const objects=await page.locator('.origin-model-surface,.origin-slip-surface').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect();return r.height/r.width}));
+ check(objects.every(r=>r>=.65),'Model and response objects retain a comfortably tall proportion');
+ const symbolStyles=await page.locator('.origin-theta,.origin-slip-symbol').evaluateAll(nodes=>nodes.map(n=>getComputedStyle(n).fontStyle));
+ check(symbolStyles.every(s=>s==='normal'),'Origin diagram symbols use upright text');
+
  await shot('redesign-u1-stream','.der-stream');
  const lab=page.locator('[data-design=response-comparison]');
  for(let i=0;i<3;i++){await lab.locator(`[data-response-case=${RESPONSE_CASES[i].id}]`).click();await page.clock.runFor(1800);const r=responseComparison(i),d=await lab.evaluate(el=>({...el.dataset}));check(d.z==='2,1,0'&&d.a===r.a.join(','),'Historical target fixed across case '+i);for(const k of ['p','q'])check(d[k].split(',').every((v,j)=>Math.abs(+v-r[k][j])<1e-12),'Unrounded probabilities share one calculation');check(Math.abs(+d.kl-r.probabilityKL)<1e-12&&+d.l2===r.squaredDistance,'Both losses agree with the shared model');check(Math.abs(+(await lab.locator('[data-kl-value]').innerText())-r.probabilityKL)<.000051,'Visible KL matches exact data');check(+(await lab.locator('[data-l2-value]').innerText())===r.squaredDistance,'Visible squared total matches exact data');}

@@ -15,22 +15,22 @@ function ResponseSlip({ x, frozen = false, placeholder = false }: {
   placeholder?: boolean;
 }) {
   return <g transform={`translate(${x} 106)`} className="origin-slip" data-kind={frozen ? 'frozen' : 'source'}>
-    <rect width="252" height="128" rx="12" className="origin-slip-surface" />
-    <path d="M18 47H234" className="origin-slip-rule" />
-    <text x="27" y="91" className="origin-slip-symbol">{frozen ? 'z₁' : 'h(x₁)'}</text>
+    <rect width="252" height="176" rx="12" className="origin-slip-surface" />
+    <path d="M18 61H234" className="origin-slip-rule" />
+    <text x="27" y="122" className="origin-slip-symbol">{frozen ? 'z₁' : 'h(x₁)'}</text>
     {MODEL_CLASSES.map((name, k) => <g key={name}>
-      <text x={91 + k * 60} y="31" textAnchor="middle" className={`origin-class origin-class-${k}`}>{name}</text>
-      <text x={91 + k * 60} y="91" textAnchor="middle" className={placeholder ? 'origin-placeholder' : 'origin-value'}>{placeholder ? '—' : F.z[k]}</text>
+      <text x={91 + k * 60} y="39" textAnchor="middle" className={`origin-class origin-class-${k}`}>{name}</text>
+      <text x={91 + k * 60} y="122" textAnchor="middle" className={placeholder ? 'origin-placeholder' : 'origin-value'}>{placeholder ? '—' : F.z[k]}</text>
     </g>)}
   </g>;
 }
 
 function CurrentModel({ updated, updating }: { updated: boolean; updating: boolean }) {
-  const layers = NETWORK_NODE_FRACTIONS.map(layer => layer.map(y => y * 46));
+  const layers = NETWORK_NODE_FRACTIONS.map(layer => layer.map(y => y * 76));
   return <g className="origin-model" data-updating={updating}>
-    <rect x="48" y="106" width="210" height="128" rx="12" className="origin-model-surface" />
+    <rect x="48" y="106" width="210" height="176" rx="12" className="origin-model-surface" />
     <text x="153" y="146" textAnchor="middle" className="origin-theta">{updated ? 'θ₁' : 'θ₀'}</text>
-    <g transform="translate(97 167)">
+    <g transform="translate(97 183)">
       {layers.slice(0, -1).flatMap((layer, l) => layer.flatMap((cy, i) => layers[l + 1].map((ny, j) =>
         <line key={`${l}-${i}-${j}`} x1={l * 56} y1={cy} x2={(l + 1) * 56} y2={ny} />)))}
       {layers.flatMap((layer, l) => layer.map((cy, i) => <circle key={`${l}-${i}`} cx={l * 56} cy={cy} r="4" />))}
@@ -46,28 +46,28 @@ export function SnapshotOrigin() {
 
   return <figure className="der-origin" data-front-scene="snapshot-origin" data-step={step} data-progress={p} data-theta={updated ? 1 : 0} data-frozen={copy === 1} data-target={F.z.join(',')}>
     <div className="origin-figure-heading"><h4>复制的是输出，继续学习的是模型。</h4><p>冻结发生在参数更新之前。</p></div>
-    <div className="der-diagram-scroll"><svg className="origin-canvas" viewBox="0 0 1060 310" role="img" aria-label="当前模型产生更新前输出，沿水平路径复制成冻结z₁，然后模型参数变为θ₁，副本保持不变且尚未入池">
+    <div className="der-diagram-scroll"><svg className="origin-canvas" viewBox="0 0 1060 350" role="img" aria-label="当前模型产生更新前输出，沿水平路径复制成冻结z₁，然后模型参数变为θ₁，副本保持不变且尚未入池">
       <text x="153" y="77" textAnchor="middle" className="origin-object-title">唯一当前模型</text>
       <text x="491" y="77" textAnchor="middle" className="origin-object-title">θ₀ 的更新前输出</text>
       <text x="876" y="77" textAnchor="middle" className="origin-object-title">冻结的历史目标</text>
-      <path d="M276 170H346m-7 -5 7 5-7 5" className="origin-forward-link" />
-      <path d="M635 170H731m-7 -5 7 5-7 5" className="origin-copy-link" />
-      <text x="311" y="155" textAnchor="middle" className="origin-link-label">前向</text>
-      <text x="683" y="272" textAnchor="middle" className="origin-link-label">复制</text>
+      <path d="M276 194H346m-7 -5 7 5-7 5" className="origin-forward-link" />
+      <path d="M635 194H731m-7 -5 7 5-7 5" className="origin-copy-link" />
+      <text x="311" y="179" textAnchor="middle" className="origin-link-label">前向</text>
+      <text x="683" y="316" textAnchor="middle" className="origin-link-label">复制</text>
       <CurrentModel updated={updated} updating={step === 2 && p > 0 && !updated} />
       <ResponseSlip x={365} />
       <g opacity={1 - settle}><ResponseSlip x={750} frozen placeholder /></g>
       {copy > 0 && <g data-vector-id="snapshot:frozen-copy" data-values={F.z.join(',')}>
         <g opacity={settle}><ResponseSlip x={750} frozen /></g>
-        <g transform={`translate(${491 + 385 * copy} 170)`} opacity={1 - settle} className="origin-copy-token">
+        <g transform={`translate(${491 + 385 * copy} 194)`} opacity={1 - settle} className="origin-copy-token">
           <rect x="-60" y="-20" width="120" height="40" rx="7" />
           <text x="-43" y="7" className="origin-token-symbol">z₁</text>
           {F.z.map((value, k) => <text key={k} x={-13 + k * 27} y="7" textAnchor="middle">{value}</text>)}
         </g>
       </g>}
-      <text x="153" y="272" textAnchor="middle" className="origin-object-note">{updated ? '参数已更新为 θ₁' : '当前参数 θ₀'}</text>
-      <text x="491" y="272" textAnchor="middle" className="origin-object-note">保留来源，复制数值</text>
-      <text x="876" y="272" textAnchor="middle" className="origin-object-note">{copy === 1 ? '数值固定 · 尚未入池' : '等待更新前的输出副本'}</text>
+      <text x="153" y="316" textAnchor="middle" className="origin-object-note">{updated ? '参数已更新为 θ₁' : '当前参数 θ₀'}</text>
+      <text x="491" y="316" textAnchor="middle" className="origin-object-note">保留来源，复制数值</text>
+      <text x="876" y="316" textAnchor="middle" className="origin-object-note">{copy === 1 ? '数值固定 · 尚未入池' : '等待更新前的输出副本'}</text>
       {copy === 1 && <g transform="translate(991 65)" className="origin-freeze-mark" aria-label="历史目标已冻结">
         <path d="M-4 0v-4a4 4 0 0 1 8 0v4" /><rect x="-7" width="14" height="11" rx="2" /><path d="M0 4v3" />
       </g>}
@@ -77,6 +77,6 @@ export function SnapshotOrigin() {
       '复制输出数值并冻结为 z₁；来源保留，此时模型参数尚未更新。',
       '模型继续更新到 θ₁，冻结副本仍为 (2,1,0)。完成更新后，候选才有机会入池。',
     ][step]}</figcaption>
-    <SceneTransport timeline={t} clips={CLIPS} label="历史目标的来源" showTiming={false} />
+    <SceneTransport timeline={t} clips={CLIPS} label="历史目标的来源" showTiming={false} teachingProgress />
   </figure>;
 }

@@ -25,13 +25,13 @@
 .origin-model line{stroke:#afc1af;stroke-width:1}
 .origin-model circle{fill:#fcfcf8;stroke:#477859;stroke-width:1.4}
 .origin-model[data-updating=true] circle{fill:#c9dfbc}
-.origin-theta{font:italic 28px var(--rk-font-math);fill:var(--der-ink)}
+.origin-theta{font:28px var(--rk-font-math);fill:var(--der-ink)}
 .origin-slip-surface{fill:#fff;stroke:#c6d1c1;stroke-width:1}
 .origin-slip[data-kind=frozen] .origin-slip-surface{fill:#faf7ef;stroke:#c6ab84}
 .origin-slip-rule{fill:none;stroke:#e1e7db;stroke-width:1}
 .origin-slip[data-kind=frozen] .origin-slip-rule{stroke:#e8dfcd}
 .origin-class{font:12px var(--rk-font-body);fill:var(--der-muted)}
-.origin-slip-symbol{font:italic 23px var(--rk-font-math);fill:#70826f}
+.origin-slip-symbol{font:23px var(--rk-font-math);fill:#70826f}
 .origin-value{font:30px var(--rk-font-math);fill:var(--der-ink);font-variant-numeric:tabular-nums}
 .origin-placeholder{font:24px var(--rk-font-math);fill:#b6b7a7}
 .origin-object-note{font:14px var(--rk-font-body);fill:var(--der-muted)}
@@ -46,7 +46,11 @@
 
 .origin-copy-token rect{fill:#fffaf0;stroke:#b99161;stroke-width:1}
 .origin-copy-token text{font:21px var(--rk-font-math);fill:var(--der-ink)}
-.origin-copy-token .origin-token-symbol{font-style:italic;font-size:18px;fill:#8e7045}
+.origin-copy-token .origin-token-symbol{font-style:normal;font-size:18px;fill:#8e7045}
 .origin-slip[data-kind=source] .origin-slip-symbol{font-size:18px}
 .der-stream-ellipsis circle{fill:var(--der-muted)}
 .der-memory-port{fill:var(--der-paper);stroke:#bd8e64;stroke-width:1.4}
+
+.der-stream,.der-origin{overflow:visible}
+.der-stream .motion-stage-menu,.der-origin .motion-stage-menu{box-sizing:border-box}
+.der-stream .motion-progress span,.der-origin .motion-progress span{min-width:250px;font-family:var(--rk-font-body)}
