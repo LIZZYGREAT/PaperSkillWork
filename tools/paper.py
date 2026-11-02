@@ -964,6 +964,39 @@ def cmd_open(args: argparse.Namespace) -> int:
     return subprocess.run([npm, "run", "dev", "--", "--open"], cwd=str(web_dir), check=False).returncode
 
 
+def cmd_open_kit_demo(args: argparse.Namespace) -> int:
+    demo_dir = REUSABLE_KIT / "demo"
+    package_path = demo_dir / "package.json"
+    if not package_path.is_file():
+        raise PaperError("Reusable Kit demo package not found: reusable-kit/demo/package.json")
+    try:
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise PaperError("Cannot read reusable-kit/demo/package.json: {}".format(exc))
+    if not isinstance(package, dict) or not isinstance(package.get("scripts"), dict) or not package["scripts"].get("dev"):
+        raise PaperError("reusable-kit/demo/package.json must define an npm 'dev' script")
+
+    npm = shutil.which("npm")
+    if not npm:
+        raise PaperError("npm was not found. Install Node.js and npm, then retry.")
+
+    if not (demo_dir / "node_modules" / "vite" / "package.json").is_file():
+        install_command = [npm, "ci"] if (demo_dir / "package-lock.json").is_file() else [npm, "install"]
+        print("Installing Reusable Kit demo dependencies...", flush=True)
+        install_result = subprocess.run(install_command, cwd=str(demo_dir), check=False)
+        if install_result.returncode != 0:
+            print("Dependency installation failed with exit code {}.".format(install_result.returncode), file=sys.stderr)
+            return install_result.returncode
+
+    print("Opening the Reusable Kit Gallery (/?demo=gallery). Vite will print the actual local address.", flush=True)
+    print("Starting the local development server. Press Ctrl+C to stop it.", flush=True)
+    return subprocess.run(
+        [npm, "run", "dev", "--", "--host", "127.0.0.1", "--open", "/?demo=gallery"],
+        cwd=str(demo_dir),
+        check=False,
+    ).returncode
+
+
 def cmd_stage(args: argparse.Namespace) -> int:
     folder, config = read_paper(args.paper_id)
     validate_or_raise(config, args.paper_id)
@@ -2116,6 +2149,9 @@ def build_parser() -> argparse.ArgumentParser:
     open_web.add_argument("paper_id")
     open_web.add_argument("--edition", choices=("enhanced", "final"), default="enhanced")
     open_web.set_defaults(func=cmd_open)
+
+    open_kit = subparsers.add_parser("open-kit-demo", help="start the Reusable Kit demo and open its Gallery")
+    open_kit.set_defaults(func=cmd_open_kit_demo)
     return parser
 
 
