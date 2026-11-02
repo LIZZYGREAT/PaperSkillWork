@@ -23,7 +23,7 @@ try {
     await scene.locator('[data-replay]').click();
     const started = Date.now(), seen = new Set(), captured = new Set(), samples = [];
     const count = name === 'reservoir' ? RESERVOIR_CLIPS.length : LESSON_DURATIONS[name].length;
-    while (Date.now() - started < 30000) {
+    while (Date.now() - started < 45000) {
       const value = await scene.evaluate(el => ({
         clip: +el.dataset.clip, progress: +el.dataset.progress, status: el.dataset.status,
         focus: el.querySelector('.lesson-cue [aria-current=step]')?.textContent,

@@ -1,6 +1,6 @@
-/** Presentation timing only. Algorithm state and commit thresholds stay in their models. */
+/** Match D1's readable action windows; never squeeze multiple causal actions into one blink. */
 export const LESSON_DURATIONS = {
-  'der-step': [2000, 2400, 2200, 2200, 1800],
-  augmentation: [2200, 1600, 2200, 2400],
-  'der-plus': [2400, 2400, 2400],
+  'der-step': [2200, 6200, 4600, 3400, 3200],
+  augmentation: [3600, 2600, 3600, 3400],
+  'der-plus': [4400, 4200, 4800],
 } as const;

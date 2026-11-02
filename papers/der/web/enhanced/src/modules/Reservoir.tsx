@@ -12,13 +12,13 @@ import './later-chapters.css';
 
 const MAIN_CLIPS = RESERVOIR_CLIPS.slice(2);
 const ATTENTION = ['抽签', '比较', '选留', '提交'];
-function RecordTile({ record, x, y, width = 280, opacity = 1 }: {
-  record: MemoryRecord; x: number; y: number; width?: number; opacity?: number;
+function RecordTile({ record, x, y, width = 280, opacity = 1, hideIcon = false }: {
+  record: MemoryRecord; x: number; y: number; width?: number; opacity?: number; hideIcon?: boolean;
 }) {
   return <g transform={'translate(' + x + ' ' + y + ')'} opacity={opacity}
     data-record={record.id} data-frozen={record.z.join(',')} data-origin={record.origin}>
     <rect width={width} height="96" rx="12" className="rv2-record" />
-    <ModelPixel model={record.model} x={14} y={26} size={43} />
+    {!hideIcon && <ModelPixel model={record.model} x={14} y={26} size={43} />}
     <text x="72" y="29" className="rv2-record-title">{record.id} <tspan className="rv2-category">{MODEL_CLASSES[record.model]}</tspan></text>
     <text x="72" y="54" className="rv2-note">z 来自更新前 {record.origin}</text>
     <text x="72" y="80" className="rv3-vector lesson-math">z = ({record.z.join(', ')})</text>
@@ -42,7 +42,7 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
   const focus = p < .18 ? 0 : p < .38 ? 1 : p < .9 ? 2 : 3;
   const slotY = (slot: number) => 140 + slot * 126;
   const moving = windowAt(p, .38, .82), leaving = windowAt(p, .38, .56);
-  const points = [{ x: 316, y: 228 }, { x: 354, y: 380 }, { x: 690, y: 380 }, { x: 744, y: slotY(step.slot ?? 0) + 48 }] as const;
+  const points = [{ x: 71.5, y: 227.5 }, { x: 71.5, y: 420 }, { x: 700, y: 420 }, { x: 789.5, y: slotY(step.slot ?? 0) + 47.5 }] as const;
   const at = curve(moving, ...points);
   const originFade = windowAt(p, accepted ? .28 : .4, accepted ? .38 : .7);
   const outcome = empty ? '空槽直接接收' : accepted ? 'j=' + step.j + ' < K，替换 slot ' + step.slot : 'j=' + step.j + ' ≥ K，保留原来的记忆';
@@ -82,8 +82,8 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
         <text x="389" y="247" className="rv3-comparison lesson-math">{focus === 0 ? (empty ? '|M| < K' : 'j = ?') : empty ? '直接追加' : 'j = ' + step.j + (accepted ? ' < K' : ' ≥ K')}</text>
         <text x="389" y="279" className="later-svg-note">{focus === 0 ? (empty ? '空槽可用，不需要抽签' : '先观察号码，再看它是否小于 K') : accepted ? '只改变 slot ' + step.slot : '旧记录全部保留'}</text>
       </g>
-      <g opacity={focus < 2 ? 1 : .35}><LessonPath d="M324 228H353" /></g>
-      {accepted && focus >= 1 && <LessonPath d={'M678 228C710 228 706 ' + (slotY(step.slot!) + 48) + ' 742 ' + (slotY(step.slot!) + 48)} progress={windowAt(p, .18, .32)} />}
+      <g opacity={focus < 2 ? 1 : .35}><LessonPath d="M316 228H364" /></g>
+      {accepted && <LessonPath d="M665 228H729" progress={windowAt(p, .18, .32)} />}
       {!accepted && focus >= 1 && <g><path d="M686 216L700 230M700 216L686 230" className="rv3-reject-mark"/><text x="693" y="255" textAnchor="middle" className="later-svg-note">止于此</text></g>}
 
       <rect x="730" y="68" width="360" height="326" rx="20" className="rv2-memory" />
@@ -96,14 +96,15 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
       </g>)}
       {state.M.map((record, slot) => <RecordTile key={record.id} record={record} x={754} y={slotY(slot)} width={312}
         opacity={!committed && step.decision === 'replace' && slot === step.slot ? 1 - leaving : 1} />)}
-      {!committed && <RecordTile record={step.candidate}
+      {!committed && <RecordTile record={step.candidate} hideIcon={accepted}
         x={accepted && p >= .38 ? 754 : 36} y={accepted && p >= .38 ? slotY(step.slot!) : 180}
         width={accepted && p >= .38 ? 312 : 280}
         opacity={accepted && p >= .38 ? windowAt(p, .8, .9) : 1 - originFade} />}
       {accepted && focus >= 1 && <rect x="750" y={slotY(step.slot!) - 4} width="320" height="104" rx="15" fill="none" className="rv3-slot-focus" opacity={windowAt(p, .18, .32)} />}
-      {accepted && moving > 0 && moving < 1 && <g data-record-token data-position={at.x + ',' + at.y}>
+      {accepted && !committed && <g data-record-token data-position={at.x + ',' + at.y}>
         <MotionTrail points={points} progress={moving} className="lesson-record-trail" />
-        <g transform={'translate(' + (at.x - 14) + ' ' + (at.y - 14) + ')'}><rect width="28" height="28" rx="7" className="rv3-token"/><ModelPixel model={step.candidate.model} x={4} y={4} size={20}/></g>
+        <ModelPixel model={step.candidate.model} x={at.x-21.5} y={at.y-21.5} size={43}/>
+        <text x={at.x+32} y={at.y+5} className="rv3-vector lesson-math" opacity={windowAt(p,.38,.46)*(1-windowAt(p,.67,.78))}>z = ({step.candidate.z.join(', ')})</text>
       </g>}
       <text x="36" y="431" className="later-svg-note">{committed ? '提交完成：M=[' + state.M.map(r => r.id).join(', ') + ']，N=' + state.N : '候选的 z 始终固定；只有提交时才改变 M 与 N。'}</text>
     </svg></div>

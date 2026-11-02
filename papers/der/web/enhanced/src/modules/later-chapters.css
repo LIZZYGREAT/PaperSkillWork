@@ -47,3 +47,8 @@
 .dp2-response-reference[data-active=false] .dp2-dark-direction,.dp2-response-reference[data-active=false] .dp2-label-direction{opacity:.35}.dp2-response-reference[data-active=false] .dp2-track{stroke:#e0e6d9}
 
 .wb2-dark-copy{fill:#668796}.wb2-label-copy{fill:#b59162}
+.dp2-input-row{fill:#fffefa;stroke:#c5d3bd;stroke-width:1}
+.dp2-objective-panel{fill:#f1f5e9;stroke:#c0d0b4;stroke-width:1}
+.dp2-stage .dp2-loss-formula{font-size:23px}
+.tg-forward-signal{fill:none;stroke:#779969;stroke-width:1.6;opacity:.65}
+.tg-gradient-signal{fill:none;stroke:#bc955b;stroke-width:1.6;opacity:.65}
