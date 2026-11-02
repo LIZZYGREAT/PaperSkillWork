@@ -24,15 +24,15 @@ Node24.18.0 / Vite6.4.3 / Edge156.0.4314.50。相邻 PaperSkill HEAD=c6d30defb90
 
 ## W9 Learning Audit
 
-状态：PENDING，待用户最终审查。下列为人审问题，Agent 不代填 PASS。
+状态：PASS。2026-11-03 用户明确要求将 W9 登记为 complete；据此记录用户本人的最终验收。下列审查项按用户的整体验收确认通过。
 
-- [ ] 能从有限回放不足推导出历史响应、表示选择、在线选留、增强和标签监督的需要。
-- [ ] 能区分原图、训练视图、当前输出和冻结 z；能解释 KL 与 logits 匹配约束的不同。
-- [ ] 能复述先读旧 M → 合并损失 → 一次 θ 更新 → 更新后选留，拒收不撤销训练。
-- [ ] 能从独立工作台重建空池、第2轮回放、第3轮先用后换、第4轮训练后拒收及跨轮继承。
-- [ ] 能区分普通只读预测与训练、Task-IL 的测试任务身份例外。
-- [ ] 正文/公式/动画共同支持理解，Reference 没有承担主线必须首先说明的内容。
-- [ ] 新场景的视觉主次、运动、停留、控制与阅读节奏符合预期。
+- [x] 能从有限回放不足推导出历史响应、表示选择、在线选留、增强和标签监督的需要。
+- [x] 能区分原图、训练视图、当前输出和冻结 z；能解释 KL 与 logits 匹配约束的不同。
+- [x] 能复述先读旧 M → 合并损失 → 一次 θ 更新 → 更新后选留，拒收不撤销训练。
+- [x] 能从独立工作台重建空池、第2轮回放、第3轮先用后换、第4轮训练后拒收及跨轮继承。
+- [x] 能区分普通只读预测与训练、Task-IL 的测试任务身份例外。
+- [x] 正文/公式/动画共同支持理解，Reference 没有承担主线必须首先说明的内容。
+- [x] 新场景的视觉主次、运动、停留、控制与阅读节奏符合预期。
 
 ## W9 Evidence Audit
 
@@ -42,8 +42,8 @@ M03 的 source_locator 移除原先误写的“Algorithm 3 and proof”：附录
 
 原图17项仍 REFERENCE_ONLY，未发布 PDF/原表/权利不明素材。ModelPixel/SVG 图元为原创教学绘制；Kit 源码副本保持 candidate，不冒称已批准公共组件。
 
-- [ ] 用户确认条件、来源、解释层级与结论边界清楚。
-- [ ] 用户确认最终教学效果与证据表述。
+- [x] 用户确认条件、来源、解释层级与结论边界清楚。
+- [x] 用户确认最终教学效果与证据表述。
 
 ## W9 Visual QA Record
 
@@ -58,7 +58,7 @@ M03 的 source_locator 移除原先误写的“Algorithm 3 and proof”：附录
 | FULLSCREEN_REAL | NOT_RUN | Windows UI 工具因无法可靠识别当前浏览器 URL 安全终止；不以 headless 尺寸或专注模式冒充 F11。 |
 | VISUAL_REVIEW | PASS (Agent范围) | 已实看两档代表状态：正式首屏、KL/Logits、生命周期、Reservoir替换/拒收、单步更新/写入、增强、DER++不同来源、四轮写入/拒收/预测、证据协议与反例。已修复端点缺口、线穿文字、候选擦过网络和占用槽透出“空槽”等缺陷。 |
 | REGRESSION | PASS (原W8记录) | 原W8时核心源码/两个关键帧无差异的结论仅适用于b78cb55。2026-10-29用户追加截图反馈明确授权正文侧栏与版式修订；本轮不再宣称布局源码未改，计算模型与九阶段时序保持不变，结果见下方追加记录。 |
-| HUMAN_ACCEPTANCE | PENDING | W9 留给用户，不由机器/Agent代签。 |
+| HUMAN_ACCEPTANCE | PASS | 用户于 2026-11-03 明确要求将 W9 登记为 complete；依据该本人确认记录。 |
 
 实际浏览器：
 - npm run test:browser（无过滤）2364断言通过；覆盖正式页与全部场景、旧生命周期回归、暂停/续播/回退、键盘、reduced motion、模式切换、公式、子路径。
@@ -81,11 +81,11 @@ NOT_RUN。W9 用户通过后再按 docs/UPSTREAM_RELEASE.md，由用户在既有
 
 ## Open Issues
 
-1. W9 用户最终学习/视觉/证据审查待进行。
-2. 真实浏览器 F11 未执行；当前官方检查器版本无法通过网络核实，发布前需补验。
+1. `FULLSCREEN_REAL=NOT_RUN`：未执行真实浏览器 F11，不能将 1920×1080 布局模拟当作 F11 通过。
+2. `UPSTREAM_SYNTAX` / `UPSTREAM_OUTPUT=NOT_RUN`：官方检查器版本未完全匹配；W10 发布前需按官方流程核验。
 3. 未发现其余阻塞性的本地构建、数学、状态、资源或已检桌面布局缺陷。
 
-Overall: PENDING
+Overall: PASS
 
 ## W9 截图反馈复核（2026-10-29）
 
@@ -242,7 +242,7 @@ S7/S8 的 W8 工程实现和 Agent 视觉复核已完成：双视口生产浏览
 | FULLSCREEN_LAYOUT | PASS；1920×1080仅布局模拟 |
 | FULLSCREEN_REAL | NOT_RUN：Computer Use 无法可靠识别当前浏览器URL而停止，已停止桌面输入 |
 | 当前官方上游检查 | NOT_RUN：相邻检查器未全部匹配当前官方版本；本地 syntax/output 诊断均PASS，不能冒称当前官方全通过 |
-| 结构 | python tools/paper.py check der：PASS；W9/W10仍PENDING |
+| 结构 | python tools/paper.py check der：PASS；W9 complete（用户授权，2026-11-03），W10 pending |
 
 三态计算：z=(2,1,0) 固定；a=(2,1,0) 时 KL=0、L2=0；a=(2,0,1) 时 KL≈0.154698、L2=2、L2梯度=(0,−2,2)；a=(3,2,1) 时 KL=0、L2=3。D1 独立未来响应 aⱼ=(1,2,0) 与比较时刻明确区分。
 
@@ -268,3 +268,7 @@ Agent 阅读复核：有限回放自然引出标签的信息缺口；同一输�
 2026-10-30 S2默认展开：首次进入显示两侧完整响应与说明，保留收起/键盘展开；按用户最新指示覆盖旧的默认隐藏要求。build PASS，front-only 两档桌面共200项PASS，已看两档默认展开截图；无浏览器资源错误。证据位于当前会话visualizations/der-default-expanded/s2-default-expanded-1440.png、s2-default-expanded-1920.png。未改D1或算法数值。
 
 2026-10-30 删除S2展开/收起按钮：控件、状态与条件渲染已移除，柱条及说明直接常驻显示。build PASS；front-only 两档桌面198项PASS，包含按钮不存在与内容始终显示的断言。已看生产截图，证据为当前会话visualizations/der-response-static/s2-response-1440.png、s2-response-1920.png。
+
+## W9 用户最终验收（2026-11-03）
+
+评审人：用户。用户于当前对话明确要求将 W9 登记为 `complete`；据此将 `HUMAN_ACCEPTANCE` 与 `Overall` 记录为 `PASS`，并通过 `python tools/paper.py stage der W9 complete --reviewed-by 用户 --note ...` 写入阶段状态。`FULLSCREEN_REAL` 仍为 `NOT_RUN`，官方 `UPSTREAM_SYNTAX` / `UPSTREAM_OUTPUT` 也仍为 `NOT_RUN`；未将这些项目冒记为通过。W10 仍为 `pending`，未执行 Import、Preflight、推送或 PR。
