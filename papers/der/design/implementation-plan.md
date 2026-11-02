@@ -953,3 +953,8 @@ build PASS。实际查看U4标题与纹样位置；最终全篇浏览器与截�
 - SOURCE_BUILD PASS（tsc/Vite86模块）；UPSTREAM_SYNTAX PASS（56源文件，TypeScript解析）。fetch upstream main退出0，HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c、官方upstream/main 792bd8f24b9203c4c959a5006f570c38cbcfa7de；语法工作/官方blob均2bcfa6f815054ee498574c51cef05f0c315b4298。输出脚本仍不匹配：工作1a58ca06bd9fa47b6730904f1622189011cc32fe / 官方9ec76b6974f262fca7b9611c4a485dd2275fe76c，UPSTREAM_OUTPUT NOT_RUN。相邻工作树不改动。
 - SUBPATH_ASSETS PASS；Node24.18.0 / Chromium153.0.8010.12。FULLSCREEN_LAYOUT为1920×1080，FULLSCREEN_REAL NOT_RUN（headless，无真实F11）。未代填W9人审；不执行发布/push/PR；5199用户预览保留。正式run读取与保留必要证据后按确切目录清理。
 - 正式run清理已返回CLEANED，Test-Path=False。
+
+### 2026-11-02 工作台0%当前输入可见性修复
+用户截图确认当前样本在暂停初态缺失，根因是appear=windowAt(p,0,.2)把0%输入设为完全透明。移除输入卡的入场透明度与位移，首帧即在最终位置显示当前输入；保留选留结束时的淡出。四轮起点、重播、查询起点统一处理，前向信号/输出和权威状态时序不变。
+build PASS（86模块）；两桌面W8共1006断言PASS，新增四轮和查询0%源输入的可见性、身份与重播检查。正式定向run-2026-11-02T15-43-17-656Z六捕获PASS，输入计算样式opacity=1，GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS通过；已读报告并实际查看1440初始截图，必要图/报告保留于会话der-workbench-input。相邻语法检查56源文件PASS（沿用本会话已核对脚本；本次未重新fetch，非新的官方版本核实）。F11仍NOT_RUN，不代填人审。5199预览保留，未发布/push/PR。
+- 本次定向run清理返回CLEANED，Test-Path=False。

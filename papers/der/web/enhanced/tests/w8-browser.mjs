@@ -97,6 +97,13 @@ export async function fullW8Checks({page,base,check,shot}){
  check(await rv.getAttribute('data-memory')==='x₁,x₃',"Manual legal replacement persists into the next rejected input");
  await page.emulateMedia({reducedMotion:'no-preference'});
  await page.goto(base+"?focus=workbench");const wb=page.locator("[data-scene=workbench]");
+ for(const start of [0,5,10,15,20]){
+  await wb.locator('select').selectOption(String(start));
+  const input=await wb.locator('.wb-current-input').evaluate(el=>({opacity:getComputedStyle(el).opacity,text:el.textContent,transform:el.getAttribute('transform')}));
+  check(await wb.getAttribute('data-progress')==='0'&&input.opacity==='1'&&!input.transform,'Every paused round/query start shows its input immediately at its final position');
+  check(input.text.includes(start===20?'查询 u':['x₁','x₂','x₃','x₄'][start/5]),'Initial input identity matches the selected round/query');
+ }
+ await wb.locator('[data-replay]').click();check(await wb.locator('.wb-current-input').getAttribute('opacity')==='1','Replay starts with the current input visible before time advances');await wb.locator('select').selectOption('0');
  check(!(await wb.locator('.wb-handoff-rounds').innerText()).includes('替换'),"Initial round navigation does not expose future reservoir outcomes");
  const recordNodes=await wb.locator('[data-instance-id]').elementHandles();
  const network=await wb.locator("[data-network]").elementHandle(),memory=await wb.locator("[data-workbench-memory]").elementHandle();
