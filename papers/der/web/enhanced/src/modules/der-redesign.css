@@ -48,6 +48,7 @@
 .origin-copy-token text{font:21px var(--rk-font-math);fill:var(--der-ink)}
 .origin-copy-token .origin-token-symbol{font-style:normal;font-size:18px;fill:#8e7045}
 .origin-slip[data-kind=source] .origin-slip-symbol{font-size:18px}
+.origin-value-trail{fill:none;stroke:#c6ab84;stroke-width:2;stroke-linecap:round;opacity:.5}
 .der-stream-ellipsis circle{fill:var(--der-muted)}
 .der-memory-port{fill:var(--der-paper);stroke:#bd8e64;stroke-width:1.4}
 
