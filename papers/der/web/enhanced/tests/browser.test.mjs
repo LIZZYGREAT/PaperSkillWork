@@ -1,3 +1,4 @@
+import {augmentationChecks} from './augmentation-browser.mjs';
 import {teachingFrontChecks} from "./teaching-front.mjs";
 import {formulaLessonChecks} from "./formula-lessons.mjs";
 import {reviewFeedbackChecks} from "./review-feedback.mjs";
@@ -40,6 +41,7 @@ try{
   page.on("pageerror",e=>errors.push(e.message));page.on("requestfailed",r=>errors.push(r.url()));page.on("response",r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`)});
   await page.clock.install();await page.clock.pauseAt(new Date());
   const shot=async(name,selector)=>{if(!output)return;const target=selector?page.locator(selector):page;await target.screenshot({path:resolve(output,`${name}-${width}.png`)});};
+  if(process.argv.includes("--augmentation-only")){await augmentationChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`AUGMENTATION_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   if(process.argv.includes("--lifecycle-only")){await lifecycleBrowserChecks({page,base,check,shot});await lifecycleFocusBrowserChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`LIFECYCLE_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   if(process.argv.includes("--front-only")){await teachingFrontChecks({page,base,check,shot});await formulaLessonChecks({page,base,check,shot});await reviewFeedbackChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`FRONT_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}
   if(process.argv.includes("--formula-only")){await formulaLessonChecks({page,base,check,shot});check(!errors.length,`No browser errors: ${errors}`);console.log(`FORMULA_BROWSER_PASS ${width}x${height} assertions=${count}`);await context.close();continue;}

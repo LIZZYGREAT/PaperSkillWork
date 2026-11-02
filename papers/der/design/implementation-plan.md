@@ -922,3 +922,12 @@ build PASS。实际查看U4标题与纹样位置；最终全篇浏览器与截�
 - PelicanIllustration仅增加可选region/mirrored/frame接口；原有调用默认不变。独立运动几何来自augmentation-motion，所有区域保持320:190比例、在原图内。四个新增测试核验源像素位置精确对应、终点一致、未来视图来自原图、冻结时序。
 - 首次build发现缩略图宽高传入字符串，已改为数值。浏览器几何检查原先把被SVG裁掉的内部绘画路径误当作对象边界；现在对这类图像检查实际SVG视口投影，并保留所有语义对象/文字原检查。29数学/状态测试与两布局W8 984断言PASS。另发现摘要数学字号被通用text选择器覆盖，已用本场景作用域恢复数学字号。
 - 后续仅继续本场景的定向中帧、真实时钟播放和正式Visual QA，用户未授权扩大修改其他已确认场景。
+
+### 数据增强最终定向验证
+- SOURCE_BUILD PASS（tsc+Vite86模块）。29数学/状态测试PASS；既有W8两布局984断言PASS；新增augmentation-only两布局38断言PASS，检查空训练窗、复制起点像素/尺寸对齐、连续移动、落地交接、原图DOM/内容完全保留、恒定目标、镜像精确变换与真实数学字号，以及暂停和reduced-motion终态。
+- 两条分支分别完整实速播放：center 22136ms、flip 22083ms，无mock时钟，均完整经过四阶段，原图viewBox始终0 0 320 190，历史target标识保持fixed-symbolic-z。实际检查两布局选区/复制中帧、未来裁剪、翻转过程/终态、共同目标，未发现标题/公式遮挡；原图、目标窗口和z位置固定。
+- 正式Visual QA本次确切run-2026-11-02T14-21-57-884Z：16个真实HTTP /der-review/捕获（八状态×1440×900、1920×1080），GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS PASS，零诊断。已读报告并查看正式桌面复制/大桌面翻转截图和真实播放中帧；报告与必要PNG/视频保留于会话der-augmentation。
+- 当前官方检查核实：fetch upstream main退出0，HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c、upstream/main e322c13c48747afabc34e3052b826fcb94fc0eba。语法脚本工作/官方blob同为2bcfa6f815054ee498574c51cef05f0c315b4298，56源文件TypeScript解析PASS。输出检查器仍不符（工作1a58ca06bd9fa47b6730904f1622189011cc32fe / 官方9ec76b6974f262fca7b9611c4a485dd2275fe76c），UPSTREAM_OUTPUT NOT_RUN；相邻工作树不修改。
+- SUBPATH_ASSETS PASS（真实HTTP预览和正式runner资源），Node24.18.0 / Chromium153.0.8010.12。FULLSCREEN_LAYOUT覆盖1920×1080，FULLSCREEN_REAL NOT_RUN（headless，无真实F11）；未代填W9人审。5199已有用户预览服务继续使用，无需替换或停止。
+- 最后仅把“图像不被压扁”这一实现描述改为直接观察提示“对照翻转前后的左右位置”，再次build；图形、时序、计算不变。其他已确认场景没有设计改动，未运行发布/push/PR。正式run在报告阅读、放大复核和轻量留存后按确切路径清理。
+- 最终定向run已返回CLEANED，Test-Path=False；最后文案修订后build PASS。

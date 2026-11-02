@@ -11,7 +11,8 @@
     "test:browser": "node tests/browser.test.mjs",
     "test:playback": "node tests/lifecycle-playback.mjs && node tests/playback.test.mjs",
     "test:workbench-layout": "node tests/workbench-layout.test.mjs",
-    "test:lesson-playback": "node tests/lesson-playback.test.mjs"
+    "test:lesson-playback": "node tests/lesson-playback.test.mjs",
+    "test:augmentation": "node tests/browser.test.mjs --augmentation-only"
   },
   "dependencies": {
     "react": "^18.3.1",

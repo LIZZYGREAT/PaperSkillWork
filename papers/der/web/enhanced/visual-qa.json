@@ -521,7 +521,169 @@
       "path": "./?focus=augmentation",
       "states": [
         {
-          "id": "shared-target",
+          "id": "select-source",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "0"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1144
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "copy-enlarge-middle",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "0"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2860
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "training-view-ready",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "0"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 4940
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "freeze-copy",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "1"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2520
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "future-crop",
+          "actions": [
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "2"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 5264
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "flip-scan",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".aug-view-controls button:nth-of-type(2)"
+            },
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "2"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 3360
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "flip-complete",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".aug-view-controls button:nth-of-type(2)"
+            },
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "2"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 5376
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "common-target",
           "actions": [
             {
               "type": "selectOption",
@@ -534,17 +696,25 @@
             },
             {
               "type": "wait",
-              "milliseconds": 3230
+              "milliseconds": 3840
             },
             {
               "type": "click",
               "selector": "[data-scene=augmentation] [data-play]"
-            },
-            {
-              "type": "scrollIntoView",
-              "selector": "[data-scene=augmentation] .aug-canvas"
             }
           ]
+        }
+      ],
+      "computedStyles": [
+        {
+          "selector": ".aug3-match",
+          "property": "font-size",
+          "equals": "25px"
+        },
+        {
+          "selector": ".aug3-art",
+          "property": "overflow",
+          "equals": "hidden"
         }
       ]
     },
