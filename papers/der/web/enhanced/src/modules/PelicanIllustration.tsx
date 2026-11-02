@@ -2,7 +2,7 @@ import { useId } from "react";
 
 export type ImageView = "original" | "saved" | "center" | "flip";
 export type ImageRegion = { x: number; y: number; w: number; h: number };
-export function PelicanIllustration({ view, label, x, y, width, height, amount = 1, className = "p1-source-art", region, mirrored = false, frame = true }: { view: ImageView; label: string; x?: number; y?: number; width?: number; height?: number; amount?: number; className?: string; region?: ImageRegion; mirrored?: boolean; frame?: boolean }) {
+export function PelicanIllustration({ view, label, x, y, width, height, amount = 1, className = "p1-source-art", region, mirrored = false, frame = true, rotation = 0, rotationScale = 1, rotationOffsetX = 0 }: { view: ImageView; label: string; x?: number; y?: number; width?: number; height?: number; amount?: number; className?: string; region?: ImageRegion; mirrored?: boolean; frame?: boolean; rotation?: number; rotationScale?: number; rotationOffsetX?: number }) {
   const clipId = useId().replace(/:/g, "");
   const transforms: Record<ImageView, { scale: number; x: number; y: number }> = {
     original: { scale: 1, x: 0, y: 0 },
@@ -13,7 +13,7 @@ export function PelicanIllustration({ view, label, x, y, width, height, amount =
   const target = transforms[view];
   const t = Math.max(0, Math.min(1, amount));
   const transform = { x: target.x * t, y: target.y * t, scale: 1 + (target.scale - 1) * t };
-  return <svg className={className} x={x} y={y} width={width} height={height} viewBox={region ? `${region.x} ${region.y} ${region.w} ${region.h}` : '0 0 320 190'} role="img" aria-label={label} data-image-identity="synthetic-source-x1" data-image-view={view} data-image-region={region ? [region.x,region.y,region.w,region.h].join(',') : undefined} data-mirrored={mirrored}>
+  return <svg className={className} x={x} y={y} width={width} height={height} viewBox={region ? `${region.x} ${region.y} ${region.w} ${region.h}` : '0 0 320 190'} role="img" aria-label={label} data-image-identity="synthetic-source-x1" data-image-view={view} data-image-region={region ? [region.x,region.y,region.w,region.h].join(',') : undefined} data-mirrored={mirrored} data-rotation={rotation} data-rotation-scale={rotationScale}>
     <defs>
       <clipPath id={clipId}><rect width="320" height="190" rx="9" /></clipPath>
       <linearGradient id={`${clipId}-sky`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#392b49"/><stop offset=".58" stopColor="#a25265"/><stop offset="1" stopColor="#ef9a66"/></linearGradient>
@@ -22,6 +22,7 @@ export function PelicanIllustration({ view, label, x, y, width, height, amount =
     </defs>
     <g clipPath={`url(#${clipId})`}>
       <g transform={mirrored ? `translate(${region ? 2*region.x+region.w : 320} 0) scale(-1 1)` : view === "flip" ? `translate(${320 * t} 0) scale(${1 - 2 * t} 1)` : undefined}>
+        <g transform={(rotation || rotationScale!==1 || rotationOffsetX) ? `translate(${rotationOffsetX} 0) translate(160 95) rotate(${rotation}) scale(${rotationScale}) translate(-160 -95)` : undefined}>
         <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.scale})`}>
           <rect width="320" height="190" fill={`url(#${clipId}-sky)`} />
           <circle cx="274" cy="78" r="47" fill={`url(#${clipId}-sun)`} />
@@ -83,6 +84,7 @@ export function PelicanIllustration({ view, label, x, y, width, height, amount =
             <path d="M202 62Q215 68 232 62" fill="none" stroke="#dc684e" strokeWidth="1.2" opacity=".7" />
             <path d="M126 97Q139 106 155 99" fill="none" stroke="#fffdf7" strokeWidth="1.5" opacity=".8" />
           </g>
+        </g>
         </g>
       </g>
     </g>

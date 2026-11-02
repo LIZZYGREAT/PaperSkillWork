@@ -686,6 +686,10 @@
           "id": "common-target",
           "actions": [
             {
+              "type": "click",
+              "selector": ".aug-view-controls button:nth-of-type(3)"
+            },
+            {
               "type": "selectOption",
               "selector": "[data-scene=augmentation] select",
               "value": "3"
@@ -697,6 +701,84 @@
             {
               "type": "wait",
               "milliseconds": 3840
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "rotate-middle",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".aug-view-controls button:nth-of-type(3)"
+            },
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "2"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2800
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "rotate-framing",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".aug-view-controls button:nth-of-type(3)"
+            },
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "2"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 4200
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            }
+          ]
+        },
+        {
+          "id": "rotate-complete",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".aug-view-controls button:nth-of-type(3)"
+            },
+            {
+              "type": "selectOption",
+              "selector": "[data-scene=augmentation] select",
+              "value": "2"
+            },
+            {
+              "type": "click",
+              "selector": "[data-scene=augmentation] [data-play]"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 5376
             },
             {
               "type": "click",
