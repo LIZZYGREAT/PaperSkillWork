@@ -12,7 +12,13 @@ export function LessonCue({ steps, active, title, detail }: {
   </div>;
 }
 
-/** D1's masked stroke: dash spacing stays constant as the route is revealed. */
+export function LessonArrowHead({ id, color }: { id: string; color: string }) {
+  return <marker id={id} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto" overflow="visible">
+    <path d="M1.5 1.5L8 5L1.5 8.5" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </marker>;
+}
+
+/** Reveal the shaft only; the arriving arrowhead must never be cut by the stroke mask. */
 export function LessonPath({ d, progress = 1, tone = 'data', className = '' }: {
   d: string;
   progress?: number;
@@ -23,13 +29,12 @@ export function LessonPath({ d, progress = 1, tone = 'data', className = '' }: {
   const colors = { data: '#58836c', history: '#668796', gradient: '#a67840' };
   return <g className={`lesson-path ${className}`} data-path-tone={tone} data-path-progress={progress}>
     <defs>
-      <mask id={`${id}-mask`} maskUnits="userSpaceOnUse" x="0" y="0" width="1120" height="640">
+      <mask id={`${id}-mask`} maskUnits="userSpaceOnUse" x="-12" y="-12" width="1320" height="840">
         <path d={d} pathLength="1" fill="none" stroke="white" strokeWidth="10" strokeDasharray="1" strokeDashoffset={1 - progress} />
       </mask>
-      <marker id={`${id}-head`} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
-        <path d="M1 1L7 4L1 7" fill="none" stroke={colors[tone]} strokeWidth="1.3" />
-      </marker>
+      <LessonArrowHead id={`${id}-head`} color={colors[tone]} />
     </defs>
-    <path d={d} fill="none" stroke={colors[tone]} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={tone === 'gradient' ? '4 4' : undefined} mask={`url(#${id}-mask)`} markerEnd={progress >= .99 ? `url(#${id}-head)` : undefined} />
+    <path className="lesson-shaft" d={d} fill="none" stroke={colors[tone]} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={tone === 'gradient' ? '4 4' : undefined} mask={`url(#${id}-mask)`} />
+    <path className="lesson-tip" d={d} fill="none" stroke="none" markerEnd={progress >= 1 ? `url(#${id}-head)` : undefined} aria-hidden="true" />
   </g>;
 }

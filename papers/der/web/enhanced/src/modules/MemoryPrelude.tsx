@@ -53,8 +53,8 @@ export function SnapshotOrigin() {
       <text x="153" y="55" textAnchor="middle" className="origin-object-title">唯一当前模型</text>
       <text x="491" y="55" textAnchor="middle" className="origin-object-title">θ₀ 的更新前输出</text>
       <text x="876" y="55" textAnchor="middle" className="origin-object-title">冻结的历史目标</text>
-      <path d="M276 194H346m-7 -5 7 5-7 5" className="origin-forward-link" />
-      <path d="M635 194H731m-7 -5 7 5-7 5" className="origin-copy-link" />
+      <path d="M258 194H365m-7 -5 7 5-7 5" className="origin-forward-link" />
+      <path d="M617 194H750m-7 -5 7 5-7 5" className="origin-copy-link" />
       <text x="311" y="179" textAnchor="middle" className="origin-link-label">前向</text>
       <text x="683" y="316" textAnchor="middle" className="origin-link-label">复制</text>
       <CurrentModel updated={updated} updating={step === 2 && p > 0 && !updated} />

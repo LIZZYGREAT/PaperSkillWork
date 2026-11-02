@@ -82,8 +82,8 @@ export default function Reservoir({ focused = false }: { focused?: boolean; chap
         <text x="389" y="247" className="rv3-comparison lesson-math">{focus === 0 ? (empty ? '|M| < K' : 'j = ?') : empty ? '直接追加' : 'j = ' + step.j + (accepted ? ' < K' : ' ≥ K')}</text>
         <text x="389" y="279" className="later-svg-note">{focus === 0 ? (empty ? '空槽可用，不需要抽签' : '先观察号码，再看它是否小于 K') : accepted ? '只改变 slot ' + step.slot : '旧记录全部保留'}</text>
       </g>
-      <g opacity={focus < 2 ? 1 : .35}><LessonPath d="M316 228H364" /></g>
-      {accepted && <LessonPath d="M665 228H729" progress={windowAt(p, .18, .32)} />}
+      <g opacity={focus < 2 ? 1 : .35}><LessonPath d="M316 228H365" /></g>
+      {accepted && <LessonPath d="M665 228H730" progress={windowAt(p, .18, .32)} />}
       {!accepted && focus >= 1 && <g><path d="M686 216L700 230M700 216L686 230" className="rv3-reject-mark"/><text x="693" y="255" textAnchor="middle" className="later-svg-note">止于此</text></g>}
 
       <rect x="730" y="68" width="360" height="326" rx="20" className="rv2-memory" />

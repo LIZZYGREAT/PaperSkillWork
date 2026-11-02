@@ -942,3 +942,14 @@ build PASS。实际查看U4标题与纹样位置；最终全篇浏览器与截�
 - 普通1440×900实际测量整段活动bottom=886.59、scrollY=0、document.scrollHeight=900；1920×1080同样通过一屏显示断言。截图包括首态、旋转中帧、25°最终取景、四视图收尾。数学/状态测试30项PASS，新增最终所有角点采样均在原图内、长喙不出界的测试。
 - build PASS（86模块）；增强专项两布局52断言PASS；完整W8两布局984与前导270断言PASS。旋转真实时钟完整播放22042ms，四阶段完整经过，原图viewBox与历史目标保持固定。证据位于会话der-rotation（含rotation25.webm）。
 - 同轮用户追加跨场景箭头修订，以下单独记录并提交；此处未改动权威训练/抽样计算与D1。
+
+### 2026-11-02 跨场景箭头修复与收尾
+- 用户三图反馈确认根因：LessonPath把箭头尖端也放进线段揭示mask，尖端会被切掉；部分线路端点停在边框外、短曲线过陡，汇合端口上下不对称；旋转手绘尖端没有沿圆弧切线，且背景横线穿过旋转图标。
+- 共用箭头分离shaft与tip，tip不受mask裁切，使用userSpaceOnUse、overflow visible与自动切线方向；仅在线段真正到达端点时显示尖端。扩大有效mask到工作台画布范围，统一绿色/历史蓝/梯度金的线头颜色与尺寸。
+- DER单步汇合改为上下镜像的圆角正交线，连接真实源边界和两个对称端口；写入路径从候选卡左边到记忆状态框右边中心，移动副本与线路共用同一曲线。工作台回传从不同方法实际损失面板底边出发，经避让通道进入网络底部中心；DER++、蓄水池、U1/U3检查并修复1至19px不等的端点间隙及历史箭头颜色。D1本体与权威训练/抽样计算不变。
+- 新增connectors-only两桌面38断言PASS，按实际对象边界断言端点无间隙、末段垂直进入边框、汇合线镜像、圆弧终点切线正确、全部完成态箭头尖端不被mask裁切。检查器曾误用Locator.evaluate参数次序导致null，已修正为(element,args)，并重跑通过。
+- 增强专项两布局52、完整W8两布局984、前导两布局270断言PASS；数学/状态30项PASS。实际查看旋转首中末帧/完整900px页面、U4汇合和写入、U6联合更新，以及两桌面代表图。最终固定目标图和辅助公式没有遮挡，压缩后公式与说明曾有0.05px边界重叠，已增加4单位行距并由真实字形断言复核。
+- 正式Visual QA确切run-2026-11-02T15-23-49-398Z共36捕获（两档桌面），真实HTTP /der-review/。GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS PASS，无诊断；已读报告并检查代表性正式截图与专项局部PNG，保留轻量报告、关键图和实速视频于会话der-rotation。无批准基线比对，机器PASS不代表W9人审。
+- SOURCE_BUILD PASS（tsc/Vite86模块）；UPSTREAM_SYNTAX PASS（56源文件，TypeScript解析）。fetch upstream main退出0，HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c、官方upstream/main 792bd8f24b9203c4c959a5006f570c38cbcfa7de；语法工作/官方blob均2bcfa6f815054ee498574c51cef05f0c315b4298。输出脚本仍不匹配：工作1a58ca06bd9fa47b6730904f1622189011cc32fe / 官方9ec76b6974f262fca7b9611c4a485dd2275fe76c，UPSTREAM_OUTPUT NOT_RUN。相邻工作树不改动。
+- SUBPATH_ASSETS PASS；Node24.18.0 / Chromium153.0.8010.12。FULLSCREEN_LAYOUT为1920×1080，FULLSCREEN_REAL NOT_RUN（headless，无真实F11）。未代填W9人审；不执行发布/push/PR；5199用户预览保留。正式run读取与保留必要证据后按确切目录清理。
+- 正式run清理已返回CLEANED，Test-Path=False。
