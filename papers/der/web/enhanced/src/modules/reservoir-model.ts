@@ -27,10 +27,10 @@ export const RESERVOIR_STEPS = (() => {
   });
 })();
 export const RESERVOIR_CLIPS = [
-  { id: "x₁ · 进入空槽", durationMs: 6500, holdMs: 1800 },
-  { id: "x₂ · 填满记忆", durationMs: 6500, holdMs: 1800 },
-  { id: "x₃ · 替换槽 0", durationMs: 8000, holdMs: 2200 },
-  { id: "x₄ · 拒收仍计数", durationMs: 8000, holdMs: 2200 },
+  { id: "x₁ · 进入空槽", durationMs: 2600, holdMs: 400 },
+  { id: "x₂ · 填满记忆", durationMs: 2600, holdMs: 400 },
+  { id: "x₃ · 抽签与选留", durationMs: 3800, holdMs: 600 },
+  { id: "x₄ · 抽签与选留", durationMs: 3800, holdMs: 600 },
 ] as const;
 export function reservoirSceneAt(clip: number, progress: number) {
   const step = RESERVOIR_STEPS[Math.max(0, Math.min(3, clip))];

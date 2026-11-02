@@ -15,6 +15,7 @@ export function useSceneTimeline(clips: readonly TimelineClip[], autoPlay = fals
   const next = () => start(state.clipIndex + 1);
   const elapsedSeconds = (clips.slice(0, state.clipIndex).reduce((sum, clip) => sum + timelineClipTotal(clip), 0) + state.elapsedMs) / 1000;
   return { state, elapsedSeconds, reducedMotion, start, previous, next, canGoBack,
+    playFrom: (index: number) => timeline.controls.goToClip(index, { autoPlay: true }),
     seek: (index: number, progress: number) => timeline.controls.goToClip(index, { progress, autoPlay: false }),
     reset: () => start(0), toggle: timeline.controls.toggle, complete: timeline.controls.stepForward,
     replay: () => timeline.controls.goToClip(0, { autoPlay: true }) };
