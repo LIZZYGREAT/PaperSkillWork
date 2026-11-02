@@ -11,7 +11,7 @@ return <g transform={`translate(${x} ${y})`} data-sample={id}><rect width={size}
 export function NetworkGlyph({x,y,version,forward=0,backward=0}:{x:number;y:number;version:string;forward?:number;backward?:number}){
 const layers=[[60,120,180],[42,78,114,150,186],[60,120,180]],layerX=[38,113,188],reverse=backward>0&&backward<1,t=reverse?backward:forward;
 const moving=t>0&&t<1,stage=Math.min(1,Math.floor(t*2)),local=t*2-stage,edgeLayer=reverse?1-stage:stage;
-return <g transform={`translate(${x} ${y})`} data-network data-version={version}>
+return <g transform={`translate(${x} ${y})`} data-network data-version={version} data-forward={forward} data-backward={backward}>
 <rect width="226" height="244" rx="17" className={`tg-network ${reverse?"is-updating":""}`}/><text x="17" y="28" className="tg-title">当前网络</text><text x="209" y="28" textAnchor="end" className="tg-theta">{version.startsWith("θ")?<>{"θ"}<MathSub>{version.slice(1)}</MathSub></>:version}</text><path d="M17 42H209" className="tg-rule"/>
 <text x="17" y="56" className="tg-small">3×5×3 示意 · 计算 2D→3 类</text>
 {layers.slice(0,-1).flatMap((from,layerIndex)=>from.flatMap((a,i)=>layers[layerIndex+1].map((b,j)=>{

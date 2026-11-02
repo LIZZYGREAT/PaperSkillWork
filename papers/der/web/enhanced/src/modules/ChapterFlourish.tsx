@@ -1,11 +1,17 @@
 import './chapter-flourish.css';
 
-/** A botanical ornament, deliberately separate from samples and model signals. */
-export default function ChapterFlourish({ end = false }: { end?: boolean }) {
-  return <svg className={end ? 'chapter-flourish is-ending' : 'chapter-flourish'} viewBox="0 0 166 38" aria-hidden="true" focusable="false">
-    <path className="flourish-ground" d="M1 31C34 23 51 33 78 28S126 25 165 31" />
-    <path className="flourish-stem" d="M95 30C104 22 116 18 132 7M112 20L111 9M123 14L139 17" />
-    <path className="flourish-leaf" d="M111 13C102 11 101 4 103 1C110 3 114 7 111 13ZM120 16C118 9 122 4 129 3C130 10 127 14 120 16ZM131 17C136 12 143 13 147 18C141 22 136 21 131 17Z" />
-    <circle className="flourish-seed" cx="74" cy="20" r="2.2" /><circle className="flourish-seed" cx="83" cy="12" r="1.4" />
+/** Static landscape borders: outside the semantic diagram and reading area. */
+export default function ChapterFlourish({ end = false, variant = 0 }: { end?: boolean; variant?: number }) {
+  const mirrored = variant % 2 === 1;
+  return <svg className={end ? 'chapter-flourish is-ending' : 'chapter-flourish'} viewBox="0 0 1240 82" aria-hidden="true" focusable="false">
+    <path className="flourish-wash" d={mirrored ? 'M0 71C160 37 241 86 423 64S724 78 912 54S1110 54 1240 69V82H0Z' : 'M0 72C156 55 232 77 391 60S687 45 849 66S1080 56 1240 65V82H0Z'}/>
+    <path className="flourish-wave" d="M0 76C176 59 229 80 395 65S690 61 853 74S1097 55 1240 66"/>
+    <path className="flourish-wave is-gold" d="M29 64C155 46 229 68 326 57M807 66C941 46 1052 62 1190 50"/>
+    <g transform={mirrored ? 'translate(200 0) scale(-1 1)' : 'translate(1050 0)'}>
+      <path className="flourish-stem" d="M40 71C54 56 64 34 66 12M55 51L39 37M62 34L82 23"/>
+      <path className="flourish-leaf" d="M65 34C53 23 58 10 67 7C75 18 73 29 65 34ZM56 54C42 51 34 42 37 32C50 32 59 43 56 54ZM62 41C64 27 76 20 86 23C84 36 75 42 62 41Z"/>
+      <circle className="flourish-seed" cx="20" cy="42" r="2.5"/><circle className="flourish-seed" cx="7" cy="52" r="1.6"/>
+    </g>
+    {!end && <g transform={mirrored ? 'translate(1080 0)' : 'translate(85 0)'}><circle className="flourish-sun" cx="0" cy="28" r="9"/><path className="flourish-ground" d="M-35 49Q-3 30 35 49T105 47"/></g>}
   </svg>;
 }

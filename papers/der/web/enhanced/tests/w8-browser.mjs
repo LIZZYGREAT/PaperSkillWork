@@ -29,6 +29,7 @@ export async function fullW8Checks({page,base,check,shot}){
    await scene.locator("[data-back]").click();check(+(await scene.getAttribute("data-progress"))===0,"Back restores stage start");
   }
   if(name==="der-step"){
+ await seek(scene,1,LESSON_DURATIONS["der-step"][1],.45);check(await scene.locator("[data-network]").getAttribute("data-forward")==="1"&&await scene.getAttribute("data-freeze-progress")==="0","Output fully arrives before its frozen copy starts");
  await seek(scene,3,LESSON_DURATIONS["der-step"][3],.6);check(await scene.locator(".tg-network.is-updating").count()===1,"Edge attachment is checked while reverse signalling is active");
  const edgeAnchors=await scene.locator("[data-network]").evaluate(g=>{const points=[...g.querySelectorAll(".tg-node")].map(n=>[+n.getAttribute("cx"),+n.getAttribute("cy")]);return [...g.querySelectorAll(".tg-edge")].every(e=>{const v=e.getAttribute("d").match(/-?\d+(?:\.\d+)?/g).map(Number);return points.some(([x,y])=>x===v[0]&&y===v[1])&&points.some(([x,y])=>x===v[2]&&y===v[3]);});});check(edgeAnchors,"Static network edges remain attached to their nodes during reverse signalling");
    await page.emulateMedia({reducedMotion:"reduce"});await scene.locator("select").selectOption("3");
@@ -103,6 +104,7 @@ export async function fullW8Checks({page,base,check,shot}){
    check(+(await wb.getAttribute("data-updates"))===expected.state.updates,"Only one update per round");
    check(await wb.getAttribute("data-memory")===expected.state.M.map(r=>r.id).join(","),"Every memory snapshot follows shared model");
    check(await wb.locator("text").filter({hasText:/slot [01] · 空/}).count()===2-expected.state.M.length,"Only genuinely empty slots carry an empty label");
+   if(c<20&&c%5===1){const response=await wb.locator('.tg-number').allTextContents();const frozen=(await wb.locator('[data-training-record="'+steps[Math.floor(c/5)].candidate.id+'"] .wb-record-vector').textContent()).replace(/[()]/g,'').split(',').map(s=>s.trim());check(JSON.stringify(response)===JSON.stringify(frozen),"Displayed frozen copy preserves exactly the displayed source numbers");}
    if(c===13)check(await wb.getAttribute("data-memory")==="x₁,x₂","Round 3 trains from old memory before replacement");
    if(c===14)check(await wb.getAttribute("data-memory")==="x₃,x₂","Round 3 replaces only after update");
    if(c===18)check(+(await wb.getAttribute("data-updates"))===4&&+(await wb.getAttribute("data-seen"))===3,"Rejected item still trains before reservoir");
@@ -123,6 +125,8 @@ export async function fullW8Checks({page,base,check,shot}){
   for(const c of [1,5,13,14,19,20]){await seek(wb,c,WORKBENCH_CLIPS[c].durationMs,.5);await geometry(wb);await shot("workbench-motion-"+c,"[data-scene=workbench]");}
  }
  await wb.locator('[data-round-select="2"]').click();
+ await wb.locator('[data-round-scrub]').fill('1.45');
+ check(await wb.locator('[data-network]').getAttribute('data-forward')==='1'&&await wb.getAttribute('data-freeze-progress')==='0','Workbench freezes only after the complete forward');
  await wb.locator('[data-round-scrub]').fill('1.64');
  check(await wb.getAttribute('data-clip')==='11'&&Math.abs(+(await wb.getAttribute('data-progress'))-.64)<.002,"Round scrub seeks a true paused intermediate frame");
  check(await wb.getAttribute('data-status')==='paused',"Scrubbing never silently resumes playback");

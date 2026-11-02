@@ -22,7 +22,7 @@
 .later-lesson .lesson-math{font-family:var(--rk-font-math);font-style:normal;font-variant-numeric:lining-nums tabular-nums;fill:var(--der-ink)}
 .later-lesson .lesson-math tspan{font-family:inherit;font-style:normal}
 .lesson-cue{padding:15px 22px 17px;margin:18px 0 0;border:1px solid #c9d7c1;border-bottom:0;border-radius:15px 15px 0 0;background:#f0f4e9}
-.lesson-cue ol{list-style:none;display:flex;gap:25px;margin:0 0 12px;padding:0;color:#65775f;font-size:13px;flex-wrap:wrap}
+.lesson-cue ol{list-style:none;display:flex;gap:25px;margin:0 0 12px;padding:0;color:#53694f;font-size:13px;flex-wrap:wrap}
 .lesson-cue li{display:flex;gap:7px;align-items:center}.lesson-cue li>span{display:grid;place-content:center;width:21px;height:21px;border:1px solid #bdcbb3;border-radius:50%;font-size:11px}
 .lesson-cue li[aria-current=step]{color:#214d3b;font-weight:650}.lesson-cue li[aria-current=step]>span{background:#3f7058;border-color:#3f7058;color:white}
 .lesson-cue-reading{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}.lesson-cue-reading strong{font-size:17px;color:#234e3c}.lesson-cue-reading>span{font-size:14px;color:#52684f}
@@ -43,3 +43,7 @@
 .later-lesson .tg-number{font-family:var(--rk-font-math);font-size:24px;font-variant-numeric:lining-nums tabular-nums}.wb2-lesson .wb-record-vector{font-family:var(--rk-font-math);font-size:16px}.wb2-lesson .wb-state b{font-family:var(--rk-font-math)}
 
 .lesson-cue-reading{display:grid;grid-template-columns:1fr;gap:4px;min-height:52px;align-content:start}.lesson-cue-reading strong{line-height:1.45}.lesson-cue-reading>span{line-height:1.55}@media(max-width:700px){.lesson-cue-reading{min-height:80px}}
+
+.dp2-response-reference[data-active=false] .dp2-dark-direction,.dp2-response-reference[data-active=false] .dp2-label-direction{opacity:.35}.dp2-response-reference[data-active=false] .dp2-track{stroke:#e0e6d9}
+
+.wb2-dark-copy{fill:#668796}.wb2-label-copy{fill:#b59162}
