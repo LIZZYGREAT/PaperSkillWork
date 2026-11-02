@@ -29,6 +29,10 @@ export async function fullW8Checks({page,base,check,shot}){
    await scene.locator("[data-back]").click();check(+(await scene.getAttribute("data-progress"))===0,"Back restores stage start");
   }
   if(name==="der-step"){
+ await seek(scene,0,LESSON_DURATIONS["der-step"][0],.28);
+ const readSizes=await scene.locator('[data-sample="replay read copy"]>rect,[data-sample="x₁ original memory"]>rect').evaluateAll(ns=>ns.map(n=>+n.getAttribute("width")));
+ check(readSizes.length===2&&readSizes.every(n=>n===48),"Reading preserves the source glyph size instead of shrinking it into a dot");
+ check(await scene.locator("[data-trail-progress]").count()>0,"A real travelled trail is present behind the moving read copy");
  await seek(scene,1,LESSON_DURATIONS["der-step"][1],.45);check(await scene.locator("[data-network]").getAttribute("data-forward")==="1"&&await scene.getAttribute("data-freeze-progress")==="0","Output fully arrives before its frozen copy starts");
  await seek(scene,3,LESSON_DURATIONS["der-step"][3],.6);check(await scene.locator(".tg-network.is-updating").count()===1,"Edge attachment is checked while reverse signalling is active");
  const edgeAnchors=await scene.locator("[data-network]").evaluate(g=>{const points=[...g.querySelectorAll(".tg-node")].map(n=>[+n.getAttribute("cx"),+n.getAttribute("cy")]);return [...g.querySelectorAll(".tg-edge")].every(e=>{const v=e.getAttribute("d").match(/-?\d+(?:\.\d+)?/g).map(Number);return points.some(([x,y])=>x===v[0]&&y===v[1])&&points.some(([x,y])=>x===v[2]&&y===v[3]);});});check(edgeAnchors,"Static network edges remain attached to their nodes during reverse signalling");
@@ -79,6 +83,13 @@ export async function fullW8Checks({page,base,check,shot}){
  await rv.locator("details summary").click();
  await rv.getByRole('button',{name:'j = 1',exact:true}).click();
  check(await rv.getAttribute("data-status")==="playing","Manual draw immediately starts its visible demonstration");
+ await page.clock.runFor(4800*.61);
+ const movingWidth=await rv.locator("[data-record-token] [data-model-pixel]").evaluate(n=>n.getBBox().width);
+ const normalWidth=await rv.locator('[data-record="x₂"] [data-model-pixel]').evaluate(n=>n.getBBox().width);
+ check(Math.abs(movingWidth-normalWidth)<.1,"Travelling DeepSeek has the same pixel grid size as the normal GPT record");
+ await page.clock.runFor(2000);
+ const landedWidth=await rv.locator('[data-record="x₃"] [data-model-pixel]').evaluate(n=>n.getBBox().width);
+ check(Math.abs(movingWidth-landedWidth)<.1,"The arriving icon keeps its size when it becomes the stored record");
  await page.emulateMedia({reducedMotion:'reduce'});await rv.locator('select').selectOption('1');
  check(await rv.getAttribute('data-memory')==='x₁,x₃',"Manual legal replacement persists into the next rejected input");
  await page.emulateMedia({reducedMotion:'no-preference'});

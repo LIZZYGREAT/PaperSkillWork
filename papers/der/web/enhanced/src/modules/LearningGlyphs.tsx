@@ -11,6 +11,7 @@ return <g transform={`translate(${x} ${y})`} data-sample={id}><rect width={size}
 export function NetworkGlyph({x,y,version,forward=0,backward=0}:{x:number;y:number;version:string;forward?:number;backward?:number}){
 const layers=[[60,120,180],[42,78,114,150,186],[60,120,180]],layerX=[38,113,188],reverse=backward>0&&backward<1,t=reverse?backward:forward;
 const moving=t>0&&t<1;
+const nodeFill=(column:number)=>{const amount=reverse?windowAt(t,(2-column)*.25,(2-column)*.25+.3)*(1-windowAt(t,.88,1)):windowAt(t,column*.25,column*.25+.3);const from=reverse?[222,236,218]:[255,255,255],to=reverse?[244,225,192]:[222,236,218];return `rgb(${from.map((v,k)=>mix(v,to[k],amount)).join(",")})`;};
 return <g transform={`translate(${x} ${y})`} data-network data-version={version} data-forward={forward} data-backward={backward}>
 <rect width="226" height="244" rx="17" className={`tg-network ${reverse?"is-updating":""}`}/><text x="17" y="28" className="tg-title">当前网络</text><text x="209" y="28" textAnchor="end" className="tg-theta">{version.startsWith("θ")?<>{"θ"}<MathSub>{version.slice(1)}</MathSub></>:version}</text><path d="M17 42H209" className="tg-rule"/>
 <text x="17" y="56" className="tg-small">3×5×3 示意 · 计算 2D→3 类</text>
@@ -20,7 +21,7 @@ const fromY=(reverse?b:a)+30,toY=(reverse?a:b)+30;
 const order=reverse?1-layerIndex:layerIndex,local=windowAt(t,order===0?.04:.43,order===0?.53:.94),light=windowAt(local,0,.12)*(1-windowAt(local,.88,1));
 return <g key={`${layerIndex}-${i}-${j}`}><path d={`M${layerX[layerIndex]} ${a+30}L${layerX[layerIndex+1]} ${b+30}`} className="tg-edge"/>{moving&&local>0&&local<1&&<g opacity={light}><path d={`M${mix(fromX,toX,Math.max(0,local-.14))} ${mix(fromY,toY,Math.max(0,local-.14))}L${mix(fromX,toX,local)} ${mix(fromY,toY,local)}`} className={reverse?"tg-gradient-signal":"tg-forward-signal"}/><circle cx={mix(fromX,toX,local)} cy={mix(fromY,toY,local)} r="3" className={reverse?"tg-gradient-dot":"tg-forward-dot"}/></g>}</g>;
 })))}
-{layers.map((layer,layerIndex)=>layer.map((v,i)=><circle key={`${layerIndex}-${i}`} cx={layerX[layerIndex]} cy={v+30} r="7" className="tg-node" style={{fill:reverse?`rgba(230,206,166,${windowAt(t,(2-layerIndex)*.25,(2-layerIndex)*.25+.3)})`:`rgb(${mix(255,222,windowAt(t,layerIndex*.25,layerIndex*.25+.3))},${mix(255,236,windowAt(t,layerIndex*.25,layerIndex*.25+.3))},${mix(255,218,windowAt(t,layerIndex*.25,layerIndex*.25+.3))})`}}/>))}
+{layers.map((layer,layerIndex)=>layer.map((v,i)=><circle key={`${layerIndex}-${i}`} cx={layerX[layerIndex]} cy={v+30} r="7" className="tg-node" style={{fill:nodeFill(layerIndex)}}/>))}
 <text x="38" y="232" textAnchor="middle" className="tg-small">输入层</text><text x="113" y="232" textAnchor="middle" className="tg-small">隐藏层</text><text x="188" y="232" textAnchor="middle" className="tg-small">输出层</text></g>;
 }
 export function ScoreGlyph({x,y,values,label,reveal=1,frozen=false,note,parameterIndex}:{x:number;y:number;values:Vec;label:string;reveal?:number;frozen?:boolean;note?:string;parameterIndex?:number}){

@@ -904,3 +904,13 @@ build PASS。实际查看U4标题与纹样位置；最终全篇浏览器与截�
 - 单步训练当前/旧样本的输入、输出连接均水平平行，移动副本48，与源图一致；读取动作约0.9秒，网络前向约1.7秒，分数到达后才复制冻结。共享网络传播改为每条实际边上的渐进信号和逐层节点亮起，无层间跳点。
 - DER++ 下方重排为等高来源行、单模型、监督区域；总公式有独立完整区域，梯度返回线路从监督底边回到模型底边，避开文字。
 - 参照D1的动作窗重新分配时长，取消把多动作挤进几百毫秒的做法。25数值/状态测试、两布局W8 976断言PASS。实际连续播放：选留21402ms，单步24811ms，增强15114ms，DER++16506ms；逐场查看中帧与末帧，局部后续收尾将继续回归。
+
+### 晚间返修第三部分与最终检查
+- U6 四轮复用同一动作时序（2200/6200/4600/3400/3200ms，每段1000ms观察停留），不再第一轮慢、后续轮快。短距离进入约0.8秒、网络传播约1.7秒，随后显示输出和复制；冻结候选沿连续曲线形成，工作台焦点随候选移动，Rd/Ry读取分别保持44像素记录图尺度，并带渐变短尾迹。原记录和精确数值保持持久身份。
+- 实际浏览器时钟完整播放 DER++ 四轮21事件：104454ms、389状态采样，参数、N、M与权威模型逐帧一致；U1完整10.7秒、U3完整12.6秒，另检查出发/中途/抵达帧。D1源码相对4cd2e89无diff，training-model仅展示时长变更。
+- 最终 SOURCE_BUILD PASS（tsc/Vite84模块）；25数学/状态测试PASS；前导两布局270、W8两布局984、D1两布局1498、工作台布局24断言PASS。新增读取副本不缩小、DeepSeek移动/落地与正常GPT记录同像素网格尺度的检查。最后节点反向波改为正常底色渐进混合金色，避免透明闪变；再build并直接检查最终两个布局的公式、写入中帧与节点实际颜色。
+- 正式 Visual QA：node tools/visual-qa/cli.mjs --config [会话目录]/der-continuity/visual-qa-continuity.json，退出0，run-2026-11-02T13-24-03-134Z共32个真实HTTP /der-review/捕获。GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS PASS，零诊断；已读报告并查看两布局代表性状态及实际出发/移动/抵达局部图。完整文章截图过长，另用真实播放的局部SVG帧放大核对U1/U3，不以缩略图代替细节检查。
+- 当前官方核实：fetch upstream main退出0；官方remote git@github.com:ReductTech/PaperSkill.git。相邻HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，upstream/main cceb69a80d5cb381895898cffc48cafbf2cfc1a9；Node24.18.0 / Chromium153.0.8010.12。syntax-check工作/上游blob均2bcfa6f815054ee498574c51cef05f0c315b4298，55文件PASS。输出检查工作blob1a58ca06bd9fa47b6730904f1622189011cc32fe，官方9ec76b6974f262fca7b9611c4a485dd2275fe76c不符，UPSTREAM_OUTPUT=NOT_RUN；相邻库未修改。
+- SUBPATH_ASSETS PASS，两个布局1440×900/1920×1080；FULLSCREEN_REAL NOT_RUN（headless，没有真实F11）。W9人审继续由用户判断，未代填。用户生产预览5199已恢复并保留；未运行发布、push或PR。
+- 必要证据位于会话可视化目录 der-continuity：qa-report、出发/移动/抵达帧、五场实速JSON、workbench-derplus.webm及两布局局部截图。正式run在读取/复核和保留轻量副本后清理，清理结果另附。
+- 正式 run 清理已返回 CLEANED，Test-Path=False；最终55文件语法检查PASS。
