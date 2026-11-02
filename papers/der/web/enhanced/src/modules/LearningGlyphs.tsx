@@ -1,4 +1,4 @@
-import { MathSub } from './LessonNotation';
+import { MathSub, ParameterSymbol } from './LessonNotation';
 import ModelPixel, {type ModelClass} from "./review/ModelPixel";
 import {mix,windowAt} from "./review/lifecycle-model";
 import {MODEL_CLASSES} from "../data/model-classes";
@@ -22,7 +22,7 @@ return <g key={`${layerIndex}-${i}-${j}`}><path d={`M${layerX[layerIndex]} ${a+3
 {layers.map((layer,layerIndex)=>layer.map((v,i)=><circle key={`${layerIndex}-${i}`} cx={layerX[layerIndex]} cy={v+30} r="7" className="tg-node"/>))}
 <text x="38" y="232" textAnchor="middle" className="tg-small">输入层</text><text x="113" y="232" textAnchor="middle" className="tg-small">隐藏层</text><text x="188" y="232" textAnchor="middle" className="tg-small">输出层</text></g>;
 }
-export function ScoreGlyph({x,y,values,label,reveal=1,frozen=false,note}:{x:number;y:number;values:Vec;label:string;reveal?:number;frozen?:boolean;note?:string}){
-return <g transform={`translate(${x} ${y})`} data-score={label}><text x="0" y="-12" className="tg-title">{label}</text>{values.map((v,k)=><g key={k} opacity={windowAt(reveal,k*.15,k*.15+.5)}><rect x={k*99} width="91" height="72" rx="9" className={`tg-score tg-tone-${k}`}/><text x={k*99+10} y="22" className="tg-small">{MODEL_CLASSES[k]}</text><text x={k*99+45} y="52" textAnchor="middle" className="tg-number">{fmt(v)}</text></g>)}<text x="0" y="93" className="tg-small">{note??(frozen?"□ 固定历史值，不随 θ 更新":"● 本次前向结果，与当前 θ 同源")}</text></g>;
+export function ScoreGlyph({x,y,values,label,reveal=1,frozen=false,note,parameterIndex}:{x:number;y:number;values:Vec;label:string;reveal?:number;frozen?:boolean;note?:string;parameterIndex?:number}){
+return <g transform={`translate(${x} ${y})`} data-score={label}><text x="0" y="-12" className="tg-title">{label}{parameterIndex!==undefined&&<> · <ParameterSymbol index={parameterIndex}/></>}</text>{values.map((v,k)=><g key={k} opacity={windowAt(reveal,k*.15,k*.15+.5)}><rect x={k*99} width="91" height="72" rx="9" className={`tg-score tg-tone-${k}`}/><text x={k*99+10} y="22" className="tg-small">{MODEL_CLASSES[k]}</text><text x={k*99+45} y="52" textAnchor="middle" className="tg-number">{fmt(v)}</text></g>)}<text x="0" y="93" className="tg-small">{note??(frozen?"□ 固定历史值，不随 θ 更新":"● 本次前向结果，与当前 θ 同源")}</text></g>;
 }
 export function MotionPath({d,progress,kind="data"}:{d:string;progress:number;kind?:string}){return <path d={d} className={`tg-path tg-path-${kind}`} pathLength="1" strokeDasharray="1" strokeDashoffset={1-progress} opacity={progress>0?1:0}/>;}

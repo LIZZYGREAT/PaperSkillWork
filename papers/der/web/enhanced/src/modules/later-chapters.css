@@ -39,3 +39,7 @@
 .wb2-lesson .wb-stage{border-radius:0 0 15px 15px;margin-top:0;background-size:100% 160px}
 .wb3-focus-frame{stroke:#ad8653;stroke-width:1.8;pointer-events:none}
 .ds3-postwrite-focus{stroke:#a57a43;stroke-width:1.5}
+
+.later-lesson .tg-number{font-family:var(--rk-font-math);font-size:24px;font-variant-numeric:lining-nums tabular-nums}.wb2-lesson .wb-record-vector{font-family:var(--rk-font-math);font-size:16px}.wb2-lesson .wb-state b{font-family:var(--rk-font-math)}
+
+.lesson-cue-reading{display:grid;grid-template-columns:1fr;gap:4px;min-height:52px;align-content:start}.lesson-cue-reading strong{line-height:1.45}.lesson-cue-reading>span{line-height:1.55}@media(max-width:700px){.lesson-cue-reading{min-height:80px}}

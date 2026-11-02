@@ -24,6 +24,8 @@ export default function DERTrainingStep() {
   const read = done(0), freeze = phase > 1 ? 1 : phase === 1 ? windowAt(p, .42, .88) : 0;
   const copyPoints = [{ x: 610, y: 190 }, { x: 548, y: 210 }, { x: 592, y: 354 }, { x: 433, y: 365 }] as const;
   const copyAt = curve(freeze, ...copyPoints);
+  const write = phase === 4 ? windowAt(p, .08, .88) : 0;
+  const writeAt = curve(write, {x:312,y:410}, {x:275,y:410}, {x:280,y:450}, {x:256,y:450});
   const notes = [
     empty ? '空池没有旧样本，先看当前输入。' : '看左下：只读出旧记录副本，原记录留在 M。',
     '看当前前向，再看网络下方：更新前输出复制成固定候选 z。',
@@ -70,7 +72,7 @@ export default function DERTrainingStep() {
       <g data-attention-object="frozen-candidate" opacity={windowAt(freeze, .8, 1)}><rect x="320" y="365" width="226" height="90" rx="12" className="ds3-candidate" /><text x="337" y="393" className="later-svg-title">冻结候选 {step.candidate.id}</text><text x="337" y="423" className="ds3-candidate-vector lesson-math">z = {vectorText(step.candidate.z, 2)}</text><text x="337" y="444" className="later-svg-note">更新后才选留</text></g>
       {freeze > 0 && freeze < 1 && <g><MotionTrail points={copyPoints} progress={freeze} className="lesson-record-trail" /><circle cx={copyAt.x} cy={copyAt.y} r="12" className="ds3-copy-dot" /><text x={copyAt.x} y={copyAt.y + 5} textAnchor="middle" className="ds3-copy-z lesson-math">z</text></g>}
       <g opacity={done(3)}><rect x="610" y="410" width="470" height="75" rx="12" className="ds3-formula-panel" /><text x="630" y="440" className="ds-total-formula lesson-math"><DerObjective /></text><text x="630" y="468" className="ds3-vector lesson-math">{fmt(step.losses.current, 4)} + {CONFIG.alpha} × {fmt(step.losses.dark, 4)} = {fmt(step.losses.total, 4)}</text></g>
-      {phase === 4 && <g><rect x="26" y="398" width="228" height="94" rx="12" fill="none" className="ds3-postwrite-focus"/><LessonPath d="M312 410Q280 410 280 438Q280 450 256 450" progress={windowAt(p,.08,.88)}/>{p>.08&&p<.88&&<SampleGlyph x={310-54*windowAt(p,.08,.88)} y={400+40*windowAt(p,.08,.88)} size={20} model={step.input.model} id="post-update write copy"/>}</g>}
+      {phase === 4 && <g><rect x="26" y="398" width="228" height="94" rx="12" fill="none" className="ds3-postwrite-focus"/><LessonPath d="M312 410C275 410 280 450 256 450" progress={write}/>{p>.08&&p<.88&&<SampleGlyph x={writeAt.x-10} y={writeAt.y-10} size={20} model={step.input.model} id="post-update write copy"/>}</g>}
       <text x="30" y="420" className="later-svg-note">更新后写入</text><text x="30" y="450" className="ds3-vector lesson-math">M = [{state.M.map(r => r.id).join(', ')}]</text><text x="30" y="479" className="later-svg-note">{phase === 4 && p >= .88 ? '本轮已提交，N=' + state.N : '读取期间 M 保持不变'}</text>
     </svg></div>
     <SceneTransport timeline={timeline} clips={DER_STEP_CLIPS} label="DER 单步" showTiming={false} teachingProgress />

@@ -53,8 +53,8 @@ export const predict = (state: TrainingState,u: Vec=[1,.5]) => {
 };
 export const TRAIN_PHASES = ["读取旧记忆","当前前向与冻结","回放与损失","合并后一次更新","更新后选留"] as const;
 export const WORKBENCH_CLIPS = [
- ...STREAM.flatMap((item,i)=>TRAIN_PHASES.map((name,phase)=>({id:`第 ${i+1} 轮 · ${item.id} / ${name}`,durationMs:phase===2?6000:phase===4?5000:4000,holdMs:1400}))),
- {id:"训练结束 · 只读预测",durationMs:5000,holdMs:2000},
+ ...STREAM.flatMap((item,i)=>TRAIN_PHASES.map((name,phase)=>({id:`第 ${i+1} 轮 · ${item.id} / ${name}`,durationMs:[1500,2200,2400,1800,2000][phase],holdMs:350}))),
+ {id:"训练结束 · 只读预测",durationMs:2400,holdMs:600},
 ];
 export function trainingSceneAt(steps: readonly TrainStep[],clip: number,p: number) {
  const prediction=clip>=20,round=prediction?3:Math.floor(clip/5),phase=prediction?5:clip%5,step=steps[round];

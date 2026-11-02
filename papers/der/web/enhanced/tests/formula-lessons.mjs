@@ -53,13 +53,13 @@ export async function formulaLessonChecks({page,base,check,shot}){
  const reservoirRule=await reservoir.locator(".rv-inline-rule").innerText();
  check(reservoirRule.includes("Uniform")&&reservoirRule.includes("N ← N + 1"),"Reservoir keeps its concise rule beside the mechanism");
  check(await derStep.locator("[data-reading-unit]").count()===0,"DER single-step opens on its mechanism rather than a separate formula lesson");
- check((await derStep.locator(".ds-total-formula").textContent()).includes("L_DER"),"DER keeps the joint objective beside the shared network");
+ check((await derStep.locator(".ds-total-formula").textContent()).includes("LDER"),"DER keeps the joint objective beside the shared network");
  const augmentation=page.locator("[data-scene=augmentation]");
  check(await augmentation.locator("[data-reading-unit]").count()===0,"Augmentation opens on the shared-image mechanism rather than a separate formula lesson");
- check((await augmentation.locator(".aug2-formula").last().textContent()).includes("L_dark"),"Augmentation keeps the concise matching rule beside its outputs");
+ check((await augmentation.locator(".aug2-formula").last().textContent()).includes("Ldark"),"Augmentation keeps the concise matching rule beside its outputs");
  const derPlus=page.locator("[data-scene=der-plus]");
  check(await derPlus.locator("[data-reading-unit]").count()===0,"DER++ opens on the conflict and shared-update mechanism, not a separate formula lesson");
- check((await derPlus.locator("[data-total-formula]").textContent()).includes("L_current + α L_dark + β L_replay-CE"),"DER++ keeps its three-term objective beside the single update");
+ check((await derPlus.locator("[data-total-formula]").textContent()).includes("Lcurrent + α Ldark + β Lreplay-CE"),"DER++ keeps its three-term objective beside the single update");
  check(await page.locator("[data-scene=lifecycle] [data-reading-unit]").count()===0,"D1 has no duplicated formula lecture");
  await page.emulateMedia({reducedMotion:"reduce"});await page.goto(base);
  check(await page.locator(".der-u2 .kl-explanation math").first().isVisible(),"Mainline formulas remain visible with reduced motion");

@@ -418,7 +418,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 5500
+              "milliseconds": 2356
             },
             {
               "type": "click",
@@ -444,7 +444,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 7500
+              "milliseconds": 3610
             },
             {
               "type": "click",
@@ -476,7 +476,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 5800
+              "milliseconds": 1980
             },
             {
               "type": "click",
@@ -502,7 +502,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 5800
+              "milliseconds": 1710
             },
             {
               "type": "click",
@@ -534,7 +534,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 5300
+              "milliseconds": 2280
             },
             {
               "type": "click",
@@ -566,7 +566,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 5800
+              "milliseconds": 2208
             },
             {
               "type": "click",
@@ -596,7 +596,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 4800
+              "milliseconds": 1440
             },
             {
               "type": "click",
@@ -628,7 +628,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 3700
+              "milliseconds": 1620
             },
             {
               "type": "click",
@@ -654,7 +654,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 4700
+              "milliseconds": 1900
             },
             {
               "type": "click",
@@ -684,7 +684,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 4700
+              "milliseconds": 1900
             },
             {
               "type": "click",
@@ -710,7 +710,7 @@
             },
             {
               "type": "wait",
-              "milliseconds": 4800
+              "milliseconds": 2304
             },
             {
               "type": "click",

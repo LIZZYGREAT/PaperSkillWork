@@ -1,3 +1,4 @@
+import {LESSON_DURATIONS} from '../src/modules/lesson-motion.ts';
 import {runTraining,trainingSceneAt,WORKBENCH_CLIPS} from "../src/modules/training-model.ts";
 import {EXPERIMENTS,COUNTEREXAMPLES} from "../src/modules/evidence-data.ts";
 const MAIN_EXPERIMENT_IDS=new Set(["cifar-class","mnist500","mnist200"]);
@@ -18,16 +19,17 @@ export async function fullW8Checks({page,base,check,shot}){
   await scene.locator("select").selectOption(String(i));await scene.locator("[data-play]").click();await page.clock.runFor(32);await page.clock.fastForward(duration*progress);await scene.locator("[data-play]").click();
  };
  await page.emulateMedia({reducedMotion:"no-preference"});
- for(const [name,durations] of [["der-step",[6000,6000,6000,6000,6000]],["augmentation",[4500,4500,5000,5500]],["der-plus",[4500,5000,6000]]]){
+ for(const [name,durations] of Object.entries(LESSON_DURATIONS)){
   await page.goto(base+"?focus="+name);await page.evaluate(()=>document.fonts.ready);const scene=page.locator("[data-scene="+name+"]");
+  let canvasOffset=null;
   for(let i=0;i<durations.length;i++){
-   await seek(scene,i,durations[i],.6);check(await scene.getAttribute("data-status")==="paused","Mid-process pause is real");await geometry(scene);
+   await seek(scene,i,durations[i],.6);check(await scene.getAttribute("data-status")==="paused","Mid-process pause is real");await geometry(scene);const offset=await scene.evaluate(el=>el.querySelector('.teaching-canvas').getBoundingClientRect().top-el.getBoundingClientRect().top);if(canvasOffset===null)canvasOffset=offset;else check(Math.abs(offset-canvasOffset)<1,"Observation copy does not move the diagram between events");check(await scene.locator(".lesson-cue li[aria-current=step]").count()===1,"Each new animation identifies exactly one current observation step");
    if(name==="der-plus"&&i===0||[1,2,4].includes(i))await shot(name+"-"+i,"[data-scene="+name+"]");
    const snapshot=await scene.locator(".teaching-canvas").innerHTML();await page.clock.fastForward(1200);check(snapshot===await scene.locator(".teaching-canvas").innerHTML(),"Pause holds all geometry and values");
    await scene.locator("[data-back]").click();check(+(await scene.getAttribute("data-progress"))===0,"Back restores stage start");
   }
   if(name==="der-step"){
- await seek(scene,3,6000,.6);check(await scene.locator(".tg-network.is-updating").count()===1,"Edge attachment is checked while reverse signalling is active");
+ await seek(scene,3,LESSON_DURATIONS["der-step"][3],.6);check(await scene.locator(".tg-network.is-updating").count()===1,"Edge attachment is checked while reverse signalling is active");
  const edgeAnchors=await scene.locator("[data-network]").evaluate(g=>{const points=[...g.querySelectorAll(".tg-node")].map(n=>[+n.getAttribute("cx"),+n.getAttribute("cy")]);return [...g.querySelectorAll(".tg-edge")].every(e=>{const v=e.getAttribute("d").match(/-?\d+(?:\.\d+)?/g).map(Number);return points.some(([x,y])=>x===v[0]&&y===v[1])&&points.some(([x,y])=>x===v[2]&&y===v[3]);});});check(edgeAnchors,"Static network edges remain attached to their nodes during reverse signalling");
    await page.emulateMedia({reducedMotion:"reduce"});await scene.locator("select").selectOption("3");
    check(await scene.getAttribute("data-updates")==="2"&&await scene.getAttribute("data-seen")==="1","One update precedes any memory write");
@@ -36,6 +38,8 @@ export async function fullW8Checks({page,base,check,shot}){
    check(await scene.locator("[data-sample*='replay']").count()===0,"Empty pool never invents replay");
   }
   if(name==="augmentation"){
+   const formulaLayout=await scene.locator('.aug2-formula').evaluateAll(nodes=>nodes.map(n=>({text:n.textContent,bottom:n.getBoundingClientRect().bottom,next:n.nextElementSibling.getBoundingClientRect().top,sub:n.querySelectorAll('tspan[baseline-shift=sub]').length,font:getComputedStyle(n).fontFamily})));
+   check(formulaLayout.every(f=>!f.text.includes('_')&&f.sub>0&&f.font.includes('Cambria Math')&&f.bottom<f.next),"Image formulas have real subscripts, D1's mathematical face and clear separation from prose");
    const target=await scene.getAttribute("data-target");
    await scene.getByRole("button",{name:"中心裁剪",exact:true}).click();
    const centerView=await scene.locator('.aug2-transformed').getAttribute('data-image-view');
@@ -56,7 +60,7 @@ export async function fullW8Checks({page,base,check,shot}){
    await scene.locator('[data-overlap-choice="different"]').click();
    check(await scene.getAttribute("data-rd")==="xₑ"&&await scene.getAttribute("data-ry")==="x_f","R-d and R-y can independently read different records");
    check(await scene.getAttribute("data-supervision-count")==="3","DER++ adds replay CE beside current CE and dark matching");
-   await seek(scene,1,5000,.6);await shot("der-plus-different-read","[data-scene=der-plus]");
+   await seek(scene,1,LESSON_DURATIONS["der-plus"][1],.6);await shot("der-plus-different-read","[data-scene=der-plus]");
   }
   await page.emulateMedia({reducedMotion:"reduce"});await scene.locator("select").selectOption(String(durations.length-1));
   check(await scene.getAttribute("data-progress")==="1","Reduced motion shows whole semantic result");
@@ -64,14 +68,16 @@ export async function fullW8Checks({page,base,check,shot}){
    check(await scene.getAttribute("data-updates")==="1","All DER++ signals reach exactly one completed parameter update");
    check(await scene.locator(".dp-updated-parameter text").evaluate(e=>getComputedStyle(e).fill!=="rgb(255, 255, 255)"),"Joint-update caption remains readable against its pale background");
    check(await scene.locator(".dp-update-hub").count()===1&&await scene.locator(".dp-updated-parameter").count()===1,"The joint objective has one shared theta hub and no claimed corrective prediction");
-   check((await scene.locator("[data-total-formula]").textContent()).includes("β L_replay-CE"),"The historical-label term appears in the one joint objective");
+   check((await scene.locator("[data-total-formula]").textContent()).includes("β Lreplay-CE"),"The historical-label term appears in the one joint objective");
   }
   const stable=await scene.locator(".teaching-canvas").innerHTML();await page.clock.fastForward(2000);check(stable===await scene.locator(".teaching-canvas").innerHTML(),"Reduced motion is static");
   await page.emulateMedia({reducedMotion:"no-preference"});
  }
  await page.goto(base);const rv=page.locator('[data-scene=reservoir]');
  check(await rv.getAttribute('data-clip')==='2'&&await rv.getAttribute('data-memory')==='x₁,x₂',"Main reservoir begins with the full old pool and third candidate");
+ await rv.locator("details summary").click();
  await rv.getByRole('button',{name:'j = 1',exact:true}).click();
+ check(await rv.getAttribute("data-status")==="playing","Manual draw immediately starts its visible demonstration");
  await page.emulateMedia({reducedMotion:'reduce'});await rv.locator('select').selectOption('1');
  check(await rv.getAttribute('data-memory')==='x₁,x₃',"Manual legal replacement persists into the next rejected input");
  await page.emulateMedia({reducedMotion:'no-preference'});
@@ -105,7 +111,7 @@ export async function fullW8Checks({page,base,check,shot}){
     check(await wb.locator("[data-read-d=true],[data-read-y=true]").count()===0,"Prediction does not imply a replay read");
     check(await wb.locator("[data-query-result]").count()===1,"Prediction has one distinct output state");
    }
-   if([0,7,13,14,19,20].includes(c)){await geometry(wb);await shot("workbench-"+mode.replace("++","plus")+"-"+c,"[data-scene=workbench]");}
+   if([0,7,13,14,19,20].includes(c)){const fits=await wb.locator('.tg-number').evaluateAll(ns=>ns.every(n=>{const b=n.getBoundingClientRect(),r=n.parentElement.querySelector('rect').getBoundingClientRect();return b.left>=r.left-1&&b.right<=r.right+1&&b.top>=r.top-1&&b.bottom<=r.bottom+1;}));check(fits,"Mathematical score numerals fit their cells without squeezing");await geometry(wb);await shot("workbench-"+mode.replace("++","plus")+"-"+c,"[data-scene=workbench]");}
   }
   const before=await wb.getAttribute("data-weights"),seen=await wb.getAttribute("data-seen");
   await wb.locator("[data-predict]").click();await page.clock.fastForward(2000);
