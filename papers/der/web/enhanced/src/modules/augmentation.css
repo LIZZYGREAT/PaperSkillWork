@@ -19,5 +19,8 @@
 .aug3-lesson .aug3-match{font:25px var(--rk-font-math)}
 .aug3-lesson .aug2-z{font:23px var(--rk-font-math)}
 .aug3-lesson .later-svg-title{font:600 18px var(--rk-font-body)}
-.aug3-lesson .aug-view-controls{margin-bottom:24px}
+.aug3-controls{margin-bottom:24px;border:1px solid #c9d7c1;border-radius:12px;background:#fbfcf8}
+.aug3-lesson .aug-view-controls{margin:0;padding:12px 16px;border:0;background:transparent}
+.aug3-controls .motion-transport{margin:0;padding:12px 16px;border-top:1px solid #d9e1d2}
+
 @media(prefers-reduced-motion:reduce){.aug3-flying-patch{filter:none}}

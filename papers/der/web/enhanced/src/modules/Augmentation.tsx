@@ -41,7 +41,10 @@ export default function Augmentation(){
  const activeInput=m.flipping?'flip':future?'center':'saved';
  return <section className="der-redesign later-lesson aug2-lesson aug3-lesson" data-scene="augmentation" data-clip={c} data-progress={p} data-status={timeline.state.status} data-target="fixed-symbolic-z" data-view={view} data-transfer-progress={m.transfer} data-flip-progress={m.flip} data-selection-progress={m.selection}>
  <header className="later-scene-heading"><div><h3>每次从原图取视图，始终对照同一份历史。</h3><p>先看选区怎样变成模型输入，再观察未来如何重新裁剪或翻转。左侧保存的原图与历史目标各有固定的位置。</p></div></header>
+ <div className="aug3-controls">
  <div className="aug-view-controls scene-options" role="group" aria-label="选择未来回放时的图像视图"><span>未来训练视图</span><button aria-pressed={view==='center'} onClick={()=>{setView('center');timeline.playFrom(2);}}>中心裁剪</button><button aria-pressed={view==='flip'} onClick={()=>{setView('flip');timeline.playFrom(2);}}>水平翻转</button><button onClick={()=>timeline.playFrom(0)}>重播保存视图</button><small>可以暂停，逐步检查像素如何对应</small></div>
+ <SceneTransport timeline={timeline} clips={AUGMENTATION_CLIPS} label="增强与一致性" showTiming={false} teachingProgress/>
+ </div>
  <LessonCue steps={['取保存视图','冻结目标','重新增强','共同约束']} active={c} title={title} detail={notes[c]}/>
  <div className="aug2-stage"><svg viewBox="0 0 1120 756" className="teaching-canvas aug-canvas" role="img" aria-label="原图亮框内的选区按相同像素比例复制，连续放大到训练窗口；未来从原图重新裁剪或水平翻转，历史目标始终固定">
  <defs>
@@ -112,7 +115,6 @@ export default function Augmentation(){
   <text x="684" y="710" className="later-svg-note">没有另加视图之间的两两损失。</text>
  </g>
  </svg></div>
- <SceneTransport timeline={timeline} clips={AUGMENTATION_CLIPS} label="增强与一致性" showTiming={false} teachingProgress/>
  <div className="later-reading-pair"><div><h4>平均响应与视图波动，都受约束。</h4><p>固定 z 时，期望平方误差可以拆成“平均响应到 z 的偏离”与“各视图围绕平均值的波动”。这解释了一种隐式一致性倾向，并不保证所有视图输出完全相同。</p><ReferenceButton term="augmentation">展开均值—方差解释</ReferenceButton></div><div><h4>稳定的历史目标，也可能是错的。</h4><p>合理变换需要保留类别语义，任意裁剪并不一定合理。即便多种视图都稳定匹配 z，z 也可能记录了一次错误判断。下一幕让历史真实标签提供独立监督。</p></div></div>
  <p className="quiet-note">鹈鹕是自绘图像增强示例；本幕不从其像素计算三类 logits、损失或梯度。下方 a₁、a₂、a₃ 表示各增强视图的响应，不预设它们的具体数值或训练结果。</p>
  </section>;

@@ -931,3 +931,7 @@ build PASS。实际查看U4标题与纹样位置；最终全篇浏览器与截�
 - SUBPATH_ASSETS PASS（真实HTTP预览和正式runner资源），Node24.18.0 / Chromium153.0.8010.12。FULLSCREEN_LAYOUT覆盖1920×1080，FULLSCREEN_REAL NOT_RUN（headless，无真实F11）；未代填W9人审。5199已有用户预览服务继续使用，无需替换或停止。
 - 最后仅把“图像不被压扁”这一实现描述改为直接观察提示“对照翻转前后的左右位置”，再次build；图形、时序、计算不变。其他已确认场景没有设计改动，未运行发布/push/PR。正式run在报告阅读、放大复核和轻量留存后按确切路径清理。
 - 最终定向run已返回CLEANED，Test-Path=False；最后文案修订后build PASS。
+
+### 2026-11-02 播放控制区移到图上方
+按用户两幅截图，将增强场景的SceneTransport从主图下方移到未来视图选择旁，合并为上方同一工具区：第一行裁剪/翻转，第二行进度、播放按钮及阶段菜单。未修改共享播放器或动画时序。build PASS，augmentation-only两桌面38断言PASS；实际检查两档控制区截图，行间gap=0、控件均在主图上方，菜单与触发器等宽且位于视口内。正式定向run-2026-11-02T14-41-22-161Z四捕获PASS（GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS），已读报告/查看截图并保留轻量证据。真实F11仍未执行，用户预览5199保留。
+- 本次定向run清理返回CLEANED，Test-Path=False。
