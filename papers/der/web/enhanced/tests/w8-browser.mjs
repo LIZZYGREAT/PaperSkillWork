@@ -9,10 +9,13 @@ export async function fullW8Checks({page,base,check,shot}){
   const frame=svg.getBoundingClientRect(),outside=[],small=[];
   const visible=el=>{for(let n=el;n&&n!==svg;n=n.parentElement)if(+getComputedStyle(n).opacity<.02)return false;return true;};
   for(const el of svg.querySelectorAll("text,rect,circle,path")){
-   if(!visible(el))continue;const r=el.getBoundingClientRect();
+   if(!visible(el)||el.closest("svg[data-image-identity]"))continue;const r=el.getBoundingClientRect();
    if(r.width&&r.height&&(r.left<frame.left-2||r.right>frame.right+2||r.top<frame.top-2||r.bottom>frame.bottom+2))outside.push(el.textContent||el.tagName);
    if(el.tagName==="text"&&parseFloat(getComputedStyle(el).fontSize)*Math.hypot(el.getScreenCTM().a,el.getScreenCTM().b)<12)small.push(`${svg.closest("[data-scene]").dataset.scene} / ${el.getAttribute("class")} / ${el.textContent} / ${parseFloat(getComputedStyle(el).fontSize)*Math.hypot(el.getScreenCTM().a,el.getScreenCTM().b)}px`);
-  }return {outside,small};
+  }
+  // Artwork intentionally extends outside its native cropped viewport; verify the viewport instead.
+  for(const art of svg.querySelectorAll("svg[data-image-identity]")){if(!visible(art))continue;const matrix=art.parentElement.getScreenCTM(),a=new DOMPoint(art.x.baseVal.value,art.y.baseVal.value).matrixTransform(matrix),b=new DOMPoint(art.x.baseVal.value+art.width.baseVal.value,art.y.baseVal.value+art.height.baseVal.value).matrixTransform(matrix);if(a.x<frame.left-2||b.x>frame.right+2||a.y<frame.top-2||b.y>frame.bottom+2)outside.push("image viewport");}
+  return {outside,small};
  });check(!result.outside.length,"All semantic shapes fit the canvas: "+result.outside);check(!result.small.length,"Diagram text retains >=12px actual size: "+result.small);
  };
  const seek=async(scene,i,duration,progress)=>{

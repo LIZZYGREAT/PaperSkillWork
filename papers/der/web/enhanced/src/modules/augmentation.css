@@ -1,0 +1,23 @@
+.aug3-lesson .aug3-art{display:block;overflow:hidden}
+.aug3-outside{fill:#142c32}
+.aug3-window-border{fill:none;stroke:#bfcdbb;stroke-width:1.1;pointer-events:none}
+.aug3-placeholder{fill:#f3f5eb;stroke:#c8d4bf;stroke-width:1;stroke-dasharray:5 6}
+.aug3-selection{fill:none;stroke:#f3cc82;stroke-width:2}
+.aug3-handle{fill:#fff7dc;stroke:#b78b49;stroke-width:1}
+.aug3-moving-border{fill:none;stroke:#e5bd74;stroke-width:1.8}
+.aug3-flying-patch{filter:drop-shadow(0 6px 8px rgb(27 51 35 / 15%))}
+.aug3-lesson .aug3-wait-title{font:22px var(--rk-font-math);fill:#546c52}
+.aug3-operation-rule{fill:none;stroke:#e1e6d8;stroke-width:1}
+.aug3-operation-arrow{fill:none;stroke:#71916d;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.aug3-sweep-line{fill:none;stroke:#ffe0a2;stroke-width:2}
+.aug3-operation-status circle{fill:#568363}
+.aug3-operation-status text{font:600 15px var(--rk-font-body);fill:#2d6049}
+.aug3-frozen-surface{fill:#faf5e8;stroke:#c4a477;stroke-width:1}
+.aug3-lock{fill:none;stroke:#947040;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.aug3-copy-signal{fill:#b59055;stroke:#fff;stroke-width:1.5}
+.aug3-common-target{fill:#f0f4e8;stroke:#c0d0b5;stroke-width:1}
+.aug3-lesson .aug3-match{font:25px var(--rk-font-math)}
+.aug3-lesson .aug2-z{font:23px var(--rk-font-math)}
+.aug3-lesson .later-svg-title{font:600 18px var(--rk-font-body)}
+.aug3-lesson .aug-view-controls{margin-bottom:24px}
+@media(prefers-reduced-motion:reduce){.aug3-flying-patch{filter:none}}

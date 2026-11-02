@@ -1,7 +1,8 @@
 import { useId } from "react";
 
 export type ImageView = "original" | "saved" | "center" | "flip";
-export function PelicanIllustration({ view, label, x, y, width, height, amount = 1, className = "p1-source-art" }: { view: ImageView; label: string; x?: number; y?: number; width?: number; height?: number; amount?: number; className?: string }) {
+export type ImageRegion = { x: number; y: number; w: number; h: number };
+export function PelicanIllustration({ view, label, x, y, width, height, amount = 1, className = "p1-source-art", region, mirrored = false, frame = true }: { view: ImageView; label: string; x?: number; y?: number; width?: number; height?: number; amount?: number; className?: string; region?: ImageRegion; mirrored?: boolean; frame?: boolean }) {
   const clipId = useId().replace(/:/g, "");
   const transforms: Record<ImageView, { scale: number; x: number; y: number }> = {
     original: { scale: 1, x: 0, y: 0 },
@@ -12,7 +13,7 @@ export function PelicanIllustration({ view, label, x, y, width, height, amount =
   const target = transforms[view];
   const t = Math.max(0, Math.min(1, amount));
   const transform = { x: target.x * t, y: target.y * t, scale: 1 + (target.scale - 1) * t };
-  return <svg className={className} x={x} y={y} width={width} height={height} viewBox="0 0 320 190" role="img" aria-label={label} data-image-identity="synthetic-source-x1" data-image-view={view}>
+  return <svg className={className} x={x} y={y} width={width} height={height} viewBox={region ? `${region.x} ${region.y} ${region.w} ${region.h}` : '0 0 320 190'} role="img" aria-label={label} data-image-identity="synthetic-source-x1" data-image-view={view} data-image-region={region ? [region.x,region.y,region.w,region.h].join(',') : undefined} data-mirrored={mirrored}>
     <defs>
       <clipPath id={clipId}><rect width="320" height="190" rx="9" /></clipPath>
       <linearGradient id={`${clipId}-sky`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#392b49"/><stop offset=".58" stopColor="#a25265"/><stop offset="1" stopColor="#ef9a66"/></linearGradient>
@@ -20,7 +21,7 @@ export function PelicanIllustration({ view, label, x, y, width, height, amount =
       <linearGradient id={`${clipId}-pouch`} x1="0" y1="0" x2=".8" y2="1"><stop offset="0" stopColor="#ffc05f"/><stop offset="1" stopColor="#e76f4f"/></linearGradient>
     </defs>
     <g clipPath={`url(#${clipId})`}>
-      <g transform={view === "flip" ? `translate(${320 * t} 0) scale(${1 - 2 * t} 1)` : undefined}>
+      <g transform={mirrored ? `translate(${region ? 2*region.x+region.w : 320} 0) scale(-1 1)` : view === "flip" ? `translate(${320 * t} 0) scale(${1 - 2 * t} 1)` : undefined}>
         <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.scale})`}>
           <rect width="320" height="190" fill={`url(#${clipId}-sky)`} />
           <circle cx="274" cy="78" r="47" fill={`url(#${clipId}-sun)`} />
@@ -85,7 +86,7 @@ export function PelicanIllustration({ view, label, x, y, width, height, amount =
         </g>
       </g>
     </g>
-    <rect x=".75" y=".75" width="318.5" height="188.5" rx="9" className="p1-image-border" />
-    <path d="M12 28V12H31M289 12H308V28M12 162V178H31M289 178H308V162" className="p1-crop-corners" />
+    {frame && <><rect x=".75" y=".75" width="318.5" height="188.5" rx="9" className="p1-image-border" />
+    <path d="M12 28V12H31M289 12H308V28M12 162V178H31M289 178H308V162" className="p1-crop-corners" /></>}
   </svg>;
 }
