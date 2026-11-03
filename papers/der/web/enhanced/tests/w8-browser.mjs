@@ -39,7 +39,9 @@ export async function fullW8Checks({page,base,check,shot}){
  await seek(scene,1,LESSON_DURATIONS["der-step"][1],.45);check(await scene.locator("[data-network]").getAttribute("data-forward")==="1"&&await scene.getAttribute("data-freeze-progress")==="0","Output fully arrives before its frozen copy starts");
  await seek(scene,3,LESSON_DURATIONS["der-step"][3],.6);check(await scene.locator(".tg-network.is-updating").count()===1,"Edge attachment is checked while reverse signalling is active");
  const edgeAnchors=await scene.locator("[data-network]").evaluate(g=>{const points=[...g.querySelectorAll(".tg-node")].map(n=>[+n.getAttribute("cx"),+n.getAttribute("cy")]);return [...g.querySelectorAll(".tg-edge")].every(e=>{const v=e.getAttribute("d").match(/-?\d+(?:\.\d+)?/g).map(Number);return points.some(([x,y])=>x===v[0]&&y===v[1])&&points.some(([x,y])=>x===v[2]&&y===v[3]);});});check(edgeAnchors,"Static network edges remain attached to their nodes during reverse signalling");
-   await page.emulateMedia({reducedMotion:"reduce"});await scene.locator("select").selectOption("3");
+   await page.emulateMedia({reducedMotion:"reduce"});
+   await page.locator('[data-scene="der-step"][data-clip="3"][data-progress="1"]').waitFor();
+   await scene.locator("select").selectOption("3");
    check(await scene.getAttribute("data-updates")==="2"&&await scene.getAttribute("data-seen")==="1","One update precedes any memory write");
    await scene.locator("select").selectOption("4");check(await scene.getAttribute("data-seen")==="2","Write occurs only after update");
    await scene.getByRole("button",{name:"空池首轮",exact:true}).click();await scene.locator("select").selectOption("2");
