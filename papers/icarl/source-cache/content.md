@@ -1,8 +1,8 @@
 # Source Cache: iCaRL: Incremental Classifier and Representation Learning
 
-Source file: `../source/paper.pdf`  
-Source version: arXiv:1611.07725v2, 14 April 2017  
-PDF length: 15 pages  
+Source file: `../source/paper.pdf`\
+Source version: arXiv:1611.07725v2, 14 April 2017\
+PDF length: 15 pages\
 Extraction: complete selectable-text extraction with Poppler `pdftotext`; physical PDF page boundaries are retained below. This internal cache preserves source wording and locators. Visual-only content is inventoried in `manifest.json` and is not represented as extracted prose.
 
 ## PDF page 1

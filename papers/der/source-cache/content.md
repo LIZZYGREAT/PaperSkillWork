@@ -1167,7 +1167,7 @@ each batch is made up of Nd1 samples from Gd1
 [r/2] and Nd2 samples from Gd2
 [r/2]+1, where:
 Nd1 = min
- 
+
 |Gd1
 [r/2]| −Cd1
 |Gd1

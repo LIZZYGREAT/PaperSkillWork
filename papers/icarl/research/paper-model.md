@@ -1,7 +1,7 @@
 # Paper Model: iCaRL: Incremental Classifier and Representation Learning
 
-Paper ID: `icarl`  
-Source: `source/paper.pdf`, arXiv:1611.07725v2 (14 April 2017)  
+Paper ID: `icarl`\
+Source: `source/paper.pdf`, arXiv:1611.07725v2 (14 April 2017)\
 Source cache: `source-cache/content.md` (15 physical PDF pages)
 
 ## Core Explanation

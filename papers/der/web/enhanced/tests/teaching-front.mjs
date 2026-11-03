@@ -73,4 +73,3 @@ export async function teachingFrontChecks({page,base,check,shot}){
  await page.locator('[data-label-mode=answer]').focus();await page.keyboard.press('Tab');check(await page.locator(':focus').evaluate(el=>getComputedStyle(el).outlineStyle!=='none'),'Keyboard focus has a visible outline');
  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No desktop page overflow');await page.emulateMedia({reducedMotion:'no-preference'});
 }
-
