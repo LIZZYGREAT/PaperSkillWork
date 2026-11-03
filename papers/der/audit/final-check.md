@@ -272,3 +272,13 @@ Agent 阅读复核：有限回放自然引出标签的信息缺口；同一输�
 ## W9 用户最终验收（2026-11-03）
 
 评审人：用户。用户于当前对话明确要求将 W9 登记为 `complete`；据此将 `HUMAN_ACCEPTANCE` 与 `Overall` 记录为 `PASS`，并通过 `python tools/paper.py stage der W9 complete --reviewed-by 用户 --note ...` 写入阶段状态。`FULLSCREEN_REAL` 仍为 `NOT_RUN`，官方 `UPSTREAM_SYNTAX` / `UPSTREAM_OUTPUT` 也仍为 `NOT_RUN`；未将这些项目冒记为通过。W10 仍为 `pending`，未执行 Import、Preflight、推送或 PR。
+
+## W10 发布事实与基础 Kit 收尾验证（2026-11-03）
+
+本节补记后续真实结果；上方 W9 当日记录保留其当时的 W10 pending 状态，不回写历史诊断。
+
+- **用户确认的本地 W10 preflight：PASS。** 用户在当前对话确认检查已完成且通过；本仓没有归档本地 preflight 的逐项终端输出，不以此补造命令细节。
+- **PaperSkill 上游发布：PASS。** [PR #445](https://github.com/ReductTech/PaperSkill/pull/445) 已合并；PR head `4da910afe9054d3a6ff54003023d53ec3de44ac9`，merge commit `6be45e32e514ea3e858bbff335e4022174fd1fc7`。目标版本目录为 `html_output/dark_experience_for_general_continual_learning_a_strong_simple_baseline/ganwenjie1102`。[官方 Actions run #41562982382](https://github.com/ReductTech/PaperSkill/actions/runs/41562982382) 结论 `success`，包括 repository structure validation、database synchronization、deployment manifest、contributor identity、PR scope 和 changed tutorial build。
+- **当前官方检查器核对：PASS。** 核对的 PaperSkill `main` SHA 为 `400be77232730297ba2cabfbe2d0a5a85c8f6a88`；官方 `syntax-check.js` blob 为 `2bcfa6f815054ee498574c51cef05f0c315b4298`，`validate-output.js` blob 为 `9ec76b6974f262fca7b9611c4a485dd2275fe76c`。相邻 PaperSkill 检出的两个文件哈希与官方 blob 一致。
+- **新模板独立兼容性：PASS。** 执行 `python tools/visual-qa/foundation-check.py --compare-der --upstream-root ..\PaperSkill --output .visual-qa/foundation-der-review`，退出码 0。脚本在临时生成的独立论文目录运行 `npm ci`、空项目生产构建，写入仅供检查的单章、已注册单模块和 Reference 夹具后再次构建，并执行官方 `syntax-check.js <project> --require-parser` 与 `validate-output.js <project>`；syntax parser 检查 14 个源码文件，validator 报告 1 个 chapter、1 个已注册 module，均为 `PASS`。临时夹具在进程退出时清除；没有在 PaperSkill 上游工作区生成或改动论文。
+- **界面回归：PASS。** Foundation 空态、开发态样式预览、有效章节页、公式与 Reference drawer 在 1440×900、1920×1080 headless Chromium 检查通过；DER Reference 几何对照一致。返回按钮为 164×52px，标签中心偏移 0px；长公式分成 8 行交错显示，正文容器没有横向溢出。截图保留在未跟踪的 `.visual-qa/foundation-der-review/`。`FULLSCREEN_REAL=NOT_RUN`（本轮为 headless 布局检查）。
