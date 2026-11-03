@@ -13,6 +13,7 @@
 import type { ReactNode } from "react";
 
 type MathMLCoreAttributes = {
+  key?: string | number;
   display?: "block" | "inline" | "inline-block";
   className?: string;
   title?: string;

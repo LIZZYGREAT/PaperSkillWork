@@ -1,5 +1,5 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import type { ReactNode, RefObject } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 const VIEWPORT_GUTTER = 12;
 const ANCHOR_GAP = 8;
@@ -90,32 +90,4 @@ export function usePopoverPosition(
   }, [anchorRef, panelRef, open, onDismiss, returnFocusOnEscape]);
 
   return position;
-}
-
-export function Popover({ label, trigger, children, className = "", closeLabel = "Close" }: {
-  label: string;
-  trigger: ReactNode;
-  children: ReactNode;
-  className?: string;
-  closeLabel?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const panelRef = useRef<HTMLDivElement | null>(null);
-  const close = useCallback(() => setOpen(false), []);
-  const position = usePopoverPosition(triggerRef, panelRef, open, close);
-
-  return (
-    <>
-      <button ref={triggerRef} type="button" className="rk-popover__trigger" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-        {trigger}
-      </button>
-      {open ? (
-        <div ref={panelRef} className={`rk-popover ${className}`.trim()} role="dialog" aria-label={label} style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}>
-          <button type="button" className="rk-overlay__close" aria-label={closeLabel} onClick={close}>×</button>
-          {children}
-        </div>
-      ) : null}
-    </>
-  );
 }

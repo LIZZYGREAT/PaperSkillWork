@@ -1,7 +1,7 @@
 import { useCallback, useId, useRef, useState } from "react";
 import type { FocusEvent, PointerEvent, ReactNode } from "react";
 import { usePopoverPosition } from "../../foundation/overlay/Popover";
-import type { KnowledgeEntry, TermRefLabels } from "./types";
+import type { ReferenceEntry, TermRefLabels } from "./types";
 
 const DEFAULT_LABELS: TermRefLabels = {
   definition: "术语解释",
@@ -11,7 +11,7 @@ const DEFAULT_LABELS: TermRefLabels = {
 };
 
 export function TermRef({ entry, children, onOpenReference, labels }: {
-  entry: KnowledgeEntry;
+  entry: ReferenceEntry;
   children?: ReactNode;
   onOpenReference?: (entryId: string) => void;
   labels?: Partial<TermRefLabels>;
@@ -81,14 +81,14 @@ export function TermRef({ entry, children, onOpenReference, labels }: {
   return (
     <span className="rk-term-ref-wrap" onPointerEnter={openOnHover} onPointerOut={closeOnLeave} onFocus={onFocus} onBlur={closeOnBlur}>
       <button ref={triggerRef} type="button" className="rk-term-ref" data-term-id={entry.id} aria-haspopup="dialog" aria-expanded={open} aria-controls={panelId} onClick={onTriggerClick}>
-        {children ?? entry.hover.title}
+        {children ?? entry.name}
       </button>
       {open ? (
-        <div ref={panelRef} className="rk-term-popover" id={panelId} role="dialog" aria-label={`${entry.hover.title} ${copy.definition}`} style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}>
-          <strong>{entry.hover.title}</strong>
-          <span>{entry.hover.definitionZh}</span>
-          {entry.hover.paperRoleZh ? <span><b>{copy.paperRole}</b> {entry.hover.paperRoleZh}</span> : null}
-          {entry.hover.confusionZh ? <span><b>{copy.easyToConfuse}</b> {entry.hover.confusionZh}</span> : null}
+        <div ref={panelRef} className="rk-term-popover" id={panelId} role="dialog" aria-label={`${entry.name} ${copy.definition}`} style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}>
+          <strong>{entry.name}</strong>
+          <span>{entry.definition}</span>
+          {entry.role ? <span><b>{copy.paperRole}</b> {entry.role}</span> : null}
+          {entry.confusion ? <span><b>{copy.easyToConfuse}</b> {entry.confusion}</span> : null}
           {onOpenReference ? <button type="button" className="rk-term-popover__link" onClick={openReference}>{copy.openReference}</button> : null}
         </div>
       ) : null}
