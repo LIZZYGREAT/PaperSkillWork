@@ -175,6 +175,16 @@ class ChangedPaperSelectorTests(unittest.TestCase):
             ],
         )
 
+    def test_template_and_generator_schedule_foundation_without_all_papers(self) -> None:
+        self.repo.paper("der", web_variant="enhanced")
+        base = self.repo.commit("add unchanged paper")
+        for path in ("templates/web-project/src/App.tsx", "tools/paper.py"):
+            self.repo.write(path, "changed\n")
+            head = self.repo.commit("edit foundation input")
+            result = self.payload(self.select(base, head=head))
+            self.assertTrue(result["kit_changed"])
+            self.assertEqual(result["changed_web_projects"], [])
+
     def test_unknown_baseline_fails_without_trusted_fallback(self) -> None:
         result = self.select("missing-base")
         self.assertEqual(result.returncode, 2)

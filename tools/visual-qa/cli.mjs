@@ -7,7 +7,7 @@ import { setTimeout as delay } from "node:timers/promises";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
-const demoRequire = createRequire(path.join(repositoryRoot, "reusable-kit/demo/package.json"));
+const qaRequire = createRequire(path.join(repositoryRoot, "tools/visual-qa/package.json"));
 const DEFAULT_VIEWPORTS = [
   { id: "1440x900", width: 1440, height: 900 },
   { id: "1920x1080", width: 1920, height: 1080 },
@@ -324,11 +324,11 @@ async function stopServer(running) {
   if (!running.exit && running.child.exitCode === null) running.child.kill("SIGKILL");
 }
 
-function chromiumFromDemoDependencies() {
+function chromiumFromQaDependencies() {
   try {
-    return demoRequire("playwright").chromium;
+    return qaRequire("playwright").chromium;
   } catch (error) {
-    throw new Error(`Playwright is unavailable. Install the locked demo dependencies with "npm ci --prefix reusable-kit/demo". ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Playwright is unavailable. Install the locked Visual QA dependencies with "npm ci --prefix tools/visual-qa". ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -882,7 +882,7 @@ async function main() {
 
     runningServer = startServer(config.server, configDirectory, config.baseUrl);
     await waitForServer(runningServer);
-    const chromium = chromiumFromDemoDependencies();
+    const chromium = chromiumFromQaDependencies();
     const executablePath = process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE;
     browser = await chromium.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
     report.browser = { name: executablePath ? "Chromium-compatible executable" : "Chromium", version: browser.version() };

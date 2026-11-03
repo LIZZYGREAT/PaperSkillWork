@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";import {createRequire} from "node:module";import {mkdir,writeFile,rename} from "node:fs/promises";import {resolve} from "node:path";import {runTraining,trainingSceneAt} from "../src/modules/training-model.ts";
-const require=createRequire(new URL("../../../../../reusable-kit/demo/package.json",import.meta.url)),{chromium}=require("playwright");
+const require=createRequire(new URL("../../../../../tools/visual-qa/package.json",import.meta.url)),{chromium}=require("playwright");
 const output=resolve(process.env.DER_PLAYBACK_DIR||".visual-qa/der-w8-playback");
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,executablePath:process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE||"C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"});

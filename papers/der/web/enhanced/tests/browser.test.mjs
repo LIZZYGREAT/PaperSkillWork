@@ -13,7 +13,7 @@ import {fileURLToPath} from "node:url";
 import {lifecycleBrowserChecks,lifecycleFocusBrowserChecks} from "./lifecycle-browser.mjs";
 import {RESERVOIR_STEPS, RESERVOIR_CLIPS} from "../src/modules/reservoir-model.ts";
 import {probabilityComparison,logitComparison} from "../src/modules/math-model.ts";
-const require=createRequire(new URL("../../../../../reusable-kit/demo/package.json",import.meta.url));
+const require=createRequire(new URL("../../../../../tools/visual-qa/package.json",import.meta.url));
 const {chromium}=require("playwright");
 const source=resolve(dirname(fileURLToPath(import.meta.url)),".."),dist=resolve(source,"dist");
 const output=process.env.DER_REVIEW_DIR;

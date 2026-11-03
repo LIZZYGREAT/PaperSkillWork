@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {REFERENCE_P, PROBABILITY_CASES, HISTORY_Z, LOGIT_CASES, probabilityComparison, logitComparison} from '../../../web/enhanced/src/modules/math-model.ts';
 const here=dirname(fileURLToPath(import.meta.url)), repo=resolve(here,'../../../../..');
-const require=createRequire(resolve(repo,'reusable-kit/demo/package.json'));
+const require=createRequire(resolve(repo,'tools/visual-qa/package.json'));
 const {chromium}=require('playwright');
 const output=resolve(repo,process.env.DER_S2_OUTPUT||'.visual-qa/der-s2-r3/review');
 const design=resolve(repo,'.visual-qa/der-s2/design-build');

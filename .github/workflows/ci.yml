@@ -171,11 +171,11 @@ jobs:
           fi
 
       - name: Install shared Visual QA dependencies
-        working-directory: reusable-kit/demo
+        working-directory: tools/visual-qa
         run: npm ci
 
       - name: Install headless Chromium
-        working-directory: reusable-kit/demo
+        working-directory: tools/visual-qa
         run: npx playwright install --with-deps chromium
 
       - name: Run production preview browser smoke
@@ -211,51 +211,35 @@ jobs:
           retention-days: 7
 
   reusable-kit:
-    name: Reusable Kit demo and shared QA checks
+    name: Foundation typography and Reference regression
     needs: detect-and-core
     if: needs.detect-and-core.outputs.kit_changed == 'true' || needs.detect-and-core.outputs.shared_qa_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v7
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements-dev.txt
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: reusable-kit/demo/package-lock.json
-
-      - name: Install Reusable Kit demo dependencies
-        working-directory: reusable-kit/demo
-        run: npm ci
-
-      - name: Build Reusable Kit demo
-        working-directory: reusable-kit/demo
-        run: npm run build
-
-      - name: Install headless Chromium
-        working-directory: reusable-kit/demo
+          cache-dependency-path: tools/visual-qa/package-lock.json
+      - name: Install independent QA dependencies
+        run: npm --prefix tools/visual-qa ci
+      - name: Install Chromium
+        working-directory: tools/visual-qa
         run: npx playwright install --with-deps chromium
-
-      - name: Check Visual QA runner behavior
+      - name: Build generated standalone project and test Reference
+        run: python tools/visual-qa/foundation-check.py --output .visual-qa/ci-foundation
+      - name: Check shared Visual QA runner
         run: node tools/visual-qa/self-check.mjs --keep-artifacts
-
-      - name: Run Visual QA on Reusable Kit demo
-        run: node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json --output .visual-qa/ci-kit
-
-      - name: Run Reusable Kit browser smoke tests
-        working-directory: reusable-kit/demo
-        run: npm run test:browser
-
-      - name: Upload Kit Visual QA reports and screenshots
+      - name: Upload foundation review artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: visual-qa-kit
-          path: |
-            .visual-qa/ci-kit/**
-            .visual-qa/runner-self-check-*/**
-          if-no-files-found: warn
+          name: visual-qa-foundation
+          path: .visual-qa/**
           include-hidden-files: true
           retention-days: 7

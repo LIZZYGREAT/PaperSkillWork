@@ -3,7 +3,7 @@ import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {lifecycleSceneAt} from '../src/modules/review/lifecycle-model.ts';
-const require=createRequire(new URL('../../../../../reusable-kit/demo/package.json',import.meta.url));
+const require=createRequire(new URL('../../../../../tools/visual-qa/package.json',import.meta.url));
 const {chromium}=require('playwright');
 const output=resolve(process.env.DER_PLAYBACK_DIR||'.visual-qa/der-w8-playback','lifecycle');
 await mkdir(output,{recursive:true});

@@ -2,14 +2,12 @@
 """Mechanical workspace and workflow checks for PaperSkillWork."""
 
 import argparse
-import datetime
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
-import tempfile
 import unicodedata
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -48,7 +46,6 @@ UPSTREAM_PAPER_NAME_RE = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 UPSTREAM_VERSION_RE = re.compile(r"^[a-z][a-z0-9]*[0-9]{4}(?:_[0-9]+)?$")
 PLACEHOLDER_RE = re.compile(r"\{\{([A-Za-z0-9_]+)\}\}")
 ALLOWED_PLACEHOLDERS = {"paper_id", "paper_title", "paper_url", "arxiv_id"}
-KIT_COMPONENT_STATUSES = ("candidate", "approved", "deprecated")
 STAGES: List[Tuple[str, str, str]] = [
     ("W0", "W0_source_intake", "Source Intake"),
     ("W1", "W1_source_cache", "Source Cache + Asset Inventory"),

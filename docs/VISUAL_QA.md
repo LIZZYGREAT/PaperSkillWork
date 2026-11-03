@@ -328,10 +328,10 @@ if (Test-Path -LiteralPath $RunDirectory) { throw "Run directory remains after c
 从仓库根目录运行示例：
 
 ```powershell
-node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo.json
+node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json
 ```
 
-首次运行前，按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 安装 Kit demo 锁定的 Playwright 依赖和 Chromium，并先执行目标项目自己的构建命令。默认产物写入忽略目录 `.visual-qa/`。工具会生成 JSON 和 Markdown 报告，但不会替代对截图的实际查看，也不会自动更新已批准基准图。
+首次运行前，按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 安装公共 QA 目录锁定的 Playwright 依赖和 Chromium，并先执行目标项目自己的构建命令。默认产物写入忽略目录 `.visual-qa/`。工具会生成 JSON 和 Markdown 报告，但不会替代对截图的实际查看，也不会自动更新已批准基准图。
 
 ### Windows Codex 中的 Edge 启动回退
 

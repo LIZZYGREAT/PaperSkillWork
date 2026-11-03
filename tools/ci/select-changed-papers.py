@@ -104,7 +104,8 @@ def changed_targets(repo: Path, paths: list[str], base: str, head: str, base_sou
             if len(parts) >= 5 and parts[2] == "web":
                 directory = "/".join(parts[:4])
                 web_dirs[directory] = {"paper_id": paper_id, "dir": directory}
-        if git_path == "reusable-kit" or git_path.startswith("reusable-kit/"):
+        if (git_path == "reusable-kit" or git_path.startswith("reusable-kit/")
+                or git_path.startswith("templates/web-project/") or git_path == "tools/paper.py"):
             kit_changed = True
         if (
             git_path == "tools/visual-qa"

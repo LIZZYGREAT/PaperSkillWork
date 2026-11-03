@@ -1,6 +1,6 @@
 import {WORKBENCH_CLIPS} from "../src/modules/training-model.ts";
 import assert from "node:assert/strict";import {createRequire} from "node:module";import {mkdir} from "node:fs/promises";import {resolve} from "node:path";
-const require=createRequire(new URL("../../../../../reusable-kit/demo/package.json",import.meta.url)),{chromium}=require("playwright");
+const require=createRequire(new URL("../../../../../tools/visual-qa/package.json",import.meta.url)),{chromium}=require("playwright");
 const output=resolve(process.env.DER_REVIEW_DIR||".visual-qa/der-w8-layout");await mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,executablePath:process.env.PAPERWORK_PLAYWRIGHT_EXECUTABLE||"C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"});let count=0;
 try{for(const [width,height] of [[1440,900],[1920,1080]]){

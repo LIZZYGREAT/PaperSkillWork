@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { LESSON_DURATIONS } from '../src/modules/lesson-motion.ts';
 import { RESERVOIR_CLIPS } from '../src/modules/reservoir-model.ts';
 
-const require = createRequire(new URL('../../../../../reusable-kit/demo/package.json', import.meta.url));
+const require = createRequire(new URL('../../../../../tools/visual-qa/package.json', import.meta.url));
 const { chromium } = require('playwright');
 const output = resolve(process.env.DER_REVIEW_DIR || '.visual-qa/lesson-playback');
 await mkdir(output, { recursive: true });
