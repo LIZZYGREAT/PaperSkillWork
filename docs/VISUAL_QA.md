@@ -335,7 +335,7 @@ node tools/visual-qa/cli.mjs --config tools/visual-qa/examples/reusable-kit-demo
 
 ### Windows Codex 中的 Edge 启动回退
 
-Codex 的 Windows 沙箱可能无法启动系统 Edge（例如进程启动时报 `Access is denied`、Edge named-pipe / IPC 权限错误）；这不等于没有截图工具。公共 runner 从 `reusable-kit/demo` 的锁定依赖加载 Playwright，默认启动 Playwright Chromium，也支持通过 `PAPERWORK_PLAYWRIGHT_EXECUTABLE` 指定本机 Chromium 兼容浏览器。先辨别错误发生在哪一层：
+Codex 的 Windows 沙箱可能无法启动系统 Edge（例如进程启动时报 `Access is denied`、Edge named-pipe / IPC 权限错误）；这不等于没有截图工具。公共 runner 从 `tools/visual-qa` 的锁定依赖加载 Playwright，默认启动 Playwright Chromium，也支持通过 `PAPERWORK_PLAYWRIGHT_EXECUTABLE` 指定本机 Chromium 兼容浏览器。先辨别错误发生在哪一层：
 
 1. 若报 Playwright Chromium 可执行文件不存在，先按 [`tools/visual-qa/README.md`](../tools/visual-qa/README.md) 检查/安装该 demo 的锁定依赖和 Chromium。网络不允许下载时，检查本机是否已有 Edge，再走下方显式路径。
 2. 若 Edge 文件不存在，先用下面的候选路径检查；不要把“未安装 Edge”和“沙箱不允许启动 Edge”混为一谈。
