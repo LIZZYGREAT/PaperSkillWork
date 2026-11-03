@@ -40,7 +40,7 @@ def invoke(root, *args):
 
 def make_project(tmp_path, selected_asset=False):
     root = tmp_path / "project"
-    shutil.copytree(REPO_ROOT / "tools", root / "tools")
+    shutil.copytree(REPO_ROOT / "tools", root / "tools", ignore=shutil.ignore_patterns("node_modules", "__pycache__"))
     shutil.copytree(TEMPLATES, root / "templates")
     shutil.copytree(
         REPO_ROOT / "reusable-kit",
@@ -150,7 +150,7 @@ def make_project(tmp_path, selected_asset=False):
     write_fenced_yaml(paper / "design/implementation-plan.md", "Implementation Plan", implementation)
     with (paper / "design/implementation-plan.md").open("a", encoding="utf-8") as handle:
         handle.write(
-            "\n## Primary Spine Mapping\n\n## Reusable Pattern Library\n"
+            "\n## Primary Spine Mapping\n"
             "\n## Vertical Slice (W6)\n\n### Vertical Slice Review (W7)\n\nVertical Slice Review: PASS\n"
         )
     write_manifest(paper, complete_core={"C01": ("S1", "Problem", "complete"), "C02": ("S2", "ArchitectureExplorer", "complete"), "C03": ("S2", "ArchitectureExplorer", "planned")})
@@ -218,21 +218,6 @@ def load_paper_module(root):
     return module
 
 
-def write_fake_kit(path, components, version=2):
-    """Write a minimal Reusable Kit whose registry declares only the given components."""
-    path.mkdir(parents=True, exist_ok=True)
-    for entry in components.values():
-        source = path.joinpath(*entry["path"].split("/"))
-        source.mkdir(parents=True, exist_ok=True)
-        (source / "Placeholder.tsx").write_text("export {};\n", encoding="utf-8")
-        entry.setdefault("source", entry["path"] + "/Placeholder.tsx")
-        entry.setdefault("dependencies", [])
-    (path / "KIT_VERSION").write_text("9.9.9\n", encoding="utf-8")
-    (path / "registry.yaml").write_text(
-        yaml.safe_dump({"version": version, "components": components}, sort_keys=False, allow_unicode=True),
-        encoding="utf-8",
-    )
-    return path
 
 
 def load_config(path):

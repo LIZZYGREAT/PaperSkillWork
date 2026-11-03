@@ -37,34 +37,9 @@ For each confirmed page/state, record the approved effect or screenshot referenc
 
 For substantial motion, record the initial, key intermediate, and final states and the required object connections. Do not duplicate the same page contract in a new document.
 
-### Reusable Asset Composition Notes (W5 free text)
+### Visual Baseline
 
-Use this section for a scene that combines multiple Kit assets or an official example package. Keep `implementation.stages[].reusable_pattern` unchanged: it remains one existing Registry pattern ID or `null`, and must not be stretched into a description of a multi-asset composition. Record these notes here, in this existing plan, only when they help another implementer start without guessing.
-
-For each complex reusable scene, record:
-
-- Scene and teaching contract: goal; input; persistent and derived state; output; lifecycle; semantic, calculation, ordering, and connection invariants to protect.
-- Kit selection: every selected asset's exact Registry ID and responsibility; the matching Recipe or official `--example` package ID; what is composed locally for this paper.
-- Delivery evidence: the exact `scaffold-kit` command with `--dry-run`, the resolved publish source and copy destination, and the reported example files / asset dependency closure. Record the corresponding copy command after the dry-run is reviewed. For an official package use `--example <id>`; for independently selected parts use `--select AssetA,AssetB`. Those modes are mutually exclusive, so do not imply they can be combined in one invocation.
-- Exclusions: relevant Kit assets or Recipes considered but not used, with the reason; describe any custom implementation instead.
-- Change classification: mark each adaptation as scene layout, paper-data/semantic adaptation, or a suspected shared component defect. Keep scene changes local; verify a suspected shared defect against the asset's default use before changing Kit internals.
-
-Example handoff (replace every placeholder with real values and command output):
-
-```text
-Scene: <stage/page and short name>
-Goal / input / state / output: <...>
-Protected semantics and connections: <...>
-Assets: <RegistryID — role>; <RegistryID — role>
-Recipe or package: <Recipe path or --example ID>; local composition: <files/responsibilities>
-Dry run: python tools/paper.py scaffold-kit <paper-id> --select <RegistryID,...> --dry-run
-Resolved source / destination / closure: <exact paths and reported files>
-Copy: <same command without --dry-run>
-Considered but excluded: <asset or Recipe — reason>
-Adaptations: <layout | data/semantics | suspected shared defect — evidence>
-```
-
-For a complete package, replace the `--select` commands with the package's actual `--example` command and record both the example files and Kit asset closure. Do not copy Gallery-only styles or leave CSS, imports, or other dependencies implicit.
+W0 installs the DER-based canvas, typography, native MathML, layout and Reference shell. Before the first formal page, inspect the development-only `?style-preview=1`; record any paper-local font/size/color adjustments here. Design teaching objects and scenes from W2/W4 without component selection quotas.
 
 ### Critical Teaching and Integration Scenes
 
@@ -118,13 +93,9 @@ implementation:
     required_core_items: []
 ```
 
-Each `stages` entry requires `id`, `page`, `core_items`, `evidence_refs`, `primary_vehicle`, `reusable_pattern`, and `reason`. `reusable_pattern` may be null; a non-null name must exist in `reusable-kit/registry.yaml` or W5 fails. For a continual-learning paper, use `python tools/paper.py scaffold-kit <paper-id> --select ComponentA,ComponentB` to copy the exact selected source closure; inspect --dry-run, use --allow-unapproved for candidates, and repeat --select to append safely. Each `supporting` / `reference` entry has an `item` ID and a `placement`. The vertical slice lists the implementation stages and CORE IDs that W6 must finish.
+Each `stages` entry requires `id`, `page`, `core_items`, `evidence_refs`, `primary_vehicle`, and `reason`. Each `supporting` / `reference` entry has an `item` ID and a `placement`. The vertical slice lists the implementation stages and CORE IDs that W6 must finish.
 
 Each selected public asset also appears once in `assets` with its asset-plan ID, a Learning Spine stage (or `Reference Hub`), and a `rendering` choice: `original`, `crop`, `redraw`, or `overlay`.
-
-## Reusable Pattern Library
-
-Check applicable patterns before inventing a new interaction: Architecture Explorer, Flow Stepper, Branch Highlighter, Before/After Comparator, Timeline, Evidence Viewer, Term Hover, Reference Hub, Expandable Detail, Result Protocol Card. Record the pattern selected, copied/adapted source location, and paper-specific changes. Check the exact reusable pattern identifier in `reusable-kit/registry.yaml`. Copy source into this paper's `web/enhanced/src/`; do not import another paper's runtime.
 
 ## Vertical Slice (W6)
 
