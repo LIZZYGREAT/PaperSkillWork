@@ -13,6 +13,9 @@
   --rk-accent: #2e6b4e;
   --rk-accent-strong: #1b4a34;
   --rk-accent-soft: #e2ebdc;
+  --rk-ornament-leaf: #b7c6a3;
+  --rk-ornament-stem: #91a583;
+  --rk-ornament-warm: #cfad72;
   --rk-good: var(--rk-accent);
   --rk-good-soft: var(--rk-accent-soft);
   --rk-warn: #8a5a25;

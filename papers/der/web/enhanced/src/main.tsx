@@ -4,6 +4,7 @@ import App from "./App";
 import "./styles/tokens.css";
 import "./styles/components.css";
 import "./shared/foundation/styles/kit.css";
+import "./shared/foundation/styles/editorial.css";
 import "./styles/paper.css";
 import "./styles/diagram-placement.css";
 

@@ -1,0 +1,3 @@
+.lesson-section>.lesson-heading h1,.lesson-section>.lesson-heading h2{font-family:var(--rk-font-math);font-size:46px;line-height:1.35;font-weight:700;letter-spacing:-.025em;color:#173d32;white-space:normal}
+.lesson-section>.lesson-heading .eyebrow{display:none}
+@media(max-width:650px){.lesson-section>.lesson-heading h1,.lesson-section>.lesson-heading h2{font-size:34px}}
