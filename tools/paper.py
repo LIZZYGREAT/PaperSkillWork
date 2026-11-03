@@ -398,6 +398,7 @@ def render_template(template_name: str, replacements: Dict[str, str], source_pat
 
 # Fixed runtime closure. No selection, approval, or cross-workspace imports.
 FOUNDATION_FILES = (
+    "foundation/editorial/EditorialFlourish.tsx", "foundation/editorial/editorial-flourish.css",
     "foundation/styles/kit.css", "foundation/styles/editorial.css",
     "foundation/overlay/Popover.tsx", "foundation/math/mathml-jsx.d.ts",
     "core/reference/ReferenceHub.tsx", "core/reference/TermRef.tsx",
