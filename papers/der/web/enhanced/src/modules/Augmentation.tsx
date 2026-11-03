@@ -116,7 +116,7 @@ export default function Augmentation(){
     {region:AUG_REGIONS.original,rotation:AUG_ROTATION_DEG,rotationScale:rotationCoverScale(AUG_ROTATION_DEG,AUG_ROTATION_PAN_X),rotationOffsetX:AUG_ROTATION_PAN_X},
   ].map((art,i)=><g key={i} opacity={windowAt(p,.04+i*.06,.28+i*.06)}>
    <PelicanIllustration view="original" {...art} label={['较宽裁剪','中心裁剪','水平翻转','顺时针旋转25度'][i]} x={252+i*100} y={438} width={88} height={52.25} frame={false} className="aug3-art"/>
-   <text x={296+i*100} y="509" textAnchor="middle" className="aug3-thumbnail-label lesson-math">A<MathSub>{i+1}</MathSub>(x)</text>
+   <text x={296+i*100} y="505" textAnchor="middle" className="aug3-thumbnail-label lesson-math">A<MathSub>{i+1}</MathSub>(x)</text>
   </g>)}
   <rect x="704" y="438" width="384" height="65" rx="10" className="aug3-common-target"/>
   <text x="720" y="459" className="aug3-family-title">对照同一份历史目标</text>
