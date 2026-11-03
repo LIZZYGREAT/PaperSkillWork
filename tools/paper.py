@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unicodedata
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -586,6 +587,42 @@ def cmd_open(args: argparse.Namespace) -> int:
 
     print("Starting the development server and opening the browser. Press Ctrl+C to stop it.", flush=True)
     return subprocess.run([npm, "run", "dev", "--", "--open"], cwd=str(web_dir), check=False).returncode
+
+
+def cmd_open_foundation_demo(args: argparse.Namespace) -> int:
+    npm = shutil.which("npm")
+    if not npm:
+        raise PaperError("npm was not found. Install Node.js and npm, then retry.")
+    if not WEB_PROJECT_TEMPLATE.is_dir():
+        raise PaperError("Web project template not found: templates/web-project")
+
+    with tempfile.TemporaryDirectory(prefix="paperskillwork-foundation-preview-") as temporary_directory:
+        preview_dir = Path(temporary_directory) / "web"
+        shutil.copytree(
+            WEB_PROJECT_TEMPLATE,
+            preview_dir,
+            ignore=shutil.ignore_patterns("node_modules", "dist", "dist-ssr", ".vite"),
+        )
+        for relative in FOUNDATION_FILES:
+            source = REUSABLE_KIT / relative
+            if not source.is_file():
+                raise PaperError("Foundation preview asset not found: reusable-kit/{}".format(relative))
+            destination = preview_dir / "src" / "shared" / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(str(source), str(destination))
+
+        print("Installing temporary foundation preview dependencies...", flush=True)
+        install_result = subprocess.run([npm, "ci"], cwd=str(preview_dir), check=False)
+        if install_result.returncode != 0:
+            print("Dependency installation failed with exit code {}.".format(install_result.returncode), file=sys.stderr)
+            return install_result.returncode
+
+        print("Opening the foundation style preview (/?style-preview=1). Press Ctrl+C to stop it.", flush=True)
+        return subprocess.run(
+            [npm, "run", "dev", "--", "--host", "127.0.0.1", "--open", "/?style-preview=1"],
+            cwd=str(preview_dir),
+            check=False,
+        ).returncode
 
 
 def cmd_stage(args: argparse.Namespace) -> int:
@@ -1710,6 +1747,13 @@ def build_parser() -> argparse.ArgumentParser:
     open_web.add_argument("paper_id")
     open_web.add_argument("--edition", choices=("enhanced", "final"), default="enhanced")
     open_web.set_defaults(func=cmd_open)
+
+    open_foundation = subparsers.add_parser(
+        "open-foundation-demo",
+        aliases=["open-kit-demo"],
+        help="start a temporary preview of the fixed foundation styles and Reference UI",
+    )
+    open_foundation.set_defaults(func=cmd_open_foundation_demo)
 
     return parser
 
