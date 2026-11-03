@@ -4,7 +4,7 @@
 
 保留 DER 已使用的 `--rk-*` 色彩与字体、阅读宽度、章节层级、正文/图注、MathML、纯图文双栏和 Reference。Editorial 样式提供阅读页顶栏、浅绿标题高亮、语义文字色与静态地形/叶片分隔纹样；纹样只作背景点缀，不承载论文对象或教学语义。正文可用 `.rk-text--accent`、`.rk-text--positive`、`.rk-text--caution`、`.rk-text--negative`、`.rk-text--muted`表达重点、正向结果、谨慎条件、否定结果与次要说明。颜色只辅助阅读，语义仍应由文字本身表达。教学图形、网络、向量、训练动画与计算由论文独立实现。
 
-新论文运行 `npm run dev` 后访问 `?style-preview=1` 检查排版、公式、悬停与抽屉；预览只在开发环境加载，正式构建不包含测试内容。首次正式页面前在已有 Design Handoff 确认基线；局部布局放入 `src/styles/paper.css`，无需新增工作流状态。
+在仓库根目录运行 `python tools/paper.py open-foundation-demo`，可直接预览当前 Kit 的顶栏、标题高亮、语义文字色、纹样、公式和 Reference；兼容旧命令名 `open-kit-demo`，按 Ctrl+C 结束。预览使用临时目录，不修改论文文件。新论文也可运行 `npm run dev` 并访问 `?style-preview=1`；预览只在开发环境加载，正式构建不包含测试内容。首次正式页面前在已有 Design Handoff 确认基线；局部布局放入 `src/styles/paper.css`，无需新增工作流状态。
 
 ## Reference API
 
