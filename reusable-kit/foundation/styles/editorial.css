@@ -20,6 +20,11 @@
 .rk-headline { margin:0; color:var(--rk-ink); font:750 var(--rk-type-display)/1.18 var(--rk-font-body); letter-spacing:-.04em; text-wrap:balance; }
 .rk-reading .rk-headline--paper { color:var(--rk-accent-strong); font:700 clamp(36px,3.8vw,56px)/1.35 var(--rk-font-math); letter-spacing:-.025em; }
 .rk-headline mark,.rk-highlight { padding:0 .03em; color:inherit; background:linear-gradient(transparent 64%,var(--rk-accent-soft) 64%); -webkit-box-decoration-break:clone; box-decoration-break:clone; }
+.rk-text--accent { color:var(--rk-accent-strong); font-weight:650; }
+.rk-text--positive { color:var(--rk-good); font-weight:650; }
+.rk-text--caution { color:var(--rk-warn); font-weight:650; }
+.rk-text--negative { color:var(--rk-bad); font-weight:650; }
+.rk-text--muted { color:var(--rk-muted); }
 .rk-editorial-meta { display:flex; align-items:center; gap:22px; padding-top:32px; color:var(--rk-muted); font-size:12px; letter-spacing:.1em; }
 .rk-editorial-meta span+span { padding-left:22px; border-left:1px solid var(--rk-line-strong); letter-spacing:.04em; }
 .rk-reading.rk-editorial-preview { padding-top:0; }

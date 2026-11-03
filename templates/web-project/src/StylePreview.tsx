@@ -30,7 +30,7 @@ export default function StylePreview() {
         <p className="rk-lead">从持续学习的真实约束出发，先看有限回放能做什么，再看它还没记录什么。</p>
         <EditorialFlourish />
       </section>
-      <section className="rk-section rk-columns" id="preview-layout"><div className="rk-prose"><h2>标题与正文</h2><p>这是一段测试文字。行内 <math><msub><mi>x</mi><mi>i</mi></msub></math> 与正文共享阅读节奏。<Term id="notation">符号排版</Term> 提供悬停解释。</p><ReferenceButton term="notation" /></div><figure><div className="rk-equation">{expression}</div><figcaption className="rk-caption">分数、求和、上下标的本地预览。</figcaption></figure></section>
+      <section className="rk-section rk-columns" id="preview-layout"><div className="rk-prose"><h2>标题与正文</h2><p>这是一段测试文字。行内 <math><msub><mi>x</mi><mi>i</mi></msub></math> 与正文共享阅读节奏。<Term id="notation">符号排版</Term> 提供悬停解释。</p><p className="rk-caption">语义色示例：<span className="rk-text--positive">可稳定保留</span> · <span className="rk-text--caution">需谨慎解释</span> · <span className="rk-text--negative">已被证据推翻</span></p><ReferenceButton term="notation" /></div><figure><div className="rk-equation">{expression}</div><figcaption className="rk-caption">分数、求和、上下标的本地预览。</figcaption></figure></section>
       <section className="rk-section" id="preview-math"><h3>长表达式</h3><div className="rk-equation">{longExpression}</div><EditorialFlourish end /></section>
     </main>
   </ReferenceProvider>;
