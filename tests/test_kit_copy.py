@@ -48,3 +48,16 @@ def test_no_external_runtime_or_paper_facts(tmp_path):
         assert forbidden not in hub
     assert 'reusable_pattern' not in (root / 'papers/demo-paper/design/implementation-plan.md').read_text(encoding='utf-8')
     assert 'scaffold-kit' not in invoke(root, '--help').stdout
+
+def test_template_entry_uses_generic_editorial_shell_and_formula_preview(tmp_path):
+    root = make_project(tmp_path)
+    assert create_paper(root).returncode == 0
+    source = root / 'papers/demo-paper/web/enhanced/src'
+    app = (source / 'App.tsx').read_text(encoding='utf-8')
+    preview = (source / 'StylePreview.tsx').read_text(encoding='utf-8')
+    assert 'site-header' in app and 'rk-editorial-opening' in app
+    assert 'tutorial.meta?.titleZh' in app and 'tutorial.references' in app
+    assert 'titleHighlight' in (source / 'types.ts').read_text(encoding='utf-8')
+    assert 'rk-equation--staggered' in preview
+    for forbidden in ['DARK EXPERIENCE REPLAY', 'NEURIPS 2020', '旧数据已过去', 'Buzzega']:
+        assert forbidden not in app + preview

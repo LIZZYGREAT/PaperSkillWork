@@ -5,7 +5,9 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createServer } from 'node:net';
 
-const [project, output, der] = process.argv.slice(2);
+const [project, output, ...options] = process.argv.slice(2);
+const der = options.find(option => option !== '--populated');
+const populated = options.includes('--populated');
 if (!project || !output) throw Error('Usage: node foundation-browser.mjs <standalone-project> <screenshots> [DER-project]');
 const children = [];
 async function serve(cwd, preview = false) {
@@ -43,17 +45,18 @@ try {
       const shell=getComputedStyle(el.querySelector('.reference-shell'));
       const heading=getComputedStyle(el.querySelector('header h2'));
       const eyebrow=getComputedStyle(el.querySelector('.eyebrow'));
-      return {width:r.width,right:r.right,height:r.height,background:s.backgroundColor,padding:shell.padding,font:s.fontFamily,headingLeading:heading.lineHeight,eyebrowSize:eyebrow.fontSize,eyebrowLeading:eyebrow.lineHeight};
+      const close=el.querySelector('.close-button').getBoundingClientRect();
+      const label=el.querySelector('.close-button-label').getBoundingClientRect();
+      return {width:r.width,right:r.right,height:r.height,background:s.backgroundColor,padding:shell.padding,font:s.fontFamily,headingLeading:heading.lineHeight,eyebrowSize:eyebrow.fontSize,eyebrowLeading:eyebrow.lineHeight,closeButton:{width:close.width,height:close.height,labelCenterOffset:Math.abs((label.left+label.width/2)-(close.left+close.width/2))}};
     });
     let incumbent;
-    let incumbentHeading;
+    let defaultHeading;
     const headingStyles = selector => page.locator(selector).first().evaluate(el => {
       const s=getComputedStyle(el);
       return {font:s.fontFamily,size:s.fontSize,leading:s.lineHeight,tracking:s.letterSpacing,color:s.color};
     });
     if (derBase) {
       await page.goto(derBase); await page.evaluate(()=>document.fonts.ready); await shot('der-closed');
-      incumbentHeading=await headingStyles('.lesson-heading h1');
       await page.locator('.site-header .text-button').click();
       incumbent=await geometry(); await shot('der-reference');
       for (const id of ['reservoir','kl']) {
@@ -66,11 +69,33 @@ try {
       if (await term.count()) { await term.hover(); await page.locator('.rk-term-popover').waitFor(); await shot('der-hover'); }
       else console.log('DER_HOVER=NOT_RUN: incumbent reading page has no visible TermRef trigger');
     }
-    await page.goto(base); assert.equal(await page.locator('h1').innerText(),'论文教程项目已初始化');
-    assert.equal(await page.locator('.module-card').count(),0);
+    await page.goto(base);
+    if (populated) {
+      assert.equal(await page.locator('main h1').innerText(),'兼容性验证章节');
+      assert.equal(await page.locator('main h1 mark.rk-highlight').innerText(),'验证');
+      assert.equal(await page.locator('.site-header nav button').count(),1);
+      assert.equal(await page.locator('.site-header nav button').getAttribute('aria-pressed'),'true');
+      assert.equal((await page.locator('.site-brand').innerText()).includes('兼容性样例'),true);
+      assert.equal((await page.locator('main').innerText()).includes('compatibility-chapter: compatibility-module'),true);
+      const pageReference=page.locator('.site-header .rk-reference-button');
+      await pageReference.click(); await page.locator('dialog[open]').waitFor();
+      assert.equal(await page.locator('[data-reference-detail]').getAttribute('data-reference-detail'),'compatibility-reference');
+      await page.locator('.close-button').click();
+      assert.equal(await pageReference.evaluate(el=>el===document.activeElement),true);
+      await shot('foundation-populated');
+    } else {
+      assert.equal(await page.locator('h1').innerText(),'论文教程项目已初始化');
+      assert.equal(await page.locator('.module-card').count(),0);
+    }
+    defaultHeading=await headingStyles('main h1');
     await page.goto(base+'?style-preview=1'); await page.evaluate(()=>document.fonts.ready);
     await page.locator('h1').waitFor(); await shot('foundation-closed');
-    if(incumbentHeading) assert.deepEqual(await headingStyles('h1'),incumbentHeading);
+    const staggered=page.locator('.rk-equation--staggered:visible').first();
+    const formulaLayout=await staggered.evaluate(el=>({rows:el.querySelectorAll('math').length,clientWidth:el.clientWidth,scrollWidth:el.scrollWidth,offsets:[...el.querySelectorAll('math')].slice(0,2).map(row=>getComputedStyle(row).marginLeft)}));
+    assert.equal(formulaLayout.rows,8); assert.equal(formulaLayout.scrollWidth<=formulaLayout.clientWidth,true); assert.notEqual(formulaLayout.offsets[0],formulaLayout.offsets[1]);
+    await staggered.scrollIntoViewIfNeeded(); await shot('foundation-staggered-equation'); await page.evaluate(()=>window.scrollTo(0,0));
+    assert.deepEqual(await headingStyles('h1'),defaultHeading);
+    assert.equal(await page.locator('h1 mark.rk-highlight').count(),1);
     assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).fontFamily.includes('Aptos')),true);
     assert.equal(await page.locator(':root').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(247, 247, 242)');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
@@ -88,6 +113,7 @@ try {
     await trigger.click(); await page.locator('dialog[open]').waitFor(); await shot('foundation-reference');
     assert.equal(await page.locator('dialog').evaluate(el=>el.scrollWidth<=el.clientWidth),true);
     const actual=await geometry(); if(incumbent) assert.deepEqual(actual,incumbent);
+    assert.ok(actual.closeButton.width>=160); assert.ok(actual.closeButton.height>=52); assert.ok(actual.closeButton.labelCenterOffset<=1);
     await page.locator('dialog').evaluate(el=>el.scrollTop=el.scrollHeight); await shot('foundation-reference-scroll');
     await page.locator('.related-terms button').click();
     assert.equal(await page.locator('[data-reference-detail]').getAttribute('data-reference-detail'),'layout');

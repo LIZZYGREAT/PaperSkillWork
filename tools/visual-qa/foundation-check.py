@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, help='Keep review screenshots at this explicit path')
     parser.add_argument('--compare-der', action='store_true', help='Compare with an already-built DER project')
+    parser.add_argument('--upstream-root', type=Path, help='Run current PaperSkill syntax and output validators against a temporary valid fixture')
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='paper-foundation-') as scratch:
         root = Path(scratch) / 'workspace'
@@ -31,13 +32,62 @@ def main():
         run([npm, 'ci'], standalone)
         run([npm, 'run', 'build'], standalone)
         production = '\n'.join(path.read_text(encoding='utf-8') for path in (standalone / 'dist').rglob('*.js'))
-        assert 'Notation preview' not in production, 'Development fixture leaked into production'
-        assert '长正文测试段落' not in production, 'Development fixture leaked into production'
+        assert 'Formula and reading layout' not in production, 'Development fixture leaked into production'
+        assert '40 项求和排版示例' not in production, 'Development fixture leaked into production'
         output = args.output.resolve() if args.output else Path(scratch) / 'screenshots'
         command = ['node', str(ROOT / 'tools/visual-qa/foundation-browser.mjs'), str(standalone), str(output)]
         if args.compare_der:
             command.append(str(ROOT / 'papers/der/web/enhanced'))
         run(command)
+        if args.upstream_root:
+            scripts = args.upstream_root.resolve() / 'paper-skill/scripts'
+            syntax_check = scripts / 'syntax-check.js'
+            validate_output = scripts / 'validate-output.js'
+            for script in (syntax_check, validate_output):
+                if not script.is_file():
+                    raise FileNotFoundError('Required PaperSkill validator not found: {}'.format(script))
+            (standalone / 'src/data/tutorial.ts').write_text('''import type { TutorialData } from "../types";
+
+export const tutorial: TutorialData = {
+  meta: { titleEn: "Compatibility fixture", titleZh: "兼容性样例" },
+  references: [{
+    id: "compatibility-reference",
+    name: "兼容性资料",
+    definition: "仅用于临时验证默认页面可以打开资料面板。",
+    source: "临时 Foundation 兼容检查。",
+  }],
+  chapters: [{
+    kind: "chapter",
+    id: "compatibility-chapter",
+    title: "兼容性验证章节",
+    titleHighlight: "验证",
+    summary: "仅用于临时验证上游输出结构。",
+    modules: [{
+      kind: "module",
+      id: "compatibility-module",
+      title: "注册模块",
+      desc: "此模块只用于结构兼容检查。",
+      componentId: "compatibility-module",
+    }],
+  }],
+};
+''', encoding='utf-8')
+            (standalone / 'src/modules/registry.tsx').write_text('''import type { ComponentType } from "react";
+import type { WidgetProps } from "../types";
+
+function CompatibilityModule({ chapterId, moduleId }: WidgetProps) {
+  return <p>{chapterId}: {moduleId}</p>;
+}
+
+export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
+  "compatibility-module": CompatibilityModule,
+};
+''', encoding='utf-8')
+            run([npm, 'run', 'build'], standalone)
+            run(['node', str(syntax_check), str(standalone), '--require-parser'])
+            run(['node', str(validate_output), str(standalone)])
+            populated_output = output / 'populated'
+            run(['node', str(ROOT / 'tools/visual-qa/foundation-browser.mjs'), str(standalone), str(populated_output), '--populated'])
 
 if __name__ == '__main__':
     main()

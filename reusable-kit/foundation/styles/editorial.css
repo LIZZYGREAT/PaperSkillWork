@@ -12,6 +12,9 @@
 .rk-columns > * { min-width:0; }
 .rk-equation { max-width:100%; overflow-x:auto; padding:24px 0; font-family:var(--rk-font-math); }
 .rk-equation math { font-size:25px; margin:auto; width:max-content; }
+.rk-equation--staggered { display:grid; gap:6px; overflow:visible; }
+.rk-equation--staggered math { box-sizing:border-box; justify-self:start; max-width:100%; width:fit-content; margin:0; font-size:clamp(18px,1.8vw,24px); }
+.rk-equation--staggered math:nth-child(even) { margin-left:clamp(14px,3.5vw,48px); }
 @media(min-width:1700px) { .rk-reading { width:min(1300px,calc(100% - 96px)); } }
 @media(max-width:760px) { .rk-reading { width:calc(100% - 40px); padding-block:36px; } .rk-columns { grid-template-columns:minmax(0,1fr); gap:28px; } .rk-equation math { font-size:21px; } }
 @media(max-width:650px) { .rk-reading h1,.rk-reading h2 { font-size:34px; } }
