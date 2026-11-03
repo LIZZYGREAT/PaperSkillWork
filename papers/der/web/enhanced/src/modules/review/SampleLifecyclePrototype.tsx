@@ -248,7 +248,12 @@ function Comparison({ s }: { s: Scene }) {
         <text x={642} y={391} textAnchor="end" className="lc-ldark">L<tspan baselineShift="sub" fontSize=".65em">dark</tspan> =</text>
         {[0,1,2].map(k => {
           const p = s.sumTransfers[k], source = { x: tileX(k) + 92, y: tiles.y + 188 }, target = { x: 668 + k * 48, y: 391 };
-          const point = curve(p, source, { x: source.x, y: source.y + 42 }, { x: target.x, y: target.y - 38 }, target);
+          // The first term crosses the equation prefix, so lift it above the label as it travels.
+          const crossesPrefix = k === 0;
+          const point = curve(p, source,
+            { x: source.x, y: source.y + (crossesPrefix ? -50 : 42) },
+            { x: target.x, y: target.y - (crossesPrefix ? 100 : 38) },
+            target);
           return <text key={k} x={point.x} y={point.y} textAnchor="middle" className="lc-sum-term" style={{ fontSize: `${mix(12,20,p)}px` }} opacity={s.sumCopyOpacity[k]} data-numeric-copy={k} data-copy-transfer={p} data-loss-term={k}>{match.squares[k]}</text>;
         })}
         {[692,740].map(x => <text key={x} x={x} y={391} textAnchor="middle" className="lc-ldark">+</text>)}
