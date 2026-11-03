@@ -54,7 +54,8 @@ workflow:
       reviewed_by: 用户
       note: 用户于2026-11-03明确要求将W9登记为complete；FULLSCREEN_REAL和官方兼容检查仍保持NOT_RUN，未记为通过。
     W10_upstream_preflight:
-      status: pending
+      status: complete
+      completed_by: automation
 artifacts:
   source_cache: source-cache
   paper_model: research/paper-model.md
