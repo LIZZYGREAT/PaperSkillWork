@@ -22,6 +22,30 @@ P1–P3 is the review slice. The reader observes why sequential training can hur
 | P2 | Image → patches → linear embedding → token sequence → 12 blocks → output and ordinary readout. Name the scopes of fₑ and fᵣ. | Select a patch in the 14×14 grid. The magnification and matching sequence index follow. Show flattening and 197×768 separately. | Open one Encoder Block to explain context. |
 | P3 | A Pre-LN block at full width with two visible bypasses and Z, U, Z′. | One head follows fixed projections, scaled scores, Softmax and Value aggregation. Show head concatenation. Compare the same target with and without an extra input token. | Fixed parameters still respond to input changes. |
 
+### P4–P6 scoped design handoff
+
+P1–P3 are approved by the user. This extension covers only P4–P6; P7–P9 remain outside the current request, so whole-spine W5 coverage stays open. Preserve the existing Editorial Kit shell, reading measure, warm paper canvas, green/amber semantics and MathML. Add a restrained plum token color for Prompt values, muted blue for frozen modules, and teal for retrieval Keys; labels and shape also carry meaning. Draw all new figures locally in DOM/SVG.
+
+| Page | Primary reading path | Lower detail | Reading exit |
+| --- | --- | --- | --- |
+| P4 | Reuse the P2 image-token language. Insert one five-token Prompt before `xₑ`; show sequence length changing while width remains `D`. | Controlled five-state loop: insert → frozen forward → classification loss → gradients pass back through the frozen computation → update `P` and `φ`, while `fₑ` and `fᵣ` values stay fixed. A compact continuation shows task B can update the same Prompt, creating possible parameter conflict. | Ask how multiple prompts can be selected for an input. |
+| P5 | A real-shape `M=10` Key–Prompt pool: ten indexed pair units, each with a distinct Key vector and a visibly longer `Lₚ=5` token sequence. An input with no task ID produces `q(x)` through the frozen no-Prompt ViT. | One shared computed retrieval model animates distance comparisons, ranking, selection and a read-view copied from the pool. Toggle two queries to compare overlap while the ten source units remain present. | Pass query A's selection to P6. |
+| P6 | One image and one frozen backbone identity support two calls: no-Prompt `[CLS]` retrieval, then selected-Prompt classification. Show pool lookup and image embedding as sibling inputs to one expanded sequence. | Animate the selected prompts joining `xₑ`, passage of every position through `fᵣ`, and a bracket that reads only the first `N Lₚ` output positions into `AvgPool → gφ → logits`. A dimension strip tracks `M`, `N`, `Lₚ`, `L` and `D` independently. | Ask how the selected Prompts and Keys learn, for P7. |
+
+#### Protected P4–P6 semantics and example values
+
+- P4's single Prompt is an explicitly simplified teaching bridge, not the full L2P method or a guaranteed forgetting result. Use an abstract `h(P,x)` readout here; reserve the official prompt-position mean for P6. Classification gradients pass through the frozen Transformer computation to trainable inputs, but the backbone parameters do not update.
+- P5's Query/Key matching is external to Transformer attention. A Key only identifies its paired Prompt; it is not concatenated into the Transformer. Top-N is per input, the pool persists after a read, and no task ID is used.
+- P5 uses a deterministic two-dimensional unit-circle example solely to make ten cosine distances re-computable: `kⱼ=(cos(36° · (j−1)), sin(36° · (j−1)))`; `q_A=(1,0)`; `q_B=k₄`. The distance labels are generated as `1−q·k/(‖q‖‖k‖)`, rounded to three decimals. With `M=10,N=5`, `S(x_A)={1,2,3,9,10}` and `S(x_B)={2,3,4,5,6}`, sharing `{2,3}`. Label these values as a two-dimensional teaching example, not paper measurements or actual learned embeddings. The ten slots, `N=5` and `Lₚ=5` match the paper's CIFAR-100/CORe50 configuration; other dataset settings differ.
+- P6 follows the same `x_A` and `S(x_A)` from P5. For the Split CIFAR-100/CORe50 ViT-B/16 dimension check, use `L=197`, `D=768`, `M=10`, `N=5`, `Lₚ=5`; therefore `N Lₚ=25` and `xₚ,H∈ℝ^(222×768)`. Pool only `H[0:25,:]`, yielding one `768`-wide feature for `gφ`. Do not classify the no-Prompt `[CLS]` query or average all 222 outputs.
+- P6 stops at forward logits. Do not animate losses, Key learning, gradient updates, or P7's minibatch update here.
+
+#### Motion thesis and review states
+
+The motion purpose is explanation and spatial continuity: the learner starts, pauses, seeks, or resets the visible computation; each score, selected slot and read Prompt derives from the same state. Retain the existing explicit playback controls and reduced-motion behavior. P4 animates gradient flow separately from parameter updates. P5 compares candidates in pool order, then outlines Top-N and makes a temporary read-copy while leaving the pool in place. P6 reuses P5's exact selected indices and animates both shared-weight calls without depicting two independently trained backbones. Keep positions, identities, labels and formulas readable while moving; no section-entry decoration or autoplay.
+
+Review P4 before/after update and task-B states, P5 query A/B comparison and Top-N/read states, and P6 initial, merge, encoded, pooled and logits states. Check the same selected indices and computed distances across P5–P6, native MathML structure, token-count arithmetic, endpoints and overlap at 1440×900 and 1920×1080. The three new page components and their figures are within scope; previously approved P1–P3 scene code and W4 order are protected. Page work may be committed separately; no W5 whole-spine or W7 acceptance is implied by those commits.
+
 ### Critical Teaching Scenes
 
 | Scene | Initial state | Trigger and intermediate state | Observable result | Protected meaning |
