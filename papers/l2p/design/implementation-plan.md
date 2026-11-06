@@ -113,6 +113,14 @@ The three pages now use a centered reading column and wider stages for diagrams.
 
 The production build and workflow structure check passed. Chromium checks covered 1440×900, 1920×1080 and 390×844. Screenshots include the network during propagation, Patch unfolding and final projection, and Value aggregation. Verified intermediate coordinate movement, playback pause and seek, source index agreement, the rounded projection arithmetic, centered prose and the reduced-motion path. Human review remains pending.
 
+### Follow-up on layout, projection and multi-head motion
+
+- P1–P3 text uses the full editorial width and aligns left. Diagrams, their internal compositions and playback controls can center independently.
+- P1 now uses a 3→5→3 schematic with 30 connections. Green denotes the first snapshot and warm brown the second, including the matching propagation pulses.
+- P2 first finishes flattening and moves the vector into the left input region. The matrix fades in after that region settles. Three color-matched trails connect x[0], x[1] and x[3] to their coefficients, then converge at a visible sum before the output is revealed.
+- P3 animates a worked example of three two-coordinate Head outputs for the same position. The six values keep their order and color during concatenation. The illustrated 6×6 output projection is computed from the shown coefficients. Typical ViT-B/16 width remains 12×64 = 768.
+- Revision checks used production Chromium at 1440×900, 1920×1080 and 390×844. Checked copy width and alignment, graph layers and edges, visible travel at intermediate positions, sample arithmetic, playback and reduced motion. Reviewed screenshots of the projection trails and multi-head result. Human approval remains pending.
+
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING

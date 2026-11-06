@@ -93,12 +93,3 @@ export function BlockDiagram({ compact = false }: { compact?: boolean }) {
     </div>
   </div>;
 }
-
-export function HeadMerge() {
-  return <div className="head-merge" aria-label="各注意力头并行计算后拼接，再通过输出投影">
-    <div><VectorGlyph /><b>同一输入序列 X</b></div><Arrow />
-    <div className="head-lanes"><span>Head 1 <VectorGlyph /></span><span>Head 2 <VectorGlyph /></span><span>…</span><span>Head 12 <VectorGlyph /></span></div><Arrow />
-    <div><span className="concat-strip"><i /><i /><i /><i /><i /><i /></span><b>按位置拼接</b></div><Arrow />
-    <div><span className="projection">Wₒ · 输出投影</span><b>回到 D 维</b></div>
-  </div>;
-}

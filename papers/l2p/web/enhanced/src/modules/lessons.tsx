@@ -2,12 +2,13 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Term } from "../shared/core/reference/ReferenceHub";
 
+import { HeadMergeMotion } from "./head-merge-motion";
 import { AttentionMotion } from "./attention-motion";
 import { ClassifierMotion } from "./classifier-motion";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { PatchMotion } from "./patch-motion";
 import { PATCH_GRID, Specimen } from "./specimen";
-import { Arrow, BlockDiagram, HeadMerge, PatchJourney, VectorGlyph, ViTOverview } from "./vit-visuals";
+import { Arrow, BlockDiagram, PatchJourney, VectorGlyph, ViTOverview } from "./vit-visuals";
 
 function Takeaway({ children }: { children: ReactNode }) {
   return <p className="lesson-takeaway">{children}</p>;
@@ -60,7 +61,7 @@ export function TaskStream() {
           <PlaybackControls playback={playback} label="固定快照的前向传播进度" />
           <p className="scene-readout" aria-live="polite">{phase === 0 ? "用 θ₁ 预测这张旧图，最高分是「鸟」。" : "用 θ₂ 预测同一张图，最高分变为「猫」。"}</p>
         </div>
-        <figcaption>3→5→5 网络和传播动画用来说明共享结构，右侧分数是独立设定的教学快照。论文的 Split CIFAR-100 将 100 类分为 10 个任务，每个任务含 10 个互不重叠的类别。</figcaption>
+        <figcaption>3→5→3 网络和传播动画用来说明共享结构，右侧分数是独立设定的教学快照。论文的 Split CIFAR-100 将 100 类分为 10 个任务，每个任务含 10 个互不重叠的类别。</figcaption>
       </figure>
       <section className="explain-section">
         <h3>测试图来自哪个任务，模型事先并不知道</h3>
@@ -206,7 +207,7 @@ export function EncoderAttention() {
         <p>每个 Head 会对每个目标位置重复上面的一行计算。不同 Head 各有自己的投影权重。同一位置的各头输出沿特征维度拼接，再由输出投影映射回 D 维，随后才能和该位置的残差相加。</p>
         <figure className="lesson-figure">
           <div className="figure-top"><strong>并行计算 → 拼接 → 输出投影</strong><span>按同一目标位置对齐</span></div>
-          <div className="figure-body"><HeadMerge /></div>
+          <div className="figure-body"><HeadMergeMotion /></div>
           <figcaption>多头改变每个位置的特征，序列顺序仍保留。Block 的输出进入下一层，同一位置可以继续吸收上下文。</figcaption>
         </figure>
       </section>

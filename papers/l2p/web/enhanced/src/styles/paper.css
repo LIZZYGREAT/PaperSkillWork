@@ -286,14 +286,17 @@
   .routing-sources > div { padding-inline: 3px; }
 }
 
-/* A centered reading measure with diagrams spanning the full stage. */
-.rk-reading .rk-editorial-opening { text-align: center; }
-.rk-reading .rk-editorial-opening .rk-lead { max-width: 46em; margin-inline: auto; }
-.rk-reading .teaching-module > h2 { text-align: center; margin-bottom: 16px; }
-.rk-reading .lesson-lead, .rk-reading .explain-section > p,
-.rk-reading .explain-section > h3, .rk-reading .detail-title,
-.rk-reading .detail-title + .rk-prose { width: min(100%, 57rem); max-width: none; margin-inline: auto; }
-.rk-reading .lesson-takeaway { max-width: 57rem; margin-inline: auto; }
+/* Copy follows the full editorial column. Diagram internals keep their own alignment. */
+.rk-reading .rk-editorial-opening,
+.rk-reading .teaching-module > h2 { text-align: start; }
+.rk-reading .teaching-module > h2 { margin-bottom: 16px; }
+.rk-reading .rk-editorial-opening .rk-lead,
+.rk-reading .lesson-lead,
+.rk-reading .explain-section > p,
+.rk-reading .explain-section > h3,
+.rk-reading .detail-title,
+.rk-reading .detail-title + .rk-prose,
+.rk-reading .lesson-takeaway { width: auto; max-width: none; margin-inline: 0; }
 .training-strip, .test-routing { width: min(100%, 57rem); margin-inline: auto; }
 .test-routing { justify-content: center; }
 .rk-reading .figure-top > span { text-align: start; }
@@ -315,7 +318,8 @@
 .network-edge, .trained-edge { stroke: #94ad9c; stroke-width: 1.1; }
 .trained-edge { stroke: #9d7954; }
 .network-node { fill: #fff; stroke: #326a50; stroke-width: 1.75; }
-.network-pulse { fill: #ad6d36; stroke: #fff; stroke-width: .5; }
+.network-pulse { fill: #326a50; stroke: #fff; stroke-width: .5; }
+.trained-pulse { fill: #9d6537; }
 .network-shape { font: 12px var(--rk-font-mono); color: var(--rk-accent-strong); }
 .classifier { align-self: stretch; align-content: center; }
 .attention-motion { margin-block: 8px 15px; }
@@ -329,3 +333,12 @@
   .patch-motion-detail { grid-template-columns: 1fr; }
   .classifier-motion { width: min(100%, 156px); }
 }
+
+.head-animation-stage { display: block; width: min(100%, 920px); height: auto; margin: 0 auto; border: 1px solid var(--rk-line); border-radius: 10px; }
+.head-stage-label { font: 650 14px var(--rk-font-body); fill: var(--rk-accent-strong); }
+.head-stage-small { font: 12px var(--rk-font-body); }
+.head-stage-small:not([fill]) { fill: var(--rk-muted); }
+.head-stage-value { font: 650 13px var(--rk-font-mono); }
+.head-motion-equations { width: min(100%, 920px); margin: 12px auto 0; display: flex; flex-wrap: wrap; gap: 5px 24px; }
+.rk-reading .head-motion-equations p { margin-bottom: 4px; font-size: 14px; }
+.rk-reading .head-animation > .rk-note { width: min(100%, 920px); margin-inline: auto; font-size: 14px; }

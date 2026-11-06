@@ -9,7 +9,7 @@ const DURATION = 6800;
 const STOPS = [
   { at: 0, name: "分离 RGB 通道" },
   { at: 1350, name: "按索引展平" },
-  { at: 3950, name: "应用线性投影" },
+  { at: 4880, name: "应用线性投影" },
   { at: DURATION, name: "得到嵌入向量" },
 ];
 const SAMPLE_WEIGHTS = [{ offset: 0, weight: .5 }, { offset: 1, weight: .3 }, { offset: 3, weight: .2 }];
@@ -41,8 +41,10 @@ function channelColor(channel: number, value: number) {
 
 function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: number[], position: number) {
   const split = clamp(position / 1100);
-  const projection = clamp((position - 3950) / 1750);
-  const visibleOutput = clamp((position - 5000) / 1800);
+  const projection = clamp((position - 3920) / 730);
+  const matrix = clamp((position - 4680) / 200);
+  const contribution = clamp((position - 4880) / 1100);
+  const visibleOutput = clamp((position - 5980) / 820);
   ctx.clearRect(0, 0, 760, 286);
   ctx.fillStyle = "#f2f5ed";
   ctx.fillRect(0, 0, 760, 286);
@@ -70,14 +72,15 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
       ctx.fillText(CHANNELS[c] + " · 16 × 16", 72 + c * 231, 54);
     }
     ctx.globalAlpha = 1;
-  } else if (position < 3950) {
+  } else if (matrix === 0) {
     ctx.fillText("x[0] → x[767]", 42, 49);
     ctx.font = "13px Segoe UI, sans-serif";
     ctx.fillText("每行连续 48 项，折行只为阅读", 42, 242);
   } else {
-    ctx.fillText("输入 x", 34, 75);
+    ctx.globalAlpha = matrix;
+    ctx.fillText("x · 768 项输入", 34, 255);
     ctx.fillText("W 局部", 350, 75);
-    ctx.fillText("输出 z", 452, 75);
+    ctx.fillText("z · 768 项输出", 452, 255);
     ctx.strokeStyle = "#8ca78f";
     ctx.lineWidth = 1;
     ctx.strokeRect(346, 88, 65, 144);
@@ -88,28 +91,60 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
         ctx.fillRect(352 + col * 11, 94 + row * 11, 8, 8);
       }
     }
-    ctx.strokeStyle = "#709578";
-    for (let i = 0; i < 3; i++) {
-      const sourceX = blend(42, 34, projection) + SAMPLE_WEIGHTS[i].offset * blend(14.1, 5.9, projection);
-      const sourceY = blend(72, 94, projection);
+    const colors = ["#a34f3d", "#397655", "#426e8d"];
+    for (let i = 0; i < SAMPLE_WEIGHTS.length; i++) {
+      const { offset, weight } = SAMPLE_WEIGHTS[i];
+      const x = 34 + i * 87;
+      const y = 98 + offset * 11;
+      const color = colors[i];
+      const point = (t: number) => {
+        const u = 1 - t;
+        return [u ** 3 * (x + 38) + 3 * u ** 2 * t * (x + 76) + 3 * u * t ** 2 * 292 + t ** 3 * 352,
+          u ** 3 * 53 + 3 * u ** 2 * t * 53 + 3 * u * t ** 2 * y + t ** 3 * y];
+      };
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.font = "600 13px Segoe UI, sans-serif";
+      ctx.fillText("x[" + offset + "] × " + weight, x, 41);
+      ctx.strokeRect(33 + offset * 5.9, 93, 7, 10);
+      ctx.strokeRect(351, y - 5, 10, 10);
+      ctx.globalAlpha = matrix * .21;
       ctx.beginPath();
-      ctx.moveTo(sourceX, sourceY);
-      const matrixY = 98 + SAMPLE_WEIGHTS[i].offset * 11;
-      ctx.bezierCurveTo(176, 80 + i * 14, 248, matrixY, 352, matrixY);
+      ctx.moveTo(x + 38, 53);
+      ctx.bezierCurveTo(x + 76, 53, 292, y, 352, y);
       ctx.stroke();
-      ctx.fillStyle = "#9b632d";
-      const progress = clamp(projection * 1.3 - i * .12);
-      if (progress > 0 && progress < 1) {
-        const inv = 1 - progress;
-        const x = inv ** 3 * sourceX + 3 * inv ** 2 * progress * 176 + 3 * inv * progress ** 2 * 248 + progress ** 3 * 352;
-        const y = inv ** 3 * sourceY + 3 * inv ** 2 * progress * (80 + i * 14) + 3 * inv * progress ** 2 * matrixY + progress ** 3 * matrixY;
-        ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+      const head = contribution * 1.3 - i * .14;
+      for (let n = 0; n < 16; n++) {
+        const t = head - n * .017;
+        if (t < 0 || t > 1) continue;
+        const [px, py] = point(t);
+        ctx.globalAlpha = matrix * (1 - n / 16) ** 1.5;
+        ctx.beginPath(); ctx.arc(px, py, n === 0 ? 3.1 : 2.1, 0, Math.PI * 2); ctx.fill();
       }
+      ctx.globalAlpha = matrix;
     }
-    ctx.beginPath(); ctx.moveTo(360, 98); ctx.lineTo(452, 98); ctx.stroke();
-    if (visibleOutput > 0 && visibleOutput < 1) {
-      ctx.fillStyle = "#9b632d";
-      ctx.beginPath(); ctx.arc(blend(360, 452, visibleOutput), 98, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#709578";
+    for (const {offset} of SAMPLE_WEIGHTS) {
+      const y = 98 + offset * 11;
+      ctx.beginPath();
+      ctx.moveTo(362, y);
+      ctx.bezierCurveTo(392, y, 410, 98, 422, 98);
+      ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(439, 98); ctx.lineTo(452, 98); ctx.stroke();
+    ctx.fillStyle = "#e5eee1";
+    ctx.beginPath(); ctx.arc(431, 98, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#214c3a";
+    ctx.font = "600 11px Segoe UI, sans-serif";
+    ctx.fillText("Σ", 427.5, 102);
+    if (visibleOutput > 0) {
+      ctx.fillStyle = "#326a50";
+      for (let n = 0; n < 12; n++) {
+        const t = visibleOutput * 2 - n * .025;
+        if (t < 0 || t > 1) continue;
+        ctx.globalAlpha = (1 - n / 12) ** 1.5;
+        ctx.beginPath(); ctx.arc(blend(439, 452, t), 98, n === 0 ? 3 : 2, 0, Math.PI * 2); ctx.fill();
+      }
     }
     for (let i = 0; i < COUNT; i++) {
       const opacity = clamp(visibleOutput * 1.22 - i / COUNT * .22);
@@ -154,6 +189,11 @@ export function PatchMotion({ index }: { index: number }) {
       </div>
       <canvas ref={canvas} width="760" height="286" className="patch-motion-canvas"
         aria-label="所选 Patch 的 RGB 通道、展平向量与线性投影。下面提供同一运算的数值说明。" />
+      <p className="motion-status">{playback.position < 1350 ? "同一块图像分成 R、G、B 三张 16×16 平面。" :
+        playback.position < 3920 ? "每个格子带着原值移动到新索引。展平只改变顺序。" :
+        playback.position < 4880 ? "把向量放到计算区左侧。下一步追踪 x[0]、x[1]、x[3]。" :
+        playback.position < 5980 ? "三条有色拖尾分别指向第一列的三个非零系数。" :
+        "三项贡献相加得到 z[0]。其他列用同一规则得到其余输出。"}</p>
       <div className="patch-motion-detail">
         <p><strong>展平顺序</strong><br />按行、列扫描，每个像素依次取 R、G、B。首个像素的三项为 {values.slice(0, 3).map(value => value.toFixed(3)).join("、")}。</p>
         <p><strong>投影示例 · 第 1 个输出坐标</strong><br />
