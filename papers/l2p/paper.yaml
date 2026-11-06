@@ -1,0 +1,68 @@
+schema_version: 3
+id: l2p
+title: Learning to Prompt for Continual Learning
+paper:
+  url: https://arxiv.org/abs/2112.08654
+  arxiv_id: '2112.08654'
+  authors:
+  - Zifeng Wang
+  - Zizhao Zhang
+  - Chen-Yu Lee
+  - Han Zhang
+  - Ruoxi Sun
+  - Xiaoqi Ren
+  - Guolong Su
+  - Vincent Perot
+  - Jennifer Dy
+  - Tomas Pfister
+  venue: CVPR 2022
+  year: 2022
+  source_type: User-provided arXiv v2 PDF
+  source_location: task/L2P/Learning to Prompt for Continual Learning.pdf
+  source_hash: C32A3012BE38E3AB1D6DCC2B38ED350C2DCF40D746899FF3E93B1B681FC08D87
+workflow:
+  version: 3
+  current_stage: W1
+  stages:
+    W0_source_intake:
+      status: complete
+      completed_by: automation
+    W1_source_cache:
+      status: pending
+    W2_paper_model:
+      status: pending
+    W3_evidence_assets:
+      status: pending
+    W4_learning_spine:
+      status: pending
+    W5_interaction_plan:
+      status: pending
+    W6_vertical_slice:
+      status: pending
+    W7_human_review:
+      status: pending
+    W8_full_implementation:
+      status: pending
+    W9_final_audit:
+      status: pending
+    W10_upstream_preflight:
+      status: pending
+artifacts:
+  source_cache: source-cache
+  paper_model: research/paper-model.md
+  evidence_registry: research/evidence-registry.yaml
+  learning_spine: design/learning-spine.md
+  asset_plan: design/asset-plan.md
+  implementation_plan: design/implementation-plan.md
+  final_check: audit/final-check.md
+  enhanced: web/enhanced
+web:
+  enhanced: web/enhanced
+release:
+  upstream_paper_name: ''
+  upstream_version: ''
+  output: ''
+paperskill:
+  tutorial_pr:
+    number: null
+    status: pending
