@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+import { ProjectionFormula, SoftmaxFormula, Sub, Tuple } from "./lesson-math";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Term } from "../shared/core/reference/ReferenceHub";
@@ -32,7 +34,7 @@ export function TaskStream() {
       </figure>
       <section className="explain-section">
         <h3>更新一次，用同一张旧图再试一次</h3>
-        <p>θ₂ 从 θ₁ 接着训练。由于新旧类使用同一组权重，这次更新也可能改动旧类依赖的特征。下面固定测试图，只切换参数快照。</p>
+        <p><math><Sub base="θ" index={2} /></math> 从 <math><Sub base="θ" index={1} /></math> 接着训练。由于新旧类使用同一组权重，这次更新也可能改动旧类依赖的特征。下面固定测试图，只切换参数快照。</p>
       </section>
       <figure className="lesson-figure">
         <div className="figure-top"><strong>顺序训练 → 统一预测</strong><span>合成教学示例</span></div>
@@ -46,7 +48,7 @@ export function TaskStream() {
             <Arrow />
             <div className="scene-object classifier"><strong>共享分类器</strong>
               <ClassifierMotion phase={phase} position={playback.position} />
-              <span className="math-label">{phase === 0 ? "fθ₁" : "fθ₂"}</span><small>{phase === 0 ? "完成任务 1 的训练" : "接着用新类图像更新"}</small></div>
+              <span className="math-label"><math><msub><mi>f</mi><Sub base="θ" index={phase + 1} /></msub></math></span><small>{phase === 0 ? "完成任务 1 的训练" : "接着用新类图像更新"}</small></div>
             <Arrow />
             <div className="score-panels" aria-label="两个训练快照的预测对照">
               {predictions.map((rows, index) =>
@@ -111,8 +113,8 @@ export function ViTPath() {
         <p>196 个 Patch Token 前面另放一个 <strong>[CLS]</strong>。它没有对应图像块，是为整图表征预留的位置。再把每个位置的向量加到对应 Token 上，告诉模型相同内容出现在哪里。</p>
         <div className="sequence-explainer" role="group" aria-label="内容向量与位置向量按列相加">
           <div><b>内容向量</b><span className="token special">[CLS]</span><span className="token">Patch 1</span><span className="token">Patch 2</span><span>…</span><span className="token">Patch 196</span></div>
-          <div><b>+ 位置向量</b><span>p₀</span><span>p₁</span><span>p₂</span><span>…</span><span>p₁₉₆</span></div>
-          <div><b>= 输入 Xₑ</b><span>第 0 位</span><span>第 1 位</span><span>第 2 位</span><span>…</span><span>第 196 位</span></div>
+          <div><b>+ 位置向量</b><math><Sub base="p" index={0} /></math><math><Sub base="p" index={1} /></math><math><Sub base="p" index={2} /></math><span>…</span><math><Sub base="p" index={196} /></math></div>
+          <div><b>= 输入 <math><Sub base="X" index="e" /></math></b><span>第 0 位</span><span>第 1 位</span><span>第 2 位</span><span>…</span><span>第 196 位</span></div>
         </div>
         <div className="shape-equation"><math display="block"><msub><mi>X</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math></div>
         <p>197 数的是位置，768 数的是每个位置的特征坐标。进了 Encoder，位置和宽度继续保留，各层更新的则是这些位置的向量内容。末层依然有 197 个输出，普通 ViT 从中取 [CLS] 作为整图分类的输入。</p>
@@ -172,7 +174,7 @@ export function EncoderAttention() {
       </figure>
 
       <h3 className="detail-title">一个位置如何读取整串 Token？</h3>
-      <p className="rk-prose">记归一化后的输入为 X，三组投影得到 Q = XW<sub>Q</sub>、K = XW<sub>K</sub>、V = XW<sub>V</sub>。选中一个目标，用它的 Q 和各来源的 K 计算匹配，再用匹配得到的权重汇总 V。</p>
+      <p className="rk-prose">记归一化后的输入为 <math><mi>X</mi></math>，三组投影分别得到 <ProjectionFormula symbol="Q" />、<ProjectionFormula symbol="K" /> 和 <ProjectionFormula symbol="V" />。选中一个目标，用它的 Q 和各来源的 K 计算匹配，再用匹配得到的权重汇总 V。</p>
       <figure className="lesson-figure attention-figure">
         <div className="figure-top"><strong>从匹配分数到输出向量</strong><span>二维教学示例 · 投影权重固定</span></div>
         <div className="figure-body">
@@ -187,7 +189,7 @@ export function EncoderAttention() {
           <AttentionMotion key={target + ":" + extra} rows={current.rows} query={current.query} output={current.output} target={baseTokens[target].name} />
           <div className="score-table-wrap">
             <table className="attention-table">
-              <thead><tr><th scope="col">来源</th><th scope="col">Key</th><th scope="col">Value</th><th scope="col">Q · K / √2</th><th scope="col">Softmax 权重</th></tr></thead>
+              <thead><tr><th scope="col">来源</th><th scope="col">Key</th><th scope="col">Value</th><th scope="col"><math><mfrac><mrow><mi>q</mi><mo>·</mo><mi>k</mi></mrow><msqrt><mn>2</mn></msqrt></mfrac></math></th><th scope="col">Softmax 权重</th></tr></thead>
               <tbody>{current.rows.map(({ name, key, value, score, weight }) => <tr key={name}>
                 <th scope="row">{name}</th><td>{vectorText(key)}</td><td>{vectorText(value)}</td><td>{score.toFixed(3)}</td>
                 <td><span className="weight-row"><span className="score-track" aria-hidden="true"><span style={{ width: weight * 100 + "%" }} /></span>{(weight * 100).toFixed(1)}%</span></td>
@@ -195,9 +197,11 @@ export function EncoderAttention() {
             </table>
           </div>
           <div className="attention-calculation">
-            <div><small>① 用目标 Q 匹配每个 K</small><strong>{vectorText(current.query)} · {vectorText(current.rows[1].key)} ÷ √2</strong><span>以 Patch A 为例，得 {current.rows[1].score.toFixed(3)}</span></div>
-            <div><small>② 让分数在同一行竞争</small><strong>exp(sⱼ) / Σ exp(sₖ)</strong><span>Patch A 占 {(current.rows[1].weight * 100).toFixed(1)}%，本行权重总和为 1</span></div>
-            <div><small>③ 对 Value 加权并相加</small><strong>{vectorText(current.output, 3)}</strong><span>{current.rows.map(row => row.weight.toFixed(3) + " × " + vectorText(row.value)).join(" + ")}</span></div>
+            <div><small>① 用目标 Q 匹配每个 K</small><strong><math><mfrac><mrow><Tuple values={current.query} /><mo>·</mo><Tuple values={current.rows[1].key} /></mrow><msqrt><mn>2</mn></msqrt></mfrac></math></strong><span>以 Patch A 为例，得 {current.rows[1].score.toFixed(3)}</span></div>
+            <div><small>② 让分数在同一行竞争</small><strong><SoftmaxFormula /></strong><span>Patch A 占 {(current.rows[1].weight * 100).toFixed(1)}%，本行权重总和为 1</span></div>
+            <div><small>③ 对 Value 加权并相加</small><strong>{vectorText(current.output, 3)}</strong><span><math><mrow>{current.rows.map((row, i) => <Fragment key={row.name}>
+              {i > 0 && <mo>+</mo>}<mn>{row.weight.toFixed(3)}</mn><mo>×</mo><Tuple values={row.value} />
+            </Fragment>)}</mrow></math></span></div>
           </div>
         </div>
         <figcaption>虚线表示 Q 与各 Key 匹配，实线表示 Value 汇入输出，线越粗权重越大。来源包含目标本身。真实 ViT 处理完整序列，表中数值已四舍五入。</figcaption>

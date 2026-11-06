@@ -1,3 +1,4 @@
+import { Sub, WeightedSum } from "./lesson-math";
 import { useEffect, useMemo, useRef, useState } from "react";
 import birdUrl from "./specimen.svg?inline";
 import { PATCH_GRID, PATCH_SIZE } from "./specimen";
@@ -5,17 +6,25 @@ import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 
 const CHANNELS = ["R", "G", "B"];
 const COUNT = PATCH_SIZE * PATCH_SIZE * CHANNELS.length;
-const DURATION = 6800;
+const ROUTE_START = 4880;
+const ROUTE_DURATION = 2200;
+const OUTPUT_START = ROUTE_START + ROUTE_DURATION;
+const DURATION = OUTPUT_START + 1640;
 const STOPS = [
   { at: 0, name: "分离 RGB 通道" },
   { at: 1350, name: "按索引展平" },
-  { at: 4880, name: "应用线性投影" },
+  { at: ROUTE_START, name: "应用线性投影" },
   { at: DURATION, name: "得到嵌入向量" },
 ];
 const SAMPLE_WEIGHTS = [{ offset: 0, weight: .5 }, { offset: 1, weight: .3 }, { offset: 3, weight: .2 }];
 
 function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
 function blend(from: number, to: number, amount: number) { return from + (to - from) * amount; }
+
+function cubic(a: number, b: number, c: number, d: number, t: number) {
+  const u = 1 - t;
+  return u ** 3 * a + 3 * u ** 2 * t * b + 3 * u * t ** 2 * c + t ** 3 * d;
+}
 
 function samplePatch(image: HTMLImageElement, index: number) {
   const sampler = document.createElement("canvas");
@@ -43,8 +52,8 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
   const split = clamp(position / 1100);
   const projection = clamp((position - 3920) / 730);
   const matrix = clamp((position - 4680) / 200);
-  const contribution = clamp((position - 4880) / 1100);
-  const visibleOutput = clamp((position - 5980) / 820);
+  const contribution = clamp((position - ROUTE_START) / ROUTE_DURATION);
+  const visibleOutput = clamp((position - OUTPUT_START) / (DURATION - OUTPUT_START));
   ctx.clearRect(0, 0, 760, 286);
   ctx.fillStyle = "#f2f5ed";
   ctx.fillRect(0, 0, 760, 286);
@@ -78,9 +87,6 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
     ctx.fillText("每行连续 48 项，折行只为阅读", 42, 242);
   } else {
     ctx.globalAlpha = matrix;
-    ctx.fillText("x · 768 项输入", 34, 255);
-    ctx.fillText("W 局部", 350, 75);
-    ctx.fillText("z · 768 项输出", 452, 255);
     ctx.strokeStyle = "#8ca78f";
     ctx.lineWidth = 1;
     ctx.strokeRect(346, 88, 65, 144);
@@ -93,25 +99,29 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
     }
     const colors = ["#a34f3d", "#397655", "#426e8d"];
     for (let i = 0; i < SAMPLE_WEIGHTS.length; i++) {
-      const { offset, weight } = SAMPLE_WEIGHTS[i];
+      const { offset } = SAMPLE_WEIGHTS[i];
       const x = 34 + i * 87;
       const y = 98 + offset * 11;
       const color = colors[i];
+      const bend = 328;
+      const laneY = 49 + i * 8;
+      const turnY = laneY + 12;
       const point = (t: number) => {
-        const u = 1 - t;
-        return [u ** 3 * (x + 38) + 3 * u ** 2 * t * (x + 76) + 3 * u * t ** 2 * 292 + t ** 3 * 352,
-          u ** 3 * 53 + 3 * u ** 2 * t * 53 + 3 * u * t ** 2 * y + t ** 3 * y];
+        const first = t < .72;
+        const u = first ? t / .72 : (t - .72) / .28;
+        return first
+          ? [cubic(x + 38, x + 82, 326, bend, u), cubic(laneY, laneY, laneY, turnY, u)]
+          : [cubic(bend, 330, 337, 352, u), cubic(turnY, turnY + 10, y, y, u)];
       };
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
-      ctx.font = "600 13px Segoe UI, sans-serif";
-      ctx.fillText("x[" + offset + "] × " + weight, x, 41);
       ctx.strokeRect(33 + offset * 5.9, 93, 7, 10);
       ctx.strokeRect(351, y - 5, 10, 10);
-      ctx.globalAlpha = matrix * .21;
+      ctx.globalAlpha = matrix * .22;
       ctx.beginPath();
-      ctx.moveTo(x + 38, 53);
-      ctx.bezierCurveTo(x + 76, 53, 292, y, 352, y);
+      ctx.moveTo(x + 38, laneY);
+      ctx.bezierCurveTo(x + 82, laneY, 326, laneY, bend, turnY);
+      ctx.bezierCurveTo(330, turnY + 10, 337, y, 352, y);
       ctx.stroke();
       const head = contribution * 1.3 - i * .14;
       for (let n = 0; n < 16; n++) {
@@ -128,22 +138,17 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
       const y = 98 + offset * 11;
       ctx.beginPath();
       ctx.moveTo(362, y);
-      ctx.bezierCurveTo(392, y, 410, 98, 422, 98);
+      ctx.bezierCurveTo(392, y, 404, 98, 416, 98);
       ctx.stroke();
     }
-    ctx.beginPath(); ctx.moveTo(439, 98); ctx.lineTo(452, 98); ctx.stroke();
-    ctx.fillStyle = "#e5eee1";
-    ctx.beginPath(); ctx.arc(431, 98, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#214c3a";
-    ctx.font = "600 11px Segoe UI, sans-serif";
-    ctx.fillText("Σ", 427.5, 102);
+    ctx.beginPath(); ctx.moveTo(446, 98); ctx.lineTo(452, 98); ctx.stroke();
     if (visibleOutput > 0) {
       ctx.fillStyle = "#326a50";
       for (let n = 0; n < 12; n++) {
         const t = visibleOutput * 2 - n * .025;
         if (t < 0 || t > 1) continue;
         ctx.globalAlpha = (1 - n / 12) ** 1.5;
-        ctx.beginPath(); ctx.arc(blend(439, 452, t), 98, n === 0 ? 3 : 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(blend(446, 452, t), 98, n === 0 ? 3 : 2, 0, Math.PI * 2); ctx.fill();
       }
     }
     for (let i = 0; i < COUNT; i++) {
@@ -163,6 +168,7 @@ export function PatchMotion({ index }: { index: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const playback = useLessonPlayback(DURATION);
   const output = useMemo(() => values ? project(values) : [], [values]);
+  const labels = clamp((playback.position - 4680) / 200);
   const stage = STOPS.filter(stop => playback.position >= stop.at).length - 1;
 
   useEffect(() => {
@@ -187,17 +193,31 @@ export function PatchMotion({ index }: { index: number }) {
         {STOPS.map(({ at, name }, i) => <button type="button" key={at} className="lesson-choice"
           aria-pressed={i === stage} onClick={() => playback.seek(at)}>{i + 1}. {name}</button>)}
       </div>
-      <canvas ref={canvas} width="760" height="286" className="patch-motion-canvas"
-        aria-label="所选 Patch 的 RGB 通道、展平向量与线性投影。下面提供同一运算的数值说明。" />
+      <div className="patch-motion-stage">
+        <canvas ref={canvas} width="760" height="286" className="patch-motion-canvas"
+          aria-label="所选 Patch 的 RGB 通道、展平向量与线性投影。下面提供同一运算的数值说明。" />
+        {labels > 0 && <div className="projection-labels" style={{opacity: labels}}>
+          {SAMPLE_WEIGHTS.map(({offset,weight}, i) => <span key={offset} className={"projection-term term-" + i}
+            style={{left: (34 + i * 87) / 7.6 + "%"}}>
+            <math><Sub base="x" index={offset} /><mo>×</mo><mn>{weight}</mn></math>
+          </span>)}
+          <span className="projection-matrix-name"><math><mi>W</mi></math> 局部</span>
+          <span className="projection-sigma" aria-label="求和"><math><mo>∑</mo></math></span>
+          <span className="projection-input-name">输入 <math><mi>x</mi></math> · 768 项</span>
+          <span className="projection-output-name">输出 <math><mi>z</mi></math> · 768 项</span>
+        </div>}
+      </div>
       <p className="motion-status">{playback.position < 1350 ? "同一块图像分成 R、G、B 三张 16×16 平面。" :
         playback.position < 3920 ? "每个格子带着原值移动到新索引。展平只改变顺序。" :
-        playback.position < 4880 ? "把向量放到计算区左侧。下一步追踪 x[0]、x[1]、x[3]。" :
-        playback.position < 5980 ? "三条有色拖尾分别指向第一列的三个非零系数。" :
+        playback.position < ROUTE_START ? "把向量放到计算区左侧。下一步追踪 x[0]、x[1]、x[3]。" :
+        playback.position < OUTPUT_START ? "三条有色拖尾分别指向第一列的三个非零系数。" :
         "三项贡献相加得到 z[0]。其他列用同一规则得到其余输出。"}</p>
       <div className="patch-motion-detail">
         <p><strong>展平顺序</strong><br />按行、列扫描，每个像素依次取 R、G、B。首个像素的三项为 {values.slice(0, 3).map(value => value.toFixed(3)).join("、")}。</p>
         <p><strong>投影示例 · 第 1 个输出坐标</strong><br />
-          <span className="projection-equation">0.5 × {values[0].toFixed(3)} + 0.3 × {values[1].toFixed(3)} + 0.2 × {values[3].toFixed(3)} = {output[0].toFixed(3)}</span></p>
+          <span className="projection-equation"><WeightedSum terms={SAMPLE_WEIGHTS.map(({offset,weight}) => ({
+            weight, value: values[offset],
+          }))} result={output[0]} /></span></p>
       </div>
       <p className="rk-note">输入从同一张图采样并缩放到 0–1。示例矩阵在每列取三个非零系数，循环使用同一索引规则。真实 ViT 使用学习到的投影权重，画面只跟踪第一列的三条贡献路径。</p>
     </> : <p>{error ? "暂时无法读取插图像素，可以从上方图解查看展平和投影关系。" : "正在读取所选 Patch 的 RGB 数值…"}</p>}

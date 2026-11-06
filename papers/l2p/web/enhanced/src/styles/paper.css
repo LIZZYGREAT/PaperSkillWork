@@ -342,3 +342,31 @@
 .head-motion-equations { width: min(100%, 920px); margin: 12px auto 0; display: flex; flex-wrap: wrap; gap: 5px 24px; }
 .rk-reading .head-motion-equations p { margin-bottom: 4px; font-size: 14px; }
 .rk-reading .head-animation > .rk-note { width: min(100%, 920px); margin-inline: auto; font-size: 14px; }
+
+/* Math labels stay sharp while the canvas scales with its diagram. */
+.patch-motion-stage { position: relative; width: min(100%, 920px); margin-inline: auto; container-type: inline-size; }
+.patch-motion-stage .patch-motion-canvas { width: 100%; box-sizing: border-box; }
+.projection-labels { position: absolute; inset: 0; color: var(--rk-accent-strong); font-size: clamp(9px, 1.8cqw, 16px); pointer-events: none; }
+.projection-labels > span { position: absolute; white-space: nowrap; }
+.projection-term { top: 8%; }
+.projection-term.term-0 { color: #8c4032; }
+.projection-term.term-1 { color: #2f6547; }
+.projection-term.term-2 { color: #355c78; }
+.projection-matrix-name { left: 45.5%; top: 23%; }
+.projection-input-name, .projection-output-name { top: 86%; font-weight: 650; }
+.projection-input-name { left: 4.5%; }
+.projection-output-name { left: 59.5%; }
+.projection-sigma { left: 56.71%; top: 34.27%; transform: translate(-50%,-50%); display: grid; place-items: center; width: 3.95%; aspect-ratio: 1; box-sizing: border-box; background: #deebdb; border: 1px solid #74997c; border-radius: 50%; font-size: clamp(12px, 3cqw, 27px); line-height: 1; }
+.attention-calculation > div { min-width: 0; }
+.attention-calculation > div > span { overflow-x: auto; }
+.attention-calculation strong > math { font-size: 1.12em; }
+.block-nodes > b { min-height: 88px; }
+.mini-heads { grid-template-columns: 27px 16px auto; grid-template-rows: repeat(3, 5px); gap: 3px; margin-block: 8px; }
+.mini-heads > i { height: 5px; }
+.mini-heads em { width: 12px; height: 17px; }
+.mini-heads .vector-glyph i { width: 7px; height: 15px; }
+@media (max-width: 440px) {
+  .mini-heads { grid-template-columns: 18px 10px auto; gap: 2px; }
+  .mini-heads em { width: 8px; }
+  .mini-heads .vector-glyph i { width: 4px; height: 12px; }
+}

@@ -22,6 +22,6 @@ export const tutorial: TutorialData = {
   references: [
     { id: "forgetting", name: "灾难性遗忘", definition: "模型学习新任务后，旧任务上的表现大幅退化。", source: "L2P 原文 §1、§5.1" },
     { id: "vit", name: "ViT-B/16", definition: "使用 16×16 图像块的基础规模 Vision Transformer。本文用 224×224 图像和 768 维特征展示典型配置。", source: "L2P 原文 §3.2、§5.2" },
-    { id: "attention", name: "缩放点积注意力", definition: "将目标 Query 与每个来源 Key 的点积除以键维度的平方根，对同一目标的所有分数做 Softmax，再对来源 Value 求加权和。", detail: "Softmax 的单项权重是 exp(sⱼ) / Σₖ exp(sₖ)。用同一个常数平移所有分数不改变权重，因此计算时可先减最大分数。", source: "L2P 原文 §3.2 所用 ViT 的架构背景" },
+    { id: "attention", name: "缩放点积注意力", definition: "将目标 Query 与每个来源 Key 的点积除以键维度的平方根，对同一目标的所有分数做 Softmax，再对来源 Value 求加权和。", detail: "Softmax 先将各分数取指数，再用每项的指数除以所有指数之和。用同一个常数平移所有分数不改变权重，因此计算时可先减最大分数。", source: "L2P 原文 §3.2 所用 ViT 的架构背景" },
   ],
 };

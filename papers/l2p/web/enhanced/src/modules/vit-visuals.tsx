@@ -1,3 +1,4 @@
+import { Sub } from "./lesson-math";
 import { PatchCrop, PatchGrid, Specimen } from "./specimen";
 
 export function Arrow() {
@@ -51,7 +52,7 @@ export function ViTOverview({ index, select }: { index: number; select: (index: 
       <BlockDiagram compact />
       <div className="architecture-legend"><span><i className="legend-image" />图像空间</span><span><i className="legend-token" />向量特征</span><span><i className="legend-special" />[CLS] 与选中位置</span></div>
     </div>
-    <figcaption>冻结的特征主干是 f = fᵣ ∘ fₑ。图中右侧展示普通 ViT 从末层 [CLS] 到分类头的路径。L2P 会在后续为 [CLS] 特征和分类读出安排不同用途。</figcaption>
+    <figcaption>冻结的特征主干是 <math><mi>f</mi><mo>=</mo><Sub base="f" index="r" /><mo>∘</mo><Sub base="f" index="e" /></math>。图中右侧展示普通 ViT 从末层 [CLS] 到分类头的路径。L2P 会在后续为 [CLS] 特征和分类读出安排不同用途。</figcaption>
   </figure>;
 }
 

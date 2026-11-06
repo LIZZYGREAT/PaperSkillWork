@@ -1,3 +1,4 @@
+import { WeightedSum } from "./lesson-math";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 
 const HEADS = [[2, 4], [1, 3], [5, 2]] as const;
@@ -25,6 +26,7 @@ export function HeadMergeMotion() {
   const time = playback.position;
   const stage = STAGES.filter(step => time >= step.at).length - 1;
   const fork = unit(time / 1350);
+  const forkFade = 1 - unit((time - 1350) / 210);
   const concat = unit((time - 2150) / 1850);
   const projection = unit((time - 4350) / 1550);
   return <div className="head-animation">
@@ -43,14 +45,14 @@ export function HeadMergeMotion() {
       <text className="head-stage-label" x="74" y="128" textAnchor="middle">同一序列</text>
       {HEADS.map((head, h) => {
         const y = 69 + h * 54;
-        const fanY = y + 14;
+        const fanY = y + 14.5;
         return <g key={h}>
-          <path d={`M118 123 C145 123 149 ${fanY} 177 ${fanY}`} fill="none" stroke={INK[h]} opacity=".27" />
-          {fork > 0 && fork < 1 && Array.from({length: 12},(_,j) => {
+          <path d={`M118 123 C145 123 149 ${fanY} 182 ${fanY}`} fill="none" stroke={INK[h]} opacity=".27" />
+          {fork > 0 && forkFade > 0 && Array.from({length: 12},(_,j) => {
             const t = fork - j * .025;
             if (t < 0) return null;
-            return <circle key={j} cx={cubic(118,145,149,177,t)} cy={cubic(123,123,fanY,fanY,t)}
-              r={j === 0 ? 3 : 1.8} fill={INK[h]} opacity={1-j/12} />;
+            return <circle key={j} cx={cubic(118,145,149,182,t)} cy={cubic(123,123,fanY,fanY,t)}
+              r={j === 0 ? 3 : 1.8} fill={INK[h]} opacity={forkFade * (1-j/12)} />;
           })}
           <text x="182" y={y - 6} className="head-stage-small" fill={INK[h]}>Head {h + 1}</text>
           {head.map((value,c) => {
@@ -98,7 +100,7 @@ export function HeadMergeMotion() {
     ][stage]}</p>
     <div className="head-motion-equations">
       <p><strong>拼接</strong>　[{HEADS.map(head => head.join(", ")).join(" | ")}]</p>
-      <p><strong>投影示例</strong>　第一个输出 = 0.5 × {CONCAT[0]} + 0.5 × {CONCAT[2]} = {OUT[0]}</p>
+      <p><strong>投影示例</strong>　第一个输出 <WeightedSum terms={[{weight: .5, value: CONCAT[0]}, {weight: .5, value: CONCAT[2]}]} result={OUT[0]} digits={1} /></p>
     </div>
     <p className="rk-note">图中用 3 个两维 Head 演示。典型 ViT-B/16 的 12 个 64 维 Head 在每个位置拼成 768 维，再乘学习得到的 Wₒ。拼接保留各头的值，投影才混合它们。</p>
   </div>;

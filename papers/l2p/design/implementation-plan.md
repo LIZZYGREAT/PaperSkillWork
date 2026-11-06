@@ -121,6 +121,12 @@ The production build and workflow structure check passed. Chromium checks covere
 - P3 animates a worked example of three two-coordinate Head outputs for the same position. The six values keep their order and color during concatenation. The illustrated 6×6 output projection is computed from the shown coefficients. Typical ViT-B/16 width remains 12×64 = 768.
 - Revision checks used production Chromium at 1440×900, 1920×1080 and 390×844. Checked copy width and alignment, graph layers and edges, visible travel at intermediate positions, sample arithmetic, playback and reduced motion. Reviewed screenshots of the projection trails and multi-head result. Human approval remains pending.
 
+### Formula rendering and motion finishing pass
+
+Native MathML now renders the Q/K/V projections, scaled score, Softmax, weighted Value sum, positional indices and projection arithmetic. The Patch diagram uses HTML MathML labels above the canvas and a larger summation node. The contribution pass takes 2.2 seconds and the output pass 1.64 seconds, twice their prior durations. Three guide lanes pass above the input grid and turn only in the gap before the matrix.
+
+In the multi-head animation, all three traveling points reach the first cell edge at x = 182 before fading in place. The block diagram reserves more height for the larger multi-head glyph. Production Chromium verified the Head contact and fade frames, MathML structures, the first projection calculation, pause and seek, and layout at 1440×900, 1920×1080 and 390×844. Screenshot review confirmed the clear projection lanes and the larger summation and multi-head objects.
+
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING
