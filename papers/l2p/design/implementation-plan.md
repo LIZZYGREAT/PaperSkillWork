@@ -2,106 +2,78 @@
 
 Paper ID: `l2p`
 
-## Learning Goal and Non-goals
+## Learning Goal and Scope
 
-State the learner outcome this page must enable. List details deliberately kept in Reference or omitted. Do not start with a fixed chapter count, animation plan, or interaction quota.
+P1–P3 is the review slice. The reader observes why sequential training can hurt older predictions, traces a patch into the pretrained ViT, then explains why fixed Transformer parameters can still produce different features when the input changes. The slice ends at that question about adding input tokens. W5 remains open for whole-spine coverage.
 
 ## Design Handoff, Invariants, and Change Scope
 
-Record the latest confirmed W4/W5 decisions here. Keep this as the single project-level decision source.
+- Design direction follows the user's references. Use the horizontal overview and lower magnification panel from image 2, with the object grouping and labels from image 1. Adapt the figures to the local Kit palette. The two supplied PNGs are composition references. The tutorial drawings are authored locally.
+- Approval of the rendered P1–P3 pages is pending with lizzy. W4 fixes the order and meaning of these three pages.
+- Keep the same specimen from P1 into P2. In P2 the selected grid cell, enlarged pixels, patch index and embedded token carry one identity. Keep [CLS] visually distinct. P3 opens the encoder stack and retains the names [CLS] and Patch token.
+- Keep the warm paper canvas, typography, Editorial header, MathML, semantic green and amber, and Reference drawer. Reserve amber for [CLS], selected positions, and caution with explicit labels. Paper-specific figure layouts live in paper.css.
+- Publish source: `C:/Users/lenovo/Desktop/Projects/PaperWork/PaperSkillWork/papers/l2p/web/enhanced`. Use the scaffold React/Vite entry and real tutorial data and component registration for P1–P3. Vite uses relative base. Figures are DOM/SVG and require no external runtime requests or assets.
 
-- Design confirmation: DRAFT / CONFIRMED (the user approved the target and constraints).
-- Rendered-page acceptance: PENDING / PASS / REVISE (the user reviewed the actual browser rendering; this is separate from design confirmation).
-- W5 CLI structural completion is recorded separately in `paper.yaml`; it does not establish user design confirmation or rendered-page acceptance.
-- Confirmed learning and visual goals:
-- Protected structures, semantics, data, scales, colors, object identities, and interactions:
-- Changes allowed without a new design decision:
-- Open choices that require user input:
-- Pages, shared components, and states affected by this change:
+### Page compositions
 
-### Upstream Delivery Compatibility (W5)
+| Page | First reading view | Lower detail | Reading exit |
+| --- | --- | --- | --- |
+| P1 | Sequential task rail above a shared classifier. Two snapshots retain the same specimen and classifier position. | Old prediction before/after, explicit synthetic scores and one unified candidate space. Compact protocol notes. | Freeze the pretrained feature model and ask what it computes. |
+| P2 | Image → patches → linear embedding → token sequence → 12 blocks → output and ordinary readout. Name the scopes of fₑ and fᵣ. | Select a patch in the 14×14 grid. The magnification and matching sequence index follow. Show flattening and 197×768 separately. | Open one Encoder Block to explain context. |
+| P3 | A Pre-LN block at full width with two visible bypasses and Z, U, Z′. | One head follows fixed projections, scaled scores, Softmax and Value aggregation. Show head concatenation. Compare the same target with and without an extra input token. | Fixed parameters still respond to input changes. |
 
-Record one concise project-level check here; do not repeat mappings for every page. Resolve the actual source using `python tools/paper.py paths <paper-id> --json` and record the absolute `publish_source` field; it uses the shared Final-first/Enhanced-fallback resolver and does not read contributor profile data. Check the real React/Vite delivery structure, `tutorial.ts` metadata and any actual `componentId` registration, Vite `base` and subpath-safe asset references, and unusual dependencies, browser APIs, network requests, or build plugins. Note the checked official PaperSkill main revision/evidence and whether the adjacent checkout is current; a stale checker cannot establish current compatibility. Generator-only visual conventions are not automatically requirements for a custom page.
+### Critical Teaching Scenes
 
-- Final source path (`paths.publish_source`, absolute):
-- Required entrypoints and real tutorial metadata/registration:
-- Vite base, static assets, and subpath risks:
-- Special dependencies, APIs, network access, or build plugins and compatibility:
-- Concrete receiving conflict (if any), official evidence, trade-off, protected approved design, and user decision needed:
-
-For each confirmed page/state, record the approved effect or screenshot reference and its change boundary:
-
-| Page / state | Confirmed effect or screenshot reference | Protected objects, scales, colors, connections, and animation | Layout changes allowed | Open trade-offs |
+| Scene | Initial state | Trigger and intermediate state | Observable result | Protected meaning |
 | --- | --- | --- | --- | --- |
-|  |  |  |  |  |
-
-For substantial motion, record the initial, key intermediate, and final states and the required object connections. Do not duplicate the same page contract in a new document.
-
-### Visual Baseline
-
-W0 installs the DER-based canvas, typography, native MathML, layout and Reference shell. Before the first formal page, inspect the development-only `?style-preview=1`; record any paper-local font/size/color adjustments here. Design teaching objects and scenes from W2/W4 without component selection quotas.
-
-### Critical Teaching and Integration Scenes
-
-Use this section only for scenes whose algorithmic meaning depends on coordinated text, graphics, formulas, data, or motion. Ordinary prose pages do not need a frame contract.
-
-For each critical scene, record:
-
-- teaching purpose, what the reader already knows, the algorithmic relationship to explain, and the expected conclusion;
-- fixed inputs/data, persistent state, temporary or derived state, outputs, real lifecycle, stable object identities, and data provenance;
-- expression details that may change freely and the semantics, calculations, ordering, and approved visual relationships that must remain protected;
-- how the scene receives context from the prior page and hands state or a question to the next page without premature terminology, repeated first teaching, or unnecessary disclaimers.
-
-For a complete-algorithm integration scene, first derive one global execution model from W2 before storyboarding motion:
-
-```text
-initial objects and persistent state S0
-  → paper operation / computation A1 → state S1 + temporary values T1
-  → paper operation / computation A2 → state S2 + temporary values T2
-  → update, task boundary, or save → cross-round state S3
-  → prediction / output Y
-```
-
-Distinguish paper state, computed/derived values, and teaching-only visible state. The visible state may reveal the first two categories but must not alter their meaning. Reuse verified calculations or atomic assets when useful, but redesign the integration scene's overall composition, hierarchy, transitions, narrative focus, and state visibility for whole-system understanding; do not qualify a scene by concatenating earlier components.
-
-Record only the semantic moments that create understanding or carry risk; there is no required frame count, duration, or stage layout.
-
-| Moment / W2 operation | Entering state | Computation / trigger | Leaving state | Graphic action | Text and formula alignment | Protected invariants | Reproducible verification |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  |
+| P1 task transition | Same old test image after task 1 with θ₁ | Select task 2. A distinct class batch updates the same network to θ₂. | New predictions in the cumulative class space. Both snapshots stay visible. | Synthetic probabilities are illustrative. Testing has no task ID. |
+| P2 patch trace | 224×224 specimen with one active cell | Pick a cell or move the patch slider. The image grid and crop use the same row and column. | Matching 1-based patch token position, with [CLS] at position zero. | 196 patch positions and 197 total positions. Shape width is 768. |
+| P3 attention | Fixed 2D toy tokens, one selected target, one head | Select a target or add an extra token. Compute scaled scores from Q and K, normalize across present sources, and aggregate V. | Show computed weights and output, alongside the same target's output without the extra token. | Keep all original toy tokens and projection weights fixed. This is a forward pass through one toy head. The Pre-LN overview separately describes the full block. |
 
 ## Visual QA State Plan
 
-List only affected interaction states per page. Follow docs/VISUAL_QA.md: default to the two desktop layouts below; record mobile/tablet only on an explicit special-check trigger with its reason. Record actual F11 inner dimensions, screen, zoom and running mode when observed; keep FULLSCREEN_LAYOUT and FULLSCREEN_REAL separate, with NOT_RUN/reason for unavailable real F11.
-
-| Page / area | State | Viewport | Observable expectation |
-| --- | --- | --- | --- |
-|  |  | Desktop Window 1440×900 / Fullscreen Layout 1920×1080 |  |
+Review each page at 1440×900 and 1920×1080. Observe P1 both snapshots, P2 patch selection and overflow, and P3 default and extra-token states. Check keyboard access and how the wide figures wrap at narrow widths.
 
 ## Primary Spine Mapping
 
-The YAML below is the sole structured source for implementation coverage. Give each CORE item one stage and one `primary_vehicle`. Use only stage IDs already defined by the Learning Spine. `supporting` and `reference` map lower-priority items to their placements; DELETE items do not appear here.
-
-```yaml
+\`\`\`yaml
 implementation:
-  stages: []
+  stages:
+    - id: P1
+      page: "连续学习的约束"
+      core_items: [I01, I02, I03]
+      evidence_refs: [C01, C02, C10, C11]
+      primary_vehicle: "共享分类器与任务时间线"
+      reason: "同一旧图贯穿参数变化与统一预测"
+    - id: P2
+      page: "ViT 从图像到特征"
+      core_items: [I04, I05]
+      evidence_refs: [C02, C04, C12, B01, B02]
+      primary_vehicle: "整体架构图与同步 Patch 放大"
+      reason: "同时呈现模块边界与位置对应"
+    - id: P3
+      page: "打开 Transformer Encoder"
+      core_items: [I06, I07]
+      evidence_refs: [B03, C02, O01]
+      primary_vehicle: "Block 走线与可复算的注意力场景"
+      reason: "用同一计算模型显示输入改变造成的变化"
   assets: []
-  supporting: []
-  reference: []
+  supporting:
+    - item: I29
+      placement: "P1 Split CIFAR-100 说明"
+    - item: I30
+      placement: "P1 协议边注"
+  reference:
+    - item: I38
+      placement: "Reference Hub / 缩放点积注意力"
   vertical_slice:
-    stages: []
-    required_core_items: []
-```
-
-Each `stages` entry requires `id`, `page`, `core_items`, `evidence_refs`, `primary_vehicle`, and `reason`. Each `supporting` / `reference` entry has an `item` ID and a `placement`. The vertical slice lists the implementation stages and CORE IDs that W6 must finish.
-
-Each selected public asset also appears once in `assets` with its asset-plan ID, a Learning Spine stage (or `Reference Hub`), and a `rendering` choice: `original`, `crop`, `redraw`, or `overlay`.
+    stages: [P1, P2, P3]
+    required_core_items: [I01, I02, I03, I04, I05, I06, I07]
+\`\`\`
 
 ## Vertical Slice (W6)
 
-Name the first 2–3 spine stages included where that range fits the content, the smallest end-to-end cognitive progression a learner can genuinely experience, included source figures, and what can be reviewed without implementing the rest. The slice should carry the reader from a perceived problem through an introduced mechanism to an observable conclusion and a natural next question, not merely collect clickable components.
-
-In the existing W6-scope command/results history below, record the applicable individual statuses `UPSTREAM_SYNTAX`, `UPSTREAM_OUTPUT`, `SOURCE_BUILD`, and `SUBPATH_ASSETS` as PASS / FAIL / NOT_RUN alongside commands, exit codes, current checker SHA/tool version, evidence, and browser states/viewports. Invoke the official upstream syntax checker with `--require-parser` and output validator directly against the absolute `publish_source` from `python tools/paper.py paths <paper-id> --json`; preserve and explain real partial-slice warnings, and do not add fake chapters or registrations to silence them. If the source, current upstream revision, or parser is unavailable, set the affected individual status(es) to NOT_RUN with the reason; do not add a combined status. W8 must rerun the checks on the final source.
+The three-page review slice uses authored diagrams and a synthetic specimen. Its observable conclusion is the difference between fixed weights and fixed output. Whole-spine W5 and formal W6 completion are separate workflow checkpoints.
 
 ### Vertical Slice Review (W7)
 

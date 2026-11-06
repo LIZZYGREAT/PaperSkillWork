@@ -42,7 +42,7 @@ workflow:
       reviewed_by: lizzy
       note: Learning spine approved by user; reviewer recorded as lizzy per user instruction.
     W5_interaction_plan:
-      status: pending
+      status: in_progress
     W6_vertical_slice:
       status: pending
     W7_human_review:
