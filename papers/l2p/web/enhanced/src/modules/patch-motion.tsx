@@ -21,34 +21,25 @@ const SAMPLE_WEIGHTS = [{ offset: 0, weight: .5 }, { offset: 1, weight: .3 }, { 
 function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
 function blend(from: number, to: number, amount: number) { return from + (to - from) * amount; }
 
-function cubic(a: number, b: number, c: number, d: number, t: number) {
-  const u = 1 - t;
-  return u ** 3 * a + 3 * u ** 2 * t * b + 3 * u * t ** 2 * c + t ** 3 * d;
-}
-
-type Point = readonly [number, number];
-
 function traceCurve(index: number, offset: number) {
-  const x = 72 + index * 87;
+  const start = 72 + index * 87;
   const lane = 49 + index * 8;
-  const y = 98 + offset * 11;
-  const segments: readonly (readonly [Point, Point, Point, Point])[] = [
-    [[x, lane], [x + 44, lane], [268, lane - 4], [298, lane + 2]],
-    [[298, lane + 2], [323, lane + 7], [328, y], [352, y]],
-  ];
+  const bend = 284 + index * 7;
+  const end = 352;
+  const target = 98 + offset * 11;
   let distance = 0;
-  const samples = [{x, y: lane, distance}];
-  for (const [a, b, c, d] of segments) {
-    for (let i = 1; i <= 48; i++) {
-      const t = i / 48;
-      const px = cubic(a[0], b[0], c[0], d[0], t);
-      const py = cubic(a[1], b[1], c[1], d[1], t);
-      const prior = samples[samples.length - 1];
-      distance += Math.hypot(px - prior.x, py - prior.y);
-      samples.push({x: px, y: py, distance});
-    }
+  const samples = [{x: start, y: lane, distance}];
+  for (let i = 1; i <= 192; i++) {
+    const x = blend(start, end, i / 192);
+    const t = clamp((x - bend) / (end - bend));
+    // Zero slope and curvature at both ends of the turn keep the entry and landing smooth.
+    const turn = t ** 3 * (10 - 15 * t + 6 * t ** 2);
+    const y = blend(lane, target, turn);
+    const prior = samples[samples.length - 1];
+    distance += Math.hypot(x - prior.x, y - prior.y);
+    samples.push({x, y, distance});
   }
-  return {segments, samples, distance};
+  return {samples, distance};
 }
 
 const ROUTES = SAMPLE_WEIGHTS.map(({offset}, i) => traceCurve(i, offset));
@@ -133,8 +124,8 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
       ctx.strokeRect(351, y - 5, 10, 10);
       ctx.globalAlpha = matrix * .22;
       ctx.beginPath();
-      ctx.moveTo(...route.segments[0][0]);
-      for (const [, b, c, d] of route.segments) ctx.bezierCurveTo(...b, ...c, ...d);
+      ctx.moveTo(route.samples[0].x, route.samples[0].y);
+      for (const {x, y} of route.samples) ctx.lineTo(x, y);
       ctx.stroke();
       const head = (contribution * 1.3 - i * .14) * route.distance;
       for (let n = 0; n < 16; n++) {
