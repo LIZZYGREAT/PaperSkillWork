@@ -22,7 +22,7 @@ paper:
   source_hash: C32A3012BE38E3AB1D6DCC2B38ED350C2DCF40D746899FF3E93B1B681FC08D87
 workflow:
   version: 3
-  current_stage: W3
+  current_stage: W4
   stages:
     W0_source_intake:
       status: complete
@@ -35,7 +35,8 @@ workflow:
       reviewed_by: lizzy
       note: Reviewed and approved by lizzy per user confirmation.
     W3_evidence_assets:
-      status: pending
+      status: complete
+      completed_by: automation
     W4_learning_spine:
       status: pending
     W5_interaction_plan:
