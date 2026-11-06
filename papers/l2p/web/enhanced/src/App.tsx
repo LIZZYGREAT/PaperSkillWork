@@ -5,18 +5,34 @@ import { tutorial } from "./data/tutorial";
 import { widgetRegistry } from "./modules/registry";
 import EditorialFlourish from "./shared/foundation/editorial/EditorialFlourish";
 
+const chapterLabels: Record<string, string> = { p1: "任务约束", p2: "ViT 架构", p3: "注意力" };
+
 const StylePreview = import.meta.env.DEV ? lazy(() => import("./StylePreview")) : null;
 
 export default function App() {
   if (StylePreview && new URLSearchParams(location.search).has("style-preview")) {
     return <Suspense fallback={<p>正在加载样式预览…</p>}><StylePreview /></Suspense>;
   }
-  return <ReferenceProvider entries={tutorial.references ?? []}><Tutorial /></ReferenceProvider>;
+  return <ReferenceProvider entries={tutorial.references ?? []} sourceLink={{ href: "https://arxiv.org/abs/2112.08654", label: "L2P 论文原文" }}><Tutorial /></ReferenceProvider>;
 }
 
 function Tutorial() {
-  const [activeChapterId, setActiveChapterId] = useState(tutorial.chapters[0]?.id ?? "");
-  const activeChapter = tutorial.chapters.find((chapter) => chapter.id === activeChapterId);
+  const requestedPage = new URLSearchParams(location.search).get("page");
+  const [activeChapterId, setActiveChapterId] = useState(
+    tutorial.chapters.find(chapter => chapter.id === requestedPage)?.id ?? tutorial.chapters[0]?.id ?? "",
+  );
+  function openChapter(id: string) {
+    setActiveChapterId(id);
+    const url = new URL(location.href);
+    url.searchParams.set("page", id);
+    url.hash = "";
+    history.replaceState(null, "", url);
+    window.scrollTo(0, 0);
+  }
+  const activeIndex = tutorial.chapters.findIndex(chapter => chapter.id === activeChapterId);
+  const activeChapter = tutorial.chapters[activeIndex];
+  const previous = tutorial.chapters[activeIndex - 1];
+  const next = tutorial.chapters[activeIndex + 1];
   const title = tutorial.meta?.titleZh || tutorial.meta?.titleEn || "论文学习笔记";
   const subtitle = tutorial.meta?.titleEn && tutorial.meta?.titleZh ? tutorial.meta.titleEn : "PAPER TUTORIAL";
   const highlight = activeChapter?.titleHighlight;
@@ -37,9 +53,9 @@ function Tutorial() {
                   key={chapter.id}
                   type="button"
                   aria-pressed={chapter.id === activeChapterId}
-                  onClick={() => setActiveChapterId(chapter.id)}
+                  onClick={() => openChapter(chapter.id)}
                 >
-                  <span>{String(index + 1).padStart(2, "0")}</span>{chapter.title}
+                  <span>{String(index + 1).padStart(2, "0")}</span>{chapterLabels[chapter.id] ?? chapter.title}
                 </button>
               ))}
             </nav>
@@ -78,6 +94,10 @@ function Tutorial() {
                   </section>
                 );
               })}
+            </div>
+            <div className="chapter-actions" aria-label="阅读顺序">
+              {previous && <button type="button" className="text-button" onClick={() => openChapter(previous.id)}>上一页 · {chapterLabels[previous.id]}</button>}
+              {next && <button type="button" className="text-button" onClick={() => openChapter(next.id)}>下一页 · {chapterLabels[next.id]}</button>}
             </div>
           </article>
         ) : (

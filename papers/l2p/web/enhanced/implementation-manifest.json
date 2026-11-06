@@ -1,5 +1,52 @@
 {
-  "implemented_core": {},
-  "supporting": {},
-  "reference": {}
+  "implemented_core": {
+    "I01": {
+      "stage": "P1",
+      "component": "TaskStream",
+      "status": "complete"
+    },
+    "I02": {
+      "stage": "P1",
+      "component": "TaskStream",
+      "status": "complete"
+    },
+    "I03": {
+      "stage": "P1",
+      "component": "TaskStream",
+      "status": "complete"
+    },
+    "I04": {
+      "stage": "P2",
+      "component": "ViTPath",
+      "status": "complete"
+    },
+    "I05": {
+      "stage": "P2",
+      "component": "ViTPath",
+      "status": "complete"
+    },
+    "I06": {
+      "stage": "P3",
+      "component": "EncoderAttention",
+      "status": "complete"
+    },
+    "I07": {
+      "stage": "P3",
+      "component": "EncoderAttention",
+      "status": "complete"
+    }
+  },
+  "supporting": {
+    "I29": {
+      "placement": "P1 Split CIFAR-100 说明"
+    },
+    "I30": {
+      "placement": "P1 协议边注"
+    }
+  },
+  "reference": {
+    "I38": {
+      "placement": "Reference Hub / 缩放点积注意力"
+    }
+  }
 }

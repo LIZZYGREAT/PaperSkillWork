@@ -75,6 +75,19 @@ implementation:
 
 The three-page review slice uses authored diagrams and a synthetic specimen. Its observable conclusion is the difference between fixed weights and fixed output. Whole-spine W5 and formal W6 completion are separate workflow checkpoints.
 
+### Review build and checks
+
+The development-only Kit preview was rendered from its local source in headless Chromium. The warm canvas, heading treatment, MathML and Reference are present. The paper stylesheet adjusts title spacing, the opening ornament margin, and diagram layouts. The approval package is a single offline HTML file assembled from the production JavaScript and CSS.
+
+| Check | Status | Evidence |
+| --- | --- | --- |
+| SOURCE_BUILD | PASS | `npm.cmd run build` exited 0. The local dependencies came from the DER workspace with an identical package lock because npm registry access was unavailable. |
+| SUBPATH_ASSETS | PASS | Headless Chromium loaded the production output under a simulated `/review/l2p/` path. Both relative JS and CSS requests resolved, and P3 rendered. |
+| UPSTREAM_SYNTAX | NOT_RUN | Current upstream could not be fetched due to the SSH process restriction. The local `syntax-check.js <publish_source> --require-parser` exited 0 using TypeScript. |
+| UPSTREAM_OUTPUT | NOT_RUN | Same freshness limitation. The local `validate-output.js <publish_source>` exited 0 and found three registered chapters and modules. Both local script blobs match cached `upstream/main` at `910adc1f0d056841303710892ba668af00396728`. |
+
+Chromium covered 1440×900 desktop, 1920×1080 fullscreen layout simulation and a 390×844 layout because the diagrams are wide. The checks exercised the P1 snapshot switch, P2 grid and keyboard slider, P3 target and extra token, the Reference close action, and horizontal overflow. Actual F11 fullscreen: NOT_RUN in the headless review. Human acceptance: PENDING.
+
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING
