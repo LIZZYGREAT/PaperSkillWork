@@ -26,6 +26,42 @@ function cubic(a: number, b: number, c: number, d: number, t: number) {
   return u ** 3 * a + 3 * u ** 2 * t * b + 3 * u * t ** 2 * c + t ** 3 * d;
 }
 
+type Point = readonly [number, number];
+
+function traceCurve(index: number, offset: number) {
+  const x = 72 + index * 87;
+  const lane = 49 + index * 8;
+  const y = 98 + offset * 11;
+  const segments: readonly (readonly [Point, Point, Point, Point])[] = [
+    [[x, lane], [x + 44, lane], [268, lane - 4], [298, lane + 2]],
+    [[298, lane + 2], [323, lane + 7], [328, y], [352, y]],
+  ];
+  let distance = 0;
+  const samples = [{x, y: lane, distance}];
+  for (const [a, b, c, d] of segments) {
+    for (let i = 1; i <= 48; i++) {
+      const t = i / 48;
+      const px = cubic(a[0], b[0], c[0], d[0], t);
+      const py = cubic(a[1], b[1], c[1], d[1], t);
+      const prior = samples[samples.length - 1];
+      distance += Math.hypot(px - prior.x, py - prior.y);
+      samples.push({x: px, y: py, distance});
+    }
+  }
+  return {segments, samples, distance};
+}
+
+const ROUTES = SAMPLE_WEIGHTS.map(({offset}, i) => traceCurve(i, offset));
+
+function atDistance(samples: (typeof ROUTES)[number]["samples"], distance: number) {
+  const next = samples.findIndex(sample => sample.distance >= distance);
+  if (next <= 0) return samples[next === 0 ? 0 : samples.length - 1];
+  const a = samples[next - 1];
+  const b = samples[next];
+  const t = (distance - a.distance) / (b.distance - a.distance);
+  return {x: blend(a.x, b.x, t), y: blend(a.y, b.y, t)};
+}
+
 function samplePatch(image: HTMLImageElement, index: number) {
   const sampler = document.createElement("canvas");
   sampler.width = PATCH_GRID * PATCH_SIZE;
@@ -73,19 +109,7 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
     ctx.fillStyle = channelColor(channel, values[i]);
     ctx.fillRect(x, y, blend(8.25, blend(12.5, 5.2, projection), flatten), blend(8.25, 7.8, flatten));
   }
-  ctx.fillStyle = "#214c3a";
-  ctx.font = "600 16px Segoe UI, sans-serif";
-  if (position < 1350) {
-    for (let c = 0; c < 3; c++) {
-      ctx.globalAlpha = split;
-      ctx.fillText(CHANNELS[c] + " · 16 × 16", 72 + c * 231, 54);
-    }
-    ctx.globalAlpha = 1;
-  } else if (matrix === 0) {
-    ctx.fillText("x[0] → x[767]", 42, 49);
-    ctx.font = "13px Segoe UI, sans-serif";
-    ctx.fillText("每行连续 48 项，折行只为阅读", 42, 242);
-  } else {
+  if (matrix > 0) {
     ctx.globalAlpha = matrix;
     ctx.strokeStyle = "#8ca78f";
     ctx.lineWidth = 1;
@@ -100,34 +124,23 @@ function drawPatch(ctx: CanvasRenderingContext2D, values: number[], output: numb
     const colors = ["#a34f3d", "#397655", "#426e8d"];
     for (let i = 0; i < SAMPLE_WEIGHTS.length; i++) {
       const { offset } = SAMPLE_WEIGHTS[i];
-      const x = 34 + i * 87;
       const y = 98 + offset * 11;
       const color = colors[i];
-      const bend = 328;
-      const laneY = 49 + i * 8;
-      const turnY = laneY + 12;
-      const point = (t: number) => {
-        const first = t < .72;
-        const u = first ? t / .72 : (t - .72) / .28;
-        return first
-          ? [cubic(x + 38, x + 82, 326, bend, u), cubic(laneY, laneY, laneY, turnY, u)]
-          : [cubic(bend, 330, 337, 352, u), cubic(turnY, turnY + 10, y, y, u)];
-      };
+      const route = ROUTES[i];
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
       ctx.strokeRect(33 + offset * 5.9, 93, 7, 10);
       ctx.strokeRect(351, y - 5, 10, 10);
       ctx.globalAlpha = matrix * .22;
       ctx.beginPath();
-      ctx.moveTo(x + 38, laneY);
-      ctx.bezierCurveTo(x + 82, laneY, 326, laneY, bend, turnY);
-      ctx.bezierCurveTo(330, turnY + 10, 337, y, 352, y);
+      ctx.moveTo(...route.segments[0][0]);
+      for (const [, b, c, d] of route.segments) ctx.bezierCurveTo(...b, ...c, ...d);
       ctx.stroke();
-      const head = contribution * 1.3 - i * .14;
+      const head = (contribution * 1.3 - i * .14) * route.distance;
       for (let n = 0; n < 16; n++) {
-        const t = head - n * .017;
-        if (t < 0 || t > 1) continue;
-        const [px, py] = point(t);
+        const distance = head - n * 2.7;
+        if (distance < 0 || distance > route.distance) continue;
+        const {x: px, y: py} = atDistance(route.samples, distance);
         ctx.globalAlpha = matrix * (1 - n / 16) ** 1.5;
         ctx.beginPath(); ctx.arc(px, py, n === 0 ? 3.1 : 2.1, 0, Math.PI * 2); ctx.fill();
       }
@@ -168,6 +181,7 @@ export function PatchMotion({ index }: { index: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const playback = useLessonPlayback(DURATION);
   const output = useMemo(() => values ? project(values) : [], [values]);
+  const split = clamp(playback.position / 1100);
   const labels = clamp((playback.position - 4680) / 200);
   const stage = STOPS.filter(stop => playback.position >= stop.at).length - 1;
 
@@ -196,6 +210,16 @@ export function PatchMotion({ index }: { index: number }) {
       <div className="patch-motion-stage">
         <canvas ref={canvas} width="760" height="286" className="patch-motion-canvas"
           aria-label="所选 Patch 的 RGB 通道、展平向量与线性投影。下面提供同一运算的数值说明。" />
+        {playback.position < 1350 && <div className="projection-labels" style={{opacity: clamp((split - .25) / .5)}}>
+          {CHANNELS.map((channel, i) => <span key={channel} className={"projection-term term-" + i} style={{
+            left: blend(298 + i * 26, 72 + i * 231, split) / 7.6 + "%",
+            top: (blend(54 + i * 15, 70, split) - 24) / 2.86 + "%",
+          }}><math><mi mathvariant="normal">{channel}</mi><mo>·</mo><mn>{PATCH_SIZE}</mn><mo>×</mo><mn>{PATCH_SIZE}</mn></math></span>)}
+        </div>}
+        {playback.position >= 1350 && labels === 0 && <div className="projection-labels">
+          <span className="flatten-range"><math><Sub base="x" index={0} /><mo>→</mo><Sub base="x" index={COUNT - 1} /></math></span>
+          <span className="flatten-caption">每行连续 <math><mn>48</mn></math> 项，折行只为阅读</span>
+        </div>}
         {labels > 0 && <div className="projection-labels" style={{opacity: labels}}>
           {SAMPLE_WEIGHTS.map(({offset,weight}, i) => <span key={offset} className={"projection-term term-" + i}
             style={{left: (34 + i * 87) / 7.6 + "%"}}>
@@ -203,15 +227,15 @@ export function PatchMotion({ index }: { index: number }) {
           </span>)}
           <span className="projection-matrix-name"><math><mi>W</mi></math> 局部</span>
           <span className="projection-sigma" aria-label="求和"><math><mo>∑</mo></math></span>
-          <span className="projection-input-name">输入 <math><mi>x</mi></math> · 768 项</span>
-          <span className="projection-output-name">输出 <math><mi>z</mi></math> · 768 项</span>
+          <span className="projection-input-name">输入 <math><mi>x</mi><mo>∈</mo><msup><mi>ℝ</mi><mn>{COUNT}</mn></msup></math></span>
+          <span className="projection-output-name">输出 <math><mi>z</mi><mo>∈</mo><msup><mi>ℝ</mi><mn>{COUNT}</mn></msup></math></span>
         </div>}
       </div>
-      <p className="motion-status">{playback.position < 1350 ? "同一块图像分成 R、G、B 三张 16×16 平面。" :
+      <p className="motion-status">{playback.position < 1350 ? <>同一块图像分成 R、G、B 三张 <math><mn>{PATCH_SIZE}</mn><mo>×</mo><mn>{PATCH_SIZE}</mn></math> 平面。</> :
         playback.position < 3920 ? "每个格子带着原值移动到新索引。展平只改变顺序。" :
-        playback.position < ROUTE_START ? "把向量放到计算区左侧。下一步追踪 x[0]、x[1]、x[3]。" :
+        playback.position < ROUTE_START ? <>把向量放到计算区左侧。下一步追踪 <math><Sub base="x" index={0} /><mo>、</mo><Sub base="x" index={1} /><mo>、</mo><Sub base="x" index={3} /></math>。</> :
         playback.position < OUTPUT_START ? "三条有色拖尾分别指向第一列的三个非零系数。" :
-        "三项贡献相加得到 z[0]。其他列用同一规则得到其余输出。"}</p>
+        <>三项贡献相加得到 <math><Sub base="z" index={0} /></math>。其他列用同一规则得到其余输出。</>}</p>
       <div className="patch-motion-detail">
         <p><strong>展平顺序</strong><br />按行、列扫描，每个像素依次取 R、G、B。首个像素的三项为 {values.slice(0, 3).map(value => value.toFixed(3)).join("、")}。</p>
         <p><strong>投影示例 · 第 1 个输出坐标</strong><br />

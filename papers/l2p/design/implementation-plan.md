@@ -127,6 +127,10 @@ Native MathML now renders the Q/K/V projections, scaled score, Softmax, weighted
 
 In the multi-head animation, all three traveling points reach the first cell edge at x = 182 before fading in place. The block diagram reserves more height for the larger multi-head glyph. Production Chromium verified the Head contact and fade frames, MathML structures, the first projection calculation, pause and seek, and layout at 1440×900, 1920×1080 and 390×844. Screenshot review confirmed the clear projection lanes and the larger summation and multi-head objects.
 
+### Patch path refinement
+
+The three projection guides now use tangent-aligned curves. Traveling trails follow sampled arc length, keeping spacing through the bend and arriving at the same matrix coefficients. RGB plane sizes, flattened index bounds, multiplication labels, vector dimensions and the sum are native MathML overlays in their respective timeline states. Production screenshots cover the channel planes, flat vector, moving trails and output, with the numerical projection and playback checks repeated.
+
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING
