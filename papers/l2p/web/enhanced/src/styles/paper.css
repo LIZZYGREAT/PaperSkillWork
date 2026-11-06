@@ -285,3 +285,47 @@
   .routing-sources small { display: none; }
   .routing-sources > div { padding-inline: 3px; }
 }
+
+/* A centered reading measure with diagrams spanning the full stage. */
+.rk-reading .rk-editorial-opening { text-align: center; }
+.rk-reading .rk-editorial-opening .rk-lead { max-width: 46em; margin-inline: auto; }
+.rk-reading .teaching-module > h2 { text-align: center; margin-bottom: 16px; }
+.rk-reading .lesson-lead, .rk-reading .explain-section > p,
+.rk-reading .explain-section > h3, .rk-reading .detail-title,
+.rk-reading .detail-title + .rk-prose { width: min(100%, 57rem); max-width: none; margin-inline: auto; }
+.rk-reading .lesson-takeaway { max-width: 57rem; margin-inline: auto; }
+.training-strip, .test-routing { width: min(100%, 57rem); margin-inline: auto; }
+.test-routing { justify-content: center; }
+.rk-reading .figure-top > span { text-align: start; }
+.playback-controls { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px 16px; padding-block: 12px; }
+.playback-controls > label { display: flex; align-items: center; gap: 8px; color: var(--rk-muted); font-size: 13px; }
+.playback-controls input, .patch-control input { accent-color: var(--rk-accent); width: clamp(104px, 18vw, 240px); }
+.playback-controls .lesson-choice, .motion-stops .lesson-choice { font-size: 13px; }
+.motion-stops { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 7px; margin: 0 0 12px; }
+.patch-motion { margin-top: 24px; padding-top: 8px; border-top: 1px solid var(--rk-line-strong); }
+.patch-motion-canvas { display: block; width: min(100%, 920px); height: auto; margin: 0 auto; border: 1px solid var(--rk-line); border-radius: 10px; }
+.patch-motion-detail { width: min(100%, 920px); margin: 14px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; }
+.rk-reading .patch-motion-detail p, .rk-reading .patch-motion > .rk-note { font-size: 14px; margin-bottom: 10px; }
+.rk-reading .patch-motion > .rk-note { width: min(100%, 920px); margin-inline: auto; }
+.projection-equation { font-variant-numeric: tabular-nums; }
+.patch-lab .patch-control { text-align: center; }
+.patch-lab .patch-control input { width: min(100%, 320px); }
+.classifier-motion { width: min(100%, 215px); display: grid; justify-items: center; }
+.classifier-motion svg { width: 100%; height: auto; }
+.network-edge, .trained-edge { stroke: #94ad9c; stroke-width: 1.1; }
+.trained-edge { stroke: #9d7954; }
+.network-node { fill: #fff; stroke: #326a50; stroke-width: 1.75; }
+.network-pulse { fill: #ad6d36; stroke: #fff; stroke-width: .5; }
+.network-shape { font: 12px var(--rk-font-mono); color: var(--rk-accent-strong); }
+.classifier { align-self: stretch; align-content: center; }
+.attention-motion { margin-block: 8px 15px; }
+.routing-particle { stroke-linecap: round; }
+.matching-particle { stroke: #345f71; stroke-width: 5; }
+.value-particle { stroke: #a36428; }
+.rk-reading .motion-status { text-align: center; font-size: 14px; color: var(--rk-accent-strong); margin: 4px 0 0; }
+@media (max-width: 600px) {
+  .playback-controls { gap: 7px 10px; }
+  .playback-controls > label { flex: 1 1 100%; justify-content: center; }
+  .patch-motion-detail { grid-template-columns: 1fr; }
+  .classifier-motion { width: min(100%, 156px); }
+}

@@ -100,6 +100,19 @@ The user requested stronger visual detail, more complete diagrams and deeper exp
 
 Production build and cached upstream syntax/output checks passed. Browser screenshots and interaction checks used 1440×900, 1920×1080 and 390×844 in Chromium. Verified the 196 tiles and gutters, first and last crop bounds, selected index agreement, unchanged input image in P1, and independent recomputation of P3 weights and output. This pass remains pending human approval. Latest upstream and real F11 status carry the limitations above.
 
+### Motion and layout revision for approval
+
+The three pages now use a centered reading column and wider stages for diagrams. Lesson controls allow playback, pause, seeking and restart. With reduced motion enabled, Play reveals the result immediately and individual steps remain inspectable.
+
+| Scene | Initial, intermediate and final states | Protected meaning |
+| --- | --- | --- |
+| P1 classifier | A tall 3→5→5 diagram holds its geometry as pulses traverse 15 first-layer and 25 second-layer edges. Selecting the other training snapshot resets the playback and switches the edge treatment. | This network shows the shared structure schematically. The scores are separate illustrative snapshots and do not come from these pulses. |
+| P2 flattening | Sample all 16×16 RGB pixels from the selected image crop. Separate the three channel planes, then move each of the 768 items from its channel plane into index 3(16r+c)+k. Wrap the single vector in groups of 48 for display. | Each source value keeps its identity and value through flattening. Changing the Patch recomputes values and resets playback. |
+| P2 projection | The flat vector compresses into the input view. The three nonzero contributions to output coordinate zero travel along their own paths into the matrix. The output reveals the 768 projected values. | The displayed matrix excerpt and dot product use the same illustrative coefficients. A real ViT uses learned projection weights. The illustration uses zero bias and circular indexing. |
+| P3 attention | Pulses follow Q-to-Key paths. During normalization, each aggregation line grows to the width associated with its weight. Weighted Value pulses then converge on the fixed target output. | The same scores, weights and sum drive the visual and table. Changing the target or adding a token resets the timeline. |
+
+The production build and workflow structure check passed. Chromium checks covered 1440×900, 1920×1080 and 390×844. Screenshots include the network during propagation, Patch unfolding and final projection, and Value aggregation. Verified intermediate coordinate movement, playback pause and seek, source index agreement, the rounded projection arithmetic, centered prose and the reduced-motion path. Human review remains pending.
+
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING

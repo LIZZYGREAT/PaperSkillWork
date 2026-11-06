@@ -2,6 +2,10 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Term } from "../shared/core/reference/ReferenceHub";
 
+import { AttentionMotion } from "./attention-motion";
+import { ClassifierMotion } from "./classifier-motion";
+import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
+import { PatchMotion } from "./patch-motion";
 import { PATCH_GRID, Specimen } from "./specimen";
 import { Arrow, BlockDiagram, HeadMerge, PatchJourney, VectorGlyph, ViTOverview } from "./vit-visuals";
 
@@ -16,6 +20,7 @@ const predictions = [
 
 export function TaskStream() {
   const [phase, setPhase] = useState(0);
+  const playback = useLessonPlayback(2300);
   return (
     <>
       <p className="lesson-lead">普通图像分类会用标签纠正预测，更新模型参数。现在把训练数据拆成按顺序到来的任务。任务 2 开始时，任务 1 的原始图像可能已经无法访问，分类器却要接着学习。</p>
@@ -33,16 +38,13 @@ export function TaskStream() {
         <div className="figure-body">
           <div className="task-rail" aria-label="选择训练快照">
             {["任务 1 · 鸟、鱼", "任务 2 · 猫、狗"].map((label, index) =>
-              <button key={label} type="button" className="lesson-choice" aria-pressed={phase === index} onClick={() => setPhase(index)}>{label}</button>)}
+              <button key={label} type="button" className="lesson-choice" aria-pressed={phase === index} onClick={() => { setPhase(index); playback.seek(0); }}>{label}</button>)}
           </div>
           <div className="task-scene">
             <div className="scene-object"><Specimen /><strong>同一张旧测试图</strong><small>真实类别：鸟</small></div>
             <Arrow />
             <div className="scene-object classifier"><strong>共享分类器</strong>
-              <svg className="classifier-glyph" viewBox="0 0 100 48" aria-hidden="true">
-                <path className={phase === 1 ? "updated-weights" : ""} d="M12 12 49 8 87 12 M12 12 49 24 87 36 M12 36 49 8 87 36 M12 36 49 40 87 12 M12 12 49 40 87 36 M12 36 49 24 87 12" />
-                {[ [12,12], [12,36], [49,8], [49,24], [49,40], [87,12], [87,36] ].map(([x,y]) => <circle key={x + ":" + y} cx={x} cy={y} r="4.5" />)}
-              </svg>
+              <ClassifierMotion phase={phase} position={playback.position} />
               <span className="math-label">{phase === 0 ? "fθ₁" : "fθ₂"}</span><small>{phase === 0 ? "完成任务 1 的训练" : "接着用新类图像更新"}</small></div>
             <Arrow />
             <div className="score-panels" aria-label="两个训练快照的预测对照">
@@ -55,9 +57,10 @@ export function TaskStream() {
                 </section>)}
             </div>
           </div>
+          <PlaybackControls playback={playback} label="固定快照的前向传播进度" />
           <p className="scene-readout" aria-live="polite">{phase === 0 ? "用 θ₁ 预测这张旧图，最高分是「鸟」。" : "用 θ₂ 预测同一张图，最高分变为「猫」。"}</p>
         </div>
-        <figcaption>示意分数用于对照共享参数的两个状态。论文的 Split CIFAR-100 将 100 类分为 10 个任务，每个任务含 10 个互不重叠的类别。</figcaption>
+        <figcaption>3→5→5 网络和传播动画用来说明共享结构，右侧分数是独立设定的教学快照。论文的 Split CIFAR-100 将 100 类分为 10 个任务，每个任务含 10 个互不重叠的类别。</figcaption>
       </figure>
       <section className="explain-section">
         <h3>测试图来自哪个任务，模型事先并不知道</h3>
@@ -96,6 +99,7 @@ export function ViTPath() {
               <input id="patch-index" type="range" min="1" max="196" value={patch + 1} onChange={e => setPatch(Number(e.target.value) - 1)} />
             </div>
             <PatchJourney index={patch} />
+            <PatchMotion key={patch} index={patch} />
           </div>
           <figcaption>裁切区域取自同一张插图。展平只重排像素。线性投影用同一组权重把各块变成特征。图中的向量格示意形状和位置。</figcaption>
         </figure>
@@ -146,26 +150,6 @@ function vectorText(values: Vector, digits = 0) {
   return "[" + values.map(value => value.toFixed(digits)).join(", ") + "]";
 }
 
-function AttentionRouting({ state, target }: { state: ReturnType<typeof attention>; target: string }) {
-  return <div className="attention-routing" aria-label="目标 Query 分别匹配各 Key，每个 Value 按权重汇入目标输出">
-    <svg className="routing-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      {state.rows.map(({name, weight}, i) => {
-        const y = (i + .5) * 100 / state.rows.length;
-        return <g key={name}>
-          <path className="query-line" d={`M20 50 C29 50 31 ${y} 40 ${y}`} vectorEffect="non-scaling-stroke" />
-          <path className="value-line" d={`M60 ${y} C69 ${y} 71 50 80 50`} vectorEffect="non-scaling-stroke"
-            strokeWidth={1 + weight * 6} />
-        </g>;
-      })}
-    </svg>
-    <div className="routing-end"><small>目标 {target}</small><strong>Q {vectorText(state.query)}</strong></div>
-    <div className="routing-sources">
-      {state.rows.map(({name,weight}) => <div key={name}><b>{name}</b><small>Key ↔ Value</small><span>{(weight * 100).toFixed(1)}%</span></div>)}
-    </div>
-    <div className="routing-end"><small>汇聚结果</small><strong>{vectorText(state.output, 3)}</strong></div>
-  </div>;
-}
-
 export function EncoderAttention() {
   const [target, setTarget] = useState(0);
   const [extra, setExtra] = useState(false);
@@ -199,7 +183,7 @@ export function EncoderAttention() {
             <label className="extra-switch"><input type="checkbox" checked={extra} onChange={e => setExtra(e.target.checked)} />加入额外 Token</label>
           </div>
           <p className="attention-query">目标 {baseTokens[target].name} 的 Q = <b>{vectorText(current.query)}</b>。示例的 Q、K 保留原坐标，V 交换两维。</p>
-          <AttentionRouting state={current} target={baseTokens[target].name} />
+          <AttentionMotion key={target + ":" + extra} rows={current.rows} query={current.query} output={current.output} target={baseTokens[target].name} />
           <div className="score-table-wrap">
             <table className="attention-table">
               <thead><tr><th scope="col">来源</th><th scope="col">Key</th><th scope="col">Value</th><th scope="col">Q · K / √2</th><th scope="col">Softmax 权重</th></tr></thead>
