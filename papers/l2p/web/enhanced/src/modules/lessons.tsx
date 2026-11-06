@@ -2,40 +2,8 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Term } from "../shared/core/reference/ReferenceHub";
 
-const GRID = 14;
-
-function pixel(x: number, y: number) {
-  if ((y === 10 && x > 0) || (y === 9 && x > 9)) return "#876343";
-  if (x === 10 && y === 4) return "#c59349";
-  if (x === 8 && y === 3) return "#182a22";
-  if ((x - 7) ** 2 + (y - 4) ** 2 < 9) return "#477587";
-  if ((x - 6) ** 2 / 15 + (y - 7) ** 2 / 7 < 1) return x < 6 ? "#547c88" : "#d59b63";
-  if (x + y === 11 && x < 5 && x > 0) return "#477587";
-  return ["#dce7cc", "#c8d8b3", "#e3e9d0", "#d0ddbe"][(x * 5 + y * 3 + x * y) % 4];
-}
-
-function Specimen({ selected, onSelect }: { selected?: number; onSelect?: (index: number) => void }) {
-  return (
-    <svg className={onSelect ? "specimen specimen-select" : "specimen"} viewBox="0 0 14 14" role="img"
-      aria-label={onSelect ? "鸟图像的 14×14 Patch 网格。可用下方滑块选择。" : "教学用像素鸟图像"}
-      shapeRendering="crispEdges">
-      {Array.from({ length: GRID * GRID }, (_, index) => (
-        <rect key={index} x={index % GRID} y={Math.floor(index / GRID)} width="1" height="1"
-          fill={pixel(index % GRID, Math.floor(index / GRID))} onClick={onSelect ? () => onSelect(index) : undefined} />
-      ))}
-      {onSelect && Array.from({ length: 13 }, (_, index) => (
-        <path key={index} d={`M${index + 1} 0v14 M0 ${index + 1}h14`} stroke="#ffffff" strokeOpacity=".76"
-          strokeWidth=".055" pointerEvents="none" />
-      ))}
-      {selected !== undefined && <rect x={selected % GRID + .05} y={Math.floor(selected / GRID) + .05}
-        width=".9" height=".9" stroke="#1b4a34" strokeWidth=".13" fill="none" pointerEvents="none" />}
-    </svg>
-  );
-}
-
-function Arrow() {
-  return <svg className="flow-arrow" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 9h18m-6-5 6 5-6 5" /></svg>;
-}
+import { PATCH_GRID, Specimen } from "./specimen";
+import { Arrow, BlockDiagram, HeadMerge, PatchJourney, VectorGlyph, ViTOverview } from "./vit-visuals";
 
 function Takeaway({ children }: { children: ReactNode }) {
   return <p className="lesson-takeaway">{children}</p>;
@@ -50,7 +18,16 @@ export function TaskStream() {
   const [phase, setPhase] = useState(0);
   return (
     <>
-      <p className="rk-prose">通常，一张图像 <i>x</i> 经过分类器得到各类别的分数，训练则用标签更新参数。连续学习改变的是数据到达的方式。旧任务的图像可能已经无法访问，新数据仍会更新同一组参数。</p>
+      <p className="lesson-lead">普通图像分类会用标签纠正预测，更新模型参数。现在把训练数据拆成按顺序到来的任务。任务 2 开始时，任务 1 的原始图像可能已经无法访问，分类器却要接着学习。</p>
+      <figure className="training-strip">
+        <div className="training-stop"><small>第一批训练图像</small><div className="class-tags"><span>鸟</span><span>鱼</span></div><b>任务 1 完成 · θ₁</b></div>
+        <div className="training-update"><Arrow /><small>沿用并更新参数</small></div>
+        <div className="training-stop"><small>随后到来的图像</small><div className="class-tags"><span>猫</span><span>狗</span></div><b>任务 2 完成 · θ₂</b></div>
+      </figure>
+      <section className="explain-section">
+        <h3>更新一次，用同一张旧图再试一次</h3>
+        <p>θ₂ 从 θ₁ 接着训练。由于新旧类使用同一组权重，这次更新也可能改动旧类依赖的特征。下面固定测试图，只切换参数快照。</p>
+      </section>
       <figure className="lesson-figure">
         <div className="figure-top"><strong>顺序训练 → 统一预测</strong><span>合成教学示例</span></div>
         <div className="figure-body">
@@ -61,7 +38,12 @@ export function TaskStream() {
           <div className="task-scene">
             <div className="scene-object"><Specimen /><strong>同一张旧测试图</strong><small>真实类别：鸟</small></div>
             <Arrow />
-            <div className="scene-object classifier"><strong>共享分类器</strong><span className="math-label">{phase === 0 ? "fθ₁" : "fθ₂"}</span><small>{phase === 0 ? "完成任务 1 的训练" : "接着用新类图像更新"}</small></div>
+            <div className="scene-object classifier"><strong>共享分类器</strong>
+              <svg className="classifier-glyph" viewBox="0 0 100 48" aria-hidden="true">
+                <path className={phase === 1 ? "updated-weights" : ""} d="M12 12 49 8 87 12 M12 12 49 24 87 36 M12 36 49 8 87 36 M12 36 49 40 87 12 M12 12 49 40 87 36 M12 36 49 24 87 12" />
+                {[ [12,12], [12,36], [49,8], [49,24], [49,40], [87,12], [87,36] ].map(([x,y]) => <circle key={x + ":" + y} cx={x} cy={y} r="4.5" />)}
+              </svg>
+              <span className="math-label">{phase === 0 ? "fθ₁" : "fθ₂"}</span><small>{phase === 0 ? "完成任务 1 的训练" : "接着用新类图像更新"}</small></div>
             <Arrow />
             <div className="score-panels" aria-label="两个训练快照的预测对照">
               {predictions.map((rows, index) =>
@@ -77,89 +59,63 @@ export function TaskStream() {
         </div>
         <figcaption>示意分数用于对照共享参数的两个状态。论文的 Split CIFAR-100 将 100 类分为 10 个任务，每个任务含 10 个互不重叠的类别。</figcaption>
       </figure>
-      <div className="lesson-notes">
-        <section><h3>旧预测为什么会变？</h3><p>新任务的更新也改动了旧类依赖的权重。旧任务表现因此可能下降，这就是 <Term id="forgetting" />。</p></section>
-        <section><h3>测试时要选哪些类？</h3><p>类别增量测试不给任务 ID，候选来自所有已学类别。论文也考察领域增量和训练边界不显式可用的设定。</p></section>
-      </div>
-      <Takeaway>作者从一个已经学到视觉表征的主干出发，保留主干权重，把后续适应交给少量可训练参数。下一步拆开这个主干，看看特征从哪里来。</Takeaway>
+      <section className="explain-section">
+        <h3>测试图来自哪个任务，模型事先并不知道</h3>
+        <p>上面那张图仍是鸟。到了第二次测试，模型要在鸟、鱼、猫、狗里统一选择。若让模型先用任务号排除猫和狗，就改变了类别增量的测试条件。</p>
+        <div className="test-routing" role="group" aria-label="一张测试图进入统一的已学类别空间">
+          <div className="route-input"><Specimen /><div><b>只收到图像</b><small>任务 ID 未提供</small></div></div><Arrow />
+          <div className="route-classes"><div className="class-tags"><span>鸟</span><span>鱼</span><span>猫</span><span>狗</span></div><small>全部已学类别一起竞争</small></div>
+        </div>
+        <p>这张旧图的误判说明干扰可能怎样发生。<Term id="forgetting" /> 要从旧任务整体表现的退化来判断。论文也考察类别集合不变、数据域变化的领域增量，以及训练边界不明确的设定。</p>
+      </section>
+      <section className="explain-section">
+        <h3>能否保留主干的视觉能力？</h3>
+        <p>如果预训练模型已经学到了可复用的视觉特征，就可以保留主干权重，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，无需保存旧样本来做回放。</p>
+      </section>
+      <Takeaway>要知道冻结以后还有什么可以利用，先跟着这张图走一遍 ViT，看它怎样形成视觉特征。</Takeaway>
     </>
-  );
-}
-
-function Tokens({ output = false, patch }: { output?: boolean; patch?: number }) {
-  const selected = patch === undefined ? null : patch + 1;
-  return (
-    <div className="token-strip" aria-label={output ? "输出 Token 序列" : "输入 Token 序列"}>
-      <span className="token special">CLS</span>
-      {selected === null ? <><span className="token">{output ? "z₁" : "1"}</span><span>…</span><span className="token">{output ? "z₁₉₆" : "196"}</span></> : <>
-        {selected > 1 && <span aria-hidden="true">…</span>}
-        <span className="token traced-token" aria-label={`选中 Patch 的 Token ${selected}`}>{selected}</span>
-        {selected < 196 && <span aria-hidden="true">…</span>}
-      </>}
-    </div>
   );
 }
 
 export function ViTPath() {
-  const [patch, setPatch] = useState(63);
-  const row = Math.floor(patch / GRID);
-  const col = patch % GRID;
+  const [patch, setPatch] = useState(65);
+  const row = Math.floor(patch / PATCH_GRID);
+  const col = patch % PATCH_GRID;
   return (
     <>
-      <p className="rk-prose">预训练特征主干分成两段。输入嵌入 <i>fₑ</i> 把二维图像变成向量序列，Encoder 堆叠 <i>fᵣ</i> 逐层更新这些向量。</p>
-      <figure className="lesson-figure">
-        <div className="figure-top"><strong>Vision Transformer</strong><span>典型 ViT-B/16 · 224×224 输入</span></div>
-        <div className="figure-body">
-          <div className="vit-flow">
-            <div className="flow-group embed-group">
-              <span className="group-name">fₑ · 输入嵌入</span>
-              <div className="flow-group-body">
-                <div className="flow-node"><Specimen /><strong>图像</strong><small>224×224×3</small></div><Arrow />
-                <div className="flow-node"><Specimen selected={patch} onSelect={setPatch} /><strong>Patch 网格</strong><small>14×14 块</small></div><Arrow />
-                <div className="flow-node"><div className="projection">线性映射</div><strong>Patch → Token</strong><small>逐块投影</small></div><Arrow />
-                <div className="flow-node"><Tokens patch={patch} /><strong>输入序列</strong><small>另加 CLS 与位置信息</small></div>
-              </div>
-            </div>
-            <Arrow />
-            <div className="flow-group encoder-group">
-              <span className="group-name">fᵣ · 特征计算</span>
-              <div className="encoder-stack"><span>Block 1</span><span>Block 2</span><span>⋮</span><span>Block 12</span></div>
-              <small>输出接入下一层</small>
-            </div>
-            <Arrow />
-            <div className="flow-group output-group">
-              <span className="group-name">输出与读出</span><Tokens output />
-              <p><b>[CLS] 特征</b><br /><small>普通 ViT 分类头的输入</small></p>
-            </div>
-          </div>
-          <div className="patch-detail">
+      <p className="lesson-lead">P1 把分类器当成了黑盒。要理解 L2P 为什么能冻结主干，我们先把黑盒拆开，看看图像在哪里变成向量，又在哪里获得上下文。</p>
+      <ViTOverview index={patch} select={setPatch} />
+      <section className="explain-section">
+        <h3>二维图像怎样变成一串向量？</h3>
+        <p>Transformer 的输入是一串同宽向量。把 224×224 的图像沿两轴每 16 像素切一次，每边得到 14 块，一共 196 块。按从上到下、每行从左到右的顺序编号，就能把二维网格排成一条序列。</p>
+        <figure className="lesson-figure patch-lab">
+          <div className="figure-top"><strong>追踪原图中的一块 Patch</strong><span>点击架构图中的网格或拖动滑块</span></div>
+          <div className="figure-body">
             <div className="patch-control">
-              <h3>放大一块 Patch</h3>
-              <p>点击上方网格，或用滑块追踪同一块图像区域。</p>
               <label htmlFor="patch-index">第 {patch + 1} 块 · 第 {row + 1} 行，第 {col + 1} 列</label>
               <input id="patch-index" type="range" min="1" max="196" value={patch + 1} onChange={e => setPatch(Number(e.target.value) - 1)} />
             </div>
-            <div className="patch-chain">
-              <div className="flow-node"><div className="patch-crop" style={{ backgroundColor: pixel(col, row) }} /><strong>Patch {patch + 1}</strong><small>16×16×3</small></div>
-              <Arrow />
-              <div className="flow-node"><div className="projection">展平 → 投影</div><strong>向量映射</strong><small>16×16×3 → 768 个输入值</small></div>
-              <Arrow />
-              <div className="flow-node"><span className="token active-token">{patch + 1}</span><strong>Token {patch + 1}</strong><small>768 维特征</small></div>
-            </div>
+            <PatchJourney index={patch} />
           </div>
+          <figcaption>裁切区域取自同一张插图。展平只重排像素。线性投影用同一组权重把各块变成特征。图中的向量格示意形状和位置。</figcaption>
+        </figure>
+        <p>在这个 <Term id="vit" /> 示例里，展平前有 16×16×3 个通道值，投影后也恰好有 768 个坐标。前者是原图的颜色，后者是权重计算出的特征。数目碰巧相同，坐标含义已经改变。</p>
+      </section>
+      <section className="explain-section">
+        <h3>序列里为什么有 197 个位置？</h3>
+        <p>196 个 Patch Token 前面另放一个 <strong>[CLS]</strong>。它没有对应图像块，是为整图表征预留的位置。再把每个位置的向量加到对应 Token 上，告诉模型相同内容出现在哪里。</p>
+        <div className="sequence-explainer" role="group" aria-label="内容向量与位置向量按列相加">
+          <div><b>内容向量</b><span className="token special">[CLS]</span><span className="token">Patch 1</span><span className="token">Patch 2</span><span>…</span><span className="token">Patch 196</span></div>
+          <div><b>+ 位置向量</b><span>p₀</span><span>p₁</span><span>p₂</span><span>…</span><span>p₁₉₆</span></div>
+          <div><b>= 输入 Xₑ</b><span>第 0 位</span><span>第 1 位</span><span>第 2 位</span><span>…</span><span>第 196 位</span></div>
         </div>
-        <figcaption>图像为像素化示例。方块表示对应位置，特征由投影计算。普通 ViT 分类读出在图中单独标注。</figcaption>
-      </figure>
-      <div className="lesson-notes">
-        <section><h3>197 是长度，768 是宽度</h3><p>每边 224 ÷ 16 = 14 块，得到 196 个 Patch Token。另有一个 [CLS] 特殊位置。位置编码帮助区分来自不同区域的 Token。</p></section>
-        <section><h3>层层传递的是特征序列</h3><p><Term id="vit" /> 的典型 12 层堆叠保留序列的形状，各层更新向量中的内容。普通 ViT 可用末层 [CLS] 做分类，L2P 在后续方法中另有分类读出。</p></section>
-      </div>
-      <div className="shape-equation"><math display="block"><msub><mi>X</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math></div>
-      <Takeaway>最初的 Patch Token 来自局部图像。经过 Encoder，它为什么能带上其他位置的信息？打开一层来看。</Takeaway>
+        <div className="shape-equation"><math display="block"><msub><mi>X</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math></div>
+        <p>197 数的是位置，768 数的是每个位置的特征坐标。进了 Encoder，位置和宽度继续保留，各层更新的则是这些位置的向量内容。末层依然有 197 个输出，普通 ViT 从中取 [CLS] 作为整图分类的输入。</p>
+      </section>
+      <Takeaway>一个位置能保留自己的编号，又能读到别处的信息吗？接下来打开架构图里那个 Block，看 [CLS] 和 Patch Token 怎样交换信息。</Takeaway>
     </>
   );
 }
-
 
 type Vector = readonly [number, number];
 
@@ -190,16 +146,24 @@ function vectorText(values: Vector, digits = 0) {
   return "[" + values.map(value => value.toFixed(digits)).join(", ") + "]";
 }
 
-function ResidualPath({ input, operation, result }: { input: string; operation: string; result: string }) {
-  return (
-    <div className="residual-unit">
-      <div className="bypass"><span>残差 · 保留输入 {input}</span></div>
-      <div className="block-nodes">
-        <strong>{input}</strong><Arrow /><span>LayerNorm</span><Arrow />
-        <b>{operation}</b><Arrow /><span className="sum-node" aria-label="与残差相加">+</span><Arrow /><strong>{result}</strong>
-      </div>
+function AttentionRouting({ state, target }: { state: ReturnType<typeof attention>; target: string }) {
+  return <div className="attention-routing" aria-label="目标 Query 分别匹配各 Key，每个 Value 按权重汇入目标输出">
+    <svg className="routing-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      {state.rows.map(({name, weight}, i) => {
+        const y = (i + .5) * 100 / state.rows.length;
+        return <g key={name}>
+          <path className="query-line" d={`M20 50 C29 50 31 ${y} 40 ${y}`} vectorEffect="non-scaling-stroke" />
+          <path className="value-line" d={`M60 ${y} C69 ${y} 71 50 80 50`} vectorEffect="non-scaling-stroke"
+            strokeWidth={1 + weight * 6} />
+        </g>;
+      })}
+    </svg>
+    <div className="routing-end"><small>目标 {target}</small><strong>Q {vectorText(state.query)}</strong></div>
+    <div className="routing-sources">
+      {state.rows.map(({name,weight}) => <div key={name}><b>{name}</b><small>Key ↔ Value</small><span>{(weight * 100).toFixed(1)}%</span></div>)}
     </div>
-  );
+    <div className="routing-end"><small>汇聚结果</small><strong>{vectorText(state.output, 3)}</strong></div>
+  </div>;
 }
 
 export function EncoderAttention() {
@@ -209,14 +173,11 @@ export function EncoderAttention() {
   const base = extra ? attention(target, false) : current;
   return (
     <>
-      <p className="rk-prose">P2 的每个 Block 都接收一整串 Token。下面拆开一个典型的 Pre-LN Block，沿着输入 <i>Z</i> 追到输出 <i>Z′</i>。</p>
+      <p className="lesson-lead">P2 留下了一个问题：编号固定的 Token，怎样读到别的位置？打开一个典型 Pre-LN Block。主路先汇聚跨位置的信息，再变换各位置的特征。两条残差支路把各自的输入送到加法节点。</p>
       <figure className="lesson-figure">
         <div className="figure-top"><strong>Transformer Encoder Block</strong><span>典型 Pre-LN 结构</span></div>
         <div className="figure-body">
-          <div className="block-flow">
-            <ResidualPath input="Z" operation="多头注意力" result="U" />
-            <ResidualPath input="U" operation="MLP / FFN" result="Z′" />
-          </div>
+          <BlockDiagram />
           <div className="block-equations">
             <math display="block"><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mi>MSA</mi><mo>(</mo><mi>LN</mi><mo>(</mo><mi>Z</mi><mo>)</mo><mo>)</mo></math>
             <math display="block"><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mi>MLP</mi><mo>(</mo><mi>LN</mi><mo>(</mo><mi>U</mi><mo>)</mo><mo>)</mo></math>
@@ -225,7 +186,7 @@ export function EncoderAttention() {
         <figcaption>每个子层在计算前先归一化，再与该子层的原输入相加。注意力跨 Token 读取信息，FFN 单独变换每个 Token 的特征。Z′ 接入下一层。</figcaption>
       </figure>
 
-      <h3 className="detail-title">放大多头注意力中的一个 Head</h3>
+      <h3 className="detail-title">一个位置如何读取整串 Token？</h3>
       <p className="rk-prose">记归一化后的输入为 X，三组投影得到 Q = XW<sub>Q</sub>、K = XW<sub>K</sub>、V = XW<sub>V</sub>。选中一个目标，用它的 Q 和各来源的 K 计算匹配，再用匹配得到的权重汇总 V。</p>
       <figure className="lesson-figure attention-figure">
         <div className="figure-top"><strong>从匹配分数到输出向量</strong><span>二维教学示例 · 投影权重固定</span></div>
@@ -238,6 +199,7 @@ export function EncoderAttention() {
             <label className="extra-switch"><input type="checkbox" checked={extra} onChange={e => setExtra(e.target.checked)} />加入额外 Token</label>
           </div>
           <p className="attention-query">目标 {baseTokens[target].name} 的 Q = <b>{vectorText(current.query)}</b>。示例的 Q、K 保留原坐标，V 交换两维。</p>
+          <AttentionRouting state={current} target={baseTokens[target].name} />
           <div className="score-table-wrap">
             <table className="attention-table">
               <thead><tr><th scope="col">来源</th><th scope="col">Key</th><th scope="col">Value</th><th scope="col">Q · K / √2</th><th scope="col">Softmax 权重</th></tr></thead>
@@ -247,17 +209,43 @@ export function EncoderAttention() {
               </tr>)}</tbody>
             </table>
           </div>
-          <div className="attention-result" aria-live="polite">
-            <div><small>同一目标 · 原序列</small><strong>{vectorText(base.output, 3)}</strong></div>
-            <div><small>{extra ? "加入额外 Token · Σ 权重 × V" : "当前输出 · Σ 权重 × V"}</small><strong>{vectorText(current.output, 3)}</strong></div>
+          <div className="attention-calculation">
+            <div><small>① 用目标 Q 匹配每个 K</small><strong>{vectorText(current.query)} · {vectorText(current.rows[1].key)} ÷ √2</strong><span>以 Patch A 为例，得 {current.rows[1].score.toFixed(3)}</span></div>
+            <div><small>② 让分数在同一行竞争</small><strong>exp(sⱼ) / Σ exp(sₖ)</strong><span>Patch A 占 {(current.rows[1].weight * 100).toFixed(1)}%，本行权重总和为 1</span></div>
+            <div><small>③ 对 Value 加权并相加</small><strong>{vectorText(current.output, 3)}</strong><span>{current.rows.map(row => row.weight.toFixed(3) + " × " + vectorText(row.value)).join(" + ")}</span></div>
           </div>
         </div>
-        <figcaption>这里展示一个目标的一行计算，来源包含目标本身。权重对当前全部来源归一化。真实 ViT 处理完整序列，显示值已四舍五入。</figcaption>
+        <figcaption>虚线表示 Q 与各 Key 匹配，实线表示 Value 汇入输出，线越粗权重越大。来源包含目标本身。真实 ViT 处理完整序列，表中数值已四舍五入。</figcaption>
       </figure>
-      <div className="lesson-notes">
-        <section><h3>多个 Head 如何汇合？</h3><p>每个 Head 有各自的 Q、K、V 投影，独立得到聚合向量。把同一位置的各 Head 输出拼接，再经输出投影回到模型宽度。</p></section>
-        <section><h3>为什么权重固定，输出还会变？</h3><p>加入额外 Token 后，原 Token 和投影权重保持固定。新的 Key 和 Value 参与匹配与聚合，改变了原目标的权重和输出。可打开 <Term id="attention" /> 查看归一化公式。</p></section>
-      </div>
+      <section className="explain-section">
+        <h3>各个 Head 怎样汇回一条序列？</h3>
+        <p>每个 Head 会对每个目标位置重复上面的一行计算。不同 Head 各有自己的投影权重。同一位置的各头输出沿特征维度拼接，再由输出投影映射回 D 维，随后才能和该位置的残差相加。</p>
+        <figure className="lesson-figure">
+          <div className="figure-top"><strong>并行计算 → 拼接 → 输出投影</strong><span>按同一目标位置对齐</span></div>
+          <div className="figure-body"><HeadMerge /></div>
+          <figcaption>多头改变每个位置的特征，序列顺序仍保留。Block 的输出进入下一层，同一位置可以继续吸收上下文。</figcaption>
+        </figure>
+      </section>
+      <section className="explain-section">
+        <h3>同一组权重遇到不同输入，会怎样？</h3>
+        <p>比较同一目标位置的两次前向计算。保持原来的三个 Token 及投影权重固定，只加一个新来源。即使原来的匹配分数不变，新 Key 也会改变 Softmax 的分母，重新分配各来源的权重。新的 Value 随之进入加权和。</p>
+        <figure className="lesson-figure">
+          <div className="figure-top"><strong>冻结权重，改变输入序列</strong><span>对照目标 {baseTokens[target].name}</span></div>
+          <div className="figure-body">
+            <label className="extra-switch"><input type="checkbox" checked={extra} onChange={e => setExtra(e.target.checked)} />在第二条序列加入额外 Token</label>
+            <div className="frozen-compare" aria-live="polite">
+              {[{label: "原序列", output: base.output, added: false}, {label: "对照序列", output: current.output, added: extra}].map(({ label, output, added }) => (
+                <div className="frozen-lane" key={label}>
+                  <div><small>{label}</small><div className="architecture-tokens"><span className="token special">CLS</span><span className="token">A</span><span className="token">B</span>{added && <span className="token traced-token">新</span>}</div></div>
+                  <Arrow /><div className="frozen-model"><VectorGlyph /><b>同一组投影权重</b></div><Arrow />
+                  <div><small>目标的 Head 输出</small><strong>{vectorText(output, 3)}</strong></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <figcaption>输出来自同一个二维示例。变化出现在前向计算中。打开 <Term id="attention" /> 可查看归一化公式。</figcaption>
+        </figure>
+      </section>
       <Takeaway>冻结的是参数。只要改变输入，前向计算仍可得到不同特征。既然增加一个 Token 就能影响输出，它能否成为专门用于适应新任务的可学习输入？</Takeaway>
     </>
   );

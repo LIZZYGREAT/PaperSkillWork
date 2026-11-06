@@ -88,6 +88,18 @@ The development-only Kit preview was rendered from its local source in headless 
 
 Chromium covered 1440×900 desktop, 1920×1080 fullscreen layout simulation and a 390×844 layout because the diagrams are wide. The checks exercised the P1 snapshot switch, P2 grid and keyboard slider, P3 target and extra token, the Reference close action, and horizontal overflow. Actual F11 fullscreen: NOT_RUN in the headless review. Human acceptance: PENDING.
 
+### P1–P3 revision for approval
+
+The user requested stronger visual detail, more complete diagrams and deeper explanation while keeping the Kit theme. The P1–P3 source plan supplied with this feedback matches the project copy.
+
+| Page | Revision and semantic alignment |
+| --- | --- |
+| P1 | Separate the arrival of training tasks, shared parameter inheritance, fixed old test image and joint prediction space. The classifier glyph preserves its structure across snapshots. Example scores are synthetic. One failed prediction illustrates interference; aggregate old-task degradation defines forgetting. |
+| P2 | Recreate the reference composition with a horizontal image-to-output overview and a lower Pre-LN Block cutaway. The same authored bird artwork feeds all 196 separated tiles. Selected patch index, crop bounds and sequence position share one state. Explain raw pixel count, embedding width, position vectors, the extra [CLS] position, the frozen fₑ/fᵣ boundary and the ordinary ViT readout separately. |
+| P3 | Make the Query-to-Key and weighted Value routes visible, show dot product, normalization and weighted sum from the same state, then diagram head concatenation and two inputs with fixed weights. Separate the typical complete block from the numeric toy head. The extra token does not change the earlier scores for the retained target in this example, but adds a term to the denominator and weighted sum. |
+
+Production build and cached upstream syntax/output checks passed. Browser screenshots and interaction checks used 1440×900, 1920×1080 and 390×844 in Chromium. Verified the 196 tiles and gutters, first and last crop bounds, selected index agreement, unchanged input image in P1, and independent recomputation of P3 weights and output. This pass remains pending human approval. Latest upstream and real F11 status carry the limitations above.
+
 ### Vertical Slice Review (W7)
 
 Vertical Slice Review: PENDING
