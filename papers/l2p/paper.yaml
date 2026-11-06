@@ -22,7 +22,7 @@ paper:
   source_hash: C32A3012BE38E3AB1D6DCC2B38ED350C2DCF40D746899FF3E93B1B681FC08D87
 workflow:
   version: 3
-  current_stage: W4
+  current_stage: W5
   stages:
     W0_source_intake:
       status: complete
@@ -38,7 +38,9 @@ workflow:
       status: complete
       completed_by: automation
     W4_learning_spine:
-      status: pending
+      status: complete
+      reviewed_by: lizzy
+      note: Learning spine approved by user; reviewer recorded as lizzy per user instruction.
     W5_interaction_plan:
       status: pending
     W6_vertical_slice:
