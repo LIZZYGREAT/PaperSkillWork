@@ -52,11 +52,15 @@ export function PromptForward() {
     ? (playback.position - boundaries[5]) / (boundaries[6] - boundaries[5]) : 0;
 
   return <>
-    <p className="lesson-lead">P5 的 Query A 已选出五个 Prompt。P6 把这组检索结果与当前图像 Token 合并，再调用冻结的 ViT 完成分类；关键是最终读出来自 Prompt 位置，不是普通 ViT 的 CLS 位置。</p>
+    <p className="lesson-lead">P5 的 Query A 已选出五个 Prompt。P6 把这组检索结果与当前图像 Token 合并，再调用冻结的 ViT 完成分类；<span className="reading-emphasis reading-emphasis--prompt">最终读出来自 Prompt 位置，不是普通 ViT 的 CLS 位置</span>。</p>
 
     <section className="explain-section">
       <h3>检索和分类是两次调用，共用同一组冻结权重</h3>
-      <p>P5 的检索调用不插入 Prompt，用 CLS 输出生成 Query；现在的分类调用把选中的 Prompt 加到图像 Token 前。两次输入不同，但都经过同一套预训练嵌入层与 Transformer 权重。下图展开分类调用，并用参数身份标记与 P5 对齐。</p>
+      <div className="reading-contrast reading-contrast--calls" role="group" aria-label="检索与分类分别调用同一组冻结的 ViT 权重">
+        <div className="reading-call--query"><strong>检索调用 · 先生成 Query</strong><p>不插入 Prompt，从 CLS 输出读取当前图像的 Query。</p></div>
+        <div className="reading-call--prompt"><strong>分类调用 · 再读取 Prompt</strong><p>把选中的 Prompt 加到图像 Token 前；两次输入经过同一套冻结权重。</p></div>
+      </div>
+      <p>下图展开分类调用，并用参数身份标记与 P5 对齐。</p>
     </section>
 
     <figure className="lesson-figure p6-forward-figure">
@@ -162,7 +166,7 @@ export function PromptForward() {
 
     <section className="explain-section">
       <h3>为什么不能把 CLS 或整个序列拿来平均？</h3>
-      <p>输入序列的前 25 个位置对应五组被选中的 Prompt。经过 Transformer 后，每个位置都带有与图像交互后的上下文信息；AvgPool 将这 25 个向量合成一个 768 维表示，交给共享分类头。图像 CLS 虽然仍在序列里，但不属于这里指定的读出区间。</p>
+      <p>输入序列的前 25 个位置对应五组被选中的 Prompt。经过 Transformer 后，每个位置都带有与图像交互后的上下文信息；<span className="reading-emphasis reading-emphasis--prompt">AvgPool 将这 25 个向量合成一个 768 维表示</span>，交给共享分类头。图像 CLS 虽然仍在序列里，但不属于这里指定的读出区间。</p>
       <p>在这个 Split CIFAR‑100 / CORe50 的 ViT‑B/16 配置下，<math><mi>N</mi><msub><mi>L</mi><mi>p</mi></msub><mo>=</mo><mn>5</mn><mo>×</mo><mn>5</mn><mo>=</mo><mn>25</mn></math>，所以序列长度是 <math><mn>197</mn><mo>+</mo><mn>25</mn><mo>=</mo><mn>222</mn></math>，每个位置仍宽 768。论文的五数据集实验使用不同的 <math><mi>M</mi></math> 与 <math><mi>N</mi></math> 配置；这里不把这些数推广到所有设置。</p>
     </section>
 

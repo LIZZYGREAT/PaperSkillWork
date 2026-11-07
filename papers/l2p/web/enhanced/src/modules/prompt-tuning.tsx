@@ -128,7 +128,10 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>梯度能穿过冻结运算，参数却不必更新</h3>
-      <p>分类损失依赖于输入序列里的 P，因此一般情形下可对 P 求梯度。反向计算经过固定的 Transformer 运算，把梯度传到 P；优化器只改 P 与分类器 φ，冻结主干 fₑ、fᵣ 的参数保持原值。</p>
+      <aside className="reading-note reading-note--prompt">
+        <strong>梯度能通过，权重仍冻结</strong>
+        <p>分类损失依赖于输入序列里的 P，因此一般情形下可对 P 求梯度。反向计算经过固定的 Transformer 运算，把梯度传到 P；优化器只改 P 与分类器 φ，冻结主干 fₑ、fᵣ 的参数保持原值。</p>
+      </aside>
       <div className="p4-gradient-equation">
         <div className="p4-equation-item">
           <span className="p4-equation-label">分类目标</span>
@@ -145,7 +148,7 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>但所有任务若继续改同一个 Prompt，仍可能相互干扰</h3>
-      <p>任务 A 学到的 Prompt 可以继续服务后续输入。若任务 B 接着更新这同一组参数，原先适用的方向可能改变。因此“冻结 ViT”本身并没有回答怎样减少不同任务对少量可训练参数的争用；这里描述的是可能性，不是保证发生的遗忘结果。</p>
+      <p>任务 A 学到的 Prompt 可以继续服务后续输入。若任务 B 接着更新这同一组参数，<span className="reading-emphasis reading-emphasis--caution">原先适用的方向可能改变</span>。因此“冻结 ViT”本身并没有回答怎样减少不同任务对少量可训练参数的争用；这里描述的是可能性，不是保证发生的遗忘结果。</p>
       <figure className="lesson-figure p4-shared-prompt">
         <div className="figure-top"><strong>同一组参数跨任务继续使用</strong><span>对象身份保持为同一个 P</span></div>
         <div className="figure-body">
