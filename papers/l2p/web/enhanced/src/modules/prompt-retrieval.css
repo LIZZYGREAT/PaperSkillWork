@@ -174,12 +174,20 @@
 .p5-shared-indices math { color: #285d40; font-size: 16px; }
 .p5-query-comparison > p { max-width: none !important; margin: 0 7px !important; color: var(--p5-muted); font-size: 12px; line-height: 1.55 !important; }
 
-.p5-motion-controls { margin-top: 18px; padding-top: 11px; border-top: 1px solid var(--p5-line); }
-.p5-motion-controls .motion-stops { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
-.p5-motion-controls .motion-stops .lesson-choice { padding: 6px 9px; color: var(--p5-ink); font-size: 12px; }
+.p5-motion-controls { position: sticky; top: 86px; z-index: 14; margin: -18px 0 15px; padding: 9px 10px 8px; border-bottom: 1px solid var(--p5-line-strong); background: var(--rk-surface); }
+.p5-motion-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.p5-motion-controls .p5-query-controls { flex: 0 0 auto; flex-wrap: nowrap; gap: 6px; padding: 0; border: 0; }
+.p5-motion-controls .p5-query-control-label { margin-right: 2px; }
+.p5-motion-controls .p5-query-control-label span { display: none; }
+.p5-motion-controls .p5-query-controls .lesson-choice { min-height: 34px; padding: 5px 10px; white-space: nowrap; }
+.p5-motion-controls .motion-stops { display: flex; flex: 1 1 auto; justify-content: flex-end; flex-wrap: nowrap; gap: 5px; min-width: 0; margin: 0; overflow-x: auto; scrollbar-width: thin; }
+.p5-motion-controls .motion-stops .lesson-choice { flex: 0 0 auto; padding: 6px 9px; color: var(--p5-ink); font-size: 12px; white-space: nowrap; }
 .p5-motion-controls .motion-stops .lesson-choice[aria-pressed="true"] { border-color: #72947b; background: #edf3e9; color: #164a35; }
-.p5-motion-controls .playback-controls { margin-top: 5px; }
-.p5-motion-controls .motion-status { margin: 8px 0 0 !important; color: #3f5d4c; font-size: 13px; line-height: 1.55 !important; }
+.p5-motion-bottomline { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px 18px; }
+.p5-motion-controls .playback-controls { justify-content: flex-start; gap: 8px 12px; padding-block: 4px; }
+.p5-motion-controls .playback-controls > label { gap: 7px; white-space: nowrap; }
+.p5-motion-controls .playback-controls input { width: clamp(120px, 20vw, 250px); }
+.p5-motion-controls .motion-status { margin: 0 !important; color: #3f5d4c; font-size: 12px; line-height: 1.45 !important; }
 .p5-retrieval-figure figcaption { line-height: 1.55; }
 
 .p5-reading-boundary { margin-top: 36px; }
@@ -187,6 +195,11 @@
 .p5-example-limits { color: #5d6254; font-size: 14px; }
 
 @media (max-width: 1080px) {
+  .p5-motion-controls { position: static; margin-inline: 0; }
+  .p5-motion-topline { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .p5-motion-controls .motion-stops { justify-content: flex-start; }
+  .p5-motion-bottomline { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .p5-motion-controls .motion-status { text-align: start; }
   .p5-query-flow { grid-template-columns: minmax(110px, .8fr) 18px minmax(120px, .9fr) 18px minmax(205px, 1.4fr); }
   .p5-query-example { grid-column: 1 / -1; justify-self: end; display: flex; align-items: baseline; gap: 9px; padding: 0; border: 0; }
   .p5-workbench-grid { grid-template-columns: minmax(0, 1fr); gap: 23px; }

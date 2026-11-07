@@ -147,11 +147,26 @@ export function PromptRetrieval() {
     <figure className="lesson-figure p5-retrieval-figure">
       <div className="figure-top"><strong>从图像 Query 到五组 Prompt</strong><span>同一个计算模型驱动向量、分数、排序和读取</span></div>
       <div className="figure-body">
-        <div className="p5-query-controls" role="group" aria-label="切换二维检索示例的 Query">
-          <div className="p5-query-control-label"><strong>当前输入</strong><span>切换样本，不提供任务 ID</span></div>
-          <button type="button" className="lesson-choice" aria-pressed={query === "A"} onClick={() => chooseQuery("A")}>查询 A · 12°</button>
-          <button type="button" className="lesson-choice" aria-pressed={query === "B"} onClick={() => chooseQuery("B")}>查询 B · 116°</button>
-          <span className="p5-query-demo-note">角度是二维教学方向，不是 ViT 的实际二维输出</span>
+        <div className="p5-motion-controls" aria-label="检索演示控制台">
+          <div className="p5-motion-topline">
+            <div className="p5-query-controls" role="group" aria-label="切换二维检索示例的 Query">
+              <div className="p5-query-control-label"><strong>当前输入</strong><span>不提供任务 ID</span></div>
+              <button type="button" className="lesson-choice" aria-pressed={query === "A"} onClick={() => chooseQuery("A")}>查询 A · 12°</button>
+              <button type="button" className="lesson-choice" aria-pressed={query === "B"} onClick={() => chooseQuery("B")}>查询 B · 116°</button>
+            </div>
+            <div className="motion-stops" role="group" aria-label="跳转到检索过程阶段">
+              {phases.map((phase, index) => <button className="lesson-choice" type="button" key={phase.short}
+                aria-pressed={activePhase === index} onClick={() => playback.seek(boundaries[index] + (index === 4
+                  ? (boundaries[5] - boundaries[4]) * 0.88
+                  : index === phases.length - 1 ? 0 : 30))}>
+                {index + 1}. {phase.short}
+              </button>)}
+            </div>
+          </div>
+          <div className="p5-motion-bottomline">
+            <PlaybackControls playback={playback} label="Query 到 Top‑N 的检索进度" />
+            <p className="motion-status" aria-live="polite">{phases[activePhase].text}</p>
+          </div>
         </div>
 
         <div className="p5-query-flow" aria-label="输入图像经冻结 ViT 生成 Query">
@@ -184,19 +199,6 @@ export function PromptRetrieval() {
         </section>
 
         <QueryComparison activeQuery={query} />
-
-        <div className="p5-motion-controls">
-          <div className="motion-stops" role="group" aria-label="跳转到检索过程阶段">
-            {phases.map((phase, index) => <button className="lesson-choice" type="button" key={phase.short}
-              aria-pressed={activePhase === index} onClick={() => playback.seek(boundaries[index] + (index === 4
-                ? (boundaries[5] - boundaries[4]) * 0.88
-                : index === phases.length - 1 ? 0 : 30))}>
-              {index + 1}. {phase.short}
-            </button>)}
-          </div>
-          <PlaybackControls playback={playback} label="Query 到 Top‑N 的检索进度" />
-          <p className="motion-status" aria-live="polite">{phases[activePhase].text}</p>
-        </div>
       </div>
       <figcaption>在 Query A 下，评分顺序、距离排序和读取视图始终来自同一个快照：{selectionOrder("A").map(index => `P${formatSubscript(index)}`).join(" · ")}。选择这些 Prompt 后，P6 才会把它们接到图像 Token 序列之前。</figcaption>
     </figure>
