@@ -77,6 +77,7 @@
       "computedStyles": [
         { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
         { "selector": ".p5-motion-controls", "property": "position", "equals": "sticky" },
+        { "selector": ".p5-retrieval-figure", "property": "overflow", "equals": "clip" },
         { "selector": ".p5-query-direction > line", "property": "stroke-width", "equals": "1.8px" }
       ]
     },

@@ -12,8 +12,9 @@
   --p5-line: #d7d8cb;
   --p5-line-strong: #bcc5b5;
   margin-block: 28px 38px;
-  overflow: clip;
 }
+
+.lesson-figure.p5-retrieval-figure { overflow: clip; }
 
 .p5-pair-intro { margin-block: 36px 30px; }
 .p5-pair-intro > p { margin-bottom: 16px; }
