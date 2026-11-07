@@ -17,7 +17,10 @@ function angleArc(candidate: CandidateScore, queryAngle: number) {
   const start = polarPoint(queryAngle, arcRadius);
   const end = polarPoint(queryAngle + delta, arcRadius);
   const sweep = delta >= 0 ? 0 : 1;
-  return `M ${start.x} ${start.y} A ${arcRadius} ${arcRadius} 0 0 ${sweep} ${end.x} ${end.y}`;
+  return {
+    path: `M ${start.x} ${start.y} A ${arcRadius} ${arcRadius} 0 0 ${sweep} ${end.x} ${end.y}`,
+    label: polarPoint(queryAngle + delta / 2, arcRadius + 19),
+  };
 }
 
 function subscript(index: number) {
@@ -37,20 +40,29 @@ function TokenRow({ className = "" }: { className?: string }) {
 export function RetrievalVectorSpace({
   snapshot,
   activeCandidateIndex,
+  approachingCandidateIndex,
+  ringAngleDegrees,
+  angleProgress,
   selectedIndices,
   phase,
   onInspectKey,
 }: {
   snapshot: SelectionSnapshot;
   activeCandidateIndex: number | null;
+  approachingCandidateIndex: number | null;
+  ringAngleDegrees: number | null;
+  angleProgress: number;
   selectedIndices: readonly number[];
   phase: number;
   onInspectKey: (index: number) => void;
 }) {
   const markerId = `p5-query-arrow-${useId().replace(/:/g, "")}`;
+  const beadGradientId = `${markerId}-bead`;
   const queryAngle = snapshot.query.angleDegrees;
   const queryScreenLabel = snapshot.query.id;
   const current = activeCandidateIndex === null ? undefined : snapshot.candidates.find(candidate => candidate.index === activeCandidateIndex);
+  const arc = current ? angleArc(current, queryAngle) : null;
+  const beadPoint = ringAngleDegrees === null ? null : polarPoint(ringAngleDegrees, vectorRadius);
   const selected = new Set(phase >= 3 ? selectedIndices : []);
 
   return <section className="p5-vector-panel" aria-label="Query 与十个 Key 的二维单位向量示例">
@@ -60,11 +72,16 @@ export function RetrievalVectorSpace({
     </div>
     <svg className="p5-vector-space" viewBox="0 0 500 410" role="group" aria-labelledby={`${markerId}-title ${markerId}-desc`}>
       <title id={`${markerId}-title`}>当前 Query 与十个固定 Key 的向量方向</title>
-      <desc id={`${markerId}-desc`}>单位圆仅用于解释余弦距离。选择一个 Key 可跳到该候选的比较步骤。</desc>
+      <desc id={`${markerId}-desc`}>单位圆仅用于解释余弦距离。播放时小球依次沿圆环移动到各 Key，停下后逐步画出与 Query 的夹角；选择一个 Key 可跳到该候选。</desc>
       <defs>
-        <marker id={markerId} viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 1 L 9 5 L 0 9 z" />
+        <marker id={markerId} viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+          <path d="M 1.2 1.8 L 8.5 5 L 1.2 8.2 z" />
         </marker>
+        <radialGradient id={beadGradientId} cx="34%" cy="28%">
+          <stop offset="0%" stopColor="#fff5d8" />
+          <stop offset="48%" stopColor="#efc36b" />
+          <stop offset="100%" stopColor="#bd7c25" />
+        </radialGradient>
       </defs>
       <circle className="p5-unit-circle" cx={cx} cy={cy} r={vectorRadius} />
       <line className="p5-axis" x1={cx - vectorRadius - 14} y1={cy} x2={cx + vectorRadius + 14} y2={cy} />
@@ -76,12 +93,13 @@ export function RetrievalVectorSpace({
         const point = polarPoint(candidate.key.angleDegrees, vectorRadius);
         const label = polarPoint(candidate.key.angleDegrees, vectorRadius + 25);
         const isActive = candidate.index === activeCandidateIndex;
+        const isApproaching = candidate.index === approachingCandidateIndex;
         const isSelected = selected.has(candidate.index);
         const anchor = Math.cos(candidate.key.angleDegrees * Math.PI / 180) >= 0 ? "start" : "end";
         const dy = Math.sin(candidate.key.angleDegrees * Math.PI / 180) > 0.78 ? 5 : -2;
         return <g
           key={candidate.index}
-          className={`p5-key-vector ${isActive ? "is-active" : ""} ${isSelected ? "is-selected" : ""}`}
+          className={`p5-key-vector ${isActive ? "is-active" : ""} ${isApproaching ? "is-approaching" : ""} ${isSelected ? "is-selected" : ""}`}
           role="button"
           tabIndex={0}
           aria-label={`查看 Key k${candidate.index}：夹角 ${candidate.thetaDegrees.toFixed(0)} 度，余弦距离 ${candidate.distance.toFixed(3)}`}
@@ -100,10 +118,15 @@ export function RetrievalVectorSpace({
         </g>;
       })}
 
-      {current && <g className="p5-active-angle" aria-hidden="true">
-        <path d={angleArc(current, queryAngle)} />
-        <text x={polarPoint(queryAngle + ((((current.key.angleDegrees - queryAngle + 540) % 360) - 180) / 2), arcRadius + 19).x}
-          y={polarPoint(queryAngle + ((((current.key.angleDegrees - queryAngle + 540) % 360) - 180) / 2), arcRadius + 19).y}>θ</text>
+      {current && arc && <g className="p5-active-angle" aria-hidden="true">
+        <path d={arc.path} pathLength="1" strokeDasharray="1" strokeDashoffset={1 - angleProgress} />
+        <text x={arc.label.x} y={arc.label.y} style={{ opacity: Math.min(angleProgress * 1.8, 1) }}>θ</text>
+      </g>}
+
+      {beadPoint && phase <= 2 && <g className="p5-orbit-bead" aria-hidden="true">
+        <circle className="p5-orbit-bead-halo" cx={beadPoint.x} cy={beadPoint.y} r="10" />
+        <circle className="p5-orbit-bead-core" cx={beadPoint.x} cy={beadPoint.y} r="5.5" fill={`url(#${beadGradientId})`} />
+        <circle className="p5-orbit-bead-glint" cx={beadPoint.x - 1.6} cy={beadPoint.y - 1.8} r="1.5" />
       </g>}
 
       <g
@@ -111,7 +134,7 @@ export function RetrievalVectorSpace({
         style={{ transform: `rotate(${-queryAngle}deg)`, transformOrigin: `${cx}px ${cy}px` }}
       >
         <line x1={cx} y1={cy} x2={cx + vectorRadius} y2={cy} markerEnd={`url(#${markerId})`} />
-        <circle cx={cx + vectorRadius} cy={cy} r="7" />
+        <circle cx={cx + vectorRadius} cy={cy} r="5.5" />
         <g className="p5-query-label" style={{ transform: `rotate(${queryAngle}deg)` }}>
           <rect x={cx + vectorRadius + 9} y={cy - 15} width="48" height="27" rx="7" />
           <text x={cx + vectorRadius + 33} y={cy + 4} textAnchor="middle">q<tspan baselineShift="sub" fontSize="10">{queryScreenLabel}</tspan></text>
@@ -122,10 +145,12 @@ export function RetrievalVectorSpace({
 
     {current && phase > 0 ? <div className="p5-distance-readout" aria-live="polite">
       <div><strong>当前比较</strong><span>q<sub>{snapshot.query.id}</sub> ↔ k{subscript(current.index)}</span></div>
-      <div className="p5-distance-steps">
-        <math><mi>θ</mi><mo>=</mo><mn>{current.thetaDegrees.toFixed(0)}</mn><mo>°</mo></math>
-        <math><mi>cos</mi><mi>θ</mi><mo>=</mo><mn>{current.cosineSimilarity.toFixed(6)}</mn></math>
-        <math><mi>γ</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>cos</mi><mi>θ</mi><mo>=</mo><mn>{current.distance.toFixed(6)}</mn><mo>≈</mo><mn>{current.distance.toFixed(3)}</mn></math>
+      <div className={`p5-distance-steps ${angleProgress < 1 ? "is-building" : ""}`}>
+        {angleProgress < 1 ? <span>已到达节点，正在描出夹角 θ</span> : <>
+          <math><mi>θ</mi><mo>=</mo><mn>{current.thetaDegrees.toFixed(0)}</mn><mo>°</mo></math>
+          <math><mi>cos</mi><mi>θ</mi><mo>=</mo><mn>{current.cosineSimilarity.toFixed(6)}</mn></math>
+          <math><mi>γ</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>cos</mi><mi>θ</mi><mo>=</mo><mn>{current.distance.toFixed(6)}</mn><mo>≈</mo><mn>{current.distance.toFixed(3)}</mn></math>
+        </>}
       </div>
     </div> : <div className="p5-distance-readout is-pending">
       <div><strong>距离从夹角得到</strong><span>播放或选择一个 Key，查看单项计算</span></div>
@@ -135,6 +160,7 @@ export function RetrievalVectorSpace({
     <div className="p5-geometry-legend" aria-label="向量图例">
       <span><i className="p5-legend-query" />Query q(x)</span>
       <span><i className="p5-legend-key" />Key kⱼ</span>
+      <span><i className="p5-legend-orbit" />正在比较</span>
       <span><i className="p5-legend-selected" />Top‑5 Key</span>
     </div>
     <p className="p5-vector-note">所有向量长度归一为 1；弧线标的是最小夹角 θ。余弦距离取自 1−cosθ，不是两端点之间的弦长。</p>
@@ -144,12 +170,14 @@ export function RetrievalVectorSpace({
 export function CandidateLedger({
   snapshot,
   activeCandidateIndex,
+  approachingCandidateIndex,
   completedIndices,
   phase,
   onInspectKey,
 }: {
   snapshot: SelectionSnapshot;
   activeCandidateIndex: number | null;
+  approachingCandidateIndex: number | null;
   completedIndices: ReadonlySet<number>;
   phase: number;
   onInspectKey: (index: number) => void;
@@ -213,6 +241,7 @@ export function CandidateLedger({
         {records.map((candidate, rowIndex) => {
           const isComplete = sorted || completedIndices.has(candidate.index);
           const isActive = candidate.index === activeCandidateIndex && phase > 0 && phase < 3;
+          const isApproaching = candidate.index === approachingCandidateIndex;
           const isSelected = sorted && rowIndex < promptPoolConfig.topN;
           return <li
             key={candidate.index}
@@ -220,15 +249,15 @@ export function CandidateLedger({
               if (element) refs.current.set(candidate.index, element);
               else refs.current.delete(candidate.index);
             }}
-            className={`p5-ledger-row ${isComplete ? "is-complete" : "is-pending"} ${isActive ? "is-active" : ""} ${isSelected ? "is-selected" : ""}`}
+            className={`p5-ledger-row ${isComplete ? "is-complete" : "is-pending"} ${isActive ? "is-active" : ""} ${isApproaching ? "is-approaching" : ""} ${isSelected ? "is-selected" : ""}`}
             data-key-index={candidate.index}
             data-record-complete={isComplete}
           >
             <button type="button" className="p5-ledger-entry" onClick={() => onInspectKey(candidate.index)} aria-label={`跳到 Key ${candidate.index} 的余弦距离计算`}>
               <span className="p5-ledger-rank">{sorted ? `${rowIndex + 1}` : `${candidate.index}`}{isSelected && <small>Top‑5</small>}</span>
               <span className="p5-ledger-source"><b>k{subscript(candidate.index)}</b><span>↔</span><b>P{subscript(candidate.index)}</b></span>
-              <span className="p5-ledger-number">{isComplete || isActive ? `${candidate.thetaDegrees.toFixed(0)}°` : "—"}</span>
-              <span className="p5-ledger-number">{isComplete || isActive ? candidate.cosineSimilarity.toFixed(3) : "—"}</span>
+              <span className="p5-ledger-number">{isComplete ? `${candidate.thetaDegrees.toFixed(0)}°` : isActive ? "θ" : "—"}</span>
+              <span className="p5-ledger-number">{isComplete ? candidate.cosineSimilarity.toFixed(3) : "—"}</span>
               <span className="p5-ledger-score">{isComplete ? candidate.distance.toFixed(3) : isActive ? "计算中" : "—"}</span>
             </button>
           </li>;

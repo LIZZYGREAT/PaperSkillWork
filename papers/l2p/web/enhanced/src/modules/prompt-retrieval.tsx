@@ -4,6 +4,7 @@ import { Arrow } from "./vit-visuals";
 import { Specimen } from "./specimen";
 import {
   buildSelectionSnapshot,
+  KEYS,
   promptPoolConfig,
   sharedKeyIndices,
   type QueryId,
@@ -18,12 +19,16 @@ import {
 } from "./prompt-retrieval-visuals";
 import "./prompt-retrieval.css";
 
-const duration = 13_700;
-const boundaries = [0, 1_000, 2_600, 8_000, 9_900, 11_700, duration];
+const nodeDwellMs = 410;
+const angleDrawDelayMs = 70;
+const angleDrawMs = 235;
+const orbitMsPerDegree = 8.8;
+const duration = 15_100;
+const boundaries = [0, 900, 2_200, 9_200, 10_900, 12_600, duration];
 const phases = [
   { label: "输入生成 Query", short: "生成 Query", text: "当前图像先经过不插入 Prompt 的冻结 ViT；读取末层 CLS 位置，形成当前输入的 Query。" },
-  { label: "计算一项余弦距离", short: "展开一项距离", text: "以 q_A 与 k₂ 为例，从两个向量的夹角 24° 得到 cosθ，再计算余弦距离 γ≈0.086。Query B 会对应展开它最近的 k₄。" },
-  { label: "逐个记录全部候选", short: "比较全部 Key", text: "同一个 Query 继续与其余九个 Key 比较。表中的分数都由同一组向量现场计算，展示到小数点后三位。" },
+  { label: "计算一项余弦距离", short: "展开一项距离", text: "先看 q_A 与 k₁：两者夹角为 8°，再由 cosθ 得到余弦距离 γ≈0.010。" },
+  { label: "逐个记录全部候选", short: "比较全部 Key", text: "小球沿圆环按槽位从 k₁ 走向 k₁₀；每到一处先停住，再逐步画出与 Query 的夹角 θ，最后记录余弦距离 γ。" },
   { label: "排序并确定选集", short: "距离排序 Top‑5", text: "候选评分记录按 γ 升序排列；前五条对应本次读取的五个 Prompt 索引。源 Pool 槽位没有移动。" },
   { label: "按索引读取 Prompt", short: "形成使用视图", text: "从五个选中槽位读取配对 Prompt，按本演示的距离顺序形成一次前向的使用视图；源参数仍保留在池中。" },
   { label: "比较两个输入", short: "查看部分共享", text: "切换 A/B 后 Query 方向与分数会变，Key–Prompt Pool 保持不动。本例选集共享 P₂、P₃。" },
@@ -42,31 +47,93 @@ function phaseAt(position: number) {
   return Math.max(0, index);
 }
 
-function comparisonOrder(query: QueryId) {
-  const first = query === "A" ? 2 : 4;
-  return [first, ...Array.from({ length: promptPoolConfig.poolSize }, (_, offset) => offset + 1).filter(index => index !== first)];
+function comparisonOrder() {
+  return Array.from({ length: promptPoolConfig.poolSize }, (_, offset) => offset + 1);
 }
 
 function queryStatus(query: QueryId) {
   return query === "A" ? "q_A · 12°" : "q_B · 116°";
 }
 
-function visibleRecords(position: number, phase: number, order: readonly number[]) {
-  if (phase === 0) return new Set<number>();
-  if (phase === 1) return new Set([order[0]]);
-  if (phase >= 3) return new Set(order);
-  const progress = Math.max(0, Math.min(1, (position - boundaries[2]) / (boundaries[3] - boundaries[2])));
-  const count = Math.min(order.length, 1 + Math.floor(progress * (order.length - 1)));
-  return new Set(order.slice(0, count));
+function clamp01(value: number) {
+  return Math.max(0, Math.min(1, value));
 }
 
-function activeCandidate(position: number, phase: number, order: readonly number[]) {
-  if (phase === 1) return order[0];
-  if (phase >= 3) return order[0];
-  if (phase !== 2) return null;
-  const progress = Math.max(0, Math.min(1, (position - boundaries[2]) / (boundaries[3] - boundaries[2])));
-  const offset = Math.min(order.length - 1, 1 + Math.floor(progress * (order.length - 1)));
-  return order[offset];
+function bezierCoordinate(progress: number, firstControl: number, secondControl: number) {
+  const inverse = 1 - progress;
+  return 3 * inverse * inverse * progress * firstControl
+    + 3 * inverse * progress * progress * secondControl
+    + progress * progress * progress;
+}
+
+function easeOrbitTravel(progress: number) {
+  let low = 0;
+  let high = 1;
+  let parameter = progress;
+  for (let iteration = 0; iteration < 14; iteration += 1) {
+    parameter = (low + high) / 2;
+    if (bezierCoordinate(parameter, 0.77, 0.175) < progress) low = parameter;
+    else high = parameter;
+  }
+  return bezierCoordinate(parameter, 0, 1);
+}
+
+function scanNodeOffset(index: number) {
+  let elapsed = 0;
+  for (let offset = 1; offset < index; offset += 1) {
+    elapsed += nodeDwellMs;
+    elapsed += Math.abs(KEYS[offset].angleDegrees - KEYS[offset - 1].angleDegrees) * orbitMsPerDegree;
+  }
+  return elapsed;
+}
+
+function scanFrameAt(position: number, order: readonly number[]) {
+  const elapsed = clamp01(position / (boundaries[3] - boundaries[2])) * (boundaries[3] - boundaries[2]);
+  let cursor = 0;
+
+  for (let offset = 0; offset < order.length; offset += 1) {
+    const index = order[offset];
+    const key = KEYS[index - 1];
+    if (offset > 0) {
+      const previousIndex = order[offset - 1];
+      const previousAngle = KEYS[previousIndex - 1].angleDegrees;
+      const travelMs = Math.abs(key.angleDegrees - previousAngle) * orbitMsPerDegree;
+      if (elapsed < cursor + travelMs) {
+        const travelProgress = clamp01((elapsed - cursor) / travelMs);
+        return {
+          activeIndex: previousIndex,
+          approachingIndex: index,
+          ringAngleDegrees: previousAngle + (key.angleDegrees - previousAngle) * easeOrbitTravel(travelProgress),
+          angleProgress: 1,
+          completedIndices: new Set(order.slice(0, offset)),
+        };
+      }
+      cursor += travelMs;
+    }
+
+    if (elapsed < cursor + nodeDwellMs) {
+      const atNodeMs = elapsed - cursor;
+      const angleProgress = offset === 0 ? 1 : clamp01((atNodeMs - angleDrawDelayMs) / angleDrawMs);
+      const angleComplete = offset === 0 || angleProgress >= 1;
+      return {
+        activeIndex: index,
+        approachingIndex: null,
+        ringAngleDegrees: key.angleDegrees,
+        angleProgress,
+        completedIndices: new Set(order.slice(0, offset + (angleComplete ? 1 : 0))),
+      };
+    }
+    cursor += nodeDwellMs;
+  }
+
+  const lastIndex = order[order.length - 1] ?? null;
+  return {
+    activeIndex: lastIndex,
+    approachingIndex: null,
+    ringAngleDegrees: lastIndex === null ? null : KEYS[lastIndex - 1].angleDegrees,
+    angleProgress: 1,
+    completedIndices: new Set(order),
+  };
 }
 
 function selectionOrder(query: QueryId) {
@@ -111,9 +178,19 @@ export function PromptRetrieval() {
   const playback = useLessonPlayback(duration);
   const activePhase = phaseAt(playback.position);
   const snapshot = snapshots[query];
-  const scanOrder = comparisonOrder(query);
-  const completedIndices = visibleRecords(playback.position, activePhase, scanOrder);
-  const activeCandidateIndex = activeCandidate(playback.position, activePhase, scanOrder);
+  const scanOrder = comparisonOrder();
+  const scanFrame = activePhase === 2 ? scanFrameAt(playback.position - boundaries[2], scanOrder) : null;
+  const angleProgress = activePhase === 1
+    ? clamp01((playback.position - boundaries[1] - angleDrawDelayMs) / angleDrawMs)
+    : scanFrame?.angleProgress ?? 1;
+  const activeCandidateIndex = activePhase === 0 ? null
+    : activePhase === 1 ? 1
+      : scanFrame?.activeIndex ?? snapshot.selectedKeyIndices[0];
+  const approachingCandidateIndex = scanFrame?.approachingIndex ?? null;
+  const ringAngleDegrees = activePhase === 1 ? KEYS[0].angleDegrees : scanFrame?.ringAngleDegrees ?? null;
+  const completedIndices = activePhase === 0 ? new Set<number>()
+    : activePhase === 1 ? angleProgress >= 1 ? new Set([1]) : new Set<number>()
+      : scanFrame?.completedIndices ?? new Set(scanOrder);
   const readProgress = activePhase > 4 ? 1 : activePhase === 4
     ? (playback.position - boundaries[4]) / (boundaries[5] - boundaries[4]) : 0;
 
@@ -123,13 +200,11 @@ export function PromptRetrieval() {
   }
 
   function inspectKey(index: number) {
-    const offset = scanOrder.indexOf(index);
-    if (offset <= 0) {
-      playback.seek(boundaries[1] + 550);
+    if (index === 1) {
+      playback.seek(boundaries[1] + angleDrawDelayMs + angleDrawMs * 0.72);
       return;
     }
-    const withinScan = (offset - 0.5) / (scanOrder.length - 1);
-    playback.seek(boundaries[2] + withinScan * (boundaries[3] - boundaries[2]));
+    playback.seek(boundaries[2] + scanNodeOffset(index) + angleDrawDelayMs + angleDrawMs * 0.72);
   }
 
   return <>
@@ -181,10 +256,11 @@ export function PromptRetrieval() {
         <p className="p5-two-d-boundary">真实机制在高维空间比较 <math><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> 与可学习 Keys。为了看清余弦规则，下方用固定的二维单位向量演示；所有数值都是可复算的教学示例。</p>
 
         <div className="p5-workbench-grid">
-          <RetrievalVectorSpace snapshot={snapshot} activeCandidateIndex={activeCandidateIndex} selectedIndices={snapshot.selectedKeyIndices}
+          <RetrievalVectorSpace snapshot={snapshot} activeCandidateIndex={activeCandidateIndex} approachingCandidateIndex={approachingCandidateIndex}
+            ringAngleDegrees={ringAngleDegrees} angleProgress={angleProgress} selectedIndices={snapshot.selectedKeyIndices}
             phase={activePhase} onInspectKey={inspectKey} />
-          <CandidateLedger snapshot={snapshot} activeCandidateIndex={activeCandidateIndex} completedIndices={completedIndices}
-            phase={activePhase} onInspectKey={inspectKey} />
+          <CandidateLedger snapshot={snapshot} activeCandidateIndex={activeCandidateIndex} approachingCandidateIndex={approachingCandidateIndex}
+            completedIndices={completedIndices} phase={activePhase} onInspectKey={inspectKey} />
         </div>
 
         <div className="p5-source-read-grid">

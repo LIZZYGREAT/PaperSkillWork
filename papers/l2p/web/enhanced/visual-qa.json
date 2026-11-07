@@ -36,12 +36,22 @@
           "actions": [{ "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(2)" }]
         },
         {
-          "id": "candidate-midpoint",
+          "id": "orbit-k1-to-k2",
           "actions": [
             { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(3)" },
             { "type": "click", "selector": "button:has-text('播放过程')" },
-            { "type": "wait", "ms": 1900 },
+            { "type": "wait", "milliseconds": 500 },
             { "type": "click", "selector": "button:has-text('暂停')" }
+          ]
+        },
+        {
+          "id": "orbit-k3-angle",
+          "actions": [
+            { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(3)" },
+            { "type": "click", "selector": "button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 1600 },
+            { "type": "click", "selector": "button:has-text('暂停')" },
+            { "type": "scrollIntoView", "selector": ".p5-vector-space" }
           ]
         },
         {
@@ -64,7 +74,11 @@
           ]
         }
       ],
-      "computedStyles": [{ "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" }]
+      "computedStyles": [
+        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
+        { "selector": ".p5-motion-controls", "property": "position", "equals": "sticky" },
+        { "selector": ".p5-query-direction > line", "property": "stroke-width", "equals": "1.8px" }
+      ]
     },
     {
       "id": "p6",

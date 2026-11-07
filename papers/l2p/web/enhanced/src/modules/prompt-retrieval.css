@@ -12,6 +12,7 @@
   --p5-line: #d7d8cb;
   --p5-line-strong: #bcc5b5;
   margin-block: 28px 38px;
+  overflow: clip;
 }
 
 .p5-pair-intro { margin-block: 36px 30px; }
@@ -60,15 +61,20 @@
 .p5-key-vector { cursor: pointer; outline: none; }
 .p5-key-vector:hover .p5-key-point { fill: #235f46; }
 .p5-key-vector:focus-visible .p5-key-point { stroke: #d4983a; stroke-width: 3; }
-.p5-key-vector.is-active .p5-key-ray { stroke: #194f3c; stroke-width: 2.5; }
+.p5-key-vector.is-active .p5-key-ray { stroke: #194f3c; stroke-width: 1.8; }
 .p5-key-vector.is-active .p5-key-point { fill: #174d3c; stroke: #fff; stroke-width: 3; }
+.p5-key-vector.is-approaching .p5-key-ray { stroke: #b2915d; stroke-width: 1.6; stroke-dasharray: 2 3; }
+.p5-key-vector.is-approaching .p5-key-point { fill: #d6a646; stroke: #fffaf0; stroke-width: 2.5; }
 .p5-key-vector.is-selected .p5-key-ray { stroke: #5a906f; stroke-width: 1.8; }
 .p5-key-vector.is-selected .p5-key-point { fill: #2d684c; }
-.p5-active-angle path { fill: none; stroke: #a47427; stroke-width: 2.2; stroke-linecap: round; }
+.p5-active-angle path { fill: none; stroke: #a47427; stroke-width: 1.8; stroke-linecap: round; }
 .p5-active-angle text { fill: #805a1f; font: 700 15px var(--rk-font-math); }
+.p5-orbit-bead-halo { fill: #e6b954; opacity: .28; }
+.p5-orbit-bead-core { stroke: #fffdf6; stroke-width: 1.8; }
+.p5-orbit-bead-glint { fill: #fffdf6; opacity: .92; }
 .p5-query-direction { transform-box: view-box; transition: transform 280ms cubic-bezier(.23, 1, .32, 1); }
-.p5-query-direction > line { stroke: var(--p5-query); stroke-width: 3; }
-.p5-query-direction > circle { fill: var(--p5-query); stroke: #fff; stroke-width: 2; }
+.p5-query-direction > line { stroke: var(--p5-query); stroke-width: 1.8; }
+.p5-query-direction > circle { fill: var(--p5-query); stroke: #fff; stroke-width: 1.5; }
 .p5-query-direction marker path { fill: var(--p5-query); }
 .p5-query-label { transform-box: view-box; transform-origin: 390px 205px; transition: transform 280ms cubic-bezier(.23, 1, .32, 1); }
 .p5-query-label rect { fill: #edf3e9; stroke: #71947c; stroke-width: 1; }
@@ -78,6 +84,7 @@
 .p5-geometry-legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .p5-legend-query, .p5-legend-key, .p5-legend-selected, .p5-legend-prompt { display: inline-block; width: 14px; height: 10px; border: 1.5px solid #2b7d68; background: #e3eee7; }
 .p5-legend-query { width: 11px; height: 11px; border-radius: 50%; background: #174d3c; border-color: #174d3c; }
+.p5-legend-orbit { width: 10px; height: 10px; border-radius: 50%; border-color: #bd7c25; background: #efc36b; }
 .p5-legend-selected { border-radius: 50%; border: 3px double #2d684c; background: #eaf1e6; }
 .p5-legend-prompt { border-color: #80659a; background: #f0e8f4; }
 .p5-vector-note { margin: 8px 4px 0 !important; color: var(--p5-muted); font-size: 12px; line-height: 1.5 !important; }
@@ -86,6 +93,7 @@
 .p5-distance-readout > div:first-child strong { color: var(--p5-query); font-size: 12px; }
 .p5-distance-readout > div:first-child span { color: #385c48; font: 600 14px var(--rk-font-math); }
 .p5-distance-steps { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.p5-distance-steps.is-building { color: #785a2a; font-size: 12px; }
 .p5-distance-readout math { color: #264d3a; font-size: 14px; white-space: nowrap; }
 .p5-distance-readout.is-pending { grid-template-columns: minmax(160px, .8fr) minmax(0, 1.2fr); }
 
@@ -98,6 +106,7 @@
 .p5-ledger-row { min-width: 0; border-bottom: 1px solid #e8e6dc; background: transparent; transition: transform 280ms cubic-bezier(.77, 0, .175, 1), opacity 170ms ease, background-color 170ms ease; }
 .p5-ledger-row.is-pending { opacity: .64; }
 .p5-ledger-row.is-active { background: #f5f0e3; }
+.p5-ledger-row.is-approaching { background: #faf7ed; }
 .p5-ledger-row.is-selected { background: #edf3e9; }
 .p5-ledger-entry { position: relative; width: 100%; min-height: 32px; padding: 4px 8px; border: 0; color: var(--p5-ink); background: transparent; text-align: start; font-variant-numeric: tabular-nums; cursor: pointer; }
 .p5-ledger-entry:hover { background: #f3f3ec; }
