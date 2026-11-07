@@ -68,7 +68,7 @@ export function PromptTuning() {
             <TokenStrip kind="prompt" label="可学习 P" />
             <TokenStrip kind="image" label="图像序列 xₑ" count={4} />
             <div className="p4-composed-sequence">
-              <span>送入 fᵣ</span>
+              <span className="p4-composed-label">送入 <math><msub><mi>f</mi><mi>r</mi></msub></math></span>
               <span className="p4-composed-cells" aria-hidden="true">
                 {Array.from({ length: 5 }, (_, index) => <i className="p4-token" key={`p${index}`} />)}
                 <i className="p4-token p4-token--cls">CLS</i><i className="p4-token p4-token--image" /><i className="p4-token p4-token--image" /><span>…</span>
@@ -86,32 +86,35 @@ export function PromptTuning() {
           </div>
           <Arrow />
           <div className={`p4-step p4-step--loss ${activePhase === 3 ? "is-active" : ""}`}>
-            <div className="p4-readout"><strong>h(P,x)</strong><small>简化教学读出</small></div>
+            <div className="p4-readout"><strong><math><mi>h</mi><mo>(</mo><mi>P</mi><mo>,</mo><mi>x</mi><mo>)</mo></math></strong><small>简化教学读出</small></div>
             <span className="p4-down-flow" aria-hidden="true">↓</span>
-            <div className="p4-classifier"><strong>共享分类头 gφ</strong><small>可训练</small></div>
-            <div className="p4-loss"><strong>交叉熵</strong><math><msub><mi>ℒ</mi><mtext>cls</mtext></msub><mo>=</mo><mi>CE</mi><mo>(</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>)</mo><mo>,</mo><mi>y</mi><mo>)</mo></math></div>
+            <div className="p4-classifier"><strong>共享分类头 <math><msub><mi>g</mi><mi>φ</mi></msub></math></strong><small>可训练</small></div>
+            <div className="p4-loss">
+              <strong>交叉熵损失</strong>
+              <math><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>=</mo><mi>CE</mi><mo>(</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>(</mo><mi>P</mi><mo>,</mo><mi>x</mi><mo>)</mo><mo>)</mo><mo>,</mo><mi>y</mi><mo>)</mo></math>
+            </div>
           </div>
         </div>
 
         <div className={`p4-gradient-route ${activePhase === 4 ? "is-active" : ""}`} aria-label="分类损失的梯度经过冻结的 Transformer 运算，回到 Prompt 输入">
           <div className="p4-gradient-label"><strong>反向计算</strong><small>梯度从分类损失返回</small></div>
           <div className="p4-gradient-track">
-            <span className="p4-gradient-source">∂ℒ / ∂h</span>
+            <math className="p4-gradient-source"><mo>∂</mo><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>/</mo><mo>∂</mo><mi>h</mi></math>
             <svg viewBox="0 0 720 54" preserveAspectRatio="none" role="img" aria-label="梯度沿相反方向穿过冻结 fᵣ 到达 Prompt">
               <defs><marker id="p4-gradient-arrow" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto"><path d="M8 0L0 4L8 8Z" fill="currentColor" /></marker></defs>
               <path d="M690 28 H35" className="p4-gradient-line" markerEnd="url(#p4-gradient-arrow)" />
               <circle className="p4-gradient-particle" cx={690 - 655 * Math.min(1, Math.max(0, gradientProgress))} cy="28" r="6" />
             </svg>
-            <span className="p4-gradient-target">∂ℒ / ∂P</span>
-            <span className="p4-gradient-frozen">穿过 fᵣ 运算 · fᵣ 参数保持冻结</span>
+            <math className="p4-gradient-target"><mo>∂</mo><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>/</mo><mo>∂</mo><mi>P</mi></math>
+            <span className="p4-gradient-frozen">穿过 <math><msub><mi>f</mi><mi>r</mi></msub></math> 运算 · 主干权重保持冻结</span>
           </div>
         </div>
 
         <div className={`p4-update-row ${activePhase === 5 ? "is-active" : ""}`} aria-label="更新可学习参数 P 和 φ，冻结的预训练参数保持不变">
           <div className="p4-update-label"><strong>参数更新</strong><small>仅更新可学习部分</small></div>
-          <div className="p4-parameter-change"><span>P⁽⁰⁾</span><div className="p4-change-track"><i style={{ transform: `scaleX(${updateProgress})` }} /></div><span>P⁽¹⁾</span></div>
-          <div className="p4-parameter-change p4-parameter-change--head"><span>φ⁽⁰⁾</span><div className="p4-change-track"><i style={{ transform: `scaleX(${updateProgress})` }} /></div><span>φ⁽¹⁾</span></div>
-          <div className="p4-stays-fixed"><span>fₑ</span><span>fᵣ</span><small>权重未改</small></div>
+          <div className="p4-parameter-change"><math><msup><mi>P</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup></math><div className="p4-change-track"><i style={{ transform: `scaleX(${updateProgress})` }} /></div><math><msup><mi>P</mi><mrow><mo>(</mo><mn>1</mn><mo>)</mo></mrow></msup></math></div>
+          <div className="p4-parameter-change p4-parameter-change--head"><math><msup><mi>φ</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup></math><div className="p4-change-track"><i style={{ transform: `scaleX(${updateProgress})` }} /></div><math><msup><mi>φ</mi><mrow><mo>(</mo><mn>1</mn><mo>)</mo></mrow></msup></math></div>
+          <div className="p4-stays-fixed"><math><msub><mi>f</mi><mi>e</mi></msub></math><math><msub><mi>f</mi><mi>r</mi></msub></math><small>权重未改</small></div>
         </div>
 
         <div className="motion-stops" role="group" aria-label="选择 Prompt 调优的观察阶段">
@@ -127,8 +130,15 @@ export function PromptTuning() {
       <h3>梯度能穿过冻结运算，参数却不必更新</h3>
       <p>分类损失依赖于输入序列里的 P，因此一般情形下可对 P 求梯度。反向计算经过固定的 Transformer 运算，把梯度传到 P；优化器只改 P 与分类器 φ，冻结主干 fₑ、fᵣ 的参数保持原值。</p>
       <div className="p4-gradient-equation">
-        <math display="block"><msub><mi>ℒ</mi><mtext>cls</mtext></msub><mo>=</mo><mi>CE</mi><mo>(</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>(</mo><mi>P</mi><mo>,</mo><mi>x</mi><mo>)</mo><mo>)</mo><mo>,</mo><mi>y</mi><mo>)</mo></math>
-        <math display="block"><msub><mo>∇</mo><mi>P</mi></msub><msub><mi>ℒ</mi><mtext>cls</mtext></msub><mo>≠</mo><mn>0</mn><mtext>（一般情形）</mtext></math>
+        <div className="p4-equation-item">
+          <span className="p4-equation-label">分类目标</span>
+          <math display="block"><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>=</mo><mi>CE</mi><mo>(</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>(</mo><mi>P</mi><mo>,</mo><mi>x</mi><mo>)</mo><mo>)</mo><mo>,</mo><mi>y</mi><mo>)</mo></math>
+        </div>
+        <div className="p4-equation-item p4-gradient-condition">
+          <span className="p4-equation-label">对 Prompt 的梯度</span>
+          <math display="block"><msub><mo>∇</mo><mi>P</mi></msub><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>≠</mo><mn>0</mn></math>
+          <small>一般情形</small>
+        </div>
       </div>
       <p>这不是在 P4 重新讲一次 Attention。P3 已说明输入 Token 会参与计算；这里沿用该结论，只追踪梯度落到哪里、哪些参数改变。</p>
     </section>
@@ -141,7 +151,7 @@ export function PromptTuning() {
         <div className="figure-body">
           <div className="p4-task-sequence">
             <div><strong>任务 A</strong><span>分类损失更新 P</span></div><Arrow />
-            <div className="p4-shared-parameter"><strong>同一组 Prompt P</strong><span>P⁽ᴬ⁾ → P⁽ᴬ→ᴮ⁾</span></div><Arrow />
+            <div className="p4-shared-parameter"><strong>同一组 Prompt P</strong><math className="p4-parameter-transition" display="block"><msup><mi>P</mi><mrow><mo>(</mo><mi>A</mi><mo>)</mo></mrow></msup><mo>→</mo><msup><mi>P</mi><mrow><mi>A</mi><mo>→</mo><mi>B</mi></mrow></msup></math></div><Arrow />
             <div><strong>任务 B</strong><span>再次写入这组参数</span></div>
           </div>
           <p className="p4-conflict-note">后续更新可能改变旧任务依赖的参数关系；本图没有表示一个必然的遗忘幅度。</p>
