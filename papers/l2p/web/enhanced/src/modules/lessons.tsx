@@ -26,7 +26,7 @@ export function TaskStream() {
   const playback = useLessonPlayback(2300);
   return (
     <>
-      <p className="lesson-lead">普通图像分类会用标签纠正预测，更新模型参数。现在把训练数据拆成按顺序到来的任务。任务 2 开始时，任务 1 的原始图像可能已经无法访问，分类器却要接着学习。</p>
+      <p className="lesson-lead">普通图像分类会用标签纠正预测，更新模型参数。现在把训练数据拆成<span className="reading-emphasis">按顺序到来的任务</span>。任务 2 开始时，<span className="reading-emphasis reading-emphasis--caution">任务 1 的原始图像可能已经无法访问</span>，分类器却要接着学习。</p>
       <figure className="training-strip">
         <div className="training-stop"><small>第一批训练图像</small><div className="class-tags"><span>鸟</span><span>鱼</span></div><b>任务 1 完成 · θ₁</b></div>
         <div className="training-update"><Arrow /><small>沿用并更新参数</small></div>
@@ -72,11 +72,15 @@ export function TaskStream() {
           <div className="route-input"><Specimen /><div><b>只收到图像</b><small>任务 ID 未提供</small></div></div><Arrow />
           <div className="route-classes"><div className="class-tags"><span>鸟</span><span>鱼</span><span>猫</span><span>狗</span></div><small>全部已学类别一起竞争</small></div>
         </div>
-        <p>这张旧图的误判说明干扰可能怎样发生。<Term id="forgetting" /> 要从旧任务整体表现的退化来判断。论文也考察类别集合不变、数据域变化的领域增量，以及训练边界不明确的设定。</p>
+        <aside className="reading-note reading-note--caution">
+          <strong>遗忘怎么判断</strong>
+          <p>这张旧图的误判说明干扰可能发生；<Term id="forgetting" /> 要看旧任务整体表现是否退化。</p>
+        </aside>
+        <p>论文也考察类别集合不变、数据域变化的领域增量，以及训练边界不明确的设定。</p>
       </section>
       <section className="explain-section">
         <h3>能否保留主干的视觉能力？</h3>
-        <p>如果预训练模型已经学到了可复用的视觉特征，就可以保留主干权重，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，无需保存旧样本来做回放。</p>
+        <p>如果预训练模型已经学到了可复用的视觉特征，就可以<span className="reading-emphasis">保留主干权重</span>，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，<span className="reading-emphasis">无需保存旧样本</span>来做回放。</p>
       </section>
       <Takeaway>要知道冻结以后还有什么可以利用，先跟着这张图走一遍 ViT，看它怎样形成视觉特征。</Takeaway>
     </>
@@ -106,7 +110,12 @@ export function ViTPath() {
           </div>
           <figcaption>裁切区域取自同一张插图。展平只重排像素。线性投影用同一组权重把各块变成特征。图中的向量格示意形状和位置。</figcaption>
         </figure>
-        <p>在这个 <Term id="vit" /> 示例里，展平前有 16×16×3 个通道值，投影后也恰好有 768 个坐标。前者是原图的颜色，后者是权重计算出的特征。数目碰巧相同，坐标含义已经改变。</p>
+        <div className="reading-contrast reading-contrast--dimension" role="group" aria-label="Patch 展平与投影后的 768 个数值含义不同">
+          <div><strong>展平输入</strong><p><Term id="vit" /> 示例：16×16×3 = 768 个像素通道值</p></div>
+          <span className="reading-contrast__flow" aria-hidden="true">→</span>
+          <div><strong>线性投影后</strong><p>768 个学习得到的特征坐标</p></div>
+          <p className="reading-contrast__conclusion">数值数量相同，坐标含义已经改变。</p>
+        </div>
       </section>
       <section className="explain-section">
         <h3>序列里为什么有 197 个位置？</h3>
@@ -117,7 +126,7 @@ export function ViTPath() {
           <div><b>= 输入 <math><Sub base="X" index="e" /></math></b><span>第 0 位</span><span>第 1 位</span><span>第 2 位</span><span>…</span><span>第 196 位</span></div>
         </div>
         <div className="shape-equation"><math display="block"><msub><mi>X</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math></div>
-        <p>197 数的是位置，768 数的是每个位置的特征坐标。进了 Encoder，位置和宽度继续保留，各层更新的则是这些位置的向量内容。末层依然有 197 个输出，普通 ViT 从中取 [CLS] 作为整图分类的输入。</p>
+        <p><span className="reading-emphasis">197 数的是位置</span>，<span className="reading-emphasis">768 数的是每个位置的特征坐标</span>。进了 Encoder，位置和宽度继续保留，各层更新的则是这些位置的向量内容。末层依然有 197 个输出，普通 ViT 从中取 [CLS] 作为整图分类的输入。</p>
       </section>
       <Takeaway>一个位置能保留自己的编号，又能读到别处的信息吗？接下来打开架构图里那个 Block，看 [CLS] 和 Patch Token 怎样交换信息。</Takeaway>
     </>
@@ -175,6 +184,11 @@ export function EncoderAttention() {
 
       <h3 className="detail-title">一个位置如何读取整串 Token？</h3>
       <p className="rk-prose">记归一化后的输入为 <math><mi>X</mi></math>，三组投影分别得到 <ProjectionFormula symbol="Q" />、<ProjectionFormula symbol="K" /> 和 <ProjectionFormula symbol="V" />。选中一个目标，用它的 Q 和各来源的 K 计算匹配，再用匹配得到的权重汇总 V。</p>
+      <div className="reading-roles" role="group" aria-label="自注意力中 Q、K、V 的分工">
+        <div><strong className="reading-role--query">Q · 目标</strong><span>目标位置提出匹配需求</span></div>
+        <div><strong className="reading-role--key">K · 来源</strong><span>各位置提供可比较的表示</span></div>
+        <div><strong className="reading-role--value">V · 内容</strong><span>按匹配权重汇总到输出</span></div>
+      </div>
       <figure className="lesson-figure attention-figure">
         <div className="figure-top"><strong>从匹配分数到输出向量</strong><span>二维教学示例 · 投影权重固定</span></div>
         <div className="figure-body">

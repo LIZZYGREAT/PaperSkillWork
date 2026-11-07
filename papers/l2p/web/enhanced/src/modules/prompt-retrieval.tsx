@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
 import { Arrow } from "./vit-visuals";
 import { promptPoolConfig, rankKeys, selectedKeyIndices, type QueryId } from "./prompt-retrieval-data";
@@ -22,6 +22,13 @@ function phaseAt(position: number) {
 
 function PromptTokens({ count = promptPoolConfig.promptLength, className = "" }: { count?: number; className?: string }) {
   return <span className={`p5-token-row ${className}`} aria-hidden="true">{Array.from({ length: count }, (_, i) => <i key={i} />)}</span>;
+}
+
+function PromptIndexList({ indices }: { indices: readonly number[] }) {
+  return <span className="p5-overlap-prompts">{indices.map((index, order) => <Fragment key={index}>
+    <math><msub><mi>P</mi><mn>{index}</mn></msub></math>
+    {order < indices.length - 1 && <span className="p5-overlap-separator" aria-hidden="true">·</span>}
+  </Fragment>)}</span>;
 }
 
 export function PromptRetrieval() {
@@ -48,13 +55,13 @@ export function PromptRetrieval() {
 
     <section className="explain-section">
       <h3>Key 负责寻址，Prompt 才进入 ViT</h3>
-      <p>每个池槽保存一对参数：<math><msub><mi>k</mi><mi>j</mi></msub></math> 是用于匹配的向量，<math><msub><mi>P</mi><mi>j</mi></msub></math> 是由多个 Token 组成的可学习序列。相同下标只表示配对关系；Key 不会拼入 Transformer，也不是 P3 的 Self‑Attention Key。</p>
+      <p>每个池槽保存一对参数：<math><msub><mi>k</mi><mi>j</mi></msub></math> 是用于匹配的向量，<math><msub><mi>P</mi><mi>j</mi></msub></math> 是由多个 Token 组成的可学习序列。相同下标只表示配对关系；<span className="reading-emphasis reading-emphasis--key">检索 Key 不会拼入 Transformer，也不是 P3 的 Self‑Attention Key</span>。</p>
       <div className="p5-equations" aria-label="Key-Prompt 池、查询和余弦距离定义">
         <math display="block"><mi>ℳ</mi><mo>=</mo><mo>{"{"}</mo><mo>(</mo><msub><mi>k</mi><mi>j</mi></msub><mo>,</mo><msub><mi>P</mi><mi>j</mi></msub><mo>)</mo><mo>:</mo><mn>1</mn><mo>≤</mo><mi>j</mi><mo>≤</mo><mi>M</mi><mo>{"}"}</mo></math>
         <math display="block"><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>[</mo><mn>0</mn><mo>,</mo><mo>:</mo><mo>]</mo></math>
         <math display="block"><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><msub><mi>k</mi><mi>j</mi></msub><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><msup><mi>q</mi><mi>⊤</mi></msup><msub><mi>k</mi><mi>j</mi></msub><mrow><mo>‖</mo><mi>q</mi><mo>‖</mo><mo>‖</mo><msub><mi>k</mi><mi>j</mi></msub><mo>‖</mo></mrow></mfrac></math>
       </div>
-      <p>Query 来自当前图像在无 Prompt 冻结 ViT 下的 CLS 输出，其中 <math><mi>f</mi><mo>=</mo><msub><mi>f</mi><mi>r</mi></msub><mo>∘</mo><msub><mi>f</mi><mi>e</mi></msub></math>；随后与池内全部 Key 比较余弦距离，并取距离最小的 <math><mi>N</mi></math> 个配对 Prompt。查询是当前前向的临时特征，池则是持续保留的参数记忆。</p>
+      <p>Query 来自当前图像在无 Prompt 冻结 ViT 下的 CLS 输出，其中 <math><mi>f</mi><mo>=</mo><msub><mi>f</mi><mi>r</mi></msub><mo>∘</mo><msub><mi>f</mi><mi>e</mi></msub></math>；随后与池内全部 Key 比较余弦距离，并取距离最小的 <math><mi>N</mi></math> 个配对 Prompt。<span className="reading-emphasis reading-emphasis--query">Query 是当前前向的临时特征；池则是持续保留的参数记忆。</span></p>
     </section>
 
     <figure className="lesson-figure p5-retrieval-figure">
@@ -119,9 +126,9 @@ export function PromptRetrieval() {
           <section className={`p5-read-view ${activePhase >= 4 ? "is-open" : ""}`} aria-label="本次前向读取出的 Prompt 副本">
             <div className="p5-region-heading"><h3>本次前向的读取视图</h3><span>池中参数仍在原位</span></div>
             {activePhase >= 4 ? <div className="p5-read-sequence" style={{ opacity: copyProgress }}>
-              {selected.map((index, order) => <div className="p5-read-prompt" key={index} style={{ transform: `translateY(${(1 - copyProgress) * 14}px)` }}>
-                <span>P<sub>{index}</sub></span><PromptTokens className="p5-read-token-row" />
-                {order < selected.length - 1 && <i className="p5-read-separator" aria-hidden="true">;</i>}
+              {selected.map((index, order) => <div className="p5-read-entry" key={index} style={{ transform: `translateY(${(1 - copyProgress) * 14}px)` }}>
+                <div className="p5-read-prompt"><span className="p5-read-label"><math><msub><mi>P</mi><mn>{index}</mn></msub></math></span><PromptTokens className="p5-read-token-row" /></div>
+                {order < selected.length - 1 && <span className="p5-read-separator" aria-hidden="true"><math><mo>;</mo></math></span>}
               </div>)}
             </div> : <div className="p5-read-pending"><strong>等待 Top‑N 选集</strong><span>源池保留 · 选中后才生成本次读取视图</span></div>}
             <p>按选择排名读取 {promptPoolConfig.topN} 组 × {promptPoolConfig.promptLength} Token；P6 会将它们接到图像 Token 序列之前。</p>
@@ -140,8 +147,15 @@ export function PromptRetrieval() {
     <section className="explain-section">
       <h3>选中索引是当前输入的路由，不是任务标签</h3>
       <p>查询 A 的 Top‑5 为 <math><mi>S</mi><mo>(</mo><msub><mi>x</mi><mi>A</mi></msub><mo>)</mo><mo>=</mo><mo>{"{"}</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>10</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>9</mn><mo>{"}"}</mo></math>；查询 B 则为 <math><mi>S</mi><mo>(</mo><msub><mi>x</mi><mi>B</mi></msub><mo>)</mo><mo>=</mo><mo>{"{"}</mo><mn>4</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>5</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>6</mn><mo>{"}"}</mo></math>。两次选择共享 P₂、P₃，其余各有不同槽位；索引由当前 Query 决定，不固定代表某个类别或任务。</p>
-      <div className="p5-overlap"><span>查询 A</span><strong>P₁ · P₂ · P₁₀ · P₃ · P₉</strong><span className="p5-shared-mark">共享 P₂、P₃</span><span>查询 B</span><strong>P₄ · P₃ · P₅ · P₂ · P₆</strong></div>
-      <p>这里展示的是样本级、可重叠的参数选择。它说明系统可在多个 Prompt 间分配使用，不代表共享必然无冲突；检索阶段也没有读取任务 ID、保存旧图像或删除未选槽位。</p>
+      <div className="p5-overlap" role="group" aria-label="查询 A 与查询 B 的 Top-5 Prompt 选择及共享槽位">
+        <div className="p5-overlap-group"><span className="p5-overlap-label">查询 A</span><PromptIndexList indices={[1, 2, 10, 3, 9]} /></div>
+        <div className="p5-shared-mark"><span>共享</span><PromptIndexList indices={[2, 3]} /></div>
+        <div className="p5-overlap-group"><span className="p5-overlap-label">查询 B</span><PromptIndexList indices={[4, 3, 5, 2, 6]} /></div>
+      </div>
+      <div className="reading-contrast reading-contrast--claims" role="group" aria-label="本例能说明的检索行为及其边界">
+        <div className="reading-claim--core"><strong>这组结果说明</strong><p>检索按样本选择 Prompt，两个输入的选集可以部分重叠。</p></div>
+        <div className="reading-claim--caution"><strong>它不保证</strong><p>共享后绝无冲突；检索也不读取任务 ID、不保存旧图像或删除未选槽位。</p></div>
+      </div>
     </section>
 
     <p className="lesson-takeaway">P5 已按当前图像得到一组 Prompt。接下来把同一组索引接入冻结 ViT，看看正式分类究竟读取哪些输出位置。</p>
