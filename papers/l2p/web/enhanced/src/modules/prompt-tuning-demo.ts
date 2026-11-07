@@ -62,7 +62,15 @@ export const P4_TOY_EXPERIMENT = Object.freeze({
 } as const);
 
 export type P4ForwardState = Readonly<{
+  inputTokens: readonly Vector2[];
+  firstPromptQuery: Vector2;
+  keys: readonly Vector2[];
+  values: readonly Vector2[];
   firstPromptAttention: readonly number[];
+  weightedValueContributions: readonly Vector2[];
+  firstPromptContext: Vector2;
+  firstPromptOutput: Vector2;
+  promptOutputs: readonly [Vector2, Vector2];
   promptReadout: Vector2;
   logits: Vector2;
   probabilities: Vector2;
@@ -119,8 +127,23 @@ function runForward(
     }
   }
 
+  const weightedValueContributions = attention[0].map((weight, sourceIndex) => Object.freeze(
+    values[sourceIndex].map(value => weight.value * value.value) as [number, number],
+  ));
+  const firstPromptContext = Object.freeze([0, 1].map(dimension =>
+    weightedValueContributions.reduce((sum, contribution) => sum + contribution[dimension], 0),
+  )) as Vector2;
+  const promptOutputs = Object.freeze([readValues(outputs[0]), readValues(outputs[1])]) as readonly [Vector2, Vector2];
   const state: P4ForwardState = Object.freeze({
+    inputTokens: Object.freeze(tokens.map(token => Object.freeze(readValues(token)))) as readonly Vector2[],
+    firstPromptQuery: Object.freeze(readValues(queries[0])) as Vector2,
+    keys: Object.freeze(keys.map(key => Object.freeze(readValues(key)))) as readonly Vector2[],
+    values: Object.freeze(values.map(item => Object.freeze(readValues(item)))) as readonly Vector2[],
     firstPromptAttention: Object.freeze(attention[0].map(weight => weight.value)),
+    weightedValueContributions: Object.freeze(weightedValueContributions),
+    firstPromptContext,
+    firstPromptOutput: Object.freeze(readValues(outputs[0])) as Vector2,
+    promptOutputs,
     promptReadout: Object.freeze(readValues(readout)) as Vector2,
     logits: Object.freeze(readValues(logits)) as Vector2,
     probabilities: Object.freeze(readValues(probabilities)) as Vector2,
