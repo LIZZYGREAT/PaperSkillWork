@@ -9,11 +9,11 @@ import {
   P9_PROTOCOL_RESULTS,
   type RetrievalMode,
 } from "./method-evidence-data";
-import { curvePath, pointOnCurve, useMotionAnchors } from "./visual-motion";
+import { easeMotion, useMotionAnchors } from "./visual-motion";
 import "./method-evidence.css";
 
-const duration = 8_400;
-const boundaries = [0, 1_150, 3_000, 4_750, 6_500, duration];
+const duration = 14_500;
+const boundaries = [0, 900, 6_300, 9_600, 12_200, duration];
 const phases = ["固定 Query", "计算 γ", "乘历史频率", "重排 Top‑N", "选中当前集合"];
 const slotIndices = Array.from({ length: promptPoolConfig.poolSize }, (_, index) => index + 1);
 
@@ -57,15 +57,14 @@ function QuerySweep({
 }) {
   if (!geometry || reducedMotion || phase !== 1 && !(phase === 2 && mode === "diversified-training")) return null;
   const start = geometry.points["p9-query"];
-  if (!start) return null;
-  const sweep = clamp(progress);
-  const index = Math.min(slotIndices.length - 1, Math.floor(sweep * slotIndices.length));
-  const localProgress = clamp(sweep * slotIndices.length - index);
-  const end = geometry.points["p9-candidate-" + (index + 1)];
+  const end = geometry.points["p9-candidate-" + slotIndices.length];
   if (!end) return null;
-  const point = pointOnCurve(start, end, localProgress);
-  return <svg className="p9-query-sweep" width={geometry.width} height={geometry.height} viewBox={"0 0 " + geometry.width + " " + geometry.height} aria-hidden="true">
-    <path d={curvePath(start, end)} pathLength="1" strokeDasharray="1" strokeDashoffset={1 - localProgress} />
+  if (!start) return null;
+  const sweep = easeMotion(clamp(progress));
+  const point = { x: start.x + (end.x - start.x) * sweep, y: start.y + (end.y - start.y) * sweep };
+  const pass = phase === 2 ? " is-frequency-pass" : "";
+  return <svg className={"p9-query-sweep" + pass} width={geometry.width} height={geometry.height} viewBox={"0 0 " + geometry.width + " " + geometry.height} aria-hidden="true">
+    <path d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`} pathLength="1" strokeDasharray="1" strokeDashoffset={1 - sweep} />
     <circle cx={point.x} cy={point.y} r="4.5" />
   </svg>;
 }
@@ -102,7 +101,7 @@ function ScoreWorkbench({
   return <div className="p9-score-workbench" ref={rootRef}>
     <QuerySweep geometry={geometry} phase={phase} progress={progress} mode={mode} reducedMotion={reducedMotion} />
     <div className="p9-query-strip">
-      <span className="p9-query-node" data-motion-anchor="p9-query"><i /> <b>q<sub>{query}</sub></b><small>{query === "A" ? "12° · P5 Query A" : "116° · P5 Query B"}</small></span>
+      <span className="p9-query-node"><i data-motion-anchor="p9-query" /> <b>q<sub>{query}</sub></b><small>{query === "A" ? "12° · P5 Query A" : "116° · P5 Query B"}</small></span>
       <span className="p9-key-rule"><strong>十个当前 Key</strong><i aria-hidden="true">→</i><b>计算分数 → 离散 Top‑{promptPoolConfig.topN}</b></span>
       <span className="p9-active-rule"><small>当前路径</small><b>{activeRule(mode)}</b></span>
     </div>
@@ -116,11 +115,11 @@ function ScoreWorkbench({
         const weightedVisible = weightProgress >= 1 || weightProgress * slotIndices.length > order;
         const isCurrentSelection = showSelection && currentSelection.includes(row.index);
         const activeRank = activeEquation === "weightedScore" ? row.diversifiedRank : row.baseRank;
-        return <button type="button" key={row.index} data-motion-anchor={"p9-candidate-" + row.index}
+        return <button type="button" key={row.index}
           className={"p9-candidate-row " + (isCurrentSelection ? "is-current-selection " : "") + (inspected === row.index ? "is-inspected " : "") + (mode === "inference" ? "is-inference " : "")}
           aria-label={"Key k" + row.index + "，Prompt P" + row.index + "，余弦距离 " + row.distance.toFixed(6) + "，历史频率 " + row.historyFrequency.toFixed(2) + "，Eq3 排名 " + row.baseRank + "，Eq4 排名 " + row.diversifiedRank}
           aria-pressed={inspected === row.index} onClick={() => onInspect(row.index)}>
-          <span className="p9-candidate-key"><b>k<sub>{row.index}</sub></b><i style={{ transform: "rotate(" + (KEY_ANGLES_DEGREES[row.index - 1] - (query === "A" ? 12 : 116)) + "deg)" }} /></span>
+          <span className="p9-candidate-key"><i className="p9-scan-target" data-motion-anchor={"p9-candidate-" + row.index} /><b>k<sub>{row.index}</sub></b><i className="p9-key-direction" style={{ transform: "rotate(" + (KEY_ANGLES_DEGREES[row.index - 1] - (query === "A" ? 12 : 116)) + "deg)" }} /></span>
           <span className="p9-candidate-prompt">P<sub>{row.index}</sub></span>
           <span className={"p9-score-cell " + (distanceVisible ? "is-revealed" : "")}>{distanceVisible ? row.distance.toFixed(3) : "· · ·"}</span>
           <span className="p9-history-cell"><b>{row.historyFrequency.toFixed(2)}</b><i><span style={{ transform: "scaleX(" + row.historyFrequency / .22 + ")" }} /></i></span>
@@ -222,8 +221,8 @@ export function MethodEvidence() {
         </div>
 
         <div className="p9-formula-band">
-          <div><span>基础排序 · Eq. (3)</span><math><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munder><mo>arg min</mo><mrow><mo>|</mo><mi>S</mi><mo>|</mo><mo>=</mo><mi>N</mi></mrow></munder><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>S</mi></mrow></munder><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><msub><mi>k</mi><mi>j</mi></msub><mo>)</mo></math></div>
-          <div className={mode === "diversified-training" ? "is-active" : "is-optional"}><span>已知任务边界时的可选训练式 · Eq. (4)</span><math><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><munder><mo>arg min</mo><mrow><mo>|</mo><mi>S</mi><mo>|</mo><mo>=</mo><mi>N</mi></mrow></munder><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>S</mi></mrow></munder><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><msub><mi>k</mi><mi>j</mi></msub><mo>)</mo><msub><mi>h</mi><mi>j</mi></msub></math></div>
+          <div><span>基础排序 · Eq. (3)</span><math><mrow><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mo>=</mo><munder><mo>arg min</mo><mrow><mo>|</mo><mi>S</mi><mo>|</mo><mo>=</mo><mi>N</mi></mrow></munder><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>S</mi></mrow></munder><mrow><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><msub><mi>k</mi><mi>j</mi></msub><mo>)</mo></mrow></math></div>
+          <div className={mode === "diversified-training" ? "is-active" : "is-optional"}><span>已知任务边界时的可选训练式 · Eq. (4)</span><math><mrow><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mo>=</mo><munder><mo>arg min</mo><mrow><mo>|</mo><mi>S</mi><mo>|</mo><mo>=</mo><mi>N</mi></mrow></munder><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>S</mi></mrow></munder><mrow><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><msub><mi>k</mi><mi>j</mi></msub><mo>)</mo></mrow><msub><mi>h</mi><mi>j</mi></msub></math></div>
         </div>
         <p className="p9-frequency-note"><strong>Hₜ 来源：</strong>此前任务对各 Prompt 的归一化选中频率。下面使用合成的 100 次历史命中快照，所有 hⱼ 均大于零以展示乘法排序；原文未完整规定零频率初始化/平滑细节，本例不替论文作此设定。</p>
 

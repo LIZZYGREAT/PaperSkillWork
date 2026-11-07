@@ -232,14 +232,22 @@
       "path": "/?page=p9",
       "states": [
         { "id": "base-query-a" },
-        { "id": "distance-sweep", "actions": [{ "type": "click", "selector": ".p9-phase-stops button:nth-child(2)" }] },
+        {
+          "id": "distance-sweep",
+          "actions": [
+            { "type": "click", "selector": ".p9-phase-stops button:nth-child(2)" },
+            { "type": "click", "selector": ".p9-playback-status button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 2700 },
+            { "type": "click", "selector": ".p9-playback-status button:has-text('暂停')" }
+          ]
+        },
         {
           "id": "frequency-weight-midpoint",
           "actions": [
             { "type": "click", "selector": ".p9-mode-toggle button:has-text('已知边界训练')" },
             { "type": "click", "selector": ".p9-phase-stops button:nth-child(3)" },
             { "type": "click", "selector": ".p9-playback-status button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 700 },
+            { "type": "wait", "milliseconds": 1650 },
             { "type": "click", "selector": ".p9-playback-status button:has-text('暂停')" }
           ]
         },
