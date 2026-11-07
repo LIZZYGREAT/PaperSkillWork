@@ -20,11 +20,19 @@
       "path": "/?page=p4",
       "states": [
         { "id": "initial" },
-        { "id": "gradient-flow", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(5)" }] },
-        { "id": "prompt-update", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(6)" }] },
-        { "id": "next-task", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(7)" }] }
+        { "id": "loss-calculation", "actions": [{ "type": "click", "selector": ".p4-control-dock .motion-stops button:nth-child(3)" }] },
+        { "id": "gradient-flow", "actions": [{ "type": "click", "selector": ".p4-control-dock .motion-stops button:nth-child(4)" }] },
+        { "id": "prompt-update", "actions": [{ "type": "click", "selector": ".p4-control-dock .motion-stops button:nth-child(5)" }] },
+        { "id": "update-intermediate", "actions": [{ "type": "click", "selector": ".p4-control-dock .motion-stops button:nth-child(5)" }, { "type": "click", "selector": ".p4-control-dock button:has-text('播放过程')" }, { "type": "wait", "milliseconds": 725 }, { "type": "click", "selector": ".p4-control-dock button:has-text('暂停')" }] },
+        { "id": "same-image-reforward", "actions": [{ "type": "click", "selector": ".p4-control-dock .motion-stops button:nth-child(6)" }] },
+        { "id": "next-task", "actions": [{ "type": "click", "selector": ".p4-control-dock .motion-stops button:nth-child(7)" }] }
       ],
-      "computedStyles": [{ "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" }]
+      "computedStyles": [
+        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
+        { "selector": ".p4-control-dock", "property": "position", "equals": "sticky" },
+        { "selector": ".lesson-figure.p4-training-figure", "property": "overflow", "equals": "clip" },
+        { "selector": ".p4-gradient-line", "property": "stroke-width", "equals": "1.7px" }
+      ]
     },
     {
       "id": "p5-query-a",
