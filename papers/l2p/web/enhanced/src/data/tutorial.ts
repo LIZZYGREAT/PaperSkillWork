@@ -23,6 +23,11 @@ export const tutorial: TutorialData = {
       summary: "P3 说明输入 Token 会参与冻结网络的计算。现在把一小段可学习向量放到图像序列前面，跟着一次分类训练，看哪些参数会改变。",
       modules: [{ kind: "module", id: "prompt-tuning", title: "把可学习 Prompt 放进冻结的 ViT", componentId: "prompt-tuning" }],
     },
+    {
+      kind: "chapter", id: "p5", title: "模型怎样为每个输入挑选 Prompt？", titleHighlight: "挑选 Prompt",
+      summary: "单个 Prompt 可能被后续任务反复修改。现在建立一组 Key–Prompt 配对记忆，让当前图像内容决定本次使用哪些 Prompt。",
+      modules: [{ kind: "module", id: "prompt-retrieval", title: "从 Query 到样本级 Top‑N 检索", componentId: "prompt-retrieval" }],
+    },
   ],
   references: [
     { id: "forgetting", name: "灾难性遗忘", definition: "模型学习新任务后，旧任务上的表现大幅退化。", source: "L2P 原文 §1、§5.1" },

@@ -44,6 +44,21 @@
       "stage": "P4",
       "component": "PromptTuning",
       "status": "complete"
+    },
+    "I10": {
+      "stage": "P5",
+      "component": "PromptRetrieval",
+      "status": "complete"
+    },
+    "I11": {
+      "stage": "P5",
+      "component": "PromptRetrieval",
+      "status": "complete"
+    },
+    "I12": {
+      "stage": "P5",
+      "component": "PromptRetrieval",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -55,6 +70,9 @@
     },
     "I31": {
       "placement": "P4 单 Prompt 教学桥与跨任务参数复用"
+    },
+    "I32": {
+      "placement": "P5 二维单位圆余弦距离示例（明确标注为教学示例）"
     }
   },
   "reference": {
