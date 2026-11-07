@@ -94,12 +94,34 @@
       "path": "/?page=p6",
       "states": [
         { "id": "selected-prompt-pool" },
-        { "id": "compose-sequence", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(3)" }] },
-        { "id": "frozen-encoder", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(4)" }] },
-        { "id": "prompt-position-pooling", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(5)" }] },
-        { "id": "class-logits", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(6)" }] }
+        { "id": "compose-sequence", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(3)" }] },
+        {
+          "id": "prompt-position-map",
+          "actions": [
+            { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(3)" },
+            { "type": "click", "selector": ".p6-sequence-cell[data-sequence-index='12']" }
+          ]
+        },
+        { "id": "frozen-encoder", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(4)" }] },
+        { "id": "prompt-position-pooling", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(5)" }] },
+        {
+          "id": "pool-intermediate",
+          "actions": [
+            { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(5)" },
+            { "type": "click", "selector": ".p6-control-dock button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 775 },
+            { "type": "click", "selector": ".p6-control-dock button:has-text('暂停')" },
+            { "type": "scrollIntoView", "selector": ".p6-pooling-workbench" }
+          ]
+        },
+        { "id": "class-logits", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(6)" }] }
       ],
-      "computedStyles": [{ "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" }]
+      "computedStyles": [
+        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
+        { "selector": ".p6-control-dock", "property": "position", "equals": "sticky" },
+        { "selector": ".lesson-figure.p6-forward-figure", "property": "overflow", "equals": "clip" },
+        { "selector": ".p6-encoder-line", "property": "stroke-width", "equals": "1.7px" }
+      ]
     }
   ],
   "geometry": {
