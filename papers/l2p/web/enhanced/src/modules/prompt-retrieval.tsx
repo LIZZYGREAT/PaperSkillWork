@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
 import { Arrow } from "./vit-visuals";
 import { promptPoolConfig, rankKeys, selectedKeyIndices, type QueryId } from "./prompt-retrieval-data";
@@ -22,6 +22,13 @@ function phaseAt(position: number) {
 
 function PromptTokens({ count = promptPoolConfig.promptLength, className = "" }: { count?: number; className?: string }) {
   return <span className={`p5-token-row ${className}`} aria-hidden="true">{Array.from({ length: count }, (_, i) => <i key={i} />)}</span>;
+}
+
+function PromptIndexList({ indices }: { indices: readonly number[] }) {
+  return <span className="p5-overlap-prompts">{indices.map((index, order) => <Fragment key={index}>
+    <math><msub><mi>P</mi><mn>{index}</mn></msub></math>
+    {order < indices.length - 1 && <span className="p5-overlap-separator" aria-hidden="true">·</span>}
+  </Fragment>)}</span>;
 }
 
 export function PromptRetrieval() {
@@ -119,9 +126,9 @@ export function PromptRetrieval() {
           <section className={`p5-read-view ${activePhase >= 4 ? "is-open" : ""}`} aria-label="本次前向读取出的 Prompt 副本">
             <div className="p5-region-heading"><h3>本次前向的读取视图</h3><span>池中参数仍在原位</span></div>
             {activePhase >= 4 ? <div className="p5-read-sequence" style={{ opacity: copyProgress }}>
-              {selected.map((index, order) => <div className="p5-read-prompt" key={index} style={{ transform: `translateY(${(1 - copyProgress) * 14}px)` }}>
-                <span>P<sub>{index}</sub></span><PromptTokens className="p5-read-token-row" />
-                {order < selected.length - 1 && <i className="p5-read-separator" aria-hidden="true">;</i>}
+              {selected.map((index, order) => <div className="p5-read-entry" key={index} style={{ transform: `translateY(${(1 - copyProgress) * 14}px)` }}>
+                <div className="p5-read-prompt"><span className="p5-read-label"><math><msub><mi>P</mi><mn>{index}</mn></msub></math></span><PromptTokens className="p5-read-token-row" /></div>
+                {order < selected.length - 1 && <span className="p5-read-separator" aria-hidden="true"><math><mo>;</mo></math></span>}
               </div>)}
             </div> : <div className="p5-read-pending"><strong>等待 Top‑N 选集</strong><span>源池保留 · 选中后才生成本次读取视图</span></div>}
             <p>按选择排名读取 {promptPoolConfig.topN} 组 × {promptPoolConfig.promptLength} Token；P6 会将它们接到图像 Token 序列之前。</p>
@@ -140,7 +147,11 @@ export function PromptRetrieval() {
     <section className="explain-section">
       <h3>选中索引是当前输入的路由，不是任务标签</h3>
       <p>查询 A 的 Top‑5 为 <math><mi>S</mi><mo>(</mo><msub><mi>x</mi><mi>A</mi></msub><mo>)</mo><mo>=</mo><mo>{"{"}</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>10</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>9</mn><mo>{"}"}</mo></math>；查询 B 则为 <math><mi>S</mi><mo>(</mo><msub><mi>x</mi><mi>B</mi></msub><mo>)</mo><mo>=</mo><mo>{"{"}</mo><mn>4</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>5</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>6</mn><mo>{"}"}</mo></math>。两次选择共享 P₂、P₃，其余各有不同槽位；索引由当前 Query 决定，不固定代表某个类别或任务。</p>
-      <div className="p5-overlap"><span>查询 A</span><strong>P₁ · P₂ · P₁₀ · P₃ · P₉</strong><span className="p5-shared-mark">共享 P₂、P₃</span><span>查询 B</span><strong>P₄ · P₃ · P₅ · P₂ · P₆</strong></div>
+      <div className="p5-overlap" role="group" aria-label="查询 A 与查询 B 的 Top-5 Prompt 选择及共享槽位">
+        <div className="p5-overlap-group"><span className="p5-overlap-label">查询 A</span><PromptIndexList indices={[1, 2, 10, 3, 9]} /></div>
+        <div className="p5-shared-mark"><span>共享</span><PromptIndexList indices={[2, 3]} /></div>
+        <div className="p5-overlap-group"><span className="p5-overlap-label">查询 B</span><PromptIndexList indices={[4, 3, 5, 2, 6]} /></div>
+      </div>
       <p>这里展示的是样本级、可重叠的参数选择。它说明系统可在多个 Prompt 间分配使用，不代表共享必然无冲突；检索阶段也没有读取任务 ID、保存旧图像或删除未选槽位。</p>
     </section>
 

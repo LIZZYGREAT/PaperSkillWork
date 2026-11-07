@@ -74,19 +74,25 @@
 .p5-read-pending { display: grid; gap: 4px; padding: 13px 0 10px; border-bottom: 1px dashed #c3b4cf; }
 .p5-read-pending > strong { color: #64477b; font-size: 12px; }
 .p5-read-pending > span { color: var(--rk-muted); font-size: 11px; }
-.p5-read-prompt { position: relative; display: inline-grid; justify-items: center; gap: 5px; padding: 6px 7px; border-bottom: 1px solid #8d73a0; transition: transform 240ms ease-out; }
-.p5-read-prompt > span:first-child { color: #64477b; font: 600 12px var(--rk-font-math); }
-.p5-read-token-row { width: 54px; }
+.p5-read-entry { display: inline-flex; align-items: center; gap: 3px; transition: transform 240ms ease-out; }
+.p5-read-prompt { display: inline-grid; justify-items: center; gap: 6px; padding: 6px 7px; border-bottom: 1px solid #8d73a0; }
+.p5-read-label math { color: #64477b; font-size: 15px; }
+.p5-read-token-row { width: 58px; }
 .p5-read-token-row i { height: 22px; }
-.p5-read-separator { align-self: center; color: var(--rk-muted); font-style: normal; }
+.p5-read-separator { display: inline-flex; align-items: center; justify-content: center; min-width: 12px; color: var(--rk-muted); transform: translateY(8px); }
+.p5-read-separator math { font-size: 19px; line-height: 1; }
 .p5-read-view > p:last-child { margin: 0; color: var(--rk-muted); font-size: 12px; line-height: 1.55; }
 .p5-retrieval-figure .motion-stops { margin-top: 17px; }
 .p5-retrieval-figure .motion-stops .lesson-choice { font-size: 12px; }
 .p5-retrieval-figure .playback-controls { margin-top: 4px; }
-.p5-overlap { display: grid; grid-template-columns: auto minmax(170px, 1fr) auto auto minmax(170px, 1fr); gap: 8px 14px; align-items: center; margin: 16px 0; padding: 12px 0; border-block: 1px solid var(--rk-line); }
-.p5-overlap > span:first-child, .p5-overlap > span:nth-of-type(2) { color: var(--rk-muted); font-size: 12px; }
-.p5-overlap > strong { color: #64477b; font: 600 13px var(--rk-font-mono); }
-.p5-shared-mark { color: #16563f; font-size: 12px; font-weight: 650; white-space: nowrap; }
+.p5-overlap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, auto) minmax(0, 1fr); gap: 14px; align-items: center; margin: 16px 0; padding: 14px 8px; border-block: 1px solid var(--rk-line); }
+.p5-overlap-group { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; }
+.p5-overlap-label { color: var(--rk-muted); font-size: 14px; font-weight: 650; white-space: nowrap; }
+.p5-overlap-prompts { min-width: 0; display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 5px; }
+.p5-overlap-prompts > math { color: #64477b; font-size: 17px; white-space: nowrap; }
+.p5-overlap-separator { color: var(--rk-muted); font-size: 14px; }
+.p5-shared-mark { display: grid; justify-items: center; gap: 4px; padding-inline: 16px; border-inline: 1px solid var(--rk-line); color: #16563f; font-size: 13px; font-weight: 650; text-align: center; }
+.p5-shared-mark .p5-overlap-prompts > math { color: #16563f; font-size: 16px; }
 @media (max-width: 1020px) {
   .p5-equations { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .p5-equations math:last-child { grid-column: 1 / -1; }
@@ -103,8 +109,11 @@
   .p5-compare-caption { grid-column: auto; justify-self: start; }
   .p5-pool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .p5-rank-and-read { grid-template-columns: minmax(0, 1fr); gap: 19px; }
-  .p5-overlap { grid-template-columns: auto minmax(0, 1fr); }
-  .p5-shared-mark { grid-column: 2; }
+  .p5-overlap { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .p5-overlap-group { justify-content: flex-start; }
+  .p5-overlap-prompts { justify-content: flex-start; }
+  .p5-shared-mark { display: flex; grid-column: auto; grid-row: auto; justify-content: flex-start; align-items: center; gap: 8px; padding: 8px 0; border-inline: 0; border-block: 1px solid var(--rk-line); text-align: start; }
+  .p5-read-sequence { gap: 4px; }
   .p5-query-disclaimer { flex-basis: 100%; margin-left: 0; }
 }
 @media (max-width: 460px) {
@@ -112,5 +121,6 @@
   .p5-pair-unit { grid-template-columns: minmax(0, 1fr); }
   .p5-ranking ol { grid-template-columns: minmax(0, 1fr); }
   .p5-region-heading { align-items: start; flex-direction: column; gap: 3px; }
-  .p5-overlap > strong { font-size: 11px; }
+  .p5-overlap-prompts > math { font-size: 15px; }
+  .p5-shared-mark .p5-overlap-prompts > math { font-size: 15px; }
 }
