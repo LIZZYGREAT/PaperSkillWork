@@ -5,6 +5,7 @@ import { PromptTuning } from "./prompt-tuning";
 import { PromptRetrieval } from "./prompt-retrieval";
 import { PromptForward } from "./prompt-forward";
 import { PromptLearning } from "./prompt-learning";
+import { ContinualRun } from "./continual-run";
 
 export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
   "task-stream": TaskStream,
@@ -14,4 +15,5 @@ export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
   "prompt-retrieval": PromptRetrieval,
   "prompt-forward": PromptForward,
   "prompt-learning": PromptLearning,
+  "continual-run": ContinualRun,
 };

@@ -186,6 +186,41 @@
         { "selector": ".lesson-figure.p7-batch-figure", "property": "overflow", "equals": "clip" },
         { "selector": ".p7-pair-slot[data-slot-index='3']", "property": "border-top-width", "equals": "1px" }
       ]
+    },
+    {
+      "id": "p8",
+      "path": "/?page=p8",
+      "states": [
+        { "id": "initialization" },
+        { "id": "task1-batch1-forward", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(2)" }] },
+        {
+          "id": "batch-writeback-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".p8-stage-stops button:nth-child(3)" },
+            { "type": "click", "selector": ".p8-playback-row button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 700 },
+            { "type": "click", "selector": ".p8-playback-row button:has-text('暂停')" },
+            { "type": "scrollIntoView", "selector": ".p8-pool-panel" }
+          ]
+        },
+        { "id": "task1-batch2-retrieval", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(4)" }] },
+        { "id": "task-boundary-inheritance", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(6)" }] },
+        {
+          "id": "task2-query-and-pool",
+          "actions": [
+            { "type": "click", "selector": ".p8-stage-stops button:nth-child(7)" },
+            { "type": "click", "selector": ".p8-pair-slot[data-slot-index='3']" }
+          ]
+        },
+        { "id": "task2-writeback", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(8)" }] },
+        { "id": "inference-no-label-no-update", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(9)" }] }
+      ],
+      "computedStyles": [
+        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
+        { "selector": ".p8-control-dock", "property": "position", "equals": "sticky" },
+        { "selector": ".lesson-figure.p8-continuous-figure", "property": "overflow", "equals": "clip" },
+        { "selector": ".p8-pair-slot[data-slot-index='3']", "property": "border-top-width", "equals": "1px" }
+      ]
     }
   ],
   "geometry": {

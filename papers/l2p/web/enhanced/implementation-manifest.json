@@ -89,6 +89,26 @@
       "stage": "P7",
       "component": "PromptLearning",
       "status": "complete"
+    },
+    "I19": {
+      "stage": "P8",
+      "component": "ContinualRun",
+      "status": "complete"
+    },
+    "I20": {
+      "stage": "P8",
+      "component": "ContinualRun",
+      "status": "complete"
+    },
+    "I21": {
+      "stage": "P8",
+      "component": "ContinualRun",
+      "status": "complete"
+    },
+    "I22": {
+      "stage": "P8",
+      "component": "ContinualRun",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -109,6 +129,9 @@
     },
     "I34": {
       "placement": "P7 报告实验优化器，不展开 Adam 内部"
+    },
+    "I35": {
+      "placement": "P8 区分有任务边界的多轮训练与 task-agnostic 单批次路径"
     }
   },
   "reference": {
