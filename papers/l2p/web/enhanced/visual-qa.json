@@ -1,0 +1,81 @@
+{
+  "baseUrl": "http://127.0.0.1:4174",
+  "server": {
+    "command": "node",
+    "args": [
+      "node_modules/vite/bin/vite.js",
+      "preview",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "4174",
+      "--strictPort"
+    ],
+    "cwd": ".",
+    "readyPath": "/"
+  },
+  "pages": [
+    {
+      "id": "p4",
+      "path": "/?page=p4",
+      "states": [
+        { "id": "initial" },
+        { "id": "gradient-flow", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(5)" }] },
+        { "id": "prompt-update", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(6)" }] },
+        { "id": "next-task", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(7)" }] }
+      ],
+      "computedStyles": [{ "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" }]
+    },
+    {
+      "id": "p5-query-a",
+      "path": "/?page=p5",
+      "states": [
+        { "id": "query" },
+        {
+          "id": "key-comparison",
+          "actions": [
+            { "type": "click", "selector": ".motion-stops button:nth-child(2)" },
+            { "type": "click", "selector": "button:has-text('播放过程')" },
+            { "type": "wait", "ms": 500 },
+            { "type": "click", "selector": "button:has-text('暂停')" }
+          ]
+        },
+        {
+          "id": "ranking",
+          "actions": [
+            { "type": "click", "selector": ".motion-stops button:nth-child(3)" },
+            { "type": "click", "selector": "button:has-text('播放过程')" },
+            { "type": "wait", "ms": 500 },
+            { "type": "click", "selector": "button:has-text('暂停')" }
+          ]
+        },
+        { "id": "top-n", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(4)" }] },
+        { "id": "read-copy", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(5)" }] },
+        {
+          "id": "query-b-read-copy",
+          "actions": [
+            { "type": "click", "selector": ".p5-query-toggle button:has-text('查询 B')" },
+            { "type": "click", "selector": ".motion-stops button:nth-child(5)" }
+          ]
+        }
+      ],
+      "computedStyles": [{ "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" }]
+    },
+    {
+      "id": "p6",
+      "path": "/?page=p6",
+      "states": [
+        { "id": "selected-prompt-pool" },
+        { "id": "compose-sequence", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(3)" }] },
+        { "id": "frozen-encoder", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(4)" }] },
+        { "id": "prompt-position-pooling", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(5)" }] },
+        { "id": "class-logits", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(6)" }] }
+      ],
+      "computedStyles": [{ "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" }]
+    }
+  ],
+  "geometry": {
+    "checkPageHorizontalOverflow": true,
+    "minSemanticFontSizePx": 12
+  }
+}

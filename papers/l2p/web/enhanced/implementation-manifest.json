@@ -1,0 +1,101 @@
+{
+  "implemented_core": {
+    "I01": {
+      "stage": "P1",
+      "component": "TaskStream",
+      "status": "complete"
+    },
+    "I02": {
+      "stage": "P1",
+      "component": "TaskStream",
+      "status": "complete"
+    },
+    "I03": {
+      "stage": "P1",
+      "component": "TaskStream",
+      "status": "complete"
+    },
+    "I04": {
+      "stage": "P2",
+      "component": "ViTPath",
+      "status": "complete"
+    },
+    "I05": {
+      "stage": "P2",
+      "component": "ViTPath",
+      "status": "complete"
+    },
+    "I06": {
+      "stage": "P3",
+      "component": "EncoderAttention",
+      "status": "complete"
+    },
+    "I07": {
+      "stage": "P3",
+      "component": "EncoderAttention",
+      "status": "complete"
+    },
+    "I08": {
+      "stage": "P4",
+      "component": "PromptTuning",
+      "status": "complete"
+    },
+    "I09": {
+      "stage": "P4",
+      "component": "PromptTuning",
+      "status": "complete"
+    },
+    "I10": {
+      "stage": "P5",
+      "component": "PromptRetrieval",
+      "status": "complete"
+    },
+    "I11": {
+      "stage": "P5",
+      "component": "PromptRetrieval",
+      "status": "complete"
+    },
+    "I12": {
+      "stage": "P5",
+      "component": "PromptRetrieval",
+      "status": "complete"
+    },
+    "I13": {
+      "stage": "P6",
+      "component": "PromptForward",
+      "status": "complete"
+    },
+    "I14": {
+      "stage": "P6",
+      "component": "PromptForward",
+      "status": "complete"
+    },
+    "I15": {
+      "stage": "P6",
+      "component": "PromptForward",
+      "status": "complete"
+    }
+  },
+  "supporting": {
+    "I29": {
+      "placement": "P1 Split CIFAR-100 说明"
+    },
+    "I30": {
+      "placement": "P1 协议边注"
+    },
+    "I31": {
+      "placement": "P4 单 Prompt 教学桥与跨任务参数复用"
+    },
+    "I32": {
+      "placement": "P5 二维单位圆余弦距离示例（明确标注为教学示例）"
+    },
+    "I33": {
+      "placement": "P6 完整分类前向与 Prompt 位置池化"
+    }
+  },
+  "reference": {
+    "I38": {
+      "placement": "Reference Hub / 缩放点积注意力"
+    }
+  }
+}
