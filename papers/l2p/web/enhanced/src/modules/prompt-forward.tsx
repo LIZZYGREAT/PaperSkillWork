@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
 import { Arrow } from "./vit-visuals";
 import { promptPoolConfig } from "./prompt-retrieval-data";
@@ -17,9 +17,17 @@ import {
 } from "./prompt-forward-data";
 import "./prompt-forward.css";
 
-const duration = 7400;
-const boundaries = [0, 900, 1800, 3250, 4550, 6100, duration];
+const duration = 9450;
+const boundaries = [0, 1000, 1950, 4350, 6050, 8450, duration];
 const patchCount = promptPoolConfig.imageLength - 1;
+const flightStep = 0.033;
+const flightSpan = 0.115;
+const poolContributions = P6_POOL_SAMPLE_ROWS.flatMap(row => row.values.map((value, tokenIndex) => ({
+  promptIndex: row.promptIndex,
+  tokenIndex,
+  sequenceIndex: row.sequenceStart + tokenIndex,
+  value,
+})));
 const phases = [
   { short: "接收 P5 选集", text: "Query A 的五个索引直接来自 P5 共享检索函数；读取 Prompt 副本，源池保持原位。" },
   { short: "准备图像序列", text: `同一图像经过冻结嵌入层得到 [CLS] 与 ${patchCount} 个 Patch 位置，共 ${promptPoolConfig.imageLength}×${promptPoolConfig.featureWidth}。` },
@@ -41,13 +49,116 @@ function phaseProgress(position: number, phase: number) {
 
 function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
 
+function easeInOut(value: number) {
+  const time = clamp(value);
+  const coordinate = (t: number, first: number, second: number) => 3 * (1 - t) ** 2 * t * first + 3 * (1 - t) * t ** 2 * second + t ** 3;
+  let low = 0;
+  let high = 1;
+  let parameter = time;
+  for (let iteration = 0; iteration < 12; iteration += 1) {
+    parameter = (low + high) / 2;
+    if (coordinate(parameter, 0.77, 0.175) < time) low = parameter;
+    else high = parameter;
+  }
+  return coordinate(parameter, 0, 1);
+}
+
+function flightProgress(progress: number, index: number) {
+  return clamp((progress - index * flightStep) / flightSpan);
+}
+
+type Point = Readonly<{ x: number; y: number }>;
+type FlightGeometry = Readonly<{ width: number; height: number; points: Readonly<Record<string, Point>> }>;
+
+function pointOnArc(start: Point, end: Point, progress: number): Point {
+  const t = easeInOut(progress);
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const lift = Math.min(76, Math.max(26, Math.abs(dy) * 0.16 + Math.abs(dx) * 0.035));
+  const first = { x: start.x + dx * 0.28, y: start.y + dy * 0.18 - lift };
+  const second = { x: start.x + dx * 0.72, y: end.y - dy * 0.18 - lift };
+  const inverse = 1 - t;
+  return {
+    x: inverse ** 3 * start.x + 3 * inverse ** 2 * t * first.x + 3 * inverse * t ** 2 * second.x + t ** 3 * end.x,
+    y: inverse ** 3 * start.y + 3 * inverse ** 2 * t * first.y + 3 * inverse * t ** 2 * second.y + t ** 3 * end.y,
+  };
+}
+
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  return reduced;
+}
+
+function useFlightGeometry(figureRef: { current: HTMLElement | null }) {
+  const [geometry, setGeometry] = useState<FlightGeometry | null>(null);
+
+  useLayoutEffect(() => {
+    const root = figureRef.current;
+    if (!root) return;
+
+    let frame = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (!root.isConnected) return;
+        const rootRect = root.getBoundingClientRect();
+        const points: Record<string, Point> = {};
+        root.querySelectorAll<HTMLElement>("[data-p6-anchor]").forEach(element => {
+          const key = element.dataset.p6Anchor;
+          if (!key) return;
+          const rect = element.getBoundingClientRect();
+          points[key] = { x: rect.left - rootRect.left + rect.width / 2, y: rect.top - rootRect.top + rect.height / 2 };
+        });
+        const next = { width: rootRect.width, height: rootRect.height, points };
+        setGeometry(previous => {
+          if (previous && Math.abs(previous.width - next.width) < 0.5 && Math.abs(previous.height - next.height) < 0.5) {
+            const keys = Object.keys(points);
+            if (keys.length === Object.keys(previous.points).length && keys.every(key => {
+              const before = previous.points[key];
+              return before && Math.abs(before.x - points[key].x) < 0.5 && Math.abs(before.y - points[key].y) < 0.5;
+            })) return previous;
+          }
+          return next;
+        });
+      });
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(root);
+    root.querySelectorAll<HTMLElement>("[data-p6-anchor]").forEach(element => observer.observe(element));
+    window.addEventListener("resize", measure);
+    document.fonts?.ready.then(measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [figureRef]);
+
+  return geometry;
+}
+
 function PromptName({ index }: { index: number }) {
   return <>P<sub>{index}</sub></>;
 }
 
 function SourcePromptView() {
   return <div className="p6-source-prompt-list" aria-label="按 P5 Query A 顺序取得的 Prompt 读取副本">
-    {P6_SELECTED_PROMPT_INDICES.map(index => <span key={index}><PromptName index={index} /><small>{promptPoolConfig.promptLength} 个 Token</small></span>)}
+    {P6_SELECTED_PROMPT_INDICES.map((index, promptOrdinal) => <span className="p6-source-prompt" key={index}>
+      <strong><PromptName index={index} /></strong>
+      <small>读取视图</small>
+      <span className="p6-source-prompt-tokens" aria-label={`${promptPoolConfig.promptLength} 个 Prompt Token`}>
+        {Array.from({ length: promptPoolConfig.promptLength }, (_, tokenIndex) => <i key={tokenIndex} data-p6-anchor={`prompt-source-${promptOrdinal}-${tokenIndex}`}>T{tokenIndex + 1}</i>)}
+      </span>
+    </span>)}
   </div>;
 }
 
@@ -66,19 +177,20 @@ function PromptSequenceGroups({
       const groupProgress = clamp(mergeProgress * P6_PROMPT_COUNT - promptOrdinal);
       return <div className="p6-sequence-prompt-group" key={`${promptIndex}-${promptOrdinal}`} style={{ opacity: 0.72 + groupProgress * 0.28 }}>
         <div className="p6-sequence-group-heading"><PromptName index={promptIndex} /><span>位置 {refs[0].sequenceIndex}–{refs[refs.length - 1].sequenceIndex}</span></div>
-        <div className="p6-sequence-group-cells">
+          <div className="p6-sequence-group-cells">
           {refs.map(ref => {
-            const cellProgress = clamp(groupProgress * promptPoolConfig.promptLength - ref.tokenIndex);
+            const tokenOrdinal = ref.promptOrdinal * promptPoolConfig.promptLength + ref.tokenIndex;
+            const arrived = mergeProgress >= tokenOrdinal * flightStep + flightSpan;
             return <button
-              className={`p6-sequence-cell ${selectedSequenceIndex === ref.sequenceIndex ? "is-selected" : ""} ${cellProgress >= 1 ? "is-composed" : ""}`}
+              className={`p6-sequence-cell ${selectedSequenceIndex === ref.sequenceIndex ? "is-selected" : ""} ${arrived ? "is-composed" : ""}`}
               type="button"
               key={ref.sequenceIndex}
               data-sequence-index={ref.sequenceIndex}
+              data-p6-anchor={`prompt-target-${ref.promptOrdinal}-${ref.tokenIndex}`}
               aria-label={`${`Prompt P${ref.promptIndex}`} 内第 ${ref.tokenIndex + 1} 个 Token，扩展序列绝对位置 ${ref.sequenceIndex}`}
               aria-pressed={selectedSequenceIndex === ref.sequenceIndex}
               onClick={() => onSelect(ref.sequenceIndex)}
-              style={{ opacity: 0.5 + 0.5 * cellProgress, transform: `translateY(${(1 - cellProgress) * 4}px)` }}
-            ><small>T{ref.tokenIndex + 1}</small><b>{ref.sequenceIndex}</b></button>;
+            ><small>T{ref.tokenIndex + 1}</small><b>{arrived ? ref.sequenceIndex : "·"}</b></button>;
           })}
         </div>
       </div>;
@@ -106,7 +218,7 @@ function PoolingTable({
   onSelect: (sequenceIndex: number) => void;
 }) {
   return <table className="p6-pool-table" aria-label="五组 Prompt 输出位置在特征维度 1 的可复算示例">
-    <thead><tr><th scope="col">Prompt 输出组</th>{Array.from({ length: promptPoolConfig.promptLength }, (_, index) => <th scope="col" key={index}>Token {index + 1}</th>)}<th scope="col">组内和</th></tr></thead>
+    <thead><tr><th scope="col">Prompt 输出组</th>{Array.from({ length: promptPoolConfig.promptLength }, (_, index) => <th scope="col" key={index} aria-label={`Prompt Token ${index + 1}`}><span className="p6-pool-token-heading"><span className="p6-pool-token-heading-full" aria-hidden="true">Token {index + 1}</span><span className="p6-pool-token-heading-short" aria-hidden="true">T{index + 1}</span></span></th>)}<th scope="col">组内和</th></tr></thead>
     <tbody>
       {P6_POOL_SAMPLE_ROWS.map((row, rowIndex) => <tr key={`${row.promptIndex}-${rowIndex}`}>
         <th scope="row"><PromptName index={row.promptIndex} /><small>位置 {row.sequenceStart}–{row.sequenceStart + row.values.length - 1}</small></th>
@@ -119,6 +231,7 @@ function PoolingTable({
               className={`p6-pool-value ${included ? "is-included" : ""} ${selected ? "is-selected" : ""}`}
               type="button"
               data-sequence-index={sequenceIndex}
+              data-p6-anchor={`pool-source-${sequenceIndex}`}
               aria-label={`H[${sequenceIndex},1] 示例值 ${value.toFixed(1)}，来自 Prompt P${row.promptIndex} 的第 ${tokenIndex + 1} 个输出 Token${included ? "，已计入当前和" : ""}`}
               aria-pressed={selected}
               onClick={() => onSelect(sequenceIndex)}
@@ -131,19 +244,111 @@ function PoolingTable({
   </table>;
 }
 
+function PoolingTray({ includedCount }: { includedCount: number }) {
+  return <div className="p6-pool-tray" role="group" aria-label={`已进入求和区的 ${includedCount} 个 Prompt 输出示例值`}>
+    {poolContributions.map(({ promptIndex, tokenIndex, sequenceIndex, value }) => {
+      const included = sequenceIndex < includedCount;
+      return <span className={`p6-pool-tray-slot ${included ? "is-filled" : ""}`} key={sequenceIndex} data-p6-anchor={`pool-target-${sequenceIndex}`} aria-label={included ? `已收集 H[${sequenceIndex},1] 的示例值 ${value.toFixed(1)}，来自 P${promptIndex} Token ${tokenIndex + 1}` : `等待 H[${sequenceIndex},1] 示例值`}>
+        {included ? value.toFixed(1) : ""}
+      </span>;
+    })}
+  </div>;
+}
+
+function FlightLayer({
+  geometry,
+  activePhase,
+  mergeProgress,
+  encoderProgress,
+  poolingProgress,
+}: {
+  geometry: FlightGeometry | null;
+  activePhase: number;
+  mergeProgress: number;
+  encoderProgress: number;
+  poolingProgress: number;
+}) {
+  if (!geometry) return null;
+  const { points, width, height } = geometry;
+  const promptFlights = activePhase === 2 ? P6_PROMPT_TOKEN_MAP.flatMap(ref => {
+    const ordinal = ref.promptOrdinal * promptPoolConfig.promptLength + ref.tokenIndex;
+    const delay = ordinal * flightStep;
+    const progress = flightProgress(mergeProgress, ordinal);
+    const start = points[`prompt-source-${ref.promptOrdinal}-${ref.tokenIndex}`];
+    const end = points[`prompt-target-${ref.promptOrdinal}-${ref.tokenIndex}`];
+    if (!start || !end || mergeProgress < delay || progress >= 1) return [];
+    const position = pointOnArc(start, end, progress);
+    return <g className="p6-flight-token" key={`prompt-${ref.sequenceIndex}`} transform={`translate(${position.x} ${position.y})`}>
+      <rect x="-26" y="-12" width="52" height="24" rx="6" />
+      <text x="0" y="4" textAnchor="middle">P{ref.promptIndex}·T{ref.tokenIndex + 1}</text>
+    </g>;
+  }) : [];
+
+  const imageStart = points["image-source"];
+  const imageEnd = points["image-target"];
+  const imageProgress = clamp((mergeProgress - 0.1) / 0.78);
+  const imagePosition = imageStart && imageEnd ? pointOnArc(imageStart, imageEnd, imageProgress) : null;
+  const imageFlight = activePhase === 2 && imageStart && imageEnd && mergeProgress >= 0.1 && imageProgress < 1 && imagePosition
+    ? <g className="p6-flight-image" transform={`translate(${imagePosition.x} ${imagePosition.y})`}>
+      <rect x="-72" y="-17" width="144" height="34" rx="8" />
+      <text x="0" y="-1" textAnchor="middle">xₑ · 197 × 768</text>
+      <text className="p6-flight-image-detail" x="0" y="11" textAnchor="middle">[CLS] + 196 Patch</text>
+    </g> : null;
+
+  const encoderTokens = [
+    { id: "prompt", startKey: "encoder-source-prompt", endKey: "encoder-target-prompt", label: "Prompt · 0", output: "H[0]", className: "is-prompt" },
+    { id: "cls", startKey: "encoder-source-cls", endKey: "encoder-target-cls", label: "[CLS] · 25", output: "H[25]", className: "is-cls" },
+    { id: "patch", startKey: "encoder-source-patch", endKey: "encoder-target-patch", label: "Patch · 221", output: "H[221]", className: "is-patch" },
+  ];
+  const encoderFlights = activePhase === 3 ? encoderTokens.map(token => {
+    const start = points[token.startKey];
+    const end = points[token.endKey];
+    if (!start || !end) return null;
+    const position = pointOnArc(start, end, encoderProgress);
+    return <g className={`p6-flight-encoder ${token.className}`} key={token.id} transform={`translate(${position.x} ${position.y})`}>
+      <rect x="-42" y="-12" width="84" height="24" rx="6" />
+      <text x="0" y="4" textAnchor="middle">{encoderProgress < 0.52 ? token.label : token.output}</text>
+    </g>;
+  }) : [];
+
+  const poolFlights = activePhase === 4 ? poolContributions.flatMap((contribution, ordinal) => {
+    const delay = ordinal * flightStep;
+    const progress = flightProgress(poolingProgress, ordinal);
+    const start = points[`pool-source-${contribution.sequenceIndex}`];
+    const end = points[`pool-target-${contribution.sequenceIndex}`];
+    if (!start || !end || poolingProgress < delay || progress >= 1) return [];
+    const position = pointOnArc(start, end, progress);
+    return <g className="p6-flight-value" key={`pool-${contribution.sequenceIndex}`} transform={`translate(${position.x} ${position.y})`}>
+      <rect x="-21" y="-12" width="42" height="24" rx="5" />
+      <text x="0" y="4" textAnchor="middle">{contribution.value.toFixed(1)}</text>
+    </g>;
+  }) : [];
+
+  if (!promptFlights.length && !imageFlight && !encoderFlights.length && !poolFlights.length) return null;
+  return <svg className="p6-flight-layer" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
+    <g>{promptFlights}{imageFlight}</g>
+    <g>{encoderFlights}</g>
+    <g>{poolFlights}</g>
+  </svg>;
+}
+
 export function PromptForward() {
   const playback = useLessonPlayback(duration);
   const [selectedSequenceIndex, setSelectedSequenceIndex] = useState(0);
+  const figureRef = useRef<HTMLElement | null>(null);
+  const geometry = useFlightGeometry(figureRef);
   const activePhase = phaseAt(playback.position);
-  const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reducedMotion = useReducedMotion();
   const mergeProgress = activePhase > 2 ? 1 : activePhase === 2 ? (reducedMotion ? 1 : phaseProgress(playback.position, 2)) : 0;
   const encoderProgress = activePhase > 3 ? 1 : activePhase === 3 ? (reducedMotion ? 1 : phaseProgress(playback.position, 3)) : 0;
   const poolingProgress = activePhase > 4 ? 1 : activePhase === 4 ? (reducedMotion ? 1 : phaseProgress(playback.position, 4)) : 0;
   const includedCount = activePhase > 4 ? P6_FINAL_POOL_EXAMPLE.totalCount : activePhase === 4
-    ? Math.floor(poolingProgress * P6_FINAL_POOL_EXAMPLE.totalCount) : 0;
+    ? poolContributions.reduce((count, _, index) => count + Number(poolingProgress >= index * flightStep + flightSpan), 0) : 0;
   const poolState = computePromptOutputPool(P6_POOL_SAMPLE_ROWS.map(row => row.values), includedCount);
   const classifierReady = activePhase === 5;
   const sequenceIsOutput = activePhase >= 4;
+  const imageFlightProgress = clamp((mergeProgress - 0.1) / 0.78);
+  const imageArrived = activePhase > 2 || (activePhase === 2 && imageFlightProgress >= 1);
 
   return <>
     <p className="lesson-lead">P5 的 Query A 已选出五个 Prompt。P6 把这些读取副本与同一张图像 Token 合并，再调用共享的冻结 ViT 完成分类；<span className="reading-emphasis reading-emphasis--prompt">最终读出来自 Prompt 位置，不是普通 ViT 的 CLS 位置</span>。</p>
@@ -157,7 +362,7 @@ export function PromptForward() {
       <p>以下工作台只展开分类调用。P5 的外部 Key 用于读取，不是 Transformer 输入 Token。</p>
     </section>
 
-    <figure className="lesson-figure p6-forward-figure">
+    <figure className="lesson-figure p6-forward-figure" ref={figureRef}>
       <div className="figure-top"><strong>从 P5 的 S(x<sub>A</sub>) 追踪到 Prompt 输出平均</strong><span>Query A · 共享冻结权重 θ₀</span></div>
       <div className="p6-control-dock" aria-label="L2P 分类前向播放控制">
         <div className="motion-stops" role="group" aria-label="选择 L2P 分类前向阶段">
@@ -176,7 +381,7 @@ export function PromptForward() {
           <span>分类：插入 Prompt → fᵣ → H</span>
         </div>
 
-        <div className="p6-source-heading"><strong>两路输入在序列维合并</strong><span>读取 Prompt 副本不清空 P5 的源池</span></div>
+          <div className="p6-source-heading"><strong>两路输入在序列维合并</strong><span>源 Pool 保留原位；本次只复制所选 Prompt</span></div>
         <div className="p6-source-branches">
           <section className={`p6-source-column p6-selected-source ${activePhase === 0 ? "is-active" : ""}`} aria-label="P5 计算得到的选中 Prompt">
             <div className="p6-source-label"><strong>P5 · Query A 的 Top-N</strong><span>S(x<sub>A</sub>)</span></div>
@@ -186,7 +391,7 @@ export function PromptForward() {
           <span className="p6-source-join" aria-hidden="true">+</span>
           <section className={`p6-source-column p6-image-source ${activePhase >= 1 ? "is-active" : ""}`} aria-label="冻结嵌入层生成的图像 Token">
             <div className="p6-source-label"><strong>同一图像 x<sub>A</sub> → 冻结 fₑ → xₑ</strong><span>{promptPoolConfig.imageLength} × {promptPoolConfig.featureWidth}</span></div>
-            <div className="p6-image-source-strip"><b>[CLS]</b><i>Patch</i><i>Patch</i><i>Patch</i><span>…</span><i>Patch</i><small>{patchCount} 个图像 Patch</small></div>
+            <div className="p6-image-source-strip" data-p6-anchor="image-source"><b>[CLS]</b><i>Patch</i><i>Patch</i><i>Patch</i><span>…</span><i>Patch</i><small>{patchCount} 个图像 Patch</small></div>
             <small>[CLS] + {patchCount} 个 Patch 位置；图像序列宽度 D={promptPoolConfig.featureWidth}。</small>
           </section>
         </div>
@@ -198,7 +403,7 @@ export function PromptForward() {
           </div>
           <div className="p6-position-key"><span>Prompt 位置 · 0–{P6_PROMPT_TOKEN_COUNT - 1}</span><span>图像位置 · [CLS] {P6_IMAGE_CLS_SEQUENCE_INDEX}，Patch {P6_FIRST_PATCH_SEQUENCE_INDEX}–{P6_LAST_PATCH_SEQUENCE_INDEX}</span></div>
           <PromptSequenceGroups mergeProgress={mergeProgress} selectedSequenceIndex={selectedSequenceIndex} onSelect={setSelectedSequenceIndex} />
-          <div className="p6-image-sequence-row">
+          <div className={`p6-image-sequence-row ${imageArrived ? "is-composed" : ""}`} data-p6-anchor="image-target">
             <span className="p6-image-position-prefix">图像 xₑ</span>
             <button className={`p6-image-position p6-cls-position ${selectedSequenceIndex === P6_IMAGE_CLS_SEQUENCE_INDEX ? "is-selected" : ""}`} type="button" data-sequence-index={P6_IMAGE_CLS_SEQUENCE_INDEX} aria-pressed={selectedSequenceIndex === P6_IMAGE_CLS_SEQUENCE_INDEX} aria-label={`图像 CLS，扩展序列绝对位置 ${P6_IMAGE_CLS_SEQUENCE_INDEX}`} onClick={() => setSelectedSequenceIndex(P6_IMAGE_CLS_SEQUENCE_INDEX)}><b>[CLS]</b><small>{P6_IMAGE_CLS_SEQUENCE_INDEX}</small></button>
             <button className={`p6-image-position ${selectedSequenceIndex === P6_FIRST_PATCH_SEQUENCE_INDEX ? "is-selected" : ""}`} type="button" data-sequence-index={P6_FIRST_PATCH_SEQUENCE_INDEX} aria-pressed={selectedSequenceIndex === P6_FIRST_PATCH_SEQUENCE_INDEX} aria-label={`第一个图像 Patch，扩展序列绝对位置 ${P6_FIRST_PATCH_SEQUENCE_INDEX}`} onClick={() => setSelectedSequenceIndex(P6_FIRST_PATCH_SEQUENCE_INDEX)}><b>Patch₁</b><small>{P6_FIRST_PATCH_SEQUENCE_INDEX}</small></button>
@@ -209,17 +414,21 @@ export function PromptForward() {
           <div className="p6-sequence-index-note"><PositionInspector sequenceIndex={selectedSequenceIndex} /><span>Key 不进入 xₚ；图像 CLS 和 Patch 输出保留在 H，但不纳入 Prompt 池化。</span></div>
           <div className={`p6-encoder-stage ${activePhase === 3 ? "is-active" : ""}`}>
             <div className="p6-encoder-flow-label"><span>输入与输出位置一一对应</span><span>同一冻结 Transformer fᵣ · 参数不更新</span></div>
-            <div className="p6-encoder-flow" aria-label="完整扩展序列通过冻结 Transformer">
-              <span className="p6-encoder-flow-start">xₚ · {P6_SEQUENCE_LENGTH} 位置</span>
-              <svg viewBox="0 0 360 38" preserveAspectRatio="none" role="img" aria-label="序列位置从输入到输出依次通过冻结计算">
-                <defs><marker id="p6-forward-arrow" markerWidth="7" markerHeight="7" refX="2.5" refY="3.5" orient="auto"><path d="M7 0L0 3.5L7 7Z" fill="currentColor" /></marker></defs>
-                <path d="M8 19 H352" className="p6-encoder-line" markerEnd="url(#p6-forward-arrow)" />
-                <circle className="p6-encoder-particle" cx="0" cy="19" r="4" transform={`translate(${8 + 344 * encoderProgress} 0)`} />
-              </svg>
-              <span className="p6-encoder-block">冻结 ViT fᵣ<br /><small>θ₀</small></span>
-              <span className="p6-encoder-flow-end">H · {P6_SEQUENCE_LENGTH} 位置</span>
+            <div className="p6-encoder-lanes" role="img" aria-label={`扩展序列的 Prompt、CLS 和 Patch 代表位置经过同一冻结 Transformer；所有 ${P6_SEQUENCE_LENGTH} 个位置均保留身份并参与上下文计算`}>
+              <span className="p6-encoder-lane-line p6-encoder-lane-line--prompt" />
+              <span className="p6-encoder-lane-line p6-encoder-lane-line--cls" />
+              <span className="p6-encoder-lane-line p6-encoder-lane-line--patch" />
+              <span className="p6-encoder-input p6-encoder-input--prompt" data-p6-anchor="encoder-source-prompt"><PromptName index={P6_SELECTED_PROMPT_INDICES[0]} /> · T1</span>
+              <span className="p6-encoder-input p6-encoder-input--cls" data-p6-anchor="encoder-source-cls">[CLS] · 25</span>
+              <span className="p6-encoder-input p6-encoder-input--patch" data-p6-anchor="encoder-source-patch">Patch · 221</span>
+              <div className="p6-encoder-block">
+                <strong>冻结 ViT</strong><span>fᵣ · θ₀</span><small>位置不变<br />表示融合上下文</small>
+              </div>
+              <span className={`p6-encoder-output p6-encoder-output--prompt ${encoderProgress >= 1 ? "is-contextualized" : ""}`} data-p6-anchor="encoder-target-prompt">H[0]</span>
+              <span className={`p6-encoder-output p6-encoder-output--cls ${encoderProgress >= 1 ? "is-contextualized" : ""}`} data-p6-anchor="encoder-target-cls">H[25]</span>
+              <span className={`p6-encoder-output p6-encoder-output--patch ${encoderProgress >= 1 ? "is-contextualized" : ""}`} data-p6-anchor="encoder-target-patch">H[221]</span>
             </div>
-            <p>序列长度与位置身份保留；各输出向量已在冻结网络中相互作用。</p>
+            <p>图中追踪三个代表位置；全部 {P6_SEQUENCE_LENGTH} 个向量都经过同一计算，未展示无依据的真实隐藏状态数值。</p>
           </div>
         </section>
 
@@ -235,12 +444,15 @@ export function PromptForward() {
             </div>
             <div className="p6-pool-accumulator">
               <span className="p6-pool-dimension">对每个特征维度各自汇总</span>
-              <div className="p6-pool-sum"><small>当前累计</small><strong>{activePhase < 4 ? "待开始" : `${poolState.sum.toFixed(2)} / ${poolState.includedCount}`}</strong><span>已计入位置 / {P6_PROMPT_TOKEN_COUNT}</span></div>
+              <div className="p6-pool-sum"><small>已抵达求和区 · 当前和 / 数量</small><strong>{activePhase < 4 ? "待开始" : `${poolState.sum.toFixed(2)} / ${poolState.includedCount}`}</strong><span>每枚数值方块来自左侧同一行的 H[r,1]</span></div>
+              <PoolingTray includedCount={includedCount} />
               <div className={`p6-pool-result ${activePhase >= 4 && includedCount === P6_PROMPT_TOKEN_COUNT ? "is-ready" : ""}`}>
-                <math><msub><mi>h</mi><mn>1</mn></msub><mo>=</mo>{activePhase >= 4 && includedCount > 0
-                  ? <mfrac><mn>{poolState.sum.toFixed(1)}</mn><mn>{poolState.includedCount}</mn></mfrac>
-                  : <mo>—</mo>}</math>
-                <strong>{activePhase >= 4 ? poolState.runningMean?.toFixed(2) ?? "—" : "—"}</strong>
+                {includedCount === P6_PROMPT_TOKEN_COUNT
+                  ? <math><msub><mi>h</mi><mn>1</mn></msub><mo>=</mo><mfrac><mn>{poolState.sum.toFixed(1)}</mn><mn>{P6_PROMPT_TOKEN_COUNT}</mn></mfrac></math>
+                  : includedCount > 0
+                    ? <span className="p6-partial-mean">前 {includedCount} 个位置的暂时均值 · 尚未完成</span>
+                    : <span className="p6-partial-mean">{activePhase >= 4 ? "等待首个输出位置" : "等待池化阶段"}</span>}
+                <strong>{includedCount === P6_PROMPT_TOKEN_COUNT ? poolState.runningMean?.toFixed(2) : "—"}</strong>
               </div>
               <small className="p6-pool-limit">另外 {promptPoolConfig.featureWidth - 1} 个维度执行相同的 {P6_PROMPT_TOKEN_COUNT} 位置平均，最终 h ∈ R<sup>{promptPoolConfig.featureWidth}</sup>。</small>
             </div>
@@ -271,6 +483,7 @@ export function PromptForward() {
           <span className="p6-dim-result"><b>NL<sub>p</sub> + L</b><strong>{P6_PROMPT_TOKEN_COUNT} + {promptPoolConfig.imageLength} = {P6_SEQUENCE_LENGTH}</strong><small>扩展序列长度</small></span>
         </div>
       </div>
+      <FlightLayer geometry={geometry} activePhase={activePhase} mergeProgress={mergeProgress} encoderProgress={encoderProgress} poolingProgress={poolingProgress} />
       <figcaption>位置图把 {P6_PROMPT_TOKEN_COUNT} 个 Prompt Token 逐一展开，图像部分按真实数量压缩显示；输出矩阵中的 d=1 数值只演示 AvgPool 算术。正式流程对 H[0:{P6_PROMPT_TOKEN_COUNT}, :] 的每一个特征维度分别求平均，分类器 Logits 保持符号形式。</figcaption>
     </figure>
 

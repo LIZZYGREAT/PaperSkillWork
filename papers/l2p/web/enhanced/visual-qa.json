@@ -96,6 +96,16 @@
         { "id": "selected-prompt-pool" },
         { "id": "compose-sequence", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(3)" }] },
         {
+          "id": "compose-flight-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(3)" },
+            { "type": "click", "selector": ".p6-control-dock button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 650 },
+            { "type": "click", "selector": ".p6-control-dock button:has-text('暂停')" },
+            { "type": "scrollIntoView", "selector": ".p6-sequence-workbench" }
+          ]
+        },
+        {
           "id": "prompt-position-map",
           "actions": [
             { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(3)" },
@@ -103,6 +113,16 @@
           ]
         },
         { "id": "frozen-encoder", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(4)" }] },
+        {
+          "id": "encoder-flight-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(4)" },
+            { "type": "click", "selector": ".p6-control-dock button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 700 },
+            { "type": "click", "selector": ".p6-control-dock button:has-text('暂停')" },
+            { "type": "scrollIntoView", "selector": ".p6-encoder-stage" }
+          ]
+        },
         { "id": "prompt-position-pooling", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(5)" }] },
         {
           "id": "pool-intermediate",
@@ -120,7 +140,7 @@
         { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
         { "selector": ".p6-control-dock", "property": "position", "equals": "sticky" },
         { "selector": ".lesson-figure.p6-forward-figure", "property": "overflow", "equals": "clip" },
-        { "selector": ".p6-encoder-line", "property": "stroke-width", "equals": "1.7px" }
+        { "selector": ".p6-encoder-lane-line", "property": "height", "equals": "1px" }
       ]
     }
   ],
