@@ -142,6 +142,50 @@
         { "selector": ".lesson-figure.p6-forward-figure", "property": "overflow", "equals": "clip" },
         { "selector": ".p6-encoder-lane-line", "property": "height", "equals": "1px" }
       ]
+    },
+    {
+      "id": "p7",
+      "path": "/?page=p7",
+      "states": [
+        { "id": "forward-results" },
+        { "id": "classification-gradients", "actions": [{ "type": "click", "selector": ".p7-motion-stops button:nth-child(2)" }] },
+        {
+          "id": "classification-flight-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".p7-motion-stops button:nth-child(2)" },
+            { "type": "click", "selector": ".p7-control-bottomline button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 650 },
+            { "type": "click", "selector": ".p7-control-bottomline button:has-text('暂停')" },
+            { "type": "scrollIntoView", "selector": ".p7-pool-panel" }
+          ]
+        },
+        { "id": "discrete-top-n-boundary", "actions": [{ "type": "click", "selector": ".p7-motion-stops button:nth-child(3)" }] },
+        {
+          "id": "key-gradient-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".p7-motion-stops button:nth-child(4)" },
+            { "type": "click", "selector": ".p7-control-bottomline button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 700 },
+            { "type": "click", "selector": ".p7-control-bottomline button:has-text('暂停')" }
+          ]
+        },
+        { "id": "shared-batch-contributions", "actions": [{ "type": "click", "selector": ".p7-motion-stops button:nth-child(5)" }] },
+        {
+          "id": "inspect-common-slot",
+          "actions": [
+            { "type": "click", "selector": ".p7-motion-stops button:nth-child(5)" },
+            { "type": "click", "selector": ".p7-pair-slot[data-slot-index='3']" }
+          ]
+        },
+        { "id": "single-sample-filter", "actions": [{ "type": "click", "selector": ".p7-control-group button:has-text('样本 A')" }] },
+        { "id": "batch-writeback", "actions": [{ "type": "click", "selector": ".p7-motion-stops button:nth-child(6)" }] }
+      ],
+      "computedStyles": [
+        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
+        { "selector": ".p7-control-dock", "property": "position", "equals": "sticky" },
+        { "selector": ".lesson-figure.p7-batch-figure", "property": "overflow", "equals": "clip" },
+        { "selector": ".p7-pair-slot[data-slot-index='3']", "property": "border-top-width", "equals": "1px" }
+      ]
     }
   ],
   "geometry": {

@@ -4,6 +4,7 @@ import { TaskStream, ViTPath, EncoderAttention } from "./lessons";
 import { PromptTuning } from "./prompt-tuning";
 import { PromptRetrieval } from "./prompt-retrieval";
 import { PromptForward } from "./prompt-forward";
+import { PromptLearning } from "./prompt-learning";
 
 export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
   "task-stream": TaskStream,
@@ -12,4 +13,5 @@ export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
   "prompt-tuning": PromptTuning,
   "prompt-retrieval": PromptRetrieval,
   "prompt-forward": PromptForward,
+  "prompt-learning": PromptLearning,
 };

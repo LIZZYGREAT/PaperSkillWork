@@ -74,6 +74,21 @@
       "stage": "P6",
       "component": "PromptForward",
       "status": "complete"
+    },
+    "I16": {
+      "stage": "P7",
+      "component": "PromptLearning",
+      "status": "complete"
+    },
+    "I17": {
+      "stage": "P7",
+      "component": "PromptLearning",
+      "status": "complete"
+    },
+    "I18": {
+      "stage": "P7",
+      "component": "PromptLearning",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -91,6 +106,9 @@
     },
     "I33": {
       "placement": "P6 完整分类前向与 Prompt 位置池化"
+    },
+    "I34": {
+      "placement": "P7 报告实验优化器，不展开 Adam 内部"
     }
   },
   "reference": {

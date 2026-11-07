@@ -33,6 +33,11 @@ export const tutorial: TutorialData = {
       summary: "P5 已经为当前输入找到一组 Prompt。跟着它们和图像 Token 一起进入同一冻结 ViT，再追踪 L2P 真正用于分类的输出位置。",
       modules: [{ kind: "module", id: "prompt-forward", title: "从检索选集到类别 Logits", componentId: "prompt-forward" }],
     },
+    {
+      kind: "chapter", id: "p7", title: "一个 Mini-batch 怎样共同更新 Key、Prompt 和分类器？", titleHighlight: "共同更新 Key",
+      summary: "P6 已经得到分类输出。现在追踪两类损失各自训练什么、硬 Top‑N 把梯度路径截在哪里，以及两个样本如何先累计再写回同一批参数。",
+      modules: [{ kind: "module", id: "prompt-learning", title: "从两项损失到一次 Batch 参数写回", componentId: "prompt-learning" }],
+    },
   ],
   references: [
     { id: "forgetting", name: "灾难性遗忘", definition: "模型学习新任务后，旧任务上的表现大幅退化。", source: "L2P 原文 §1、§5.1" },
