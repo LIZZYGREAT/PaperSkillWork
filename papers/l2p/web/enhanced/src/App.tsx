@@ -40,7 +40,7 @@ function Tutorial() {
 
   return (
     <>
-      <header className="site-header">
+      <header className={"site-header" + (tutorial.chapters.length > 8 ? " site-header--dense-nav" : "")}>
         <div className="site-header-inner">
           <a href="#tutorial-opening" className="site-brand" aria-label={`${title} 开头`}>
             <span className="brand-mark" aria-hidden="true">PAPER</span>

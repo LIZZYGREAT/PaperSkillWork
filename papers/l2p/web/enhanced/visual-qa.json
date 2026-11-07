@@ -221,6 +221,59 @@
         { "selector": ".lesson-figure.p8-continuous-figure", "property": "overflow", "equals": "clip" },
         { "selector": ".p8-pair-slot[data-slot-index='3']", "property": "border-top-width", "equals": "1px" }
       ]
+    },
+    {
+      "id": "p9",
+      "path": "/?page=p9",
+      "states": [
+        { "id": "base-query-a" },
+        { "id": "distance-sweep", "actions": [{ "type": "click", "selector": ".p9-phase-stops button:nth-child(2)" }] },
+        {
+          "id": "frequency-weight-midpoint",
+          "actions": [
+            { "type": "click", "selector": ".p9-mode-toggle button:has-text('已知边界训练')" },
+            { "type": "click", "selector": ".p9-phase-stops button:nth-child(3)" },
+            { "type": "click", "selector": ".p9-playback-status button:has-text('播放过程')" },
+            { "type": "wait", "milliseconds": 700 },
+            { "type": "click", "selector": ".p9-playback-status button:has-text('暂停')" }
+          ]
+        },
+        {
+          "id": "eq4-training-selection",
+          "actions": [
+            { "type": "click", "selector": ".p9-mode-toggle button:has-text('已知边界训练')" },
+            { "type": "click", "selector": ".p9-phase-stops button:nth-child(5)" }
+          ]
+        },
+        {
+          "id": "query-b-recomputed-ranking",
+          "actions": [
+            { "type": "click", "selector": ".p9-query-toggle button:has-text('Query B')" },
+            { "type": "click", "selector": ".p9-mode-toggle button:has-text('已知边界训练')" },
+            { "type": "click", "selector": ".p9-phase-stops button:nth-child(5)" }
+          ]
+        },
+        {
+          "id": "inference-restores-eq3",
+          "actions": [
+            { "type": "click", "selector": ".p9-mode-toggle button:has-text('测试 · Eq. (3)')" },
+            { "type": "click", "selector": ".p9-phase-stops button:nth-child(5)" }
+          ]
+        },
+        {
+          "id": "table5-diversification-ablation",
+          "actions": [
+            { "type": "scrollIntoView", "selector": ".p9-ablation-list" },
+            { "type": "click", "selector": ".p9-ablation-row:nth-child(4)" }
+          ]
+        }
+      ],
+      "computedStyles": [
+        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
+        { "selector": ".p9-control-dock", "property": "position", "equals": "sticky" },
+        { "selector": ".lesson-figure.p9-strategy-figure", "property": "overflow", "equals": "clip" },
+        { "selector": ".p9-candidate-row", "property": "border-bottom-width", "equals": "1px" }
+      ]
     }
   ],
   "geometry": {

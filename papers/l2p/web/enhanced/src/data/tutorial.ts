@@ -43,6 +43,11 @@ export const tutorial: TutorialData = {
       summary: "沿着同一个 Key–Prompt Pool，从初始化经过多个 Batch、任务交接走到无任务 ID 的推断；每一批都读取当前状态，并在批末统一更新。",
       modules: [{ kind: "module", id: "continual-run", title: "从初始化、Batch 更新到最终推断", componentId: "continual-run" }],
     },
+    {
+      kind: "chapter", id: "p9", title: "哪些设计有实验支持，证据边界在哪里？", titleHighlight: "实验支持",
+      summary: "用同一 Query 与 Key 重算 Eq. (3)/(4) 的排名，再对照作者实际报告的 Prompt 使用观察、5-datasets 消融和不同增量协议结果。",
+      modules: [{ kind: "module", id: "method-evidence", title: "可选检索策略与论文实验证据", componentId: "method-evidence" }],
+    },
   ],
   references: [
     { id: "forgetting", name: "灾难性遗忘", definition: "模型学习新任务后，旧任务上的表现大幅退化。", source: "L2P 原文 §1、§5.1" },

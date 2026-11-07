@@ -109,6 +109,36 @@
       "stage": "P8",
       "component": "ContinualRun",
       "status": "complete"
+    },
+    "I23": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I24": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I25": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I26": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I27": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I28": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -132,6 +162,12 @@
     },
     "I35": {
       "placement": "P8 区分有任务边界的多轮训练与 task-agnostic 单批次路径"
+    },
+    "I36": {
+      "placement": "P9 以不同协议呈现 CORe50 与 Gaussian-scheduled CIFAR-100 主结果"
+    },
+    "I37": {
+      "placement": "P9 Figure 4 池容量与单次调用容量补充说明"
     }
   },
   "reference": {
