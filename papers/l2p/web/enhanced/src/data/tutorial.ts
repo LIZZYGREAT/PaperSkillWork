@@ -18,6 +18,11 @@ export const tutorial: TutorialData = {
       summary: "在一层 Transformer 中，Token 可以读取其他位置的信息。沿着一条注意力计算路径，看看冻结的网络如何响应新输入。",
       modules: [{ kind: "module", id: "encoder", title: "一层 Transformer 的前向路径", componentId: "encoder-attention" }],
     },
+    {
+      kind: "chapter", id: "p4", title: "冻结 ViT 时，Prompt 怎样学会适应新任务？", titleHighlight: "Prompt 怎样学会适应",
+      summary: "P3 说明输入 Token 会参与冻结网络的计算。现在把一小段可学习向量放到图像序列前面，跟着一次分类训练，看哪些参数会改变。",
+      modules: [{ kind: "module", id: "prompt-tuning", title: "把可学习 Prompt 放进冻结的 ViT", componentId: "prompt-tuning" }],
+    },
   ],
   references: [
     { id: "forgetting", name: "灾难性遗忘", definition: "模型学习新任务后，旧任务上的表现大幅退化。", source: "L2P 原文 §1、§5.1" },

@@ -34,6 +34,16 @@
       "stage": "P3",
       "component": "EncoderAttention",
       "status": "complete"
+    },
+    "I08": {
+      "stage": "P4",
+      "component": "PromptTuning",
+      "status": "complete"
+    },
+    "I09": {
+      "stage": "P4",
+      "component": "PromptTuning",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -42,6 +52,9 @@
     },
     "I30": {
       "placement": "P1 协议边注"
+    },
+    "I31": {
+      "placement": "P4 单 Prompt 教学桥与跨任务参数复用"
     }
   },
   "reference": {

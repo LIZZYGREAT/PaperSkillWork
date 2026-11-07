@@ -191,3 +191,7 @@ Resolve the final source path from the absolute `publish_source` field in `pytho
 ## Human Acceptance Record
 
 Keep the original approved decisions, later user reconfirmations, affected stages, changed invariants, and required W7/W9 re-reviews here; do not create duplicate review documents or manually reset completed workflow states. If a W8/W9 finding requires changing an approved W4/W5 decision, first state the impact and review scope, obtain the relevant human reconfirmation, and revisit affected learning acceptance before claiming PASS.
+
+### P4 implementation and visual check
+
+P4 is registered as the frozen-backbone Prompt-tuning chapter. Production `npm.cmd run build` passed (exit 0). Chromium screenshots at 1440×900, 1920×1080, and 390×844 were inspected, including the gradient-return midpoint and next-task reuse state. The 197-position input, unchanged width, trainable `P` and `φ`, frozen `fₑ`/`fᵣ`, and simplified readout remain aligned with the approved bridge. No horizontal overflow or browser errors; MathML rendered with 8 expressions and no unresolved `mspace` width. Evidence: `C:/Users/lenovo/.codex/visualizations/2026/11/06/01a1b173-46d3-7612-a26d-751babb3eea0/P4-1440.png`, `P4-1920.png`, `P4-390.png`, `P4-gradient-1440.png`, and `P4-task-b-1440.png`. Human learning review remains pending.

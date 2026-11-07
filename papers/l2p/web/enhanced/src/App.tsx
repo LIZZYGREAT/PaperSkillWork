@@ -5,7 +5,7 @@ import { tutorial } from "./data/tutorial";
 import { widgetRegistry } from "./modules/registry";
 import EditorialFlourish from "./shared/foundation/editorial/EditorialFlourish";
 
-const chapterLabels: Record<string, string> = { p1: "任务约束", p2: "ViT 架构", p3: "注意力" };
+const chapterLabels: Record<string, string> = { p1: "任务约束", p2: "ViT 架构", p3: "注意力", p4: "Prompt 调优" };
 
 const StylePreview = import.meta.env.DEV ? lazy(() => import("./StylePreview")) : null;
 
