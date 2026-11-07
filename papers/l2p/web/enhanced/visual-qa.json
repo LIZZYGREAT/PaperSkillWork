@@ -32,30 +32,35 @@
       "states": [
         { "id": "query" },
         {
-          "id": "key-comparison",
+          "id": "key-angle-example",
+          "actions": [{ "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(2)" }]
+        },
+        {
+          "id": "candidate-midpoint",
           "actions": [
-            { "type": "click", "selector": ".motion-stops button:nth-child(2)" },
+            { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(3)" },
             { "type": "click", "selector": "button:has-text('播放过程')" },
-            { "type": "wait", "ms": 500 },
+            { "type": "wait", "ms": 1900 },
             { "type": "click", "selector": "button:has-text('暂停')" }
           ]
         },
         {
           "id": "ranking",
+          "actions": [{ "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(4)" }]
+        },
+        { "id": "read-view", "actions": [{ "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(5)" }] },
+        {
+          "id": "query-b-read-view",
           "actions": [
-            { "type": "click", "selector": ".motion-stops button:nth-child(3)" },
-            { "type": "click", "selector": "button:has-text('播放过程')" },
-            { "type": "wait", "ms": 500 },
-            { "type": "click", "selector": "button:has-text('暂停')" }
+            { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
+            { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(5)" }
           ]
         },
-        { "id": "top-n", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(4)" }] },
-        { "id": "read-copy", "actions": [{ "type": "click", "selector": ".motion-stops button:nth-child(5)" }] },
         {
-          "id": "query-b-read-copy",
+          "id": "query-b-comparison",
           "actions": [
-            { "type": "click", "selector": ".p5-query-toggle button:has-text('查询 B')" },
-            { "type": "click", "selector": ".motion-stops button:nth-child(5)" }
+            { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
+            { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(6)" }
           ]
         }
       ],
