@@ -343,6 +343,100 @@
 .rk-reading .head-motion-equations p { margin-bottom: 4px; font-size: 14px; }
 .rk-reading .head-animation > .rk-note { width: min(100%, 920px); margin-inline: auto; font-size: 14px; }
 
+/* Reading hierarchy: emphasis follows meaning, while small comparison panels
+   separate concepts that are easy to conflate across the six-page spine. */
+.reading-emphasis { color: var(--rk-accent-strong); font-weight: 700; }
+.reading-emphasis--caution { color: var(--rk-warn); }
+.reading-emphasis--prompt { color: #57436e; }
+.reading-emphasis--query { color: #365a6b; }
+.reading-emphasis--key { color: var(--rk-accent-strong); }
+.reading-note {
+  width: min(100%, 66rem);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(8rem, .25fr) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px 20px;
+  margin: 20px 0 22px;
+  padding: 14px 18px;
+  border: 1px solid var(--rk-line);
+  border-radius: var(--rk-radius);
+  background: var(--rk-figure);
+}
+.rk-reading .reading-note > strong { color: var(--rk-accent-strong); font-size: 15px; }
+.rk-reading .reading-note > p { margin: 0; font-size: 15px; line-height: 1.65; }
+.reading-note--caution { border-color: #e5d5b9; background: var(--rk-warn-soft); }
+.rk-reading .reading-note--caution > strong { color: var(--rk-warn); }
+.reading-note--prompt { border-color: #c9bbd2; background: #f1ebf5; }
+.rk-reading .reading-note--prompt > strong { color: #57436e; }
+.reading-contrast {
+  width: min(100%, 68rem);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+  margin: 18px 0 24px;
+}
+.reading-contrast > div {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 13px 16px;
+  border: 1px solid var(--rk-line);
+  border-radius: var(--rk-radius-small);
+  background: var(--rk-surface);
+}
+.rk-reading .reading-contrast > div > strong { color: var(--rk-accent-strong); font-size: 15px; }
+.rk-reading .reading-contrast > div > p { margin: 0; font-size: 14px; line-height: 1.65; }
+.reading-contrast__flow { align-self: center; color: var(--rk-accent); font-size: 20px; }
+.rk-reading .reading-contrast .reading-contrast__conclusion {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--rk-line);
+  color: var(--rk-accent-strong);
+  font-size: 14px;
+  font-weight: 650;
+}
+.reading-contrast--dimension > div:first-child { background: var(--rk-surface-soft); }
+.reading-contrast--dimension > div:last-of-type { background: var(--rk-figure); }
+.reading-contrast--claims, .reading-contrast--calls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.reading-contrast--claims .reading-claim--core { background: var(--rk-figure); }
+.rk-reading .reading-contrast--claims .reading-claim--caution > strong { color: var(--rk-warn); }
+.reading-contrast--claims .reading-claim--caution { border-color: #e5d5b9; background: var(--rk-warn-soft); }
+.reading-contrast--calls .reading-call--query { border-color: #c0cdd1; background: #eef2f3; }
+.reading-contrast--calls .reading-call--prompt { border-color: #c9bbd2; background: #f1ebf5; }
+.rk-reading .reading-contrast--calls .reading-call--query > strong { color: #365a6b; }
+.rk-reading .reading-contrast--calls .reading-call--prompt > strong { color: #57436e; }
+.reading-roles {
+  width: min(100%, 68rem);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 23px;
+}
+.reading-roles > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 10px 13px;
+  border-bottom: 1px solid var(--rk-line-strong);
+  background: var(--rk-surface-soft);
+}
+.reading-roles strong { font-size: 14px; }
+.reading-roles span { color: var(--rk-muted); font-size: 13px; line-height: 1.5; }
+.reading-role--query { color: #365a6b; }
+.reading-role--key { color: var(--rk-accent-strong); }
+.reading-role--value { color: #57436e; }
+@media (max-width: 760px) {
+  .reading-note { grid-template-columns: 1fr; gap: 4px; padding: 12px 14px; }
+  .reading-contrast--dimension { grid-template-columns: minmax(0, 1fr); }
+  .reading-contrast--dimension .reading-contrast__flow { justify-self: center; transform: rotate(90deg); line-height: 1; }
+  .reading-contrast--claims, .reading-contrast--calls, .reading-roles { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* Math labels stay sharp while the canvas scales with its diagram. */
 .patch-motion-stage { position: relative; width: min(100%, 920px); margin-inline: auto; container-type: inline-size; }
 .patch-motion-stage .patch-motion-canvas { width: 100%; box-sizing: border-box; }
