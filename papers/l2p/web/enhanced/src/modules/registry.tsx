@@ -3,6 +3,7 @@ import type { WidgetProps } from "../types";
 import { TaskStream, ViTPath, EncoderAttention } from "./lessons";
 import { PromptTuning } from "./prompt-tuning";
 import { PromptRetrieval } from "./prompt-retrieval";
+import { PromptForward } from "./prompt-forward";
 
 export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
   "task-stream": TaskStream,
@@ -10,4 +11,5 @@ export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
   "encoder-attention": EncoderAttention,
   "prompt-tuning": PromptTuning,
   "prompt-retrieval": PromptRetrieval,
+  "prompt-forward": PromptForward,
 };

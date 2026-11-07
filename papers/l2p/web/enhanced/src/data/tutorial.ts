@@ -28,6 +28,11 @@ export const tutorial: TutorialData = {
       summary: "单个 Prompt 可能被后续任务反复修改。现在建立一组 Key–Prompt 配对记忆，让当前图像内容决定本次使用哪些 Prompt。",
       modules: [{ kind: "module", id: "prompt-retrieval", title: "从 Query 到样本级 Top‑N 检索", componentId: "prompt-retrieval" }],
     },
+    {
+      kind: "chapter", id: "p6", title: "选中的 Prompt 如何参与完整分类？", titleHighlight: "完整分类",
+      summary: "P5 已经为当前输入找到一组 Prompt。跟着它们和图像 Token 一起进入同一冻结 ViT，再追踪 L2P 真正用于分类的输出位置。",
+      modules: [{ kind: "module", id: "prompt-forward", title: "从检索选集到类别 Logits", componentId: "prompt-forward" }],
+    },
   ],
   references: [
     { id: "forgetting", name: "灾难性遗忘", definition: "模型学习新任务后，旧任务上的表现大幅退化。", source: "L2P 原文 §1、§5.1" },

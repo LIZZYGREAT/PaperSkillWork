@@ -59,6 +59,21 @@
       "stage": "P5",
       "component": "PromptRetrieval",
       "status": "complete"
+    },
+    "I13": {
+      "stage": "P6",
+      "component": "PromptForward",
+      "status": "complete"
+    },
+    "I14": {
+      "stage": "P6",
+      "component": "PromptForward",
+      "status": "complete"
+    },
+    "I15": {
+      "stage": "P6",
+      "component": "PromptForward",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -73,6 +88,9 @@
     },
     "I32": {
       "placement": "P5 二维单位圆余弦距离示例（明确标注为教学示例）"
+    },
+    "I33": {
+      "placement": "P6 完整分类前向与 Prompt 位置池化"
     }
   },
   "reference": {
