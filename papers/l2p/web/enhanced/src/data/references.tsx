@@ -23,6 +23,7 @@ function SourceLink({ href, children }: { href: string; children: ReactNode }) {
 
 const L2P = "https://arxiv.org/abs/2112.08654";
 const VIT = "https://arxiv.org/abs/2010.11929";
+const TRANSFORMER = "https://arxiv.org/abs/1706.03762";
 
 export const references: ReferenceEntry[] = [
   {
@@ -189,5 +190,226 @@ export const references: ReferenceEntry[] = [
     />,
     related: ["continual-learning", "catastrophic-forgetting"],
     source: <>L2P §1、§5.1（PDF pp. 1、6）。<SourceLink href={L2P}>查看论文摘要与原文</SourceLink></>,
+  },
+  {
+    id: "vit", page: "P2", name: "视觉 Transformer", english: "Vision Transformer · ViT",
+    definition: "把图像切成一组 Patch，并像处理序列一样交给 Transformer 编码的视觉模型。",
+    role: "L2P 使用预训练 ViT 作视觉主干；P2 沿它的输入嵌入、Encoder 与分类读出展开。",
+    confusion: "ViT 是通用架构背景，L2P 的方法贡献是后续加入的 Prompt Pool 与检索机制。",
+    detail: <ReferenceDetail
+      explanation="传统卷积网络沿局部网格反复提取特征；ViT 则把图像分块，每块转成向量 Token，再用 Transformer 在序列位置间交换信息。每个位置经过编码后仍保留原有序列索引。"
+      steps={[
+        { title: "切分图像", text: "将二维像素网格划为固定大小的图像块。" },
+        { title: "形成向量序列", text: "每个图像块映射到同一宽度的特征向量，并加入位置信息。" },
+        { title: "上下文编码", text: "多层 Transformer 让不同图像区域交换信息，再读取用于分类的表示。" },
+      ]}
+      note="L2P 复用预训练 ViT 的图像嵌入与 Transformer 主干；本页展示的是它的架构前置知识。"
+    />,
+    related: ["pretrained-backbone", "image-patch", "token-sequence", "encoder-block", "vit-b16"],
+    source: <>L2P §3.2、§5.2（PDF pp. 4、7）；架构细节见 <SourceLink href={VIT}>ViT 原论文</SourceLink>。</>,
+  },
+  {
+    id: "embedding-layer", page: "P2", name: "输入嵌入", english: "Input embedding · fₑ",
+    definition: "把原始图像像素转换为 Transformer 能处理的向量序列，包含图像块映射与位置信息组装。",
+    role: "图中的 fₑ 是 ViT 的入口；它先把像素变成模型宽度的 Token。",
+    confusion: "输入嵌入只负责构造初始序列；跨位置的上下文交互发生在后续 Encoder 中。",
+    detail: <ReferenceDetail
+      explanation="输入嵌入不是一个必须独立成层的单一矩阵名。在 ViT 中，它通常统称图像块投影、[CLS] Token 与位置向量等步骤，输出尺寸为‘序列长度 × 特征宽度’。"
+      steps={[
+        { title: "接收像素", text: "输入为带有空间与颜色通道的图像数组。" },
+        { title: "映射各块", text: "同一组投影权重把每个 Patch 转成向量。" },
+        { title: "组装位置", text: "加入 [CLS] 与位置向量，得到 Encoder 的整条输入序列。" },
+      ]}
+      note="L2P 将输入嵌入记作 fₑ，并与后续的 Transformer 特征提取器 fᵣ 一起保持冻结。"
+    />,
+    related: ["image-patch", "linear-projection", "patch-token", "position-embedding", "cls-token", "frozen-parameters"],
+    source: <>L2P §3.2（PDF p. 4）；ViT 输入序列构造见 <SourceLink href={VIT}>ViT 原论文 §3.1</SourceLink>。</>,
+  },
+  {
+    id: "image-patch", page: "P2", name: "图像块（Patch）", english: "Image patch",
+    definition: "把图像网格切分后得到的局部矩形区域；ViT 对每块分别映射成序列中的一个视觉 Token。",
+    role: "P2 的可选网格块对应一段固定像素范围，可沿它追踪到输出向量。",
+    confusion: "Patch 是图像区域；Patch Token 是这个区域经过投影后的向量表示。",
+    detail: <ReferenceDetail
+      explanation="图像通常有高、宽、颜色三个维度。切块时按固定网格划分空间范围，不改变块内的像素数值；之后再为每个小块单独做向量映射。"
+      steps={[
+        { title: "确定网格", text: "224×224 图像按 16×16 像素分块，每条边可分成 14 块。" },
+        { title: "编号位置", text: "二维网格按固定顺序展成 196 个 Patch 位置。" },
+      ]}
+      note="切块本身不会产生语义特征；图像块要经过嵌入投影才成为模型宽度的 Token。"
+    />,
+    related: ["flattening", "linear-projection", "patch-token", "vit-b16"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）；L2P 的输入尺寸见 §5.2（PDF p. 7）。</>,
+  },
+  {
+    id: "flattening", page: "P2", name: "展平", english: "Flattening",
+    definition: "按预定顺序把 Patch 中的行、列和颜色通道排成一维向量；这一步重排数据，不负责学习特征。",
+    role: "图中的 16×16×3 像素值被排成长度 768 的输入，再交给投影矩阵。",
+    confusion: "展平不等于压缩或语义编码；特征坐标是在后面的线性投影中学习出来的。",
+    detail: <ReferenceDetail
+      explanation="例如一个 16×16 的 RGB 图像块含有 16×16×3 个标量。规定好遍历顺序后，将这些值串起来，就能用普通矩阵乘法统一处理。遍历约定要在整个模型中保持一致。"
+      steps={[
+        { title: "保持数值", text: "展平前后的像素值相同。" },
+        { title: "改变形状", text: "从二维空间布局与通道轴转成一个一维列表。" },
+        { title: "交给学习层", text: "投影权重再把该列表变成模型内部的特征表示。" },
+      ]}
+      note="P2 的 PatchMotion 可暂停查看同一块的读取顺序；只有投影步骤改变特征坐标。"
+    />,
+    related: ["image-patch", "linear-projection", "patch-token"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）。</>,
+  },
+  {
+    id: "linear-projection", page: "P2", name: "线性投影", english: "Linear projection",
+    definition: "用一组训练得到的矩阵权重和偏置，将 Patch 像素向量映射到模型使用的特征维度。",
+    role: "ViT 对各 Patch 使用共享映射，使每个图像块进入相同宽度的特征空间。",
+    confusion: "它会混合并重表达输入数值；输出不再是原始像素列表，也不等同于附加位置信息。",
+    detail: <ReferenceDetail
+      explanation="把展平后的像素向量 x 乘以权重矩阵 W，再加偏置 b，得到 z=xW+b。权重通过训练学习哪些像素组合适合作为特征。每个 Patch 复用相同的 W 与 b，因而可在不同空间位置比较这些表示。"
+      steps={[
+        { title: "输入", text: "一维 Patch 像素向量，典型示例长度为 768。" },
+        { title: "共享映射", text: "所有 Patch 通过同一个线性层，不为每个位置单独配一套权重。" },
+        { title: "输出", text: "得到模型宽度 D 的 Patch Token；位置向量随后按序列位置加入。" },
+      ]}
+      note="图中的矩阵和向量格是形状示意，显示的数字不代表论文训练出的真实权重。"
+    />,
+    related: ["flattening", "patch-token", "position-embedding", "embedding-layer"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）；本页矩阵演示为教学图。</>,
+  },
+  {
+    id: "patch-token", page: "P2", name: "Patch Token", english: "Patch embedding / visual token",
+    definition: "由一个 Patch 的像素向量投影得到的特征向量；它以一个序列位置代表对应的图像区域。",
+    role: "P2 追踪 Patch A 时，格状向量从像素值变成这枚 Token 的特征坐标。",
+    confusion: "视觉 Token 是向量单位，不是自然语言里的单词；它也不保留原始二维像素排列。",
+    detail: <ReferenceDetail
+      explanation="每块图像经过共享投影后变成 D 维向量。向量所在的序列位置仍与原图块位置相对应，之后再加入对应的位置向量，交给 Transformer 编码。"
+      steps={[
+        { title: "图像区域", text: "输入中一块固定范围的 RGB 像素。" },
+        { title: "内容表示", text: "线性投影把像素值变成 D 个学习特征。" },
+        { title: "序列成员", text: "该向量作为一个 Token，和其他 Patch Token 一起输入 Encoder。" },
+      ]}
+      note="Token 在这里表示序列的一项，不要求它对应词语、离散 ID 或单个像素。"
+    />,
+    related: ["image-patch", "linear-projection", "token-sequence", "position-embedding"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）。</>,
+  },
+  {
+    id: "token-sequence", page: "P2", name: "Token 序列", english: "Token sequence",
+    definition: "按固定位置顺序排列的一组向量；Transformer 将整组位置作为输入，在各层中更新它们的表示。",
+    role: "P2 逐个位置保留 Patch 身份；P3 将说明一个位置怎样读取其余位置。",
+    confusion: "Token 序列不是词语串；图像 Token 表示图像块或额外的聚合位置。",
+    detail: <ReferenceDetail
+      explanation="把每个向量视作序列中的一个位置，整个输入可写成长度 N、宽度 D 的矩阵。层间传递时位置索引不变，向量内容会随注意力和前馈变换更新。"
+      steps={[
+        { title: "长度 N", text: "表示当前共有多少个 Token 位置。" },
+        { title: "宽度 D", text: "表示每个 Token 用多少个特征坐标记录内容。" },
+        { title: "整组传递", text: "每个 Encoder Block 接收完整矩阵并输出相同长度、相同宽度的新矩阵。" },
+      ]}
+      note="P2 使用 N=197、D=768 的 ViT-B/16 示例配置；换模型或 Patch 设置，形状也会改变。"
+    />,
+    related: ["patch-token", "position-embedding", "cls-token", "token-shape", "encoder-block"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）。</>,
+  },
+  {
+    id: "position-embedding", page: "P2", name: "位置向量", english: "Positional embedding",
+    definition: "按序列位置分配的向量，与 Token 内容相加，使模型能区分图像块在原图中的位置。",
+    role: "它把 Patch A 的行列位置带入输入序列，之后由 Encoder 联合内容处理。",
+    confusion: "位置向量不是 Patch 像素，也不是注意力权重；它在输入端提供位置线索。",
+    detail: <ReferenceDetail
+      explanation="如果只把图像块表示按序列顺序送入一个不含位置机制的网络，网络本身不会自然知道每个向量来自图像的哪一格。ViT 为每个序列槽位准备一个可学习的位置向量，并与对应内容表示逐元素相加。"
+      steps={[
+        { title: "第 0 位", text: "通常对应额外的 [CLS] Token。" },
+        { title: "第 1–196 位", text: "依照 Patch 的固定扫描顺序，对应各图像块。" },
+        { title: "相加", text: "每个内容向量与自己位置的向量相加，结果形成 Encoder 输入。" },
+      ]}
+      note="所用位置编码的形状和插值方式取决于具体 ViT 配置；P2 只解释本例的序列位置向量。"
+    />,
+    related: ["token-sequence", "cls-token", "embedding-layer"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）。</>,
+  },
+  {
+    id: "cls-token", page: "P2", name: "[CLS] Token", english: "Class token",
+    definition: "在 Patch 序列前添加的一个可学习向量；经过 Encoder 后，常用其末层表示作为整幅图像的读出特征。",
+    role: "ViT-B/16 输入含 196 个图像块位置和 1 个 [CLS] 位置。",
+    confusion: "它不是从某个图像块裁出来的；L2P 还会将无 Prompt 的 [class] 特征用于 Key 检索。",
+    detail: <ReferenceDetail
+      explanation="[CLS] 占据序列中的一个专用位置，不对应任何局部 Patch。自注意力让该位置逐层读取图像区域的信息，最终形成可供分类使用的汇总表示。"
+      steps={[
+        { title: "加入序列前端", text: "把一个可学习向量放在所有 Patch Token 之前。" },
+        { title: "参与同一计算", text: "它与图像 Token 一起经过各层注意力与前馈变换。" },
+        { title: "读出整图", text: "标准 ViT 分类常将它的末层向量送入分类头。" },
+      ]}
+      note="L2P 用 [class] 输出作检索 Query；完整 L2P 分类路径会在 P6 另读 Prompt 位置的输出，不能把两条用途混为一谈。"
+    />,
+    related: ["token-sequence", "position-embedding", "classification-head"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）；L2P 的默认 Query 定义见 §4.2（PDF p. 5）。</>,
+  },
+  {
+    id: "vit-b16", page: "P2", name: "ViT-B/16 配置", english: "Vision Transformer · Base / 16",
+    definition: "ViT 的 Base 规模变体，Patch 边长为 16 像素；在 224×224 输入例子中形成 196 个 Patch Token。",
+    role: "这是 P2 用来计算 197 个位置与 768 维宽度的典型结构配置。",
+    confusion: "这些尺寸属于所选骨干配置，不是所有 ViT 的固定常数，也不是 L2P 的新算法部件。",
+    detail: <ReferenceDetail
+      explanation="“B”表示 Base 规模，“16”表示每个 Patch 的边长为 16 像素。224 除以 16，每边得到 14 格；二维网格共 14×14=196 块。再加上一个 [CLS] 位置，序列长度成为 197。"
+      steps={[
+        { title: "图像输入", text: "224×224 像素。" },
+        { title: "Patch 网格", text: "14×14 个 16×16 图像块，共 196 块。" },
+        { title: "整图位置", text: "额外添加一个 [CLS]，总序列长度为 197。" },
+        { title: "特征宽度", text: "该 Base 配置的每个 Token 使用 768 个特征坐标。" },
+      ]}
+      note="L2P 论文使用预训练 ViT-B/16 并将输入缩放到 224×224；该架构数值说明的是所用模型，不是 L2P 独有设计。"
+    />,
+    related: ["vit", "token-shape", "image-patch", "cls-token"],
+    source: <>L2P §5.2（PDF p. 7）；具体结构见 <SourceLink href={VIT}>ViT 原论文与模型配置</SourceLink>。</>,
+  },
+  {
+    id: "token-shape", page: "P2", name: "序列形状 197 × 768", english: "Sequence length × hidden width",
+    definition: "矩阵的第一维是 Token 位置数，第二维是每个位置的特征宽度；本例分别为 197 与 768。",
+    role: "帮助读取 P2 的 Xₑ∈ℝ^(197×768)：整条图像表示是一组向量，而非单个 768 维向量。",
+    confusion: "197 表示有多少个位置，768 表示每个位置有多少个特征坐标；两者不是同一种计数。",
+    detail: <ReferenceDetail
+      explanation="序列张量可以想成 197 行、768 列：每一行是一枚 Token 的表示，每一列是某个特征坐标。Patch Token 与 [CLS] Token 都占一行。"
+      steps={[
+        { title: "197 行", text: "196 个 Patch 位置，加上 1 个 [CLS] 位置。" },
+        { title: "768 列", text: "每个 Token 的嵌入宽度，即 hidden size。" },
+        { title: "进入 Encoder", text: "各 Block 保持该序列长度和宽度，同时更新向量内容。" },
+      ]}
+      note="仅适用于当前 ViT-B/16 示例；改变图像分辨率、Patch 尺寸或骨干宽度都会改变形状。"
+    />,
+    related: ["vit-b16", "token-sequence", "encoder-block"],
+    source: <>L2P §5.2（PDF p. 7）；ViT 架构维度见 <SourceLink href={VIT}>原论文的模型配置</SourceLink>。</>,
+  },
+  {
+    id: "encoder-block", page: "P2", name: "Transformer Encoder / Block", english: "Transformer encoder block",
+    definition: "由自注意力与前馈网络等子层组成的重复计算单元；整条 Token 序列会依次通过多个 Block。",
+    role: "P2 追踪表示怎样逐层更新，P3 再打开其中一个 Block 查看具体运算。",
+    confusion: "Encoder 是多层 Block 的堆叠；单个 Block 只是其中一层，不等同于完整 ViT。",
+    detail: <ReferenceDetail
+      explanation="一层通常先计算自注意力，让每个位置读取其他位置，再用逐位置的前馈网络加工特征。层与层之间按顺序串接；ViT-B/16 的典型配置使用 12 个 Encoder Block。"
+      steps={[
+        { title: "输入整条序列", text: "N 个位置、D 维向量作为一个整体进入 Block。" },
+        { title: "注意力交换信息", text: "序列中不同位置的内容影响各自新的表示。" },
+        { title: "前馈网络继续变换", text: "每个位置再独立加工特征，结果交给下一层。" },
+      ]}
+      note="Block 的标准部件是架构背景；L2P 的贡献不在于重新提出 Transformer Encoder。"
+    />,
+    related: ["vit", "token-sequence", "classification-head", "layer-normalization", "self-attention", "ffn"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）；Transformer 基础结构见 <SourceLink href={TRANSFORMER}>Attention Is All You Need</SourceLink>。</>,
+  },
+  {
+    id: "classification-head", page: "P2", name: "分类头", english: "Classification head",
+    definition: "接收模型读出的图像特征，并将其映射成各候选类别分数的输出层。",
+    role: "标准 ViT 通常把末层 [CLS] 特征交给分类头；L2P 后续改用 Prompt 位置的汇聚特征。",
+    confusion: "分类头负责把特征变成类别分数；它不负责生成图像 Token，也不等于 Encoder。",
+    detail: <ReferenceDetail
+      explanation="分类头是任务相关的最后映射。若标签有 C 类，它会为读入的特征计算 C 个 Logit，再由预测规则选出类别。不同方法可以选择不同的特征进入同一类读出层。"
+      steps={[
+        { title: "特征输入", text: "标准 ViT 示例使用最后一层的 [CLS] 表示。" },
+        { title: "类别映射", text: "输出层为每个类别生成一个分数。" },
+        { title: "读取预测", text: "从候选类别分数中选出模型认为最匹配的一类。" },
+      ]}
+      note="P2 展示普通 ViT 的基础读出；L2P 的 Prompt 条件分类路径会在 P6 按论文实际公式展开。"
+    />,
+    related: ["cls-token", "encoder-block", "vit"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）；L2P 分类表示见 §4.2（PDF p. 5）。</>,
   },
 ];

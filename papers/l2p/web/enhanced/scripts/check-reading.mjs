@@ -106,6 +106,30 @@ try {
         report.referenceResults ??= [];
         report.referenceResults.push({ page: 1, hover: 'PASS', hubTerms: 10, detailNavigation: 'PASS' });
       }
+      if (index === 2 && width === 1440) {
+        await page.locator('[data-term-id="vit"]').first().hover();
+        const hover = page.locator('.rk-term-popover');
+        await hover.waitFor({ state: 'visible' });
+        assert.match(await hover.innerText(), /Vision Transformer/);
+        assert.match(await hover.innerText(), /图像切成一组 Patch/);
+        await hover.getByRole('button', { name: '查看完整解释' }).click();
+        const hub = page.locator('.reference-dialog');
+        await hub.waitFor({ state: 'visible' });
+        assert.equal(await hub.locator('.reference-terms [data-reference-term]').count(), 13, 'P2 Hub must expose its thirteen linked concepts');
+        for (const id of ['image-patch', 'flattening', 'linear-projection', 'position-embedding', 'cls-token', 'token-shape', 'encoder-block', 'classification-head']) {
+          assert.equal(await hub.locator(`[data-reference-term="${id}"]`).count(), 1, `P2 Hub must link ${id}`);
+        }
+        await hub.locator('[data-reference-term="token-shape"]').click();
+        const detail = await hub.locator('[data-reference-detail]').innerText();
+        assert.match(detail, /197 行/);
+        assert.match(detail, /768 列/);
+        assert.match(detail, /图像分辨率、Patch 尺寸或骨干宽度/);
+        assert.equal(await hub.locator('.reference-explanation li').count(), 3);
+        await page.screenshot({ path: path.join(output, 'P2-1440-reference-hub.png') });
+        await page.keyboard.press('Escape');
+        report.referenceResults ??= [];
+        report.referenceResults.push({ page: 2, hover: 'PASS', hubTerms: 13, detailNavigation: 'PASS' });
+      }
       await page.screenshot({ path: path.join(output, `P${index}-${width}-opening.png`) });
       await page.screenshot({ path: path.join(output, `P${index}-${width}-full.png`), fullPage: true });
       if (index === 3) {

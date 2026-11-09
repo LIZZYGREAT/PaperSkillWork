@@ -1,5 +1,6 @@
 import { Sub } from "./lesson-math";
 import { PatchCrop, PatchGrid, Specimen } from "./specimen";
+import { Term } from "../shared/core/reference/ReferenceHub";
 
 export function Arrow() {
   return <svg className="flow-arrow" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 9h18m-6-5 6 5-6 5" /></svg>;
@@ -13,39 +14,39 @@ export function VectorGlyph({ kind = "token" }: { kind?: "pixel" | "token" | "po
 
 function TokenRow({ index, output = false }: { index?: number; output?: boolean }) {
   return <div className="architecture-tokens" aria-label={output ? "末层输出序列" : "输入序列"}>
-    <span className="token special">{output ? "z₀" : "CLS"}</span>
+    <span className="token special"><Term id="cls-token">{output ? "[CLS]" : "[CLS]"}</Term></span>
     {index !== undefined && index > 0 && <span>…</span>}
-    <span className={index === undefined ? "token" : "token traced-token"} data-token-index={index}>{index === undefined ? "z₁" : index + 1}</span>
+    <span className={index === undefined ? "token" : "token traced-token"} data-token-index={index}><Term id="patch-token">{index === undefined ? "Patch 1" : index + 1}</Term></span>
     {index !== 195 && <span>…</span>}
-    {output && <span className="token">z₁₉₆</span>}
+    {output && <span className="token"><Term id="patch-token">Patch 196</Term></span>}
   </div>;
 }
 
 export function ViTOverview({ index, select }: { index: number; select: (index: number) => void }) {
   return <figure className="lesson-figure architecture">
-    <div className="figure-top"><strong>Vision Transformer · 从图像到分类读出</strong><span>典型 ViT-B/16 · 224 × 224 输入</span></div>
+    <div className="figure-top"><strong><Term id="vit">Vision Transformer</Term> · 从图像到分类读出</strong><span>典型 <Term id="vit-b16">ViT-B/16</Term> · 224 × 224 输入</span></div>
     <div className="figure-body">
       <div className="architecture-lanes" aria-label="ViT 端到端架构">
-        <div className="arch-boundary"><b>fₑ</b> 输入嵌入 · 形成序列</div>
+        <div className="arch-boundary"><b>fₑ</b> <Term id="embedding-layer">输入嵌入</Term> · 形成序列</div>
         <div className="arch-boundary"><b>fᵣ</b> 编码</div>
-        <div className="arch-boundary arch-readout">分类读出</div>
+        <div className="arch-boundary arch-readout"><Term id="classification-head">分类读出</Term></div>
         <section className="arch-node">
           <h4>输入图像</h4><Specimen /><small>224 × 224 × 3</small>
         </section>
         <section className="arch-node">
-          <h4>分割成 Patch</h4><PatchGrid index={index} select={select} /><small>14 × 14 个位置</small>
+          <h4>分割成 <Term id="image-patch">Patch</Term></h4><PatchGrid index={index} select={select} /><small>14 × 14 个位置</small>
         </section>
         <section className="arch-node">
-          <h4>Patch → Token</h4><div className="arch-projection"><VectorGlyph kind="pixel" /><span>线性投影</span><VectorGlyph /></div><small>每块一个 D 维向量</small>
+          <h4><Term id="image-patch">Patch</Term> → <Term id="patch-token">Token</Term></h4><div className="arch-projection"><VectorGlyph kind="pixel" /><span><Term id="linear-projection">线性投影</Term></span><VectorGlyph /></div><small>每块一个 D 维向量</small>
         </section>
         <section className="arch-node">
-          <h4>组装序列</h4><TokenRow index={index} /><div className="position-row"><span>+</span><VectorGlyph kind="position" /></div><small>加上对应位置向量</small>
+          <h4><Term id="token-sequence">组装序列</Term></h4><TokenRow index={index} /><div className="position-row"><span>+</span><VectorGlyph kind="position" /></div><small>加上对应 <Term id="position-embedding">位置向量</Term></small>
         </section>
         <section className="arch-node stack-node">
-          <h4>Encoder × 12</h4><ol className="block-stack"><li>Block 1</li><li>Block 2</li><li>⋮</li><li className="stack-focus">Block ℓ</li><li>⋮</li><li>Block 12</li></ol><small>逐层更新 Token</small>
+          <h4><Term id="encoder-block">Encoder × 12</Term></h4><ol className="block-stack"><li>Block 1</li><li>Block 2</li><li>⋮</li><li className="stack-focus"><Term id="encoder-block">Block ℓ</Term></li><li>⋮</li><li>Block 12</li></ol><small>逐层更新 Token</small>
         </section>
         <section className="arch-node arch-last">
-          <h4>输出 Token</h4><TokenRow output /><div className="readout-line"><span>[CLS] 特征</span><Arrow /><span>分类头</span></div><small>普通 ViT 的读出</small>
+          <h4>输出 Token</h4><TokenRow output /><div className="readout-line"><span><Term id="cls-token">[CLS]</Term> 特征</span><Arrow /><span><Term id="classification-head">分类头</Term></span></div><small>普通 ViT 的读出</small>
         </section>
       </div>
       <div className="arch-zoom-link"><span>放大堆叠中的 Block ℓ</span></div>
@@ -58,17 +59,17 @@ export function ViTOverview({ index, select }: { index: number; select: (index: 
 
 export function PatchJourney({ index }: { index: number }) {
   return <div className="patch-journey">
-    <div className="patch-crop-stage"><PatchCrop index={index} /><b>Patch {index + 1}</b><small>16 × 16 × 3</small></div>
+    <div className="patch-crop-stage"><PatchCrop index={index} /><b><Term id="image-patch">Patch {index + 1}</Term></b><small>16 × 16 × 3</small></div>
     <Arrow />
-    <div><VectorGlyph kind="pixel" /><b>按固定顺序展平</b><small>768 个像素通道值</small></div>
+    <div><VectorGlyph kind="pixel" /><b>按固定顺序 <Term id="flattening">展平</Term></b><small>768 个像素通道值</small></div>
     <Arrow />
     <div><svg className="matrix-glyph" viewBox="0 0 70 56" aria-hidden="true">
       <path d="M11 4H5v48h6M59 4h6v48h-6" fill="none" stroke="currentColor" strokeWidth="2" />
       {Array.from({length: 25}, (_, i) => <rect key={i} x={14 + i % 5 * 9} y={7 + Math.floor(i / 5) * 9}
         width="6" height="6" fill="currentColor" opacity={.22 + ((i * 11) % 7) / 12} />)}
-    </svg><b>共享线性投影</b><small>混合像素通道</small></div>
+    </svg><b>共享 <Term id="linear-projection">线性投影</Term></b><small>混合像素通道</small></div>
     <Arrow />
-    <div><VectorGlyph /><b>Token {index + 1}</b><small>768 个嵌入坐标</small></div>
+    <div><VectorGlyph /><b><Term id="patch-token">Token {index + 1}</Term></b><small>768 个嵌入坐标</small></div>
   </div>;
 }
 

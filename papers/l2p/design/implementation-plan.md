@@ -413,8 +413,12 @@ ROOT_PROSE_REGRESSION=PASS、SUBPATH_ASSETS=PASS：npm.cmd --prefix papers/l2p/w
 
 本轮未创建 runner run 目录。任务专用 typography-details.mjs 在截图/指标审阅后按确切路径清理，原生截图和 JSON 保留供交付；临时检查服务器已关闭。既有 package-lock.json 改动未纳入提交。
 
-### P1–P3 技术词 Hover 与 ReferenceHub（P1 完成，2026-11-09）
+### P1–P3 技术词 Hover 与 ReferenceHub（P1/P2 完成，2026-11-09）
 
-按正文首见位置建立可触达的术语 Hover：一屏显示中英文术语、准确释义、本页作用和易混点；点击“查看完整解释”进入按 P1/P2/P3 编组的 ReferenceHub，在页内术语索引中浏览更完整的解释、步骤卡、跨概念关系与来源。统一入口已改名“术语与资料”。P1 已完成 10 个概念：持续学习、类别/域增量、task-agnostic、任务 ID 与任务边界、灾难性遗忘、预训练主干、冻结参数、回放缓冲区；正文在首见处连接对应 Hover。重点解释测试无任务 ID 与训练无任务边界是两项独立条件；冻结权重仍执行前向计算；基础 L2P 与回放版 L2P-R 的差别。P2/P3 继续沿术语首见处补齐。
+按正文首见位置建立可触达的术语 Hover：一屏显示中英文术语、准确释义、本页作用和易混点；点击“查看完整解释”进入按 P1/P2/P3 编组的 ReferenceHub，在页内术语索引中浏览更完整的解释、步骤卡、跨概念关系与来源。统一入口已改名“术语与资料”。P1 已完成 10 个概念：持续学习、类别/域增量、task-agnostic、任务 ID 与任务边界、灾难性遗忘、预训练主干、冻结参数、回放缓冲区；正文在首见处连接对应 Hover。重点解释测试无任务 ID 与训练无任务边界是两项独立条件；冻结权重仍执行前向计算；基础 L2P 与回放版 L2P-R 的差别。
+
+P2 完成 13 个概念：视觉 Transformer、输入嵌入、Patch、展平、线性投影、Patch Token、Token 序列、位置向量、[CLS]、ViT-B/16、197×768 形状、Encoder/Block、分类头。正文、架构总览、逐块路径和分类读出图均在相关首见处接入 Hover。详细说明区分图像块与 Patch Token、展平与投影、位置向量与内容向量，以及序列长度与隐藏维度；标注典型架构参数不是 L2P 的方法贡献。引用 L2P、ViT 原论文的对应章节与配置。
 
 SOURCE_BUILD=PASS：`npm.cmd --prefix papers/l2p/web/enhanced run build`，TypeScript + Vite 6.4.3，72 modules。P1 Hub 回归断言已加入 `scripts/check-reading.mjs`：Hover 释义/中英术语/易混点、完整词条说明、10 项页索引、相关词跳转；浏览器在 1440×900、1920×1080 的九页正文容器与 MathML 回归通过。检查命令：`PAPERWORK_PLAYWRIGHT_EXECUTABLE=<系统 Edge> npm.cmd --prefix papers/l2p/web/enhanced run check:reading -- <P1-reference证据目录>`，PASS；查看 `P1-1440-reference-hub.png`。ReferenceHub 使用按需抽屉，完整条目在面板内纵向滚动。证据保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/P1-reference/`。此次共享面板变更只覆盖相关入口与词条浏览；六个保护动画、attention()、正文统一容器不变。
+
+P2 SOURCE_BUILD=PASS：npm build 编译 72 modules。`check:reading` 在 1440×900 和 1920×1080 对 P1/P2 Hub 进行浏览器交互断言：P2 的 13 项术语索引、ViT Hover、197 行/768 列展开定义及配置可变边界通过；P1 的 10 项与任务 ID/边界区分断言继续通过。P1–P9 正文容器、字号、行高、MathML 和页面溢出均通过。证据 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/P1-P2-reference/`，已查看 P2-1440-reference-hub.png 和 P2-1440-full.png。六个保护动画和 attention() 不变。
