@@ -512,3 +512,5 @@
 .lesson-copy .lesson-term--latin { font-family: "Georgia", "Cambria", serif; font-style: italic; font-size: 1.12em; }
 .lesson-copy .lesson-number { font: 600 1.65em/1 var(--rk-font-math); color: var(--rk-accent-strong); padding-inline: .08em; }
 .lesson-copy .lesson-number--width { color: #315d73; }
+.lesson-copy .lesson-term--value { color: #6c4f7a; background-image: linear-gradient(transparent 64%, #e9deed 64%, #e9deed 94%, transparent 94%); }
+.lesson-copy .lesson-symbol { font-size: 1.3em; color: var(--rk-accent-strong); }
