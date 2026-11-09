@@ -442,3 +442,9 @@ SOURCE_BUILD=PASS：`npm.cmd run build`（`papers/l2p/web/enhanced`，TypeScript
 前向只保留一个流动点，沿注意力查询与加权 Value 的实际贝塞尔曲线逐段移动；按曲线弧长分配时长并做近似恒速定位。回传点沿对应的折线路径匀速运动。梯度阶段从 3.2 秒延长至 4.5 秒以适配长回程；完整播放时长增加 1.3 秒至 18.1 秒。参数更新仍保留原来的单步位移与数据。
 
 SOURCE_BUILD=PASS：`npm run build`，TypeScript + Vite 6.4.3。Visual QA 使用 `tools/visual-qa/cli.mjs` 对 1440×900 与 1920×1080 的前向中点、梯度中点、更新帧共 6 张截图；GEOMETRY_QA=PASS、BROWSER_ERRORS=PASS（0），无几何诊断。已人工检查前向与梯度中点的箭头落点、路径和点位，VISUAL_REVIEW=PASS。QA 报告及截图保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-motion-fix-final/run-2026-11-09T13-55-19-308Z/`。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（固定桌面视口）。
+
+### P4 连续因果、梯度路径与可读性复核（2026-11-09）
+
+按新增截图继续收敛 P4：曲线箭头使用末段切线方向，避免尖端横指；前向顺序固定为柔焦清晰后才启动第一个绿点，绿点抵达后才出现紫点，并逐个完成查询与加权 Value 汇总。反向阶段改为单点逐段反向，按损失→分类头→读出→H₀/P₀→H₁/P₁ 的次序沿相应连接返回；已完成路径降为浅色，P₀、P₁ 与 φ 的梯度标记只在到达后显示。阶段时长增至 6.8 秒，完整播放 29.1 秒。公式字号增大；左侧向量图标增强并明确实际坐标，参数小视图改为 P₀/P₁ 更新前后坐标读数，消除原来含糊且溢出的倍率说明。窄屏复核发现 Grid 项目最小宽度导致横向溢出，已在 P4 模块局部设为可收缩，同时保留动画画布内部滚动。
+
+SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。VISUAL_QA=PASS：1440×900、1920×1080、390×844 共 36 张截图，无横向溢出、无浏览器错误、无几何诊断；重点帧涵盖前向串行、损失到 φ、P₀ 回传、H₁ 分支、P₁ 回传与参数更新。主报告 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-gradient-return-review/run-2026-11-09T14-55-10-606Z/`；P₁ 梯度标记抵达帧补充截图 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-gradient-arrival-review/run-2026-11-09T15-00-39-128Z/`。已人工检查梯度逐段路径、箭头方向与落点、更新前后坐标和窄屏布局，VISUAL_REVIEW=PASS；Impeccable detector 无发现。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（固定视口 headless Edge）。
