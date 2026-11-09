@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --configLoader runner",
     "build": "tsc && vite build --configLoader runner",
-    "preview": "vite preview --configLoader runner"
+    "preview": "vite preview --configLoader runner",
+    "check:reading": "node scripts/check-reading.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

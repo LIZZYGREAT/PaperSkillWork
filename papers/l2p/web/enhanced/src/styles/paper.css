@@ -121,7 +121,6 @@
 .rk-reading .teaching-module > h2 { font-size: clamp(27px, 3vw, 39px); }
 
 /* Reading rhythm and explanatory objects for the review slice. */
-.rk-reading .lesson-lead, .rk-reading .explain-section > p { max-width: 48em; }
 .rk-reading .lesson-lead { font-size: clamp(17px, 1.4vw, 19px); margin-bottom: 24px; }
 .explain-section { margin-block: 42px; }
 .rk-reading .explain-section > h3, .rk-reading .detail-title { font-size: clamp(22px, 2.3vw, 29px); margin: 0 0 9px; }
@@ -295,7 +294,6 @@
 .rk-reading .explain-section > p,
 .rk-reading .explain-section > h3,
 .rk-reading .detail-title,
-.rk-reading .detail-title + .rk-prose,
 .rk-reading .lesson-takeaway { width: auto; max-width: none; margin-inline: 0; }
 .training-strip, .test-routing { width: min(100%, 57rem); margin-inline: auto; }
 .test-routing { justify-content: center; }
@@ -468,20 +466,6 @@
 .flatten-caption { left: 5.5%; top: 82%; }
 
 /* Small reading diagrams connect causes and computations without changing the labs. */
-.parameter-cause, .attention-rule {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) 24px minmax(0, 1fr);
-  align-items: center;
-  gap: 16px;
-  margin-block: 24px;
-  max-width: 68rem;
-}
-.parameter-cause > span { padding-block: 12px; border-bottom: 1px solid var(--rk-line-strong); }
-.parameter-cause > span:nth-of-type(2) { color: var(--rk-accent-strong); }
-.parameter-cause small, .context-bridge small { display: block; margin-top: 6px; color: var(--rk-muted); font-size: 14px; }
-.attention-rule > div { display: grid; gap: 12px; justify-items: start; min-width: 0; }
-.attention-rule > div > span { color: var(--rk-muted); font-size: 14px; }
-.attention-rule math { font-size: 21px; }
 .context-bridge {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(160px, 1fr) minmax(0, 1fr);
@@ -495,13 +479,11 @@
 .context-bridge__gap .flow-arrow { width: 56px; }
 .rk-reading .context-bridge > p { grid-column: 2 / -1; margin: 0; }
 @media (max-width: 760px) {
-  .parameter-cause, .attention-rule, .context-bridge { grid-template-columns: minmax(0, 1fr); }
-  .parameter-cause > .flow-arrow, .attention-rule > .flow-arrow, .context-bridge__gap .flow-arrow { transform: rotate(90deg); justify-self: center; }
+  .context-bridge { grid-template-columns: minmax(0, 1fr); }
+  .context-bridge__gap .flow-arrow { transform: rotate(90deg); justify-self: center; }
   .rk-reading .context-bridge > p { grid-column: 1; }
 }
 
-/* P1–P3 prose follows the same reading measure as the existing section text. */
-.rk-reading .lesson-prose { width: auto; max-width: none; margin-inline: 0; font-size: inherit; line-height: inherit; }
 .lesson-variable { display: inline math; font-size: 1em; white-space: nowrap; vertical-align: baseline; }
 
 /* One prose contract for all nine lessons; visual layouts own their nested copy. */

@@ -110,11 +110,12 @@
 .qkv-card > math { font-size: 24px; color: var(--rk-accent-strong); }
 .qkv-card h4 { font-size: 18px; margin: 14px 0 8px; }
 .rk-reading .qkv-card p { margin: 0; font-size: 16px; }
-.lesson-copy .attention-rule { position: relative; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; max-width: none; padding: 25px 0; }
+.lesson-copy .attention-rule { display: grid; align-items: center; margin-block: 24px; position: relative; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; max-width: none; padding: 25px 0; }
 .lesson-copy .attention-rule::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--rk-accent); }
 .lesson-copy .attention-rule > .flow-arrow { display: none; }
-.lesson-copy .attention-rule > div { z-index: 1; position: relative; padding: 20px 24px; background: var(--rk-canvas); border: 1px solid var(--rk-line-strong); border-radius: 12px; }
+.lesson-copy .attention-rule > div { display: grid; gap: 12px; justify-items: start; min-width: 0; z-index: 1; position: relative; padding: 20px 24px; background: var(--rk-canvas); border: 1px solid var(--rk-line-strong); border-radius: 12px; }
 .lesson-copy .attention-rule > div::before { content: ""; position: absolute; top: calc(50% - 4px); left: -5px; width: 8px; height: 8px; background: var(--rk-accent); border-radius: 50%; }
+.lesson-copy .attention-rule > div > span { font-size: 14px; color: var(--rk-muted); }
 .lesson-copy .attention-rule math { font-size: 24px; }
 .residual-reading { margin: 48px 0; }
 .rk-reading .residual-reading > h3 { font-size: 27px; margin-bottom: 24px; }

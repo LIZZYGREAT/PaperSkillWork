@@ -348,3 +348,21 @@ P2 视觉设计修订：总览前将阅读路线与三种表示对象错位配�
 P3 视觉设计修订：输入 X 沿连线分成 Q/K/V 三张投影卡；分数→权重→汇聚使用贯穿主轴连接独立公式卡；残差与 FFN 的交接采用交叉错位图文，页末用可学习输入对象连接 P4。正文仍讲清逐位置共享投影、归一化与加权和，主 Attention/多头/冻结对照的计算和时间轴保持原样。复核发现旧五列网格覆盖新卡片三列布局，已在拥有者 .lesson-copy 下提高局部规则优先级，并加入卡片无重叠、公式不越界断言。TypeScript/Vite 构建通过。
 
 正文长期约定（P1–P9 共用）：App.tsx 的 lesson-copy 是单一正文容器，普通正文使用 p，不单独依赖 rk-prose 的 72ch 宽度；字号 17px、行高 1.8，宽度由容器统一提供。嵌套的图表注释、卡片与有意分栏可以局部设定宽度，但必须同时有对应视觉内容。数学变量使用 MathML，禁止在新增普通正文中混写 Unicode 下标。每次正文或共享样式变更后运行 npm run check:reading（需要仓库 tools/visual-qa 的独立 Playwright 安装），不能仅以构建或首屏截图验收。
+
+### 本轮根因修复与视觉设计最终检查
+
+SOURCE_BUILD=PASS：npm.cmd --prefix papers/l2p/web/enhanced run build，TypeScript + Vite 6.4.3，71 modules，最终资源 index-BPpZYD1B.js / index-5f-iBcYa.css。UPSTREAM_SYNTAX=PASS、UPSTREAM_OUTPUT=PASS：继续使用本会话已核实与成功 fetch 的 upstream/main 一致的两份官方检查器（修订 SHA/blob 见上方记录），对最终源码直接执行 syntax-check.js --require-parser、validate-output.js，38 个源文件解析通过、9 个模块注册完整，退出均为 0。
+
+ROOT_PROSE_REGRESSION=PASS：npm.cmd --prefix papers/l2p/web/enhanced run check:reading -- <本轮截图目录>，Edge 157.0.4341.42。在 1440×900 与 1920×1080、DPR 1 上逐一检查 P1–P9，共 18 页/视口组合、102 项真实正文/回归探针：普通段落宽度与所属容器一致、字体 17px、行高 30.6px；即使未来新增段落仍带 rk-prose，也会被共用容器规范覆盖。另检查前三页正文无 Unicode 下标混排、MathML msub 子节点结构、三张公式卡互不重叠且公式不越界、页面无横向溢出、P1 快照和复位、P2 Patch196 与序列身份、P3 两组数值/目标切换/多头终态。P3 的 [CLS] 输出仍为 [0.856,1.436] 与 [1.472,2.279]。测试是源码中保留的可复跑脚本 scripts/check-reading.mjs；visual-qa.json 同步补齐 P1–P3 与全部九页的容器样式断言。
+
+SUBPATH_ASSETS=PASS：该回归脚本在临时随机端口的 /papers/l2p/qa-preview/ 上直接服务最终 dist，校验实际前向操作及同源资源响应，没有子路径资源错误；Vite 仍采用相对 base。未增加应用运行时依赖。
+
+MOBILE_TARGETED=PASS：因新增图示直接带有窄屏排版，专项运行 check:reading -- <截图目录>/mobile --mobile，P1–P3 在 390×844 下正文、MathML、页面宽度与交互断言通过；已查看纵向鱼骨信息、坐标卡和 Q/K/V 卡片截图。移动截图取自清理遗留规则前的同等布局，最终清理只删除已被新规则替代的桌面/宽度定义。
+
+VISUAL_REVIEW：已查看 P1–P3 两种桌面尺度的整页、时间轴、完整鱼骨图、错位坐标卡、层间传递、Q/K/V 分支卡与计算公式/交接；P4–P9 六页桌面首屏正文及主要控件；新正文不再意外只占左半栏，有意错位段落均有对应视觉对象。额外检查新图示在窄屏下的堆叠。全部六个保护动画组件与 4897f3b 基线无 diff。Impeccable detector 返回 []。
+
+正式 runner 的九页初态/代表性交互回归覆盖 38 captures，几何/样式/浏览器错误检查通过。首轮 run-2026-11-09T08-55-17-547Z 的唯一字体警告来自 P4 既有图内 p4-object-caption（11px），它属于图内说明，未作为正文容器错误改动。最终重复检查报告目录见下方清理记录。
+
+证据保留：C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/reading-repair/，含 reading-report.json、九页两种桌面首屏/整页、前三页设计与交互状态、mobile/ 专项截图。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（本轮为 headless Edge，未进行桌面 F11）。获批像素基线比较=NOT_RUN；W7/W9 人工教学验收仍 PENDING，未改工作流状态或发布。
+
+最终 runner 报告 run-2026-11-09T09-02-16-057Z：38 captures 全部 GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS=PASS，浏览器错误 0，P4 既有图内 11px 注释警告保持原状。报告已阅读，并查看 P6 分类终态回归截图。两个本轮确切 run 目录经 --cleanup-run 返回 CLEANED，逐项 Test-Path=False；唯一临时配置 l2p-reading-final.json 已按核实的绝对路径删除。本轮原生截图和 JSON 作为交付证据保留于 reading-repair/；临时服务全部正常关闭。最终遗留只有任务开始前已存在的 package-lock.json 改动，不纳入本轮提交。
