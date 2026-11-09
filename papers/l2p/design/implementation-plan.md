@@ -470,3 +470,8 @@ SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules�
 用户指出上一轮的辅助表达仍然重复流程轴和节点卡，需增加与知识对象匹配的视觉形式。本部分移除开场三节点桥接和五步前向轨道：Prompt 与图像 Token 改为真实数值组成的输入标本板，拼接结果用分段序列带表达；前向读出改为两个 Prompt 输出汇聚到均值向量，再进入分类头与 CE 的收敛构图。所有向量、Logits、损失均读取同一 P4 Trace，主舞台的动画次序和算法没有改动。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`，TypeScript + Vite 6.4.3，72 modules。首轮 Visual QA runner 未进入页面：报告 `PaperSkillWork/.visual-qa/run-2026-11-09T16-41-14-813Z/` 显示本机 `127.0.0.1:4174` ready 探测失败；Node 本地 fetch 返回 EACCES。该报告不作为页面通过证据，完整视觉复核留待本轮最终页面与获准的本机浏览器路径。
+### P4 教学视觉多元化 · 梯度权限账本（2026-11-10）
+
+反向解释不再使用与阶段导航相似的五步横向轨道。新增三列表格，分别列出对象、反向计算和优化器写回范围：P 与 φ 获得各自梯度并更新；∂L/∂P 的导数经过冻结 fᵣ 的运算；θViT 不写回；固定 xₑ 作为输入保留。该表与主舞台的连续梯度动画分工互补，没有将“导数经过”误画成“冻结权重获得更新”。
+
+SOURCE_BUILD=PASS：`npm.cmd run build`，TypeScript + Vite 6.4.3，72 modules。浏览器视觉复核仍待本轮最终组合后统一执行；此前 runner 的 localhost EACCES 失败报告继续保留。

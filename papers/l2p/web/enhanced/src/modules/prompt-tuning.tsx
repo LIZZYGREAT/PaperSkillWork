@@ -741,21 +741,20 @@ export function PromptTuning() {
       <h3>损失的导数经过固定计算，更新只写入 P 与 φ</h3>
       <p>先从分类损失沿前向路径反向追踪：误差信号经过分类头和均值读出，再穿过冻结的 <math><msub><mi>f</mi><mi>r</mi></msub></math> 回到输入中的 Prompt。梯度能穿过这些运算；“冻结”只表示主干参数不会被写回。分类头 <math><mi>φ</mi></math> 和 Prompt <math><mi>P</mi></math> 都会得到各自的梯度。</p>
       <figure className="lesson-figure p4-gradient-figure">
-        <div className="figure-top"><strong>从损失沿同一计算路径返回</strong><span>按 01 → 05 阅读梯度去向</span></div>
+        <div className="figure-top"><strong>梯度经过什么，优化器写入什么</strong><span>分开核对导数路径与参数状态</span></div>
         <div className="figure-body">
-          <ol className="p4-gradient-steps" aria-label="梯度从交叉熵返回 Prompt 的顺序">
-            <li><span>01</span><strong>ℒcls</strong><small>分类误差起点</small></li>
-            <li><span>02</span><strong>分类头 φ</strong><small>得到 ∇φℒ</small></li>
-            <li><span>03</span><strong>读出 h</strong><small>分回 Hₚ₀、Hₚ₁</small></li>
-            <li className="p4-gradient-step--frozen"><span>04</span><strong>冻结 fᵣ</strong><small>导数通过，θViT 不改</small></li>
-            <li className="p4-gradient-step--prompt"><span>05</span><strong>Prompt P</strong><small>得到 ∇Pℒ</small></li>
-          </ol>
-          <div className="p4-gradient-legend">
-            <div><span className="p4-gradient-legend__mark p4-gradient-legend__mark--learnable" /><p><strong>本轮写入</strong><br />Prompt P、分类头 φ</p></div>
-            <div><span className="p4-gradient-legend__mark p4-gradient-legend__mark--frozen" /><p><strong>保持原值</strong><br />ViT 参数 θViT、图像嵌入 xₑ</p></div>
-          </div>
+          <table className="p4-gradient-ledger">
+            <caption>本轮反向信号与参数写回范围</caption>
+            <thead><tr><th scope="col">对象</th><th scope="col">反向计算</th><th scope="col">优化器写回</th></tr></thead>
+            <tbody>
+              <tr className="p4-gradient-ledger__prompt"><th scope="row"><span>Prompt</span><strong>P</strong></th><td><code>∇<sub>P</sub>ℒ<sub>cls</sub></code></td><td><b>更新参数</b></td></tr>
+              <tr className="p4-gradient-ledger__head"><th scope="row"><span>分类头</span><strong>φ</strong></th><td><code>∇<sub>φ</sub>ℒ<sub>cls</sub></code></td><td><b>更新参数</b></td></tr>
+              <tr className="p4-gradient-ledger__frozen"><th scope="row"><span>冻结主干</span><strong>θ<sub>ViT</sub></strong></th><td>导数穿过 f<sub>r</sub> 运算回到 P</td><td><b>权重不变</b></td></tr>
+              <tr className="p4-gradient-ledger__input"><th scope="row"><span>图像输入</span><strong>x<sub>e</sub></strong></th><td>作为固定表示参与前向</td><td><b>不写入参数</b></td></tr>
+            </tbody>
+          </table>
         </div>
-        <figcaption>梯度经过冻结主干的计算关系返回输入；锁住的是权重更新，不是反向导数。</figcaption>
+        <figcaption>Prompt 与分类头取得梯度并更新；冻结主干中的运算仍参与输入导数计算，主干权重保持原值。</figcaption>
       </figure>
       <div className="p4-gradient-equation">
         <div className="p4-equation-item">
