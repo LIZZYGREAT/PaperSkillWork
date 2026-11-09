@@ -24,6 +24,8 @@ function SourceLink({ href, children }: { href: string; children: ReactNode }) {
 const L2P = "https://arxiv.org/abs/2112.08654";
 const VIT = "https://arxiv.org/abs/2010.11929";
 const TRANSFORMER = "https://arxiv.org/abs/1706.03762";
+const LAYERNORM = "https://arxiv.org/abs/1607.06450";
+const RESNET = "https://arxiv.org/abs/1512.03385";
 
 export const references: ReferenceEntry[] = [
   {
@@ -392,7 +394,7 @@ export const references: ReferenceEntry[] = [
       ]}
       note="Block 的标准部件是架构背景；L2P 的贡献不在于重新提出 Transformer Encoder。"
     />,
-    related: ["vit", "token-sequence", "classification-head", "layer-normalization", "self-attention", "ffn"],
+    related: ["vit", "token-sequence", "classification-head", "layer-normalization", "attention", "ffn"],
     source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）；Transformer 基础结构见 <SourceLink href={TRANSFORMER}>Attention Is All You Need</SourceLink>。</>,
   },
   {
@@ -411,5 +413,260 @@ export const references: ReferenceEntry[] = [
     />,
     related: ["cls-token", "encoder-block", "vit"],
     source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）；L2P 分类表示见 §4.2（PDF p. 5）。</>,
+  },
+  {
+    id: "pre-ln", page: "P3", name: "Pre-LN 结构", english: "Pre-layer normalization",
+    definition: "在注意力或前馈子层计算前先做 LayerNorm，再把子层结果加回原输入的 Encoder 排布。",
+    role: "本页图采用这种常见顺序，先用它认路，再聚焦 MSA 与 FFN 的运算。",
+    confusion: "Pre-LN 是具体架构选择；Post-LN 会把归一化放在残差相加之后。不同实现的顺序可能不同。",
+    detail: <ReferenceDetail
+      explanation="对输入 Z，Pre-LN 先计算 LayerNorm(Z)，把结果送入子层，再执行 U=Z+Sublayer(LayerNorm(Z))。因此原输入 Z 通过残差支路直接到加法节点。第二个子层对 U 重复相同结构。"
+      steps={[
+        { title: "先归一化", text: "LayerNorm 作用于当前 Token 表示。" },
+        { title: "再做子层计算", text: "进入多头自注意力，或进入前馈网络。" },
+        { title: "加回原表示", text: "把子层输出逐位置加到未归一化的残差输入上。" },
+      ]}
+      note="本页对应的 ViT Encoder 采用 Pre-LN。读其他 Transformer 实现时应查看具体公式或代码，不能由‘Transformer Block’名称假定归一化次序。"
+    />,
+    related: ["layer-normalization", "residual-connection", "encoder-block", "attention", "ffn"],
+    source: <>ViT 原论文 §3.1（<SourceLink href={VIT}>论文原文</SourceLink>）；Norm 顺序属于架构实现背景。</>,
+  },
+  {
+    id: "layer-normalization", page: "P3", name: "层归一化", english: "Layer normalization · LayerNorm",
+    definition: "对每个样本位置的特征坐标做归一化，再用可学习的缩放与平移参数恢复模型需要的表示范围。",
+    role: "在图示 Pre-LN Block 中，它在 MSA 和 FFN 之前分别处理各 Token。",
+    confusion: "统计量按单个 Token 的特征维计算，不像 BatchNorm 那样汇总一批样本的统计量。",
+    detail: <ReferenceDetail
+      explanation="给定一个 Token 的 D 维向量，LayerNorm 沿这 D 个特征计算均值和方差，标准化后再应用可学习的 γ 与 β。它不改变序列长度，也不在不同 Token 之间交换信息。"
+      steps={[
+        { title: "逐位置处理", text: "序列中的每个 Token 各自归一化。" },
+        { title: "沿特征维统计", text: "当前 Token 的 D 个通道共同参与均值、方差计算。" },
+        { title: "可学习仿射调整", text: "缩放和偏置参数让网络仍能形成合适的表示。" },
+      ]}
+      note="归一化负责调整当前向量的数值尺度；跨 Token 的信息读取由注意力子层完成。"
+    />,
+    related: ["pre-ln", "attention", "ffn"],
+    source: <><SourceLink href={LAYERNORM}>Layer Normalization 原论文</SourceLink>；ViT 中的使用见 §3.1。</>,
+  },
+  {
+    id: "attention", page: "P3", name: "缩放点积自注意力", english: "Scaled dot-product self-attention",
+    definition: "让目标 Token 用 Query 与所有来源 Key 计算匹配分数，经 Softmax 变成权重，再对来源 Value 加权求和。",
+    role: "本页把其中一个目标位置展开，追踪它如何读取同一序列里的其他位置。",
+    confusion: "这里的内部 Query/Key/Value 来自同一条图像序列；P5 的池检索 Key 是另一套外部记忆对象。",
+    detail: <ReferenceDetail
+      explanation="单个注意力头先计算 qᵢ·kⱼ/√dₖ，再沿来源位置 j 做 Softmax，得到 aᵢⱼ。输出 oᵢ=Σⱼaᵢⱼvⱼ。所以匹配信号决定‘从哪读多少’，Value 决定‘汇聚哪些内容’。"
+      steps={[
+        { title: "匹配", text: "目标 Query 与每个来源 Key 点积，得到一行分数。" },
+        { title: "归一化", text: "Softmax 将一行分数转为总和为 1 的非负权重。" },
+        { title: "汇聚", text: "按这些权重混合来源 Value，得到目标位置的新表示。" },
+      ]}
+      note="注意力权重是当前目标对各来源的分配比例，不表示该来源是客观上唯一重要或正确的信息。"
+    />,
+    related: ["query", "key", "value", "softmax", "attention-weight", "weighted-sum", "multi-head-attention"],
+    source: <>Transformer 的定义见 §3.2、式 (1)–(3)，<SourceLink href={TRANSFORMER}>Attention Is All You Need</SourceLink>；ViT 将其用于图像序列。</>,
+  },
+  {
+    id: "query", page: "P3", name: "Query（查询向量）", english: "Query · Q",
+    definition: "由目标位置的输入投影得到，用来向所有来源 Key 发出匹配查询，决定目标要读取各位置多少信息。",
+    role: "更新 [CLS] 时，目标的 qᵢ 逐一与 [CLS]、各 Patch 及其他来源的 kⱼ 比较。",
+    confusion: "此处的 Query 是注意力内部向量；L2P 后续用于 Pool 检索的 Query 是另外定义的特征。",
+    detail: <ReferenceDetail
+      explanation="每个目标位置都产生自己的 Query。一个 Query 会与序列中每个来源位置的 Key 计算兼容分数；同一个目标因此得到一整行读取权重。"
+      steps={[
+        { title: "从输入投影", text: "归一化后的 Token 表示乘以该注意力头的查询矩阵。" },
+        { title: "逐个比较来源", text: "与所有 Key 计算点积和缩放分数。" },
+        { title: "产生目标输出", text: "匹配分数经 Softmax 后成为 Value 汇聚的权重。" },
+      ]}
+      note="Q 的含义取决于‘当前正在更新哪个目标位置’；改变目标 Token 会得到另一行匹配。"
+    />,
+    related: ["attention", "key", "attention-weight"],
+    source: <>Transformer §3.2（<SourceLink href={TRANSFORMER}>式 (1)</SourceLink>）。</>,
+  },
+  {
+    id: "key", page: "P3", name: "Key（匹配向量）", english: "Key · K",
+    definition: "由每个来源位置的输入投影得到；它与目标 Query 配对计算分数，帮助决定这个来源被读取的比例。",
+    role: "每个 Patch 和 [CLS] 都有一个内部 Key，供当前目标位置进行匹配。",
+    confusion: "Attention Key 与 L2P Prompt Pool 的检索 Key 作用不同，参数和所在计算路径也不同。",
+    detail: <ReferenceDetail
+      explanation="同一条输入序列中，每个位置都投影出一个 Key。对当前目标 i 来说，所有来源 Key 组成可匹配集合；下一目标会换 Query，但这些来源投影仍供这一层共享使用。"
+      steps={[
+        { title: "每个位置生成", text: "Key 由对应来源 Token 的表示映射而来。" },
+        { title: "参与打分", text: "qᵢ·kⱼ 只产生匹配分数，不直接提供输出内容。" },
+        { title: "与 Value 分工", text: "Key 决定分配比例；Value 承载后面真正汇聚的内容。" },
+      ]}
+      note="P5 的 L2P 外部 Key 用于从 Prompt Pool 选条目；它不是本页 Q/K/V 矩阵里的内部 Key。"
+    />,
+    related: ["attention", "query", "value", "weighted-sum"],
+    source: <>Transformer §3.2（<SourceLink href={TRANSFORMER}>式 (1)</SourceLink>）；内部角色与 L2P Pool Key 的区分依照 L2P §4.2。</>,
+  },
+  {
+    id: "value", page: "P3", name: "Value（内容向量）", english: "Value · V",
+    definition: "由每个来源位置投影得到的内容表示；Softmax 权重确定它在目标输出加权和中的贡献。",
+    role: "图中实线按权重汇聚各来源 V，生成目标位置的新 Head 表示。",
+    confusion: "Value 不负责决定匹配对象；打分由 Query 和 Key 产生。",
+    detail: <ReferenceDetail
+      explanation="注意力会将每个来源位置映射为 Value。匹配分数经过 Softmax 后得到系数，再乘到对应 Value 上并求和。不同目标可对同一组 Value 使用不同权重。"
+      steps={[
+        { title: "来源内容", text: "每个 Token 经过 Value 投影形成一个向量。" },
+        { title: "按权重缩放", text: "某来源的 Value 乘以当前目标分给它的 aᵢⱼ。" },
+        { title: "形成输出", text: "将所有加权 Value 相加，得到目标的注意力结果。" },
+      ]}
+      note="在本页二维示例中，V 矩阵特意交换两维来帮助辨认计算；真实 ViT 使用训练得到的投影。"
+    />,
+    related: ["attention", "key", "attention-weight", "weighted-sum"],
+    source: <>Transformer §3.2（<SourceLink href={TRANSFORMER}>式 (1)</SourceLink>）。</>,
+  },
+  {
+    id: "softmax", page: "P3", name: "Softmax 归一化", english: "Softmax",
+    definition: "对一组实数先取指数，再除以该组指数之和；结果非负且总和为 1。",
+    role: "注意力对同一目标的一整行分数使用 Softmax，转换成来源位置的读取权重。",
+    confusion: "按行归一化意味着各来源在当前目标内竞争；新增来源会改变分母和既有权重。",
+    detail: <ReferenceDetail
+      explanation="若一行分数是 s₁,…,sₙ，则第 j 项权重为 exp(sⱼ)/Σₜexp(sₜ)。指数放大较大的相对分数，除以总和后得到可比较的比例。"
+      steps={[
+        { title: "指数变换", text: "每个分数分别变为正数 exp(sⱼ)。" },
+        { title: "共享分母", text: "用这一行所有指数之和作分母。" },
+        { title: "得到比例", text: "各项介于 0 与 1 之间，整行求和为 1。" },
+      ]}
+      note="数值实现通常先从一行分数中减去最大值再计算指数；这不改变 Softmax 结果，可避免指数溢出。"
+    />,
+    related: ["attention", "attention-weight", "weighted-sum"],
+    source: <>Transformer §3.2（<SourceLink href={TRANSFORMER}>缩放点积注意力公式</SourceLink>）。</>,
+  },
+  {
+    id: "attention-weight", page: "P3", name: "注意力权重", english: "Attention weight · aᵢⱼ",
+    definition: "目标位置 i 在一行 Softmax 输出中分给来源位置 j 的系数；它控制该来源 Value 对结果的贡献。",
+    role: "表格中的 Softmax 权重相加为 100%，线宽也按相同比例显示。",
+    confusion: "权重描述一次计算中的分配，不是模型预测正确的概率，也不单独构成因果解释。",
+    detail: <ReferenceDetail
+      explanation="对固定的目标 i，aᵢⱼ 与所有来源 j 的权重组成一行并归一化。换目标位置，就会得到另一行。对固定序列新增一个来源，也会改变同一行的归一化分母。"
+      steps={[
+        { title: "对象", text: "一个权重对应‘目标位置—来源位置’这对关系。" },
+        { title: "范围", text: "同一目标行内比较各个来源，行和为 1。" },
+        { title: "用途", text: "作为 Value 的系数进入加权和。" },
+      ]}
+      note="注意力可视化有助于追踪模型计算路径，但不能仅凭高权重断言模型作出决定的全部原因。"
+    />,
+    related: ["attention", "softmax", "weighted-sum"],
+    source: <>Transformer §3.2（<SourceLink href={TRANSFORMER}>式 (1)</SourceLink>）。</>,
+  },
+  {
+    id: "weighted-sum", page: "P3", name: "Value 加权和", english: "Weighted sum of values",
+    definition: "将每个来源 Value 乘以对应注意力权重后相加，得到当前目标位置的输出向量。",
+    role: "它把分散在 Patch 与 [CLS] 位置的信息汇入一个目标表示。",
+    confusion: "系数来自 Query-Key 匹配；相加的是 Value 向量，不是原始图像像素。",
+    detail: <ReferenceDetail
+      explanation="oᵢ=Σⱼaᵢⱼvⱼ。Softmax 权重非负且总和为 1，因此输出是这些 Value 的加权组合。目标位置不同，系数通常也不同，所以各位置会形成不同的新向量。"
+      steps={[
+        { title: "取一个来源", text: "读取该位置的 Value 向量 vⱼ。" },
+        { title: "乘上系数", text: "用注意力权重 aᵢⱼ 调整它对当前目标的贡献。" },
+        { title: "汇总来源", text: "将全序列的加权 Value 相加，输出给目标位置。" },
+      ]}
+      note="如果某来源权重较大，它在这次加权运算中占比更高；输出仍由所有来源 Value 共同构成。"
+    />,
+    related: ["attention", "value", "attention-weight", "multi-head-attention"],
+    source: <>Transformer §3.2（<SourceLink href={TRANSFORMER}>式 (1)</SourceLink>）。</>,
+  },
+  {
+    id: "multi-head-attention", page: "P3", name: "多头自注意力", english: "Multi-head self-attention · MSA",
+    definition: "让多个注意力头并行使用各自的 Q/K/V 投影读取同一序列，再合并各头结果。",
+    role: "每个头可产生不同的匹配与汇聚，整组结果经拼接和输出投影回到模型宽度。",
+    confusion: "多头表示并行的多组可学习计算；不能仅凭头编号给每个 Head 固定指定一种语义。",
+    detail: <ReferenceDetail
+      explanation="每个头都有独立的线性投影矩阵，用同一序列计算 Query、Key、Value。各头可在不同投影子空间内形成各自的输出，最后按特征维合并并线性变换。"
+      steps={[
+        { title: "并行投影", text: "多组 WQ、WK、WV 将同一输入映射成不同头的向量。" },
+        { title: "各自读取", text: "每个头独立计算匹配、权重和 Value 汇聚。" },
+        { title: "合并输出", text: "沿特征轴拼接所有头，再投影回隐藏宽度 D。" },
+      ]}
+      note="头数和各头维度由模型配置决定；‘多头’本身不保证某一头对应可命名的人类概念。"
+    />,
+    related: ["attention", "concatenation", "output-projection", "residual-connection"],
+    source: <>Transformer §3.2.2（<SourceLink href={TRANSFORMER}>Multi-Head Attention</SourceLink>）；ViT 将多头注意力用于 Encoder。</>,
+  },
+  {
+    id: "concatenation", page: "P3", name: "特征拼接", english: "Concatenation across feature dimensions",
+    definition: "将多个 Head 在相同目标位置生成的向量沿特征维首尾接合，组成一个更宽的向量。",
+    role: "它把并行读取结果汇到同一位置，保留每个头的输出坐标供下一层混合。",
+    confusion: "拼接不是平均或求和，也不会把序列长度增加为 Head 数的倍数。",
+    detail: <ReferenceDetail
+      explanation="假设 h 个 Head 各输出 dₕ 维向量，按特征轴拼接后得到 h·dₕ 维向量。每个目标位置都执行一次相同的形状拼接，Token 位置数保持不变。"
+      steps={[
+        { title: "对齐位置", text: "只合并不同 Head 对同一个目标 Token 的输出。" },
+        { title: "延展特征轴", text: "每个 Head 的坐标放在同一行的不同区段。" },
+        { title: "保持序列长度", text: "结果仍有原来的 N 个 Token 位置。" },
+      ]}
+      note="接下来输出投影会在特征轴上混合这些区段，并恢复模型需要的宽度。"
+    />,
+    related: ["multi-head-attention", "output-projection", "token-sequence"],
+    source: <>Transformer §3.2.2（<SourceLink href={TRANSFORMER}>Multi-Head Attention</SourceLink>）。</>,
+  },
+  {
+    id: "output-projection", page: "P3", name: "输出投影", english: "Output projection · Wᴼ",
+    definition: "对拼接后的多头向量再做线性映射，混合各头特征并恢复到模型隐藏宽度。",
+    role: "输出投影构成 MSA 子层的最终输出，再送往残差加法节点。",
+    confusion: "它混合已计算出的头向量；跨位置匹配和权重分配早已在各头内部完成。",
+    detail: <ReferenceDetail
+      explanation="多头拼接的向量维度通常是各头宽度的总和。学习得到的 Wᴼ 将它映射到 Block 的隐藏维 D，使 MSA 的输出能与同宽度残差输入相加。"
+      steps={[
+        { title: "输入", text: "同一目标位置的多头拼接结果。" },
+        { title: "线性混合", text: "投影矩阵学习如何组合不同头提供的特征。" },
+        { title: "输出", text: "宽度回到 D，逐位置送到残差支路的加法节点。" },
+      ]}
+      note="这里的投影不是 Patch 嵌入的输入投影；两者发生在计算路径的不同位置。"
+    />,
+    related: ["multi-head-attention", "concatenation", "residual-connection", "linear-projection"],
+    source: <>Transformer §3.2.2（<SourceLink href={TRANSFORMER}>Multi-Head Attention</SourceLink>）；ViT 的 Block 见 §3.1。</>,
+  },
+  {
+    id: "residual-connection", page: "P3", name: "残差连接", english: "Residual connection / skip connection",
+    definition: "把子层输入沿旁路保留，并与该子层的输出逐位置相加，形成传给下一步的表示。",
+    role: "图中的 Z→U 和 U→Z′ 两条支路让原表示与 MSA、FFN 输出汇合。",
+    confusion: "相加两侧形状必须相同；残差支路保留信息通道，不会自动冻结或跳过子层参数。",
+    detail: <ReferenceDetail
+      explanation="若子层计算 F(x)，残差单元输出 x+F(x)。这样下一步收到的是原表示与新增变换共同形成的结果，并提供一条直接的信息与梯度通道。"
+      steps={[
+        { title: "分出旁路", text: "输入沿主干支路进入 LayerNorm 与子层计算。" },
+        { title: "保留原输入", text: "同一输入同时沿旁路前进，不先经过该子层变换。" },
+        { title: "相加汇合", text: "子层输出与原输入逐元素相加，再交给下一阶段。" },
+      ]}
+      note="Pre-LN Block 的两式分别是 U=Z+MSA(LN(Z)) 与 Z′=U+MLP(LN(U))。"
+    />,
+    related: ["pre-ln", "layer-normalization", "multi-head-attention", "ffn"],
+    source: <><SourceLink href={RESNET}>Deep Residual Learning</SourceLink> 提出残差学习框架；ViT 的 Block 排布见 §3.1。</>,
+  },
+  {
+    id: "ffn", page: "P3", name: "前馈神经网络", english: "Feed-forward network · FFN / MLP",
+    definition: "对每个 Token 单独应用相同的多层线性变换与非线性激活，继续加工它的特征向量。",
+    role: "MSA 先汇入上下文，FFN 再逐位置变换特征；它不负责在 Token 之间读信息。",
+    confusion: "FFN 的位置间参数共享，但每个位置的计算本身相互独立；跨位置交流由注意力完成。",
+    detail: <ReferenceDetail
+      explanation="典型 Transformer FFN 先将 D 维特征扩展到更宽的内部层，经过非线性激活，再映回 D 维。权重在序列位置间共享，每个 Token 分别执行同一函数。ViT 中常用 GELU 激活。"
+      steps={[
+        { title: "扩展通道", text: "第一层线性映射将每个位置的向量升到较宽的中间维度。" },
+        { title: "引入非线性", text: "激活函数让组合表示具备非线性表达能力。" },
+        { title: "映回隐藏宽度", text: "第二层线性映射回到 D 维，以便进入残差相加。" },
+      ]}
+      note="本页将 MLP 与 FFN 并列标注；不同 ViT 实现可以在内部激活或扩展倍率上有配置差异。"
+    />,
+    related: ["encoder-block", "layer-normalization", "pre-ln", "residual-connection"],
+    source: <>Transformer §3.1（<SourceLink href={TRANSFORMER}>Position-wise Feed-Forward Networks</SourceLink>）；ViT FFN 配置见 §3.1。</>,
+  },
+  {
+    id: "forward-pass", page: "P3", name: "前向计算", english: "Forward pass",
+    definition: "固定当前网络参数，将输入依次通过各层，计算中间表示和最终输出的过程。",
+    role: "P3 只改变输入 Token 序列，重复运行同一前向计算来对照 Head 输出。",
+    confusion: "前向计算会产生新的激活值，但本身不会更新参数；训练时还要经过损失、梯度和优化器写回。",
+    detail: <ReferenceDetail
+      explanation="可以把一次前向计算看作沿架构箭头运行：输入进入嵌入和各 Block，层内产生 Query、权重、Value 汇聚及残差结果，最后读出预测。权重作为本次计算的固定条件。"
+      steps={[
+        { title: "读取当前参数", text: "各层使用当前保存的矩阵与偏置。" },
+        { title: "逐层计算", text: "从输入表示派生注意力与前馈激活，并把输出传到下一层。" },
+        { title: "给出结果", text: "输出类别分数或其他任务结果；训练更新属于之后的反向传播与优化步骤。" },
+      ]}
+      note="因此，冻结权重仍可因输入变化而产生不同的注意力权重和输出。"
+    />,
+    related: ["frozen-parameters", "attention", "token-sequence"],
+    source: <>Transformer 的分层计算见 §3（<SourceLink href={TRANSFORMER}>原论文</SourceLink>）；本页用 ViT 前向路径作说明。</>,
   },
 ];

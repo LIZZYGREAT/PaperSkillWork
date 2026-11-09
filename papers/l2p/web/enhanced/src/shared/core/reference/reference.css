@@ -54,6 +54,7 @@
 .reference-shell .source-note a { display:inline-block; margin:0 7px 4px 0; }
 .rk-term-ref:focus-visible { border-radius:2px; outline:2px solid var(--rk-accent); outline-offset:2px; }
 .rk-term-popover__english { color:var(--rk-muted); font:italic 12px/1.45 Georgia,Cambria,serif; }
+.rk-term-ref { color:inherit; }
 @media(max-width:520px) {
   .reference-index nav { grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
   .reference-index nav button { grid-template-columns:1fr; gap:3px; padding:9px 7px; }

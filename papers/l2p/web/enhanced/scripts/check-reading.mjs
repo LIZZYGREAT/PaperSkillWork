@@ -32,7 +32,7 @@ const report = { baseUrl, browser: browser.version(), results: [] };
 try {
   await mkdir(output, { recursive: true });
   for (const width of mobileOnly ? [390] : [1440, 1920]) {
-    const page = await browser.newPage({ viewport: { width, height: width === 390 ? 844 : width === 1440 ? 900 : 1080 }, deviceScaleFactor: 1 });
+    const page = await browser.newPage({ viewport: { width, height: width === 390 ? 844 : width === 1440 ? 900 : 1080 }, deviceScaleFactor: 1, ...(width === 390 ? { isMobile: true, hasTouch: true } : {}) });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     page.on('response', response => { if (response.url().startsWith(baseUrl) && response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
@@ -129,6 +129,56 @@ try {
         await page.keyboard.press('Escape');
         report.referenceResults ??= [];
         report.referenceResults.push({ page: 2, hover: 'PASS', hubTerms: 13, detailNavigation: 'PASS' });
+      }
+      if (index === 3 && width === 1440) {
+        const query = page.locator('[data-term-id="query"]').first();
+        const key = page.locator('[data-term-id="key"]').first();
+        const value = page.locator('[data-term-id="value"]').first();
+        const roleColors = await Promise.all([query, key, value].map(term => term.evaluate(node => getComputedStyle(node).color)));
+        assert.equal(new Set(roleColors).size, 3, `P3 Q/K/V semantic colors must remain distinct: ${roleColors.join(', ')}`);
+        await key.hover();
+        const hover = page.locator('.rk-term-popover');
+        await hover.waitFor({ state: 'visible' });
+        assert.match(await hover.innerText(), /Key · K/);
+        assert.match(await hover.innerText(), /L2P Prompt Pool 的检索 Key/);
+        await hover.getByRole('button', { name: '查看完整解释' }).click();
+        const hub = page.locator('.reference-dialog');
+        await hub.waitFor({ state: 'visible' });
+        assert.equal(await hub.locator('.reference-terms [data-reference-term]').count(), 15, 'P3 Hub must expose its fifteen linked concepts');
+        for (const id of ['pre-ln', 'layer-normalization', 'attention', 'query', 'key', 'value', 'softmax', 'attention-weight', 'weighted-sum', 'multi-head-attention', 'concatenation', 'output-projection', 'residual-connection', 'ffn', 'forward-pass']) {
+          assert.equal(await hub.locator(`[data-reference-term="${id}"]`).count(), 1, `P3 Hub must link ${id}`);
+        }
+        await hub.locator('[data-reference-term="pre-ln"]').click();
+        const preLnText = await hub.locator('[data-reference-detail]').innerText();
+        assert.match(preLnText, /先归一化/);
+        assert.match(preLnText, /加回原表示/);
+        assert.match(preLnText, /Post-LN/);
+        await hub.locator('[data-reference-term="forward-pass"]').click();
+        const forwardText = await hub.locator('[data-reference-detail]').innerText();
+        assert.match(forwardText, /固定当前网络参数/);
+        assert.match(forwardText, /反向传播与优化步骤/);
+        await page.screenshot({ path: path.join(output, 'P3-1440-reference-hub.png') });
+        await page.keyboard.press('Escape');
+        report.referenceResults ??= [];
+        report.referenceResults.push({ page: 3, hover: 'PASS', hubTerms: 15, detailNavigation: 'PASS', roleColors });
+      }
+      if (index === 3 && width === 390) {
+        await page.locator('[data-term-id="softmax"]').first().tap();
+        const hover = page.locator('.rk-term-popover');
+        await hover.waitFor({ state: 'visible' });
+        const popover = await hover.boundingBox();
+        assert(popover && popover.x >= 0 && popover.x + popover.width <= width, 'P3 mobile hover must remain within the viewport');
+        await hover.getByRole('button', { name: '查看完整解释' }).tap();
+        const hub = page.locator('.reference-dialog');
+        await hub.waitFor({ state: 'visible' });
+        const hubBox = await hub.boundingBox();
+        assert.equal(hubBox?.width, width, 'P3 mobile reference panel should use the viewport width');
+        assert.equal(await hub.locator('.reference-terms [data-reference-term]').count(), 15);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width, 'P3 mobile ReferenceHub must not create horizontal page overflow');
+        await page.screenshot({ path: path.join(output, 'P3-390-reference-hub.png') });
+        await page.keyboard.press('Escape');
+        report.referenceResults ??= [];
+        report.referenceResults.push({ page: 3, viewport: width, hoverBounds: 'PASS', hubWidth: 'PASS', hubTerms: 15 });
       }
       await page.screenshot({ path: path.join(output, `P${index}-${width}-opening.png`) });
       await page.screenshot({ path: path.join(output, `P${index}-${width}-full.png`), fullPage: true });

@@ -99,6 +99,12 @@ export function EncoderReading() {
   </section>;
 }
 
+function qkvTermId(symbol: string) {
+  if (symbol === "Q") return "query";
+  if (symbol === "K") return "key";
+  return "value";
+}
+
 export function QKVBranch() {
   return <div className="qkv-branch" role="group" aria-label="归一化输入通过共享投影生成 Query、Key、Value">
     <div className="qkv-origin"><VectorGlyph /><math><mi>X</mi><mo>=</mo><mrow><mi mathvariant="normal">LN</mi><mo>(</mo><mi>Z</mi><mo>)</mo></mrow></math><span>同一条输入序列</span></div>
@@ -107,15 +113,15 @@ export function QKVBranch() {
       {symbol:'Q',title:'目标的匹配向量',text:'选定位置取出一个 Query，用它读取整条序列。'},
       {symbol:'K',title:'来源的匹配表示',text:'每个来源都有 Key，用于与目标 Query 计算分数。'},
       {symbol:'V',title:'来源的汇聚内容',text:'每个来源的 Value 按分配到的权重进入输出。'},
-    ].map(item=><div className={'qkv-card qkv-card--'+item.symbol.toLowerCase()} key={item.symbol}><math><mi>{item.symbol}</mi><mo>=</mo><mi>X</mi><Sub base="W" index={item.symbol} /></math><h4>{item.title}</h4><p>{item.text}</p></div>)}</div>
+    ].map(item=><div className={'qkv-card qkv-card--'+item.symbol.toLowerCase()} key={item.symbol}><math><mi>{item.symbol}</mi><mo>=</mo><mi>X</mi><Sub base="W" index={item.symbol} /></math><h4><Term id={qkvTermId(item.symbol)}>{item.symbol==='Q'?'Query':item.symbol==='K'?'Key':'Value'}</Term> · {item.title}</h4><p>{item.text}</p></div>)}</div>
   </div>;
 }
 
 export function ResidualReading() {
   return <section className="residual-reading" aria-label="Attention 结果经两条残差路径交给下一层">
     <h3>把多头结果<span className="editorial-key">接回</span> Block</h3>
-    <div className="residual-reading__row"><div><h4>先加回原输入</h4><p>第一条残差将 Z 与 MSA 输出<span className="lesson-key">逐位置相加</span>，得到 U，保留原表示并加入本次读取的信息。</p></div><div className="residual-equation"><span>第一处交接</span><math><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mtext>多头注意力输出</mtext></math><small>原表示 + 跨位置汇聚结果</small></div></div>
-    <div className="residual-reading__row residual-reading__row--reverse"><div className="residual-equation"><span>第二处交接</span><math><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mtext>FFN 输出</mtext></math><small>整条输出序列交给下一层</small></div><div><h4>再加工每个位置的内部特征</h4><p>U 经 LayerNorm 归一化后进入 FFN，逐位置做<span className="lesson-key lesson-term">非线性变换</span>；第二条残差再将结果与 U 相加，得到 Z′。跨位置读取由 Attention 完成，FFN 继续加工读入的特征。</p></div></div>
+    <div className="residual-reading__row"><div><h4>先加回原输入</h4><p>第一条 <Term id="residual-connection">残差</Term>将 Z 与 MSA 输出<span className="lesson-key">逐位置相加</span>，得到 U，保留原表示并加入本次读取的信息。</p></div><div className="residual-equation"><span>第一处交接</span><math><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mtext>多头注意力输出</mtext></math><small>原表示 + 跨位置汇聚结果</small></div></div>
+    <div className="residual-reading__row residual-reading__row--reverse"><div className="residual-equation"><span>第二处交接</span><math><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mtext>FFN 输出</mtext></math><small>整条输出序列交给下一层</small></div><div><h4>再加工每个位置的内部特征</h4><p>U 经 <Term id="layer-normalization">LayerNorm</Term> 归一化后进入 <Term id="ffn">FFN</Term>，逐位置做<span className="lesson-key lesson-term">非线性变换</span>；第二条残差再将结果与 U 相加，得到 Z′。跨位置读取由 Attention 完成，FFN 继续加工读入的特征。</p></div></div>
   </section>;
 }
 

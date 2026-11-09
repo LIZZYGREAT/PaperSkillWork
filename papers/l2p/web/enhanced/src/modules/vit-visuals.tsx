@@ -75,10 +75,10 @@ export function PatchJourney({ index }: { index: number }) {
 
 function Residual({ input, result, operation, detail }: { input: string; result: string; operation: string; detail: string }) {
   return <div className="residual-unit">
-    <div className="bypass"><span>{input} 沿残差支路直达加法</span></div>
+      <div className="bypass"><span>{input} 沿<Term id="residual-connection">残差支路</Term>直达加法</span></div>
     <div className="block-nodes">
-      <strong>{input}</strong><Arrow /><span>LayerNorm</span><Arrow />
-      <b>{operation}
+      <strong>{input}</strong><Arrow /><span><Term id="layer-normalization">LayerNorm</Term></span><Arrow />
+      <b><Term id={operation === "多头注意力" ? "multi-head-attention" : "ffn"}>{operation}</Term>
         {operation === "多头注意力" && <span className="mini-heads" aria-hidden="true"><i /><i /><i /><em /><VectorGlyph /></span>}
         <small>{detail}</small>
       </b><Arrow /><span className="sum-node" aria-label="与残差相加">+</span><Arrow /><strong>{result}</strong>
@@ -88,7 +88,7 @@ function Residual({ input, result, operation, detail }: { input: string; result:
 
 export function BlockDiagram({ compact = false }: { compact?: boolean }) {
   return <div className={`encoder-cutaway ${compact ? "cutaway-overview" : ""}`}>
-    {compact && <div className="cutaway-title"><b>Transformer Encoder Block</b><span>典型 Pre-LN 结构</span></div>}
+      {compact && <div className="cutaway-title"><b><Term id="encoder-block">Transformer Encoder Block</Term></b><span>典型 <Term id="pre-ln">Pre-LN</Term> 结构</span></div>}
     <div className="block-flow">
       <Residual input="Z" operation="多头注意力" detail="跨 Token 汇聚" result="U" />
       <Residual input="U" operation="MLP / FFN" detail="逐 Token 变换" result="Z′" />

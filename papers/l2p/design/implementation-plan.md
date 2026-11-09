@@ -413,12 +413,18 @@ ROOT_PROSE_REGRESSION=PASS、SUBPATH_ASSETS=PASS：npm.cmd --prefix papers/l2p/w
 
 本轮未创建 runner run 目录。任务专用 typography-details.mjs 在截图/指标审阅后按确切路径清理，原生截图和 JSON 保留供交付；临时检查服务器已关闭。既有 package-lock.json 改动未纳入提交。
 
-### P1–P3 技术词 Hover 与 ReferenceHub（P1/P2 完成，2026-11-09）
+### P1–P3 技术词 Hover 与 ReferenceHub（P1/P2/P3 完成，2026-11-09）
 
 按正文首见位置建立可触达的术语 Hover：一屏显示中英文术语、准确释义、本页作用和易混点；点击“查看完整解释”进入按 P1/P2/P3 编组的 ReferenceHub，在页内术语索引中浏览更完整的解释、步骤卡、跨概念关系与来源。统一入口已改名“术语与资料”。P1 已完成 10 个概念：持续学习、类别/域增量、task-agnostic、任务 ID 与任务边界、灾难性遗忘、预训练主干、冻结参数、回放缓冲区；正文在首见处连接对应 Hover。重点解释测试无任务 ID 与训练无任务边界是两项独立条件；冻结权重仍执行前向计算；基础 L2P 与回放版 L2P-R 的差别。
 
 P2 完成 13 个概念：视觉 Transformer、输入嵌入、Patch、展平、线性投影、Patch Token、Token 序列、位置向量、[CLS]、ViT-B/16、197×768 形状、Encoder/Block、分类头。正文、架构总览、逐块路径和分类读出图均在相关首见处接入 Hover。详细说明区分图像块与 Patch Token、展平与投影、位置向量与内容向量，以及序列长度与隐藏维度；标注典型架构参数不是 L2P 的方法贡献。引用 L2P、ViT 原论文的对应章节与配置。
 
+P3 完成 15 个概念：Pre-LN、LayerNorm、自注意力与缩放点积、Query/Key/Value、Softmax、注意力权重、Value 加权和、多头、特征拼接、输出投影、残差连接、FFN/MLP、前向计算。机制词连接到正文、Q/K/V 分支图、Attention 公式讲解和残差示意。完整说明区按计算顺序解释运算，区分注意力内部的 Key 与 P5 Prompt Pool 的检索 Key；指出 attention weight 是当前运算中的分配比例、Head 不保证可直接命名的人类语义，冻结参数仍允许输入激活变化。外部参考链接分别指向 Transformer、LayerNorm、Residual 原论文；Pre-LN 在 ViT 中的配置有明确边界。检查发现通用 `.rk-term-ref` 颜色会盖住 Q/K/V 的语义色，已改为继承上层颜色，并回归确认蓝/绿/紫角色色均保留。
+
 SOURCE_BUILD=PASS：`npm.cmd --prefix papers/l2p/web/enhanced run build`，TypeScript + Vite 6.4.3，72 modules。P1 Hub 回归断言已加入 `scripts/check-reading.mjs`：Hover 释义/中英术语/易混点、完整词条说明、10 项页索引、相关词跳转；浏览器在 1440×900、1920×1080 的九页正文容器与 MathML 回归通过。检查命令：`PAPERWORK_PLAYWRIGHT_EXECUTABLE=<系统 Edge> npm.cmd --prefix papers/l2p/web/enhanced run check:reading -- <P1-reference证据目录>`，PASS；查看 `P1-1440-reference-hub.png`。ReferenceHub 使用按需抽屉，完整条目在面板内纵向滚动。证据保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/P1-reference/`。此次共享面板变更只覆盖相关入口与词条浏览；六个保护动画、attention()、正文统一容器不变。
 
 P2 SOURCE_BUILD=PASS：npm build 编译 72 modules。`check:reading` 在 1440×900 和 1920×1080 对 P1/P2 Hub 进行浏览器交互断言：P2 的 13 项术语索引、ViT Hover、197 行/768 列展开定义及配置可变边界通过；P1 的 10 项与任务 ID/边界区分断言继续通过。P1–P9 正文容器、字号、行高、MathML 和页面溢出均通过。证据 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/P1-P2-reference/`，已查看 P2-1440-reference-hub.png 和 P2-1440-full.png。六个保护动画和 attention() 不变。
+
+P3 SOURCE_BUILD=PASS：npm build，TypeScript + Vite 6.4.3，72 modules。`check:reading` 的 P1–P9 两种桌面宽度检查和 P3 Hub 导航/公式基线/关系色检查通过；三组索引分别为 P1=10、P2=13、P3=15，共 38 项。P3 的 ReferenceHub 可打开各术语，核对 Pre-LN 顺序、前向计算边界与内部/外部 Key 的区别。窄屏以 390×844 + `isMobile/hasTouch` 运行，P1–P3 阅读、公式与溢出回归通过，P3 对 Softmax 术语执行触屏点按打开 Hover 与 ReferenceHub。结果 PASS，浏览器错误 0。证据 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/P1-P3-reference/`，已查看 P3-1440-reference-hub.png、P3-1440-full.png、P3-390-reference-hub.png。六个保护动画、attention()、P1–P9 统一正文容器与 P3 公式基线不变。
+
+术语图谱审计：P1/P2/P3 分别 10/13/15 项；38 项全部有正文或图示 Hover 使用，所有正文 Term ID 与 Related 链接均能解析，没有孤立词条或悬空关系。UPSTREAM_SYNTAX=PASS、UPSTREAM_OUTPUT=PASS：直接检查发布源码，TypeScript parser 共 39 个源文件，9 个模块/章节注册完整。Node v24.18.0；检查器在本会话已核实匹配当前 PaperSkill upstream/main（`f73c7e50f043317181161fba5cc446424bb564e0`；syntax blob `2bcfa6f815054ee498574c51cef05f0c315b4298`；output blob `9ec76b6974f262fca7b9611c4a485dd2275fe76c`）。未改人工审核记录、W7/W9 或发布阶段。
