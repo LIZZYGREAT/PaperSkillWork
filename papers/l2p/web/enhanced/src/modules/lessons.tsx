@@ -26,14 +26,14 @@ export function TaskStream() {
   const playback = useLessonPlayback(2300);
   return (
     <>
-      <p className="lesson-lead">普通图像分类通过训练图像和标签调整模型参数，学会区分一组类别。持续学习改变的是数据到来的方式：模型依次接收新的类别，后续阶段往往无法重新取得此前全部训练图像，却仍需保留已经学到的识别能力。</p>
-      <p className="lesson-prose">下面让任务 1 和任务 2 依次使用同一个分类器训练。新任务会在已有参数上继续更新，不会自动创建一份与旧任务隔离的模型。</p>
+      <p className="lesson-lead">普通图像分类通过训练图像和标签调整模型参数，学会区分一组类别。持续学习改变的是数据到来的方式：模型依次接收新的类别，后续阶段往往<span className="lesson-key lesson-key--caution">无法重新取得</span>此前全部训练图像，却仍需保留已经学到的识别能力。</p>
+      <p className="lesson-prose">下面让任务 1 和任务 2 依次使用<span className="lesson-key">同一个分类器</span>训练。新任务会在已有参数上继续更新，不会自动创建一份与旧任务隔离的模型。</p>
       <TaskTimeline phase={phase} />
       <section className="explain-section">
         <h3>从 <LessonVar base="θ" index="1" /> 到 <LessonVar base="θ" index="2" />，为什么旧预测也会改变？</h3>
-        <p>完成任务 1 后的模型参数记为 <math><Sub base="θ" index={1} /></math>。任务 2 从这组参数接着训练，得到 <math><Sub base="θ" index={2} /></math>。训练虽然使用新类别数据，更新的却是整个共享网络中的参数，因此旧类别原先依赖的特征和预测分数也可能改变。</p>
+        <p>完成任务 1 后的模型参数记为 <math><Sub base="θ" index={1} /></math>。任务 2 从这组参数接着训练，得到 <math><Sub base="θ" index={2} /></math>。训练虽然使用新类别数据，更新的却是整个<span className="lesson-key">共享网络中的参数</span>，因此旧类别原先依赖的特征和预测分数也可能改变。</p>
         <InterferenceFishbone />
-        <p>下面固定同一张鸟类测试图，先查看任务 1 结束时的预测，再切换到任务 2 结束时的参数快照，比较最高分所属类别。播放时可以追踪当前快照下的前向传播。</p>
+        <p>下面固定<span className="lesson-key">同一张鸟类测试图</span>，先查看任务 1 结束时的预测，再切换到任务 2 结束时的参数快照，比较最高分所属类别。播放时可以追踪当前快照下的前向传播。</p>
       </section>
       <figure className="lesson-figure">
         <div className="figure-top"><strong>同一张旧图，两份参数快照</strong><span>教学预测分数 · 合成示例分布</span></div>
@@ -67,7 +67,7 @@ export function TaskStream() {
       <OldImageReading />
       <section className="explain-section">
         <h3>测试图来自哪个任务，模型事先并不知道</h3>
-        <p>困难还在于，学完第二批类别后，测试输入只有图像，没有“来自任务 1 还是任务 2”的提示。类别增量测试要求模型在全部已学类别中统一选择，不能先按任务号排除猫和狗，再只在旧类别中判断。</p>
+        <p>困难还在于，学完第二批类别后，测试输入<span className="lesson-key lesson-key--caution">只有图像</span>，没有“来自任务 1 还是任务 2”的提示。类别增量测试要求模型在<span className="lesson-key">全部已学类别</span>中统一选择，不能先按任务号排除猫和狗，再只在旧类别中判断。</p>
         <div className="test-routing" role="group" aria-label="一张测试图进入统一的已学类别空间">
           <div className="route-input"><Specimen /><div><b>只收到图像</b><small>任务 ID 未提供</small></div></div><Arrow />
           <div className="route-classes"><div className="class-tags"><span>鸟</span><span>鱼</span><span>猫</span><span>狗</span></div><small>全部已学类别一起竞争</small></div>
@@ -76,7 +76,7 @@ export function TaskStream() {
       </section>
       <section className="explain-section">
         <h3>能否保留主干的视觉能力？</h3>
-        <p>如果预训练模型已经学到了可复用的视觉特征，就可以<span className="reading-emphasis">保留主干权重</span>，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，<span className="reading-emphasis">无需保存旧样本</span>来做回放。</p>
+        <p>如果预训练模型已经学到了可复用的视觉特征，就可以<span className="lesson-key">保留主干权重</span>，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，<span className="lesson-key">无需保存旧样本</span>来做回放。</p>
       </section>
       <BackboneHandoff />
     </>
@@ -94,8 +94,8 @@ export function ViTPath() {
       <ViTOverview index={patch} select={setPatch} />
       <section className="explain-section">
         <h3>二维图像怎样变成一串向量？</h3>
-        <p>Transformer 处理按位置排列的向量序列，图像最初却是由高度、宽度和颜色通道组成的像素数组。ViT 先把图像切成等大的图像块（Patch），将每块像素展平，再通过共享的线性投影变成一个 Patch Token，让局部区域进入模型的特征空间。</p>
-        <p>以这里的 ViT-B/16、224×224 输入为例，每块边长为 16，每边得到 14 块，共 14×14=196 块。点击网格或拖动滑块选一块，沿着它的行列位置追踪到对应 Token，再播放通道读取、展平和投影过程。展平只重排像素，投影则把像素值映射为特征坐标。</p>
+        <p>Transformer 处理按位置排列的<span className="lesson-key">向量序列</span>，图像最初却是由高度、宽度和颜色通道组成的像素数组。ViT 先把图像切成等大的图像块（Patch），将每块像素展平，再通过共享的线性投影变成一个 Patch Token，让局部区域进入模型的特征空间。</p>
+        <p>以这里的 ViT-B/16、224×224 输入为例，每块边长为 16，每边得到 14 块，共 14×14=196 块。点击网格或拖动滑块选一块，沿着它的行列位置追踪到对应 Token，再播放通道读取、展平和投影过程。展平<span className="lesson-key lesson-key--caution">只重排像素</span>，投影则把像素值映射为<span className="lesson-key">特征坐标</span>。</p>
         <figure className="lesson-figure patch-lab">
           <div className="figure-top"><strong>追踪原图中的一块 Patch</strong><span>点击架构图中的网格或拖动滑块</span></div>
           <div className="figure-body">
@@ -112,7 +112,7 @@ export function ViTPath() {
       </section>
       <section className="explain-section">
         <h3>序列里为什么有 197 个位置？</h3>
-        <p>投影得到的向量承载局部内容，但相似内容出现在不同位置时，对整图的意义可能不同。ViT 为各位置加入对应的位置向量，使模型能利用空间位置信息。</p>
+        <p>投影得到的向量承载局部内容，但相似内容出现在不同位置时，对整图的意义可能不同。ViT 为各位置加入对应的<span className="lesson-key">位置向量</span>，使模型能利用空间位置信息。</p>
         <p>普通 ViT 还在 196 个 Patch Token 前面加入一个用于整图表示的 <strong>[CLS]</strong> Token。它独占序列中的第 0 位，没有对应的图像块。因此共有 196+1=197 个位置。下面按列看内容与位置向量如何相加，形成输入序列 <LessonVar base="X" index="e" />。</p>
         <div className="sequence-explainer" role="group" aria-label="内容向量与位置向量按列相加">
           <div><b>内容向量</b><span className="token special">[CLS]</span><span className="token">Patch 1</span><span className="token">Patch 2</span><span>…</span><span className="token">Patch 196</span></div>
@@ -120,7 +120,7 @@ export function ViTPath() {
           <div><b>= 输入 <math><Sub base="X" index="e" /></math></b><span>第 0 位</span><span>第 1 位</span><span>第 2 位</span><span>…</span><span>第 196 位</span></div>
         </div>
         <div className="shape-equation"><math display="block"><msub><mi>X</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math></div>
-        <p><span className="reading-emphasis">197 是序列长度</span>，<span className="reading-emphasis">768 是每个位置的向量维数</span>。这个形状描述当前演示的配置，序列将整体交给 Encoder 处理。</p>
+        <p><span className="lesson-key">197</span> 是序列长度，<span className="lesson-key lesson-key--type">768</span> 是每个位置的向量维数。这个形状描述当前演示的配置，序列将整体交给 Encoder 处理。</p>
       </section>
       <EncoderReading />
       <div className="context-bridge" role="group" aria-label="从局部内容到上下文表示，下一页解释中间计算">
@@ -170,7 +170,7 @@ export function EncoderAttention() {
   return (
     <>
       <p className="lesson-lead">P2 中，每层 Encoder 都会更新整条 Token 序列。打开其中一个 Block，就能看到一个位置怎样读取其他位置，以及读到的信息怎样成为下一层的输入。</p>
-      <p className="lesson-prose">图中采用典型的 Pre-LN 结构：输入先经层归一化（LayerNorm），进入多头自注意力（MSA），再加回原输入；随后经过第二次归一化和前馈网络（FFN/MLP），再做一次残差相加。先把这条路径作为地图，接下来放大负责跨位置读取的 Attention。</p>
+      <p className="lesson-prose">图中采用典型的 Pre-LN 结构：输入先经层归一化（LayerNorm），进入多头自注意力（MSA），再加回原输入；随后经过第二次归一化和前馈网络（FFN/MLP），再做一次残差相加。先把这条路径作为地图，接下来放大负责<span className="lesson-key">跨位置读取</span>的 Attention。</p>
       <figure className="lesson-figure">
         <div className="figure-top"><strong>Transformer Encoder Block</strong><span>典型 Pre-LN 结构</span></div>
         <div className="figure-body">
@@ -186,9 +186,9 @@ export function EncoderAttention() {
 
       <h3 className="detail-title">一个位置如何读取整串 Token？</h3>
       <p className="lesson-prose">假设正在更新 [CLS]：它需要决定从每个来源位置读取多少信息。Attention 为每个 Token 生成三种向量，Query（Q）参与目标匹配，Key（K）提供来源的匹配表示，Value（V）提供实际汇聚的内容。来源也包含目标自身。</p>
-      <p className="lesson-prose">这三种向量都从归一化后的输入 X 计算出来。同一个 Head 的三组投影矩阵在所有位置共享。这里的 Key 属于 Transformer 内部 Attention；P5 的池检索 Key 将承担另一种用途。</p>
+      <p className="lesson-prose">这三种向量都从归一化后的输入 X 计算出来。同一个 Head 的三组投影矩阵在<span className="lesson-key">所有位置共享</span>。这里的 Key 属于 Transformer 内部 Attention；P5 的池检索 Key 将承担另一种用途。</p>
       <QKVBranch />
-      <p className="lesson-prose">选定目标 i 后，用它的 <LessonVar base="q" index="i" /> 与各来源 <LessonVar base="k" index="j" /> 点积，并除以 Key 维度 <LessonVar base="d" index="k" /> 的平方根，得到匹配分数 <LessonVar base="s" index="ij" />。Softmax 将这一行分数归一化为总和为 1 的权重 <LessonVar base="a" index="ij" />，再把各来源 <LessonVar base="v" index="j" /> 按权重相加，形成目标的 Head 输出 <LessonVar base="o" index="i" />。</p>
+      <p className="lesson-prose">选定目标 i 后，用它的 <LessonVar base="q" index="i" /> 与各来源 <LessonVar base="k" index="j" /> 点积，并除以 Key 维度 <LessonVar base="d" index="k" /> 的平方根，得到匹配分数 <LessonVar base="s" index="ij" />。Softmax 将这一行分数归一化为<span className="lesson-key">总和为 1</span> 的权重 <LessonVar base="a" index="ij" />，再把各来源 <LessonVar base="v" index="j" /> 按权重相加，形成目标的 Head 输出 <LessonVar base="o" index="i" />。</p>
       <div className="attention-rule" role="group" aria-label="一个目标位置从匹配到汇聚的计算">
         <div><span>匹配来源</span><math><Sub base="s" index="ij" /><mo>=</mo><mfrac><mrow><Sub base="q" index="i" /><mo>·</mo><Sub base="k" index="j" /></mrow><msqrt><Sub base="d" index="k" /></msqrt></mfrac></math></div>
         <Arrow />
@@ -228,7 +228,7 @@ export function EncoderAttention() {
         </div>
         <figcaption>二维教学示例：W_Q、W_K 保留坐标，W_V 交换两维。虚线表示匹配，实线表示 Value 汇聚，线宽对应权重。表中数值已四舍五入。</figcaption>
       </figure>
-      <p className="lesson-prose">输出由整行 Value 的加权和组成，所以一个位置的表示能够包含其他位置的信息。真实 ViT 对完整序列的每个目标都执行这类计算；这里用少量二维向量展开其中一个 Head，便于对照分数、权重与结果。</p>
+      <p className="lesson-prose">输出由整行 Value 的<span className="lesson-key">加权和</span>组成，所以一个位置的表示能够包含其他位置的信息。真实 ViT 对完整序列的每个目标都执行这类计算；这里用少量二维向量展开其中一个 Head，便于对照分数、权重与结果。</p>
       <section className="explain-section">
         <h3>各个 Head 怎样汇回一条序列？</h3>
         <p>多个 Head 并行读取相同的输入序列，各自使用一组投影参数，形成不同的汇聚结果。对同一目标位置，各 Head 的输出沿特征维度拼接，再由输出投影映射回模型宽度 D，得到 MSA 在这个位置的输出。</p>
@@ -243,7 +243,7 @@ export function EncoderAttention() {
       <section className="explain-section">
         <h3>同一组权重遇到不同输入，会怎样？</h3>
         <p>冻结网络会固定投影矩阵和 FFN 等参数，当前输入仍会参与 Q/K/V 和后续输出的计算。下面保留三个基础 Token 与相同投影权重，在第二条序列加入一个额外 Token，比较同一目标的 Head 输出。</p>
-        <p>打开开关后，原有 Query 与 Key 的匹配分数保持不变，新来源却加入了 Softmax 的分母，原有来源的权重随之重新分配。新的 Value 也进入加权和，目标输出因此发生变化。整个对照只有前向计算，网络权重始终固定。</p>
+        <p>打开开关后，原有 Query 与 Key 的匹配分数<span className="lesson-key">保持不变</span>，新来源却加入了 Softmax 的<span className="lesson-key lesson-key--caution">分母</span>，原有来源的权重随之重新分配。新的 Value 也进入加权和，目标输出因此发生变化。整个对照只有前向计算，网络权重<span className="lesson-key">始终固定</span>。</p>
         <figure className="lesson-figure">
           <div className="figure-top"><strong>冻结权重，改变输入序列</strong><span>对照目标 {baseTokens[target].name}</span></div>
           <div className="figure-body">

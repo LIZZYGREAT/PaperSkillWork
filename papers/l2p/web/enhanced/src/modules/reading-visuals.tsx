@@ -31,7 +31,7 @@ export function InterferenceFishbone() {
 export function OldImageReading() {
   return <div className="old-image-reading">
     <div className="fixed-image-object"><Specimen /><div><strong>图像始终相同</strong><span>真实类别仍然是鸟</span></div></div>
-    <div className="prediction-reading"><h3>变的是参数状态与输出</h3><p>在 <math><Sub base="θ" index={1} /></math> 下最高分是鸟，在 <math><Sub base="θ" index={2} /></math> 下变成猫。后续更新可能干扰模型原先的分类能力。</p><p>是否发生灾难性遗忘，还需比较旧任务整体测试表现。这张图帮助我们看清干扰如何发生。</p></div>
+    <div className="prediction-reading"><h3>变的是参数状态与输出</h3><p>在 <math><Sub base="θ" index={1} /></math> 下最高分是鸟，在 <math><Sub base="θ" index={2} /></math> 下变成猫。后续更新<span className="lesson-key lesson-key--caution">可能干扰</span>模型原先的分类能力。</p><p>遗忘的程度要看旧任务的<span className="lesson-key">整体测试表现</span>。<span className="lesson-key lesson-key--limit">单张图</span>只能呈现这一次预测变化。</p></div>
   </div>;
 }
 
@@ -70,14 +70,14 @@ export function PixelFeatureCompare() {
 export function EncoderReading() {
   return <section className="encoder-reading" aria-label="序列逐层传递与整图分类读出">
     <div className="encoder-reading__row">
-      <div><h3>位置保留，表示逐层更新</h3><p>回到总览中的 Encoder 堆叠：每个 Block 接收前一层的整条序列，保留位置顺序与向量宽度，更新各位置内部的特征。后一层接着处理这些输出，各位置逐渐携带其他区域的信息。</p></div>
+      <div><h3>位置保留，表示逐层更新</h3><p>回到总览中的 Encoder 堆叠：每个 Block 接收前一层的整条序列，保留<span className="lesson-key">位置顺序</span>与向量宽度，更新各位置内部的<span className="lesson-key">特征</span>。后一层接着处理这些输出，各位置逐渐携带其他区域的信息。</p></div>
       <div className="layer-relay" aria-label="同一位置的表示经过连续三层 Encoder 更新">
         {["Block 1", "Block 2", "Block 3"].map(label=><div key={label}><b>{label}</b><div><span className="token special">CLS</span><VectorGlyph kind="token" /><VectorGlyph /></div><small>整条序列传给下一层</small></div>)}
       </div>
     </div>
     <div className="encoder-reading__row encoder-reading__row--reverse">
       <div className="cls-readout-object"><span>末层输出序列</span><div><span className="token special">[CLS]</span><span className="token">Patch 1</span><span className="token">…</span></div><span className="cls-readout-line" /><strong>[CLS] 特征 → 分类头</strong><small>普通 ViT 的基础读出</small></div>
-      <div><h3>从序列中读出整图特征</h3><p>普通 ViT 分类通常读取末层 [CLS] 表示，再交给分类头。后面的 L2P 会用无 Prompt 的 [CLS] 特征做检索，并从带 Prompt 序列的另一组输出位置读取分类特征；P5–P6 将沿实际路径展开。</p></div>
+      <div><h3>从序列中读出整图特征</h3><p>普通 ViT 分类通常读取<span className="lesson-key">末层 [CLS]</span> 表示，再交给分类头。后面的 L2P 会用无 Prompt 的 [CLS] 特征做检索，并从带 Prompt 序列的另一组输出位置读取分类特征；P5–P6 将沿实际路径展开。</p></div>
     </div>
   </section>;
 }
@@ -97,8 +97,8 @@ export function QKVBranch() {
 export function ResidualReading() {
   return <section className="residual-reading" aria-label="Attention 结果经两条残差路径交给下一层">
     <h3>把多头结果接回 Block</h3>
-    <div className="residual-reading__row"><div><h4>先加回原输入</h4><p>第一条残差将 Z 与 MSA 输出逐位置相加，得到 U，保留原表示并加入本次读取的信息。</p></div><div className="residual-equation"><span>第一处交接</span><math><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mtext>多头注意力输出</mtext></math><small>原表示 + 跨位置汇聚结果</small></div></div>
-    <div className="residual-reading__row residual-reading__row--reverse"><div className="residual-equation"><span>第二处交接</span><math><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mtext>FFN 输出</mtext></math><small>整条输出序列交给下一层</small></div><div><h4>再加工每个位置的内部特征</h4><p>U 经 LayerNorm 归一化后进入 FFN，逐位置做非线性变换；第二条残差再将结果与 U 相加，得到 Z′。跨位置读取由 Attention 完成，FFN 继续加工读入的特征。</p></div></div>
+    <div className="residual-reading__row"><div><h4>先加回原输入</h4><p>第一条残差将 Z 与 MSA 输出<span className="lesson-key">逐位置相加</span>，得到 U，保留原表示并加入本次读取的信息。</p></div><div className="residual-equation"><span>第一处交接</span><math><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mtext>多头注意力输出</mtext></math><small>原表示 + 跨位置汇聚结果</small></div></div>
+    <div className="residual-reading__row residual-reading__row--reverse"><div className="residual-equation"><span>第二处交接</span><math><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mtext>FFN 输出</mtext></math><small>整条输出序列交给下一层</small></div><div><h4>再加工每个位置的内部特征</h4><p>U 经 LayerNorm 归一化后进入 FFN，逐位置做非线性变换；第二条残差再将结果与 U 相加，得到 Z′。跨位置读取由 Attention 完成，FFN 继续加工读入的<span className="lesson-key">特征</span>。</p></div></div>
   </section>;
 }
 

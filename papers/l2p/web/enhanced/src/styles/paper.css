@@ -496,3 +496,9 @@
   font-size: var(--lesson-body-size);
   line-height: var(--lesson-body-leading);
 }
+
+/* Sparse, semantic emphasis: short key phrases retain the surrounding sentence rhythm. */
+.lesson-copy .lesson-key { color: var(--rk-accent-strong); font-weight: 700; background: linear-gradient(transparent 64%, #dfe8d5 64%, #dfe8d5 94%, transparent 94%); padding-inline: .05em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.lesson-copy .lesson-key--caution { color: #895713; background-image: linear-gradient(transparent 64%, #f1e2c5 64%, #f1e2c5 94%, transparent 94%); }
+.lesson-copy .lesson-key--limit { color: #a1402e; background: none; text-decoration: underline; text-decoration-color: #d6a99a; text-underline-offset: .23em; text-decoration-thickness: 1px; }
+.lesson-copy .lesson-key--type { background: none; color: #315d73; font-weight: 750; font-variant-numeric: lining-nums; }

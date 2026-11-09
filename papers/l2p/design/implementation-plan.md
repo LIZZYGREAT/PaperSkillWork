@@ -366,3 +366,7 @@ VISUAL_REVIEW：已查看 P1–P3 两种桌面尺度的整页、时间轴、完�
 证据保留：C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/reading-repair/，含 reading-report.json、九页两种桌面首屏/整页、前三页设计与交互状态、mobile/ 专项截图。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（本轮为 headless Edge，未进行桌面 F11）。获批像素基线比较=NOT_RUN；W7/W9 人工教学验收仍 PENDING，未改工作流状态或发布。
 
 最终 runner 报告 run-2026-11-09T09-02-16-057Z：38 captures 全部 GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS=PASS，浏览器错误 0，P4 既有图内 11px 注释警告保持原状。报告已阅读，并查看 P6 分类终态回归截图。两个本轮确切 run 目录经 --cleanup-run 返回 CLEANED，逐项 Test-Path=False；唯一临时配置 l2p-reading-final.json 已按核实的绝对路径删除。本轮原生截图和 JSON 作为交付证据保留于 reading-repair/；临时服务全部正常关闭。最终遗留只有任务开始前已存在的 package-lock.json 改动，不纳入本轮提交。
+
+### 重点层次与视觉精修（2026-11-09）
+
+本轮保留已确认的结构、因果链、正文容器与计算。正文采用少量短语强调：绿色标记核心对象/机制，琥珀色标记约束与风险，砖红细下划线标记推断边界；数字含义用字重与蓝色区分。每段只选择一至两个关键词组，避免整句涂色。新增 lesson-key 属于共用正文的语义强调样式，不改变字号、行高或正文宽度。先完成 P1–P3 重点标注，TypeScript/Vite 构建通过；后续图示精修结束后统一检查真实渲染。
