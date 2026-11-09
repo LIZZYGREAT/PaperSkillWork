@@ -625,14 +625,6 @@ export function PromptTuning() {
   return <>
     <p className="lesson-lead">P3 的对照说明：即使 Transformer 参数固定，额外 Token 仍能改变它的输出。接下来要问的是，这个 Token 能否从给定向量变成可学习参数，让任务损失告诉我们该怎样调整？这就是 <Term id="prompt-tuning">Prompt Tuning</Term> 要追踪的训练入口。</p>
 
-    <div className="p4-opening-bridge" role="group" aria-label="从 P3 的输入影响过渡到 P4 的 Prompt 学习问题">
-      <div><small>P3 已观察到</small><strong>固定 θ</strong><span>计算仍会运行</span></div>
-      <span className="p4-bridge-link" aria-hidden="true" />
-      <div><small>改变输入</small><strong>加入 Token</strong><span>输出表示随之改变</span></div>
-      <span className="p4-bridge-link" aria-hidden="true" />
-      <div className="p4-opening-bridge__question"><small>P4 接着追问</small><strong>让 Prompt 可学习</strong><span>损失能否更新它？</span></div>
-    </div>
-
     <section className="explain-section">
       <h3>Prompt 是加在图像序列前端的一组向量</h3>
       <p>沿用 P2 得到的图像嵌入 <math><msub><mi>x</mi><mi>e</mi></msub></math>，把同一组可学习的 <Term id="prompt-token">Prompt Token</Term> 接到序列前端。<math><msub><mi>L</mi><mi>p</mi></msub></math> 表示 Prompt 位置数，<math><mi>L</mi></math> 表示图像 Token 数，<math><mi>D</mi></math> 是每个位置的向量宽度；拼接增加位置，不改变宽度。</p>
@@ -640,16 +632,29 @@ export function PromptTuning() {
         <math display="block"><mi>P</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>L</mi><mi>p</mi></msub><mo>×</mo><mi>D</mi></mrow></msup><mo>,</mo><msub><mi>x</mi><mi>p</mi></msub><mo>=</mo><mo>[</mo><mi>P</mi><mo>;</mo><msub><mi>x</mi><mi>e</mi></msub><mo>]</mo></math>
         <math display="block"><msub><mi>x</mi><mi>p</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mo>(</mo><msub><mi>L</mi><mi>p</mi></msub><mo>+</mo><mi>L</mi><mo>)</mo><mo>×</mo><mi>D</mi></mrow></msup><mo>,</mo><mi>H</mi><mo>=</mo><msub><mi>f</mi><mi>r</mi></msub><mo>(</mo><msub><mi>x</mi><mi>p</mi></msub><mo>)</mo></math>
       </div>
-      <div className="p4-sequence-assembly" role="group" aria-label="在图像 Token 序列前插入两个 Prompt 位置">
-        <div className="p4-sequence-row">
-          <span className="p4-sequence-label">P2 图像序列</span>
-          <div className="p4-sequence-tokens p4-sequence-tokens--image"><i>[CLS]</i><i>Patch</i><b>…</b><i>Patch</i></div>
-          <small>L × D</small>
+      <div className="p4-specimen-board" role="group" aria-label="Prompt 参数与固定图像 Token 组成的输入序列">
+        <div className="p4-specimen-source p4-specimen-source--prompt">
+          <div className="p4-specimen-source__heading"><strong>可学习前缀 P</strong><span>训练时写入</span></div>
+          <div className="p4-vector-specimens">
+            {P4_TOY_EXPERIMENT.prompt.map((vector, index) => <div className="p4-vector-specimen" key={index}>
+              <b>P<sub>{index}</sub></b><code>{pairText(vector)}</code><span>Prompt</span>
+            </div>)}
+          </div>
         </div>
-        <div className="p4-sequence-row p4-sequence-row--inserted">
-          <span className="p4-sequence-label">接入同一组 P</span>
-          <div className="p4-sequence-tokens"><i>P₀</i><i>P₁</i><span>+</span><i>[CLS]</i><i>Patch</i><b>…</b><i>Patch</i></div>
-          <small>(Lₚ + L) × D</small>
+        <div className="p4-specimen-source p4-specimen-source--image">
+          <div className="p4-specimen-source__heading"><strong>固定图像 Token xₑ</strong><span>沿用 P2 的嵌入</span></div>
+          <div className="p4-vector-specimens">
+            {P4_TOY_EXPERIMENT.imageTokens.map((vector, index) => <div className="p4-vector-specimen" key={index}>
+              <b>{index === 0 ? "[CLS]" : "Patch₁"}</b><code>{pairText(vector)}</code><span>图像</span>
+            </div>)}
+          </div>
+        </div>
+        <div className="p4-sequence-specimen">
+          <strong>xₚ</strong>
+          <div className="p4-sequence-specimen__slots" aria-label="P0、P1、CLS、Patch1 的顺序">
+            <span>P₀</span><span>P₁</span><i aria-hidden="true" /><span>[CLS]</span><span>Patch₁</span>
+          </div>
+          <code>(Lₚ + L) × D = 4 × 2</code>
         </div>
       </div>
       <p>在 P2 的 ViT-B/16 参照中，图像序列为 <span className="lesson-number">197</span>×<span className="lesson-number lesson-number--width">768</span>；加两枚 Prompt Token 后成为 199×768。下面的教学 Trace 缩到 Lₚ=2、L=2、D=2，让每个参数的变化都能读出来。P₀、P₁ 是同一组 Prompt 的两个位置；Prompt Pool 的检索留到 P5。</p>
@@ -666,13 +671,31 @@ export function PromptTuning() {
           <math display="block"><mi>z</mi><mo>=</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>)</mo><mo>,</mo><msub><mi>ℒ</mi><mtext>cls</mtext></msub><mo>=</mo><mi mathvariant="normal">CE</mi><mo>(</mo><mi>z</mi><mo>,</mo><mi>y</mi><mo>)</mo></math>
         </div>
       </div>
-      <ol className="p4-forward-map" aria-label="冻结前向到损失的阅读顺序">
-        <li><span>01</span><strong>[P; xₑ]</strong><small>一起进入序列</small></li>
-        <li><span>02</span><strong>冻结 fᵣ</strong><small>仍逐层计算</small></li>
-        <li><span>03</span><strong>Hₚ₀、Hₚ₁</strong><small>保留 Prompt 位置</small></li>
-        <li><span>04</span><strong>h → z</strong><small>读出并分类</small></li>
-        <li><span>05</span><strong>CE(z, y)</strong><small>与标签比较</small></li>
-      </ol>
+      <div className="p4-readout-confluence" role="group" aria-label="两个 Prompt 位置的输出汇成读出向量，再进入分类头与交叉熵">
+        <div className="p4-readout-source">
+          <div className="p4-readout-source__heading">冻结前向的 Prompt 输出</div>
+          {P4_TRAINING_TRACE.initial.promptOutputs.map((vector, index) => <div className="p4-output-specimen" key={index}>
+            <strong>H<sub>P{index}</sub></strong><code>{pairText(vector)}</code>
+          </div>)}
+        </div>
+        <svg className="p4-readout-converge" viewBox="0 0 110 180" aria-hidden="true">
+          <path d="M 2 44 C 42 44, 50 90, 106 90 M 2 136 C 42 136, 50 90, 106 90" />
+          <circle cx="106" cy="90" r="4" />
+        </svg>
+        <div className="p4-readout-pool">
+          <span>均值读出</span>
+          <strong>h</strong>
+          <code>{pairText(P4_TRAINING_TRACE.initial.promptReadout)}</code>
+        </div>
+        <div className="p4-readout-classifier">
+          <div className="p4-classifier-stamp"><strong>gφ</strong><span>可训练分类头</span></div>
+          <div className="p4-loss-stamp">
+            <span>标签 y={P4_TOY_EXPERIMENT.label} · Logits z</span>
+            <code>{pairText(P4_TRAINING_TRACE.initial.logits)}</code>
+            <strong>CE = {number(P4_TRAINING_TRACE.initial.loss)}</strong>
+          </div>
+        </div>
+      </div>
       <p>这里的两个位置平均是为了把 Prompt 输出与分类损失连成一条可复算的教学路径；完整 L2P 对检索所得 Prompt 的分类读出会在 P6 展开。</p>
     </section>
 

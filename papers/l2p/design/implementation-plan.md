@@ -464,3 +464,9 @@ SOURCE_BUILD=PASS：TypeScript + Vite 6.4.3，72 modules。正式视觉 runner �
 为每段推理增加对应的小型视觉支撑：P3→P4 节点过渡、图像 Token 前缀插入示意、前向节点顺序、反向梯度阶梯、更新后同图复算时间轴、共享参数干扰分支图。阶段控制改为连续时间轴式导航；舞台前增加观看提示。文字层级使用项目普通正文 17px/1.8，计算公式保持 22–28px，阶段提示 15px，辅助说明不低于 14px；沿用 Prompt 紫色、冻结计算蓝灰、训练目标琥珀色。移除顶部“固定 xₑ”重复标签，保留正文中同图复算所需的固定输入说明；移除重复的 P5 过渡问句。滚动定位为桌面与手机固定导航留出空间。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。Edge 实际视口截图检查 P4 桌面 1440×900 与手机 390×844 的开场、主舞台、梯度路径、更新复算及 P5 交接；浏览器错误 0，根文档宽度分别等于视口宽度，没有横向溢出。截图保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-logic-review/`，已逐张查看。`HUMAN_ACCEPTANCE=PENDING`；`FULLSCREEN_REAL=NOT_RUN`（固定视口，不代表真实 F11）。P1–P3 源码未修改。
+
+### P4 教学视觉多元化 · 输入标本与读出汇聚（2026-11-10）
+
+用户指出上一轮的辅助表达仍然重复流程轴和节点卡，需增加与知识对象匹配的视觉形式。本部分移除开场三节点桥接和五步前向轨道：Prompt 与图像 Token 改为真实数值组成的输入标本板，拼接结果用分段序列带表达；前向读出改为两个 Prompt 输出汇聚到均值向量，再进入分类头与 CE 的收敛构图。所有向量、Logits、损失均读取同一 P4 Trace，主舞台的动画次序和算法没有改动。
+
+SOURCE_BUILD=PASS：`npm.cmd run build`，TypeScript + Vite 6.4.3，72 modules。首轮 Visual QA runner 未进入页面：报告 `PaperSkillWork/.visual-qa/run-2026-11-09T16-41-14-813Z/` 显示本机 `127.0.0.1:4174` ready 探测失败；Node 本地 fetch 返回 EACCES。该报告不作为页面通过证据，完整视觉复核留待本轮最终页面与获准的本机浏览器路径。
