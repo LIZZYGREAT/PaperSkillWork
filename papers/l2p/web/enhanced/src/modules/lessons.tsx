@@ -1,6 +1,6 @@
-import { TaskTimeline, InterferenceFishbone, OldImageReading, BackboneHandoff, ViTReadingMap, PixelFeatureCompare, EncoderReading } from "./reading-visuals";
+import { TaskTimeline, InterferenceFishbone, OldImageReading, BackboneHandoff, ViTReadingMap, PixelFeatureCompare, EncoderReading, QKVBranch, ResidualReading, LearnableInputHandoff } from "./reading-visuals";
 import { Fragment } from "react";
-import { ProjectionFormula, SoftmaxFormula, Sub, Tuple } from "./lesson-math";
+import { SoftmaxFormula, Sub, Tuple } from "./lesson-math";
 import { useState } from "react";
 import { Term } from "../shared/core/reference/ReferenceHub";
 
@@ -186,12 +186,8 @@ export function EncoderAttention() {
 
       <h3 className="detail-title">一个位置如何读取整串 Token？</h3>
       <p className="lesson-prose">假设正在更新 [CLS]：它需要决定从每个来源位置读取多少信息。Attention 为每个 Token 生成三种向量，Query（Q）参与目标匹配，Key（K）提供来源的匹配表示，Value（V）提供实际汇聚的内容。来源也包含目标自身。</p>
-      <p className="lesson-prose">这三种向量都从当前输入计算出来。记归一化后的 LN(Z) 为 X，通过 <ProjectionFormula symbol="Q" />、<ProjectionFormula symbol="K" /> 和 <ProjectionFormula symbol="V" /> 得到它们。同一个 Head 的三组投影矩阵在所有位置共享。这里的 Key 属于 Transformer 内部 Attention；P5 的池检索 Key 将承担另一种用途。</p>
-      <div className="reading-roles" role="group" aria-label="自注意力中 Q、K、V 的分工">
-        <div><strong className="reading-role--query">Q · 目标</strong><span>目标位置提出匹配需求</span></div>
-        <div><strong className="reading-role--key">K · 来源</strong><span>各位置提供可比较的表示</span></div>
-        <div><strong className="reading-role--value">V · 内容</strong><span>按匹配权重汇总到输出</span></div>
-      </div>
+      <p className="lesson-prose">这三种向量都从归一化后的输入 X 计算出来。同一个 Head 的三组投影矩阵在所有位置共享。这里的 Key 属于 Transformer 内部 Attention；P5 的池检索 Key 将承担另一种用途。</p>
+      <QKVBranch />
       <p className="lesson-prose">选定目标 i 后，用它的 <LessonVar base="q" index="i" /> 与各来源 <LessonVar base="k" index="j" /> 点积，并除以 Key 维度 <LessonVar base="d" index="k" /> 的平方根，得到匹配分数 <LessonVar base="s" index="ij" />。Softmax 将这一行分数归一化为总和为 1 的权重 <LessonVar base="a" index="ij" />，再把各来源 <LessonVar base="v" index="j" /> 按权重相加，形成目标的 Head 输出 <LessonVar base="o" index="i" />。</p>
       <div className="attention-rule" role="group" aria-label="一个目标位置从匹配到汇聚的计算">
         <div><span>匹配来源</span><math><Sub base="s" index="ij" /><mo>=</mo><mfrac><mrow><Sub base="q" index="i" /><mo>·</mo><Sub base="k" index="j" /></mrow><msqrt><Sub base="d" index="k" /></msqrt></mfrac></math></div>
@@ -243,11 +239,7 @@ export function EncoderAttention() {
           <figcaption>多头改变每个位置的特征，序列顺序仍保留。Block 的输出进入下一层，同一位置可以继续吸收上下文。</figcaption>
         </figure>
       </section>
-      <section className="explain-section">
-        <h3>把多头结果接回 Block</h3>
-        <p>回到开头的两式：第一条残差将 Z 与 MSA 输出逐位置相加，得到 U，保留原表示并加入本次读取的信息。LayerNorm 在每个位置内归一化特征，为接下来的子层计算准备输入。</p>
-        <p>随后 FFN 对每个位置的向量做非线性变换，继续加工内部特征；跨位置的信息读取已经由 Attention 完成。第二条残差把 FFN 输出与 U 相加，得到 Z′。这条更新后的序列进入下一层，沿同样的路径继续计算。</p>
-      </section>
+      <ResidualReading />
       <section className="explain-section">
         <h3>同一组权重遇到不同输入，会怎样？</h3>
         <p>冻结网络会固定投影矩阵和 FFN 等参数，当前输入仍会参与 Q/K/V 和后续输出的计算。下面保留三个基础 Token 与相同投影权重，在第二条序列加入一个额外 Token，比较同一目标的 Head 输出。</p>
@@ -269,10 +261,7 @@ export function EncoderAttention() {
           <figcaption>两条序列复用上方二维示例的计算函数。目标选择与额外 Token 开关会同步更新两处演示，并重置局部播放。<Term id="attention" /> 中附有归一化说明。</figcaption>
         </figure>
       </section>
-      <section className="explain-section">
-        <h3>这个额外 Token，能学出来吗？</h3>
-        <p>刚才只加入一个给定向量，固定网络的输出就发生了变化。如果让这个向量通过训练调整，能否使它带来更适合当前任务的特征？P4 将把这个想法变成可学习的 Prompt，沿分类损失追踪它如何更新。</p>
-      </section>
+      <LearnableInputHandoff />
     </>
   );
 }

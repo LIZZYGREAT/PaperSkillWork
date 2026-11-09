@@ -61,7 +61,7 @@ export function PixelFeatureCompare() {
     </div>
     <div className="projection-link"><span>共享线性投影</span><math><mi>z</mi><mo>=</mo><mi>x</mi><mi>W</mi><mo>+</mo><mi>b</mi></math><small>映射到新的特征坐标</small></div>
     <div className="coordinate-board coordinate-board--feature">
-      <div className="coordinate-board__visual" aria-hidden="true"><VectorGlyph /><span className="coordinate-ribbon">z₁ · z₂ · z₃ · …</span></div>
+      <div className="coordinate-board__visual" aria-hidden="true"><VectorGlyph /><span className="coordinate-ribbon"><math><Sub base="z" index={1} /><mo>,</mo><Sub base="z" index={2} /><mo>,</mo><Sub base="z" index={3} /><mo>,</mo><mo>…</mo></math></span></div>
       <h4>投影：从像素坐标到特征坐标</h4><p>本配置输出宽度也为 768。维数相等，表示的含义已经改变；其他配置可用不同宽度。</p>
     </div>
   </div>;
@@ -72,7 +72,7 @@ export function EncoderReading() {
     <div className="encoder-reading__row">
       <div><h3>位置保留，表示逐层更新</h3><p>回到总览中的 Encoder 堆叠：每个 Block 接收前一层的整条序列，保留位置顺序与向量宽度，更新各位置内部的特征。后一层接着处理这些输出，各位置逐渐携带其他区域的信息。</p></div>
       <div className="layer-relay" aria-label="同一位置的表示经过连续三层 Encoder 更新">
-        {["Block 1", "Block 2", "Block 3"].map((label,i)=><div key={label}><b>{label}</b><div><span className="token special">CLS</span><VectorGlyph kind={i===0?'pixel':'token'} /><VectorGlyph /></div><small>整条序列传给下一层</small></div>)}
+        {["Block 1", "Block 2", "Block 3"].map(label=><div key={label}><b>{label}</b><div><span className="token special">CLS</span><VectorGlyph kind="token" /><VectorGlyph /></div><small>整条序列传给下一层</small></div>)}
       </div>
     </div>
     <div className="encoder-reading__row encoder-reading__row--reverse">
@@ -80,5 +80,32 @@ export function EncoderReading() {
       <div><h3>从序列中读出整图特征</h3><p>普通 ViT 分类通常读取末层 [CLS] 表示，再交给分类头。后面的 L2P 会用无 Prompt 的 [CLS] 特征做检索，并从带 Prompt 序列的另一组输出位置读取分类特征；P5–P6 将沿实际路径展开。</p></div>
     </div>
   </section>;
+}
+
+export function QKVBranch() {
+  return <div className="qkv-branch" role="group" aria-label="归一化输入通过共享投影生成 Query、Key、Value">
+    <div className="qkv-origin"><VectorGlyph /><math><mi>X</mi><mo>=</mo><mrow><mi mathvariant="normal">LN</mi><mo>(</mo><mi>Z</mi><mo>)</mo></mrow></math><span>同一条输入序列</span></div>
+    <svg viewBox="0 0 1000 80" preserveAspectRatio="none" aria-hidden="true"><path d="M500 0V30M165 80V30H835V80M500 30V80" /></svg>
+    <div className="qkv-branches">{[
+      {symbol:'Q',title:'目标的匹配向量',text:'选定位置取出一个 Query，用它读取整条序列。'},
+      {symbol:'K',title:'来源的匹配表示',text:'每个来源都有 Key，用于与目标 Query 计算分数。'},
+      {symbol:'V',title:'来源的汇聚内容',text:'每个来源的 Value 按分配到的权重进入输出。'},
+    ].map(item=><div className={'qkv-card qkv-card--'+item.symbol.toLowerCase()} key={item.symbol}><math><mi>{item.symbol}</mi><mo>=</mo><mi>X</mi><Sub base="W" index={item.symbol} /></math><h4>{item.title}</h4><p>{item.text}</p></div>)}</div>
+  </div>;
+}
+
+export function ResidualReading() {
+  return <section className="residual-reading" aria-label="Attention 结果经两条残差路径交给下一层">
+    <h3>把多头结果接回 Block</h3>
+    <div className="residual-reading__row"><div><h4>先加回原输入</h4><p>第一条残差将 Z 与 MSA 输出逐位置相加，得到 U，保留原表示并加入本次读取的信息。</p></div><div className="residual-equation"><span>第一处交接</span><math><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mtext>多头注意力输出</mtext></math><small>原表示 + 跨位置汇聚结果</small></div></div>
+    <div className="residual-reading__row residual-reading__row--reverse"><div className="residual-equation"><span>第二处交接</span><math><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mtext>FFN 输出</mtext></math><small>整条输出序列交给下一层</small></div><div><h4>再加工每个位置的内部特征</h4><p>U 经 LayerNorm 归一化后进入 FFN，逐位置做非线性变换；第二条残差再将结果与 U 相加，得到 Z′。跨位置读取由 Attention 完成，FFN 继续加工读入的特征。</p></div></div>
+  </section>;
+}
+
+export function LearnableInputHandoff() {
+  return <div className="learnable-handoff">
+    <div><h3>这个额外 Token，能学出来吗？</h3><p>刚才只加入一个给定向量，固定网络的输出就发生了变化。如果让这个向量通过训练调整，能否带来更适合当前任务的特征？</p><p>P4 将把它变成可学习的 Prompt，沿分类损失追踪更新过程。</p></div>
+    <div className="learnable-object"><span className="token traced-token">额外 Token</span><span className="learnable-object__line" /><div><VectorGlyph /><b>向量的取值也可以学习</b></div><small>下一页开始训练，主干权重继续保持固定</small></div>
+  </div>;
 }
 
