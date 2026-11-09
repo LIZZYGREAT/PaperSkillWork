@@ -370,3 +370,17 @@ VISUAL_REVIEW：已查看 P1–P3 两种桌面尺度的整页、时间轴、完�
 ### 重点层次与视觉精修（2026-11-09）
 
 本轮保留已确认的结构、因果链、正文容器与计算。正文采用少量短语强调：绿色标记核心对象/机制，琥珀色标记约束与风险，砖红细下划线标记推断边界；数字含义用字重与蓝色区分。每段只选择一至两个关键词组，避免整句涂色。新增 lesson-key 属于共用正文的语义强调样式，不改变字号、行高或正文宽度。先完成 P1–P3 重点标注，TypeScript/Vite 构建通过；后续图示精修结束后统一检查真实渲染。
+
+图示精修保留当前构图，细化同一视觉语言：时间轴用浅绿/淡金/冷灰蓝区分两个训练阶段与统一测试，大号 θ 快照符号和选中节点双环保留真实阶段身份；鱼骨图以绿/金/砖红分支、条件线性图标、轻量结论面板建立层次。根据用户补充，对线条本身加入浅色衬轨、圆角汇入、节点套环、支线端点与小型方向记号；旧图访问受限的分支使用虚线，与其图标一致，完整主轴始终连续。Q/K/V 分叉同样采用圆角连线与汇合节点；展平/投影卡片强化字体层级与暖冷表面，残差卡片细化边线。未改变六个保护动画组件、attention()、正文容器或页间顺序。
+
+本轮最终验证：
+- SOURCE_BUILD=PASS：npm.cmd --prefix papers/l2p/web/enhanced run build，TypeScript + Vite 6.4.3，71 modules；最终资源 index-DWOWqRf-.js / index-B7Aqxmje.css。
+- UPSTREAM_SYNTAX=PASS / UPSTREAM_OUTPUT=PASS：直接执行同会话已核实 revision/blob 的官方 syntax-check.js <源码绝对路径> --require-parser、validate-output.js <源码绝对路径>，38 个源文件、9 个模块通过，退出 0。Impeccable detect 返回 []。
+- ROOT_PROSE_REGRESSION=PASS / SUBPATH_ASSETS=PASS：npm.cmd --prefix papers/l2p/web/enhanced run check:reading -- <reading-polish证据目录>，P1–P9 在 1440×900、1920×1080、DPR 1 的正文宽度/字体/行高、MathML、公式卡片几何、前向对照与资源响应通过；P1–P3 快照/Patch/Attention/多头状态保持正常。
+- MOBILE_TARGETED=PASS：同一命令增加 --mobile，P1–P3 的 390×844 窄屏布局与交互通过。此检查由本轮卡片、轴线的窄屏样式变更触发。
+- 正式 runner：PAPERWORK_PLAYWRIGHT_EXECUTABLE=<系统Edge> node tools/visual-qa/cli.mjs --config .visual-qa/l2p-polish.json，报告 run-2026-11-09T09-24-42-393Z；P1–P3 的 14 个桌面截图全部几何/样式/浏览器检查通过，0 warning、0 browser error。
+- 近景与文字检查：node .visual-qa/polish-details.mjs；查看时间轴、鱼骨图、正文重点、坐标卡片、Q/K/V 和 Attention 计算轴截图。被标记段落最大强调比例 P1=27.3%、P2=10.3%、P3=11.4%，没有整句高亮。绿色、琥珀色、砖红、蓝色与鱼骨图图注的实际色值对比度分别为 8.02、4.78、5.94、6.64、4.80，均高于 4.5。未见正文宽度回退、公式裁切、控件挤压或装饰遮挡内容。
+- 代表证据：C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/reading-polish/，包含 P1-timeline-detail.png、P1-fishbone-detail.png、P1-keywords-detail.png、P2-coordinates-detail.png、P3-qkv-detail.png、P3-rules-detail.png，以及九页两种桌面布局、mobile/ 和 JSON 检查记录。证据为本轮最终生产构建的真实截图，保留供复核。
+- FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless Edge，没有桌面 F11）。人工 W7/W9 仍 PENDING，未改阶段状态或发布。
+
+清理：本轮 runner 确切目录返回 CLEANED 且 Test-Path=False；任务专用临时配置及近景脚本已按核实的绝对路径删除。原生截图/JSON 作为交付证据保留于 reading-polish/。任务启动的预览服务均正常退出；任务开始前的 package-lock.json 改动不纳入提交。
