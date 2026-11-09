@@ -402,3 +402,13 @@ SOURCE_BUILD=PASS：npm.cmd --prefix papers/l2p/web/enhanced run build，71 modu
 P2：沿真实计算链标注视觉 Transformer、Patch、展平、线性投影、Patch Token、位置向量、[CLS]、Encoder/Block 与分类头；首次术语使用少量放大衬线/英文斜体，空间表征使用蓝色，运算保持绿色，[CLS] 沿用图中的琥珀色。197 与 768 在说明段中作为两个字号放大的数字锚点，分别连接序列长度与向量宽度。问题标题只强调“向量”“197”等局部；段落宽度与正文基准不改。P2 构建通过，继续完成 P3 后统一复核。
 
 P3：首次机制名的放大衬线强调扩展到 Block、层归一化、多头自注意力、前馈神经网络、Q/K/V、Softmax、拼接、输出投影、非线性变换、冻结网络与前向计算。Query/Key/Value 用与分支卡对应的蓝/绿/紫区分，英文术语适度使用衬线斜体；Z/U/Z′ 的正文定义使用局部放大的原生 MathML，不改主公式及其基线。问题标题只强调读取/汇回/不同输入等局部动作。P3 构建通过，接下来进行三页整体验证。
+
+本轮整体验证：SOURCE_BUILD=PASS，npm.cmd --prefix papers/l2p/web/enhanced run build（TypeScript + Vite 6.4.3，71 modules，最终 index-DWDIOETl.js / index-DNpR3W0l.css）。同会话已核实的官方 syntax-check.js --require-parser、validate-output.js 对最终源码检查通过，38 个源文件、9 个模块，UPSTREAM_SYNTAX/UPSTREAM_OUTPUT=PASS。Impeccable detect 返回 []。
+
+ROOT_PROSE_REGRESSION=PASS、SUBPATH_ASSETS=PASS：npm.cmd --prefix papers/l2p/web/enhanced run check:reading -- <typography-p1-p3证据目录>；P1–P9 的 1440×900、1920×1080、DPR 1 正文容器宽度/基准字号/行高、MathML、P3 两式基线、公式卡片与关键交互/数值通过。新增局部字体没有改变普通正文的 17px / 1.8 约定。P1–P3 的 390×844 专项（同入口追加 --mobile）通过，数字锚点和放大术语未造成横向溢出。
+
+近景审核：node .visual-qa/typography-details.mjs 记录三页所有带强调段落的文本比例，P1 最大 27.3%、P2 最大 21.0%、P3 最大 18.8%（包含字重、色标、放大术语、数字和符号），没有整句全部突出。普通正文首讲术语实测 19.04–19.55px，导语中的术语约 21–22px；197/768 为 28.05px，Z/U/Z′ 为 22.1px。已逐页查看桌面整页和近景、窄屏维度说明：主次层次来自少量重要对象的字体差异，避免每句都放大。近景截图改为按真实顶栏高度避让；原固定 110px 在窄屏会遮住截图顶部，属于截图定位问题，已将同样的动态避让修复应用于永久回归脚本。
+
+证据保留于 C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/typography-p1-p3/：P1-1440-lead-detail.png、P1-1440-reasoning-detail.png、P2-1440-mechanisms-detail.png、P2-1440-dimensions-detail.png、P3-1440-core-terms-detail.png，以及三页整页、两种桌面/窄屏 JSON 与字体指标。六个保护主动画和 attention() 无修改，既有公式对齐保持正确。FULLSCREEN_LAYOUT=PASS，FULLSCREEN_REAL=NOT_RUN（headless Edge）；人工教学验收与工作流阶段未变。
+
+本轮未创建 runner run 目录。任务专用 typography-details.mjs 在截图/指标审阅后按确切路径清理，原生截图和 JSON 保留供交付；临时检查服务器已关闭。既有 package-lock.json 改动未纳入提交。

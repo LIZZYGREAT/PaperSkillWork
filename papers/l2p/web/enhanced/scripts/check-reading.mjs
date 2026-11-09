@@ -86,7 +86,7 @@ try {
       await page.screenshot({ path: path.join(output, `P${index}-${width}-full.png`), fullPage: true });
       if (index === 3) {
         for (const [name, locator] of [['block-formulas', page.locator('.block-equations')], ['core-terms', page.locator('.lesson-copy > .lesson-prose').first()]]) {
-          await locator.evaluate(node => window.scrollTo(0, node.getBoundingClientRect().top + scrollY - 110));
+          await locator.evaluate(node => window.scrollTo(0, node.getBoundingClientRect().top + scrollY - document.querySelector(".site-header").getBoundingClientRect().height - 20));
           await locator.screenshot({ path: path.join(output, `P3-${width}-${name}.png`) });
         }
       }
@@ -110,7 +110,7 @@ try {
       }
       if (index <= 3) {
         const selector = index === 1 ? '.interference-fishbone' : index === 2 ? '.pixel-feature-compare' : '.qkv-branch';
-        await page.locator(selector).evaluate(node => window.scrollTo(0, node.getBoundingClientRect().top + scrollY - 110));
+        await page.locator(selector).evaluate(node => window.scrollTo(0, node.getBoundingClientRect().top + scrollY - document.querySelector(".site-header").getBoundingClientRect().height - 20));
         await page.locator(selector).screenshot({ path: path.join(output, `P${index}-${width}-reading-design.png`) });
         await page.screenshot({ path: path.join(output, `P${index}-${width}-interaction.png`), fullPage: true });
       }
