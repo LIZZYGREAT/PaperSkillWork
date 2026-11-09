@@ -15,7 +15,7 @@ export const tutorial: TutorialData = {
     },
     {
       kind: "chapter", id: "p3", title: "打开一层 Encoder，追踪 Token 如何交换信息", titleHighlight: "交换信息",
-      summary: "在一层 Transformer 中，Token 可以读取其他位置的信息。沿着一条注意力计算路径，看看冻结的网络如何响应新输入。",
+      summary: "从一层 Block 的运算地图进入 Q/K/V、权重和 Value 汇聚，再接回多头、残差与 FFN，最后比较固定权重如何响应新的输入。",
       modules: [{ kind: "module", id: "encoder", title: "一层 Transformer 的前向路径", componentId: "encoder-attention" }],
     },
     {

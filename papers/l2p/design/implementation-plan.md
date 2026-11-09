@@ -317,3 +317,16 @@ P1：补全顺序数据、旧数据访问限制、共享参数干扰、固定旧
 保护基线：runner 首次受沙箱本地连接限制，第二次发现未安装 Playwright Chromium；改用系统 Edge 后成功。基线报告 run-2026-11-09T08-18-12-261Z 覆盖 P1 双快照、P2 默认 Patch、P3 基础/额外 Token（1440×900、1920×1080），已查看三页默认截图。真实 F11 与人工学习验收尚未执行。
 
 P2：补全总览前的 fₑ→fᵣ→分类路线、Patch/投影的必要性、位置向量与 [CLS]、示例维度含义和层间传递；区分普通 ViT 与后续 L2P 的读出用途。页末用 Patch A 如何读取 Patch B 引向 P3。PatchMotion、选块与编号逻辑未改。npm.cmd run build 通过；Edge QA run-2026-11-09T08-22-47-100Z 的 4 个截图（两种桌面布局、默认/第196块投影终态）几何与浏览器检查通过；已查看 1440 终态、1920 默认整页，未见新增溢出或控件遮挡。
+
+P3 与后续补充要求：正文先解释 Pre-LN 顺序和 Z/U/Z′，沿单目标 Q/K/V、缩放点积、Softmax、Value 加权、多头合并回到残差与 FFN，再比较固定投影与变化输入。保留同一个 attention() 计算函数；[CLS] 基础输出 [0.856,1.436] 与新增 Token 输出 [1.472,2.279] 经浏览器实际断言确认。额外 Token 的训练问题留给 P4。
+
+按用户跟进要求，用不同形式引导：P1 的共享参数因果链与自然段结尾，P2 的局部 Patch→上下文表示缺口图，P3 的三段计算关系与实验后的训练问题。移除统一 Takeaway 包装，新增 CSS 仅作用于这三类轻量阅读图；没有重做主动画。六个受保护组件 classifier-motion、patch-motion、attention-motion、head-merge-motion、vit-visuals、lesson-playback 与基线无差异。文案避免“不是……而是……”句式。
+
+最终验证（代码版本 index-Crva6VgK.js / index-B75N7Hn6.css）：
+- SOURCE_BUILD=PASS：publish_source 为 paths l2p --json 返回的 enhanced 绝对路径；npm.cmd run build，TypeScript + Vite 6.4.3，69 modules，退出 0。
+- UPSTREAM_SYNTAX=PASS / UPSTREAM_OUTPUT=PASS：Node v24.18.0；相邻 PaperSkill HEAD 4da910afe9054d3a6ff54003023d53ec3de44ac9，官方 upstream 为 git@github.com:ReductTech/PaperSkill.git。fetch upstream main 成功，最新 f73c7e50f043317181161fba5cc446424bb564e0；两个实际检查器 blob 分别为 2bcfa6f815054ee498574c51cef05f0c315b4298、9ec76b6974f262fca7b9611c4a485dd2275fe76c，与已 fetch 的 upstream/main 完全一致。直接执行 syntax-check.js <绝对源码目录> --require-parser 与 validate-output.js <绝对源码目录>，均退出 0，无占位/注册警告。
+- SUBPATH_ASSETS=PASS：Vite base='./'，检查 dist/index.html 引用的本次 JS/CSS；生产产物暂存于任务独有 .visual-qa/l2p-copy-stage/papers/learning-to-prompt/qa-preview/。运行 PAPERWORK_PLAYWRIGHT_EXECUTABLE=<系统 Edge> node tools/visual-qa/cli.mjs --config .visual-qa/l2p-final-config.json；报告 run-2026-11-09T08-29-01-925Z，28 captures 的 actualUrl 均在预期非根路径，页面/同源资源错误为 0。Python 静态服务的浏览器默认 /favicon.ico 请求返回 404，不影响教程内引用资源。
+- GEOMETRY_QA=PASS，FULLSCREEN_LAYOUT=PASS：Edge 157.0.4341.42，1440×900 / 1920×1080、DPR 1；P1 双快照、播放中间及返回，P2 默认/第196块终态/第1块投影中间态，P3 默认/额外 Token/目标 B/Softmax/Value 汇聚中间态/多头合并及终态。已查看三页整页、1440 的新增小图与公式、P3 对照及多头终态、1920 P1/P3 初态和 1440 投影/汇聚/合并中间态。未见新增溢出、公式裁切或控制区挤压；runner 仍报告 P2 原有六个 Block 堆叠标签 11px，随后做局部字号修复复测。
+- INTERACTIONS=PASS：node .visual-qa/l2p-interactions.mjs，真实 DOM 操作断言 P1 播放/暂停/复位、快照；P2 Patch196 行列与 data-token-index=195；P3 两组输出、四行来源、目标 B、步骤跳转与复位，零 pageerror。原生截图保留在 C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522：P1-snapshot2.png、P1-parameter-cause.png、P2-patch196.png、P2-sequence.png、P2-to-P3.png、P3-attention-rule.png、P3-attention-extra.png、P3-frozen-compare.png、P3-head-output.png，供复核。
+- Impeccable detect --json lessons.tsx tutorial.ts paper.css 返回 []。
+- FULLSCREEN_REAL=NOT_RUN：本轮使用 headless Edge，未操作桌面 F11。STYLE_QA 自动断言与获批像素基线对比=NOT_RUN（本轮配置未声明）；Agent 已进行上述截图视觉复核。W7/W9 人工教学验收 PENDING，无工作流阶段变更或正式发布。

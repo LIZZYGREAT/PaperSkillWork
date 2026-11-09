@@ -466,3 +466,36 @@
 }
 .flatten-range { left: 5.5%; top: 10%; }
 .flatten-caption { left: 5.5%; top: 82%; }
+
+/* Small reading diagrams connect causes and computations without changing the labs. */
+.parameter-cause, .attention-rule {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  margin-block: 24px;
+  max-width: 68rem;
+}
+.parameter-cause > span { padding-block: 12px; border-bottom: 1px solid var(--rk-line-strong); }
+.parameter-cause > span:nth-of-type(2) { color: var(--rk-accent-strong); }
+.parameter-cause small, .context-bridge small { display: block; margin-top: 6px; color: var(--rk-muted); font-size: 14px; }
+.attention-rule > div { display: grid; gap: 12px; justify-items: start; min-width: 0; }
+.attention-rule > div > span { color: var(--rk-muted); font-size: 14px; }
+.attention-rule math { font-size: 21px; }
+.context-bridge {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 22px;
+  margin-top: 40px;
+  padding-block: 24px;
+  border-top: 1px solid var(--rk-line-strong);
+}
+.context-bridge__gap { display: grid; justify-items: center; gap: 10px; color: var(--rk-accent-strong); font-size: 16px; }
+.context-bridge__gap .flow-arrow { width: 56px; }
+.rk-reading .context-bridge > p { grid-column: 2 / -1; margin: 0; }
+@media (max-width: 760px) {
+  .parameter-cause, .attention-rule, .context-bridge { grid-template-columns: minmax(0, 1fr); }
+  .parameter-cause > .flow-arrow, .attention-rule > .flow-arrow, .context-bridge__gap .flow-arrow { transform: rotate(90deg); justify-self: center; }
+  .rk-reading .context-bridge > p { grid-column: 1; }
+}
