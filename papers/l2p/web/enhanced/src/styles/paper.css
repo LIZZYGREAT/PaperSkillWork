@@ -504,3 +504,11 @@
 .lesson-copy .lesson-key--caution { color: #895713; background-image: linear-gradient(transparent 64%, #f1e2c5 64%, #f1e2c5 94%, transparent 94%); }
 .lesson-copy .lesson-key--limit { color: #a1402e; background: none; text-decoration: underline; text-decoration-color: #d6a99a; text-underline-offset: .23em; text-decoration-thickness: 1px; }
 .lesson-copy .lesson-key--type { background: none; color: #315d73; font-weight: 750; font-variant-numeric: lining-nums; }
+
+/* Three levels of emphasis: quiet ink, semantic marker, expressive first-use term. */
+.lesson-copy .lesson-ink { font-weight: 700; color: var(--rk-ink); }
+.lesson-copy .lesson-term { font-family: "Cambria Math", "SimSun", "STSong", serif; font-size: 1.15em; font-weight: 700; line-height: 1; }
+.lesson-copy .lesson-term--object { color: #315d73; background-image: linear-gradient(transparent 64%, #dce8ec 64%, #dce8ec 94%, transparent 94%); }
+.lesson-copy .lesson-term--latin { font-family: "Georgia", "Cambria", serif; font-style: italic; font-size: 1.12em; }
+.lesson-copy .lesson-number { font: 600 1.65em/1 var(--rk-font-math); color: var(--rk-accent-strong); padding-inline: .08em; }
+.lesson-copy .lesson-number--width { color: #315d73; }
