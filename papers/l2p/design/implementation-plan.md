@@ -456,3 +456,11 @@ SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules�
 图内读数统一提高到至少 12px；参数前后坐标、冻结区说明、分类头说明、向量值、注意力分数和输出数值分别增大，公式和计算区注释继续提高字号。1440×900、390×844 实际视口截图使用仓库现有 Playwright 模块与系统 Edge，通过 `view_image` 逐张查看；首帧无模糊、中间帧无卡片叠压、前向第一个绿点晚于准备阶段。截图证据保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-font-review/`。
 
 SOURCE_BUILD=PASS：TypeScript + Vite 6.4.3，72 modules。正式视觉 runner 完成 112 captures（P1–P9，1440×900 与 1920×1080）；整体 GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS=PASS，浏览器错误 0；P4 无字号或几何警告。报告仅在 P2 初始与 patch196 状态列出 4 条既有 `small-semantic-text` 提示，每条涉及 3 个元素。Impeccable detector 返回 `[]`。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（headless Edge 固定视口）；P1–P3 文件无改动。
+
+### P4 教学顺序与图文讲解重构（2026-11-10）
+
+按 P1–P3 的阅读节奏重写 P4 的因果讲解：先接住 P3“固定权重仍依赖输入”的结论，再说明 Prompt 前缀与序列形状，接着交代冻结前向、Prompt 位置读出、分类头和交叉熵，然后进入同一份计算 Trace 的前向/反向舞台；舞台后依次解释梯度回流、`P` 与 `φ` 的单步 SGD、固定图像同图复算，最后以共享 Prompt 的跨任务干扰可能性自然交给 P5。教学均值读出及低维单头 Trace 继续明确标注为机制示例。
+
+为每段推理增加对应的小型视觉支撑：P3→P4 节点过渡、图像 Token 前缀插入示意、前向节点顺序、反向梯度阶梯、更新后同图复算时间轴、共享参数干扰分支图。阶段控制改为连续时间轴式导航；舞台前增加观看提示。文字层级使用项目普通正文 17px/1.8，计算公式保持 22–28px，阶段提示 15px，辅助说明不低于 14px；沿用 Prompt 紫色、冻结计算蓝灰、训练目标琥珀色。移除顶部“固定 xₑ”重复标签，保留正文中同图复算所需的固定输入说明；移除重复的 P5 过渡问句。滚动定位为桌面与手机固定导航留出空间。
+
+SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。Edge 实际视口截图检查 P4 桌面 1440×900 与手机 390×844 的开场、主舞台、梯度路径、更新复算及 P5 交接；浏览器错误 0，根文档宽度分别等于视口宽度，没有横向溢出。截图保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-logic-review/`，已逐张查看。`HUMAN_ACCEPTANCE=PENDING`；`FULLSCREEN_REAL=NOT_RUN`（固定视口，不代表真实 F11）。P1–P3 源码未修改。

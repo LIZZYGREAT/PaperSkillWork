@@ -623,16 +623,57 @@ export function PromptTuning() {
     : activePhase >= 5 ? P4_TRAINING_TRACE.updated : P4_TRAINING_TRACE.initial;
 
   return <>
-    <p className="lesson-lead">P3 已说明，固定的 Transformer 参数仍会对输入 Token 执行计算，输出也会随输入改变。P4 接着把 <Term id="prompt-token">Prompt Token</Term> 设为可学习参数；这种做法叫 <Term id="prompt-tuning">Prompt Tuning</Term>。让分类损失沿固定计算路径回传，看看更新真正落在哪里。</p>
+    <p className="lesson-lead">P3 的对照说明：即使 Transformer 参数固定，额外 Token 仍能改变它的输出。接下来要问的是，这个 Token 能否从给定向量变成可学习参数，让任务损失告诉我们该怎样调整？这就是 <Term id="prompt-tuning">Prompt Tuning</Term> 要追踪的训练入口。</p>
+
+    <div className="p4-opening-bridge" role="group" aria-label="从 P3 的输入影响过渡到 P4 的 Prompt 学习问题">
+      <div><small>P3 已观察到</small><strong>固定 θ</strong><span>计算仍会运行</span></div>
+      <span className="p4-bridge-link" aria-hidden="true" />
+      <div><small>改变输入</small><strong>加入 Token</strong><span>输出表示随之改变</span></div>
+      <span className="p4-bridge-link" aria-hidden="true" />
+      <div className="p4-opening-bridge__question"><small>P4 接着追问</small><strong>让 Prompt 可学习</strong><span>损失能否更新它？</span></div>
+    </div>
 
     <section className="explain-section">
       <h3>Prompt 是加在图像序列前端的一组向量</h3>
-      <p>沿用 P2 的图像嵌入 <math><msub><mi>x</mi><mi>e</mi></msub></math>，再把可学习的 <Term id="prompt-token">Prompt Token</Term> 接到序列前端。它们的宽度与图像 Token 相同，所以 Prompt 增加序列位置，不改变隐藏宽度 <math><mi>D</mi></math>。</p>
+      <p>沿用 P2 得到的图像嵌入 <math><msub><mi>x</mi><mi>e</mi></msub></math>，把同一组可学习的 <Term id="prompt-token">Prompt Token</Term> 接到序列前端。<math><msub><mi>L</mi><mi>p</mi></msub></math> 表示 Prompt 位置数，<math><mi>L</mi></math> 表示图像 Token 数，<math><mi>D</mi></math> 是每个位置的向量宽度；拼接增加位置，不改变宽度。</p>
       <div className="p4-shape-equations">
         <math display="block"><mi>P</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>L</mi><mi>p</mi></msub><mo>×</mo><mi>D</mi></mrow></msup><mo>,</mo><msub><mi>x</mi><mi>p</mi></msub><mo>=</mo><mo>[</mo><mi>P</mi><mo>;</mo><msub><mi>x</mi><mi>e</mi></msub><mo>]</mo></math>
         <math display="block"><msub><mi>x</mi><mi>p</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mo>(</mo><msub><mi>L</mi><mi>p</mi></msub><mo>+</mo><mi>L</mi><mo>)</mo><mo>×</mo><mi>D</mi></mrow></msup><mo>,</mo><mi>H</mi><mo>=</mo><msub><mi>f</mi><mi>r</mi></msub><mo>(</mo><msub><mi>x</mi><mi>p</mi></msub><mo>)</mo></math>
       </div>
-      <p>在 P2 的 ViT-B/16 参照中，图像序列为 <span className="lesson-number">197</span>×<span className="lesson-number lesson-number--width">768</span>；若加两枚 Prompt Token，形状成为 199×768。下面的计算 Trace 则缩到 Lₚ=2、L=2、D=2，让每个参数的变化都能被读出来。两枚 Token 是同一组 Prompt 的两个位置，Pool 检索留到 P5。</p>
+      <div className="p4-sequence-assembly" role="group" aria-label="在图像 Token 序列前插入两个 Prompt 位置">
+        <div className="p4-sequence-row">
+          <span className="p4-sequence-label">P2 图像序列</span>
+          <div className="p4-sequence-tokens p4-sequence-tokens--image"><i>[CLS]</i><i>Patch</i><b>…</b><i>Patch</i></div>
+          <small>L × D</small>
+        </div>
+        <div className="p4-sequence-row p4-sequence-row--inserted">
+          <span className="p4-sequence-label">接入同一组 P</span>
+          <div className="p4-sequence-tokens"><i>P₀</i><i>P₁</i><span>+</span><i>[CLS]</i><i>Patch</i><b>…</b><i>Patch</i></div>
+          <small>(Lₚ + L) × D</small>
+        </div>
+      </div>
+      <p>在 P2 的 ViT-B/16 参照中，图像序列为 <span className="lesson-number">197</span>×<span className="lesson-number lesson-number--width">768</span>；加两枚 Prompt Token 后成为 199×768。下面的教学 Trace 缩到 Lₚ=2、L=2、D=2，让每个参数的变化都能读出来。P₀、P₁ 是同一组 Prompt 的两个位置；Prompt Pool 的检索留到 P5。</p>
+
+      <h3>这组输入怎样走到分类损失？</h3>
+      <p>拼好的序列 <math><msub><mi>x</mi><mi>p</mi></msub></math> 进入同一个冻结前向计算 <math><msub><mi>f</mi><mi>r</mi></msub></math>。我们只读出两个 Prompt 位置的输出并取平均，再交给可训练分类头 <math><msub><mi>g</mi><mi>φ</mi></msub></math>；分类结果与标签 <math><mi>y</mi></math> 比较后得到损失。冻结表示主干参数不写回，前向计算仍会正常执行。</p>
+      <div className="p4-forward-equations" aria-label="从冻结前向到分类损失的教学计算路径">
+        <div>
+          <span>读取两个 Prompt 输出</span>
+          <math display="block"><mi>h</mi><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>(</mo><msub><mi>H</mi><mrow><msub><mi>P</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>H</mi><mrow><msub><mi>P</mi><mn>1</mn></msub></mrow></msub><mo>)</mo></math>
+        </div>
+        <div>
+          <span>分类头与标签形成损失</span>
+          <math display="block"><mi>z</mi><mo>=</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>)</mo><mo>,</mo><msub><mi>ℒ</mi><mtext>cls</mtext></msub><mo>=</mo><mi mathvariant="normal">CE</mi><mo>(</mo><mi>z</mi><mo>,</mo><mi>y</mi><mo>)</mo></math>
+        </div>
+      </div>
+      <ol className="p4-forward-map" aria-label="冻结前向到损失的阅读顺序">
+        <li><span>01</span><strong>[P; xₑ]</strong><small>一起进入序列</small></li>
+        <li><span>02</span><strong>冻结 fᵣ</strong><small>仍逐层计算</small></li>
+        <li><span>03</span><strong>Hₚ₀、Hₚ₁</strong><small>保留 Prompt 位置</small></li>
+        <li><span>04</span><strong>h → z</strong><small>读出并分类</small></li>
+        <li><span>05</span><strong>CE(z, y)</strong><small>与标签比较</small></li>
+      </ol>
+      <p>这里的两个位置平均是为了把 Prompt 输出与分类损失连成一条可复算的教学路径；完整 L2P 对检索所得 Prompt 的分类读出会在 P6 展开。</p>
     </section>
 
     <figure className="lesson-figure p4-training-figure">
@@ -645,7 +686,7 @@ export function PromptTuning() {
             key={phase.short}
             aria-pressed={activePhase === index}
             onClick={() => playback.seek(boundaries[index])}
-          >{String.fromCharCode(65 + index)} · {phase.short}</button>)}
+          ><span className="p4-phase-index">{String(index + 1).padStart(2, "0")}</span><span>{phase.short}</span></button>)}
         </div>
         <div className="p4-control-bottomline">
           <PlaybackControls playback={playback} label="Prompt 学习进度" />
@@ -653,9 +694,10 @@ export function PromptTuning() {
         </div>
       </div>
       <div className="figure-body p4-figure-body">
+        <p className="p4-stage-guide">沿左侧追踪 P₀、P₁ 怎样与图像 Token 一起进入冻结计算；再看右侧损失如何产生回传信号，最后核对同一图像读入新参数后的结果。</p>
         <div className="p4-data-note">
           <span>可复算的教学数据，不是论文测量值</span>
-          <span>固定 xₑ · 标签 y={P4_TOY_EXPERIMENT.label} · η={number(P4_TOY_EXPERIMENT.learningRate)}</span>
+          <span>标签 y={P4_TOY_EXPERIMENT.label} · η={number(P4_TOY_EXPERIMENT.learningRate)}</span>
         </div>
         <PromptLearningStage
           state={currentState}
@@ -674,35 +716,69 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>损失的导数经过固定计算，更新只写入 P 与 φ</h3>
-      <p>分类头给出 Logits，与标签比较后形成损失。因为输出依赖输入参数 P，反向求导会穿过 <math><msub><mi>f</mi><mi>r</mi></msub></math> 的固定运算，将 <Term id="gradient-flow">梯度回传</Term> 给 Prompt；优化器更新 Prompt 与可训练分类头 <math><mi>φ</mi></math>，冻结的主干参数保留原值。</p>
+      <p>先从分类损失沿前向路径反向追踪：误差信号经过分类头和均值读出，再穿过冻结的 <math><msub><mi>f</mi><mi>r</mi></msub></math> 回到输入中的 Prompt。梯度能穿过这些运算；“冻结”只表示主干参数不会被写回。分类头 <math><mi>φ</mi></math> 和 Prompt <math><mi>P</mi></math> 都会得到各自的梯度。</p>
+      <figure className="lesson-figure p4-gradient-figure">
+        <div className="figure-top"><strong>从损失沿同一计算路径返回</strong><span>按 01 → 05 阅读梯度去向</span></div>
+        <div className="figure-body">
+          <ol className="p4-gradient-steps" aria-label="梯度从交叉熵返回 Prompt 的顺序">
+            <li><span>01</span><strong>ℒcls</strong><small>分类误差起点</small></li>
+            <li><span>02</span><strong>分类头 φ</strong><small>得到 ∇φℒ</small></li>
+            <li><span>03</span><strong>读出 h</strong><small>分回 Hₚ₀、Hₚ₁</small></li>
+            <li className="p4-gradient-step--frozen"><span>04</span><strong>冻结 fᵣ</strong><small>导数通过，θViT 不改</small></li>
+            <li className="p4-gradient-step--prompt"><span>05</span><strong>Prompt P</strong><small>得到 ∇Pℒ</small></li>
+          </ol>
+          <div className="p4-gradient-legend">
+            <div><span className="p4-gradient-legend__mark p4-gradient-legend__mark--learnable" /><p><strong>本轮写入</strong><br />Prompt P、分类头 φ</p></div>
+            <div><span className="p4-gradient-legend__mark p4-gradient-legend__mark--frozen" /><p><strong>保持原值</strong><br />ViT 参数 θViT、图像嵌入 xₑ</p></div>
+          </div>
+        </div>
+        <figcaption>梯度经过冻结主干的计算关系返回输入；锁住的是权重更新，不是反向导数。</figcaption>
+      </figure>
       <div className="p4-gradient-equation">
         <div className="p4-equation-item">
           <span className="p4-equation-label">一次教学 SGD 更新</span>
-          <math display="block"><msup><mi>P</mi><mn>1</mn></msup><mo>=</mo><msup><mi>P</mi><mn>0</mn></msup><mo>−</mo><mi>η</mi><msub><mo>∇</mo><mi>P</mi></msub><mi>ℒ</mi></math>
-          <math display="block"><msup><mi>φ</mi><mn>1</mn></msup><mo>=</mo><msup><mi>φ</mi><mn>0</mn></msup><mo>−</mo><mi>η</mi><msub><mo>∇</mo><mi>φ</mi></msub><mi>ℒ</mi></math>
+          <math display="block"><msup><mi>P</mi><mn>1</mn></msup><mo>=</mo><msup><mi>P</mi><mn>0</mn></msup><mo>−</mo><mi>η</mi><msub><mo>∇</mo><mi>P</mi></msub><msub><mi>ℒ</mi><mtext>cls</mtext></msub></math>
+          <math display="block"><msup><mi>φ</mi><mn>1</mn></msup><mo>=</mo><msup><mi>φ</mi><mn>0</mn></msup><mo>−</mo><mi>η</mi><msub><mo>∇</mo><mi>φ</mi></msub><msub><mi>ℒ</mi><mtext>cls</mtext></msub></math>
         </div>
         <div className="p4-equation-item p4-gradient-condition">
           <span className="p4-equation-label">固定主干</span>
-          <math display="block"><msup><mi>θ</mi><mn>1</mn></msup><mo>=</mo><msup><mi>θ</mi><mn>0</mn></msup></math>
-          <small>反向经过运算，权重不写回</small>
+          <math display="block"><msup><msub><mi>θ</mi><mtext>ViT</mtext></msub><mn>1</mn></msup><mo>=</mo><msup><msub><mi>θ</mi><mtext>ViT</mtext></msub><mn>0</mn></msup></math>
+          <small>导数经过运算，主干权重不写回</small>
         </div>
       </div>
-      <p>动画中的更新位移按真实梯度方向呈现，坐标和更新前后 Logits、损失均可在计算详情中复核。该教学例子的损失变化只描述这一次计算，不保证一般训练步骤都会下降。</p>
+      <p>舞台中的 P 位移按这份 Trace 的梯度方向呈现；接下来要确认它是否影响预测，需把更新后的参数重新送入同一输入和同一冻结计算。</p>
+      <div className="p4-update-explainer">
+        <p>一次写回只改变 <strong>P</strong> 与 <strong>φ</strong>。之后用同一图像嵌入 <math><msub><mi>x</mi><mi>e</mi></msub></math>、同一标签 <math><mi>y</mi></math> 和同一组 <math><msub><mi>θ</mi><mtext>ViT</mtext></msub></math> 再做前向；这样才能把新旧输出差异对应到刚更新的参数。</p>
+        <ol className="p4-update-timeline" aria-label="一次 SGD 更新后使用同一图像重新前向">
+          <li><small>更新前</small><strong>P⁰ · φ⁰</strong><span>读入 xₑ、标签 y</span></li>
+          <li className="p4-update-timeline__write"><small>一次 SGD</small><strong>−η∇ℒcls</strong><span>只写入可训练参数</span></li>
+          <li><small>更新后</small><strong>P¹ · φ¹</strong><span>新参数状态</span></li>
+          <li><small>同图再算</small><strong>同一 fᵣ、同一 xₑ</strong><span>不更换输入与主干</span></li>
+          <li className="p4-update-timeline__result"><small>本例的损失对照</small><strong>ℒ⁰={number(P4_TRAINING_TRACE.initial.loss)} → ℒ¹={number(P4_TRAINING_TRACE.updated.loss)}</strong><span>来自同一可复算 Trace</span></li>
+        </ol>
+      </div>
+      <p>本例的损失变化只描述这一次教学计算；它不是论文测量值，也不保证一般训练步骤都会下降。完整向量、梯度与 Logits 可在舞台的计算详情中核对。</p>
     </section>
 
     <section className="explain-section p4-shared-section">
       <h3>任务继续到来时，共享 Prompt 仍可能受到干扰</h3>
       <p>任务 A 学到的一组 Prompt 可以继续给任务 B 使用。若 B 的分类目标继续写入同一组参数，先前输入依赖的表示可能随之改变。冻结 ViT 缩小了可更新范围；不同任务之间怎样减少这组共享参数的争用，仍需下一页回答。</p>
-      <div className="p4-task-rail" aria-label="同一组 Prompt 从任务 A 延续到任务 B">
-        <div><strong>任务 A</strong><span>更新 P</span></div>
-        <span className="p4-task-arrow" aria-hidden="true" />
-        <div className="p4-task-identity"><strong>同一组 P</strong><math display="block"><msup><mi>P</mi><mrow><mi>A</mi><mo>→</mo><mi>B</mi></mrow></msup></math></div>
-        <span className="p4-task-arrow" aria-hidden="true" />
-        <div><strong>任务 B</strong><span>可继续更新 P</span></div>
+      <div className="p4-sharing-map" role="group" aria-label="同一组 Prompt 在任务 A 与任务 B 之间可能产生的参数干扰">
+        <svg viewBox="0 0 1000 230" preserveAspectRatio="none" aria-hidden="true">
+          <path className="p4-sharing-spine" d="M70 116H790" />
+          <path className="p4-sharing-branch" d="M220 116L280 48" />
+          <path className="p4-sharing-branch" d="M450 116L510 184" />
+          <path className="p4-sharing-branch" d="M650 116L710 48" />
+          <circle cx="220" cy="116" r="4" /><circle cx="450" cy="116" r="4" /><circle cx="650" cy="116" r="4" />
+        </svg>
+        <div className="p4-sharing-cause p4-sharing-cause--one"><small>参数身份延续</small><strong>任务 A、B 共用同一组 P</strong></div>
+        <div className="p4-sharing-cause p4-sharing-cause--two"><small>后续目标继续训练</small><strong>若继续训练，梯度写入 P</strong></div>
+        <div className="p4-sharing-cause p4-sharing-cause--three"><small>本页教学范围</small><strong>还没有按输入选择多组 Prompt</strong></div>
+        <div className="p4-sharing-risk"><small>需要留意的可能性</small><strong>任务 A 依赖的表示可能改变</strong></div>
       </div>
+      <div className="p4-p5-question"><span>P5 要接住的问题</span><strong>能否保存多组 Prompt，再由当前输入选用合适的一组？</strong></div>
       <p className="p4-task-note">这里只指出参数身份延续带来的干扰可能性；没有模拟任务 B 的数据、梯度或遗忘结果。</p>
     </section>
 
-    <p className="lesson-takeaway">如果多个任务继续共享可学习参数，怎样保存多组 Prompt，并由当前输入选出合适的一组？</p>
   </>;
 }
