@@ -6,9 +6,17 @@ import "./prompt-tuning.css";
 type Pair = readonly [number, number];
 type Matrix = readonly [Pair, Pair];
 type ForwardState = NonNullable<ReturnType<typeof runP4Forward>>;
+type AttentionRoute = {
+  sourceIndex: number;
+  kind: "query" | "value";
+  from: Pair;
+  controls: [Pair, Pair];
+  to: Pair;
+  length: number;
+};
 
-const duration = 16_800;
-const boundaries = [0, 2_300, 5_400, 7_200, 10_400, 12_700, 15_800, duration];
+const duration = 18_100;
+const boundaries = [0, 2_300, 5_400, 7_200, 11_700, 14_000, 17_100, duration];
 const phases = [
   { short: "组装输入", text: "两枚紫色参数 Token 移到序列前端；它们与固定的 [CLS]、Patch₁ 组成同一输入。" },
   { short: "冻结前向", text: "同一组固定运算处理四个位置。观察 P₀ 的注意力路径与它对应的输出 H₀。" },
@@ -86,6 +94,45 @@ function cubicPath(from: Pair, control1: Pair, control2: Pair, to: Pair) {
     + " " + to[0] + " " + to[1];
 }
 
+function cubicLength(from: Pair, control1: Pair, control2: Pair, to: Pair) {
+  const steps = 32;
+  let previous = from;
+  let length = 0;
+  for (let step = 1; step <= steps; step += 1) {
+    const point = cubicPoint(from, control1, control2, to, step / steps);
+    length += Math.hypot(point[0] - previous[0], point[1] - previous[1]);
+    previous = point;
+  }
+  return length;
+}
+
+function cubicPointAtLengthFraction(
+  from: Pair,
+  control1: Pair,
+  control2: Pair,
+  to: Pair,
+  progress: number,
+  length: number,
+): Pair {
+  if (length <= 0) return from;
+  const steps = 32;
+  const targetDistance = clamp(progress) * length;
+  let previous = from;
+  let travelled = 0;
+  for (let step = 1; step <= steps; step += 1) {
+    const point = cubicPoint(from, control1, control2, to, step / steps);
+    const segmentLength = Math.hypot(point[0] - previous[0], point[1] - previous[1]);
+    if (travelled + segmentLength >= targetDistance && segmentLength > 0) {
+      const segmentProgress = clamp((targetDistance - travelled) / segmentLength);
+      const curveProgress = (step - 1 + segmentProgress) / steps;
+      return cubicPoint(from, control1, control2, to, curveProgress);
+    }
+    travelled += segmentLength;
+    previous = point;
+  }
+  return to;
+}
+
 const gradientRailStart: Pair = [1060, 230];
 const gradientRailTurn: Pair = [1060, 252];
 const gradientRailEnd: Pair = [228, 252];
@@ -124,7 +171,9 @@ function PromptLearningStage({
   prompt,
   updateProgress,
   forwardProgress,
+  forwardTimeline,
   gradientProgress,
+  gradientTimeline,
 }: {
   state: ForwardState;
   phase: number;
@@ -132,7 +181,9 @@ function PromptLearningStage({
   prompt: Matrix;
   updateProgress: number;
   forwardProgress: number;
+  forwardTimeline: number;
   gradientProgress: number;
+  gradientTimeline: number;
 }) {
   const insertionProgress = phase === 0 ? cubicBezierProgress(phaseProgress(position, 0)) : 1;
   const inputRows = [84, 136, 188, 240];
@@ -147,8 +198,52 @@ function PromptLearningStage({
   const afterForward = phase === 5 && forwardProgress >= 0.86 || phase === 6;
   const currentLoss = state.loss;
   const sourceY = [91, 133, 175, 217];
-  const queryOrigin: Pair = [316, 151];
+  const queryOrigin: Pair = [354, 151];
   const valueTargets: Pair[] = [[474, 134], [467, 146], [467, 160], [474, 172]];
+  const attentionRoutes: AttentionRoute[] = sourceY.flatMap((y, sourceIndex) => {
+    const routes = [
+      {
+        sourceIndex,
+        kind: "query" as const,
+        from: queryOrigin,
+        controls: [[364, queryOrigin[1]], [367, y]] as [Pair, Pair],
+        to: [402, y] as Pair,
+      },
+      {
+        sourceIndex,
+        kind: "value" as const,
+        from: [446, y] as Pair,
+        controls: [[454, y], [460, valueTargets[sourceIndex][1]]] as [Pair, Pair],
+        to: valueTargets[sourceIndex],
+      },
+    ];
+    return routes.map(route => ({ ...route, length: cubicLength(route.from, route.controls[0], route.controls[1], route.to) }));
+  });
+  const totalAttentionLength = attentionRoutes.reduce((total, route) => total + route.length, 0);
+  const attentionTravelWindow = 1;
+  let remainingAttentionDistance = forwardTimeline < attentionTravelWindow
+    ? (forwardTimeline / attentionTravelWindow) * totalAttentionLength
+    : totalAttentionLength;
+  const activeAttentionRoute = forwardActive && forwardTimeline < attentionTravelWindow
+    ? attentionRoutes.find(route => {
+      if (remainingAttentionDistance < route.length) return true;
+      remainingAttentionDistance -= route.length;
+      return false;
+    }) ?? null
+    : null;
+  const activeAttentionProgress = activeAttentionRoute
+    ? remainingAttentionDistance / activeAttentionRoute.length
+    : 0;
+  const activeAttentionPoint = activeAttentionRoute
+    ? cubicPointAtLengthFraction(
+      activeAttentionRoute.from,
+      activeAttentionRoute.controls[0],
+      activeAttentionRoute.controls[1],
+      activeAttentionRoute.to,
+      activeAttentionProgress,
+      activeAttentionRoute.length,
+    )
+    : null;
   const inputTokenValues = state.inputTokens;
   const targetPromptY = [inputRows[0], inputRows[1]];
   const parkedPromptY = [326, 379];
@@ -221,27 +316,20 @@ function PromptLearningStage({
 
       {sourceY.map((y, index) => {
         const attention = state.firstPromptAttention[index];
-        const keyPoint: Pair = [402, y];
-        const qControls: [Pair, Pair] = [[364, queryOrigin[1]], [367, y]];
-        const queryPath = "M" + queryOrigin[0] + " " + queryOrigin[1] + " C"
-          + qControls[0][0] + " " + qControls[0][1] + " " + qControls[1][0] + " " + qControls[1][1]
-          + " " + keyPoint[0] + " " + keyPoint[1];
-        const queryDot = cubicPoint(queryOrigin, qControls[0], qControls[1], keyPoint, forwardProgress);
-        const valueFrom: Pair = [446, y];
-        const valueControls: [Pair, Pair] = [[454, y], [460, valueTargets[index][1]]];
-        const valueDot = cubicPoint(valueFrom, valueControls[0], valueControls[1], valueTargets[index], forwardProgress);
+        const activeHere = activeAttentionRoute?.sourceIndex === index;
         const sourceLabel = ["P₀", "P₁", "[CLS]", "Patch₁"][index];
         return <g key={"attention-source-" + index}>
-          <path d={queryPath} className="p4-attention-link" style={{ opacity: 0.08 + attentionProgress * (0.2 + attention * 0.8), strokeWidth: 0.8 + attention * 3.4 }} />
           <g className="p4-source-chip" style={{ opacity: 0.34 + attentionProgress * 0.66 }}>
             <rect x="402" y={y - 15} width="44" height="30" rx="8" />
             <text x="424" y={y - 3} textAnchor="middle">{sourceLabel}</text>
             <text className="p4-alpha" x="424" y={y + 11} textAnchor="middle">α={number(attention)}</text>
           </g>
-          {forwardActive && attentionProgress > 0 && <>
-            <circle className="p4-flow-bead" cx={queryDot[0]} cy={queryDot[1]} r="3.2" />
-            <circle className="p4-value-bead" cx={valueDot[0]} cy={valueDot[1]} r="3" />
-          </>}
+          {forwardActive && forwardTimeline > 0 && activeHere && activeAttentionPoint && <circle
+            className={activeAttentionRoute.kind === "query" ? "p4-flow-bead" : "p4-value-bead"}
+            cx={activeAttentionPoint[0]}
+            cy={activeAttentionPoint[1]}
+            r="3.2"
+          />}
         </g>;
       })}
 
@@ -290,9 +378,19 @@ function PromptLearningStage({
       </g>
 
       <g className="p4-forward-connectors">
-        {sourceY.map((y, index) => <path
+        {sourceY.map((_, index) => {
+          const route = attentionRoutes[index * 2];
+          return <path
+            key={"query-link-" + index}
+            d={cubicPath(route.from, route.controls[0], route.controls[1], route.to)}
+            className="p4-attention-link"
+            markerEnd="url(#p4-flow-arrow)"
+            style={{ opacity: phase === 3 ? 0.12 : 0.08 + attentionProgress * (0.2 + state.firstPromptAttention[index] * 0.8), strokeWidth: 0.8 + state.firstPromptAttention[index] * 3.4 }}
+          />;
+        })}
+        {sourceY.map((_, index) => <path
           key={"value-link-" + index}
-          d={cubicPath([446, y], [454, y], [460, valueTargets[index][1]], valueTargets[index])}
+          d={cubicPath(attentionRoutes[index * 2 + 1].from, attentionRoutes[index * 2 + 1].controls[0], attentionRoutes[index * 2 + 1].controls[1], attentionRoutes[index * 2 + 1].to)}
           className="p4-value-link"
           markerEnd="url(#p4-flow-arrow)"
           style={{ opacity: phase === 3 ? 0.12 : 0.25 + state.firstPromptAttention[index] * 0.75, strokeWidth: 0.8 + state.firstPromptAttention[index] * 2.3 }}
@@ -325,7 +423,7 @@ function PromptLearningStage({
         <text className="p4-gradient-label" x="918" y="240" textAnchor="middle" style={{ opacity: gradientOpacity }}>∇φ</text>
         {phase === 3 && gradientProgress > 0 && <>
           {(() => {
-            const point = gradientRailPoint(gradientProgress);
+            const point = gradientRailPoint(gradientTimeline);
             return <circle className="p4-gradient-bead" cx={point[0]} cy={point[1]} r="3.2" />;
           })()}
         </>}
@@ -459,10 +557,14 @@ export function PromptTuning() {
     P4_TRAINING_TRACE.updatedClassifierBias,
     updateProgress,
   );
+  const forwardTimeline = activePhase === 1 || activePhase === 5
+    ? phaseProgress(playback.position, activePhase)
+    : 0;
   const forwardProgress = activePhase === 1 || activePhase === 5
-    ? cubicBezierProgress(phaseProgress(playback.position, activePhase))
+    ? cubicBezierProgress(forwardTimeline)
     : activePhase > 1 && activePhase < 5 || activePhase === 6 ? 1 : 0;
-  const gradientProgress = activePhase === 3 ? cubicBezierProgress(phaseProgress(playback.position, 3)) : 0;
+  const gradientTimeline = activePhase === 3 ? phaseProgress(playback.position, 3) : 0;
+  const gradientProgress = activePhase === 3 ? cubicBezierProgress(gradientTimeline) : 0;
   const currentState = activePhase === 4
     ? runP4Forward(currentPrompt, currentClassifierWeights, currentClassifierBias)
     : activePhase === 5 && forwardProgress < 0.86
@@ -511,7 +613,9 @@ export function PromptTuning() {
           prompt={currentPrompt}
           updateProgress={updateProgress}
           forwardProgress={forwardProgress}
+          forwardTimeline={forwardTimeline}
           gradientProgress={gradientProgress}
+          gradientTimeline={gradientTimeline}
         />
         <p className="p4-stage-caption">紫色表示可学习 Prompt，绿色表示固定图像输入，灰蓝框表示冻结计算，暖橙提示当前训练目标。向量、注意力权重、梯度和输出来自同一份计算 Trace。</p>
         <TraceDetails state={currentState} />

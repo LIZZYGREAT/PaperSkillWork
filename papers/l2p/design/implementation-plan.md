@@ -434,3 +434,11 @@ P3 SOURCE_BUILD=PASS：npm build，TypeScript + Vite 6.4.3，72 modules。`check
 P4 改为一套可暂停、定位、回到起点的共享教学舞台：两枚 Prompt Token 接入固定图像序列，依次展示冻结前向、二分类损失、沿固定计算回传梯度、一次参数更新、同图复算，再以任务 B 引出共享参数干扰的可能性。向量、注意力、输出、损失和坐标来自原有可复算教学 Trace；明确区分 ViT-B/16 全宽序列形状与低维单头示例，并将图内辅助字号修正为项目字体 token。新增 P4 的 Prompt Token、Prompt Tuning、梯度回传术语引用；本页分类均值读出标注为机制教学简化，不冒充完整 L2P Prompt Pool 路径。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`（`papers/l2p/web/enhanced`，TypeScript + Vite 6.4.3，72 modules）。VISUAL_QA=PASS：runner 的 1440×900 与 1920×1080 桌面布局共 16 张截图，几何、样式和浏览器错误检查通过，0 browser error；代表性初始、梯度、参数更新、同图复算和任务衔接状态已人工查看，VISUAL_REVIEW=PASS。报告与完整截图副本保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-core-refactor-qa/`。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（使用 headless Edge 的固定视口）。
+
+### P4 动画箭头、流动点与回传帧纠偏（2026-11-09）
+
+按用户截图调整教学舞台：固定 SVG 箭头尖端的像素尺寸，并将连接线绘制在节点背景上方，使箭头方向与目标边缘清晰可见；注意力查询线从 Q 节点边缘发出，并加上指向各 Token 的小箭头；拆开带箭头的多段路径，修正 H₁ 绕过冻结计算的错误连线，分离 H₀/H₁ 到读出的箭头。梯度回传收敛为单条干线与指向 P₀、P₁、φ 的独立分支，只在回传阶段显示；移除重复 φ 支路、落入 Prompt 卡片文字区的箭头及分散的梯度点。参数位移轨迹不再使用大于实际位移的箭头头部。
+
+前向只保留一个流动点，沿注意力查询与加权 Value 的实际贝塞尔曲线逐段移动；按曲线弧长分配时长并做近似恒速定位。回传点沿对应的折线路径匀速运动。梯度阶段从 3.2 秒延长至 4.5 秒以适配长回程；完整播放时长增加 1.3 秒至 18.1 秒。参数更新仍保留原来的单步位移与数据。
+
+SOURCE_BUILD=PASS：`npm run build`，TypeScript + Vite 6.4.3。Visual QA 使用 `tools/visual-qa/cli.mjs` 对 1440×900 与 1920×1080 的前向中点、梯度中点、更新帧共 6 张截图；GEOMETRY_QA=PASS、BROWSER_ERRORS=PASS（0），无几何诊断。已人工检查前向与梯度中点的箭头落点、路径和点位，VISUAL_REVIEW=PASS。QA 报告及截图保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-motion-fix-final/run-2026-11-09T13-55-19-308Z/`。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（固定桌面视口）。
