@@ -771,13 +771,33 @@ export function PromptTuning() {
       <p>舞台中的 P 位移按这份 Trace 的梯度方向呈现；接下来要确认它是否影响预测，需把更新后的参数重新送入同一输入和同一冻结计算。</p>
       <div className="p4-update-explainer">
         <p>一次写回只改变 <strong>P</strong> 与 <strong>φ</strong>。之后用同一图像嵌入 <math><msub><mi>x</mi><mi>e</mi></msub></math>、同一标签 <math><mi>y</mi></math> 和同一组 <math><msub><mi>θ</mi><mtext>ViT</mtext></msub></math> 再做前向；这样才能把新旧输出差异对应到刚更新的参数。</p>
-        <ol className="p4-update-timeline" aria-label="一次 SGD 更新后使用同一图像重新前向">
-          <li><small>更新前</small><strong>P⁰ · φ⁰</strong><span>读入 xₑ、标签 y</span></li>
-          <li className="p4-update-timeline__write"><small>一次 SGD</small><strong>−η∇ℒcls</strong><span>只写入可训练参数</span></li>
-          <li><small>更新后</small><strong>P¹ · φ¹</strong><span>新参数状态</span></li>
-          <li><small>同图再算</small><strong>同一 fᵣ、同一 xₑ</strong><span>不更换输入与主干</span></li>
-          <li className="p4-update-timeline__result"><small>本例的损失对照</small><strong>ℒ⁰={number(P4_TRAINING_TRACE.initial.loss)} → ℒ¹={number(P4_TRAINING_TRACE.updated.loss)}</strong><span>来自同一可复算 Trace</span></li>
-        </ol>
+        <div className="p4-parameter-compare" role="group" aria-label="同一份 Trace 的 Prompt 与分类头更新前后数值">
+          <div className="p4-compare-condition"><span>复算条件保持</span><strong>同一 xₑ · 同一 y · 同一 θ<sub>ViT</sub></strong></div>
+          <div className="p4-compare-states">
+            <section className="p4-parameter-state p4-parameter-state--before">
+              <h4>写回前 <span>P<sup>0</sup> · φ<sup>0</sup></span></h4>
+              <div className="p4-prompt-register">
+                {P4_TOY_EXPERIMENT.prompt.map((vector, index) => <div key={index}><b>P<sub>{index}</sub></b><code>{pairText(vector)}</code></div>)}
+              </div>
+              <div className="p4-classifier-register">
+                <span>W<sub>cls</sub></span><code>{matrixText(P4_TOY_EXPERIMENT.classifier.weights)}</code>
+                <span>b<sub>cls</sub></span><code>{pairText(P4_TOY_EXPERIMENT.classifier.bias)}</code>
+              </div>
+            </section>
+            <div className="p4-compare-update"><span>一次教学 SGD</span><strong>−η∇ℒ<sub>cls</sub></strong></div>
+            <section className="p4-parameter-state p4-parameter-state--after">
+              <h4>写回后 <span>P<sup>1</sup> · φ<sup>1</sup></span></h4>
+              <div className="p4-prompt-register">
+                {P4_TRAINING_TRACE.updatedPrompt.map((vector, index) => <div key={index}><b>P<sub>{index}</sub></b><code>{pairText(vector)}</code></div>)}
+              </div>
+              <div className="p4-classifier-register">
+                <span>W<sub>cls</sub></span><code>{matrixText(P4_TRAINING_TRACE.updatedClassifierWeights)}</code>
+                <span>b<sub>cls</sub></span><code>{pairText(P4_TRAINING_TRACE.updatedClassifierBias)}</code>
+              </div>
+            </section>
+          </div>
+          <div className="p4-loss-comparison"><span>同图重新前向后的教学 Trace</span><strong>CE {number(P4_TRAINING_TRACE.initial.loss)} <i aria-hidden="true">→</i> {number(P4_TRAINING_TRACE.updated.loss)}</strong></div>
+        </div>
       </div>
       <p>本例的损失变化只描述这一次教学计算；它不是论文测量值，也不保证一般训练步骤都会下降。完整向量、梯度与 Logits 可在舞台的计算详情中核对。</p>
     </section>
@@ -785,18 +805,19 @@ export function PromptTuning() {
     <section className="explain-section p4-shared-section">
       <h3>任务继续到来时，共享 Prompt 仍可能受到干扰</h3>
       <p>任务 A 学到的一组 Prompt 可以继续给任务 B 使用。若 B 的分类目标继续写入同一组参数，先前输入依赖的表示可能随之改变。冻结 ViT 缩小了可更新范围；不同任务之间怎样减少这组共享参数的争用，仍需下一页回答。</p>
-      <div className="p4-sharing-map" role="group" aria-label="同一组 Prompt 在任务 A 与任务 B 之间可能产生的参数干扰">
-        <svg viewBox="0 0 1000 230" preserveAspectRatio="none" aria-hidden="true">
-          <path className="p4-sharing-spine" d="M70 116H790" />
-          <path className="p4-sharing-branch" d="M220 116L280 48" />
-          <path className="p4-sharing-branch" d="M450 116L510 184" />
-          <path className="p4-sharing-branch" d="M650 116L710 48" />
-          <circle cx="220" cy="116" r="4" /><circle cx="450" cy="116" r="4" /><circle cx="650" cy="116" r="4" />
-        </svg>
-        <div className="p4-sharing-cause p4-sharing-cause--one"><small>参数身份延续</small><strong>任务 A、B 共用同一组 P</strong></div>
-        <div className="p4-sharing-cause p4-sharing-cause--two"><small>后续目标继续训练</small><strong>若继续训练，梯度写入 P</strong></div>
-        <div className="p4-sharing-cause p4-sharing-cause--three"><small>本页教学范围</small><strong>还没有按输入选择多组 Prompt</strong></div>
-        <div className="p4-sharing-risk"><small>需要留意的可能性</small><strong>任务 A 依赖的表示可能改变</strong></div>
+      <div className="p4-shared-parameter" role="group" aria-label="任务 A 与任务 B 继续使用同一组 Prompt 参数">
+        <div className="p4-sharing-task p4-sharing-task--a">
+          <span>任务 A</span><strong>已学到的输入行为</strong><small>沿用这组 Prompt</small>
+        </div>
+        <div className="p4-sharing-connector"><span>使用 / 写入</span><i aria-hidden="true" /></div>
+        <div className="p4-shared-slot">
+          <span>共享参数位置</span><strong>P</strong><div><i>P₀</i><i>P₁</i></div>
+        </div>
+        <div className="p4-sharing-connector"><span>继续使用</span><i aria-hidden="true" /></div>
+        <div className="p4-sharing-task p4-sharing-task--b">
+          <span>任务 B</span><strong>新目标到来</strong><small>若继续训练，会写入同一组 P</small>
+        </div>
+        <div className="p4-sharing-impact"><span>可能的影响</span><strong>任务 A 依赖的表示可能改变</strong></div>
       </div>
       <div className="p4-p5-question"><span>P5 要接住的问题</span><strong>能否保存多组 Prompt，再由当前输入选用合适的一组？</strong></div>
       <p className="p4-task-note">这里只指出参数身份延续带来的干扰可能性；没有模拟任务 B 的数据、梯度或遗忘结果。</p>

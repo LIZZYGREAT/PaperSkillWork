@@ -475,3 +475,9 @@ SOURCE_BUILD=PASS：`npm.cmd run build`，TypeScript + Vite 6.4.3，72 modules�
 反向解释不再使用与阶段导航相似的五步横向轨道。新增三列表格，分别列出对象、反向计算和优化器写回范围：P 与 φ 获得各自梯度并更新；∂L/∂P 的导数经过冻结 fᵣ 的运算；θViT 不写回；固定 xₑ 作为输入保留。该表与主舞台的连续梯度动画分工互补，没有将“导数经过”误画成“冻结权重获得更新”。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`，TypeScript + Vite 6.4.3，72 modules。浏览器视觉复核仍待本轮最终组合后统一执行；此前 runner 的 localhost EACCES 失败报告继续保留。
+
+### P4 教学视觉多元化 · 参数对照与共享参数枢纽（2026-11-10）
+
+单步更新后的解释改为左右参数账本，直接对照同一 Trace 中写回前后的 P、Wcls、bcls 数值，中间保留 SGD 更新算子，底部列出同图复算的 CE 变化；不再用重复的五步时间轴。跨任务部分改为“任务 A—共享 P—任务 B”的参数枢纽图，并将表示变化明确写为可能影响，不虚构任务 B 的数值、梯度或遗忘结果。连同前两部分，P4 现在使用输入标本板与分段序列、输出汇聚图、梯度权限账本、更新前后参数对照、共享参数枢纽等不同视觉形式；各表达读取既有 Trace 或只说明定性关系。新增对象为正文讲解提供配套图示，主舞台算法、阶段次序、播放逻辑及 P1–P3 均未改动。阶段提示条改用上下细边线，避免厚侧条抢占阅读层级。
+
+SOURCE_BUILD=PASS：`npm.cmd run build`，TypeScript + Vite 6.4.3，72 modules。FINAL_VISUAL_QA=PASS：Edge 157.0.4341.42，报告 `PaperSkillWork/.visual-qa/run-2026-11-09T17-04-33-244Z/`；1440×900、1920×1080、390×844 共 24 个状态截图，几何、样式和浏览器错误检查全部通过，0 条浏览器错误、无裁切/溢出诊断。截图按 `task/L2P/截图实现与失败排查方法记录.md` 的本机 Playwright + Edge 方法，以 `fullPage:false` 捕获并用 `view_image` 逐张查看；共 11 张桌面与手机实际视口图，保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-visual-diversity/`。实测 document 宽度与视口相同：桌面 1440px、手机 390px，浏览器页面错误 0。Visual QA 的 1920×1080 是固定视口布局检查，不代表真实 F11；`FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。此前 detector 扫描指出的 3px 左侧色条已改为细上下边线；按一次扫描的流程未重复运行 detector。截图临时目录清理后保留上述 11 张交付图；任务启动的本机预览关闭。任务开始前已有的 `package-lock.json` 改动未纳入本次提交。
