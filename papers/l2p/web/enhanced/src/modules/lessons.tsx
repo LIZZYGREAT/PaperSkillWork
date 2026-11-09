@@ -89,12 +89,12 @@ export function ViTPath() {
   const col = patch % PATCH_GRID;
   return (
     <>
-      <p className="lesson-lead">P1 提出保留预训练主干的视觉能力。L2P 使用的主干是视觉 Transformer（ViT）：它接收图像，在内部形成一组向量表示，供后续分类使用。先沿完整路径认清这些表示从哪里来、怎样传下去。</p>
+      <p className="lesson-lead">P1 提出保留预训练主干的视觉能力。L2P 使用的主干是<span className="lesson-key lesson-term lesson-term--object">视觉 Transformer</span>（ViT）：它接收图像，在内部形成一组向量表示，供后续分类使用。先沿完整路径认清这些表示从哪里来、怎样传下去。</p>
       <ViTReadingMap />
       <ViTOverview index={patch} select={setPatch} />
       <section className="explain-section">
-        <h3>二维图像怎样变成一串向量？</h3>
-        <p>Transformer 处理按位置排列的<span className="lesson-key">向量序列</span>，图像最初却是由高度、宽度和颜色通道组成的像素数组。ViT 先把图像切成等大的图像块（Patch），将每块像素展平，再通过共享的线性投影变成一个 Patch Token，让局部区域进入模型的特征空间。</p>
+        <h3>二维图像怎样变成一串<span className="editorial-key">向量</span>？</h3>
+        <p>Transformer 处理按位置排列的<span className="lesson-key">向量序列</span>，图像最初却是由高度、宽度和颜色通道组成的像素数组。ViT 先把图像切成等大的图像块（<span className="lesson-key lesson-term lesson-term--latin lesson-term--object">Patch</span>），将每块像素<strong className="lesson-ink">展平</strong>，再通过共享的<span className="lesson-key lesson-term">线性投影</span>变成一个 <strong className="lesson-ink">Patch Token</strong>，让局部区域进入模型的特征空间。</p>
         <p>以这里的 ViT-B/16、224×224 输入为例，每块边长为 16，每边得到 14 块，共 14×14=196 块。点击网格或拖动滑块选一块，沿着它的行列位置追踪到对应 Token，再播放通道读取、展平和投影过程。展平<span className="lesson-key lesson-key--caution">只重排像素</span>，投影则把像素值映射为<span className="lesson-key">特征坐标</span>。</p>
         <figure className="lesson-figure patch-lab">
           <div className="figure-top"><strong>追踪原图中的一块 Patch</strong><span>点击架构图中的网格或拖动滑块</span></div>
@@ -111,16 +111,16 @@ export function ViTPath() {
         <PixelFeatureCompare />
       </section>
       <section className="explain-section">
-        <h3>序列里为什么有 197 个位置？</h3>
-        <p>投影得到的向量承载局部内容，但相似内容出现在不同位置时，对整图的意义可能不同。ViT 为各位置加入对应的<span className="lesson-key">位置向量</span>，使模型能利用空间位置信息。</p>
-        <p>普通 ViT 还在 196 个 Patch Token 前面加入一个用于整图表示的 <strong>[CLS]</strong> Token。它独占序列中的第 0 位，没有对应的图像块。因此共有 196+1=197 个位置。下面按列看内容与位置向量如何相加，形成输入序列 <LessonVar base="X" index="e" />。</p>
+        <h3>序列里为什么有 <span className="editorial-key">197</span> 个位置？</h3>
+        <p>投影得到的向量承载局部内容，但相似内容出现在不同位置时，对整图的意义可能不同。ViT 为各位置加入对应的<span className="lesson-key lesson-term">位置向量</span>，使模型能利用空间位置信息。</p>
+        <p>普通 ViT 还在 196 个 Patch Token 前面加入一个用于整图表示的 <strong className="lesson-key lesson-term lesson-key--caution">[CLS]</strong> Token。它独占序列中的第 0 位，没有对应的图像块。因此共有 <strong className="lesson-ink">196+1=197</strong> 个位置。下面按列看内容与位置向量如何相加，形成输入序列 <LessonVar base="X" index="e" />。</p>
         <div className="sequence-explainer" role="group" aria-label="内容向量与位置向量按列相加">
           <div><b>内容向量</b><span className="token special">[CLS]</span><span className="token">Patch 1</span><span className="token">Patch 2</span><span>…</span><span className="token">Patch 196</span></div>
           <div><b>+ 位置向量</b><math><Sub base="p" index={0} /></math><math><Sub base="p" index={1} /></math><math><Sub base="p" index={2} /></math><span>…</span><math><Sub base="p" index={196} /></math></div>
           <div><b>= 输入 <math><Sub base="X" index="e" /></math></b><span>第 0 位</span><span>第 1 位</span><span>第 2 位</span><span>…</span><span>第 196 位</span></div>
         </div>
         <div className="shape-equation"><math display="block"><msub><mi>X</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math></div>
-        <p><span className="lesson-key">197</span> 是序列长度，<span className="lesson-key lesson-key--type">768</span> 是每个位置的向量维数。这个形状描述当前演示的配置，序列将整体交给 Encoder 处理。</p>
+        <p><span className="lesson-number">197</span> 是序列长度，<span className="lesson-number lesson-number--width">768</span> 是每个位置的向量维数。这个形状描述当前演示的配置，序列将整体交给 Encoder 处理。</p>
       </section>
       <EncoderReading />
       <div className="context-bridge" role="group" aria-label="从局部内容到上下文表示，下一页解释中间计算">

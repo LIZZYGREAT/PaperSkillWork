@@ -60,7 +60,7 @@ export function BackboneHandoff() {
 
 export function ViTReadingMap() {
   return <div className="vit-reading-map">
-    <div className="vit-reading-map__copy"><p>先顺着主图看完整路径：输入嵌入模块 <math><Sub base="f" index="e" /></math> 形成序列，多层 Encoder 组成 <math><Sub base="f" index="r" /></math>，最后从输出中读取分类特征。</p><p>冻结标记表示后续适应时保留主干权重，图像仍会完整经过这条计算路径。</p></div>
+    <div className="vit-reading-map__copy"><p>先顺着主图看完整路径：<span className="lesson-key">输入嵌入</span>模块 <math><Sub base="f" index="e" /></math> 形成序列，多层 Encoder 组成 <math><Sub base="f" index="r" /></math>，最后从输出中读取分类特征。</p><p>冻结标记表示后续适应时保留主干权重，图像仍会完整经过这条计算路径。</p></div>
     <div className="representation-ladder" aria-label="像素数组、Token 序列与上下文表示三种对象">
       <div><span className="mini-pixel-field" aria-hidden="true">{Array.from({length:16},(_,i)=><i key={i} />)}</span><b>像素数组</b><small>空间与颜色</small></div>
       <div><span className="mini-sequence" aria-hidden="true"><VectorGlyph /><VectorGlyph /><VectorGlyph /></span><b>Token 序列</b><small>位置与特征</small></div>
@@ -86,14 +86,14 @@ export function PixelFeatureCompare() {
 export function EncoderReading() {
   return <section className="encoder-reading" aria-label="序列逐层传递与整图分类读出">
     <div className="encoder-reading__row">
-      <div><h3><span className="editorial-key">位置</span>保留，<span className="editorial-key">表示</span>逐层更新</h3><p>回到总览中的 Encoder 堆叠：每个 Block 接收前一层的整条序列，保留<span className="lesson-key">位置顺序</span>与向量宽度，更新各位置内部的<span className="lesson-key">特征</span>。后一层接着处理这些输出，各位置逐渐携带其他区域的信息。</p></div>
+      <div><h3><span className="editorial-key">位置</span>保留，<span className="editorial-key">表示</span>逐层更新</h3><p>回到总览中的 <span className="lesson-key lesson-term lesson-term--latin lesson-term--object">Encoder</span> 堆叠：每个 <strong className="lesson-ink">Block</strong> 接收前一层的整条序列，保留<span className="lesson-key">位置顺序</span>与向量宽度，更新各位置内部的特征。后一层接着处理这些输出，各位置逐渐携带其他区域的信息。</p></div>
       <div className="layer-relay" aria-label="同一位置的表示经过连续三层 Encoder 更新">
         {["Block 1", "Block 2", "Block 3"].map(label=><div key={label}><b>{label}</b><div><span className="token special">CLS</span><VectorGlyph kind="token" /><VectorGlyph /></div><small>整条序列传给下一层</small></div>)}
       </div>
     </div>
     <div className="encoder-reading__row encoder-reading__row--reverse">
       <div className="cls-readout-object"><span>末层输出序列</span><div><span className="token special">[CLS]</span><span className="token">Patch 1</span><span className="token">…</span></div><span className="cls-readout-line" /><strong>[CLS] 特征 → 分类头</strong><small>普通 ViT 的基础读出</small></div>
-      <div><h3>从序列中读出整图特征</h3><p>普通 ViT 分类通常读取<span className="lesson-key">末层 [CLS]</span> 表示，再交给分类头。后面的 L2P 会用无 Prompt 的 [CLS] 特征做检索，并从带 Prompt 序列的另一组输出位置读取分类特征；P5–P6 将沿实际路径展开。</p></div>
+      <div><h3>从序列中读出整图特征</h3><p>普通 ViT 分类通常读取<span className="lesson-key">末层 [CLS]</span> 表示，再交给<span className="lesson-key lesson-term">分类头</span>。后面的 L2P 会用无 Prompt 的 [CLS] 特征做检索，并从带 Prompt 序列的另一组输出位置读取分类特征；P5–P6 将沿实际路径展开。</p></div>
     </div>
   </section>;
 }
