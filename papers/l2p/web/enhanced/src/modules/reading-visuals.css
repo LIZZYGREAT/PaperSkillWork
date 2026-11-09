@@ -1,0 +1,49 @@
+/* Auxiliary lesson diagrams. Main animation geometry and timelines are independent. */
+.task-timeline { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 48px; margin: 28px 0 40px; padding: 0 20px; }
+.timeline-spine { position: absolute; inset: 95px 0 auto; width: 100%; height: 48px; fill: none; stroke: var(--rk-accent); stroke-width: 1.5; }
+.timeline-stop { position: relative; display: grid; grid-template-rows: 94px 50px auto; justify-items: start; }
+.timeline-card { align-self: start; display: grid; gap: 5px; padding: 10px 16px; border: 1px solid var(--rk-line-strong); border-radius: 12px; background: var(--rk-surface); min-width: 0; }
+.timeline-card span { color: var(--rk-muted); font-size: 14px; }
+.timeline-stop.is-current .timeline-card { background: var(--rk-accent-soft); border-color: var(--rk-accent); }
+.timeline-pin { align-self: center; display: block; width: 12px; height: 12px; margin-left: 24px; border-radius: 50%; background: var(--rk-canvas); border: 2px solid var(--rk-accent); z-index: 1; }
+.timeline-stop.is-current .timeline-pin { background: var(--rk-accent); }
+.rk-reading .timeline-stop > p { font-size: 15px; line-height: 1.65; margin: 6px 0 0; }
+.task-timeline figcaption { grid-column: 1/-1; font-size: 14px; color: var(--rk-muted); margin-top: 18px; }
+.interference-fishbone { position: relative; height: 286px; margin: 26px 0; }
+.interference-fishbone > svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--rk-line-strong); stroke-width: 1.5; }
+.interference-fishbone .fish-spine { stroke: var(--rk-accent); stroke-width: 2; }
+.interference-fishbone circle { fill: var(--rk-accent); stroke: none; }
+.fish-note { position: absolute; width: 26%; }
+.fish-note b { font-size: 16px; color: var(--rk-accent-strong); }
+.rk-reading .fish-note p { margin: 5px 0 0; font-size: 14px; color: var(--rk-muted); }
+.fish-note--shared { left: 2%; top: 4px; }
+.fish-note--new { left: 24%; top: 218px; }
+.fish-note--past { left: 47%; top: 4px; }
+.fish-result { position: absolute; left: 81%; top: 99px; width: 19%; display: grid; gap: 8px; }
+.fish-result strong { font-size: 21px; line-height: 1.5; color: var(--rk-warn); }
+.fish-result span { font-size: 13px; color: var(--rk-muted); }
+.old-image-reading { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.7fr); gap: 60px; margin: 42px 0; align-items: start; }
+.fixed-image-object { display: flex; align-items: center; gap: 20px; padding-top: 12px; }
+.fixed-image-object .specimen { width: 94px; }
+.fixed-image-object span { display: block; font-size: 14px; color: var(--rk-muted); margin-top: 5px; }
+.prediction-reading { margin-top: 28px; border-top: 1px solid var(--rk-line-strong); padding-top: 20px; }
+.rk-reading .prediction-reading h3, .rk-reading .backbone-handoff h3 { font-size: 24px; margin: 0 0 12px; }
+.rk-reading .prediction-reading p { margin-bottom: 12px; }
+.backbone-handoff { display: grid; grid-template-columns: 1fr 1.15fr; gap: 60px; align-items: center; margin: 40px 0 12px; padding-top: 28px; border-top: 1px solid var(--rk-line-strong); }
+.backbone-object { display: flex; align-items: center; justify-content: space-between; gap: 16px; position: relative; }
+.backbone-object::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid var(--rk-line-strong); z-index: -1; }
+.backbone-object .specimen { width: 68px; }
+.backbone-object__model { text-align: center; padding: 18px; border: 1px solid var(--rk-line-strong); border-radius: 12px; background: var(--rk-figure); color: var(--rk-accent-strong); }
+.backbone-object__model small { display: block; color: var(--rk-muted); font-size: 13px; }
+@media (max-width: 760px) {
+  .task-timeline { grid-template-columns: 1fr; gap: 20px; padding-left: 28px; }
+  .timeline-spine { display: none; }
+  .task-timeline::before { content: ""; position: absolute; top: 16px; bottom: 50px; left: 8px; border-left: 1px solid var(--rk-accent); }
+  .timeline-stop { grid-template-rows: auto auto; }
+  .timeline-pin { position: absolute; left: -51px; top: 20px; }
+  .interference-fishbone { height: auto; display: grid; gap: 20px; padding-left: 24px; border-left: 1px solid var(--rk-accent); }
+  .interference-fishbone > svg { display: none; }
+  .fish-note, .fish-result { position: static; width: auto; }
+  .old-image-reading, .backbone-handoff { grid-template-columns: 1fr; gap: 22px; }
+  .prediction-reading { margin-top: 0; }
+}

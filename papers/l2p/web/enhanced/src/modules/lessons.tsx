@@ -1,3 +1,4 @@
+import { TaskTimeline, InterferenceFishbone, OldImageReading, BackboneHandoff } from "./reading-visuals";
 import { Fragment } from "react";
 import { ProjectionFormula, SoftmaxFormula, Sub, Tuple } from "./lesson-math";
 import { useState } from "react";
@@ -27,19 +28,11 @@ export function TaskStream() {
     <>
       <p className="lesson-lead">普通图像分类通过训练图像和标签调整模型参数，学会区分一组类别。持续学习改变的是数据到来的方式：模型依次接收新的类别，后续阶段往往无法重新取得此前全部训练图像，却仍需保留已经学到的识别能力。</p>
       <p className="lesson-prose">下面让任务 1 和任务 2 依次使用同一个分类器训练。新任务会在已有参数上继续更新，不会自动创建一份与旧任务隔离的模型。</p>
-      <figure className="training-strip">
-        <div className="training-stop"><small>第一批训练图像</small><div className="class-tags"><span>鸟</span><span>鱼</span></div><b>任务 1 完成 · θ₁</b></div>
-        <div className="training-update"><Arrow /><small>沿用并更新参数</small></div>
-        <div className="training-stop"><small>随后到来的图像</small><div className="class-tags"><span>猫</span><span>狗</span></div><b>任务 2 完成 · θ₂</b></div>
-      </figure>
+      <TaskTimeline phase={phase} />
       <section className="explain-section">
         <h3>从 <LessonVar base="θ" index="1" /> 到 <LessonVar base="θ" index="2" />，为什么旧预测也会改变？</h3>
         <p>完成任务 1 后的模型参数记为 <math><Sub base="θ" index={1} /></math>。任务 2 从这组参数接着训练，得到 <math><Sub base="θ" index={2} /></math>。训练虽然使用新类别数据，更新的却是整个共享网络中的参数，因此旧类别原先依赖的特征和预测分数也可能改变。</p>
-        <div className="parameter-cause" role="group" aria-label="新数据通过共享参数影响旧图预测">
-          <span>任务 2 的新图像<small>本轮训练数据</small></span><Arrow />
-          <span><b>θ₁ → θ₂</b><small>共享网络继续更新</small></span><Arrow />
-          <span>旧图的特征与分数<small>也可能随参数改变</small></span>
-        </div>
+        <InterferenceFishbone />
         <p>下面固定同一张鸟类测试图，先查看任务 1 结束时的预测，再切换到任务 2 结束时的参数快照，比较最高分所属类别。播放时可以追踪当前快照下的前向传播。</p>
       </section>
       <figure className="lesson-figure">
@@ -71,7 +64,7 @@ export function TaskStream() {
         </div>
         <figcaption>网络结构为示意，右侧类别分数另行设定，用两个合成快照对照训练前后的预测。百分数表示示例分数；动画播放当前快照的前向传播。</figcaption>
       </figure>
-      <p className="lesson-prose">同一张鸟类图像在 <LessonVar base="θ" index="1" /> 下最高分是鸟，在 <LessonVar base="θ" index="2" /> 下却变成猫。图像没有改变，改变的是模型参数及其预测结果：后续更新可能干扰原先的分类能力。实际是否发生 <Term id="forgetting" />，需比较旧任务整体测试表现，不能凭一张图的误判判断。</p>
+      <OldImageReading />
       <section className="explain-section">
         <h3>测试图来自哪个任务，模型事先并不知道</h3>
         <p>困难还在于，学完第二批类别后，测试输入只有图像，没有“来自任务 1 还是任务 2”的提示。类别增量测试要求模型在全部已学类别中统一选择，不能先按任务号排除猫和狗，再只在旧类别中判断。</p>
@@ -85,7 +78,7 @@ export function TaskStream() {
         <h3>能否保留主干的视觉能力？</h3>
         <p>如果预训练模型已经学到了可复用的视觉特征，就可以<span className="reading-emphasis">保留主干权重</span>，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，<span className="reading-emphasis">无需保存旧样本</span>来做回放。</p>
       </section>
-      <p className="lesson-prose">这条思路依赖预训练模型已经具备的视觉能力。下一页沿同一张鸟类图像走进 ViT，看看这份能力怎样体现为可用于分类的特征。</p>
+      <BackboneHandoff />
     </>
   );
 }

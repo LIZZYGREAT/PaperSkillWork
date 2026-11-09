@@ -503,3 +503,14 @@
 /* P1–P3 prose follows the same reading measure as the existing section text. */
 .rk-reading .lesson-prose { width: auto; max-width: none; margin-inline: 0; font-size: inherit; line-height: inherit; }
 .lesson-variable { display: inline math; font-size: 1em; white-space: nowrap; vertical-align: baseline; }
+
+/* One prose contract for all nine lessons; visual layouts own their nested copy. */
+.lesson-copy { --lesson-body-size: 17px; --lesson-body-leading: 1.8; min-width: 0; }
+.rk-reading .lesson-copy > p:not(.lesson-lead):not(.rk-note),
+.rk-reading .lesson-copy .explain-section > p {
+  width: auto;
+  max-width: none;
+  margin-inline: 0;
+  font-size: var(--lesson-body-size);
+  line-height: var(--lesson-body-leading);
+}

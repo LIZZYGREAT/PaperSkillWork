@@ -90,7 +90,7 @@ function Tutorial() {
                   <section className="rk-section teaching-module" key={module.id} aria-labelledby={`module-${module.id}`}>
                     <h2 id={`module-${module.id}`}>{module.title}</h2>
                     {(module.desc || module.summary) && <p>{module.desc || module.summary}</p>}
-                    {Widget && <Widget chapterId={activeChapter.id} moduleId={module.id} />}
+                    {Widget && <div className="lesson-copy" data-lesson-page={activeChapter.id}><Widget chapterId={activeChapter.id} moduleId={module.id} /></div>}
                   </section>
                 );
               })}
