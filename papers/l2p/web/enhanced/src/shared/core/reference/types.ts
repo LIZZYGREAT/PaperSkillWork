@@ -3,6 +3,7 @@ export type ReferenceEntry = {
   id: string;
   name: string;
   english?: string;
+  page?: string;
   definition: string;
   role?: string;
   confusion?: string;

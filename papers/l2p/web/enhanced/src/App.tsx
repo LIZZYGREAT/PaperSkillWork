@@ -60,7 +60,7 @@ function Tutorial() {
               ))}
             </nav>
           )}
-          {(tutorial.references?.length ?? 0) > 0 && <ReferenceButton>参考资料</ReferenceButton>}
+          {(tutorial.references?.length ?? 0) > 0 && <ReferenceButton>术语与资料</ReferenceButton>}
         </div>
       </header>
       <main className="rk-reading rk-editorial-preview">

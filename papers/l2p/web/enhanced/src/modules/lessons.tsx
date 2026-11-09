@@ -26,12 +26,12 @@ export function TaskStream() {
   const playback = useLessonPlayback(2300);
   return (
     <>
-      <p className="lesson-lead">普通<strong className="lesson-ink">图像分类</strong>通过训练图像和标签调整模型参数，学会区分一组类别。<span className="lesson-key lesson-term">持续学习</span>改变的是数据到来的方式：模型依次接收新的类别，后续阶段往往<span className="lesson-key lesson-key--caution">无法重新取得</span>此前全部训练图像，却仍需保留已经学到的识别能力。</p>
+      <p className="lesson-lead">普通<strong className="lesson-ink">图像分类</strong>通过训练图像和标签调整模型参数，学会区分一组类别。<span className="lesson-key lesson-term"><Term id="continual-learning">持续学习</Term></span>改变的是数据到来的方式：模型依次接收新的类别，后续阶段往往<span className="lesson-key lesson-key--caution">无法重新取得</span>此前全部训练图像，却仍需保留已经学到的识别能力。</p>
       <p className="lesson-prose">下面让任务 1 和任务 2 依次使用<span className="lesson-key lesson-term">同一个分类器</span>训练。新任务会在已有参数上继续更新，不会自动创建一份与旧任务隔离的模型。</p>
       <TaskTimeline phase={phase} />
       <section className="explain-section">
         <h3>从 <LessonVar base="θ" index="1" /> 到 <LessonVar base="θ" index="2" />，为什么<span className="editorial-key">旧预测</span>也会改变？</h3>
-        <p>完成任务 1 后的模型参数记为 <math><Sub base="θ" index={1} /></math>。任务 2 从这组参数接着训练，得到 <math><Sub base="θ" index={2} /></math>。训练虽然使用新类别数据，更新的却是整个<span className="lesson-key lesson-term">共享网络</span>中的参数，因此旧类别原先依赖的特征和预测分数也可能改变。</p>
+        <p>这种后续学习对旧类别造成的干扰，常被称为 <span className="lesson-key"><Term id="catastrophic-forgetting">灾难性遗忘</Term></span>。完成任务 1 后的模型参数记为 <math><Sub base="θ" index={1} /></math>；任务 2 从这组参数接着训练，得到 <math><Sub base="θ" index={2} /></math>。更新作用于整个<span className="lesson-key lesson-term">共享网络</span>，因此旧类别依赖的特征和预测分数也可能改变。</p>
         <InterferenceFishbone />
         <p>下面固定<span className="lesson-key">同一张鸟类测试图</span>，先查看任务 1 结束时的预测，再切换到任务 2 结束时的参数快照，比较最高分所属类别。播放时可以追踪当前快照下的前向传播。</p>
       </section>
@@ -67,16 +67,16 @@ export function TaskStream() {
       <OldImageReading />
       <section className="explain-section">
         <h3>测试图来自哪个<span className="editorial-key">任务</span>，模型事先并不知道</h3>
-        <p>困难还在于，学完第二批类别后，测试输入<span className="lesson-key lesson-key--caution">只有图像</span>，没有“来自任务 1 还是任务 2”的提示。<span className="lesson-key lesson-term">类别增量</span>测试要求模型在<span className="lesson-key">全部已学类别</span>中统一选择，不能先按任务号排除猫和狗，再只在旧类别中判断。</p>
+        <p>困难还在于，学完第二批类别后，测试输入<span className="lesson-key lesson-key--caution">只有图像</span>，没有“来自任务 1 还是任务 2”的 <Term id="task-id">任务 ID</Term>。<span className="lesson-key lesson-term"><Term id="class-incremental">类别增量</Term></span>测试要求模型在<span className="lesson-key">全部已学类别</span>中统一选择，不能先按任务号排除猫和狗，再只在旧类别中判断。</p>
         <div className="test-routing" role="group" aria-label="一张测试图进入统一的已学类别空间">
           <div className="route-input"><Specimen /><div><b>只收到图像</b><small>任务 ID 未提供</small></div></div><Arrow />
           <div className="route-classes"><div className="class-tags"><span>鸟</span><span>鱼</span><span>猫</span><span>狗</span></div><small>全部已学类别一起竞争</small></div>
         </div>
-        <p>训练时知道<span className="lesson-key">任务划分</span>，与测试时没有<span className="lesson-key lesson-key--caution">任务 ID</span> 可以同时成立；训练时也没有明确边界的 task-agnostic 是另一项条件。</p>
+        <p>训练时知道<span className="lesson-key"><Term id="task-boundary">任务边界</Term></span>，与测试时没有<span className="lesson-key lesson-key--caution"><Term id="task-id">任务 ID</Term></span>可以同时成立。<span className="lesson-key"><Term id="domain-incremental">域增量</Term></span>保留标签集合、改变输入分布；<span className="lesson-key"><Term id="task-agnostic">task-agnostic</Term></span>则没有明确的任务切换边界，是另一种数据流条件。</p>
       </section>
       <section className="explain-section">
         <h3>能否保留主干的<span className="editorial-key">视觉能力</span>？</h3>
-        <p>如果<span className="lesson-key lesson-term lesson-term--object">预训练模型</span>已经学到了可复用的视觉特征，就可以<span className="lesson-key">保留主干权重</span>，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，无需保存<span className="lesson-key">旧样本</span>来做回放。</p>
+        <p>如果<span className="lesson-key lesson-term lesson-term--object"><Term id="pretrained-backbone">预训练主干</Term></span>已经学到了可复用的视觉特征，就可以<span className="lesson-key"><Term id="frozen-parameters">冻结主干权重</Term></span>，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，无需保存旧图像放进<span className="lesson-key"><Term id="rehearsal-buffer">回放缓冲区</Term></span>再训练。</p>
       </section>
       <BackboneHandoff />
     </>

@@ -82,6 +82,30 @@ try {
           if (i && width > 760) assert(boxes[i].left > boxes[i - 1].right, 'Attention stages overlap');
         }
       }
+      if (index === 1 && width === 1440) {
+        const term = page.locator('[data-term-id="task-id"]').first();
+        await term.hover();
+        const hover = page.locator('.rk-term-popover');
+        await hover.waitFor({ state: 'visible' });
+        const hoverText = await hover.innerText();
+        assert.match(hoverText, /Task identity/);
+        assert.match(hoverText, /标识一个样本或测试输入属于哪项任务/);
+        assert.match(hoverText, /任务 ID 与任务边界不同/);
+        await hover.getByRole('button', { name: '查看完整解释' }).click();
+        const hub = page.locator('.reference-dialog');
+        await hub.waitFor({ state: 'visible' });
+        assert.match(await hub.innerText(), /沿学习顺序选择主题/);
+        assert.equal(await hub.locator('.reference-terms [data-reference-term]').count(), 10, 'P1 Hub must expose its ten linked concepts');
+        assert.match(await hub.locator('[data-reference-detail]').innerText(), /任务身份|任务边界/);
+        assert.equal(await hub.locator('.reference-explanation li').count(), 2, 'P1 task-ID detail must explain both identity states');
+        await hub.locator('[data-reference-term="class-incremental"]').click();
+        assert.match(await hub.locator('[data-reference-detail]').innerText(), /全部已见类别|全部类别/);
+        assert.equal(await hub.locator('.related-terms button').count(), 4, 'P1 class-incremental concept should link its protocol contrasts');
+        await page.screenshot({ path: path.join(output, 'P1-1440-reference-hub.png') });
+        await page.keyboard.press('Escape');
+        report.referenceResults ??= [];
+        report.referenceResults.push({ page: 1, hover: 'PASS', hubTerms: 10, detailNavigation: 'PASS' });
+      }
       await page.screenshot({ path: path.join(output, `P${index}-${width}-opening.png`) });
       await page.screenshot({ path: path.join(output, `P${index}-${width}-full.png`), fullPage: true });
       if (index === 3) {

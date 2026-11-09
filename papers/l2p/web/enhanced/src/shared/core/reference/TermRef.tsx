@@ -86,6 +86,7 @@ export function TermRef({ entry, children, onOpenReference, labels }: {
       {open ? (
         <div ref={panelRef} className="rk-term-popover" id={panelId} role="dialog" aria-label={`${entry.name} ${copy.definition}`} style={{ top: position.top, left: position.left, visibility: position.ready ? "visible" : "hidden" }}>
           <strong>{entry.name}</strong>
+          {entry.english ? <small className="rk-term-popover__english">{entry.english}</small> : null}
           <span>{entry.definition}</span>
           {entry.role ? <span><b>{copy.paperRole}</b> {entry.role}</span> : null}
           {entry.confusion ? <span><b>{copy.easyToConfuse}</b> {entry.confusion}</span> : null}
