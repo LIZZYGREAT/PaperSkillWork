@@ -140,6 +140,20 @@ const promptGradientBranches = [
   { target: [212, 105] as Pair, controls: [[228, 226], [220, 137]] as const },
   { target: [212, 157] as Pair, controls: [[228, 235], [220, 181]] as const },
 ];
+const querySourceRoute = {
+  from: [212, 105] as Pair,
+  controls: [[236, 105], [240, 139]] as [Pair, Pair],
+  to: [266, 151] as Pair,
+};
+const downstreamRoutes = [
+  { from: [520, 153] as Pair, controls: [[528, 153], [536, 153]] as [Pair, Pair], to: [544, 153] as Pair },
+  { from: [574, 153] as Pair, controls: [[585, 153], [588, 122]] as [Pair, Pair], to: [598, 126] as Pair },
+  { from: [579, 220] as Pair, controls: [[585, 220], [592, 220]] as [Pair, Pair], to: [598, 220] as Pair },
+  { from: [724, 126] as Pair, controls: [[738, 126], [740, 147]] as [Pair, Pair], to: [750, 156] as Pair },
+  { from: [724, 220] as Pair, controls: [[738, 220], [740, 197]] as [Pair, Pair], to: [750, 188] as Pair },
+  { from: [828, 173] as Pair, controls: [[832, 173], [837, 173]] as [Pair, Pair], to: [841, 173] as Pair },
+  { from: [944, 173] as Pair, controls: [[952, 173], [960, 173]] as [Pair, Pair], to: [970, 173] as Pair },
+];
 
 function gradientRailPoint(progress: number): Pair {
   const verticalLength = gradientRailTurn[1] - gradientRailStart[1];
@@ -206,14 +220,14 @@ function PromptLearningStage({
         sourceIndex,
         kind: "query" as const,
         from: queryOrigin,
-        controls: [[364, queryOrigin[1]], [367, y]] as [Pair, Pair],
+        controls: [[364, queryOrigin[1]], [380, y + (y < queryOrigin[1] ? 11 : -11)]] as [Pair, Pair],
         to: [402, y] as Pair,
       },
       {
         sourceIndex,
         kind: "value" as const,
         from: [446, y] as Pair,
-        controls: [[454, y], [460, valueTargets[sourceIndex][1]]] as [Pair, Pair],
+        controls: [[454, y], [valueTargets[sourceIndex][0] - 12, valueTargets[sourceIndex][1] + (sourceIndex < 2 ? -12 : 12)]] as [Pair, Pair],
         to: valueTargets[sourceIndex],
       },
     ];
@@ -312,7 +326,7 @@ function PromptLearningStage({
         <text className="p4-node-title" x="276" y="143">Q₀ ← P₀</text>
         <text className="p4-node-value" x="276" y="162">{pairText(state.firstPromptQuery)}</text>
       </g>
-      <path d="M212 105C236 105 239 151 266 151" className="p4-query-source" markerEnd="url(#p4-flow-arrow)" opacity={phase === 3 ? 0.12 : attentionProgress} />
+      <path d={cubicPath(querySourceRoute.from, querySourceRoute.controls[0], querySourceRoute.controls[1], querySourceRoute.to)} className="p4-query-source" markerEnd="url(#p4-flow-arrow)" opacity={phase === 3 ? 0.12 : attentionProgress} />
 
       {sourceY.map((y, index) => {
         const attention = state.firstPromptAttention[index];
@@ -396,13 +410,14 @@ function PromptLearningStage({
           style={{ opacity: phase === 3 ? 0.12 : 0.25 + state.firstPromptAttention[index] * 0.75, strokeWidth: 0.8 + state.firstPromptAttention[index] * 2.3 }}
         />)}
         <path d="M446 153H466" className="p4-operator-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : attentionProgress }} />
-        <path d="M520 153H544" className="p4-operator-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : attentionProgress }} />
-        <path d="M574 153C586 153 585 126 598 126" className="p4-output-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : outputOpacity }} />
-        <path d="M579 220H598" className="p4-output-link p4-output-link--secondary" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : outputOpacity }} />
-        <path d="M724 126C741 126 739 156 750 156" className="p4-readout-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : outputOpacity }} />
-        <path d="M724 220C741 220 739 188 750 188" className="p4-readout-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : outputOpacity }} />
-        <path d="M828 173H841" className="p4-readout-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : outputOpacity }} />
-        <path d="M944 173H969" className="p4-readout-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : outputOpacity }} />
+        <path d={cubicPath(downstreamRoutes[0].from, downstreamRoutes[0].controls[0], downstreamRoutes[0].controls[1], downstreamRoutes[0].to)} className="p4-operator-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : attentionProgress }} />
+        {downstreamRoutes.slice(1).map((route, index) => <path
+          key={"downstream-link-" + index}
+          d={cubicPath(route.from, route.controls[0], route.controls[1], route.to)}
+          className={index === 1 ? "p4-output-link p4-output-link--secondary" : index > 1 ? "p4-readout-link" : "p4-output-link"}
+          markerEnd="url(#p4-flow-arrow)"
+          style={{ opacity: phase === 3 ? 0.12 : outputOpacity }}
+        />)}
       </g>
       {phase >= 5 && <g className="p4-loss-compare">
         <text x="970" y="250">同图对照</text>
