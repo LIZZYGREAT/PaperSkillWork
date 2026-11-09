@@ -92,11 +92,13 @@ export function ViTPath() {
   const col = patch % PATCH_GRID;
   return (
     <>
-      <p className="lesson-lead">P1 把分类器当成了黑盒。要理解 L2P 为什么能冻结主干，我们先把黑盒拆开，看看图像在哪里变成向量，又在哪里获得上下文。</p>
+      <p className="lesson-lead">P1 提出保留预训练主干的视觉能力。L2P 使用的主干是视觉 Transformer（ViT）：它接收图像，在内部形成一组向量表示，供后续分类使用。先沿完整路径认清这些表示从哪里来、怎样传下去。</p>
+      <p className="rk-prose">图中从左向右，输入嵌入模块 fₑ 将图像整理成 Token 序列；多层 Transformer Encoder 组成 fᵣ，逐层更新各位置的向量；最后从输出序列中读出分类特征。图上的冻结标记表示后续适应时保留主干权重，前向计算仍照常执行。</p>
       <ViTOverview index={patch} select={setPatch} />
       <section className="explain-section">
         <h3>二维图像怎样变成一串向量？</h3>
-        <p>Transformer 的输入是一串同宽向量。把 224×224 的图像沿两轴每 16 像素切一次，每边得到 14 块，一共 196 块。按从上到下、每行从左到右的顺序编号，就能把二维网格排成一条序列。</p>
+        <p>Transformer 处理按位置排列的向量序列，图像最初却是由高度、宽度和颜色通道组成的像素数组。ViT 先把图像切成等大的图像块（Patch），将每块像素展平，再通过共享的线性投影变成一个 Patch Token，让局部区域进入模型的特征空间。</p>
+        <p>以这里的 ViT-B/16、224×224 输入为例，每块边长为 16，每边得到 14 块，共 14×14=196 块。点击网格或拖动滑块选一块，沿着它的行列位置追踪到对应 Token，再播放通道读取、展平和投影过程。展平只重排像素，投影则把像素值映射为特征坐标。</p>
         <figure className="lesson-figure patch-lab">
           <div className="figure-top"><strong>追踪原图中的一块 Patch</strong><span>点击架构图中的网格或拖动滑块</span></div>
           <div className="figure-body">
@@ -113,21 +115,27 @@ export function ViTPath() {
           <div><strong>展平输入</strong><p><Term id="vit" /> 示例：16×16×3 = 768 个像素通道值</p></div>
           <span className="reading-contrast__flow" aria-hidden="true">→</span>
           <div><strong>线性投影后</strong><p>768 个学习得到的特征坐标</p></div>
-          <p className="reading-contrast__conclusion">数值数量相同，坐标含义已经改变。</p>
+          <p className="reading-contrast__conclusion">这里输入和输出都为 768 维，坐标含义已经改变；其他 ViT 配置可以采用不同的投影宽度。</p>
         </div>
       </section>
       <section className="explain-section">
         <h3>序列里为什么有 197 个位置？</h3>
-        <p>196 个 Patch Token 前面另放一个 <strong>[CLS]</strong>。它没有对应图像块，是为整图表征预留的位置。再把每个位置的向量加到对应 Token 上，告诉模型相同内容出现在哪里。</p>
+        <p>投影得到的向量承载局部内容，但相似内容出现在不同位置时，对整图的意义可能不同。ViT 为各位置加入对应的位置向量，使模型能利用空间位置信息。</p>
+        <p>普通 ViT 还在 196 个 Patch Token 前面加入一个用于整图表示的 <strong>[CLS]</strong> Token。它独占序列中的第 0 位，没有对应的图像块。因此共有 196+1=197 个位置。下面按列看内容与位置向量如何相加，形成输入序列 Xₑ。</p>
         <div className="sequence-explainer" role="group" aria-label="内容向量与位置向量按列相加">
           <div><b>内容向量</b><span className="token special">[CLS]</span><span className="token">Patch 1</span><span className="token">Patch 2</span><span>…</span><span className="token">Patch 196</span></div>
           <div><b>+ 位置向量</b><math><Sub base="p" index={0} /></math><math><Sub base="p" index={1} /></math><math><Sub base="p" index={2} /></math><span>…</span><math><Sub base="p" index={196} /></math></div>
           <div><b>= 输入 <math><Sub base="X" index="e" /></math></b><span>第 0 位</span><span>第 1 位</span><span>第 2 位</span><span>…</span><span>第 196 位</span></div>
         </div>
         <div className="shape-equation"><math display="block"><msub><mi>X</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math></div>
-        <p><span className="reading-emphasis">197 数的是位置</span>，<span className="reading-emphasis">768 数的是每个位置的特征坐标</span>。进了 Encoder，位置和宽度继续保留，各层更新的则是这些位置的向量内容。末层依然有 197 个输出，普通 ViT 从中取 [CLS] 作为整图分类的输入。</p>
+        <p><span className="reading-emphasis">197 是序列长度</span>，<span className="reading-emphasis">768 是每个位置的向量维数</span>。这个形状描述当前演示的配置，序列将整体交给 Encoder 处理。</p>
       </section>
-      <Takeaway>一个位置能保留自己的编号，又能读到别处的信息吗？接下来打开架构图里那个 Block，看 [CLS] 和 Patch Token 怎样交换信息。</Takeaway>
+      <section className="explain-section">
+        <h3>Encoder 逐层更新什么，分类又读取什么？</h3>
+        <p>回到总览中的 Encoder 堆叠：每个 Block 接收前一层的整条序列，保留位置顺序与向量宽度，更新各位置内部的特征。后一层接着处理这些输出；经过多层计算，各位置逐渐携带来自其他区域的信息。</p>
+        <p>普通 ViT 分类通常读取末层 [CLS] 表示，再交给分类头。后面的 L2P 会用无 Prompt 的 [CLS] 特征做检索，并从带 Prompt 序列的另一组输出位置读取分类特征；P5–P6 将沿实际路径展开。</p>
+      </section>
+      <Takeaway>图像已经变成带位置的 Token 序列，Encoder 则逐层更新它们。但 Patch A 最初只包含一块局部图像，它怎样接收到 Patch B 的信息？P3 将打开其中一个 Block，追踪一次 Attention 计算。</Takeaway>
     </>
   );
 }

@@ -10,7 +10,7 @@ export const tutorial: TutorialData = {
     },
     {
       kind: "chapter", id: "p2", title: "一张图，怎样变成 197 个 Token？", titleHighlight: "197 个 Token",
-      summary: "跟着同一张图走过 ViT。先看主干全貌，再放大一块 Patch，找到它进入序列的位置。",
+      summary: "沿同一块 Patch 走过展平、投影和序列组装，理解 196、197 与 768 的来源，再看 Encoder 如何逐层形成分类特征。",
       modules: [{ kind: "module", id: "vit", title: "从图像到上下文特征", componentId: "vit-path" }],
     },
     {
