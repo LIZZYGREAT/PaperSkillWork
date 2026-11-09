@@ -47,3 +47,54 @@
   .old-image-reading, .backbone-handoff { grid-template-columns: 1fr; gap: 22px; }
   .prediction-reading { margin-top: 0; }
 }
+
+.vit-reading-map { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; margin: 20px 0 30px; }
+.vit-reading-map__copy { border-top: 1px solid var(--rk-line-strong); padding-top: 18px; }
+.representation-ladder { display: grid; gap: 10px; }
+.representation-ladder > div { display: grid; grid-template-columns: 122px 1fr; align-items: center; gap: 2px 18px; padding: 10px 14px; background: var(--rk-surface-soft); border-radius: 12px; }
+.representation-ladder > div:nth-child(2) { margin-left: 24px; }
+.representation-ladder > div:nth-child(3) { margin-left: 48px; }
+.representation-ladder > div > span { grid-row: span 2; }
+.representation-ladder small { font-size: 13px; color: var(--rk-muted); }
+.mini-pixel-field { display: grid; grid-template-columns: repeat(4, 1fr); width: 46px; height: 46px; gap: 2px; }
+.mini-pixel-field i { background: #c5c7a2; }
+.mini-pixel-field i:nth-child(3n) { background: #719894; }
+.mini-pixel-field i:nth-child(4n) { background: #c7b47d; }
+.mini-sequence { display: flex; gap: 5px; }
+.mini-sequence .vector-glyph > i { width: 5px; height: 24px; }
+.mini-context { position: relative; display: grid; justify-items: center; }
+.mini-context svg { width: 100px; height: 35px; fill: none; stroke: var(--rk-accent); }
+.pixel-feature-compare { display: grid; grid-template-columns: 1fr .6fr 1fr; gap: 24px; align-items: center; margin: 30px 0 44px; }
+.coordinate-board { padding: 24px; background: var(--rk-surface-soft); border: 1px solid var(--rk-line); border-radius: 12px; }
+.coordinate-board--feature { margin-top: 66px; background: var(--rk-figure); }
+.coordinate-board__visual { display: flex; align-items: center; gap: 18px; min-height: 48px; margin-bottom: 18px; }
+.coordinate-ribbon { font: 14px var(--rk-font-mono); color: var(--rk-accent-strong); }
+.coordinate-board h4 { margin: 0 0 10px; font-size: 18px; color: var(--rk-accent-strong); }
+.rk-reading .coordinate-board p { margin: 0; font-size: 16px; }
+.projection-link { display: grid; justify-items: center; gap: 12px; text-align: center; }
+.projection-link::before { content: ""; width: 100%; border-top: 1px solid var(--rk-line-strong); }
+.projection-link math { font-size: 23px; }
+.projection-link small { font-size: 13px; color: var(--rk-muted); }
+.encoder-reading { margin-block: 44px; display: grid; gap: 40px; }
+.encoder-reading__row { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; }
+.encoder-reading__row--reverse { grid-template-columns: 1fr 1.2fr; }
+.rk-reading .encoder-reading h3 { font-size: 25px; margin-bottom: 14px; }
+.rk-reading .encoder-reading p { margin: 0; }
+.layer-relay { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; position: relative; padding: 16px 0; }
+.layer-relay::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--rk-accent); }
+.layer-relay > div { display: grid; gap: 12px; padding: 14px 10px; background: var(--rk-figure); border: 1px solid var(--rk-line-strong); border-radius: 12px; z-index: 1; }
+.layer-relay > div:nth-child(2) { transform: translateY(18px); }
+.layer-relay > div:nth-child(3) { transform: translateY(36px); }
+.layer-relay > div > div { display: grid; justify-items: start; gap: 6px; }
+.layer-relay small { font-size: 12px; line-height: 1.5; color: var(--rk-muted); }
+.layer-relay .vector-glyph > i { width: 6px; height: 16px; }
+.cls-readout-object { display: grid; justify-items: center; gap: 12px; padding: 24px; border-block: 1px solid var(--rk-line-strong); }
+.cls-readout-object > div { display: flex; gap: 8px; }
+.cls-readout-object strong { color: var(--rk-accent-strong); }
+.cls-readout-object small { font-size: 13px; color: var(--rk-muted); }
+.cls-readout-line { height: 30px; border-left: 1px solid var(--rk-warn); }
+@media(max-width: 760px) {
+  .vit-reading-map, .pixel-feature-compare, .encoder-reading__row { grid-template-columns: 1fr; gap: 24px; }
+  .coordinate-board--feature { margin-top: 0; }
+  .layer-relay { margin-bottom: 36px; }
+}

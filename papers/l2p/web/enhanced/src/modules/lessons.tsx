@@ -1,4 +1,4 @@
-import { TaskTimeline, InterferenceFishbone, OldImageReading, BackboneHandoff } from "./reading-visuals";
+import { TaskTimeline, InterferenceFishbone, OldImageReading, BackboneHandoff, ViTReadingMap, PixelFeatureCompare, EncoderReading } from "./reading-visuals";
 import { Fragment } from "react";
 import { ProjectionFormula, SoftmaxFormula, Sub, Tuple } from "./lesson-math";
 import { useState } from "react";
@@ -90,7 +90,7 @@ export function ViTPath() {
   return (
     <>
       <p className="lesson-lead">P1 提出保留预训练主干的视觉能力。L2P 使用的主干是视觉 Transformer（ViT）：它接收图像，在内部形成一组向量表示，供后续分类使用。先沿完整路径认清这些表示从哪里来、怎样传下去。</p>
-      <p className="lesson-prose">图中从左向右，输入嵌入模块 <LessonVar base="f" index="e" /> 将图像整理成 Token 序列；多层 Transformer Encoder 组成 <LessonVar base="f" index="r" />，逐层更新各位置的向量；最后从输出序列中读出分类特征。图上的冻结标记表示后续适应时保留主干权重，前向计算仍照常执行。</p>
+      <ViTReadingMap />
       <ViTOverview index={patch} select={setPatch} />
       <section className="explain-section">
         <h3>二维图像怎样变成一串向量？</h3>
@@ -108,12 +108,7 @@ export function ViTPath() {
           </div>
           <figcaption>裁切区域取自同一张插图。展平只重排像素。线性投影用同一组权重把各块变成特征。图中的向量格示意形状和位置。</figcaption>
         </figure>
-        <div className="reading-contrast reading-contrast--dimension" role="group" aria-label="Patch 展平与投影后的 768 个数值含义不同">
-          <div><strong>展平输入</strong><p><Term id="vit" /> 示例：16×16×3 = 768 个像素通道值</p></div>
-          <span className="reading-contrast__flow" aria-hidden="true">→</span>
-          <div><strong>线性投影后</strong><p>768 个学习得到的特征坐标</p></div>
-          <p className="reading-contrast__conclusion">这里输入和输出都为 768 维，坐标含义已经改变；其他 ViT 配置可以采用不同的投影宽度。</p>
-        </div>
+        <PixelFeatureCompare />
       </section>
       <section className="explain-section">
         <h3>序列里为什么有 197 个位置？</h3>
@@ -127,11 +122,7 @@ export function ViTPath() {
         <div className="shape-equation"><math display="block"><msub><mi>X</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math></div>
         <p><span className="reading-emphasis">197 是序列长度</span>，<span className="reading-emphasis">768 是每个位置的向量维数</span>。这个形状描述当前演示的配置，序列将整体交给 Encoder 处理。</p>
       </section>
-      <section className="explain-section">
-        <h3>Encoder 逐层更新什么，分类又读取什么？</h3>
-        <p>回到总览中的 Encoder 堆叠：每个 Block 接收前一层的整条序列，保留位置顺序与向量宽度，更新各位置内部的特征。后一层接着处理这些输出；经过多层计算，各位置逐渐携带来自其他区域的信息。</p>
-        <p>普通 ViT 分类通常读取末层 [CLS] 表示，再交给分类头。后面的 L2P 会用无 Prompt 的 [CLS] 特征做检索，并从带 Prompt 序列的另一组输出位置读取分类特征；P5–P6 将沿实际路径展开。</p>
-      </section>
+      <EncoderReading />
       <div className="context-bridge" role="group" aria-label="从局部内容到上下文表示，下一页解释中间计算">
         <div><span className="token traced-token">Patch A</span><small>最初只来自一块局部图像</small></div>
         <div className="context-bridge__gap"><span>Encoder 内部发生了什么？</span><Arrow /></div>
