@@ -669,4 +669,55 @@ export const references: ReferenceEntry[] = [
     related: ["frozen-parameters", "attention", "token-sequence"],
     source: <>Transformer 的分层计算见 §3（<SourceLink href={TRANSFORMER}>原论文</SourceLink>）；本页用 ViT 前向路径作说明。</>,
   },
+  {
+    id: "prompt-token", page: "P4", name: "Prompt Token", english: "Prompt token · pᵢ",
+    definition: "插入模型输入序列、可由训练更新的向量位置；它与图像 Token 具有相同的隐藏宽度。",
+    role: "P4 用 P₀、P₁ 表示同一组 Prompt 的两个可学习位置，并将它们接到固定图像 Token 前。",
+    confusion: "Prompt Token 不是图像 Patch；添加它会增加序列长度，不会改变隐藏宽度 D。P4 的两个位置也不等于两个独立 Prompt Pool 槽位。",
+    detail: <ReferenceDetail
+      explanation="Prompt 是送入预训练网络的可学习输入向量。把它与图像嵌入拼接后，冻结网络仍按正常前向计算处理每个位置；训练时，损失可沿计算路径为这些输入向量提供梯度。"
+      steps={[
+        { title: "保持宽度", text: "每个 Prompt Token 与图像 Token 都是 D 维向量。" },
+        { title: "增加位置", text: "加入 Lₚ 个 Prompt 后，输入序列长度由 L 变为 Lₚ+L。" },
+        { title: "参与计算", text: "Prompt 和图像位置共同进入冻结的 Transformer 计算。" },
+      ]}
+      note="P4 的全宽 ViT 参照是 197×768 加两枚 Prompt 后得到 199×768；舞台里的 Lₚ=L=D=2 是便于复核的小型教学 Trace。"
+    />,
+    related: ["prompt-tuning", "gradient-flow", "token-sequence"],
+    source: <>L2P §4.1 与 Algorithm 1（<SourceLink href={L2P}>Prompt Tuning 与训练流程</SourceLink>）。</>,
+  },
+  {
+    id: "prompt-tuning", page: "P4", name: "Prompt Tuning", english: "Prompt tuning",
+    definition: "固定预训练主干的权重，通过训练输入侧的 Prompt 向量来适应目标任务。",
+    role: "P4 沿一份分类 Trace 展示前向、损失、梯度回传，以及 Prompt 与可训练分类头的更新。",
+    confusion: "冻结主干只表示其权重不写回，不表示计算停止或 Prompt 的梯度被截断；P4 的均值读出是教学简化，不是完整 L2P 的检索与分类路径。",
+    detail: <ReferenceDetail
+      explanation="输入 Prompt 会影响冻结网络产生的激活和输出。训练目标先由分类头与标签计算，再通过固定计算把梯度传回 Prompt；优化器只写入列为可训练的参数。"
+      steps={[
+        { title: "接入输入", text: "将一组 Prompt Token 拼到图像序列前，保持每个位置的特征宽度不变。" },
+        { title: "执行冻结前向", text: "Prompt、[CLS] 与 Patch 位置共同经过固定的预训练计算。" },
+        { title: "回传并更新", text: "损失为 Prompt 和可训练分类头提供梯度；冻结主干参数保持原值。" },
+      ]}
+      note="本页使用两个 Prompt 位置、两个图像位置、单头注意力和二分类头解释机制；论文中的 Prompt Pool 检索与正式分类读出在后续页面展开。"
+    />,
+    related: ["prompt-token", "gradient-flow", "frozen-parameters"],
+    source: <>L2P §4.1 与 Algorithm 1（<SourceLink href={L2P}>Prompt Tuning 方法与训练流程</SourceLink>）。</>,
+  },
+  {
+    id: "gradient-flow", page: "P4", name: "梯度回传", english: "Gradient flow through frozen computation",
+    definition: "从损失沿可微计算路径反向求导，把输出对输入或可训练参数的导数传回去。",
+    role: "P4 用紫色路径连接分类目标与 Prompt，说明固定权重可继续参与求导，而更新只写入 P 与 φ。",
+    confusion: "梯度经过某个冻结运算，不等于该运算的权重会被优化器更新；是否写回取决于参数的可训练状态。",
+    detail: <ReferenceDetail
+      explanation="只要输出依赖 Prompt，链式求导就能穿过固定的 Transformer 运算，为 Prompt 计算导数。被冻结的权重在前向和反向中作为固定计算条件，其参数更新保持关闭。"
+      steps={[
+        { title: "得到损失", text: "分类头输出 Logits，再与标签形成训练目标。" },
+        { title: "沿计算图回传", text: "导数经过冻结计算返回到影响输出的 Prompt。" },
+        { title: "写入可训练参数", text: "本例更新 Prompt 与分类头 φ；主干参数不变。" },
+      ]}
+      note="舞台展示一次教学 SGD 更新，不把一次损失变化推广成所有训练步都必然下降的保证。"
+    />,
+    related: ["prompt-tuning", "prompt-token", "frozen-parameters"],
+    source: <>L2P §4.1、Algorithm 1（<SourceLink href={L2P}>Prompt 的训练目标与更新</SourceLink>）。</>,
+  },
 ];

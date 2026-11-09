@@ -21,7 +21,7 @@ export const tutorial: TutorialData = {
     },
     {
       kind: "chapter", id: "p4", title: "冻结 ViT 时，Prompt 怎样学会适应新任务？", titleHighlight: "Prompt 怎样学会适应",
-      summary: "P3 说明输入 Token 会参与冻结网络的计算。现在把一小段可学习向量放到图像序列前面，跟着一次分类训练，看哪些参数会改变。",
+      summary: "用低维教学 Trace 观察两个 Prompt Token 如何接入图像序列，经历冻结前向、分类损失、梯度回传、一次参数更新与同图复算；再引出共享 Prompt 在后续任务中可能受到的干扰。均值读出只用于解释机制，不代表完整 L2P Prompt Pool 路径。",
       modules: [{ kind: "module", id: "prompt-tuning", title: "把可学习 Prompt 放进冻结的 ViT", componentId: "prompt-tuning" }],
     },
     {

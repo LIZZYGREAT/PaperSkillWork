@@ -12,6 +12,7 @@ const pageNames: Record<string, string> = {
   P1: "问题与任务设定",
   P2: "ViT 图像序列",
   P3: "Transformer 计算",
+  P4: "Prompt 调优",
   其他: "其他资料",
 };
 

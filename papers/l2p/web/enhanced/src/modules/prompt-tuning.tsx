@@ -443,7 +443,7 @@ export function PromptTuning() {
       : activePhase >= 5 ? P4_TRAINING_TRACE.updated : P4_TRAINING_TRACE.initial;
 
   return <>
-    <p className="lesson-lead">P3 已说明，固定的 Transformer 参数仍会对输入 Token 执行计算，输出也会随输入改变。P4 接着把新增 Token 设为可学习参数：让分类损失沿这条固定计算路径回传，看看更新真正落在哪里。</p>
+    <p className="lesson-lead">P3 已说明，固定的 Transformer 参数仍会对输入 Token 执行计算，输出也会随输入改变。P4 接着把 <Term id="prompt-token">Prompt Token</Term> 设为可学习参数；这种做法叫 <Term id="prompt-tuning">Prompt Tuning</Term>。让分类损失沿固定计算路径回传，看看更新真正落在哪里。</p>
 
     <section className="explain-section">
       <h3>Prompt 是加在图像序列前端的一组向量</h3>
@@ -494,7 +494,7 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>损失的导数经过固定计算，更新只写入 P 与 φ</h3>
-      <p>分类头给出 Logits，与标签比较后形成损失。因为输出依赖输入参数 P，反向求导会穿过 <math><msub><mi>f</mi><mi>r</mi></msub></math> 的固定运算并把梯度送回 Prompt；优化器更新 Prompt 与可训练分类头 <math><mi>φ</mi></math>，冻结的主干参数保留原值。</p>
+      <p>分类头给出 Logits，与标签比较后形成损失。因为输出依赖输入参数 P，反向求导会穿过 <math><msub><mi>f</mi><mi>r</mi></msub></math> 的固定运算，将 <Term id="gradient-flow">梯度回传</Term> 给 Prompt；优化器更新 Prompt 与可训练分类头 <math><mi>φ</mi></math>，冻结的主干参数保留原值。</p>
       <div className="p4-gradient-equation">
         <div className="p4-equation-item">
           <span className="p4-equation-label">一次教学 SGD 更新</span>
