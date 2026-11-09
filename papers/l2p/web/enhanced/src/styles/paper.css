@@ -171,7 +171,7 @@
 .architecture-tokens .token { padding-inline: 4px; }
 .stack-node { background: var(--rk-figure); }
 .block-stack { width: min(100%, 108px); list-style: none; padding: 0 5px 0 0; margin: 0; display: grid; gap: 2px; }
-.block-stack li { font-size: 11px; line-height: 1.5; border: 1px solid var(--rk-line-strong); border-radius: 3px; background: var(--rk-surface); box-shadow: 3px 2px 0 #dae3d7; }
+.block-stack li { font-size: 12px; line-height: 1.5; border: 1px solid var(--rk-line-strong); border-radius: 3px; background: var(--rk-surface); box-shadow: 3px 2px 0 #dae3d7; }
 .block-stack li:nth-child(3), .block-stack li:nth-child(5) { border: 0; box-shadow: none; background: none; line-height: 1; }
 .block-stack .stack-focus { border-color: var(--rk-warn); background: var(--rk-warn-soft); color: var(--rk-warn); font-weight: 650; }
 .readout-line { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 3px; font-size: 11px; }

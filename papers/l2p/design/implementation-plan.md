@@ -330,3 +330,9 @@ P3 与后续补充要求：正文先解释 Pre-LN 顺序和 Z/U/Z′，沿单目
 - INTERACTIONS=PASS：node .visual-qa/l2p-interactions.mjs，真实 DOM 操作断言 P1 播放/暂停/复位、快照；P2 Patch196 行列与 data-token-index=195；P3 两组输出、四行来源、目标 B、步骤跳转与复位，零 pageerror。原生截图保留在 C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522：P1-snapshot2.png、P1-parameter-cause.png、P2-patch196.png、P2-sequence.png、P2-to-P3.png、P3-attention-rule.png、P3-attention-extra.png、P3-frozen-compare.png、P3-head-output.png，供复核。
 - Impeccable detect --json lessons.tsx tutorial.ts paper.css 返回 []。
 - FULLSCREEN_REAL=NOT_RUN：本轮使用 headless Edge，未操作桌面 F11。STYLE_QA 自动断言与获批像素基线对比=NOT_RUN（本轮配置未声明）；Agent 已进行上述截图视觉复核。W7/W9 人工教学验收 PENDING，无工作流阶段变更或正式发布。
+
+P2 字号修复复测：仅将 .block-stack li 从 11px 提高到 12px，不改布局结构和动画。npm.cmd run build 再次通过（最终 index-CshBsept.js / index-D0-52zPb.css）。运行 l2p-p2-final-config.json，报告 run-2026-11-09T08-33-15-041Z，六个非根路径截图（两种桌面布局、默认/第196块终态/第1块投影中间态）全部通过，small-semantic-text 警告清零；已复核 1920 默认整页，标签清楚且无挤压。
+
+清理范围已核实为本轮输出的七个 runner 目录：run-2026-11-09T08-16-33-578Z、run-2026-11-09T08-17-31-736Z、run-2026-11-09T08-18-12-261Z、run-2026-11-09T08-20-20-968Z、run-2026-11-09T08-22-47-100Z、run-2026-11-09T08-29-01-925Z、run-2026-11-09T08-33-15-041Z。完成报告/截图审阅后按 CLI 精确清理；任务专用 staging/config/native script 一并按确切路径清理，交付截图保留在上述 visualizations 目录。任务启动的临时服务均随 runner/native script 退出关闭。
+
+清理结果：上述七次 --cleanup-run 均返回 CLEANED，逐项 Test-Path=False；任务专用 staging 与五个临时配置/脚本均按已核实的绝对路径删除。交付截图保留；历史 QA 目录与既有 package-lock.json 改动未动。
