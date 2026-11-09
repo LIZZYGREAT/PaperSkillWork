@@ -499,3 +499,7 @@
   .parameter-cause > .flow-arrow, .attention-rule > .flow-arrow, .context-bridge__gap .flow-arrow { transform: rotate(90deg); justify-self: center; }
   .rk-reading .context-bridge > p { grid-column: 1; }
 }
+
+/* P1–P3 prose follows the same reading measure as the existing section text. */
+.rk-reading .lesson-prose { width: auto; max-width: none; margin-inline: 0; font-size: inherit; line-height: inherit; }
+.lesson-variable { display: inline math; font-size: 1em; white-space: nowrap; vertical-align: baseline; }
