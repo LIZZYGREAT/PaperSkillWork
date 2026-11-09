@@ -433,4 +433,4 @@ P3 SOURCE_BUILD=PASS：npm build，TypeScript + Vite 6.4.3，72 modules。`check
 
 P4 改为一套可暂停、定位、回到起点的共享教学舞台：两枚 Prompt Token 接入固定图像序列，依次展示冻结前向、二分类损失、沿固定计算回传梯度、一次参数更新、同图复算，再以任务 B 引出共享参数干扰的可能性。向量、注意力、输出、损失和坐标来自原有可复算教学 Trace；明确区分 ViT-B/16 全宽序列形状与低维单头示例，并将图内辅助字号修正为项目字体 token。新增 P4 的 Prompt Token、Prompt Tuning、梯度回传术语引用；本页分类均值读出标注为机制教学简化，不冒充完整 L2P Prompt Pool 路径。
 
-SOURCE_BUILD=PASS：`npm.cmd run build`（`papers/l2p/web/enhanced`，TypeScript + Vite 6.4.3，72 modules）。VISUAL_QA=PASS：`.visual-qa/run-2026-11-09T12-31-51-462Z` 的 1440×900 与 1920×1080 桌面布局共 16 张截图，几何、样式和浏览器错误检查通过，0 browser error；代表性初始、梯度、参数更新、同图复算和任务衔接状态已人工查看，VISUAL_REVIEW=PASS。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（使用 headless Edge 的固定视口）。
+SOURCE_BUILD=PASS：`npm.cmd run build`（`papers/l2p/web/enhanced`，TypeScript + Vite 6.4.3，72 modules）。VISUAL_QA=PASS：runner 的 1440×900 与 1920×1080 桌面布局共 16 张截图，几何、样式和浏览器错误检查通过，0 browser error；代表性初始、梯度、参数更新、同图复算和任务衔接状态已人工查看，VISUAL_REVIEW=PASS。报告与完整截图副本保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-core-refactor-qa/`。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（使用 headless Edge 的固定视口）。
