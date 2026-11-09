@@ -8,7 +8,7 @@
   border-block: 1px solid var(--rk-line-strong);
   color: var(--rk-accent-strong);
 }
-.p4-shape-equations math { font-size: clamp(19px, 1.5vw, 22px); }
+.p4-shape-equations math { font-size: clamp(22px, 1.65vw, 26px); }
 .lesson-figure.p4-training-figure { width: 100%; max-width: 100%; min-width: 0; overflow: clip; }
 .teaching-module:has(.p4-training-figure) { min-width: 0; }
 .p4-training-figure .figure-top { align-items: center; }
@@ -36,7 +36,7 @@
   flex: 0 0 auto;
   padding: 5px 9px;
   color: var(--rk-accent-strong);
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .p4-control-bottomline {
@@ -48,8 +48,8 @@
 .p4-control-dock .playback-controls { justify-content: flex-start; gap: 7px 11px; padding-block: 0; }
 .p4-control-dock .playback-controls > label { gap: 7px; white-space: nowrap; }
 .p4-control-dock .playback-controls input { width: clamp(120px, 19vw, 230px); }
-.p4-control-dock .motion-status { margin: 0 !important; color: var(--rk-accent-strong); font-size: 12px; line-height: 1.45 !important; }
-.p4-data-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 16px; margin-bottom: 8px; color: #47574c; font-size: 12px; font-variant-numeric: tabular-nums; }
+.p4-control-dock .motion-status { margin: 0 !important; color: var(--rk-accent-strong); font-size: 13px; line-height: 1.45 !important; }
+.p4-data-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 16px; margin-bottom: 8px; color: #47574c; font-size: 13px; font-variant-numeric: tabular-nums; }
 .p4-data-note > span:first-child { color: #765c43; font-weight: 700; }
 .p4-stage-scroll {
   display: block;
@@ -63,19 +63,16 @@
 }
 .p4-stage-svg { display: block; width: 100%; min-width: 1040px; height: auto; background: #fdfcf9; }
 .p4-zone-label { fill: #315641; font: 700 14px/1.2 var(--rk-font-body); }
-.p4-zone-sub { fill: #586459; font: 12px/1.2 var(--rk-font-body); }
+.p4-zone-sub { fill: #586459; font: 13px/1.2 var(--rk-font-body); }
 .p4-input-frame { fill: #fbfaf6; stroke: #c6cbbd; stroke-width: 1; }
-.p4-frame-caption { fill: #47375b; font: 650 12px/1.2 var(--rk-font-body); }
-.p4-fixed-caption { fill: #53675d; font-weight: 500; }
+.p4-frame-caption { fill: #47375b; font: 650 13px/1.2 var(--rk-font-body); }
 .p4-token-card rect { stroke-width: 1.2; }
 .p4-token-card--prompt rect { fill: #f1ecf4; stroke: #b4a3c0; }
 .p4-token-card--image rect { fill: #edf4f0; stroke: #a8c5ba; }
 .p4-token-label { fill: #2e483a; font: 700 13px/1.2 var(--rk-font-body); }
 .p4-token-card--prompt .p4-token-label { fill: #684b7a; }
-.p4-token-value, .p4-node-value { fill: #33493d; font: 12px/1.2 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
-.p4-token-state { fill: #705381; font: 700 11px/1 var(--rk-font-body); }
-.p4-vector-axis { fill: none; stroke: #91a095; stroke-width: .9; stroke-dasharray: 2 2; }
-.p4-vector-arrow { fill: none; stroke-width: 2; stroke-linecap: round; }
+.p4-token-value, .p4-node-value { fill: #33493d; font: 13px/1.2 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
+.p4-token-state { fill: #705381; font: 700 12px/1 var(--rk-font-body); }
 .p4-input-link, .p4-output-link, .p4-readout-link, .p4-operator-link {
   fill: none;
   stroke: #78917d;
@@ -86,81 +83,82 @@
 .p4-input-link--image { stroke: #5c9181; }
 .p4-output-link--secondary { stroke: #7d9b8a; stroke-dasharray: 3 3; }
 .p4-encoder-frame { fill: #f1f4f2; fill-opacity: .72; stroke: #91a9ab; stroke-width: 1.4; }
-.p4-encoder-title { fill: #36535a; font: 700 13px/1.2 var(--rk-font-body); }
+.p4-encoder-title { fill: #36535a; font: 700 15px/1.2 var(--rk-font-body); }
 .p4-lock-badge rect { fill: #e8efef; stroke: #91a9ab; stroke-width: 1; }
 .p4-lock-badge path { fill: none; stroke: #45636a; stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
-.p4-lock-badge text { fill: #3e5960; font: 650 11px/1 var(--rk-font-body); }
+.p4-lock-badge text { fill: #3e5960; font: 650 12px/1 var(--rk-font-body); }
 .p4-query-node rect { fill: #f0eaf4; stroke: #896e9a; stroke-width: 1.25; }
+.p4-query-node .p4-node-value { font-size: 12px; }
 .p4-query-source { fill: none; stroke: #795f8a; stroke-width: 1.3; stroke-dasharray: 4 3; }
-.p4-node-title { fill: #49365b; font: 700 12px/1.2 var(--rk-font-body); }
+.p4-node-title { fill: #49365b; font: 700 13px/1.2 var(--rk-font-body); }
 .p4-attention-link, .p4-value-link { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .p4-attention-link { stroke: #648b71; }
 .p4-value-link { stroke: #886b9a; stroke-dasharray: 3 2; }
 .p4-source-chip rect { fill: #f7f8f3; stroke: #a8b8a9; stroke-width: 1; }
-.p4-source-chip text { fill: #40594a; font: 650 11px/1.1 var(--rk-font-body); }
-.p4-source-chip .p4-alpha { fill: #52694e; font: 10px/1 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
+.p4-source-chip text { fill: #40594a; font: 650 12px/1.1 var(--rk-font-body); }
+.p4-source-chip .p4-alpha { fill: #52694e; font: 12px/1 var(--rk-font-body); font-variant-numeric: tabular-nums; }
 .p4-flow-bead { fill: #28724c; stroke: white; stroke-width: 1; }
 .p4-value-bead { fill: #78558c; stroke: white; stroke-width: 1; }
-.p4-sum-node circle { fill: #f1ecf4; stroke: #ac98bb; stroke-width: 1.2; }
-.p4-sum-node text { fill: #59416e; font: 700 12px/1 var(--rk-font-body); }
-.p4-sum-node .p4-node-value { font-size: 10px; }
+.p4-sum-node rect { fill: #f1ecf4; stroke: #ac98bb; stroke-width: 1.2; }
+.p4-sum-node text { fill: #59416e; font: 700 13px/1 var(--rk-font-body); }
+.p4-sum-node .p4-node-value { font-size: 12px; }
 .p4-frozen-projection rect { fill: #e9f0f0; stroke: #92aaac; stroke-width: 1; }
-.p4-frozen-projection text { fill: #385860; font: 700 11px/1 var(--rk-font-math); }
-.p4-compute-caption { fill: #516057; font: 12px/1.2 var(--rk-font-body); }
+.p4-frozen-projection text { fill: #385860; font: 700 12px/1 var(--rk-font-math); }
+.p4-compute-caption { fill: #516057; font: 14px/1.2 var(--rk-font-body); }
 .p4-output-token rect { fill: #f1ecf4; stroke: #ab96ba; stroke-width: 1.2; }
 .p4-output-token .p4-token-label { fill: #684b7a; }
 .p4-readout-node rect { fill: #f6f5ee; stroke: #c1beaa; stroke-width: 1.1; }
 .p4-readout-node .p4-node-title { font-size: 14px; }
-.p4-readout-node .p4-node-value { font-size: 10px; }
+.p4-readout-node .p4-node-value { font-size: 12px; }
 .p4-readout-node .p4-readout-equation { font-size: 13px; }
 .p4-classifier-node rect { fill: #fbf7ee; stroke: #d7bf8f; stroke-width: 1.2; }
 .p4-classifier-mark { fill: #694f30; font: 700 15px/1 var(--rk-font-math); }
-.p4-classifier-copy, .p4-trainable-tag { fill: #6a5d4a; font: 11px/1.1 var(--rk-font-body); }
+.p4-classifier-copy, .p4-trainable-tag { fill: #6a5d4a; font: 12px/1.1 var(--rk-font-body); }
 .p4-trainable-tag { fill: #875b24; font-weight: 700; }
 .p4-loss-node rect { fill: #fcf4e6; stroke: #d6b476; stroke-width: 1.2; }
-.p4-loss-title { fill: #835a20; font: 700 12px/1.2 var(--rk-font-body); }
-.p4-loss-value { fill: #594a38; font: 11px/1.2 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
+.p4-loss-title { fill: #835a20; font: 700 13px/1.2 var(--rk-font-body); }
+.p4-loss-value { fill: #594a38; font: 12px/1.2 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
 .p4-loss-divider { stroke: #e5d7bc; stroke-width: 1; }
 .p4-loss-final { fill: #8a5d1f; font: 700 13px/1.2 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
-.p4-loss-compare text { fill: #685740; font: 11px/1.2 var(--rk-font-body); font-variant-numeric: tabular-nums; }
+.p4-loss-compare text { fill: #685740; font: 12px/1.2 var(--rk-font-body); font-variant-numeric: tabular-nums; }
 .p4-loss-compare text:first-child { fill: #79572a; font-weight: 700; }
 .p4-gradient-route, .p4-gradient-history-route, .p4-gradient-branch { fill: none; stroke: #745887; stroke-width: 1.6; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
 .p4-gradient-route { stroke-width: 2; }
 .p4-gradient-history-route { stroke-width: 1.4; opacity: .34; }
 .p4-gradient-branch { stroke-width: 1.4; }
 .p4-gradient-bead { fill: #745887; stroke: #fff; stroke-width: 1.3; }
-.p4-gradient-label { fill: #674c7a; font: 700 11px/1.2 var(--rk-font-body); }
+.p4-gradient-label { fill: #674c7a; font: 700 12px/1.2 var(--rk-font-body); }
 .p4-divider { stroke: #cfd3c7; stroke-width: 1; }
-.p4-mini-title { fill: #3d5848; font: 700 12px/1.2 var(--rk-font-body); }
-.p4-parameter-caption { fill: #5d6258; font: 10px/1.2 var(--rk-font-body); }
-.p4-parameter-label { fill: #684b7a; font: 700 12px/1 var(--rk-font-body); }
-.p4-parameter-value { fill: #645b50; font: 10px/1 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
+.p4-mini-title { fill: #3d5848; font: 700 13px/1.2 var(--rk-font-body); }
+.p4-parameter-caption { fill: #5d6258; font: 13px/1.2 var(--rk-font-body); }
+.p4-parameter-label { fill: #684b7a; font: 700 13px/1 var(--rk-font-body); }
+.p4-parameter-value { fill: #645b50; font: 13px/1 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
 .p4-parameter-value--current { fill: #684b7a; font-weight: 700; }
 .p4-parameter-origin { fill: #fcfbfd; stroke: #765985; stroke-width: 1.6; }
 .p4-freeze-summary { fill: #f2f5f2; stroke: #b6c5c2; stroke-width: 1; }
 .p4-freeze-icons rect { fill: #e7eeee; stroke: #9eb0b0; stroke-width: 1; }
-.p4-freeze-icons text { fill: #3c5b60; font: 650 11px/1 var(--rk-font-mono); }
+.p4-freeze-icons text { fill: #3c5b60; font: 650 12px/1 var(--rk-font-mono); }
 .p4-freeze-icons path { fill: none; stroke: #536e70; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 .p4-freeze-icons circle { fill: #eff3eb; stroke: #91a390; stroke-width: 1; }
-.p4-freeze-copy { fill: #526057; font: 11px/1.2 var(--rk-font-body); }
+.p4-freeze-copy { fill: #526057; font: 13px/1.2 var(--rk-font-body); }
 .p4-phi-summary { fill: #fbf8f0; stroke: #dacba9; stroke-width: 1; }
-.p4-phi-label, .p4-phi-value, .p4-phi-scale { fill: #66553d; font: 11px/1.2 var(--rk-font-body); }
+.p4-phi-label, .p4-phi-value, .p4-phi-scale { fill: #66553d; font: 13px/1.2 var(--rk-font-body); }
 .p4-phi-value { font-family: var(--rk-font-mono); font-variant-numeric: tabular-nums; }
-.p4-phi-scale { fill: #867a66; font-size: 10px; }
+.p4-phi-scale { fill: #74684f; font-size: 12px; }
 .p4-classifier-axis { fill: none; stroke: #b9b19e; stroke-width: 3; stroke-linecap: round; }
 .p4-classifier-trail { fill: none; stroke: #a78b5f; stroke-width: 3; stroke-linecap: round; }
 .p4-classifier-current { fill: #b17b32; stroke: #fff; stroke-width: 1.5; }
 .p4-task-handoff rect { fill: #f8f0df; stroke: #dec797; stroke-width: .8; }
-.p4-task-handoff text { fill: #80591f; font: 650 11px/1 var(--rk-font-body); }
-.p4-stage-caption { margin: 9px 0 7px; color: #405247; font-size: 12px; line-height: 1.5; }
+.p4-task-handoff text { fill: #80591f; font: 650 12px/1 var(--rk-font-body); }
+.p4-stage-caption { margin: 9px 0 7px; color: #405247; font-size: 14px; line-height: 1.55; }
 .p4-trace-details { margin-top: 8px; border-top: 1px solid var(--rk-line); border-bottom: 1px solid var(--rk-line); }
-.p4-trace-details > summary { padding: 9px 0; color: #375a45; font-size: 13px; font-weight: 700; cursor: pointer; }
-.p4-trace-details > p { margin: 0 0 10px !important; color: #4d5b51; font-size: 13px !important; line-height: 1.55 !important; }
+.p4-trace-details > summary { padding: 9px 0; color: #375a45; font-size: 14px; font-weight: 700; cursor: pointer; }
+.p4-trace-details > p { margin: 0 0 10px !important; color: #4d5b51; font-size: 14px !important; line-height: 1.55 !important; }
 .p4-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 22px; }
 .p4-detail-grid > section { min-width: 0; padding: 9px 0 11px; border-top: 1px solid #e0e2da; }
-.p4-detail-grid h4 { margin: 0 0 6px; color: #3d5947; font-size: 13px; }
-.p4-detail-grid p { margin: 3px 0 !important; color: #405247; font-size: 12px !important; line-height: 1.5 !important; overflow-wrap: anywhere; }
-.p4-detail-grid code { color: #33463a; font: 11px/1.45 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
+.p4-detail-grid h4 { margin: 0 0 6px; color: #3d5947; font-size: 14px; }
+.p4-detail-grid p { margin: 3px 0 !important; color: #405247; font-size: 13px !important; line-height: 1.55 !important; overflow-wrap: anywhere; }
+.p4-detail-grid code { color: #33463a; font: 12px/1.5 var(--rk-font-mono); font-variant-numeric: tabular-nums; }
 
 .p4-gradient-equation {
   display: grid;
@@ -175,7 +173,7 @@
   color: var(--rk-accent-strong);
 }
 .p4-equation-item { min-width: 0; display: grid; justify-items: start; gap: 6px; }
-.p4-equation-label { color: var(--rk-muted); font-size: 13px; font-weight: 650; }
+.p4-equation-label { color: var(--rk-muted); font-size: 14px; font-weight: 650; }
 .p4-equation-item > math { max-width: 100%; font-size: clamp(22px, 1.85vw, 28px); }
 .p4-gradient-condition { padding-left: 21px; border-left: 1px solid var(--rk-line-strong); }
 .p4-gradient-condition > small { color: var(--rk-muted); font-size: 13px; }

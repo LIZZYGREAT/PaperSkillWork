@@ -18,11 +18,11 @@ type TimedAttentionRoute = AttentionRoute & { startMs: number; travelMs: number;
 type CubicRoute = { from: Pair; controls: [Pair, Pair]; to: Pair };
 type TimedGradientRoute = CubicRoute & { length: number; startMs: number; travelMs: number; settleMs: number };
 
-const duration = 29_100;
-const boundaries = [0, 2_300, 9_500, 11_800, 18_600, 20_900, 28_100, duration];
+const duration = 29_900;
+const boundaries = [0, 2_300, 9_500, 11_800, 19_400, 21_700, 28_900, duration];
 const phases = [
-  { short: "组装输入", text: "两枚紫色参数 Token 移到序列前端；它们与固定的 [CLS]、Patch₁ 组成同一输入。" },
-  { short: "冻结前向", text: "画面由柔焦转清；绿点完成 P₀ 查询后，紫点再逐项汇总加权值，随后才显出读出与分类。" },
+  { short: "组装输入", text: "P₀、P₁ 与固定的 [CLS]、Patch₁ 已组成同一输入；准备就绪后开始固定权重计算。" },
+  { short: "冻结前向", text: "输入与计算图保持清晰；绿点先完成 P₀ 查询，抵达后紫点再逐项汇总加权值，随后显出读出与分类。" },
   { short: "分类与损失", text: "H₀、H₁ 汇成教学读出 h，经可训练分类头得到 Logits；标签 y=1 给出交叉熵。" },
   { short: "梯度回传", text: "梯度先从损失经过分类头与读出，再依次沿 H₀→P₀、H₁→P₁ 穿过冻结计算；φ 同样取得梯度。" },
   { short: "一次参数更新", text: "按一次 SGD 更新 P 与 φ。轨迹插值只呈现这一步的位移，不代表额外训练步。" },
@@ -137,17 +137,17 @@ function cubicPointAtLengthFraction(
 }
 
 const promptGradientReturnRoutes: CubicRoute[] = [
-  { from: [212, 105], controls: [[268, 104], [344, 88]], to: [402, 91] },
-  { from: [579, 220], controls: [[520, 246], [300, 246]], to: [212, 157] },
+  { from: [164, 105], controls: [[228, 104], [342, 88]], to: [402, 91] },
+  { from: [579, 220], controls: [[520, 246], [260, 246]], to: [164, 157] },
 ];
 const querySourceRoute = {
-  from: [212, 105] as Pair,
-  controls: [[236, 105], [240, 139]] as [Pair, Pair],
-  to: [266, 151] as Pair,
+  from: [164, 105] as Pair,
+  controls: [[176, 105], [192, 139]] as [Pair, Pair],
+  to: [208, 151] as Pair,
 };
 const downstreamRoutes = [
-  { from: [520, 153] as Pair, controls: [[528, 153], [536, 153]] as [Pair, Pair], to: [544, 153] as Pair },
-  { from: [574, 153] as Pair, controls: [[585, 153], [588, 122]] as [Pair, Pair], to: [598, 126] as Pair },
+  { from: [538, 153] as Pair, controls: [[542, 153], [546, 153]] as [Pair, Pair], to: [550, 153] as Pair },
+  { from: [579, 153] as Pair, controls: [[585, 153], [588, 122]] as [Pair, Pair], to: [598, 126] as Pair },
   { from: [579, 220] as Pair, controls: [[585, 220], [592, 220]] as [Pair, Pair], to: [598, 220] as Pair },
   { from: [724, 126] as Pair, controls: [[738, 126], [740, 147]] as [Pair, Pair], to: [750, 156] as Pair },
   { from: [724, 220] as Pair, controls: [[738, 220], [740, 197]] as [Pair, Pair], to: [750, 188] as Pair },
@@ -157,23 +157,6 @@ const downstreamRoutes = [
 
 function reverseCubicRoute(route: CubicRoute): CubicRoute {
   return { from: route.to, controls: [route.controls[1], route.controls[0]], to: route.from };
-}
-
-function MiniVector({ values, x, y, color }: { values: Pair; x: number; y: number; color: string }) {
-  const origin: Pair = [x + 16, y + 15];
-  const endpoint: Pair = [origin[0] + values[0] * 23, origin[1] - values[1] * 23];
-  const angle = Math.atan2(endpoint[1] - origin[1], endpoint[0] - origin[0]);
-  const wingA: Pair = [endpoint[0] - 4.5 * Math.cos(angle - 0.52), endpoint[1] - 4.5 * Math.sin(angle - 0.52)];
-  const wingB: Pair = [endpoint[0] - 4.5 * Math.cos(angle + 0.52), endpoint[1] - 4.5 * Math.sin(angle + 0.52)];
-  return <g className="p4-vector-glyph" aria-hidden="true">
-    <title>向量方向；精确坐标见旁侧数值</title>
-    <path d={"M" + (x + 1) + " " + origin[1] + "H" + (x + 37) + " M" + origin[0] + " " + (y + 1) + "V" + (y + 29)} className="p4-vector-axis" />
-    <path d={"M" + origin[0] + " " + origin[1] + "L" + endpoint[0] + " " + endpoint[1]
-      + " M" + wingA[0] + " " + wingA[1] + "L" + endpoint[0] + " " + endpoint[1]
-      + "L" + wingB[0] + " " + wingB[1]} stroke={color} className="p4-vector-arrow" />
-    <circle cx={origin[0]} cy={origin[1]} r="1.8" fill="#fff" stroke={color} strokeWidth="1" />
-    <circle cx={endpoint[0]} cy={endpoint[1]} r="2.4" fill={color} />
-  </g>;
 }
 
 function PromptLearningStage({
@@ -193,7 +176,7 @@ function PromptLearningStage({
   forwardTimeline: number;
   gradientTimeline: number;
 }) {
-  const insertionProgress = phase === 0 ? cubicBezierProgress(phaseProgress(position, 0)) : 1;
+  const setupProgress = phase === 0 ? cubicBezierProgress(phaseProgress(position, 0)) : 1;
   const inputRows = [84, 136, 188, 240];
   const names = ["P₀", "P₁", "[CLS]", "Patch₁"];
   const colors = ["prompt", "prompt", "image", "image"];
@@ -207,14 +190,14 @@ function PromptLearningStage({
         sourceIndex,
         kind: "query" as const,
         from: queryOrigin,
-        controls: [[364, queryOrigin[1]], [380, y + (y < queryOrigin[1] ? 11 : -11)]] as [Pair, Pair],
-        to: [402, y] as Pair,
+        controls: [[364, queryOrigin[1]], [368, y + (y < queryOrigin[1] ? 11 : -11)]] as [Pair, Pair],
+        to: [375, y] as Pair,
       },
       {
         sourceIndex,
         kind: "value" as const,
-        from: [446, y] as Pair,
-        controls: [[454, y], [valueTargets[sourceIndex][0] - 12, valueTargets[sourceIndex][1] + (sourceIndex < 2 ? -12 : 12)]] as [Pair, Pair],
+        from: [427, y] as Pair,
+        controls: [[435, y], [valueTargets[sourceIndex][0] - 12, valueTargets[sourceIndex][1] + (sourceIndex < 2 ? -12 : 12)]] as [Pair, Pair],
         to: valueTargets[sourceIndex],
       },
     ];
@@ -262,6 +245,8 @@ function PromptLearningStage({
   });
   const gradientRouteComplete = (index: number) => phase > 3
     || phase === 3 && gradientElapsedMs >= gradientRoutes[index].startMs + gradientRoutes[index].travelMs + gradientRoutes[index].settleMs;
+  const gradientRouteStarted = (index: number) => phase > 3
+    || phase === 3 && gradientElapsedMs >= gradientRoutes[index].startMs;
   const activeGradientRoute = phase === 3
     ? gradientRoutes.find(route => gradientElapsedMs >= route.startMs
       && gradientElapsedMs < route.startMs + route.travelMs + route.settleMs) ?? null
@@ -297,18 +282,24 @@ function PromptLearningStage({
     )
     : null;
   const routeOpacity = (event: TimedAttentionRoute) => {
-    if (phase === 3) return 0.12;
-    if (!forwardActive) return phase === 0 ? 0.12 : 1;
+    if (phase === 3) return 0.24;
+    if (!forwardActive) return phase === 0 ? 0.4 : 1;
     if (forwardElapsedMs < event.startMs) return 0.09;
     if (forwardElapsedMs < event.startMs + event.travelMs + event.settleMs) return 0.82;
     return 0.42;
   };
   const attentionProgress = forwardActive
     ? clamp((forwardElapsedMs - focusDurationMs) / Math.max(1, attentionEndMs - focusDurationMs))
-    : phase === 0 ? 0 : phase === 3 ? 0.12 : 1;
+    : phase === 0 ? 0.52 : phase === 3 ? 0.72 : 1;
   const outputReveal = (stage: number) => {
-    if (phase === 3) return 0.12;
-    if (!forwardActive) return phase === 0 ? 0.12 : 1;
+    if (phase === 3) {
+      if (stage === 0) return gradientRouteStarted(2) ? 0.9 : 0.66;
+      if (stage === 1) return gradientRouteStarted(7) ? 0.9 : 0.66;
+      if (stage === 2) return 0.78;
+      if (stage === 3) return gradientRouteStarted(0) ? 0.9 : 0.76;
+      return 0.92;
+    }
+    if (!forwardActive) return phase === 0 ? 0.46 : 1;
     const startMs = attentionEndMs + 100 + stage * 230;
     return 0.12 + 0.88 * clamp((forwardElapsedMs - startMs) / 220);
   };
@@ -319,13 +310,10 @@ function PromptLearningStage({
   const afterForward = phase === 5 && lossOpacity >= 0.99 || phase === 6;
   const currentLoss = state.loss;
   const inputTokenValues = state.inputTokens;
-  const targetPromptY = [inputRows[0], inputRows[1]];
-  const parkedPromptY = [326, 379];
-  const promptY = [0, 1].map(index => targetPromptY[index] + (parkedPromptY[index] - targetPromptY[index]) * (1 - insertionProgress));
   const classifierWeightBefore = P4_TOY_EXPERIMENT.classifier.weights[0][0];
   const classifierWeightAfter = P4_TRAINING_TRACE.updatedClassifierWeights[0][0];
   const classifierWeightCurrent = classifierWeightBefore + (classifierWeightAfter - classifierWeightBefore) * updateProgress;
-  const classifierMarkerX = 844 + clamp((classifierWeightCurrent - 0.25) / 0.25) * 270;
+  const classifierMarkerX = 868 + clamp((classifierWeightCurrent - 0.25) / 0.25) * 270;
 
   return <div className="p4-stage-scroll" role="group" aria-label="Prompt 调优的统一计算舞台">
     <svg
@@ -333,7 +321,6 @@ function PromptLearningStage({
       viewBox="0 0 1180 468"
       role="img"
       aria-labelledby="p4-stage-title p4-stage-desc"
-      style={{ filter: insertionProgress < 1 ? `blur(${(1 - insertionProgress) * 1.6}px)` : undefined }}
     >
       <title id="p4-stage-title">同一组 Prompt 进入冻结计算，接收梯度并更新</title>
       <desc id="p4-stage-desc">左侧显示 P₀、P₁ 与固定图像 Token，中间展示固定 Attention 运算，右侧展示 Prompt 输出、均值读出、分类头和损失。反向阶段沿同一舞台回到 Prompt，只有 Prompt 与分类头的参数更新。</desc>
@@ -344,32 +331,29 @@ function PromptLearningStage({
 
       <text className="p4-zone-label" x="24" y="28">输入与可学习参数</text>
       <text className="p4-zone-sub" x="24" y="47">P₀、P₁ 同属一个 Prompt</text>
-      <text className="p4-zone-label" x="244" y="28">冻结的前向计算 fᵣ</text>
-      <text className="p4-zone-sub" x="244" y="47">单头 Attention 教学模型 · 参数固定</text>
+      <text className="p4-zone-label" x="194" y="28">冻结的前向计算 fᵣ</text>
+      <text className="p4-zone-sub" x="194" y="47">单头 Attention 教学模型 · 参数固定</text>
       <text className="p4-zone-label" x="598" y="28">Prompt 位置输出</text>
       <text className="p4-zone-label" x="742" y="28">教学读出</text>
       <text className="p4-zone-label" x="836" y="28">可训练分类头 φ</text>
       <text className="p4-zone-label" x="978" y="28">标签与损失</text>
 
-      <path d="M20 58H219V284H20Z" className="p4-input-frame" />
+      <path d="M20 58H171V284H20Z" className="p4-input-frame" />
       <text className="p4-frame-caption" x="31" y="73">xₚ = [P₀; P₁; xₑ]</text>
-      <text className="p4-frame-caption p4-fixed-caption" x="132" y="73">图像 xₑ 固定</text>
       {inputRows.map((row, index) => {
         const isPrompt = index < 2;
-        const y = isPrompt ? promptY[index] : row;
+        const y = row;
         const vector = isPrompt ? prompt[index] : inputTokenValues[index];
-        const tokenColor = isPrompt ? "#745684" : "#32796f";
-        return <g key={names[index]} className={"p4-token-card p4-token-card--" + colors[index]} style={{ opacity: isPrompt ? 0.4 + insertionProgress * 0.6 : 1 }}>
-          <rect x="28" y={y} width="184" height="43" rx="9" />
+        return <g key={names[index]} className={"p4-token-card p4-token-card--" + colors[index]}>
+          <rect x="28" y={y} width="136" height="43" rx="9" />
           <text className="p4-token-label" x="39" y={y + 17}>{names[index]}</text>
           <text className="p4-token-value" x="39" y={y + 34}>{pairText(vector)}</text>
-          <MiniVector values={vector} x={166} y={y + 8} color={tokenColor} />
-          {isPrompt && phase >= 3 && <text className="p4-token-state" x="126" y={y + 16}>{phase >= 4 ? "可更新" : promptGradientReceived[index] ? `∇P${index}` : ""}</text>}
+          {isPrompt && phase >= 3 && <text className="p4-token-state" x="111" y={y + 16}>{phase >= 4 ? "可更新" : promptGradientReceived[index] ? `∇P${index}` : ""}</text>}
         </g>;
       })}
 
-      <rect x="242" y="58" width="337" height="246" rx="15" className="p4-encoder-frame" />
-      <text className="p4-encoder-title" x="259" y="78">固定权重仍执行计算</text>
+      <rect x="192" y="58" width="387" height="246" rx="15" className="p4-encoder-frame" />
+      <text className="p4-encoder-title" x="209" y="78">固定权重仍执行计算</text>
       <g className="p4-lock-badge">
         <rect x="488" y="64" width="77" height="25" rx="12" />
         <path d="M501 77v-3a4 4 0 0 1 8 0v3m-9 0h10v7h-10z" />
@@ -378,17 +362,17 @@ function PromptLearningStage({
 
       {[0, 1].map(index => <path
         key={"input-flow-" + index}
-        d={"M212 " + (inputRows[index] + 21) + "H242"}
+        d={"M164 " + (inputRows[index] + 21) + "H192"}
         className={index === 0 ? "p4-input-link p4-input-link--prompt" : "p4-input-link"}
         markerEnd="url(#p4-flow-arrow)"
-        opacity={phase === 3 ? 0.1 : insertionProgress}
+        opacity={phase === 3 ? 0.16 : setupProgress}
       />)}
-      {[2, 3].map(index => <path key={"image-flow-" + index} d={"M212 " + (inputRows[index] + 21) + "H242"} className="p4-input-link p4-input-link--image" markerEnd="url(#p4-flow-arrow)" opacity={phase === 3 ? 0.1 : 1} />)}
+      {[2, 3].map(index => <path key={"image-flow-" + index} d={"M164 " + (inputRows[index] + 21) + "H192"} className="p4-input-link p4-input-link--image" markerEnd="url(#p4-flow-arrow)" opacity={phase === 3 ? 0.16 : 1} />)}
 
       <g className="p4-query-node" style={{ opacity: 0.25 + attentionProgress * 0.75 }}>
-        <rect x="266" y="124" width="88" height="55" rx="10" />
-        <text className="p4-node-title" x="276" y="143">Q₀ ← P₀</text>
-        <text className="p4-node-value" x="276" y="162">{pairText(state.firstPromptQuery)}</text>
+        <rect x="208" y="124" width="146" height="55" rx="10" />
+        <text className="p4-node-title" x="218" y="143">Q₀ ← P₀</text>
+        <text className="p4-node-value" x="218" y="162">{pairText(state.firstPromptQuery)}</text>
       </g>
       <path d={cubicPath(querySourceRoute.from, querySourceRoute.controls[0], querySourceRoute.controls[1], querySourceRoute.to)} className="p4-query-source" markerEnd="url(#p4-flow-arrow)" opacity={routeOpacity(timedRoutes[0])} />
 
@@ -402,25 +386,25 @@ function PromptLearningStage({
         const sourceLabel = ["P₀", "P₁", "[CLS]", "Patch₁"][index];
         return <g key={"attention-source-" + index}>
           <g className="p4-source-chip" style={{ opacity: forwardActive ? sourceActive ? 0.98 : sourceDone ? 0.6 : 0.36 : 0.34 + attentionProgress * 0.66 }}>
-            <rect x="402" y={y - 15} width="44" height="30" rx="8" />
-            <text x="424" y={y - 3} textAnchor="middle">{sourceLabel}</text>
-            <text className="p4-alpha" x="424" y={y + 11} textAnchor="middle">α={number(attention)}</text>
+            <rect x="375" y={y - 15} width="52" height="30" rx="8" />
+            <text x="401" y={y - 3} textAnchor="middle">{sourceLabel}</text>
+            <text className="p4-alpha" x="401" y={y + 11} textAnchor="middle">α={number(attention)}</text>
           </g>
         </g>;
       })}
 
       <g className="p4-sum-node" style={{ opacity: 0.28 + attentionProgress * 0.72 }}>
-        <circle cx="493" cy="153" r="27" />
-        <text x="493" y="150" textAnchor="middle">Σ αV</text>
-        <text className="p4-node-value" x="493" y="164" textAnchor="middle">{pairText(state.firstPromptContext)}</text>
+        <rect x="430" y="124" width="108" height="58" rx="13" />
+        <text x="484" y="148" textAnchor="middle">Σ αV</text>
+        <text className="p4-node-value" x="484" y="165" textAnchor="middle">{pairText(state.firstPromptContext)}</text>
       </g>
       <g className="p4-frozen-projection">
-        <rect x="544" y="133" width="29" height="40" rx="7" />
-        <text x="558" y="150" textAnchor="middle">W</text>
-        <text x="558" y="163" textAnchor="middle">O</text>
+        <rect x="550" y="133" width="29" height="40" rx="7" />
+        <text x="564" y="150" textAnchor="middle">W</text>
+        <text x="564" y="163" textAnchor="middle">O</text>
       </g>
-      <text className="p4-compute-caption" x="258" y="265">局部展开 P₀；P₁ 也经过同一冻结运算</text>
-      <text className="p4-compute-caption" x="258" y="283">反向导数通过 fᵣ，权重锚点保持不动</text>
+      <text className="p4-compute-caption" x="209" y="265">局部展开 P₀；P₁ 也经过同一冻结运算</text>
+      <text className="p4-compute-caption" x="209" y="283">反向导数通过 fᵣ，权重锚点保持不动</text>
 
       {[0, 1].map(index => {
         const output = state.promptOutputs[index];
@@ -471,13 +455,13 @@ function PromptLearningStage({
           markerEnd="url(#p4-flow-arrow)"
           style={{ opacity: routeOpacity(timedRoutes[index * 2 + 2]), strokeWidth: 0.8 + state.firstPromptAttention[index] * 2.3 }}
         />)}
-        <path d={cubicPath(downstreamRoutes[0].from, downstreamRoutes[0].controls[0], downstreamRoutes[0].controls[1], downstreamRoutes[0].to)} className="p4-operator-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.12 : attentionProgress }} />
+        <path d={cubicPath(downstreamRoutes[0].from, downstreamRoutes[0].controls[0], downstreamRoutes[0].controls[1], downstreamRoutes[0].to)} className="p4-operator-link" markerEnd="url(#p4-flow-arrow)" style={{ opacity: phase === 3 ? 0.24 : attentionProgress }} />
         {downstreamRoutes.slice(1).map((route, index) => <path
           key={"downstream-link-" + index}
           d={cubicPath(route.from, route.controls[0], route.controls[1], route.to)}
           className={index === 1 ? "p4-output-link p4-output-link--secondary" : index > 1 ? "p4-readout-link" : "p4-output-link"}
           markerEnd="url(#p4-flow-arrow)"
-          style={{ opacity: [phase === 3 ? 0.12 : attentionProgress, promptOutputOpacity[0], promptOutputOpacity[1], readoutOpacity, readoutOpacity, classifierOpacity, lossOpacity][index + 1] }}
+          style={{ opacity: phase === 3 ? 0.24 : [attentionProgress, promptOutputOpacity[0], promptOutputOpacity[1], readoutOpacity, readoutOpacity, classifierOpacity, lossOpacity][index + 1] }}
         />)}
       </g>
       {activeEvent && activeEventPoint && <circle
@@ -512,19 +496,21 @@ function PromptLearningStage({
       </>}
 
       <path d="M20 313H220" className="p4-divider" />
-      <text className="p4-mini-title" x="24" y="331">Prompt 参数变化</text>
-      <text className="p4-parameter-caption" x="24" y="347">旧值与当前值 · 实际坐标</text>
-      {[0, 1].map(index => {
-        const updated = P4_TRAINING_TRACE.updatedPrompt[index];
-        const original = P4_TOY_EXPERIMENT.prompt[index];
-        const current = interpolatePair(original, updated, updateProgress);
-        const row = index === 0 ? 370 : 411;
-        return <g key={"parameter-position-" + index} className="p4-parameter-readout" style={{ opacity: phase >= 3 ? 1 : 0.72 }}>
-          <text className="p4-parameter-label" x="24" y={row}>P{index}</text>
-          <text className="p4-parameter-value" x="52" y={row - 7}>旧 {pairText(original)}</text>
-          <text className="p4-parameter-value p4-parameter-value--current" x="52" y={row + 9}>现 {pairText(current)}</text>
-        </g>;
-      })}
+      <g style={{ opacity: clamp((setupProgress - 0.8) / 0.2) }}>
+        <text className="p4-mini-title" x="24" y="331">Prompt 参数变化</text>
+        <text className="p4-parameter-caption" x="24" y="347">旧值与当前值 · 实际坐标</text>
+        {[0, 1].map(index => {
+          const updated = P4_TRAINING_TRACE.updatedPrompt[index];
+          const original = P4_TOY_EXPERIMENT.prompt[index];
+          const current = interpolatePair(original, updated, updateProgress);
+          const row = index === 0 ? 370 : 411;
+          return <g key={"parameter-position-" + index} className="p4-parameter-readout">
+            <text className="p4-parameter-label" x="24" y={row}>P{index}</text>
+            <text className="p4-parameter-value" x="52" y={row - 7}>旧 {pairText(original)}</text>
+            <text className="p4-parameter-value p4-parameter-value--current" x="52" y={row + 9}>现 {pairText(current)}</text>
+          </g>;
+        })}
+      </g>
 
       <rect x="242" y="320" width="366" height="119" rx="12" className="p4-freeze-summary" />
       <text className="p4-mini-title" x="260" y="344">被冻结的 fₑ、fᵣ</text>
@@ -543,14 +529,14 @@ function PromptLearningStage({
       <rect x="622" y="320" width="538" height="119" rx="12" className="p4-phi-summary" />
       <text className="p4-mini-title" x="642" y="344">分类头 φ 也随这一步更新</text>
       <text className="p4-phi-label" x="642" y="370">示例系数 Wcls[0,0]</text>
-      <path d="M844 374H1114" className="p4-classifier-axis" />
-      <path d={"M" + (844 + clamp((classifierWeightBefore - 0.25) / 0.25) * 270) + " 374H" + classifierMarkerX} className="p4-classifier-trail" />
-      <circle cx={844 + clamp((classifierWeightBefore - 0.25) / 0.25) * 270} cy="374" r="4.4" className="p4-parameter-origin" />
+      <path d="M868 374H1138" className="p4-classifier-axis" />
+      <path d={"M" + (868 + clamp((classifierWeightBefore - 0.25) / 0.25) * 270) + " 374H" + classifierMarkerX} className="p4-classifier-trail" />
+      <circle cx={868 + clamp((classifierWeightBefore - 0.25) / 0.25) * 270} cy="374" r="4.4" className="p4-parameter-origin" />
       <circle cx={classifierMarkerX} cy="374" r="4.8" className="p4-classifier-current" />
       <text className="p4-phi-value" x="642" y="398">W⁰={number(classifierWeightBefore)} → 当前 {number(classifierWeightCurrent)}</text>
       <text className="p4-phi-value" x="642" y="419">{phase >= 5 ? "同一 xₑ 与 fᵣ · 已重跑前向" : "完整矩阵与偏置变化见计算详情"}</text>
-      <text className="p4-phi-scale" x="844" y="398">0.25</text>
-      <text className="p4-phi-scale" x="1100" y="398">0.50</text>
+      <text className="p4-phi-scale" x="868" y="398">0.25</text>
+      <text className="p4-phi-scale" x="1124" y="398">0.50</text>
 
       {phase === 6 && <g className="p4-task-handoff">
         <rect x="242" y="444" width="918" height="18" rx="8" />
@@ -680,7 +666,7 @@ export function PromptTuning() {
           forwardTimeline={forwardTimeline}
           gradientTimeline={gradientTimeline}
         />
-        <p className="p4-stage-caption">左侧小箭头表示 Token 向量方向，坐标数字是实际值。紫色表示可学习 Prompt，绿色表示固定图像输入，灰蓝框表示冻结计算，暖橙提示训练目标；向量、注意力权重、梯度和输出来自同一份计算 Trace。</p>
+        <p className="p4-stage-caption">左侧数字是 Token 向量的实际坐标。紫色表示可学习 Prompt，绿色表示固定图像输入，灰蓝框表示冻结计算，暖橙提示训练目标；向量、注意力权重、梯度和输出来自同一份计算 Trace。</p>
         <TraceDetails state={currentState} />
       </div>
       <figcaption>该 Trace 使用 2 个 Prompt Token、2 个固定图像 Token、一个冻结单头 Attention 和一个可训练二分类头。P4 用 Prompt 输出的均值作为教学读出；它用于解释梯度机制，不代表完整 L2P Prompt Pool 的检索与分类路径。</figcaption>

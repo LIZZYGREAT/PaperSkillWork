@@ -448,3 +448,11 @@ SOURCE_BUILD=PASS：`npm run build`，TypeScript + Vite 6.4.3。Visual QA 使用
 按新增截图继续收敛 P4：曲线箭头使用末段切线方向，避免尖端横指；前向顺序固定为柔焦清晰后才启动第一个绿点，绿点抵达后才出现紫点，并逐个完成查询与加权 Value 汇总。反向阶段改为单点逐段反向，按损失→分类头→读出→H₀/P₀→H₁/P₁ 的次序沿相应连接返回；已完成路径降为浅色，P₀、P₁ 与 φ 的梯度标记只在到达后显示。阶段时长增至 6.8 秒，完整播放 29.1 秒。公式字号增大；左侧向量图标增强并明确实际坐标，参数小视图改为 P₀/P₁ 更新前后坐标读数，消除原来含糊且溢出的倍率说明。窄屏复核发现 Grid 项目最小宽度导致横向溢出，已在 P4 模块局部设为可收缩，同时保留动画画布内部滚动。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。VISUAL_QA=PASS：1440×900、1920×1080、390×844 共 36 张截图，无横向溢出、无浏览器错误、无几何诊断；重点帧涵盖前向串行、损失到 φ、P₀ 回传、H₁ 分支、P₁ 回传与参数更新。主报告 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-gradient-return-review/run-2026-11-09T14-55-10-606Z/`；P₁ 梯度标记抵达帧补充截图 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-gradient-arrival-review/run-2026-11-09T15-00-39-128Z/`。已人工检查梯度逐段路径、箭头方向与落点、更新前后坐标和窄屏布局，VISUAL_REVIEW=PASS；Impeccable detector 无发现。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（固定视口 headless Edge）。
+
+### P4 首帧清晰、图内字号与输入区压缩（2026-11-09）
+
+按最新截图彻底取消首帧模糊；P₀、P₁从第一帧就在最终序列位置清晰显示，不再穿过 [CLS]/Patch。保留准备阶段的时间边界，准备结束后才启动首个绿点；阶段提示语已同步去掉“柔焦转清”。梯度段延为 7.6 秒，总播放时长 29.9 秒以容纳单点逐段回程。删除整组向量缩放小图（坐标轴、箭头和端点一起），保留 Token 的精确数值坐标；删除“图像 xₑ 固定”图内标签。左侧输入框缩窄，中间冻结计算区加宽；注意力小节点和求和节点随字号扩展，分类头参数轴右移以避让说明文字。
+
+图内读数统一提高到至少 12px；参数前后坐标、冻结区说明、分类头说明、向量值、注意力分数和输出数值分别增大，公式和计算区注释继续提高字号。1440×900、390×844 实际视口截图使用仓库现有 Playwright 模块与系统 Edge，通过 `view_image` 逐张查看；首帧无模糊、中间帧无卡片叠压、前向第一个绿点晚于准备阶段。截图证据保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-font-review/`。
+
+SOURCE_BUILD=PASS：TypeScript + Vite 6.4.3，72 modules。正式视觉 runner 完成 112 captures（P1–P9，1440×900 与 1920×1080）；整体 GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS=PASS，浏览器错误 0；P4 无字号或几何警告。报告仅在 P2 初始与 patch196 状态列出 4 条既有 `small-semantic-text` 提示，每条涉及 3 个元素。Impeccable detector 返回 `[]`。HUMAN_ACCEPTANCE=PENDING；FULLSCREEN_REAL=NOT_RUN（headless Edge 固定视口）；P1–P3 文件无改动。
