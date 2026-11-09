@@ -114,7 +114,7 @@ export function ResidualReading() {
   return <section className="residual-reading" aria-label="Attention 结果经两条残差路径交给下一层">
     <h3>把多头结果接回 Block</h3>
     <div className="residual-reading__row"><div><h4>先加回原输入</h4><p>第一条残差将 Z 与 MSA 输出<span className="lesson-key">逐位置相加</span>，得到 U，保留原表示并加入本次读取的信息。</p></div><div className="residual-equation"><span>第一处交接</span><math><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mtext>多头注意力输出</mtext></math><small>原表示 + 跨位置汇聚结果</small></div></div>
-    <div className="residual-reading__row residual-reading__row--reverse"><div className="residual-equation"><span>第二处交接</span><math><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mtext>FFN 输出</mtext></math><small>整条输出序列交给下一层</small></div><div><h4>再加工每个位置的内部特征</h4><p>U 经 LayerNorm 归一化后进入 FFN，逐位置做非线性变换；第二条残差再将结果与 U 相加，得到 Z′。跨位置读取由 Attention 完成，FFN 继续加工读入的<span className="lesson-key">特征</span>。</p></div></div>
+    <div className="residual-reading__row residual-reading__row--reverse"><div className="residual-equation"><span>第二处交接</span><math><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mtext>FFN 输出</mtext></math><small>整条输出序列交给下一层</small></div><div><h4>再加工每个位置的内部特征</h4><p>U 经 LayerNorm 归一化后进入 FFN，逐位置做<span className="lesson-key">非线性变换</span>；第二条残差再将结果与 U 相加，得到 Z′。跨位置读取由 Attention 完成，FFN 继续加工读入的特征。</p></div></div>
   </section>;
 }
 

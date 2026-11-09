@@ -67,6 +67,11 @@ try {
       assert.deepEqual(metrics.rawSubscripts, [], `P${index}: unformatted inline variable`);
       assert.equal(metrics.invalidSubscripts, 0, `P${index}: invalid MathML subscript`);
       if (index === 3) {
+        metrics.equationAxes = await page.locator('.block-equations math').evaluateAll(nodes => nodes.map(node => {
+          const equalSign = [...node.children].find(child => child.tagName.toLowerCase() === 'mo' && child.textContent === '=').getBoundingClientRect();
+          return equalSign.top + equalSign.height / 2;
+        }));
+        if (width > 760) assert(Math.abs(metrics.equationAxes[0] - metrics.equationAxes[1]) <= 1, 'Pre-LN equations have different mathematical baselines');
         const boxes = await page.locator('.attention-rule > div').evaluateAll(nodes => nodes.map(node => {
           const box = node.getBoundingClientRect();
           const formula = node.querySelector('math').getBoundingClientRect();
@@ -79,6 +84,12 @@ try {
       }
       await page.screenshot({ path: path.join(output, `P${index}-${width}-opening.png`) });
       await page.screenshot({ path: path.join(output, `P${index}-${width}-full.png`), fullPage: true });
+      if (index === 3) {
+        for (const [name, locator] of [['block-formulas', page.locator('.block-equations')], ['core-terms', page.locator('.lesson-copy > .lesson-prose').first()]]) {
+          await locator.evaluate(node => window.scrollTo(0, node.getBoundingClientRect().top + scrollY - 110));
+          await locator.screenshot({ path: path.join(output, `P3-${width}-${name}.png`) });
+        }
+      }
       if (index === 1) {
         await page.locator('.task-rail button').nth(1).click();
         assert.match(await page.locator('.scene-readout').innerText(), /猫/);

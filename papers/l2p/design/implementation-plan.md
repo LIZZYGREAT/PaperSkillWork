@@ -384,3 +384,13 @@ VISUAL_REVIEW：已查看 P1–P3 两种桌面尺度的整页、时间轴、完�
 - FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless Edge，没有桌面 F11）。人工 W7/W9 仍 PENDING，未改阶段状态或发布。
 
 清理：本轮 runner 确切目录返回 CLEANED 且 Test-Path=False；任务专用临时配置及近景脚本已按核实的绝对路径删除。原生截图/JSON 作为交付证据保留于 reading-polish/。任务启动的预览服务均正常退出；任务开始前的 package-lock.json 改动不纳入提交。
+
+### P3 公式基线与核心术语强调补正（2026-11-09）
+
+按截图反馈修正两点：Pre-LN 两式改为各自的行内 MathML + CSS 行框，外层 flex 按 baseline 对齐；不通过 translate/top 偏移修补。Z′ 的上标高度仍保留，两个公式共用同一数学基线。正文强调改为首次出现的机制名“层归一化”“多头自注意力”“前馈神经网络”“残差相加”，并补齐 Query/Key/Value、Softmax、沿特征维度拼接、输出投影、非线性变换；移除概括性“跨位置读取”和泛化“特征”上的重复强调，保持短语而非整句着色。
+
+SOURCE_BUILD=PASS：npm.cmd --prefix papers/l2p/web/enhanced run build，71 modules，最终 index-BsWHnglM.js / index-DWk_PJ3r.css。UPSTREAM_SYNTAX=PASS、UPSTREAM_OUTPUT=PASS：同会话已核实的官方检查器直接检查最终源码，38 个源文件、9 个模块均通过。Impeccable detect 返回 []。
+
+回归入口新增 Pre-LN 两式等号轴线对齐断言（容差 1px）及近景截图。最初的断言误选了 Z′ 内部的撇号，诊断后改为明确选择公式顶层等号，未放宽容差。npm run check:reading 在九页两种桌面布局通过，P3 等号中心坐标分别为 1440: [875.15625,875.15625]、1920: [842.703125,842.703125]；P1–P3 的 390×844 窄屏专项通过，允许窄屏两式自然换行。原有正文几何、MathML 与交互/数值断言通过。未修改主动画组件或计算。
+
+已查看 P3-1440-block-formulas.png、P3-1920-block-formulas.png、P3-1440-core-terms.png，公式基线一致、关键术语清楚，字号和正文宽度保持原状。证据保留于 C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1bf5d-7a01-7c11-8a7b-cc961eeea522/p3-formula-terms/，包含 JSON 指标及 mobile/ 专项。没有新建临时 runner 目录；原生检查服务均正常关闭。真实 F11=NOT_RUN，人工教学验收状态未变。

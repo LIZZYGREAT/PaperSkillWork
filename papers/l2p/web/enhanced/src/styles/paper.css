@@ -69,7 +69,9 @@
 .block-nodes > .sum-node { background: var(--rk-warn-soft); border-color: var(--rk-warn); color: var(--rk-warn); padding-inline: 6px; }
 .bypass { border: 1px solid var(--rk-warn); border-bottom: 0; grid-column: 1 / 8; grid-row: 1; margin: 0 10px 2px 7px; height: 25px; text-align: center; border-radius: 5px 5px 0 0; color: var(--rk-warn); }
 .bypass span { position: relative; top: -9px; background: var(--rk-surface); padding: 0 5px; font-size: 12px; }
-.block-equations { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 32px; margin-top: 18px; font-size: 20px; }
+.block-equations { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 12px 32px; margin-top: 18px; font-size: 20px; }
+.block-equation { display: inline-block; }
+.block-equation > math { margin: 0; math-style: normal; }
 .rk-reading .detail-title { margin: 36px 0 10px; }
 .attention-controls { justify-content: space-between; }
 .extra-switch { display: inline-flex; align-items: center; gap: 6px; background: var(--rk-warn-soft); padding: 6px 10px; border-radius: 8px; cursor: pointer; }

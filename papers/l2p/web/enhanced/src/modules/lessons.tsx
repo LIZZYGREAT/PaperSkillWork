@@ -170,14 +170,14 @@ export function EncoderAttention() {
   return (
     <>
       <p className="lesson-lead">P2 中，每层 Encoder 都会更新整条 Token 序列。打开其中一个 Block，就能看到一个位置怎样读取其他位置，以及读到的信息怎样成为下一层的输入。</p>
-      <p className="lesson-prose">图中采用典型的 Pre-LN 结构：输入先经层归一化（LayerNorm），进入多头自注意力（MSA），再加回原输入；随后经过第二次归一化和前馈网络（FFN/MLP），再做一次残差相加。先把这条路径作为地图，接下来放大负责<span className="lesson-key">跨位置读取</span>的 Attention。</p>
+      <p className="lesson-prose">图中采用典型的 Pre-LN 结构：输入先经<span className="lesson-key">层归一化</span>（LayerNorm），进入<span className="lesson-key">多头自注意力</span>（MSA），再加回原输入；随后经过第二次归一化和<span className="lesson-key">前馈神经网络</span>（FFN/MLP），再做一次<span className="lesson-key lesson-key--caution">残差相加</span>。先把这条路径作为地图，接下来放大负责跨位置读取的 Attention。</p>
       <figure className="lesson-figure">
         <div className="figure-top"><strong>Transformer Encoder Block</strong><span>典型 Pre-LN 结构</span></div>
         <div className="figure-body">
           <BlockDiagram />
           <div className="block-equations">
-            <math display="block"><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mrow><mi mathvariant="normal">MSA</mi><mo>(</mo><mrow><mi mathvariant="normal">LN</mi><mo>(</mo><mi>Z</mi><mo>)</mo></mrow><mo>)</mo></mrow></math>
-            <math display="block"><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mrow><mi mathvariant="normal">MLP</mi><mo>(</mo><mrow><mi mathvariant="normal">LN</mi><mo>(</mo><mi>U</mi><mo>)</mo></mrow><mo>)</mo></mrow></math>
+            <span className="block-equation"><math><mi>U</mi><mo>=</mo><mi>Z</mi><mo>+</mo><mrow><mi mathvariant="normal">MSA</mi><mo>(</mo><mrow><mi mathvariant="normal">LN</mi><mo>(</mo><mi>Z</mi><mo>)</mo></mrow><mo>)</mo></mrow></math></span>
+            <span className="block-equation"><math><msup><mi>Z</mi><mo>′</mo></msup><mo>=</mo><mi>U</mi><mo>+</mo><mrow><mi mathvariant="normal">MLP</mi><mo>(</mo><mrow><mi mathvariant="normal">LN</mi><mo>(</mo><mi>U</mi><mo>)</mo></mrow><mo>)</mo></mrow></math></span>
           </div>
         </div>
         <figcaption>典型 Pre-LN Encoder 的结构导航；图中两条支路分别保留 Z 和 U，送往对应加法节点。</figcaption>
@@ -185,10 +185,10 @@ export function EncoderAttention() {
       <p className="lesson-prose">Z 是当前层收到的整条序列，U 是注意力结果与原输入相加后的中间序列，Z′ 是本层输出。先沿第一式进入 MSA，等看完多头计算，再回到两条残差路径。</p>
 
       <h3 className="detail-title">一个位置如何读取整串 Token？</h3>
-      <p className="lesson-prose">假设正在更新 [CLS]：它需要决定从每个来源位置读取多少信息。Attention 为每个 Token 生成三种向量，Query（Q）参与目标匹配，Key（K）提供来源的匹配表示，Value（V）提供实际汇聚的内容。来源也包含目标自身。</p>
+      <p className="lesson-prose">假设正在更新 [CLS]：它需要决定从每个来源位置读取多少信息。Attention 为每个 Token 生成三种向量，<span className="lesson-key">Query</span>（Q）参与目标匹配，<span className="lesson-key">Key</span>（K）提供来源的匹配表示，<span className="lesson-key">Value</span>（V）提供实际汇聚的内容。来源也包含目标自身。</p>
       <p className="lesson-prose">这三种向量都从归一化后的输入 X 计算出来。同一个 Head 的三组投影矩阵在<span className="lesson-key">所有位置共享</span>。这里的 Key 属于 Transformer 内部 Attention；P5 的池检索 Key 将承担另一种用途。</p>
       <QKVBranch />
-      <p className="lesson-prose">选定目标 i 后，用它的 <LessonVar base="q" index="i" /> 与各来源 <LessonVar base="k" index="j" /> 点积，并除以 Key 维度 <LessonVar base="d" index="k" /> 的平方根，得到匹配分数 <LessonVar base="s" index="ij" />。Softmax 将这一行分数归一化为<span className="lesson-key">总和为 1</span> 的权重 <LessonVar base="a" index="ij" />，再把各来源 <LessonVar base="v" index="j" /> 按权重相加，形成目标的 Head 输出 <LessonVar base="o" index="i" />。</p>
+      <p className="lesson-prose">选定目标 i 后，用它的 <LessonVar base="q" index="i" /> 与各来源 <LessonVar base="k" index="j" /> 点积，并除以 Key 维度 <LessonVar base="d" index="k" /> 的平方根，得到匹配分数 <LessonVar base="s" index="ij" />。<span className="lesson-key">Softmax</span> 将这一行分数归一化为<span className="lesson-key">总和为 1</span> 的权重 <LessonVar base="a" index="ij" />，再把各来源 <LessonVar base="v" index="j" /> 按权重相加，形成目标的 Head 输出 <LessonVar base="o" index="i" />。</p>
       <div className="attention-rule" role="group" aria-label="一个目标位置从匹配到汇聚的计算">
         <div><span>匹配来源</span><math><Sub base="s" index="ij" /><mo>=</mo><mfrac><mrow><Sub base="q" index="i" /><mo>·</mo><Sub base="k" index="j" /></mrow><msqrt><Sub base="d" index="k" /></msqrt></mfrac></math></div>
         <Arrow />
@@ -231,7 +231,7 @@ export function EncoderAttention() {
       <p className="lesson-prose">输出由整行 Value 的<span className="lesson-key">加权和</span>组成，所以一个位置的表示能够包含其他位置的信息。真实 ViT 对完整序列的每个目标都执行这类计算；这里用少量二维向量展开其中一个 Head，便于对照分数、权重与结果。</p>
       <section className="explain-section">
         <h3>各个 Head 怎样汇回一条序列？</h3>
-        <p>多个 Head 并行读取相同的输入序列，各自使用一组投影参数，形成不同的汇聚结果。对同一目标位置，各 Head 的输出沿特征维度拼接，再由输出投影映射回模型宽度 D，得到 MSA 在这个位置的输出。</p>
+        <p>多个 Head 并行读取相同的输入序列，各自使用一组投影参数，形成不同的汇聚结果。对同一目标位置，各 Head 的输出<span className="lesson-key">沿特征维度拼接</span>，再由<span className="lesson-key">输出投影</span>映射回模型宽度 D，得到 MSA 在这个位置的输出。</p>
         <p>下面追踪位置 i 的几组 Head 输出：它们汇入同一个向量。拼接保留各头坐标，输出投影再混合这些特征；其他 Token 位置各自完成同样的计算。</p>
         <figure className="lesson-figure">
           <div className="figure-top"><strong>并行计算 → 拼接 → 输出投影</strong><span>按同一目标位置对齐</span></div>
