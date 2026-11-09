@@ -5,7 +5,7 @@ export const tutorial: TutorialData = {
   chapters: [
     {
       kind: "chapter", id: "p1", title: "学会新类别以后，旧类别还认得吗？", titleHighlight: "旧类别还认得吗",
-      summary: "数据按任务陆续到来。用同一张旧图对比两次预测，看看更新同一个分类器会带来什么变化。",
+      summary: "新类别依次到来，旧训练图像往往无法完整回放。对比同一旧图在两份参数快照下的预测，再理解无任务 ID 的统一测试为何更困难。",
       modules: [{ kind: "module", id: "stream", title: "一个分类器，两次任务", componentId: "task-stream" }],
     },
     {

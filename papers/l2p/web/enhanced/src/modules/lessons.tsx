@@ -26,18 +26,20 @@ export function TaskStream() {
   const playback = useLessonPlayback(2300);
   return (
     <>
-      <p className="lesson-lead">普通图像分类会用标签纠正预测，更新模型参数。现在把训练数据拆成<span className="reading-emphasis">按顺序到来的任务</span>。任务 2 开始时，<span className="reading-emphasis reading-emphasis--caution">任务 1 的原始图像可能已经无法访问</span>，分类器却要接着学习。</p>
+      <p className="lesson-lead">普通图像分类通过训练图像和标签调整模型参数，学会区分一组类别。持续学习改变的是数据到来的方式：模型依次接收新的类别，后续阶段往往无法重新取得此前全部训练图像，却仍需保留已经学到的识别能力。</p>
+      <p className="rk-prose">下面让任务 1 和任务 2 依次使用同一个分类器训练。新任务会在已有参数上继续更新，不会自动创建一份与旧任务隔离的模型。</p>
       <figure className="training-strip">
         <div className="training-stop"><small>第一批训练图像</small><div className="class-tags"><span>鸟</span><span>鱼</span></div><b>任务 1 完成 · θ₁</b></div>
         <div className="training-update"><Arrow /><small>沿用并更新参数</small></div>
         <div className="training-stop"><small>随后到来的图像</small><div className="class-tags"><span>猫</span><span>狗</span></div><b>任务 2 完成 · θ₂</b></div>
       </figure>
       <section className="explain-section">
-        <h3>更新一次，用同一张旧图再试一次</h3>
-        <p><math><Sub base="θ" index={2} /></math> 从 <math><Sub base="θ" index={1} /></math> 接着训练。由于新旧类使用同一组权重，这次更新也可能改动旧类依赖的特征。下面固定测试图，只切换参数快照。</p>
+        <h3>从 θ₁ 到 θ₂，为什么旧预测也会改变？</h3>
+        <p>完成任务 1 后的模型参数记为 <math><Sub base="θ" index={1} /></math>。任务 2 从这组参数接着训练，得到 <math><Sub base="θ" index={2} /></math>。训练虽然使用新类别数据，更新的却是整个共享网络中的参数，因此旧类别原先依赖的特征和预测分数也可能改变。</p>
+        <p>下面固定同一张鸟类测试图，先查看任务 1 结束时的预测，再切换到任务 2 结束时的参数快照，比较最高分所属类别。播放时可以追踪当前快照下的前向传播。</p>
       </section>
       <figure className="lesson-figure">
-        <div className="figure-top"><strong>顺序训练 → 统一预测</strong><span>合成教学示例</span></div>
+        <div className="figure-top"><strong>同一张旧图，两份参数快照</strong><span>教学预测分数 · 合成示例分布</span></div>
         <div className="figure-body">
           <div className="task-rail" aria-label="选择训练快照">
             {["任务 1 · 鸟、鱼", "任务 2 · 猫、狗"].map((label, index) =>
@@ -48,7 +50,7 @@ export function TaskStream() {
             <Arrow />
             <div className="scene-object classifier"><strong>共享分类器</strong>
               <ClassifierMotion phase={phase} position={playback.position} />
-              <span className="math-label"><math><msub><mi>f</mi><Sub base="θ" index={phase + 1} /></msub></math></span><small>{phase === 0 ? "完成任务 1 的训练" : "接着用新类图像更新"}</small></div>
+              <span className="math-label"><math><msub><mi>f</mi><mrow><Sub base="θ" index={phase + 1} /></mrow></msub></math></span><small>{phase === 0 ? "任务 1 训练后的参数 θ₁" : "任务 2 训练后的参数 θ₂"}</small></div>
             <Arrow />
             <div className="score-panels" aria-label="两个训练快照的预测对照">
               {predictions.map((rows, index) =>
@@ -63,26 +65,23 @@ export function TaskStream() {
           <PlaybackControls playback={playback} label="固定快照的前向传播进度" />
           <p className="scene-readout" aria-live="polite">{phase === 0 ? "用 θ₁ 预测这张旧图，最高分是「鸟」。" : "用 θ₂ 预测同一张图，最高分变为「猫」。"}</p>
         </div>
-        <figcaption>3→5→3 网络和传播动画用来说明共享结构，右侧分数是独立设定的教学快照。论文的 Split CIFAR-100 将 100 类分为 10 个任务，每个任务含 10 个互不重叠的类别。</figcaption>
+        <figcaption>网络结构为示意，右侧类别分数另行设定，用两个合成快照对照训练前后的预测。百分数表示示例分数；动画播放当前快照的前向传播。</figcaption>
       </figure>
+      <p className="rk-prose">同一张鸟类图像在 θ₁ 下最高分是鸟，在 θ₂ 下却变成猫。图像没有改变，改变的是模型参数及其预测结果：后续更新可能干扰原先的分类能力。实际是否发生 <Term id="forgetting" />，需比较旧任务整体测试表现，不能凭一张图的误判判断。</p>
       <section className="explain-section">
         <h3>测试图来自哪个任务，模型事先并不知道</h3>
-        <p>上面那张图仍是鸟。到了第二次测试，模型要在鸟、鱼、猫、狗里统一选择。若让模型先用任务号排除猫和狗，就改变了类别增量的测试条件。</p>
+        <p>困难还在于，学完第二批类别后，测试输入只有图像，没有“来自任务 1 还是任务 2”的提示。类别增量测试要求模型在全部已学类别中统一选择，不能先按任务号排除猫和狗，再只在旧类别中判断。</p>
         <div className="test-routing" role="group" aria-label="一张测试图进入统一的已学类别空间">
           <div className="route-input"><Specimen /><div><b>只收到图像</b><small>任务 ID 未提供</small></div></div><Arrow />
           <div className="route-classes"><div className="class-tags"><span>鸟</span><span>鱼</span><span>猫</span><span>狗</span></div><small>全部已学类别一起竞争</small></div>
         </div>
-        <aside className="reading-note reading-note--caution">
-          <strong>遗忘怎么判断</strong>
-          <p>这张旧图的误判说明干扰可能发生；<Term id="forgetting" /> 要看旧任务整体表现是否退化。</p>
-        </aside>
-        <p>论文也考察类别集合不变、数据域变化的领域增量，以及训练边界不明确的设定。</p>
+        <p>训练时知道任务划分，与测试时没有任务 ID 可以同时成立；训练时也没有明确边界的 task-agnostic 是另一项条件。</p>
       </section>
       <section className="explain-section">
         <h3>能否保留主干的视觉能力？</h3>
         <p>如果预训练模型已经学到了可复用的视觉特征，就可以<span className="reading-emphasis">保留主干权重</span>，让少量其他参数承担后续适应。基础 L2P 沿这个方向设计，<span className="reading-emphasis">无需保存旧样本</span>来做回放。</p>
       </section>
-      <Takeaway>要知道冻结以后还有什么可以利用，先跟着这张图走一遍 ViT，看它怎样形成视觉特征。</Takeaway>
+      <Takeaway>反复更新共享参数可能干扰旧类别。如果保留预训练主干，它已有的视觉能力能怎样帮助后续学习？P2 先沿一张图像走进 ViT，看看分类所需的特征如何形成。</Takeaway>
     </>
   );
 }

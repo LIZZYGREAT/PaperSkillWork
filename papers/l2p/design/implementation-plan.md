@@ -307,3 +307,11 @@ The P9 Key label and direction glyph now occupy separate slots, with a distinct 
 I increased formula, control, ledger, score and evidence typography. Grouped MathML expressions keep the parentheses at the height of their own functions instead of stretching across the full equation. At widths up to 760 px, the tall control dock returns to document flow so it cannot cover the formulas; the wide score table scrolls inside its own region while the page stays within the viewport width.
 
 Verification: `npm.cmd run build` passed (TypeScript + Vite 6.4.3; 69 modules). Final P9 Visual QA run `.visual-qa/run-2026-11-07T19-38-43-743Z` passed all 14 captures across 1440×900 and 1920×1080: geometry, computed styles and browser errors passed, with no P9 semantic-size warnings. I visually inspected formula, distance-sweep, frequency-sweep and final-selection screenshots. Playwright/Chromium 153.0.8010.12 captured actual 1440×900 and 390×844 viewports: zero browser errors, document width matched each viewport, Key scan lane aligned within 1 px, and scan targets did not overlap Key labels or direction glyphs. The desktop captures show the 23 px MathML and continuous scan; mobile captures show both equations unobscured and the table contained in an 838 px internal scroll area. Evidence: `C:/Users/lenovo/.codex/visualizations/2026/11/07/01a1b6d4-82cd-7781-bef1-255f5672adbc/P9-redesign-equations-1440.png`, `P9-redesign-distance-sweep-1440.png`, `P9-redesign-frequency-sweep-1440.png`, `P9-redesign-topn-selected-1440.png`, `P9-redesign-equations-390.png`, and `P9-redesign-query-table-390.png`. The 1920×1080 view is a viewport simulation; actual interactive F11 is **NOT_RUN**. W7/human learning acceptance remains pending.
+
+### P1–P3 教学文案修订（2026-11-09）
+
+按用户执行方案保护 P1–P3 的核心图形、时间轴、交互及计算；仅调整 lessons.tsx、tutorial.ts 与必要局部排版。P4–P9、W4 首讲顺序及工作流状态保持原状。页末以本页结论提出下一页需要解决的问题；文案采用自然教学陈述。
+
+P1：补全顺序数据、旧数据访问限制、共享参数干扰、固定旧图对照与无任务 ID 统一测试；预测百分数标为教学分数，图注集中说明合成范围。用现有 Takeaway 承接 P2 的视觉特征形成问题。动画组件未修改。TypeScript/Vite 构建通过；修订中间版 Edge Chromium QA 的两种桌面布局几何与浏览器检查通过，已查看 P1 第二快照截图；最终简化文字与页末衔接将随三页整体验证复核。
+
+保护基线：runner 首次受沙箱本地连接限制，第二次发现未安装 Playwright Chromium；改用系统 Edge 后成功。基线报告 run-2026-11-09T08-18-12-261Z 覆盖 P1 双快照、P2 默认 Patch、P3 基础/额外 Token（1440×900、1920×1080），已查看三页默认截图。真实 F11 与人工学习验收尚未执行。
