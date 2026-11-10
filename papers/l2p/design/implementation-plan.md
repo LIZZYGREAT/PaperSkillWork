@@ -507,3 +507,9 @@ SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules�
 开场明确 P5 返回的是当前输入的 Prompt 索引集合，而不是类别结果；保留“无 Prompt 提取 Query”与“带 Prompt 计算分类”两次调用共用同一组冻结权重的解释。在 AvgPool 工作台增加读出范围图：五个 Prompt 组依 P5 的 `[1, 2, 10, 3, 9]` 顺序各展开五个位置，共 25 个；图像 `[CLS]` 位置 25 与 Patch 位置 26–221 单独标为保留在 H、但不进入均值。图示不替换原矩阵算术、Transformer 全序列计算或分类流程；没有加入损失/梯度/参数更新。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。Playwright + 本机 Edge 实际视口截图 1440×900、1920×1080、390×844 共 3 张；0 个页面错误；读出图包含 5 组/25 个 Prompt 位置标记，CLS=25、Patch=26–221；根文档宽度分别等于视口宽度。已人工检查读出切片、图像保留区、教学数值表和窄屏堆叠。证据：`C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p5-p6-teaching-logic/P6-readout-1440.png`、`P6-readout-1920.png`、`P6-readout-390.png`。Impeccable detector 已对 P5/P6 路由运行；未返回文字结果。
+
+#### P6 反馈后拆分读出与收缩主图（2026-11-10）
+
+用户指出页面仍缺少主图前的逻辑铺垫，且主图体量持续增加。本次在主工作台前新增按 P5 选集顺序核对的拼接算式，将主图限制为 1080px，内容聚焦于所选 Prompt 副本、图像 Token、序列位置和冻结 Transformer 前向。原先任意设定的 d=1 隐状态表、逐数值收集盘与对应飞行动画已移除；这些值不是论文测量值，也不是必要的教学对象。读出范围图移到独立讲解段，紧邻 AvgPool 公式与 `h → gφ → logits/argmax` 分类链；再用形状表分清池容量、选取数、Prompt 位置数、图像位置数、扩展序列长度和特征宽度。播放阶段 5/6 会分别点亮读出区与分类器，提供直达读出图的链接。两次 ViT 调用、P5 索引、25 个 Prompt 输出位置参与均值、197 个图像输出位置保留在 H 等机制保持不变；未引入损失或训练更新。
+
+SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。Playwright + 系统 Edge `fullPage:false` 实际视口截图逐张复核：桌面 1440×900 的拼接算式、前向主图和读出/形状表；手机 390×844 的主图与读出范围。页面错误 0；根文档宽度分别等于 1440px 与 390px；已补足固定导航的滚动留白。证据位于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p5-p6-teaching-logic/`：`P6-splice-1440.png`、`P6-sequence-1440.png`、`P6-sequence-390.png`、`P6-readout-1440.png`、`P6-readout-390.png`。`HUMAN_ACCEPTANCE=PENDING`；固定视口截图不代表真实 F11。

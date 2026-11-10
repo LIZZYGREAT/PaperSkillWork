@@ -342,3 +342,61 @@
 @media (prefers-reduced-motion: reduce) {
   .p6-forward-figure *, .p6-forward-figure *::before, .p6-forward-figure *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* Keep P6's interactive sequence map focused; explain readout and dimensions in smaller objects below it. */
+.lesson-figure.p6-forward-figure { width: min(100%, 1080px); margin-inline: auto; }
+.p6-splice-primer, .p6-readout-section, .p6-dimension-section { width: min(100%, 1080px); margin-inline: auto; }
+.p6-splice-primer > p, .p6-readout-section > p, .p6-dimension-section > p { max-width: 75ch; }
+.p6-splice-notation { display: grid; grid-template-columns: minmax(0, 1.15fr) auto 20px minmax(110px, .55fr) 20px minmax(200px, 1fr); gap: 10px; align-items: center; margin-top: 15px; padding-block: 11px; border-block: 1px solid var(--rk-line-strong); color: var(--p6-ink); }
+.p6-splice-notation > span:not(.p6-splice-operator) { min-width: 0; display: grid; gap: 4px; }
+.p6-splice-notation small { color: var(--p6-muted); font-size: 12px; }
+.p6-splice-notation strong { color: #60477a; font-size: 15px; line-height: 1.5; }
+.p6-splice-notation .p6-splice-image strong { color: #315e70; }
+.p6-splice-notation .p6-splice-total strong { color: #24583d; font: 600 14px var(--rk-font-mono); font-variant-numeric: tabular-nums; }
+.p6-splice-multiplicity { color: var(--p6-muted); font-size: 12px; white-space: nowrap; }
+.p6-splice-operator { color: #547965; font: 20px var(--rk-font-math); text-align: center; }
+.p6-splice-picked > strong > span { white-space: nowrap; }
+.p6-readout-section { padding-block: 2px 8px; }
+.p6-readout-scope { margin-top: 16px; transition: border-color 220ms ease-out, background-color 220ms ease-out; }
+.p6-readout-scope.is-active { border-color: #7f9f80; }
+.p6-readout-scope.is-active .p6-scope-included { background: #edf3e8; }
+.p6-pooling-equation { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin-top: 11px; padding-block: 9px; border-bottom: 1px solid var(--p6-line); color: #315d43; }
+.p6-pooling-equation math { font-size: 18px; }
+.p6-pooling-equation > span { color: var(--p6-muted); font-size: 13px; }
+.p6-classification-output { grid-template-columns: minmax(150px, .38fr) 24px minmax(0, 1fr); gap: 13px; margin-block: 15px 5px; }
+.p6-pooled-vector { display: grid; gap: 3px; justify-items: start; padding-block: 7px; border-block: 1px solid #c8d5c7; color: #24583d; }
+.p6-pooled-vector small { color: var(--p6-muted); font-size: 12px; }
+.p6-pooled-vector strong { font: 600 15px var(--rk-font-math); }
+.p6-classifier-boundary { margin-top: 10px !important; color: var(--p6-muted); font-size: 13px; }
+.p6-dimension-section { margin-top: 42px; }
+.p6-shape-ledger { width: min(100%, 900px); margin-top: 14px; border-collapse: collapse; text-align: left; font-variant-numeric: tabular-nums; }
+.p6-shape-ledger caption { padding-bottom: 7px; color: var(--p6-muted); font-size: 12px; text-align: left; }
+.p6-shape-ledger th, .p6-shape-ledger td { padding: 8px 10px; border-bottom: 1px solid var(--p6-line); vertical-align: top; }
+.p6-shape-ledger thead th { color: #355a47; font-size: 12px; font-weight: 700; }
+.p6-shape-ledger tbody th { width: 23%; color: var(--p6-ink); font-size: 13px; font-weight: 650; }
+.p6-shape-ledger tbody td:nth-child(2) { color: #60477a; font: 13px var(--rk-font-mono); }
+.p6-shape-ledger tbody td:last-child { color: var(--p6-muted); font-size: 13px; }
+.p6-control-dock .motion-status a { margin-left: 7px; color: #24583d; font-weight: 650; text-decoration-thickness: 1px; text-underline-offset: 3px; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .lesson-figure.p6-forward-figure, .p6-splice-primer, .p6-readout-section, .p6-dimension-section { scroll-margin-top: 140px; }
+  .p6-splice-notation { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .p6-splice-notation > span:not(.p6-splice-operator) { justify-self: stretch; }
+  .p6-splice-operator { text-align: start; padding-left: 5px; }
+  .p6-classification-output { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+  .p6-classification-output > .flow-arrow { justify-self: center; transform: rotate(90deg); }
+  .p6-pooled-vector { justify-self: stretch; }
+  .p6-classifier { grid-template-columns: repeat(2, minmax(0, auto)); justify-content: start; }
+  .p6-classifier > span { grid-column: 1 / -1; }
+  .p6-shape-ledger th, .p6-shape-ledger td { padding: 7px 5px; }
+  .p6-shape-ledger tbody th { width: 27%; }
+  .p6-shape-ledger tbody td:nth-child(2) { font-size: 11px; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 480px) {
+  .p6-shape-ledger thead th:first-child { width: 27%; }
+  .p6-shape-ledger thead th:last-child { display: none; }
+  .p6-shape-ledger tbody td:last-child { display: none; }
+  .p6-shape-ledger tbody th { font-size: 12px; }
+  .p6-shape-ledger tbody td:nth-child(2) { font-size: 12px; }
+}

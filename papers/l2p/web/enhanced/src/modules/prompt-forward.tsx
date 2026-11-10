@@ -3,17 +3,14 @@ import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
 import { Arrow } from "./vit-visuals";
 import { promptPoolConfig } from "./prompt-retrieval-data";
 import {
-  P6_FINAL_POOL_EXAMPLE,
   P6_FIRST_PATCH_SEQUENCE_INDEX,
   P6_IMAGE_CLS_SEQUENCE_INDEX,
   P6_LAST_PATCH_SEQUENCE_INDEX,
-  P6_POOL_SAMPLE_ROWS,
   P6_PROMPT_COUNT,
   P6_PROMPT_TOKEN_COUNT,
   P6_PROMPT_TOKEN_MAP,
   P6_SELECTED_PROMPT_INDICES,
   P6_SEQUENCE_LENGTH,
-  computePromptOutputPool,
 } from "./prompt-forward-data";
 import "./prompt-forward.css";
 
@@ -22,12 +19,6 @@ const boundaries = [0, 1000, 1950, 4350, 6050, 8450, duration];
 const patchCount = promptPoolConfig.imageLength - 1;
 const flightStep = 0.033;
 const flightSpan = 0.115;
-const poolContributions = P6_POOL_SAMPLE_ROWS.flatMap(row => row.values.map((value, tokenIndex) => ({
-  promptIndex: row.promptIndex,
-  tokenIndex,
-  sequenceIndex: row.sequenceStart + tokenIndex,
-  value,
-})));
 const phases = [
   { short: "接收 P5 选集", text: "Query A 的五个索引直接来自 P5 共享检索函数；读取 Prompt 副本，源池保持原位。" },
   { short: "准备图像序列", text: `同一图像经过冻结嵌入层得到 [CLS] 与 ${patchCount} 个 Patch 位置，共 ${promptPoolConfig.imageLength}×${promptPoolConfig.featureWidth}。` },
@@ -206,46 +197,8 @@ function PositionInspector({ sequenceIndex }: { sequenceIndex: number }) {
   return <span><strong>当前查看</strong><b>图像 Patch {patchIndex} / {patchCount}</b><code>xₚ[{sequenceIndex}]</code></span>;
 }
 
-function PoolingTable({
-  includedCount,
-  groupSums,
-  selectedSequenceIndex,
-  onSelect,
-}: {
-  includedCount: number;
-  groupSums: readonly number[];
-  selectedSequenceIndex: number;
-  onSelect: (sequenceIndex: number) => void;
-}) {
-  return <table className="p6-pool-table" aria-label="五组 Prompt 输出位置在特征维度 1 的可复算示例">
-    <thead><tr><th scope="col">Prompt 输出组</th>{Array.from({ length: promptPoolConfig.promptLength }, (_, index) => <th scope="col" key={index} aria-label={`Prompt Token ${index + 1}`}><span className="p6-pool-token-heading"><span className="p6-pool-token-heading-full" aria-hidden="true">Token {index + 1}</span><span className="p6-pool-token-heading-short" aria-hidden="true">T{index + 1}</span></span></th>)}<th scope="col">组内和</th></tr></thead>
-    <tbody>
-      {P6_POOL_SAMPLE_ROWS.map((row, rowIndex) => <tr key={`${row.promptIndex}-${rowIndex}`}>
-        <th scope="row"><PromptName index={row.promptIndex} /><small>位置 {row.sequenceStart}–{row.sequenceStart + row.values.length - 1}</small></th>
-        {row.values.map((value, tokenIndex) => {
-          const sequenceIndex = row.sequenceStart + tokenIndex;
-          const included = sequenceIndex < includedCount;
-          const selected = sequenceIndex === selectedSequenceIndex;
-          return <td key={sequenceIndex}>
-            <button
-              className={`p6-pool-value ${included ? "is-included" : ""} ${selected ? "is-selected" : ""}`}
-              type="button"
-              data-sequence-index={sequenceIndex}
-              data-p6-anchor={`pool-source-${sequenceIndex}`}
-              aria-label={`H[${sequenceIndex},1] 示例值 ${value.toFixed(1)}，来自 Prompt P${row.promptIndex} 的第 ${tokenIndex + 1} 个输出 Token${included ? "，已计入当前和" : ""}`}
-              aria-pressed={selected}
-              onClick={() => onSelect(sequenceIndex)}
-            ><b>{value.toFixed(1)}</b><small>H[{sequenceIndex},1]</small></button>
-          </td>;
-        })}
-        <td className="p6-row-sum">{includedCount === 0 ? "—" : groupSums[rowIndex].toFixed(2)}</td>
-      </tr>)}
-    </tbody>
-  </table>;
-}
-
-function ReadoutScopeMap() {
-  return <div className="p6-readout-scope" role="img" aria-label={`AvgPool 读取 H[0:${P6_PROMPT_TOKEN_COUNT},:] 的 ${P6_PROMPT_TOKEN_COUNT} 个 Prompt 输出位置；图像输出 H[${P6_IMAGE_CLS_SEQUENCE_INDEX}:${P6_SEQUENCE_LENGTH},:] 仍保留在上下文序列中，但不进入均值。`}>
+function ReadoutScopeMap({ active }: { active: boolean }) {
+  return <div className={`p6-readout-scope ${active ? "is-active" : ""}`} role="img" aria-label={`AvgPool 读取 H[0:${P6_PROMPT_TOKEN_COUNT},:] 的 ${P6_PROMPT_TOKEN_COUNT} 个 Prompt 输出位置；图像输出 H[${P6_IMAGE_CLS_SEQUENCE_INDEX}:${P6_SEQUENCE_LENGTH},:] 仍保留在上下文序列中，但不进入均值。`}>
     <div className="p6-scope-region p6-scope-included">
       <div className="p6-scope-heading"><strong>读入 AvgPool</strong><code>H[0:{P6_PROMPT_TOKEN_COUNT},:]</code></div>
       <div className="p6-scope-prompt-groups">
@@ -272,29 +225,16 @@ function ReadoutScopeMap() {
   </div>;
 }
 
-function PoolingTray({ includedCount }: { includedCount: number }) {
-  return <div className="p6-pool-tray" role="group" aria-label={`已进入求和区的 ${includedCount} 个 Prompt 输出示例值`}>
-    {poolContributions.map(({ promptIndex, tokenIndex, sequenceIndex, value }) => {
-      const included = sequenceIndex < includedCount;
-      return <span className={`p6-pool-tray-slot ${included ? "is-filled" : ""}`} key={sequenceIndex} data-p6-anchor={`pool-target-${sequenceIndex}`} aria-label={included ? `已收集 H[${sequenceIndex},1] 的示例值 ${value.toFixed(1)}，来自 P${promptIndex} Token ${tokenIndex + 1}` : `等待 H[${sequenceIndex},1] 示例值`}>
-        {included ? value.toFixed(1) : ""}
-      </span>;
-    })}
-  </div>;
-}
-
 function FlightLayer({
   geometry,
   activePhase,
   mergeProgress,
   encoderProgress,
-  poolingProgress,
 }: {
   geometry: FlightGeometry | null;
   activePhase: number;
   mergeProgress: number;
   encoderProgress: number;
-  poolingProgress: number;
 }) {
   if (!geometry) return null;
   const { points, width, height } = geometry;
@@ -339,24 +279,10 @@ function FlightLayer({
     </g>;
   }) : [];
 
-  const poolFlights = activePhase === 4 ? poolContributions.flatMap((contribution, ordinal) => {
-    const delay = ordinal * flightStep;
-    const progress = flightProgress(poolingProgress, ordinal);
-    const start = points[`pool-source-${contribution.sequenceIndex}`];
-    const end = points[`pool-target-${contribution.sequenceIndex}`];
-    if (!start || !end || poolingProgress < delay || progress >= 1) return [];
-    const position = pointOnArc(start, end, progress);
-    return <g className="p6-flight-value" key={`pool-${contribution.sequenceIndex}`} transform={`translate(${position.x} ${position.y})`}>
-      <rect x="-21" y="-12" width="42" height="24" rx="5" />
-      <text x="0" y="4" textAnchor="middle">{contribution.value.toFixed(1)}</text>
-    </g>;
-  }) : [];
-
-  if (!promptFlights.length && !imageFlight && !encoderFlights.length && !poolFlights.length) return null;
+  if (!promptFlights.length && !imageFlight && !encoderFlights.length) return null;
   return <svg className="p6-flight-layer" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
     <g>{promptFlights}{imageFlight}</g>
     <g>{encoderFlights}</g>
-    <g>{poolFlights}</g>
   </svg>;
 }
 
@@ -369,10 +295,6 @@ export function PromptForward() {
   const reducedMotion = useReducedMotion();
   const mergeProgress = activePhase > 2 ? 1 : activePhase === 2 ? (reducedMotion ? 1 : phaseProgress(playback.position, 2)) : 0;
   const encoderProgress = activePhase > 3 ? 1 : activePhase === 3 ? (reducedMotion ? 1 : phaseProgress(playback.position, 3)) : 0;
-  const poolingProgress = activePhase > 4 ? 1 : activePhase === 4 ? (reducedMotion ? 1 : phaseProgress(playback.position, 4)) : 0;
-  const includedCount = activePhase > 4 ? P6_FINAL_POOL_EXAMPLE.totalCount : activePhase === 4
-    ? poolContributions.reduce((count, _, index) => count + Number(poolingProgress >= index * flightStep + flightSpan), 0) : 0;
-  const poolState = computePromptOutputPool(P6_POOL_SAMPLE_ROWS.map(row => row.values), includedCount);
   const classifierReady = activePhase === 5;
   const sequenceIsOutput = activePhase >= 4;
   const imageFlightProgress = clamp((mergeProgress - 0.1) / 0.78);
@@ -390,15 +312,28 @@ export function PromptForward() {
       <p>以下工作台只展开分类调用。P5 的外部 Key 用于读取，不是 Transformer 输入 Token。</p>
     </section>
 
+    <section className="explain-section p6-splice-primer">
+      <h3>先按 P5 返回的下标取值，再沿序列方向拼接</h3>
+      <p>这一步把五组 Prompt 的读取副本放到图像 Token 前面。每组贡献 <math><msub><mi>L</mi><mi>p</mi></msub></math> 个位置；图像 Token 接在后面，Key 不会跟着进入输入。</p>
+      <div className="p6-splice-notation" role="img" aria-label={`P5 返回的五组 Prompt，每组 ${promptPoolConfig.promptLength} 个位置，与 ${promptPoolConfig.imageLength} 个图像位置拼接，得到 ${P6_SEQUENCE_LENGTH} 个位置`}>
+        <span className="p6-splice-picked"><small>P5 的选集顺序</small><strong>{P6_SELECTED_PROMPT_INDICES.map((index, ordinal) => <span key={`${index}-${ordinal}`}><PromptName index={index} />{ordinal < P6_SELECTED_PROMPT_INDICES.length - 1 ? " · " : ""}</span>)}</strong></span>
+        <span className="p6-splice-multiplicity">每组 L<sub>p</sub> = {promptPoolConfig.promptLength}</span>
+        <span className="p6-splice-operator" aria-hidden="true">+</span>
+        <span className="p6-splice-image"><small>图像序列 x<sub>e</sub></small><strong>L = {promptPoolConfig.imageLength}</strong></span>
+        <span className="p6-splice-operator" aria-hidden="true">=</span>
+        <span className="p6-splice-total"><small>输入长度</small><strong>{P6_PROMPT_COUNT} × {promptPoolConfig.promptLength} + {promptPoolConfig.imageLength} = {P6_SEQUENCE_LENGTH}</strong></span>
+      </div>
+    </section>
+
     <figure className="lesson-figure p6-forward-figure" ref={figureRef}>
-      <div className="figure-top"><strong>从 P5 的 S(x<sub>A</sub>) 追踪到 Prompt 输出平均</strong><span>Query A · 共享冻结权重 θ₀</span></div>
+      <div className="figure-top"><strong>沿位置追踪拼接输入与冻结前向</strong><span>Query A · 共享冻结权重 θ₀</span></div>
       <div className="p6-control-dock" aria-label="L2P 分类前向播放控制">
         <div className="motion-stops" role="group" aria-label="选择 L2P 分类前向阶段">
           {phases.map((phase, index) => <button className="lesson-choice" type="button" key={phase.short} aria-pressed={activePhase === index} onClick={() => playback.seek(boundaries[index])}>{index + 1}. {phase.short}</button>)}
         </div>
         <div className="p6-control-bottomline">
           <PlaybackControls playback={playback} label="Prompt 序列到类别预测" />
-          <p className="motion-status" aria-live="polite">{phases[activePhase].text}</p>
+          <p className="motion-status" aria-live="polite">{phases[activePhase].text}{activePhase >= 4 ? <> <a href="#p6-readout">查看下方读出图 ↓</a></> : null}</p>
         </div>
       </div>
 
@@ -409,7 +344,7 @@ export function PromptForward() {
           <span>分类：插入 Prompt → fᵣ → H</span>
         </div>
 
-          <div className="p6-source-heading"><strong>两路输入在序列维合并</strong><span>源 Pool 保留原位；本次只复制所选 Prompt</span></div>
+        <div className="p6-source-heading"><strong>两路输入在序列维合并</strong><span>源 Pool 保留原位；本次只复制所选 Prompt</span></div>
         <div className="p6-source-branches">
           <section className={`p6-source-column p6-selected-source ${activePhase === 0 ? "is-active" : ""}`} aria-label="P5 计算得到的选中 Prompt">
             <div className="p6-source-label"><strong>P5 · Query A 的 Top-N</strong><span>S(x<sub>A</sub>)</span></div>
@@ -460,66 +395,46 @@ export function PromptForward() {
           </div>
         </section>
 
-        <section className={`p6-pooling-workbench ${activePhase >= 4 ? "is-active" : ""}`} aria-label="Prompt 输出位置逐维平均计算">
-          <div className="p6-pooling-heading">
-            <div><strong>只读前 {P6_PROMPT_TOKEN_COUNT} 个 Prompt 输出位置</strong><span>正式读出 H[0:{P6_PROMPT_TOKEN_COUNT}, :] · 图像位置 {P6_IMAGE_CLS_SEQUENCE_INDEX}–{P6_LAST_PATCH_SEQUENCE_INDEX} 留在序列但不进入均值</span></div>
-            <math><mi>h</mi><mo>=</mo><mi>AvgPool</mi><mo>(</mo><mi>H</mi><mo>[</mo><mn>0</mn><mo>:</mo><mn>{P6_PROMPT_TOKEN_COUNT}</mn><mo>,</mo><mo>:</mo><mo>]</mo><mo>)</mo></math>
-          </div>
-          <ReadoutScopeMap />
-          <div className="p6-pooling-grid">
-            <div className="p6-pool-matrix-wrap">
-              <div className="p6-pool-sample-label"><strong>单一特征维度 d=1 的教学数值</strong><span>示例输出值，不是预训练 ViT 的隐藏状态</span></div>
-              <PoolingTable includedCount={includedCount} groupSums={poolState.groupSums} selectedSequenceIndex={selectedSequenceIndex} onSelect={setSelectedSequenceIndex} />
-            </div>
-            <div className="p6-pool-accumulator">
-              <span className="p6-pool-dimension">对每个特征维度各自汇总</span>
-              <div className="p6-pool-sum"><small>已抵达求和区 · 当前和 / 数量</small><strong>{activePhase < 4 ? "待开始" : `${poolState.sum.toFixed(2)} / ${poolState.includedCount}`}</strong><span>每枚数值方块来自左侧同一行的 H[r,1]</span></div>
-              <PoolingTray includedCount={includedCount} />
-              <div className={`p6-pool-result ${activePhase >= 4 && includedCount === P6_PROMPT_TOKEN_COUNT ? "is-ready" : ""}`}>
-                {includedCount === P6_PROMPT_TOKEN_COUNT
-                  ? <math><msub><mi>h</mi><mn>1</mn></msub><mo>=</mo><mfrac><mn>{poolState.sum.toFixed(1)}</mn><mn>{P6_PROMPT_TOKEN_COUNT}</mn></mfrac></math>
-                  : includedCount > 0
-                    ? <span className="p6-partial-mean">前 {includedCount} 个位置的暂时均值 · 尚未完成</span>
-                    : <span className="p6-partial-mean">{activePhase >= 4 ? "等待首个输出位置" : "等待池化阶段"}</span>}
-                <strong>{includedCount === P6_PROMPT_TOKEN_COUNT ? poolState.runningMean?.toFixed(2) : "—"}</strong>
-              </div>
-              <small className="p6-pool-limit">另外 {promptPoolConfig.featureWidth - 1} 个维度执行相同的 {P6_PROMPT_TOKEN_COUNT} 位置平均，最终 h ∈ R<sup>{promptPoolConfig.featureWidth}</sup>。</small>
-            </div>
-          </div>
-          <div className="p6-pooling-equation">
-            <math><msub><mi>h</mi><mi>d</mi></msub><mo>=</mo><mfrac><mn>1</mn><mn>{P6_PROMPT_TOKEN_COUNT}</mn></mfrac><munderover><mo>∑</mo><mrow><mi>r</mi><mo>=</mo><mn>0</mn></mrow><mn>{P6_PROMPT_TOKEN_COUNT - 1}</mn></munderover><msub><mi>H</mi><mrow><mi>r</mi><mo>,</mo><mi>d</mi></mrow></msub></math>
-            <span>按位置维求和；保持特征维 d 独立。</span>
-          </div>
-        </section>
-
-        <div className="p6-classification-output">
-          <Arrow />
-          <div className={`p6-classifier ${classifierReady ? "is-active" : ""}`}>
-            <strong>共享分类器 g<sub>φ</sub></strong>
-            <math><mi>z</mi><mo>=</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>)</mo></math>
-            <math><mover><mi>y</mi><mo>^</mo></mover><mo>=</mo><msub><mi>argmax</mi><mi>c</mi></msub><msub><mi>z</mi><mi>c</mi></msub></math>
-            <span>类别 Logits 数值未在本教学例中计算</span>
-          </div>
-          <span>前向分类到此为止 · 不展开损失或参数更新</span>
-        </div>
-
-        <div className="p6-dimensions" aria-label="本页形状与数量核对">
-          <span><b>M</b><strong>{promptPoolConfig.poolSize}</strong><small>池中候选 Prompt 数</small></span>
-          <span><b>N</b><strong>{P6_PROMPT_COUNT}</strong><small>当前检索选中数</small></span>
-          <span><b>L<sub>p</sub></b><strong>{promptPoolConfig.promptLength}</strong><small>每组 Prompt Token 数</small></span>
-          <span><b>L</b><strong>{promptPoolConfig.imageLength}</strong><small>图像 Token 位置数</small></span>
-          <span><b>D</b><strong>{promptPoolConfig.featureWidth}</strong><small>向量特征宽度</small></span>
-          <span className="p6-dim-result"><b>NL<sub>p</sub> + L</b><strong>{P6_PROMPT_TOKEN_COUNT} + {promptPoolConfig.imageLength} = {P6_SEQUENCE_LENGTH}</strong><small>扩展序列长度</small></span>
-        </div>
       </div>
-      <FlightLayer geometry={geometry} activePhase={activePhase} mergeProgress={mergeProgress} encoderProgress={encoderProgress} poolingProgress={poolingProgress} />
-      <figcaption>位置图把 {P6_PROMPT_TOKEN_COUNT} 个 Prompt Token 逐一展开，图像部分按真实数量压缩显示；输出矩阵中的 d=1 数值只演示 AvgPool 算术。正式流程对 H[0:{P6_PROMPT_TOKEN_COUNT}, :] 的每一个特征维度分别求平均，分类器 Logits 保持符号形式。</figcaption>
+      <FlightLayer geometry={geometry} activePhase={activePhase} mergeProgress={mergeProgress} encoderProgress={encoderProgress} />
+      <figcaption>图中逐组展示 Prompt 位置，图像序列按真实数量压缩；前向动画抽样追踪 Prompt、[CLS] 与 Patch 的代表位置。完整序列仍有 {P6_SEQUENCE_LENGTH} 个位置。</figcaption>
     </figure>
 
-    <section className="explain-section">
-      <h3>池化的是经过 Transformer 的 Prompt 输出，不是 Prompt 参数本身</h3>
-      <p>输入位置里的 Prompt 向量参与冻结 Transformer 计算后，输出 <math><mi>H</mi></math> 的前 {P6_PROMPT_TOKEN_COUNT} 行已携带上下文。正式读出从这些行取值并沿位置方向平均，得到一个 <math><mn>{promptPoolConfig.featureWidth}</mn></math> 维向量交给共享分类器。Prompt Pool 的原参数留在 P5，当前分类路径使用它们的读取视图。</p>
-      <p>以 Split CIFAR‑100 / CORe50 的 ViT‑B/16 维度为例：<math><mi>M</mi><mo>=</mo><mn>{promptPoolConfig.poolSize}</mn></math>、<math><mi>N</mi><mo>=</mo><mn>{promptPoolConfig.topN}</mn></math>、<math><msub><mi>L</mi><mi>p</mi></msub><mo>=</mo><mn>{promptPoolConfig.promptLength}</mn></math>、<math><mi>L</mi><mo>=</mo><mn>{promptPoolConfig.imageLength}</mn></math>、<math><mi>D</mi><mo>=</mo><mn>{promptPoolConfig.featureWidth}</mn></math>，所以 <math><msub><mi>x</mi><mi>p</mi></msub><mo>,</mo><mi>H</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>{P6_SEQUENCE_LENGTH}</mn><mo>×</mo><mn>{promptPoolConfig.featureWidth}</mn></mrow></msup></math>。其他数据集实验会使用不同的池大小或选取数值。</p>
+    <section id="p6-readout" className={`explain-section p6-readout-section ${activePhase >= 4 ? "is-active" : ""}`}>
+      <h3>分类读出只取上下文后的 Prompt 输出位置</h3>
+      <p>冻结 Transformer 处理了整个拼接序列，输出 <math><mi>H</mi></math> 中的 Prompt 行也已融合图像上下文。分类时从 <math><mi>H</mi><mo>[</mo><mn>0</mn><mo>:</mo><mn>{P6_PROMPT_TOKEN_COUNT}</mn><mo>,</mo><mo>:</mo><mo>]</mo></math> 取出这些输出并沿位置方向平均；图像的 CLS 与 Patch 仍在 H 中，但不进入这个均值。</p>
+      <ReadoutScopeMap active={activePhase >= 4} />
+      <div className="p6-pooling-equation">
+        <math><msub><mi>h</mi><mi>d</mi></msub><mo>=</mo><mfrac><mn>1</mn><mn>{P6_PROMPT_TOKEN_COUNT}</mn></mfrac><munderover><mo>∑</mo><mrow><mi>r</mi><mo>=</mo><mn>0</mn></mrow><mn>{P6_PROMPT_TOKEN_COUNT - 1}</mn></munderover><msub><mi>H</mi><mrow><mi>r</mi><mo>,</mo><mi>d</mi></mrow></msub></math>
+        <span>每个特征维 d 独立计算；h ∈ ℝ<sup>{promptPoolConfig.featureWidth}</sup>。</span>
+      </div>
+      <div className="p6-classification-output">
+        <div className="p6-pooled-vector"><small>Prompt 输出平均</small><strong>h ∈ ℝ<sup>{promptPoolConfig.featureWidth}</sup></strong></div>
+        <Arrow />
+        <div className={`p6-classifier ${classifierReady ? "is-active" : ""}`}>
+          <strong>共享分类器 g<sub>φ</sub></strong>
+          <math><mi>z</mi><mo>=</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>)</mo></math>
+          <math><mover><mi>y</mi><mo>^</mo></mover><mo>=</mo><msub><mi>argmax</mi><mi>c</mi></msub><msub><mi>z</mi><mi>c</mi></msub></math>
+          <span>这里保留分类规则；不虚构 Logits 数值</span>
+        </div>
+      </div>
+      <p className="p6-classifier-boundary">前向预测到此结束。损失计算和 Prompt / Key 的学习信号留到 P7。</p>
+    </section>
+
+    <section className="explain-section p6-dimension-section">
+      <h3>核对序列长度与向量宽度</h3>
+      <p>Prompt 增加的是位置数；每个位置的特征宽度仍由冻结 ViT 的维度决定。下面把本教学配置中的数量关系排在一起。</p>
+      <table className="p6-shape-ledger">
+        <caption>本页输入与读出形状</caption>
+        <thead><tr><th scope="col">关系</th><th scope="col">本例数值</th><th scope="col">含义</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">池容量与选集</th><td>M = {promptPoolConfig.poolSize} · N = {P6_PROMPT_COUNT}</td><td>候选槽位数 · 当前读取组数</td></tr>
+          <tr><th scope="row">Prompt 位置</th><td>N × L<sub>p</sub> = {P6_PROMPT_COUNT} × {promptPoolConfig.promptLength} = {P6_PROMPT_TOKEN_COUNT}</td><td>拼接到输入序列前部</td></tr>
+          <tr><th scope="row">图像位置</th><td>L = {promptPoolConfig.imageLength}</td><td>[CLS] 与 Patch 序列</td></tr>
+          <tr><th scope="row">扩展序列长度</th><td>NL<sub>p</sub> + L = {P6_PROMPT_TOKEN_COUNT} + {promptPoolConfig.imageLength} = {P6_SEQUENCE_LENGTH}</td><td>xₚ 与 H 的位置数</td></tr>
+          <tr><th scope="row">特征宽度</th><td>D = {promptPoolConfig.featureWidth}</td><td>每个位置的向量宽度；h 也为 D 维</td></tr>
+        </tbody>
+      </table>
     </section>
 
     <p className="lesson-takeaway">预测已经得到。接下来要解释：分类误差怎样训练被选中的 Prompt，而离散 Top-N 选择中的 Key 又怎样得到自己的学习信号？</p>
