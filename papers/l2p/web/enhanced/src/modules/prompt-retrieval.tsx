@@ -216,19 +216,46 @@ export function PromptRetrieval() {
   }
 
   return <>
-    <p className="lesson-lead">若后续仍训练同一个共享 Prompt，旧输入依赖的表示可能随参数变化。P5 看 L2P 如何在没有任务 ID 时，从当前图像生成 Query、比较全池 Keys，再按命中的索引读回 Prompt。</p>
+    <p className="lesson-lead">P4 留下的问题是：若后续任务继续训练同一个共享 Prompt，旧输入依赖的表示可能变化。P5 接着问，测试时没有任务 ID，模型怎样仅凭当前图像找到可用的 Prompt？</p>
 
-    <section className="explain-section p5-pair-intro">
-      <h3>没有任务 ID，当前输入怎样寻址？</h3>
-      <p>先用未插入 Prompt 的冻结 ViT 从图像提取 Query，再与全部 Keys 比较；距离最小的索引指向配对 Prompt。每个池槽位都保存一对持久参数：<math><msub><mi>k</mi><mi>j</mi></msub></math> 是检索向量，<math><msub><mi>P</mi><mi>j</mi></msub></math> 是含 <math><msub><mi>L</mi><mi>p</mi></msub></math> 个可学习 Token 的序列。</p>
-      <div className="reading-contrast reading-contrast--claims p5-key-boundary" role="group" aria-label="Key 与 Prompt 的角色区别">
-        <div className="reading-claim--core"><strong>Key 只参与外部检索</strong><p>它决定取哪个 Prompt，不会拼进 ViT；这里的 Query/Key 也不是 Self‑Attention 内部的 Q/K/V。</p></div>
-        <div className="reading-claim--caution"><strong>Pool 保存可复用参数</strong><p>本次读取不会新增、消耗或删除槽位；选集按样本变化，不按任务固定分区。</p></div>
+    <section className="explain-section p5-query-primer">
+      <h3>推断只收到图像，Query 就从图像产生</h3>
+      <p>如果测试输入没有“属于哪个任务”的标签，路由就不能先查任务号。L2P 先把当前图像送入不插入 Prompt 的冻结 ViT，读取末层 [CLS] 特征作为 Query；它是检索线索，还不是分类结果。</p>
+      <div className="p5-query-flow" aria-label="输入图像经冻结 ViT 生成 Query">
+        <div className="p5-query-input"><Specimen /><span><strong>x<sub>{query.toLowerCase()}</sub></strong><small>当前图像 · 无任务 ID</small></span></div>
+        <Arrow />
+        <div className={`p5-query-frozen ${activePhase === 0 ? "is-active" : ""}`}><strong>冻结 ViT f</strong><small>不插入 Prompt</small></div>
+        <Arrow />
+        <div className={`p5-query-output ${activePhase === 0 ? "is-active" : ""}`}><strong>q(x) = f(x)[0,:]</strong><small>末层 CLS 特征 · 用于寻址</small></div>
+        <div className="p5-query-example"><span>二维方向示例</span><strong>{queryStatus(query)}</strong></div>
       </div>
     </section>
 
+    <section className="explain-section p5-pair-intro">
+      <h3>每个槽位把检索 Key 与输入 Prompt 配成一对</h3>
+      <p>Query 与池中所有 <math><msub><mi>k</mi><mi>j</mi></msub></math> 比较，选中的下标 <math><mi>j</mi></math> 再指向同槽位的 <math><msub><mi>P</mi><mi>j</mi></msub></math>。Key 是寻址向量；Prompt 才是由 <math><msub><mi>L</mi><mi>p</mi></msub></math> 个 Token 组成、之后接入分类序列的参数。</p>
+      <div className="p5-slot-anatomy" role="group" aria-label="同一池槽位中的 Key 与 Prompt 一一配对，但承担不同作用">
+        <div className="p5-slot-key">
+          <span className="p5-slot-role">检索地址</span>
+          <div><i className="p5-key-shape" aria-hidden="true" /><math><msub><mi>k</mi><mi>j</mi></msub></math></div>
+          <small>与 q(x) 比较距离</small>
+        </div>
+        <div className="p5-slot-pair-link"><i aria-hidden="true" /><span>同下标 j</span><i aria-hidden="true" /></div>
+        <div className="p5-slot-prompt">
+          <div><span className="p5-slot-role">模型输入</span><math><msub><mi>P</mi><mi>j</mi></msub></math></div>
+          <span className="p5-slot-token-map" aria-label={`${promptPoolConfig.promptLength} 个 Prompt Token`}>
+            {Array.from({ length: promptPoolConfig.promptLength }, (_, index) => <i key={index} />)}
+          </span>
+          <small>L<sub>p</sub> = {promptPoolConfig.promptLength} 个序列位置</small>
+        </div>
+      </div>
+      <p className="p5-slot-note">Key 留在外部检索步骤，不拼进 ViT；读取只复制 Prompt，源 Pool 槽位继续保留。这里的 Key 也不是 Attention 的 K。</p>
+    </section>
+
+    <p className="lesson-prose p5-observation-guide">现在跟着同一个 Query 看一次可复算检索：先算与 Key 的余弦距离，再比较全部十个候选，最后按距离取五个索引并读取配对 Prompt。圆上的角度是帮助检查规则的二维教学数据，不是论文实测向量。</p>
+
     <figure className="lesson-figure p5-retrieval-figure">
-      <div className="figure-top"><strong>从图像 Query 到五组 Prompt</strong><span>同一个计算模型驱动向量、分数、排序和读取</span></div>
+      <div className="figure-top"><strong>沿一份快照核对距离、排名与读取</strong><span>余弦比较 · Top‑5 · 同索引副本</span></div>
       <div className="figure-body">
         <div className="p5-motion-controls" aria-label="检索演示控制台">
           <div className="p5-motion-topline">
@@ -252,17 +279,6 @@ export function PromptRetrieval() {
           </div>
         </div>
 
-        <div className="p5-query-flow" aria-label="输入图像经冻结 ViT 生成 Query">
-          <div className="p5-query-input"><Specimen /><span><strong>x<sub>{query.toLowerCase()}</sub></strong><small>当前图像</small></span></div>
-          <Arrow />
-          <div className={`p5-query-frozen ${activePhase === 0 ? "is-active" : ""}`}><strong>冻结 ViT f</strong><small>不插入 Prompt</small></div>
-          <Arrow />
-          <div className={`p5-query-output ${activePhase === 0 ? "is-active" : ""}`}><strong>q(x) = f(x)[0,:]</strong><small>末层 CLS 特征 · 无任务 ID</small></div>
-          <div className="p5-query-example"><span>二维方向示例</span><strong>{queryStatus(query)}</strong></div>
-        </div>
-
-        <p className="p5-two-d-boundary">真实机制在高维空间比较 <math><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo></math> 与可学习 Keys。为了看清余弦规则，下方用固定的二维单位向量演示；所有数值都是可复算的教学示例。</p>
-
         <div className="p5-workbench-grid">
           <RetrievalVectorSpace snapshot={snapshot} activeCandidateIndex={activeCandidateIndex} approachingCandidateIndex={approachingCandidateIndex}
             ringAngleDegrees={ringAngleDegrees} angleProgress={angleProgress} selectedIndices={snapshot.selectedKeyIndices}
@@ -282,10 +298,15 @@ export function PromptRetrieval() {
           <p>公式 (3) 定义的是 Top‑N 集合；页面按距离从小到大显示索引，便于追踪读取次序。此演示设 M={promptPoolConfig.poolSize}、N={promptPoolConfig.topN}、L<sub>p</sub>={promptPoolConfig.promptLength}；这些容量匹配论文报告的部分配置。</p>
         </section>
 
-        <QueryComparison activeQuery={query} />
       </div>
       <figcaption>在 Query A 下，评分顺序、距离排序和读取视图始终来自同一个快照：{selectionOrder("A").map(index => `P${formatSubscript(index)}`).join(" · ")}。选择这些 Prompt 后，P6 才会把它们接到图像 Token 序列之前。</figcaption>
     </figure>
+
+    <section className="explain-section p5-query-sharing">
+      <h3>换一个输入，命中位置会怎样变化？</h3>
+      <p>下面把两份 Query 放回同一组十个池槽位比较。每行只回答“是否入选”；距离名次仍由上方评分表展示。这样可以看到样本级选集既有差异，也可能部分重合。</p>
+      <QueryComparison activeQuery={query} />
+    </section>
 
     <section className="explain-section p5-reading-boundary">
       <h3>从检索结果回到论文机制</h3>

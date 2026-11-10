@@ -210,6 +210,24 @@
 .p5-example-limits { color: #5d6254; font-size: 14px; }
 .teaching-module:has(.p5-retrieval-figure) { min-width: 0; }
 
+.p5-query-primer { width: min(100%, 1080px); margin: 28px auto 34px; }
+.p5-query-primer > p, .p5-pair-intro > p { max-width: 75ch; }
+.p5-slot-anatomy { width: min(100%, 700px); display: grid; grid-template-columns: minmax(0, 1fr) 94px minmax(0, 1fr); gap: 12px; align-items: center; margin-block: 17px 13px; padding-block: 11px; border-block: 1px solid #c9cec1; }
+.p5-slot-key, .p5-slot-prompt { min-width: 0; display: grid; gap: 5px; }
+.p5-slot-key > div, .p5-slot-prompt > div { display: flex; align-items: center; gap: 9px; color: #684d80; font: 600 18px var(--rk-font-math); }
+.p5-slot-role { color: #526458; font-size: 12px; font-weight: 650; }
+.p5-slot-key > small, .p5-slot-prompt > small { color: #465c4c; font-size: 12px; }
+.p5-slot-pair-link { display: flex; align-items: center; gap: 5px; color: #526458; font: 11px var(--rk-font-mono); white-space: nowrap; }
+.p5-slot-pair-link > i { flex: 1; height: 1px; background: #9eaa9e; }
+.p5-slot-token-map { width: min(100%, 220px); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.p5-slot-token-map > i { height: 19px; border: 1px solid #947ca6; background: #eee6f2; }
+.p5-slot-note { max-width: 75ch; margin-top: 4px !important; color: #465c4c; font-size: 14px; }
+.p5-observation-guide { max-width: 76ch; margin: 28px auto 16px !important; }
+.lesson-figure.p5-retrieval-figure { width: min(100%, 1120px); margin-inline: auto; }
+.p5-query-sharing { margin-inline: auto; }
+.p5-query-sharing .p5-query-comparison { width: min(100%, 1000px); }
+.lesson-figure.p5-retrieval-figure, .p5-pair-intro, .p5-query-sharing { scroll-margin-top: 104px; }
+
 @media (max-width: 1080px) {
   .p5-motion-controls { position: static; margin-inline: 0; }
   .p5-motion-topline { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
@@ -226,6 +244,11 @@
 }
 
 @media (max-width: 760px) {
+  .lesson-figure.p5-retrieval-figure, .p5-pair-intro, .p5-query-sharing { scroll-margin-top: 140px; }
+  .p5-slot-anatomy { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .p5-slot-pair-link { width: min(100%, 220px); }
+  .p5-slot-pair-link > i:first-child { display: none; }
+  .p5-slot-prompt { max-width: 300px; }
   .p5-query-demo-note { flex-basis: 100%; margin-left: 0; }
   .p5-query-flow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .p5-query-input, .p5-query-frozen, .p5-query-output { justify-self: stretch; }
