@@ -173,6 +173,31 @@
 .p6-pooling-heading > div { display: grid; gap: 3px; }
 .p6-pooling-heading > div > span { max-width: 88ch; }
 .p6-pooling-heading > math { color: var(--p6-output); font-size: 18px; white-space: nowrap; }
+.p6-readout-scope { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(230px, .85fr); margin-top: 12px; border-block: 1px solid var(--p6-line); }
+.p6-scope-region { min-width: 0; padding: 9px 11px 10px; }
+.p6-scope-included { border-bottom: 2px solid #9678a8; background: #f4eff7; }
+.p6-scope-retained { border-bottom: 2px solid #8da8aa; background: #eff3f3; }
+.p6-scope-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 9px; margin-bottom: 7px; }
+.p6-scope-heading strong { color: var(--p6-prompt); font-size: 12px; }
+.p6-scope-retained .p6-scope-heading strong { color: #315e70; }
+.p6-scope-heading code { color: #56436a; font: 12px var(--rk-font-mono); }
+.p6-scope-retained .p6-scope-heading code { color: #315e70; }
+.p6-scope-prompt-groups { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+.p6-scope-prompt-group { min-width: 0; display: grid; justify-items: center; gap: 2px; padding: 3px 2px; border-right: 1px solid #d7cadd; }
+.p6-scope-prompt-group:last-child { border-right: 0; }
+.p6-scope-prompt-group > strong { color: var(--p6-prompt); font: 600 12px var(--rk-font-math); }
+.p6-scope-prompt-group > small { color: #56436a; font: 11px var(--rk-font-mono); }
+.p6-scope-position-marks { width: 100%; display: flex; justify-content: center; gap: 2px; }
+.p6-scope-position-marks > i { flex: 0 1 8px; min-width: 3px; height: 13px; border: 1px solid #9a82aa; background: #e8dff0; }
+.p6-scope-image-positions { min-height: 43px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: stretch; }
+.p6-scope-cls { min-width: 47px; display: grid; justify-items: center; align-content: center; gap: 2px; padding-inline: 5px; border: 1px solid #96aeb0; background: #f7faf9; color: #315e70; }
+.p6-scope-cls strong, .p6-scope-patches strong { font-size: 11px; }
+.p6-scope-cls small, .p6-scope-patches small { color: #425e67; font: 11px var(--rk-font-mono); }
+.p6-scope-patches { min-width: 0; display: grid; align-content: center; gap: 4px; color: #315e70; }
+.p6-scope-patches > i { position: relative; display: block; height: 1px; margin-inline: 3px; background: #9bb0b1; }
+.p6-scope-patches > i::before, .p6-scope-patches > i::after { position: absolute; top: -2px; width: 5px; height: 5px; border-radius: 50%; background: #527d84; content: ""; }
+.p6-scope-patches > i::before { left: 0; }
+.p6-scope-patches > i::after { right: 0; }
 .p6-pooling-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(210px, .55fr); gap: 18px; align-items: center; margin-top: 12px; }
 .p6-pool-matrix-wrap { min-width: 0; }
 .p6-pool-sample-label { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 3px 10px; margin-bottom: 6px; }
@@ -264,6 +289,7 @@
   .p6-source-join { transform: rotate(90deg); }
   .p6-sequence-prompt-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .p6-pooling-grid { grid-template-columns: minmax(0, 1fr); }
+  .p6-readout-scope { grid-template-columns: minmax(0, 1fr); }
   .p6-pool-accumulator { padding: 10px 0 0; border-top: 1px solid #cdd6c8; border-left: 0; }
   .p6-pool-tray { max-width: 300px; }
   .p6-encoder-lanes { grid-template-columns: minmax(75px, .9fr) minmax(92px, 1fr) minmax(50px, .62fr); gap: 4px 6px; }
@@ -297,6 +323,12 @@
   .p6-pool-table tbody th small { font-size: 12px; }
   .p6-pool-value > b { font-size: 13px; }
   .p6-pool-value > small { display: none; }
+  .p6-scope-region { padding-inline: 7px; }
+  .p6-scope-prompt-groups { gap: 2px; }
+  .p6-scope-prompt-group > strong { font-size: 11px; }
+  .p6-scope-prompt-group > small, .p6-scope-cls small, .p6-scope-patches small { font-size: 10px; }
+  .p6-scope-position-marks { gap: 1px; }
+  .p6-scope-position-marks > i { height: 11px; }
   .p6-pool-result { grid-template-columns: minmax(0, 1fr) auto; }
   .p6-encoder-lanes { grid-template-columns: minmax(69px, .82fr) minmax(88px, 1fr) minmax(47px, .58fr); gap: 3px 4px; grid-template-rows: repeat(3, 32px); }
   .p6-encoder-input, .p6-encoder-output { min-height: 25px; padding-inline: 2px; font-size: 11px; }

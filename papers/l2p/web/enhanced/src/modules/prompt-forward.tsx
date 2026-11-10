@@ -244,6 +244,34 @@ function PoolingTable({
   </table>;
 }
 
+function ReadoutScopeMap() {
+  return <div className="p6-readout-scope" role="img" aria-label={`AvgPool 读取 H[0:${P6_PROMPT_TOKEN_COUNT},:] 的 ${P6_PROMPT_TOKEN_COUNT} 个 Prompt 输出位置；图像输出 H[${P6_IMAGE_CLS_SEQUENCE_INDEX}:${P6_SEQUENCE_LENGTH},:] 仍保留在上下文序列中，但不进入均值。`}>
+    <div className="p6-scope-region p6-scope-included">
+      <div className="p6-scope-heading"><strong>读入 AvgPool</strong><code>H[0:{P6_PROMPT_TOKEN_COUNT},:]</code></div>
+      <div className="p6-scope-prompt-groups">
+        {P6_SELECTED_PROMPT_INDICES.map((index, ordinal) => {
+          const firstPosition = ordinal * promptPoolConfig.promptLength;
+          const lastPosition = firstPosition + promptPoolConfig.promptLength - 1;
+          return <span className="p6-scope-prompt-group" key={`${index}-${ordinal}`}>
+            <strong><PromptName index={index} /></strong>
+            <small>{firstPosition}–{lastPosition}</small>
+            <span className="p6-scope-position-marks" aria-hidden="true">
+              {Array.from({ length: promptPoolConfig.promptLength }, (_, tokenIndex) => <i key={tokenIndex} />)}
+            </span>
+          </span>;
+        })}
+      </div>
+    </div>
+    <div className="p6-scope-region p6-scope-retained">
+      <div className="p6-scope-heading"><strong>留在 H · 不进入均值</strong><code>H[{P6_IMAGE_CLS_SEQUENCE_INDEX}:{P6_SEQUENCE_LENGTH},:]</code></div>
+      <div className="p6-scope-image-positions">
+        <span className="p6-scope-cls"><strong>[CLS]</strong><small>{P6_IMAGE_CLS_SEQUENCE_INDEX}</small></span>
+        <span className="p6-scope-patches"><i aria-hidden="true" /><strong>Patch × {patchCount}</strong><small>{P6_FIRST_PATCH_SEQUENCE_INDEX}–{P6_LAST_PATCH_SEQUENCE_INDEX}</small></span>
+      </div>
+    </div>
+  </div>;
+}
+
 function PoolingTray({ includedCount }: { includedCount: number }) {
   return <div className="p6-pool-tray" role="group" aria-label={`已进入求和区的 ${includedCount} 个 Prompt 输出示例值`}>
     {poolContributions.map(({ promptIndex, tokenIndex, sequenceIndex, value }) => {
@@ -351,7 +379,7 @@ export function PromptForward() {
   const imageArrived = activePhase > 2 || (activePhase === 2 && imageFlightProgress >= 1);
 
   return <>
-    <p className="lesson-lead">P5 的 Query A 已选出五个 Prompt。P6 把这些读取副本与同一张图像 Token 合并，再调用共享的冻结 ViT 完成分类；<span className="reading-emphasis reading-emphasis--prompt">最终读出来自 Prompt 位置，不是普通 ViT 的 CLS 位置</span>。</p>
+    <p className="lesson-lead">P5 给出的是当前输入的索引集合，不是类别预测。P6 将读取到的五组 Prompt 与同一张图像 Token 合并，再经共享冻结 ViT 前向；<span className="reading-emphasis reading-emphasis--prompt">分类特征从 Prompt 输出位置读出，不从普通 ViT 的 CLS 位置读出</span>。</p>
 
     <section className="explain-section">
       <h3>检索和分类是两次调用，共用同一组冻结权重</h3>
@@ -437,6 +465,7 @@ export function PromptForward() {
             <div><strong>只读前 {P6_PROMPT_TOKEN_COUNT} 个 Prompt 输出位置</strong><span>正式读出 H[0:{P6_PROMPT_TOKEN_COUNT}, :] · 图像位置 {P6_IMAGE_CLS_SEQUENCE_INDEX}–{P6_LAST_PATCH_SEQUENCE_INDEX} 留在序列但不进入均值</span></div>
             <math><mi>h</mi><mo>=</mo><mi>AvgPool</mi><mo>(</mo><mi>H</mi><mo>[</mo><mn>0</mn><mo>:</mo><mn>{P6_PROMPT_TOKEN_COUNT}</mn><mo>,</mo><mo>:</mo><mo>]</mo><mo>)</mo></math>
           </div>
+          <ReadoutScopeMap />
           <div className="p6-pooling-grid">
             <div className="p6-pool-matrix-wrap">
               <div className="p6-pool-sample-label"><strong>单一特征维度 d=1 的教学数值</strong><span>示例输出值，不是预训练 ViT 的隐藏状态</span></div>

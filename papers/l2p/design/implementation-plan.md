@@ -495,3 +495,9 @@ P5 保留同一 Query 计算、余弦距离、Top‑N 集合与源池读取次�
 开场改成“没有任务 ID 时如何寻址”的因果问题：旧共享 Prompt 在后续继续训练时可能改变旧输入依赖的表示；当前样本经不插入 Prompt 的冻结 ViT 生成 Query，再与全池 Keys 比较、按索引取回配对 Prompt。Key/Prompt 的一一配对与 Key 不进入分类序列边界保留。双 Query 对照改为十槽位入选矩阵：每行各有五个成员、P₂/P₃ 两次共有；矩阵按池顺序，距离名次仍由上方候选评分表表达，并增加移动端横滑提示。窄屏为 P5 模块解除 Grid 项目的固有最小宽度，矩阵在自身滚动容器中横向查看。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。Playwright + 本机 Edge 实际视口截图 1440×900、1920×1080、390×844 共 3 张；0 个页面错误；各行入选 5 个、共享槽位 2 个；根文档宽度分别为视口宽度，无页面级横向溢出。已人工检查矩阵图例、交集编码、标题可见性与手机横滑布局。证据：`C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p5-p6-teaching-logic/P5-membership-1440.png`、`P5-membership-1920.png`、`P5-membership-390.png`。
+
+#### P6 教学逻辑优化已完成（2026-11-10）
+
+开场明确 P5 返回的是当前输入的 Prompt 索引集合，而不是类别结果；保留“无 Prompt 提取 Query”与“带 Prompt 计算分类”两次调用共用同一组冻结权重的解释。在 AvgPool 工作台增加读出范围图：五个 Prompt 组依 P5 的 `[1, 2, 10, 3, 9]` 顺序各展开五个位置，共 25 个；图像 `[CLS]` 位置 25 与 Patch 位置 26–221 单独标为保留在 H、但不进入均值。图示不替换原矩阵算术、Transformer 全序列计算或分类流程；没有加入损失/梯度/参数更新。
+
+SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。Playwright + 本机 Edge 实际视口截图 1440×900、1920×1080、390×844 共 3 张；0 个页面错误；读出图包含 5 组/25 个 Prompt 位置标记，CLS=25、Patch=26–221；根文档宽度分别等于视口宽度。已人工检查读出切片、图像保留区、教学数值表和窄屏堆叠。证据：`C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p5-p6-teaching-logic/P6-readout-1440.png`、`P6-readout-1920.png`、`P6-readout-390.png`。Impeccable detector 已对 P5/P6 路由运行；未返回文字结果。
