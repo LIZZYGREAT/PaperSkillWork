@@ -481,3 +481,17 @@ SOURCE_BUILD=PASS：`npm.cmd run build`，TypeScript + Vite 6.4.3，72 modules�
 单步更新后的解释改为左右参数账本，直接对照同一 Trace 中写回前后的 P、Wcls、bcls 数值，中间保留 SGD 更新算子，底部列出同图复算的 CE 变化；不再用重复的五步时间轴。跨任务部分改为“任务 A—共享 P—任务 B”的参数枢纽图，并将表示变化明确写为可能影响，不虚构任务 B 的数值、梯度或遗忘结果。连同前两部分，P4 现在使用输入标本板与分段序列、输出汇聚图、梯度权限账本、更新前后参数对照、共享参数枢纽等不同视觉形式；各表达读取既有 Trace 或只说明定性关系。新增对象为正文讲解提供配套图示，主舞台算法、阶段次序、播放逻辑及 P1–P3 均未改动。阶段提示条改用上下细边线，避免厚侧条抢占阅读层级。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`，TypeScript + Vite 6.4.3，72 modules。FINAL_VISUAL_QA=PASS：Edge 157.0.4341.42，报告 `PaperSkillWork/.visual-qa/run-2026-11-09T17-04-33-244Z/`；1440×900、1920×1080、390×844 共 24 个状态截图，几何、样式和浏览器错误检查全部通过，0 条浏览器错误、无裁切/溢出诊断。截图按 `task/L2P/截图实现与失败排查方法记录.md` 的本机 Playwright + Edge 方法，以 `fullPage:false` 捕获并用 `view_image` 逐张查看；共 11 张桌面与手机实际视口图，保留于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p4-visual-diversity/`。实测 document 宽度与视口相同：桌面 1440px、手机 390px，浏览器页面错误 0。Visual QA 的 1920×1080 是固定视口布局检查，不代表真实 F11；`FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。此前 detector 扫描指出的 3px 左侧色条已改为细上下边线；按一次扫描的流程未重复运行 detector。截图临时目录清理后保留上述 11 张交付图；任务启动的本机预览关闭。任务开始前已有的 `package-lock.json` 改动未纳入本次提交。
+
+### P5–P6 教学逻辑优化（2026-11-10）
+
+本轮只改 P5 与 P6 的教学文案、页面内教学视觉对象及其样式；不改 P1–P4、P7–P9、全站流程、论文事实、路由和算法。内容核对依据为 `source/notes/P4-P6_教学主线与内容规划.md`、`source/notes/L2P论文笔记.md` 与 `source-cache/content.md`。新增例子必须来自既有确定性快照，或明确标成结构示意；不把玩具数值称为论文实测。
+
+P5 保留同一 Query 计算、余弦距离、Top‑N 集合与源池读取次序；重点解释“无任务 ID → 当前图像 Query → 全 Key 比较 → 同索引读取 Prompt”，并以池槽位顺序的 A/B 入选矩阵呈现交集/差集，避免把集合成员关系误读成距离排序。P6 保留 P5 Query A 的五个索引、两个冻结 ViT 调用和原有维度；在读出工作台明确对照 25 个 Prompt 输出参与 AvgPool 与 197 个图像输出保留在 H 但不参与该均值。两页新增辅助图只表达笔记已核实的关系，不重画主流程或引入 P7 的训练更新。
+
+每页依次完成源码、构建、页面截图复核与单独提交；报告实际复核视口、截图位置和构建结果，不将固定视口截图表述为真实全屏或用户验收。
+
+#### P5 教学逻辑优化已完成（2026-11-10）
+
+开场改成“没有任务 ID 时如何寻址”的因果问题：旧共享 Prompt 在后续继续训练时可能改变旧输入依赖的表示；当前样本经不插入 Prompt 的冻结 ViT 生成 Query，再与全池 Keys 比较、按索引取回配对 Prompt。Key/Prompt 的一一配对与 Key 不进入分类序列边界保留。双 Query 对照改为十槽位入选矩阵：每行各有五个成员、P₂/P₃ 两次共有；矩阵按池顺序，距离名次仍由上方候选评分表表达，并增加移动端横滑提示。窄屏为 P5 模块解除 Grid 项目的固有最小宽度，矩阵在自身滚动容器中横向查看。
+
+SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。Playwright + 本机 Edge 实际视口截图 1440×900、1920×1080、390×844 共 3 张；0 个页面错误；各行入选 5 个、共享槽位 2 个；根文档宽度分别为视口宽度，无页面级横向溢出。已人工检查矩阵图例、交集编码、标题可见性与手机横滑布局。证据：`C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p5-p6-teaching-logic/P5-membership-1440.png`、`P5-membership-1920.png`、`P5-membership-390.png`。

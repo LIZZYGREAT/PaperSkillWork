@@ -6,7 +6,6 @@ import {
   buildSelectionSnapshot,
   KEYS,
   promptPoolConfig,
-  sharedKeyIndices,
   type QueryId,
   type SelectionSnapshot,
 } from "./prompt-retrieval-data";
@@ -38,7 +37,6 @@ const snapshots: Readonly<Record<QueryId, SelectionSnapshot>> = Object.freeze({
   A: buildSelectionSnapshot("A"),
   B: buildSelectionSnapshot("B"),
 });
-const commonIndices = sharedKeyIndices();
 
 function phaseAt(position: number) {
   if (position >= duration) return phases.length - 1;
@@ -140,36 +138,46 @@ function selectionOrder(query: QueryId) {
   return snapshots[query].selected.map(candidate => candidate.index);
 }
 
-function Sequence({ snapshot }: { snapshot: SelectionSnapshot }) {
-  return <span className="p5-index-sequence">
-    {snapshot.selected.map((candidate, offset) => <span className="p5-index-item" key={candidate.index}>
-      <math><msub><mi>P</mi><mn>{candidate.index}</mn></msub></math>
-      {offset < snapshot.selected.length - 1 && <span className="p5-index-separator" aria-hidden="true">·</span>}
-    </span>)}
-  </span>;
-}
-
 function QueryComparison({ activeQuery }: { activeQuery: QueryId }) {
+  const selectedA = new Set(snapshots.A.selectedKeyIndices);
+  const selectedB = new Set(snapshots.B.selectedKeyIndices);
+  const slots = comparisonOrder();
+
   return <section className={`p5-query-comparison ${activeQuery === "B" ? "is-b-active" : "is-a-active"}`} aria-label="Query A 与 Query B 的 Top-5 及共享 Prompt">
     <div className="p5-region-heading">
-      <h3>同一组槽位，输入决定选集</h3>
-      <span>比较两次输入的 Top‑5 索引</span>
+      <h3>两个输入，各自命中哪些槽位？</h3>
+      <span>槽位 P₁→P₁₀ · 手机可横向浏览</span>
     </div>
-    <div className="p5-comparison-row">
-      <div className={`p5-comparison-set ${activeQuery === "A" ? "is-active" : ""}`}>
-        <span className="p5-comparison-label">查询 A · {queryStatus("A")}</span>
-        <Sequence snapshot={snapshots.A} />
-      </div>
-      <div className="p5-shared-set">
-        <span>共享槽位</span>
-        <span className="p5-shared-indices">{commonIndices.map(index => <math key={index}><msub><mi>P</mi><mn>{index}</mn></msub></math>)}</span>
-      </div>
-      <div className={`p5-comparison-set ${activeQuery === "B" ? "is-active" : ""}`}>
-        <span className="p5-comparison-label">查询 B · {queryStatus("B")}</span>
-        <Sequence snapshot={snapshots.B} />
-      </div>
+    <div className="p5-membership-scroll">
+      <table className="p5-membership-table" aria-label="Query A 和 B 在 Prompt 池十个槽位中的入选情况">
+        <thead><tr>
+          <th scope="col">当前输入</th>
+          {slots.map(index => <th scope="col" key={index}><math><msub><mi>P</mi><mn>{index}</mn></msub></math></th>)}
+        </tr></thead>
+        <tbody>
+          {(["A", "B"] as const).map(query => {
+            const selected = query === "A" ? selectedA : selectedB;
+            return <tr key={query} className={`p5-membership-row p5-membership-row--${query.toLowerCase()} ${activeQuery === query ? "is-active" : ""}`}>
+              <th scope="row"><span>Query {query}</span><small>{queryStatus(query).split(" · ")[1]}</small></th>
+              {slots.map(index => {
+                const isSelected = selected.has(index);
+                const isShared = selectedA.has(index) && selectedB.has(index);
+                return <td key={index}>
+                  <span className={`p5-membership-dot ${isSelected ? "is-selected" : ""} ${isShared ? "is-shared" : ""}`}
+                    role="img" aria-label={`P${index}${isSelected ? "已入选" : "未入选"}${isShared ? "，A 与 B 共享" : ""}`} />
+                </td>;
+              })}
+            </tr>;
+          })}
+        </tbody>
+      </table>
     </div>
-    <p>这些索引取决于每个样本的 Query，而不是任务或类别标签。本例只说明可以部分共享，不保证共享后永远没有参数冲突。</p>
+    <div className="p5-membership-legend" aria-label="入选矩阵图例">
+      <span><i className="p5-membership-dot is-selected p5-membership-dot--a" />Query A 入选</span>
+      <span><i className="p5-membership-dot is-selected p5-membership-dot--b" />Query B 入选</span>
+      <span><i className="p5-membership-dot is-selected is-shared" />两次共享</span>
+    </div>
+    <p>列按池中 P₁→P₁₀ 的位置排列，不代表距离名次；距离从小到大的顺序见上方评分表。本例的交集是 P₂、P₃。选择取决于当前样本的 Query，而不是任务或类别标签；部分共享也不保证永远没有参数冲突。</p>
   </section>;
 }
 
@@ -208,11 +216,11 @@ export function PromptRetrieval() {
   }
 
   return <>
-    <p className="lesson-lead">P4 的单个共享 Prompt 会被后续任务继续更新。L2P 把多个可学习 Prompt 与 Key 一一配对，让每个输入按自身特征取用一部分参数。</p>
+    <p className="lesson-lead">若后续仍训练同一个共享 Prompt，旧输入依赖的表示可能随参数变化。P5 看 L2P 如何在没有任务 ID 时，从当前图像生成 Query、比较全池 Keys，再按命中的索引读回 Prompt。</p>
 
     <section className="explain-section p5-pair-intro">
-      <h3>Key 寻址，Prompt 进入模型</h3>
-      <p>每个槽位保存一对持久参数：<math><msub><mi>k</mi><mi>j</mi></msub></math> 是与 Query 比较的检索向量；<math><msub><mi>P</mi><mi>j</mi></msub></math> 是含 <math><msub><mi>L</mi><mi>p</mi></msub></math> 个可学习 Token 的序列。相同下标表示一一配对。</p>
+      <h3>没有任务 ID，当前输入怎样寻址？</h3>
+      <p>先用未插入 Prompt 的冻结 ViT 从图像提取 Query，再与全部 Keys 比较；距离最小的索引指向配对 Prompt。每个池槽位都保存一对持久参数：<math><msub><mi>k</mi><mi>j</mi></msub></math> 是检索向量，<math><msub><mi>P</mi><mi>j</mi></msub></math> 是含 <math><msub><mi>L</mi><mi>p</mi></msub></math> 个可学习 Token 的序列。</p>
       <div className="reading-contrast reading-contrast--claims p5-key-boundary" role="group" aria-label="Key 与 Prompt 的角色区别">
         <div className="reading-claim--core"><strong>Key 只参与外部检索</strong><p>它决定取哪个 Prompt，不会拼进 ViT；这里的 Query/Key 也不是 Self‑Attention 内部的 Q/K/V。</p></div>
         <div className="reading-claim--caution"><strong>Pool 保存可复用参数</strong><p>本次读取不会新增、消耗或删除槽位；选集按样本变化，不按任务固定分区。</p></div>

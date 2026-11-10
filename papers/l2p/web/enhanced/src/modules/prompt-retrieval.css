@@ -167,22 +167,27 @@
 .p5-ranking-rule > math { min-width: 0; max-width: 100%; overflow-x: auto; color: #234f3c; font-size: 18px; }
 .p5-ranking-rule > p { grid-column: 1 / -1; margin: 0 !important; color: var(--p5-muted); font-size: 12px; line-height: 1.55 !important; }
 
-.p5-query-comparison { margin-top: 20px; padding: 14px 0 11px; border-block: 1px solid var(--p5-line-strong); transition: background-color 170ms ease; }
-.p5-query-comparison.is-a-active { background: linear-gradient(90deg, #f3f6ee, transparent 44%); }
-.p5-query-comparison.is-b-active { background: linear-gradient(90deg, transparent 56%, #f3f6ee); }
+.p5-query-comparison { margin-top: 20px; padding: 14px 0 11px; border-block: 1px solid var(--p5-line-strong); }
 .p5-query-comparison .p5-region-heading { margin-inline: 5px; }
-.p5-comparison-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(118px, .34fr) minmax(0, 1fr); gap: 13px; align-items: center; padding: 13px 5px 9px; }
-.p5-comparison-set { min-width: 0; display: grid; gap: 8px; padding: 8px; border: 1px solid transparent; border-radius: 8px; transition: background-color 170ms ease, border-color 170ms ease; }
-.p5-comparison-set.is-active { border-color: #a9bea9; background: #fafbf7; }
-.p5-comparison-label { color: var(--p5-muted); font-size: 12px; font-weight: 650; }
-.p5-index-sequence { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
-.p5-index-item { display: inline-flex; align-items: center; gap: 6px; }
-.p5-index-item math { color: var(--p5-prompt); font-size: 17px; }
-.p5-index-separator { color: #78867a; font-size: 12px; }
-.p5-shared-set { display: grid; justify-items: center; gap: 6px; padding: 7px 6px; border-inline: 1px solid var(--p5-line); color: #285d40; font-size: 12px; font-weight: 700; }
-.p5-shared-indices { display: flex; gap: 8px; }
-.p5-shared-indices math { color: #285d40; font-size: 16px; }
-.p5-query-comparison > p { max-width: none !important; margin: 0 7px !important; color: var(--p5-muted); font-size: 12px; line-height: 1.55 !important; }
+.p5-membership-scroll { min-width: 0; margin: 10px 5px 0; overflow-x: auto; scrollbar-width: thin; }
+.p5-membership-table { width: 100%; min-width: 540px; table-layout: fixed; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.p5-membership-table th, .p5-membership-table td { padding: 7px 4px; border-bottom: 1px solid #e5e5da; text-align: center; }
+.p5-membership-table thead th { color: #526458; font-size: 12px; font-weight: 650; }
+.p5-membership-table thead th:first-child { width: 104px; text-align: start; }
+.p5-membership-table thead math { color: var(--p5-prompt); font-size: 14px; }
+.p5-membership-table tbody th { width: 104px; color: var(--p5-query); font-size: 12px; font-weight: 700; text-align: start; }
+.p5-membership-table tbody th span, .p5-membership-table tbody th small { display: block; }
+.p5-membership-table tbody th small { margin-top: 2px; color: var(--p5-muted); font-size: 11px; font-weight: 500; }
+.p5-membership-row { transition: background-color 170ms ease; }
+.p5-membership-row.is-active { background: #f5f6ef; }
+.p5-membership-dot { position: relative; display: inline-block; width: 9px; height: 9px; border: 1.5px solid #aeb8ad; border-radius: 50%; background: #fff; vertical-align: middle; }
+.p5-membership-row--a .p5-membership-dot.is-selected, .p5-membership-dot--a { border-color: #80659a; background: #80659a; }
+.p5-membership-row--b .p5-membership-dot.is-selected, .p5-membership-dot--b { border-color: #387c68; background: #387c68; }
+.p5-membership-dot.is-shared::after { position: absolute; inset: -4px; border: 1.5px solid #c28a35; border-radius: 50%; content: ""; }
+.p5-membership-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 9px 10px 5px; color: var(--p5-muted); font-size: 11px; }
+.p5-membership-legend > span { display: inline-flex; align-items: center; gap: 7px; }
+.p5-membership-legend .p5-membership-dot { margin: 0 3px; }
+.p5-query-comparison > p { max-width: none !important; margin: 7px 7px 0 !important; color: var(--p5-muted); font-size: 12px; line-height: 1.55 !important; }
 
 .p5-motion-controls { position: sticky; top: 86px; z-index: 14; margin: -18px 0 15px; padding: 9px 10px 8px; border-bottom: 1px solid var(--p5-line-strong); background: var(--rk-surface); }
 .p5-motion-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -203,6 +208,7 @@
 .p5-reading-boundary { margin-top: 36px; }
 .p5-reading-boundary p { margin-bottom: 13px; }
 .p5-example-limits { color: #5d6254; font-size: 14px; }
+.teaching-module:has(.p5-retrieval-figure) { min-width: 0; }
 
 @media (max-width: 1080px) {
   .p5-motion-controls { position: static; margin-inline: 0; }
@@ -229,8 +235,7 @@
   .p5-readout-panel { padding: 14px 0 0; border-left: 0; border-top: 1px solid var(--p5-line); }
   .p5-ranking-rule { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .p5-ranking-rule > p { grid-column: auto; }
-  .p5-comparison-row { grid-template-columns: minmax(0, 1fr); gap: 7px; }
-  .p5-shared-set { display: flex; justify-content: flex-start; gap: 9px; padding: 7px 8px; border-inline: 0; border-block: 1px solid var(--p5-line); }
+  .p5-membership-table { min-width: 520px; }
   .p5-pair-slot { min-height: 77px; padding-inline: 7px; }
 }
 
@@ -250,14 +255,12 @@
   .p5-ledger-entry { padding-inline: 5px; }
   .p5-ledger-source { gap: 3px; font-size: 11px; }
   .p5-ledger-number, .p5-ledger-score { font-size: 10px; }
-  .p5-query-comparison.is-a-active, .p5-query-comparison.is-b-active { background: none; }
-  .p5-index-item { gap: 3px; }
-  .p5-index-item math { font-size: 16px; }
+  .p5-membership-table { min-width: 500px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .p5-query-direction, .p5-query-label, .p5-query-frozen, .p5-query-output, .p5-key-ray, .p5-key-point,
-  .p5-pair-slot, .p5-ledger-row, .p5-readout-entry, .p5-query-comparison, .p5-comparison-set {
+  .p5-pair-slot, .p5-ledger-row, .p5-readout-entry, .p5-membership-row {
     transition-duration: 0.01ms !important;
   }
   .p5-query-direction, .p5-query-label, .p5-ledger-row, .p5-readout-entry, .p5-pair-slot { transform: none !important; }
