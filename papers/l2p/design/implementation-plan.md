@@ -571,3 +571,9 @@ Edge 测量三页画布与正文左右边缘完全一致，1440×900 时宽度 1
 P6 重新分配图内横向空间，编码轨道、锁和标题组合、输入行标签沿画布中轴居中，左右两端 Token 等距。三页阶段按钮及播放进度条铺满正文列，播放、暂停和重播共用同一按钮宽度。P7 展开槽位控件和局部 Key 图的控制区，P8 分开任务组与组内按钮的间距。中等宽度把顶栏导航排到第二行，修复页面级横向溢出。
 
 `npm.cmd run build` 和本地 PaperSkill 的 `syntax-check.js --require-parser`、`validate-output.js` 均退出 0。Edge 157.0.4341.46 在 320–1920px 的十种视口宽度复核 P6–P8，测量控件、正文与画布对齐及四个 P6 动画时刻的居中误差，误差均小于 1px。实测分段播放、暂停、拖动、回到起点、P7 槽位切换和展开 Key 插图。另用 `node tools/visual-qa/cli.mjs --config <子路径配置>` 检查最终构建在部署子路径下的 18 个状态，`SUBPATH_ASSETS=PASS`，报告编号 `run-2026-11-11T14-05-19-986Z`。浏览器自动请求根目录 favicon 时仍有既有的 404。桌面和窄屏截图、测量与报告存于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-controls-centering`。1920×1080 布局已复核，真实 F11 未执行。
+
+### P6–P8 图内字体字重调整（2026-11-11）
+
+三页动画图内的 SVG 文本、模型与池化标签、阶段按钮选中项、P7 槽位和 Key 局部图标题改用 400 字重。
+
+`npm.cmd run build`、本地 PaperSkill 的 `syntax-check.js --require-parser`、`validate-output.js` 均退出 0。浏览器实测上述图内元素字重为 400，检查部署子路径下 P6–P8 共 18 个动画状态，无资源或页面错误。已查看 P6、P7、P8 的最终截图。Visual QA 报告编号 `run-2026-11-11T14-40-17-505Z`，测量数据和截图存于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-regular-weights`。

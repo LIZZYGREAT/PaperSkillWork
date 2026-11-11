@@ -2,10 +2,10 @@
 .p7-scene { display: block; width: 100%; min-width: 690px; }
 .p7-scene text { font-size: var(--motion-svg-label); fill: var(--motion-ink); }
 .p7-key-study svg text { font-size: 15px; fill: #254335; }
-.p7-scene .p7-label { font-weight: 650; }
+.p7-scene .p7-label { font-weight: 400; }
 .p7-scene .p7-muted { fill: var(--motion-muted); font-size: var(--motion-svg-detail); }
-.p7-scene .p7-loss-label { font-size: var(--motion-svg-detail); font-weight: 650; }
-.p7-scene .p7-mark { font-size: var(--motion-svg-detail); font-weight: 650; }
+.p7-scene .p7-loss-label { font-size: var(--motion-svg-detail); font-weight: 400; }
+.p7-scene .p7-mark { font-size: var(--motion-svg-detail); font-weight: 400; }
 .p7-scene .p7-sum { fill: white; }
 .p7-rule { stroke: var(--motion-line); fill: none; }
 .p7-slots {
@@ -15,11 +15,12 @@
   gap: clamp(6px, 1vw, 14px);
   padding: 14px 0 4px;
 }
-.p7-slots > strong { font-size: 14px; }
+.p7-slots > strong { font-size: 14px; font-weight: 400; }
 .p7-slots .lesson-choice { padding: 5px 4px; font-size: 14px; }
+.p7-slots .lesson-choice[aria-pressed="true"] { font-weight: 400; }
 .p7-slots .lesson-choice span { display: block; color: var(--rk-muted); font-size: 13px; line-height: 1.15; }
 .p7-key-study { font-family: var(--motion-font); font-variant-numeric: tabular-nums; box-sizing: border-box; width: 100%; margin: 0 auto; padding: 13px clamp(12px, 2.4vw, 26px); border-block: 1px solid var(--rk-line-strong); }
-.p7-key-study summary { width: fit-content; margin-inline: auto; cursor: pointer; color: var(--rk-accent-strong); font-weight: 650; }
+.p7-key-study summary { width: fit-content; margin-inline: auto; cursor: pointer; color: var(--rk-accent-strong); font-weight: 400; }
 .p7-key-study-body { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(200px, 1fr); align-items: center; gap: 14px clamp(20px, 4vw, 56px); margin: 12px 0 0; }
 .p7-key-study-body svg { width: min(100%, 300px); justify-self: center; background: #f2f5ed; border: 1px solid var(--rk-line); border-radius: 8px; }
 .p7-key-controls { margin-top: 14px; }

@@ -53,7 +53,7 @@
 .motion-dock input[type="range"] { width: 100%; min-width: 0; }
 .guided-motion .motion-dock .lesson-choice,
 .guided-motion .motion-dock .text-button { font-size: 14px; font-weight: 400; }
-.guided-motion .motion-dock .lesson-choice[aria-pressed="true"] { font-weight: 600; }
+.guided-motion .motion-dock .lesson-choice[aria-pressed="true"] { font-weight: 400; }
 .motion-dock input[type="range"]:focus-visible {
   outline: 2px solid var(--rk-focus);
   outline-offset: 4px;

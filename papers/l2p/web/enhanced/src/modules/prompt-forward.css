@@ -12,7 +12,7 @@
 .p6-calls dd { margin: 0; color: var(--rk-muted); }
 .p6-scene { display: block; width: 100%; min-width: 678px; }
 .p6-scene text { font-size: var(--motion-svg-label); fill: var(--motion-ink); }
-.p6-scene .p6-label { font-weight: 650; }
+.p6-scene .p6-label { font-weight: 400; }
 .p6-scene .p6-symbol { font-size: calc(var(--motion-svg-label) + 1px); }
 .p6-scene .p6-token-label { font-size: var(--motion-svg-detail); fill: var(--motion-blue); }
 .p6-encoder-label {
@@ -25,7 +25,7 @@
   color: var(--motion-ink);
   background: #edf3e9;
   font-size: var(--motion-svg-label);
-  font-weight: 650;
+  font-weight: 400;
 }
 .p6-encoder-label > svg { flex: 0 0 13px; width: 13px; height: 15px; }
 .p6-guide { stroke: var(--motion-line); fill: none; }
