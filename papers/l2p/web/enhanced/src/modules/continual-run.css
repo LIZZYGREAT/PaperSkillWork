@@ -55,11 +55,13 @@
 @media (max-width: 830px) {
   .p8-model { grid-template-columns: 1fr 1fr; gap: 10px; }
   .p8-pool { grid-row: 2; grid-column: 1 / -1; padding-inline: 0; border: 0; }
-  .p8-backbone, .p8-classifier { grid-auto-flow: column; align-items: center; justify-content: center; gap: 5px; }
-  .p8-backbone svg, .p8-classifier svg { width: 33px; }
+  .p8-backbone, .p8-classifier { grid-template-columns: auto auto; align-items: center; justify-content: center; gap: 0 6px; }
+  .p8-backbone svg, .p8-classifier svg { width: 33px; grid-row: span 2; }
 }
 @media (max-width: 620px) {
-  .p8-stage-stops { justify-content: flex-start; }
+  .p8-stage-stops { justify-content: flex-start; align-items: end; gap: 9px 6px; }
+  .p8-time-group:has(> button:only-of-type) > span { display: none; }
+  .p8-time-group button { padding-inline: 7px; }
   .p8-state-rail { padding-inline: 8px; }
   .p8-state-rail li { padding-inline: 3px; }
   .p8-pool-slots { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -68,3 +70,4 @@
 }
 .p8-operations li > .p8-input-samples { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
 .p8-input-samples b { padding: 2px 6px; border: 1px solid #afc2b7; border-radius: 4px; background: #f3f6f2; font-weight: 650; }
+.teaching-module:has(.p8-continuous-figure) { min-width: 0; }

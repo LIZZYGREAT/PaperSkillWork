@@ -27,3 +27,8 @@
 .p6-inspect ul { list-style: none; padding: 0; font-variant-numeric: tabular-nums; }
 .p6-inspect li { display: flex; gap: 15px; }
 .p6-inspect li strong { min-width: 3ch; color: #614780; }
+.teaching-module:has(.p6-forward-figure) { min-width: 0; }
+.p6-pan-hint { display: none; }
+@media (max-width: 765px) {
+  .p6-pan-hint { display: block; padding: 0 0 9px; text-align: center; color: var(--rk-muted); font-size: 14px; }
+}

@@ -25,3 +25,8 @@
   .p7-equation { font-size: 18px; }
   .p7-key-study-body { grid-template-columns: 1fr; }
 }
+.teaching-module:has(.p7-batch-figure) { min-width: 0; }
+.p7-pan-hint { display: none; }
+@media (max-width: 810px) {
+  .p7-pan-hint { display: block; padding: 0 0 9px; text-align: center; color: var(--rk-muted); font-size: 14px; }
+}

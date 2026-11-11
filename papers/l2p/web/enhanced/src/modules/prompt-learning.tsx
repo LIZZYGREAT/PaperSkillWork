@@ -156,6 +156,7 @@ export function PromptLearning() {
             onClick={() => playback.seek(item.time)}>{item.label}</button>)}
         </div>
         <PlaybackControls playback={playback} label="批内更新进度" />
+        <span className="p7-pan-hint">横向滑动查看完整过程</span>
       </div>
       <div className="p7-scene-scroll" role="region" tabIndex={0} aria-label="两个样本的学习路径">
         <BatchScene time={playback.position} slot={slot} />

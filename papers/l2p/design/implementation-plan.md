@@ -513,3 +513,27 @@ SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules�
 用户指出页面仍缺少主图前的逻辑铺垫，且主图体量持续增加。本次在主工作台前新增按 P5 选集顺序核对的拼接算式，将主图限制为 1080px，内容聚焦于所选 Prompt 副本、图像 Token、序列位置和冻结 Transformer 前向。原先任意设定的 d=1 隐状态表、逐数值收集盘与对应飞行动画已移除；这些值不是论文测量值，也不是必要的教学对象。读出范围图移到独立讲解段，紧邻 AvgPool 公式与 `h → gφ → logits/argmax` 分类链；再用形状表分清池容量、选取数、Prompt 位置数、图像位置数、扩展序列长度和特征宽度。播放阶段 5/6 会分别点亮读出区与分类器，提供直达读出图的链接。两次 ViT 调用、P5 索引、25 个 Prompt 输出位置参与均值、197 个图像输出位置保留在 H 等机制保持不变；未引入损失或训练更新。
 
 SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules）。Playwright + 系统 Edge `fullPage:false` 实际视口截图逐张复核：桌面 1440×900 的拼接算式、前向主图和读出/形状表；手机 390×844 的主图与读出范围。页面错误 0；根文档宽度分别等于 1440px 与 390px；已补足固定导航的滚动留白。证据位于 `C:/Users/lenovo/.codex/visualizations/2026/11/09/01a1c020-e9c2-7512-920c-880c94f51cbb/p5-p6-teaching-logic/`：`P6-splice-1440.png`、`P6-sequence-1440.png`、`P6-sequence-390.png`、`P6-readout-1440.png`、`P6-readout-390.png`。`HUMAN_ACCEPTANCE=PENDING`；固定视口截图不代表真实 F11。
+
+### P6–P8 教学与核心动画重构（2026-11-11）
+
+基线为 `work/l2p` 的 `f612c4c`，启动时工作树干净。按 P6、P7、P8 分别实现与提交，先对照旧截图核查对象和关键中间态。修改集中在三个页面的 TSX/CSS、P6–P8 的教程元数据和对应的 `visual-qa.json` 场景。
+
+- P6（`7b9ce41`）把装配、编码、读出和分类放进同一场景。沿 P5 的 A 选集 1、2、10、3、9 展开 25 个 Prompt 位置，接上 197 个图像位置；[CLS] 位于 25，Patch 位于 26–221。只取 H 的 0–24 行逐维求均值，得到宽度为 768 的分类特征。一维算例给出 6.0 ÷ 25 = 0.240。
+- P7（`32a5a93`）用同一参数快照展示分类梯度与匹配梯度的去向。槽位 2、3 各收到 A/B 两份贡献，槽位 7、8 没有本批直接梯度；整批梯度汇总后写回一次。二维 SGD 放大图用于核算单 Key 余弦距离。
+- P8（`059d096`）将样本与运算放在模型下方，池、主干、分类器维持固定身份。三次批末写回依次到 Θ₁、Θ₂、Θ₃，任务交接沿用 Θ₂，推断用 Θ₃ 按 Eq. (3) 重算选集。Key 角度按二维 SGD 演示，Prompt 与分类器采用符号化写回记录。训练和推断有独立伪代码。
+
+工程检查使用 `python tools/paper.py paths l2p --json` 的 `publish_source`，即 `papers/l2p/web/enhanced`。工具版本为 Node v24.18.0、npm 11.16.0、TypeScript 5.9.3、Vite 6.4.3、Playwright 1.63.0、Edge 157.0.4341.46。
+
+| W8 检查 | 结果与命令 |
+| --- | --- |
+| UPSTREAM_SYNTAX | PASS。 `node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser`，退出 0，39 个源码文件由 TypeScript 解析。 |
+| UPSTREAM_OUTPUT | PASS。 `node ../PaperSkill/paper-skill/scripts/validate-output.js <publish_source>`，退出 0，9 章与 9 个组件注册通过。 |
+| SOURCE_BUILD | PASS。 `npm.cmd run build`，退出 0，产出 72 个模块。原地 `npm ci` 遇到既有预览进程占用 esbuild 的 EPERM。使用同一份锁文件在临时目录运行 `npm ci --prefer-offline`（退出 0），补回源码目录的依赖文件并保留哈希相同的在用文件。 `npm ls --depth=0` 退出 0。 |
+| SUBPATH_ASSETS | PASS。将 `dist` 暂存于 `/papers/learning_to_prompt_for_continual_learning/qa-preview/`，用 `node tools/visual-qa/cli.mjs --config <子路径配置>`，退出 0。50 个状态的实际 URL 均在该子路径，引用的 `./assets/index-DRgGvO4w.js` 与 `./assets/index-BxosLbVI.css` 正常加载。浏览器自动探测站点根目录的 favicon 得到 404，发布页面资源检查无错误。 |
+
+相邻 PaperSkill 工作树 HEAD 为 `4da910afe9054d3a6ff54003023d53ec3de44ac9`。SSH fetch 失败后，通过 GitHub API 读取官方 main 的 `dca0ae9fe9e6e0094d772e86ecfbbc2a8f6bad33`，逐文件比对 API 返回的 blob 与本地 `git hash-object --path`。两文件分别匹配 `2bcfa6f815054ee498574c51cef05f0c315b4298` 与 `9ec76b6974f262fca7b9611c4a485dd2275fe76c`。 [PaperSkill 官方 main 核验版本](https://github.com/ReductTech/PaperSkill/commit/dca0ae9fe9e6e0094d772e86ecfbbc2a8f6bad33)
+
+- `node scripts/check-p5-retrieval.mjs` 与 esbuild/Node 数据断言退出 0。检查选集来源、位置范围、池化、批内共享槽位、连续批次的输入角度和测试检索。全站 `npm.cmd run check:reading` 在 P4 已有的正文字号断言（实际 14px，期望 17px）退出 1。独立浏览器检查确认 P6–P8 正文 17px、行高 30.6px、MathML 下标有效，P5 至 P9 导航和减少动态效果模式通过。
+- 实查 1440×900 与 1920×1080 浏览器截图，覆盖初态、动作中间态、阶段交接和终态。完整播放、暂停后时间固定、回拖复位与重播均通过。1440×900 时主舞台完整处于固定顶栏下方，测得 P6 y=94–807、P7 y=139–761、P8 y=99–802。另测 390×844 触屏，根文档宽度 390px，P6/P7 图形在各自可横向滑动的区域内，P8 控件换行。
+- FULLSCREEN_LAYOUT=PASS。FULLSCREEN_REAL=NOT_RUN（使用无头 Edge 的固定视口）。HUMAN_ACCEPTANCE=PENDING。人工预览用 `npm.cmd run preview -- --host 127.0.0.1 --port 4178` 后访问 `http://127.0.0.1:4178/?page=p6` 至 `?page=p8`。
+- 证据目录为 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8`。保留修改前截图、两种桌面的关键视口/整页图、390px 复测图、各页播放断言及 `subpath-report.md` / `subpath-report.json`。首轮 P7 中间态定位到两个播放控件，限定为主图控件后复测通过。最终原始报告编号为 `run-2026-11-11T12-20-36-908Z`。

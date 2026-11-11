@@ -139,6 +139,7 @@ export function PromptForward() {
             onClick={() => playback.seek(item.time)}>{item.label}</button>)}
         </div>
         <PlaybackControls playback={playback} label="分类进度" />
+        <span className="p6-pan-hint">横向滑动查看完整过程</span>
       </div>
       <div className="p6-scene-scroll" tabIndex={0} role="region" aria-label="Token 装配、编码与读出图">
         <ForwardScene time={playback.position} />

@@ -31,17 +31,17 @@ export const tutorial: TutorialData = {
     },
     {
       kind: "chapter", id: "p6", title: "选中的 Prompt 如何参与完整分类？", titleHighlight: "完整分类",
-      summary: "P5 已经为当前输入找到一组 Prompt。跟着它们和图像 Token 一起进入同一冻结 ViT，再追踪 L2P 真正用于分类的输出位置。",
+      summary: "沿着 P5 的选集，看 Prompt 如何拼入图像序列、通过冻结 ViT，再由 Prompt 输出的均值生成类别分数。",
       modules: [{ kind: "module", id: "prompt-forward", title: "从检索选集到类别 Logits", componentId: "prompt-forward" }],
     },
     {
-      kind: "chapter", id: "p7", title: "一个 Mini-batch 怎样共同更新 Key、Prompt 和分类器？", titleHighlight: "共同更新 Key",
-      summary: "P6 已经得到分类输出。现在追踪两类损失各自训练什么、硬 Top‑N 把梯度路径截在哪里，以及两个样本如何先累计再写回同一批参数。",
+      kind: "chapter", id: "p7", title: "两种损失怎样完成一次批量更新？", titleHighlight: "一次批量更新",
+      summary: "追踪分类损失与匹配损失各自训练哪些参数，再看两个样本怎样先累积梯度、批末写回一次。",
       modules: [{ kind: "module", id: "prompt-learning", title: "从两项损失到一次 Batch 参数写回", componentId: "prompt-learning" }],
     },
     {
       kind: "chapter", id: "p8", title: "同一套参数怎样跨任务持续运行？", titleHighlight: "跨任务持续运行",
-      summary: "沿着同一个 Key–Prompt Pool，从初始化经过多个 Batch、任务交接走到无任务 ID 的推断；每一批都读取当前状态，并在批末统一更新。",
+      summary: "跟踪同一套 Key、Prompt 和分类器如何跨批次和任务传递，以及模型如何在没有任务 ID 的情况下预测。",
       modules: [{ kind: "module", id: "continual-run", title: "从初始化、Batch 更新到最终推断", componentId: "continual-run" }],
     },
     {
