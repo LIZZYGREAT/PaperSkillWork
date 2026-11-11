@@ -565,3 +565,9 @@ Edge 测量三页画布与正文左右边缘完全一致，1440×900 时宽度 1
 按随后确认的重点复查 P6、P7、P8 各页。P6 和 P7 图内数学符号共享下标排版，P7 的局部 Key 插图采用与主图一致的字体，P8 的参数和版本改用 MathML 下标，伪代码容器对齐正文两侧。P1–P5 与 P9 已完成初步浏览器巡查，证据存于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-full-width/all-chapters`。
 
 最终构建及源码校验退出 0。四种视口下再次测量 P6–P8 的主画布、P6 对照栏、P7 Key 插图、P8 伪代码与正文的边缘，全部重合。生产子路径的 18 个回归状态通过，报告编号 `run-2026-11-11T13-30-31-655Z`。保留截图、像素测量和报告于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-full-width/p6-p8-review`。
+
+### P6–P8 控件间距与图内居中复修（2026-11-11）
+
+P6 重新分配图内横向空间，编码轨道、锁和标题组合、输入行标签沿画布中轴居中，左右两端 Token 等距。三页阶段按钮及播放进度条铺满正文列，播放、暂停和重播共用同一按钮宽度。P7 展开槽位控件和局部 Key 图的控制区，P8 分开任务组与组内按钮的间距。中等宽度把顶栏导航排到第二行，修复页面级横向溢出。
+
+`npm.cmd run build` 和本地 PaperSkill 的 `syntax-check.js --require-parser`、`validate-output.js` 均退出 0。Edge 157.0.4341.46 在 320–1920px 的十种视口宽度复核 P6–P8，测量控件、正文与画布对齐及四个 P6 动画时刻的居中误差，误差均小于 1px。实测分段播放、暂停、拖动、回到起点、P7 槽位切换和展开 Key 插图。另用 `node tools/visual-qa/cli.mjs --config <子路径配置>` 检查最终构建在部署子路径下的 18 个状态，`SUBPATH_ASSETS=PASS`，报告编号 `run-2026-11-11T14-05-19-986Z`。浏览器自动请求根目录 favicon 时仍有既有的 404。桌面和窄屏截图、测量与报告存于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-controls-centering`。1920×1080 布局已复核，真实 F11 未执行。

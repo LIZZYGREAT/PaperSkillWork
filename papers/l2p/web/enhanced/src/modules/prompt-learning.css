@@ -8,15 +8,24 @@
 .p7-scene .p7-mark { font-size: var(--motion-svg-detail); font-weight: 650; }
 .p7-scene .p7-sum { fill: white; }
 .p7-rule { stroke: var(--motion-line); fill: none; }
-.p7-slots { display: flex; justify-content: center; align-items: center; gap: 5px; flex-wrap: wrap; padding: 12px 0 0; }
-.p7-slots > strong { margin-inline-end: 5px; font-size: 14px; }
-.p7-slots .lesson-choice { padding: 3px 7px; min-width: 39px; font-size: 14px; }
+.p7-slots {
+  display: grid;
+  grid-template-columns: auto repeat(10, minmax(0, 1fr));
+  align-items: center;
+  gap: clamp(6px, 1vw, 14px);
+  padding: 14px 0 4px;
+}
+.p7-slots > strong { font-size: 14px; }
+.p7-slots .lesson-choice { padding: 5px 4px; font-size: 14px; }
 .p7-slots .lesson-choice span { display: block; color: var(--rk-muted); font-size: 13px; line-height: 1.15; }
 .p7-key-study { font-family: var(--motion-font); font-variant-numeric: tabular-nums; box-sizing: border-box; width: 100%; margin: 0 auto; padding: 13px clamp(12px, 2.4vw, 26px); border-block: 1px solid var(--rk-line-strong); }
 .p7-key-study summary { width: fit-content; margin-inline: auto; cursor: pointer; color: var(--rk-accent-strong); font-weight: 650; }
-.p7-key-study-body { display: grid; grid-template-columns: minmax(0, 590px) minmax(200px, 300px); justify-content: center; align-items: center; gap: 12px 23px; margin: 12px 0 0; }
-.p7-key-study-body svg { width: min(100%, 260px); justify-self: center; background: #f2f5ed; border: 1px solid var(--rk-line); border-radius: 8px; }
+.p7-key-study-body { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(200px, 1fr); align-items: center; gap: 14px clamp(20px, 4vw, 56px); margin: 12px 0 0; }
+.p7-key-study-body svg { width: min(100%, 300px); justify-self: center; background: #f2f5ed; border: 1px solid var(--rk-line); border-radius: 8px; }
+.p7-key-controls { margin-top: 14px; }
 .teaching-module:has(.p7-batch-figure) { min-width: 0; }
 @media (max-width: 640px) {
+  .p7-slots { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .p7-slots > strong { grid-column: 1 / -1; text-align: center; }
   .p7-key-study-body { grid-template-columns: 1fr; }
 }

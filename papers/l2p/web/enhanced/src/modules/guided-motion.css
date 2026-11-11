@@ -31,25 +31,42 @@
 }
 .guided-motion .motion-dock {
   display: grid;
-  justify-items: center;
-  gap: 8px;
-  padding: 0 0 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 0 0 18px;
 }
-.guided-motion .motion-dock .playback-controls { padding: 0; }
+.motion-dock .playback-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(10px, 2vw, 26px);
+  padding: 0;
+}
+.motion-dock .playback-controls > .lesson-choice {
+  min-inline-size: 6em;
+  min-height: 40px;
+}
+.motion-dock .playback-controls > label {
+  min-width: 0;
+  gap: clamp(6px, 1.2vw, 16px);
+}
+.motion-dock .playback-controls > label > span { white-space: nowrap; }
+.motion-dock input[type="range"] { width: 100%; min-width: 0; }
 .guided-motion .motion-dock .lesson-choice,
 .guided-motion .motion-dock .text-button { font-size: 14px; font-weight: 400; }
 .guided-motion .motion-dock .lesson-choice[aria-pressed="true"] { font-weight: 600; }
-.guided-motion .motion-dock input[type="range"]:focus-visible {
+.motion-dock input[type="range"]:focus-visible {
   outline: 2px solid var(--rk-focus);
   outline-offset: 4px;
   border-radius: 4px;
 }
 .guided-motion .motion-stops {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 5px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  gap: clamp(8px, 1.4vw, 20px);
+  margin: 0;
 }
+.guided-motion .motion-stops button { min-height: 40px; }
 .guided-motion .motion-window {
   container-type: inline-size;
   overflow-x: auto;
@@ -83,7 +100,18 @@
 @media (max-width: 760px) {
   .guided-motion .motion-pan-hint {
     display: block;
+    text-align: center;
     color: var(--rk-muted);
     font-size: 13px;
+  }
+}
+@media (max-width: 540px) {
+  .guided-motion .motion-stops { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .guided-motion .motion-stops button { grid-column: span 2; padding-inline: 5px; }
+  .guided-motion .motion-stops button:nth-last-child(-n + 2) { grid-column: span 3; }
+  .motion-dock .playback-controls > button { white-space: nowrap; }
+  .motion-dock .playback-controls > label {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }

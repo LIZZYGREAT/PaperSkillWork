@@ -119,6 +119,11 @@
 .site-header .text-button { white-space: nowrap; }
 .site-header nav button { padding-block: 6px; border-bottom: 1px solid transparent; }
 .site-header nav button[aria-pressed="true"] { border-bottom-color: var(--rk-accent); font-weight: 650; }
+.site-header--dense-nav nav { min-width: 0; overflow-x: auto; }
+@media (761px <= width <= 1280px) {
+  .site-header--dense-nav .site-header-inner { flex-wrap: wrap; min-height: 72px; padding-block: 12px; }
+  .site-header--dense-nav nav { order: 3; flex-basis: 100%; justify-content: space-between; }
+}
 .traced-token { background: var(--rk-warn-soft); color: var(--rk-warn); border-color: var(--rk-warn); }
 .rk-reading .teaching-module > h2 { font-size: clamp(27px, 3vw, 39px); }
 

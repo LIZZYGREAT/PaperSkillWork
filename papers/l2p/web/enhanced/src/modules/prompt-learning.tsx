@@ -139,7 +139,9 @@ function KeyGradientStudy() {
         <text x="120" y="147" textAnchor="middle">余弦距离 {distance.toFixed(3)}</text>
       </svg>
     </div>
-    <PlaybackControls playback={playback} label="Key 更新进度" />
+    <div className="motion-dock p7-key-controls">
+      <PlaybackControls playback={playback} label="Key 更新进度" />
+    </div>
   </details>;
 }
 
