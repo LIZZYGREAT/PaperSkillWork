@@ -1,34 +1,22 @@
 
 .p6-calls {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 325px), 1fr));
-  gap: 0 28px;
-  max-width: 960px;
-  margin: 22px 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  width: min(100%, 940px);
+  margin: 20px auto 0;
   border-block: 1px solid var(--rk-line-strong);
 }
-.p6-calls > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 13px 0; }
-.p6-calls dt { color: var(--rk-accent-strong); font-weight: 700; }
+.p6-calls > div { display: flex; align-items: baseline; justify-content: center; gap: 4px 12px; padding: 13px 0; }
+.p6-calls dt { color: var(--rk-accent-strong); font-weight: 700; white-space: nowrap; }
 .p6-calls dd { margin: 0; color: var(--rk-muted); }
-.p6-equation { display: flex; align-items: center; flex-wrap: wrap; gap: 18px 38px; margin: 18px 0; font-size: 21px; }
-.lesson-figure.p6-forward-figure { max-width: 1050px; margin-inline: auto; overflow: clip; }
-.p6-control-dock { padding: 12px 18px 0; border-bottom: 1px solid var(--rk-line); }
-.p6-control-dock .motion-stops { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
-.p6-scene-scroll { overflow-x: auto; background: #fcfdfb; }
-.p6-scene { display: block; width: 100%; min-width: 715px; }
-.p6-scene text { font-size: 15px; fill: #22342d; font-weight: 550; }
-.p6-scene text[fill] { fill: revert-layer; }
-.p6-scene .p6-stage-label { font-weight: 750; }
-.p6-scene .p6-muted { fill: #496054; }
-.p6-hairline { stroke: #a9b9af; fill: none; }
-.p6-forward-figure figcaption { min-height: 49px; color: var(--rk-ink); }
-.p6-inspect { max-width: 720px; padding: 14px 18px; border-block: 1px solid var(--rk-line-strong); }
-.p6-inspect summary { cursor: pointer; color: var(--rk-accent-strong); font-weight: 650; }
-.p6-inspect ul { list-style: none; padding: 0; font-variant-numeric: tabular-nums; }
-.p6-inspect li { display: flex; gap: 15px; }
-.p6-inspect li strong { min-width: 3ch; color: #614780; }
+.p6-scene { display: block; width: 100%; min-width: 678px; }
+.p6-scene text { font-size: 15px; fill: var(--motion-ink); }
+.p6-scene .p6-label { font-weight: 700; }
+.p6-scene .p6-token-label { font-size: 13px; fill: var(--motion-blue); }
+.p6-guide { stroke: var(--motion-line); fill: none; }
 .teaching-module:has(.p6-forward-figure) { min-width: 0; }
-.p6-pan-hint { display: none; }
-@media (max-width: 765px) {
-  .p6-pan-hint { display: block; padding: 0 0 9px; text-align: center; color: var(--rk-muted); font-size: 14px; }
+@media (max-width: 780px) {
+  .p6-calls { grid-template-columns: 1fr; }
+  .p6-calls > div + div { border-top: 1px solid var(--rk-line); }
 }

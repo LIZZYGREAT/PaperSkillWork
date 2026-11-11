@@ -1,0 +1,69 @@
+
+/* Match the warm paper surface and the blue, leaf and ochre accents in P2/P3. */
+.lesson-figure.guided-motion {
+  --motion-paper: #f2f5ed;
+  --motion-line: #a8b9a8;
+  --motion-ink: #254335;
+  --motion-muted: #506759;
+  --motion-leaf: #396746;
+  --motion-leaf-wash: #dce8d5;
+  --motion-blue: #315d73;
+  --motion-blue-wash: #dce9ed;
+  --motion-ochre: #775023;
+  --motion-ochre-wash: #f0e2c9;
+  width: min(100%, 940px);
+  margin: 24px auto 34px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+.guided-motion .motion-dock {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 0 0 12px;
+}
+.guided-motion .motion-dock .playback-controls { padding: 0; }
+.guided-motion .motion-stops {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+}
+.guided-motion .motion-window {
+  overflow-x: auto;
+  border: 1px solid var(--rk-line);
+  border-radius: 10px;
+  background: var(--motion-paper);
+}
+.guided-motion figcaption {
+  border: 0;
+  padding: 12px 12px 0;
+  min-height: 48px;
+  text-align: center;
+  color: var(--motion-ink);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.guided-motion .motion-pan-hint { display: none; }
+
+.guided-equations {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 9px 34px;
+  margin: 15px auto 25px;
+  padding: 5px 0;
+  font-size: clamp(18px, 2vw, 23px);
+}
+.guided-equations > math { max-width: 100%; margin: 0; }
+
+@media (max-width: 760px) {
+  .guided-motion .motion-pan-hint {
+    display: block;
+    color: var(--rk-muted);
+    font-size: 13px;
+  }
+}
