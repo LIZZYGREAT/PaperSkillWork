@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkP4 } from './check-prompt-scenes.mjs';
 
 const source = fileURLToPath(new URL('..', import.meta.url));
 const repo = path.resolve(source, '../../../..');
@@ -206,6 +207,7 @@ try {
         await page.locator('.target-picker button').nth(2).click();
         await page.locator('.head-animation .motion-stops button').last().click();
       }
+      if (index === 4) await checkP4(page, output, width);
       if (index <= 3) {
         const selector = index === 1 ? '.interference-fishbone' : index === 2 ? '.pixel-feature-compare' : '.qkv-branch';
         await page.locator(selector).evaluate(node => window.scrollTo(0, node.getBoundingClientRect().top + scrollY - document.querySelector(".site-header").getBoundingClientRect().height - 20));

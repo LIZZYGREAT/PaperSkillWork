@@ -99,21 +99,16 @@
       "path": "/?page=p4",
       "states": [
         { "id": "initial" },
-        { "id": "frozen-forward", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(2)" }] },
-        { "id": "classification-loss", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(3)" }] },
-        { "id": "gradient-flow", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(4)" }] },
-        { "id": "prompt-update", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(5)" }] },
-        { "id": "update-intermediate", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(5)" }, { "type": "click", "selector": ".p4-control-dock button:has-text('播放过程')" }, { "type": "wait", "milliseconds": 725 }, { "type": "click", "selector": ".p4-control-dock button:has-text('暂停')" }] },
-        { "id": "same-image-reforward", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(6)" }] },
-        { "id": "next-task", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(7)" }] }
+        { "id": "forward", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(2)" }] },
+        { "id": "loss", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(3)" }] },
+        { "id": "backward", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(4)" }] },
+        { "id": "write-intermediate", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(5)" }] },
+        { "id": "rerun", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(6)" }] }
       ],
       "computedStyles": [
         { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" },
-        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
-        { "selector": ".p4-control-dock", "property": "position", "equals": "static" },
-        { "selector": ".lesson-figure.p4-training-figure", "property": "overflow", "equals": "clip" },
-        { "selector": ".p4-stage-scroll", "property": "overflow-x", "equals": "auto" },
-        { "selector": ".p4-zone-label", "property": "font-size", "equals": "14px" }
+        { "selector": ".p4-training-figure", "property": "overflow", "equals": "visible" },
+        { "selector": ".p4-node h4", "property": "font-size", "equals": "16px" }
       ]
     },
     {
