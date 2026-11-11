@@ -1,288 +1,232 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+
+import { useState } from "react";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
-import { promptPoolConfig } from "./prompt-retrieval-data";
-import {
-  interpolateKeyAngles,
-  P8_STAGES,
-  type RunSelection,
-  type RunStage,
-} from "./continual-run-data";
-import { curvePath, pointOnCurve, useMotionAnchors, type MotionPoint } from "./visual-motion";
+import { Sub } from "./lesson-math";
+import { interpolateKeyAngles, P8_STAGES, type RunStage } from "./continual-run-data";
+import { easeMotion } from "./visual-motion";
 import "./continual-run.css";
 
-const duration = 13_000;
-const boundaries = [0, 1_300, 2_900, 4_350, 5_850, 7_200, 8_500, 10_050, 11_500, duration];
-const slotIndices = Array.from({ length: promptPoolConfig.poolSize }, (_, index) => index + 1);
+const timeline = [
+  { start: 0, seek: 0, label: "初始化" },
+  { start: 1100, seek: 4410, label: "批次 1" },
+  { start: 4800, seek: 4880, label: "写回 1" },
+  { start: 7150, seek: 9620, label: "批次 2" },
+  { start: 10050, seek: 10130, label: "写回 2" },
+  { start: 12300, seek: 13400, label: "继承参数" },
+  { start: 14400, seek: 17220, label: "批次 1" },
+  { start: 17600, seek: 17680, label: "写回 3" },
+  { start: 20100, seek: 23220, label: "预测" },
+] as const;
 
-function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
+const duration = 23900;
+const sections = [
+  { label: "起点", first: 0, end: 1 },
+  { label: "Task 1", first: 1, end: 5 },
+  { label: "任务交接", first: 5, end: 6 },
+  { label: "Task 2", first: 6, end: 8 },
+  { label: "测试", first: 8, end: 9 },
+] as const;
+const versionLabels = ["初始化", "Task 1 · 批次 1 后", "Task 1 · 批次 2 后", "Task 2 · 批次 1 后"];
 
-function phaseAt(position: number) {
-  if (position >= duration) return P8_STAGES.length - 1;
-  const index = boundaries.findIndex((start, offset) => offset < boundaries.length - 1 && position >= start && position < boundaries[offset + 1]);
-  return Math.max(0, index);
+function VersionRail({ cursor, version }: { cursor: number; version: number }) {
+  return <div className="p8-state-rail" aria-label={`当前参数版本 Θ${version}`}>
+    <div className="p8-state-track" aria-hidden="true">
+      <div data-run-state style={{ left: `${cursor * 100 / (versionLabels.length - 1)}%` }} />
+    </div>
+    <ol>{versionLabels.map((label, index) => <li key={label} aria-current={version === index ? "step" : undefined}>
+      <strong>Θ<sub>{index}</sub></strong><span>{label}</span>
+    </li>)}</ol>
+  </div>;
 }
 
-function phaseProgress(position: number, phase: number) {
-  return clamp((position - boundaries[phase]) / (boundaries[phase + 1] - boundaries[phase]));
+function KeyDial({ angle }: { angle: number }) {
+  return <svg viewBox="0 0 30 30" aria-hidden="true">
+    <circle cx="15" cy="15" r="13" />
+    <path d="M15 15h10l-3-2m3 2-3 2" transform={`rotate(${-angle} 15 15)`} />
+  </svg>;
 }
 
-type TransitRoute = Readonly<{ id: string; start: MotionPoint; end: MotionPoint; progress: number; sampleIndex: number }>;
-
-function activeSelections(stage: RunStage): readonly RunSelection[] {
-  if (stage.batch) return stage.batch.samples;
-  return stage.query ? [stage.query] : [];
-}
-
-function QueryTransit({
-  geometry,
-  stage,
-  progress,
-  reducedMotion,
-}: {
-  geometry: ReturnType<typeof useMotionAnchors>;
-  stage: RunStage;
-  progress: number;
-  reducedMotion: boolean;
+function SharedModel({ stage, angles, slot, setSlot, selected, write, version }: {
+  stage: RunStage; angles: readonly number[]; slot: number; setSlot: (index: number) => void;
+  selected: readonly number[]; write: number; version: number;
 }) {
-  if (!geometry || reducedMotion || (stage.kind !== "forward" && stage.kind !== "inference")) return null;
-  const selections = activeSelections(stage);
-  if (!selections.length) return null;
-  const transitProgress = progress;
-  const routes: TransitRoute[] = selections.flatMap((selection, sampleIndex) => {
-    const queryPoint = geometry.points["p8-query-" + selection.sample.id];
-    if (!queryPoint || !selection.selected.length) return [];
-    const sweep = clamp(transitProgress * 1.65 + (selections.length > 1 ? sampleIndex * 0.18 : 0));
-    const targetOffset = Math.min(selection.selected.length - 1, Math.floor(sweep * selection.selected.length));
-    const localProgress = clamp(sweep * selection.selected.length - targetOffset);
-    const keyPoint = geometry.points["p8-slot-" + selection.selected[targetOffset]];
-    if (!keyPoint) return [];
-    return [{
-      id: selection.sample.id,
-      start: queryPoint,
-      end: keyPoint,
-      progress: localProgress,
-      sampleIndex,
-    }];
+  const isStep = stage.kind === "step";
+  const touched = stage.batch?.selectedUnion.includes(slot);
+  const previous = stage.batch?.startAngles[slot - 1];
+  const current = angles[slot - 1];
+  const lastWrite = P8_STAGES.reduce((latest, event) => (
+    event.kind === "step" && event.parameterVersion <= version && event.batch?.selectedUnion.includes(slot)
+      ? event.parameterVersion : latest
+  ), 0);
+
+  return <div className="p8-model">
+    <div className="p8-backbone">
+      <svg viewBox="0 0 54 40" aria-hidden="true">
+        <path d="M2 8H43l8 6H10z M2 18H43l8 6H10z M2 28H43l8 6H10z" />
+        <path d="M26 20v-4a4 4 0 0 1 8 0v4m-10 0h12v11H24z" />
+      </svg>
+      <strong>冻结 ViT</strong><span>fₑ / fᵣ</span>
+    </div>
+    <div className="p8-pool">
+      <div className="p8-pool-title"><strong>同一组 Key–Prompt</strong><span>固定配对 · 选择随输入改变</span></div>
+      <div className="p8-pool-slots" role="group" aria-label="查看 Key 与 Prompt 槽位">
+        {angles.map((angle, i) => {
+          const id = i + 1;
+          const active = selected.includes(id);
+          const updated = isStep && stage.batch?.selectedUnion.includes(id);
+          return <button key={id} type="button" data-slot={id} data-hit={active} aria-pressed={slot === id}
+            aria-label={`槽位 ${id}${active ? "，当前选中" : ""}`} onClick={() => setSlot(id)}>
+            <KeyDial angle={angle} />
+            <span className="p8-prompt-strips" aria-hidden="true" style={{ opacity: updated ? .48 + .52 * write : .75 }} />
+            <span>{id}</span>
+          </button>;
+        })}
+      </div>
+      <p className="p8-slot-detail" data-angle={current.toFixed(4)}>
+        <strong>k{slot}</strong> · {current.toFixed(1)}°
+        <span>{isStep && touched ? `（批前 ${previous?.toFixed(1)}°）` : " "}</span>
+        <span> · P{slot} 上次写入 Θ{lastWrite}{selected.includes(slot) ? " · 本轮命中" : ""}</span>
+      </p>
+    </div>
+    <div className="p8-classifier">
+      <svg viewBox="0 0 48 34" aria-hidden="true">
+        <path d="M5 8H18 M5 17H18 M5 26H18 M29 8H43 M29 17H43 M29 26H43" />
+        <rect x="17" y="3" width="14" height="28" rx="3" fill={isStep ? `rgba(121, 92, 170, ${.14 + .6 * write})` : "#e9e2f3"} />
+      </svg>
+      <strong>共享分类器</strong><span>φ · Θ{version}</span>
+    </div>
+  </div>;
+}
+
+function RunProcess({ stage, local, write }: { stage: RunStage; local: number; write: number }) {
+  const inference = stage.kind === "inference";
+  const samples = stage.query ? [stage.query] : stage.batch?.samples ?? [];
+  const hasInputs = samples.length > 0;
+  const isStep = stage.kind === "step";
+  const progress = isStep ? 1 : local;
+  const inputArrival = isStep ? 1 : easeMotion(local / .18);
+  const departure = isStep ? easeMotion((local - .89) / .11) : 0;
+  const layers = [
+    { label: "无 Prompt Query", description: samples.map(({sample}) => `${sample.symbol.replace("x_", "q")} · ${sample.angleDegrees}°`).join(" / "), reveal: .16 },
+    { label: "当前 Key 检索", description: samples.map(({sample, selected}) => `${sample.symbol.replace("x_", "")} [${selected.join(" ")}]`).join(" / "), reveal: .37 },
+    { label: "带 Prompt 分类", description: inference ? "Logits → 预测 ŷ" : "Prompt 输出均值 → Logits", reveal: .59 },
+  ];
+  if (!inference) layers.push({
+    label: stage.kind === "step" ? "批末写回" : "计算联合损失",
+    description: stage.kind === "step" ? (write >= 1 ? "优化器已执行 1 次" : "整批梯度 → 优化器") : "Lcls + λ Lmatch",
+    reveal: .81,
   });
-  return <svg className="p8-transit-overlay" width={geometry.width} height={geometry.height} viewBox={"0 0 " + geometry.width + " " + geometry.height} aria-hidden="true">
-    {routes.map(route => {
-      const point = pointOnCurve(route.start, route.end, route.progress, route.sampleIndex * 5);
-      return <g className="p8-transit p8-transit--query" key={route.id}>
-        <path d={curvePath(route.start, route.end, route.sampleIndex * 5)} pathLength="1" strokeDasharray="1" strokeDashoffset={1 - route.progress} />
-        <circle cx={point.x} cy={point.y} r="4.5" />
-      </g>;
-    })}
-  </svg>;
-}
-
-function KeyCompass({ angle, live }: { angle: number; live: boolean }) {
-  return <svg className={"p8-key-compass " + (live ? "is-live" : "")} viewBox="0 0 34 34" aria-hidden="true">
-    <circle cx="17" cy="17" r="13.5" />
-    <line x1="17" y1="17" x2="28" y2="17" className="p8-key-ray" style={{ transform: "rotate(" + angle + "deg)" } as CSSProperties} />
-    <circle cx="28" cy="17" r="2.3" className="p8-key-tip" style={{ transform: "rotate(" + angle + "deg)" } as CSSProperties} />
-    <circle cx="17" cy="17" r="1.6" className="p8-key-center" />
-  </svg>;
-}
-
-function PersistentPool({
-  stage,
-  angles,
-  phaseProgressValue,
-  slotFocus,
-  onSlotFocus,
-  live,
-}: {
-  stage: RunStage;
-  angles: readonly number[];
-  phaseProgressValue: number;
-  slotFocus: number | null;
-  onSlotFocus: (index: number) => void;
-  live: boolean;
-}) {
-  const active = activeSelections(stage);
-  const bySlot = new Map<number, string[]>();
-  active.forEach(({ sample, selected }) => selected.forEach(index => {
-    const sources = bySlot.get(index) ?? [];
-    sources.push(sample.id);
-    bySlot.set(index, sources);
-  }));
-  const updatedSlots = new Set(stage.kind === "step" ? Object.keys(stage.batch?.gradientBySlot ?? {}).map(Number) : []);
-  return <section className="p8-pool-panel" aria-label="跨 Batch 与任务持续复用的十个 Key–Prompt 槽位">
-    <div className="p8-panel-heading">
-      <div><strong>同一份 Key–Prompt Pool</strong><span>固定 M={promptPoolConfig.poolSize} 个槽位 · 本次每个 Prompt 含 Lₚ={promptPoolConfig.promptLength} 个 Token</span></div>
-      <span className="p8-pool-version"><b>{stage.kind === "step" ? "Θ" + (stage.parameterVersion - 1) : "Θ" + stage.parameterVersion}</b><i>{stage.kind === "step" ? "→" : "·"}</i><b>{stage.kind === "step" ? "Θ" + stage.parameterVersion : "参数沿用"}</b></span>
+  return <section className="p8-process" aria-label={inference ? "推断分支" : "当前数据与运算"} data-mode={inference ? "inference" : stage.kind}>
+    <div className="p8-process-title">
+      <strong>{stage.title}</strong>
+      {hasInputs && <span>{inference ? "无标签 · 无任务 ID" : `标签 ${samples.map(({sample}) => sample.label?.replace("y_", "y")).join("、")}`}</span>}
     </div>
-    <div className="p8-pool-grid">
-      {slotIndices.map(index => {
-        const sources = bySlot.get(index) ?? [];
-        const selected = sources.length > 0;
-        const updated = updatedSlots.has(index);
-        const angle = angles[index - 1];
-        return <button type="button" key={index} data-slot-index={index} data-motion-anchor={"p8-slot-" + index}
-          className={"p8-pair-slot " + (selected ? "is-selected " : "") + (sources.length > 1 ? "is-shared " : "") + (updated ? "is-updated " : "") + (slotFocus === index ? "is-inspected" : "")}
-          aria-label={"槽位 " + index + "，Key k" + index + " 与 Prompt P" + index + "；" + (selected ? "当前由 " + sources.join("、") + " 选中" : "当前未选中") + "；Key 角度 " + angle.toFixed(2) + " 度"}
-          aria-pressed={slotFocus === index} onClick={() => onSlotFocus(index)}>
-          <span className="p8-slot-heading"><b>{String(index).padStart(2, "0")}</b><small>{selected ? sources.join(" + ") : "保留"}</small></span>
-          <span className="p8-pair-values"><span className="p8-key-value"><KeyCompass angle={angle} live={live} /><span><b>k<sub>{index}</sub></b><small>θ {angle.toFixed(1)}°</small></span></span>
-            <span className="p8-prompt-value"><b>P<sub>{index}</sub></b><span aria-hidden="true">{Array.from({ length: promptPoolConfig.promptLength }, (_, token) => <i key={token} />)}</span></span></span>
-          <span className="p8-slot-state">{updated ? "当前 Batch 匹配梯度命中" : selected ? (sources.length > 1 ? "多个样本共用此槽位" : "本次 Top‑N 命中") : "槽位身份与参数保留"}</span>
-        </button>;
+    {hasInputs ? <ol className="p8-operations" style={{ opacity: 1 - departure }}>
+      <li><strong>{inference ? "测试图像" : "训练样本"}</strong>
+        <span className="p8-input-samples" style={{ opacity: inputArrival, transform: `translateX(${-10 * (1 - inputArrival)}px)` }}>
+          {samples.map(({sample}) => <b key={sample.id}>{sample.symbol.replace("x_", "x")}</b>)}
+        </span>
+      </li>
+      {layers.map(({label, description, reveal}) => {
+        const amount = easeMotion((progress - reveal) / .14);
+        return <li key={label} style={{opacity: .43 + .57 * amount}}>
+          <span className="p8-process-fill" aria-hidden="true" style={{transform: `scaleX(${amount})`}} />
+          <strong>{label}</strong><span>{amount > .3 ? description : "\u00a0"}</span>
+        </li>;
       })}
-    </div>
-    <div className="p8-pool-legend"><span><i className="p8-legend-key" /> Key 用于 Query 检索</span><span><i className="p8-legend-prompt" />配对 Prompt 进入分类路径</span><span className="p8-pool-note">读取不会删除槽位；只有当前批次选中的对象获得相应梯度。</span></div>
-    <SlotInspector stage={stage} slotIndex={slotFocus} angles={angles} />
-    {stage.kind === "step" && <div className="p8-step-progress" role="status">
-      <span className="p8-step-progress-label">Batch 内梯度已累积</span>
-      <span className="p8-step-progress-track"><i style={{ transform: "scaleX(" + phaseProgressValue + ")" }} /></span>
-      <b>{phaseProgressValue >= .98 ? "Step 完成" : "本批一次写回"}</b>
-    </div>}
+    </ol> : <p className="p8-no-input">{stage.kind === "boundary"
+      ? "Task 1 的训练样本已退出。Task 2 将从当前参数继续读取。"
+      : "等待第一个训练批次。Key、Prompt 和分类器只在这里初始化。"}</p>}
   </section>;
 }
 
-function SlotInspector({ stage, slotIndex, angles }: { stage: RunStage; slotIndex: number | null; angles: readonly number[] }) {
-  if (slotIndex === null) return <p className="p8-slot-inspector">选择一个槽位，查看当前批次为何命中它，以及对应的 Key–Prompt 参数身份。</p>;
-  const entries = activeSelections(stage).filter(selection => selection.selected.includes(slotIndex));
-  const source = entries.length ? entries.map(selection => selection.sample.symbol + " · γ=" + selection.distances[slotIndex].toFixed(6)).join("；") : "本阶段没有样本直接选中此槽位";
-  return <p className="p8-slot-inspector" aria-live="polite"><strong>槽位 {slotIndex}</strong><span>Key 当前角度 {angles[slotIndex - 1].toFixed(3)}°。</span><span>{source}。</span><span>k<sub>{slotIndex}</sub> 只负责寻址，配对的 P<sub>{slotIndex}</sub> 才作为 Prompt Token 进入分类计算。</span></p>;
-}
-
-function CurrentInputs({ stage }: { stage: RunStage }) {
-  const selections = activeSelections(stage);
-  if (!selections.length) {
-    return <aside className={"p8-input-panel p8-input-panel--" + stage.kind} aria-label="当前阶段的数据入口">
-      <span className="p8-kicker">{stage.kind === "boundary" ? "任务边界" : "模型初态"}</span>
-      <strong>{stage.kind === "boundary" ? "训练数据切换" : "尚未送入样本"}</strong>
-      <p>{stage.kind === "boundary" ? "输入端短暂清空，参数池和分类器留在原位。下一批数据到来后再生成 Query。" : "十个槽位已初始化；冻结主干、Prompt、Key 与共享分类器各有明确身份。"}</p>
-      {stage.kind === "boundary" && <span className="p8-boundary-handoff">Θ₂ → Task 2 使用同一对象</span>}
-    </aside>;
-  }
-  return <aside className={"p8-input-panel p8-input-panel--" + stage.kind} aria-label="当前阶段的数据入口">
-    <span className="p8-kicker">{stage.kind === "inference" ? "测试输入" : stage.batch?.task + " · " + stage.batch?.batch}</span>
-    <strong>{stage.kind === "inference" ? "无任务 ID 的单样本" : stage.kind === "step" ? "同一 Batch 已完成前向" : "当前可用训练样本"}</strong>
-    <div className="p8-sample-list">
-      {selections.map(({ sample }) => <article className="p8-run-sample" key={sample.id}>
-        <span className="p8-sample-mark" data-motion-anchor={"p8-query-" + sample.id}><i />{sample.symbol}</span>
-        <span className="p8-sample-copy"><b>{sample.source}</b><small>{sample.label ? "标签 " + sample.label + " · 参与当前训练损失" : "标签未提供 · 仅生成预测"}</small></span>
-      </article>)}
-    </div>
-    <div className="p8-query-explainer"><span>无 Prompt 冻结 ViT</span><i aria-hidden="true">→</i><b>q(x) → 当前 K → Top‑{promptPoolConfig.topN}</b></div>
-    <p className="p8-input-note">{stage.kind === "inference" ? "测试沿用 Eq. (3)；检索不需要先判定任务身份。" : "检索由输入 Query 决定；当前 Batch 的标签只进入分类损失。"}</p>
-  </aside>;
-}
-
-function SharedModelState({ stage, progress }: { stage: RunStage; progress: number }) {
-  const stepDone = stage.kind === "step" && progress >= .98;
-  const version = stage.kind === "step" ? (stepDone ? stage.parameterVersion : stage.parameterVersion - 1) : stage.parameterVersion;
-  return <div className="p8-model-state" aria-label="持续复用的模型参数状态">
-    <div className="p8-frozen-state"><span className="p8-lock" aria-hidden="true">▣</span><span><b>同一冻结 ViT</b><small>fₑ、fᵣ 保持 θ₀</small></span><span className="p8-state-tag">不更新</span></div>
-    <div className="p8-trainable-state"><span className="p8-pool-glyph" aria-hidden="true">K↔P</span><span><b>Key–Prompt Pool</b><small>{stage.kind === "step" && !stepDone ? "本批写回中" : "固定槽位，参数持续继承"}</small></span><span className="p8-state-tag">Θ{version}</span></div>
-    <div className="p8-classifier-state"><span className="p8-classifier-glyph" aria-hidden="true">gφ</span><span><b>一个共享分类器</b><small>{stage.kind === "step" && !stepDone ? "累计当前批次分类梯度" : "所有任务沿用同一 φ"}</small></span><span className="p8-state-tag">φ{version}</span></div>
-  </div>;
-}
-
-function BatchMath({ stage }: { stage: RunStage }) {
-  if (!stage.batch) return null;
-  return <div className="p8-batch-summary" aria-label="当前批次的选择和更新摘要">
-    <div><span>当前选集并集</span><strong>{stage.batch.selectedUnion.map(index => "P" + index).join(" · ")}</strong></div>
-    <div><span>Batch 损失</span><strong>{stage.kind === "step" ? "Σᵢ [Lcls,i + λ Lmatch,i]" : "Lcls + λ Lmatch"}</strong></div>
-    <div><span>更新边界</span><strong>{stage.kind === "step" ? "累积后 · Optimizer Step ×1" : "当前参数版本内完成前向"}</strong></div>
-  </div>;
-}
+const trainingCode = `初始化 K、P、φ，冻结 fₑ、fᵣ
+for task in 数据流:
+  for epoch in task:
+    for batch B in epoch:
+      L_B ← 0；S_B ← ∅
+      for (x, y) in B:
+        q ← 无 Prompt 的冻结 ViT(x) 的 [CLS]
+        S ← TopN(γ(q, K))                  # Eq. (3)
+        H ← fᵣ([P[S]; fₑ(x)])
+        z ← gφ(AvgPool(H[0 : N·Lₚ, :]))
+        L_B += CE(z, y) + λ Σⱼ∈S γ(q, kⱼ)
+        S_B ← S_B ∪ S
+      Backward(L_B)
+      OptimizerStep(K[S_B], P[S_B], φ)
+  # 下一任务沿用当前 K、P、φ`;
+const inferenceCode = `q ← 无 Prompt 的冻结 ViT(x) 的 [CLS]
+S ← TopN(γ(q, K))                         # Eq. (3)
+H ← fᵣ([P[S]; fₑ(x)])
+预测 ← argmax gφ(AvgPool(H[0 : N·Lₚ, :]))`;
 
 export function ContinualRun() {
   const playback = useLessonPlayback(duration);
-  const activePhase = phaseAt(playback.position);
-  const stage = P8_STAGES[activePhase];
-  const progress = phaseProgress(playback.position, activePhase);
-  const [slotFocus, setSlotFocus] = useState<number | null>(null);
-  const [reducedMotion, setReducedMotion] = useState(() => matchMedia("(prefers-reduced-motion: reduce)").matches);
-  useEffect(() => {
-    const preference = matchMedia("(prefers-reduced-motion: reduce)");
-    const updatePreference = () => setReducedMotion(preference.matches);
-    preference.addEventListener("change", updatePreference);
-    return () => preference.removeEventListener("change", updatePreference);
-  }, []);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const geometry = useMotionAnchors(rootRef);
-  const activeAngles = stage.kind === "step" && stage.batch
-    ? interpolateKeyAngles(stage.batch.startAngles, stage.batch.endAngles, progress)
-    : stage.angles;
-  const liveUpdate = stage.kind === "step" && playback.playing;
+  const [slot, setSlot] = useState(3);
+  const phase = timeline.reduce((active, item, index) => item.start <= playback.position ? index : active, 0);
+  const stage = P8_STAGES[phase];
+  const { start } = timeline[phase];
+  const end = timeline[phase + 1]?.start ?? duration;
+  const local = (playback.position - start) / (end - start);
+  const batch = stage.batch;
+  const isStep = stage.kind === "step" && batch !== null;
+  const write = isStep ? (local >= .79 ? 1 : easeMotion((local - .16) / .63)) : 0;
+  const writing = isStep && local < .79;
+  const version = stage.parameterVersion - Number(writing);
+  const cursor = writing ? version + write : version;
+  const angles = isStep ? interpolateKeyAngles(batch.startAngles, batch.endAngles, write) : stage.angles;
+  const selected = local >= .48 || isStep ? stage.query?.selected ?? batch?.selectedUnion ?? [] : [];
+  const note = writing
+    ? "先汇总损失和梯度，再写回当前这一个批次。状态到达下一版本后才供下一批读取。"
+    : stage.note;
 
   return <>
-    <p className="lesson-lead">P7 结束后，参数不再停在一张更新图里。沿着同一组 Key–Prompt 槽位，看每个 Batch 如何读当前状态、累积一次更新，再把新状态交给下一个 Batch、下一个任务和最终测试。</p>
-
-    <section className="p8-run-intro explain-section">
-      <h3>时间在前进，系统身份保持</h3>
-      <p>任务切换会替换当前可用数据；它不会替换 Key Pool、Prompt Pool 或共享分类器。底部时间点代表参数状态交接，中央十个配对槽位从头到尾都是同一批对象。</p>
+    <p className="lesson-lead">P7 解释了一批数据如何完成一次更新。在持续学习中，这次更新的结果还要交给下一批，甚至交给另一个任务。模型用的是一套持续保存的参数，当前样本只决定这一轮会用到其中哪些槽位。</p>
+    <section className="explain-section">
+      <h3>起点只初始化一次</h3>
+      <p>将预训练 ViT 的嵌入层和 Transformer 固定下来，并初始化 Key Pool、Prompt Pool 与共享分类器。把这三个可学习部分记为 <math><Sub base="Θ" index="0" /><mo>=</mo><mo>(</mo><mi>K</mi><mo>,</mo><mi>P</mi><mo>,</mo><mi>φ</mi><mo>)</mo></math>。同一个槽位上的 Key 用于检索，Prompt 用于分类。槽位的编号贯穿整个训练与测试。</p>
+    </section>
+    <section className="explain-section">
+      <h3>每批读取当前版本，批末交出新版本</h3>
+      <p>Task 1 的第一批沿用 P5 的 A、B。两者各自提取 Query、检索并带 Prompt 分类，计算联合损失后一起写回。看下方版本标记从 Θ₀ 移到 Θ₁ 时，池和分类器的位置与身份都保持固定。<span className="lesson-key">第二批读取 Θ₁</span>，再用自己的 Query 在更新后的 Key 上排名。</p>
     </section>
 
     <figure className="lesson-figure p8-continuous-figure">
-      <div className="figure-top"><strong>持续运行状态台</strong><span>稳定 Pool 身份 · Batch 后更新 · 推断无任务 ID</span></div>
-      <div className="figure-body">
-        <div className="p8-control-dock" aria-label="持续学习时间轴控制">
-          <div className="p8-stage-stops" role="group" aria-label="选择训练与推断阶段">
-            {P8_STAGES.map((item, index) => <button type="button" className="lesson-choice" key={item.id} aria-pressed={activePhase === index} onClick={() => playback.seek(boundaries[index] + 50)}>
-              <span>{String(index + 1).padStart(2, "0")}</span>{item.short}
-            </button>)}
-          </div>
-          <div className="p8-playback-row"><PlaybackControls playback={playback} label="一份参数状态跨 Batch 与任务传递" /><p className="p8-stage-note" aria-live="polite">{stage.note}</p></div>
-          <div className="p8-time-rail" aria-label="参数状态时间轨道">
-            {P8_STAGES.map((item, index) => <button type="button" key={item.id} aria-label={item.title} aria-current={activePhase === index ? "step" : undefined} onClick={() => playback.seek(boundaries[index] + 50)} className={"p8-time-node " + (index <= activePhase ? "is-reached " : "") + (activePhase === index ? "is-current" : "")}>
-              <i>{item.kind === "step" ? "↻" : item.kind === "inference" ? "⌕" : item.kind === "boundary" ? "⇢" : index === 0 ? "Θ" : "•"}</i><span>{item.short}</span>
-            </button>)}
-          </div>
+      <div className="p8-control-dock">
+        <div className="p8-stage-stops" role="group" aria-label="持续学习时间线">
+          {sections.map(section => <div className="p8-time-group" key={section.label}>
+            <span>{section.label}</span>
+            {timeline.slice(section.first, section.end).map((event, offset) => {
+              const index = section.first + offset;
+              return <button type="button" className="lesson-choice" key={event.start} aria-pressed={index === phase} data-run-event={index}
+                onClick={() => playback.seek(event.seek)}>{event.label}</button>;
+            })}
+          </div>)}
         </div>
-
-        <div className={"p8-live-workbench " + (stage.kind === "inference" ? "is-inference " : "") + (stage.kind === "boundary" ? "is-boundary" : "")} ref={rootRef}>
-          <QueryTransit geometry={geometry} stage={stage} progress={progress} reducedMotion={reducedMotion} />
-          <div className="p8-workbench-topline"><span><b>{stage.title}</b><small>{stage.kind === "step" ? "在本批样本都完成前向后，才写回一次" : stage.kind === "inference" ? "当前只运行前向检索与分类" : "同一模型的当前观察点"}</small></span>
-            <span className="p8-theta-version"><small>参数版本</small><b>{stage.kind === "step" && progress < .98 ? "Θ" + (stage.parameterVersion - 1) + " → Θ" + stage.parameterVersion : "Θ" + stage.parameterVersion}</b></span>
-          </div>
-          <div className="p8-stage-grid">
-            <CurrentInputs stage={stage} />
-            <div className="p8-addressing-panel">
-              <span className="p8-kicker">检索与分类共用同一模型</span>
-              <div className="p8-addressing-path"><span>Query</span><i aria-hidden="true">→</i><b>当前 Key 排名</b><i aria-hidden="true">→</i><b>读取配对 Prompt</b></div>
-              <div className="p8-classification-path"><span>Prompt + xₑ</span><i aria-hidden="true">→</i><span>同一冻结 fᵣ</span><i aria-hidden="true">→</i><span>共享 gφ</span></div>
-              <small>Key 只用于寻址，不作为 Transformer Token；分类仍读取选中 Prompt 的输出。</small>
-              {stage.kind === "inference" ? <div className="p8-inference-output"><b>Logits → argmax</b><span>预测符号保留为 ŷ · 未模拟类别分数</span></div> : <div className="p8-training-signal"><b>{stage.kind === "step" ? "Lcls + λLmatch" : "训练标签进入 Lcls"}</b><span>{stage.kind === "step" ? "本批损失合并后统一反向传播" : "匹配损失训练本次选中的 Key"}</span></div>}
-            </div>
-            <PersistentPool stage={stage} angles={activeAngles} phaseProgressValue={progress} slotFocus={slotFocus} onSlotFocus={setSlotFocus} live={liveUpdate} />
-          </div>
-          <SharedModelState stage={stage} progress={progress} />
-          <BatchMath stage={stage} />
-          {stage.kind === "step" && <p className="p8-simulation-note">连续 Key 轨迹是二维角度参数上的 SGD 教学模拟：q、k 为单位向量，∂γ/∂θₖ=−sin(θq−θk)。Prompt/分类器梯度来源按算法呈现但不伪造数值；论文实验使用 Adam。</p>}
-        </div>
+        <PlaybackControls playback={playback} label="运行进度" />
       </div>
-      <figcaption>对象身份固定，选择集合随当前 Key 状态重算。这里用 P5 的确定性角度例子演示寻址；Task 1/Task 2 的扩展 Query 是明确标注的合成教学输入。</figcaption>
+      <VersionRail cursor={cursor} version={version} />
+      <SharedModel stage={stage} angles={angles} slot={slot} setSlot={setSlot} selected={selected} write={write} version={version} />
+      <RunProcess stage={stage} local={local} write={write} />
+      <figcaption aria-live="polite">{note}</figcaption>
     </figure>
+    <p className="p8-example-note">教学模拟使用单位圆上的 Key 与合成 Query。Key 角度用匹配损失的梯度做二维 SGD，Prompt 与分类器只显示参数身份与更新事件。论文实验采用 Adam。</p>
 
-    <section className="p8-pseudocode explain-section">
-      <div><span className="p8-section-kicker">Algorithm 1 · 教学整理</span><h3>循环层级决定何时更新</h3>
-        <p>每个样本独立产生 Query 与 Top‑N 选集；一个 Batch 的损失全部累积后才调用优化器。任务边界传递状态，不重建 Pool。以下伪代码保留论文执行顺序，并把反向步骤展开到批次级。</p>
-      </div>
-      <pre aria-label="L2P 训练与推断伪代码"><code>{`初始化 P、K、φ；冻结 fₑ、fᵣ
-for task t:
-  for epoch e:
-    for mini-batch B:
-      L_B ← 0；S_B ← ∅
-      for each (x, y) in B:
-        q ← FrozenViTWithoutPrompt(x).CLS
-        S ← TopNByKeyDistance(q, K)         # Eq. (3)
-        H ← fᵣ([P[S]; fₑ(x)])
-        z ← gφ(Mean(H[0 : N·Lₚ, :]))
-        L_B += CE(z,y) + λ Σⱼ∈S γ(q,kⱼ)
-        S_B ← S_B ∪ S
-      Backward(L_B)
-      OptimizerStep(P[S_B], K[S_B], φ)
-      # fₑ、fᵣ 权重保持冻结
-  # 将当前 P、K、φ 交给下一任务
-
-推断：用 Eq. (3) 检索并分类；无 y、Loss、Backward、Step、task ID`}</code></pre>
-      <div className="p8-run-boundaries"><p><strong>有任务边界的实验</strong><span>可按协议多轮遍历该任务数据；状态跨 Epoch 与任务持续保留。</span></p><p><strong>Task-agnostic 基础路径</strong><span>数据按到达顺序逐 Batch 更新，不需要任务段标记；不启用 P9 的历史频率分支。</span></p><p><strong>缓存条件</strong><span>基础 L2P 不重放旧样本；L2P-R 是另一个加入缓存的实验变体。</span></p></div>
+    <section className="explain-section">
+      <h3>任务交接切换数据，模型继承 Θ₂</h3>
+      <p>Task 1 的第二批写回 Θ₂ 后，Task 1 的数据退出。基础 L2P 直接用继承下来的 <span className="lesson-key">同一套 Key、Prompt 和分类器</span>处理 Task 2 的第一批，新的 Query 在原池里重新选槽位。这个批次完成后，最新状态变为 Θ₃。</p>
     </section>
-
-    <section className="p8-next-question explain-section"><h3>模型已经跑通；共享效果要由证据回答</h3><p>参数状态在新任务中延续，Prompt 也可能再次被选中。P9 接着比较一个有任务边界时可选的训练策略，再核对作者报告的选择分布、消融和主实验结果。</p></section>
+    <section className="explain-section">
+      <h3>测试只做检索与分类</h3>
+      <p>测试输入是一张没有标签、也没有任务 ID 的图像。模型用 Θ₃ 按式 (3) 做普通 Key 距离检索，再取配对 Prompt 做分类前向，最后选出分数最高的类别。此时画面里只剩这条前向路径，损失、反向和优化器都退出，<span className="lesson-key">Θ₃ 保持固定</span>。</p>
+    </section>
+    <section className="explain-section p8-pseudocode">
+      <h3>Algorithm 1 中，循环层级决定写回时机</h3>
+      <p>在有任务边界的协议中，每个任务可多轮遍历当前数据，每一轮包含多个批次。样本逐个产生选集与损失，选集取并集，损失累积到整批再反向。参数因此可以跨 Epoch 和任务持续保存。</p>
+      <details open><summary>训练 · Task → Epoch → Batch → Sample</summary><pre><code>{trainingCode}</code></pre></details>
+      <details><summary>推断 · 只传入图像 x</summary><pre><code>{inferenceCode}</code></pre></details>
+      <p>在无明确任务边界的 task-agnostic 设置里，基础方法随数据到达逐批更新。基础 L2P 无需旧样本回放，L2P-R 是加入回放缓存的实验变体。</p>
+    </section>
+    <p className="lesson-takeaway">同一个槽位可被多个任务中的样本选中。P9 将比较可选的历史频率策略，并用论文的选择分布、消融和主实验观察共享实际发生了多少。</p>
   </>;
 }

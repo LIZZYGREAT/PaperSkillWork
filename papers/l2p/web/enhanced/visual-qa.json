@@ -404,36 +404,87 @@
       "id": "p8",
       "path": "/?page=p8",
       "states": [
-        { "id": "initialization" },
-        { "id": "task1-batch1-forward", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(2)" }] },
         {
-          "id": "batch-writeback-midpoint",
+          "id": "initialization",
+          "actions": []
+        },
+        {
+          "id": "task1-batch1",
           "actions": [
-            { "type": "click", "selector": ".p8-stage-stops button:nth-child(3)" },
-            { "type": "click", "selector": ".p8-playback-row button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 700 },
-            { "type": "click", "selector": ".p8-playback-row button:has-text('暂停')" },
-            { "type": "scrollIntoView", "selector": ".p8-pool-panel" }
+            {
+              "type": "click",
+              "selector": ".p8-stage-stops [data-run-event='1']"
+            }
           ]
         },
-        { "id": "task1-batch2-retrieval", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(4)" }] },
-        { "id": "task-boundary-inheritance", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(6)" }] },
         {
-          "id": "task2-query-and-pool",
+          "id": "batch1-write-midpoint",
           "actions": [
-            { "type": "click", "selector": ".p8-stage-stops button:nth-child(7)" },
-            { "type": "click", "selector": ".p8-pair-slot[data-slot-index='3']" }
+            {
+              "type": "click",
+              "selector": ".p8-stage-stops [data-run-event='2']"
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('播放过程')"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1050
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('暂停')"
+            }
           ]
         },
-        { "id": "task2-writeback", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(8)" }] },
-        { "id": "inference-no-label-no-update", "actions": [{ "type": "click", "selector": ".p8-stage-stops button:nth-child(9)" }] }
+        {
+          "id": "batch2-reads-version1",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p8-stage-stops [data-run-event='3']"
+            }
+          ]
+        },
+        {
+          "id": "cross-task-version2",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p8-stage-stops [data-run-event='5']"
+            }
+          ]
+        },
+        {
+          "id": "task2-reuses-pool",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p8-stage-stops [data-run-event='6']"
+            },
+            {
+              "type": "click",
+              "selector": ".p8-pool-slots [data-slot='3']"
+            }
+          ]
+        },
+        {
+          "id": "inference-version3",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p8-stage-stops [data-run-event='8']"
+            }
+          ]
+        }
       ],
       "computedStyles": [
-        { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" },
-        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
-        { "selector": ".p8-control-dock", "property": "position", "equals": "sticky" },
-        { "selector": ".lesson-figure.p8-continuous-figure", "property": "overflow", "equals": "clip" },
-        { "selector": ".p8-pair-slot[data-slot-index='3']", "property": "border-top-width", "equals": "1px" }
+        {
+          "selector": ".lesson-copy",
+          "property": "--lesson-body-size",
+          "equals": "17px"
+        }
       ]
     },
     {
