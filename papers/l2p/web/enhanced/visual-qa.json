@@ -176,55 +176,107 @@
       "id": "p6",
       "path": "/?page=p6",
       "states": [
-        { "id": "selected-prompt-pool" },
-        { "id": "compose-sequence", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(3)" }] },
         {
-          "id": "compose-flight-midpoint",
+          "id": "source",
+          "actions": []
+        },
+        {
+          "id": "assembly-midpoint",
           "actions": [
-            { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(3)" },
-            { "type": "click", "selector": ".p6-control-dock button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 650 },
-            { "type": "click", "selector": ".p6-control-dock button:has-text('暂停')" },
-            { "type": "scrollIntoView", "selector": ".p6-sequence-workbench" }
+            {
+              "type": "click",
+              "selector": ".p6-control-dock .motion-stops button:nth-child(1)"
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('播放过程')"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1120
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('暂停')"
+            }
           ]
         },
         {
-          "id": "prompt-position-map",
+          "id": "assembled",
           "actions": [
-            { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(3)" },
-            { "type": "click", "selector": ".p6-sequence-cell[data-sequence-index='12']" }
+            {
+              "type": "click",
+              "selector": ".p6-control-dock .motion-stops button:nth-child(2)"
+            }
           ]
         },
-        { "id": "frozen-encoder", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(4)" }] },
         {
-          "id": "encoder-flight-midpoint",
+          "id": "encoder-midpoint",
           "actions": [
-            { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(4)" },
-            { "type": "click", "selector": ".p6-control-dock button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 700 },
-            { "type": "click", "selector": ".p6-control-dock button:has-text('暂停')" },
-            { "type": "scrollIntoView", "selector": ".p6-encoder-stage" }
+            {
+              "type": "click",
+              "selector": ".p6-control-dock .motion-stops button:nth-child(2)"
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('播放过程')"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1320
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('暂停')"
+            }
           ]
         },
-        { "id": "prompt-position-pooling", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(5)" }] },
         {
-          "id": "pool-intermediate",
+          "id": "pooling-midpoint",
           "actions": [
-            { "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(5)" },
-            { "type": "click", "selector": ".p6-control-dock button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 775 },
-            { "type": "click", "selector": ".p6-control-dock button:has-text('暂停')" },
-            { "type": "scrollIntoView", "selector": ".p6-pooling-workbench" }
+            {
+              "type": "click",
+              "selector": ".p6-control-dock .motion-stops button:nth-child(3)"
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('播放过程')"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 2230
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('暂停')"
+            }
           ]
         },
-        { "id": "class-logits", "actions": [{ "type": "click", "selector": ".p6-control-dock .motion-stops button:nth-child(6)" }] }
+        {
+          "id": "pooled",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p6-control-dock .motion-stops button:nth-child(4)"
+            }
+          ]
+        },
+        {
+          "id": "class-logits",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p6-control-dock .motion-stops button:nth-child(5)"
+            }
+          ]
+        }
       ],
       "computedStyles": [
-        { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" },
-        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
-        { "selector": ".p6-control-dock", "property": "position", "equals": "sticky" },
-        { "selector": ".lesson-figure.p6-forward-figure", "property": "overflow", "equals": "clip" },
-        { "selector": ".p6-encoder-lane-line", "property": "height", "equals": "1px" }
+        {
+          "selector": ".lesson-copy",
+          "property": "--lesson-body-size",
+          "equals": "17px"
+        }
       ]
     },
     {
