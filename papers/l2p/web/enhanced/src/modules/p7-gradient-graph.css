@@ -2,7 +2,7 @@
   width: 100%;
   margin: 32px 0 38px;
   color: var(--motion-ink, #254335);
-  font-family: var(--motion-font, "Segoe UI", "Microsoft YaHei UI", sans-serif);
+  font-family: var(--rk-font-body, "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
   font-variant-numeric: tabular-nums;
   font-weight: 400;
 }
@@ -25,7 +25,7 @@
 .p7-gradient-graph__scroll { width: 100%; overflow-x: auto; border-block: 1px solid #a8b9a8; }
 .p7-gradient-graph__scroll:focus-visible { outline: 2px solid var(--rk-focus); outline-offset: 3px; }
 .p7-gradient-graph svg { display: block; width: 100%; min-width: 920px; height: auto; }
-.p7-gradient-graph svg text { font-family: var(--motion-font, "Segoe UI", "Microsoft YaHei UI", sans-serif); font-weight: 400; }
+.p7-gradient-graph svg text { font-family: var(--rk-font-body, "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif); font-weight: 400; }
 .p7-graph-rule { fill: none; stroke: #d2dcd0; stroke-width: 1; }
 .p7-graph-lane { font-size: 15px; fill: #315d73; }
 .p7-graph-lane--select { fill: #775023; }
@@ -64,6 +64,8 @@
   text-align: center;
   font-weight: 400;
 }
+.p7-gradient-graph__hint { display: none; }
 @media (max-width: 780px) {
   .p7-gradient-graph svg { min-width: 1050px; }
+  .p7-gradient-graph__hint { display: block; margin: 5px 0 0; color: #506759; font-size: 12px; line-height: 1.5; text-align: center; }
 }

@@ -597,3 +597,17 @@ P6 重新分配图内横向空间，编码轨道、锁和标题组合、输入�
 用三条有向路径分别呈现分类损失梯度的去向、Query/Key 的离散 Top-N 前向寻址，以及匹配损失到已选 Key 的连续梯度。分类路径贯穿冻结 Transformer 的输入计算到所选 Prompt；节点明确标注分类器参数可训练、冻结层权重不更新。索引集合标作整数集合，Top-N 与 Prompt 选择画成虚线，不暗示可微。论文未提供各梯度贡献的相对幅值，所以连线保持等宽；图内文字常规字重，与章节既有绿、蓝、赭、淡紫语义一致。
 
 `SOURCE_BUILD=PASS`：当前 P6–P8 生产构建由 `npm.cmd run build` 执行，TypeScript 与 Vite 6.4.3 构建退出 0，80 modules。通过本机 Edge 157.0.4341.46，使用 `node tools/visual-qa/cli.mjs --config <p6-p8-review.tmp.json>` 对 P6–P8 共 27 个状态在 1440×900、1920×1080 两种桌面宽度检查，54 个截图状态全部 `PASS`；`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`，无几何/基准诊断和浏览器错误。P7 的初始图、分类梯度、匹配梯度、B 样本贡献、合流、写回和 Key 中间角度均已查看；报告 `run-2026-11-11T15-38-14-689Z`。截图与报告副本保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/`。`FULLSCREEN_LAYOUT=PASS`（桌面宽布局模拟）；`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
+
+#### P8 参数状态账本与训练/推断分岔图
+
+保留连续学习主动画，在其后增加表格式状态账本，逐行对照 Θ₀ 初始化、Task 1 两次批末写回得到的 Θ₁/Θ₂，以及 Task 2 写回得到的 Θ₃；列出每版的产生事件、下一个读取者与跨任务继承语义。测试章节后增加共享前向分岔图：上方横向路径串起无 Prompt Query、Key Top-N、Prompt 分类与 Logits；下方分支分别写出带标签训练的损失累计、整批反向传播和一次优化器写回，以及无标签/无任务 ID 测试的 argmax、预测输出与 Θ₃ 只读状态。账本使用横向细线与重点状态行区分；流程图用方向箭头、版面分支和低饱和绿/蓝区分两种结束方式，不重复 P7 的损失回传节点图语法。图表内文字均为常规字重，宽度与正文对齐，窄视口通过局部滚动保留全部列/节点。
+
+`SOURCE_BUILD=PASS`：P6–P8 `npm.cmd run build` 的 TypeScript 与 Vite 6.4.3 生产构建退出 0，80 modules。P8 的初始化、批次推进、两次批末写回、Θ₂ 跨任务继承、Task 2 复用池和推断中/末态均纳入同次双桌面视口运行；共 9 状态 × 2 视口，几何、样式、浏览器错误均 `PASS`。已查看 1440×900 的账本/分岔图、Θ₃ 推断终态，以及 1920×1080 的 Θ₂ 交接与分岔图。P6–P8 汇总报告为 `run-2026-11-11T15-38-14-689Z`；PNG 与报告副本位于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/`。`FULLSCREEN_LAYOUT=PASS`（桌面宽布局模拟）；`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
+
+### P6–P8 字体与窄屏排版复核（2026-11-12）
+
+再次核对 P6–P8 的正文字体与图内字重：P6、P7、P8 共用 `--rk-font-body`；正文保持 17px；主图文字、账本标题和表格单元格均为常规 400 字重。P7 SVG 改用与 P6/P8 一致的字体 token。窄屏下，P6 比例尺的说明图例改为随版宽换行，只有 222 位序列轨道保留局部横向滚动；P6/P7 图与 P8 账本/流程图补充滚动提示，P8 账本状态列在横向滚动时固定显示。
+
+`SOURCE_BUILD=PASS`：`npm.cmd run build`，TypeScript + Vite 6.4.3，80 modules。当前 PaperSkill 官方上游检查器运行 `syntax-check.js --require-parser` 与 `validate-output.js` 均 `PASS`：43 个源文件解析通过，9 个章节与组件注册完整。Edge 157.0.4341.46 的 Visual QA 对 P6–P8 27 个状态分别在 390×844、1440×900、1920×1080 捕获，共 81 个状态全部 `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`，无溢出、基准或浏览器错误。正文 17px 和图内 400 字重的断言均通过。人工查看了 P6 桌面、P7 手机和 P8 桌面代表截图。报告编号 `run-2026-11-11T16-08-32-065Z`，报告及关键截图副本位于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/`。
+
+全站 `npm run check:reading` 仍停在进入 P6 之前的 P4：既有诊断说明段实测 14px，而通用探针要求 17px；本轮不更改 P4。针对 P6–P8 的 17px 与图内字重断言由上述 81 状态检查单独完成。此次新增图形的最新部署子路径浏览器检查未能运行；此前子路径 PASS 报告早于本轮 P8 辅助图，故不沿用为本轮结果。`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。

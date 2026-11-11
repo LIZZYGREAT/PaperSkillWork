@@ -83,6 +83,7 @@
 .p6-sequence-ruler__legend span:last-child { padding-left: 12px; color: #315d73; }
 .p6-sequence-ruler__scroll { width: 100%; overflow-x: auto; border-block: 1px solid #a8b9a8; }
 .p6-sequence-ruler__scroll:focus-visible { outline: 2px solid var(--rk-focus); outline-offset: 3px; }
+.p6-sequence-ruler__hint { display: none; }
 .p6-sequence-ruler__track { display: flex; min-height: 52px; width: 100%; }
 .p6-ruler-prompt {
   min-width: 0;
@@ -130,5 +131,7 @@
   .p6-call-row__step { margin: 0 0 2px 2px; }
   .p6-call-card { min-height: 75px; }
   .p6-call-arrow { transform: rotate(90deg); line-height: 1; }
-  .p6-sequence-ruler__legend, .p6-sequence-ruler__track { min-width: 780px; }
+  .p6-sequence-ruler__legend { min-width: 0; grid-template-columns: minmax(0, .95fr) minmax(0, 2.05fr); }
+  .p6-sequence-ruler__track { min-width: 780px; }
+  .p6-sequence-ruler__hint { display: block; margin: 5px 0 0; color: #617267; font-size: 12px; line-height: 1.5; text-align: center; }
 }

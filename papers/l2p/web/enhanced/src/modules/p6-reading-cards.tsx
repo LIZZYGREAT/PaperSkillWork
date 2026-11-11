@@ -49,6 +49,7 @@ export function P6SequenceRuler() {
         </div>
       </div>
     </div>
+    <p className="p6-sequence-ruler__hint">窄屏可横向滑动查看完整位置比例</p>
     <div className="p6-sequence-ruler__sum">
       <span>{P6_PROMPT_TOKEN_COUNT} Prompt</span><span aria-hidden="true">+</span><span>{imageLength} 图像位置</span>
       <span aria-hidden="true">=</span><span>{P6_SEQUENCE_LENGTH} 个位置</span><span className="p6-ruler-width">每个位置均为 {config.featureWidth} 维</span>

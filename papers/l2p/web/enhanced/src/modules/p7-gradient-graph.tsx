@@ -92,6 +92,7 @@ export function P7GradientGraph() {
         <path className="p7-graph-edge p7-graph-edge--query" d="M475 352V340m-5 7 5-7 5 7" />
       </svg>
     </div>
+    <p className="p7-gradient-graph__hint">窄屏可横向滑动查看完整节点路径</p>
     <figcaption>两种信号各有目标：分类误差训练分类器与已选 Prompt；匹配损失直接作用于已选 Key。箭头表示训练路径，不表示梯度大小。</figcaption>
   </figure>;
 }
