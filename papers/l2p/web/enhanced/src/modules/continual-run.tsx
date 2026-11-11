@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Sub } from "./lesson-math";
 import { interpolateKeyAngles, P8_STAGES, type RunStage } from "./continual-run-data";
+import { P8StateLedger, P8TrainInferMap } from "./p8-run-visuals";
 import { arrive, elapsed, MotionTrace, type MotionCurve } from "./guided-motion";
 import "./guided-motion.css";
 import "./continual-run.css";
@@ -260,6 +261,7 @@ export function ContinualRun() {
       <figcaption aria-live="polite">{note}</figcaption>
     </figure>
     <p className="p8-example-note">教学模拟使用单位圆上的 Key 与合成 Query。Key 角度用匹配损失的梯度做二维 SGD，Prompt 与分类器只显示参数身份与更新事件。论文实验采用 Adam。</p>
+    <P8StateLedger />
 
     <section className="explain-section">
       <h3>任务交接切换数据，模型继承 Θ₂</h3>
@@ -269,6 +271,7 @@ export function ContinualRun() {
       <h3>测试只做检索与分类</h3>
       <p>测试输入是一张没有标签、也没有任务 ID 的图像。模型用 Θ₃ 按式 (3) 做普通 Key 距离检索，再取配对 Prompt 做分类前向，最后选出分数最高的类别。此时画面里只剩这条前向路径，损失、反向和优化器都退出，<span className="lesson-key">Θ₃ 保持固定</span>。</p>
     </section>
+    <P8TrainInferMap />
     <section className="explain-section p8-pseudocode">
       <h3>Algorithm 1 中，循环层级决定写回时机</h3>
       <p>在有任务边界的协议中，每个任务可多轮遍历当前数据，每一轮包含多个批次。样本逐个产生选集与损失，选集取并集，损失累积到整批再反向。参数因此可以跨 Epoch 和任务持续保存。</p>

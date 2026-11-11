@@ -1,0 +1,258 @@
+.p8-ledger {
+  margin: 3.2rem 0;
+  padding: 1.8rem 0 1.65rem;
+  border-top: 1px solid #d4dfcf;
+  border-bottom: 1px solid #d4dfcf;
+  font-family: var(--rk-font-body, "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
+}
+
+.p8-ledger__intro {
+  max-width: 56rem;
+  margin: 0 auto 1.5rem;
+  text-align: center;
+}
+
+.p8-ledger__eyebrow {
+  color: #587563;
+  font-size: .82rem;
+  letter-spacing: .08em;
+}
+
+.p8-ledger__intro h3 {
+  margin: .45rem 0 .55rem;
+  color: #183b39;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.p8-ledger__intro p,
+.p8-ledger__note {
+  color: #586d66;
+  font-size: .94rem;
+  line-height: 1.75;
+}
+
+.p8-ledger__intro p { margin: 0; }
+
+.p8-ledger__scroll {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: #a9bda9 transparent;
+}
+
+.p8-ledger table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+  color: #234447;
+  font-size: .93rem;
+  line-height: 1.65;
+  text-align: left;
+}
+
+.p8-ledger th,
+.p8-ledger td {
+  padding: .8rem .95rem;
+  border-bottom: 1px solid #dfe7dc;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+.p8-ledger tbody th { position: sticky; left: 0; z-index: 1; background: #f8f9f4; }
+.p8-ledger tbody tr:nth-child(even) th { background: #f3f6ef; }
+.p8-ledger tbody tr.p8-ledger__handoff th { background: #f7f2e8; }
+
+.p8-ledger thead th {
+  color: #60756b;
+  font-size: .83rem;
+  letter-spacing: .025em;
+}
+
+.p8-ledger tbody tr:last-child th,
+.p8-ledger tbody tr:last-child td { border-bottom: 0; }
+
+.p8-ledger tbody tr:nth-child(even) { background: #f3f6ef; }
+
+.p8-ledger tbody tr.p8-ledger__handoff {
+  background: #f7f2e8;
+}
+
+.p8-ledger__theta {
+  display: inline-grid;
+  min-width: 2.7rem;
+  min-height: 2.15rem;
+  place-items: center;
+  border: 1px solid #b5c8b2;
+  border-radius: 999px;
+  background: #e7eee1;
+  color: #315f48;
+  font-size: 1.02rem;
+}
+
+.p8-ledger__handoff .p8-ledger__theta {
+  border-color: #c8ae78;
+  background: #efe5d2;
+  color: #765526;
+}
+
+.p8-ledger__note {
+  margin: 1rem 0 0;
+  text-align: center;
+}
+
+.p8-ledger__scroll-note,
+.p8-flow__scroll-note { display: none; }
+
+.p8-flow {
+  margin: 2.4rem 0 3.2rem;
+  padding: 1.65rem 0 1.3rem;
+  border-top: 1px solid #d4dfcf;
+  border-bottom: 1px solid #d4dfcf;
+  font-family: var(--rk-font-body, "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
+}
+
+.p8-flow__heading {
+  max-width: 58rem;
+  margin: 0 auto 1.1rem;
+  text-align: center;
+}
+
+.p8-flow__heading span {
+  color: #183b39;
+  font-size: 1.24rem;
+}
+
+.p8-flow__heading p {
+  margin: .4rem 0 0;
+  color: #586d66;
+  font-size: .94rem;
+  line-height: 1.7;
+}
+
+.p8-flow__scroll {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: #a9bda9 transparent;
+}
+
+.p8-flow svg {
+  display: block;
+  width: 100%;
+  min-width: 1000px;
+  height: auto;
+  overflow: visible;
+  color: #234447;
+  font-family: var(--rk-font-body, "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
+  font-weight: 400;
+}
+
+.p8-flow svg text { font-weight: 400; }
+
+.p8-flow__lane-label {
+  fill: #60756b;
+  font-size: 14px;
+  letter-spacing: .03em;
+}
+
+.p8-flow__node rect { stroke-width: 1.15; }
+
+.p8-flow__node--shared rect {
+  fill: #f6f8f2;
+  stroke: #b5c5b1;
+}
+
+.p8-flow__node--prompt rect {
+  fill: #f2edf6;
+  stroke: #c7b5d5;
+}
+
+.p8-flow__node--frozen rect {
+  fill: #edf3f5;
+  stroke: #aabfc8;
+}
+
+.p8-flow__main {
+  fill: #214343;
+  font-size: 15px;
+}
+
+.p8-flow__sub {
+  fill: #647971;
+  font-size: 12.5px;
+}
+
+.p8-flow__edge {
+  fill: none;
+  stroke-width: 1.6;
+}
+
+.p8-flow__edge--shared { stroke: #6f9880; marker-end: url(#p8-flow-arrow-shared); }
+.p8-flow__edge--branch { stroke: #91a99a; marker-end: url(#p8-flow-arrow-branch); }
+.p8-flow__edge--train { stroke: #668b72; marker-end: url(#p8-flow-arrow-train); }
+.p8-flow__edge--infer { stroke: #789baa; marker-end: url(#p8-flow-arrow-infer); }
+
+.p8-flow__branch-title {
+  fill: #315e47;
+  font-size: 15px;
+}
+
+.p8-flow__node--train rect {
+  fill: #f0f5ec;
+  stroke: #b3c5ad;
+}
+
+.p8-flow__node--train-write rect {
+  fill: #e6eee0;
+  stroke: #819e7e;
+}
+
+.p8-flow__node--infer rect {
+  fill: #f0f4f5;
+  stroke: #bdcbd0;
+}
+
+.p8-flow__node--infer-result rect {
+  fill: #e7eff1;
+  stroke: #91abb4;
+}
+
+.p8-flow__read-rule {
+  fill: none;
+  stroke: #8ca7ae;
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.p8-flow__read-title {
+  fill: #436c77;
+  font-size: 17px;
+}
+
+.p8-flow__foot {
+  fill: #587563;
+  font-size: 13px;
+}
+
+.p8-flow figcaption {
+  margin: 1rem 0 0;
+  color: #586d66;
+  font-size: .9rem;
+  line-height: 1.65;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .p8-ledger,
+  .p8-flow { margin-block: 2.35rem; }
+  .p8-ledger { padding-block: 1.45rem; }
+  .p8-ledger__intro { text-align: left; }
+  .p8-ledger__scroll,
+  .p8-flow__scroll { margin-inline: -.35rem; width: calc(100% + .7rem); }
+  .p8-ledger__scroll-note,
+  .p8-flow__scroll-note { display: block; margin: 5px 0 0; color: #586d66; font-size: 12px; line-height: 1.5; text-align: center; }
+  .p8-flow { padding-block: 1.35rem; }
+  .p8-flow__heading { text-align: left; }
+}
