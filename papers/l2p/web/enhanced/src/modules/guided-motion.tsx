@@ -30,11 +30,11 @@ export function MotionTrace({ curve, progress, color, opacity = 1 }: {
     <path d={`M${a.x} ${a.y} C${b.x} ${b.y},${c.x} ${c.y},${d.x} ${d.y}`}
       stroke={color} fill="none" opacity=".24" />
     {Array.from({ length: 10 }, (_, i) => {
-      const t = progress * 1.24 - i * .024;
+      const t = progress - i * .024;
       if (t <= 0 || t >= 1) return null;
       const point = curvePosition(curve, t);
       return <circle key={i} cx={point.x} cy={point.y} r={i === 0 ? 3 : 1.9} fill={color}
-        opacity={Math.min(t / .07, (1 - t) / .05, 1) * (1 - i / 10)} />;
+        opacity={Math.min(t / .07, (1 - progress) / .075, 1) * (1 - i / 10)} />;
     })}
   </g>;
 }

@@ -1,32 +1,21 @@
 
-.p7-equation { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 36px; margin: 16px 0 22px; font-size: 21px; }
-.p7-equation math { max-width: 100%; }
-.lesson-figure.p7-batch-figure { max-width: 1050px; margin-inline: auto; overflow: clip; }
-.p7-control-dock { padding: 12px 18px 0; border-bottom: 1px solid var(--rk-line); }
-.p7-motion-stops { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
-.p7-scene-scroll { overflow-x: auto; background: #fcfdfb; }
-.p7-scene { display: block; width: 100%; min-width: 760px; }
-.p7-scene text, .p7-key-study svg text { font-size: 15px; fill: #253a31; }
-.p7-scene .p7-strong { font-weight: 750; }
-.p7-scene .p7-cls { fill: #664788; font-weight: 700; }
-.p7-scene .p7-match { fill: #23675d; font-weight: 700; }
-.p7-scene .p7-limit { fill: #815b26; font-size: 14px; }
-.p7-scene .p7-receipt { fill: white; font-weight: 700; }
-.p7-slots { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--rk-line); padding: 12px; }
-.p7-slots > strong { margin-inline-end: 7px; font-size: 14px; }
-.p7-slots .lesson-choice { padding: 4px 8px; min-width: 45px; font-size: 14px; }
+.p7-scene { display: block; width: 100%; min-width: 690px; }
+.p7-scene text, .p7-key-study svg text { font-size: 15px; fill: #254335; }
+.p7-scene .p7-label { font-weight: 700; }
+.p7-scene .p7-muted { fill: #506759; font-size: 13px; }
+.p7-scene .p7-loss-label { font-size: 14px; font-weight: 650; }
+.p7-scene .p7-mark { font-size: 12.5px; font-weight: 750; }
+.p7-scene .p7-sum { fill: white; }
+.p7-rule { stroke: var(--motion-line); fill: none; }
+.p7-slots { display: flex; justify-content: center; align-items: center; gap: 5px; flex-wrap: wrap; padding: 12px 0 0; }
+.p7-slots > strong { margin-inline-end: 5px; font-size: 14px; }
+.p7-slots .lesson-choice { padding: 3px 7px; min-width: 39px; font-size: 14px; }
 .p7-slots .lesson-choice span { display: block; color: var(--rk-muted); font-size: 13px; line-height: 1.15; }
-.p7-batch-figure figcaption { color: var(--rk-ink); }
-.p7-key-study { border-block: 1px solid var(--rk-line-strong); padding: 14px 18px; max-width: 910px; }
-.p7-key-study summary { cursor: pointer; color: var(--rk-accent-strong); font-weight: 650; }
-.p7-key-study-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 32%); align-items: center; gap: 12px 24px; }
-.p7-key-study-body svg { width: 100%; max-width: 295px; }
-@media (max-width: 640px) {
-  .p7-equation { font-size: 18px; }
-  .p7-key-study-body { grid-template-columns: 1fr; }
-}
+.p7-key-study { box-sizing: border-box; width: min(100%, 850px); margin: 0 auto; padding: 13px clamp(12px, 2.4vw, 26px); border-block: 1px solid var(--rk-line-strong); }
+.p7-key-study summary { width: fit-content; margin-inline: auto; cursor: pointer; color: var(--rk-accent-strong); font-weight: 650; }
+.p7-key-study-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 32%); align-items: center; gap: 12px 23px; margin: 12px 0 0; }
+.p7-key-study-body svg { width: min(100%, 260px); justify-self: center; background: #f2f5ed; border: 1px solid var(--rk-line); border-radius: 8px; }
 .teaching-module:has(.p7-batch-figure) { min-width: 0; }
-.p7-pan-hint { display: none; }
-@media (max-width: 810px) {
-  .p7-pan-hint { display: block; padding: 0 0 9px; text-align: center; color: var(--rk-muted); font-size: 14px; }
+@media (max-width: 640px) {
+  .p7-key-study-body { grid-template-columns: 1fr; }
 }

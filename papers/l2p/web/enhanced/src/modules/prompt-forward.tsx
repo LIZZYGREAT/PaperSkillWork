@@ -6,7 +6,7 @@ import {
   P6_IMAGE_CLS_SEQUENCE_INDEX, P6_LAST_PATCH_SEQUENCE_INDEX, P6_PROMPT_TOKEN_COUNT,
   P6_PROMPT_TOKEN_MAP, P6_SELECTED_PROMPT_INDICES, P6_SEQUENCE_LENGTH,
 } from "./prompt-forward-data";
-import { arrive, blend, curvePosition, elapsed, MotionTrace, type MotionCurve } from "./guided-motion";
+import { arrive, blend, curvePosition, MotionTrace, type MotionCurve } from "./guided-motion";
 import "./guided-motion.css";
 import "./prompt-forward.css";
 
@@ -103,7 +103,7 @@ function ForwardScene({ time }: { time: number }) {
       <text x="99" y="312" className="p6-label">AvgPool</text>
       <text x="170" y="312">逐维相加 ÷ {P6_PROMPT_TOKEN_COUNT}</text>
     </g>
-    <MotionTrace curve={flow} progress={elapsed(time, 10150, 11850)} color={leaf} opacity={arrive(time, 9880, 10270)} />
+    <MotionTrace curve={flow} progress={classify} color={leaf} opacity={arrive(time, 9880, 10270)} />
     <g transform={`translate(${vector.x} ${poolY})`} opacity={pooled}>
       <rect x="-23" y="-12" width="46" height="24" rx="4" fill="#c4d8bd" stroke={leaf} />
       <path d="M-15 -4h9m-9 4h6m-6 4h9" stroke={leaf} />
