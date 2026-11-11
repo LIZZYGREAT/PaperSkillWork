@@ -553,3 +553,11 @@ SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules�
 独立 Playwright 检查验证 1440×900、1920×1080、390×844 均无页面级横向溢出，显示公式与画布中心误差小于 3px。逐段采样验证对象确实经过至少 8 个不同中间位置，另实测完整播放、分段播放、暂停、拖动和重播。P7 Key 端点在起点、中间态和终点单调移动。实际截图已检查。 `FULLSCREEN_LAYOUT=PASS`，`FULLSCREEN_REAL=NOT_RUN`（固定无头视口），`HUMAN_ACCEPTANCE=PENDING`。
 
 浏览器报告和复核截图保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-motion-review`。最终报告编号为 `run-2026-11-11T12-59-43-282Z`。本机预览 `http://127.0.0.1:4178/?page=p6` 返回 200，并引用最终构建资源 `index-CqDoJY9D.js`。
+
+### P6–P8 动画宽度与字体复修（2026-11-11）
+
+去掉 P6–P8 动画的 940px 上限。P6 的两条调用对照、P7 的 Key 更新插图和三页主画布沿正文左右边缘对齐。P6 缩紧画布内部两侧留白，Key 和 Prompt 编号用数学字体和下标，和对应的 Token 组对正。图内说明使用适合中英混排的无衬线字体，控件统一字号并通过字重区分选中态。宽屏图内字号随 SVG 缩放补偿。
+
+Edge 测量三页画布与正文左右边缘完全一致，1440×900 时宽度 1240px，1920×1080 时宽度 1300px。另检查 1536×864（DPR 1.25）和 390×844，无页面级横向溢出。桌面图内主要标签实测约 17–18px。关键状态拖动、Key/Prompt 位置与排版截图见 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-full-width`。
+
+`SOURCE_BUILD=PASS`（`npm.cmd run build`，退出 0，74 模块）。本地上游语法与输出校验器均退出 0。 `SUBPATH_ASSETS=PASS`，Visual QA 在生产子路径下通过 P6–P8 共 18 个状态。原始报告编号为 `run-2026-11-11T13-17-15-449Z`。 `FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。

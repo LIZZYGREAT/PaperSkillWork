@@ -11,7 +11,13 @@
   --motion-blue-wash: #dce9ed;
   --motion-ochre: #775023;
   --motion-ochre-wash: #f0e2c9;
-  width: min(100%, 940px);
+  --motion-font: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  /* SVG labels use viewBox units, so reduce their size as the canvas scales up. */
+  --motion-svg-label: clamp(11px, calc(20px - .66cqw), 16px);
+  --motion-svg-detail: calc(var(--motion-svg-label) - 1px);
+  width: 100%;
+  font-family: var(--motion-font);
+  font-variant-numeric: tabular-nums;
   margin: 24px auto 34px;
   border: 0;
   border-radius: 0;
@@ -25,6 +31,14 @@
   padding: 0 0 12px;
 }
 .guided-motion .motion-dock .playback-controls { padding: 0; }
+.guided-motion .motion-dock .lesson-choice,
+.guided-motion .motion-dock .text-button { font-size: 14px; font-weight: 400; }
+.guided-motion .motion-dock .lesson-choice[aria-pressed="true"] { font-weight: 600; }
+.guided-motion .motion-dock input[type="range"]:focus-visible {
+  outline: 2px solid var(--rk-focus);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
 .guided-motion .motion-stops {
   display: flex;
   flex-wrap: wrap;
@@ -32,6 +46,7 @@
   gap: 5px;
 }
 .guided-motion .motion-window {
+  container-type: inline-size;
   overflow-x: auto;
   border: 1px solid var(--rk-line);
   border-radius: 10px;

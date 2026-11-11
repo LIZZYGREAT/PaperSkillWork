@@ -38,9 +38,9 @@
 .p8-process { overflow-x: auto; }
 .p8-process-scene { display: block; width: 100%; min-width: 650px; }
 .p8-path-guide { stroke: var(--motion-line); stroke-dasharray: 3 3; }
-.p8-path-label { fill: var(--motion-ink); font-size: 15px; font-weight: 700; }
-.p8-path-data { fill: var(--motion-muted); font-size: 13px; }
-.p8-sample-letter { fill: #fff; font-size: 10px; font-weight: 750; }
+.p8-path-label { fill: var(--motion-ink); font-size: var(--motion-svg-label); font-weight: 650; }
+.p8-path-data { fill: var(--motion-muted); font-size: var(--motion-svg-detail); }
+.p8-sample-letter { fill: #fff; font-size: 10px; font-weight: 650; }
 .rk-reading .p8-example-note { width: min(100%, 940px); margin-inline: auto; color: var(--rk-muted); text-align: center; }
 .p8-pseudocode details { width: min(100%, 850px); margin-inline: auto; padding: 11px 0; border-top: 1px solid var(--rk-line-strong); }
 .p8-pseudocode summary { width: fit-content; margin-inline: auto; cursor: pointer; color: var(--rk-accent-strong); font-weight: 650; }

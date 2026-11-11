@@ -38,14 +38,13 @@ function ForwardScene({ time }: { time: number }) {
   const encoderFocus = arrive(time, 3160, 3640) * (1 - arrive(time, 5370, 5930));
   const shelf = 1 - .67 * arrive(time, 2100, 3080);
 
-  return <svg className="p6-scene" viewBox="0 0 860 344" role="img"
+  return <svg className="p6-scene" viewBox="64 0 814 344" role="img"
     aria-label="追踪选中的 Prompt Token 及图像 Token，经冻结编码器后仅汇聚 Prompt 输出。">
     <g opacity={shelf}>
       <text x="99" y="28" className="p6-label">池中配对 · Query A</text>
-      {P6_SELECTED_PROMPT_INDICES.map((id, i) => <g key={id} transform={`translate(${111 + i * 88} 48)`}>
-        <path d="M0 0l5-5 5 5-5 5z" fill={leaf} />
-        <text x="15" y="5">k{id}</text>
-      </g>)}
+      {P6_SELECTED_PROMPT_INDICES.map((id, i) => <text key={id} x={130 + i * 88} y="53" textAnchor="middle" className="p6-symbol">
+        <tspan className="p6-symbol-letter">k</tspan><tspan className="p6-symbol-index" dy=".24em">{id}</tspan>
+      </text>)}
       <text x="610" y="28" className="p6-label">图像嵌入 xₑ</text>
       <text x="610" y="48">[CLS] + {config.imageLength - 1} 个 Patch</text>
     </g>
@@ -77,8 +76,10 @@ function ForwardScene({ time }: { time: number }) {
         <rect x={x} y={y - 9} width={blend(7, 10, join)} height="18" rx="2"
           fill="#b8cda9" stroke="#6f9475" opacity={1 - .54 * dispatch} />
         <path d={`M${x + 2} ${y - 3}h6m-6 4h4m-4 4h5`} stroke={leaf} opacity={context * (1 - .62 * dispatch)} />
-        {token === 2 && <text x={x + 5} y={y + blend(26, -14, encode)} textAnchor="middle" fill={leaf}
-          opacity={1 - .86 * encoderFocus}>P{promptIndex}</text>}
+        {token === 2 && <text x={x + blend(3.5, 5, join)} y={y + blend(26, -14, encode)} textAnchor="middle"
+          className="p6-symbol" opacity={1 - .86 * encoderFocus}>
+          <tspan className="p6-symbol-letter">P</tspan><tspan className="p6-symbol-index" dy=".24em">{promptIndex}</tspan>
+        </text>}
         <rect data-read-position={sequenceIndex} x={contribution.x} y={contribution.y - 8} width="9" height="16" rx="2"
           fill="#a4c0a3" stroke={leaf} opacity={read * arrive(dispatch, 0, .15) * (1 - pooled)} />
       </g>;
