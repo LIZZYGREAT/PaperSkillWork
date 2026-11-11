@@ -217,6 +217,13 @@ try {
       }
       report.results.push({ page: index, ...metrics, status: 'PASS' });
     }
+    if (!mobileOnly) {
+      await page.goto(`${baseUrl}?page=p3`);
+      for (const chapter of ["p4", "p5", "p6"]) {
+        await page.getByRole('button', { name: /^下一页/ }).click();
+        assert.equal(await page.locator('.lesson-copy').getAttribute('data-lesson-page'), chapter);
+      }
+    }
     assert.deepEqual(errors, []);
     await page.close();
   }

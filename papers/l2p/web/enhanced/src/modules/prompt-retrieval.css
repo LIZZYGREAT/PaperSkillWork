@@ -58,6 +58,7 @@
 .p5-lesson .figure-top { border-start-start-radius: inherit; border-start-end-radius: inherit; }
 .p5-lesson .figure-body { padding-block: 15px 18px; }
 .p5-lesson .playback-controls { justify-content: start; padding: 0; }
+.p5-lesson .playback-controls > .lesson-choice { min-inline-size: 78px; }
 .p5-lesson .playback-controls input { width: clamp(100px, 13vw, 180px); }
 .p5-compare-grid { display: grid; grid-template-columns: minmax(0, 332px) minmax(0, 1fr); align-items: center; gap: 12px clamp(16px, 4vw, 54px); }
 .p5-vector-space { display: block; width: 100%; height: auto; }
@@ -114,6 +115,7 @@
   padding: 0 2px 5px;
   border-bottom: 3px solid var(--rk-line);
   font-size: 15px;
+  line-height: 1.25;
   color: var(--p5-key);
   font-variant-numeric: tabular-nums;
 }

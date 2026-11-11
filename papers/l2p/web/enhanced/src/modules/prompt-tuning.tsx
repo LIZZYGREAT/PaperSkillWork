@@ -176,7 +176,7 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>把可学习参数放在输入端</h3>
-      <p>从图像得到的 Token 随图像改变。<span className="lesson-key">Prompt 自己是一组可训练的输入向量</span>，同一组参数可以与不同图像拼接。每个 Prompt Token 的宽度与图像 Token 相同，因此它们能一起参与 P3 的注意力计算。</p>
+      <p>从图像得到的 Token 随图像改变。<span className="lesson-key">Prompt 自己是一组可训练的输入向量</span>，同一组参数可以与不同图像拼接。每个 <Term id="prompt-token">Prompt Token</Term> 的宽度与图像 Token 相同，因此它们能一起参与 P3 的注意力计算。</p>
       <div className="p4-input-equation">
         <math><mi>P</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>L</mi><mi>p</mi></msub><mo>×</mo><mi>D</mi></mrow></msup></math>
         <math><msub><mi>x</mi><mi>p</mi></msub><mo>=</mo><mo>[</mo><mi>P</mi><mo>;</mo><msub><mi>x</mi><mi>e</mi></msub><mo>]</mo></math>
@@ -205,7 +205,7 @@ export function PromptTuning() {
         <p className="p4-observation" aria-live="polite">{stops[phase].hint}</p>
         <TrainingStage position={playback.position} phase={phase} />
       </div>
-      <figcaption>实线向右表示前向依赖。暖色虚线向左表示沿依赖回传梯度。</figcaption>
+      <figcaption>实线沿前向依赖展开。暖色虚线沿同一条路径反向回传梯度。</figcaption>
     </figure>
 
     <section className="explain-section">
@@ -224,8 +224,7 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>下一批任务还要共用这组 Prompt 吗？</h3>
-      <p>这一轮改写对当前标签有利。若任务 B 继续更新同一组 Prompt，任务 A 的输入也会读到改写后的值，原有表示可能随之变化。P5 将用一个 <Term id="prompt-pool">Prompt 池</Term>提供多组候选，再让每张图像自己决定取哪几组。</p>
+      <p>这一轮改写对当前标签有利。若任务 B 继续更新同一组 Prompt，任务 A 的输入也会读到改写后的值，原有表示可能随之变化。P5 将用一个 Prompt 池提供多组候选，再让每张图像自己决定取哪几组。</p>
     </section>
   </>;
 }
-

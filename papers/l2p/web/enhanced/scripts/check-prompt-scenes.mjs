@@ -51,6 +51,15 @@ export async function checkP4(page, output, width) {
   const promptValues = () => prompt.locator("div > span:last-child").allTextContents();
   const original = toy.prompt.flat().map(value => value.toFixed(3));
   const revised = trace.updatedPrompt.flat().map(value => value.toFixed(3));
+  const attached = await stage.locator(".p4-edge").evaluateAll(edges => edges.every(edge => {
+    const track = edge.getBoundingClientRect();
+    const before = edge.previousElementSibling.getBoundingClientRect();
+    const after = edge.nextElementSibling.getBoundingClientRect();
+    const middle = (track.top + track.bottom) / 2;
+    return Math.abs(track.left - before.right) <= 1 && Math.abs(track.right - after.left) <= 1
+      && [before, after].every(node => middle > node.top && middle < node.bottom);
+  }));
+  assert(attached, "Training arrows must connect adjacent node edges");
 
   for (const [index, label] of ["input", "forward", "loss", "backward", "write", "rerun"].entries()) {
     await figure.locator(".p4-phase-list button").nth(index).click();
@@ -67,6 +76,7 @@ export async function checkP4(page, output, width) {
     }
   }
   assert.deepEqual(await promptValues(), revised);
+  assert.equal(await stage.locator(".p4-loss .p4-value").first().innerText(), trace.updatedClassifierBias[1].toFixed(3));
   assert.equal(await stage.locator(".p4-loss-value").innerText(), trace.updated.loss.toFixed(3));
   assert.equal(await stage.getAttribute("data-updates"), "1");
   const traceDetails = page.locator(".p4-trace-details");
@@ -88,6 +98,10 @@ export async function checkP4(page, output, width) {
   await page.waitForFunction(() => document.querySelector(".p4-stage").dataset.phase === "0");
   await figure.getByRole("button", { name: "暂停", exact: true }).click();
   assert.deepEqual(await promptValues(), original);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await figure.getByRole("button", { name: "播放过程" }).click();
+  assert.equal(await stage.getAttribute("data-updates"), "1");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
 }
 
 export async function checkP5(page, output, width) {
@@ -172,4 +186,16 @@ export async function checkP5(page, output, width) {
   await page.getByRole("button", { name: /查询 A/ }).click();
   assert.equal(await readRange.inputValue(), "0");
   assert.equal(await shelf.locator("[data-copy]").count(), 0);
+  await compare.evaluate(node => node.scrollIntoView({ block: "center", behavior: "instant" }));
+  await compare.getByRole("button", { name: "播放过程", exact: true }).click();
+  await page.waitForFunction(() => document.querySelector(".p5-compare-grid")?.dataset.computed === "1");
+  await compare.getByRole("button", { name: "暂停", exact: true }).click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await retrieval.getByRole("button", { name: "播放过程" }).click();
+  assert.deepEqual(await order(shelf.locator("[data-arrived='true']"), "data-copy"), buildSelectionSnapshot("A").selectedKeyIndices);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const details = page.locator(".p5-score-details");
+  await details.locator("summary").click();
+  await checkLayout(details, "math, th, td");
+  await details.locator("summary").click();
 }

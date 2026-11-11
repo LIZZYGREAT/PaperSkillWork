@@ -611,3 +611,13 @@ P6 重新分配图内横向空间，编码轨道、锁和标题组合、输入�
 `SOURCE_BUILD=PASS`：`npm.cmd run build`，TypeScript + Vite 6.4.3，80 modules。当前 PaperSkill 官方上游检查器运行 `syntax-check.js --require-parser` 与 `validate-output.js` 均 `PASS`：43 个源文件解析通过，9 个章节与组件注册完整。Edge 157.0.4341.46 的 Visual QA 对 P6–P8 27 个状态分别在 390×844、1440×900、1920×1080 捕获，共 81 个状态全部 `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`，无溢出、基准或浏览器错误。正文 17px 和图内 400 字重的断言均通过。人工查看了 P6 桌面、P7 手机和 P8 桌面代表截图。报告编号 `run-2026-11-11T16-08-32-065Z`，报告及关键截图副本位于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/`。
 
 全站 `npm run check:reading` 仍停在进入 P6 之前的 P4：既有诊断说明段实测 14px，而通用探针要求 17px；本轮不更改 P4。针对 P6–P8 的 17px 与图内字重断言由上述 81 状态检查单独完成。此次新增图形的最新部署子路径浏览器检查未能运行；此前子路径 PASS 报告早于本轮 P8 辅助图，故不沿用为本轮结果。`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
+
+## P4–P5 教学与核心动画复修（2026-11-12）
+
+P4 从 P3 的固定运算、可变输入切入。主场景由正常文档流中的输入、冻结计算、读出和分类节点组成，连接线由相邻网格轨道对齐，反传沿同一依赖关系逆向展开。Prompt 分量、分类头偏置、Attention 权重、读出和损失均来自 `P4_TRAINING_TRACE`。写回过渡对应一次 SGD。删除了绝对定位大图、淡化标签和重复读出图，以第一维均值算例和折叠 Trace 保留验证线索。
+
+P5 先说明图像生成 Query 的理由，再用对照图拆解同槽位的 Key 和 Prompt。旧配对图在 1440px 基线实测宽 700px，左缘与 1240px 正文区同起点，旧旋转标记没有内侧空间。当前分支的基线未复现大范围裁切。新配对图采用同一边界和内边距契约，可收缩网格在窄屏下按阅读顺序堆叠。取消黏性控制和旧工作台，将角度扫描、候选移位、按索引读取与交集对照交给各自的局部场景。排序中给移动候选留出轨道，读取中给副本留出独立路径。A 选择 1、2、10、3、9，B 选择 4、5、3、6、2，两者共享 2、3。P6 沿用 A 的选择。
+
+图形参考为 [3Blue1Brown 的 Attention 分步可视化](https://www.3blue1brown.com/lessons/attention/)、[GeoGebra 的二维向量比较](https://www.geogebra.org/m/J86FP5j3)、[VisuAlgo 的排序移动](https://visualgo.net/en/sorting)和 [L2P 原论文图 2](https://openaccess.thecvf.com/content/CVPR2022/papers/Wang_Learning_To_Prompt_for_Continual_Learning_CVPR_2022_paper.pdf)。图形由教程的教学数据和既有图像素材绘制。
+
+两档桌面视口逐项复核 P4 初态、前向、损失、反传、写回中和同图复算，以及 P5 配对、A/B 单项距离、扫描中、排序中、排名、读取中、A/B 读出与交集。截图证据为 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1cb72-320b-7d10-a686-fcad4d0d7be6/l2p-evidence` 中的原始代表图及状态总览。专项脚本覆盖 17px 正文与 MathML、边界与箭头锚点、P4 一次更新、P5 候选与读出身份、暂停、重播、拖动、减少动态效果和 P3→P6 导航。390×844 补查本次改动涉及的纵向重排及公式。具体命令与状态见 `audit/final-check.md` 的本轮复核记录。

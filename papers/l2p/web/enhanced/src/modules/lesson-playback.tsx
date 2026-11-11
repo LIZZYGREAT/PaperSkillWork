@@ -11,7 +11,8 @@ export function useLessonPlayback(duration: number) {
     let frame = 0;
     let previous = performance.now();
     function tick(now: number) {
-      const elapsed = now - previous;
+      // The first frame can have been timestamped before this effect started.
+      const elapsed = Math.max(0, now - previous);
       previous = now;
       setPosition(value => Math.min(value + elapsed, end));
       frame = requestAnimationFrame(tick);
