@@ -537,3 +537,19 @@ SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules�
 - 实查 1440×900 与 1920×1080 浏览器截图，覆盖初态、动作中间态、阶段交接和终态。完整播放、暂停后时间固定、回拖复位与重播均通过。1440×900 时主舞台完整处于固定顶栏下方，测得 P6 y=94–807、P7 y=139–761、P8 y=99–802。另测 390×844 触屏，根文档宽度 390px，P6/P7 图形在各自可横向滑动的区域内，P8 控件换行。
 - FULLSCREEN_LAYOUT=PASS。FULLSCREEN_REAL=NOT_RUN（使用无头 Edge 的固定视口）。HUMAN_ACCEPTANCE=PENDING。人工预览用 `npm.cmd run preview -- --host 127.0.0.1 --port 4178` 后访问 `http://127.0.0.1:4178/?page=p6` 至 `?page=p8`。
 - 证据目录为 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8`。保留修改前截图、两种桌面的关键视口/整页图、390px 复测图、各页播放断言及 `subpath-report.md` / `subpath-report.json`。首轮 P7 中间态定位到两个播放控件，限定为主图控件后复测通过。最终原始报告编号为 `run-2026-11-11T12-20-36-908Z`。
+
+### P6–P8 排版与连续动效复修（2026-11-11）
+
+按用户截图修订 P6 对照栏、P6/P7 陈列公式和 P7 Key 插图的对齐，移除 P6 被划掉的一维算例。三页使用和 P2/P3 一致的浅底、蓝、叶绿和赭色语义。控制区与画布分离并沿相同轴居中。阶段按钮从该段起点播放至终点，手动进度仍可暂停和来回拖动。
+
+- P6 `89fed0a` 沿同一组 Token 依次展开、拼接、穿过冻结层，保留图像输出位置。Prompt 的 25 个位置分批汇入池化，再用同一个向量对象进入分类器。
+- P7 `5fc2403` 将分类器、Prompt 和 Key 分成三行。A/B 标记先后抵达、合为 Σ、再向参数写回。轨迹尾迹跟随移动对象。Key 插图按同一步 SGD 的中间位置绘制端点、角度和距离。
+- P8 `26b13b8` 保留模型、槽位和版本轴。样本标记依次通过四段前向，训练信号回到批末写回区后点亮受影响的槽位，随后版本标记移向下一版。推断复用前向路径并收束到预测。
+
+`SOURCE_BUILD=PASS`。在 `paths.publish_source` 下运行 `npm.cmd run build`，退出 0，74 个模块。 `UPSTREAM_SYNTAX=PASS`、`UPSTREAM_OUTPUT=PASS`。对同一源码运行 `node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser` 及 `node ../PaperSkill/paper-skill/scripts/validate-output.js <publish_source>`，均退出 0。通过 GitHub API 复核官方 main `1b6e0998e23965dca126665c32669e9a130321b5`，两脚本 blob 与上一轮核验的 `2bcfa6f815054ee498574c51cef05f0c315b4298` 和 `9ec76b6974f262fca7b9611c4a485dd2275fe76c` 相同。
+
+`SUBPATH_ASSETS=PASS`。最终产物在 `/papers/learning_to_prompt_for_continual_learning/qa-preview/` 下运行 `node tools/visual-qa/cli.mjs --config <子路径配置>`（退出 0）。Edge 157.0.4341.46 共检查 64 个状态，含 P2/P3 对共享播放控件的回归和 P6–P8 的动作中间态。几何、样式和被引用资源检查通过。浏览器自动探测根目录 favicon 时仍有既有的 404。
+
+独立 Playwright 检查验证 1440×900、1920×1080、390×844 均无页面级横向溢出，显示公式与画布中心误差小于 3px。逐段采样验证对象确实经过至少 8 个不同中间位置，另实测完整播放、分段播放、暂停、拖动和重播。P7 Key 端点在起点、中间态和终点单调移动。实际截图已检查。 `FULLSCREEN_LAYOUT=PASS`，`FULLSCREEN_REAL=NOT_RUN`（固定无头视口），`HUMAN_ACCEPTANCE=PENDING`。
+
+浏览器报告和复核截图保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-motion-review`。最终报告编号为 `run-2026-11-11T12-59-43-282Z`。本机预览 `http://127.0.0.1:4178/?page=p6` 返回 200，并引用最终构建资源 `index-CqDoJY9D.js`。

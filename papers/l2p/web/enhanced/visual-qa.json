@@ -176,315 +176,54 @@
       "id": "p6",
       "path": "/?page=p6",
       "states": [
-        {
-          "id": "source",
-          "actions": []
-        },
-        {
-          "id": "assembly-midpoint",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p6-control-dock .motion-stops button:nth-child(1)"
-            },
-            {
-              "type": "click",
-              "selector": ".playback-controls button:has-text('播放过程')"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 1120
-            },
-            {
-              "type": "click",
-              "selector": ".playback-controls button:has-text('暂停')"
-            }
-          ]
-        },
-        {
-          "id": "assembled",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p6-control-dock .motion-stops button:nth-child(2)"
-            }
-          ]
-        },
-        {
-          "id": "encoder-midpoint",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p6-control-dock .motion-stops button:nth-child(2)"
-            },
-            {
-              "type": "click",
-              "selector": ".playback-controls button:has-text('播放过程')"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 1320
-            },
-            {
-              "type": "click",
-              "selector": ".playback-controls button:has-text('暂停')"
-            }
-          ]
-        },
-        {
-          "id": "pooling-midpoint",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p6-control-dock .motion-stops button:nth-child(3)"
-            },
-            {
-              "type": "click",
-              "selector": ".playback-controls button:has-text('播放过程')"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 2230
-            },
-            {
-              "type": "click",
-              "selector": ".playback-controls button:has-text('暂停')"
-            }
-          ]
-        },
-        {
-          "id": "pooled",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p6-control-dock .motion-stops button:nth-child(4)"
-            }
-          ]
-        },
-        {
-          "id": "class-logits",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p6-control-dock .motion-stops button:nth-child(5)"
-            }
-          ]
-        }
+        {"id":"source","actions":[]},
+        {"id":"assembly-midpoint","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":1900}]},
+        {"id":"assembled","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":3060}]},
+        {"id":"encoder-midpoint","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":4300}]},
+        {"id":"pooling-midpoint","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":7700}]},
+        {"id":"pooled","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":9700}]},
+        {"id":"classifier-midpoint","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":11100}]},
+        {"id":"class-logits","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":13600}]}
       ],
       "computedStyles": [
-        {
-          "selector": ".lesson-copy",
-          "property": "--lesson-body-size",
-          "equals": "17px"
-        }
+        { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" }
       ]
     },
     {
       "id": "p7",
       "path": "/?page=p7",
       "states": [
-        {
-          "id": "snapshot",
-          "actions": []
-        },
-        {
-          "id": "classification-middle",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p7-motion-stops button:nth-child(1)"
-            },
-            {
-              "type": "click",
-              "selector": ".p7-control-dock .playback-controls button:has-text('播放过程')"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 1200
-            },
-            {
-              "type": "click",
-              "selector": ".p7-control-dock .playback-controls button:has-text('暂停')"
-            }
-          ]
-        },
-        {
-          "id": "classification",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p7-motion-stops button:nth-child(2)"
-            }
-          ]
-        },
-        {
-          "id": "matching",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p7-motion-stops button:nth-child(3)"
-            }
-          ]
-        },
-        {
-          "id": "accumulation",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p7-motion-stops button:nth-child(4)"
-            }
-          ]
-        },
-        {
-          "id": "shared-slot-3",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p7-motion-stops button:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p7-slots [data-slot='3']"
-            }
-          ]
-        },
-        {
-          "id": "untouched-slot-7",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p7-motion-stops button:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p7-slots [data-slot='7']"
-            }
-          ]
-        },
-        {
-          "id": "writeback-middle",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p7-motion-stops button:nth-child(4)"
-            },
-            {
-              "type": "click",
-              "selector": ".p7-control-dock .playback-controls button:has-text('播放过程')"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 1500
-            },
-            {
-              "type": "click",
-              "selector": ".p7-control-dock .playback-controls button:has-text('暂停')"
-            }
-          ]
-        },
-        {
-          "id": "one-writeback",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p7-motion-stops button:nth-child(5)"
-            }
-          ]
-        }
+        {"id":"snapshot","actions":[]},
+        {"id":"classification-midpoint","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":2020}]},
+        {"id":"matching-midpoint","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":4650}]},
+        {"id":"batch-b-midpoint","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":7740}]},
+        {"id":"shared-slot-3","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":10300},{"type":"click","selector":".p7-slots [data-slot='3']"}]},
+        {"id":"untouched-slot-7","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":14300},{"type":"click","selector":".p7-slots [data-slot='7']"}]},
+        {"id":"merge-midpoint","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":11500}]},
+        {"id":"writeback-midpoint","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":12900}]},
+        {"id":"one-writeback","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":14300}]},
+        {"id":"key-angle-midpoint","actions":[{"type":"click","selector":".p7-key-study summary"},{"type":"fill","selector":".p7-key-study input[type='range']","value":1350}]}
       ],
       "computedStyles": [
-        {
-          "selector": ".lesson-copy",
-          "property": "--lesson-body-size",
-          "equals": "17px"
-        }
+        { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" }
       ]
     },
     {
       "id": "p8",
       "path": "/?page=p8",
       "states": [
-        {
-          "id": "initialization",
-          "actions": []
-        },
-        {
-          "id": "task1-batch1",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p8-stage-stops [data-run-event='1']"
-            }
-          ]
-        },
-        {
-          "id": "batch1-write-midpoint",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p8-stage-stops [data-run-event='2']"
-            },
-            {
-              "type": "click",
-              "selector": ".playback-controls button:has-text('播放过程')"
-            },
-            {
-              "type": "wait",
-              "milliseconds": 1050
-            },
-            {
-              "type": "click",
-              "selector": ".playback-controls button:has-text('暂停')"
-            }
-          ]
-        },
-        {
-          "id": "batch2-reads-version1",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p8-stage-stops [data-run-event='3']"
-            }
-          ]
-        },
-        {
-          "id": "cross-task-version2",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p8-stage-stops [data-run-event='5']"
-            }
-          ]
-        },
-        {
-          "id": "task2-reuses-pool",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p8-stage-stops [data-run-event='6']"
-            },
-            {
-              "type": "click",
-              "selector": ".p8-pool-slots [data-slot='3']"
-            }
-          ]
-        },
-        {
-          "id": "inference-version3",
-          "actions": [
-            {
-              "type": "click",
-              "selector": ".p8-stage-stops [data-run-event='8']"
-            }
-          ]
-        }
+        {"id":"initialization","actions":[]},
+        {"id":"task1-query-midpoint","actions":[{"type":"fill","selector":".p8-control-dock input[type='range']","value":3150}]},
+        {"id":"batch1-return","actions":[{"type":"fill","selector":".p8-control-dock input[type='range']","value":5410}]},
+        {"id":"batch1-write-midpoint","actions":[{"type":"fill","selector":".p8-control-dock input[type='range']","value":6260}]},
+        {"id":"batch2-reads-version1","actions":[{"type":"fill","selector":".p8-control-dock input[type='range']","value":9620}]},
+        {"id":"cross-task-version2","actions":[{"type":"fill","selector":".p8-control-dock input[type='range']","value":13400}]},
+        {"id":"task2-reuses-pool","actions":[{"type":"fill","selector":".p8-control-dock input[type='range']","value":17100},{"type":"click","selector":".p8-pool-slots [data-slot='3']"}]},
+        {"id":"inference-midpoint","actions":[{"type":"fill","selector":".p8-control-dock input[type='range']","value":21400}]},
+        {"id":"inference-version3","actions":[{"type":"fill","selector":".p8-control-dock input[type='range']","value":23900}]}
       ],
       "computedStyles": [
-        {
-          "selector": ".lesson-copy",
-          "property": "--lesson-body-size",
-          "equals": "17px"
-        }
+        { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" }
       ]
     },
     {
