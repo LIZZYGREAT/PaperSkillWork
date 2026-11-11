@@ -577,3 +577,13 @@ P6 重新分配图内横向空间，编码轨道、锁和标题组合、输入�
 三页动画图内的 SVG 文本、模型与池化标签、阶段按钮选中项、P7 槽位和 Key 局部图标题改用 400 字重。
 
 `npm.cmd run build`、本地 PaperSkill 的 `syntax-check.js --require-parser`、`validate-output.js` 均退出 0。浏览器实测上述图内元素字重为 400，检查部署子路径下 P6–P8 共 18 个动画状态，无资源或页面错误。已查看 P6、P7、P8 的最终截图。Visual QA 报告编号 `run-2026-11-11T14-40-17-505Z`，测量数据和截图存于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-regular-weights`。
+
+### P6–P8 教学卡片与辅助图增补（2026-11-11）
+
+在用户要求下，继续依照 P1–P3 的“主路径 + 局部解释卡”层级，给 P6–P8 补充主动画之外的静态导航图。图例文字维持常规字重；颜色沿用叶绿、冻结蓝、Prompt 淡紫与读出赭色。新增图形由教程本地实现，不复制论文配图（原图复用权未核实）。内容对照[原论文 CVPR 2022 版本](https://openaccess.thecvf.com/content/CVPR2022/html/Wang_Learning_To_Prompt_for_Continual_Learning_CVPR_2022_paper.html)的公式 (3)、(5) 和 Algorithm 1，以及[作者维护的 L2P 代码库](https://github.com/google-research/l2p)。不加与算法因果无关的甘特图或示例数据。
+
+#### P6 两次调用与序列形状卡片
+
+把此前一行概述改成两条顺序路径，分别显示“无 Prompt 的图像 → 冻结 ViT → [CLS] Query → Key 选集”与“所选 Prompt + 图像嵌入 → 同一冻结 ViT → Prompt 位置池化 → 分类器”。在维度说明处新增三张形状卡：池容量/当前选集、25 个 Prompt 位置与 197 个图像位置、扩展后的 `222 × 768` 序列。选集索引、Prompt 长度、池容量、图像位置数和特征宽度直接读取既有配置；没有用新造的训练结果或手写动画数值。
+
+`SOURCE_BUILD=PASS`：在 `paths.publish_source` 下运行 `npm.cmd run build`，TypeScript 与 Vite 6.4.3 构建退出 0，76 modules。P6 最终卡片版的专页浏览器检查通过本机 Edge 157.0.4341.46 完成：筛选现有 `visual-qa.json` 的 P6 状态，`node tools/visual-qa/cli.mjs --config <p6-cards-visual-qa.tmp.json>`，1440×900 与 1920×1080 两档 16 个截图状态全部通过，`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`；已查看 P6 初始页及检索/分类中间状态。此前完整配置一次覆盖 P1–P9 的 107 个状态，三个工具状态同为 PASS，P1–P3 回归与 P6 变更前的其余动画状态已实际查看。P2 原有图内文字有 3 个小于项目阈值的诊断警告；本次未修改范围之外的 P2。P6 最终版截图副本：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/P6-cards-1440.png`、`P6-cards-1920.png`。`FULLSCREEN_LAYOUT=PASS`（1920×1080 布局模拟）；`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。P6 单页 QA 报告编号 `run-2026-11-11T15-10-36-290Z`，最终三页合并后的 QA 会另行记录。
