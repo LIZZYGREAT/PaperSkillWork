@@ -7,6 +7,7 @@ import {
   distanceFromExampleKey, gradientSourcesForSlot, P7_BATCH_INDICES, P7_BATCH_SAMPLES,
   P7_COMMON_INDICES, P7_EXAMPLE_GRADIENT, P7_UNTOUCHED_INDICES,
 } from "./prompt-learning-data";
+import { P7GradientGraph } from "./p7-gradient-graph";
 import { arrive, blend, curvePosition, DiagramParameter, MotionTrace, type MotionCurve } from "./guided-motion";
 import "./guided-motion.css";
 import "./prompt-learning.css";
@@ -166,6 +167,7 @@ export function PromptLearning() {
         <math display="block"><mi>L</mi><mo>=</mo><Sub base="L" index="cls" /><mo>+</mo><mi>λ</mi><Sub base="L" index="match" /></math>
       </div>
     </section>
+    <P7GradientGraph />
     <section className="explain-section">
       <h3>两个样本先把贡献累积到同一份参数</h3>
       <p>Mini-batch 是一组共同完成一次更新的样本。下图中的 A、B 沿用 P5 的选集，前向和损失计算都从同一份 <math><Sub base="Θ" index="b" /></math> 读取参数。选集相交于 {P7_COMMON_INDICES.join("、")} 号槽位。观察这些槽位时，两份分类梯度会汇入同一个 Prompt，两份匹配梯度会汇入其配对 Key。</p>
