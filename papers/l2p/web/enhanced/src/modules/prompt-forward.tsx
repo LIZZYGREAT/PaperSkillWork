@@ -20,8 +20,19 @@ const stops = [
 const duration = 13600;
 const leaf = "#396746";
 const blue = "#315d73";
+const sceneWidth = 860;
+const sceneCenter = sceneWidth / 2;
+const railInset = 34;
+const railWidth = sceneWidth - 2 * railInset;
+const encoderLabelWidth = 228;
+const promptStart = 45;
+const patchWidth = 12;
+const lastPatchOffset = 247;
+const imageStart = sceneWidth - promptStart - lastPatchOffset - patchWidth;
+const patchOffsets = [65, 94, 123, lastPatchOffset];
 const poolY = 304;
-const rowX = (group: number, token: number) => 99 + group * 91 + token * 13;
+const sourceX = (group: number, token: number) => promptStart + group * 96 + token * 8.8;
+const rowX = (group: number, token: number) => promptStart + group * 99 + token * 13;
 
 function ForwardScene({ time }: { time: number }) {
   const encode = arrive(time, 3470, 5500);
@@ -31,45 +42,47 @@ function ForwardScene({ time }: { time: number }) {
   const classify = arrive(time, 10150, 11850);
   const rowY = blend(116, 220, encode);
   const imageJoin = arrive(time, 1810, 2920);
-  const imageX = blend(610, 580, imageJoin);
   const imageY = blend(72, rowY, imageJoin);
-  const flow: MotionCurve = [{x: 438, y: poolY}, {x: 486, y: poolY}, {x: 592, y: poolY}, {x: 641, y: poolY}];
+  const flow: MotionCurve = [{x: sceneCenter, y: poolY}, {x: 486, y: poolY}, {x: 592, y: poolY}, {x: 641, y: poolY}];
   const vector = curvePosition(flow, classify);
   const encoderFocus = arrive(time, 3160, 3640) * (1 - arrive(time, 5370, 5930));
   const shelf = 1 - .67 * arrive(time, 2100, 3080);
 
-  return <svg className="p6-scene" viewBox="64 0 814 344" role="img"
+  return <svg className="p6-scene" viewBox={`0 0 ${sceneWidth} 344`} role="img"
     aria-label="追踪选中的 Prompt Token 及图像 Token，经冻结编码器后仅汇聚 Prompt 输出。">
     <g opacity={shelf}>
-      <text x="99" y="28" className="p6-label">池中配对 · Query A</text>
-      {P6_SELECTED_PROMPT_INDICES.map((id, i) => <text key={id} x={130 + i * 88} y="53" textAnchor="middle" className="p6-symbol">
+      <text x={promptStart} y="28" className="p6-label">池中配对 · Query A</text>
+      {P6_SELECTED_PROMPT_INDICES.map((id, i) => <text key={id} x={sourceX(i, 2) + 3.5} y="53" textAnchor="middle" className="p6-symbol">
         <DiagramParameter symbol="k" index={id} />
       </text>)}
-      <text x="610" y="28" className="p6-label">图像嵌入 xₑ</text>
-      <text x="610" y="48">[CLS] + {config.imageLength - 1} 个 Patch</text>
+      <text x={imageStart} y="28" className="p6-label">图像嵌入 xₑ</text>
+      <text x={imageStart} y="48">[CLS] + {config.imageLength - 1} 个 Patch</text>
     </g>
 
     <g opacity={arrive(time, 810, 1870) * (1 - .7 * encode)}>
-      <path d="M95 132 H770" className="p6-guide" />
-      <text x="430" y="104" textAnchor="middle" opacity={arrive(time, 2610, 3080)}>
+      <path d={`M${railInset} 132h${railWidth}`} className="p6-guide" />
+      <text x={sceneCenter} y="104" textAnchor="middle" opacity={arrive(time, 2610, 3080)}>
         输入 xₚ · {P6_PROMPT_TOKEN_COUNT} + {config.imageLength} = {P6_SEQUENCE_LENGTH} 个位置
       </text>
     </g>
-    <rect x="93" y="145" width="681" height="43" rx="8" fill="#e6ede3" stroke="#acbeac" />
-    <rect x="93" y="145" width="681" height="43" rx="8" fill="#c8dcc9" opacity={.65 * encoderFocus} />
-    <path d="M105 158 H762 M105 177 H762" className="p6-guide" />
-    <g transform="translate(432 170)" opacity={1 - .76 * encoderFocus}>
-      <rect x="-101" y="-14" width="202" height="28" rx="5" fill="#edf3e9" />
-      <path d="M-89 -2v-4a3.5 3.5 0 0 1 7 0v4m-9 0h11v9h-11z" fill="none" stroke={leaf} />
-      <text x="6" y="5" textAnchor="middle" className="p6-label">冻结 Transformer · fᵣ</text>
-    </g>
+    <rect className="p6-encoder-rail" x={railInset} y="145" width={railWidth} height="43" rx="8" fill="#e6ede3" stroke="#acbeac" />
+    <rect x={railInset} y="145" width={railWidth} height="43" rx="8" fill="#c8dcc9" opacity={.65 * encoderFocus} />
+    <path d={`M${railInset + 12} 157h${railWidth - 24} M${railInset + 12} 176h${railWidth - 24}`} className="p6-guide" />
+    <foreignObject x={sceneCenter - encoderLabelWidth / 2} y="151" width={encoderLabelWidth} height="31" opacity={1 - .76 * encoderFocus}>
+      <div className="p6-encoder-label">
+        <svg viewBox="0 0 16 18" aria-hidden="true">
+          <path d="M4 7V5a4 4 0 0 1 8 0v2M2 7h12v9H2z" fill="none" stroke="currentColor" />
+        </svg>
+        <span>冻结 Transformer · <math><Sub base="f" index="r" /></math></span>
+      </div>
+    </foreignObject>
 
     {P6_PROMPT_TOKEN_MAP.map(({promptIndex, promptOrdinal: group, tokenIndex: token, sequenceIndex}) => {
       const join = arrive(time, 770 + group * 231 + token * 48, 1780 + group * 231 + token * 48);
-      const x = blend(109 + group * 88 + token * 8.8, rowX(group, token), join);
+      const x = blend(sourceX(group, token), rowX(group, token), join);
       const y = blend(78, rowY, join);
       const dispatch = arrive(time, 6640 + sequenceIndex * 32, 8300 + sequenceIndex * 32);
-      const endX = 425 + (sequenceIndex % 5) * 6;
+      const endX = sceneCenter - 16.5 + token * 6;
       const route: MotionCurve = [{x, y}, {x, y: 263}, {x: endX, y: 269}, {x: endX, y: poolY}];
       const contribution = curvePosition(route, dispatch);
       return <g key={sequenceIndex} data-position={sequenceIndex}>
@@ -84,25 +97,25 @@ function ForwardScene({ time }: { time: number }) {
           fill="#a4c0a3" stroke={leaf} opacity={read * arrive(dispatch, 0, .15) * (1 - pooled)} />
       </g>;
     })}
-    <g transform={`translate(${imageX} ${imageY})`} opacity={1 - .36 * read}>
+    <g transform={`translate(${imageStart} ${imageY})`} opacity={1 - .36 * read}>
       <rect y="-9" width="49" height="18" rx="3" fill="#dce9ed" stroke="#7e9da9" />
       <text x="24.5" y="4" textAnchor="middle" className="p6-token-label">[CLS]</text>
-      {[60, 79, 98, 168].map(offset => <g key={offset}>
-        <rect x={offset} y="-9" width="12" height="18" rx="2" fill="#abc7cf" stroke="#7e9da9" />
+      {patchOffsets.map(offset => <g key={offset}>
+        <rect x={offset} y="-9" width={patchWidth} height="18" rx="2" fill="#abc7cf" stroke="#7e9da9" />
         <path d={`M${offset + 3} -3h6m-6 4h4m-4 4h5`} stroke={blue} opacity={context} />
       </g>)}
-      <text x="134" y="4" textAnchor="middle">…</text>
+      <text x="188" y="4" textAnchor="middle">…</text>
     </g>
 
     <g opacity={arrive(time, 5430, 5790)}>
-      <path d="M96 259v5h425v-5 M576 259v5h187v-5" className="p6-guide" />
-      <path d="M96 259v5h425v-5" stroke={leaf} strokeWidth="2" fill="none" opacity={read} />
-      <text x="99" y="281" className="p6-label">H · Prompt 位置 0–{P6_PROMPT_TOKEN_COUNT - 1}</text>
-      <text x="670" y="281" textAnchor="middle">图像位置 {P6_IMAGE_CLS_SEQUENCE_INDEX}–{P6_LAST_PATCH_SEQUENCE_INDEX}</text>
+      <path d="M42 259v5h465v-5 M552 259v5h267v-5" className="p6-guide" />
+      <path d="M42 259v5h465v-5" stroke={leaf} strokeWidth="2" fill="none" opacity={read} />
+      <text x={promptStart} y="281" className="p6-label">H · Prompt 位置 0–{P6_PROMPT_TOKEN_COUNT - 1}</text>
+      <text x="686" y="281" textAnchor="middle">图像位置 {P6_IMAGE_CLS_SEQUENCE_INDEX}–{P6_LAST_PATCH_SEQUENCE_INDEX}</text>
     </g>
     <g opacity={read}>
-      <text x="99" y="312" className="p6-label">AvgPool</text>
-      <text x="170" y="312">逐维相加 ÷ {P6_PROMPT_TOKEN_COUNT}</text>
+      <text x={promptStart} y="312" className="p6-label">AvgPool</text>
+      <text x="117" y="312">逐维相加 ÷ {P6_PROMPT_TOKEN_COUNT}</text>
     </g>
     <MotionTrace curve={flow} progress={classify} color={leaf} opacity={arrive(time, 9880, 10270)} />
     <g transform={`translate(${vector.x} ${poolY})`} opacity={pooled}>
