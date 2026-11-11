@@ -1,347 +1,145 @@
-import { useId, useLayoutEffect, useRef } from "react";
+import { useId, useMemo, type CSSProperties } from "react";
 import { promptPoolConfig, type CandidateScore, type SelectionSnapshot } from "./prompt-retrieval-data";
 
-const cx = 244;
-const cy = 205;
-const vectorRadius = 137;
-const arcRadius = 46;
+const subscripts = "₀₁₂₃₄₅₆₇₈₉";
+export const formatSubscript = (index: number) => String(index).replace(/\d/g, digit => subscripts[Number(digit)]);
+export const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+const eased = (value: number) => value * value * (3 - 2 * value);
 
-function polarPoint(angleDegrees: number, radius: number) {
-  const angle = angleDegrees * Math.PI / 180;
-  return { x: cx + radius * Math.cos(angle), y: cy - radius * Math.sin(angle) };
-}
-
-function angleArc(candidate: CandidateScore, queryAngle: number) {
-  let delta = ((candidate.key.angleDegrees - queryAngle + 540) % 360) - 180;
-  if (delta === -180) delta = 180;
-  const start = polarPoint(queryAngle, arcRadius);
-  const end = polarPoint(queryAngle + delta, arcRadius);
-  const sweep = delta >= 0 ? 0 : 1;
-  return {
-    path: `M ${start.x} ${start.y} A ${arcRadius} ${arcRadius} 0 0 ${sweep} ${end.x} ${end.y}`,
-    label: polarPoint(queryAngle + delta / 2, arcRadius + 19),
-  };
-}
-
-function subscript(index: number) {
-  return String(index).replace(/\d/g, digit => "₀₁₂₃₄₅₆₇₈₉"[Number(digit)]);
-}
-
-function MathIndex({ base, index }: { base: string; index: number }) {
-  return <math><msub><mi>{base}</mi><mn>{index}</mn></msub></math>;
-}
-
-function TokenRow({ className = "" }: { className?: string }) {
-  return <span className={`p5-token-row ${className}`} aria-label="5 个 Prompt Token">
-    {Array.from({ length: promptPoolConfig.promptLength }, (_, offset) => <i key={offset} aria-hidden="true" />)}
+export function PromptTokens() {
+  return <span className="p5-token-strip" role="img" aria-label={promptPoolConfig.promptLength + " 个 Prompt Token"}>
+    {Array.from({ length: promptPoolConfig.promptLength }, (_, index) => <i key={index} />)}
   </span>;
 }
 
-export function RetrievalVectorSpace({
-  snapshot,
-  activeCandidateIndex,
-  approachingCandidateIndex,
-  ringAngleDegrees,
-  angleProgress,
-  selectedIndices,
-  phase,
-  onInspectKey,
-}: {
-  snapshot: SelectionSnapshot;
-  activeCandidateIndex: number | null;
-  approachingCandidateIndex: number | null;
-  ringAngleDegrees: number | null;
-  angleProgress: number;
-  selectedIndices: readonly number[];
-  phase: number;
-  onInspectKey: (index: number) => void;
+const center = 166;
+const circleRadius = 105;
+const point = (degrees: number, radius: number) => {
+  const angle = degrees * Math.PI / 180;
+  return [center + radius * Math.cos(angle), center - radius * Math.sin(angle)] as const;
+};
+
+export function VectorSpace({ snapshot, candidate, progress }: {
+  snapshot: SelectionSnapshot; candidate: CandidateScore; progress: number;
 }) {
-  const markerId = `p5-query-arrow-${useId().replace(/:/g, "")}`;
-  const beadGradientId = `${markerId}-bead`;
+  const marker = useId();
   const queryAngle = snapshot.query.angleDegrees;
-  const queryScreenLabel = snapshot.query.id;
-  const current = activeCandidateIndex === null ? undefined : snapshot.candidates.find(candidate => candidate.index === activeCandidateIndex);
-  const arc = current ? angleArc(current, queryAngle) : null;
-  const beadPoint = ringAngleDegrees === null ? null : polarPoint(ringAngleDegrees, vectorRadius);
-  const selected = new Set(phase >= 3 ? selectedIndices : []);
+  const keyAngle = candidate.key.angleDegrees;
+  const sweep = (keyAngle - queryAngle + 540) % 360 - 180;
+  const [qx, qy] = point(queryAngle, circleRadius - 2);
+  const [kx, ky] = point(keyAngle, circleRadius - 2);
+  const arcStart = point(queryAngle, 62);
+  const arcEnd = point(queryAngle + sweep * progress, 62);
 
-  return <section className="p5-vector-panel" aria-label="Query 与十个 Key 的二维单位向量示例">
-    <div className="p5-region-heading">
-      <h3>向量空间</h3>
-      <span>二维单位向量 · 比较方向夹角</span>
-    </div>
-    <svg className="p5-vector-space" viewBox="0 0 500 410" role="group" aria-labelledby={`${markerId}-title ${markerId}-desc`}>
-      <title id={`${markerId}-title`}>当前 Query 与十个固定 Key 的向量方向</title>
-      <desc id={`${markerId}-desc`}>单位圆仅用于解释余弦距离。播放时小球依次沿圆环移动到各 Key，停下后逐步画出与 Query 的夹角；选择一个 Key 可跳到该候选。</desc>
-      <defs>
-        <marker id={markerId} viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-          <path d="M 1.2 1.8 L 8.5 5 L 1.2 8.2 z" />
-        </marker>
-        <radialGradient id={beadGradientId} cx="34%" cy="28%">
-          <stop offset="0%" stopColor="#fff5d8" />
-          <stop offset="48%" stopColor="#efc36b" />
-          <stop offset="100%" stopColor="#bd7c25" />
-        </radialGradient>
-      </defs>
-      <circle className="p5-unit-circle" cx={cx} cy={cy} r={vectorRadius} />
-      <line className="p5-axis" x1={cx - vectorRadius - 14} y1={cy} x2={cx + vectorRadius + 14} y2={cy} />
-      <line className="p5-axis" x1={cx} y1={cy - vectorRadius - 14} x2={cx} y2={cy + vectorRadius + 14} />
-      <text className="p5-axis-label" x={cx + vectorRadius + 19} y={cy + 5}>x₁</text>
-      <text className="p5-axis-label" x={cx + 5} y={cy - vectorRadius - 20}>x₂</text>
-
-      {snapshot.candidates.map(candidate => {
-        const point = polarPoint(candidate.key.angleDegrees, vectorRadius);
-        const label = polarPoint(candidate.key.angleDegrees, vectorRadius + 25);
-        const isActive = candidate.index === activeCandidateIndex;
-        const isApproaching = candidate.index === approachingCandidateIndex;
-        const isSelected = selected.has(candidate.index);
-        const anchor = Math.cos(candidate.key.angleDegrees * Math.PI / 180) >= 0 ? "start" : "end";
-        const dy = Math.sin(candidate.key.angleDegrees * Math.PI / 180) > 0.78 ? 5 : -2;
-        return <g
-          key={candidate.index}
-          className={`p5-key-vector ${isActive ? "is-active" : ""} ${isApproaching ? "is-approaching" : ""} ${isSelected ? "is-selected" : ""}`}
-          role="button"
-          tabIndex={0}
-          aria-label={`查看 Key k${candidate.index}：夹角 ${candidate.thetaDegrees.toFixed(0)} 度，余弦距离 ${candidate.distance.toFixed(3)}`}
-          aria-pressed={isActive}
-          onClick={() => onInspectKey(candidate.index)}
-          onKeyDown={event => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              onInspectKey(candidate.index);
-            }
-          }}
-        >
-          <line className="p5-key-ray" x1={cx} y1={cy} x2={point.x} y2={point.y} />
-          <circle className="p5-key-point" cx={point.x} cy={point.y} r={isActive ? 7 : 5.5} />
-          <text className="p5-key-label" x={label.x} y={label.y + dy} textAnchor={anchor}>k{subscript(candidate.index)}</text>
-        </g>;
-      })}
-
-      {current && arc && <g className="p5-active-angle" aria-hidden="true">
-        <path d={arc.path} pathLength="1" strokeDasharray="1" strokeDashoffset={1 - angleProgress} />
-        <text x={arc.label.x} y={arc.label.y} style={{ opacity: Math.min(angleProgress * 1.8, 1) }}>θ</text>
-      </g>}
-
-      {beadPoint && phase <= 2 && <g className="p5-orbit-bead" aria-hidden="true">
-        <circle className="p5-orbit-bead-halo" cx={beadPoint.x} cy={beadPoint.y} r="10" />
-        <circle className="p5-orbit-bead-core" cx={beadPoint.x} cy={beadPoint.y} r="5.5" fill={`url(#${beadGradientId})`} />
-        <circle className="p5-orbit-bead-glint" cx={beadPoint.x - 1.6} cy={beadPoint.y - 1.8} r="1.5" />
-      </g>}
-
-      <g
-        className="p5-query-direction"
-        style={{ transform: `rotate(${-queryAngle}deg)`, transformOrigin: `${cx}px ${cy}px` }}
-      >
-        <line x1={cx} y1={cy} x2={cx + vectorRadius} y2={cy} markerEnd={`url(#${markerId})`} />
-        <circle cx={cx + vectorRadius} cy={cy} r="5.5" />
-        <g className="p5-query-label" style={{ transform: `rotate(${queryAngle}deg)` }}>
-          <rect x={cx + vectorRadius + 9} y={cy - 15} width="48" height="27" rx="7" />
-          <text x={cx + vectorRadius + 33} y={cy + 4} textAnchor="middle">q<tspan baselineShift="sub" fontSize="10">{queryScreenLabel}</tspan></text>
-        </g>
-      </g>
-      <circle className="p5-vector-origin" cx={cx} cy={cy} r="4" />
-    </svg>
-
-    {current && phase > 0 ? <div className="p5-distance-readout" aria-live="polite">
-      <div><strong>当前比较</strong><span>q<sub>{snapshot.query.id}</sub> ↔ k{subscript(current.index)}</span></div>
-      <div className={`p5-distance-steps ${angleProgress < 1 ? "is-building" : ""}`}>
-        {angleProgress < 1 ? <span>已到达节点，正在描出夹角 θ</span> : <>
-          <math><mi>θ</mi><mo>=</mo><mn>{current.thetaDegrees.toFixed(0)}</mn><mo>°</mo></math>
-          <math><mi>cos</mi><mi>θ</mi><mo>=</mo><mn>{current.cosineSimilarity.toFixed(6)}</mn></math>
-          <math><mi>γ</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>cos</mi><mi>θ</mi><mo>=</mo><mn>{current.distance.toFixed(6)}</mn><mo>≈</mo><mn>{current.distance.toFixed(3)}</mn></math>
-        </>}
-      </div>
-    </div> : <div className="p5-distance-readout is-pending">
-      <div><strong>距离从夹角得到</strong><span>播放或选择一个 Key，查看单项计算</span></div>
-      <math><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><mi>k</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mi>cos</mi><mi>θ</mi></math>
-    </div>}
-
-    <div className="p5-geometry-legend" aria-label="向量图例">
-      <span><i className="p5-legend-query" />Query q(x)</span>
-      <span><i className="p5-legend-key" />Key kⱼ</span>
-      <span><i className="p5-legend-orbit" />正在比较</span>
-      <span><i className="p5-legend-selected" />Top‑5 Key</span>
-    </div>
-    <p className="p5-vector-note">所有向量长度归一为 1；弧线标的是最小夹角 θ。余弦距离取自 1−cosθ，不是两端点之间的弦长。</p>
-  </section>;
+  return <svg className="p5-vector-space" viewBox="0 0 332 332" role="img"
+    aria-label={`Query ${snapshot.query.id} 与 Key ${candidate.index} 的二维向量夹角 ${candidate.thetaDegrees.toFixed(0)} 度`}>
+    <defs>
+      <marker id={marker + "-query"} viewBox="0 0 8 8" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+        <path className="p5-query-arrow" d="M0 0 L8 4 L0 8 Z" />
+      </marker>
+      <marker id={marker + "-key"} viewBox="0 0 8 8" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+        <path className="p5-key-arrow" d="M0 0 L8 4 L0 8 Z" />
+      </marker>
+    </defs>
+    <circle className="p5-vector-ring" cx={center} cy={center} r={circleRadius} />
+    <line className="p5-vector-axis" x1={center - circleRadius} y1={center} x2={center + circleRadius} y2={center} />
+    <line className="p5-vector-axis" x1={center} y1={center - circleRadius} x2={center} y2={center + circleRadius} />
+    <path className="p5-angle" d={`M ${arcStart.join(" ")} A 62 62 0 0 ${sweep < 0 ? 1 : 0} ${arcEnd.join(" ")}`} />
+    <line className="p5-query-vector" x1={center} y1={center} x2={qx} y2={qy} markerEnd={`url(#${marker}-query)`} />
+    <line className="p5-key-vector" x1={center} y1={center} x2={kx} y2={ky} markerEnd={`url(#${marker}-key)`} />
+    <circle cx={center} cy={center} r="3" className="p5-query-arrow" />
+    {snapshot.candidates.map(item => {
+      const [x, y] = point(item.key.angleDegrees, circleRadius);
+      const [tx, ty] = point(item.key.angleDegrees, 131);
+      return <g key={item.index} className="p5-ring-key" data-active={item.index === candidate.index}>
+        <circle cx={x} cy={y} r="4" />
+        <text x={tx} y={ty} textAnchor="middle" dominantBaseline="central">k{formatSubscript(item.index)}</text>
+      </g>;
+    })}
+  </svg>;
 }
 
-export function CandidateLedger({
-  snapshot,
-  activeCandidateIndex,
-  approachingCandidateIndex,
-  completedIndices,
-  phase,
-  onInspectKey,
-}: {
-  snapshot: SelectionSnapshot;
-  activeCandidateIndex: number | null;
-  approachingCandidateIndex: number | null;
-  completedIndices: ReadonlySet<number>;
-  phase: number;
-  onInspectKey: (index: number) => void;
-}) {
-  const refs = useRef(new Map<number, HTMLLIElement>());
-  const previousTops = useRef(new Map<number, number>());
-  const hasMeasured = useRef(false);
-  const frame = useRef<number | null>(null);
-  const sorted = phase >= 3;
-  const records = sorted ? snapshot.ranking : snapshot.candidates;
-  const orderKey = `${snapshot.query.id}:${sorted ? "ranked" : "pool"}`;
-
-  useLayoutEffect(() => {
-    const elements = records.flatMap(record => {
-      const element = refs.current.get(record.index);
-      return element ? [{ index: record.index, element }] : [];
-    });
-    const nextTops = new Map(elements.map(({ index, element }) => [index, element.getBoundingClientRect().top]));
-    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (hasMeasured.current && sorted && !reducedMotion) {
-      for (const { index, element } of elements) {
-        const previousTop = previousTops.current.get(index);
-        const nextTop = nextTops.get(index);
-        if (previousTop === undefined || nextTop === undefined) continue;
-        const delta = previousTop - nextTop;
-        if (Math.abs(delta) < 1) continue;
-        element.style.transition = "none";
-        element.style.transform = `translateY(${delta}px)`;
-      }
-      void elements[0]?.element.offsetHeight;
-      frame.current = requestAnimationFrame(() => {
-        for (const { element } of elements) {
-          element.style.transition = "";
-          element.style.transform = "";
-        }
-      });
-    }
-
-    previousTops.current = nextTops;
-    hasMeasured.current = true;
-    return () => {
-      if (frame.current !== null) cancelAnimationFrame(frame.current);
-    };
-  }, [orderKey]);
-
-  return <section className="p5-ledger-panel" aria-label="十个 Key 候选的角度与余弦距离计算记录">
-    <div className="p5-region-heading">
-      <h3>{sorted ? "距离排序 · Top‑5" : "候选计算记录"}</h3>
-      <span>{sorted ? "γ 从小到大 · 最小的 5 项进入选集" : "每条记录都能回到对应 Key"}</span>
-    </div>
-    <div className="p5-ledger-table" role="table" aria-label={sorted ? "按距离升序排列的 Key" : "按原 Key 槽位排列的候选记录"}>
-      <div className="p5-ledger-head" aria-hidden="true">
-        <span>{sorted ? "排名" : "槽位"}</span>
-        <span>Key → Prompt</span>
-        <span>θ</span>
-        <span>cos θ</span>
-        <span>γ(q,k)</span>
-      </div>
-      <ol className={`p5-ledger-list ${sorted ? "is-ranked" : ""}`} aria-label={sorted ? "距离升序候选记录" : "按 Key 编号排列的候选记录"}>
-        {records.map((candidate, rowIndex) => {
-          const isComplete = sorted || completedIndices.has(candidate.index);
-          const isActive = candidate.index === activeCandidateIndex && phase > 0 && phase < 3;
-          const isApproaching = candidate.index === approachingCandidateIndex;
-          const isSelected = sorted && rowIndex < promptPoolConfig.topN;
-          return <li
-            key={candidate.index}
-            ref={element => {
-              if (element) refs.current.set(candidate.index, element);
-              else refs.current.delete(candidate.index);
-            }}
-            className={`p5-ledger-row ${isComplete ? "is-complete" : "is-pending"} ${isActive ? "is-active" : ""} ${isApproaching ? "is-approaching" : ""} ${isSelected ? "is-selected" : ""}`}
-            data-key-index={candidate.index}
-            data-record-complete={isComplete}
-          >
-            <button type="button" className="p5-ledger-entry" onClick={() => onInspectKey(candidate.index)} aria-label={`跳到 Key ${candidate.index} 的余弦距离计算`}>
-              <span className="p5-ledger-rank">{sorted ? `${rowIndex + 1}` : `${candidate.index}`}{isSelected && <small>Top‑5</small>}</span>
-              <span className="p5-ledger-source"><b>k{subscript(candidate.index)}</b><span>↔</span><b>P{subscript(candidate.index)}</b></span>
-              <span className="p5-ledger-number">{isComplete ? `${candidate.thetaDegrees.toFixed(0)}°` : isActive ? "θ" : "—"}</span>
-              <span className="p5-ledger-number">{isComplete ? candidate.cosineSimilarity.toFixed(3) : "—"}</span>
-              <span className="p5-ledger-score">{isComplete ? candidate.distance.toFixed(3) : isActive ? "计算中" : "—"}</span>
-            </button>
-          </li>;
-        })}
-      </ol>
-    </div>
-    <p className="p5-ledger-note">排序时移动的是这十条评分记录；Key–Prompt 源槽始终按编号留在原位。</p>
-  </section>;
+function buildRankMoves(snapshot: SelectionSnapshot) {
+  const items = [...snapshot.candidates];
+  return snapshot.ranking.flatMap((target, to) => {
+    const from = items.indexOf(target);
+    if (from === to) return [];
+    const before = [...items];
+    items.splice(from, 1);
+    items.splice(to, 0, target);
+    return [{ before, from, to }];
+  });
 }
 
-export function PromptPairPool({
-  snapshot,
-  activeCandidateIndex,
-  phase,
-  onInspectKey,
-}: {
-  snapshot: SelectionSnapshot;
-  activeCandidateIndex: number | null;
-  phase: number;
-  onInspectKey: (index: number) => void;
-}) {
-  const selectedRanks = new Map(snapshot.selectedKeyIndices.map((index, offset) => [index, offset + 1]));
-  const showSelection = phase >= 3;
-  return <section className="p5-pool-panel" aria-label="固定保留的十组 Key–Prompt 配对参数">
-    <div className="p5-region-heading">
-      <h3>Key–Prompt Pool</h3>
-      <span>M = {promptPoolConfig.poolSize} · 每组 P 有 L<sub>p</sub> = {promptPoolConfig.promptLength} 个 Token</span>
-    </div>
-    <div className="p5-pool-grid">
-      {snapshot.candidates.map(candidate => {
-        const rank = selectedRanks.get(candidate.index);
-        const isSelected = showSelection && rank !== undefined;
-        const isActive = candidate.index === activeCandidateIndex && phase > 0 && phase < 3;
-        const slotState = isSelected ? `Top-5 排名 ${rank}` : "源参数持续保留";
-        return <button
-          className={`p5-pair-slot ${isActive ? "is-active" : ""} ${isSelected ? "is-selected" : ""}`}
-          type="button"
-          key={candidate.index}
-          data-key-index={candidate.index}
-          aria-pressed={isActive}
-          aria-label={`检查源槽 ${candidate.index}：Key k${candidate.index} 与 Prompt P${candidate.index} 配对，${slotState}`}
-          onClick={() => onInspectKey(candidate.index)}
-        >
-          <span className="p5-pair-top"><strong><MathIndex base="k" index={candidate.index} /><span className="p5-pair-link-mark" aria-hidden="true">↔</span><MathIndex base="P" index={candidate.index} /></strong>
-            <span>{isSelected ? `Top‑5 · #${rank}` : `槽位 ${candidate.index}`}</span></span>
-          <span className="p5-pair-body"><span className="p5-key-shape" aria-hidden="true" /><span className="p5-prompt-word">Prompt</span><TokenRow /></span>
-        </button>;
-      })}
-    </div>
-    <div className="p5-pool-legend"><span><i className="p5-legend-key" />Key：距离检索</span><span><i className="p5-legend-prompt" />Prompt：五个可学习 Token</span><span>共同下标保持配对，检索不移动也不消耗槽位</span></div>
-  </section>;
+export function CandidateBars({ snapshot, progress }: { snapshot: SelectionSnapshot; progress: number }) {
+  const moves = useMemo(() => buildRankMoves(snapshot), [snapshot]);
+  const ranked = progress >= 1;
+  const step = progress * moves.length;
+  const move = moves[Math.floor(step)];
+  const time = step % 1;
+  const slide = eased(clamp01((time - .24) / .52));
+  const lift = eased(Math.min(clamp01(time / .24), clamp01((1 - time) / .24)));
+  const items = ranked ? snapshot.ranking : move?.before ?? snapshot.candidates;
+  return <ol className="p5-rank-bars" aria-label={ranked ? "按余弦距离升序排列" : "余弦距离候选"}
+    data-ranked={ranked} data-sorting={progress > 0 && !ranked}>
+    {items.map((item, position) => {
+      const lifted = move?.from === position;
+      const target = lifted ? move.to : move && position >= move.to && position < move.from ? position + 1 : position;
+      const style = {
+        "--slot": position + 1,
+        "--compact-col": position % 5 + 1,
+        "--compact-row": Math.floor(position / 5) + 1,
+        "--rank-x": (target - position) * slide * 100 + "%",
+        "--lift": lifted ? lift : 0,
+        "--compact-x": (target % 5 - position % 5) * slide * 100 + "%",
+        "--compact-y": (Math.floor(target / 5) - Math.floor(position / 5)) * slide,
+        "--distance": item.distance / 2,
+      } as CSSProperties;
+      return <li key={item.index} data-key={item.index} data-lifted={Boolean(lifted && lift > 0)}
+        data-selected={ranked && position < promptPoolConfig.topN} style={style}>
+        <span className="p5-distance-track" aria-hidden="true"><i /></span>
+        <strong>k{formatSubscript(item.index)}</strong>
+        <span>{item.distance.toFixed(3)}</span>
+      </li>;
+    })}
+  </ol>;
 }
 
-export function PromptReadout({
-  snapshot,
-  visible,
-  progress,
-}: {
-  snapshot: SelectionSnapshot;
-  visible: boolean;
-  progress: number;
-}) {
-  return <section className={`p5-readout-panel ${visible ? "is-open" : ""}`} aria-label="本次前向所用的 Prompt 视图">
-    <div className="p5-region-heading">
-      <h3>本次使用视图</h3>
-      <span>按 Top‑5 顺序读取</span>
-    </div>
-    {visible ? <>
-      <div className="p5-readout-list">
-        {snapshot.selected.map((candidate, order) => {
-          const itemProgress = Math.max(0, Math.min(1, progress * 1.32 - order * 0.16));
-          return <div className="p5-readout-entry" key={candidate.index} data-source-index={candidate.index}
-            style={{ opacity: itemProgress, transform: `translateY(${(1 - itemProgress) * 9}px)` }}>
-            <span className="p5-readout-origin">来自槽位 {candidate.index}</span>
-            <MathIndex base="P" index={candidate.index} />
-            <TokenRow className="p5-readout-tokens" />
-          </div>;
-        })}
-      </div>
-      <p className="p5-readout-note">这只是本次前向的使用视图；每组仍指向源池中的同一个 P<sub>j</sub> 参数。</p>
-    </> : <div className="p5-readout-pending"><strong>等待 Top‑5 选集</strong><span>选中后，从相同编号的源槽读取 Prompt</span></div>}
-  </section>;
+export function PromptShelf({ snapshot, progress }: { snapshot: SelectionSnapshot; progress: number }) {
+  const reading = Math.floor(progress);
+  return <div className="p5-prompt-shelf" aria-label="固定源池与本次读取的 Prompt">
+    <strong className="p5-shelf-heading">源池 · 槽位固定</strong>
+    {snapshot.candidates.map(({ index }) => <div key={index} className="p5-source-pair"
+      data-slot={index} data-reading={progress > 0 && snapshot.selected[reading]?.index === index}>
+      <span>k{formatSubscript(index)}</span><strong>P{formatSubscript(index)}</strong>
+    </div>)}
+    <strong className="p5-shelf-heading p5-read-heading">本次使用的 Prompt · 按距离次序</strong>
+    {snapshot.selected.map(({ index }, rank) => {
+      const amount = clamp01(progress - rank);
+      const distance = (index - 0.5 - (rank * 2 + 1)) * 50;
+      const style = { "--copy-x": distance * (1 - eased(clamp01(amount / .65))) + "%",
+        "--copy-y": 1 - eased(clamp01((amount - .65) / .35)) } as CSSProperties;
+      return <div className="p5-copy-target" key={index}>
+        {amount > 0 && <div className="p5-copy" data-copy={index} data-arrived={amount >= 1} style={style}>
+          <strong>P{formatSubscript(index)}</strong><PromptTokens />
+        </div>}
+      </div>;
+    })}
+  </div>;
 }
 
-export function formatSubscript(index: number) {
-  return subscript(index);
+export function QueryOverlap({ first, second }: { first: SelectionSnapshot; second: SelectionSnapshot }) {
+  const a = first.selectedKeyIndices;
+  const b = second.selectedKeyIndices;
+  const groups = [
+    { label: "仅 A 命中", indices: a.filter(index => !b.includes(index)) },
+    { label: "A、B 共同命中", indices: a.filter(index => b.includes(index)) },
+    { label: "仅 B 命中", indices: b.filter(index => !a.includes(index)) },
+  ];
+  return <div className="p5-overlap" role="group" aria-label="两个选集的交集与差集">
+    {groups.map(group => <div key={group.label}>
+      <strong>{group.label}</strong>
+      <div>{group.indices.map(index => <span key={index}>P{formatSubscript(index)}</span>)}</div>
+    </div>)}
+  </div>;
 }

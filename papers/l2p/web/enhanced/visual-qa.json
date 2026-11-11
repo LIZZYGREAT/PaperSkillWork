@@ -112,59 +112,30 @@
       ]
     },
     {
-      "id": "p5-query-a",
+      "id": "p5-retrieval",
       "path": "/?page=p5",
       "states": [
-        { "id": "query" },
-        {
-          "id": "key-angle-example",
-          "actions": [{ "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(2)" }]
-        },
-        {
-          "id": "orbit-k1-to-k2",
-          "actions": [
-            { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(3)" },
-            { "type": "click", "selector": "button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 500 },
-            { "type": "click", "selector": "button:has-text('暂停')" }
-          ]
-        },
-        {
-          "id": "orbit-k3-angle",
-          "actions": [
-            { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(3)" },
-            { "type": "click", "selector": "button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 1600 },
-            { "type": "click", "selector": "button:has-text('暂停')" },
-            { "type": "scrollIntoView", "selector": ".p5-vector-space" }
-          ]
-        },
-        {
-          "id": "ranking",
-          "actions": [{ "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(4)" }]
-        },
-        { "id": "read-view", "actions": [{ "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(5)" }] },
-        {
-          "id": "query-b-read-view",
-          "actions": [
-            { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
-            { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(5)" }
-          ]
-        },
-        {
-          "id": "query-b-comparison",
-          "actions": [
-            { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
-            { "type": "click", "selector": ".p5-motion-controls .motion-stops button:nth-child(6)" }
-          ]
-        }
+        { "id": "pair", "actions": [{ "type": "scrollIntoView", "selector": ".p5-slot-anatomy" }] },
+        { "id": "angle-a", "actions": [{ "type": "click", "selector": ".p5-scan-keys button:nth-child(1)" }] },
+        { "id": "scanning", "actions": [{ "type": "fill", "selector": ".p5-compare-figure input[type=range]", "value": "1110" }] },
+        { "id": "sorting", "actions": [{ "type": "fill", "selector": ".p5-retrieval-figure input[type=range]", "value": "1340" }] },
+        { "id": "ranked", "actions": [{ "type": "click", "selector": ".p5-motion-controls button:has-text('查看排名')" }] },
+        { "id": "copying", "actions": [{ "type": "fill", "selector": ".p5-retrieval-figure input[type=range]", "value": "5310" }] },
+        { "id": "read-a", "actions": [{ "type": "click", "selector": ".p5-motion-controls button:has-text('查看读出')" }] },
+        { "id": "angle-b", "actions": [
+          { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
+          { "type": "click", "selector": ".p5-scan-keys button:nth-child(4)" }
+        ] },
+        { "id": "read-b", "actions": [
+          { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
+          { "type": "click", "selector": ".p5-motion-controls button:has-text('查看读出')" }
+        ] },
+        { "id": "overlap", "actions": [{ "type": "scrollIntoView", "selector": ".p5-overlap" }] }
       ],
       "computedStyles": [
         { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" },
-        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
-        { "selector": ".p5-motion-controls", "property": "position", "equals": "sticky" },
-        { "selector": ".p5-retrieval-figure", "property": "overflow", "equals": "clip" },
-        { "selector": ".p5-query-direction > line", "property": "stroke-width", "equals": "1.8px" }
+        { "selector": ".p5-retrieval-figure", "property": "overflow", "equals": "visible" },
+        { "selector": ".p5-slot-pair-link", "property": "font-size", "equals": "14px" }
       ]
     },
     {

@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkP4 } from './check-prompt-scenes.mjs';
+import { checkP4, checkP5 } from './check-prompt-scenes.mjs';
 
 const source = fileURLToPath(new URL('..', import.meta.url));
 const repo = path.resolve(source, '../../../..');
@@ -208,6 +208,7 @@ try {
         await page.locator('.head-animation .motion-stops button').last().click();
       }
       if (index === 4) await checkP4(page, output, width);
+      if (index === 5) await checkP5(page, output, width);
       if (index <= 3) {
         const selector = index === 1 ? '.interference-fishbone' : index === 2 ? '.pixel-feature-compare' : '.qkv-branch';
         await page.locator(selector).evaluate(node => window.scrollTo(0, node.getBoundingClientRect().top + scrollY - document.querySelector(".site-header").getBoundingClientRect().height - 20));
@@ -219,7 +220,7 @@ try {
     assert.deepEqual(errors, []);
     await page.close();
   }
-  console.log(`PASS: ${mobileOnly ? 'P1–P3 mobile' : 'P1–P9 desktop'} prose widths/fonts/leading, future rk-prose probe, MathML, overflow, P1–P3 interactions. Report: ${path.join(output, 'reading-report.json')}`);
+  console.log(`PASS: ${mobileOnly ? 'P1–P3 mobile reading and interactions' : 'P1–P9 desktop reading, P1–P3 interactions, P4/P5 geometry, data and playback'}. Report: ${path.join(output, 'reading-report.json')}`);
 } finally {
   await writeFile(path.join(output, 'reading-report.json'), JSON.stringify(report, null, 2));
   await browser.close();
