@@ -60,43 +60,75 @@
   text-align: center;
   font-weight: 400;
 }
-.p6-shape-cards {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) 24px minmax(0, 1.08fr);
-  align-items: stretch;
-  gap: 12px;
+.p6-sequence-ruler {
+  width: 100%;
+  margin: 30px 0 36px;
+  color: #244c3c;
+  font-family: var(--rk-font-body, "Segoe UI", "Microsoft YaHei UI", sans-serif);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
 }
-.p6-shape-card {
-  min-width: 0;
-  min-height: 128px;
-  box-sizing: border-box;
-  padding: 15px 17px;
+.p6-sequence-ruler__legend {
   display: grid;
-  align-content: center;
-  gap: 4px;
-  border: 1px solid #c4d1c0;
-  border-radius: 12px;
-  background: #f1f4ed;
+  grid-template-columns: 25fr 197fr;
+  gap: 0;
+  margin: 0 0 7px;
+  color: #506759;
   font-size: 13px;
   line-height: 1.5;
   font-weight: 400;
 }
-.p6-shape-card__eyebrow { color: #506759; font-size: 13px; font-weight: 400; }
-.p6-shape-card__value { color: #244c3c; font-size: 19px; line-height: 1.35; font-variant-numeric: tabular-nums; font-weight: 400; }
-.p6-shape-card__formula { color: #315d73; font-size: 14px; font-weight: 400; }
-.p6-shape-card small { color: #617267; font-size: 12px; line-height: 1.5; font-weight: 400; }
-.p6-shape-card--prompt { background: #f2edf4; border-color: #d1bfd7; }
-.p6-shape-card--prompt .p6-shape-card__value { color: #66516f; }
-.p6-shape-card--image { background: #e9f0f1; border-color: #b5c8cc; }
-.p6-shape-card--total { background: #edf3e9; border-color: #b9ccb7; }
-.p6-shape-operator { align-self: center; color: #789080; font-size: 18px; text-align: center; font-weight: 400; }
+.p6-sequence-ruler__legend span:first-child { color: #66516f; }
+.p6-sequence-ruler__legend span:last-child { padding-left: 12px; color: #315d73; }
+.p6-sequence-ruler__scroll { width: 100%; overflow-x: auto; border-block: 1px solid #a8b9a8; }
+.p6-sequence-ruler__scroll:focus-visible { outline: 2px solid var(--rk-focus); outline-offset: 3px; }
+.p6-sequence-ruler__track { display: flex; min-height: 52px; width: 100%; }
+.p6-ruler-prompt {
+  min-width: 0;
+  display: grid;
+  background: #e8dfea;
+  border-right: 2px solid #f7f7f2;
+}
+.p6-ruler-group {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 20px 1fr;
+  justify-items: center;
+  align-items: center;
+  padding: 4px 1px;
+  border-right: 1px solid #c2b2c9;
+  color: #66516f;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+.p6-ruler-group:last-child { border-right: 0; }
+.p6-ruler-group__positions { width: 100%; height: 13px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; }
+.p6-ruler-group__positions i { display: block; border: 1px solid #9b84a4; border-radius: 2px; background: #cbbbd2; }
+.p6-ruler-image { min-width: 0; display: grid; grid-template-columns: repeat(197, minmax(0, 1fr)); }
+.p6-ruler-image i { display: block; background: #c4d8dc; border-right: 1px solid #e9f0f1; }
+.p6-ruler-image i[data-cls="true"] { background: #315d73; border-color: #315d73; }
+.p6-sequence-ruler__sum {
+  min-height: 34px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 5px 12px;
+  padding: 7px 0 2px;
+  color: #244c3c;
+  font-size: 14px;
+  font-weight: 400;
+}
+.p6-sequence-ruler__sum > span:nth-of-type(2), .p6-sequence-ruler__sum > span:nth-of-type(4) { color: #789080; }
+.p6-sequence-ruler__sum .p6-ruler-width { color: #315d73; }
+.p6-sequence-ruler figcaption { margin-top: 5px; color: #506759; font-size: 13px; line-height: 1.6; text-align: center; font-weight: 400; }
 
 @media (max-width: 780px) {
   .p6-call-row { grid-template-columns: 1fr; gap: 5px; }
   .p6-call-row__step { margin: 0 0 2px 2px; }
   .p6-call-card { min-height: 75px; }
   .p6-call-arrow { transform: rotate(90deg); line-height: 1; }
-  .p6-shape-cards { grid-template-columns: 1fr; gap: 7px; }
-  .p6-shape-card { min-height: 100px; }
-  .p6-shape-operator { transform: rotate(90deg); line-height: 1; }
+  .p6-sequence-ruler__legend, .p6-sequence-ruler__track { min-width: 780px; }
 }

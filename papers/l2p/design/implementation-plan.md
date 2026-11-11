@@ -582,8 +582,12 @@ P6 重新分配图内横向空间，编码轨道、锁和标题组合、输入�
 
 在用户要求下，继续依照 P1–P3 的“主路径 + 局部解释卡”层级，给 P6–P8 补充主动画之外的静态导航图。图例文字维持常规字重；颜色沿用叶绿、冻结蓝、Prompt 淡紫与读出赭色。新增图形由教程本地实现，不复制论文配图（原图复用权未核实）。内容对照[原论文 CVPR 2022 版本](https://openaccess.thecvf.com/content/CVPR2022/html/Wang_Learning_To_Prompt_for_Continual_Learning_CVPR_2022_paper.html)的公式 (3)、(5) 和 Algorithm 1，以及[作者维护的 L2P 代码库](https://github.com/google-research/l2p)。不加与算法因果无关的甘特图或示例数据。
 
-#### P6 两次调用与序列形状卡片
+#### P6 两次调用图与比例序列尺
 
-把此前一行概述改成两条顺序路径，分别显示“无 Prompt 的图像 → 冻结 ViT → [CLS] Query → Key 选集”与“所选 Prompt + 图像嵌入 → 同一冻结 ViT → Prompt 位置池化 → 分类器”。在维度说明处新增三张形状卡：池容量/当前选集、25 个 Prompt 位置与 197 个图像位置、扩展后的 `222 × 768` 序列。选集索引、Prompt 长度、池容量、图像位置数和特征宽度直接读取既有配置；没有用新造的训练结果或手写动画数值。
+把此前一行概述改成卡片式两条顺序路径，分别显示“无 Prompt 的图像 → 冻结 ViT → [CLS] Query → Key 选集”与“所选 Prompt + 图像嵌入 → 同一冻结 ViT → Prompt 位置池化 → 分类器”。尺寸说明不再重复同样的卡片，改用不同的、按 Token 数绘制的序列比例尺：Prompt 段占 25/222，图像段占 197/222；每个 Prompt 与图像位置均有一个刻度单元，[CLS] 与 Patch 使用不同颜色。选集索引、Prompt 长度、池容量、图像位置数和特征宽度直接读取既有配置；没有用新造的训练结果或手写动画数值。
 
-`SOURCE_BUILD=PASS`：在 `paths.publish_source` 下运行 `npm.cmd run build`，TypeScript 与 Vite 6.4.3 构建退出 0，76 modules。P6 最终卡片版的专页浏览器检查通过本机 Edge 157.0.4341.46 完成：筛选现有 `visual-qa.json` 的 P6 状态，`node tools/visual-qa/cli.mjs --config <p6-cards-visual-qa.tmp.json>`，1440×900 与 1920×1080 两档 16 个截图状态全部通过，`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`；已查看 P6 初始页及检索/分类中间状态。此前完整配置一次覆盖 P1–P9 的 107 个状态，三个工具状态同为 PASS，P1–P3 回归与 P6 变更前的其余动画状态已实际查看。P2 原有图内文字有 3 个小于项目阈值的诊断警告；本次未修改范围之外的 P2。P6 最终版截图副本：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/P6-cards-1440.png`、`P6-cards-1920.png`。`FULLSCREEN_LAYOUT=PASS`（1920×1080 布局模拟）；`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。P6 单页 QA 报告编号 `run-2026-11-11T15-10-36-290Z`，最终三页合并后的 QA 会另行记录。
+#### 为 P6–P8 选择不同图形语法
+
+用户指出整页应采用不同图示设计。浏览 D3/Observable 官方的 [Sankey 节点流图](https://observablehq.com/@d3/d3-sankey-diagram)、[Force-Directed Graph](https://observablehq.com/@d3/force-directed-graph-component) 与 [D3 Charts 示例集](https://observablehq.com/@d3/charts) 后，按三页问题分别采用序列比例尺（P6）、有向节点路径图（P7）和参数状态账本/训练—推断分岔流程（P8）。这些网页只用于研究图形语法，不引用或带入其示例数据。Sankey 线宽通常表达流量，而论文并未给出梯度贡献幅值；因此 P7 连线保持等宽，只编码路径类型与方向，不能把定性路径画成定量流量。
+
+`SOURCE_BUILD=PASS`：在 `paths.publish_source` 下运行 `npm.cmd run build`，TypeScript 与 Vite 6.4.3 构建退出 0，76 modules。P6 最终比例尺版专页浏览器检查通过本机 Edge 157.0.4341.46 完成：筛选现有 `visual-qa.json` 的 P6 四个关键状态，`node tools/visual-qa/cli.mjs --config <p6-ruler-visual-qa.tmp.json>`，1440×900 与 1920×1080 共 8 个截图状态全部通过，`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`；已查看两种桌面宽度及检索/池化/Logits 状态。此前完整配置一次覆盖 P1–P9 的 107 个状态，三个工具状态同为 PASS，P1–P3 回归与 P6 其余动画状态已实际查看。P2 原有图内文字有 3 个小于项目阈值的诊断警告；本次未修改范围之外的 P2。当前 P6 截图副本：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/P6-ruler-1440.png`、`P6-ruler-1920.png`。`FULLSCREEN_LAYOUT=PASS`（1920×1080 布局模拟）；`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。P6 单页比例尺 QA 报告编号 `run-2026-11-11T15-22-06-416Z`，最终三页合并后的 QA 会另行记录。

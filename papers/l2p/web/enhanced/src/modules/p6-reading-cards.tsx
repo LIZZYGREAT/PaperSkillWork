@@ -29,27 +29,30 @@ export function P6CallMap() {
   </figure>;
 }
 
-export function P6ShapeCards() {
-  return <figure className="p6-shape-cards reading-card-figure" aria-label="Prompt 数量、图像位置与扩展序列形状">
-    <article className="p6-shape-card p6-shape-card--prompt">
-      <span className="p6-shape-card__eyebrow">本次选中</span>
-      <span className="p6-shape-card__value">{P6_SELECTED_PROMPT_INDICES.length} 组 × {config.promptLength} 个</span>
-      <span className="p6-shape-card__formula">= {P6_PROMPT_TOKEN_COUNT} 个 Prompt 位置</span>
-      <small>池容量 M = {config.poolSize}；本次选 N = {P6_SELECTED_PROMPT_INDICES.length}</small>
-    </article>
-    <span className="p6-shape-operator" aria-hidden="true">+</span>
-    <article className="p6-shape-card p6-shape-card--image">
-      <span className="p6-shape-card__eyebrow">图像嵌入</span>
-      <span className="p6-shape-card__value">{config.imageLength} 个位置</span>
-      <span className="p6-shape-card__formula">[CLS] + {config.imageLength - 1} 个 Patch</span>
-      <small>从扩展序列位置 {P6_PROMPT_TOKEN_COUNT} 开始</small>
-    </article>
-    <span className="p6-shape-operator" aria-hidden="true">→</span>
-    <article className="p6-shape-card p6-shape-card--total">
-      <span className="p6-shape-card__eyebrow">送入冻结 Transformer</span>
-      <span className="p6-shape-card__value">{P6_SEQUENCE_LENGTH} × {config.featureWidth}</span>
-      <span className="p6-shape-card__formula">位置数增加，宽度 D 不变</span>
-      <small>输出 H 保留每个位置的上下文特征</small>
-    </article>
+export function P6SequenceRuler() {
+  const imageLength = config.imageLength;
+  return <figure className="p6-sequence-ruler" aria-label={`扩展序列位置比例：${P6_PROMPT_TOKEN_COUNT} 个 Prompt 位置加 ${imageLength} 个图像位置，合计 ${P6_SEQUENCE_LENGTH} 个位置，宽度 ${config.featureWidth} 维`}>
+    <div className="p6-sequence-ruler__legend" aria-hidden="true">
+      <span>Prompt 段 · {P6_PROMPT_TOKEN_COUNT} 位 · 0–{P6_PROMPT_TOKEN_COUNT - 1}</span>
+      <span>图像段 · {imageLength} 位 · [CLS] + {imageLength - 1} Patch</span>
+    </div>
+    <div className="p6-sequence-ruler__scroll" tabIndex={0} role="region" aria-label="扩展序列比例尺；可横向滚动查看">
+      <div className="p6-sequence-ruler__track">
+        <div className="p6-ruler-prompt" style={{ flexGrow: P6_PROMPT_TOKEN_COUNT, gridTemplateColumns: `repeat(${P6_SELECTED_PROMPT_INDICES.length}, minmax(0, 1fr))` }}>
+          {P6_SELECTED_PROMPT_INDICES.map((id, index) => <div className="p6-ruler-group" key={`${id}-${index}`}>
+            <span>P<sub>{id}</sub></span>
+            <span className="p6-ruler-group__positions" aria-hidden="true">{Array.from({ length: config.promptLength }, (_, token) => <i key={token} />)}</span>
+          </div>)}
+        </div>
+        <div className="p6-ruler-image" style={{ flexGrow: imageLength }}>
+          {Array.from({ length: imageLength }, (_, position) => <i key={position} data-cls={position === 0 || undefined} aria-hidden="true" />)}
+        </div>
+      </div>
+    </div>
+    <div className="p6-sequence-ruler__sum">
+      <span>{P6_PROMPT_TOKEN_COUNT} Prompt</span><span aria-hidden="true">+</span><span>{imageLength} 图像位置</span>
+      <span aria-hidden="true">=</span><span>{P6_SEQUENCE_LENGTH} 个位置</span><span className="p6-ruler-width">每个位置均为 {config.featureWidth} 维</span>
+    </div>
+    <figcaption>长度比例对应序列行数；深蓝首格是 [CLS]，其后为 Patch。行数拼接后增加，向量宽度不变。</figcaption>
   </figure>;
 }
