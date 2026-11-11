@@ -1,4 +1,10 @@
 
+.lesson-copy:has(> .guided-motion) {
+  --motion-font: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+.guided-motion .motion-parameter { font-family: var(--rk-font-math); font-style: italic; font-weight: 400; }
+.guided-motion .motion-parameter-index { font-size: .74em; font-style: normal; }
+
 /* Match the warm paper surface and the blue, leaf and ochre accents in P2/P3. */
 .lesson-figure.guided-motion {
   --motion-paper: #f2f5ed;
@@ -11,7 +17,6 @@
   --motion-blue-wash: #dce9ed;
   --motion-ochre: #775023;
   --motion-ochre-wash: #f0e2c9;
-  --motion-font: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
   /* SVG labels use viewBox units, so reduce their size as the canvas scales up. */
   --motion-svg-label: clamp(11px, calc(20px - .66cqw), 16px);
   --motion-svg-detail: calc(var(--motion-svg-label) - 1px);

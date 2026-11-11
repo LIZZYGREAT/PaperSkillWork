@@ -7,7 +7,7 @@ import {
   distanceFromExampleKey, gradientSourcesForSlot, P7_BATCH_INDICES, P7_BATCH_SAMPLES,
   P7_COMMON_INDICES, P7_EXAMPLE_GRADIENT, P7_UNTOUCHED_INDICES,
 } from "./prompt-learning-data";
-import { arrive, blend, curvePosition, MotionTrace, type MotionCurve } from "./guided-motion";
+import { arrive, blend, curvePosition, DiagramParameter, MotionTrace, type MotionCurve } from "./guided-motion";
 import "./guided-motion.css";
 import "./prompt-learning.css";
 
@@ -55,7 +55,7 @@ function BatchScene({ time, slot }: { time: number; slot: number }) {
       return <g key={id} opacity={reveal}>
         <circle cx="48" cy={y} r="16" fill={i === 0 ? "#f0e2c9" : "#dce8d5"} stroke={color} />
         <path d={`M48 ${y}l${11 * query.x} ${-11 * query.y}`} stroke={color} strokeWidth="2" />
-        <text x="73" y={y + 4} className="p7-label">样本 {id} · 标签 y{id}</text>
+        <text x="73" y={y + 4} className="p7-label">样本 {id} · 标签 <DiagramParameter symbol="y" index={id} /></text>
         {selected.map((index, order) => <g key={index} transform={`translate(${29 + 30 * order} ${y + 22})`}>
           <rect width="24" height="22" rx="3" fill={index === slot ? "#e8d9ba" : "#edf3e9"} stroke={index === slot ? "#a78450" : "#b9c9b8"} />
           <text x="12" y="15" textAnchor="middle">{index}</text>
@@ -68,7 +68,9 @@ function BatchScene({ time, slot }: { time: number; slot: number }) {
       const ids = sources[kind];
       const merge = arrive(time, 10700 + row * 140, 11950 + row * 140);
       const write = arrive(time, batchStart, 13260);
-      const target = kind === "prompts" ? `Prompt P${slot}` : kind === "keys" ? `Key k${slot}` : "分类器 φ";
+      const target = kind === "prompts"
+        ? <>Prompt <DiagramParameter symbol="P" index={slot} /></>
+        : kind === "keys" ? <>Key <DiagramParameter symbol="k" index={slot} /></> : "分类器 φ";
       const sumRoute: MotionCurve = [{x:625,y:y+8},{x:658,y:y+8},{x:689,y:y+8},{x:729,y:y+8}];
       return <g key={kind} data-parameter={kind} data-written={committed && ids.length > 0}>
         <rect x="222" y={y - 26} width="609" height="67" rx="7" fill={fill} opacity=".41" />

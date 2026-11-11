@@ -1,6 +1,12 @@
 
 import type { MotionPoint } from "./visual-motion";
 
+export function DiagramParameter({ symbol, index }: { symbol: string; index: number | string }) {
+  return <tspan className="motion-parameter">
+    <tspan>{symbol}</tspan><tspan className="motion-parameter-index" dy=".24em">{index}</tspan>
+  </tspan>;
+}
+
 export const blend = (start: number, end: number, amount: number) => start + (end - start) * amount;
 
 export function elapsed(time: number, start: number, end: number) {

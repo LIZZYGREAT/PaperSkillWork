@@ -84,9 +84,9 @@ function SharedModel({ stage, angles, slot, setSlot, hits, write, version }: {
         })}
       </div>
       <p className="p8-slot-detail" data-angle={current.toFixed(4)}>
-        <strong>k{slot}</strong> · {current.toFixed(1)}°
+        <math><Sub base="k" index={slot} /></math> · {current.toFixed(1)}°
         <span>{isStep && touched ? `（批前 ${previous?.toFixed(1)}°）` : " "}</span>
-        <span> · P{slot} 上次写入 Θ{lastWrite}{hits[slot - 1] >= .65 ? " · 本轮命中" : ""}</span>
+        <span> · <math><Sub base="P" index={slot} /></math> 上次写入 <math><Sub base="Θ" index={lastWrite} /></math>{hits[slot - 1] >= .65 ? " · 本轮命中" : ""}</span>
       </p>
     </div>
     <div className="p8-classifier">
@@ -94,7 +94,7 @@ function SharedModel({ stage, angles, slot, setSlot, hits, write, version }: {
         <path d="M5 8H18 M5 17H18 M5 26H18 M29 8H43 M29 17H43 M29 26H43" />
         <rect x="17" y="3" width="14" height="28" rx="3" fill={isStep ? `rgba(57, 103, 70, ${.15 + .32 * write})` : "#dce8d5"} />
       </svg>
-      <strong>共享分类器</strong><span>φ · Θ{version}</span>
+      <strong>共享分类器</strong><math><mi>φ</mi><mo>·</mo><Sub base="Θ" index={version} /></math>
     </div>
   </div>;
 }

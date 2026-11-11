@@ -561,3 +561,7 @@ SOURCE_BUILD=PASS：`npm.cmd run build`（TypeScript + Vite 6.4.3，72 modules�
 Edge 测量三页画布与正文左右边缘完全一致，1440×900 时宽度 1240px，1920×1080 时宽度 1300px。另检查 1536×864（DPR 1.25）和 390×844，无页面级横向溢出。桌面图内主要标签实测约 17–18px。关键状态拖动、Key/Prompt 位置与排版截图见 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-full-width`。
 
 `SOURCE_BUILD=PASS`（`npm.cmd run build`，退出 0，74 模块）。本地上游语法与输出校验器均退出 0。 `SUBPATH_ASSETS=PASS`，Visual QA 在生产子路径下通过 P6–P8 共 18 个状态。原始报告编号为 `run-2026-11-11T13-17-15-449Z`。 `FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。
+
+按随后确认的重点复查 P6、P7、P8 各页。P6 和 P7 图内数学符号共享下标排版，P7 的局部 Key 插图采用与主图一致的字体，P8 的参数和版本改用 MathML 下标，伪代码容器对齐正文两侧。P1–P5 与 P9 已完成初步浏览器巡查，证据存于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-full-width/all-chapters`。
+
+最终构建及源码校验退出 0。四种视口下再次测量 P6–P8 的主画布、P6 对照栏、P7 Key 插图、P8 伪代码与正文的边缘，全部重合。生产子路径的 18 个回归状态通过，报告编号 `run-2026-11-11T13-30-31-655Z`。保留截图、像素测量和报告于 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-full-width/p6-p8-review`。

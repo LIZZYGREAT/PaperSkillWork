@@ -12,7 +12,7 @@
 .p7-slots > strong { margin-inline-end: 5px; font-size: 14px; }
 .p7-slots .lesson-choice { padding: 3px 7px; min-width: 39px; font-size: 14px; }
 .p7-slots .lesson-choice span { display: block; color: var(--rk-muted); font-size: 13px; line-height: 1.15; }
-.p7-key-study { box-sizing: border-box; width: 100%; margin: 0 auto; padding: 13px clamp(12px, 2.4vw, 26px); border-block: 1px solid var(--rk-line-strong); }
+.p7-key-study { font-family: var(--motion-font); font-variant-numeric: tabular-nums; box-sizing: border-box; width: 100%; margin: 0 auto; padding: 13px clamp(12px, 2.4vw, 26px); border-block: 1px solid var(--rk-line-strong); }
 .p7-key-study summary { width: fit-content; margin-inline: auto; cursor: pointer; color: var(--rk-accent-strong); font-weight: 650; }
 .p7-key-study-body { display: grid; grid-template-columns: minmax(0, 590px) minmax(200px, 300px); justify-content: center; align-items: center; gap: 12px 23px; margin: 12px 0 0; }
 .p7-key-study-body svg { width: min(100%, 260px); justify-self: center; background: #f2f5ed; border: 1px solid var(--rk-line); border-radius: 8px; }
