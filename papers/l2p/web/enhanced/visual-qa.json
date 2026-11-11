@@ -283,50 +283,121 @@
       "id": "p7",
       "path": "/?page=p7",
       "states": [
-        { "id": "forward-results" },
-        { "id": "classification-gradients", "actions": [{ "type": "click", "selector": ".p7-motion-stops button:nth-child(2)" }] },
         {
-          "id": "classification-flight-midpoint",
+          "id": "snapshot",
+          "actions": []
+        },
+        {
+          "id": "classification-middle",
           "actions": [
-            { "type": "click", "selector": ".p7-motion-stops button:nth-child(2)" },
-            { "type": "click", "selector": ".p7-control-dock button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 1350 },
-            { "type": "click", "selector": ".p7-control-dock button:has-text('暂停')" },
-            { "type": "scrollIntoView", "selector": ".p7-sample-stage" }
+            {
+              "type": "click",
+              "selector": ".p7-motion-stops button:nth-child(1)"
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('播放过程')"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1200
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('暂停')"
+            }
           ]
         },
-        { "id": "discrete-top-n-boundary", "actions": [{ "type": "click", "selector": ".p7-motion-stops button:nth-child(3)" }] },
         {
-          "id": "key-gradient-midpoint",
+          "id": "classification",
           "actions": [
-            { "type": "click", "selector": ".p7-motion-stops button:nth-child(4)" },
-            { "type": "click", "selector": ".p7-control-dock button:has-text('播放过程')" },
-            { "type": "wait", "milliseconds": 1400 },
-            { "type": "click", "selector": ".p7-control-dock button:has-text('暂停')" }
+            {
+              "type": "click",
+              "selector": ".p7-motion-stops button:nth-child(2)"
+            }
           ]
         },
-        { "id": "shared-batch-contributions", "actions": [{ "type": "click", "selector": ".p7-motion-stops button:nth-child(5)" }] },
         {
-          "id": "inspect-common-slot",
+          "id": "matching",
           "actions": [
-            { "type": "click", "selector": ".p7-motion-stops button:nth-child(5)" },
-            { "type": "click", "selector": ".p7-slot-chip[data-parameter-kind='prompt'][data-slot-index='3']" }
+            {
+              "type": "click",
+              "selector": ".p7-motion-stops button:nth-child(3)"
+            }
           ]
         },
-        { "id": "key-vector-midpoint", "actions": [
-          { "type": "scrollIntoView", "selector": ".p7-key-study" },
-          { "type": "click", "selector": ".p7-key-study button:has-text('播放过程')" },
-          { "type": "wait", "milliseconds": 1100 },
-          { "type": "click", "selector": ".p7-key-study button:has-text('暂停')" }
-        ] },
-        { "id": "batch-writeback", "actions": [{ "type": "click", "selector": ".p7-motion-stops button:nth-child(6)" }] }
+        {
+          "id": "accumulation",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p7-motion-stops button:nth-child(4)"
+            }
+          ]
+        },
+        {
+          "id": "shared-slot-3",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p7-motion-stops button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-slots [data-slot='3']"
+            }
+          ]
+        },
+        {
+          "id": "untouched-slot-7",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p7-motion-stops button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".p7-slots [data-slot='7']"
+            }
+          ]
+        },
+        {
+          "id": "writeback-middle",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p7-motion-stops button:nth-child(4)"
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('播放过程')"
+            },
+            {
+              "type": "wait",
+              "milliseconds": 1500
+            },
+            {
+              "type": "click",
+              "selector": ".playback-controls button:has-text('暂停')"
+            }
+          ]
+        },
+        {
+          "id": "one-writeback",
+          "actions": [
+            {
+              "type": "click",
+              "selector": ".p7-motion-stops button:nth-child(5)"
+            }
+          ]
+        }
       ],
       "computedStyles": [
-        { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" },
-        { "selector": ":root", "property": "--rk-canvas", "equals": "#f7f7f2" },
-        { "selector": ".p7-control-dock", "property": "position", "equals": "sticky" },
-        { "selector": ".lesson-figure.p7-batch-figure", "property": "overflow", "equals": "clip" },
-        { "selector": ".p7-slot-chip[data-parameter-kind='prompt'][data-slot-index='3']", "property": "border-top-width", "equals": "2px" }
+        {
+          "selector": ".lesson-copy",
+          "property": "--lesson-body-size",
+          "equals": "17px"
+        }
       ]
     },
     {
