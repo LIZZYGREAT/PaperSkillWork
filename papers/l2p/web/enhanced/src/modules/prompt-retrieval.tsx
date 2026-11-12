@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
-import { Arrow } from "./vit-visuals";
 import { Specimen } from "./specimen";
 import { buildSelectionSnapshot, promptPoolConfig, type QueryId } from "./prompt-retrieval-data";
 import {
@@ -16,6 +15,12 @@ const rankEnd = 4400;
 const readStart = 5100;
 const copyMs = 600;
 const readDuration = readStart + copyMs * topN + 700;
+
+function RetrievalFlowArrow() {
+  return <svg className="flow-arrow" viewBox="0 0 48 18" aria-hidden="true">
+    <path d="M2 9h42m-7-4 7 4-7 4" />
+  </svg>;
+}
 
 export function PromptRetrieval() {
   const [query, setQuery] = useState<QueryId>("A");
@@ -55,9 +60,9 @@ export function PromptRetrieval() {
       <p>先让原始图像走一遍不插入 Prompt 的冻结 ViT，再取末层的 <span className="lesson-key">[CLS] 特征作为检索 Query</span>。这样，检索可以在选出 Prompt 之前完成，得到的向量用于找相近的 Key。分类要等选中的 Prompt 接入下一次前向。</p>
       <div className="p5-query-flow" role="group" aria-label="当前图像经不插入 Prompt 的冻结 ViT 生成 Query">
         <div className="p5-query-input"><Specimen /><strong>当前图像</strong></div>
-        <Arrow />
+        <RetrievalFlowArrow />
         <div><strong>冻结 ViT</strong><span>原始图像序列</span></div>
-        <Arrow />
+        <RetrievalFlowArrow />
         <div><strong>末层 [CLS] 特征</strong><math><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>[</mo><mn>0</mn><mo>,</mo><mo>:</mo><mo>]</mo></math></div>
       </div>
     </section>
