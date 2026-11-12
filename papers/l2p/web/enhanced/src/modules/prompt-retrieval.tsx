@@ -117,10 +117,10 @@ export function PromptRetrieval() {
           </div>
         </div>
         <figcaption className="p5-legend" aria-label="Query 与 Key 夹角图例">
-          <span><i className="p5-legend-query" aria-hidden="true" />固定 Query q<sub>{query}</sub></span>
-          <span><i className="p5-legend-key" aria-hidden="true" />当前比较 Key k<sub>j</sub></span>
-          <span><i className="p5-legend-candidate" aria-hidden="true" />候选 Key；橙色为当前项</span>
-          <span><i className="p5-legend-angle" aria-hidden="true" />夹角 θ</span>
+          <span><i className="p5-legend-query" aria-hidden="true" /><strong>固定 Query</strong><small><IndexedMath base="q" index={query} /></small></span>
+          <span><i className="p5-legend-key" aria-hidden="true" /><strong>当前比较</strong><small><IndexedMath base="k" index="j" /></small></span>
+          <span><i className="p5-legend-candidate" aria-hidden="true" /><strong>候选 Key</strong><small>橙色为当前项</small></span>
+          <span><i className="p5-legend-angle" aria-hidden="true" /><strong>夹角</strong><small>θ</small></span>
         </figcaption>
       </figure>
       <p>每个候选的记录都是 <math><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><mi>k</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mi>cos</mi><mi>θ</mi></math>。把十个距离排在一起，才能知道哪几个方向最接近当前 Query。</p>
@@ -140,10 +140,10 @@ export function PromptRetrieval() {
           <PromptShelf snapshot={snapshot} progress={read} />
         </div>
         <figcaption className="p5-legend p5-retrieval-legend" aria-label="距离排序与 Prompt 读取图例">
-          <span><i className="p5-legend-distance" aria-hidden="true" />柱高：余弦距离 γ(q,k<sub>j</sub>)</span>
-          <span><i className="p5-legend-topn" aria-hidden="true" />绿色底线：Top-{topN} 入选 Key</span>
-          <span><i className="p5-legend-source" aria-hidden="true" />固定源池槽位 k<sub>j</sub></span>
-          <span><i className="p5-legend-prompt" aria-hidden="true" />紫色块：同索引 Prompt P<sub>j</sub></span>
+          <span><i className="p5-legend-distance" aria-hidden="true" /><strong>余弦距离</strong><small>柱高 · γ(q, k<sub>j</sub>)</small></span>
+          <span><i className="p5-legend-topn" aria-hidden="true" /><strong>Top-{topN}</strong><small>入选 Key</small></span>
+          <span><i className="p5-legend-source" aria-hidden="true" /><strong>源池槽位</strong><small><IndexedMath base="k" index="j" /></small></span>
+          <span><i className="p5-legend-prompt" aria-hidden="true" /><strong>配对 Prompt</strong><small><IndexedMath base="P" index="j" /></small></span>
         </figcaption>
       </figure>
       <p>论文公式 (3) 选择的是总距离最小的 N 个索引。只要各项距离独立评分，取最小的 N 项就能得到这个集合。这里按距离顺序展示，方便把每个名次和一次读取对上。</p>
