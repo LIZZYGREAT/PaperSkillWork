@@ -2,7 +2,7 @@ import { useId, useMemo, type CSSProperties } from "react";
 import { promptPoolConfig, type CandidateScore, type SelectionSnapshot } from "./prompt-retrieval-data";
 
 export const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
-const eased = (value: number) => value * value * (3 - 2 * value);
+export const eased = (value: number) => value * value * (3 - 2 * value);
 
 export function IndexedMath({ base, index }: { base: string; index: string | number }) {
   return <math className="p5-index-math"><msub><mi>{base}</mi>{typeof index === "number" ? <mn>{index}</mn> : <mi>{index}</mi>}</msub></math>;
