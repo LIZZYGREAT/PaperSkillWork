@@ -16,20 +16,29 @@
 }
 .p5-query-flow {
   display: grid;
-  width: max-content;
-  max-width: 100%;
-  margin-inline: auto;
-  grid-template-columns: max-content 52px max-content 52px max-content;
-  gap: clamp(16px, 2vw, 24px);
-  justify-content: center;
+  grid-template-columns: minmax(184px, 1fr) minmax(96px, 1.4fr) minmax(184px, 1fr) minmax(96px, 1.4fr) minmax(184px, 1fr);
+  gap: clamp(12px, 1.5vw, 20px);
   background: #edf2ea;
 }
-.p5-query-flow > div { display: grid; gap: 3px; min-width: 0; width: max-content; max-width: 100%; }
-.p5-query-flow .p5-query-input { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.p5-query-flow > div {
+  box-sizing: border-box;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  min-height: 78px;
+  padding: 10px 12px;
+  border: 1px solid var(--rk-line-strong);
+  border-radius: 5px;
+  background: #f8f9f4;
+  justify-items: center;
+  align-content: center;
+  text-align: center;
+}
+.p5-query-flow .p5-query-input { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 10px; }
 .p5-query-input .specimen { width: 55px; height: 55px; border-radius: 7px; }
-.p5-query-flow > .flow-arrow { width: 52px; height: 20px; stroke-width: 1.25; }
+.p5-query-flow > .flow-arrow { width: 100%; min-width: 0; height: 20px; stroke-width: 1.25; }
 .p5-query-flow span { color: var(--rk-muted); font-size: 14px; }
-.p5-query-flow math { justify-self: start; color: var(--p5-query); font-size: 19px; }
+.p5-query-flow math { justify-self: center; color: var(--p5-query); font-size: 19px; }
 .p5-slot-anatomy {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(120px, .4fr) minmax(0, 1fr);
@@ -170,9 +179,12 @@
 .p5-overlap > div:nth-child(2) { border-inline: 1px solid var(--rk-line-strong); background: #edf2ea; }
 .p5-overlap > div > div { display: flex; flex-wrap: wrap; gap: 5px 12px; margin-top: 5px; color: var(--p5-prompt); font-size: 16px; font-weight: 650; }
 
+@media (max-width: 900px) {
+  .p5-query-flow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .p5-query-flow > .flow-arrow { width: 52px; justify-self: center; transform: rotate(90deg); }
+}
+
 @media (max-width: 680px) {
-  .p5-query-flow { width: 100%; max-width: none; margin-inline: 0; grid-template-columns: minmax(0, 1fr); justify-items: start; }
-  .p5-query-flow > .flow-arrow { transform: rotate(90deg); margin-left: 10px; }
   .p5-slot-anatomy, .p5-compare-grid { grid-template-columns: minmax(0, 1fr); }
   .p5-slot-pair-link { justify-self: start; }
   .p5-vector-space { width: min(100%, 332px); justify-self: center; }

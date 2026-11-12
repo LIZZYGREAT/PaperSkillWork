@@ -17,8 +17,8 @@ const copyMs = 600;
 const readDuration = readStart + copyMs * topN + 700;
 
 function RetrievalFlowArrow() {
-  return <svg className="flow-arrow" viewBox="0 0 48 18" aria-hidden="true">
-    <path d="M2 9h42m-7-4 7 4-7 4" />
+  return <svg className="flow-arrow" viewBox="0 0 120 18" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M2 9h116m-6-4 6 4-6 4" />
   </svg>;
 }
 
@@ -61,9 +61,9 @@ export function PromptRetrieval() {
       <div className="p5-query-flow" role="group" aria-label="当前图像经不插入 Prompt 的冻结 ViT 生成 Query">
         <div className="p5-query-input"><Specimen /><strong>当前图像</strong></div>
         <RetrievalFlowArrow />
-        <div><strong>冻结 ViT</strong><span>原始图像序列</span></div>
+        <div className="p5-query-model"><strong>冻结 ViT</strong><span>原始图像序列</span></div>
         <RetrievalFlowArrow />
-        <div><strong>末层 [CLS] 特征</strong><math><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>[</mo><mn>0</mn><mo>,</mo><mo>:</mo><mo>]</mo></math></div>
+        <div className="p5-query-output"><strong>末层 [CLS] 特征</strong><math><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>[</mo><mn>0</mn><mo>,</mo><mo>:</mo><mo>]</mo></math></div>
       </div>
     </section>
 
