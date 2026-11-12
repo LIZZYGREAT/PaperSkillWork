@@ -649,3 +649,9 @@ P5 先说明图像生成 Query 的理由，再用对照图拆解同槽位的 Key
 将宽屏双列网格的分支对齐设为 stretch，使训练和推断卡片共用同一行高；卡片改为纵向弹性布局，把末尾说明推至底部，保持两列内容基线一致。1024px 以下继续改为单列顺序展示，不强行等高。
 
 `npm.cmd run build` 通过（TypeScript 与 Vite 6.4.3，80 个模块）。Edge Visual QA 报告 `run-2026-11-12T05-04-56-791Z` 在 1440×900、1920×1080、1024×900、390×844 检查 4 张 P8 截图，`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`。已复看四档截图：桌面两列上下边缘齐平，平板/手机维持纵向堆叠且无页面溢出；`VISUAL_REVIEW=PASS`。截图与记录保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p8-branch-height-alignment/run-2026-11-12T05-04-56-791Z`。无已批准截图基准，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
+
+### P8 分支说明文字基线对齐（2026-11-12）
+
+在外层容器等高的基础上，为训练和推断卡片显式设置“标题、弹性内容区、说明”三行布局。中间步骤区吸收两列内容高度差，末尾说明共享底部行，确保两句文字的垂直位置一致。
+
+`npm.cmd run build` 通过（TypeScript 与 Vite 6.4.3，80 个模块）。Edge Visual QA 报告 `run-2026-11-12T05-15-20-886Z` 在 1440×900、1920×1080、1024×900、390×844 的 4 张截图全部通过几何、样式与浏览器检查。已复看桌面、宽屏和手机截图，确认两列说明文字共用底部行，窄屏纵向布局无裁切；`VISUAL_REVIEW=PASS`。证据保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p8-branch-height-alignment/text-baseline/run-2026-11-12T05-15-20-886Z`。无已批准截图基准，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
