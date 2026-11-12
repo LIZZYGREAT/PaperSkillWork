@@ -8,7 +8,7 @@ import "./p7-key-lab.css";
 const duration = 8100;
 const writeStart = 3680;
 const writeEnd = 6300;
-const colors = { A: "#f6c67d", B: "#86d8e0", key: "#d9b9ff" } as const;
+const colors = { A: "var(--lab-a)", B: "var(--lab-b)", key: "var(--lab-key)" } as const;
 const phases = [
   { title: "梯度汇入", at: 3450, note: "A 与 B 的梯度指向相反方向，先相加；Key 仍停在原位。" },
   { title: "批末写回", at: 4990, note: "紫色箭头沿合成方向移到新位置。途中是同一步的示意过渡。" },
@@ -85,7 +85,7 @@ function KeyPlot({ keyVector, time }: { keyVector: Vector2; time: number }) {
       <circle r="5" fill={colors.key} />
       <text x="16" y="-9" fill={colors.key}>Key {step.index}</text>
     </g>
-    <circle cx={origin.x} cy={origin.y} r="3" fill="#aac4bc" />
+    <circle cx={origin.x} cy={origin.y} r="3" fill="var(--lab-muted)" />
     <g transform="translate(352 388)">
       <path d="M 0 0 H 24" stroke={colors.key} strokeDasharray="4 5" />
       <text x="32" y="5" className="p7-lab-axis">写回轨迹</text>
