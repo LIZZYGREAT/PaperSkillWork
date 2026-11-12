@@ -8,7 +8,7 @@
 }
 .p5-query-flow, .p5-slot-anatomy {
   box-sizing: border-box;
-  width: min(100%, 760px);
+  width: 100%;
   margin: 18px 0;
   padding: 14px clamp(12px, 2vw, 23px);
   align-items: center;
@@ -28,7 +28,7 @@
 .p5-query-flow math { justify-self: start; color: var(--p5-query); font-size: 19px; }
 .p5-slot-anatomy {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(80px, .55fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(0, 1fr) minmax(120px, .4fr) minmax(0, 1fr);
   gap: 14px;
   background: var(--rk-surface);
 }
