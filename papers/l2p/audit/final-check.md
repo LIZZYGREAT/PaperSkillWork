@@ -92,6 +92,12 @@ Record the exact build command and exit result. Geometry evidence names the page
 - `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`：Edge Chromium 157.0.4341.46 在 1440×900 与 1920×1080 检查 P5 配对、A/B 比较、扫描、排序、排名、Prompt 读取和交集，共 20 个状态。Agent 实看两档比较、排名、读取与交集截图，动画卡和交集组已与正文同宽；数学下标字体一致，重点字重已降低，页面无横向溢出或浏览器错误。与用户提供的修改前截图对照，`VISUAL_REVIEW=PASS`、`REGRESSION=PASS`、`FULLSCREEN_LAYOUT=PASS`，`FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。
 - 移除重复的“查看排名”“查看读出”按钮和错位的十项距离详情；Visual QA 通过进度条定位排名/读出状态，A/B 读取与选集交集保持原数据和算法。报告及 20 张截图：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1cb72-320b-7d10-a686-fcad4d0d7be6/l2p-evidence/followup-screenshot-review/p5-report.md` 和同目录 `p5-screenshots`。
 
+#### P4/P5 本地视口截图复核（2026-11-12）
+
+- 按 P4/P5 两页配置重新截图，Edge Chromium 157.0.4341.46，1440×900 与 1920×1080，DPR 1，共 32 个页面状态。`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`。本轮截图命令没有重跑构建；`SOURCE_BUILD` 结果见上方 P4、P5 记录。
+- Agent 逐张检查了 14 张实际视口截图，并复核代表性全页状态。P4 训练卡、同图复算卡与公式/指标按正文网格居中；P5 查询比较、排名读取、A/B Prompt 读取和交集组与正文左右边界对齐；MathML 下标清楚，卡内无横向溢出或文字裁切。`VISUAL_REVIEW=PASS`、`FULLSCREEN_LAYOUT=PASS`。先前记录的修改前后对照仍为 `REGRESSION=PASS`；本轮不重复基线比较。`FULLSCREEN_REAL=NOT_RUN`（headless 视口截图不能验证真实 F11），`HUMAN_ACCEPTANCE=PENDING`。
+- 本轮报告：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1cb72-320b-7d10-a686-fcad4d0d7be6/l2p-evidence/followup-screenshot-review/self-check/run-2026-11-12T02-57-59-227Z/report.md`。实际视口截图：同目录 `viewport-screenshots`；两档各包含 P4 训练/复算与 P5 比较、排名、A/B 读取、交集截图。
+
 
 ## W10 Official PaperSkill Release
 
