@@ -627,3 +627,13 @@ P5 先说明图像生成 Query 的理由，再用对照图拆解同槽位的 Key
 按反馈移除批梯度图中跟随贡献对象绘制的轨迹尾线，保留 A、B 标记沿原曲线连续移动的过程。去掉与样本来源不直观、字形基线不稳的 Σ 符号，改用低饱和底色的来源芯片：两份贡献显示为 A + B，单份贡献显示为 A 或 B。截图复查发现原实现会把 A、B 拉到同一横坐标，造成标记相叠；现让两枚来源标记在整批梯度框的相邻槽位分别停留（中心距 30px），先淡出并留出短暂间隔，再显示合并芯片。双份芯片从两份来源的中点出现，随后平滑移向参数槽；单份芯片从对应来源位置出现。移动前两条通道的中心距为 22px。颜色沿用 A 的赭色与 B 的叶绿色，图内字重为 400，不改变损失路径和批末仅写回一次的算法表达。
 
 `SOURCE_BUILD=PASS`：最终修复后运行 `npm.cmd run build`，TypeScript 与 Vite 6.4.3 生产构建退出 0，80 modules。Edge Visual QA 在 390×844、1440×900、1920×1080 检查 P7 的 B 贡献、双来源合流、单来源合流、写回和写回后 5 个状态，共 15 张截图；`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`，无页面横向溢出、浏览器错误或几何诊断。已查看桌面 B 贡献、双来源合流、单来源合流、写回，以及手机端双来源和单来源截图；来源标记彼此分开，合流芯片出现时来源标记已退出，不再重叠，轨迹尾线已移除。`VISUAL_REVIEW=PASS`；无已批准截图基准，`REGRESSION=NOT_RUN`。初次临时宽度断言将 SVG 的计算宽度误设为字符串 `100%`，后改为图内常规字重断言。受限进程无法访问本地 loopback，Playwright Chromium 未安装；按仓库 Windows 回退流程指定本机 Edge 后截图成功。最终报告 `run-2026-11-12T02-20-35-191Z` 与代表截图副本保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p7-batch-merge`。`FULLSCREEN_LAYOUT=PASS`（1920×1080 固定视口模拟）；`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
+
+### P8 变量字形与训练/推断节点图重排（2026-11-12）
+
+把第四幅图由单层横向节点加大回折改为两条有交接关系的前向泳道：先以无 Prompt 的冻结 ViT 调用得到 Query，并从 Key 池取 Top‑N 配对 Prompt；再把所选 Prompt 与图像嵌入拼接，沿同一冻结 Transformer、Prompt 位置 AvgPool 与共享分类器得到 Logits。这样分开表达两次前向调用，并让所选 Prompt 到分类输入的交接可直接追踪。Logits 下方用短分叉线连接训练与推断：训练列出联合损失、整批累积、反向传播和一次优化器写回；推断列出 argmax、预测类别与只读参数状态。保持原批末更新、任务参数继承和测试不更新的语义。按截图红叉移除了单独占行的教学模拟说明段。
+
+统一 P8 可见公式中的变量为 MathML 下标/运算符：`fₑ`、`fᵣ`、`xₑ`、`q(x)`、`P_S`、`gφ` 与 `Θ₀–Θ₃`；样本轨迹标签也补齐向量下标。冻结 ViT 字号约 19.5px，账本版本符号约 20.5px，节点主标签 16px、辅助标签约 14.6px、账本正文 16px；沿用已有数学/正文两类字体、常规字重与低饱和绿蓝紫语义。宽屏保留两条并列前向泳道和左右训练/推断结果；1024px 将结果列改为纵向；窄屏将节点按阅读顺序纵向展开，页面不引入横向溢出。
+
+`SOURCE_BUILD=PASS`：最终代码运行 `npm.cmd run build`，TypeScript 与 Vite 6.4.3 退出 0，80 modules。最终 Edge Visual QA 报告 `run-2026-11-12T03-01-34-616Z`；5 个 P8 状态分别在 1440×900、1920×1080、1024×900、390×844 检查，共 20 张截图。`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`；页面无横向溢出、截图无剪切诊断，浏览器错误为 0。已实看桌面初态、账本、检索/分类泳道、训练/推断分支，以及 1024px 和 390px 的对应布局。首轮临时配置因滚动选择器同时命中两条泳道而未执行该状态；改用分类泳道专属选择器后完整重跑并通过。Impeccable type 与 layout 检测各返回空结果。截图和报告副本保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p8-variable-flow-review`。`VISUAL_REVIEW=PASS`；无已批准截图基准，`REGRESSION=NOT_RUN`；`FULLSCREEN_LAYOUT=PASS`（1920×1080 固定视口）；`FULLSCREEN_REAL=NOT_RUN`；`SUBPATH_ASSETS=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
+
+最后将推断节点的 `ŷ` 改为数学变量字体后，重新运行 `run-2026-11-12T03-07-53-744Z`：初始化、写回中段、推断完成 3 个状态在 1440×900、1920×1080、390×844 共 9 张截图均通过几何、样式与浏览器错误检查。复看桌面与手机端推断全页，数学字形清晰，训练/推断节点按窄屏顺序展开，账本保留横向浏览提示。该次构建也再次通过；最终报告和桌面、手机代表截图保存在同一证据目录，`VISUAL_REVIEW=PASS`，`HUMAN_ACCEPTANCE=PENDING`。

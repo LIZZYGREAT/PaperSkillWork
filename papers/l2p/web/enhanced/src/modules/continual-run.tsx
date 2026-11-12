@@ -35,7 +35,7 @@ function VersionRail({ cursor, version }: { cursor: number; version: number }) {
       <div data-run-state style={{ left: `${cursor * 100 / (versionLabels.length - 1)}%` }} />
     </div>
     <ol>{versionLabels.map((label, index) => <li key={label} aria-current={version === index ? "step" : undefined}>
-      <strong>Θ<sub>{index}</sub></strong><span>{label}</span>
+      <strong><math aria-label={`Theta ${index}`}><Sub base="Θ" index={index} /></math></strong><span>{label}</span>
     </li>)}</ol>
   </div>;
 }
@@ -66,7 +66,7 @@ function SharedModel({ stage, angles, slot, setSlot, hits, write, version }: {
         <path d="M2 8H43l8 6H10z M2 18H43l8 6H10z M2 28H43l8 6H10z" />
         <path d="M26 20v-4a4 4 0 0 1 8 0v4m-10 0h12v11H24z" />
       </svg>
-      <strong>冻结 ViT</strong><span>fₑ / fᵣ</span>
+      <strong>冻结 ViT</strong><span className="p8-backbone__functions"><math aria-label="f sub e"><Sub base="f" index="e" /></math><span aria-hidden="true">/</span><math aria-label="f sub r"><Sub base="f" index="r" /></math></span>
     </div>
     <div className="p8-pool">
       <div className="p8-pool-title"><strong>同一组 Key–Prompt</strong><span>固定配对 · 选择随输入改变</span></div>
@@ -131,7 +131,7 @@ function RunProcess({ stage, time }: { stage: RunStage; time: number }) {
       {["输入样本", "无 Prompt Query", "检索当前 Key", "带 Prompt 分类"].map((name, i) =>
         <text x={stations[i]} y="28" textAnchor="middle" className="p8-path-label" key={name}>{name}</text>)}
       <text x={stations[4]} y="28" textAnchor="middle" className="p8-path-label" opacity={1 - test}>联合损失</text>
-      <text x={stations[4]} y="28" textAnchor="middle" className="p8-path-label" opacity={test}>预测 ŷ</text>
+      <text x={stations[4]} y="28" textAnchor="middle" className="p8-path-label" opacity={test}>预测 <tspan className="p8-svg-math">ŷ</tspan></text>
       {stations.map(x => <circle key={x} cx={x} cy="57" r="5" fill="#dce8d5" stroke="#94ad98" />)}
 
       {passes.map(pass => {
@@ -145,14 +145,7 @@ function RunProcess({ stage, time }: { stage: RunStage; time: number }) {
             const y = pass.samples.length === 1 ? 57 : 51 + index * 13;
             const phase = elapsed(completion, index * .084, 1);
             const color = pass.inference ? leaf : index === 0 ? ochre : blue;
-            const label = pass.inference ? "测试" : sample.symbol.replace("x_", "");
-            const points = [
-              sample.label ? `x${label} · y${label}` : "无标签 · 无任务 ID",
-              `q${label} · ${sample.angleDegrees}°`,
-              selected.join(" · "),
-              "Prompt 输出 → Logits",
-              pass.inference ? "最大分数类别" : "分类 + 匹配",
-            ];
+            const label = pass.inference ? "test" : sample.symbol.replace("x_", "");
             const offset = pass.samples.length > 1 ? index * 20 : 0;
             const x = stations.slice(1).reduce<number>((current, next, i) =>
               current + (next - stations[i]) * arrive(phase, .12 + .20 * i, .30 + .20 * i), stations[0] - 15 * (1 - arrive(phase, 0, .14)));
@@ -167,9 +160,17 @@ function RunProcess({ stage, time }: { stage: RunStage; time: number }) {
                 <circle r="8" fill={color} stroke="#f5f7ef" strokeWidth="1.5" />
                 <text y="3.7" textAnchor="middle" className="p8-sample-letter">{pass.inference ? "x" : label.slice(0, 1)}</text>
               </g>
-              {points.map((value, i) => <text key={i} x={stations[i]} y={85 + offset} textAnchor="middle"
+              {[0, 1, 2, 3, 4].map(i => <text key={i} x={stations[i]} y={85 + offset} textAnchor="middle"
                 opacity={arrive(phase, ends[i] - .08, ends[i]) * (i === 4 ? 1 - .6 * back : 1)}
-                className="p8-path-data">{value}</text>)}
+                className="p8-path-data">
+                {i === 0 && (sample.label && !pass.inference
+                  ? <><tspan className="p8-svg-math">x</tspan><tspan className="p8-svg-math" fontSize=".75em" baselineShift="sub">{label}</tspan><tspan> · </tspan><tspan className="p8-svg-math">y</tspan><tspan className="p8-svg-math" fontSize=".75em" baselineShift="sub">{label}</tspan></>
+                  : "无标签 · 无任务 ID")}
+                {i === 1 && <><tspan className="p8-svg-math">q</tspan><tspan className="p8-svg-math" fontSize=".75em" baselineShift="sub">{label}</tspan><tspan> · {sample.angleDegrees}°</tspan></>}
+                {i === 2 && selected.join(" · ")}
+                {i === 3 && "Prompt 输出 → Logits"}
+                {i === 4 && (pass.inference ? "最大分数类别" : "分类 + 匹配")}
+              </text>)}
             </g>;
           })}
           {!pass.inference && <g opacity={arrive(back, 0, .24)}>
@@ -235,7 +236,7 @@ export function ContinualRun() {
     </section>
     <section className="explain-section">
       <h3>每批读取当前版本，批末交出新版本</h3>
-      <p>Task 1 的第一批沿用 P5 的 A、B。两者各自提取 Query、检索并带 Prompt 分类，计算联合损失后一起写回。看下方版本标记从 Θ₀ 移到 Θ₁ 时，池和分类器的位置与身份都保持固定。<span className="lesson-key">第二批读取 Θ₁</span>，再用自己的 Query 在更新后的 Key 上排名。</p>
+      <p>Task 1 的第一批沿用 P5 的 A、B。两者各自提取 Query、检索并带 Prompt 分类，计算联合损失后一起写回。看下方版本标记从 <math><Sub base="Θ" index="0" /></math> 移到 <math><Sub base="Θ" index="1" /></math> 时，池和分类器的位置与身份都保持固定。<span className="lesson-key">第二批读取 <math><Sub base="Θ" index="1" /></math></span>，再用自己的 Query 在更新后的 Key 上排名。</p>
     </section>
 
     <figure className="lesson-figure guided-motion p8-continuous-figure">
@@ -260,16 +261,15 @@ export function ContinualRun() {
       </div>
       <figcaption aria-live="polite">{note}</figcaption>
     </figure>
-    <p className="p8-example-note">教学模拟使用单位圆上的 Key 与合成 Query。Key 角度用匹配损失的梯度做二维 SGD，Prompt 与分类器只显示参数身份与更新事件。论文实验采用 Adam。</p>
     <P8StateLedger />
 
     <section className="explain-section">
-      <h3>任务交接切换数据，模型继承 Θ₂</h3>
-      <p>Task 1 的第二批写回 Θ₂ 后，Task 1 的数据退出。基础 L2P 直接用继承下来的 <span className="lesson-key">同一套 Key、Prompt 和分类器</span>处理 Task 2 的第一批，新的 Query 在原池里重新选槽位。这个批次完成后，最新状态变为 Θ₃。</p>
+      <h3>任务交接切换数据，模型继承 <math><Sub base="Θ" index="2" /></math></h3>
+      <p>Task 1 的第二批写回 <math><Sub base="Θ" index="2" /></math> 后，Task 1 的数据退出。基础 L2P 直接用继承下来的 <span className="lesson-key">同一套 Key、Prompt 和分类器</span>处理 Task 2 的第一批，新的 Query 在原池里重新选槽位。这个批次完成后，最新状态变为 <math><Sub base="Θ" index="3" /></math>。</p>
     </section>
     <section className="explain-section">
       <h3>测试只做检索与分类</h3>
-      <p>测试输入是一张没有标签、也没有任务 ID 的图像。模型用 Θ₃ 按式 (3) 做普通 Key 距离检索，再取配对 Prompt 做分类前向，最后选出分数最高的类别。此时画面里只剩这条前向路径，损失、反向和优化器都退出，<span className="lesson-key">Θ₃ 保持固定</span>。</p>
+      <p>测试输入是一张没有标签、也没有任务 ID 的图像。模型用 <math><Sub base="Θ" index="3" /></math> 按式 (3) 做普通 Key 距离检索，再取配对 Prompt 做分类前向，最后选出分数最高的类别。此时画面里只剩这条前向路径，损失、反向和优化器都退出，<span className="lesson-key"><math><Sub base="Θ" index="3" /></math> 保持固定</span>。</p>
     </section>
     <P8TrainInferMap />
     <section className="explain-section p8-pseudocode">
