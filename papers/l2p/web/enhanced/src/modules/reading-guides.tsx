@@ -1,4 +1,3 @@
-import { P6_IMAGE_CLS_SEQUENCE_INDEX, P6_PROMPT_TOKEN_COUNT } from "./prompt-forward-data";
 import { promptPoolConfig } from "./prompt-retrieval-data";
 import { P7_COMMON_INDICES } from "./prompt-learning-data";
 import "./reading-guides.css";
@@ -24,25 +23,7 @@ export function P5RankGuide() {
   </figure>;
 }
 
-export function P6ReadoutGuide() {
-  return <figure className="reading-guide p6-readout-guide" aria-label="放大编码后的 Prompt 与图像输出分界">
-    <div className="p6-guide-rows">
-      <div className="p6-guide-prompt">
-        <span>Prompt 输出</span>
-        <strong>第 0–{P6_PROMPT_TOKEN_COUNT - 1} 行</strong>
-        <div className="guide-token-strip" aria-hidden="true">{Array.from({ length: P6_PROMPT_TOKEN_COUNT }, (_, index) => <i key={index} />)}</div>
-        <span>逐维平均，得到 <math><mi>h</mi></math></span>
-      </div>
-      <div className="p6-guide-image">
-        <span>图像输出</span>
-        <strong>第 {P6_IMAGE_CLS_SEQUENCE_INDEX} 行起</strong>
-        <div className="guide-token-strip" aria-hidden="true"><i className="guide-cls" /><i /><i /><i /></div>
-        <span>从 [CLS] 开始，随后是 Patch</span>
-      </div>
-    </div>
-    <figcaption>这是输出序列的局部放大。所有位置都参与编码，平均池化只读取紫色位置。</figcaption>
-  </figure>;
-}
+
 
 
 export function P7BatchGuide() {

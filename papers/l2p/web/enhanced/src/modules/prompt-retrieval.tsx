@@ -1,11 +1,12 @@
 import { P5RankGuide } from "./reading-guides";
+import { QueryOverlap } from "./p5-pool-overlap";
 import { Term } from "../shared/core/reference/ReferenceHub";
 import { useState } from "react";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Specimen } from "./specimen";
 import { buildSelectionSnapshot, promptPoolConfig, type QueryId } from "./prompt-retrieval-data";
 import {
-  CandidateBars, IndexedMath, PromptShelf, PromptTokens, QueryOverlap, VectorSpace, clamp01, eased,
+  CandidateBars, IndexedMath, PromptShelf, PromptTokens, VectorSpace, clamp01, eased,
 } from "./prompt-retrieval-visuals";
 import "./prompt-retrieval.css";
 

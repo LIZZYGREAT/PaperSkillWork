@@ -1,5 +1,6 @@
 import { P4ParameterGuide } from "./reading-guides";
 import { P4Rerun } from "./p4-rerun";
+import { P4SharedPrompt } from "./p4-shared-prompt";
 import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
 import { Term } from "../shared/core/reference/ReferenceHub";
 import { P4_TOY_EXPERIMENT as experiment, P4_TRAINING_TRACE as trace } from "./prompt-tuning-demo";
@@ -164,7 +165,9 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>下一批任务还要共用这组 Prompt 吗？</h3>
-      <p>这一轮改写对当前标签有利。若任务 B 继续更新同一组 Prompt，任务 A 的输入也会读到改写后的值，原有表示可能随之变化。P5 将用一个 Prompt 池提供多组候选，再让每张图像自己决定取哪几组。</p>
+      <p>这一轮改写对当前标签有利。若任务 B 继续更新同一组 Prompt，任务 A 的输入也会读到改写后的值，原有表示可能随之变化。</p>
+      <P4SharedPrompt />
+      <p>P5 将用一个 Prompt 池提供多组候选，再让每张图像自己决定取哪几组。</p>
     </section>
   </>;
 }

@@ -171,7 +171,12 @@ export async function checkP5(page, output, width) {
     await capture(page, retrieval, output, "P5-" + width + "-read-" + query);
   }
   assert.deepEqual(sharedKeyIndices(), [2, 3]);
-  assert.deepEqual(await page.locator(".p5-overlap > div").nth(1).locator("msub > mn").allTextContents(), ["2", "3"]);
+  const sharedColumns = page.locator(".p5-overlap [data-shared=true]");
+  assert.deepEqual(await order(sharedColumns, "data-pool-slot"), [2, 3]);
+  const overlapDrawing = page.locator(".p5-overlap .viewport-drawing");
+  await overlapDrawing.scrollIntoViewIfNeeded();
+  await overlapDrawing.and(page.locator("[data-entered=true]")).waitFor();
+  await overlapDrawing.evaluate(el => Promise.all(el.getAnimations({ subtree: true }).map(animation => animation.finished)));
   await capture(page, page.locator(".p5-query-sharing"), output, "P5-" + width + "-overlap");
   await retrieval.getByRole("button", { name: "重播" }).click();
   await page.waitForFunction(() => document.querySelector(".p5-rank-bars").dataset.ranked === "false");

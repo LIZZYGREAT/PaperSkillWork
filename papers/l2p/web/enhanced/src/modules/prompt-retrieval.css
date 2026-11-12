@@ -200,10 +200,6 @@
 }
 .p5-copy .p5-token-strip { width: min(45%, 62px); }
 .p5-copy .p5-token-strip i { height: 8px; }
-.p5-overlap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; margin-block: 16px; border-block: 1px solid var(--rk-line-strong); }
-.p5-overlap > div { padding: 12px; }
-.p5-overlap > div:nth-child(2) { border-inline: 1px solid var(--rk-line-strong); background: #edf2ea; }
-.p5-overlap > div > div { display: flex; flex-wrap: wrap; gap: 5px 12px; margin-top: 5px; color: var(--p5-prompt); font-size: 16px; font-weight: 650; }
 
 @media (max-width: 900px) {
   .p5-query-flow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
@@ -224,5 +220,4 @@
     grid-row: var(--compact-row);
     transform: translate(var(--compact-x), calc((var(--compact-y) - var(--lift)) * var(--p5-rank-height)));
   }
-  .p5-overlap > div { padding: 9px 6px; font-size: 14px; }
 }

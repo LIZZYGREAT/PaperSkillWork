@@ -15,23 +15,12 @@
 .p5-rank-guide li:nth-child(3) { margin-top: 30px; }
 .p5-rank-guide li strong { font-size: 17px; }
 .rk-reading .p5-rank-guide li p { margin: 4px 0 0; font-size: 15px; line-height: 1.6; color: var(--rk-muted); }
-.p6-guide-rows { display: grid; grid-template-columns: 1.6fr 1fr; border: 1px solid var(--rk-line); border-radius: 12px; overflow: hidden; }
-.p6-guide-rows > div { display: grid; gap: 6px; padding: 16px 20px; font-size: 15px; line-height: 1.5; }
-.p6-guide-rows strong { font-size: 18px; font-variant-numeric: tabular-nums; }
-.p6-guide-prompt { color: var(--guide-plum); background: #f1e9f1; }
-.p6-guide-image { color: var(--guide-blue); background: #eaf0f2; border-inline-start: 1px dashed #8499a2; }
-.guide-token-strip { display: flex; gap: 3px; align-items: center; min-width: 0; padding-block: 4px; }
-.guide-token-strip i { display: block; flex: 0 1 15px; min-width: 0; height: 16px; background: #d3b9d8; border: 1px solid #97789f; border-radius: 2px; }
-.p6-guide-image .guide-token-strip i { background: #c5d6de; border-color: #829eab; }
-.p6-guide-image .guide-token-strip .guide-cls { background: #e6c888; border-color: #9c763c; }
 @media (max-width: 760px) {
   .p4-parameter-guide dl > div { grid-template-columns: 1fr; gap: 8px; padding-inline: 10px; }
   .p5-rank-guide ol { grid-template-columns: 1fr; gap: 8px; }
   .p5-rank-guide li:nth-child(n) { margin-top: 0; }
   .p5-rank-guide li:nth-child(2) { margin-inline-start: 10px; }
   .p5-rank-guide li:nth-child(3) { margin-inline-start: 20px; }
-  .p6-guide-rows { grid-template-columns: 1fr; }
-  .p6-guide-image { border-inline-start: 0; border-top: 1px dashed #8499a2; }
 }
 
 

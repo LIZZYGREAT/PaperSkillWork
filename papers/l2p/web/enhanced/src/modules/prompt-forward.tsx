@@ -1,4 +1,4 @@
-import { P6ReadoutGuide } from "./reading-guides";
+import { P6PoolingTrace } from "./p6-pooling-trace";
 import { Term } from "../shared/core/reference/ReferenceHub";
 
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
@@ -175,7 +175,7 @@ export function PromptForward() {
     <section className="explain-section" id="p6-readout">
       <h3>从编码后的 Prompt 位置读出类别特征</h3>
       <p>冻结 Transformer 计算 <math><mi>H</mi><mo>=</mo><Sub base="f" index="r" /><mo>(</mo><Sub base="x" index="p" /><mo>)</mo></math> 时，扩展序列的全部位置参与上下文计算。行号一一对应，向量内容已经改变，因此开头 {P6_PROMPT_TOKEN_COUNT} 个 <span className="lesson-key lesson-term--value"><Term id="prompt-readout">Prompt 输出位置</Term></span>现在带有图像信息。图像的 [CLS] 与 Patch 输出仍在 H 中，它们从位置 {P6_IMAGE_CLS_SEQUENCE_INDEX} 开始。</p>
-      <P6ReadoutGuide />
+      <P6PoolingTrace />
       <p>L2P 对开头 <math><mi>N</mi><Sub base="L" index="p" /></math> 行做<Term id="prompt-pooling">平均池化</Term>。每一维独立相加并除以位置数，结果 <math><mi>h</mi></math> 仍为 {config.featureWidth} 维。共享分类器由它得到各类别的 <Term id="logits">Logits</Term>，最高分所在的类别就是本次预测。</p>
       <div className="guided-equations p6-equation"><math display="block">
         <Sub base="h" index="d" /><mo>=</mo><mfrac><mn>1</mn><mrow><mi>N</mi><Sub base="L" index="p" /></mrow></mfrac>

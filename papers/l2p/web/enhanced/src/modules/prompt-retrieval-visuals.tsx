@@ -141,19 +141,3 @@ export function PromptShelf({ snapshot, progress }: { snapshot: SelectionSnapsho
     })}
   </div>;
 }
-
-export function QueryOverlap({ first, second }: { first: SelectionSnapshot; second: SelectionSnapshot }) {
-  const a = first.selectedKeyIndices;
-  const b = second.selectedKeyIndices;
-  const groups = [
-    { label: "仅 A 命中", indices: a.filter(index => !b.includes(index)) },
-    { label: "A、B 共同命中", indices: a.filter(index => b.includes(index)) },
-    { label: "仅 B 命中", indices: b.filter(index => !a.includes(index)) },
-  ];
-  return <div className="p5-overlap" role="group" aria-label="两个选集的交集与差集">
-    {groups.map(group => <div key={group.label}>
-      <strong>{group.label}</strong>
-      <div>{group.indices.map(index => <IndexedMath key={index} base="P" index={index} />)}</div>
-    </div>)}
-  </div>;
-}

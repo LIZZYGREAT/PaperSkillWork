@@ -688,3 +688,13 @@ ReferenceHub 覆盖 P1–P9，新增 23 条概念。页眉进入当前页主题�
 - P8 删除旧折叠代码，将 Task → Epoch → Batch → Sample 与对应代码放在共享行网格。Sample 中寻址、分类、累积各自对齐；写回退回 Batch 缩进，用一整行标出；推断只读单独列为一条对照行。
 
 验证：`npm.cmd run build`（Vite 6.4.3，88 modules）和 `node scripts/check-p5-retrieval.mjs` 均通过。Edge 1440×900 与 1920×1080（DPR 1）仅检查桌面。Visual QA 使用 P4/P7/P8 三页配置（从 `visual-qa.json` 筛选），54 个状态的 `GEOMETRY_QA`、`STYLE_QA`、`BROWSER_ERRORS` 通过，运行编号 `run-2026-11-12T09-09-34-812Z`。随后精修 P7 滑杆并重建，用构建的非根子路径复验两档桌面图、P4 刻度对齐、P8 行高/缩进/Pseudocode 无横向裁切，及 P7 真实播放、暂停、拖动、减少动态效果、同一 SVG 节点、有限差分终点校验和唯一一次写回。已查看三页截取与代表状态，Impeccable 静态检查无报告项。`FULLSCREEN_LAYOUT=PASS`；`FULLSCREEN_REAL=NOT_RUN`（无头浏览器）；`HUMAN_ACCEPTANCE=PENDING`。截图与报告副本位于 `C:/Users/lenovo/.codex/visualizations/2026/11/12/01a1ced9-92d5-7943-a334-2155308642b2/l2p-rework/`。
+
+
+### P7 浅纸色与 P4–P6 随阅读播放的图解（2026-11-12）
+
+- P7 保留共享 Key 的连续位置和一次写回计算。把深色舞台换成纸白、浅绿坐标网，A / B / Key 保留琥珀 / 蓝 / 紫的对象色。
+- P4 新增共享 Prompt 的写回和再读取。先示意 B 的优化器写回中央同一份参数，随后 A（若再次输入）和 B 读取更新值，不假设旧任务性能变化。
+- P5 选集图用 P5 同一个计算快照：A、B 两排分别读出同一源池的配对 Prompt；源池 10 个编号不移动，2、3 号用共用列标记。
+- P6 第 1 维池化使用既有教学数据的 25 个分量。五个小计先汇入 6.00，再除以 25 得 0.24；[CLS] 与其余图像行明确在汇聚边界之外。分组只为便于追踪，平均的分母仍为全部 25 个位置。
+
+三张短图解由 IntersectionObserver 触发一次；位置、路径与数据各有固定身份，结束停留在结果，减少动态效果时直接显示结果。桌面 Edge 1440×900 / 1920×1080（DPR 1）实看各图中途和终点、以及 P7 梯度汇入和写回前后；核对可见前不播放、滚出滚回不重播、减少动态效果时无动画，P5 共享列与 P6 结果均按数据核算。P7 完整播放、暂停、拖动和单次写回复验通过。 `npm.cmd run build`（Vite 6.4.3，93 modules）、`node scripts/check-p5-retrieval.mjs`、`npm.cmd run check:reading`（P1–P9，非根子路径）通过。定向 Visual QA 的 18 个 P4–P7 状态全部 `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`（`run-2026-11-12T09-27-51-694Z`），Impeccable 无报告项。 `FULLSCREEN_LAYOUT=PASS`；`FULLSCREEN_REAL=NOT_RUN`（无头浏览器）；`HUMAN_ACCEPTANCE=PENDING`。桌面截图和报告副本：`C:/Users/lenovo/.codex/visualizations/2026/11/12/01a1ced9-92d5-7943-a334-2155308642b2/l2p-motion-paper/`。
