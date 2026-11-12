@@ -698,3 +698,10 @@ ReferenceHub 覆盖 P1–P9，新增 23 条概念。页眉进入当前页主题�
 - P6 第 1 维池化使用既有教学数据的 25 个分量。五个小计先汇入 6.00，再除以 25 得 0.24；[CLS] 与其余图像行明确在汇聚边界之外。分组只为便于追踪，平均的分母仍为全部 25 个位置。
 
 三张短图解由 IntersectionObserver 触发一次；位置、路径与数据各有固定身份，结束停留在结果，减少动态效果时直接显示结果。桌面 Edge 1440×900 / 1920×1080（DPR 1）实看各图中途和终点、以及 P7 梯度汇入和写回前后；核对可见前不播放、滚出滚回不重播、减少动态效果时无动画，P5 共享列与 P6 结果均按数据核算。P7 完整播放、暂停、拖动和单次写回复验通过。 `npm.cmd run build`（Vite 6.4.3，93 modules）、`node scripts/check-p5-retrieval.mjs`、`npm.cmd run check:reading`（P1–P9，非根子路径）通过。定向 Visual QA 的 18 个 P4–P7 状态全部 `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`（`run-2026-11-12T09-27-51-694Z`），Impeccable 无报告项。 `FULLSCREEN_LAYOUT=PASS`；`FULLSCREEN_REAL=NOT_RUN`（无头浏览器）；`HUMAN_ACCEPTANCE=PENDING`。桌面截图和报告副本：`C:/Users/lenovo/.codex/visualizations/2026/11/12/01a1ced9-92d5-7943-a334-2155308642b2/l2p-motion-paper/`。
+
+
+### P4–P6 居中触发、跟读节奏与图内排版（2026-11-12）
+
+三张自动图解改用图面中心判断，进入视口中央 ±6% 才启动；一个页面实例只播一次，保留减少动态效果的静态结果。总时长约 4.36 秒（P4）、4.55 秒（P5）、4.84 秒（P6）。三段跟读提示与关键动作同步：P4 留出时间看 P′ 写回同一槽位再沿两侧读取；P5 等 A 的选集就位再播 B，最后标出交集；P6 在小计移动时高亮汇聚提示，待总和出现才进入除法。调整 P4 写回箭头、P5 固定池底带与 P6 小计列头，统一图内字体、数字对齐和提示层级。
+
+`npm.cmd run build`（Vite 6.4.3，94 modules）、`npm.cmd run check:reading`（P1–P9，生产构建非根子路径）通过。Edge 在 1440×900 / 1920×1080 逐图核对可见但偏离中央时等待、居中开播、滚回不重播、减少动态效果，以及中间帧、末帧字号与横向布局。定向 Visual QA 6 个状态通过几何、样式与浏览器错误检查，运行编号 `run-2026-11-12T09-43-37-176Z`；已查看两档尺寸的代表截图，Impeccable 无报告项。`FULLSCREEN_LAYOUT=PASS`；`FULLSCREEN_REAL=NOT_RUN`（无头浏览器）；`HUMAN_ACCEPTANCE=PENDING`。截图及报告副本：`C:/Users/lenovo/.codex/visualizations/2026/11/12/01a1ced9-92d5-7943-a334-2155308642b2/l2p-motion-center/`。

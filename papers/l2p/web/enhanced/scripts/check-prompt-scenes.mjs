@@ -174,7 +174,7 @@ export async function checkP5(page, output, width) {
   const sharedColumns = page.locator(".p5-overlap [data-shared=true]");
   assert.deepEqual(await order(sharedColumns, "data-pool-slot"), [2, 3]);
   const overlapDrawing = page.locator(".p5-overlap .viewport-drawing");
-  await overlapDrawing.scrollIntoViewIfNeeded();
+  await overlapDrawing.evaluate(el => el.scrollIntoView({ block: "center", behavior: "instant" }));
   await overlapDrawing.and(page.locator("[data-entered=true]")).waitFor();
   await overlapDrawing.evaluate(el => Promise.all(el.getAnimations({ subtree: true }).map(animation => animation.finished)));
   await capture(page, page.locator(".p5-query-sharing"), output, "P5-" + width + "-overlap");

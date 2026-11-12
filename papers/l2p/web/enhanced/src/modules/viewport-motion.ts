@@ -1,23 +1,47 @@
 import { useEffect, useRef, useState } from "react";
 
-/** Start a short explanatory sequence once, when the drawing is readable in the viewport. */
-export function useViewportMotion() {
+/** The drawing, not the surrounding prose, determines the start position. */
+export function useViewportMotion(secondAt: number, thirdAt: number) {
   const ref = useRef<HTMLDivElement>(null);
-  const [entered, setEntered] = useState(false);
+  const [phase, setPhase] = useState(-1);
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    if (!("IntersectionObserver" in window)) {
-      setEntered(true);
-      return;
+    let frame = 0;
+    let started = false;
+    const timers: number[] = [];
+
+    function check() {
+      frame = 0;
+      if (!element || started) return;
+      const rect = element.getBoundingClientRect();
+      const height = window.innerHeight;
+      if (Math.abs(rect.top + rect.height / 2 - height / 2) > height * .06) return;
+
+      started = true;
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setPhase(2);
+        return;
+      }
+      setPhase(0);
+      timers.push(window.setTimeout(() => setPhase(1), secondAt));
+      timers.push(window.setTimeout(() => setPhase(2), thirdAt));
     }
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.intersectionRatio < .55) return;
-      setEntered(true);
-      observer.disconnect();
-    }, { threshold: .55, rootMargin: "-80px 0px -8% 0px" });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-  return { ref, entered };
+
+    function schedule() {
+      if (!frame && !started) frame = requestAnimationFrame(check);
+    }
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    schedule();
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      cancelAnimationFrame(frame);
+      timers.forEach(clearTimeout);
+    };
+  }, [secondAt, thirdAt]);
+  return { ref, phase };
 }

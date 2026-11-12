@@ -104,7 +104,7 @@
         { "id": "backward", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(4)" }] },
         { "id": "write-intermediate", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(5)" }] },
         { "id": "rerun", "actions": [{ "type": "click", "selector": ".p4-phase-list button:nth-child(6)" }] },
-        { "id": "shared-prompt", "actions": [{ "type": "scrollIntoView", "selector": ".p4-shared-prompt .viewport-drawing" }, { "type": "wait", "milliseconds": 2400 }] }
+        { "id": "shared-prompt", "actions": [{ "type": "scrollIntoView", "selector": ".p4-shared-prompt .viewport-drawing" }, { "type": "waitFor", "selector": ".p4-shared-prompt[data-guide-phase='2']", "timeoutMs": 5000 }, { "type": "wait", "milliseconds": 1500 }] }
       ],
       "computedStyles": [
         { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" },
@@ -131,7 +131,7 @@
           { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
           { "type": "fill", "selector": ".p5-retrieval-figure input[type=range]", "value": "8800" }
         ] },
-        { "id": "overlap", "actions": [{ "type": "scrollIntoView", "selector": ".p5-overlap .viewport-drawing" }, { "type": "wait", "milliseconds": 2300 }] }
+        { "id": "overlap", "actions": [{ "type": "scrollIntoView", "selector": ".p5-overlap .viewport-drawing" }, { "type": "waitFor", "selector": ".p5-overlap[data-guide-phase='2']", "timeoutMs": 5000 }, { "type": "wait", "milliseconds": 650 }] }
       ],
       "computedStyles": [
         { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" },
@@ -151,7 +151,7 @@
         {"id":"pooled","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":9700}]},
         {"id":"classifier-midpoint","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":11100}]},
         {"id":"class-logits","actions":[{"type":"fill","selector":".p6-control-dock input[type='range']","value":13600}]},
-        {"id":"pooling-trace","actions":[{"type":"scrollIntoView","selector":".p6-pooling-trace .viewport-drawing"},{"type":"wait","milliseconds":2850}]}
+        {"id":"pooling-trace","actions":[{"type":"scrollIntoView","selector":".p6-pooling-trace .viewport-drawing"},{"type":"waitFor","selector":".p6-pooling-trace[data-guide-phase='2']","timeoutMs":5000},{"type":"wait","milliseconds":1500}]}
       ],
       "computedStyles": [
         { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" }
