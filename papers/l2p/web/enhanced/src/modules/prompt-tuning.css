@@ -1,5 +1,5 @@
 .lesson-figure.p4-training-figure {
-  inline-size: min(100%, 1080px);
+  inline-size: 100%;
   margin-inline: auto;
   overflow: visible;
   scroll-margin-block-start: 110px;
@@ -15,7 +15,8 @@
 
 .p4-input-equation {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 8px 26px;
   margin-block: 18px;
@@ -86,14 +87,9 @@
 .p4-edge-backward::before { left: 2px; color: var(--p4-backward); transform: rotate(-135deg); }
 .p4-stage-foot { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--rk-line); }
 .p4-stage-foot strong { color: var(--p4-prompt); }
-.p4-loss-comparison { display: flex; flex-wrap: wrap; gap: 16px 38px; margin-block: 18px; padding: 14px 0; border-block: 1px solid var(--rk-line); }
+.p4-loss-comparison { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 38px; margin-block: 18px; padding: 14px 0; border-block: 1px solid var(--rk-line); }
 .p4-loss-comparison > div { display: grid; gap: 3px; }
-.p4-loss-comparison strong { font-size: 26px; color: #82481a; font-variant-numeric: tabular-nums; }
-.p4-trace-details { padding: 12px 0; border-bottom: 1px solid var(--rk-line); }
-.p4-trace-details summary { cursor: pointer; font-weight: 650; }
-.p4-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 14px 22px; }
-.p4-detail-grid h4 { margin: 0 0 7px; }
-.p4-detail-grid p { margin: 3px 0; font-size: 15px; overflow-wrap: anywhere; }
+.p4-loss-comparison strong { font-size: 23px; font-weight: 500; color: #82481a; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 840px) {
   .p4-training-path { grid-template-columns: minmax(0, 1fr); justify-items: stretch; }

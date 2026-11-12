@@ -4,7 +4,6 @@ import { P4_TOY_EXPERIMENT as experiment, P4_TRAINING_TRACE as trace } from "./p
 import "./prompt-tuning.css";
 
 type Pair = readonly [number, number];
-type Matrix = readonly [Pair, Pair];
 
 const stops = [
   { at: 0, label: "组装输入", hint: "紫色 Prompt 与图像 Token 一起进入冻结 Attention。" },
@@ -17,7 +16,6 @@ const stops = [
 const duration = 21100;
 const number = (value: number) => value.toFixed(3);
 const pairText = (pair: Pair) => '[' + pair.map(number).join(', ') + ']';
-const matrixText = (matrix: Matrix) => matrix.map(pairText).join(' · ');
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
 const mix = (start: number, end: number, amount: number) => start + (end - start) * amount;
 const mixPair = (start: Pair, end: Pair, amount: number): Pair =>
@@ -91,7 +89,7 @@ function TrainingStage({ position, phase }: { position: number; phase: number })
       <Edge forward={edge(2150)} backward={gradient(950)} />
       <section className="p4-node p4-readout" data-active={readoutReady && (phase === 1 || revised)}>
         <h4>Prompt 位置读出</h4>
-        <strong className="p4-pooling">H₀ + H₁ → 均值 h</strong>
+        <strong className="p4-pooling"><math><msub><mi>H</mi><mn>0</mn></msub><mo>+</mo><msub><mi>H</mi><mn>1</mn></msub></math> → 均值 <math><mi>h</mi></math></strong>
         <span className="p4-value">{readoutReady ? pairText(state.promptReadout) : "等待读出"}</span>
         <span>按坐标平均</span>
       </section>
@@ -111,57 +109,6 @@ function TrainingStage({ position, phase }: { position: number; phase: number })
         : "写回范围 · Prompt P 与分类头 φ"}</span>
     </div>
   </div>;
-}
-
-
-function TraceDetails() {
-  const initial = trace.initial;
-  const updated = trace.updated;
-  return <details className="p4-trace-details">
-    <summary>展开同一份教学 Trace 的计算细节</summary>
-    <p>以下二维数值、Logits、损失、梯度与更新都来自一个前向/反向计算图；它们是可复算教学值，不是预训练 ViT 的隐藏状态或论文实验结果。</p>
-    <div className="p4-detail-grid">
-      <section>
-        <h4>固定运算与输入</h4>
-        <p>Prompt 初值：<code>{matrixText(experiment.prompt)}</code></p>
-        <p>图像 Token：<code>{matrixText(experiment.imageTokens)}</code></p>
-        <p>WQ：<code>{matrixText(experiment.frozenWeights.wq)}</code></p>
-        <p>WK：<code>{matrixText(experiment.frozenWeights.wk)}</code></p>
-        <p>WV：<code>{matrixText(experiment.frozenWeights.wv)}</code></p>
-        <p>WO：<code>{matrixText(experiment.frozenWeights.wo)}</code></p>
-      </section>
-      <section>
-        <h4>首个 Prompt 的 Attention</h4>
-        <p>Q₀：<code>{pairText(initial.firstPromptQuery)}</code></p>
-        <p>K₀…K₃：<code>{initial.keys.map(pairText).join(" · ")}</code></p>
-        <p>V₀…V₃：<code>{initial.values.map(pairText).join(" · ")}</code></p>
-        <p>α₀…α₃：<code>{initial.firstPromptAttention.map(number).join(" · ")}</code></p>
-        <p>Σ αV：<code>{pairText(initial.firstPromptContext)}</code></p>
-        <p>初始 H₀：<code>{pairText(initial.firstPromptOutput)}</code></p>
-      </section>
-      <section>
-        <h4>分类与损失</h4>
-        <p>读出 h：<code>{pairText(initial.promptReadout)}</code></p>
-        <p>Logits：<code>{pairText(initial.logits)}</code></p>
-        <p>Softmax：<code>{pairText(initial.probabilities)}</code></p>
-        <p>标签 y：<code>{experiment.label}</code>；交叉熵：<code>{number(initial.loss)}</code></p>
-        <p>更新后 Logits：<code>{pairText(updated.logits)}</code></p>
-        <p>更新后损失：<code>{number(updated.loss)}</code></p>
-        <p>Wcls⁰：<code>{matrixText(experiment.classifier.weights)}</code></p>
-        <p>Wcls¹：<code>{matrixText(trace.updatedClassifierWeights)}</code></p>
-        <p>bcls⁰：<code>{pairText(experiment.classifier.bias)}</code>；bcls¹：<code>{pairText(trace.updatedClassifierBias)}</code></p>
-      </section>
-      <section>
-        <h4>梯度与一次 SGD</h4>
-        <p>∇Pℒ：<code>{matrixText(trace.promptGradients)}</code></p>
-        <p>P¹：<code>{matrixText(trace.updatedPrompt)}</code></p>
-        <p>∇Wclsℒ：<code>{matrixText(trace.classifierWeightGradients)}</code></p>
-        <p>∇bclsℒ：<code>{pairText(trace.classifierBiasGradients)}</code></p>
-        <p>学习率 η：<code>{number(experiment.learningRate)}</code></p>
-        <p>中心差分梯度校验最大误差：<code>{trace.gradientCheck.maxAbsoluteError.toExponential(2)}</code>（ε={trace.gradientCheck.epsilon}）</p>
-      </section>
-    </div>
-  </details>;
 }
 
 
@@ -214,12 +161,11 @@ export function PromptTuning() {
       <div className="p4-input-equation">
         <math><msup><mi>P</mi><mrow><mo>(</mo><mn>1</mn><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>P</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup><mo>−</mo><mi>η</mi><msub><mo>∇</mo><mi>P</mi></msub><mi>ℒ</mi></math>
       </div>
-      <p>以更新前的读出为例，h 的第一维由 H₀ 的 {number(initial.promptOutputs[0][0])} 和 H₁ 的 {number(initial.promptOutputs[1][0])} 取均值，得到 {number(initial.promptReadout[0])}。换成更新后的 P 和 φ，同图重新计算，标签对应的概率上升，交叉熵下降。</p>
+      <p>以更新前的读出为例，<math><mi>h</mi></math> 的第一维由 <math><msub><mi>H</mi><mn>0</mn></msub></math> 的 {number(initial.promptOutputs[0][0])} 和 <math><msub><mi>H</mi><mn>1</mn></msub></math> 的 {number(initial.promptOutputs[1][0])} 取均值，得到 {number(initial.promptReadout[0])}。换成更新后的 <math><mi>P</mi></math> 和 <math><mi>φ</mi></math>，同图重新计算，标签对应的概率上升，交叉熵下降。</p>
       <div className="p4-loss-comparison">
         <div><span>初次前向</span><strong>{number(initial.loss)}</strong></div>
         <div><span>同图复算</span><strong>{number(updated.loss)}</strong></div>
       </div>
-      <TraceDetails />
     </section>
 
     <section className="explain-section">

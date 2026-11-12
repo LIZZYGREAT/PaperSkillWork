@@ -80,6 +80,12 @@ Record the exact build command and exit result. Geometry evidence names the page
 - 响应式专项 PASS。390×844 截图复查了本次涉及的单列节点、配对图、比较图、读取结果与展开 MathML。DESKTOP_WINDOW=PASS，FULLSCREEN_LAYOUT=PASS。FULLSCREEN_REAL=NOT_RUN，本机工具无法确认 Edge 当前地址，因而结束了真实 F11 检查。HUMAN_ACCEPTANCE=PENDING。
 - UPSTREAM_SYNTAX=PASS，UPSTREAM_OUTPUT=PASS。PaperSkill 官方 main 为 `1b6e0998e23965dca126665c32669e9a130321b5`，相邻检出为 `4da910afe9054d3a6ff54003023d53ec3de44ac9`。两个检查脚本的内容在统一换行后与官方 main 一致。`node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser` 和 `node ../PaperSkill/paper-skill/scripts/validate-output.js <publish_source>` 均退出 0，43 个源码文件使用 TypeScript 解析。W10 官方发布预检仍为 NOT_RUN。
 
+#### P4 排版与文字修整（2026-11-12）
+
+- `SOURCE_BUILD=PASS`：`npm.cmd run build` 退出 0，TypeScript 与 Vite 6.4.3。
+- `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`：仅 P4，1440×900 与 1920×1080 两档，初始、前向、损失、反传、写回中和同图复算各检查一次，共 12 个状态。Visual QA 使用安装的 Edge Chromium 157.0.4341.46；Playwright 默认 Chromium 可执行文件未安装。Agent 实看两档截图，公式与损失对照居中，训练卡铺满正文，Trace 明细已删除；节点文字、箭头和参数行未出现挤压或裁切。`VISUAL_REVIEW=PASS`，`FULLSCREEN_LAYOUT=PASS`，`FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。
+- 截图与报告：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1cb72-320b-7d10-a686-fcad4d0d7be6/l2p-evidence/followup-screenshot-review`。原始 runner 报告：`.visual-qa/run-2026-11-12T02-24-01-869Z/report.md`。
+
 
 ## W10 Official PaperSkill Release
 
