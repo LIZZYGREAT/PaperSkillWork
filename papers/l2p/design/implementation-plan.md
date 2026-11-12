@@ -655,3 +655,25 @@ P5 先说明图像生成 Query 的理由，再用对照图拆解同槽位的 Key
 在外层容器等高的基础上，为训练和推断卡片显式设置“标题、弹性内容区、说明”三行布局。中间步骤区吸收两列内容高度差，末尾说明共享底部行，确保两句文字的垂直位置一致。
 
 `npm.cmd run build` 通过（TypeScript 与 Vite 6.4.3，80 个模块）。Edge Visual QA 报告 `run-2026-11-12T05-15-20-886Z` 在 1440×900、1920×1080、1024×900、390×844 的 4 张截图全部通过几何、样式与浏览器检查。已复看桌面、宽屏和手机截图，确认两列说明文字共用底部行，窄屏纵向布局无裁切；`VISUAL_REVIEW=PASS`。证据保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p8-branch-height-alignment/text-baseline/run-2026-11-12T05-15-20-886Z`。无已批准截图基准，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
+
+
+### P4–P9 教学图解与 ReferenceHub 补齐（2026-11-12）
+
+沿用 P1–P3 的纸面底色、正文宽度、17px / 1.8 排版与绿色关键词下划线。紫色标注 Prompt，蓝色标注冻结计算或特征对象，暖色提示可选策略；各图的标签也写明角色。保留既有教学顺序、合成数据、公式、核心动画与论文实验数值，新图全部由本地 DOM 和 MathML 绘制。
+
+| 页 | 新增阅读支撑 |
+| --- | --- |
+| P4 | 参数对照表区分梯度通过冻结运算和优化器写回，用动画的两个相邻阶段检验。 |
+| P5 | 距离、索引、内容三阶引导，提示跟踪排序前后同一根柱的源槽位。 |
+| P6 | 放大编码输出的行分界，明确读前 25 个 Prompt 行，第 25 行的 [CLS] 不进入池化。 |
+| P7 | 用 A、B 共同命中的实际槽位作梯度账表，按参数区分来源，批末统一写回。 |
+| P8 | Task / Epoch / Batch / Sample 缩进图把写回落在 Batch 层；保留可展开的伪代码。 |
+| P9 | 三条证据导航分别指向 Figure 3、Table 5、Tables 1/3/4；消融列标签、数值和条形对齐。 |
+
+ReferenceHub 覆盖 P1–P9，新增 23 条概念。页眉进入当前页主题；正文术语直接打开释义，相关条目可往返。P5–P9 条目定位到 CVPR 原文的章节、公式、图表或补充材料 Algorithm 1。现有 P1–P4 条目仍可从同一索引访问。
+
+- `SOURCE_BUILD=PASS`：`npm.cmd run build`，TypeScript / Vite 6.4.3，共 82 个模块。 `node scripts/check-p5-retrieval.mjs` 通过；64 个术语 ID 无重复，224 条关联均能解析。
+- `npm.cmd run check:reading` 在构建的子路径下通过，覆盖 P1–P9 正文宽度、17px 字号、行距、公式结构和 P1–P5 交互。更新已有 P4/P5 回归脚本，移除已经不存在的折叠块定位，用滑杆复核 P5 的新扫描节奏与读出位置，按 MathML 节点核对共享编号。
+- `node tools/visual-qa/cli.mjs --config papers/l2p/web/enhanced/visual-qa.json`：Edge、DPR 1，实际 1440×900 / 1920×1080，114 个截图状态通过。 `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`。P2 原有三处小字警告在本轮目标页之外。已查看新图解、P1–P9 代表状态、两档 ReferenceHub 和 P9 消融列对齐。
+- 定向桌面验证：逐项核对 23 个新增词条的正文入口、释义、来源，逐页验证浮层→详情→相关条目→返回、Escape 焦点复位，以及 P9 三个锚点避开固定导航。Impeccable 静态检测无报告项。
+- `FULLSCREEN_LAYOUT=PASS`（固定视口模拟）；`FULLSCREEN_REAL=NOT_RUN`（使用无头浏览器）；`HUMAN_ACCEPTANCE=PENDING`。代表截图和报告副本：`C:/Users/lenovo/.codex/visualizations/2026/11/12/01a1ced9-92d5-7943-a334-2155308642b2/l2p-review/`。原始运行编号：`run-2026-11-12T08-41-50-401Z`。

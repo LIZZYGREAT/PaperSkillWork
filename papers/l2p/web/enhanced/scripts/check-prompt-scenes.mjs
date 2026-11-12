@@ -129,12 +129,13 @@ export async function checkP5(page, output, width) {
     assert.equal(await compare.locator("button[data-computed='true']").count(), 1);
     await capture(page, compare, output, "P5-" + width + "-angle-" + query);
 
-    await compareRange.fill("1110");
+    // During the second Key’s angle sweep, only the first score has landed.
+    await compareRange.fill("1800");
     assert.equal(await compare.locator(".p5-compare-grid").getAttribute("data-computed"), "1");
     assert.equal(await compare.locator("dd").last().innerText(), "—");
     if (query === "A") {
       await capture(page, compare, output, "P5-" + width + "-scanning");
-      await compareRange.fill("7200");
+      await compareRange.fill("10800");
       await compare.getByRole("button", { name: "播放过程" }).click();
       await page.waitForFunction(() => document.querySelector(".p5-compare-grid").dataset.computed === "10");
       await compare.getByRole("button", { name: "暂停", exact: true }).click();
@@ -152,7 +153,7 @@ export async function checkP5(page, output, width) {
       assert.equal(intersects, false, "Sorting obscures candidate labels");
       await capture(page, retrieval, output, "P5-" + width + "-sorting");
     }
-    await retrieval.getByRole("button", { name: "查看排名" }).click();
+    await readRange.fill("4400");
     assert.deepEqual(await order(rank.locator("li"), "data-key"), expected.ranking.map(item => item.index));
     assert.deepEqual(await order(rank.locator("[data-selected='true']"), "data-key"), expected.selectedKeyIndices);
     await checkLayout(rank, "li strong, li > span:last-child");
@@ -163,14 +164,14 @@ export async function checkP5(page, output, width) {
     assert.deepEqual(await order(shelf.locator("[data-reading='true']"), "data-slot"), expected.selectedKeyIndices.slice(0, 1));
     assert.equal(await shelf.locator("[data-copy]").getAttribute("data-arrived"), "false");
     if (query === "A") await capture(page, retrieval, output, "P5-" + width + "-copying");
-    await retrieval.getByRole("button", { name: "查看读出" }).click();
+    await readRange.press("End");
     assert.deepEqual(await order(shelf.locator("[data-arrived='true']"), "data-copy"), expected.selectedKeyIndices);
     assert.deepEqual(await order(shelf.locator("[data-slot]"), "data-slot"), ids);
     await checkLayout(shelf, ".p5-source-pair, .p5-copy, .p5-shelf-heading");
     await capture(page, retrieval, output, "P5-" + width + "-read-" + query);
   }
   assert.deepEqual(sharedKeyIndices(), [2, 3]);
-  assert.match(await page.locator(".p5-overlap > div").nth(1).innerText(), /P₂\s+P₃/);
+  assert.deepEqual(await page.locator(".p5-overlap > div").nth(1).locator("msub > mn").allTextContents(), ["2", "3"]);
   await capture(page, page.locator(".p5-query-sharing"), output, "P5-" + width + "-overlap");
   await retrieval.getByRole("button", { name: "重播" }).click();
   await page.waitForFunction(() => document.querySelector(".p5-rank-bars").dataset.ranked === "false");
@@ -190,8 +191,6 @@ export async function checkP5(page, output, width) {
   await retrieval.getByRole("button", { name: "播放过程" }).click();
   assert.deepEqual(await order(shelf.locator("[data-arrived='true']"), "data-copy"), buildSelectionSnapshot("A").selectedKeyIndices);
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  const details = page.locator(".p5-score-details");
-  await details.locator("summary").click();
-  await checkLayout(details, "math, th, td");
-  await details.locator("summary").click();
+  await checkLayout(compare.locator(".p5-legend"), "strong, small");
+  await checkLayout(retrieval.locator(".p5-retrieval-legend"), "strong, small");
 }
