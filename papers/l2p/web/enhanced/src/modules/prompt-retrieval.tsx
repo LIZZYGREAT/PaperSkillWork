@@ -1,3 +1,4 @@
+import { P5RankGuide } from "./reading-guides";
 import { useState } from "react";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Specimen } from "./specimen";
@@ -76,7 +77,7 @@ export function PromptRetrieval() {
 
     <section className="explain-section p5-query-primer">
       <h3>用图像本身生成查询向量</h3>
-      <p>先让原始图像走一遍不插入 Prompt 的冻结 ViT，再取末层的 <span className="lesson-key">[CLS] 特征作为检索 Query</span>。这样，检索可以在选出 Prompt 之前完成，得到的向量用于找相近的 Key。分类要等选中的 Prompt 接入下一次前向。</p>
+      <p>先让原始图像走一遍不插入 Prompt 的冻结 ViT，再取末层的 <span className="lesson-key lesson-term--object">[CLS] 特征</span>作为检索 Query。这样，检索可以在选出 Prompt 之前完成，得到的向量用于找相近的 Key。分类要等选中的 Prompt 接入下一次前向。</p>
       <div className="p5-query-flow" role="group" aria-label="当前图像经不插入 Prompt 的冻结 ViT 生成 Query">
         <div className="p5-query-input"><Specimen /><strong>当前图像</strong></div>
         <RetrievalFlowArrow />
@@ -88,7 +89,7 @@ export function PromptRetrieval() {
 
     <section className="explain-section p5-pair-intro">
       <h3>用同一个下标把地址和内容配成一对</h3>
-      <p>池中每个槽位存两个对象。<span className="lesson-key">外部 Key 负责被比较，配对的 Prompt 负责进入模型</span>。例如，若 Key 的编号是 j，读出的就是同槽位的 Prompt j。P3 的 Attention Key 则是在模型内部计算的，两者处于不同的运算阶段。</p>
+      <p>池中每个槽位存两个对象。<span className="lesson-key lesson-term--object">外部 Key</span>负责被比较，配对的<span className="lesson-key lesson-term--value"> Prompt </span>负责进入模型。例如，若 Key 的编号是 j，读出的就是同槽位的 Prompt j。P3 的 Attention Key 则是在模型内部计算的，两者处于不同的运算阶段。</p>
       <div className="p5-slot-anatomy" role="group" aria-label="同槽位的检索 Key 与 Prompt">
         <div className="p5-slot-key"><strong>检索地址</strong><math><msub><mi>k</mi><mi>j</mi></msub></math><span>一条向量，参与距离比较</span></div>
         <div className="p5-slot-pair-link">同槽位 j</div>
@@ -97,7 +98,7 @@ export function PromptRetrieval() {
     </section>
 
     <section className="explain-section">
-      <h3>固定 Query，逐个比较方向</h3>
+      <h3>固定 Query，逐个比较<span className="editorial-key">方向</span></h3>
       <p>先点选一个 Key，观察它与 Query 的夹角。方向越接近，余弦越接近 1，距离就越小。再播放一次扫描：同一个 Query 保持方向，十个 Key 轮流接受同一条比较规则。下面用二维单位向量演示这一过程。</p>
       <div className="p5-query-controls" role="group" aria-label="切换两个输入的 Query">
         <strong>当前查询</strong>
@@ -146,6 +147,7 @@ export function PromptRetrieval() {
     <section className="explain-section">
       <h3>选出最小的五个距离，再用下标取 Prompt</h3>
       <p>横排的十根柱先按池槽位放置，柱越短，距离越小。排序把短柱移到前面，前 {topN} 名给出本例的索引集合。然后按入选次序读出配对的 Prompt，每次取用都保留池中的源参数。</p>
+      <P5RankGuide />
       <figure className="lesson-figure p5-retrieval-figure">
         <div className="figure-top"><strong>距离排序与同索引读取</strong><span>当前 Query {query}</span></div>
         <div className="figure-body">
@@ -168,7 +170,7 @@ export function PromptRetrieval() {
 
     <section className="explain-section p5-query-sharing">
       <h3>换一个输入，哪些 Prompt 还能共用？</h3>
-      <p>换 Query 后，角度和排名会变，池还是同一个。A 和 B 都选到 P₂、P₃，也分别读到了对方没有取用的三个 Prompt。共享来自输入和 Key 的匹配，因此一个槽位可以被不同输入取用。</p>
+      <p>换 Query 后，角度和排名会变，池还是同一个。A 和 B 都选到 P₂、P₃，也分别读到了对方没有取用的三个 Prompt。<span className="lesson-key">共享</span>来自输入和 Key 的匹配，因此一个槽位可以被不同输入取用。</p>
       <QueryOverlap first={snapshots.A} second={snapshots.B} />
       <p>P6 沿用 A 的读取结果，把这五组 Prompt 接在图像 Token 前面，执行一次带 Prompt 的前向分类。</p>
     </section>

@@ -1,3 +1,4 @@
+import { P6ReadoutGuide } from "./reading-guides";
 
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Sub } from "./lesson-math";
@@ -142,8 +143,8 @@ export function PromptForward() {
     <p className="lesson-lead">上一页为图像 A 找到了 {P6_SELECTED_PROMPT_INDICES.map(id => `P${id}`).join("、")}。这些是池中已经学到的向量组。要得到类别分数，还要把它们交给 ViT，让每个 Prompt 位置吸收当前图像的信息。</p>
 
     <section className="explain-section">
-      <h3>同一组冻结权重，两次不同的调用</h3>
-      <p>检索时，ViT 先单独处理图像，从 <code>[CLS]</code> 位置得到 Query，再用它与外部 Key 比较。拿到索引之后，分类调用重新使用<span className="lesson-key">同一组冻结权重</span>，输入现在包括选中的 Prompt。Key 留在池中，Query 已经完成寻址。</p>
+      <h3>同一组冻结权重，<span className="editorial-key">两次调用</span></h3>
+      <p>检索时，ViT 先单独处理图像，从 <code>[CLS]</code> 位置得到 Query，再用它与外部 Key 比较。拿到索引之后，分类调用重新使用<span className="lesson-key lesson-term--object">同一组冻结权重</span>，输入现在包括选中的 Prompt。Key 留在池中，Query 已经完成寻址。</p>
       <P6CallMap />
     </section>
 
@@ -172,7 +173,8 @@ export function PromptForward() {
 
     <section className="explain-section" id="p6-readout">
       <h3>从编码后的 Prompt 位置读出类别特征</h3>
-      <p>冻结 Transformer 计算 <math><mi>H</mi><mo>=</mo><Sub base="f" index="r" /><mo>(</mo><Sub base="x" index="p" /><mo>)</mo></math> 时，扩展序列的全部位置参与上下文计算。行号一一对应，向量内容已经改变，因此开头 {P6_PROMPT_TOKEN_COUNT} 个 <span className="lesson-key">Prompt 输出位置</span>现在带有图像信息。图像的 [CLS] 与 Patch 输出仍在 H 中，它们从位置 {P6_IMAGE_CLS_SEQUENCE_INDEX} 开始。</p>
+      <p>冻结 Transformer 计算 <math><mi>H</mi><mo>=</mo><Sub base="f" index="r" /><mo>(</mo><Sub base="x" index="p" /><mo>)</mo></math> 时，扩展序列的全部位置参与上下文计算。行号一一对应，向量内容已经改变，因此开头 {P6_PROMPT_TOKEN_COUNT} 个 <span className="lesson-key lesson-term--value">Prompt 输出位置</span>现在带有图像信息。图像的 [CLS] 与 Patch 输出仍在 H 中，它们从位置 {P6_IMAGE_CLS_SEQUENCE_INDEX} 开始。</p>
+      <P6ReadoutGuide />
       <p>L2P 对开头 <math><mi>N</mi><Sub base="L" index="p" /></math> 行按位置做平均。每一维独立相加并除以位置数，结果 <math><mi>h</mi></math> 仍为 {config.featureWidth} 维。共享分类器由它得到各类别的 Logits，最高分所在的类别就是本次预测。</p>
       <div className="guided-equations p6-equation"><math display="block">
         <Sub base="h" index="d" /><mo>=</mo><mfrac><mn>1</mn><mrow><mi>N</mi><Sub base="L" index="p" /></mrow></mfrac>
@@ -182,7 +184,7 @@ export function PromptForward() {
     </section>
     <section className="explain-section">
       <h3>拼接改变位置数，特征宽度保持不变</h3>
-      <p>池容量 <math><mi>M</mi><mo>=</mo><mn>{config.poolSize}</mn></math> 给出候选组数，本次只读 <math><mi>N</mi><mo>=</mo><mn>{P6_SELECTED_PROMPT_INDICES.length}</mn></math> 组。它们贡献 {P6_PROMPT_TOKEN_COUNT} 个位置，与 {config.imageLength} 个图像位置合为 {P6_SEQUENCE_LENGTH} 个位置。输入与输出的每一行都保持 <math><mi>D</mi><mo>=</mo><mn>{config.featureWidth}</mn></math> 维。</p>
+      <p>池容量 <math><mi>M</mi><mo>=</mo><mn>{config.poolSize}</mn></math> 给出候选组数，本次只读 <math><mi>N</mi><mo>=</mo><mn>{P6_SELECTED_PROMPT_INDICES.length}</mn></math> 组。它们贡献 <span className="lesson-key lesson-key--type">{P6_PROMPT_TOKEN_COUNT} 个位置</span>，与 {config.imageLength} 个图像位置合为 {P6_SEQUENCE_LENGTH} 个位置。输入与输出的每一行都保持 <math><mi>D</mi><mo>=</mo><mn>{config.featureWidth}</mn></math> 维。</p>
       <P6SequenceRuler />
     </section>
     <p className="lesson-takeaway">有了类别分数，就能用训练标签衡量预测误差。下一页追踪这个误差怎样训练 Prompt 与分类器，以及检索 Key 从哪里获得自己的学习信号。</p>

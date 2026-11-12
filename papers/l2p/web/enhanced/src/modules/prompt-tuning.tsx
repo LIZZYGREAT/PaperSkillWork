@@ -1,3 +1,4 @@
+import { P4ParameterGuide } from "./reading-guides";
 import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
 import { Term } from "../shared/core/reference/ReferenceHub";
 import { P4_TOY_EXPERIMENT as experiment, P4_TRAINING_TRACE as trace } from "./prompt-tuning-demo";
@@ -122,8 +123,8 @@ export function PromptTuning() {
     <p className="lesson-lead">P3 让一组不同的 Token 穿过同一个冻结 Transformer，输出随输入改变。现在把这个现象变成训练办法：如果额外的 Token 可以根据分类误差调整，冻结主干也能适应新任务。</p>
 
     <section className="explain-section">
-      <h3>把可学习参数放在输入端</h3>
-      <p>从图像得到的 Token 随图像改变。<span className="lesson-key">Prompt 自己是一组可训练的输入向量</span>，同一组参数可以与不同图像拼接。每个 <Term id="prompt-token">Prompt Token</Term> 的宽度与图像 Token 相同，因此它们能一起参与 P3 的注意力计算。</p>
+      <h3>把可学习参数放在<span className="editorial-key">输入端</span></h3>
+      <p>从图像得到的 Token 随图像改变。Prompt 则是<span className="lesson-key lesson-term--value">可训练的输入向量</span>，同一组参数可以与不同图像拼接。每个 <Term id="prompt-token">Prompt Token</Term> 的宽度与图像 Token 相同，因此它们能一起参与 P3 的注意力计算。</p>
       <div className="p4-input-equation">
         <math><mi>P</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>L</mi><mi>p</mi></msub><mo>×</mo><mi>D</mi></mrow></msup></math>
         <math><msub><mi>x</mi><mi>p</mi></msub><mo>=</mo><mo>[</mo><mi>P</mi><mo>;</mo><msub><mi>x</mi><mi>e</mi></msub><mo>]</mo></math>
@@ -134,7 +135,8 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>用分类误差找到该改的参数</h3>
-      <p>分类头读取 h 并给每个类别打分，交叉熵把分数和标签联系起来。反向传播沿着这些依赖回溯：<span className="lesson-key">冻结的运算仍会把梯度传到输入端</span>，因此 P 和分类头 φ 都能获得梯度。优化器只写回这两处，主干权重继续参与前向并保持原值。</p>
+      <p>分类头读取 h 并给每个类别打分，交叉熵把分数和标签联系起来。反向传播沿着这些依赖回溯：冻结的运算仍会<span className="lesson-key">把梯度传到输入端</span>，因此 P 和分类头 φ 都能获得梯度。优化器只写回这两处，主干权重继续参与前向并保持原值。</p>
+      <P4ParameterGuide />
     </section>
 
     <figure className="lesson-figure p4-training-figure">

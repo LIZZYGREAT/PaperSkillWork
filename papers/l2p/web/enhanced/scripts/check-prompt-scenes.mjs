@@ -79,10 +79,6 @@ export async function checkP4(page, output, width) {
   assert.equal(await stage.locator(".p4-loss .p4-value").first().innerText(), trace.updatedClassifierBias[1].toFixed(3));
   assert.equal(await stage.locator(".p4-loss-value").innerText(), trace.updated.loss.toFixed(3));
   assert.equal(await stage.getAttribute("data-updates"), "1");
-  const traceDetails = page.locator(".p4-trace-details");
-  await traceDetails.locator("summary").click();
-  await checkLayout(traceDetails, "code");
-  await traceDetails.locator("summary").click();
 
   // Continue in real time through the backward and update phases, then scrub back.
   await range.fill("11300");
