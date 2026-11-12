@@ -61,3 +61,18 @@
   .reference-index nav button small { grid-column:1; }
   .reference-shell .reference-explanation { padding:16px; }
 }
+
+
+/* Nine chapter topics fit above the entry without a second set of large cards. */
+.reference-index nav { gap: 6px; }
+.reference-index nav button { padding: 8px 10px; gap: 1px 8px; border-radius: 5px; }
+.reference-index nav button span { font-size: 13px; }
+.reference-index nav button small { font-size: 12px; }
+.reference-terms > button { font-size: 13px; }
+.reference-shell article { scroll-margin-top: 115px; }
+.reference-shell .reference-explanation > p { font-size: 15px; }
+.reference-shell .reference-explanation .reference-example { font-size: 14px; }
+.reference-shell .reference-role { border-left-width: 1px; }
+@media(max-width:520px) {
+  .reference-index nav button { padding: 7px; gap: 2px; }
+}

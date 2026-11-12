@@ -1,4 +1,5 @@
 import { P6ReadoutGuide } from "./reading-guides";
+import { Term } from "../shared/core/reference/ReferenceHub";
 
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Sub } from "./lesson-math";
@@ -150,7 +151,7 @@ export function PromptForward() {
 
     <section className="explain-section">
       <h3>沿序列方向，把 Prompt 接到图像前面</h3>
-      <p>P2 的图像嵌入 <math><Sub base="x" index="e" /><mo>=</mo><Sub base="f" index="e" /><mo>(</mo><mi>x</mi><mo>)</mo></math> 已经包含 [CLS] 和 {config.imageLength - 1} 个 Patch。每组选中的 Prompt 含 <math><Sub base="L" index="p" /><mo>=</mo><mn>{config.promptLength}</mn></math> 个 Token。播放时可以看见各组依 P5 的顺序展开，前置于图像序列，随后整条序列穿过冻结编码器。</p>
+      <p>P2 的图像嵌入 <math><Sub base="x" index="e" /><mo>=</mo><Sub base="f" index="e" /><mo>(</mo><mi>x</mi><mo>)</mo></math> 已经包含 [CLS] 和 {config.imageLength - 1} 个 Patch。每组选中的 Prompt 含 <math><Sub base="L" index="p" /><mo>=</mo><mn>{config.promptLength}</mn></math> 个 Token。播放时可以看见各组依 P5 的顺序展开，做<Term id="prompt-prefix">序列前置拼接</Term>，随后整条序列穿过冻结编码器。</p>
       <div className="guided-equations p6-equation"><math display="block">
         <Sub base="x" index="p" /><mo>=</mo><mo>[</mo><Sub base="P" index="s₁" /><mo>;</mo><mo>…</mo><mo>;</mo><Sub base="P" index="sₙ" /><mo>;</mo><Sub base="x" index="e" /><mo>]</mo>
       </math></div>
@@ -173,9 +174,9 @@ export function PromptForward() {
 
     <section className="explain-section" id="p6-readout">
       <h3>从编码后的 Prompt 位置读出类别特征</h3>
-      <p>冻结 Transformer 计算 <math><mi>H</mi><mo>=</mo><Sub base="f" index="r" /><mo>(</mo><Sub base="x" index="p" /><mo>)</mo></math> 时，扩展序列的全部位置参与上下文计算。行号一一对应，向量内容已经改变，因此开头 {P6_PROMPT_TOKEN_COUNT} 个 <span className="lesson-key lesson-term--value">Prompt 输出位置</span>现在带有图像信息。图像的 [CLS] 与 Patch 输出仍在 H 中，它们从位置 {P6_IMAGE_CLS_SEQUENCE_INDEX} 开始。</p>
+      <p>冻结 Transformer 计算 <math><mi>H</mi><mo>=</mo><Sub base="f" index="r" /><mo>(</mo><Sub base="x" index="p" /><mo>)</mo></math> 时，扩展序列的全部位置参与上下文计算。行号一一对应，向量内容已经改变，因此开头 {P6_PROMPT_TOKEN_COUNT} 个 <span className="lesson-key lesson-term--value"><Term id="prompt-readout">Prompt 输出位置</Term></span>现在带有图像信息。图像的 [CLS] 与 Patch 输出仍在 H 中，它们从位置 {P6_IMAGE_CLS_SEQUENCE_INDEX} 开始。</p>
       <P6ReadoutGuide />
-      <p>L2P 对开头 <math><mi>N</mi><Sub base="L" index="p" /></math> 行按位置做平均。每一维独立相加并除以位置数，结果 <math><mi>h</mi></math> 仍为 {config.featureWidth} 维。共享分类器由它得到各类别的 Logits，最高分所在的类别就是本次预测。</p>
+      <p>L2P 对开头 <math><mi>N</mi><Sub base="L" index="p" /></math> 行做<Term id="prompt-pooling">平均池化</Term>。每一维独立相加并除以位置数，结果 <math><mi>h</mi></math> 仍为 {config.featureWidth} 维。共享分类器由它得到各类别的 <Term id="logits">Logits</Term>，最高分所在的类别就是本次预测。</p>
       <div className="guided-equations p6-equation"><math display="block">
         <Sub base="h" index="d" /><mo>=</mo><mfrac><mn>1</mn><mrow><mi>N</mi><Sub base="L" index="p" /></mrow></mfrac>
         <munderover><mo>∑</mo><mrow><mi>r</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><Sub base="L" index="p" /><mo>−</mo><mn>1</mn></mrow></munderover>

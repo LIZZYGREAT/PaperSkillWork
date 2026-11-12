@@ -120,7 +120,7 @@ export function PromptTuning() {
   const initial = trace.initial;
   const updated = trace.updated;
   return <>
-    <p className="lesson-lead">P3 让一组不同的 Token 穿过同一个冻结 Transformer，输出随输入改变。现在把这个现象变成训练办法：如果额外的 Token 可以根据分类误差调整，冻结主干也能适应新任务。</p>
+    <p className="lesson-lead">P3 让一组不同的 Token 穿过同一个冻结 Transformer，输出随输入改变。现在把这个现象变成训练办法：如果额外的 Token 可以根据分类误差调整，冻结主干也能适应新任务。这就是 <Term id="prompt-tuning">Prompt Tuning</Term>。</p>
 
     <section className="explain-section">
       <h3>把可学习参数放在<span className="editorial-key">输入端</span></h3>
@@ -135,7 +135,7 @@ export function PromptTuning() {
 
     <section className="explain-section">
       <h3>用分类误差找到该改的参数</h3>
-      <p>分类头读取 h 并给每个类别打分，交叉熵把分数和标签联系起来。反向传播沿着这些依赖回溯：冻结的运算仍会<span className="lesson-key">把梯度传到输入端</span>，因此 P 和分类头 φ 都能获得梯度。优化器只写回这两处，主干权重继续参与前向并保持原值。</p>
+      <p>分类头读取 h 并给每个类别打分，交叉熵把分数和标签联系起来。<Term id="gradient-flow">梯度回传</Term>沿着这些依赖回溯：冻结的运算仍会<span className="lesson-key">把梯度传到输入端</span>，因此 P 和分类头 φ 都能获得梯度。优化器只写回这两处，主干权重继续参与前向并保持原值。</p>
       <P4ParameterGuide />
     </section>
 

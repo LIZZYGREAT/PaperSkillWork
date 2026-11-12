@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { P7BatchGuide } from "./reading-guides";
+import { Term } from "../shared/core/reference/ReferenceHub";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Sub } from "./lesson-math";
 import { promptPoolConfig, QUERIES } from "./prompt-retrieval-data";
@@ -169,13 +170,13 @@ export function PromptLearning() {
     <p className="lesson-lead">P6 用已经选好的 Prompt 得到了类别分数。训练时还知道图像的真实标签，于是可以衡量预测偏差，并用它调整分类过程。检索本身也要学习，因为这一轮选中的 Key 决定了下一轮有哪些 Prompt 容易被读到。</p>
     <section className="explain-section">
       <h3>分类误差沿着前向计算回到 Prompt</h3>
-      <p>用交叉熵比较样本的类别分数和标签得到<span className="lesson-key">分类损失</span>。共享分类器直接参与预测，因此可以接收这项损失的梯度。选中的 Prompt 先经过 Transformer，再经平均池化影响类别分数，所以梯度也沿着这条路径回到这些 Prompt。冻结层照常参与求导，其权重保持固定。</p>
+      <p>用交叉熵比较样本的类别分数和标签得到<span className="lesson-key lesson-term--value"><Term id="classification-loss">分类损失</Term></span>。共享分类器直接参与预测，因此可以接收这项损失的梯度。选中的 Prompt 先经过 Transformer，再经平均池化影响类别分数，所以梯度也沿着这条路径回到这些 Prompt。冻结层照常参与求导，其权重保持固定。</p>
       <div className="guided-equations p7-equation"><math display="block"><Sub base="L" index="cls" /><mo>=</mo><mi>CE</mi><mo>(</mo><Sub base="g" index="φ" /><mo>(</mo><mi>h</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo><mo>,</mo><mi>y</mi><mo>)</mo></math></div>
     </section>
     <section className="explain-section">
       <h3>用距离给已选 Key 直接的学习信号</h3>
-      <p>轻微移动一个 Key 时，余弦距离会连续变化。<span className="lesson-key">硬 Top‑N</span>只返回一组整数索引，名次越过入选边界时，索引才会跳变。以当前选集为条件求分类梯度，无法沿离散索引回到 Key 排名。</p>
-      <p>因此，L2P 把已选 Key 到冻结 Query 的距离相加，作为<span className="lesson-key">匹配损失</span>。这项距离直接依赖 Key 向量，能让已选 Key 向当前 Query 的方向靠近。系数 λ 控制匹配损失在联合目标中的权重。</p>
+      <p>轻微移动一个 Key 时，余弦距离会连续变化。<span className="lesson-key"><Term id="retrieval-top-n">硬 Top‑N</Term></span>只返回一组整数索引，名次越过入选边界时，索引才会跳变。以当前选集为条件求分类梯度，无法沿离散索引回到 Key 排名。</p>
+      <p>因此，L2P 把已选 Key 到冻结 Query 的距离相加，作为<span className="lesson-key lesson-term--object"><Term id="matching-loss">匹配损失</Term></span>。这项距离直接依赖 Key 向量，能让已选 Key 向当前 Query 的方向靠近。系数 λ 控制匹配损失在<Term id="joint-objective">联合目标</Term>中的权重。</p>
       <div className="guided-equations p7-equation">
         <math display="block"><Sub base="L" index="match" /><mo>=</mo><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>S</mi><mo>(</mo><mi>x</mi><mo>)</mo></mrow></munder>
         <mi>γ</mi><mo>(</mo><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>,</mo><Sub base="k" index="j" /><mo>)</mo></math>
@@ -185,7 +186,7 @@ export function PromptLearning() {
     <P7GradientGraph />
     <section className="explain-section">
       <h3>两个样本先把贡献累积到<span className="editorial-key">同一份参数</span></h3>
-      <p>Mini-batch 是一组共同完成一次更新的样本。下图中的 A、B 沿用 P5 的选集，前向和损失计算都从同一份 <math><Sub base="Θ" index="b" /></math> 读取参数。选集相交于 {P7_COMMON_INDICES.join("、")} 号槽位。观察这些槽位时，<span className="lesson-key lesson-term--value">两份分类梯度</span>会汇入同一个 Prompt，<span className="lesson-key lesson-term--object">两份匹配梯度</span>会汇入其配对 Key。</p>
+      <p><Term id="mini-batch">Mini-batch</Term> 是一组共同完成一次更新的样本。下图中的 A、B 沿用 P5 的选集，前向和损失计算都从同一份 <math><Sub base="Θ" index="b" /></math> 读取参数。选集相交于 {P7_COMMON_INDICES.join("、")} 号槽位。观察这些槽位时，<span className="lesson-key lesson-term--value">两份分类梯度</span>会汇入同一个 Prompt，<span className="lesson-key lesson-term--object">两份匹配梯度</span>会汇入其配对 Key。</p>
     </section>
     <P7BatchGuide />
     <figure className="lesson-figure guided-motion p7-batch-figure">
@@ -215,7 +216,7 @@ export function PromptLearning() {
     </figure>
     <section className="explain-section">
       <h3>汇总整批梯度后，优化器写回一次</h3>
-      <p>这里按 Algorithm 1 将样本损失相加。对每个参数求导时，A、B 对它的贡献相加，之后执行<span className="lesson-key">一次 Batch 更新</span>。本批命中的槽位是 {P7_BATCH_INDICES.join("、")}，{P7_UNTOUCHED_INDICES.join("、")} 号槽位没有来自本批样本的直接梯度。共享分类器收到 A、B 两份分类梯度。</p>
+      <p>这里按 Algorithm 1 将样本损失相加。对每个参数求导时，A、B 对它的贡献相加，之后执行<span className="lesson-key"><Term id="batch-writeback">一次 Batch 更新</Term></span>。本批命中的槽位是 {P7_BATCH_INDICES.join("、")}，{P7_UNTOUCHED_INDICES.join("、")} 号槽位没有来自本批样本的直接梯度。共享分类器收到 A、B 两份分类梯度。</p>
       <div className="guided-equations p7-equation">
         <math display="block"><Sub base="L" index="batch" /><mo>=</mo><Sub base="L" index="A" /><mo>+</mo><Sub base="L" index="B" /></math>
         <math display="block"><Sub base="Θ" index="b+1" /><mo>=</mo><mi>OptimizerStep</mi><mo>(</mo><Sub base="Θ" index="b" /><mo>,</mo><mo>∇</mo><Sub base="L" index="batch" /><mo>)</mo></math>

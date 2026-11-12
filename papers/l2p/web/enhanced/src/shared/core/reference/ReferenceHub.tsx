@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { TermRef } from "./TermRef";
 import type { ReferenceEntry } from "./types";
 
-const ReferenceContext = createContext<{ open: (id: string) => void; entries: ReferenceEntry[] }>({
+const ReferenceContext = createContext<{ open: (id: string, showDetail?: boolean) => void; entries: ReferenceEntry[] }>({
   open: () => {},
   entries: [],
 });
@@ -13,6 +13,11 @@ const pageNames: Record<string, string> = {
   P2: "ViT 图像序列",
   P3: "Transformer 计算",
   P4: "Prompt 调优",
+  P5: "动态检索",
+  P6: "完整分类",
+  P7: "联合更新",
+  P8: "持续运行",
+  P9: "实验与证据",
   其他: "其他资料",
 };
 
@@ -23,12 +28,12 @@ export function Term({ id, children }: { id: string; children?: ReactNode }) {
   return <TermRef entry={entry} onOpenReference={() => open(id)}>{children}</TermRef>;
 }
 
-export function ReferenceButton({ term, children = "推导与出处" }: { term?: string; children?: ReactNode }) {
+export function ReferenceButton({ term, page, children = "推导与出处" }: { term?: string; page?: string; children?: ReactNode }) {
   const { open, entries } = useContext(ReferenceContext);
   return (
     <button type="button" className="text-button rk-reference-button" onClick={() => {
-      const id = term ?? entries[0]?.id;
-      if (id) open(id);
+      const id = term ?? entries.find(entry => entry.page === page)?.id ?? entries[0]?.id;
+      if (id) open(id, Boolean(term));
     }}>
       {children}<span aria-hidden="true"> ↗</span>
     </button>
@@ -61,11 +66,13 @@ export function ReferenceProvider({ children, entries, title = "概念与资料"
     return () => element.removeEventListener("close", restore);
   }, []);
 
-  useEffect(() => {
-    if (!dialog.current?.open) return;
-    dialog.current.scrollTop = 0;
-    article.current?.focus({ preventScroll: true });
-  }, [active]);
+  function revealDetail() {
+    requestAnimationFrame(() => {
+      if (!dialog.current?.open) return;
+      article.current?.focus({ preventScroll: true });
+      article.current?.scrollIntoView({ block: "start" });
+    });
+  }
 
   const select = (id: string, remember = true) => {
     const next = termEntries[id];
@@ -83,7 +90,7 @@ export function ReferenceProvider({ children, entries, title = "概念与资料"
     setActive(first.id);
   };
 
-  const open = (id: string) => {
+  const open = (id: string, showDetail = true) => {
     const next = termEntries[id];
     if (!next) return;
     opener.current = document.activeElement as HTMLElement | null;
@@ -92,6 +99,7 @@ export function ReferenceProvider({ children, entries, title = "概念与资料"
     setActive(id);
     if (!dialog.current?.open) dialog.current?.showModal();
     if (dialog.current) dialog.current.scrollTop = 0;
+    if (showDetail) revealDetail();
   };
 
   return (
@@ -145,13 +153,14 @@ export function ReferenceProvider({ children, entries, title = "概念与资料"
                 {entry.detail}
                 {(entry.related ?? []).some((id) => termEntries[id]) && <nav className="related-terms" aria-label="相关术语">
                   {(entry.related ?? []).filter((id) => termEntries[id]).map((id) =>
-                    <button className="text-button" key={id} onClick={() => select(id)}>{termEntries[id].name} ↗</button>,
+                    <button className="text-button" key={id} onClick={() => { select(id); revealDetail(); }}>{termEntries[id].name} ↗</button>,
                   )}
                 </nav>}
                 {history.length > 0 && <button className="text-button reference-back" onClick={() => {
                   const previous = history[history.length - 1];
                   setHistory((items) => items.slice(0, -1));
                   select(previous, false);
+                  revealDetail();
                 }}>← 返回上一条目</button>}
                 {(entry.source || sourceLink) && <section className="source-note">
                   <h3>出处与教学边界</h3>

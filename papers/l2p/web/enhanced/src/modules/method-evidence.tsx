@@ -12,6 +12,7 @@ import {
 import { easeMotion, useMotionAnchors } from "./visual-motion";
 import { P9EvidenceGuide } from "./reading-guides";
 import "./method-evidence.css";
+import { Term } from "../shared/core/reference/ReferenceHub";
 
 const duration = 14_500;
 const boundaries = [0, 900, 6_300, 9_600, 12_200, duration];
@@ -152,7 +153,7 @@ function AblationWorkbench() {
   const [selectedId, setSelectedId] = useState("full");
   const selected = P9_ABLATIONS.find(row => row.id === selectedId) ?? P9_ABLATIONS[0];
   return <section className="p9-ablation-section explain-section" id="p9-ablation-evidence">
-    <div className="p9-evidence-heading"><span className="p9-section-kicker">Table 5 · 5-datasets 消融</span><h3>去掉一项设计，结果怎样变化？</h3><p>两条量表方向分开：平均准确率越高越好，遗忘越低越好。所有行来自同一 5-datasets 类别增量消融配置。</p></div>
+    <div className="p9-evidence-heading"><span className="p9-section-kicker">Table 5 · 5-datasets 消融</span><h3>去掉一项设计，结果怎样变化？</h3><p>两条量表方向分开：<Term id="average-accuracy">平均准确率</Term>越高越好，<Term id="forgetting-metric">遗忘度</Term>越低越好。所有行来自同一 5-datasets 类别增量<Term id="ablation">消融</Term>配置。</p></div>
     <div className="p9-ablation-legend"><span>消融配置</span><span>Average Accuracy · 0–100 ↑</span><span>Forgetting · 0–30 ↓</span></div>
     <div className="p9-ablation-list" role="group" aria-label="选择一个论文消融配置查看其移除的设计">
       {P9_ABLATIONS.map(row => <button type="button" key={row.id} className={"p9-ablation-row " + (selectedId === row.id ? "is-selected" : "")} aria-pressed={selectedId === row.id} aria-label={`${row.name}，平均准确率 ${row.accuracy.toFixed(2)}，遗忘 ${row.forgetting.toFixed(2)}`} onClick={() => setSelectedId(row.id)}>
@@ -199,7 +200,7 @@ export function MethodEvidence() {
 
   return <>
     <p className="lesson-lead">P8 说明同一套 Key–Prompt 参数如何跨 Batch 和任务保留下来。P9 先比较训练时的一项可选检索策略，再把共享观察、消融与主实验放回各自的论文证据条件中。</p>
-    <section className="p9-intro explain-section"><h3>共享带来复用，热门槽位也可能被<span className="editorial-key">反复改写</span></h3><p>如果训练数据提供任务边界，能否用过去的 Prompt 使用频率影响下一任务的选择？这是一条<span className="lesson-key lesson-key--caution">可选训练分支</span>。基础训练和测试都能继续使用普通 Query–Key 距离。</p></section>
+    <section className="p9-intro explain-section"><h3>共享带来复用，热门槽位也可能被<span className="editorial-key">反复改写</span></h3><p>如果训练数据提供任务边界，能否用过去的 Prompt 使用频率影响下一任务的选择？这是一条<span className="lesson-key lesson-key--caution">可选的<Term id="frequency-selection">多样化选择</Term></span>。基础训练和测试都能继续使用普通 Query–Key 距离。</p></section>
 
     <figure className="lesson-figure p9-strategy-figure">
       <div className="figure-top"><strong>两种选择评分，复用同一 Query 与 Key</strong><span>P5 确定性二维教学池 · 历史频率为显式合成快照</span></div>
@@ -235,7 +236,7 @@ export function MethodEvidence() {
 
     <P9EvidenceGuide />
     <section className="p9-figure3-note explain-section" id="p9-selection-evidence">
-      <div><span className="p9-section-kicker">Figure 3 · 作者对选择分布的解释</span><h3>观察到共享模式，不等于 Prompt 绑定任务</h3><p>原文图记录训练后的 Prompt 选择频率。图像素材的复用权利未核实，且没有可供精确重画的柱值，因此这里保留作者的定性解释，不伪造直方图。</p></div>
+      <div><span className="p9-section-kicker">Figure 3 · 作者对选择分布的解释</span><h3>观察到共享模式，不等于 Prompt 绑定任务</h3><p>原文的<Term id="selection-histogram">Prompt 选择直方图</Term>记录训练后各槽位的命中频率。读图时看同一槽位是否被多个任务反复选中；下方保留作者的定性解读。</p></div>
       <div className="p9-interpretation-grid">{P9_FIGURE3_INTERPRETATION.map(item => <article key={item.dataset}><b>{item.dataset}</b><p>{item.pattern}</p></article>)}</div>
       <small>5-datasets 的该组完整配置启用了多样化选择。分布是所测配置中的观察，不代表一个 Prompt 只属于一个任务。</small>
     </section>
@@ -243,7 +244,7 @@ export function MethodEvidence() {
     <AblationWorkbench />
     <EvidenceResults />
 
-    <section className="p9-conclusion explain-section"><span className="p9-section-kicker">回到 P1 · 结论的适用范围</span><h3>L2P 在报告的协议中<span className="editorial-key">缓解遗忘</span>，不保证永不遗忘</h3><p>证据支持预训练视觉 Transformer 加可学习 Prompt Pool 在若干持续学习设置中的效果；作者展示的 task-agnostic Gaussian-scheduled CIFAR-100 是合成的平滑分布漂移基准，仍不同于不规则真实数据流。基础 L2P 不需要旧样本回放，L2P-R 则是另一个加入缓存的变体。</p>
+    <section className="p9-conclusion explain-section"><span className="p9-section-kicker">回到 P1 · 结论的适用范围</span><h3>L2P 在报告的协议中<span className="editorial-key">缓解遗忘</span>，不保证永不遗忘</h3><p>证据支持预训练视觉 Transformer 加可学习 Prompt Pool 在若干持续学习设置中的效果；作者展示的 task-agnostic Gaussian-scheduled CIFAR-100 是合成的平滑分布漂移基准，仍不同于不规则真实数据流。基础 L2P 不需要旧样本回放，<Term id="replay-variant">L2P-R</Term> 则是加入缓存的变体。</p>
       <details className="p9-capacity-note"><summary>补充：池容量 M 与单次调用容量 N·Lₚ</summary><p>M 决定池中可寻址的 Key–Prompt 槽位数；N·Lₚ 决定单次输入拼入多少 Prompt Token。增加 M 不必然增加一次前向序列长度。论文 Figure 4 在所测范围内报告了依数据集而异的容量趋势，参数并非越大越好。</p></details>
     </section>
   </>;
