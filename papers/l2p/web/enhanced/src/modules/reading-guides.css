@@ -33,3 +33,31 @@
   .p6-guide-rows { grid-template-columns: 1fr; }
   .p6-guide-image { border-inline-start: 0; border-top: 1px dashed #8499a2; }
 }
+
+
+.p7-guide-snapshot { padding: 10px 14px; color: #35533d; background: #e9efe3; font-size: 16px; }
+.p7-batch-guide table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 15px; text-align: left; }
+.p7-batch-guide :is(th, td) { border-bottom: 1px solid var(--rk-line); padding: 10px 14px; }
+.p7-batch-guide thead th[data-tone="prompt"] { color: var(--guide-plum); background: #f1e9f1; }
+.p7-batch-guide thead th[data-tone="frozen"] { color: var(--guide-blue); background: #eaf0f2; }
+.p7-guide-total { color: #315e40; background: #edf2e8; font-weight: 650; }
+.p8-loop-guide ol { margin: 0; padding: 0; list-style: none; --loop-step: clamp(12px, 2.5vw, 36px); }
+.p8-loop-guide li { display: grid; grid-template-columns: 7ch minmax(0, 1fr); align-items: baseline; gap: 14px; border-top: 1px solid var(--rk-line); border-inline-start: 1px solid var(--rk-line-strong); padding: 10px 16px; font-size: 16px; line-height: 1.6; }
+.p8-loop-guide li[data-depth="1"] { margin-inline-start: var(--loop-step); }
+.p8-loop-guide li[data-depth="2"] { margin-inline-start: calc(2 * var(--loop-step)); }
+.p8-loop-guide li[data-depth="3"] { margin-inline-start: calc(3 * var(--loop-step)); border-bottom: 1px solid var(--rk-line); }
+.p8-loop-guide li[data-write] { background: #e8efe0; }
+.p8-loop-guide li b { color: #315e40; }
+.p9-evidence-guide ol { list-style: none; padding: 0; margin: 0; border-block: 1px solid var(--rk-line-strong); }
+.p9-evidence-guide li { display: grid; grid-template-columns: minmax(290px, 1fr) 1.4fr; gap: 20px; padding: 13px 12px; align-items: baseline; }
+.p9-evidence-guide li + li { border-top: 1px solid var(--rk-line); }
+.p9-evidence-guide a { display: grid; grid-template-columns: 122px minmax(0, 1fr); gap: 10px; align-items: baseline; color: var(--rk-accent-strong); text-underline-offset: .25em; }
+.p9-evidence-guide a span { font-size: 14px; color: var(--rk-muted); }
+.rk-reading .p9-evidence-guide li p { margin: 0; font-size: 15px; line-height: 1.65; color: var(--rk-muted); }
+[id^="p9-"][id$="-evidence"] { scroll-margin-top: 130px; }
+@media (max-width: 760px) {
+  .p7-batch-guide :is(th, td) { padding-inline: 8px; }
+  .p8-loop-guide li { grid-template-columns: 1fr; gap: 3px; padding-inline: 10px; }
+  .p9-evidence-guide li { grid-template-columns: 1fr; gap: 4px; padding-inline: 6px; }
+  .p9-evidence-guide a { grid-template-columns: 110px minmax(0, 1fr); }
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { P8LoopGuide } from "./reading-guides";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Sub } from "./lesson-math";
 import { interpolateKeyAngles, P8_STAGES, type RunStage } from "./continual-run-data";
@@ -231,8 +232,8 @@ export function ContinualRun() {
   return <>
     <p className="lesson-lead">P7 解释了一批数据如何完成一次更新。在持续学习中，这次更新的结果还要交给下一批，甚至交给另一个任务。模型用的是一套持续保存的参数，当前样本只决定这一轮会用到其中哪些槽位。</p>
     <section className="explain-section">
-      <h3>起点只初始化一次</h3>
-      <p>将预训练 ViT 的嵌入层和 Transformer 固定下来，并初始化 Key Pool、Prompt Pool 与共享分类器。把这三个可学习部分记为 <math><Sub base="Θ" index="0" /><mo>=</mo><mo>(</mo><mi>K</mi><mo>,</mo><mi>P</mi><mo>,</mo><mi>φ</mi><mo>)</mo></math>。同一个槽位上的 Key 用于检索，Prompt 用于分类。槽位的编号贯穿整个训练与测试。</p>
+      <h3>起点只<span className="editorial-key">初始化一次</span></h3>
+      <p>将预训练 ViT 的<span className="lesson-key lesson-term--object">嵌入层和 Transformer</span>固定下来，并初始化 Key Pool、Prompt Pool 与共享分类器。把这三个可学习部分记为 <math><Sub base="Θ" index="0" /><mo>=</mo><mo>(</mo><mi>K</mi><mo>,</mo><mi>P</mi><mo>,</mo><mi>φ</mi><mo>)</mo></math>。同一个槽位上的 Key 用于检索，Prompt 用于分类。槽位的编号贯穿整个训练与测试。</p>
     </section>
     <section className="explain-section">
       <h3>每批读取当前版本，批末交出新版本</h3>
@@ -273,9 +274,10 @@ export function ContinualRun() {
     </section>
     <P8TrainInferMap />
     <section className="explain-section p8-pseudocode">
-      <h3>Algorithm 1 中，循环层级决定写回时机</h3>
+      <h3>Algorithm 1 中，循环层级决定<span className="editorial-key">写回时机</span></h3>
       <p>在有任务边界的协议中，每个任务可多轮遍历当前数据，每一轮包含多个批次。样本逐个产生选集与损失，选集取并集，损失累积到整批再反向。参数因此可以跨 Epoch 和任务持续保存。</p>
-      <details open><summary>训练 · Task → Epoch → Batch → Sample</summary><pre><code>{trainingCode}</code></pre></details>
+      <P8LoopGuide />
+      <details><summary>训练 · Task → Epoch → Batch → Sample</summary><pre><code>{trainingCode}</code></pre></details>
       <details><summary>推断 · 只传入图像 x</summary><pre><code>{inferenceCode}</code></pre></details>
       <p>在无明确任务边界的 task-agnostic 设置里，基础方法随数据到达逐批更新。基础 L2P 无需旧样本回放，L2P-R 是加入回放缓存的实验变体。</p>
     </section>

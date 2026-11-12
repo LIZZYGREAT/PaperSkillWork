@@ -179,3 +179,22 @@
   .p9-metric-track > i, .p9-ablation-row { transition-duration: .01ms !important; }
   .p9-query-sweep { display: none; }
 }
+
+
+/* Keep evidence labels on the same columns as the values they describe. */
+.rk-reading .p9-evidence-heading p, .rk-reading .p9-figure3-note > div:first-child > p {
+  max-width: none;
+  font-size: var(--lesson-body-size);
+  line-height: var(--lesson-body-leading);
+}
+.p9-ablation-legend, .p9-ablation-row { grid-template-columns: minmax(180px, 1.2fr) minmax(0, 1fr) minmax(0, .88fr); gap: 12px; }
+.p9-ablation-legend, .p9-results-table thead th { font-size: 14px; }
+.p9-ablation-name > b, .p9-results-table { font-size: 15px; }
+.p9-ablation-inspector, .rk-reading .p9-evidence-caveat, .rk-reading .p9-protocol-caveat { font-size: 14px; line-height: 1.65; }
+.p9-metric-mobile { display: none; }
+@media (max-width: 760px) {
+  .p9-ablation-legend { display: none; }
+  .p9-ablation-row { grid-template-columns: 1fr; gap: 6px; }
+  .p9-metric { grid-template-columns: 60px 48px minmax(0, 1fr); }
+  .p9-metric .p9-metric-mobile { display: inline; font: 13px var(--rk-font-body); }
+}

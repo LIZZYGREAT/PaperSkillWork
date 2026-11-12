@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { P7BatchGuide } from "./reading-guides";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Sub } from "./lesson-math";
 import { promptPoolConfig, QUERIES } from "./prompt-retrieval-data";
@@ -183,9 +184,10 @@ export function PromptLearning() {
     </section>
     <P7GradientGraph />
     <section className="explain-section">
-      <h3>两个样本先把贡献累积到同一份参数</h3>
-      <p>Mini-batch 是一组共同完成一次更新的样本。下图中的 A、B 沿用 P5 的选集，前向和损失计算都从同一份 <math><Sub base="Θ" index="b" /></math> 读取参数。选集相交于 {P7_COMMON_INDICES.join("、")} 号槽位。观察这些槽位时，两份分类梯度会汇入同一个 Prompt，两份匹配梯度会汇入其配对 Key。</p>
+      <h3>两个样本先把贡献累积到<span className="editorial-key">同一份参数</span></h3>
+      <p>Mini-batch 是一组共同完成一次更新的样本。下图中的 A、B 沿用 P5 的选集，前向和损失计算都从同一份 <math><Sub base="Θ" index="b" /></math> 读取参数。选集相交于 {P7_COMMON_INDICES.join("、")} 号槽位。观察这些槽位时，<span className="lesson-key lesson-term--value">两份分类梯度</span>会汇入同一个 Prompt，<span className="lesson-key lesson-term--object">两份匹配梯度</span>会汇入其配对 Key。</p>
     </section>
+    <P7BatchGuide />
     <figure className="lesson-figure guided-motion p7-batch-figure">
       <div className="motion-dock p7-control-dock">
         <div className="motion-stops p7-motion-stops" role="group" aria-label="联合训练阶段">
