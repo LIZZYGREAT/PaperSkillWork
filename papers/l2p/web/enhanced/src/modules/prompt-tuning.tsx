@@ -1,4 +1,5 @@
 import { P4ParameterGuide } from "./reading-guides";
+import { P4Rerun } from "./p4-rerun";
 import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
 import { Term } from "../shared/core/reference/ReferenceHub";
 import { P4_TOY_EXPERIMENT as experiment, P4_TRAINING_TRACE as trace } from "./prompt-tuning-demo";
@@ -117,8 +118,6 @@ export function PromptTuning() {
   const playback = useLessonPlayback(duration);
   const next = stops.findIndex(stop => stop.at > playback.position);
   const phase = next === -1 ? stops.length - 1 : next - 1;
-  const initial = trace.initial;
-  const updated = trace.updated;
   return <>
     <p className="lesson-lead">P3 让一组不同的 Token 穿过同一个冻结 Transformer，输出随输入改变。现在把这个现象变成训练办法：如果额外的 Token 可以根据分类误差调整，冻结主干也能适应新任务。这就是 <Term id="prompt-tuning">Prompt Tuning</Term>。</p>
 
@@ -158,16 +157,9 @@ export function PromptTuning() {
     </figure>
 
     <section className="explain-section">
-      <h3>保持同一个输入，检查更新的效果</h3>
-      <p>一次 SGD 沿负梯度方向移动参数。下式写的是 Prompt，分类头的权重和偏置也用各自的梯度做同一步更新。</p>
-      <div className="p4-input-equation">
-        <math><msup><mi>P</mi><mrow><mo>(</mo><mn>1</mn><mo>)</mo></mrow></msup><mo>=</mo><msup><mi>P</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup><mo>−</mo><mi>η</mi><msub><mo>∇</mo><mi>P</mi></msub><mi>ℒ</mi></math>
-      </div>
-      <p>以更新前的读出为例，<math><mi>h</mi></math> 的第一维由 <math><msub><mi>H</mi><mn>0</mn></msub></math> 的 {number(initial.promptOutputs[0][0])} 和 <math><msub><mi>H</mi><mn>1</mn></msub></math> 的 {number(initial.promptOutputs[1][0])} 取均值，得到 {number(initial.promptReadout[0])}。换成更新后的 <math><mi>P</mi></math> 和 <math><mi>φ</mi></math>，同图重新计算，标签对应的概率上升，交叉熵下降。</p>
-      <div className="p4-loss-comparison">
-        <div><span>初次前向</span><strong>{number(initial.loss)}</strong></div>
-        <div><span>同图复算</span><strong>{number(updated.loss)}</strong></div>
-      </div>
+      <h3>只换 Prompt，预测也会<span className="editorial-key">改变</span>吗？</h3>
+      <p>刚才同一步 SGD 更新了 Prompt 和分类头。为了分清是谁改变了输出，我们额外复算一次：先只换成更新后的 <span className="lesson-key lesson-term--value">Prompt</span>，分类头仍用原来的参数。三次都用同一组图像 Token、同一个标签和同一套冻结主干。</p>
+      <P4Rerun />
     </section>
 
     <section className="explain-section">

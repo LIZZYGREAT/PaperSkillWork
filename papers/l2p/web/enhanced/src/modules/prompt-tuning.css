@@ -87,9 +87,7 @@
 .p4-edge-backward::before { left: 2px; color: var(--p4-backward); transform: rotate(-135deg); }
 .p4-stage-foot { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--rk-line); }
 .p4-stage-foot strong { color: var(--p4-prompt); }
-.p4-loss-comparison { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 38px; margin-block: 18px; padding: 14px 0; border-block: 1px solid var(--rk-line); }
-.p4-loss-comparison > div { display: grid; gap: 3px; }
-.p4-loss-comparison strong { font-size: 23px; font-weight: 500; color: #82481a; font-variant-numeric: tabular-nums; }
+
 
 @media (max-width: 840px) {
   .p4-training-path { grid-template-columns: minmax(0, 1fr); justify-items: stretch; }
