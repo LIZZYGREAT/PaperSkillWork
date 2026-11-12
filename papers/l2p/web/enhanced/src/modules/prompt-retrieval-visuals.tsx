@@ -1,10 +1,12 @@
 import { useId, useMemo, type CSSProperties } from "react";
 import { promptPoolConfig, type CandidateScore, type SelectionSnapshot } from "./prompt-retrieval-data";
 
-const subscripts = "₀₁₂₃₄₅₆₇₈₉";
-export const formatSubscript = (index: number) => String(index).replace(/\d/g, digit => subscripts[Number(digit)]);
 export const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const eased = (value: number) => value * value * (3 - 2 * value);
+
+export function IndexedMath({ base, index }: { base: string; index: string | number }) {
+  return <math className="p5-index-math"><msub><mi>{base}</mi>{typeof index === "number" ? <mn>{index}</mn> : <mi>{index}</mi>}</msub></math>;
+}
 
 export function PromptTokens() {
   return <span className="p5-token-strip" role="img" aria-label={promptPoolConfig.promptLength + " 个 Prompt Token"}>
@@ -53,7 +55,9 @@ export function VectorSpace({ snapshot, candidate, progress }: {
       const [tx, ty] = point(item.key.angleDegrees, 131);
       return <g key={item.index} className="p5-ring-key" data-active={item.index === candidate.index}>
         <circle cx={x} cy={y} r="4" />
-        <text x={tx} y={ty} textAnchor="middle" dominantBaseline="central">k{formatSubscript(item.index)}</text>
+        <text x={tx} y={ty} textAnchor="middle" dominantBaseline="central">
+          <tspan>k</tspan><tspan baselineShift="sub" fontSize="70%">{item.index}</tspan>
+        </text>
       </g>;
     })}
   </svg>;
@@ -98,7 +102,7 @@ export function CandidateBars({ snapshot, progress }: { snapshot: SelectionSnaps
       return <li key={item.index} data-key={item.index} data-lifted={Boolean(lifted && lift > 0)}
         data-selected={ranked && position < promptPoolConfig.topN} style={style}>
         <span className="p5-distance-track" aria-hidden="true"><i /></span>
-        <strong>k{formatSubscript(item.index)}</strong>
+        <strong><IndexedMath base="k" index={item.index} /></strong>
         <span>{item.distance.toFixed(3)}</span>
       </li>;
     })}
@@ -111,7 +115,7 @@ export function PromptShelf({ snapshot, progress }: { snapshot: SelectionSnapsho
     <strong className="p5-shelf-heading">源池 · 槽位固定</strong>
     {snapshot.candidates.map(({ index }) => <div key={index} className="p5-source-pair"
       data-slot={index} data-reading={progress > 0 && snapshot.selected[reading]?.index === index}>
-      <span>k{formatSubscript(index)}</span><strong>P{formatSubscript(index)}</strong>
+      <span><IndexedMath base="k" index={index} /></span><strong><IndexedMath base="P" index={index} /></strong>
     </div>)}
     <strong className="p5-shelf-heading p5-read-heading">本次使用的 Prompt · 按距离次序</strong>
     {snapshot.selected.map(({ index }, rank) => {
@@ -121,7 +125,7 @@ export function PromptShelf({ snapshot, progress }: { snapshot: SelectionSnapsho
         "--copy-y": 1 - eased(clamp01((amount - .65) / .35)) } as CSSProperties;
       return <div className="p5-copy-target" key={index}>
         {amount > 0 && <div className="p5-copy" data-copy={index} data-arrived={amount >= 1} style={style}>
-          <strong>P{formatSubscript(index)}</strong><PromptTokens />
+          <strong><IndexedMath base="P" index={index} /></strong><PromptTokens />
         </div>}
       </div>;
     })}
@@ -139,7 +143,7 @@ export function QueryOverlap({ first, second }: { first: SelectionSnapshot; seco
   return <div className="p5-overlap" role="group" aria-label="两个选集的交集与差集">
     {groups.map(group => <div key={group.label}>
       <strong>{group.label}</strong>
-      <div>{group.indices.map(index => <span key={index}>P{formatSubscript(index)}</span>)}</div>
+      <div>{group.indices.map(index => <IndexedMath key={index} base="P" index={index} />)}</div>
     </div>)}
   </div>;
 }

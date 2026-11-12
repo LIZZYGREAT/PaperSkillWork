@@ -83,8 +83,14 @@ Record the exact build command and exit result. Geometry evidence names the page
 #### P4 排版与文字修整（2026-11-12）
 
 - `SOURCE_BUILD=PASS`：`npm.cmd run build` 退出 0，TypeScript 与 Vite 6.4.3。
-- `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`：仅 P4，1440×900 与 1920×1080 两档，初始、前向、损失、反传、写回中和同图复算各检查一次，共 12 个状态。Visual QA 使用安装的 Edge Chromium 157.0.4341.46；Playwright 默认 Chromium 可执行文件未安装。Agent 实看两档截图，公式与损失对照居中，训练卡铺满正文，Trace 明细已删除；节点文字、箭头和参数行未出现挤压或裁切。`VISUAL_REVIEW=PASS`，`FULLSCREEN_LAYOUT=PASS`，`FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。
-- 截图与报告：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1cb72-320b-7d10-a686-fcad4d0d7be6/l2p-evidence/followup-screenshot-review`。原始 runner 报告：`.visual-qa/run-2026-11-12T02-24-01-869Z/report.md`。
+- `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`：仅 P4，1440×900 与 1920×1080 两档，初始、前向、损失、反传、写回中和同图复算各检查一次，共 12 个状态。Visual QA 使用安装的 Edge Chromium 157.0.4341.46；Playwright 默认 Chromium 可执行文件未安装。Agent 实看两档截图，公式与损失对照居中，训练卡铺满正文，Trace 明细已删除；节点文字、箭头和参数行未出现挤压或裁切。与用户提供的修改前截图对照，`VISUAL_REVIEW=PASS`、`REGRESSION=PASS`、`FULLSCREEN_LAYOUT=PASS`，`FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。
+- 截图与报告：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1cb72-320b-7d10-a686-fcad4d0d7be6/l2p-evidence/followup-screenshot-review/p4-report.md`。
+
+#### P5 排版与字形修整（2026-11-12）
+
+- `SOURCE_BUILD=PASS`：P5 修改后执行 `npm.cmd run build`，TypeScript 与 Vite 6.4.3 退出 0。
+- `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`：Edge Chromium 157.0.4341.46 在 1440×900 与 1920×1080 检查 P5 配对、A/B 比较、扫描、排序、排名、Prompt 读取和交集，共 20 个状态。Agent 实看两档比较、排名、读取与交集截图，动画卡和交集组已与正文同宽；数学下标字体一致，重点字重已降低，页面无横向溢出或浏览器错误。与用户提供的修改前截图对照，`VISUAL_REVIEW=PASS`、`REGRESSION=PASS`、`FULLSCREEN_LAYOUT=PASS`，`FULLSCREEN_REAL=NOT_RUN`，`HUMAN_ACCEPTANCE=PENDING`。
+- 移除重复的“查看排名”“查看读出”按钮和错位的十项距离详情；Visual QA 通过进度条定位排名/读出状态，A/B 读取与选集交集保持原数据和算法。报告及 20 张截图：`C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1cb72-320b-7d10-a686-fcad4d0d7be6/l2p-evidence/followup-screenshot-review/p5-report.md` 和同目录 `p5-screenshots`。
 
 
 ## W10 Official PaperSkill Release

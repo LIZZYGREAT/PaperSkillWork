@@ -4,7 +4,7 @@ import { Arrow } from "./vit-visuals";
 import { Specimen } from "./specimen";
 import { buildSelectionSnapshot, promptPoolConfig, type QueryId } from "./prompt-retrieval-data";
 import {
-  CandidateBars, PromptShelf, PromptTokens, QueryOverlap, VectorSpace, clamp01, formatSubscript,
+  CandidateBars, IndexedMath, PromptShelf, PromptTokens, QueryOverlap, VectorSpace, clamp01,
 } from "./prompt-retrieval-visuals";
 import "./prompt-retrieval.css";
 
@@ -89,7 +89,7 @@ export function PromptRetrieval() {
           <div className="p5-compare-grid" data-query={query} data-computed={computed}>
             <VectorSpace snapshot={snapshot} candidate={candidate} progress={angleProgress} />
             <div className="p5-score">
-              <strong className="p5-score-pair"><span>q<sub>{query}</sub></span> 与 <span>k{formatSubscript(candidate.index)}</span></strong>
+              <div className="p5-score-pair"><span><IndexedMath base="q" index={query} /></span><span>与</span><span><IndexedMath base="k" index={candidate.index} /></span></div>
               <dl>
                 <div><dt>夹角 θ</dt><dd>{candidate.thetaDegrees.toFixed(0)}°</dd></div>
                 <div><dt>余弦 cos θ</dt><dd>{angleProgress >= 1 ? candidate.cosineSimilarity.toFixed(3) : "—"}</dd></div>
@@ -100,7 +100,7 @@ export function PromptRetrieval() {
                 {snapshot.candidates.map((item, index) => <button type="button" key={item.index}
                   className="lesson-choice" aria-pressed={item === candidate} data-computed={hasScore(index)}
                   onClick={() => { scan.seek(0); setInspected(index); }}>
-                  <span>k{formatSubscript(item.index)}</span>
+                  <IndexedMath base="k" index={item.index} />
                   <i aria-hidden="true" style={{ transform: `scaleX(${hasScore(index) ? item.distance / 2 : 0})` }} />
                 </button>)}
               </div>
@@ -120,10 +120,6 @@ export function PromptRetrieval() {
         <div className="figure-body">
           <div className="p5-motion-controls">
             <PlaybackControls playback={retrieval} label="排序与读取进度" />
-            <div className="motion-stops" role="group" aria-label="查看排序和读取结果">
-              <button type="button" className="lesson-choice" onClick={() => retrieval.seek(rankEnd)}>查看排名</button>
-              <button type="button" className="lesson-choice" onClick={() => retrieval.seek(readDuration)}>查看读出</button>
-            </div>
           </div>
           <p className="p5-rank-hint" aria-live="polite">{rankHint}</p>
           <CandidateBars snapshot={snapshot} progress={sort} />
@@ -132,22 +128,6 @@ export function PromptRetrieval() {
         <figcaption>距离最小的 {topN} 个 Key 以绿色底线标出。紫色的使用视图按对应索引从源池生成。</figcaption>
       </figure>
       <p>论文公式 (3) 选择的是总距离最小的 N 个索引。只要各项距离独立评分，取最小的 N 项就能得到这个集合。这里按距离顺序展示，方便把每个名次和一次读取对上。</p>
-      <details className="p5-score-details">
-        <summary>核对 Query {query} 的十项距离</summary>
-        <math display="block" aria-label="论文公式三，寻找余弦距离之和最小的 N 个索引">
-          <msub><mi>K</mi><mi>x</mi></msub><mo>=</mo>
-          <munder><mi>argmin</mi><mrow><mi>S</mi><mo>⊆</mo><mo>[</mo><mn>1</mn><mo>,</mo><mi>M</mi><mo>]</mo><mo>,</mo><mo>|</mo><mi>S</mi><mo>|</mo><mo>=</mo><mi>N</mi></mrow></munder>
-          <munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mi>S</mi></mrow></munder>
-          <mi>γ</mi><mo>(</mo><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>,</mo><msub><mi>k</mi><mi>j</mi></msub><mo>)</mo>
-        </math>
-        <table>
-          <thead><tr><th scope="col">Key</th><th scope="col">夹角</th><th scope="col">余弦</th><th scope="col">距离</th><th scope="col">名次</th></tr></thead>
-          <tbody>{snapshot.ranking.map((item, rank) => <tr key={item.index}>
-            <th scope="row">k{formatSubscript(item.index)}</th><td>{item.thetaDegrees.toFixed(0)}°</td>
-            <td>{item.cosineSimilarity.toFixed(3)}</td><td>{item.distance.toFixed(3)}</td><td>{rank + 1}</td>
-          </tr>)}</tbody>
-        </table>
-      </details>
     </section>
 
     <section className="explain-section p5-query-sharing">

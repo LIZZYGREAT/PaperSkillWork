@@ -119,16 +119,16 @@
         { "id": "angle-a", "actions": [{ "type": "click", "selector": ".p5-scan-keys button:nth-child(1)" }] },
         { "id": "scanning", "actions": [{ "type": "fill", "selector": ".p5-compare-figure input[type=range]", "value": "1110" }] },
         { "id": "sorting", "actions": [{ "type": "fill", "selector": ".p5-retrieval-figure input[type=range]", "value": "1340" }] },
-        { "id": "ranked", "actions": [{ "type": "click", "selector": ".p5-motion-controls button:has-text('查看排名')" }] },
+        { "id": "ranked", "actions": [{ "type": "fill", "selector": ".p5-retrieval-figure input[type=range]", "value": "4400" }] },
         { "id": "copying", "actions": [{ "type": "fill", "selector": ".p5-retrieval-figure input[type=range]", "value": "5310" }] },
-        { "id": "read-a", "actions": [{ "type": "click", "selector": ".p5-motion-controls button:has-text('查看读出')" }] },
+        { "id": "read-a", "actions": [{ "type": "fill", "selector": ".p5-retrieval-figure input[type=range]", "value": "8800" }] },
         { "id": "angle-b", "actions": [
           { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
           { "type": "click", "selector": ".p5-scan-keys button:nth-child(4)" }
         ] },
         { "id": "read-b", "actions": [
           { "type": "click", "selector": ".p5-query-controls button:has-text('查询 B')" },
-          { "type": "click", "selector": ".p5-motion-controls button:has-text('查看读出')" }
+          { "type": "fill", "selector": ".p5-retrieval-figure input[type=range]", "value": "8800" }
         ] },
         { "id": "overlap", "actions": [{ "type": "scrollIntoView", "selector": ".p5-overlap" }] }
       ],
