@@ -59,17 +59,6 @@ export function P7BatchGuide() {
   </figure>;
 }
 
-export function P8LoopGuide() {
-  return <figure className="reading-guide p8-loop-guide" aria-label="训练循环从任务嵌套到批内样本">
-    <ol>
-      <li data-depth="0"><b>Task</b><span>换成当前任务的数据，继承已有模型状态。</span></li>
-      <li data-depth="1"><b>Epoch</b><span>遍历当前任务的数据一次。</span></li>
-      <li data-depth="2" data-write><b>Batch</b><span>汇总这一批的损失，<span className="lesson-key">写回一次</span>。</span></li>
-      <li data-depth="3"><b>Sample</b><span>生成自己的选集与损失；继续读取同一批的旧状态。</span></li>
-    </ol>
-    <figcaption>逐层向内看计算的范围：最内层产出样本贡献，返回 Batch 层才更新参数。</figcaption>
-  </figure>;
-}
 
 export function P9EvidenceGuide() {
   const evidence = [

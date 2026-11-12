@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { P8LoopGuide } from "./reading-guides";
+import { P8AlgorithmGuide } from "./p8-algorithm-guide";
 import { Term } from "../shared/core/reference/ReferenceHub";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Sub } from "./lesson-math";
@@ -186,25 +186,7 @@ function RunProcess({ stage, time }: { stage: RunStage; time: number }) {
   </section>;
 }
 
-const trainingCode = `初始化 K、P、φ，冻结 fₑ、fᵣ
-for task in 数据流:
-  for epoch in task:
-    for batch B in epoch:
-      L_B ← 0；S_B ← ∅
-      for (x, y) in B:
-        q ← 无 Prompt 的冻结 ViT(x) 的 [CLS]
-        S ← TopN(γ(q, K))                  # Eq. (3)
-        H ← fᵣ([P[S]; fₑ(x)])
-        z ← gφ(AvgPool(H[0 : N·Lₚ, :]))
-        L_B += CE(z, y) + λ Σⱼ∈S γ(q, kⱼ)
-        S_B ← S_B ∪ S
-      Backward(L_B)
-      OptimizerStep(K[S_B], P[S_B], φ)
-  # 下一任务沿用当前 K、P、φ`;
-const inferenceCode = `q ← 无 Prompt 的冻结 ViT(x) 的 [CLS]
-S ← TopN(γ(q, K))                         # Eq. (3)
-H ← fᵣ([P[S]; fₑ(x)])
-预测 ← argmax gφ(AvgPool(H[0 : N·Lₚ, :]))`;
+
 
 export function ContinualRun() {
   const playback = useLessonPlayback(duration);
@@ -277,9 +259,7 @@ export function ContinualRun() {
     <section className="explain-section p8-pseudocode">
       <h3>Algorithm 1 中，循环层级决定<span className="editorial-key">写回时机</span></h3>
       <p>在有任务边界的协议中，每个任务可多轮遍历当前数据，每一轮包含多个批次。样本逐个产生选集与损失，选集取并集，损失累积到整批再反向。参数因此可以跨 <Term id="epoch">Epoch</Term> 和任务持续保存。</p>
-      <P8LoopGuide />
-      <details><summary>训练 · Task → Epoch → Batch → Sample</summary><pre><code>{trainingCode}</code></pre></details>
-      <details><summary>推断 · 只传入图像 x</summary><pre><code>{inferenceCode}</code></pre></details>
+      <P8AlgorithmGuide />
       <p>在无明确任务边界的 task-agnostic 设置里，基础方法随数据到达逐批更新。基础 L2P 无需旧样本回放，L2P-R 是加入回放缓存的实验变体。</p>
     </section>
     <p className="lesson-takeaway">同一个槽位可被多个任务中的样本选中。P9 将比较可选的历史频率策略，并用论文的选择分布、消融和主实验观察共享实际发生了多少。</p>

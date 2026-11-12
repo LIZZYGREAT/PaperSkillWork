@@ -52,9 +52,7 @@
 .p8-path-data { fill: #526b62; font-size: 14px; }
 .p8-svg-math { font-family: var(--rk-font-math); font-style: italic; }
 .p8-sample-letter { fill: #fff; font-size: 10px; font-weight: 400; }
-.p8-pseudocode details { padding: 11px 0; border-top: 1px solid var(--rk-line-strong); }
-.p8-pseudocode summary { width: fit-content; margin-inline: auto; cursor: pointer; color: var(--rk-accent-strong); font-weight: 650; }
-.p8-pseudocode pre { margin: 10px 0 0; padding: 14px 18px; border-radius: 8px; overflow-x: auto; background: #edf2ea; font-size: 15px; line-height: 1.6; }
+
 .teaching-module:has(.p8-continuous-figure) { min-width: 0; }
 @media (max-width: 760px) {
   .p8-stage-stops { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px 12px; }
