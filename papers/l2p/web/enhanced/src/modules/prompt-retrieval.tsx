@@ -10,7 +10,9 @@ import "./prompt-retrieval.css";
 const snapshots = { A: buildSelectionSnapshot("A"), B: buildSelectionSnapshot("B") };
 const { poolSize, topN, promptLength } = promptPoolConfig;
 const compareStepMs = 1200;
-const angleMoveMs = 720;
+const keyRevealMs = 260;
+const angleMoveMs = 500;
+const scanTravelMs = 180;
 const finalScoreHoldMs = 800;
 const scanDuration = poolSize * compareStepMs + finalScoreHoldMs;
 const rankEnd = 4400;
@@ -32,8 +34,21 @@ export function PromptRetrieval() {
   const snapshot = snapshots[query];
   const candidateOffset = Math.min(poolSize - 1, Math.floor(scan.position / compareStepMs));
   const candidate = snapshot.candidates[inspected ?? candidateOffset];
+  const stepTime = Math.max(0, scan.position - candidateOffset * compareStepMs);
+  const nextCandidate = inspected === null ? snapshot.candidates[candidateOffset + 1] : undefined;
+  const travelProgress = nextCandidate
+    ? eased(clamp01((stepTime - (compareStepMs - scanTravelMs)) / scanTravelMs))
+    : 0;
+  const nextAngle = nextCandidate?.key.angleDegrees ?? candidate.key.angleDegrees;
+  const scanAngleDegrees = inspected === null
+    ? candidate.key.angleDegrees + (nextAngle - candidate.key.angleDegrees) * travelProgress
+    : candidate.key.angleDegrees;
+  const scanSweepDegrees = inspected === null
+    ? scanAngleDegrees - snapshot.candidates[0].key.angleDegrees
+    : 0;
+  const keyProgress = inspected === null ? eased(clamp01(stepTime / keyRevealMs)) : 1;
   const angleProgress = inspected === null
-    ? eased(clamp01((scan.position - candidateOffset * compareStepMs) / angleMoveMs))
+    ? eased(clamp01((stepTime - keyRevealMs) / angleMoveMs))
     : 1;
   const computed = inspected === null ? candidateOffset + (angleProgress >= 1 ? 1 : 0) : 1;
   const hasScore = (index: number) => inspected === null ? index < computed : index === inspected;
@@ -96,11 +111,12 @@ export function PromptRetrieval() {
         <div className="figure-body">
           <PlaybackControls playback={scanControls} label="比较进度" />
           <div className="p5-compare-grid" data-query={query} data-computed={computed}>
-            <VectorSpace snapshot={snapshot} candidate={candidate} progress={angleProgress} />
+            <VectorSpace snapshot={snapshot} candidate={candidate} rayProgress={keyProgress} angleProgress={angleProgress}
+              scanAngleDegrees={scanAngleDegrees} scanSweepDegrees={scanSweepDegrees} />
             <div className="p5-score">
               <div className="p5-score-pair"><span><IndexedMath base="q" index={query} /></span><span>与</span><span><IndexedMath base="k" index={candidate.index} /></span></div>
               <dl>
-                <div><dt>夹角 θ</dt><dd>{candidate.thetaDegrees.toFixed(0)}°</dd></div>
+                <div><dt>夹角 θ</dt><dd>{angleProgress >= 1 ? `${candidate.thetaDegrees.toFixed(0)}°` : "—"}</dd></div>
                 <div><dt>余弦 cos θ</dt><dd>{angleProgress >= 1 ? candidate.cosineSimilarity.toFixed(3) : "—"}</dd></div>
                 <div><dt>余弦距离 γ</dt><dd>{angleProgress >= 1 ? candidate.distance.toFixed(3) : "—"}</dd></div>
               </dl>
@@ -118,8 +134,9 @@ export function PromptRetrieval() {
         </div>
         <figcaption className="p5-legend" aria-label="Query 与 Key 夹角图例">
           <span><i className="p5-legend-query" aria-hidden="true" /><strong>固定 Query</strong><small><IndexedMath base="q" index={query} /></small></span>
-          <span><i className="p5-legend-key" aria-hidden="true" /><strong>当前比较</strong><small><IndexedMath base="k" index="j" /></small></span>
+          <span><i className="p5-legend-key" aria-hidden="true" /><strong>当前比较</strong><small><IndexedMath base="k" index={candidate.index} /></small></span>
           <span><i className="p5-legend-candidate" aria-hidden="true" /><strong>候选 Key</strong><small>橙色为当前项</small></span>
+          <span><i className="p5-legend-scan" aria-hidden="true" /><strong>扫描顺序</strong><small>沿环逐个比较</small></span>
           <span><i className="p5-legend-angle" aria-hidden="true" /><strong>夹角</strong><small>θ</small></span>
         </figcaption>
       </figure>
