@@ -621,3 +621,9 @@ P5 先说明图像生成 Query 的理由，再用对照图拆解同槽位的 Key
 图形参考为 [3Blue1Brown 的 Attention 分步可视化](https://www.3blue1brown.com/lessons/attention/)、[GeoGebra 的二维向量比较](https://www.geogebra.org/m/J86FP5j3)、[VisuAlgo 的排序移动](https://visualgo.net/en/sorting)和 [L2P 原论文图 2](https://openaccess.thecvf.com/content/CVPR2022/papers/Wang_Learning_To_Prompt_for_Continual_Learning_CVPR_2022_paper.pdf)。图形由教程的教学数据和既有图像素材绘制。
 
 两档桌面视口逐项复核 P4 初态、前向、损失、反传、写回中和同图复算，以及 P5 配对、A/B 单项距离、扫描中、排序中、排名、读取中、A/B 读出与交集。截图证据为 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1cb72-320b-7d10-a686-fcad4d0d7be6/l2p-evidence` 中的原始代表图及状态总览。专项脚本覆盖 17px 正文与 MathML、边界与箭头锚点、P4 一次更新、P5 候选与读出身份、暂停、重播、拖动、减少动态效果和 P3→P6 导航。390×844 补查本次改动涉及的纵向重排及公式。具体命令与状态见 `audit/final-check.md` 的本轮复核记录。
+
+### P7 批梯度汇合图微调（2026-11-12）
+
+按反馈移除批梯度图中跟随贡献对象绘制的轨迹尾线，保留 A、B 标记沿原曲线连续移动的过程。去掉与样本来源不直观、字形基线不稳的 Σ 符号，改用低饱和底色的来源芯片：两份贡献显示为 A + B，单份贡献显示为 A 或 B。截图复查发现原实现会把 A、B 拉到同一横坐标，造成标记相叠；现让两枚来源标记在整批梯度框的相邻槽位分别停留（中心距 30px），先淡出并留出短暂间隔，再显示合并芯片。双份芯片从两份来源的中点出现，随后平滑移向参数槽；单份芯片从对应来源位置出现。移动前两条通道的中心距为 22px。颜色沿用 A 的赭色与 B 的叶绿色，图内字重为 400，不改变损失路径和批末仅写回一次的算法表达。
+
+`SOURCE_BUILD=PASS`：最终修复后运行 `npm.cmd run build`，TypeScript 与 Vite 6.4.3 生产构建退出 0，80 modules。Edge Visual QA 在 390×844、1440×900、1920×1080 检查 P7 的 B 贡献、双来源合流、单来源合流、写回和写回后 5 个状态，共 15 张截图；`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`，无页面横向溢出、浏览器错误或几何诊断。已查看桌面 B 贡献、双来源合流、单来源合流、写回，以及手机端双来源和单来源截图；来源标记彼此分开，合流芯片出现时来源标记已退出，不再重叠，轨迹尾线已移除。`VISUAL_REVIEW=PASS`；无已批准截图基准，`REGRESSION=NOT_RUN`。初次临时宽度断言将 SVG 的计算宽度误设为字符串 `100%`，后改为图内常规字重断言。受限进程无法访问本地 loopback，Playwright Chromium 未安装；按仓库 Windows 回退流程指定本机 Edge 后截图成功。最终报告 `run-2026-11-12T02-20-35-191Z` 与代表截图副本保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p7-batch-merge`。`FULLSCREEN_LAYOUT=PASS`（1920×1080 固定视口模拟）；`FULLSCREEN_REAL=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。

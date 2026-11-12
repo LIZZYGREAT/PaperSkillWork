@@ -8,7 +8,7 @@ import {
   P7_COMMON_INDICES, P7_EXAMPLE_GRADIENT, P7_UNTOUCHED_INDICES,
 } from "./prompt-learning-data";
 import { P7GradientGraph } from "./p7-gradient-graph";
-import { arrive, blend, curvePosition, DiagramParameter, MotionTrace, type MotionCurve } from "./guided-motion";
+import { arrive, blend, curvePosition, DiagramParameter, type MotionCurve } from "./guided-motion";
 import "./guided-motion.css";
 import "./prompt-learning.css";
 
@@ -16,7 +16,7 @@ const stops = [
   { start: 0, time: 0, label: "读取同一快照", note: "先看左侧 A、B 的选集。它们都读取 Θᵦ。下方可以切换要追踪的槽位。" },
   { start: 800, time: 3640, label: "分类梯度", note: "沿蓝线观察 A 的两份分类贡献。Prompt 路径经过冻结 Transformer，分类器直接收到梯度。" },
   { start: 3860, time: 5610, label: "匹配梯度", note: "沿绿线看 A 的匹配贡献到达 Key。硬 Top‑N 的整数索引不传分类梯度。" },
-  { start: 5850, time: 10300, label: "汇总两份贡献", note: "接着看 B 的贡献进入同一个槽位。并排的小标记表示两份来源，参数仍是 Θᵦ。" },
+  { start: 5850, time: 10300, label: "汇总两份贡献", note: "接着看 B 的贡献进入同一个槽位；合并标记保留样本来源，参数仍是 Θᵦ。" },
   { start: 10600, time: 14300, label: "一次写回", note: "按参数归并贡献，优化器在批末写回一次。下一批读取 Θᵦ₊₁。" },
 ] as const;
 const duration = 14300;
@@ -39,9 +39,9 @@ function BatchScene({ time, slot }: { time: number; slot: number }) {
   const batchStart = 12600;
   const committed = time >= 13260;
   return <svg className="p7-scene" viewBox="0 0 860 300" role="img"
-    aria-label={`槽位 ${slot} 的梯度贡献。分类损失更新 Prompt 和分类器，匹配损失更新 Key，优化器最后一次写回。`}>
+    aria-label={`槽位 ${slot} 的梯度贡献。分类损失更新 Prompt 和分类器，匹配损失更新 Key，A、B 的贡献按参数汇总后由优化器批末写回一次。`}>
     <text x="30" y="31" className="p7-label">两个样本 · 同读 Θᵦ</text>
-    <text x="239" y="31" className="p7-label">梯度沿对应路径回传</text>
+    <text x="239" y="31" className="p7-label">A、B 的梯度贡献</text>
     <text x="623" y="31" className="p7-label" textAnchor="middle">整批梯度</text>
     <text x="783" y="31" className="p7-label" textAnchor="middle">
       <tspan opacity={1 - arrive(time, batchStart, 13260)}>参数 Θᵦ</tspan>
@@ -67,12 +67,20 @@ function BatchScene({ time, slot }: { time: number; slot: number }) {
     <text x="30" y="276" className="p7-muted">硬 Top‑N 只给出索引</text>
     {rows.map(({kind, y, color, fill, loss}, row) => {
       const ids = sources[kind];
-      const merge = arrive(time, 10700 + row * 140, 11950 + row * 140);
+      const mergeStart = 10700 + row * 140;
+      const sourceExit = arrive(time, mergeStart, mergeStart + 280);
+      const resultReveal = arrive(time, mergeStart + 340, 11950 + row * 140);
       const write = arrive(time, batchStart, 13260);
       const target = kind === "prompts"
         ? <>Prompt <DiagramParameter symbol="P" index={slot} /></>
         : kind === "keys" ? <>Key <DiagramParameter symbol="k" index={slot} /></> : "分类器 φ";
-      const sumRoute: MotionCurve = [{x:625,y:y+8},{x:658,y:y+8},{x:689,y:y+8},{x:729,y:y+8}];
+      const resultWidth = ids.length > 1 ? 52 : 24;
+      const resultStartX = ids.length > 1 ? 624 : ids[0] === "B" ? 639 : 609;
+      const resultRoute: MotionCurve = [
+        {x:resultStartX,y:y+14}, {x:652,y:y+14}, {x:677,y:y+9},
+        {x:731-resultWidth/2-4,y:y+9},
+      ];
+      const resultPoint = curvePosition(resultRoute, write);
       return <g key={kind} data-parameter={kind} data-written={committed && ids.length > 0}>
         <rect x="222" y={y - 26} width="609" height="67" rx="7" fill={fill} opacity=".41" />
         <text x="239" y={y - 8} className="p7-loss-label" style={{fill:color}}>{loss}</text>
@@ -86,25 +94,31 @@ function BatchScene({ time, slot }: { time: number; slot: number }) {
           const index = id === "A" ? 0 : 1;
           const [begin, end] = timings[row][index];
           const move = arrive(time, begin, end);
-          const laneY = y + 9 + index * 13;
+          const laneY = y + 9 + index * 22;
           const targetX = 609 + index * 30;
           const route: MotionCurve = [{x:251,y:laneY},{x:366,y:laneY},{x:493,y:laneY},{x:targetX,y:y+14}];
           const point = curvePosition(route, move);
-          const incoming = 1 - arrive(time, end - 140, end + 120);
-          const opacity = (.47 + .53 * arrive(time, begin - 300, begin)) * (1 - merge);
+          const opacity = (.47 + .53 * arrive(time, begin - 300, begin)) * (1 - sourceExit);
           return <g key={id}>
-            <MotionTrace curve={route} progress={move} color={color} opacity={incoming * (.35 + .65 * move)} />
-            <g data-contribution={`${id}-${kind}`} transform={`translate(${blend(point.x, 625, merge)} ${point.y})`} opacity={opacity}>
+            <g data-contribution={`${id}-${kind}`} transform={`translate(${point.x} ${point.y})`} opacity={opacity}>
               <rect x="-9" y="-8" width="18" height="16" rx={id === "A" ? 8 : 3} fill={fill} stroke={color} />
               <text y="4.7" textAnchor="middle" className="p7-mark" style={{fill:color}}>{id}</text>
             </g>
           </g>;
         })}
         {ids.length > 0 && <>
-          <MotionTrace curve={sumRoute} progress={write} color={color} opacity={merge * (1 - .65 * write)} />
-          <g transform={`translate(${curvePosition(sumRoute, write).x} ${y + 8})`} opacity={merge * (1 - arrive(time, 13140, 13340))}>
-            <rect x="-11" y="-8" width="22" height="16" rx="4" fill={color} />
-            <text y="4.7" textAnchor="middle" className="p7-mark p7-sum">Σ</text>
+          <g transform={`translate(${resultPoint.x} ${resultPoint.y})`} opacity={resultReveal * (1 - arrive(time, 13140, 13340))}>
+            <rect x={-resultWidth / 2} y="-10" width={resultWidth} height="20" rx="6" fill="#f6f8f2" stroke={color} />
+            {ids.map((id, index) => {
+              const sourceX = ids.length > 1 ? (index === 0 ? -15 : 15) : 0;
+              const sourceColor = id === "A" ? ochre : leaf;
+              const sourceFill = id === "A" ? "#f0e2c9" : "#dce8d5";
+              return <g key={id}>
+                <circle cx={sourceX} cy="0" r="6.5" fill={sourceFill} stroke={sourceColor} />
+                <text x={sourceX} y="3.4" textAnchor="middle" className="p7-sum-label" style={{fill:sourceColor}}>{id}</text>
+              </g>;
+            })}
+            {ids.length > 1 && <text x="0" y="3.4" textAnchor="middle" className="p7-sum-plus">+</text>}
           </g>
         </>}
       </g>;

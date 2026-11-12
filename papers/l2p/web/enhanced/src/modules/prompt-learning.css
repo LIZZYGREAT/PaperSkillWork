@@ -6,7 +6,8 @@
 .p7-scene .p7-muted { fill: var(--motion-muted); font-size: var(--motion-svg-detail); }
 .p7-scene .p7-loss-label { font-size: var(--motion-svg-detail); font-weight: 400; }
 .p7-scene .p7-mark { font-size: var(--motion-svg-detail); font-weight: 400; }
-.p7-scene .p7-sum { fill: white; }
+.p7-scene .p7-sum-label { font-size: 9.5px; font-weight: 400; }
+.p7-scene .p7-sum-plus { fill: #65766e; font-size: 9px; font-weight: 400; }
 .p7-rule { stroke: var(--motion-line); fill: none; }
 .p7-slots {
   display: grid;
