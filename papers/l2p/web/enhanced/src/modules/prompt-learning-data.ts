@@ -1,4 +1,4 @@
-import { buildSelectionSnapshot, promptPoolConfig, type QueryId } from "./prompt-retrieval-data";
+import { buildSelectionSnapshot, KEYS, promptPoolConfig, QUERIES, type QueryId, type Vector2 } from "./prompt-retrieval-data";
 
 export type BatchSample = Readonly<{
   id: QueryId;
@@ -48,15 +48,27 @@ export function selectedDistanceTotal(sample: BatchSample) {
   return sample.selected.reduce((sum, index) => sum + sample.distances[index], 0);
 }
 
-export const P7_EXAMPLE_GRADIENT = Object.freeze({
-  query: Object.freeze({ x: 1, y: 0 }),
-  initialKey: Object.freeze({ x: 0, y: 1 }),
-  learningRate: 0.2,
-  gradient: Object.freeze({ x: -1, y: 0 }),
-  updatedKey: Object.freeze({ x: 0.2, y: 1 }),
-});
-
-export function distanceFromExampleKey(key: Readonly<{ x: number; y: number }>) {
-  const norm = Math.hypot(key.x, key.y);
-  return norm === 0 ? Number.NaN : 1 - key.x / norm;
+/** Gradient of 1 − cos(q, k) with respect to k. */
+export function cosineKeyGradient(query: Vector2, key: Vector2): Vector2 {
+  const qNorm = Math.hypot(query.x, query.y);
+  const kNorm = Math.hypot(key.x, key.y);
+  const q = { x: query.x / qNorm, y: query.y / qNorm };
+  const k = { x: key.x / kNorm, y: key.y / kNorm };
+  const cosine = q.x * k.x + q.y * k.y;
+  return { x: (cosine * k.x - q.x) / kNorm, y: (cosine * k.y - q.y) / kNorm };
 }
+
+const index = P7_COMMON_INDICES[0];
+const initial = KEYS[index - 1].vector;
+const contributions = (["A", "B"] as const).map(id => ({
+  id, query: QUERIES[id].vector, gradient: cosineKeyGradient(QUERIES[id].vector, initial),
+}));
+const gradient = contributions.reduce((sum, item) => ({
+  x: sum.x + item.gradient.x, y: sum.y + item.gradient.y,
+}), { x: 0, y: 0 });
+const learningRate = 0.8;
+
+export const P7_KEY_STEP = {
+  index, initial, contributions, gradient, learningRate,
+  updated: { x: initial.x - learningRate * gradient.x, y: initial.y - learningRate * gradient.y },
+} as const;

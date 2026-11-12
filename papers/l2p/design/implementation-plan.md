@@ -677,3 +677,14 @@ ReferenceHub 覆盖 P1–P9，新增 23 条概念。页眉进入当前页主题�
 - `node tools/visual-qa/cli.mjs --config papers/l2p/web/enhanced/visual-qa.json`：Edge、DPR 1，实际 1440×900 / 1920×1080，114 个截图状态通过。 `GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`。P2 原有三处小字警告在本轮目标页之外。已查看新图解、P1–P9 代表状态、两档 ReferenceHub 和 P9 消融列对齐。
 - 定向桌面验证：逐项核对 23 个新增词条的正文入口、释义、来源，逐页验证浮层→详情→相关条目→返回、Escape 焦点复位，以及 P9 三个锚点避开固定导航。Impeccable 静态检测无报告项。
 - `FULLSCREEN_LAYOUT=PASS`（固定视口模拟）；`FULLSCREEN_REAL=NOT_RUN`（使用无头浏览器）；`HUMAN_ACCEPTANCE=PENDING`。代表截图和报告副本：`C:/Users/lenovo/.codex/visualizations/2026/11/12/01a1ced9-92d5-7943-a334-2155308642b2/l2p-review/`。原始运行编号：`run-2026-11-12T08-41-50-401Z`。
+
+
+### P4、P7、P8 定向重做（2026-11-12）
+
+按用户的四张截图重新选择教学内容。保留 P4 的固定单头模型、P7 的硬检索与批末一次更新、P8 的 Algorithm 1 执行边界。重做只影响这三处和匹配损失词条说明。
+
+- P4 将旧的公式和两项孤立损失改为同图三组复算：原参数、只换 Prompt、同时换 Prompt 与分类头。共享原有数值模型，额外分支只做前向。统一 40%–50% 的局部尺度，概率分别为 42.31%、42.37%、46.17%；本例预测类别没有翻转。
+- P7 用 P5 的 Query A、Query B 和两者共同命中的 Key 2 替换孤立小算例。两侧贡献从原状态计算，SVG 中同一箭头和编号持续存在，合成后才沿一步 SGD 位移。两项距离从 0.086/0.826 变为 0.342/0.429，和从 0.913 变为 0.771。数值、角度、轨迹与阶段由同一时钟驱动。动画途中是该步的过渡，只在终点标记一次写回；论文实验使用 Adam。
+- P8 删除旧折叠代码，将 Task → Epoch → Batch → Sample 与对应代码放在共享行网格。Sample 中寻址、分类、累积各自对齐；写回退回 Batch 缩进，用一整行标出；推断只读单独列为一条对照行。
+
+验证：`npm.cmd run build`（Vite 6.4.3，88 modules）和 `node scripts/check-p5-retrieval.mjs` 均通过。Edge 1440×900 与 1920×1080（DPR 1）仅检查桌面。Visual QA 使用 P4/P7/P8 三页配置（从 `visual-qa.json` 筛选），54 个状态的 `GEOMETRY_QA`、`STYLE_QA`、`BROWSER_ERRORS` 通过，运行编号 `run-2026-11-12T09-09-34-812Z`。随后精修 P7 滑杆并重建，用构建的非根子路径复验两档桌面图、P4 刻度对齐、P8 行高/缩进/Pseudocode 无横向裁切，及 P7 真实播放、暂停、拖动、减少动态效果、同一 SVG 节点、有限差分终点校验和唯一一次写回。已查看三页截取与代表状态，Impeccable 静态检查无报告项。`FULLSCREEN_LAYOUT=PASS`；`FULLSCREEN_REAL=NOT_RUN`（无头浏览器）；`HUMAN_ACCEPTANCE=PENDING`。截图与报告副本位于 `C:/Users/lenovo/.codex/visualizations/2026/11/12/01a1ced9-92d5-7943-a334-2155308642b2/l2p-rework/`。

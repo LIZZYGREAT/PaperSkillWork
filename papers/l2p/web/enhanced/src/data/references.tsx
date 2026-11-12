@@ -125,7 +125,7 @@ const laterReferences: ReferenceEntry[] = [
     definition: "将当前入选 Key 到冻结 Query 的余弦距离相加，作为检索参数的训练信号。",
     role: "P7 用这条支路直接更新入选 Key，并用 λ 调整其在目标中的权重。",
     confusion: "匹配项用原始 γ，P9 的可选频率权重只改变选集。",
-    detail: <ReferenceDetail explanation="固定 Query 和当前选集，对式 (5) 的距离项求导；每个入选 Key 从自己的距离获得梯度。" note="二维 Key 算例只说明一次 SGD 方向；论文实验采用 Adam。" />,
+    detail: <ReferenceDetail explanation="固定 Query 和当前选集，对式 (5) 的距离项求导；每个入选 Key 从自己的距离获得梯度。" note="P7 沿用 P5 的两枚 Query，复算共享 Key 的一次 SGD；论文实验采用 Adam。" />,
     related: ["pool-key","cosine-distance","joint-objective","frequency-selection"],
     source: <SourceLink href={L2P_CVPR}>L2P §4.3，式 (5)；§5.2</SourceLink>,
   },

@@ -168,7 +168,9 @@
         {"id":"merge-midpoint","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":11500}]},
         {"id":"writeback-midpoint","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":12900}]},
         {"id":"one-writeback","actions":[{"type":"fill","selector":".p7-control-dock input[type='range']","value":14300}]},
-        {"id":"key-angle-midpoint","actions":[{"type":"click","selector":".p7-key-study summary"},{"type":"fill","selector":".p7-key-study input[type='range']","value":1350}]}
+        {"id":"key-lab-collect","actions":[{"type":"fill","selector":".p7-key-lab input[type='range']","value":2060}]},
+        {"id":"key-lab-write","actions":[{"type":"fill","selector":".p7-key-lab input[type='range']","value":5000}]},
+        {"id":"key-lab-final","actions":[{"type":"fill","selector":".p7-key-lab input[type='range']","value":8100}]}
       ],
       "computedStyles": [
         { "selector": ".lesson-copy", "property": "--lesson-body-size", "equals": "17px" }

@@ -1,16 +1,17 @@
 
 import { useState } from "react";
 import { P7BatchGuide } from "./reading-guides";
+import { P7KeyLab } from "./p7-key-lab";
 import { Term } from "../shared/core/reference/ReferenceHub";
 import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
 import { Sub } from "./lesson-math";
 import { promptPoolConfig, QUERIES } from "./prompt-retrieval-data";
 import {
-  distanceFromExampleKey, gradientSourcesForSlot, P7_BATCH_INDICES, P7_BATCH_SAMPLES,
-  P7_COMMON_INDICES, P7_EXAMPLE_GRADIENT, P7_UNTOUCHED_INDICES,
+  gradientSourcesForSlot, P7_BATCH_INDICES, P7_BATCH_SAMPLES,
+  P7_COMMON_INDICES, P7_UNTOUCHED_INDICES,
 } from "./prompt-learning-data";
 import { P7GradientGraph } from "./p7-gradient-graph";
-import { arrive, blend, curvePosition, DiagramParameter, type MotionCurve } from "./guided-motion";
+import { arrive, curvePosition, DiagramParameter, type MotionCurve } from "./guided-motion";
 import "./guided-motion.css";
 import "./prompt-learning.css";
 
@@ -128,39 +129,7 @@ function BatchScene({ time, slot }: { time: number; slot: number }) {
   </svg>;
 }
 
-function KeyGradientStudy() {
-  const playback = useLessonPlayback(2800);
-  const progress = arrive(playback.position, 250, 2420);
-  const { initialKey, updatedKey } = P7_EXAMPLE_GRADIENT;
-  const key = { x: blend(initialKey.x, updatedKey.x, progress), y: initialKey.y };
-  const distance = distanceFromExampleKey(key);
-  const radius = 47;
-  const angle = Math.atan2(key.y, key.x);
-  const tipX = 77 + 87 * key.x;
-  return <details className="p7-key-study">
-    <summary>放大一个 Key 的二维更新</summary>
-    <div className="p7-key-study-body">
-      <div>
-        <p>固定 q = (1, 0)，从 k = (0, 1) 开始。沿梯度 (−1, 0) 的反方向走一步，步长为 0.2，得到 k′ = (0.2, 1)。看绿箭头的端点怎样沿水平轨迹移动。</p>
-        <p>图中是一步二维 SGD 教学算例。论文实验使用 Adam。</p>
-      </div>
-      <svg viewBox="0 0 240 155" role="img" aria-label={`Key 连续移动时的余弦距离为 ${distance.toFixed(3)}`}>
-        <path d="M77 21V124H207" fill="none" stroke="#a8b9a8" />
-        <path d="M77 124H164m-6-4 6 4-6 4" fill="none" stroke={ochre} strokeWidth="2" />
-        <path d="M77 124V37H94.4" fill="none" stroke="#7d9a81" strokeDasharray="3 4" />
-        <path d={`M124 124 A${radius} ${radius} 0 0 0 ${77 + radius * Math.cos(angle)} ${124 - radius * Math.sin(angle)}`}
-          fill="none" stroke="#a78450" />
-        <path d={`M77 124L${tipX} 37`} stroke={leaf} strokeWidth="3" />
-        <circle data-key-tip cx={tipX} cy="37" r="4" fill={leaf} />
-        <text x={tipX + 9} y="32">k</text><text x="174" y="118">q</text>
-        <text x="120" y="147" textAnchor="middle">余弦距离 {distance.toFixed(3)}</text>
-      </svg>
-    </div>
-    <div className="motion-dock p7-key-controls">
-      <PlaybackControls playback={playback} label="Key 更新进度" />
-    </div>
-  </details>;
-}
+
 
 export function PromptLearning() {
   const playback = useLessonPlayback(duration);
@@ -221,7 +190,11 @@ export function PromptLearning() {
         <math display="block"><Sub base="L" index="batch" /><mo>=</mo><Sub base="L" index="A" /><mo>+</mo><Sub base="L" index="B" /></math>
         <math display="block"><Sub base="Θ" index="b+1" /><mo>=</mo><mi>OptimizerStep</mi><mo>(</mo><Sub base="Θ" index="b" /><mo>,</mo><mo>∇</mo><Sub base="L" index="batch" /><mo>)</mo></math>
       </div>
-      <KeyGradientStudy />
+    </section>
+    <section className="explain-section">
+      <h3>两张图同时命中一个 Key，它会<span className="editorial-key">朝哪边走</span>？</h3>
+      <p>用 A、B 在 P5 共同命中的 {P7_COMMON_INDICES[0]} 号槽位做一次复算。两张图的 Query 都固定，匹配损失的梯度先在同一枚 Key 上相加，批末才移动它。播放时注意：<span className="lesson-key">总距离下降</span>，并不要求每个样本的距离都下降。</p>
+      <P7KeyLab />
     </section>
     <p className="lesson-takeaway">下一批重新用更新后的 Key 排名，并从同一组参数读取选中的 Prompt 和分类器。P8 将沿这份状态追踪下一批、下一项任务与最终预测。</p>
   </>;
