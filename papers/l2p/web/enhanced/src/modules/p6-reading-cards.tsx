@@ -10,19 +10,19 @@ export function P6CallMap() {
     <div className="p6-call-map__rows">
       <div className="p6-call-row" data-route="retrieve">
         <span className="p6-call-row__step">先检索</span>
-        <article className="p6-call-card"><span>图像</span><span className="p6-call-card__main">x</span><small>不插入 Prompt</small></article>
+        <article className="p6-call-card"><span>图像</span><span className="p6-call-card__main"><math><mi>x</mi></math></span><small>不插入 Prompt</small></article>
         <span className="p6-call-arrow" aria-hidden="true">→</span>
-        <article className="p6-call-card p6-call-card--frozen"><span>冻结 ViT</span><span className="p6-call-card__main">fₑ → fᵣ</span><small>只计算当前图像</small></article>
+        <article className="p6-call-card p6-call-card--frozen"><span>冻结 ViT</span><span className="p6-call-card__main"><math><msub><mi>f</mi><mi>e</mi></msub></math><span className="p6-call-inline-arrow" aria-hidden="true">→</span><math><msub><mi>f</mi><mi>r</mi></msub></math></span><small>只计算当前图像</small></article>
         <span className="p6-call-arrow" aria-hidden="true">→</span>
-        <article className="p6-call-card p6-call-card--query"><span>读出寻址特征</span><span className="p6-call-card__main">[CLS] → q(x)</span><small>与 Key 比较，得到 S(x)</small></article>
+        <article className="p6-call-card p6-call-card--query"><span>读出寻址特征</span><span className="p6-call-card__main">[CLS] <span className="p6-call-inline-arrow" aria-hidden="true">→</span> <math><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo></math></span><small>与 Key 比较，得到 S(x)</small></article>
       </div>
       <div className="p6-call-row" data-route="classify">
         <span className="p6-call-row__step">再分类</span>
-        <article className="p6-call-card p6-call-card--prompt"><span>拼成输入</span><span className="p6-call-card__main p6-call-selection">{P6_SELECTED_PROMPT_INDICES.map((id, index) => <span key={id}>P<sub>{id}</sub>{index < P6_SELECTED_PROMPT_INDICES.length - 1 ? ", " : " + "}</span>)}xₑ</span><small>使用刚才选出的 Prompt</small></article>
+        <article className="p6-call-card p6-call-card--prompt"><span>拼成输入</span><span className="p6-call-card__main p6-call-selection">{P6_SELECTED_PROMPT_INDICES.map((id, index) => <span key={id}><math><msub><mi>P</mi><mn>{id}</mn></msub></math>{index < P6_SELECTED_PROMPT_INDICES.length - 1 ? "," : " +"}</span>)}<math><msub><mi>x</mi><mi>e</mi></msub></math></span><small>使用刚才选出的 Prompt</small></article>
         <span className="p6-call-arrow" aria-hidden="true">→</span>
-        <article className="p6-call-card p6-call-card--frozen"><span>同一冻结 ViT</span><span className="p6-call-card__main">fᵣ(xₚ) = H</span><small>整条扩展序列共同计算</small></article>
+        <article className="p6-call-card p6-call-card--frozen"><span>同一冻结 ViT</span><span className="p6-call-card__main"><math><msub><mi>f</mi><mi>r</mi></msub><mo>(</mo><msub><mi>x</mi><mi>p</mi></msub><mo>)</mo><mo>=</mo><mi>H</mi></math></span><small>整条扩展序列共同计算</small></article>
         <span className="p6-call-arrow" aria-hidden="true">→</span>
-        <article className="p6-call-card p6-call-card--readout"><span>读分类特征</span><span className="p6-call-card__main">Prompt 输出 → h → z</span><small>AvgPool 后交给 gφ</small></article>
+        <article className="p6-call-card p6-call-card--readout"><span>读分类特征</span><span className="p6-call-card__main">Prompt 输出 <span className="p6-call-inline-arrow" aria-hidden="true">→</span> <math><mi>h</mi></math> <span className="p6-call-inline-arrow" aria-hidden="true">→</span> <math><mi>z</mi></math></span><small>AvgPool 后交给 gφ</small></article>
       </div>
     </div>
     <figcaption>q(x) 负责从 Key 中找 Prompt；分类特征 h 则来自带 Prompt 的另一次前向。二者使用相同冻结权重，但输入和读出位置不同。</figcaption>

@@ -14,7 +14,7 @@
   gap: 8px 24px;
   margin: 0 0 12px;
   color: #506759;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.5;
   font-weight: 400;
 }
@@ -27,12 +27,13 @@
 .p7-gradient-graph svg { display: block; width: 100%; min-width: 920px; height: auto; }
 .p7-gradient-graph svg text { font-family: var(--rk-font-body, "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif); font-weight: 400; }
 .p7-graph-rule { fill: none; stroke: #d2dcd0; stroke-width: 1; }
-.p7-graph-lane { font-size: 15px; fill: #315d73; }
+.p7-graph-lane { font-size: 17px; fill: #315d73; }
 .p7-graph-lane--select { fill: #775023; }
 .p7-graph-lane--match { fill: #396746; }
 .p7-graph-node rect { stroke-width: 1.2; }
-.p7-graph-node__main { font-size: 15px; fill: #254335; }
-.p7-graph-node__note { font-size: 12px; fill: #506759; }
+.p7-graph-node__main { font-size: 17px; fill: #254335; }
+.p7-graph-node__note { font-size: 14px; fill: #506759; }
+.p7-graph-math { font-family: var(--rk-font-math, "STIX Two Math", "Cambria Math", serif); font-size: 1.1em; font-style: italic; }
 .p7-graph-node--loss rect { fill: #e9f0f1; stroke: #94adb3; }
 .p7-graph-node--loss .p7-graph-node__main { fill: #315d73; }
 .p7-graph-node--loss-match rect { fill: #edf3e9; stroke: #a8b9a8; }
@@ -49,17 +50,20 @@
 .p7-graph-node--key rect { fill: #edf3e9; stroke: #9db39e; }
 .p7-graph-node--key .p7-graph-node__main { fill: #396746; }
 .p7-graph-node--fixed-query rect { fill: #f0f3ed; stroke: #bdcbbc; stroke-dasharray: 2 3; }
-.p7-graph-edge { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.p7-graph-edge,
+.p7-graph-arrowhead { fill: none; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.p7-graph-arrowhead--select { stroke: #9a7745; }
+.p7-graph-arrowhead--query { stroke: #82938a; }
 .p7-graph-edge--cls { stroke: #315d73; }
 .p7-graph-edge--select { stroke: #9a7745; stroke-dasharray: 4 5; }
 .p7-graph-edge--match { stroke: #396746; }
 .p7-graph-edge--query { stroke: #82938a; stroke-dasharray: 2 3; }
-.p7-graph-edge-note { font-size: 12px; fill: #775023; }
-.p7-graph-boundary { font-size: 12px; fill: #775023; }
+.p7-graph-edge-note { font-size: 14px; fill: #775023; }
+.p7-graph-boundary { font-size: 14px; fill: #775023; }
 .p7-gradient-graph figcaption {
   margin: 10px auto 0;
   color: #506759;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.65;
   text-align: center;
   font-weight: 400;

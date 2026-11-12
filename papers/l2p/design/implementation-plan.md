@@ -637,3 +637,9 @@ P5 先说明图像生成 Query 的理由，再用对照图拆解同槽位的 Key
 `SOURCE_BUILD=PASS`：最终代码运行 `npm.cmd run build`，TypeScript 与 Vite 6.4.3 退出 0，80 modules。最终 Edge Visual QA 报告 `run-2026-11-12T03-01-34-616Z`；5 个 P8 状态分别在 1440×900、1920×1080、1024×900、390×844 检查，共 20 张截图。`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`；页面无横向溢出、截图无剪切诊断，浏览器错误为 0。已实看桌面初态、账本、检索/分类泳道、训练/推断分支，以及 1024px 和 390px 的对应布局。首轮临时配置因滚动选择器同时命中两条泳道而未执行该状态；改用分类泳道专属选择器后完整重跑并通过。Impeccable type 与 layout 检测各返回空结果。截图和报告副本保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p8-variable-flow-review`。`VISUAL_REVIEW=PASS`；无已批准截图基准，`REGRESSION=NOT_RUN`；`FULLSCREEN_LAYOUT=PASS`（1920×1080 固定视口）；`FULLSCREEN_REAL=NOT_RUN`；`SUBPATH_ASSETS=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
 
 最后将推断节点的 `ŷ` 改为数学变量字体后，重新运行 `run-2026-11-12T03-07-53-744Z`：初始化、写回中段、推断完成 3 个状态在 1440×900、1920×1080、390×844 共 9 张截图均通过几何、样式与浏览器错误检查。复看桌面与手机端推断全页，数学字形清晰，训练/推断节点按窄屏顺序展开，账本保留横向浏览提示。该次构建也再次通过；最终报告和桌面、手机代表截图保存在同一证据目录，`VISUAL_REVIEW=PASS`，`HUMAN_ACCEPTANCE=PENDING`。
+
+### P6–P8 字号与箭头空间复修（2026-11-12）
+
+按最新截图扩大图内字号，并重新分配节点和连线的空间。P6 调大调用卡片标题、变量和说明文字，使用 MathML 呈现公式变量；两条调用路径改为弹性网格列，把原先卡片间的余量交给细箭头。P7 节点主标签调整到 17px、辅助说明到 14px，增高节点并拉开行距；分类路径的长箭头、前向寻址虚线与独立箭头头部分开绘制，避免虚线头和节点边缘混在一起。P8 节点标题/说明提升到 18px/16px，扩大水平节点间距与批步骤间距，使箭头延伸到节点之间的可用空隙；上下交接箭头也加长。窄屏继续按阅读方向纵向排列，并使用同色的细垂直连线。
+
+`npm.cmd run build` 通过，TypeScript 与 Vite 6.4.3 构建 80 个模块。最终 Edge Visual QA 报告 `run-2026-11-12T04-50-52-601Z`：P6–P8 共 6 个教学状态，在 1440×900、1920×1080、390×844 三档视口检查 18 张截图；`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`，无几何/基线诊断、浏览器错误或页面级横向溢出。人工查看 P6、P7、P8 桌面截图及 P8 手机截图后，确认连接线较前版更长、更细，端点落在节点之间，标签无重叠或裁切，`VISUAL_REVIEW=PASS`。截图、报告和人工复核记录保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p6-p8-type-arrow-review/run-2026-11-12T04-50-52-601Z`。无已批准截图基准，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`；`FULLSCREEN_REAL=NOT_RUN`。
