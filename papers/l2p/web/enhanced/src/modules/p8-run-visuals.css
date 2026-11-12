@@ -189,8 +189,8 @@
 .p8-flow__fork-leg--training { left: 25%; }
 .p8-flow__fork-leg--inference { left: 75%; }
 
-.p8-flow__outcomes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 1.2rem; }
-.p8-flow__branch { min-width: 0; padding: 1.1rem 1.15rem 1rem; border: 1px solid #c3d0bf; border-radius: 10px; background: #f3f6ef; }
+.p8-flow__outcomes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 1.2rem; }
+.p8-flow__branch { display: flex; min-width: 0; flex-direction: column; padding: 1.1rem 1.15rem 1rem; border: 1px solid #c3d0bf; border-radius: 10px; background: #f3f6ef; }
 .p8-flow__branch--inference { border-color: #bfccd0; background: #f0f4f5; }
 .p8-flow__branch h4 { margin: 0 0 1.15rem; color: #315f48; font-size: 1.125rem; font-weight: 400; line-height: 1.45; }
 .p8-flow__branch--inference h4 { color: #456d79; }
@@ -204,7 +204,7 @@
 .p8-flow__step-main math { font-size: 1.1em; }
 .p8-flow__step-detail { color: #526b62; font-size: .96rem; line-height: 1.45; text-wrap: balance; }
 .p8-flow__steps--inference { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.p8-flow__branch > p { margin: 1rem 0 0; color: #526b62; font-size: .96rem; line-height: 1.5; text-align: center; }
+.p8-flow__branch > p { margin: auto 0 0; padding-top: 1rem; color: #526b62; font-size: .96rem; line-height: 1.5; text-align: center; }
 .p8-flow figcaption { margin: 1.15rem 0 0; color: #586d66; font-size: .98rem; line-height: 1.65; text-align: center; }
 
 @media (max-width: 1050px) {

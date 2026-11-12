@@ -643,3 +643,9 @@ P5 先说明图像生成 Query 的理由，再用对照图拆解同槽位的 Key
 按最新截图扩大图内字号，并重新分配节点和连线的空间。P6 调大调用卡片标题、变量和说明文字，使用 MathML 呈现公式变量；两条调用路径改为弹性网格列，把原先卡片间的余量交给细箭头。P7 节点主标签调整到 17px、辅助说明到 14px，增高节点并拉开行距；分类路径的长箭头、前向寻址虚线与独立箭头头部分开绘制，避免虚线头和节点边缘混在一起。P8 节点标题/说明提升到 18px/16px，扩大水平节点间距与批步骤间距，使箭头延伸到节点之间的可用空隙；上下交接箭头也加长。窄屏继续按阅读方向纵向排列，并使用同色的细垂直连线。
 
 `npm.cmd run build` 通过，TypeScript 与 Vite 6.4.3 构建 80 个模块。最终 Edge Visual QA 报告 `run-2026-11-12T04-50-52-601Z`：P6–P8 共 6 个教学状态，在 1440×900、1920×1080、390×844 三档视口检查 18 张截图；`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`，无几何/基线诊断、浏览器错误或页面级横向溢出。人工查看 P6、P7、P8 桌面截图及 P8 手机截图后，确认连接线较前版更长、更细，端点落在节点之间，标签无重叠或裁切，`VISUAL_REVIEW=PASS`。截图、报告和人工复核记录保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p6-p8-type-arrow-review/run-2026-11-12T04-50-52-601Z`。无已批准截图基准，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`；`FULLSCREEN_REAL=NOT_RUN`。
+
+### P8 训练/推断分支容器等高（2026-11-12）
+
+将宽屏双列网格的分支对齐设为 stretch，使训练和推断卡片共用同一行高；卡片改为纵向弹性布局，把末尾说明推至底部，保持两列内容基线一致。1024px 以下继续改为单列顺序展示，不强行等高。
+
+`npm.cmd run build` 通过（TypeScript 与 Vite 6.4.3，80 个模块）。Edge Visual QA 报告 `run-2026-11-12T05-04-56-791Z` 在 1440×900、1920×1080、1024×900、390×844 检查 4 张 P8 截图，`GEOMETRY_QA=PASS`、`STYLE_QA=PASS`、`BROWSER_ERRORS=PASS`。已复看四档截图：桌面两列上下边缘齐平，平板/手机维持纵向堆叠且无页面溢出；`VISUAL_REVIEW=PASS`。截图与记录保存在 `C:/Users/lenovo/.codex/visualizations/2026/11/11/01a1ca68-3f63-7392-8d9f-a853d32df6f8/l2p-p6-p8-guides/p8-branch-height-alignment/run-2026-11-12T05-04-56-791Z`。无已批准截图基准，`REGRESSION=NOT_RUN`；`HUMAN_ACCEPTANCE=PENDING`。
