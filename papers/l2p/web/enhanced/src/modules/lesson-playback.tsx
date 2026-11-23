@@ -3,24 +3,27 @@ import { useEffect, useState } from "react";
 export function useLessonPlayback(duration: number) {
   const [position, setPosition] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [segmentEnd, setSegmentEnd] = useState<number | null>(null);
+  const end = segmentEnd ?? duration;
 
   useEffect(() => {
     if (!playing) return;
     let frame = 0;
     let previous = performance.now();
     function tick(now: number) {
-      const elapsed = now - previous;
+      // The first frame can have been timestamped before this effect started.
+      const elapsed = Math.max(0, now - previous);
       previous = now;
-      setPosition(value => Math.min(value + elapsed, duration));
+      setPosition(value => Math.min(value + elapsed, end));
       frame = requestAnimationFrame(tick);
     }
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [duration, playing]);
+  }, [end, playing]);
 
   useEffect(() => {
-    if (position >= duration && playing) setPlaying(false);
-  }, [duration, playing, position]);
+    if (position >= end && playing) setPlaying(false);
+  }, [end, playing, position]);
 
   function toggle() {
     if (playing) {
@@ -31,16 +34,28 @@ export function useLessonPlayback(duration: number) {
       setPosition(duration);
       return;
     }
+    if (position >= end) setSegmentEnd(null);
     if (position >= duration) setPosition(0);
     setPlaying(true);
   }
 
   function seek(value: number) {
     setPlaying(false);
+    setSegmentEnd(null);
     setPosition(value);
   }
 
-  return { position, playing, toggle, seek, duration };
+  function playSegment(start: number, finish: number) {
+    if (finish <= start || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      seek(finish);
+      return;
+    }
+    setPosition(start);
+    setSegmentEnd(finish);
+    setPlaying(true);
+  }
+
+  return { position, playing, toggle, seek, playSegment, duration };
 }
 
 export function PlaybackControls({ playback, label }: { playback: ReturnType<typeof useLessonPlayback>; label: string }) {

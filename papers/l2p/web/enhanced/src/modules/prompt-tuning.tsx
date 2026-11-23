@@ -1,167 +1,173 @@
+import { P4ParameterGuide } from "./reading-guides";
+import { P4Rerun } from "./p4-rerun";
+import { P4SharedPrompt } from "./p4-shared-prompt";
 import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
-import { Specimen } from "./specimen";
-import { Arrow } from "./vit-visuals";
+import { Term } from "../shared/core/reference/ReferenceHub";
+import { P4_TOY_EXPERIMENT as experiment, P4_TRAINING_TRACE as trace } from "./prompt-tuning-demo";
 import "./prompt-tuning.css";
 
-const duration = 7200;
-const boundaries = [0, 900, 1900, 3000, 3900, 5350, 6300, duration];
-const phases = [
-  { label: "先得到图像 Token", short: "图像嵌入", text: "冻结的嵌入层先把当前图像变成宽度为 D 的 Token 序列 xₑ。" },
-  { label: "把可学习 P 前置", short: "拼接 Prompt", text: "一组与图像 Token 同宽的 Prompt 向量放在 xₑ 前面；序列变长，特征宽度不变。" },
-  { label: "通过冻结 Transformer", short: "冻结前向", text: "扩展序列通过原有 Transformer。权重固定，Token 的输出仍取决于当前输入。" },
-  { label: "计算分类损失", short: "分类误差", text: "分类器把教学读出 h(P,x) 映射为类别分数，再与标签 y 计算交叉熵。" },
-  { label: "梯度回到可学习参数", short: "梯度回传", text: "梯度经过冻结 Transformer 的计算回到输入 P；fᵣ 的参数没有被更新。" },
-  { label: "更新 P 和分类头", short: "参数更新", text: "优化器更新 Prompt P 与分类头 φ。预训练的 fₑ、fᵣ 仍保持原值。" },
-  { label: "下一任务再次使用同一 P", short: "继续使用 P", text: "若后续任务继续训练同一组 P，它可能与旧任务需要的方向产生参数争用；这不意味着每次都会遗忘。" },
+type Pair = readonly [number, number];
+
+const stops = [
+  { at: 0, label: "组装输入", hint: "紫色 Prompt 与图像 Token 一起进入冻结 Attention。" },
+  { at: 2300, label: "前向", hint: "观察 P₀ 如何汇合四个位置的信息，再与 P₁ 的输出一起形成读出。" },
+  { at: 6600, label: "计算损失", hint: "分类头读取 h；交叉熵把预测与固定标签 y = 1 对照。" },
+  { at: 8800, label: "反向传播", hint: "虚线逆着前向路径展开。梯度经过冻结运算，抵达 Prompt；分类头也获得梯度。" },
+  { at: 12800, label: "更新一次", hint: "跟踪向量分量和分类头偏置的位移。中间画面只是一次写回的过渡。" },
+  { at: 15300, label: "同图复算", hint: "用更新后的 Prompt 与分类头重跑前向，对照同一图像和标签的损失。" },
 ];
+const duration = 21100;
+const number = (value: number) => value.toFixed(3);
+const pairText = (pair: Pair) => '[' + pair.map(number).join(', ') + ']';
+const clamp = (value: number) => Math.min(1, Math.max(0, value));
+const mix = (start: number, end: number, amount: number) => start + (end - start) * amount;
+const mixPair = (start: Pair, end: Pair, amount: number): Pair =>
+  [mix(start[0], end[0], amount), mix(start[1], end[1], amount)];
 
-function phaseAt(position: number) {
-  if (position >= duration) return phases.length - 1;
-  const index = boundaries.findIndex((end, i) => i < boundaries.length - 1 && position >= end && position < boundaries[i + 1]);
-  return Math.max(0, index);
-}
-
-function TokenStrip({ kind, label, count = 5 }: { kind: "prompt" | "image"; label: string; count?: number }) {
-  return <div className={`p4-token-strip p4-token-strip--${kind}`}>
-    <span className="p4-token-label">{label}</span>
-    <span className="p4-token-cells" aria-hidden="true">
-      {Array.from({ length: count }, (_, index) => <i className={kind === "image" && index === 0 ? "p4-token p4-token--cls" : "p4-token"} key={index}>{kind === "image" && index === 0 ? "CLS" : ""}</i>)}
-      {kind === "image" && <span className="p4-token-ellipsis">…</span>}
-    </span>
+function PairBars({ values, name }: { values: Pair; name: string }) {
+  return <div className="p4-vector" aria-label={name + " " + pairText(values)}>
+    <strong>{name}</strong>
+    <div className="p4-components">
+      {values.map((value, coordinate) => <div key={coordinate}>
+        <span className="p4-axis" aria-hidden="true"><i style={{
+          transform: `scaleX(${Math.abs(value)})`,
+          [value < 0 ? "right" : "left"]: "50%",
+          transformOrigin: value < 0 ? "right" : "left",
+        }} /></span>
+        <span>{number(value)}</span>
+      </div>)}
+    </div>
   </div>;
 }
 
+function Edge({ forward, backward }: { forward: number; backward: number }) {
+  return <div className="p4-edge" aria-hidden="true">
+    <span className="p4-edge-base" />
+    <span className="p4-edge-forward" style={{ transform: `scaleX(${forward})` }} />
+    <span className="p4-edge-backward" style={{ transform: `scaleX(${backward})` }} />
+  </div>;
+}
+
+function TrainingStage({ position, phase }: { position: number; phase: number }) {
+  const elapsed = position - stops[phase].at;
+  const revised = phase === 5;
+  const write = phase === 4 ? clamp(elapsed / 1800) : revised ? 1 : 0;
+  const prompt = experiment.prompt.map((pair, row) => mixPair(pair, trace.updatedPrompt[row], write));
+  const bias = mix(experiment.classifier.bias[1], trace.updatedClassifierBias[1], write);
+  const state = revised ? trace.updated : trace.initial;
+  const forward = phase === 1 || revised ? elapsed : phase >= 2 ? Infinity : 0;
+  const reverse = phase === 3 ? elapsed : phase === 4 ? Infinity : 0;
+  const edge = (offset: number) => clamp((forward - offset) / 850);
+  const gradient = (offset: number) => clamp((reverse - offset) / 800);
+  const attention = clamp((forward - 850) / 900);
+  const readoutReady = forward >= 3000;
+  const lossReady = revised ? forward >= 3950 : phase > 2 || (phase === 2 && elapsed >= 650);
+  const version = write === 1 ? "写回完成 · 1 步" : phase === 4 ? "正在写回 · 1 步" : "初始参数";
+
+  return <div className="p4-stage" data-phase={phase} data-updates={write === 1 ? 1 : 0}>
+    <div className="p4-training-path">
+      <section className="p4-node p4-input" data-active={phase === 0 || phase === 4 || reverse >= 2700}>
+        <h4>输入序列</h4>
+        <div className="p4-prompt-group">
+          <span>可学习 Prompt · P</span>
+          <PairBars name="P₀" values={prompt[0]} />
+          <PairBars name="P₁" values={prompt[1]} />
+        </div>
+        <div className="p4-image-group"><span>固定图像 Token</span><strong>x₀</strong><strong>x₁</strong></div>
+      </section>
+      <Edge forward={edge(0)} backward={gradient(1900)} />
+      <section className="p4-node p4-frozen" data-active={forward >= 850 && forward < 2150 || reverse >= 1050 && reverse < 2700}>
+        <h4>冻结 Attention</h4>
+        <span className="p4-frozen-status">权重固定 · 梯度可通过</span>
+        <div className="p4-attention">
+          <strong>Q₀ 对四个位置的权重</strong>
+          <div className="p4-attention-strip" aria-label="P₀ 的 Attention 权重">
+            {state.firstPromptAttention.map((weight, index) => <div key={index} style={{ flexGrow: weight }}>
+              <span><i style={{ transform: `scaleY(${attention})` }} /></span>
+              <strong>{["P₀", "P₁", "x₀", "x₁"][index]}</strong>
+            </div>)}
+          </div>
+        </div>
+      </section>
+      <Edge forward={edge(2150)} backward={gradient(950)} />
+      <section className="p4-node p4-readout" data-active={readoutReady && (phase === 1 || revised)}>
+        <h4>Prompt 位置读出</h4>
+        <strong className="p4-pooling"><math><msub><mi>H</mi><mn>0</mn></msub><mo>+</mo><msub><mi>H</mi><mn>1</mn></msub></math> → 均值 <math><mi>h</mi></math></strong>
+        <span className="p4-value">{readoutReady ? pairText(state.promptReadout) : "等待读出"}</span>
+        <span>按坐标平均</span>
+      </section>
+      <Edge forward={edge(3100)} backward={gradient(0)} />
+      <section className="p4-node p4-loss" data-active={phase === 2 || phase === 4 || lossReady && revised}>
+        <h4>分类头与损失</h4>
+        <span>φ 的偏置 b₁ <strong className="p4-value">{number(bias)}</strong></span>
+        <span>{phase === 4 ? "上次交叉熵" : "分类交叉熵"} · y = {experiment.label}</span>
+        <strong className="p4-loss-value">{lossReady ? number(state.loss) : "待计算"}</strong>
+        <span className="p4-value">p(y) {lossReady ? number(state.probabilities[experiment.label]) : "待计算"}</span>
+      </section>
+    </div>
+    <div className="p4-stage-foot">
+      <strong>{version}</strong>
+      <span>{phase === 3 && reverse >= 2700
+        ? "∇P₀ = " + pairText(trace.promptGradients[0]) + "，φ 获得梯度"
+        : "写回范围 · Prompt P 与分类头 φ"}</span>
+    </div>
+  </div>;
+}
+
+
 export function PromptTuning() {
   const playback = useLessonPlayback(duration);
-  const activePhase = phaseAt(playback.position);
-  const gradientProgress = activePhase > 4 ? 1 : activePhase === 4
-    ? (playback.position - boundaries[4]) / (boundaries[5] - boundaries[4]) : 0;
-  const updateProgress = activePhase > 5 ? 1 : activePhase === 5
-    ? (playback.position - boundaries[5]) / (boundaries[6] - boundaries[5]) : 0;
-
+  const next = stops.findIndex(stop => stop.at > playback.position);
+  const phase = next === -1 ? stops.length - 1 : next - 1;
   return <>
-    <p className="lesson-lead">P3 已经给出一个入口：即使 Transformer 权重固定，改变输入 Token 仍会改变输出。Prompt Tuning 把一小段连续向量设为可学习参数，让它随图像一起进入网络，靠分类误差适应新任务。</p>
+    <p className="lesson-lead">P3 让一组不同的 Token 穿过同一个冻结 Transformer，输出随输入改变。现在把这个现象变成训练办法：如果额外的 Token 可以根据分类误差调整，冻结主干也能适应新任务。这就是 <Term id="prompt-tuning">Prompt Tuning</Term>。</p>
 
     <section className="explain-section">
-      <h3>Prompt 是一组向量参数，不是图像 Patch 或自然语言句子</h3>
-      <p>沿用 P2 的图像嵌入层，先得到 <math><msub><mi>x</mi><mi>e</mi></msub></math>。Prompt 放在这段序列之前：每个 Prompt Token 与图像 Token 有相同的特征宽度 <math><mi>D</mi></math>，因此增加的是位置数，不是新建 Transformer 层。</p>
-      <div className="p4-shape-equations">
-        <math display="block"><mi>P</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>L</mi><mi>p</mi></msub><mo>×</mo><mi>D</mi></mrow></msup></math>
-        <math display="block"><msub><mi>x</mi><mi>p</mi></msub><mo>=</mo><mo>[</mo><mi>P</mi><mo>;</mo><msub><mi>x</mi><mi>e</mi></msub><mo>]</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mo>(</mo><msub><mi>L</mi><mi>p</mi></msub><mo>+</mo><mi>L</mi><mo>)</mo><mo>×</mo><mi>D</mi></mrow></msup><mo>,</mo><mi>H</mi><mo>=</mo><msub><mi>f</mi><mi>r</mi></msub><mo>(</mo><msub><mi>x</mi><mi>p</mi></msub><mo>)</mo></math>
+      <h3>把可学习参数放在<span className="editorial-key">输入端</span></h3>
+      <p>从图像得到的 Token 随图像改变。Prompt 则是<span className="lesson-key lesson-term--value">可训练的输入向量</span>，同一组参数可以与不同图像拼接。每个 <Term id="prompt-token">Prompt Token</Term> 的宽度与图像 Token 相同，因此它们能一起参与 P3 的注意力计算。</p>
+      <div className="p4-input-equation">
+        <math><mi>P</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>L</mi><mi>p</mi></msub><mo>×</mo><mi>D</mi></mrow></msup></math>
+        <math><msub><mi>x</mi><mi>p</mi></msub><mo>=</mo><mo>[</mo><mi>P</mi><mo>;</mo><msub><mi>x</mi><mi>e</mi></msub><mo>]</mo></math>
+        <span>沿序列轴拼接，向量宽度 D 相同</span>
       </div>
-      <p>这里的分号表示沿序列长度拼接。P4 先用一个 Prompt 解释学习原理；L2P 正式使用多个 Prompt，分类时读取它们经过 Transformer 后的位置输出，留到 P6。</p>
+      <p>下面固定一张图像和一个标签，用两个二维 Prompt Token 和单头 Attention 追踪一次更新。前向时先看紫色的 P₀ 怎样读取四个位置，再看两个 Prompt 输出怎样汇成分类特征 h。</p>
+    </section>
+
+    <section className="explain-section">
+      <h3>用分类误差找到该改的参数</h3>
+      <p>分类头读取 h 并给每个类别打分，交叉熵把分数和标签联系起来。<Term id="gradient-flow">梯度回传</Term>沿着这些依赖回溯：冻结的运算仍会<span className="lesson-key">把梯度传到输入端</span>，因此 P 和分类头 φ 都能获得梯度。优化器只写回这两处，主干权重继续参与前向并保持原值。</p>
+      <P4ParameterGuide />
     </section>
 
     <figure className="lesson-figure p4-training-figure">
-      <div className="figure-top"><strong>单 Prompt 教学桥 · 从输入到一次更新</strong><span>播放、暂停或拖动到任一计算阶段</span></div>
+      <div className="figure-top"><strong>从一次预测到同图复算</strong></div>
       <div className="figure-body">
-        <div className="p4-step-strip" aria-label="Prompt 调优的前向与更新路径">
-          <div className={`p4-step p4-step--source ${activePhase === 0 ? "is-active" : ""}`}>
-            <Specimen />
-            <strong>图像 x</strong>
-            <span className="p4-mini-module p4-frozen">冻结 fₑ</span>
-            <math><msub><mi>x</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo></math>
+        <div className="p4-control-dock">
+          <div className="motion-stops p4-phase-list" role="group" aria-label="训练阶段">
+            {stops.map((stop, index) => <button key={stop.label} type="button" className="lesson-choice"
+              aria-pressed={index === phase} onClick={() => playback.seek(stop.at + [0, 1740, 1000, 2300, 900, 4400][index])}>
+              {stop.label}
+            </button>)}
           </div>
-          <Arrow />
-          <div className={`p4-step p4-step--assembly ${activePhase === 1 ? "is-active" : ""}`}>
-            <strong>同宽 Token，前置拼接</strong>
-            <TokenStrip kind="prompt" label="可学习 P" />
-            <TokenStrip kind="image" label="图像序列 xₑ" count={4} />
-            <div className="p4-composed-sequence">
-              <span className="p4-composed-label">送入 <math><msub><mi>f</mi><mi>r</mi></msub></math></span>
-              <span className="p4-composed-cells" aria-hidden="true">
-                {Array.from({ length: 5 }, (_, index) => <i className="p4-token" key={`p${index}`} />)}
-                <i className="p4-token p4-token--cls">CLS</i><i className="p4-token p4-token--image" /><i className="p4-token p4-token--image" /><span>…</span>
-              </span>
-            </div>
-            <small>位置从 L 变为 L + Lₚ · 每个位置仍宽 D</small>
-          </div>
-          <Arrow />
-          <div className={`p4-step p4-step--encoder ${activePhase === 2 || activePhase === 4 ? "is-active" : ""}`}>
-            <strong>冻结 Transformer</strong>
-            <div className="p4-encoder-stack" aria-label="同一组冻结的 Transformer Encoder 层">
-              <span>Encoder Block 1</span><span>Encoder Block 2</span><i>⋮</i><span>Encoder Block L</span>
-            </div>
-            <small>前向与梯度计算都经过这里；权重不更新</small>
-          </div>
-          <Arrow />
-          <div className={`p4-step p4-step--loss ${activePhase === 3 ? "is-active" : ""}`}>
-            <div className="p4-readout"><strong><math><mi>h</mi><mo>(</mo><mi>P</mi><mo>,</mo><mi>x</mi><mo>)</mo></math></strong><small>简化教学读出</small></div>
-            <span className="p4-down-flow" aria-hidden="true">↓</span>
-            <div className="p4-classifier"><strong>共享分类头 <math><msub><mi>g</mi><mi>φ</mi></msub></math></strong><small>可训练</small></div>
-            <div className="p4-loss">
-              <strong>交叉熵损失</strong>
-              <math><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>=</mo><mi>CE</mi><mo>(</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>(</mo><mi>P</mi><mo>,</mo><mi>x</mi><mo>)</mo><mo>)</mo><mo>,</mo><mi>y</mi><mo>)</mo></math>
-            </div>
-          </div>
+          <PlaybackControls playback={playback} label="训练进度" />
         </div>
-
-        <div className={`p4-gradient-route ${activePhase === 4 ? "is-active" : ""}`} aria-label="分类损失的梯度经过冻结的 Transformer 运算，回到 Prompt 输入">
-          <div className="p4-gradient-label"><strong>反向计算</strong><small>梯度从分类损失返回</small></div>
-          <div className="p4-gradient-track">
-            <math className="p4-gradient-source"><mo>∂</mo><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>/</mo><mo>∂</mo><mi>h</mi></math>
-            <svg viewBox="0 0 720 54" preserveAspectRatio="none" role="img" aria-label="梯度沿相反方向穿过冻结 fᵣ 到达 Prompt">
-              <defs><marker id="p4-gradient-arrow" markerWidth="8" markerHeight="8" refX="3" refY="4" orient="auto"><path d="M8 0L0 4L8 8Z" fill="currentColor" /></marker></defs>
-              <path d="M690 28 H35" className="p4-gradient-line" markerEnd="url(#p4-gradient-arrow)" />
-              <circle className="p4-gradient-particle" cx={690 - 655 * Math.min(1, Math.max(0, gradientProgress))} cy="28" r="6" />
-            </svg>
-            <math className="p4-gradient-target"><mo>∂</mo><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>/</mo><mo>∂</mo><mi>P</mi></math>
-            <span className="p4-gradient-frozen">穿过 <math><msub><mi>f</mi><mi>r</mi></msub></math> 运算 · 主干权重保持冻结</span>
-          </div>
-        </div>
-
-        <div className={`p4-update-row ${activePhase === 5 ? "is-active" : ""}`} aria-label="更新可学习参数 P 和 φ，冻结的预训练参数保持不变">
-          <div className="p4-update-label"><strong>参数更新</strong><small>仅更新可学习部分</small></div>
-          <div className="p4-parameter-change"><math><msup><mi>P</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup></math><div className="p4-change-track"><i style={{ transform: `scaleX(${updateProgress})` }} /></div><math><msup><mi>P</mi><mrow><mo>(</mo><mn>1</mn><mo>)</mo></mrow></msup></math></div>
-          <div className="p4-parameter-change p4-parameter-change--head"><math><msup><mi>φ</mi><mrow><mo>(</mo><mn>0</mn><mo>)</mo></mrow></msup></math><div className="p4-change-track"><i style={{ transform: `scaleX(${updateProgress})` }} /></div><math><msup><mi>φ</mi><mrow><mo>(</mo><mn>1</mn><mo>)</mo></mrow></msup></math></div>
-          <div className="p4-stays-fixed"><math><msub><mi>f</mi><mi>e</mi></msub></math><math><msub><mi>f</mi><mi>r</mi></msub></math><small>权重未改</small></div>
-        </div>
-
-        <div className="motion-stops" role="group" aria-label="选择 Prompt 调优的观察阶段">
-          {phases.map((phase, index) => <button className="lesson-choice" type="button" key={phase.short} aria-pressed={activePhase === index} onClick={() => playback.seek(boundaries[index])}>{index + 1}. {phase.short}</button>)}
-        </div>
-        <PlaybackControls playback={playback} label="Prompt 前向与更新进度" />
-        <p className="motion-status" aria-live="polite">{phases[activePhase].text}</p>
+        <p className="p4-observation" aria-live="polite">{stops[phase].hint}</p>
+        <TrainingStage position={playback.position} phase={phase} />
       </div>
-      <figcaption>单 Prompt 只用于解释可学习输入怎样适应冻结网络。这里的 h(P,x) 是抽象教学读出，不代表 L2P 正式分类头的读取位置。</figcaption>
+      <figcaption>实线沿前向依赖展开。暖色虚线沿同一条路径反向回传梯度。</figcaption>
     </figure>
 
     <section className="explain-section">
-      <h3>梯度能穿过冻结运算，参数却不必更新</h3>
-      <aside className="reading-note reading-note--prompt">
-        <strong>梯度能通过，权重仍冻结</strong>
-        <p>分类损失依赖于输入序列里的 P，因此一般情形下可对 P 求梯度。反向计算经过固定的 Transformer 运算，把梯度传到 P；优化器只改 P 与分类器 φ，冻结主干 fₑ、fᵣ 的参数保持原值。</p>
-      </aside>
-      <div className="p4-gradient-equation">
-        <div className="p4-equation-item">
-          <span className="p4-equation-label">分类目标</span>
-          <math display="block"><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>=</mo><mi>CE</mi><mo>(</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>(</mo><mi>P</mi><mo>,</mo><mi>x</mi><mo>)</mo><mo>)</mo><mo>,</mo><mi>y</mi><mo>)</mo></math>
-        </div>
-        <div className="p4-equation-item p4-gradient-condition">
-          <span className="p4-equation-label">对 Prompt 的梯度</span>
-          <math display="block"><msub><mo>∇</mo><mi>P</mi></msub><msub><mi>ℒ</mi><mi>cls</mi></msub><mo>≠</mo><mn>0</mn></math>
-          <small>一般情形</small>
-        </div>
-      </div>
-      <p>这不是在 P4 重新讲一次 Attention。P3 已说明输入 Token 会参与计算；这里沿用该结论，只追踪梯度落到哪里、哪些参数改变。</p>
+      <h3>只换 Prompt，预测也会<span className="editorial-key">改变</span>吗？</h3>
+      <p>刚才同一步 SGD 更新了 Prompt 和分类头。为了分清是谁改变了输出，我们额外复算一次：先只换成更新后的 <span className="lesson-key lesson-term--value">Prompt</span>，分类头仍用原来的参数。三次都用同一组图像 Token、同一个标签和同一套冻结主干。</p>
+      <P4Rerun />
     </section>
 
     <section className="explain-section">
-      <h3>但所有任务若继续改同一个 Prompt，仍可能相互干扰</h3>
-      <p>任务 A 学到的 Prompt 可以继续服务后续输入。若任务 B 接着更新这同一组参数，<span className="reading-emphasis reading-emphasis--caution">原先适用的方向可能改变</span>。因此“冻结 ViT”本身并没有回答怎样减少不同任务对少量可训练参数的争用；这里描述的是可能性，不是保证发生的遗忘结果。</p>
-      <figure className="lesson-figure p4-shared-prompt">
-        <div className="figure-top"><strong>同一组参数跨任务继续使用</strong><span>对象身份保持为同一个 P</span></div>
-        <div className="figure-body">
-          <div className="p4-task-sequence">
-            <div><strong>任务 A</strong><span>分类损失更新 P</span></div><Arrow />
-            <div className="p4-shared-parameter"><strong>同一组 Prompt P</strong><math className="p4-parameter-transition" display="block"><msup><mi>P</mi><mrow><mo>(</mo><mi>A</mi><mo>)</mo></mrow></msup><mo>→</mo><msup><mi>P</mi><mrow><mi>A</mi><mo>→</mo><mi>B</mi></mrow></msup></math></div><Arrow />
-            <div><strong>任务 B</strong><span>再次写入这组参数</span></div>
-          </div>
-          <p className="p4-conflict-note">后续更新可能改变旧任务依赖的参数关系；本图没有表示一个必然的遗忘幅度。</p>
-        </div>
-      </figure>
+      <h3>下一批任务还要共用这组 Prompt 吗？</h3>
+      <p>这一轮改写对当前标签有利。若任务 B 继续更新同一组 Prompt，任务 A 的输入也会读到改写后的值，原有表示可能随之变化。</p>
+      <P4SharedPrompt />
+      <p>P5 将用一个 Prompt 池提供多组候选，再让每张图像自己决定取哪几组。</p>
     </section>
-
-    <p className="lesson-takeaway">如果一个 Prompt 仍会被多个任务共同修改，能否保存多个 Prompt，再让当前图像自己选出需要的一部分？</p>
   </>;
 }

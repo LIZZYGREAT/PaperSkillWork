@@ -1,163 +1,180 @@
-import { Fragment, useState } from "react";
-import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
-import { Arrow } from "./vit-visuals";
-import { promptPoolConfig, rankKeys, selectedKeyIndices, type QueryId } from "./prompt-retrieval-data";
+import { P5RankGuide } from "./reading-guides";
+import { QueryOverlap } from "./p5-pool-overlap";
+import { Term } from "../shared/core/reference/ReferenceHub";
+import { useState } from "react";
+import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
+import { Specimen } from "./specimen";
+import { buildSelectionSnapshot, promptPoolConfig, type QueryId } from "./prompt-retrieval-data";
+import {
+  CandidateBars, IndexedMath, PromptShelf, PromptTokens, VectorSpace, clamp01, eased,
+} from "./prompt-retrieval-visuals";
 import "./prompt-retrieval.css";
 
-const duration = 7600;
-const boundaries = [0, 900, 2650, 4050, 5400, duration];
-const phases = [
-  { label: "无任务 ID 的当前输入", short: "生成 Query", text: "当前输入先经过不带 Prompt 的冻结 ViT，从位置 0 的 CLS 特征得到查询向量 q(x)。" },
-  { label: "同一个 Query 对照 Key 池", short: "逐 Key 比较", text: "外部检索将 q(x) 分别与十个 Key 计算余弦距离；Key 与 Prompt 按相同下标配对。" },
-  { label: "距离由小到大排序", short: "按距离排序", text: "对全部 Key 排序，距离越小越相近。此处的距离来自明确给出的二维单位圆示例。" },
-  { label: "选取距离最小的五个 Key", short: "取 Top‑N", text: "当前样本选择五个不同索引，并按这些索引读取对应 Prompt；池中的参数仍留在原位。" },
-  { label: "生成本次前向的读取视图", short: "读取 Prompt", text: "被选中的五个 Prompt 被复制到本次计算视图中，源池没有消耗或删除任何槽位。" },
-];
+const snapshots = { A: buildSelectionSnapshot("A"), B: buildSelectionSnapshot("B") };
+const { poolSize, topN, promptLength } = promptPoolConfig;
+const compareStepMs = 1200;
+const keyRevealMs = 260;
+const angleMoveMs = 500;
+const scanTravelMs = 180;
+const finalScoreHoldMs = 800;
+const scanDuration = poolSize * compareStepMs + finalScoreHoldMs;
+const rankEnd = 4400;
+const readStart = 5100;
+const copyMs = 600;
+const readDuration = readStart + copyMs * topN + 700;
 
-function phaseAt(position: number) {
-  if (position >= duration) return phases.length - 1;
-  const index = boundaries.findIndex((_, i) => i < boundaries.length - 1 && position >= boundaries[i] && position < boundaries[i + 1]);
-  return Math.max(0, index);
-}
-
-function PromptTokens({ count = promptPoolConfig.promptLength, className = "" }: { count?: number; className?: string }) {
-  return <span className={`p5-token-row ${className}`} aria-hidden="true">{Array.from({ length: count }, (_, i) => <i key={i} />)}</span>;
-}
-
-function PromptIndexList({ indices }: { indices: readonly number[] }) {
-  return <span className="p5-overlap-prompts">{indices.map((index, order) => <Fragment key={index}>
-    <math><msub><mi>P</mi><mn>{index}</mn></msub></math>
-    {order < indices.length - 1 && <span className="p5-overlap-separator" aria-hidden="true">·</span>}
-  </Fragment>)}</span>;
+function RetrievalFlowArrow() {
+  return <svg className="flow-arrow" viewBox="0 0 120 18" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M2 9h116m-6-4 6 4-6 4" />
+  </svg>;
 }
 
 export function PromptRetrieval() {
   const [query, setQuery] = useState<QueryId>("A");
-  const playback = useLessonPlayback(duration);
-  const activePhase = phaseAt(playback.position);
-  const comparisonProgress = activePhase > 1 ? 1 : activePhase === 1
-    ? (playback.position - boundaries[1]) / (boundaries[2] - boundaries[1]) : 0;
-  const revealProgress = activePhase > 2 ? 1 : activePhase === 2
-    ? (playback.position - boundaries[2]) / (boundaries[3] - boundaries[2]) : 0;
-  const copyProgress = activePhase > 4 ? 1 : activePhase === 4
-    ? 0.25 + 0.75 * (playback.position - boundaries[4]) / (boundaries[5] - boundaries[4]) : 0;
-  const ranking = rankKeys(query);
-  const selected = selectedKeyIndices(query);
-  const selectedSet = new Set(selected);
+  const [inspected, setInspected] = useState<number | null>(null);
+  const scan = useLessonPlayback(scanDuration);
+  const retrieval = useLessonPlayback(readDuration);
+  const snapshot = snapshots[query];
+  const candidateOffset = Math.min(poolSize - 1, Math.floor(scan.position / compareStepMs));
+  const candidate = snapshot.candidates[inspected ?? candidateOffset];
+  const stepTime = Math.max(0, scan.position - candidateOffset * compareStepMs);
+  const nextCandidate = inspected === null ? snapshot.candidates[candidateOffset + 1] : undefined;
+  const travelProgress = nextCandidate
+    ? eased(clamp01((stepTime - (compareStepMs - scanTravelMs)) / scanTravelMs))
+    : 0;
+  const nextAngle = nextCandidate?.key.angleDegrees ?? candidate.key.angleDegrees;
+  const scanAngleDegrees = inspected === null
+    ? candidate.key.angleDegrees + (nextAngle - candidate.key.angleDegrees) * travelProgress
+    : candidate.key.angleDegrees;
+  const scanSweepDegrees = inspected === null
+    ? scanAngleDegrees - snapshot.candidates[0].key.angleDegrees
+    : 0;
+  const keyProgress = inspected === null ? eased(clamp01(stepTime / keyRevealMs)) : 1;
+  const angleProgress = inspected === null
+    ? eased(clamp01((stepTime - keyRevealMs) / angleMoveMs))
+    : 1;
+  const computed = inspected === null ? candidateOffset + (angleProgress >= 1 ? 1 : 0) : 1;
+  const hasScore = (index: number) => inspected === null ? index < computed : index === inspected;
+  const scanControls = {
+    ...scan,
+    toggle() { setInspected(null); scan.toggle(); },
+    seek(value: number) { setInspected(null); scan.seek(value); },
+  };
+  const sort = clamp01((retrieval.position - 900) / (rankEnd - 900));
+  const read = Math.min(topN, Math.max(0, (retrieval.position - readStart) / copyMs));
+  const rankHint = sort < 1 ? "观察同一个候选条怎样移动到它的距离名次。"
+    : read < topN ? "按入选名次，从同编号槽位逐个读取 Prompt。"
+    : "五组 Prompt 已备好，源池的十个槽位仍留在原处。";
 
   function chooseQuery(next: QueryId) {
+    if (query === next) return;
     setQuery(next);
-    playback.seek(0);
+    setInspected(null);
+    scan.seek(0);
+    retrieval.seek(0);
   }
 
-  return <>
-    <p className="lesson-lead">P4 的单 Prompt 会被后续任务继续修改。L2P 保留多个 Prompt，并给每个 Prompt 配一个 Key：当前输入先生成 Query，再按样本内容选择 Top‑N，不需要先知道任务 ID。</p>
+  return <div className="p5-lesson">
+    <p className="lesson-lead">P4 中，两批任务若轮流改写同一个 Prompt，旧输入依赖的表示也可能跟着变。用<Term id="prompt-pool">Prompt 池</Term>存放多组候选，可以分担这种干扰，但测试时只给图像。L2P 要先解决一个问题：如何让图像自己找到合适的 Prompt？</p>
 
-    <section className="explain-section">
-      <h3>Key 负责寻址，Prompt 才进入 ViT</h3>
-      <p>每个池槽保存一对参数：<math><msub><mi>k</mi><mi>j</mi></msub></math> 是用于匹配的向量，<math><msub><mi>P</mi><mi>j</mi></msub></math> 是由多个 Token 组成的可学习序列。相同下标只表示配对关系；<span className="reading-emphasis reading-emphasis--key">检索 Key 不会拼入 Transformer，也不是 P3 的 Self‑Attention Key</span>。</p>
-      <div className="p5-equations" aria-label="Key-Prompt 池、查询和余弦距离定义">
-        <math display="block"><mi>ℳ</mi><mo>=</mo><mo>{"{"}</mo><mo>(</mo><msub><mi>k</mi><mi>j</mi></msub><mo>,</mo><msub><mi>P</mi><mi>j</mi></msub><mo>)</mo><mo>:</mo><mn>1</mn><mo>≤</mo><mi>j</mi><mo>≤</mo><mi>M</mi><mo>{"}"}</mo></math>
-        <math display="block"><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>[</mo><mn>0</mn><mo>,</mo><mo>:</mo><mo>]</mo></math>
-        <math display="block"><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><msub><mi>k</mi><mi>j</mi></msub><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><msup><mi>q</mi><mi>⊤</mi></msup><msub><mi>k</mi><mi>j</mi></msub><mrow><mo>‖</mo><mi>q</mi><mo>‖</mo><mo>‖</mo><msub><mi>k</mi><mi>j</mi></msub><mo>‖</mo></mrow></mfrac></math>
-      </div>
-      <p>Query 来自当前图像在无 Prompt 冻结 ViT 下的 CLS 输出，其中 <math><mi>f</mi><mo>=</mo><msub><mi>f</mi><mi>r</mi></msub><mo>∘</mo><msub><mi>f</mi><mi>e</mi></msub></math>；随后与池内全部 Key 比较余弦距离，并取距离最小的 <math><mi>N</mi></math> 个配对 Prompt。<span className="reading-emphasis reading-emphasis--query">Query 是当前前向的临时特征；池则是持续保留的参数记忆。</span></p>
-    </section>
-
-    <figure className="lesson-figure p5-retrieval-figure">
-      <div className="figure-top"><strong>一张输入，十个候选，读取五组 Prompt</strong><span>切换查询或按阶段播放同一组检索状态</span></div>
-      <div className="figure-body">
-        <div className="p5-query-toggle" role="group" aria-label="选择二维检索教学示例">
-          <span>示例查询方向</span>
-          <button type="button" className="lesson-choice" aria-pressed={query === "A"} onClick={() => chooseQuery("A")}>查询 A · q<sub>A</sub></button>
-          <button type="button" className="lesson-choice" aria-pressed={query === "B"} onClick={() => chooseQuery("B")}>查询 B · q<sub>B</sub></button>
-          <span className="p5-query-disclaimer">二维单位圆教学示例 · 非论文测量值</span>
-        </div>
-
-        <div className="p5-query-flow" aria-label="由输入图像生成无 Prompt 的 CLS Query">
-          <div className="p5-sample"><strong>当前输入 x<sub>{query.toLowerCase()}</sub></strong><span>不提供任务 ID</span></div><Arrow />
-          <div className={`p5-no-prompt ${activePhase === 0 ? "is-active" : ""}`}><strong>冻结 ViT f</strong><span>不插入 Prompt</span></div><Arrow />
-          <div className={`p5-query-output ${activePhase === 0 ? "is-active" : ""}`}>
-            <strong>q(x) = f(x)[0,:]</strong><span className="p5-query-vector" aria-hidden="true">{Array.from({ length: 10 }, (_, i) => <i key={i} />)}</span><small>CLS 特征 · 临时 Query</small>
-          </div>
-          <span className="p5-compare-caption">分别与 M = {promptPoolConfig.poolSize} 个 Key 比较</span>
-        </div>
-
-        <section className="p5-pool" aria-label="十个 Key-Prompt 配对记忆槽">
-          <div className="p5-region-heading"><h3>Key–Prompt Pool</h3><span>M = 10 · 每个 P 含 L<sub>p</sub> = 5 个 Token</span></div>
-          <div className="p5-pool-grid">
-            {Array.from({ length: promptPoolConfig.poolSize }, (_, offset) => {
-              const index = offset + 1;
-              const item = ranking.find(candidate => candidate.index === index)!;
-              const isSelected = selectedSet.has(index);
-              const rank = ranking.findIndex(candidate => candidate.index === index) + 1;
-              const distance = item.distance;
-              const measured = 100 * distance / 2;
-              return <div className={`p5-pair-unit ${activePhase >= 3 && isSelected ? "is-selected" : ""}`} key={index}>
-                <div className="p5-pair-head"><strong>P<sub>{index}</sub></strong><span>{activePhase >= 3 ? (isSelected ? `Top‑N · #${rank}` : "未选中") : `槽位 ${index}`}</span></div>
-                <div className="p5-key-block"><span className="p5-key-label">Key k<sub>{index}</sub></span><span className="p5-key-vector" aria-label={`Key ${index} 向量示意`}>{Array.from({ length: 4 }, (_, i) => <i key={i} />)}</span><small>用于距离比较</small></div>
-                <span className="p5-pair-link" aria-hidden="true" />
-                <div className="p5-prompt-block"><span>Prompt P<sub>{index}</sub></span><PromptTokens /></div>
-                <div className="p5-distance">
-                  <span>γ = {activePhase >= 1 ? distance.toFixed(3) : "待比较"}</span>
-                  <span className="p5-distance-rail"><i style={{ width: `${comparisonProgress * measured}%` }} /></span>
-                </div>
-              </div>;
-            })}
-          </div>
-          <div className="p5-pool-legend"><span><i className="p5-legend-key" />检索 Key</span><span><i className="p5-legend-prompt" />输入 Prompt</span><span>同一下标表示配对；池槽始终保留</span></div>
-        </section>
-
-        <div className="p5-rank-and-read">
-          <section className="p5-ranking" aria-label="按余弦距离升序排列的十个 Key">
-            <div className="p5-region-heading"><h3>距离升序 · Top‑N</h3><span>γ 越小越接近 · N = {promptPoolConfig.topN}</span></div>
-            {activePhase >= 2 ? <ol>
-              {ranking.map((item, index) => {
-                const isSelected = index < promptPoolConfig.topN;
-                const rowReveal = activePhase > 2 ? 1 : Math.max(0, Math.min(1, 0.38 + revealProgress * (ranking.length + 1) - index));
-                return <li className={activePhase >= 3 && isSelected ? "is-selected" : ""} key={item.index} style={{ opacity: rowReveal, transform: `translateY(${(1 - rowReveal) * 7}px)` }}>
-                  <span className="p5-rank-index">#{index + 1}</span><strong>k<sub>{item.index}</sub> / P<sub>{item.index}</sub></strong><span className="p5-rank-rail"><i style={{ width: `${100 * item.distance / 2}%` }} /></span><span className="p5-rank-distance">{item.distance.toFixed(3)}</span>
-                </li>;
-              })}
-            </ol> : <div className="p5-ranking-pending"><strong>距离比较完成后，十个候选会按 γ 由小到大重新排列</strong><span>{Array.from({ length: promptPoolConfig.poolSize }, (_, index) => <i key={index}>k<sub>{index + 1}</sub></i>)}</span></div>}
-            <p className="p5-set-result">{activePhase >= 3 ? <>S(x<sub>{query.toLowerCase()}</sub>) = &#123;{selected.join(", ")}&#125;</> : "排序后读取距离最小的五项"}</p>
-          </section>
-
-          <section className={`p5-read-view ${activePhase >= 4 ? "is-open" : ""}`} aria-label="本次前向读取出的 Prompt 副本">
-            <div className="p5-region-heading"><h3>本次前向的读取视图</h3><span>池中参数仍在原位</span></div>
-            {activePhase >= 4 ? <div className="p5-read-sequence" style={{ opacity: copyProgress }}>
-              {selected.map((index, order) => <div className="p5-read-entry" key={index} style={{ transform: `translateY(${(1 - copyProgress) * 14}px)` }}>
-                <div className="p5-read-prompt"><span className="p5-read-label"><math><msub><mi>P</mi><mn>{index}</mn></msub></math></span><PromptTokens className="p5-read-token-row" /></div>
-                {order < selected.length - 1 && <span className="p5-read-separator" aria-hidden="true"><math><mo>;</mo></math></span>}
-              </div>)}
-            </div> : <div className="p5-read-pending"><strong>等待 Top‑N 选集</strong><span>源池保留 · 选中后才生成本次读取视图</span></div>}
-            <p>按选择排名读取 {promptPoolConfig.topN} 组 × {promptPoolConfig.promptLength} Token；P6 会将它们接到图像 Token 序列之前。</p>
-          </section>
-        </div>
-
-        <div className="motion-stops" role="group" aria-label="选择检索过程阶段">
-          {phases.map((phase, index) => <button className="lesson-choice" type="button" key={phase.short} aria-pressed={activePhase === index} onClick={() => playback.seek(boundaries[index])}>{index + 1}. {phase.short}</button>)}
-        </div>
-        <PlaybackControls playback={playback} label="Query 到 Top‑N 的检索进度" />
-        <p className="motion-status" aria-live="polite">{phases[activePhase].text}</p>
-      </div>
-      <figcaption>距离由单位圆公式现场计算并四舍五入到三位。q<sub>A</sub> = (1,0)，q<sub>B</sub> = k<sub>4</sub>；它们只用于展示“不同输入可选出不同 Prompt 组合”，不代表论文中的 ViT 特征或实验数据。</figcaption>
-    </figure>
-
-    <section className="explain-section">
-      <h3>选中索引是当前输入的路由，不是任务标签</h3>
-      <p>查询 A 的 Top‑5 为 <math><mi>S</mi><mo>(</mo><msub><mi>x</mi><mi>A</mi></msub><mo>)</mo><mo>=</mo><mo>{"{"}</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>10</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>9</mn><mo>{"}"}</mo></math>；查询 B 则为 <math><mi>S</mi><mo>(</mo><msub><mi>x</mi><mi>B</mi></msub><mo>)</mo><mo>=</mo><mo>{"{"}</mo><mn>4</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>5</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>6</mn><mo>{"}"}</mo></math>。两次选择共享 P₂、P₃，其余各有不同槽位；索引由当前 Query 决定，不固定代表某个类别或任务。</p>
-      <div className="p5-overlap" role="group" aria-label="查询 A 与查询 B 的 Top-5 Prompt 选择及共享槽位">
-        <div className="p5-overlap-group"><span className="p5-overlap-label">查询 A</span><PromptIndexList indices={[1, 2, 10, 3, 9]} /></div>
-        <div className="p5-shared-mark"><span>共享</span><PromptIndexList indices={[2, 3]} /></div>
-        <div className="p5-overlap-group"><span className="p5-overlap-label">查询 B</span><PromptIndexList indices={[4, 3, 5, 2, 6]} /></div>
-      </div>
-      <div className="reading-contrast reading-contrast--claims" role="group" aria-label="本例能说明的检索行为及其边界">
-        <div className="reading-claim--core"><strong>这组结果说明</strong><p>检索按样本选择 Prompt，两个输入的选集可以部分重叠。</p></div>
-        <div className="reading-claim--caution"><strong>它不保证</strong><p>共享后绝无冲突；检索也不读取任务 ID、不保存旧图像或删除未选槽位。</p></div>
+    <section className="explain-section p5-query-primer">
+      <h3>用图像本身生成查询向量</h3>
+      <p>先让原始图像走一遍不插入 Prompt 的冻结 ViT，再取末层的 <span className="lesson-key lesson-term--object">[CLS] 特征</span>作为<Term id="retrieval-query">检索 Query</Term>。这样，检索可以在选出 Prompt 之前完成，得到的向量用于找相近的 Key。分类要等选中的 Prompt 接入下一次前向。</p>
+      <div className="p5-query-flow" role="group" aria-label="当前图像经不插入 Prompt 的冻结 ViT 生成 Query">
+        <div className="p5-query-input"><Specimen /><strong>当前图像</strong></div>
+        <RetrievalFlowArrow />
+        <div className="p5-query-model"><strong>冻结 ViT</strong><span>原始图像序列</span></div>
+        <RetrievalFlowArrow />
+        <div className="p5-query-output"><strong>末层 [CLS] 特征</strong><math><mi>q</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>[</mo><mn>0</mn><mo>,</mo><mo>:</mo><mo>]</mo></math></div>
       </div>
     </section>
 
-    <p className="lesson-takeaway">P5 已按当前图像得到一组 Prompt。接下来把同一组索引接入冻结 ViT，看看正式分类究竟读取哪些输出位置。</p>
-  </>;
+    <section className="explain-section p5-pair-intro">
+      <h3>用同一个下标把地址和内容配成一对</h3>
+      <p>池中每个槽位存两个对象。<span className="lesson-key lesson-term--object"><Term id="pool-key">外部 Key</Term></span>负责被比较，配对的<span className="lesson-key lesson-term--value"> Prompt </span>负责进入模型。例如，若 Key 的编号是 j，读出的就是同槽位的 Prompt j。P3 的 Attention Key 则是在模型内部计算的，两者处于不同的运算阶段。</p>
+      <div className="p5-slot-anatomy" role="group" aria-label="同槽位的检索 Key 与 Prompt">
+        <div className="p5-slot-key"><strong>检索地址</strong><math><msub><mi>k</mi><mi>j</mi></msub></math><span>一条向量，参与距离比较</span></div>
+        <div className="p5-slot-pair-link">同槽位 j</div>
+        <div className="p5-slot-prompt"><strong>可取用的输入</strong><math><msub><mi>P</mi><mi>j</mi></msub></math><PromptTokens /><span>{promptLength} 个 Prompt Token</span></div>
+      </div>
+    </section>
+
+    <section className="explain-section">
+      <h3>固定 Query，逐个比较<span className="editorial-key">方向</span></h3>
+      <p>先点选一个 Key，观察它与 Query 的夹角。方向越接近，余弦越接近 1，<Term id="cosine-distance">余弦距离</Term>就越小。再播放一次扫描：同一个 Query 保持方向，十个 Key 轮流接受同一条比较规则。下面用二维单位向量演示这一过程。</p>
+      <div className="p5-query-controls" role="group" aria-label="切换两个输入的 Query">
+        <strong>当前查询</strong>
+        {(["A", "B"] as const).map(id => <button key={id} type="button" className="lesson-choice"
+          aria-pressed={query === id} onClick={() => chooseQuery(id)}>
+          查询 {id} · {snapshots[id].query.angleDegrees}°
+        </button>)}
+      </div>
+      <figure className="lesson-figure p5-compare-figure">
+        <div className="figure-top"><strong>每次只量一个夹角</strong></div>
+        <div className="figure-body">
+          <PlaybackControls playback={scanControls} label="比较进度" />
+          <div className="p5-compare-grid" data-query={query} data-computed={computed}>
+            <VectorSpace snapshot={snapshot} candidate={candidate} rayProgress={keyProgress} angleProgress={angleProgress}
+              scanAngleDegrees={scanAngleDegrees} scanSweepDegrees={scanSweepDegrees} />
+            <div className="p5-score">
+              <div className="p5-score-pair"><span><IndexedMath base="q" index={query} /></span><span>与</span><span><IndexedMath base="k" index={candidate.index} /></span></div>
+              <dl>
+                <div><dt>夹角 θ</dt><dd>{angleProgress >= 1 ? `${candidate.thetaDegrees.toFixed(0)}°` : "—"}</dd></div>
+                <div><dt>余弦 cos θ</dt><dd>{angleProgress >= 1 ? candidate.cosineSimilarity.toFixed(3) : "—"}</dd></div>
+                <div><dt>余弦距离 γ</dt><dd>{angleProgress >= 1 ? candidate.distance.toFixed(3) : "—"}</dd></div>
+              </dl>
+              <div className="p5-scan-heading"><strong>候选 Key</strong><span>已比较 {computed}/{poolSize}</span></div>
+              <div className="p5-scan-keys" role="group" aria-label="点选要比较的 Key">
+                {snapshot.candidates.map((item, index) => <button type="button" key={item.index}
+                  className="lesson-choice" aria-pressed={item === candidate} data-computed={hasScore(index)}
+                  onClick={() => { scan.seek(0); setInspected(index); }}>
+                  <IndexedMath base="k" index={item.index} />
+                  <i aria-hidden="true" style={{ transform: `scaleX(${hasScore(index) ? item.distance / 2 : 0})` }} />
+                </button>)}
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption className="p5-legend" aria-label="Query 与 Key 夹角图例">
+          <span><i className="p5-legend-query" aria-hidden="true" /><strong>固定 Query</strong><small><IndexedMath base="q" index={query} /></small></span>
+          <span><i className="p5-legend-key" aria-hidden="true" /><strong>当前比较</strong><small><IndexedMath base="k" index={candidate.index} /></small></span>
+          <span><i className="p5-legend-candidate" aria-hidden="true" /><strong>候选 Key</strong><small>橙色为当前项</small></span>
+          <span><i className="p5-legend-scan" aria-hidden="true" /><strong>扫描顺序</strong><small>沿环逐个比较</small></span>
+          <span><i className="p5-legend-angle" aria-hidden="true" /><strong>夹角</strong><small>θ</small></span>
+        </figcaption>
+      </figure>
+      <p>每个候选的记录都是 <math><mi>γ</mi><mo>(</mo><mi>q</mi><mo>,</mo><mi>k</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mi>cos</mi><mi>θ</mi></math>。把十个距离排在一起，才能知道哪几个方向最接近当前 Query。</p>
+    </section>
+
+    <section className="explain-section">
+      <h3>选出最小的五个距离，再用下标取 Prompt</h3>
+      <p>横排的十根柱先按池槽位放置，柱越短，距离越小。排序把短柱移到前面，<Term id="retrieval-top-n">Top‑N 检索</Term>取前 {topN} 名，给出本例的索引集合。然后按入选次序读出配对的 Prompt，每次取用都保留池中的源参数。</p>
+      <P5RankGuide />
+      <figure className="lesson-figure p5-retrieval-figure">
+        <div className="figure-top"><strong>距离排序与同索引读取</strong><span>当前 Query {query}</span></div>
+        <div className="figure-body">
+          <div className="p5-motion-controls">
+            <PlaybackControls playback={retrieval} label="排序与读取进度" />
+          </div>
+          <p className="p5-rank-hint" aria-live="polite">{rankHint}</p>
+          <CandidateBars snapshot={snapshot} progress={sort} />
+          <PromptShelf snapshot={snapshot} progress={read} />
+        </div>
+        <figcaption className="p5-legend p5-retrieval-legend" aria-label="距离排序与 Prompt 读取图例">
+          <span><i className="p5-legend-distance" aria-hidden="true" /><strong>余弦距离</strong><small>柱高 · γ(q, k<sub>j</sub>)</small></span>
+          <span><i className="p5-legend-topn" aria-hidden="true" /><strong>Top-{topN}</strong><small>入选 Key</small></span>
+          <span><i className="p5-legend-source" aria-hidden="true" /><strong>源池槽位</strong><small><IndexedMath base="k" index="j" /></small></span>
+          <span><i className="p5-legend-prompt" aria-hidden="true" /><strong>配对 Prompt</strong><small><IndexedMath base="P" index="j" /></small></span>
+        </figcaption>
+      </figure>
+      <p>论文公式 (3) 选择的是总距离最小的 N 个索引。只要各项距离独立评分，取最小的 N 项就能得到这个集合。这里按距离顺序展示，方便把每个名次和一次读取对上。</p>
+    </section>
+
+    <section className="explain-section p5-query-sharing">
+      <h3>换一个输入，哪些 Prompt 还能共用？</h3>
+      <p>换 Query 后，角度和排名会变，池还是同一个。A 和 B 都选到 P₂、P₃，也分别读到了对方没有取用的三个 Prompt。<span className="lesson-key">共享</span>来自输入和 Key 的匹配，因此一个槽位可以被不同输入取用。</p>
+      <QueryOverlap first={snapshots.A} second={snapshots.B} />
+      <p>P6 沿用 A 的读取结果，把这五组 Prompt 接在图像 Token 前面，执行一次带 Prompt 的前向分类。</p>
+    </section>
+  </div>;
 }

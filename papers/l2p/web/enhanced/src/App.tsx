@@ -5,7 +5,7 @@ import { tutorial } from "./data/tutorial";
 import { widgetRegistry } from "./modules/registry";
 import EditorialFlourish from "./shared/foundation/editorial/EditorialFlourish";
 
-const chapterLabels: Record<string, string> = { p1: "任务约束", p2: "ViT 架构", p3: "注意力", p4: "Prompt 调优", p5: "动态检索", p6: "完整分类" };
+const chapterLabels: Record<string, string> = { p1: "任务约束", p2: "ViT 架构", p3: "注意力", p4: "Prompt 调优", p5: "动态检索", p6: "完整分类", p7: "联合更新", p8: "持续运行", p9: "实验与证据" };
 
 const StylePreview = import.meta.env.DEV ? lazy(() => import("./StylePreview")) : null;
 
@@ -40,7 +40,7 @@ function Tutorial() {
 
   return (
     <>
-      <header className="site-header">
+      <header className={"site-header" + (tutorial.chapters.length > 8 ? " site-header--dense-nav" : "")}>
         <div className="site-header-inner">
           <a href="#tutorial-opening" className="site-brand" aria-label={`${title} 开头`}>
             <span className="brand-mark" aria-hidden="true">PAPER</span>
@@ -60,7 +60,7 @@ function Tutorial() {
               ))}
             </nav>
           )}
-          {(tutorial.references?.length ?? 0) > 0 && <ReferenceButton>参考资料</ReferenceButton>}
+          {(tutorial.references?.length ?? 0) > 0 && <ReferenceButton page={activeChapterId.toUpperCase()}>术语与资料</ReferenceButton>}
         </div>
       </header>
       <main className="rk-reading rk-editorial-preview">
@@ -90,7 +90,7 @@ function Tutorial() {
                   <section className="rk-section teaching-module" key={module.id} aria-labelledby={`module-${module.id}`}>
                     <h2 id={`module-${module.id}`}>{module.title}</h2>
                     {(module.desc || module.summary) && <p>{module.desc || module.summary}</p>}
-                    {Widget && <Widget chapterId={activeChapter.id} moduleId={module.id} />}
+                    {Widget && <div className="lesson-copy" data-lesson-page={activeChapter.id}><Widget chapterId={activeChapter.id} moduleId={module.id} /></div>}
                   </section>
                 );
               })}

@@ -74,6 +74,71 @@
       "stage": "P6",
       "component": "PromptForward",
       "status": "complete"
+    },
+    "I16": {
+      "stage": "P7",
+      "component": "PromptLearning",
+      "status": "complete"
+    },
+    "I17": {
+      "stage": "P7",
+      "component": "PromptLearning",
+      "status": "complete"
+    },
+    "I18": {
+      "stage": "P7",
+      "component": "PromptLearning",
+      "status": "complete"
+    },
+    "I19": {
+      "stage": "P8",
+      "component": "ContinualRun",
+      "status": "complete"
+    },
+    "I20": {
+      "stage": "P8",
+      "component": "ContinualRun",
+      "status": "complete"
+    },
+    "I21": {
+      "stage": "P8",
+      "component": "ContinualRun",
+      "status": "complete"
+    },
+    "I22": {
+      "stage": "P8",
+      "component": "ContinualRun",
+      "status": "complete"
+    },
+    "I23": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I24": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I25": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I26": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I27": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
+    },
+    "I28": {
+      "stage": "P9",
+      "component": "MethodEvidence",
+      "status": "complete"
     }
   },
   "supporting": {
@@ -91,6 +156,18 @@
     },
     "I33": {
       "placement": "P6 完整分类前向与 Prompt 位置池化"
+    },
+    "I34": {
+      "placement": "P7 报告实验优化器，不展开 Adam 内部"
+    },
+    "I35": {
+      "placement": "P8 区分有任务边界的多轮训练与 task-agnostic 单批次路径"
+    },
+    "I36": {
+      "placement": "P9 以不同协议呈现 CORe50 与 Gaussian-scheduled CIFAR-100 主结果"
+    },
+    "I37": {
+      "placement": "P9 Figure 4 池容量与单次调用容量补充说明"
     }
   },
   "reference": {

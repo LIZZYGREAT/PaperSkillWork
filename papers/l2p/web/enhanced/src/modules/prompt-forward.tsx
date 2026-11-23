@@ -1,175 +1,193 @@
-import { useLessonPlayback, PlaybackControls } from "./lesson-playback";
-import { Arrow } from "./vit-visuals";
-import { promptPoolConfig, selectedKeyIndices } from "./prompt-retrieval-data";
+import { P6PoolingTrace } from "./p6-pooling-trace";
+import { Term } from "../shared/core/reference/ReferenceHub";
+
+import { PlaybackControls, useLessonPlayback } from "./lesson-playback";
+import { Sub } from "./lesson-math";
+import { promptPoolConfig as config } from "./prompt-retrieval-data";
+import {
+  P6_IMAGE_CLS_SEQUENCE_INDEX, P6_LAST_PATCH_SEQUENCE_INDEX, P6_PROMPT_TOKEN_COUNT,
+  P6_PROMPT_TOKEN_MAP, P6_SELECTED_PROMPT_INDICES, P6_SEQUENCE_LENGTH,
+} from "./prompt-forward-data";
+import { arrive, blend, curvePosition, DiagramParameter, MotionTrace, type MotionCurve } from "./guided-motion";
+import { P6CallMap, P6SequenceRuler } from "./p6-reading-cards";
+import "./guided-motion.css";
 import "./prompt-forward.css";
 
-const duration = 7000;
-const boundaries = [0, 850, 1800, 3100, 4450, 5650, duration];
-const selected = selectedKeyIndices("A");
-const phases = [
-  { label: "承接 P5 的查询 A", short: "接收选集", text: "P5 对查询 A 选出 P₁、P₂、P₁₀、P₃、P₉；分类路径读取这五组对应 Prompt。" },
-  { label: "图像嵌入形成 xₑ", short: "得到图像 Token", text: "同一张输入图像经过冻结嵌入层 fₑ，形成 197 个图像 Token，特征宽度为 768。" },
-  { label: "沿序列维拼接", short: "组成 xₚ", text: "五组 Prompt 各含五个位置，放到图像序列之前；总长度从 197 增至 222，宽度仍为 768。" },
-  { label: "第二次调用同一冻结主干", short: "冻结前向", text: "带 Prompt 的序列再次使用 P5 查询路径所用的同一组冻结 ViT 权重。输出仍保留 222 个位置。" },
-  { label: "截取前 25 个 Prompt 位置", short: "Prompt AvgPool", text: "分类只对 25 个 Prompt 位置的输出做平均池化；图像 CLS 与 196 个 Patch 位置不进入这次池化。" },
-  { label: "共享分类头生成 Logits", short: "输出类别分数", text: "平均池化得到 768 维表示，送入共享分类器 gφ，得到类别 Logits。这里不展开训练损失或参数更新。" },
-];
+const stops = [
+  { start: 0, time: 0, label: "从池中读取", note: "看上方五组 Prompt。编号沿用 P5 的检索顺序，配对 Key 留在池中。" },
+  { start: 600, time: 3060, label: "拼成输入", note: "每组的五个位置依次展开，图像 [CLS] 与 Patch 接在同一行的后面。" },
+  { start: 3300, time: 5750, label: "经过编码器", note: "沿同一列向下看。所有 Token 一起经过冻结 Transformer，位置不变，内容已融合上下文。" },
+  { start: 6100, time: 9700, label: "取出并平均", note: `蓝色图像输出留在原位。只汇聚前 ${P6_PROMPT_TOKEN_COUNT} 个 Prompt 输出，逐维求平均。` },
+  { start: 9950, time: 13600, label: "生成类别分数", note: `平均向量 h 保留 ${config.featureWidth} 维。沿绿色路径进入共享分类器，得到类别分数。` },
+] as const;
+const duration = 13600;
+const leaf = "#396746";
+const blue = "#315d73";
+const sceneWidth = 860;
+const sceneCenter = sceneWidth / 2;
+const railInset = 34;
+const railWidth = sceneWidth - 2 * railInset;
+const encoderLabelWidth = 228;
+const promptStart = 45;
+const patchWidth = 12;
+const lastPatchOffset = 247;
+const imageStart = sceneWidth - promptStart - lastPatchOffset - patchWidth;
+const patchOffsets = [65, 94, 123, lastPatchOffset];
+const poolY = 304;
+const sourceX = (group: number, token: number) => promptStart + group * 96 + token * 8.8;
+const rowX = (group: number, token: number) => promptStart + group * 99 + token * 13;
 
-function phaseAt(position: number) {
-  if (position >= duration) return phases.length - 1;
-  const index = boundaries.findIndex((_, i) => i < boundaries.length - 1 && position >= boundaries[i] && position < boundaries[i + 1]);
-  return Math.max(0, index);
-}
+function ForwardScene({ time }: { time: number }) {
+  const encode = arrive(time, 3470, 5500);
+  const context = arrive(time, 4190, 5030);
+  const read = arrive(time, 6100, 6670);
+  const pooled = arrive(time, 8810, 9650);
+  const classify = arrive(time, 10150, 11850);
+  const rowY = blend(116, 220, encode);
+  const imageJoin = arrive(time, 1810, 2920);
+  const imageY = blend(72, rowY, imageJoin);
+  const flow: MotionCurve = [{x: sceneCenter, y: poolY}, {x: 486, y: poolY}, {x: 592, y: poolY}, {x: 641, y: poolY}];
+  const vector = curvePosition(flow, classify);
+  const encoderFocus = arrive(time, 3160, 3640) * (1 - arrive(time, 5370, 5930));
+  const shelf = 1 - .67 * arrive(time, 2100, 3080);
 
-function PromptSequence({ compact = false }: { compact?: boolean }) {
-  return <span className={`p6-prompt-groups ${compact ? "is-compact" : ""}`} aria-label={`${promptPoolConfig.topN} 个选中 Prompt，每个含 ${promptPoolConfig.promptLength} 个位置`}>
-    {selected.map(index => <span className="p6-prompt-group" key={index}>
-      {!compact && <b>P<sub>{index}</sub></b>}
-      <span>{Array.from({ length: promptPoolConfig.promptLength }, (_, i) => <i key={i} />)}</span>
-    </span>)}
-  </span>;
-}
+  return <svg className="p6-scene" viewBox={`0 0 ${sceneWidth} 344`} role="img"
+    aria-label="追踪选中的 Prompt Token 及图像 Token，经冻结编码器后仅汇聚 Prompt 输出。">
+    <g opacity={shelf}>
+      <text x={promptStart} y="28" className="p6-label">池中配对 · Query A</text>
+      {P6_SELECTED_PROMPT_INDICES.map((id, i) => <text key={id} x={sourceX(i, 2) + 3.5} y="53" textAnchor="middle" className="p6-symbol">
+        <DiagramParameter symbol="k" index={id} />
+      </text>)}
+      <text x={imageStart} y="28" className="p6-label">图像嵌入 xₑ</text>
+      <text x={imageStart} y="48">[CLS] + {config.imageLength - 1} 个 Patch</text>
+    </g>
 
-function ImageSequence({ output = false }: { output?: boolean }) {
-  return <span className={`p6-image-sequence ${output ? "is-output" : ""}`} aria-label="图像序列：一个 CLS 位置与 196 个 Patch 位置">
-    <b className="p6-cls">CLS</b>
-    {Array.from({ length: 7 }, (_, i) => <i key={i} />)}<span>…</span><small>196 Patch</small>
-  </span>;
+    <g opacity={arrive(time, 810, 1870) * (1 - .7 * encode)}>
+      <path d={`M${railInset} 132h${railWidth}`} className="p6-guide" />
+      <text x={sceneCenter} y="104" textAnchor="middle" opacity={arrive(time, 2610, 3080)}>
+        输入 xₚ · {P6_PROMPT_TOKEN_COUNT} + {config.imageLength} = {P6_SEQUENCE_LENGTH} 个位置
+      </text>
+    </g>
+    <rect className="p6-encoder-rail" x={railInset} y="145" width={railWidth} height="43" rx="8" fill="#e6ede3" stroke="#acbeac" />
+    <rect x={railInset} y="145" width={railWidth} height="43" rx="8" fill="#c8dcc9" opacity={.65 * encoderFocus} />
+    <path d={`M${railInset + 12} 157h${railWidth - 24} M${railInset + 12} 176h${railWidth - 24}`} className="p6-guide" />
+    <foreignObject x={sceneCenter - encoderLabelWidth / 2} y="151" width={encoderLabelWidth} height="31" opacity={1 - .76 * encoderFocus}>
+      <div className="p6-encoder-label">
+        <svg viewBox="0 0 16 18" aria-hidden="true">
+          <path d="M4 7V5a4 4 0 0 1 8 0v2M2 7h12v9H2z" fill="none" stroke="currentColor" />
+        </svg>
+        <span>冻结 Transformer · <math><Sub base="f" index="r" /></math></span>
+      </div>
+    </foreignObject>
+
+    {P6_PROMPT_TOKEN_MAP.map(({promptIndex, promptOrdinal: group, tokenIndex: token, sequenceIndex}) => {
+      const join = arrive(time, 770 + group * 231 + token * 48, 1780 + group * 231 + token * 48);
+      const x = blend(sourceX(group, token), rowX(group, token), join);
+      const y = blend(78, rowY, join);
+      const dispatch = arrive(time, 6640 + sequenceIndex * 32, 8300 + sequenceIndex * 32);
+      const endX = sceneCenter - 16.5 + token * 6;
+      const route: MotionCurve = [{x, y}, {x, y: 263}, {x: endX, y: 269}, {x: endX, y: poolY}];
+      const contribution = curvePosition(route, dispatch);
+      return <g key={sequenceIndex} data-position={sequenceIndex}>
+        <rect x={x} y={y - 9} width={blend(7, 10, join)} height="18" rx="2"
+          fill="#b8cda9" stroke="#6f9475" opacity={1 - .54 * dispatch} />
+        <path d={`M${x + 2} ${y - 3}h6m-6 4h4m-4 4h5`} stroke={leaf} opacity={context * (1 - .62 * dispatch)} />
+        {token === 2 && <text x={x + blend(3.5, 5, join)} y={y + blend(26, -14, encode)} textAnchor="middle"
+          className="p6-symbol" opacity={1 - .86 * encoderFocus}>
+          <DiagramParameter symbol="P" index={promptIndex} />
+        </text>}
+        <rect data-read-position={sequenceIndex} x={contribution.x} y={contribution.y - 8} width="9" height="16" rx="2"
+          fill="#a4c0a3" stroke={leaf} opacity={read * arrive(dispatch, 0, .15) * (1 - pooled)} />
+      </g>;
+    })}
+    <g transform={`translate(${imageStart} ${imageY})`} opacity={1 - .36 * read}>
+      <rect y="-9" width="49" height="18" rx="3" fill="#dce9ed" stroke="#7e9da9" />
+      <text x="24.5" y="4" textAnchor="middle" className="p6-token-label">[CLS]</text>
+      {patchOffsets.map(offset => <g key={offset}>
+        <rect x={offset} y="-9" width={patchWidth} height="18" rx="2" fill="#abc7cf" stroke="#7e9da9" />
+        <path d={`M${offset + 3} -3h6m-6 4h4m-4 4h5`} stroke={blue} opacity={context} />
+      </g>)}
+      <text x="188" y="4" textAnchor="middle">…</text>
+    </g>
+
+    <g opacity={arrive(time, 5430, 5790)}>
+      <path d="M42 259v5h465v-5 M552 259v5h267v-5" className="p6-guide" />
+      <path d="M42 259v5h465v-5" stroke={leaf} strokeWidth="2" fill="none" opacity={read} />
+      <text x={promptStart} y="281" className="p6-label">H · Prompt 位置 0–{P6_PROMPT_TOKEN_COUNT - 1}</text>
+      <text x="686" y="281" textAnchor="middle">图像位置 {P6_IMAGE_CLS_SEQUENCE_INDEX}–{P6_LAST_PATCH_SEQUENCE_INDEX}</text>
+    </g>
+    <g opacity={read}>
+      <text x={promptStart} y="312" className="p6-label">AvgPool</text>
+      <text x="117" y="312">逐维相加 ÷ {P6_PROMPT_TOKEN_COUNT}</text>
+    </g>
+    <MotionTrace curve={flow} progress={classify} color={leaf} opacity={arrive(time, 9880, 10270)} />
+    <g transform={`translate(${vector.x} ${poolY})`} opacity={pooled}>
+      <rect x="-23" y="-12" width="46" height="24" rx="4" fill="#c4d8bd" stroke={leaf} />
+      <path d="M-15 -4h9m-9 4h6m-6 4h9" stroke={leaf} />
+      <text x="8" y="5" className="p6-label">h</text>
+    </g>
+    <g opacity={arrive(time, 11300, 12100)}>
+      <rect x="667" y="291" width="91" height="27" rx="4" fill="#dce8d5" stroke="#81a186" />
+      <text x="712" y="309" textAnchor="middle" className="p6-label">分类器 gφ</text>
+    </g>
+    <g opacity={arrive(time, 11850, 12600)}>
+      <path d="M758 304h17m-4-4 4 4-4 4" stroke={leaf} fill="none" />
+      <text x="786" y="309" className="p6-label">Logits z</text>
+    </g>
+  </svg>;
 }
 
 export function PromptForward() {
   const playback = useLessonPlayback(duration);
-  const activePhase = phaseAt(playback.position);
-  const imageProgress = activePhase > 1 ? 1 : activePhase === 1
-    ? (playback.position - boundaries[1]) / (boundaries[2] - boundaries[1]) : 0;
-  const mergeProgress = activePhase > 2 ? 1 : activePhase === 2
-    ? (playback.position - boundaries[2]) / (boundaries[3] - boundaries[2]) : 0;
-  const encoderProgress = activePhase > 3 ? 1 : activePhase === 3
-    ? (playback.position - boundaries[3]) / (boundaries[4] - boundaries[3]) : 0;
-  const readProgress = activePhase > 4 ? 1 : activePhase === 4
-    ? (playback.position - boundaries[4]) / (boundaries[5] - boundaries[4]) : 0;
-  const outputProgress = activePhase > 5 ? 1 : activePhase === 5
-    ? (playback.position - boundaries[5]) / (boundaries[6] - boundaries[5]) : 0;
-
+  const stop = stops.reduce((active, candidate) => candidate.start <= playback.position ? candidate : active, stops[0]);
   return <>
-    <p className="lesson-lead">P5 的 Query A 已选出五个 Prompt。P6 把这组检索结果与当前图像 Token 合并，再调用冻结的 ViT 完成分类；<span className="reading-emphasis reading-emphasis--prompt">最终读出来自 Prompt 位置，不是普通 ViT 的 CLS 位置</span>。</p>
+    <p className="lesson-lead">上一页为图像 A 找到了 {P6_SELECTED_PROMPT_INDICES.map(id => `P${id}`).join("、")}。这些是池中已经学到的向量组。要得到类别分数，还要把它们交给 ViT，让每个 Prompt 位置吸收当前图像的信息。</p>
 
     <section className="explain-section">
-      <h3>检索和分类是两次调用，共用同一组冻结权重</h3>
-      <div className="reading-contrast reading-contrast--calls" role="group" aria-label="检索与分类分别调用同一组冻结的 ViT 权重">
-        <div className="reading-call--query"><strong>检索调用 · 先生成 Query</strong><p>不插入 Prompt，从 CLS 输出读取当前图像的 Query。</p></div>
-        <div className="reading-call--prompt"><strong>分类调用 · 再读取 Prompt</strong><p>把选中的 Prompt 加到图像 Token 前；两次输入经过同一套冻结权重。</p></div>
-      </div>
-      <p>下图展开分类调用，并用参数身份标记与 P5 对齐。</p>
+      <h3>同一组冻结权重，<span className="editorial-key">两次调用</span></h3>
+      <p>检索时，ViT 先单独处理图像，从 <code>[CLS]</code> 位置得到 Query，再用它与外部 Key 比较。拿到索引之后，分类调用重新使用<span className="lesson-key lesson-term--object">同一组冻结权重</span>，输入现在包括选中的 Prompt。Key 留在池中，Query 已经完成寻址。</p>
+      <P6CallMap />
     </section>
 
-    <figure className="lesson-figure p6-forward-figure">
-      <div className="figure-top"><strong>从 P5 的 S(x<sub>A</sub>) 到类别 Logits</strong><span>同一 θ₀ · 第二次调用 · 前向分类</span></div>
-      <div className="figure-body">
-        <div className="p6-shared-weights"><span>共享的预训练权重 θ₀</span><span>检索调用：无 Prompt → q(x<sub>A</sub>)</span><span>本页分类调用：加入选中 Prompt → Logits</span></div>
+    <section className="explain-section">
+      <h3>沿序列方向，把 Prompt 接到图像前面</h3>
+      <p>P2 的图像嵌入 <math><Sub base="x" index="e" /><mo>=</mo><Sub base="f" index="e" /><mo>(</mo><mi>x</mi><mo>)</mo></math> 已经包含 [CLS] 和 {config.imageLength - 1} 个 Patch。每组选中的 Prompt 含 <math><Sub base="L" index="p" /><mo>=</mo><mn>{config.promptLength}</mn></math> 个 Token。播放时可以看见各组依 P5 的顺序展开，做<Term id="prompt-prefix">序列前置拼接</Term>，随后整条序列穿过冻结编码器。</p>
+      <div className="guided-equations p6-equation"><math display="block">
+        <Sub base="x" index="p" /><mo>=</mo><mo>[</mo><Sub base="P" index="s₁" /><mo>;</mo><mo>…</mo><mo>;</mo><Sub base="P" index="sₙ" /><mo>;</mo><Sub base="x" index="e" /><mo>]</mo>
+      </math></div>
+    </section>
 
-        <div className="p6-source-branches">
-          <div className={`p6-selected-source ${activePhase === 0 ? "is-active" : ""}`}>
-            <strong>来自 P5 的选集 · S(x<sub>A</sub>)</strong>
-            <div>{selected.map(index => <span key={index}>P<sub>{index}</sub></span>)}</div>
-            <small>Key 用于选取；Key 本身不拼入序列</small>
-          </div>
-          <span className="p6-branch-join" aria-label="沿序列长度维拼接">;</span>
-          <div className={`p6-image-source ${activePhase >= 1 ? "is-ready" : ""}`}>
-            <strong>输入图像 x<sub>A</sub> → 冻结 f<sub>e</sub> → x<sub>e</sub></strong>
-            <span className="p6-image-preview" aria-hidden="true" style={{ transform: `scaleX(${.78 + .22 * imageProgress})` }}>
-              <ImageSequence />
-            </span>
-            <small>L = 197 个位置 · D = 768</small>
-          </div>
+    <figure className="lesson-figure guided-motion p6-forward-figure">
+      <div className="motion-dock p6-control-dock">
+        <div className="motion-stops" role="group" aria-label="分类前向阶段">
+          {stops.map(item => <button type="button" className="lesson-choice" key={item.time} aria-pressed={item === stop}
+            onClick={() => playback.playSegment(item.start, item.time)}>{item.label}</button>)}
         </div>
-
-        <div className={`p6-composition ${activePhase >= 2 ? "is-open" : ""}`}>
-          <div className="p6-composition-heading"><strong>沿序列长度拼接</strong><span>Prompt 在前，图像 Token 在后</span></div>
-          <div className="p6-sequence-result" style={{ opacity: .68 + .32 * mergeProgress }}>
-            <PromptSequence compact />
-            <span className="p6-sequence-divider" aria-hidden="true">;</span>
-            <ImageSequence />
-          </div>
-          <div className="p6-composition-formula">
-            <math><msub><mi>x</mi><mi>p</mi></msub><mo>=</mo><mo>[</mo><msub><mi>P</mi><mn>1</mn></msub><mo>;</mo><msub><mi>P</mi><mn>2</mn></msub><mo>;</mo><msub><mi>P</mi><mn>10</mn></msub><mo>;</mo><msub><mi>P</mi><mn>3</mn></msub><mo>;</mo><msub><mi>P</mi><mn>9</mn></msub><mo>;</mo><msub><mi>x</mi><mi>e</mi></msub><mo>]</mo></math>
-            <math><msub><mi>x</mi><mi>p</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>222</mn><mo>×</mo><mn>768</mn></mrow></msup></math>
-          </div>
-        </div>
-
-        <div className="p6-forward-flow">
-          <div className="p6-flow-input"><strong>x<sub>p</sub></strong><span>222 × 768</span><PromptSequence compact /><ImageSequence /></div>
-          <div className="p6-motion-lane" aria-hidden="true">
-            <svg viewBox="0 0 260 50" preserveAspectRatio="none">
-              <path d="M5 26 C74 26 102 26 132 26 S198 26 255 26" />
-              <circle cx={5 + 250 * encoderProgress} cy="26" r="5" />
-            </svg>
-            <span>{activePhase >= 3 ? "逐位置更新上下文表示" : "序列送入 Encoder"}</span>
-          </div>
-          <div className={`p6-encoder ${activePhase === 3 ? "is-active" : ""}`}>
-            <strong>冻结 Transformer f<sub>r</sub></strong>
-            <span>Encoder Block 1</span><span>Encoder Block 2</span><i>⋮</i><span>Encoder Block L</span>
-            <small>运算经过 · 权重不更新</small>
-          </div>
-          <Arrow />
-          <div className={`p6-output-sequence ${activePhase >= 3 ? "is-ready" : ""}`}>
-            <strong>输出序列 H = f<sub>r</sub>(x<sub>p</sub>)</strong>
-            <span className="p6-read-bracket" aria-hidden="true">Prompt 位置 · 25</span>
-            <PromptSequence compact />
-            <ImageSequence output />
-            <small>仍保留 222 个位置</small>
-          </div>
-        </div>
-
-        <div className={`p6-readout-flow ${activePhase >= 4 ? "is-reading" : ""}`}>
-          <div className="p6-pool-input">
-            <strong>只截取 Prompt 的输出位置</strong>
-            <span className="p6-slice-label">H[0:25, :] <small>零基切片</small></span>
-            <span className="p6-slice-vector" aria-label="前 25 个 Prompt 输出位置">{Array.from({ length: 25 }, (_, i) => <i key={i} style={{ opacity: .62 + .38 * readProgress }} />)}</span>
-          </div>
-          <span className="p6-read-arrow" aria-hidden="true">↓</span>
-          <div className="p6-average">
-            <strong>AvgPool</strong>
-            <span className="p6-average-glyph" aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <i key={i} style={{ transform: `translateY(${(1 - readProgress) * 6}px)` }} />)}</span>
-            <small>25 个位置 → 1 个向量</small>
-          </div>
-          <Arrow />
-          <div className="p6-feature-out"><strong>h(x<sub>A</sub>)</strong><span>768 维</span><i style={{ transform: `scaleX(${.35 + .65 * readProgress})` }} /></div>
-          <Arrow />
-          <div className={`p6-classifier ${activePhase === 5 ? "is-active" : ""}`}>
-            <strong>共享分类器 g<sub>φ</sub></strong>
-            <span>Logits z = (z₁, z₂, …, z<sub>C</sub>)</span>
-            <span className="p6-logit-vector" aria-label="类别 Logits 向量">{Array.from({ length: 7 }, (_, i) => <i key={i} style={{ opacity: .35 + .65 * outputProgress }} />)}</span>
-            <small>示意向量 · 数值未给出</small><small>预测规则：arg max<sub>c</sub> z<sub>c</sub></small>
-          </div>
-        </div>
-
-        <div className="p6-equations">
-          <math display="block"><msub><mi>x</mi><mi>e</mi></msub><mo>=</mo><msub><mi>f</mi><mi>e</mi></msub><mo>(</mo><mi>x</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>197</mn><mo>×</mo><mn>768</mn></mrow></msup></math>
-          <math display="block"><mi>H</mi><mo>=</mo><msub><mi>f</mi><mi>r</mi></msub><mo>(</mo><msub><mi>x</mi><mi>p</mi></msub><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>222</mn><mo>×</mo><mn>768</mn></mrow></msup></math>
-          <math display="block"><mi>h</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>AvgPool</mi><mo>(</mo><mi>H</mi><mo>[</mo><mn>0</mn><mo>:</mo><mn>25</mn><mo>,</mo><mo>:</mo><mo>]</mo><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mn>768</mn></msup></math>
-          <math display="block"><mi>z</mi><mo>=</mo><msub><mi>g</mi><mi>φ</mi></msub><mo>(</mo><mi>h</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo><mo>;</mo><mover><mi>y</mi><mo>^</mo></mover><mo>=</mo><msub><mi>argmax</mi><mi>c</mi></msub><msub><mi>z</mi><mi>c</mi></msub></math>
-        </div>
-
-        <div className="p6-dimensions" aria-label="本页维度检查">
-          <span><b>M</b><strong>10</strong><small>候选 Prompt</small></span><span><b>N</b><strong>5</strong><small>选中 Prompt</small></span><span><b>L<sub>p</sub></b><strong>5</strong><small>每组位置</small></span><span><b>L</b><strong>197</strong><small>图像 Token</small></span><span><b>D</b><strong>768</strong><small>特征宽度</small></span><span className="p6-dim-result"><b>N L<sub>p</sub> + L</b><strong>25 + 197 = 222</strong><small>扩展序列长度</small></span>
-        </div>
-
-        <div className="motion-stops" role="group" aria-label="选择 L2P 分类前向阶段">
-          {phases.map((phase, index) => <button className="lesson-choice" type="button" key={phase.short} aria-pressed={activePhase === index} onClick={() => playback.seek(boundaries[index])}>{index + 1}. {phase.short}</button>)}
-        </div>
-        <PlaybackControls playback={playback} label="Prompt 分类前向进度" />
-        <p className="motion-status" aria-live="polite">{phases[activePhase].text}</p>
+        <PlaybackControls playback={playback} label="分类进度" />
+        <span className="motion-pan-hint">横向滑动查看完整过程</span>
       </div>
-      <figcaption>图像 Token 为可读性压缩显示：一个 [CLS] 加 196 个 Patch 位置；Prompt 的 25 个位置逐一绘出。Logits 向量只示意类别分数的形状，不代表具体预测值。分类池化只覆盖序列最前的 25 个 Prompt 输出，不包含其后的 [CLS] 与 Patch。</figcaption>
+      <div className="motion-window p6-scene-scroll" tabIndex={0} role="region" aria-label="Token 装配、编码与读出图">
+        <ForwardScene time={playback.position} />
+      </div>
+      <figcaption aria-live="polite">{stop.note}</figcaption>
     </figure>
 
-    <section className="explain-section">
-      <h3>为什么不能把 CLS 或整个序列拿来平均？</h3>
-      <p>输入序列的前 25 个位置对应五组被选中的 Prompt。经过 Transformer 后，每个位置都带有与图像交互后的上下文信息；<span className="reading-emphasis reading-emphasis--prompt">AvgPool 将这 25 个向量合成一个 768 维表示</span>，交给共享分类头。图像 CLS 虽然仍在序列里，但不属于这里指定的读出区间。</p>
-      <p>在这个 Split CIFAR‑100 / CORe50 的 ViT‑B/16 配置下，<math><mi>N</mi><msub><mi>L</mi><mi>p</mi></msub><mo>=</mo><mn>5</mn><mo>×</mo><mn>5</mn><mo>=</mo><mn>25</mn></math>，所以序列长度是 <math><mn>197</mn><mo>+</mo><mn>25</mn><mo>=</mo><mn>222</mn></math>，每个位置仍宽 768。论文的五数据集实验使用不同的 <math><mi>M</mi></math> 与 <math><mi>N</mi></math> 配置；这里不把这些数推广到所有设置。</p>
+    <section className="explain-section" id="p6-readout">
+      <h3>从编码后的 Prompt 位置读出类别特征</h3>
+      <p>冻结 Transformer 计算 <math><mi>H</mi><mo>=</mo><Sub base="f" index="r" /><mo>(</mo><Sub base="x" index="p" /><mo>)</mo></math> 时，扩展序列的全部位置参与上下文计算。行号一一对应，向量内容已经改变，因此开头 {P6_PROMPT_TOKEN_COUNT} 个 <span className="lesson-key lesson-term--value"><Term id="prompt-readout">Prompt 输出位置</Term></span>现在带有图像信息。图像的 [CLS] 与 Patch 输出仍在 H 中，它们从位置 {P6_IMAGE_CLS_SEQUENCE_INDEX} 开始。</p>
+      <P6PoolingTrace />
+      <p>L2P 对开头 <math><mi>N</mi><Sub base="L" index="p" /></math> 行做<Term id="prompt-pooling">平均池化</Term>。每一维独立相加并除以位置数，结果 <math><mi>h</mi></math> 仍为 {config.featureWidth} 维。共享分类器由它得到各类别的 <Term id="logits">Logits</Term>，最高分所在的类别就是本次预测。</p>
+      <div className="guided-equations p6-equation"><math display="block">
+        <Sub base="h" index="d" /><mo>=</mo><mfrac><mn>1</mn><mrow><mi>N</mi><Sub base="L" index="p" /></mrow></mfrac>
+        <munderover><mo>∑</mo><mrow><mi>r</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><Sub base="L" index="p" /><mo>−</mo><mn>1</mn></mrow></munderover>
+        <Sub base="H" index="r,d" />
+      </math><math display="block"><mi>z</mi><mo>=</mo><Sub base="g" index="φ" /><mo>(</mo><mi>h</mi><mo>)</mo></math></div>
     </section>
-
-    <p className="lesson-takeaway">一次分类前向已经连通：检索选集决定输入 Prompt，Prompt 位置输出经平均池化后进入分类器。下一步再看这些 Key 和 Prompt 如何在训练中分别得到学习信号。</p>
+    <section className="explain-section">
+      <h3>拼接改变位置数，特征宽度保持不变</h3>
+      <p>池容量 <math><mi>M</mi><mo>=</mo><mn>{config.poolSize}</mn></math> 给出候选组数，本次只读 <math><mi>N</mi><mo>=</mo><mn>{P6_SELECTED_PROMPT_INDICES.length}</mn></math> 组。它们贡献 <span className="lesson-key lesson-key--type">{P6_PROMPT_TOKEN_COUNT} 个位置</span>，与 {config.imageLength} 个图像位置合为 {P6_SEQUENCE_LENGTH} 个位置。输入与输出的每一行都保持 <math><mi>D</mi><mo>=</mo><mn>{config.featureWidth}</mn></math> 维。</p>
+      <P6SequenceRuler />
+    </section>
+    <p className="lesson-takeaway">有了类别分数，就能用训练标签衡量预测误差。下一页追踪这个误差怎样训练 Prompt 与分类器，以及检索 Key 从哪里获得自己的学习信号。</p>
   </>;
 }

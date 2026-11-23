@@ -69,7 +69,9 @@
 .block-nodes > .sum-node { background: var(--rk-warn-soft); border-color: var(--rk-warn); color: var(--rk-warn); padding-inline: 6px; }
 .bypass { border: 1px solid var(--rk-warn); border-bottom: 0; grid-column: 1 / 8; grid-row: 1; margin: 0 10px 2px 7px; height: 25px; text-align: center; border-radius: 5px 5px 0 0; color: var(--rk-warn); }
 .bypass span { position: relative; top: -9px; background: var(--rk-surface); padding: 0 5px; font-size: 12px; }
-.block-equations { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 32px; margin-top: 18px; font-size: 20px; }
+.block-equations { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 12px 32px; margin-top: 18px; font-size: 20px; }
+.block-equation { display: inline-block; }
+.block-equation > math { margin: 0; math-style: normal; }
 .rk-reading .detail-title { margin: 36px 0 10px; }
 .attention-controls { justify-content: space-between; }
 .extra-switch { display: inline-flex; align-items: center; gap: 6px; background: var(--rk-warn-soft); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
@@ -117,11 +119,15 @@
 .site-header .text-button { white-space: nowrap; }
 .site-header nav button { padding-block: 6px; border-bottom: 1px solid transparent; }
 .site-header nav button[aria-pressed="true"] { border-bottom-color: var(--rk-accent); font-weight: 650; }
+.site-header--dense-nav nav { min-width: 0; overflow-x: auto; }
+@media (761px <= width <= 1280px) {
+  .site-header--dense-nav .site-header-inner { flex-wrap: wrap; min-height: 72px; padding-block: 12px; }
+  .site-header--dense-nav nav { order: 3; flex-basis: 100%; justify-content: space-between; }
+}
 .traced-token { background: var(--rk-warn-soft); color: var(--rk-warn); border-color: var(--rk-warn); }
 .rk-reading .teaching-module > h2 { font-size: clamp(27px, 3vw, 39px); }
 
 /* Reading rhythm and explanatory objects for the review slice. */
-.rk-reading .lesson-lead, .rk-reading .explain-section > p { max-width: 48em; }
 .rk-reading .lesson-lead { font-size: clamp(17px, 1.4vw, 19px); margin-bottom: 24px; }
 .explain-section { margin-block: 42px; }
 .rk-reading .explain-section > h3, .rk-reading .detail-title { font-size: clamp(22px, 2.3vw, 29px); margin: 0 0 9px; }
@@ -171,7 +177,7 @@
 .architecture-tokens .token { padding-inline: 4px; }
 .stack-node { background: var(--rk-figure); }
 .block-stack { width: min(100%, 108px); list-style: none; padding: 0 5px 0 0; margin: 0; display: grid; gap: 2px; }
-.block-stack li { font-size: 11px; line-height: 1.5; border: 1px solid var(--rk-line-strong); border-radius: 3px; background: var(--rk-surface); box-shadow: 3px 2px 0 #dae3d7; }
+.block-stack li { font-size: 12px; line-height: 1.5; border: 1px solid var(--rk-line-strong); border-radius: 3px; background: var(--rk-surface); box-shadow: 3px 2px 0 #dae3d7; }
 .block-stack li:nth-child(3), .block-stack li:nth-child(5) { border: 0; box-shadow: none; background: none; line-height: 1; }
 .block-stack .stack-focus { border-color: var(--rk-warn); background: var(--rk-warn-soft); color: var(--rk-warn); font-weight: 650; }
 .readout-line { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 3px; font-size: 11px; }
@@ -295,7 +301,6 @@
 .rk-reading .explain-section > p,
 .rk-reading .explain-section > h3,
 .rk-reading .detail-title,
-.rk-reading .detail-title + .rk-prose,
 .rk-reading .lesson-takeaway { width: auto; max-width: none; margin-inline: 0; }
 .training-strip, .test-routing { width: min(100%, 57rem); margin-inline: auto; }
 .test-routing { justify-content: center; }
@@ -466,3 +471,51 @@
 }
 .flatten-range { left: 5.5%; top: 10%; }
 .flatten-caption { left: 5.5%; top: 82%; }
+
+/* Small reading diagrams connect causes and computations without changing the labs. */
+.context-bridge {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 22px;
+  margin-top: 40px;
+  padding-block: 24px;
+  border-top: 1px solid var(--rk-line-strong);
+}
+.context-bridge__gap { display: grid; justify-items: center; gap: 10px; color: var(--rk-accent-strong); font-size: 16px; }
+.context-bridge__gap .flow-arrow { width: 56px; }
+.rk-reading .context-bridge > p { grid-column: 2 / -1; margin: 0; }
+@media (max-width: 760px) {
+  .context-bridge { grid-template-columns: minmax(0, 1fr); }
+  .context-bridge__gap .flow-arrow { transform: rotate(90deg); justify-self: center; }
+  .rk-reading .context-bridge > p { grid-column: 1; }
+}
+
+.lesson-variable { display: inline math; font-size: 1em; white-space: nowrap; vertical-align: baseline; }
+
+/* One prose contract for all nine lessons; visual layouts own their nested copy. */
+.lesson-copy { --lesson-body-size: 17px; --lesson-body-leading: 1.8; min-width: 0; }
+.rk-reading .lesson-copy > p:not(.lesson-lead):not(.rk-note),
+.rk-reading .lesson-copy .explain-section > p {
+  width: auto;
+  max-width: none;
+  margin-inline: 0;
+  font-size: var(--lesson-body-size);
+  line-height: var(--lesson-body-leading);
+}
+
+/* Sparse, semantic emphasis: short key phrases retain the surrounding sentence rhythm. */
+.lesson-copy .lesson-key { color: var(--rk-accent-strong); font-weight: 700; background: linear-gradient(transparent 64%, #dfe8d5 64%, #dfe8d5 94%, transparent 94%); padding-inline: .05em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.lesson-copy .lesson-key--caution { color: #895713; background-image: linear-gradient(transparent 64%, #f1e2c5 64%, #f1e2c5 94%, transparent 94%); }
+.lesson-copy .lesson-key--limit { color: #a1402e; background: none; text-decoration: underline; text-decoration-color: #d6a99a; text-underline-offset: .23em; text-decoration-thickness: 1px; }
+.lesson-copy .lesson-key--type { background: none; color: #315d73; font-weight: 750; font-variant-numeric: lining-nums; }
+
+/* Three levels of emphasis: quiet ink, semantic marker, expressive first-use term. */
+.lesson-copy .lesson-ink { font-weight: 700; color: var(--rk-ink); }
+.lesson-copy .lesson-term { font-family: "Cambria Math", "SimSun", "STSong", serif; font-size: 1.15em; font-weight: 700; line-height: 1; }
+.lesson-copy .lesson-term--object { color: #315d73; background-image: linear-gradient(transparent 64%, #dce8ec 64%, #dce8ec 94%, transparent 94%); }
+.lesson-copy .lesson-term--latin { font-family: "Georgia", "Cambria", serif; font-style: italic; font-size: 1.12em; }
+.lesson-copy .lesson-number { font: 600 1.65em/1 var(--rk-font-math); color: var(--rk-accent-strong); padding-inline: .08em; }
+.lesson-copy .lesson-number--width { color: #315d73; }
+.lesson-copy .lesson-term--value { color: #6c4f7a; background-image: linear-gradient(transparent 64%, #e9deed 64%, #e9deed 94%, transparent 94%); }
+.lesson-copy .lesson-symbol { font-size: 1.3em; color: var(--rk-accent-strong); }
