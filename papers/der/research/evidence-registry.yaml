@@ -1,0 +1,281 @@
+claims:
+  C01:
+    claim: 'GCL 的主要要求包括训练不依赖任务边界、测试不依赖任务 oracle，以及有限记忆。'
+    type: PAPER_FACT
+    source_locator: 'Sections 1–2, pp. 1–2; Table 1 p. 2; Appendix A'
+    conditions: '论文定义的 General Continual Learning setting。'
+    allowed_wording: '按论文的 GCL 设定，训练不依赖任务边界，测试不使用任务 oracle，并限制记忆规模。不要将这些条件泛化为每个标准 benchmark 的实际训练协议。'
+  C02:
+    claim: 'DER 将当前样本分类损失与记忆样本上的历史 logits 平方距离组合。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3, Eq. (5)'
+    conditions: '论文 Eq. (5) 定义的 DER 目标；alpha 取实验设置中的值。'
+    allowed_wording: 'DER 的目标由当前标签分类项和对记忆历史 logits 的平方距离项组成。'
+  C03:
+    claim: 'DER++ 在 DER 输出匹配项之外增加回放样本的真实标签分类损失。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3, Eq. (6); Algorithm 2 p. 4'
+    conditions: 'DER++ 模式；标签项按 beta 加权。'
+    allowed_wording: 'DER++ 增加历史样本标签 CE；这不是 DER 原目标内含的组成部分。'
+  C04:
+    claim: 'Algorithms 1–2 按读取已有记忆、计算当前与回放输出及损失、更新参数、再将当前候选写入 reservoir 的顺序执行。'
+    type: PAPER_FACT
+    source_locator: 'Algorithms 1–2, p. 4'
+    conditions: '按论文印刷算法顺序解释；具体批次实现细节仍依实验设置。'
+    allowed_wording: '本步先读取已有记忆并计算当前/回放损失，一次联合参数更新后再写入当前样本；不得写成先写当前样本再回放或刷新旧目标。'
+  C05:
+    claim: 'DER++ 的历史输出匹配与标签分类来自两次分开的记忆采样调用，所采样集合可能重叠。'
+    type: PAPER_FACT
+    source_locator: 'Algorithm 2, p. 4'
+    conditions: '两次 sample 调用均从同一现有记忆读取。'
+    allowed_wording: 'DER++ 有两次采样调用，不能保证两组 replay 样本互斥。'
+  C06:
+    claim: '容量 K 的 reservoir 在处理第 n 个流样本后，对任一流位置样本的边际留存概率为 K/n（n 大于等于 K）。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3, equal-inclusion statement before Eq. (4); Appendix D, Algorithm 3, p. 15'
+    conditions: '按数据项逐项处理的标准 reservoir sampling，记忆容量 K 固定。'
+    allowed_wording: '在固定容量和逐项处理条件下，前 n 项各自有 K/n 的边际留存概率；该结论不等于类别均衡或永久保留保证。'
+  C07:
+    claim: '标准 Class-IL、Task-IL 与 Domain-IL 实验的测试信息约束不同；Task-IL 测试允许使用任务身份。'
+    type: PAPER_FACT
+    source_locator: 'Section 4, pp. 4–5; Table 2 p. 6'
+    conditions: '论文的标准持续学习 benchmark 协议。'
+    allowed_wording: 'Task-IL 的测试阶段可以使用任务身份限定候选类别；这项协议例外不能套用于 Class-IL、Domain-IL 或 GCL。'
+  C08:
+    claim: 'MNIST-360 每张图像只呈现一次，包含变化旋转的连续流，并在整个流训练完成后评估。'
+    type: PAPER_FACT
+    source_locator: 'Section 4.3, pp. 6–7; Figure 1 p. 7; Appendix B.2 p. 13'
+    conditions: '论文定义的 MNIST-360 流和其测试协议。'
+    allowed_wording: 'MNIST-360 的结果是整段训练结束后的评估；不能据此声称论文每步测试。'
+  C09:
+    claim: '实验骨干和每任务训练轮数随数据集变化：MNIST 使用 2×100 ReLU MLP 且每任务 1 epoch，CIFAR-10 使用非预训练 ResNet18 且 50 epochs，Tiny ImageNet 使用非预训练 ResNet18 且 100 epochs。'
+    type: PAPER_FACT
+    source_locator: 'Section 4.1, p. 5; Appendix G.1, p. 20; Table 9, pp. 21–23'
+    conditions: '仅指论文列出的对应标准 benchmark 配置。'
+    allowed_wording: '描述结果时一并注明数据集、骨干和训练轮数；不同协议的结果不能只比较数值。'
+  C10:
+    claim: '论文从教师输出间的 KL 目标，过渡到有限记忆样本上的目标，再用单一 reservoir 形成 Eq. (5) 的函数输出约束动机。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3, Eq. (2)–(5)'
+    conditions: '论文从任务末尾蒸馏动机发展为在线记忆方案的理论叙述。'
+    allowed_wording: '可用作从旧函数行为到记忆 logits 的推导动机；不能说 DER 训练时永久保存历史教师网络。'
+  C11:
+    claim: 'ER 将有限记忆中的旧样本与当前样本交错训练；DER 改用保存的历史输出提供额外的行为信息。'
+    type: PAPER_FACT
+    source_locator: 'Section 1, p. 1, Experience Replay discussion; Section 3, p. 3, Eq. (3)–(5)'
+    conditions: '普通带标签经验回放与 DER 的机制比较；不宣称 ER 没有能力缓解遗忘。'
+    allowed_wording: 'ER 能复习旧输入的真实类别，但硬标签不记录当时整组输出；保存软目标是另一种历史监督选择。'
+  C12:
+    claim: 'DER 在优化轨迹中采集 logits，各条目标可来自不同训练步，不依赖任务结束时的单一教师。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3, text after Eq. (4); Section 3.1, p. 4, comparison with iCaRL and FDR'
+    conditions: '历史输出采集时机的区别，不是首次将蒸馏用于持续学习。'
+    allowed_wording: '记录训练途中的响应数值，不必保存产生这些数值的旧网络；不能把每条记录说成来自已收敛教师。'
+  C13:
+    claim: '作者选择直接匹配 pre-softmax logits，以避免经 softmax 映射到概率空间时的信息损失。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3, paragraph between Eq. (4) and Eq. (5)'
+    conditions: '作者的设计理由；KL 与欧氏目标的联系带有假设，且引用了既有蒸馏研究。'
+    allowed_wording: '可说明作者为何选择 logits；不能声称平方距离与 KL 全局相等，或概率无法用作有效软监督。'
+  C14:
+    claim: '当前与回放输入均执行增强；论文在 CIFAR-10 和 Tiny ImageNet 上采用裁剪、水平翻转，并指出增强与输出正则共同形成隐式一致性约束。'
+    type: PAPER_FACT
+    source_locator: 'Algorithms 1–2, p. 4; Section 4.1, p. 5, Augmentation'
+    conditions: '原文明确的图像实验设置；不扩大为所有数据集都使用相同变换。'
+    allowed_wording: '同一原图在不同次访问可产生不同训练视图，仍匹配固定历史目标；增强不是 DER++ 才引入的机制，也没有另加独立一致性损失。'
+  C15:
+    claim: '作者指出分布突变时，训练途中的 logits 可能带有旧分布偏置，DER++ 因而增加真实标签回放。'
+    type: PAPER_FACT
+    source_locator: 'Section 3, p. 3, Dark Experience Replay++ paragraph and Eq. (6)'
+    conditions: 'DER++ 的动机；历史预测不保证正确，新增标签项也不保证纠正所有错误。'
+    allowed_wording: '标签监督提供纠正历史错误的机会；与匹配旧行为的目标可能发生权衡，不称其为必然提升。'
+  C16:
+    claim: '论文将持续学习描述为从非 i.i.d. 数据流学习，GCL 同时考虑类别和域分布的突然或渐进变化。'
+    type: PAPER_FACT
+    source_locator: 'Abstract and Section 1, p. 1; Section 4.3, pp. 6–7'
+    conditions: '研究问题和 MNIST-360 的设计背景；不改写 Section 3 任务内分布的形式化假设。'
+    allowed_wording: '流中相邻数据可能在类别和外观上相关；不要说论文所有实验均严格单遍无边界。'
+  C17:
+    claim: '论文对照指出 iCaRL 依赖任务边界更新 herding 记忆，并讨论其按类别均衡保留样本的特点。'
+    type: PAPER_FACT
+    source_locator: 'Appendix A.2, p. 12, No Task Boundaries; Section 4.2, p. 6, low-memory comparison with iCaRL'
+    conditions: '只作记忆管理触发时机和按类保留的局部比较，不全面重教 iCaRL。'
+    allowed_wording: '可对照任务结束后的按类 exemplar 管理与逐项 reservoir；不声称在线无边界抽样只能使用 reservoir。'
+results:
+  R01:
+    claim: 'S-CIFAR-10 Class-IL、K=500、ResNet18、50 epochs/task 的最终平均准确率为 ER 57.74±0.27、DER 70.51±1.67、DER++ 72.70±1.36。'
+    type: PAPER_RESULT
+    source_locator: 'Section 4.2 p. 5; Table 2 p. 6'
+    conditions: 'S-CIFAR-10；5×2 类；Class-IL；K=500；非预训练 ResNet18；50 epochs/task；最终平均准确率；Table 2 报告 10 次运行。'
+    allowed_wording: '仅可说在上述设置及该表报告值下 DER、DER++ 高于 ER；保留 ± 原样，不解释其统计含义。'
+  R02:
+    claim: 'S-CIFAR-10 Task-IL、K=500 的最终平均准确率为 ER 93.61±0.27、DER 93.40±0.39、DER++ 93.88±0.50。'
+    type: PAPER_RESULT
+    source_locator: 'Table 2, p. 6; Section 4.2 p. 5'
+    conditions: 'S-CIFAR-10；5×2 类；Task-IL 测试可用任务身份；K=500；非预训练 ResNet18；50 epochs/task；最终平均准确率。'
+    allowed_wording: '本设置下 DER 没有超过 ER；不得与 Class-IL 指标混为同一协议。'
+  R03:
+    claim: 'S-Tiny ImageNet Class-IL、K=500 的最终平均准确率为 ER 9.99±0.29、DER 17.75±1.14、DER++ 19.38±1.41。'
+    type: PAPER_RESULT
+    source_locator: 'Table 2, p. 6; Section 4.1–4.2, pp. 5–6'
+    conditions: 'S-Tiny ImageNet；10×20 类；Class-IL；K=500；非预训练 ResNet18；100 epochs/task；最终平均准确率。'
+    allowed_wording: '仅可描述该数据集、容量、协议和训练设置中的表格结果；保留 ± 原样。'
+  R04:
+    claim: 'MNIST-360、K=500 的整流结束准确率为 ER 65.04±1.53、DER 69.11±1.66、DER++ 69.62±1.59。'
+    type: PAPER_RESULT
+    source_locator: 'Section 4.3 pp. 6–7; Table 3 p. 7; Appendix B.2 p. 13'
+    conditions: 'MNIST-360；数字 0–8；九组连续类别对重复三轮；每图像只呈现一次；2×100 ReLU MLP；整流结束后评估；MNIST-360 当前/回放 batch 大小经搜索。'
+    allowed_wording: '注明这是 MNIST-360 的整流结束指标及其特定搜索设置；不能泛化为所有 GCL 流。'
+  R05:
+    claim: 'DER++ 并非每个设置都超过 DER 或 ER：K=200 的 Tiny ImageNet Class-IL 中 DER 高于 DER++；K=5120 的 CIFAR Task-IL 中 ER 高于 DER++；K=200 的 MNIST-360 中 DER 高于 DER++。'
+    type: PAPER_RESULT
+    source_locator: 'Table 2 p. 6; Table 3 p. 7'
+    conditions: '分别为 S-Tiny ImageNet Class-IL、S-CIFAR-10 Task-IL、MNIST-360；容量和完整数值见 paper-model.md 的 Results 表。'
+    allowed_wording: '可用这些表项反驳 DER++ 在每个配置必然更优；须逐项保留协议、数据集和容量。'
+  R06:
+    claim: 'Figure 3 展示 Section 4 与 Appendix F.1 的准确率和记忆分配关系；图注说明准确率较低或记忆消耗过高的方法可能未展示。'
+    type: PAPER_RESULT
+    source_locator: 'Appendix C, Figure 3, pp. 14–15'
+    conditions: '论文图中所列方法和 memory allocation；后续点表示同一方法增大缓冲区。'
+    allowed_wording: '可描述图中展示的趋势和纳入范围；不能把省略的方法当作不存在。'
+  R07:
+    claim: 'Table 5 报告单 epoch Class-IL 设置，作者讨论指出部分结果受欠拟合影响。'
+    type: PAPER_RESULT
+    source_locator: 'Appendix F.3, p. 17, Table 5'
+    conditions: '附录中特定单 epoch Class-IL 比较。'
+    allowed_wording: '将其作为训练时长影响结果解释的限制；不能据此概括所有在线或单遍学习算法。'
+  R08:
+    claim: 'Appendix Tables 6–8 分别报告 Section 4.2 与 F.1 实验的前向迁移、后向迁移和遗忘指标。'
+    type: PAPER_RESULT
+    source_locator: 'Appendix F.4, Tables 6–8, pp. 18–20'
+    conditions: '使用附录定义的 FWT、BWT、FRG 指标及各表对应实验协议。'
+    allowed_wording: '作为附加迁移/遗忘指标引用时保留对应协议；不要将它们与最终平均准确率互换。'
+  R09:
+    claim: 'Appendix Table 4 报告 Sequential-MNIST 的 Class-IL 与 Task-IL 结果。'
+    type: PAPER_RESULT
+    source_locator: 'Appendix F.1, p. 16, Table 4'
+    conditions: '论文的 Sequential-MNIST 补充实验及各自评测协议。'
+    allowed_wording: '作为补充 benchmark 结果时注明 Sequential-MNIST 和 Class-IL/Task-IL 协议。'
+author_interpretations:
+  AI01:
+    claim: '作者将 S-CIFAR-10 的参数扰动损失和经验 Fisher 迹观察解释为 DER 解具有较平坦的局部区域。'
+    type: AUTHOR_INTERPRETATION
+    source_locator: 'Section 5, pp. 7–9; Figure 2(a–b), p. 8'
+    conditions: '论文报告的模型、数据集、容量和局部扰动/经验 Fisher 分析。'
+    allowed_wording: '应称为作者基于特定实验的解释，不是对所有模型或方向的定理。'
+  AI02:
+    claim: '作者依据 S-Tiny ImageNet 校准图与 ECE 比较，报告 DER 类方法相较若干基线较少过度自信。'
+    type: AUTHOR_INTERPRETATION
+    source_locator: 'Section 5, pp. 7–9; Figure 2(c–d), p. 8'
+    conditions: 'S-Tiny ImageNet、图中所列方法及相应评估设置。'
+    allowed_wording: '只能报告图中条件下的校准观察，不得写成可靠性保证。'
+  AI03:
+    claim: '作者提出极小 reservoir 可能遗漏类别，并推测非最大 logits 或许保留 ghost class 信息。'
+    type: AUTHOR_INTERPRETATION
+    source_locator: 'Appendix F.2, p. 17; Figure 4 p. 16'
+    conditions: '论文讨论的低记忆对比与作者提出的解释。'
+    allowed_wording: '必须保留“可能/推测”语气；不能写成类别覆盖保证或已证实机制。'
+our_interpretations:
+  I01:
+    claim: '均匀 reservoir 对流样本位置做抽样，不会自行保证每类在 M 中均衡。'
+    type: OUR_INTERPRETATION
+    source_locator: 'Section 3 p. 3; Appendix D, Algorithm 3, p. 15'
+    conditions: '由按样本位置均匀留存规则推出；不额外假定流类别分布。'
+    allowed_wording: '写作“均匀保留不等于类别均衡”，并区分概率性质与具体样本实现。'
+  I02:
+    claim: 'Table 2/3 的 ± 记号在本文对应表格中没有明示为标准差或标准误。'
+    type: OUR_INTERPRETATION
+    source_locator: 'Table 2 p. 6; Table 3 p. 7 and their captions'
+    conditions: '仅按当前 arXiv v2 表格与图注核对。'
+    allowed_wording: '照录 ± 数值，不擅自称其为 SD、SE 或置信区间。'
+  I03:
+    claim: '固定原图和历史目标 z 时，增强下的期望平方匹配损失可分解为输出方差与平均输出对 z 的平方偏差。'
+    type: OUR_INTERPRETATION
+    source_locator: 'Section 4.1, p. 5, implicit consistency motivation; design/learning-spine.md, Mathematical Expression Strategy, augmentation identity'
+    conditions: '本项目辅助推导；U=h_theta(A(x)) 有有限二阶矩，z 固定，对同一增强分布取期望。'
+    allowed_wording: '以 E||U-z||²=E||U-EU||²+||EU-z||² 解释一致性；这是数学解释，不是论文编号公式或新增训练项。'
+implementation_mappings:
+  M01:
+    claim: '教学伪代码在 M 为空时跳过两种回放损失，只计算当前标签分类损失；原论文印刷算法没有明示空池分支。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Algorithms 1–2 initialization and sampling, p. 4; Eq. (5)–(6), p. 3'
+    conditions: '本项目为可执行讲解补齐的空记忆起始分支，不宣称是原文逐字步骤。'
+    allowed_wording: '明确标作教学/实现补全；不要归因于作者明文规定。'
+  M02:
+    claim: 'W2 采用 DER 记录 (x,z)、DER++ 记录 (x,z,y) 的一致模型，并保留 Algorithm 1 取样解包三元组却写入二元组的印刷不一致。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Algorithms 1–2, p. 4; Eq. (5)–(6), p. 3'
+    conditions: '按两种目标实际使用的变量消歧；source cache 保留原印刷内容。'
+    allowed_wording: '解释正规化数据结构时同时披露 DER 原算法的变量不一致。'
+  M03:
+    claim: '本项目用 K 表示固定容量、M 表示容器、N 表示已处理项数，并用包含端点的整数抽样 [0,N] 表达 Algorithm 3 的计数逻辑。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Appendix D, Algorithm 3, p. 15; Section 3, p. 3 (uniform retention statement)'
+    conditions: '这是对原算法容量/计数符号和未展开计数递增的规范化表达。'
+    allowed_wording: '必须标注为本项目消歧；不把符号 K、计数更新或整理后的伪代码说成原文原样。'
+  M04:
+    claim: 'W2 的联合梯度下降采用减号，同时保留原 Algorithm 1–2 的加号印刷及其与最小化/SGD 叙述不一致。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Algorithms 1–2, p. 4; Section 3 Eq. (5)–(6), p. 3; Section 4.1, p. 5'
+    conditions: '本项目将目标按最小化解释，照常以下降方向更新参数。'
+    allowed_wording: '并列报告原文印刷形式与本项目的下降式整理；不要静默改写原文。'
+  M05:
+    claim: 'W2 将预测入口整理为对当前训练后网络求分数并按评测允许类别取 argmax；这不是论文单列的预测算法。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Section 3 function definition, p. 3; Section 4 protocol, pp. 4–5; Appendix B.2 p. 13'
+    conditions: '基于论文模型和评测协议的接口整理；Task-IL 根据协议使用任务身份，其余相应协议不读取该信息。'
+    allowed_wording: '预测只读模型是本项目为教学整理的接口；不要称它为论文 Algorithm。'
+  M06:
+    claim: '候选 z 来自当前增强图的更新前输出；更新后可能写入的是原图 x 和该数值副本，后续回放不刷新旧 z。'
+    type: IMPLEMENTATION_MAPPING
+    source_locator: 'Algorithms 1–2, p. 4: augment(x), z=h_theta(xt), parameter update, reservoir(M,(x,z[,y])); research/paper-model.md, State and Time'
+    conditions: '依据原文赋值和写入顺序整理生命周期；detach/copy 是表达冻结数值的教学记号，不是原文 API。'
+    allowed_wording: '明确区分生成目标与写入目标的时间；不存旧网络或梯度图，不用更新后模型重算该候选。'
+background:
+  B01:
+    claim: '固定参考概率 p、当前 q=softmax(a) 时，KL(p||q)=H(p,q)-H(p)，对当前 logits 的梯度为 q-p。'
+    type: GENERAL_BACKGROUND
+    source_locator: 'Standard KL/softmax identity; design/learning-spine.md, Mathematical Expression Strategy, KL derivation; paper Section 3, Eq. (2)–(4) supplies the application'
+    conditions: 'p 为固定归一化分布，q_k>0，使用自然对数；公式推导属于背景，不归为 DER 的新贡献。'
+    allowed_wording: '说明如何量化并优化历史概率偏离；KL 一般不对称，各单项可为负，总和非负。'
+  B02:
+    claim: '平方 logit 距离为各维偏差平方之和，对当前输出 a 的梯度为 2(a-z)，并经链式法则传到 theta。'
+    type: GENERAL_BACKGROUND
+    source_locator: 'Elementary derivative of paper Eq. (5), p. 3; design/learning-spine.md, Mathematical Expression Strategy, squared-distance expansion'
+    conditions: 'z 冻结；每条记录先对类别维求和，再按抽样记录平均；不将输出空间更新误写为真实参数更新。'
+    allowed_wording: '用逐维小例子解释损失与梯度方向；实际网络仍由联合损失反传更新参数。'
+  B03:
+    claim: 'Softmax 对所有 logits 共同平移不变，因而概率匹配不能恢复原 logits 的共同偏移量。'
+    type: GENERAL_BACKGROUND
+    source_locator: 'Identity exp(a_k+c)/sum_j exp(a_j+c)=exp(a_k)/sum_j exp(a_j); design/learning-spine.md, Mathematical Expression Strategy, probability/logit comparison'
+    conditions: '比较同一类别坐标；共同平移的不可辨识性不等于丢失所有类间相对分数。'
+    allowed_wording: '用来展示 KL 与平方匹配有区别；概率仍保留相对偏好，不宣称 logits 有普遍性能优势。'
+teaching_examples:
+  E01:
+    claim: '旧概率 (0.8,0.2) 与当前概率 (0.6,0.4) 的 KL 约为 0.0915，反转为 (0.2,0.8) 后约为 0.8318。'
+    type: TEACHING_EXAMPLE
+    source_locator: 'Synthetic substitution into B01; design/learning-spine.md, Mathematical Expression Strategy, KL derivation'
+    conditions: '人为构造的两类概率，使用自然对数，不是论文测量。'
+    allowed_wording: '用于核算偏离与 q-p 的方向，不称其为训练实验或论文数据。'
+  E02:
+    claim: 'z=(2,1,0)、a=(1,2,0) 的平方距离为 2；a=(3,2,1) 与 z 的 softmax 相同，但平方距离为 3。'
+    type: TEACHING_EXAMPLE
+    source_locator: 'Synthetic substitution into B02 and B03; design/learning-spine.md, Mathematical Expression Strategy, squared-distance expansion'
+    conditions: '三类合成向量，非真实模型轨迹。'
+    allowed_wording: '第一例展示逐维差异，第二例反驳无条件等价；不能据此证明哪种损失实验上更好。'
+  E03:
+    claim: 'K=2 的四样本轨迹可依次追加 x1、追加 x2、以 j=0 替换 x1、以 j=3 拒收 x4。'
+    type: TEACHING_EXAMPLE
+    source_locator: 'Synthetic execution of Appendix D Algorithm 3; design/learning-spine.md, Complete Algorithm Integration, four-sample trace'
+    conditions: '每步一个流项、零基槽位；第 3 步 j 属于 [0,2]，第 4 步 j 属于 [0,3]；仅一种合法随机结果。'
+    allowed_wording: '演示填充、替换、不入池及跨轮交接；四张图都参与当前分类训练，不把抽签轨迹当作固定规则。'
+  E04:
+    claim: '猫图若保存 z=(0.5,2,0)，且坐标为猫、狗、狐狸，则历史最高分为狗；匹配旧输出与真实猫标签会产生竞争。'
+    type: TEACHING_EXAMPLE
+    source_locator: 'Synthetic illustration of Section 3, p. 3, DER++ motivation; design/learning-spine.md, Reader''s Causal Path, S6'
+    conditions: '假设旧模型预测错误的教学例子，不是论文失败案例数据。'
+    allowed_wording: '借例子引出标签回放的必要动机；不保证 DER++ 一步即可纠正错误。'
+review:
+  unresolved_source_conflicts: []
+  unresolved_evidence_conflicts: []
+  unsafe_claim_wording: []

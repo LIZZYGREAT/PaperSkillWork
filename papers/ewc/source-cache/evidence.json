@@ -1,0 +1,64 @@
+{
+  "source_notes": [
+    {
+      "id": "SRC-PROBLEM",
+      "locator": "PDF pp. 1-2, Abstract and §1",
+      "note": "Defines sequential task learning and catastrophic forgetting; contrasts sequential learning with joint multi-task access or retaining and replaying data."
+    },
+    {
+      "id": "SRC-EWC-MECHANISM",
+      "locator": "PDF pp. 2-3, §2, Equations (1)-(3), Figure 1",
+      "note": "Bayesian parameter view, sequential update, diagonal-Fisher Gaussian approximation, and the EWC quadratic objective; Figure 1 compares no penalty, uniform constraint, and EWC."
+    },
+    {
+      "id": "SRC-FISHER-STATEMENT",
+      "locator": "PDF p. 3, §2, paragraph preceding Equation (3)",
+      "note": "The paper describes the diagonal of Fisher as the diagonal precision in its Laplace approximation and lists properties attributed to Fisher. This passage does not give a per-sample Fisher-estimation formula."
+    },
+    {
+      "id": "SRC-PERMUTED-MNIST-PROTOCOL",
+      "locator": "PDF pp. 3-4, §2.1; Appendix §4.1 on p. 10; Table 1 on p. 10",
+      "note": "Fully connected network; each task uses a fixed random pixel permutation; data are trained in shuffled mini-batches and training on a task stops after a fixed amount. Appendix describes dropout, early stopping, and hyperparameter search."
+    },
+    {
+      "id": "SRC-PERMUTED-MNIST-RESULTS",
+      "locator": "PDF pp. 3-4, Figure 2 and adjacent §2.1 text",
+      "note": "Compares EWC with plain SGD, uniform L2, and dropout baselines under the stated permuted-MNIST settings; reports task retention, learning of new tasks, error growth, and Fisher overlap trends."
+    },
+    {
+      "id": "SRC-FISHER-OVERLAP",
+      "locator": "PDF p. 4, Figure 2C and adjacent text; PDF p. 13, Appendix §4.3",
+      "note": "Defines overlap using a Fréchet-distance construction on trace-normalized task Fisher matrices; the interpretation concerns shared versus distinct parameter use across tasks."
+    },
+    {
+      "id": "SRC-ATARI-PROTOCOL",
+      "locator": "PDF pp. 4-6, §2.2 and Figure 3; Appendix §4.2 on pp. 10-12",
+      "note": "Ten-game sequences are sampled from a pool of nineteen; game order can return to previous games; evaluation occurs without training; the appendix specifies repeated sets and random seeds."
+    },
+    {
+      "id": "SRC-ATARI-SYSTEM-ROLES",
+      "locator": "PDF p. 5, §2.2; Appendix §4.2 on pp. 10-11",
+      "note": "The system includes EWC, a task-recognition model based on a latent-context HMM/Forget Me Not procedure, per-task replay buffers, and task-specific biases and gains. EWC is applied to games after at least 20 million frames."
+    },
+    {
+      "id": "SRC-ATARI-RESULTS",
+      "locator": "PDF pp. 5-6, Figure 3A-B and adjacent §2.2 text; Figure 4 on p. 13",
+      "note": "Reports aggregate human-normalized scores across ten games, contrasts inferred and provided task labels, and shows per-game curves in the appendix. Preserve the experiment conditions when stating the result."
+    },
+    {
+      "id": "SRC-FISHER-PERTURBATION",
+      "locator": "PDF p. 6, Figure 3C and adjacent §2.2 text",
+      "note": "In a single-game Breakout DQN perturbation test, inverse-diagonal-Fisher shaped noise was more robust than uniform noise; empirical nullspace perturbations had a similar effect to inverse-Fisher perturbations, which the authors interpret as evidence of overconfidence in low-importance estimates."
+    },
+    {
+      "id": "SRC-LIMITATIONS",
+      "locator": "PDF pp. 6-7, §§2.2-3",
+      "note": "The authors report a gap from separate DQNs and identify tractable posterior/uncertainty approximation as a possible reason; the discussion names factorized Gaussian and point-estimate/diagonal-Fisher approximations as limitations."
+    },
+    {
+      "id": "SRC-ATARI-APPENDIX-DETAILS",
+      "locator": "PDF pp. 10-12, Appendix §4.2, Equation (4), Table 2",
+      "note": "Gives Atari preprocessing, network architecture, task-specific gain/bias transform, RL settings, task-recognition settings, and Fisher sample/multiplier settings. Table 2's printed caption says MNIST despite appearing within the Atari appendix; retain and flag this source inconsistency."
+    }
+  ]
+}

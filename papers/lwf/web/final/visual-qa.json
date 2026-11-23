@@ -1,0 +1,35 @@
+{
+  "baseUrl": "http://127.0.0.1:4173",
+  "server": {
+    "command": "node",
+    "args": ["node_modules/vite/bin/vite.js", "preview", "--host", "127.0.0.1", "--port", "4173", "--strictPort"],
+    "cwd": ".",
+    "readyPath": "/"
+  },
+  "pages": [
+    {
+      "id": "lwf-final-home",
+      "path": "/",
+      "states": [
+        {
+          "id": "initial",
+          "actions": [
+            { "type": "waitFor", "selector": ".v3-stage-rail", "state": "visible" },
+            { "type": "waitFor", "selector": ".v3-main h1", "state": "visible" }
+          ]
+        },
+        {
+          "id": "next-chapter",
+          "actions": [
+            { "type": "click", "selector": ".v3-rail-nav button:nth-child(2)" },
+            { "type": "waitFor", "selector": "#chapter-01", "state": "visible" }
+          ]
+        }
+      ],
+      "computedStyles": [
+        { "selector": ":root", "property": "--ui-accent", "equals": "#27446e" },
+        { "selector": ".v3-stage-rail", "property": "background-color", "equals": "rgb(240, 244, 242)" }
+      ]
+    }
+  ]
+}

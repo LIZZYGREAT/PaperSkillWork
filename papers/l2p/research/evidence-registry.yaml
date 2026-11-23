@@ -1,0 +1,205 @@
+# W3 evidence registry for Learning to Prompt for Continual Learning (arXiv:2112.08654v2).
+# Locators refer to the exact 13-page PDF in source/paper.pdf and source-cache/content.md.
+claims:
+  C01:
+    claim: "Continual learning trains one model on sequential or changing data; earlier-task examples may be unavailable, and class-incremental test inputs have no task ID. Domain-incremental learning changes the input distribution while retaining the label set; task-agnostic learning has no explicit boundary."
+    type: PAPER_FACT
+    source_locator: "§3.1, PDF p. 3; Appendix C, PDF p. 12"
+    conditions: "These are the protocols defined and studied by the paper; task-agnostic data use a gradual Gaussian-scheduled CIFAR-100 stream."
+    allowed_wording: "The paper evaluates the stated continual-learning protocols; describe each protocol's task-ID and boundary assumptions explicitly."
+  C02:
+    claim: "L2P keeps the pretrained input embedding layer and Transformer feature extractor frozen while learning prompt parameters and a final classifier."
+    type: PAPER_FACT
+    source_locator: "§3.2, PDF p. 4; Algorithm 1, PDF p. 13"
+    conditions: "The paper's prompt-tuning method is applied to a pretrained ViT; the algorithm initializes and updates P, K, and classifier parameters φ."
+    allowed_wording: "L2P adapts the tested pretrained backbone through learned prompts and a classifier while keeping the pretrained feature extractor fixed."
+  C03:
+    claim: "The prompt pool is P={P_1,...,P_M}; each prompt P_j has token length L_p and embedding width D, and each is paired with a learnable key k_j."
+    type: PAPER_FACT
+    source_locator: "Eq. 1, §4.1–4.2, PDF pp. 4–5"
+    conditions: "The method uses a shared pool, not a fixed one-prompt-per-task mapping."
+    allowed_wording: "L2P stores learnable prompt values with paired learnable retrieval keys in a shared pool."
+  C04:
+    claim: "The query is q(x)=f(x)[0,:], the [class] feature from the frozen pretrained ViT f=f_r∘f_e, and the query function has no learnable parameters."
+    type: PAPER_FACT
+    source_locator: "§4.2, PDF p. 5"
+    conditions: "The paper excludes the classification head from f and uses the [class] feature as the default query representation."
+    allowed_wording: "The default query comes from the frozen ViT's [class] output; it is distinct from the later prompt-position classification feature."
+  C05:
+    claim: "For an input, base retrieval selects a size-N subset of keys minimizing the summed query-key score γ(q(x),k_j); the paper reports cosine distance as an effective score."
+    type: PAPER_FACT
+    source_locator: "Eq. 3, §4.2, PDF p. 5"
+    conditions: "Top-N retrieval is instance-wise over the shared pool; do not substitute task-ID lookup."
+    allowed_wording: "L2P retrieves the N keys with the lowest summed query distance under its stated matching score."
+  C06:
+    claim: "Selected prompt values are prepended to the image embedding sequence; after the frozen Transformer, L2P averages the first N·L_p prompt-position outputs and classifies that feature."
+    type: PAPER_FACT
+    source_locator: "Eq. 2, Eq. 5, Fig. 2, PDF pp. 4–5"
+    conditions: "The pooling range is the prompt-token positions, not the original [class] position."
+    allowed_wording: "The retrieved prompts condition the frozen Transformer, and the mean of their output positions is sent to the L2P classifier."
+  C07:
+    claim: "The per-sample training objective is classification cross-entropy plus λ times the sum of query-key matching scores for the selected keys."
+    type: PAPER_FACT
+    source_locator: "Eq. 5, §4.3, PDF p. 5"
+    conditions: "The selected-key set is obtained by Eq. 3 in the base method; Eq. 4 is an optional training-time lookup rule."
+    allowed_wording: "L2P combines a label-prediction loss with a weighted matching loss on selected keys."
+  C08:
+    claim: "Algorithm 1 accumulates sample losses for a minibatch, tracks the selected key and prompt sets, updates those selected entries, and updates classifier parameters φ."
+    type: PAPER_FACT
+    source_locator: "Algorithm 1, Appendix D, PDF pp. 12–13"
+    conditions: "The algorithm's gradient-step notation is schematic; §5.2 reports Adam for the experiments."
+    allowed_wording: "The paper's algorithm updates the batch-selected keys and prompts plus the shared classifier; it does not update the frozen pretrained layers."
+  C09:
+    claim: "When task-boundary prior is known during training, the optional diversification rule weights key distance by prompt-selection frequency through task t−1; test-time lookup uses Eq. 3."
+    type: PAPER_FACT
+    source_locator: "Eq. 4, §4.2, PDF p. 5; Appendix D, PDF p. 12"
+    conditions: "This is an optional training extension and is unavailable in a task-agnostic stream without boundaries. The exact initialization/smoothing recipe for H_t is not specified."
+    allowed_wording: "Describe frequency-weighted retrieval as an optional boundary-aware training rule, with ordinary Eq. 3 retrieval at test time."
+  C10:
+    claim: "The paper distinguishes base L2P without a rehearsal buffer from L2P-R, which is equipped with a rehearsal buffer for comparison."
+    type: PAPER_FACT
+    source_locator: "§5.1, Table 1, PDF p. 6"
+    conditions: "Table rows for L2P and L2P-R belong to different buffer conditions."
+    allowed_wording: "L2P's baseline needs no rehearsal buffer; identify L2P-R separately whenever reporting replay-equipped results."
+  C11:
+    claim: "The reported experiments use Split CIFAR-100 and 5-datasets for class-incremental learning, CORe50 for domain-incremental learning, and Gaussian-scheduled CIFAR-100 for task-agnostic learning."
+    type: PAPER_FACT
+    source_locator: "§5.2, PDF p. 6; Appendix C, PDF p. 12"
+    conditions: "Appendix C says Split CIFAR-100 has ten tasks with ten disjoint classes each; the task-agnostic Gaussian schedule has no explicit task boundaries."
+    allowed_wording: "Name the benchmark and its protocol together; the Gaussian-scheduled task-agnostic setting is synthetic."
+  C12:
+    claim: "Reported training details include Adam, batch size 128, learning rate 0.03, λ=0.5, five epochs for class/domain-incremental tasks, and one pass per batch in task-agnostic learning."
+    type: PAPER_FACT
+    source_locator: "§5.2, PDF p. 7"
+    conditions: "The method-specific pool sizes differ: M=10,N=5,L_p=5 for CIFAR-100-based datasets and CORe50; M=20,N=4,L_p=5 for 5-datasets."
+    allowed_wording: "These are the paper's reported experimental settings, not universal requirements of L2P."
+  C13:
+    claim: "The authors limit their demonstrated scope to pretrained sequence-based vision models, call the task-agnostic Gaussian-scheduled CIFAR-100 benchmark synthetic and far from realistic, and flag inherited pretrained-model bias and unresolved robustness concerns."
+    type: PAPER_FACT
+    source_locator: "Appendix A–B, PDF p. 12"
+    conditions: "These are author-stated scope and risk observations, not evidence that L2P is fair or robust."
+    allowed_wording: "State the authors' benchmark and model-scope limitations; do not generalize the task-agnostic result to real-world streams."
+results:
+  R01:
+    claim: "In class-incremental learning with zero rehearsal buffer, L2P reports 83.83±0.04 average accuracy and 7.63±0.30 forgetting on Split CIFAR-100, and 81.14±0.93 average accuracy and 4.64±0.52 forgetting on 5-datasets."
+    type: PAPER_RESULT
+    source_locator: "Table 1, §§5.2–5.3, PDF pp. 6–7"
+    conditions: "Class-incremental; task ID unknown at test; zero-buffer L2P row; metrics are average accuracy and forgetting; main results average three runs and report standard deviation."
+    allowed_wording: "On these two reported zero-buffer class-incremental benchmarks, L2P achieved the listed average-accuracy and forgetting results."
+  R02:
+    claim: "On CORe50 domain-incremental learning, the zero-buffer L2P row reports test accuracy 78.33±0.06; L2P-R with a 50-per-class rehearsal buffer reports 81.07±0.13."
+    type: PAPER_RESULT
+    source_locator: "Table 3, §§5.1–5.3, PDF pp. 6–7"
+    conditions: "CORe50 domain-incremental protocol; metric is test accuracy; distinguish base L2P from buffer-equipped L2P-R."
+    allowed_wording: "The paper reports 78.33±0.06 for base L2P under its zero-buffer CORe50 protocol; L2P-R is a separate replay-equipped result."
+  R03:
+    claim: "On Gaussian-scheduled CIFAR-100 task-agnostic learning, base L2P with buffer size 0 reports test accuracy 88.34±0.14; L2P-R with 50 examples per class reports 88.92±0.39."
+    type: PAPER_RESULT
+    source_locator: "Table 4, §§5.2–5.3, PDF pp. 7–8; Appendix C, PDF p. 12"
+    conditions: "Task-agnostic stream with gradual Gaussian distribution shift and no explicit boundaries; metric is final test accuracy; the benchmark is synthetic."
+    allowed_wording: "On the paper's synthetic Gaussian-scheduled CIFAR-100 benchmark, the base no-buffer L2P result is 88.34±0.14."
+  R04:
+    claim: "On the 5-datasets ablation, full L2P reports 81.14 average accuracy and 4.64 forgetting; removing the prompt pool yields 51.96/26.60, removing the key-value pair 58.33/20.45, and removing diversified selection 62.26/17.84."
+    type: PAPER_RESULT
+    source_locator: "Table 5, §5.4, PDF pp. 7–8"
+    conditions: "5-datasets class-incremental ablation; values are Average Acc / Forgetting; diversified selection is the optional rule used in this setting."
+    allowed_wording: "These ablations show the listed changes on this setup; do not treat them as isolated effects proven across all datasets."
+  R05:
+    claim: "Figure 4 reports sensitivity to prompt length, selection size, and pool size; the authors describe larger prompt pools as more helpful on diverse 5-datasets than on Split CIFAR-100."
+    type: PAPER_RESULT
+    source_locator: "Figure 4, §5.4, PDF p. 8"
+    conditions: "The plotted ranges and fixed companion parameters are specified in the Figure 4 caption; conclusions are bounded by those runs."
+    allowed_wording: "The reported curves suggest dataset-dependent prompt-capacity effects in the tested ranges."
+  R06:
+    claim: "On Split CIFAR-100, Table 2 reports L2P on ViT-B/16 at 83.83±0.04 average accuracy and a 7.02-point gap to the 90.85 upper bound; the architecture-based ResNet18 comparisons use their own 80.41 upper bound."
+    type: PAPER_RESULT
+    source_locator: "Table 2, §5.3, PDF p. 6"
+    conditions: "Class-incremental Split CIFAR-100; Table 2 reports backbone-specific upper bounds and gaps rather than a direct same-architecture comparison for all rows."
+    allowed_wording: "The table compares each method relative to its backbone's upper bound; do not present its cross-backbone accuracies as a controlled same-model comparison."
+author_interpretations:
+  A01:
+    claim: "The authors interpret prompt pools as a way to encode task-invariant and task-specific knowledge and to let similar inputs share prompts while retaining specialization."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "§4.1, Eq. 2, PDF p. 4; §5.4, PDF p. 8"
+    conditions: "This is the authors' design rationale and interpretation of their reported experiments."
+    allowed_wording: "The authors propose that prompt combinations can support both shared and task-specific knowledge."
+  A02:
+    claim: "The authors read the Figure 3 histograms as greater prompt sharing across similar Split CIFAR-100 tasks and more task-specific prompt use across diverse 5-datasets tasks."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "Figure 3 and §5.4, PDF pp. 7–8"
+    conditions: "The figure shows selection frequencies; its caption and text interpret these patterns for the tested tasks."
+    allowed_wording: "In the plotted settings, the authors interpret the selection histograms as showing different sharing patterns."
+  A03:
+    claim: "The authors interpret the key-value ablation as evidence that learnable keys help decouple query and prompt learning, and the diversity ablation as reducing unnecessary sharing for diverse tasks."
+    type: AUTHOR_INTERPRETATION
+    source_locator: "Table 5 and §5.4, PDF pp. 7–8"
+    conditions: "Author explanation of one 5-datasets ablation; not a universal causal guarantee."
+    allowed_wording: "The authors attribute the observed ablation changes to these roles on the tested configuration."
+our_interpretations:
+  O01:
+    claim: "The query feature and the classification feature have different roles: the frozen [class] output selects memory entries, while pooled prompt-position outputs are classified."
+    type: OUR_INTERPRETATION
+    source_locator: "§4.2 and Eq. 5, PDF p. 5"
+    conditions: "A synthesis of the query definition and the Eq. 5 pooling range."
+    allowed_wording: "Keep retrieval and classification representations distinct when explaining or implementing the execution model."
+  O02:
+    claim: "The base algorithm is task-ID-free at inference, but the optional frequency-weighted training rule presupposes known task boundaries."
+    type: OUR_INTERPRETATION
+    source_locator: "Eq. 4, §4.2, PDF p. 5; Appendix C–D, PDF pp. 12–13"
+    conditions: "The optional rule uses prior task selection frequencies; the paper explicitly reverts to Eq. 3 at test time."
+    allowed_wording: "Qualify task-agnostic claims by separating the base path from the optional boundary-aware training extension."
+  O03:
+    claim: "A single trainable Prompt is a pedagogical simplification used to bridge input prompting to L2P's pool; it must not be presented as the full proposed L2P method."
+    type: OUR_INTERPRETATION
+    source_locator: "§3.2 and §4.1, PDF pp. 3–4; Table 5, PDF p. 7; user-approved P4 plan"
+    conditions: "The full method uses a shared prompt pool and paired keys; the single-prompt experiment appears as an ablation."
+    allowed_wording: "Label the single-Prompt training loop as an explanatory simplification; reserve formal L2P for the pooled method."
+implementation_mappings:
+  M01:
+    claim: "The normalized pseudocode in research/paper-model.md maps Algorithm 1 notation to S_x and P_x while preserving the outer task/epoch/minibatch loops, per-sample query and loss, batch selected-entry sets, and parameter-update order."
+    type: IMPLEMENTATION_MAPPING
+    source_locator: "Algorithm 1, Appendix D, PDF pp. 12–13; Eqs. 2–5, PDF pp. 4–5"
+    conditions: "Equivalent explanatory pseudocode; not a claim that the paper publishes these exact variable names or uses SGD instead of the Adam reported in §5.2."
+    allowed_wording: "Call it a source-grounded normalized transcription of Algorithm 1."
+background:
+  B01:
+    claim: "The paper treats the pretrained ViT embedding and self-attention stack as existing components; general patch-token, attention, and Transformer-block instruction is prerequisite background, not an L2P contribution."
+    type: GENERAL_BACKGROUND
+    source_locator: "§3.2, PDF p. 4, citing ViT reference [10]; user-approved P1–P3 plan marks the expanded block explanation as background."
+    conditions: "Do not present standard ViT or Transformer details as newly proposed by L2P."
+    allowed_wording: "Introduce only the pretrained-model behavior needed to explain why prompt tokens can affect the frozen model."
+  B02:
+    claim: "The P1–P3 plan's ViT-B/16 example uses a 224×224 input, 16×16 patches, 196 patch tokens plus one [class] token, and hidden width 768."
+    type: GENERAL_BACKGROUND
+    source_locator: "User-approved source/notes/P1-P3_教学主线与内容规划.md, P2; paper §5.2 confirms 224×224 inputs and the ViT-B/16 backbone (PDF p. 7)."
+    conditions: "These are configuration/background values for the cited ViT-B/16 example, not an L2P contribution; check a selected checkpoint's configuration before implementation."
+    allowed_wording: "Use the 197×768 token example as a typical ViT-B/16 teaching configuration, clearly separated from the paper's method claims."
+  B03:
+    claim: "Q/K/V projections, scaled dot-product attention, multi-head aggregation, residual paths, LayerNorm, and MLP/FFN are standard Transformer-block background used by the approved P3 plan to explain frozen-input dependence."
+    type: GENERAL_BACKGROUND
+    source_locator: "source/notes/L2P前置知识笔记.md, §3; source/notes/P1-P3_教学主线与内容规划.md, P3; paper §3.2 identifies f_r as a stack of self-attention layers and cites ViT reference [10] (PDF p. 4)."
+    conditions: "The exact normalization order is implementation-dependent; do not attribute the standard block to L2P as a proposed method."
+    allowed_wording: "Teach the selected ViT's relevant Transformer computation as prerequisite background, not as an L2P innovation."
+teaching_examples:
+  T01:
+    claim: "A two-example minibatch with overlapping selected indices can illustrate how the batch unions selected entries and accumulates their loss contributions."
+    type: TEACHING_EXAMPLE
+    source_locator: "User-approved source/notes/P7-P9_教学主线与内容规划.md, P7 §6"
+    conditions: "Example selections such as {1,3} and {3,5} are synthetic teaching choices, not values from a paper run."
+    allowed_wording: "Label the indices as a teaching example and derive their update scope from Algorithm 1."
+  T02:
+    claim: "Two input examples with overlapping top-N sets can illustrate instance-wise sharing without implying a permanent prompt-to-task assignment."
+    type: TEACHING_EXAMPLE
+    source_locator: "User-approved source/notes/P4-P6_教学主线与内容规划.md, P5 §5"
+    conditions: "Example selections such as {1,3,4} and {3,4,5} are synthetic and do not report model measurements."
+    allowed_wording: "Use only as a labeled illustration of possible overlap, not as a measured selection pattern."
+  T03:
+    claim: "A single learned prompt can demonstrate how a trainable input changes a frozen model's prediction path before the shared L2P pool is introduced."
+    type: TEACHING_EXAMPLE
+    source_locator: "User-approved source/notes/P4-P6_教学主线与内容规划.md, P4; paper §3.2, PDF p. 4"
+    conditions: "This is an instructional simplification; the full method is the pooled Key–Prompt system and the reported single-prompt row is an ablation."
+    allowed_wording: "Explicitly call this a simplified prompt-tuning explanation, not the complete L2P algorithm."
+review:
+  unresolved_source_conflicts: []
+  unresolved_evidence_conflicts: []
+  unsafe_claim_wording: []

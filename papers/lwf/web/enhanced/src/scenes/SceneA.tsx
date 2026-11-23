@@ -1,5 +1,6 @@
 import React from 'react';
 import { TermRef } from '../components/ReferencePrimitives';
+import { InlineNotation } from '../components/InlineNotation';
 import { openWorkspaceFor } from '../components/workspaceActions';
 import { methodOrder, type LearningAction, type LearningSession, type MethodId } from '../data/session';
 
@@ -37,15 +38,15 @@ export function SceneA({ session, dispatch, onNext }: {
             <span className="v2-step-number">01</span>
             <div><p className="v2-eyebrow">BEFORE THE NEW TASK</p><h2 id="old-checkpoint-title">先从已训练完成的旧模型开始</h2></div>
           </div>
-          <p className="v2-scene-copy">旧任务训练已经结束。此时，旧图像 <code>X_o</code>、旧真值 <code>Y_o^GT</code> 和已训练模型都还在。</p>
+          <p className="v2-scene-copy">旧任务训练已经结束。此时，旧图像 <code><InlineNotation text="X_o" /></code>、旧真值 <code><InlineNotation text="Y_o^GT" /></code> 和已训练模型都还在。</p>
           <div className="v2-resource-row">
-            <div><span>旧图像</span><code>X_o</code><strong>当前可用</strong></div>
-            <div><span>旧真值</span><code>Y_o^GT</code><strong>当前可用</strong></div>
-            <div><span>已训练模型</span><code>(θ_s, θ_o)</code><strong>checkpoint 已完成</strong></div>
+            <div><span>旧图像</span><code><InlineNotation text="X_o" /></code><strong>当前可用</strong></div>
+            <div><span>旧真值</span><code><InlineNotation text="Y_o^GT" /></code><strong>当前可用</strong></div>
+            <div><span>已训练模型</span><code><InlineNotation text="(θ_s, θ_o)" /></code><strong>checkpoint 已完成</strong></div>
           </div>
           <div className="v2-old-model-summary">
             <div className="v2-model-summary-icon" aria-hidden="true">M</div>
-            <div><strong>Existing CNN · Old Task</strong><span>共享表示 θ_s → 旧任务输出头 θ_o</span></div>
+            <div><strong>Existing CNN · Old Task</strong><span><InlineNotation text="共享表示 θ_s → 旧任务输出头 θ_o" /></span></div>
             <button type="button" className="v2-inline-inspect" onClick={() => openWorkspaceFor('teacher')}>检查模型对象 ↗</button>
           </div>
           <div className="v2-transition-row">
@@ -79,7 +80,7 @@ export function SceneA({ session, dispatch, onNext }: {
               {methodOrder.map((method, index) => (
                 <button key={method} type="button" aria-pressed={session.selectedMethod === method} className={session.selectedMethod === method ? 'is-active' : ''} onClick={() => dispatch({ type: 'SELECT_METHOD', method })}>
                   <span className="v2-strategy-index">0{index + 1}</span>
-                  <span><strong>{methods[method].title}</strong><small>{methods[method].short}</small></span>
+                  <span><strong>{methods[method].title}</strong><small><InlineNotation text={methods[method].short} /></small></span>
                   <span className="v2-strategy-visited" aria-label={session.exploredMethods.includes(method) ? '已检查' : '未检查'}>{session.exploredMethods.includes(method) ? '✓' : '○'}</span>
                 </button>
               ))}
@@ -88,9 +89,9 @@ export function SceneA({ session, dispatch, onNext }: {
             <article className={`v2-strategy-detail ${session.selectedMethod === 'joint' ? 'is-constraint-conflict' : ''}`} aria-live="polite">
               <header><div><span className="v2-strategy-current">当前路线</span><h3>{selected.title}</h3></div><span className={`v2-fit-badge ${session.selectedMethod === 'joint' ? 'is-conflict' : 'is-fit'}`}>{selected.fit}</span></header>
               <dl>
-                <div><dt>旧训练数据</dt><dd>{selected.oldData}</dd></div>
-                <div><dt>共享表示 θ_s</dt><dd>{selected.shared}</dd></div>
-                <div><dt>监督来源</dt><dd>{selected.supervision}</dd></div>
+                <div><dt>旧训练数据</dt><dd><InlineNotation text={selected.oldData} /></dd></div>
+                <div><dt>共享表示 θ_s</dt><dd><InlineNotation text={selected.shared} /></dd></div>
+                <div><dt>监督来源</dt><dd><InlineNotation text={selected.supervision} /></dd></div>
               </dl>
               <p className="v2-mechanism-explanation">{selected.explanation}</p>
               {session.selectedMethod === 'joint' ? <p className="v2-paper-boundary-note"><strong>约束检查：</strong>Joint training 本身并非错误；它需要当前不可用的旧训练图像与标签。</p> : null}
@@ -137,7 +138,7 @@ function ConstraintItem({ label, symbol, available }: { label: string; symbol: s
   return (
     <div className={`v2-constraint-item ${available ? 'is-available' : 'is-unavailable'}`} role="listitem">
       <span className="v2-constraint-mark" aria-hidden="true">{available ? '✓' : '×'}</span>
-      <span><strong>{label}</strong><code>{symbol}</code></span>
+      <span><strong>{label}</strong><code><InlineNotation text={symbol} /></code></span>
       <small>{available ? '可用' : '不可用'}</small>
     </div>
   );

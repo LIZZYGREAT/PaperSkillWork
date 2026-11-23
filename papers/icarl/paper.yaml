@@ -1,0 +1,77 @@
+schema_version: 3
+id: icarl
+title: 'iCaRL: Incremental Classifier and Representation Learning'
+paper:
+  url: https://arxiv.org/abs/1611.07725
+  arxiv_id: arXiv:1611.07725
+  authors:
+  - Sylvestre-Alvise Rebuffi
+  - Alexander Kolesnikov
+  - Georg Sperl
+  - Christoph H. Lampert
+  venue: Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition
+    (CVPR)
+  year: 2017
+  source_type: arXiv
+  source_location: http://arxiv.org/abs/1611.07725
+  source_hash: 95b31caf45ddcef315e35f7111f5cd3de2b27affd6b8f83a0675ec5620819ca7
+workflow:
+  version: 3
+  current_stage: W10
+  stages:
+    W0_source_intake:
+      status: complete
+      completed_by: automation
+    W1_source_cache:
+      status: complete
+      completed_by: automation
+    W2_paper_model:
+      status: complete
+      reviewed_by: 甘文杰
+      note: W2已通过评审
+    W3_evidence_assets:
+      status: complete
+      completed_by: automation
+    W4_learning_spine:
+      status: complete
+      reviewed_by: 甘文杰
+      note: 用户批准按该学习主线进入W5/W6，并要求Page9展示原论文Figure 2–4。
+    W5_interaction_plan:
+      status: complete
+      completed_by: automation
+    W6_vertical_slice:
+      status: complete
+      completed_by: automation
+    W7_human_review:
+      status: complete
+      reviewed_by: 用户（本次对话）
+      note: 用户确认当前 iCaRL 实现可以接受，并明确要求将 W6 与 W7 标记为通过；本记录依据本次人工验收。
+    W8_full_implementation:
+      status: complete
+      completed_by: automation
+    W9_final_audit:
+      status: complete
+      reviewed_by: 用户（本次对话）
+      note: 用户于2026-10-19确认教程没有问题，并明确要求将W9登记为complete。
+    W10_upstream_preflight:
+      status: complete
+      completed_by: automation
+artifacts:
+  source_cache: source-cache
+  paper_model: research/paper-model.md
+  evidence_registry: research/evidence-registry.yaml
+  learning_spine: design/learning-spine.md
+  asset_plan: design/asset-plan.md
+  implementation_plan: design/implementation-plan.md
+  final_check: audit/final-check.md
+  enhanced: web/enhanced
+web:
+  enhanced: web/enhanced
+release:
+  upstream_paper_name: ''
+  upstream_version: ''
+  output: ''
+paperskill:
+  tutorial_pr:
+    number: null
+    status: pending

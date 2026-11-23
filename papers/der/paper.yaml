@@ -1,0 +1,77 @@
+schema_version: 3
+id: der
+title: 'Dark Experience for General Continual Learning: a Strong, Simple Baseline'
+paper:
+  url: https://arxiv.org/abs/2004.07211v2
+  arxiv_id: '2004.07211'
+  authors:
+  - Pietro Buzzega
+  - Matteo Boschini
+  - Angelo Porrello
+  - Davide Abati
+  - Simone Calderara
+  venue: NeurIPS 2020
+  year: 2020
+  source_type: arXiv v2 (2020-10-22, main paper and appendices)
+  source_location: https://arxiv.org/pdf/2004.07211v2
+  source_hash: e7dcafb05e9fd77e0524be8b98578cd884a9fe6455322beb2f4a6c4a383cd72e
+workflow:
+  version: 3
+  current_stage: W10
+  stages:
+    W0_source_intake:
+      status: complete
+      completed_by: automation
+    W1_source_cache:
+      status: complete
+      completed_by: automation
+    W2_paper_model:
+      status: complete
+      reviewed_by: 用户
+      note: 用户确认 W2 论文理解模型通过，批准继续 W3 与 W4。
+    W3_evidence_assets:
+      status: complete
+      completed_by: automation
+    W4_learning_spine:
+      status: complete
+      reviewed_by: 用户
+      note: 用户确认整体内容 ok，认可本轮因果主线及内容取舍；已按反馈统一行间公式为两组 $$，并在强调结束标记后补空格。
+    W5_interaction_plan:
+      status: complete
+      completed_by: automation
+    W6_vertical_slice:
+      status: complete
+      completed_by: automation
+    W7_human_review:
+      status: complete
+      reviewed_by: 用户
+      note: 用户于2026-10-29在本聊天明确确认：W7我认为是通过的。登记S1–S3首切片人工验收通过；浏览器、迁移视觉与真实F11工程补验仍独立记录；不含Reservoir新场景验收。
+    W8_full_implementation:
+      status: complete
+      completed_by: automation
+    W9_final_audit:
+      status: complete
+      reviewed_by: 用户
+      note: 用户于2026-11-03明确要求将W9登记为complete；FULLSCREEN_REAL和官方兼容检查仍保持NOT_RUN，未记为通过。
+    W10_upstream_preflight:
+      status: complete
+      completed_by: automation
+artifacts:
+  source_cache: source-cache
+  paper_model: research/paper-model.md
+  evidence_registry: research/evidence-registry.yaml
+  learning_spine: design/learning-spine.md
+  asset_plan: design/asset-plan.md
+  implementation_plan: design/implementation-plan.md
+  final_check: audit/final-check.md
+  enhanced: web/enhanced
+web:
+  enhanced: web/enhanced
+release:
+  upstream_paper_name: ''
+  upstream_version: ''
+  output: ''
+paperskill:
+  tutorial_pr:
+    number: null
+    status: pending

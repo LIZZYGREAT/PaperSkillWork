@@ -339,6 +339,20 @@ section.chap p, section.chap li { color: var(--ink-2); }
   border: 0;
   border-radius: var(--ui-radius-sm);
 }
+.analogy-focus-visual {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 140px;
+  padding: 18px 20px;
+  border: 1px solid rgba(70, 116, 121, 0.18);
+  border-radius: var(--ui-radius-sm);
+  color: var(--paper-ink);
+  background: linear-gradient(145deg, #fff 0%, #f4f8f6 100%);
+}
+.analogy-focus-visual strong { color: var(--teal, #28756e); font-size: var(--ui-type-body-small-size); }
+.analogy-focus-visual span { color: var(--paper-muted); font-size: var(--ui-type-caption-size); line-height: 1.55; }
 .analogy-body {
   display: flex;
   flex: 1;

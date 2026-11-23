@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { MathFormula } from '../components/MathFormula';
 import { datasets } from '../data/knowledge';
 import { coverageCopy, constraintPoints, oldSupportDrift, oldSupportPoints, responseLossOnConstraints, summarizeTeacherResponse, teacherOutput, studentOutput, type CoverageMode } from '../simulation/domainCoverage';
 import { useReferenceHub } from '../components/ReferencePrimitives';
@@ -37,7 +38,7 @@ export function SceneG() {
       <div className="v2-section-title-row"><div><p className="v2-eyebrow">DOMAIN COVERAGE · PAPER EVIDENCE + SCHEMATIC</p><h2>新任务输入上的响应约束，覆盖了多少旧任务相关区域？</h2></div><button className="v2-intro-evidence" type="button" onClick={() => openHub({ evidenceId: 'C07' })}>论文边界 C07 ↗</button></div>
       <div className="v2-g-question-pair"><div><span>Response preservation sees</span><strong>p<sub>n</sub>(x) · X<sub>n</sub></strong><small>Teacher 在新任务输入上产生响应目标</small></div><i aria-hidden="true">↔</i><div><span>Old-task performance is evaluated over</span><strong>p<sub>o</sub>(x) · X<sub>o</sub></strong><small>旧任务表现关心旧域相关输入与标签</small></div></div>
       <p>下面的二维分布与一维函数都是 <b>Teaching Schematic</b>，用于区分覆盖与未观测区域；它们不是 ImageNet、Places365 或其他数据集的真实特征分布，也不计算“域距离分数”。</p>
-      <div className="v2-g-risk-grid"><div><span>Mechanism Interpretation · 训练时响应约束</span><strong>E<sub>x∼pₙ</sub>[D(f<sub>teacher</sub>(x), f<sub>student</sub>(x))]</strong></div><div><span>旧任务评估关心的风险</span><strong>E<sub>(x,y)∼pₒ</sub>[ℓ<sub>old</sub>(f<sub>student</sub>(x), y)]</strong></div></div>
+      <div className="v2-g-risk-grid"><div><span>机制解读 · 训练时响应约束</span><strong><MathFormula id="formula:training_response" /></strong></div><div><span>旧任务评估关心的风险</span><strong><MathFormula id="formula:old_task_risk" /></strong></div></div>
     </section>
 
     <section className="v2-g-explorer v2-state-card">

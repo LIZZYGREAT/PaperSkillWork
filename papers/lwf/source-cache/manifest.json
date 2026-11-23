@@ -1,0 +1,24 @@
+{
+  "paper": {
+    "title": "Learning without Forgetting",
+    "authors": ["Zhizhong Li", "Derek Hoiem"],
+    "venue": "European Conference on Computer Vision (ECCV)",
+    "year": 2016,
+    "source_type": "arXiv v3 PDF",
+    "source_location": "source/paper.pdf (arXiv:1606.09282v3, 2017-02-14)",
+    "source_hash": "f62623b398b2dfa417686e2fe7ec981fcb39ef1ce94837656fc64726c8085a66"
+  },
+  "cache_status": "complete",
+  "extraction": "Complete 13-page selectable-text extraction with pypdf. Page boundaries and PDF page numbers are retained in content.md. Figure/table captions and page locators were inventoried here; rotated and figure-embedded labels need direct PDF visual review.",
+  "figures": [
+    {"id": "FIG-01", "locator": "Figure 1, PDF p. 2", "caption": "Motivates adding prediction tasks without old-task training data and compares method trade-offs.", "type": "MECHANISM", "candidate_role": "High-level problem and method comparison."},
+    {"id": "FIG-02", "locator": "Figure 2, PDF p. 3", "caption": "Illustrates LwF and the comparison methods, including which task data each uses.", "type": "ARCHITECTURE", "candidate_role": "Shows the old model response path on new-task inputs."},
+    {"id": "FIG-03", "locator": "Figure 3, PDF p. 5", "caption": "Procedure for Learning without Forgetting.", "type": "ALGORITHM", "candidate_role": "Summarizes response generation, losses, and staged training."},
+    {"id": "TABLE-01", "locator": "Table 1, PDF p. 7", "caption": "Single-new-task results; comparator differences are reported relative to LwF.", "type": "RESULT", "candidate_role": "Primary task-pair evidence; values need their dataset and protocol."},
+    {"id": "FIG-04", "locator": "Figure 4, PDF p. 8", "caption": "Performance as tasks are added sequentially, across task-specific subplots.", "type": "RESULT", "candidate_role": "Shows older-task performance over sequential additions."},
+    {"id": "FIG-05", "locator": "Figure 5, PDF p. 8", "caption": "Effect of reducing the new-task training-set size on compared methods.", "type": "RESULT", "candidate_role": "Shows sensitivity to available new-task data."},
+    {"id": "FIG-06", "locator": "Figure 6, PDF p. 9", "caption": "Alternative network modifications, including task-specific layers and network expansion.", "type": "ARCHITECTURE", "candidate_role": "Explains alternative designs tested by the authors."},
+    {"id": "TABLE-02", "locator": "Table 2, PDF p. 9", "caption": "LwF results compared with alternative design choices.", "type": "ABLATION", "candidate_role": "Supports discussion of design alternatives and ablations."},
+    {"id": "FIG-07", "locator": "Figure 7, PDF p. 10", "caption": "Old and new task performance for compared methods and selected loss weights.", "type": "ABLATION", "candidate_role": "Shows loss-weight and parameter-regularization comparisons."}
+  ]
+}

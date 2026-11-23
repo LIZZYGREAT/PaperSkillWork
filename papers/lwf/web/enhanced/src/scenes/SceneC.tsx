@@ -2,6 +2,7 @@ import React from 'react';
 import type { GradientSource, LearningAction, LearningSession, ParamGroupId, TrainingPhase, TrainingStage } from '../data/session';
 import { useReferenceHub } from '../components/ReferencePrimitives';
 import { openWorkspaceFor } from '../components/workspaceActions';
+import { InlineNotation } from '../components/InlineNotation';
 import {
   computeToyGradients,
   getTeacherResponse,
@@ -46,6 +47,7 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
   onPrevious: () => void;
   onReset: () => void;
 }) {
+  const [selectedStep, setSelectedStep] = React.useState(0);
   const { openHub } = useReferenceHub();
   const sample = toySamples.find((item) => item.id === session.selectedSampleId) || toySamples[0];
   const stage = session.trainingStage;
@@ -69,23 +71,36 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
   const loadBatch = () => {
     dispatchToy({ type: 'ZERO_GRAD' });
     dispatch({ type: 'SET_TRAINING_STAGE', stage: 'batch' });
+    setSelectedStep(0);
   };
-  const runForward = () => dispatch({ type: 'SET_TRAINING_STAGE', stage: 'forward' });
-  const computeLoss = () => dispatch({ type: 'SET_TRAINING_STAGE', stage: 'loss' });
+  const runForward = () => {
+    dispatch({ type: 'SET_TRAINING_STAGE', stage: 'forward' });
+    setSelectedStep(1);
+  };
+  const computeLoss = () => {
+    dispatch({ type: 'SET_TRAINING_STAGE', stage: 'loss' });
+    setSelectedStep(2);
+  };
   const runBackward = () => {
     dispatchToy({ type: 'BACKWARD', phase: session.phase });
     dispatch({ type: 'SET_TRAINING_STAGE', stage: 'backward' });
+    setSelectedStep(3);
   };
   const optimizerStep = () => {
     dispatchToy({ type: 'OPTIMIZER_STEP', phase: session.phase, optimizerGroups: session.optimizerGroups });
     dispatch({ type: 'SET_TRAINING_STAGE', stage: 'updated' });
+    setSelectedStep(4);
+  };
+  const resetTeachingModel = () => {
+    onReset();
+    setSelectedStep(0);
   };
 
   return (
     <div className="v2-scene-content v2-scene-c">
       <section className="v2-c-toy-banner">
         <div><span className="v2-source-badge is-toy">TEACHING TOY</span><strong>可计算的小型线性模型</strong><span>合成二维输入 · 3 个旧类 · 2 个新类 · 固定初始权重 · 抽象三组参数</span></div>
-        <button type="button" className="v2-secondary-action" onClick={onReset}>重置教学模型</button>
+        <button type="button" className="v2-secondary-action" onClick={resetTeachingModel}>重置教学模型</button>
       </section>
 
       {!inputReady ? (
@@ -107,8 +122,13 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
 
           <section className="v2-state-card v2-c-stepper-card" aria-labelledby="c-stepper-title">
             <div className="v2-section-title-row"><div><p className="v2-eyebrow">USER-CONTROLLED EXECUTION</p><h2 id="c-stepper-title">逐步运行一个 batch</h2></div><span className="v2-c-current-step">{stage === 'idle' ? '等待开始' : stage === 'updated' ? 'Optimizer step 完成' : `当前：${steps[rank - 1]?.title}`}</span></div>
-            <ol className="v2-c-stepper">
-              {steps.map((step, index) => <li key={step.stage} className={`${rank > index ? 'is-done' : ''} ${rank === index + 1 ? 'is-current' : ''}`}><span>{rank > index ? '✓' : step.label}</span><strong>{step.title}</strong></li>)}
+            <p className="v2-c-step-view-label">选择步骤查看对应细节</p>
+            <ol className="v2-c-stepper" aria-label="选择要查看的训练步骤">
+              {steps.map((step, index) => <li key={step.stage}>
+                <button type="button" className={`v2-c-step-tab ${selectedStep === index ? 'is-selected' : ''} ${rank > index ? 'is-done' : ''} ${rank === index + 1 ? 'is-current' : ''}`} aria-pressed={selectedStep === index} aria-label={`查看步骤 ${step.label}: ${step.title}`} onClick={() => setSelectedStep(index)}>
+                  <span>{rank > index ? '✓' : step.label}</span><strong>{step.title}</strong>
+                </button>
+              </li>)}
             </ol>
             <div className="v2-c-step-actions">
               <StepAction number="01" title={stage === 'updated' ? 'Load Next Batch' : 'Load Batch'} hint="本轮开始时先执行 zero_grad()，清除上轮 .grad。" disabled={!canLoad} complete={rank >= 1} onClick={loadBatch} />
@@ -120,13 +140,13 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
             <p className="v2-c-toy-disclaimer">这是 shared affine + 两个并行 affine head 的 Teaching Toy 计算，不是论文模型运行结果，也不模拟 B 中 backbone 的内部层数；每个操作只执行当前一步，不自动播放。</p>
           </section>
 
-          {rank >= 1 ? <BatchInspector session={session} dispatch={dispatch} sample={sample} forward={forward} teacherResponse={teacherResponse} /> : null}
-          {rank >= 2 ? <ForwardInspector session={session} sample={sample} forward={forward} teacherResponse={teacherResponse} /> : null}
-          {rank >= 3 ? <LossInspector result={result} onEvidence={() => openHub({ evidenceId: 'F01' })} /> : null}
-          <GradientInspector session={session} dispatch={dispatch} result={result} phase={session.phase} toyState={toyState} />
-          {rank >= 5 ? <UpdateInspector toyState={toyState} /> : null}
-
-          <section className="v2-state-card v2-c-optimizer-card" aria-labelledby="optimizer-c-title">
+          {selectedStep === 0 ? <BatchInspector session={session} dispatch={dispatch} sample={sample} forward={forward} teacherResponse={teacherResponse} /> : null}
+          {selectedStep === 1 ? <ForwardInspector session={session} sample={sample} forward={forward} teacherResponse={teacherResponse} /> : null}
+          {selectedStep === 2 ? <LossInspector result={result} onEvidence={() => openHub({ evidenceId: 'F01' })} /> : null}
+          {selectedStep === 3 ? <GradientInspector session={session} dispatch={dispatch} result={result} phase={session.phase} toyState={toyState} /> : null}
+          {selectedStep === 4 ? <>
+            <UpdateInspector toyState={toyState} />
+            <section className="v2-state-card v2-c-optimizer-card" aria-labelledby="optimizer-c-title">
             <div className="v2-section-title-row"><div><p className="v2-eyebrow">COMPUTATION GRAPH ≠ OPTIMIZER</p><h2 id="optimizer-c-title">梯度存在，不代表参数一定更新</h2></div></div>
             <div className="v2-c-membership-table">
               <div className="v2-c-membership-head"><span>Parameter group</span><span>requires_grad</span><span>.grad</span><span>Optimizer</span><span>本步变化</span></div>
@@ -140,7 +160,8 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
               })}
             </div>
             <p className="v2-c-membership-note">requires_grad 控制是否为该参数保留梯度；optimizer membership 控制 step 是否持有它。Warm-up 中冻结组即使被误加进 optimizer，也没有 .grad 可供本 toy 更新。</p>
-          </section>
+            </section>
+          </> : null}
 
           <details className="v2-implementation-details v2-c-advanced">
             <summary>Implementation notes：冻结、zero_grad 与计算图</summary>
@@ -152,7 +173,7 @@ export function SceneC({ session, dispatch, toyState, dispatchToy, onPrevious, o
           </details>
 
           <div className="v2-c-ending">
-            <div><span className="v2-source-badge is-paper">PAPER OBJECTIVE</span><strong>λ_o L_old + L_new + R → backward → optimizer.step()</strong><small>下一专题将单独拆解温度与旧任务蒸馏损失。</small></div>
+            <div><span className="v2-source-badge is-paper">论文目标</span><strong><InlineNotation text="L = λ_o L_old + L_new + R(θ_s, θ_o, θ_n)" /> → backward → optimizer.step()</strong><small>下一专题将单独拆解温度与旧任务蒸馏损失。</small></div>
             <button type="button" onClick={() => openHub({ evidenceId: 'F02' })}>查看温度依据 F02 ↗</button>
           </div>
         </>
@@ -175,8 +196,8 @@ function BatchInspector({ session, dispatch, sample, forward, teacherResponse }:
       <strong>检查单样本 <span>（仅用于查看；训练 loss 使用整个 batch）</span></strong>
       {toySamples.map((entry) => <button key={entry.id} type="button" aria-pressed={session.selectedSampleId === entry.id} className={session.selectedSampleId === entry.id ? 'is-active' : ''} disabled={stageRank(session.trainingStage) >= 2} onClick={() => dispatch({ type: 'SET_SAMPLE', id: entry.id })}>sample_id {entry.id}</button>)}
     </div>
-    <div className="v2-c-sample-detail"><div><span>sample_id</span><strong>{sample.id}</strong></div><div><span>x_n</span><code>{vector(sample.x)}</code></div><div><span>Y_n label</span><code>class {sample.y}</code></div><div><span>Y_o = f_old(x_n)</span><code>{vector(teacherResponse.probabilities)}</code></div><div><span>Y_o ≠ Y_o^GT</span><strong>Teacher response，不是旧真值</strong></div><div><span>Student Ŷ_n (Forward)</span><code>{vector(forward.newProbabilities)}</code></div></div>
-    <p className="v2-c-shape-note">batch 内 sample_id、X_n、Y_n、Y_o 保持一一对应。本 toy 的输入形状为 [B,2]；B 场景的图像形状说明仍是 [B,C,H,W]。</p>
+    <div className="v2-c-sample-detail"><div><span>sample_id</span><strong>{sample.id}</strong></div><div><span><InlineNotation text="x_n" /></span><code>{vector(sample.x)}</code></div><div><span><InlineNotation text="Y_n label" /></span><code>class {sample.y}</code></div><div><span><InlineNotation text="Y_o = f_old(x_n)" /></span><code>{vector(teacherResponse.probabilities)}</code></div><div><span><InlineNotation text="Y_o ≠ Y_o^GT" /></span><strong>Teacher response，不是旧真值</strong></div><div><span><InlineNotation text="Student Ŷ_n (Forward)" /></span><code>{vector(forward.newProbabilities)}</code></div></div>
+    <p className="v2-c-shape-note"><InlineNotation text="batch 内 sample_id、X_n、Y_n、Y_o 保持一一对应。本 toy 的输入形状为 [B,2]；B 场景的图像形状说明仍是 [B,C,H,W]。" /></p>
   </section>;
 }
 
@@ -184,22 +205,26 @@ function ForwardInspector({ session, sample, forward, teacherResponse }: { sessi
   return <section className="v2-c-panel" aria-labelledby="forward-inspector-title">
     <PanelHeading step="B" eyebrow="STEP 2 · STUDENT FORWARD" title="一个 shared feature，分成两条输出路径" />
     <div className="v2-c-forward-diagram">
-      <div className="v2-c-flow-node is-data"><code>x_{sample.id}</code><small>[2]</small></div><span>→</span>
-      <button type="button" className={`v2-c-flow-node is-shared ${session.phase === 'warmup' ? 'is-frozen' : ''}`}><code>θ_s</code><small>{session.phase === 'warmup' ? 'frozen' : 'trainable'}</small></button><span>→</span>
+      <div className="v2-c-flow-node is-data"><code><InlineNotation text={`x_${sample.id}`} /></code><small>[2]</small></div><span>→</span>
+      <button type="button" className={`v2-c-flow-node is-shared ${session.phase === 'warmup' ? 'is-frozen' : ''}`}><code><InlineNotation text="θ_s" /></code><small>{session.phase === 'warmup' ? 'frozen' : 'trainable'}</small></button><span>→</span>
       <div className="v2-c-flow-node is-feature"><code>h</code><small>{vector(forward.h)}</small></div>
-      <div className="v2-c-branch-lines"><div className="is-old"><b>old path</b><span>↓</span><code>θ_o</code><span>↓</span><code>ẑ_o</code><small>{vector(forward.oldLogits)}</small><span>softmax</span><strong>{vector(forward.oldProbabilities)}</strong></div><div className="is-new"><b>new path</b><span>↓</span><code>θ_n</code><span>↓</span><code>ẑ_n</code><small>{vector(forward.newLogits)}</small><span>softmax</span><strong>{vector(forward.newProbabilities)}</strong></div></div>
+      <div className="v2-c-branch-lines"><div className="is-old"><b>old path</b><span>↓</span><code><InlineNotation text="θ_o" /></code><span>↓</span><code><InlineNotation text="ẑ_o" /></code><small>{vector(forward.oldLogits)}</small><span>softmax</span><strong>{vector(forward.oldProbabilities)}</strong></div><div className="is-new"><b>new path</b><span>↓</span><code><InlineNotation text="θ_n" /></code><span>↓</span><code><InlineNotation text="ẑ_n" /></code><small>{vector(forward.newLogits)}</small><span>softmax</span><strong>{vector(forward.newProbabilities)}</strong></div></div>
     </div>
-    <div className="v2-c-logit-note"><div><strong>Logits</strong><code>ẑ_o = {vector(forward.oldLogits)}</code><small>未归一化分数；可为任意实数</small></div><div><strong>Probability</strong><code>softmax(ẑ_o) = {vector(forward.oldProbabilities)}</code><small>归一化后和为 1；Teaching Toy 的显示精度为 4 位</small></div><div className="is-temperature"><strong>Temperature node · T={TOY_TEMPERATURE}</strong><code>softmax(z_o / T)</code><small>旧损失分支使用温度响应；后续专题详解</small><span>Teacher raw Y_o: {vector(teacherResponse.probabilities)}</span></div></div>
+    <div className="v2-c-logit-note"><div><strong>Logits</strong><code><InlineNotation text="ẑ_o =" /> {vector(forward.oldLogits)}</code><small>未归一化分数；可为任意实数</small></div><div><strong>Probability</strong><code><InlineNotation text="softmax(ẑ_o) =" /> {vector(forward.oldProbabilities)}</code><small>归一化后和为 1；Teaching Toy 的显示精度为 4 位</small></div><div className="is-temperature"><strong>Temperature node · T={TOY_TEMPERATURE}</strong><code><InlineNotation text="softmax(z_o / T)" /></code><small>旧损失分支使用温度响应；后续专题详解</small><span><InlineNotation text="Teacher raw Y_o:" /> {vector(teacherResponse.probabilities)}</span></div></div>
   </section>;
 }
 
 function LossInspector({ result, onEvidence }: { result: ReturnType<typeof computeToyGradients>; onEvidence: () => void }) {
   return <section className="v2-c-panel" aria-labelledby="loss-inspector-title">
     <PanelHeading step="C" eyebrow="STEP 3 · COMPUTE LOSS" title="旧响应与新标签走不同分支，再汇合成标量" />
-    <div className="v2-c-loss-formula"><span>Paper objective</span><strong>L = λ_o L_old + L_new + R</strong><code>λ_o = {TOY_LAMBDA_OLD} · T = {TOY_TEMPERATURE}</code></div>
-    <div className="v2-c-loss-paths"><div className="is-old"><span>Teacher target Y_o</span><i>→</i><span>student old soft response Ŷ_o</span><i>→</i><strong>L_old = {fmt(result.oldLoss)}</strong></div><div className="is-new"><span>new label Y_n</span><i>→</i><span>student new output Ŷ_n</span><i>→</i><strong>L_new = {fmt(result.newLoss)}</strong></div><div className="is-reg"><span>Student weights</span><i>→</i><strong>R = {fmt(result.regularizationLoss)}</strong></div></div>
-    <div className="v2-c-total-loss"><span>Teaching Toy computed total</span><strong>{fmt(result.totalLoss)}</strong><small>本 toy 明确使用 ½ × 0.0005 × ΣW²；论文目标为 λ_o L_old + L_new + R。</small></div>
-    <div className="v2-c-dependency-grid"><div><strong>L_new dependency</strong><span>Y_n → L_new ← Ŷ_n ← θ_n ← h ← θ_s</span><b>∂L_new / ∂θ_o = 0</b><small>θ_o 不在 L_new 的计算路径上。</small></div><div><strong>L_old dependency</strong><span>Y_o → L_old ← Ŷ_o ← θ_o ← h ← θ_s</span><b>∂L_old / ∂θ_n = 0</b><small>θ_n 不在 L_old 的计算路径上。</small></div></div>
+    <div className="v2-c-loss-formula"><span>论文目标</span><strong><InlineNotation text="L = λ_o L_old + L_new + R(θ_s, θ_o, θ_n)" /></strong><code>λₒ = {TOY_LAMBDA_OLD} · T = {TOY_TEMPERATURE}</code></div>
+    <div className="v2-c-loss-paths">
+      <div className="v2-c-loss-path is-old"><span><InlineNotation text="Teacher target Y_o" /></span><i aria-hidden="true">→</i><span><InlineNotation text="student old soft response Ŷ_o" /></span><i aria-hidden="true">→</i><strong><InlineNotation text="L_old =" /> {fmt(result.oldLoss)}</strong></div>
+      <div className="v2-c-loss-path is-new"><span><InlineNotation text="new label Y_n" /></span><i aria-hidden="true">→</i><span><InlineNotation text="student new output Ŷ_n" /></span><i aria-hidden="true">→</i><strong><InlineNotation text="L_new =" /> {fmt(result.newLoss)}</strong></div>
+      <div className="v2-c-loss-path is-reg"><span>Student weights</span><i aria-hidden="true">→</i><strong>R = {fmt(result.regularizationLoss)}</strong></div>
+    </div>
+    <div className="v2-c-total-loss"><span>Teaching Toy computed total</span><strong>{fmt(result.totalLoss)}</strong><small><InlineNotation text="本 toy 明确使用 ½ × 0.0005 × ΣW²；论文目标为 λ_o L_old + L_new + R。" /></small></div>
+    <div className="v2-c-dependency-grid"><div><strong><InlineNotation text="L_new dependency" /></strong><span><InlineNotation text="Y_n → L_new ← Ŷ_n ← θ_n ← h ← θ_s" /></span><b><InlineNotation text="∂L_new / ∂θ_o = 0" /></b><small><InlineNotation text="θ_o 不在 L_new 的计算路径上。" /></small></div><div><strong><InlineNotation text="L_old dependency" /></strong><span><InlineNotation text="Y_o → L_old ← Ŷ_o ← θ_o ← h ← θ_s" /></span><b><InlineNotation text="∂L_old / ∂θ_n = 0" /></b><small><InlineNotation text="θ_n 不在 L_old 的计算路径上。" /></small></div></div>
     <button type="button" className="v2-c-evidence-link" onClick={onEvidence}>查看论文损失与温度依据 F01 ↗</button>
   </section>;
 }
@@ -215,8 +240,11 @@ function GradientInspector({ session, dispatch, result, phase, toyState }: { ses
     </div>
     <div className={`v2-c-gradient-graph source-${source}`}>
       <div className="v2-c-loss-source">{sourceLabel}<small>{rank >= 4 ? 'backward 已执行' : 'backward 前：尚无 .grad'}</small></div>
-      <div className="v2-c-gradient-branches"><GradientBranch group="theta_o" source={source} trainable={phase === 'joint'} active={source === 'old' || source === 'total' || source === 'regularization'} />
+      <div className="v2-c-gradient-branches">
+        <GradientBranch group="theta_o" source={source} trainable={phase === 'joint'} active={source === 'old' || source === 'total' || source === 'regularization'} />
+        <span className="v2-c-gradient-arrow" aria-hidden="true">→</span>
         <div className="v2-c-grad-shared"><span>h</span><i>shared trunk gradient</i><button type="button" onClick={() => openWorkspaceFor('theta_s')} className={phase === 'joint' ? 'is-trainable' : 'is-frozen'}>θ_s <small>{phase === 'warmup' ? 'frozen' : 'trainable'}</small></button></div>
+        <span className="v2-c-gradient-arrow" aria-hidden="true">←</span>
         <GradientBranch group="theta_n" source={source} trainable={true} active={source === 'new' || source === 'total' || source === 'regularization'} />
       </div>
     </div>
@@ -240,7 +268,10 @@ function GradientInspector({ session, dispatch, result, phase, toyState }: { ses
 
 function UpdateInspector({ toyState }: { toyState: TeachingToyState }) {
   const update = toyState.lastUpdate;
-  if (!update) return null;
+  if (!update) return <section className="v2-c-panel v2-c-step-pending" aria-labelledby="update-inspector-title">
+    <PanelHeading step="E" eyebrow="STEP 5 · OPTIMIZER.STEP" title="只有 optimizer.step() 才尝试改变成员参数" />
+    <p>尚未执行参数更新。完成前向计算、损失计算和反向传播后，执行 Optimizer Step 即可在此查看各参数组的更新量。</p>
+  </section>;
   return <section className="v2-c-panel v2-c-update-panel" aria-labelledby="update-inspector-title">
     <PanelHeading step="E" eyebrow="STEP 5 · OPTIMIZER.STEP" title="只有 optimizer.step() 才尝试改变成员参数" />
     <div className="v2-c-update-table"><div className="v2-c-update-head"><span>Group</span><span>‖θ‖ before</span><span>‖grad‖</span><span>‖Δθ‖</span><span>‖θ‖ after</span><span>Changed</span></div>
@@ -265,7 +296,7 @@ function PanelHeading({ step, eyebrow, title }: { step: string; eyebrow: string;
 }
 
 function TensorCard({ name, shape, description, value, tone }: { name: string; shape: string; description: string; value: string; tone?: 'new' | 'old' }) {
-  return <div className={`v2-c-tensor-card ${tone ? `is-${tone}` : ''}`}><div><code>{name}</code><strong>{shape}</strong></div><p>{description}</p><small>{value}</small></div>;
+  return <div className={`v2-c-tensor-card ${tone ? `is-${tone}` : ''}`}><div><code><InlineNotation text={name} /></code><strong><InlineNotation text={shape} /></strong></div><p><InlineNotation text={description} /></p><small><InlineNotation text={value} /></small></div>;
 }
 
 function fmt(value: number) { return Number.isFinite(value) ? value.toFixed(4) : '0.0000'; }

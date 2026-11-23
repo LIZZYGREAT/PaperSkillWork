@@ -14,6 +14,7 @@ import { SignalSource } from './signal-source';
 import { TemperatureLab } from './temperature-lab';
 import { TrainingSteps } from './training-steps';
 import { TermHints } from './term-hints';
+import { v3WidgetRegistry } from './v3-widgets';
 
 export interface WidgetProps {
   chapterId: string;
@@ -46,3 +47,4 @@ widgetRegistry['result-race'] = withChapterHints(ResultRace);
 widgetRegistry['signal-source'] = withChapterHints(SignalSource);
 widgetRegistry['temperature-lab'] = withChapterHints(TemperatureLab);
 widgetRegistry['training-steps'] = withChapterHints(TrainingSteps);
+Object.assign(widgetRegistry, v3WidgetRegistry);

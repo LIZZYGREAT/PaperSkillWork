@@ -1,0 +1,964 @@
+# Implementation Plan: Dark Experience for General Continual Learning
+
+Paper ID: `der`
+
+## 当前执行与授权（2026-10-29）
+
+当前状态：W7/W8/W9 complete。用户于2026-11-03明确要求将W9登记为complete；W9记录保留 `FULLSCREEN_REAL=NOT_RUN` 与官方检查器 `NOT_RUN` 项，不将它们记为通过。U1–U7内容实现及旧公式讲义清理已分段提交；W10仍pending，不启动发布流程。
+
+本轮有效内容安排：U1–U3 将 KL 与平方匹配的必要公式放回对应场景，深证明和曲线由 Reference 按需提供；U4–U5 以短交接串起 Reservoir、单步训练、增强视图与历史标签；U6 保持唯一的四轮 θ/M/N 工作台和只读预测；U7 正文选择三组带条件的实验结果，完整表格、Task-IL 与额外反例留在 Reference。重复公式讲义 JSX/CSS 已删除，独有梯度推导转入 CE Reference 与工作台数值展开。计算模型、论文数据和 `paper.yaml` 未改。
+
+起点 fa3257b / der，原工作区干净。用户要求依据 W7_Approval_W8_Execution_Plan.md 执行，直接确认“W7我认为是通过的”，随后要求不再逐批询问，执行全文、自查后交最终审查，完成部分及时 commit。本次授权解除批次间反馈停止点，继续 W8-A–E；W9 仍待用户最终验收，不执行 W10 Import/Preflight、推送或 PR。
+
+### Vertical Slice Review (W7)
+
+Vertical Slice Review: PASS
+
+真实评审人：用户，依据本聊天“W7我认为是通过的”。CLI 已登记 W7 complete（efc08b9）。保护已认可 S1–S3，尤其生命周期九阶段、网络、样本身份、冻结值、槽位和专注布局。新场景尚未获用户验收；工程补验独立于人工验收。
+
+## 当前入口和复用边界
+
+paths CLI 解析发布源码为本仓库 papers/der/web/enhanced。正式 / 接入认可的 KL / ScoreBoard 和同一生命周期组件；设计评审板反向引用生产组件，不作运行时依赖。保留 ?review=1&focus=lifecycle；移除 Legacy 与退役三场景和专用测试，生命周期回归原样保留，KL/Logits 检查迁到生产页。没有 localhost iframe。
+
+Kit 沿用下文已核实的 Registry/Recipe/source：useAnimationTimeline、SceneTransport、useReducedMotion、ModelPixel、数学与 Reference。运动/槽位/损失支路归 DER，不改 Kit，不建第二运行时。Reservoir 插入函数供后续唯一 trainStep 复用；W5 fixture 生成 θ/M/N/z、损失和更新，时间线只控制揭示。
+
+## W8 批次一 · G0 + Reservoir
+
+- 正式迁移不改变数学计算或已认可构图。冻结入口直接复用同一生命周期实例。
+- Reservoir 从空池 K=2 连续四次候选：追加、追加、j=0 替换、j=3 拒收；j 明标教学预设随机结果，拒收也增 N，不重新计算 z，不撤销当前训练。此给定输出入池例与 S7 数值轨迹独立。
+- npm test 17/17，build 退出0；定向 test:browser -- --reservoir-only 114断言通过（1440×900/1920×1080、生产 /der-review/），含中间运动、暂停/恢复、回退、完整播放、reduced motion、冻结值及资源错误。KL/Logits/生命周期已跑过1440回归；最终整篇回归待补全。
+- 已实看 .visual-qa/der-w8-batch1/review 的替换中间态1440、拒收结果1920，以及正式 Logits 与生命周期截图；最终布局还会复查。
+- SOURCE_BUILD=PASS：Node24.18.0、Vite6.4.3，tsc + vite build 退出0。SUBPATH_ASSETS=PASS：上述已执行场景 /der-review/ 的生产资源，无浏览器/资源错误。
+- UPSTREAM_SYNTAX / UPSTREAM_OUTPUT=NOT_RUN：相邻 PaperSkill HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，upstream=git@github.com:ReductTech/PaperSkill.git；git fetch upstream main 终端退出1（原生git码未单独采集），SSH 权限失败，无法核实当前官方脚本一致性。后续再尝试；不称为 W10 通过。
+- FULLSCREEN_REAL=NOT_RUN：上轮 Computer Use 因无法可靠识别当前 URL 终止；headless 尺寸不冒充 F11。W9 HUMAN_ACCEPTANCE=PENDING。
+
+## 已确认设计与计算依据
+
+保留 W4/W5 数学分层、页面组织、语义帧、来源、Kit 选型、S7 数值 fixture 与唯一 implementation YAML。重复历史 REVISE/调试流水由 Git 保留。
+
+### 数学呈现边界（沿用已确认的W5/W6约定）
+
+本轮执行《W5 数学表达修订与 W6 首个教学切片实施任务》。保留 W4/W5 因果链、七单元、S1–S3 / I01–I05、固定算例、S7 fixture、唯一 implementation YAML 与既有审批；W5 已 complete，不重复提交完成命令。本次只调整数学呈现层并实现首切片。
+
+主线同时提供机制和必要数学：先说明变量对象与固定/变化身份，再给关键定义式、逐项含义、一段轻量完整的代数推演，最后用图形与有限交互检验。U2 的 KL 定义及 H(p,q)−H(p) 拆解必须默认可见，p/q/k/C 首次出现即说明；固定 p 使 H(p) 成为不随当前网络变化的基准，因而降低 KL 可作为训练目标。U3 的平方距离定义、逐类相减/平方/求和与 softmax 共同平移的原因也在主线。没有公式数量配额，不能把定义或必要短推演全部移到展开区。
+
+U1 默认只观察同类仍判对但整组分数偏好不同，不展示相同 CE 的小数账本。U2 默认用同尺度概率条、一个合理舍入的 KL 总量及同步结论，不逐行铺开所有对数乘积；U3 默认用三类对齐分数和一次短平方和展开，不额外堆差值表与梯度矩阵。完整代入、非负性证明、q−p 与 2(a−z) 求导、KL 的局部二阶关系放 Reference Hub/邻近详情。S7 九位小数与梯度矩阵保留为后续核验依据和深入查看，不进入本次 W6 引擎。
+
+Hover/TermRef 只补当前语境中的短定义与身份，Reference Hub 负责证明、扩展与出处；关闭它们仍须能理解主线。网页使用原生 MathML，设计文档的行间数学继续使用两组 `$$`。允许为排版调整局部比例，不改变数学含义、样本身份、共同尺度、冻结时机或真实训练顺序。
+
+### 页面组织与阅读节奏（已确认方向）
+
+以下 U 编号是本轮确定的阅读单元，非新增工作流/页面 schema。唯一结构化覆盖仍是下方 implementation YAML。七个单元来自内容关系，不是章节或交互数量指标。
+
+| 阅读单元 / W4 主讲范围 | 正文的任务与进入条件 | 图形/公式的任务 | 交互/动画的任务与边界 | 读完留下的问题 |
+| --- | --- | --- | --- | --- |
+| U1 为什么留旧数据还不够 / S1 I01 → S2 I02 | 从流式分类和有限空间引出 ER，再质疑硬标签记录了多少旧行为 | 上半以数据流和少量留存图作开放式对照；下半固定同一 x、y，并排看整组响应 | 以静态图文为主；不加“任务切换”按钮，不强制播放开场动画 | 已决定记录整组响应，怎样衡量偏离？ |
+| U2 概率怎样成为约束 / S3 I03 | 接住旧概率 p 与当前 q，解释为何需要 KL | 两类概率、逐项 p·log(p/q)、和与 q−p 的方向同步对应 | 切换 W4 E01 的三个 q，检验“同样判Claude”仍有不同偏离；不任意拖动所有坐标 | 概率方案已可行，为什么还看原始分数？ |
+| U3 为什么留下 logits / S3 I04、I05 | 先比较匹配空间，再解决旧目标何时产生 | 三维对齐、偏差平方和、共同平移反例；之后用短时间轴展示不同训练步的 z | 在 W4 E02 的两种 a 间切换；快照只显示冻结数值，不建旧教师网络 | 记录内容已定，但容量有限，哪些记录能留下？ |
+| U4 让有限记忆持续工作 / S4 I06、I07 | 先解释选留，再把旧记忆接入 DER 一步 | 固定槽位的 reservoir，随后用更紧凑的读→损失→更新→写演示闭合两项目标 | 两个局部任务分开操作；用预设抽签结果呈现替换/拒收，然后看一次训练顺序 | 同一原图回放时像素视图是否仍相同？ |
+| U5 稳定复现，还要复现正确 / S5 I08 → S6 I09 | 先恢复增强，再质疑冻结目标的正确性；两段间明确写出因果转折 | 同一原图的 A0/A1 视图共指 z；再展示错误历史 z 与真实 y 的不同监督 | 增强用并排对照；DER/DER++ 模式变化只显露额外标签路径及第二采样，不增加模型 | 部件都学过，空池开始怎样连续运行？ |
+| U6 一份记忆，四轮学习 / S7 I10 | 不重教局部概念，沿一条状态轨迹核查交接 | 独立系统场景：唯一当前网络、两个记忆槽、候选、联合损失和跨轮状态 | 回退/前进/本轮重播；DER++ 为模式分支；预测是独立只读分支 | 能运行不等于有效，哪些结果能支持它？ |
+| U7 用实验回答效果问题 / S8 I11 | 先限定协议再看数值，回收“DER++ 是否必胜” | 条件齐全的精炼对比和反例；完整数据在证据详情 | 首版用静态条件表和可展开来源；不建跨协议排行榜或无必要的大筛选台 | 收束适用范围与未保证的性质 |
+
+U1 的入口可有大标题，其余以问题句和留白分组，避免每节重复大封面。U2/U3 的计算区紧邻解释；U4 的槽位居中，U5 使用宽度较轻的对照，U6 才使用独立完整工作台，U7 回到证据型排版。不以同尺寸卡片包住所有段落。
+
+#### 普通单元的表达落地：U1、U5、U7
+
+U1 开头以一条自然的数据流和只能留存少量记录的容器建立对象关系，正文直接问“旧数据已经过去，参数却还在变，如何复习旧判断？”有限 ER 是顺着这个问题给出的第一个方案，图中不出现任务边界开关。下半沿同一原图 x2、同一真实 y 对照“类别答案”和“整组响应”：硬标签处只写真实类别，响应处保留所有类别坐标，不能把非标签类别画成没有梯度。
+
+为了让“类别仍正确，历史响应却未被保留”可直接核算，U1 使用独立教学配对：真实类别为Claude，旧分数 (2,1,0)，假设的另一组当前分数 (2,0,1)，坐标均为Claude、GPT、DeepSeek。两组都将Claude排第一，Claude的 softmax 概率相同、标签 CE 相同，GPT/DeepSeek偏好却互换。这是从 W4 硬标签不足问题补充的合成比较，不是论文实测或 U3 的训练结果；它只回答 C11，不新增训练机制。默认只呈现类别与相对分数形状，相同 CE 的具体小数仅作内部核对。例子无需交互。U1 收束文案为“少量旧图能让模型复习类别；如果还想保护当时的整组判断，就需要保存输出。怎样衡量两次判断有多不一样？”随后进入 U2。
+
+U5 的前半使用同一原图 x2 和两种训练视图的并排图：左侧注明生成历史 z 时使用的 A0(x2)，右侧注明回放使用的 A1(x2)；两条路径指向同一个冻结目标，而不是两份可更新目标。原图身份始终显示，视图只附变换标记。图片可用自写矢量图形说明裁剪/翻转，不能使用未获复用许可的论文或笔记图片，也不能将矢量示意称为真实训练图。图下保留实际匹配公式，I17 的均值—方差推导在邻近 details 展开；主线已经解释“多个视图共用一个 z”为什么鼓励一致，不依赖展开才懂。
+
+U5 前后两段之间明确写出“但更稳定地复现旧输出，不等于旧输出就是正确的”。后半原样采用 E04：Claude图的 z=(0.5,2,0) 将GPT排第一，y 仍是Claude。静态对比先建立旧行为与真实类别的不同要求，再以 DER/DER++ 切换显露第二次历史采样、标签 CE、β 权重和记录中的 y。模式切换只重建本地示例，所有损失仍指向同一网络；不暗示必定立即纠错。读者只需一个模式控件，α/β 不做大型调参台；I18 用短段解释权衡。结尾交接为“目标与记忆都已有了，接下来从空池开始检查它们是否真的按同一个顺序运行”。
+
+U7 以“这套运行规则是否在有限记忆下保住了分类能力？”进入。第一组固定 S-CIFAR-10 Class-IL、K=500、非预训练 ResNet18、50 epochs/task、最终平均准确率和 Table 2 十次运行，报告 ER/DER/DER++ 的 57.74±0.27 / 70.51±1.67 / 72.70±1.36（R01）。条件紧挨数值，不用大排名遮住实验协议。第二组是 MNIST-360、K=500、2×100 ReLU MLP、每图一次、整流结束评测，报告 65.04±1.53 / 69.11±1.66 / 69.62±1.59（R04、C08）。两组分开展示，不能横向混作同一指标。
+
+正文精选三组结果：S-CIFAR-10 Class-IL、K=500 的 ER/DER/DER++ 对照；MNIST-360 无稳定任务边界流、K=500 的对照；以及 MNIST-360、K=200 时 DER 55.22±1.67 高于 DER++ 54.16±3.02 的反例（R01、R04、R05）。S-CIFAR-10 Task-IL、K=500 的 DER 93.40±0.39 低于 ER 93.61±0.27（R02）及其他非优势表项留在 Reference；这样主线仍能回答“加标签是否必胜”，同时不重复完整表。I20 只用短段讲平坦性/校准是经验分析，完整定义与补充表归 I22/I23；± 保持原样，不补统计名称。结果正文静态可读，证据定位原位展开；不为了筛选而复制英文 BenchmarkExplorer。结尾回收有限记忆、类别遗漏和历史错误的局限，收束整篇而非再引入新机制。
+
+### 共同视觉母题与对象身份
+
+沿用 Kit 的暖白画布、深色正文、弱分隔线及绿/暖橙数据语言。颜色不同时承担样本 ID、类别、梯度正负三种含义：样本由 x1/x2、缩略图和文字识别，冻结由锁定文字与边线识别，可训练由 θ 标签识别，正负数才用 Kit 对应数据填充。当前焦点另有描边，不等同于冻结或可训练。
+
+x2 是 S2–S7 的追踪锚：S2 看它的类别与整组响应，S3 确定历史目标表示，S4 看候选选留，S5 看增强视图，S6 看标签职责，S7 看其真实入池和回放生命周期。S3 的概率与三维 logits 小例子分别来自 E01/E02，必须标作不同计算示例，不能伪称它们是同一次前向结果。S7 的 x2 不强行套用局部向量；若需要数值，由完整教学模型计算并明示数据来源。
+
+| 对象 | 稳定身份 / 归属 | 可变化的量 | 不允许的视觉暗示 |
+| --- | --- | --- | --- |
+| x、y | 原图 ID 与真实类别，随记录保留 | A(x) 的视图可变 | 增强后当作另一条原始样本，或 y 变成网络输入 |
+| z | 对应样本及生成步号，冻结到记录退出 | 无；整条被替换后退出 M | z 随 θ 更新或被当前网络覆盖 |
+| θ | 一个当前模型容器 | 联合损失更新参数 | 三条损失各自拥有一台模型 |
+| M、K、N | 槽位容器、固定容量、已处理项数 | 槽内记录替换；N 每处理项递增 | 每轮重新清池，或 N 是任务编号 |
+| Rd、Ry | 本步从旧 M 读取的临时样本组 | 每步可抽不同记录、可重叠 | 必须相同、互斥，或本步新写入立刻参与本步回放 |
+
+### Upstream Delivery Compatibility (W5)
+
+`python tools/paper.py paths der --json` 已执行，退出 0。解析目标为 `C:\Users\lenovo\Desktop\Projects\PaperWork\PaperSkillWork\papers\der\web\enhanced`，无 Final 覆盖。后续复制目的地为该目录的 `src/shared/`；本轮没有复制。
+
+已读真实入口：`index.html`→`src/main.tsx`→`App.tsx`，React 18 + TypeScript + Vite 6；`src/data/tutorial.ts` 当前只有空 chapters，`src/modules/registry.tsx` 为空，`TutorialData.meta` 可表达 titleEn/titleZh，现有页面按 componentId 选模块。这些是待 W6 填充的脚手架状态，不是假定已有教程。W6 保留入口，按实际教学内容扩展局部布局，不借元数据修改 W4。
+
+W6 元数据使用完整英文题名 `Dark Experience for General Continual Learning: a Strong, Simple Baseline`、中文题名“DER / DER++：用有限记忆保留历史预测”，首页短标识为 DER / DER++。概率计算、logits 比较和目标快照分别使用本地组件 ID `der-probability-constraint`、`der-logit-matching`、`der-memory-snapshot`，在 tutorial.ts 声明并在真实 widgetRegistry 中逐项注册；普通问题正文仍是普通图文。componentId 名称可作同义的局部工程调整，但必须同时修改引用和注册，不新增空注册项占位。MathML 的 d.ts 应被实际 tsconfig 包含；静态图形、类别坐标与数据计算由 DER 模块拥有，不从 Kit 或另一篇论文借入事实。
+
+`vite.config.ts` 的 `base: './'` 支持相对子路径产物；新增本地资源须通过相对模块导入或 Vite base 解析，禁止硬编码 `/images/`。不新增外部服务、CDN、远程字体或训练服务；原生 MathML/Kit 类型声明是数学排版候选，不必增加运行时数学依赖。S7 教学数值若采用小模型，浏览器本地计算，不加载真实论文模型权重。
+
+相邻 PaperSkill 检出 HEAD 为 `c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`，工作树干净，upstream 指向官方 `ReductTech/PaperSkill`。已读 `scripts/import-paper.js`、`scripts/validate-repository.js`、`paper-skill/scripts/validate-output.js` 与本地 contract；定稿时尝试 `git -C ../PaperSkill fetch upstream main`，退出 1：本机 MSYS SSH 的 NtCreateDirectoryObject 返回 0xC0000022，随后 Git 报无法读取远端。未取得成功刷新的官方版本，不能将当前本地检查称为最新官方兼容证明。此失败不改动上游源码，不以此改动已确认的教学结构。本轮不运行 Import/Preflight。
+
+已证实的接收关系：本地 `validate-repository.js` 会调用 `validate-output.js`，后者确实检查 `tutorial.ts` 的 kind 数量及 componentId 注册，并非所有生成器约定都只停留在文档。该本地版本读取 contract 的 6–10 chapters、至少 4 modules、至少 1 个双 module chapter；它没有据此强制八阶段一页一章或每章交互。候选七单元与 U4 的两个真实教学任务在完整内容阶段可以自然适配，不能为了数字新增假模块。首切片只有 U1–U3，届时可能出现真实阶段不足的校验失败/提示，要如实分别记录，不篡改数据凑满；W8 再核对完整内容。
+
+未发现要求改变 W4 的确定硬冲突。待 W6 前核实最新官方脚本及配置；若该版本对自定义页面出现实际硬冲突，把命令、失败项和取舍记在本节再决策。`paper.json` 由 W10 的官方 Import 根据用户信息生成，本轮不编造；网页 meta 和 componentId 则由 W6 实际内容填充。MD 的 `$$` 是本设计文档格式，网页拟用 MathML，二者不能混称。
+
+### Reusable Asset Composition Notes (W5 free text)
+
+已检查 Registry、对应 Recipe、实际 TSX/CSS/Hook。以下是设计可行性选型，不是复制记录或批准记录。所有资产仍为 candidate；下面三组 dry-run 均退出 0，目标中仍无 `src/shared/`。公开 DER 页面未创建。
+
+| Registry ID / 使用决定 | 具体用途 / 场景责任 | 实际尺寸或 API 约束 / 预计占用 | Recipe / 内部样式边界 |
+| --- | --- | --- | --- |
+| SampleToken / 选用 | U1/U3–U6 的稳定原图 ID；图像内容由 DER 提供 | 默认图块 76px、min-height 76px；含图注拟留 96–128px 宽 | visual-parts；原生 children/pixels API，无内部样式改动 |
+| RepresentationVector / 选用 | U3 分数与 U4/U6 的 z 详情；不替代逐类计算表 | 每坐标 min-width 34px，正/负区各 44px；三维拟留 140–220px，显式 extent=3 用于 E02 | visual-parts；坐标名/对齐由局部场景负责，不把 z 标成特征向量 |
+| ResponseMeter / 选用 | U2 的概率条；明确 min=0、max=1 | 轨道 min-width 48px、高 8px，另有标签和值；每组拟留 200–300px，统一在组上标尺度 | visual-parts；只传计算值，不把组件当 softmax 计算器 |
+| MathTypography / 选用 | U2/U3 和后续损失公式的 MathML JSX 类型 | 实际是 d.ts 与 Kit 样式，无独立交互或 DOM 组件；公式宽度随正文 | typography-formula；W6 核对 tsconfig include，不加运行时数学库 |
+| FigureFrame / 选用 | 只包真实教学主图，提供标题/图注/当前步 | 无固定尺寸，主图按单元决定；不把全部自然段卡片化 | typography/editorial 语义 + 实际 source；不改内部样式 |
+| MiniNetworkGlyph / 后续选用 | U6 表达唯一当前网络；若数值层采用线性教学网络，拓扑为 2→3 | compact max-width 232px、standard 360px、inspect 560px；viewBox 宽 320、高至少184；U6 拟用 220–232px | mini-network-glyph；不沿用示例 Teacher/Student 或 3–5–3 假 CNN |
+| FlowConnector / 局部选用 | 邻接数据/参照/梯度的明确连接 | 横向 SVG 44×16px，向下 16×40px；标签另占空间；短关系拟留 56–100px | visual-parts；只有 right/down/left，不假定任意曲线端点能力 |
+| useAnimationTimeline / 可选播放时选用 | U4/U6 只有拥有者调用一次，驱动揭示，不计算 θ/M | 无固定尺寸；输入稳定 clip 列表；默认暂停；replayClip 只重播当前 clip | animation-timeline；从 state 派生所有视图，单独实现“重播本轮/从头开始”的轨迹定位 |
+
+S3 组合由 DER 本地负责 p/q 和 softmax/KL/L2 计算、固定类别坐标、逐项代入、解释与例子切换；Kit 只画输入/数值并提供数学类型和图框。S4 的槽位、读写锁、候选托盘、整数抽签及消息由 DER 本地负责。S7 的唯一执行函数、操作轨迹、参数/记录身份和整体布线均属论文局部；不把组件代码改成 DER 算法引擎。
+
+真实命令（均从仓库根执行）：
+
+```text
+python tools/paper.py scaffold-kit der --select SampleToken,RepresentationVector,ResponseMeter,MathTypography,FigureFrame --allow-unapproved --dry-run
+python tools/paper.py scaffold-kit der --select MiniNetworkGlyph,FlowConnector,useAnimationTimeline --allow-unapproved --dry-run
+python tools/paper.py scaffold-kit der --select FormulaBlock,StickySystemView,EvidenceViewer,BenchmarkExplorer --allow-unapproved --dry-run
+```
+
+三次均解析到上节 publish_source，复制目的地是其 `src/shared/`。首两组是拟选的 8 项资产，共用依赖去重后实际闭包如下（相对于 `src/shared/`，共12文件）：
+
+```text
+compositions/figure-frame/FigureFrame.tsx
+foundation/math/mathml-jsx.d.ts
+foundation/styles/kit.css
+foundation/visual-parts/SampleToken.tsx
+foundation/visual-parts/RepresentationVector.tsx
+foundation/visual-parts/ResponseMeter.tsx
+foundation/visual-parts/FlowConnector.tsx
+foundation/visual-parts/visual-parts.css
+foundation/neural-network/MiniNetworkGlyph.tsx
+foundation/neural-network/mini-network-glyph.css
+foundation/animation/useAnimationTimeline.ts
+foundation/accessibility/useReducedMotion.ts
+```
+
+已确认首切片 W6 只需第一组部件，实际开工时才执行相同 `--select` 命令去掉 `--dry-run`；第二组等 U4/U6 真正开工时按需要追加。入口只引一次 `shared/foundation/styles/kit.css`，图元和 Glyph 自带各自 CSS 导入；MathML d.ts 需要被 tsconfig 读取。所有场景 CSS 留在 DER 本地，不复制 Gallery 样式。当前没有必须修改 Kit 内部样式的证据；适配分类为局部布局与教学数据/语义，不是共享缺陷修复。
+
+第三组是对照候选，不实施复制：FormulaBlock 会带 FormulaTerm/MathTypography；BenchmarkExplorer 会带 SegmentedControl；四者合计闭包为 7 文件（controls/SegmentedControl.tsx、layout/StickySystemView.tsx、math/mathml-jsx.d.ts、styles/kit.css、optional/benchmark-explorer/BenchmarkExplorer.tsx、optional/evidence-viewer/EvidenceViewer.tsx、optional/formula/FormulaBlock.tsx，前三类均位于 foundation/）。FormulaBlock 的符号交互非当前主任务，静态 MathML 更直接；StickySystemView 使用滚动阅读线与手动覆盖，可能和 U6 显式训练步竞争，故先不用；EvidenceViewer/BenchmarkExplorer 的源码有硬编码英文 UI 且 U7 暂无需大筛选，先采用本地中文协议表和原位详情。
+
+`shared-input-models` 及 `vector-retrieval` 已看 README/Recipe 的职责，不选整个 example：前者是两个独立模型，后者是内积检索，都不符合本篇训练语义。FlowConnector 不足以连接复杂图时只拒绝那段布线复用，不因此引入整套旧论文系统。没有复制 Gallery 场景文件，也没有跨论文 runtime import。
+
+Gallery 实际查看状态：尝试启动现有 Demo 并通过浏览器打开 `http://127.0.0.1:5187/?demo=gallery#gallery-parts`，Vite 已就绪，但浏览器两次连接均超时，未取得可复核的部件画面。此项为 NOT_RUN，不称视觉通过；预览服务已关闭。当前尺寸结论依据上方真实 CSS/API，W6 必须在实际切片复核。此限制不影响本轮文档覆盖、计算和 dry-run 证据。
+
+### Critical Teaching and Integration Scenes
+
+以下三个场景的结构与交互方向已获用户确认，网页实现及渲染验收仍未进行。线框里的箭头标注数据、读取、梯度或时间关系；不是可直接执行的算法代码。普通图文按上方职责实施，不要求逐帧稿。
+
+#### A / S3：从一个可行的概率约束，走到 logits 的选择
+
+推荐两个连续阅读单元，各有一个计算焦点。U2 的左侧约 1/3 宽度负责“同判Claude为何仍有差异”的引导与结论，右侧约 2/3 是两类概率和代入计算。U3 恢复开放式横向排版，以旧/新两行、类别三列对齐分数，下方对齐差值与平方项。比例是桌面构图起点，不是固定像素锁死，也不是两组同模板控制台。
+
+```text
+U2  已有：同一输入，固定旧概率 p               正文约 1/3 | 计算区约 2/3
+    为什么同判Claude仍不一样？                    p：Claude .8  / GPT .2   [固定]
+    当前 q 的概率分配变了                     q：Claude .6  / GPT .4   [切换例子]
+    ↓ 变量身份、KL 定义与逐类含义             概率形状与一个 KL 总量
+    log 比拆分为 H(p,q)−H(p)，解释固定基准     同步结论；完整数值和梯度在 Reference
+
+    交接：概率约束已经可行；原始分数能否直接比较？
+
+U3  旧 z [冻结]          2       1       0      类别坐标固定
+    当前 a              1       2       0      [交换例 / 共同平移例]
+    平方距离定义及逐类含义                    一次短展开 → 总量 2
+    共同平移例          概率未变，KL=0；平方和=3
+
+    收束后才展示：本步更新前 θ → 产生 z → 冻结数值 → 候选 (x,z)
+    交接给 S4：知道记录什么，但不是每条都能在有限空间中留下。
+```
+
+固定数据按 W4 E01/E02 原样使用。U2 旧 p=(0.8,0.2)，当前 q 可切到 (0.6,0.4)、p 本身或 (0.2,0.8)；只开放这三个有教学意义的例子，不加入自由拖动 p/q 的多变量面板。比较前后，p 始终锁定；读者一次操作改变 q，概率条、KL 总量、公式对应身份与结论从同一 q 计算。完整逐项值与输出梯度也从同一数据派生，但默认放按需内容。E01 的两类概率与 E02 的三维分数是不同算例，切换阅读单元时明示，不能把两者画成同一张图的连续前向。
+
+在 q=(0.6,0.4) 时，两个 KL 项约为 +0.230146 和 −0.138629，总和 0.091516；负项保留符号，不画成两个均非负的“距离块”。q=p 时总和和梯度都为零；反转 q 后总和约 0.831777。梯度箭头只是输出层的下降倾向，不能说 θ 的每个分量直接减去 q−p。
+
+U3 默认 z=(2,1,0)、a=(1,2,0)，切换 a=(3,2,1) 时，两组柱使用相同固定 extent=3，不分别自动缩放。所有分数坐标标明Claude/GPT/DeepSeek；差值带正负号，平方项单列，保留“概率仍携带相对偏好”的正文。共同平移例展示同 softmax、不同平方和，不能被解释成 logits 方案普遍更优。RepresentationVector 可画两组向量；类名与逐维对应由本地布局提供，不修改组件内部；若绘图对齐不够清楚，改本地语义表，不强迫图元替代计算表。
+
+数学位置：KL 定义、变量角色、H(p,q)−H(p) 的一步拆解与优化意义、平方匹配定义和一次短展开、平移反例及其 softmax 数学原因均在正文/主图邻近处。q−p、2(a−z) 的完整求导和 KL 非负性证明在按需内容，二阶/Jacobian 放 I21 Advanced details。U3 末尾用一个候选 z 追踪生成、复制与之后的参数变化，只有一个当前网络，明确生成早于更新、实际写入晚于更新；reservoir 的取舍规则尚不首讲。
+
+| 有理解风险的时刻 | 输入与真实计算 | 画面与文字对应 | 保护关系与可复算检查 |
+| --- | --- | --- | --- |
+| KL 换例 | 固定 p，替换 q；逐项计算后求和 | 概率条、代入式、总和、q−p 同步 | q 归一化且正；同类项对齐；KL 三例分别约 .091516/0/.831777 |
+| 从概率转向 logits | 明示更换为 E02 三类例子；softmax 由分数重算 | 保留旧/新身份，恢复类别坐标 | 不把两类 p 硬接为三维 z 的概率；不新增教师模型 |
+| 共同平移反例 | a=z+(1,1,1)，平方和 3，softmax 相同 | 概率相同和分数偏移同时可见 | 共用尺度；计算全精度，显示可舍入；KL 与 L2 不宣称等价 |
+| 留下目标 | 更新前产生 z 的数值副本，θ 后续改变 | z 旁标“冻结/生成步”，当前模型标参数版本 | z 不刷新；只有最终候选是否入池的问题交给 S4 |
+
+这个场景的必要互动是“只改当前判断，检查后果”。主线计算和结论始终可读；不需要自动开场或装饰性数字滚动。已确认采用两个连续计算区，保留概率方案先成立、随后才质疑表示的转折。
+
+#### B / S4：先决定记忆怎样留下，再看它如何参与训练
+
+推荐 U4 内先给一个完整可操作的 reservoir 小图，再给一次紧凑训练闭环。前者的唯一操作是“给本次候选选择合法抽签 j”；后者的唯一操作是“推进本步”。两者共享记录样式和槽位编号，但不共享一个让读者猜测先后的混合控制面板。
+
+```text
+上半：此前记录 [v1] [v2]，K=2，N=2        | 本次候选 v3=(x3,z3)
+      槽位 0     槽位 1                 | j∈{0,1,2}
+      j=0 → 槽 0 替换；j=1 → 槽 1 替换；j=2 → 候选不入池
+      结果区：M 的新内容，N=3；候选不入池也不等于没训练。
+
+下半：已存在的 M [只读] ──取 Rd──→ 当前网络 θ ←──当前原图 X
+                                             │ 同一组参数前向
+                               当前 CE(y,概率) + α·历史平方匹配
+                                             │ 一次联合梯度更新
+                                            θ+
+                                             │ 之后才允许写 M
+                                  本步候选 (x,z) → reservoir
+```
+
+上半可以把 reservoir 当作刚训练完成后的独立函数检查，标题必须写清候选已参与当前训练；不能把先讲 reservoir 的认知顺序画成“先写 M，再用其训练”。满池示例固定 K=2、N=2 与 W4 E03，直接列三个合法 j；这是穷举反事实，不标作真实抽签。N<K 分支的进入态另有短选例，展示无需抽签的追加。真正的随机运行只作为后续可选检查模式，必须显示 seed/实际 j；W6 不实施此场景。
+
+下半的输入来自写入前 M，候选始终停在池外托盘，直到 θ 完成一次更新后才进入上半的选留过程。临时区显示 Rd、当前 Z、Zsave 和两项损失；持久区只显示 θ、M、N，K 是只读配置。对齐线只能从被读取的旧槽位连向回放路径，当前候选不得通过本步 reservoir 反向进入该路径。需要说明回放损失时可复用 E02 的已学平方和 2，只写 α·2 与 Lcurrent 合成；不捏造 θ 的参数变化量，也不把该局部算例说成 E03 的真实训练数值。
+
+| W2 操作 / 场景时刻 | 进入状态 | 计算/触发与离开状态 | 画面动作、文字/公式 | 不变量与复核 |
+| --- | --- | --- | --- | --- |
+| 读旧记忆 | θ、旧 M、N；候选在池外 | sample(M) 得 Rd；M/N 不变 | 被抽槽位强调，副本进入回放路径 | 当前候选不可在 Rd；“读”无写入 |
+| 前向与冻结候选 | 所有路径仍用原 θ | 当前 Z 复制为 Zsave，历史 z 作常量 | z 的冻结标记在当前更新之前出现 | 前向不改 θ；旧 z 不变 |
+| 合成与更新 | Lcurrent、Ldark 已计算 | L=Lcurrent+αLdark；一次 θ→θ+ | 两项先合成；一条梯度路径回到唯一模型 | 只加一次更新计数；尚未写 M/N |
+| reservoir 处理 | θ+，旧 M、N，候选 | 追加/替换/拒收后 N+1 | 才解锁 j 和槽位写入，原图与 z 同进同出 | K 固定；拒收也加 N；已更新 θ 不撤销 |
+
+可复用 SampleToken、RepresentationVector 与局部 FlowConnector；槽位、候选托盘、j 的解释和阶段写入锁由 DER 本地负责。全图多端点路径不能硬用横向/竖向小连接件绕线；需要时用本地 SVG 端点映射，显式区分 data/reference/gradient/control。已确认保留上半抽签、下半训练的双段说明，不将概率证明、样本抽签、梯度计算同时挤入主图。
+
+#### C / S7：在独立整体场景中看四轮连续学习
+
+先从 W2 确立唯一执行轨迹，再设计画面。统一状态输入为 θ、M、N；记录包含原图 ID、冻结 logits、生成参数版本以及 DER++ 标签。每步依次为旧 M 采样→增强→当前和回放前向→联合损失→一次参数更新→逐条 reservoir→下一轮。完整预测只读当前 θ，不能经过训练损失或 M。
+
+推荐“中间唯一网络，左侧输入/记忆，右侧本步计算，底部跨轮时间线”的稳定整体构图。比较过“把前面局部模块顺次拼接”的方案：它重复第一次讲解，且看不到本轮读的记录为何下一轮消失，所以不采用；也不采用全页固定大侧栏，把正文压成窄缝。
+
+```text
+本步进入：第 i 轮        θ_(i−1) / N / K       模式 DER 或 DER++ [重置后切换]
+┌──────────────┐      ┌─────────────────┐       ┌────────────────────┐
+│ 当前原图 xi   │ ───→ │ 唯一当前网络 θ  │ ────→ │ 当前 Z / Zsave     │
+│ 标签 yi→CE    │      │ 所有路径共享参数│       │ Lcurrent(yi,概率)  │
+│ 候选托盘 vi   │      │                 │       │                    │
+├──────────────┤      │ 本步只更新一次  │       │ α·Ldark            │
+│ 记忆 M       │ ─取→ │                 │ ────→ │ β·Llabel [++]      │
+│ 槽 0 / 槽 1 │ Rd,Ry└─────────────────┘       │ 合成 L / 梯度详情 │
+└──────────────┘            ↑ 联合梯度             └────────────────────┘
+      ↑ 参数更新后才写       └──────────────────────────────┘
+      └────── 候选记录 / j / 替换或拒收 ──────────────────────
+
+底部：第1轮 空池 ─ 第2轮 回放 ─ 第3轮 替换 ─ 第4轮 拒收 ─ 只读预测
+当前说明紧邻主图下沿；上一语义步 / 下一语义步 / 本轮重播 / 展开状态检查
+```
+
+线框表达布局与归属，不赋予所有箭头相同语义。原图 x 才进入网络，y 从样本归属区旁路直达 CE，不能沿图中原图箭头一起进入模型；历史标签同理。实际图中，数据为实线，历史目标为带“固定 z”的参照线，梯度为反向虚线，写 M 为更新结束后才激活的独立路径。屏幕较宽时图面使用可用宽度但限制对象间距；1440×900 起点约 1200px 内容宽，左列 220px、中列 240px、右列 300px，其余留给连接和边距。主图与控制优先可见，完整数值检查放其后原位展开，不能靠缩小字号塞满视口。1920×1080 保持同一局部关系，允许增大留白，不把关系拉散到屏幕四角。实际值由 W6/W8 渲染再调整。
+
+唯一计算源拟为 DER 本地纯函数 `trainStep(state,batch,choices)` 产生的不可变操作轨迹。它承担真实教学计算；时间线只决定揭示哪一项结果，不能另算一份损失或另维护副本 M。选择预设教学轨迹时显式记录 Rd/Ry 与 j，回退恢复已有轨迹快照，不再抽签或训练一次。进入预测只计算查询输出，θ/M/N 保持逐值一致。更换 DER/DER++ 模式会从 θ0 重建整条轨迹，禁止在 θ3 上偷偷补标签路径后沿用旧结果。
+
+数值分两层：默认主图明确 θ 的版本、记录身份、损失来源与 reservoir 的 E03 决策，不伪造 ResNet 的实测参数；展开计算使用已确认的三类小型线性分类器 h_W(u)=Wu。u 是教学记录的二维合成表示，不声称来自论文 CNN；主图的样本 ID 与展开区的数据项对应，但不声称计算出了真实图片的特征。当前输出、冻结 z、损失和参数更新均由下方固定设定计算，不与 S3 的独立 E01/E02 向量冒充同一训练轨迹。
+
+##### S7 小模型的固定计算设定
+
+这是本项目对 W4 E03 四轮状态轨迹的数值展开；参数和视图由 W5 合成，计算规则依据 B01/B02 与 W2 联合训练顺序，不是论文训练数据、准确率或新的方法模块。固定三类坐标依次为Claude、GPT、DeepSeek，单条当前输入、单条每次回放；无 bias、无 momentum、无 dropout/BN、无动态扩头。参数 θ=W，初态 M=[]、N=0、K=2，η=0.1、α=0.5；DER++ 的 β=0.5，DER 不计算标签回放项。这些系数只是此合成算例配置，不是论文全实验唯一最优值。
+
+$$
+W_0=\begin{pmatrix}0.2&-0.1\\0&0.1\\-0.1&0\end{pmatrix},
+\qquad h_W(u)=Wu,
+\qquad A_s(u)=(u_1+0.1s,\ u_2),\quad s\in\{-1,+1\}.
+$$
+
+A_s 是二维教学数据的微小视图变化，标签按 fixture 保持；不将它说成真实图像裁剪的计算，也不声称任意变换都保持类别。可视层区分原始 u、视图标记 s 和结果 A_s(u)，原始 u 才入池，z 来自本次当前视图的更新前网络。Fixture 的全表只用于教学配置和重播；训练函数每轮只读取当前项、旧 M 及本轮选择，不能借全表恢复已淘汰样本参与回放。
+
+| 轮次 / 当前项 | 原始 u / 真实 y | 当前视图 s | Rd / 回放视图 s | DER++ 的 Ry / 回放视图 s | 参数更新后的 reservoir |
+| --- | --- | --- | --- | --- | --- |
+| 1 / x1 | (1,0) / Claude | +1 | 无 | 无 | 追加 v1；N=1 |
+| 2 / x2 | (0,1) / GPT | −1 | v1 / −1 | v1 / +1 | 追加 v2；N=2 |
+| 3 / x3 | (1,1) / DeepSeek | +1 | v1 / +1 | v2 / −1 | j=0，替换 v1；N=3 |
+| 4 / x4 | (1,−1) / Claude | −1 | v2 / −1 | v3 / +1 | j=3，拒收 v4；N=4 |
+
+这些是预设的合法教学选择，不称为一次真实随机抽样；三、四轮 j 分别属于 [0,2]、[0,3]。需要随机探索时另开明示模式并从头计算，不能沿用下面核对值。DER 与 DER++ 各从同一 W0 开始，记录池身份相同，但第三轮起响应和后续参数可以不同。
+
+对当前视图 v，q=softmax(Wv)；真实标签 y 采用同一三类坐标，e_y 为其 one-hot。v_d、z_d 属于 Rd 的增强输入与冻结目标；v_l、y_l 属于 Ry 的增强输入与真实标签。当前 CE 梯度、历史匹配梯度、标签回放梯度和一次联合更新为：
+
+$$
+g_c=(q-e_y)v^\top,\qquad
+g_d=2(Wv_d-z_d)v_d^\top,\qquad
+g_l=(\operatorname{softmax}(Wv_l)-e_{y_l})v_l^\top,
+\qquad W^+=W-\eta(g_c+\alpha g_d+\beta g_l).
+$$
+
+DER 的最后一项省略；空池两种回放项均省略。所有梯度在进入本轮的同一个 W 上计算；先将当前 z=WA_s(u) 复制为数值，再更新 W，最后根据表中选择入池。Softmax 用减去最大值的稳定实现；计算保留浮点精度，只在显示时舍入。
+
+下表是本轮独立复算的核对值，保留九位小数。Ldark/Llabel 是未乘系数的值；总损失是 Lcurrent+0.5Ldark（DER）或再加 0.5Llabel（DER++）。界面应使用公式计算，不能反过来把此舍入表当作动画数据源。
+
+| 模式 / 轮次 | Lcurrent | Ldark | Llabel | 总损失 | 终态池身份 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| DER / 1 | 0.924831171 | 0 | 不计算 | 0.924831171 | [v1] |
+| DER / 2 | 0.996218307 | 0.001450076 | 不计算 | 0.996943345 | [v1,v2] |
+| DER / 3 | 1.320544135 | 0.008208513 | 不计算 | 1.324648391 | [v3,v2] |
+| DER / 4 | 0.795830653 | 0.005751480 | 不计算 | 0.798706393 | [v3,v2] |
+| DER++ / 1 | 0.924831171 | 0 | 无样本 | 0.924831171 | [v1] |
+| DER++ / 2 | 0.996218307 | 0.001450076 | 0.860131109 | 1.427008899 | [v1,v2] |
+| DER++ / 3 | 1.339471793 | 0.017769232 | 0.935701131 | 1.816206974 | [v3,v2] |
+| DER++ / 4 | 0.763913071 | 0.010760951 | 1.173231484 | 1.355909289 | [v3,v2] |
+
+首轮 z1=(0.22,0,−0.11)，第二轮候选 z2≈(−0.126637418,0.103501054,0.013136364)，这两个时刻两模式尚相同；之后须分别从各模式 W 计算，不能共享旧结果。DER 的 W4 三行为 (0.266925345,−0.215478335)、(−0.096221826,0.149995574)、(−0.069122901,0.065498583)；DER++ 为 (0.274097285,−0.245087785)、(−0.130273778,0.159440379)、(−0.042242889,0.085663228)。
+
+只读查询固定 u_query=(1,0.5)，评测视图为恒等映射；两模式都在三类中取 argmax。DER 查询 logits≈(0.159186177,−0.021224039,−0.036373610)，DER++≈(0.151553393,−0.050553588,0.000588725)，均输出Claude。该结果只演示预测入口，不是方法性能比较；同一步查询前后 W/M/N 深比较必须相同。记录 z1/z2/z3 需与各自产生步的更新前数值逐值相等，槽位替换时整条记录退出；按前后步执行轨迹检查跨轮交接。
+
+| W2 操作 / 高风险时刻 | 进入状态 / 计算 | 离开状态与图文同步 | 必须固定 / 可复算断言 |
+| --- | --- | --- | --- |
+| 初始化与空池首轮 | θ0、M=[]、N=0；无历史样本 | 历史支路不可用，当前 CE 正常；保存更新前 z1 候选 | 首轮不调用空池 sample；空池补全标注 M01 |
+| 旧记忆读取 | 第2轮进入 θ1、M=[v1]、N=1 | Rd=v1；DER++ 的 Ry 也只能是 v1，允许重叠；M 只读 | 当前 v2 尚未入池；两次调用身份可核对 |
+| 前向、损失与一次更新 | 参数仍为本步进入版本；z 候选已固定 | 损失求和后一次 θ 更新，M/N 仍保持进入值 | 旧 z 不反传、不刷新；更新前 Zsave 与写入 z 逐值相同 |
+| 第3轮先用再换 | 旧池 [v1,v2]，示例 Rd=v1、Ry=v2 | 更新 θ2→θ3 后 j=0，池变 [v3,v2]，N=3 | v1 可用于本步训练，之后才失去未来回放资格 |
+| 第4轮未入池仍训练 | θ3、池 [v3,v2]；Rd=v2、Ry=v3 | 完成 θ3→θ4 后 j=3 拒收 v4；池不变，N=4 | 不撤销当前 CE/梯度；不是“未训练 x4” |
+| 跨轮交接 / 回退重播 | 本轮最终 θ/M/N 和不可变轨迹 | 下一轮直接读取终态；回退只改变查看位置 | snapshot[i].exit 等于 snapshot[i+1].entry；重播不二次更新 |
+| 只读预测 | 当前 θ4 与查询输入 | 只走评测前向及 argmax，不连接损失与池槽 | 预测前后 θ/M/N 深比较相同；测试预处理不冒用随机训练增强 |
+
+操作默认暂停，读者按语义步前进/后退；“本轮重播”只重现同一轨迹，另有“从第1轮重新开始”。若加可选连续播放，只在拥有者使用一次 useAnimationTimeline，关键损失/更新/入池的结果需可停留观察；reduced motion 下保留相同语义步与手动导航。滚动只能改变阅读位置，不能触发训练步骤；不同时引入 StickySystemView 的滚动时钟。
+
+到 U6 前，U5 已说明稳定性与正确性，入口只恢复三项损失的来源；离开时交给 U7 的问题是“这套机制在对应协议中效果如何”。模型/记忆/查询的所有者在全过程保持不变。已确认采用稳定整体工作台、手动主导的四轮演练及可展开小模型数值计算；具体计算设定在下方固定，网页阶段不得另手设一份不一致的训练输出。
+
+## Visual QA State Plan
+
+下列为已确认的观测范围；实际W8结果见本文件末尾及audit/final-check.md。首切片只检查 U1–U3，其余状态随实际实现进入对应阶段。每一代表态在普通桌面 1440×900 与全屏布局模拟 1920×1080 观察；真实 F11 另记实际尺寸和结果，不能由模拟替代。无移动专项触发，不运行 Kit 全量回归。
+
+| 单元 / 受影响状态 | 两种桌面布局都需观察的内容 | 语义/几何断言与保留信息 |
+| --- | --- | --- |
+| U1 入口及响应对照 | 首屏对象、段落密度、从 ER 到软目标的桥接 | y 不充作模型输入；类名和向量对应；无页面横向溢出 |
+| U2 初态、q=p、q 反转、返回 | 固定 p、负 KL 单项、和、梯度及键盘选例 | p 不漂移；q 归一化；图/代入/结果同步；不只靠颜色 |
+| U3 E02 两种 a、快照结束态 | 共用 extent、完整三列及平方项、冻结标记与生成步 | 换例不自动缩放；softmax/L2 结论可同屏核对；旧模型不常驻 |
+| U4 旧池读取、更新后写入、j=2 拒收 | 槽位端点、候选托盘、合成与更新顺序 | 更新前无写；N 与 K 含义不混淆；读写线型清楚 |
+| U5 增强/错误历史与 DER++ 路径 | 同一原图身份、两个视图、z/y 的不同职责 | z 不刷新；只新增标签损失和第二采样，不新增模型 |
+| U6 空池、第2轮、第3轮写入前后、第4轮拒收、预测、回退 | 全图稳定、局部数值展开、单步/重播及 reduced motion | 对应语义帧断言；控制不遮主图；回退不重复训练；预测不读池 |
+| U7 协议比较与反例、证据详情展开 | 条件与数值靠近、±原样、反例不被折叠隐藏 | 不混协议；无超出证据的通用优越声明 |
+
+## Primary Spine Mapping
+
+以下为当前实现覆盖：S3 的 I03/I04 在 U2 单一实验台讲解，I05 在 U3 桥接与 D1；结构化阶段仅登记一次。S1/S2、S5/S6 分别共用阅读单元，CORE 不重复分配。
+
+```yaml
+implementation:
+  stages:
+    - {id: S1, page: U1-replay-entry, core_items: [I01], evidence_refs: [C01, C11, C16], primary_vehicle: '问题正文与有限回放静态对照', reusable_pattern: null, reason: '先建立旧数据不可完整取得的缺口，再给出有限 ER'}
+    - {id: S2, page: U1-replay-entry, core_items: [I02], evidence_refs: [C11, C10, B01, B03], primary_vehicle: '同图同标签与整组响应对照', reusable_pattern: null, reason: '直接承接 ER，并揭示标签没有保存的历史行为'}
+    - {id: S3, page: 'U2-probability / U3-logit-memory', core_items: [I03, I04, I05], evidence_refs: [C10, C02, C13, C12, M02, M06, B01, B02, B03, E01, E02], primary_vehicle: '分层数学正文与单一双表示实验台、机制桥接及 D1 预讲解', reusable_pattern: null, reason: '先验证概率监督可行，再比较表示空间，最后决定目标采集时机'}
+    - {id: S4, page: U4-reservoir-and-step, core_items: [I06, I07], evidence_refs: [C06, M03, I01, C02, C04, M04, M06, E02], primary_vehicle: '槽位抽签与单步读写顺序演示', reusable_pattern: null, reason: '记录内容确定后解决在线选留，再闭合基本 DER'}
+    - {id: S5, page: U5-consistency-and-correction, core_items: [I08], evidence_refs: [C14, M06], primary_vehicle: '同一原图的两种增强视图与固定目标对照', reusable_pattern: null, reason: '恢复前段暂固定视图的真实训练条件'}
+    - {id: S6, page: U5-consistency-and-correction, core_items: [I09], evidence_refs: [C03, C05, C15, E04], primary_vehicle: '错误历史引出标签监督与三损失同网络图', reusable_pattern: null, reason: '从一致但可能错误的目标自然引出 DER++'}
+    - {id: S7, page: U6-complete-system, core_items: [I10], evidence_refs: [C02, C03, C04, C05, C06, C14, M01, M02, M03, M04, M05, M06, B01, B02, E03], primary_vehicle: '独立系统级四轮连续执行与只读预测', reusable_pattern: null, reason: '核查空池、回放、更新、写入及跨轮交接，不拼接局部演示'}
+    - {id: S8, page: U7-evidence-and-limits, core_items: [I11], evidence_refs: [R01, R02, R04, R05, C07, C08, C09, I01, I02], primary_vehicle: '协议先行的精炼结果对照与反例', reusable_pattern: null, reason: '运行闭环后用实验证据检验效果，不从机制直觉断言优越'}
+  assets: []
+  supporting:
+    - {item: I12, placement: compact-inline}
+    - {item: I13, placement: compact-inline}
+    - {item: I14, placement: expandable}
+    - {item: I15, placement: expandable}
+    - {item: I16, placement: compact-inline}
+    - {item: I17, placement: expandable}
+    - {item: I18, placement: compact-inline}
+    - {item: I19, placement: compact-inline}
+    - {item: I20, placement: compact-inline}
+  reference:
+    - {item: I21, placement: Advanced details}
+    - {item: I22, placement: Evidence details}
+    - {item: I23, placement: Evidence details}
+  vertical_slice:
+    stages: [S1, S2, S3]
+    required_core_items: [I01, I02, I03, I04, I05]
+```
+
+`assets: []` 对应 W3 没有选中可公开原图；自写教学图和小例子不是这些 REFERENCE_ONLY 页图的裁剪或描摹。SUPPORTING 保留 W4 原主讲位置，REFERENCE 置于主线之外，DELETE 不进入实现映射。
+
+## Reusable Pattern Library
+
+结构化 `reusable_pattern: null` 表示没有采用一个整套 Kit 交互模式来负责该阶段；上方图元仍可按真实闭包组合，不串写多个 ID。Architecture Explorer/双模型 example 不用于唯一当前网络；Flow Stepper 的抽象循环不替代真实 θ/M/N；StickySystemView 暂不用于手动训练；公式和结果模式均已查源码并记录不采用理由。Term Hover/Reference Hub 后续只负责短定义和外部于主线的 I21–I23，不能承载本该在正文的推理。
+
+## Vertical Slice (W6)
+
+用户已确认 S1–S3，对应 U1–U3，CORE 为 I01–I05。认知闭环为：不能完整保存历史→有限 ER→标签未记录整组响应→概率/KL 可优化→logits 匹配的区别→记录更新前历史 z→引出 S4 的在线留存。S1/S2 合为一个开放图文单元，S3 的两个计算任务各有足够解释空间。
+
+范围已确定，W5 完成后按此执行 W6。首切片不实施 reservoir、DER++、四轮完整系统或结果页，不用未来占位组件凑验收；下一阶段问题以正文衔接即可。S7 小模型只在本计划固定计算依据，不提前实现为 W6 隐藏组件。之后若改变首切片范围，必须同步覆盖和确认记录，不能静默删 I01。
+
+SUPPORTING 的具体落点：U1 原位短回忆 I12/I13；U2 的 I14 紧邻梯度结论可展开；U4 的 I15 概率归纳可展开、I16 iCaRL 比较一短段；U5 的 I17 增强均值/方差推导可展开、I18 权衡系数紧邻三项损失；U6 的 I19 原文消歧作为算法旁说明；U7 的 I20 分析含义一短段。I21–I23 在主线之后的参考/证据区，主线对必要结论本身不依赖点开；I24–I26 排除。
+
+W5 定稿时四项源码检查均未运行；当前 W6 的实际命令、状态与限制记录如下，W5 的结构通过不作为 W6 质量依据。
+
+### W8-B–E · 全篇实施与首轮回归
+
+用户已直接要求执行全文、自查后交最终审查，不再停于批次间询问。新增 DER 单步、增强、DER++、独立四轮工作台与实验证据，沿原 W4 的 U4–U7 接入。
+
+- 唯一 training-model.ts 按 W5 固定二维模型、η=0.1、α=β=0.5 复算两模式；八组损失、两组预测与 W5 九位小数表一致，联合梯度有限差分通过。空池、分别采样可重合/不同、旧 M 先读、冻结值、一次更新后写入、替换和拒收都有状态测试。
+- DER 单步与四轮台共用 trainStep；增强用同一 first-record / W1 计算视图输出，固定 z 不刷新。DER++ 合成错误例不编造优化后的类别，画面显示旧 z 与 y 的独立职责。
+- 工作台从 θ0/M空/N0/K2 到四轮连续继承，选择阶段只读取不可变快照；预测只读 θ4，参数/记忆/计数不改。提供完整视图、目标、联合梯度和参数矩阵查看。模式切换从同一 W0 重算全轨迹。
+- 实验数据取 W3 R01/R02/R04/R05 与 W2 Results，主线显示两种 CIFAR 协议、MNIST容量差异与三项反例；按条件重绘，不发布原表截图；补充结果及 Fisher/ECE/ghost-class 边界进入 Reference。
+- npm test 20/20；SOURCE_BUILD=PASS（71 modules、Node24.18.0、Vite6.4.3，退出0）。新增场景 test:browser -- --w8-only 共680断言通过，两档桌面、全阶段参数/计数/池身份、完整结果、暂停/回退、reduced motion、预测、模式切换、证据与几何。最后端点与第二旧记录来源的修正将随整篇回归复核，不声称已过最终 W8。
+- 实看代表图后修正：增强分支端点缺口、文字交叉；工作台回放源改从实际旧槽边缘发出；DER++ 不同 Ry 时明确第二旧记录；Reservoir 专注页压缩头部留白、将固定候选说明移出运动路径。公式仍用 MathML，图内损失下标用 SVG tspan。
+- 相邻旧检查器本地诊断（非当前官方验收）：syntax-check.js <publish_source> --require-parser / validate-output.js <publish_source> 均退出0，无占位项，7 chapters/10注册模块。HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c；缓存 upstream/main=c096ab528186f754ca3f8680ace8b12f6d1cf341；脚本 Git blobs=2bcfa6f815054ee498574c51cef05f0c315b4298 / 1a58ca06bd9fa47b6730904f1622189011cc32fe。HTTPS fetch亦失败（连接被重置），当前官方 UPSTREAM_SYNTAX/UPSTREAM_OUTPUT 仍为 NOT_RUN。
+- 真实F11再次尝试失败：Windows UI 工具无法可靠识别当前浏览器 URL，安全终止；停止操作个人浏览器。FULLSCREEN_REAL=NOT_RUN，保持最终人审明确待核。
+
+## W8 最终自检与 W9 交接（2026-10-29）
+
+全部 S4–S8 / I06–I11 已实现。最终无过滤浏览器2364断言通过；随后工作台局部几何修正再跑新增场景764断言，以及候选/旁注/网络避让24断言。21项数学/状态/证据测试全部通过。SOURCE_BUILD=PASS（最终 tsc/Vite退出0，71 modules，index-phdlzviR.js / index-DpXOBddT.css）；SUBPATH_ASSETS=PASS（生产 /der-review/，无浏览器/资源错误）。
+
+公共 Visual QA 40状态、两个桌面布局通过；报告run为 .visual-qa/run-2026-10-28T17-33-55-233Z，已核读actualUrl与诊断并实看必要截图。其后仅改工作台：候选沿空白列下降，拒收向侧边退出，M标题与旁注避开运动，已占槽不显示“空”。两档末次定向几何/截图通过。上述检查 scope 与未执行项详记 audit/final-check.md。
+
+真实连续播放127532ms、21阶段、508样本逐值匹配；未模拟时间。受保护生命周期核心TSX/model/CSS相对fa3257b完全无改动；1440的0/8阶段前后截图SHA256相同：87e4375130aa1ff678be7c45886e885609f5d3c2b365c85d7b361ba2d3f3eb45 / ebfc413a4f28cd73c2f6903a0c0f5cd48dd7270e5c5b65f0d1ac06d0d6b8f973。
+
+UPSTREAM_SYNTAX / UPSTREAM_OUTPUT 仍 NOT_RUN（两次fetch终端退出1，原生git码未单独采集，无法核实当前官方版本）；相邻旧脚本的本地诊断都PASS，不冒称当前官方检查。FULLSCREEN_REAL=NOT_RUN（Windows UI URL安全识别失败）；FULLSCREEN_LAYOUT=PASS；W9 HUMAN_ACCEPTANCE=PENDING。
+
+已校正M03的证明定位：Appendix D只有Algorithm 3，等概率陈述在§3，本教程归纳不是附录证明。未改既有论文理解或因果主线。
+
+审阅入口：正式 /；?focus=reservoir；?focus=der-step；?focus=augmentation；?focus=der-plus；?focus=workbench；?focus=evidence；受保护 ?review=1&focus=lifecycle#lifecycle-player。生产预览由本轮启动于 http://127.0.0.1:5195/，保留供用户审查。最后交接在现有 audit/final-check.md；不新增平行报告、不进行W10。
+
+最终收尾：CLI 已登记 W8 complete，当前 W9 pending。公共 runner 清理输出 CLEANED: <上述同一run>，Test-Path=False；本轮三处自建测试输出目录均验证在工作区内、非链接后精确删除。13个必要文件（关键PNG、最终录像、采样JSON和原机器报告JSON）保留于最终证据目录；归档JSON保留原run相对路径，实际保留画面以命名PNG为准。未触碰其他历史QA目录。
+
+## W9 截图反馈修订（2026-10-29）
+
+用户明确要求四处修订：KL定义/熵拆解前置并修复内部滚动；同标签对照图注等宽、mark突出划线句并删除划掉的品牌实验句；结果图误差标记改为协调的柔和区间；正式正文生命周期启用既有侧栏讲解/公式。此授权包括正文侧栏布局调整，不重新申请已授权的视觉变化。保护类别、同源数学、九阶段、图内对象、冻结/读写时序、同一播放状态和专注入口；共享样式/控制受影响范围须针对回归。W7/W8保留既有完成记录，W9仍PENDING。
+
+追加截图反馈：生命周期标题/引导文字对齐普通正文栏；只让舞台和侧栏突破正文宽度。正常标题的左右边界须与 reading-layout 精确一致。
+
+### 本轮截图反馈的已执行检查
+
+实现提交 a45fae9。普通生命周期直接复用已认可的侧栏：控制、分段文字、公式与示例说明都在左侧，保持同一组件/时钟；标题和引导文字回到 reading-layout 对齐线，下方舞台局部加宽。math-model.ts / lifecycle-model.ts 没有改动。
+
+- BUILD：npm.cmd --prefix papers/der/web/enhanced run build，退出0；Node24.18.0、Vite6.4.3，71 modules；index-D99Hv4HX.js / index-C5JYbR8T.css。
+- 数学/状态/证据测试：npm test 21/21通过。
+- 五项反馈定向回归：test:browser -- --review-feedback，1440×900与1920×1080共42断言，退出0。覆盖公式在动画/控件之前、公式容器无滚动/裁切、图注边界、mark/删除文案、四协议区间样式和数值位置、侧栏布局、正文标题边线、同一网络DOM与阶段在专注切换中保持。
+- 公共 Visual QA：node tools/visual-qa/cli.mjs --config .visual-qa/feedback-config-20261029.json，退出0；run-2026-10-29T00-58-22-881Z共14状态，两档桌面Geometry/BrowserErrors均PASS；STYLE仅显式背景基线PASS。actualUrl均为 /der-review/。
+- 已实看两档最终KL、图注、误差区间、普通侧栏与标题边线、原专注版的代表截图。公式没有靠裁切或隐藏滚动条处理；旧overflow-x:auto让MathML字形外延触发内部纵向滚动，现改自然高度与必要留白。接入侧栏时发现新字号覆盖挤压紧凑冻结块，已撤销不匹配的覆盖、恢复原版局部字号。
+- 回归契约按用户要求从旧“文字在图上方/单段16px”改为原版“侧栏多段14px”，并检查全部段落；没有删除冻结/读写/暂停/键盘/对象身份断言。专注版1440的阶段0/8截图与上轮归档SHA256完全相同（87e437...3eb45 / ebfc413...8f973）。
+- 最终必要画面与机器报告归档：C:/Users/lenovo/.codex/visualizations/2026/10/28/01a1836d-f85f-7e31-b7b3-3847b946b36b/der-feedback-20261029。原run截图路径用于追溯，实际保留画面以归档命名PNG为准。
+- FULLSCREEN_LAYOUT=PASS（布局模拟），FULLSCREEN_REAL=NOT_RUN（延用UI安全识别限制）；不将本轮反馈当作W9最终人工PASS，不执行W10。
+
+本轮收尾：无过滤test:browser最终2490断言通过，两档各1245，退出0；包括本轮反馈检查和原有全流程。公共runner的确切run清理输出CLEANED、Test-Path=False；必要证据已归档，两个本轮自建测试截图目录随后精确清理。工作流仍W9 PENDING，未代签人工终审。
+
+
+### 2026-10-29 · 用户要求公式先行与独立数学讲解
+
+用户直接授权：除 D1 单样本生命周期外，所有含公式模块先呈现公式，再单独详细解释，再进入机制动画。KL 增加散度曲线、方向性、非负性与梯度；Logit Matching 增加平方函数、逐坐标梯度、参数链式求导与共同平移。Reservoir、DER 单步、增强、DER++、四轮工作台同步调整公式顺序与讲解。保留原核心单元顺序、动画状态/计算引擎、合成示例边界及结果数据。D1 的 TSX/CSS/model 不改动；W7 既有通过记录保留，W9 人工终审仍 PENDING。新增图像为同源数学探索，不代替算法训练轨迹；局部样式避免影响 D1 与 Reference Hub。验证包括数学差分、公式顺序/交互、既有全流程、两档桌面截图。此节记录本轮范围，结果收尾追加。
+
+本轮实现与首轮检查：七个主线模块已采用公式→独立讲解→原机制动画；新增 KL 正反向曲线/切线、二类受约束导数与 log-softmax 推导，平方函数/标量梯度步，Reservoir 离散留存曲线与归纳。讲解公式使用原生 MathML；局部 CSS 使用独有 lesson-reading / lesson-derivation，避免旧全局类名冲突，保留 block math 排版。24 项单元测试通过；公式定向浏览器 114 断言通过；生产构建退出 0（Node 24.18.0、Vite 6.4.3，75 modules），最终排版公共 Visual QA 14 状态 GEOMETRY/STYLE/BROWSER_ERRORS PASS（STYLE 仅配置主线 MathML display 断言；其余靠截图复核）。完整全流程正在运行，最终结果在收尾追加。D1 源码、生命周期模型及训练引擎均无差异。最初试运行发现并修复 Node .ts 导入后缀、MathML display 和旧类名冲突；一次未成功构建后的预启动回归已中断，不计入最终通过结果。
+
+本轮收尾复核：
+
+- 七单元计数回归发现 DER 单步、增强、DER++ 三处遗留 `lesson-section`，已改为专用 `lesson-derivation`，保持原七单元断言；三模块两档公共视觉复测 6 状态通过。曲线端点的选中圆点移出曲线裁切层，曲线/切线仍按绘图区裁切，新增端点完整可见检查。
+- `npm --prefix papers/der/web/enhanced test`：24/24 PASS，退出 0；含二类归一化 KL 曲线有限差分、平方梯度与一步下降、Reservoir 留存归纳，原生命周期/训练/实验数据测试保留。
+- 无过滤 `npm --prefix papers/der/web/enhanced run test:browser`：两档各 1301，总 2602 断言 PASS，退出 0。覆盖原 KL/Logit 动画、D1 九阶段/侧栏/专注切换、Reservoir、DER/增强/DER++、四轮两模式、预测只读、键盘、减少动态、Reference、图注和误差带。该全回归后只移动绘图端点的选中圆点；最终构建的 `--formula-only` 专项两档各 61，总 122 断言 PASS，另检查曲线扫描、暂停、标量一步更新、端点、原生 MathML 与七模块公式→讲解→动画顺序。没有为通过而降低既有断言。
+- SOURCE_BUILD=PASS：最终 `npm --prefix papers/der/web/enhanced run build` 退出 0，75 modules；Node 24.18.0、Vite 6.4.3。产物引用 `index-Dp06vX94.js` / `index-CKpmrUfX.css`。SUBPATH_ASSETS=PASS：生产 dist 在 `/der-review/` 提供，完整和最终专项均无请求/页面错误；Vite base=`./`。
+- 公共 runner 首次 14 状态、局部修正后 6 状态：GEOMETRY_QA / BROWSER_ERRORS 均 PASS；首次仅主线配置了 MathML display 样式断言并 PASS，其余样式依实际截图复核，不将未配置项说成自动 PASS。已查看两档公式条、正文/曲线、非负性、梯度推导、共同平移、训练讲解与原动画交界及关键动态截图，VISUAL_REVIEW=PASS（本轮检查范围）。D1 源码/CSS/模型无改动，已对照原专注图审看主图；不将本轮截图声称为旧基准的逐字节一致。
+- 相邻现有 PaperSkill 检查器本地诊断：`node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser`（44 文件）和 `validate-output.js <publish_source>` 均退出 0 / PASS。当前官方检查器仍受上文网络核实限制，UPSTREAM_SYNTAX / UPSTREAM_OUTPUT=NOT_RUN；本地诊断不替代当前官方验证。
+- Desktop Window=PASS（1440×900），FULLSCREEN_LAYOUT=PASS（1920×1080），DPR=1；FULLSCREEN_REAL=NOT_RUN（本轮为 headless Edge 156.0.4314.50，未操作真实 F11）。W9 用户最终审查维持 PENDING。
+- 必要证据 33 文件归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/28/01a1836d-f85f-7e31-b7b3-3847b946b36b/der-formulas-20261029/`（各模块两档、数学推导/曲线边界和中间态、D1 对照及两份 runner JSON）。两个已完成公共 run 按终端报告的确切路径执行 cleanup，均 CLEANED 且 Test-Path=False；本轮原生测试目录与中断 run 的部分截图在归档、诊断复测结束后精确清理。保留用户审查用 5195 预览，HTTP 200 已确认。
+
+## W9 REVISE · 内容责任审查与返修保护边界（2026-10-29）
+
+本轮审查基准为 `33f3dbbf59951c1e5736278b181e001bf8c6c8c2`，即 W8 完成与“公式优先”测试门禁同时存在的 HEAD。从该 HEAD 的提交链可见：`07db1fd` 加入完整 S4–S8 场景、四轮工作台与实验页；`7d94b55` 随后新增七个公式讲义及曲线；`33f3dbb` 再将统一先后顺序固化进 DOM 测试。W7 首切片人工通过记录在 `efc08b9`，W8 仍是结构完成记录。当前人工结论 `REVISE` 指向 W8 新增内容；`paper.yaml` 的 W7/W8 状态不回退，W9 仍 `pending`，不得进入 W10。
+
+保护的现有内容包括：W7 已确认的 U1–U3 因果与动态关系；`MechanismScenes.tsx` 中 KL 和 Logit Matching 的概率/分数对照与类别次序；`review/SampleLifecyclePrototype.tsx`、`review/lifecycle-model.ts`、`review/lifecycle.css` 中已通过的九阶段生命周期及专注播放（含用户后来明确要求的正文侧栏修订）；`training-model.ts`、`reservoir-model.ts`、`formula-model.ts`、`evidence-data.ts` 的计算源与论文数据；W2/W4、证据定位、类别名和历史记录身份。P0/P1 不改这些受保护模块与算法纯函数；W7 原审批不会被新结论撤销或扩展到 Reservoir。
+
+### P0：按阅读单元梳理信息责任
+
+**U2 / KL。** 读者已有软最大值和当前分类损失的基本印象，刚看到固定的旧分布与当前分布；本段要回答概率蒸馏是否可行、方向为何重要。主视觉沿用获认可的固定 `p` 对当前 `q` 及同类别贡献，正文只留 KL 定义、变量含义和解释曲线所需的短推演。旧 `p` 与新的 KL 对象不重教 softmax/CE；完整梯度链、严格非负证明与反向散度数值表移至 Reference 按需查看。
+
+**U3 / Logit Matching。** 读者刚比较过概率目标，接下来要看直接保留整组分数会多约束什么。主视觉仍用同一类别轴对照冻结 `z` 和当前 `a`，并保留原三类例足以读懂平方距离；主线显示 `||a-z||²`、符号角色和必要结果。完整链式求导及长数值代入按需展开；KL 与 logits 的关键差异及 W4 需要的共同平移反例不能删成新的理解缺口。
+
+**U4 / Reservoir。** 读者已经知道候选是 `(x,z)` 且 `z` 冻结，需要理解容量 `K`、池 `M`、计数 `N` 如何在持续到达中共同变化。主视觉须看到同一批有身份的记录流、固定槽位、一次完整抽签，以及替换与拒收的不同结果；正文紧邻说明满池规则和拒收后 `N` 仍递增。`K/n` 归纳证明移到旁支；独立概率曲线不再占据主舞台。
+
+**U4 / DER 单步。** 读者刚学完选留，需要把回放接回训练顺序。主画面必须呈现当前 `(x,y)` 与旧 `(x,z)` 两条输入、更新前同一个 `θ`、当前 CE 与历史匹配如何合成一次更新，最后才处理候选入池；`z` 始终可追踪为固定副本。只保留联合目标和一次更新所需解释；不重讲 CE、平方差和完整输出/参数梯度，拒收不取消本步训练必须讲清。
+
+**U5 / 增强。** 读者已理解原图与冻结 `z`，现在要看保存时和回放时的视图为什么可以不同。主视觉展示同一原图身份、实际可区分的 `A₀(x)` 与 `A₁(x)`，以及二者共用同一 `z`；关键公式是当前视图与该冻结目标的匹配，旁边直接解释。均值—方差等式作为就近可展开的帮助，不先挤占主画面；合成小模型与图像像素变换的边界必须标明。
+
+**U5 / DER++。** 读者已知道匹配目标稳定但未必正确，需要看到真实标签为何提供另一方向的监督。开场直接展示真实 `y` 与错误旧 `z` 的冲突，再让 `Rd`、`Ry` 从写入前同一记忆分别抽取，可重合也可不同；当前损失和两种历史监督最终只触发一次联合更新。保留三项联合目标、职责和“提供纠偏机会但不保证改对”；不再逐页重教 CE/L2 或展开全梯度。
+
+**U6 / 四轮贯通。** 读者已掌握局部操作，目标是沿同一 `θ、M、N` 重建从空池、回放、替换到拒收与只读预测的真实执行。主画面连续继承轮次状态，每一步只唤回必要符号，不把四轮拆成彼此独立的框图，也不重复整套损失推导；完整 `W`、梯度和精度表留在可复核细节。
+
+**U7 / 实验证据。** 读者已能解释算法，接下来需要按协议判断哪些结论被实际结果支持。正文以清楚的对照图、条件和简短解释呈现 Class-IL、Task-IL、MNIST-360、容量与占优/不占优结果；完整源表与附加分析按需查阅。这里的主任务是证据比较，不需用无关动画增加交互。
+
+### P0 已执行范围
+
+`FormulaLesson` 的固定三段 DOM 模板已拆成中性的 `ReadingUnit` 容器和由各阅读模块自行组合的片段。各模块当前仍显式保留既有显示顺序，后续重排留在其自己的设计/实现中；共享组件和浏览器测试不再强制七个模块统一“公式先行”。测试仍核对七个阅读单元各自保有公式、解释与机制入口，MathML 尺寸/边界、公式数值/曲线交互、数据一致性及 D1 侧栏回归。此 P0 只撤销模板/测试门禁，不代表 W9 接受当前公式页的构图。
+
+源仓库已通过其 README 规定的共享 Playwright 锁定版本运行两档 Chromium；截图和交互回归保存在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p0` 与 `.../der-p0-formulas`。自动回归为两档公式专项 122 项、两档截图反馈专项 42 项、单元测试 24/24 与生产构建 PASS；实际查看了七个公式关键片段及 KL/D1 代表画面。截图测试为 headless Chromium；真实浏览器 F11 未运行。完整页面重做、S4–S6 的高保真方向审阅与 W9 复审仍在后续阶段。
+
+### P1 方向稿与短动态预览（2026-10-29）
+
+P1 只提供 Reservoir、增强视图、DER++ 三个方向供用户审阅。入口是 Vite 开发预览专用的 `web/enhanced/p1-review.html`，不改正式 `App.tsx` 路由，生产构建也不包含该入口。原有 `reservoir-model.ts`、`training-model.ts`、D1 已认可生命周期和论文数据均未修改。
+
+- Reservoir 直接显示既有预设轨迹的连续流、两个固定槽、同槽替换和拒收；动画的中间帧表现旧记录离槽，提交帧显示 x₃ 占据原槽，拒收后 N=4、M 保持不变。
+- 增强方向用同一合成原图身份展示保存时视图和可切换的裁剪/翻转回放视图；冻结 z 与当前 a 并列。图像为合成 SVG，logits/损失来自既有 W5 二维小模型，画面已标出二者边界。
+- DER++ 方向沿用 E04 合成错例（真实 y=Claude、旧 z 将 GPT 排第一），独立展示 Rd/Ry 可重合或抽到不同记录，以及当前 CE、dark 匹配和标签 CE 汇入一次 θ 更新；不承诺更新后必定纠错。
+
+P1 复核：`npm.cmd --prefix papers/der/web/enhanced run build` PASS（tsc、Vite 75 modules），生产 `dist` 不含 `p1-review.html`。仓库公共 Visual QA runner 经本机 Edge 156.0.4314.50 在 1440×900 和 1920×1080 捕获 20 个状态，20/20 PASS；`GEOMETRY_QA`、`BROWSER_ERRORS` PASS、浏览器错误为 0、无横向溢出/裁切/12px 以下语义文本。实际截图已审阅三种方向的静态/动态关键帧。该 runner 将 `STYLE_QA`、`REGRESSION`、其自身的 `BUILD`、`VISUAL_REVIEW` 留作 NOT_RUN；构建和人工图像复核分别另行完成。页面内容在较小窗口中可纵向滚动，截图为完整页面。
+
+Playwright Chromium 安装在本轮因 CDN DNS 失败（`ENOTFOUND cdn.playwright.dev`）；按照已实跑的 `docs/VISUAL_QA.md` Windows 回退流程，使用本机 Edge 完成同一 runner 的预览。这支持流程可用，不代表 Chromium 下载成功。报告和 20 张截图归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1`。P1 的 Agent 视觉复核完成；方向选择、P2–P4 和 W9 最终人工验收仍待用户审阅，本阶段不启动它们。
+
+#### Reservoir 视觉反馈返修（2026-10-29）
+
+用户指出原 Reservoir 画面的箭头、虚线、动画节奏和抽签控件不协调。本轮重排该方向稿：将抽签移到输入流与固定槽之间，统一“写入”绿色实线箭头和“离池”琥珀色虚线；替换与拒收各自落到明确的池外收纳区。旧记录移出和新候选写入分段运动，到站后淡出交接；固定槽只显示最终留存，满池选择值在收紧的决策卡中突出。没有修改算法、轨迹、正式页面或增强/DER++ 场景。
+
+修订后 `npm.cmd --prefix papers/der/web/enhanced run build` PASS（75 modules）。公共 Visual QA 用 Edge 156.0.4314.50 在 1440×900 与 1920×1080 的 20 状态全部 PASS，几何、浏览器错误均 PASS，0 浏览器错误；实看替换中段、替换完成、拒收三个 Reservoir 关键帧，确认箭头落点、抽签卡、动画交接及两档布局。最终报告为 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/reservoir-revision-20261029/run-2026-10-29T03-41-46-385Z/report.md`，同目录保留截图。人工方向选择与 W9 最终验收仍待用户。
+
+#### 增强视图鹈鹕样本插画（2026-10-29）
+
+用户追加要求将第二幅增强视图中的原合成小鸟替换为其示例中的鹈鹕形象。SourceIllustration 现以同一原图身份绘制戴蓝帽、白色羽身、长橙喙及喉囊的鹈鹕骑青绿色自行车；采用日落背景色回应参考图。写入视图、中心裁剪、水平翻转仍共享同一 SVG 与 x₁ 身份；冻结 logits、回放 logits、计算和增强交互均未改，其他两个方向也未动。
+
+修订后生产构建 PASS（TypeScript、Vite 75 modules）。公共 Visual QA 仍为两个视口 20/20 PASS、几何与浏览器错误 PASS、0 浏览器错误。实看原图、写入裁剪、回放中心裁剪和水平翻转，并复核 1920×1080；主体在两种变换中仍可辨识。截图与报告归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p1/pelican-revision-20261029/run-2026-10-29T05-37-14-832Z`。该方向的最终选择与 W9 人工验收仍待用户。
+
+#### P1 用户通过与 P2 启动（2026-10-29）
+
+用户回复“我通过了，你继续按方案执行P2”，据当前会话上下文确认 P1 三方向及 Reservoir、鹈鹕两项返修均获阶段通过，并授权启动 P2。此通过仅对应 P1 方向审核；P2 完成后仍须按方案停下进行下一次人工复评。W9 总验收保持 `pending`，不启动 W10，不修改 `paper.yaml`。
+
+### P2 / S4 Reservoir 生产主线（2026-10-29）
+
+将 P1 通过的 Reservoir 构图接入正式阅读模块：连续输入流进入抽签门，再分别流向两个固定记忆槽、替换出口或拒收出口。替换和拒收使用琥珀色虚线，写入使用绿色实线；冻结响应与原图身份继续随记录同行。移出记录缩小后停留在出口，候选落槽后才交接；拒收候选沿记忆槽上方到池外。主线规则移至机制图下方，长 `K/n` 证明留在旁支参考。播放状态、阶段选择、回退、冻结数据及计数继续由既有时间线与 `reservoir-model.ts` 驱动。
+
+生产构建 PASS（TypeScript 与 Vite，75 modules），`npm test` 24/24 PASS。`node tests/browser.test.mjs --reservoir-only` 经 Playwright/Edge 156.0.4314.50 在 1440×900 和 1920×1080 各 57 项通过，合计 114；包括四步全程播放、替换/拒收中间态、暂停/回退、状态模型一致、减少动态与实际画布边界。内置 Playwright Chromium 可执行文件缺失，Edge 使用仓库记录的 Windows 回退路径；截图为无头浏览器，不声称真实 F11。已实看替换动画、替换落定及拒收动画/落定两档画面。截图归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/reservoir`。
+
+此处仅完成 P2 的 Reservoir 子项；DER 单步、增强、DER++ 尚待处理。P2 全部结束后依方案停止交用户复审，W9 保持 `PENDING`，不启动 P3/P4，不改 `paper.yaml`。
+
+### P2 / U4 DER 单步生产主线（2026-10-29）
+
+生产版单步场景改为两条输入共用一个更新前网络：当前 `(x,y)` 支路呈现 logits 与当前 CE；从 `M` 读取的旧 `(x,z)` 支路呈现当前 `a` 与冻结 `z` 的逐类对照及历史匹配。两项损失在旁边合并为 `L_DER`，再显示唯一一次 `θ → θ⁺` 更新。画面底部保留更新前复制出的当前候选，并只在更新完成后把它交给 Reservoir；空池模式没有历史输入、回放样本或历史损失。阶段、值、回放身份和写入次序继续来自 `training-model.ts`；没有更改纯计算模型或复算表。顶部独立 DER 数学讲义已移出主线，完整推导只在旁支查阅，联合目标紧贴机制展示。
+
+生产构建 PASS（75 modules），`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 的 `--w8-only` 在 1440×900 与 1920×1080 各 382 项 PASS，覆盖单步连续阶段、暂停/回退、空池分支、更新先于写入、记忆值、减少动态及几何；更新后的 `--formula-only` 两档各 60 项 PASS，核对当前主线只在 Reservoir/DER 单步旁显示必要短公式。已实际查看当前前向、回放、联合更新/候选写入三阶段的两档截图。检查为无头 Edge；真实 F11 未运行。证据归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-step`。
+
+P2 的 Reservoir、DER 单步、增强视图与 DER++ 四项均已完成。现按方案停下等待用户对 P2 进行人工复审；W9 总验收继续 `PENDING`，不推进 P3/P4/W10，不改 `paper.yaml`。
+
+### P2 / S5 增强视图生产主线（2026-10-29）
+
+增强主线从重复小图标改为同一鹈鹕原图的实际可视视图：左侧固定身份的 x₁ 分流到保存时 `A₀(x₁)` 与回放时 `A₁(x₁)`；回放可切换中心裁剪或水平翻转。保存视图生成冻结 `z`，未来视图由当前模型生成 `a`，两者汇入一个紧凑匹配区。切换只重算当前 logits 与 `L_match`，不会写回 `z`。复用同一共享 SVG 鹈鹕资产，保持已通过 P1 画面一致；短公式贴近机制，独立增强公式讲义已移出主线。图像是合成插图、输出数值来自 W5 二维玩具模型的边界也在图中说明。训练模型与增强定义未改。
+
+构建 PASS（TypeScript 与 Vite，76 modules）；`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 `--w8-only` 两档各 384 项、合计 768 项 PASS；覆盖连续阶段、暂停/回退、同一固定目标、中心裁剪/水平翻转交互、即时损失变化、reduced motion 及几何边界。`--formula-only` 两档各 60 项、合计 120 项 PASS，确认主线只留短匹配规则。已查看 1440×900 与 1920×1080 的原图/保存视图/回放视图截图，插图变换后主体清晰，图像与二维模型数值的边界可见。无头 Edge 检查；真实 F11 `NOT_RUN`。证据位于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/augmentation`。
+
+S5 增强视图已完成；P2 最终状态见下方 S6 记录。
+### P2 / S6 DER++ 生产主线（2026-10-29）
+
+DER++ 主图以 E04 合成错例开场：同一旧记忆 `x₁` 的真实标签为 Claude，冻结向量 `z=(0.5,2,0)` 却将 GPT 排第一。暗知识匹配显示为逐类 `aᵢ ↔ zᵢ`；真实标签分支提供另一类方向。`Rᴅ` 与 `Rʏ` 是分开的读取事件，控件可查看它们恰好重合或分别抽到 `x₁/x₂`；两次读取均从本步更新前的 M 取值。当前样本分类、历史输出匹配和（DER++ 模式下）历史标签 CE 用不同颜色/图形汇入一个 θ 枢纽，再执行唯一一次更新；不显示或承诺更新后必然纠错。DER 模式会移除历史标签读取和第三项损失。总公式贴近合流主图，独立 DER++ 公式讲义移出主线。
+
+为确保原型与正式页面共享同一份合成记忆向量，E04 `x₁/x₂` 常量已从 P1 组件提取为共用数据；P1 中 `x₂` 的旧 logits 最高项说明改为由该向量动态读取，修正原有错误标签，不改 P1 构图。P1 增强方向以开发预览回归：Edge 两档均加载三张鹈鹕视图、三张保有同一 `x₁` 身份且无浏览器错误；截图在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/p1-augmentation-1440.png` 与 `.../p1-augmentation-1920.png`。算法、训练模型、论文事实和 W2/W4 未修改。
+
+构建 PASS（TypeScript 与 Vite，77 modules），`npm test` 24/24 PASS。Playwright/Edge 156.0.4314.50 `--w8-only` 两桌面视口各 390 项、合计 780 项 PASS，包括首幕冲突、DER/DER++ 分支、同条/异条读取、单一联合目标、三项只更新一次、暂停/回退、reduced motion 和画布边界。`--formula-only` 两档各 60 项、合计 120 项 PASS，当前独立阅读公式模块为 3 个，DER++ 联合目标留在机制旁。已审看 1440×900 与 1920×1080 冲突首幕、异条采样和三监督合流图；真实 F11 `NOT_RUN`。截图在 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p2/der-plus`。
+
+P2 四项（Reservoir、DER 单步、增强、DER++）已完成。现停止等待用户对 P2 进行人工复审；不推进 P3/P4/W10，W9 总验收保持 `PENDING`，`paper.yaml` 未改。
+
+## P3 完成：S7 持续系统与 S8 实验证据（2026-10-29）
+
+S7 以同一网络、参数 θ、容量 K、计数 N 与有身份的记忆 M 连续呈现四轮训练；每轮结束状态直接由 `training-model.ts` 生成并用于下一轮，轮次账本可回退检查。DER / DER++ 分支显示相应读取和损失；第三轮先训练、后替换同一槽，第四轮先训练、后拒收但递增 N。训练后的只读预测明确不读取记忆、不回放、不更新参数。细节矩阵和梯度可按需展开；合成模型边界保留。
+
+S8 同屏对照四项论文结果，分别保留 Class-IL、Task-IL、MNIST-360 与容量、实验条件、表中均值及原表 ±；条长只表示均值，不把 ± 解释为置信区间或显著性。页内突出条件化发现和 R05 反例，完整结果表/分析入口与来源定位仍可查。实验值、协议事实与 Registry ID 均由 W2 源表及证据登记测试核对。
+
+验证：`npm test` 24/24 PASS；`npm run build`（TypeScript + Vite，76 modules）PASS；生产构建子路径浏览器回归 `node tests/browser.test.mjs --w8-only` 在 Edge 156.0.4314.50 两个尺寸各 436 项、共 872 项 PASS，包含跨轮 θ/M/N/身份继承、DER/DER++、替换/拒收、暂停回退、只读预测、完整实验值/协议/来源和页面几何。最终生产构建的 `node tests/playback.test.mjs` 使用真实播放时钟完整播放 21 个阶段：500 个状态采样，127,576 ms，结束状态 `N=4`、updates=4、`M=x₃,x₂`，无浏览器错误。结构检查 `python tools/paper.py check der` 为 PASS；`status` 仍显示 W9/W10 PENDING，未改阶段元数据。
+
+人工图像复核为 Agent 的 W8 视觉 QA，不是用户验收。关键帧和双视口截图位于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-p3/workbench-v7`；完整生产播放视频、`playback.json` 和关键帧位于 `.../der-p3/production-playback-final`。真实 F11 `NOT_RUN`。训练/Reservoir 计算模型、论文源表、证据 Registry、W2/W4 与 `paper.yaml` 均无差异；W9 最终人工验收仍待用户确认，W10 未启动。
+
+## P4 完成：工作流与两份 Skill 校正（2026-10-29）
+
+将 W5 的视觉构图/状态关系先于 Kit 选择，以及关键动态场景先审高保真关键帧和短动态（或准确分镜）的顺序写入 `docs/WORKFLOW.md`、`docs/TEACHING_DESIGN_STANDARD.md` 和 W5–W7 `implementation-plan` Skill。W6/W8 在必要时先实现由同一模型驱动的核心动作和身份/状态交接，再单独精修视觉并复核端点/节奏，写入两份规范和 W6–W8 `enhanced-implementation` Skill。W7/W9 人审区分运动表达、算法语义/证据、教学因果/读者理解，再综合判断；不设动画配额，不加入机器人评分表。W9 明确须在真正的生产构建上完整播放关键连续场景；静态图不能代替。
+
+P4 只更新现有两份规范、两份 Skills 及既有计划/审计，无新 schema、清单、评分框架或论文内容。`git diff --check` PASS。仓库 `python -m pytest` 使用工作区临时目录运行：123 passed，1 项 Kit CLI 测试在沙箱拒绝原子目录改名时失败；随后该单项在本机权限下定向复跑 1/1 PASS。W5–W9 文档/流程用例通过。生产页面构建及完整 21 阶段播放已在紧接的 P3 完成，P4 没有改页面源码。`python tools/paper.py check der` 保持 PASS；W9/W10 仍 PENDING，未经用户确认不启动 W10。
+
+## 三幅机制图的箭头与轨迹返修（2026-10-29）
+
+针对用户反馈统一精修 S4 Reservoir、增强视图与 S6 DER++ 的连接线：结构箭头改为细线小空心箭头；真正随对象移动的路线改用与 D1 同采样窗口、点划线与淡出的短拖尾。Reservoir 入槽与离槽路线按对象运动进度渐进显露，最终态撤去路线；图中输入项、决策卡、双槽与池外区域共用中心轴，左右槽的进入路线镜像绕开记忆标题。增强图的双分支使用柔和曲线；原图身份说明移到连线外，时间控制、视图选择与插图区之间保留明确间距。DER++ 的读样本 token 增加 D1 风格拖尾，其他监督与更新连接同步收细。计算模型、阶段顺序、D1 本体与论文数据未改。
+
+验证：TypeScript/Vite 生产构建 PASS（78 modules）；生产浏览器 `--reservoir-only` 最终双视口共 114 项通过；`--w8-only` 双视口共 872 项通过，覆盖 DER++/增强页画布几何、播放/暂停、视图切换与语义回归。Edge 156.0.4314.50 headless；真实 F11 `NOT_RUN`。已实际查看 Reservoir 替换中段/拒收画面、DER++ 三监督汇合、增强回放画面。截图归档于 `C:/Users/lenovo/.codex/visualizations/2026/10/29/01a18566-4e3d-7401-968f-252bee2a2d93/der-arrow-revision`。W9 人工验收仍为 `PENDING`，W10 未启动，`paper.yaml` 未改。
+
+## W9 用户截图局部返修（2026-10-29）
+
+依据本轮四张用户截图完成三组修改，并分别提交：`3ad80cd` 将共享网络图改为 3×5 示意，同时标注计算仍为 2D→3 类；`448e217` 让 Reservoir 候选流从样本圆边界起步、平滑接入决策卡，并让增强分支箭头贴近目标图像边缘且使用连续细线；`a3dcf1f` 将 Reservoir 槽位占位内容和两侧空状态文案居中。训练模型、状态顺序和样本数值未改。
+
+本轮仅做源码与 `git diff --check` 检查；构建、单元/浏览器测试、生产播放和截图实看均未运行。此前 W8/W9 的 PASS 不覆盖上述三个提交；W9 仍待用户终审，W10 未启动，`paper.yaml` 未改。
+
+## W9 用户截图追加返修与复核（2026-10-30）
+
+按用户更正将工作台与单步场景的网络示意统一写为 **3×5×3**（仅为 2D 输入、3 类输出的结构示意）。Reservoir 与四轮工作台移除整段渐进路线和路线箭头，改为复用 D1 同款短点状运动拖尾；Reservoir 入槽改为先水平离开决策卡、再沿槽位边侧垂直落下，避免拖尾或候选卡经过槽标题。工作台的 `AFTER UPDATE · RESERVOIR` 不再继承会放大眉题的规则；DER 单步冻结向量拆到独立一行并提高到 12px，防止说明串出卡片。训练/Reservoir 模型、数值及阶段时序未改。
+
+代码分两部分及时提交：`d866a23`（D1 样式短拖尾与去除长路线）和 `944ec6d`（冻结向量文字可读性）。
+
+定向 Chromium Visual QA 配置 `.visual-qa/der-targeted-qa.json` 检查 Reservoir 替换/拒收、DER 单步联合更新/更新后写入、工作台第 3 轮写入/第 4 轮 DER++ 拒收，共 6 状态 × 1440×900、1920×1080 = 12 张截图。报告 `.visual-qa/run-2026-10-29T16-32-00-402Z/report.md`：`GEOMETRY_QA=PASS`、`BROWSER_ERRORS=PASS`（0）、所有目标截图结果 PASS；无整页横向溢出、已登记裁切或小于 12px 的语义文本。逐张实看两档的 12 张截图后，Agent 范围 `VISUAL_REVIEW=PASS`：3×5×3 图和向量行落在卡片内；槽位标题与入槽候选分离；仅见 D1 同款短尾；工作台眉题完整。runner 报告自身仍将 `STYLE_QA/VISUAL_REVIEW=NOT_RUN`，这里的视觉结论来自人工查看，不扩大为全站断言。`FULLSCREEN_LAYOUT=PASS`（1920×1080 模拟），真实 F11 与连续播放检查 `NOT_RUN`。
+
+`node node_modules/vite/bin/vite.js build --configLoader runner`：Vite 生产打包 PASS（78 modules）。项目命令 `npm.cmd run build` 仍失败于未修改的 `src/modules/MechanismScenes.tsx:168`：`<mspace width="1em" />` 的 `width` 不属于当前 React `MathMLCoreAttributes` 类型；不将单独 Vite 打包记作 TypeScript 构建通过。未运行测试套件。该记录只覆盖上述三个目标场景和 6 个状态；W9 用户终审仍 `PENDING`，W10 未启动，`paper.yaml` 未改。
+
+## S1–S3 + D1 教学重构（2026-10-30，当前执行契约）
+
+用户授权按本轮执行方案正式重构并逐部分 commit。起点 HEAD c256cdf，高于方案基线 fa1cb77；后续场景的既有修复保留。此节替代历史记录中 U2/U3 双动画、D1 侧栏和自动播放的设计；paper.yaml 人工阶段状态不改。
+
+P0 统一 S2/S3：x₁、Claude/GPT/DeepSeek，z=(2,1,0)，a=(2,0,1)。RESPONSE_CASES / responseComparison 为三态入口，复用 softmax / probabilityComparison / logitComparison。D1 是独立未来情境：给定 aⱼ=(1,2,0)，Ldark=2。已核对缓存 §3 Eq.(2)–(5)、Algorithm 1、registry、manifest 和导航；FormulaLessons.tsx 已不存在，不恢复。
+
+实施顺序：P0 数据/契约；P1 S1 推导和 S2 按需揭示；P2 单一 S3 实验台及导航；P3 机制桥接与 D1 两轮预讲解；P4 居中无侧栏播放器；P5 测试/视觉/文档。每部分提交，不创建 PR、不发布。
+
+Kit：已查 Registry、visual-parts Recipe 与现有副本。直接复用 ResponseMeter、SampleToken、Reference/TermRef、MathNotation、SceneTransport/useSceneTimeline 和 reduced motion。正文阶梯与机制时间轴属于 DER 局部构图，无需扩充 Kit，不批准 candidate。原两类概率仅留作 Reference 独立数学背景。
+
+D1 保护：主 SVG、内部组件、几何/时序模型与九阶段不改；只调整外部 DOM、CSS、旁白及首次播放状态。邻接风险：review 入口、浏览器旧侧栏/自动播放断言、公式测试与 visual-qa。视觉计划覆盖 1440×900、1920×1080 的完整阅读、S2 双态、S3 三态、D1 初始/冻结/联合更新/入池、专注/菜单。真实 F11 单独记录。审查仅写本计划与 audit/final-check.md。
+
+P0 验证：原数学测试 10/10 PASS。导航合并随 P2 原子提交，避免暂时留下空章节。
+
+P1 已实施：S1 交错图文、三步阶梯、GCL 因果说明与最小 ER 关系；S2 同一 x₁ 的双正确预测，用户操作后才挂载响应条与结论，复用 ResponseMeter。数学测试 10/10、diff --check PASS。npm ci 在沙箱与本机权限下均因原有 node_modules 原生二进制被占用而 EPERM；正在恢复依赖，完整构建及双视口视觉随 P2/P5 验证，不将当前源码检查记为视觉通过。
+
+P2 已实施：正式 U2 单次挂载 ResponseComparison，U3 专责历史监督与生命周期；registry、manifest、导航及 review 入口同步。旧 KL/Score 两套计时演出及其专用 CSS 已替换为统一双表示、三态实验台，正文包含固定/可训练角色、两种输出梯度及可展开求导。原 LOGIT_CASES 保留给已批准 D1 与 Reference，未改其给定值。
+
+新增三态与有限差分核验后 npm test 25/25 PASS；npm run build 的 TypeScript/Vite PASS（80 modules），原 mspace 类型错误随旧演出移除而消失。npm install --ignore-scripts 在本机权限恢复依赖成功，lockfile 无语义差异；npm ci 的 EPERM 原因保留记录。双视口截图检查进行中。
+
+P3 已实施：用小型教师—学生关系、ER/DER 记录对照与 θ₀→θ₁→θ₂ 时间轴桥接历史监督来源；正文明确蒸馏不必然依赖边界，候选不必留池。D1 前完整呈现空记忆第一轮与同一当前网络的第二轮，强调先冻结/再更新/再入池、一次联合更新与旧 z 固定；给定未来 aⱼ 与 S2/S3 比较时刻就地区分。npm run build PASS；P1/P2 双视口截图已生成，已实看 1440 的完整 S1/S2、展开响应与偏好变化实验台，未见布局溢出。播放器本体尚待 P4。
+
+P4 已实施：正常/专注均采用居中且保持 1120:640 比例的舞台，下方水平紧凑控制区，一句观察提示及可展开来源；撤除 sidebar、has-sidebar、旧多段旁白和布局覆盖。首次暂停，舞台前增加“播放完整生命周期”入口。专注与退出使用同一舞台与同一时钟。
+
+保护比对：主 SVG 字符串、type Scene 至内部绘图组件与起点 c256cdf 完全一致（换行规范化），lifecycle-model.ts 与 SceneTransport.tsx 未改。npm test 25/25、build PASS；更新布局与初次暂停断言后，lifecycle-only 两视口共 1,494 项 PASS，保留九段几何/身份/冻结/写入顺序及键盘、reduced motion、DOM 身份回归。已审看 1440 普通起始、专注终态与两轮预讲解；修正 review.css 对标题宽度的覆盖。截图器长元素自动滚动会让 sticky 顶栏进入局部截图，最终阅读证据将用文档坐标截图避免这个采集伪影。
+
+真实 F11：Computer Use 初始化及窗口定位后，工具因无法可靠识别当前浏览器 URL 而终止，已停止桌面输入；FULLSCREEN_REAL=NOT_RUN，不能以 headless 双视口替代。整篇与最终视觉仍在 P5 继续。
+
+P5 定向检查与已修复问题：新增 teaching-front 浏览器检查、真实 D1 播放检查；保留原生命周期、数学、工作台与证据检查。旧侧栏/自动播放/双实验台断言已迁移。Reference 平方匹配表改用同一 RESPONSE_CASES；历史 z 与 S2 旧响应共用同一常量。S2 未展开时不再在图注泄露当前向量。保留 #logit-matching 深链，公式面板取消继承的 overflow:auto。
+
+整篇回归发现此前基线遗留的两处实际字号问题：DER 单步 ds-vector-note 12→13px（原缩放后11.606px）、工作台 wb-panel-kicker 10→13px（原9.547px）。只改这两个局部规则，布局/数值/状态/运动不改。旧证据页测试仍寻找已移除的切换器与误差带，已改为核对现有三幅静态卡片的均值标记与原表 ± 文本，不恢复旧 UI。W8 几何诊断增加场景/类名/实际字号，阈值未放宽。
+
+最新定向结果：front-only 双视口192项 PASS；w8-only 双视口854项 PASS。公共 QA 首轮本轮阅读与 D1 全通过，整体 FAIL 来自四种旧选择器（增强嵌套svg、DER++旧按钮、证据页旧切换器），已修正原 visual-qa.json 并重跑，未删除状态覆盖。真实连续播放：D1 9阶段、310次采样、67,348ms PASS；原工作台21阶段、458次采样、127,478ms PASS。最终整篇回归及公共报告待下方收尾记录。
+
+## 用户截图排版返修（2026-10-30，接续本轮任务）
+
+用户四张截图指出 GCL 大幅右移、章节与机制桥接左边线不一致、第一轮流程右侧大片空白，以及 D1 导语/标题层级和字体混用。已按截图修正：取消 GCL/桥接/第二轮的各自居中限宽，章节、正文与 D1 标题共用正文左边线；正文段落左对齐限长；第一轮使用较宽解释正文与最多400px的窄流程轴，撤除大块浅绿背景；收紧段间和 D1 入口留白。主 SVG 和动画组件保持起点一致。
+
+前半程及顶栏明确采用 Microsoft YaHei 优先的同一正文栈，强调/列表/按钮使用同一字体族，数学排版和受保护 SVG 字体保持原职责。CDP CSS.getPlatformFontsForNode 实测：修复前同段调用 Segoe UI 与 Microsoft YaHei；修复后正文中英文字与按钮均为 Microsoft YaHei（少量 Unicode 下标由系统符号字形补足）。新增共同左边线、正文/强调/列表/控件字体族一致、流程宽度与无溢出的浏览器断言。
+
+TypeScript/Vite build PASS；front-only 两档198项 PASS（含新增6项排版回归）。已实看修复后的桥接与两轮预讲解；最终完整回归、定向公共 QA 与证据刷新继续执行。此前整篇2652项和公共56状态PASS仅覆盖截图返修之前，不把它们冒称为返修后的最终结果。
+
+### 本轮最终结果与证据（2026-10-30）
+
+截图返修提交 c6cf540 后，未过滤 npm run test:browser 双视口共2658项PASS；公共全篇56状态PASS，返修影响范围（阅读+生命周期）另28状态PASS，GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS 均通过。来源/字体与 Agent 阅读复核、真实播放、四项兼容状态及证据路径统一见 audit/final-check.md 的本轮最终审查。上游当前输出检查器与真实F11仍NOT_RUN，不扩大为W9人审通过。
+
+Agent 逐段阅读与截图检查后，保留最终双视口阅读图、S2双态、S3三态、两轮预讲解、D1关键帧/专注/菜单，以及播放状态采样。因原公共runner整页截图过长不适于文字审查，另使用文档坐标截取各完整教学段落，实际查看更新后的布局。用户反馈前的视觉结果不会代替本轮返修复核。
+
+清理：已读报告并查看代表截图后，将轻量报告复制到当前会话 visualizations 的 der-front-qa。按本次输出的确切路径清理三批公共runner产物：run-2026-10-30T08-33-50-764Z、run-2026-10-30T08-43-42-005Z、run-2026-10-30T08-54-41-392Z；三次均返回 CLEANED，随后 Test-Path 均为False。保留可交接的必要截图/状态JSON于visualizations，不放入Git或冒充获批基线。临时脚本与视频在最后收尾时按确切路径清理。
+
+最终微调：为避免13px工作台眉题的额外字距把 AFTER UPDATE · RESERVOIR 挤出局部框，仅将 wb-panel-kicker 字距设为0；不改文本、坐标、字号或训练逻辑。对该变化只重跑 build 与 W8/工作台布局的受影响检查，结果见审计补充。
+
+最终字距微调后的 build、W8 854项、工作台避让24项均PASS；已实看刷新关键帧。十个临时脚本/配置和临时视频已清理，必要报告、截图及播放JSON留在当前会话visualizations；本任务5195预览已停止，复看命令见README。最终源码/文档提交后检查git status，不留本轮临时产物。
+
+### S2 柱条左边线修复（2026-10-30）
+
+按用户截图，将 S2 两卡的响应行改为统一标签列与数值列，避免各行按 Claude/GPT/DeepSeek 的文字长度分别决定柱条起点。仅修改 DER 局部 response-reveal 布局，不动 Kit、数值或 D1。
+
+build PASS；生产 Edge 双视口1440×900/1920×1080核对：两卡各三条柱条相对左偏移均88px、轨道宽均427.984375px，无页面溢出；已实看两张截图。证据在当前会话 visualizations/der-bar-alignment/aligned-1440.png、aligned-1920.png。临时浏览器/HTTP服务已退出，检查脚本随后清理。
+
+### S2 默认展开（2026-10-30）
+
+按用户最新要求，S2 整组响应及其说明首次进入即展开，仍可手动收起和键盘重新展开；眉题同步改为“最终答案与整组响应”。此要求覆盖先前“先隐藏再揭示”的首次进入策略。同步调整现有浏览器期望、公共QA的展开/收起状态与README。数值、柱条对齐及D1不变。build PASS，双视口交互与截图复核结果见审计追加。
+
+### 移除 S2 展开/收起控件（2026-10-30）
+
+用户明确要求删除截图中的“收起整组响应”按钮。已彻底删除该按钮、React展开状态及条件渲染，响应柱条与解释作为普通正文始终显示；清理按钮样式，并同步现有浏览器断言、公共QA状态及README。此项覆盖上一条保留收起功能的处理。
+
+## S1–S3 / D1 视觉二次优化 · W1 S3 样板（2026-10-31）
+
+依据用户指定的 `task/DER/DER_S1-S3_D1_视觉教学二次优化执行方案.md` 开始执行，起点 `ed225ed`，分支 der。按方案第十节 W1 的明确边界，先实现、验证并提交 S3，视觉方向等待用户验收后再开展 W2–W5；不代填 W7/W9 人审状态。S2 旧的“始终展开”当前保持，后续按本方案恢复渐进揭示。
+
+W1 实际改动：MechanismScenes 将共用三类 logits 舞台前置；复用 D1 ModelMark 与已有 ResponseMeter，历史/当前同轴；概率镜头支持按类别追踪比值、KL 单项与 q−p；平方镜头从差值到平方贡献，再沿路径逐项移动数值副本至合计。切换 / 重播采用 1.4s 确定性插值，可暂停、继续；每帧都用 math-model 的 logitComparison / probabilityComparison 同步计算全部概率与损失，终态回到精确输入。中途显示约等号以说明小数舍入。reduced-motion 直接提交完整语义终态，推导和 Reference 入口保留。
+
+保护范围：math-model、S1/S2、机制桥接、D1 内部及 S4–S8 源码不改。D1 三个受保护文件 git diff 为空；ModelMark/ModelPixel 与 Kit 内部不改。本次只调整局部 mechanism-scenes.css、S3 摘要及对应浏览器/QA定位和过渡等待，不修改 shared/global 样式。沿用缓存 §3 Eq.(2)–(5) 与既有数学模型的含义，不重新解释为真实优化器训练。
+
+验证：`npm.cmd --prefix papers/der/web/enhanced run build` PASS；`npm.cmd --prefix papers/der/web/enhanced test` 25/25 PASS；`npm.cmd --prefix papers/der/web/enhanced run test:browser` 两档 2680 项 PASS（在最后数值副本避让微调前）；最后微调后 `node papers/der/web/enhanced/tests/browser.test.mjs --front-only` 两档 220 项 PASS，覆盖三态、逐帧数据一致、暂停/继续、replay、类别追踪、公式/条形边界、Reference、键盘与 reduced motion。三态 KL/L2=0/0、0.154697…/2、0/3。`git diff --check` PASS。
+
+公共 QA：`node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json` 全篇54状态 PASS；数值副本最终避让调整后，使用本次临时聚焦配置 `.visual-qa/s3-current-config.json` 补跑 S3 三终态与暂停帧，两档8状态 PASS。GEOMETRY_QA、STYLE_QA、BROWSER_ERRORS 均 PASS。报告中的4项11px眉题警告属于未改动的 S8 证据区，本次不扩展重构范围；无 S3 几何警告。报告未自动判断的 VISUAL_REVIEW 已由 Agent 实看两档首屏、三态和暂停帧/后半程贡献移动帧，无裁切、重叠或数字挤压。修复了中间平方值槽宽不足、三个副本同时汇合重叠和舍入合计误读。
+
+真实播放：首次 `test:playback` 因未启动5195服务 ERR_CONNECTION_REFUSED（未进入测试）失败，启动本次专用生产预览并设置 DER_PREVIEW_URL 后重跑 `npm.cmd --prefix papers/der/web/enhanced run test:playback` PASS：D1九阶段322采样/66,971ms；完整工作台21阶段501采样/127,583ms。不使用加速时钟冒充连续播放。
+
+FULLSCREEN_LAYOUT=PASS（实际1440×900与1920×1080、DPR1、Chromium153.0.8010.12）；FULLSCREEN_REAL=NOT_RUN（本次仅 headless 自动化，物理 F11 留待人审）。REGRESSION=PASS（限定本次 S3 与受保护D1源码不变和功能回归，不声称像素基准比对）；HUMAN_ACCEPTANCE=PENDING。UPSTREAM_SYNTAX/UPSTREAM_OUTPUT=NOT_RUN：相邻 PaperSkill checkout 的 Git 当前版本验证被 dubious ownership 阻止，未改全局 safe.directory，也未用未核实的脚本冒充当前官方检查。SOURCE_BUILD=PASS；SUBPATH_ASSETS=PASS（生产/der-review/下实际浏览器网络请求无错误）。
+
+代表证据保存在 `C:/Users/lenovo/.codex/visualizations/2026/10/31/01a1923c-865b-7811-827d-df3b90e90dc8/der-s3/`：s3-firstscreen-{1440,1920}.png、s3-{equal,preference,shifted,intermediate}-{1440,1920}.png、s3-late-intermediate-1440.png 及 full-report/final-s3-report。连续播放 JSON 与关键帧在同级 der-s3-playback。截图仅为待签收证据，不是获批基准；请先确认 S3 的观察工作台方向，再继续 S2 → S1 → 桥接与两轮预览。
+
+清理与交接：已读取两份公共报告并实看代表图，轻量报告与必要截图已提取至上述证据目录。本次两个准确 run 目录（14-01-49-620Z、14-05-46-630Z）均通过公共 cleanup-run 返回 CLEANED，并逐一 Test-Path=False；临时配置、采集脚本、无关回归截图与浏览器 debug.log 已清理。本次5195生产预览已停止，其余runner服务已自行退出。
+
+### 用户截图字体与排版修复（2026-10-31）
+
+接续 ad3ae7d，按用户五张截图修复。用户补充明确要求保留 x₁–x₃ 并添加像素图：S1 保留编号，并展示对应 Claude/GPT/DeepSeek 像素图与名称；θ 用正文无衬线字体与 HTML 下标。S2 样本/真实标签移到标题之后；压缩重复说明，保留标签监督影响所有输出但不重建旧分数、软目标和暗知识的因果。取消 S2 结论、前半程章节摘要、S3 导语/总结/推导和桥接正文的任意局部限宽，使用各自现有构图内的完整宽度。
+
+字体根因：Kit 正文默认优先 Aptos/Segoe UI，论文前半程优先 Microsoft YaHei，控件和响应条仍走 Kit 字体。仅在前半程局部绑定统一正文变量，数值也用同一字体与 tabular-nums，D1 SVG/内部字体不改。KL 推导原先将 Unicode 下标和长公式混入段落，现改为三步 MathML：展开 log q、代入 KL、求梯度 q−p。正文与数学分开，数学字体统一 Cambria Math；保留 H(p) 固定、交叉熵等价及 KL 方向说明。math-model 与训练逻辑不改。
+
+验证：npm.cmd --prefix papers/der/web/enhanced run build PASS；node papers/der/web/enhanced/tests/browser.test.mjs --front-only 两档242项 PASS。新增断言覆盖像素图/编号并存、标题→样本顺序、可用宽度、正文/控件字体、三步数学结构和真实字形。CDP CSS.getPlatformFontsForNode 实测图注/S2正文/推导正文为 Microsoft YaHei，公式为 Cambria Math。已有三态损失、暂停/回放、Reference、D1居中/身份检查保留通过；此次不重复未改动的D1全程实时时钟播放。
+
+公共QA：本次临时聚焦配置 type-repair-config.json，在生产 /der-review/ 下覆盖1440×900与1920×1080的S1数据流、S2布局、展开推导、S3共同平移，共8状态 PASS；GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS PASS。报告仍有原S8四个11px眉题警告，本次不改该区。已实看两档相关局部截图，无挤压、裁切或额外限宽，标题下方的样本信息与新增像素/原编号均可见。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless）；HUMAN_ACCEPTANCE=PENDING，不代填S3方向签收。
+
+证据保留在当前会话 visualizations/der-type-repair：s1-stream、s2-response、s3-proof、s3-firstscreen、s3-intermediate两档代表图。报告已读取；准确run-2026-10-31T14-44-27-142Z经cleanup-run返回CLEANED、Test-Path=False。临时配置与无用回归截图已清理，5196服务由runner自行关闭。
+
+### 用户截图构图、章节过渡与字体节奏修复（2026-10-31）
+
+接续7e448cc。按标注将S1改为三列完整状态：每列在同一框中纵向排列像素图、类别名、x编号与θ编号，两条箭头连接整列。ER图增加当前/记忆的像素记录和标签，短汇合线连接同一小网络，旧记录保持在虚线记录位；仅展示ER的(x,y)。最后微调汇合路径与记录中心对齐，并将共同监督的解释归入图注。
+
+新增论文局部ChapterHandoff，在App的六个实际章节边界统一挂载。每张卡以本节所得、下一问、对应的小视觉对象和真实锚点形成过渡，替换三个模块中原有纯文本front-handoff，不叠加两套衔接。S4–S8只增外部章节卡片，内部场景/数值不变；D1内部源码、几何、播放时钟不改。冻结出处的Reference入口保留在D1之后。
+
+字体与阅读检查覆盖S1状态图、ER、S2/S3、桥接、两轮预讲解、D1入口和六个章节边界。用户图四的更新说明、数值条件与观看提示统一17px、常规字重与同一字体；完整数值条件保留在可展开注释中，观看提示用小型阅读面板承接D1，不再额外放大正文。章节卡片使用同一组14px定位、16px回收、20px下一问、15px入口层级。保留标题、正文、图形对象的必要区别，避免相邻正文随机换样式。
+
+验证：npm.cmd --prefix papers/der/web/enhanced run build PASS；全篇test:browser双视口2712项PASS。最终ER路径/槽位示意微调后，browser.test.mjs --front-only两档252项PASS。新增断言覆盖样本/θ的纵向对齐、两条箭头、六个唯一过渡及有效锚点、D1前三类文字的同字号/字体/字重。原有数学三态、暂停/继续、Reference、D1居中/身份与全篇机制回归均通过。math-model与D1内部源码无diff；本次未改播放逻辑，不重复实时全程播放检查。
+
+公共QA使用本次临时配置，覆盖三列状态、ER、D1前提示、六个章节过渡，两档18状态PASS；最终ER连线及两槽位示意另4状态PASS。首份report的GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS均PASS，最终定向runner返回PASS；已实看双视口相关局部图与六卡拼图，无新增横向溢出或遮挡。首份报告仍包含原S8的四条11px眉题警告，本次不改其源码。9个状态已同步加入正式visual-qa.json。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless）；HUMAN_ACCEPTANCE=PENDING，不代填S3方向签收。
+
+证据保留在当前会话visualizations/der-composition-repair：s1-stream、er-records、chapter-handoff-1至6、six-handoffs-1920、second-round-reading及D1前后代表图。公共临时run目录15-02-06-915Z与15-07-43-833Z均按本次准确路径cleanup-run返回CLEANED，并各自Test-Path=False；临时配置、无用途回归截图与debug.log已清理。未保留公共完整报告文件，必要结论记录于本节；公共runner创建的预览服务已退出。
+
+### 状态列间距与ER纵向比例（2026-10-31）
+
+按最新两张截图：S1主视觉列加宽，三列间距26→56px，短字符箭头替换为50px SVG路径，保持样本/θ对应。ER两条记录各112px高、行间距56px；汇合SVG改为160×280，端点y=56/224对齐记录中心，中点y=140对齐同一模型。增加纵向呼吸空间，未改变(x,y)与标签监督语义。
+
+build PASS；front-only双视口252项PASS，实看两档代表图，状态列、记录、箭头无裁切/重叠。证据在当前会话visualizations/der-objects-polish的s1-stream与er-records。此部分先提交；接着完成用户要求的01–03卡片与视觉对象检查。
+
+### 01–03卡片与教学对象深化（2026-10-31）
+
+接续8ab89e7。按用户要求逐段检查并改善01–03，不只增加背景框。01用历史堆叠、容量K框、从M读回样本三个局部对象承接有限回放，GCL三项要求作为紧凑约束条；开场导语21→18px，正文17px，辅助说明15px。02在结论旁增加像素类别的历史/当前名次对照：Claude 1→1、GPT 2→3、DeepSeek 3→2，名次直接由LABEL_OLD/LABEL_CURRENT求得，不维护第二套分数。正文与可观察差异相邻，整块保持章节宽度。
+
+03新增论文局部TeachingObjects：教师/学生小网络明确固定与可训练角色；ER与DER卡片各自包含标签记录/冻结数值记录；参数时刻卡片重复展示同一z₁，直观看到θ改变而z₁不变。FrozenResponse所有值读取HISTORY_Z，不影响原math-model。第一轮使用冻结对象与紧凑状态卡，微调两栏比例及列表间距，减少右卡过高导致的左侧空白；第二轮给当前样本与旧记录各自可辨认的对象，联合目标改为MathML，保留一次联合更新和更新后入池的时序。D1播放器内部SVG/时钟/九阶段与S4–S8源码不改。
+
+检查：build PASS，npm test 25/25 PASS；最终front-only双视口264项PASS（新增记录中心/花括号端点对齐、长箭头与列间距、三类名次实算、固定向量跨时刻不变、新对象不裁切等断言）。公共QA覆盖开场/推导卡/ER/名次/教师/记录/冻结时刻/两轮预讲解，共16状态PASS；第一轮高度微调后再跑两轮2状态PASS，GEOMETRY_QA、STYLE_QA、BROWSER_ERRORS均PASS。仅有原S8四条11px眉题警告。正式visual-qa.json补充rank-exchange、teacher-output、frozen-targets三状态，以后可持续回归。
+
+Agent视觉复核：用生产整页截图按文档坐标裁出两档的开场、推导卡、约束、ER、S2、S3实验台、桥接和两轮预讲解，避免element screenshot自动滚动时顶栏混入长区域的采集伪影。已实际查看两档代表区域，检查对象身份、正文比例、字号和公式、边界与间隔；发现并修复时轴中frozen-cells的旧display样式覆盖，以及第一轮状态卡过高。截图仅是审查证据，不是人审基准。FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless）；HUMAN_ACCEPTANCE仍PENDING。
+
+证据在当前会话visualizations/der-objects-polish，保留read-opening/reasoning/constraints/replay/prediction/math/bridge/rounds两档图与objects-qa/rounds-qa轻量报告。全篇浏览器首跑在DER++选择器超时，恰逢生产dist重建；不将该次记为PASS，正在使用不再变化的最终构建重跑。D1实时播放此次未重跑，受保护源码diff为空。
+
+最终全篇重跑：最终dist保持不变后，npm.cmd --prefix papers/der/web/enhanced run test:browser两档2724项PASS，未再出现DER++选择器超时。首跑失败及构建时间重叠的记录保留，不删除/放宽原断言。最终264项前半程检查、25项模型测试与build结果均覆盖当前源码。两次公共run均准确返回CLEANED并Test-Path=False，报告与必要截图已提取；临时采集脚本/配置和大幅整页中间图已清理，本次5195预览已停止。
+
+### 方案继续执行 · W2（2026-10-31）
+
+用户“整体还行，继续按文档执行”确认当前方向，继续剩余W2–W5，不代填paper.yaml人审阶段。W2以最新执行方案为准恢复真正的逐步揭示：首屏只见两次Claude正确预测；历史先展开，再将当前响应从同一参照连续变到(2,0,1)，最后出现排序观察与Dark Knowledge解释。提供分类答案/完整响应两个观察模式及暂停、重播；与此前删除旧收起按钮的界面分开，当前控件承担方案要求的揭示任务。小头像、类别顺序、柱条对齐与此前字体/卡片修复保留。复用既有useSceneTimeline，reduced-motion一键读完整结果，仍可返回只看答案。
+
+build PASS；front-only双视口270项PASS，含历史先于当前、暂停中间态、重播一致与共享最终数据。已实看1440初态/历史展开中帧和1920最终态；证据在当前会话visualizations/der-execution。最终占位区域最小高度随展开进度变化，避免初态保留整组分数的空白。
+
+### W3 数据流与有限回放动作（2026-11-01）
+
+保留三类像素/编号与宽间隔的状态列，将其下方增加唯一固定模型站点与固定旧x₁观察位。三个可暂停/重播的片段按输入进入、更新信号、参数提交、旧响应标记漂移展开，最后停在θ₂。不提供虚构训练数值；图旁明确为合成概念示意。ER保留原两条记录、长花括号与同一模型，通过ResizeObserver测量真实源/目标位置，从像素原位发出读取副本；原记录DOM与数值不变。副本走上下留白弧线避开标签，不穿过正文；两路输入之后共同监督。
+
+共用FrontMotion的MiniControls和既有useSceneTimeline，不增加第二套时钟。build PASS，前半程双视口282项PASS；已实看流动中帧、旧记录读取中帧。新增断言覆盖参数在输入/信号之后提交、暂停冻结、结束停留与原记忆身份不被消耗。此部分单独提交后继续W4。
+
+### W4 历史副本来源与两轮接力（2026-11-01）
+
+用SnapshotOrigin替换三栏静态θ表：更新前输出为来源，数值副本沿真实路径移动到冻结候选，随后模型θ改变，候选数值保持(2,1,0)，本场景不暗示已经入池。教师/学生与ER/DER记录关系保留此前卡片和身份。
+
+用TwoRoundPreview替换first-round/round-state/joint-round的重复正文列表和终态框。唯一模型、当前输入、两类损失、候选和K=2记忆槽位构成稳定舞台；两轮各4个短步骤，轮末停留。保留当前/读取副本的来源，旧槽0记录不会移动或刷新，当前和历史损失汇合后沿返回路径更新模型，更新后才写入槽位。每帧θ/M/N、损失来源、冻结时机与写入提交均直接投影原lifecycleSceneAt，不另建算法模型；z及z₂符号来自LIFECYCLE_FIXTURE。
+
+build PASS；双视口front-only418项PASS。新增front-motion-checks覆盖数值副本连续移动/暂停、模型改变而目标固定、两轮每步中帧的D1模型比对、记忆读取不消耗本体、轮末只增加一次更新与一次写入、画框内几何和reduced-motion逐步结果。已实看1440/1920的来源复制/冻结、两轮初中终态与联合更新中帧，最后补明确的总损失→唯一模型更新路径。D1内部代码未改。最终路径补充后在W5统一复验。
+
+### W5 全页收敛、差异化视觉与最终检查（2026-11-01）
+
+清理已被动态场景替换的snapshot-time-axis、first-round、round-state、joint-round等旧CSS；更新正式Visual QA定位器和新状态。用户进一步要求独立设计更多视觉对象，本轮新增封签式三层响应、按真实softmax分配的概率色带、折角候选记录与锁定印记、带空/占用状态的记忆架、双端口六边形损失汇合节点和固定历史参照环。它们分别编码未知响应、概率分配、冻结、容量和单次联合更新，不改变三类像素身份。实际复看后将封签旁提示精简为一句，避免两句挤在同一行。
+
+最终构建与公式：npm.cmd --prefix papers/der/web/enhanced run build PASS（TypeScript 5.9.3 / Vite6.4.3 / 87 modules）；npm test 25/25 PASS。最终造型的完整test:browser两档2886项PASS；最后一句提示精简与仅max-width:800px生效的容器修复后，front-only两档426项PASS。首轮新增键盘断言误用指针之后的programmatic focus，已修正为真实Tab/Shift+Tab输入并同时断言:focus-visible和3px描边；未放宽阈值。
+
+真实连续播放：test:playback PASS（DER_PREVIEW_URL=http://127.0.0.1:5195/der-review/）。D1九阶段324次采样、67,186ms；完整工作台21阶段492次采样、127,461ms。另用真实浏览器时钟播放新增两轮预览，90次采样均完成两轮各一次更新/写入；保留relay-real-playback.json。D1的SampleLifecyclePrototype.tsx、lifecycle-model.ts、lifecycle.css与ed225ed起点git diff为空，不扩大为重新认可其设计。
+
+公共QA：按正式visual-qa.json运行全站96状态PASS；用户最后追加的独立视觉造型完成后，针对S2初/终态、概率目标、S1更新、冻结中/终态及两轮读取/汇合/写入再检查20状态PASS。两份报告GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS均PASS，actualUrl均为预期/der-review/，仅保留原S8四项11px眉题警告。本次源码最后微调仅涉及一句提示和窄屏min-width，不改变这些桌面构图。代表性初、中、终态及两档整段正文均已实际查看，不以机器PASS替代视觉复核。
+
+窄屏检查由新SVG局部滚动触发，限定新增的三个motion阅读区。390×844首次发现S1网格项auto min-width将560px画布撑到外面；通过网格项min-width:0保留完整局部横向阅读，不缩小字、不裁掉对象。复验数据及范围见narrow-motion-containment.json，不宣称全站移动端已验收。桌面实际innerWidth/innerHeight为1440×900和1920×1080，DPR1，Playwright Chromium153.0.8010.12；连续播放Edge156.0.4314.58。
+
+当前官方检查器验证：相邻PaperSkill HEAD=c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，worktree干净。正式upstream为git@github.com:ReductTech/PaperSkill.git；SSH fetch因known_hosts读取权限失败，改以相同官方仓库HTTPS只读fetch main，得到FETCH_HEAD=a777cc475fa5c7d10b1e15720eaa1817e945b7a6，未改分支、工作树或全局Git配置。syntax-check.js当前官方/本地blob均2bcfa6f815054ee498574c51cef05f0c315b4298，直接运行node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser，52个源文件PASS，UPSTREAM_SYNTAX=PASS。validate-output.js当前官方blob为9ec76b6974f262fca7b9611c4a485dd2275fe76c，本地为1a58ca06bd9fa47b6730904f1622189011cc32fe，版本不符，UPSTREAM_OUTPUT=NOT_RUN；未复制检查器或覆盖旁库。Node v24.18.0。SOURCE_BUILD=PASS，SUBPATH_ASSETS=PASS（生产/der-review/实际请求无错误）。
+
+FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN。使用computer-use技能尝试检查真实Edge窗口，helper在get_window_state阶段因无法可靠识别当前浏览器URL而停止，未执行任何桌面输入，已停止Computer Use，没有把布局模拟冒充F11。VISUAL_REVIEW=PASS（限定实际查看的01–03与D1外围及代表中帧）；REGRESSION=PASS（源码保护和功能回归，无获批像素基准重置）；HUMAN_ACCEPTANCE保持PENDING，本轮不代填W7/W9，不发布/推送/创建PR。
+
+最终证据保存在当前会话visualizations/der-execution-final：两档opening/replay/responses/answer-sealed/comparison/bridge/prelude/d1图、真实预览采样、轻量full-qa/final-objects报告。最终中帧在der-final-browser中保留S2历史展开、S1输入移动、ER读取、数值复制/冻结、两轮各步及终态；D1与工作台真实播放JSON在der-execution-playback。截图是待人审证据，不是批准基准。报告提取、临时文件和本次预览服务清理结果见本节最后补充。
+
+最终清理：两次公共QA运行目录run-2026-10-31T16-26-53-329Z、run-2026-10-31T16-41-11-615Z均已按本次准确路径cleanup-run返回CLEANED，随后Test-Path=False。已保留轻量报告与必要区域截图/中帧/播放JSON；原始整页采集中间图、定位JSON、临时脚本/配置、无用全篇截图、调试日志和临时视频清理。本次5195预览已停止，4197公共预览已由runner退出。最终提示文字和min-width修复后的build、官方当前语法检查、426项定向浏览器检查及窄窗口三个滚动区检查均PASS；该窄屏修复不影响已通过2886项回归的桌面媒体规则。
+
+### U1–U3 重新设计 · U1（2026-11-01）
+用户明确授权直接重新设计、删除过时代码、独立分支逐部分提交；不等待额外图稿批准，不代填 W7/W9。分支 redesign/der-u1-u3，自32a83c0开始。保留原工作区未跟踪 docs/TEACHING_VISUAL_PHILOSOPHY.md，不纳入提交。
+U1重做为共享的数据流/有限记忆场景与同一输入双时刻响应对比。移除三卡推导与重复ER大图；使用D1既有ModelPixel类别身份，局部重新绘制3–4–3网络，节点与边明确对应。动画使用现有useSceneTimeline，支持暂停/继续/重播/步骤与reduced-motion；不改数学模型或D1文件。
+首轮build PASS。实际Chromium生产文件渲染1440×900、1920×1080；验证U1中间态暂停、整段重播、完整响应揭示和无页面横向溢出。浏览器sandbox禁止localhost网络，使用Playwright route从本地dist提供完整HTML/JS/CSS，未据此宣称真实HTTP子路径通过；最终需另行检查。发现旧CSS污染结论区与术语按钮后加局部修复；最终统一复查。截图位于会话visualizations/der-redesign。FULLSCREEN_REAL=NOT_RUN；人审PENDING。
+
+### U1–U3 重新设计 · U2（2026-11-01）
+U2改为单一比较实验台：固定x₁与z，左侧三类共用刻度的历史/当前标记，右侧在概率KL和原始分数平方差之间切换，底部保留两个总量。聚焦类别同步高亮逐类贡献；公式贴近计算表，保留KL方向、固定熵、输出梯度和共同平移的必要解释。复用原math-model计算真值；当前向量、p/q、贡献、总量随同一插值更新。
+build PASS；实际Chromium生产渲染检查1440实验台。三状态核对平方距离0/2/3、共同平移KL=0；右侧镜头切换有效。最终两档、暂停/快速切换及reduced-motion统一回归。D1未修改。
+
+### U1–U3 重新设计 · U3（2026-11-01）
+U3删除旧教师/学生网络卡、ER/DER重复记录卡及完整TwoRoundPreview。新的SnapshotOrigin只承担更新前输出→独立数值副本→冻结后参数更新；候选明确尚未入池。两轮差异改为同构两行说明，强调空池/有旧记录、同一更新前参数与一次合并更新。D1作为唯一完整生命周期播放器，放在der-redesign样式作用域之外。
+清理已无引用的FrontMotion、TeachingObjects及三份旧前导/实验台CSS。build PASS；实际查看1440×900的U3生产图，来源/候选/时间关系和两轮正文无裁切。D1原TSX、lifecycle-model、SceneTransport、lifecycle.css未改，最终继续执行其原回归。
+
+### U1–U3 重新设计 · 最终回归与交付（2026-11-01）
+
+本轮按用户最新授权直接完成三章，不将附件中的旧只读/逐章等待提示当作新一轮停工要求；保留人审状态，不代填W7/W9。仅变更DER前三章和对应检查。三类图形直接复用原ModelPixel身份；D1主TSX、lifecycle-model、SceneTransport、lifecycle.css与32a83c0的git diff为空。外围恢复原D1标题的正文宽度对齐，未改变主舞台几何。
+
+最终收敛：修正旧样式继承造成的D1外标题回归与正文术语按钮尺寸；U1读取副本从实际旧记录出发，绕开标签文字，原记录保留；响应以clip-path和opacity逐步揭示，不引起高度跳变。U3候选明确“更新前冻结·尚未入池”，删除容易把左右位置误读为更新前/后的竖分界线。重用既有时间线与数学函数，未增加依赖。
+
+| 动作审查前 | 修正后 | 原因 |
+| --- | --- | --- |
+| 读取线穿过记录标签 | 从样本原位绕行至上方通路 | 对象来源可追踪，文字不被路径遮挡 |
+| 完整响应在第一帧突然出现 | 在固定观察区连续揭示 | 保留历史先展示、当前再变化的认识顺序 |
+| 旧前导与D1各演示一次完整两轮 | 轻量复制/冻结，外加两行差异说明 | D1保持唯一完整执行舞台 |
+
+实际验证（Node24.18.0 / TypeScript5.9.3 / Vite6.4.3 / Chromium153.0.8010.12）：
+- SOURCE_BUILD=PASS：`npm.cmd --prefix papers/der/web/enhanced run build`，最终80 modules，退出0。
+- `npm.cmd --prefix papers/der/web/enhanced test`：25/25数学、生命周期、reservoir、训练与证据测试PASS。
+- `node tests/browser.test.mjs`：1440×900、1920×1080全篇2688项PASS，含D1、参考区、U4–U7；最后仅U1揭示/读取与U3图注修改后，`node tests/browser.test.mjs --front-only`再次两档228项PASS。
+- `node tests/lifecycle-playback.mjs`：最终生产预览实速播放9阶段，323次采样，66,953ms，冻结目标/记忆/更新数均符合原模型；D1未加速。首次独立预览处于隔离网络，连接失败；改在可达的同机生产预览复跑通过，未放宽断言。
+- 公共Visual QA正式配置已更新为新场景，保留后续章节检查。76状态GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS均PASS；最终局部修订后追加10状态PASS。actualUrl为真实HTTP子路径`/der-review/`，本轮SUBPATH_ASSETS=PASS。最初sandbox内localhost被拒时使用的本地文件route渲染仅用于早期视觉观察，最终结果以上述真实HTTP检查为准。
+- Agent实际复看两档代表初态/读取中帧/响应终态、U2两镜头和共同平移、U3来源/复制/冻结及两轮引导；最后一条读取路径绕行后重新查看1440中帧，定向浏览器检查覆盖两档。截图是待人审证据，不是批准基准。
+- UPSTREAM_SYNTAX=PASS：官方仓库HTTPS只读fetch得当前main `ee99a421a083f6591fe23a19a10cd412cf34c85a`；相邻PaperSkill HEAD仍`c6d30defb90480afb2b4fa6ee8083a27d8dafb5c`。本地syntax-check.js与当前官方blob均`2bcfa6f815054ee498574c51cef05f0c315b4298`；直接运行`node ../PaperSkill/paper-skill/scripts/syntax-check.js <publish_source> --require-parser`，51文件PASS。
+- UPSTREAM_OUTPUT=NOT_RUN：当前官方validate-output.js blob `9ec76b6974f262fca7b9611c4a485dd2275fe76c`与本地`1a58ca06bd9fa47b6730904f1622189011cc32fe`不匹配；未覆盖旁库，未运行Import/Preflight、push或PR。
+- FULLSCREEN_LAYOUT=PASS；FULLSCREEN_REAL=NOT_RUN（headless不代表真实F11）；HUMAN_ACCEPTANCE=PENDING。
+
+证据保留在本会话`visualizations/der-redesign`：final-u1-1440、final-u2-1440、final-u3-1440/1920、final-stream-1440等局部PNG，qa-full.json/qa-final.json及playback/lifecycle/playback.json。原始长截图和报告目录已按本次准确路径清理：run-2026-11-01T14-58-03-398Z、run-2026-11-01T15-08-50-784Z均返回CLEANED，随后Test-Path=False；临时QA配置和本次debug.log已删除。保留5199生产预览供用户检查，停止5198临时开发服务。
+
+### 用户截图修订 · 数据流线（2026-11-01）
+用户指出第一幅图长线横穿x₁和前两个像素对象。将该线改为仅从当前样本右侧留白到模型端口的短连接，历史样本之间不再绘制穿心横线；保留回放的独立读取路径。浏览器回归新增实际SVG路径采样与三个静态样本边界的交叉检查，不按path字符串断言。D1未变更。
+回放线路也仅在实际读取阶段显示，空记忆时不再出现从空槽出发的长箭头。首轮构建及两档定向浏览器230项通过；初态截图已核对。
+
+### 用户截图修订 · 冻结来源图（2026-11-01）
+用户指出第二幅图排版与对象粗糙。本轮重画为横向同基线的“当前模型—更新前输出—冻结目标”，删除顶部装饰性时间长箭头、斜向虚线与空候选大框。模型使用规整三层小网络与独立θ状态；输出/目标共用对齐的类别名、数值列和一体记录表面，暖色仅标识冻结副本。使用h(x₁)标识来源，不引入另一个与U1/U2当前a混淆的比较时刻。
+复制中帧先试整张记录移动，实际查看发现遮挡两侧数值，改成小型数值副本沿短路径传递，抵达后淡入冻结记录；保留源输出，θ仅在后续更新阶段改变。下方控制区保留既有时间线、暂停、重播、步骤/键盘与reduced-motion，次要操作改为轻量文字按钮。移除无引用旧Vector对象及其专用样式。D1受保护文件git diff为空。
+
+| 修订前 | 修订后 | 原因 |
+| --- | --- | --- |
+| 横线穿过褪色历史像素 | 仅连接当前样本右侧与模型 | 连接端点明确，历史对象不被贯穿 |
+| 顶部长时间箭头、下方斜线连空框 | 同基线的前向与复制短连接 | 消除多条方向线争夺阅读顺序 |
+| 分散小数值格与大空候选框 | 类别/数值对齐的完整输出与冻结记录 | 比例、字形、留白和归属一致 |
+| 整张卡移动时遮挡来源 | 小型数值副本传递，到达后形成冻结记录 | 中帧可同时阅读来源与去向 |
+
+验证：最终build PASS（80 modules）；`node tests/browser.test.mjs --front-only`两档232项PASS，新增真实SVG路径与三个样本边界不相交、复制中点两侧记录不被遮挡的几何断言。原有冻结时序、暂停/重播、完整响应、公式参考区、D1标题/专注播放回归均保留。官方匹配版本的syntax-check.js --require-parser，51文件PASS。正式Visual QA按两图初态、读取/复制中帧、冻结终态共10状态PASS，actualUrl均为真实HTTP `/der-review/`，GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS为PASS。
+Agent实际查看两档复制中帧、冻结终态，以及最终1920初态；来源数值与目标副本相同，θ后更新，连接不穿正文。FULLSCREEN_REAL=NOT_RUN（headless），人审保持PENDING。证据在本会话visualizations/der-feedback，保留局部PNG和qa-report.json。公共run-2026-11-01T15-29-35-982Z已返回CLEANED，Test-Path=False；临时配置已删除。生产预览5199继续用于用户查看，不push/PR，不改原有未跟踪文档。
+
+### 用户追加：统一3–5–3并恢复记忆连接（2026-11-01）
+按用户截图，两处前导网络统一为3–5–3。DerPrimitives提供共享节点纵向比例，U1大模型和U3紧凑模型均使用该定义，避免再次独立漂移；每处11节点、30条相邻层连接。仅修改这两处前导，D1受保护源码未改。
+恢复有限记忆右侧端口到模型的常显曲线箭头，连接不穿过记录标签或历史像素；读取副本从该端口沿同一曲线移动，原记忆保留。省略号改为3个半径3的SVG圆点，尺寸不再依赖字体的小中点。
+验证：最终build PASS；两档`node tests/browser.test.mjs --front-only`244项PASS，新增共享3–5–3节点/30连接、初态记忆箭头可见、三个省略点显示尺寸的断言；原暂停、重播、冻结与D1外围回归保留。51文件官方匹配版本syntax-check --require-parser PASS；git diff --check通过，受保护review目录diff为空。已实际查看1440×900两处初态、1920×1080紧凑网络及读取中帧，记忆箭头/副本路径与端点一致。截图在本会话visualizations/der-network-353。未新增临时仓库产物；FULLSCREEN_REAL仍NOT_RUN，人审不代填，5199生产预览保留。
+
+### 样本、前导控制与对象比例修订（2026-11-02）
+用户指出初态两个GPT、末步进度与菜单遮挡。确认样本身份混淆确属设计失误：旧x₁=Claude、旧x₂=GPT，当前x₃=DeepSeek从初态固定。将原混合的两次更新概念图改为一次完整ER训练示意：旧记忆已有(x₁,y₁)，θ₀先处理x₃，再读取旧x₁，最后联合更新一次为θ₁；不再把同一个新样本在同图中当成两次流输入。
+前导SceneTransport显式启用teachingProgress：阶段内进度与总步骤进度同步，末步起点显示“第4/4步·本步0%”，完成入口将状态/进度共同推进至终态；没有把“选中最后阶段”伪装成已播放完成。最后阶段动作结束即填满进度，观察停留不再使已完成的动作看起来未完成。默认D1及后续章节仍保留原时间进度与原导航行为。
+前导阶段菜单按触发按钮实际宽度对齐，按可用空间选择向上/下展开；移除前导figure对浮层的裁切。宽高、选项命中与键盘Escape均加入检查。冻结前导卡高由128增至176、网络跨度46增至76，公式符号仅在该图改为正体，复制路径与标签同步移位。
+验证：最终build PASS；模型测试25/25 PASS；两档front-only 270项PASS，含样本身份、末步完成与满进度、菜单等宽/无裁切/可点击、正体和对象比例。源码语法51文件PASS，git diff --check PASS。实际查看1440初态/菜单/完成进度与增高对象，证据在本会话visualizations/der-final-feedback。真实F11仍NOT_RUN，不代填人审。
+
+### 用户指定D1节点间距修订（2026-11-02）
+本次用户直接指向D1截图，明确要求第一、第三列节点间距缩到2/3，构成对原保护边界的这一项定向授权。仅将spacing [84,45,84]改为[56,45,56]，以同一列中心对称收缩；中间列45不变。所有边与前向/反向信号均读取同一节点坐标，跟随新端点。算法模型、数值、九阶段时序和专注能力不变。
+两档lifecycle-only共1498项PASS，新增外列/中列跨度比例112/180检查，原30条全连接、动作中帧/标签避让/冻结与控制回归保留。已实际查看1920 D1初态，证据d1-outer-spacing-1920.png。此轮保护例外仅为用户指定几何，后续U4–U6不据此扩大改动D1。
+
+### 全篇章节纹样与标题（2026-11-02）
+按用户补充“每一页都要有”统一应用U1–U7：页眉与章节收尾各有一处轻量叶形/细线/暖金种子纹样，纯装饰aria-hidden，不冒充类别像素或模型信号。章节主标题统一衬线层级、深绿与行高；沿用既有字体，不新增字体网络依赖。纹样处于正常文档流，避开正文、公式与播放器。U7仅做本项装饰统一，实验内容不改。
+build PASS。实际查看U4标题与纹样位置；最终全篇浏览器与截图回归继续核对14处纹样及两档布局。不修改D1内部，当前原有用户docs提交96e77e6保留。
+
+### 2026-11-02 U4：在线选留与单步训练重建
+- 用户本轮明确授权按 U4–U6 方案重设计；保留 D1 结构及全部计算模型。每页花纹已在 a4121b1 独立提交。
+- 主阅读默认从 N=2 的满池开始，固定两个槽位；x3 替换、x4 拒收，手动合法 j 产生的池状态继承到下一步。候选移动后才提交 M/N，拒收已完成训练。区分本场景给定冻结值与下方独立二维计算例。
+- 单步训练重排为两来源、同一个 3–5–3 示意网络、紧凑输出与一次更新；更新后才写池。修复 LearningGlyphs 反向播放时静态边脱离节点的根因。
+- 验证：SOURCE_BUILD PASS；reservoir-only 两桌面布局 114 断言 PASS（真实 HTTP /der-review/）；实际检查初态、联合更新与替换终点截图，修复损失汇合线末端断开。后续整体验证继续覆盖中间状态。FULLSCREEN_REAL NOT_RUN（无真实 F11）。W9 人工学习验收未代填。
+
+### 2026-11-02 U5：实际图像增强与历史监督冲突
+- 放大自绘鹈鹕：原图始终在场，裁剪窗口对应真实视图放大，翻转仅镜像图像内容。取消鹈鹕旁二维合成模型的精确 logits/loss，改用跨时刻符号和明确标注的输出空间方向示意。
+- 独立错例改名 xₑ / x_f，冻结 z=(0.5,2,0)、当前示意 a=(1,1,0)。共享三类响应刻度展示平方匹配与标签 CE 的不同方向；当前 a 不伪造更新后数值。
+- DER++ 在同一旧池上分别读 Rᴅ/Rʏ，支持重合与不同项结果；不同项时明确不能延用同一输入冲突解释。三种监督汇入一个 θ，仅更新一次，候选仍在更新后选留。
+- SOURCE_BUILD PASS；w8-only 1440×900 / 1920×1080 856 断言 PASS；实际检查两幕终态截图，修复旧 CSS 导致一次更新说明变白、θ 字号继承变小的问题。后续与 U6 统一复查。
+
+### 2026-11-02 U6：连续四轮工作台
+- 保留 training-model.ts 的唯一计算结果与 21 个语义事件索引，重写视图为持久网络、固定双槽与稳定 keyed 记录对象。读出的 Rd/Ry 副本不移走原记录；当前样本和冻结候选实际移动，候选从更新前输出复制后再等待写入。
+- 联合梯度只提交一次参数更新；选留提交点同步 M/N，下一轮保持相同记录 DOM 与槽位位置。移除巨大的池外垃圾箱、提前泄漏的未来轮次结果、候选绕全画布飞行。预测使用无类别标签的 u，不用 Claude 像素图暗示查询类别。
+- 增加轮内拖动暂停定位、上一轮/下一轮起点；跨轮与方法切换明确显示状态跳转，方法切换从相同初态独立重算。共享时间轴新增可选 progress 定位参数，默认行为保持；D1 回归两布局 1498 断言 PASS。
+- 验证：25 数学/状态测试 PASS；w8-only 两布局 880 断言 PASS（含主阅读满池、手动 j 继承、边端点、记录 DOM 持久性、轮内暂停定位及每页两处花纹）；front-only 两布局 270 断言 PASS；布局专项 24 断言 PASS。真实浏览器时钟 DER++ 连播 21 事件 PASS，500 次采样，127524ms，最终 θ4/N4/M=[x3,x2] 与权威模型一致。
+- 逐帧修复：冻结候选不再覆盖模型说明；U4 所有合法替换槽位的飞行区与抽签说明分开。统一正体 MathML（取消默认单字母自动斜体）及 SVG 符号。
+
+### 2026-11-02 全页复核与检查器边界
+- 全量 Visual QA：`node tools/visual-qa/cli.mjs --config papers/der/web/enhanced/visual-qa.json`，退出 0，74 个实际 HTTP 子路径捕获（两桌面布局）；GEOMETRY_QA / STYLE_QA / BROWSER_ERRORS PASS。报告是自动几何与样式检查，未冒充人工学习验收。另实际查看 U4–U6 主场景及运动中间帧、七章标题/花纹与两布局复核图。发现并修复冻结候选遮挡说明、抽签文字被候选挡住、旧 CSS 白字与默认斜体；最新修改继续定向复测。
+- 正式报告保留轻量副本与复核拼图于 `C:/Users/lenovo/.codex/visualizations/2026/11/01/01a19781-0760-7eb1-af91-1834069e8367/der-u4-u6-review/`；细节运动截图与七章花纹见同级 der-final-feedback。完整自动截图在记录后清理。
+- 当前官方检查器核实：2026-11-02 `git -C ../PaperSkill fetch upstream main` 退出 0；remote 为 git@github.com:ReductTech/PaperSkill.git，工作树无修改。HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，upstream/main dad469a70d8e5cb8f2164cc18bbfa79f1e731ed7；Node v24.18.0。syntax-check.js 上游/工作树 blob 均为 2bcfa6f815054ee498574c51cef05f0c315b4298；官方当前语法检查 PASS，52 文件由 TypeScript 解析。validate-output.js 上游 9ec76b6974f262fca7b9611c4a485dd2275fe76c、工作树 1a58ca06bd9fa47b6730904f1622189011cc32fe 不一致：UPSTREAM_OUTPUT=NOT_RUN；本地旧脚本诊断执行退出 0，不计为当前官方结果。未覆盖或修改相邻 PaperSkill。
+- SOURCE_BUILD PASS；SUBPATH_ASSETS PASS（实际 dist 于 /der-review/ 的 CSS/JS/页面交互资源，无浏览器错误）。FULLSCREEN_LAYOUT 覆盖 1920×1080，FULLSCREEN_REAL NOT_RUN：本轮使用 headless Chromium，没有操作真实 F11。W9 人工验收仍待用户，未填写 reviewer 或调用发布流程。
+
+### 2026-11-02 最终定向复测与收尾
+- 最终定向 Visual QA 报告：`.visual-qa/run-2026-11-01T17-08-14-611Z/report.md`，20 捕获 / 两桌面布局，退出 0，无几何、基线或字号诊断，实际 URL 均在 /der-review/。已读取报告并放大查看对应 U4 移动、DER++ 联合监督与 U6 更新截图。
+- 放大复核再次发现更具体的旧 `.dp-canvas ... :first-of-type` 选择器仍覆盖 DER++ 更新说明，以及工作台高亮轮次按钮继承白字：移除新场景的旧 SVG 根类并给工作台选中态指定深色；补充浅底说明可读性断言。U6 联合梯度路径现真正接到网络底边并有正确向上的箭头。更新后的实际 1920×1080 截图确认修复，保留于 der-final-feedback/u5-white-caption-fixed.png、u6-active-round-fixed.png、u6-gradient-endpoint-fixed.png。
+- 最终 SOURCE_BUILD PASS（tsc + Vite）；语法检查 52 文件 PASS；reservoir-only 两布局 114 断言 PASS；front-only 两布局 270 PASS；D1 两布局 1498 PASS；W8 最终轮次回归的实际断言数见下方收尾记录。数值模型未修改。
+- 已按工具输出的确切路径清理首轮 run-2026-11-01T16-55-48-547Z，CLEANED 且 Test-Path=False；最终定向 run 在报告/截图阅读及轻量副本保留后同样清理。不清理历史目录或用户已有产物。保留用户预览 5199；未发布、推送或创建 PR。
+- 收尾实际结果：W8_BROWSER_PASS 1440×900=443 / 1920×1080累计=886；两布局共 886 断言，包含反向信号活跃时边端点检查、浅底文字可读性及轮内暂停；退出 0。定向 run 清理已得到 CLEANED 与 Test-Path=False。两次 runner 的轻量报告均已留在可交接目录，真实 F11 和 W9 人审仍未代作。
+
+### 2026-11-02 用户二次视觉修订：以 D1 为参照
+- 用户明确要求修订 U4/U5 公式、连接线、观看顺序、过慢动画，并增加每章波浪/叶片等背景。此次为用户授权的局部重设计，继续当前分支并按完成部分 commit；D1 自身布局、模型、时序均保护，仅学习其数学字体、真实上下标、端口连接、短尾迹与渐变聚焦。
+- 已确认问题：U5 用程序变量样式的 h_θ_old / L_dark；U4 抽签落在远离候选与槽位的位置，永久折线指向不明；手动 j 仅重置而不播放，字幕提前泄漏结果；单步训练长回路线和框外连接争夺注意力。
+- 本轮方案：项目局部 SVG 数学排版零件；Reservoir 固定候选—抽签—双槽一行，短方向线、按阶段聚焦、轻量移动副本和原位淡入；手动抽签即播放。DER 单步损失在一处汇合，联合梯度从顶部参数端口返回。减少本场景时长和停留，保留暂停/定位/减少动态；不改变权威训练与蓄水池计算。所有章的装饰保持背景层、静态、无语义标记。
+- 计划复核：两桌面布局初态/抽签/两合法槽位替换中帧/拒收/提交、当前与旧前向/冻结/联合更新、图像变换/公式、每章纹样、D1 回归。自动通过不等于用户学习验收；W9 继续保留人工状态。
+- 用户追加确认：不是仅修 U4，全部新动画逐个优化。范围扩展至五场景（Reservoir、DER 单步、增强、DER++、四轮工作台）。分别增加观察提示与本步骤焦点；减少无意义停留、过期读线与重复步骤带；所有数学标记统一 D1 的 Cambria Math 字体和 SVG 真上下标。
+- 首轮渲染复核已查看 U4 初态/联合更新、U5 公式与 DER++、U6 更新画面；修正历史参数的嵌套下标与说明行距离、DER++ 名称应整体作为 L 的下标。首轮数值25测试、Reservoir两布局114断言、W8两布局888断言通过；继续复核写入动作和完整播放。
+
+### 2026-11-02 五场景逐项完成与实速播放
+- 增强：移除可见的程序式下划线，使用真实上下标和 Cambria Math。实际字形测量发现说明行仍贴近下沿，已增加行距，新增不相交断言；裁剪/翻转点击即播放，固定 z 不变。
+- DER++：同一响应的比较保持，独立读池改为短尾迹而非常显长折线；监督汇合用渐进掩膜路径，仅更新一个 θ。L 的 DER++、current、dark、replay-CE 名称真正排为下标。
+- 工作台：每个事件同步观察提示和局部焦点框；读取结束后路径/副本淡出，去掉重复事件带。分数与历史参数版本补齐数学字形，预测仍不读池、不训练。仅调整展示时长，权威训练/选留计算及提交阈值不变。
+- 真实时钟连续播放（无 mock）：Reservoir 4段15017ms、单步5段12837ms、增强4段10556ms、DER++3段8870ms；均完整经过语义段、保持当前观察提示，无浏览器错误。U6 DER++ 21段50148ms/170状态采样，与权威模型完全对应。此前约128秒的展示现在约50秒；D1本身未加速或改画。
+- 25数值/状态测试 PASS；第一轮 W8 两布局914断言 PASS；前导270与受保护D1 1498断言 PASS。后续小型排版完善继续定向检查。截图/实速记录保留在本会话 der-d1-guided。
+- 最终定向浏览器回归：W8 两布局956断言 PASS，包含数学字形真实上下标、公式说明不相交、分数单元格留白、观察提示切换不推动画框；工作台中帧布局24断言 PASS。构建与55文件TypeScript语法检查 PASS。
+- 最终统一工作台当前/历史参数版本的下标、分数的数学字体；单步写入副本改为严格跟随同一条三次曲线路径。保持网络、记忆与权重计算不变；减少动态模式仍显示完整语义帧。
+
+### 2026-11-02 七章纹样与最终视觉收尾
+- 七章标题和章末均扩展为静态波浪、叶簇、金色日光/种子，按章节交替方向；新动画画框增加低对比度景观底纹。纹样没有箭头语义，不覆盖模型/公式，不新增动画干扰。
+- 已读取正式 Visual QA 报告 `run-2026-11-02T01-41-53-151Z/report.md`：34 个捕获 / 两布局，GEOMETRY_QA、STYLE_QA、BROWSER_ERRORS PASS，零诊断。已实际查看两个布局的五场景复核图及中间帧、两种槽位替换、公式与工作台最新版的局部截图。小数值字形与观察带稳定行高的最后微调由定向浏览器断言另行覆盖。
+- 复核又发现工作台前向输出显示3位小数，而冻结记录仅显示2位，会造成“复制后变值”的观感。两者统一3位，加入显示源值与副本逐项完全相等的断言；底层精确数值一直保持不变。
+- 当前检查器：本轮 `git -C ../PaperSkill fetch upstream main` 退出0；HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，官方 upstream/main dad469a70d8e5cb8f2164cc18bbfa79f1e731ed7。语法脚本工作树/官方 blob 同为2bcfa6f815054ee498574c51cef05f0c315b4298，55源文件 TypeScript 解析 PASS。输出检查脚本仍不匹配（官方9ec76b6974f262fca7b9611c4a485dd2275fe76c / 本地1a58ca06bd9fa47b6730904f1622189011cc32fe），UPSTREAM_OUTPUT=NOT_RUN，未修改旁库或执行发布。
+- Node24.18.0 / Chromium153.0.8010.12；SOURCE_BUILD PASS，SUBPATH_ASSETS PASS（真实HTTP /der-review/）。实际浏览器窗口布局为1440×900 / 1920×1080，FULLSCREEN_REAL=NOT_RUN（headless无真实F11）；W9 人工学习验收仍由用户判断，不代填。
+- 必要局部PNG、实速记录与轻量正式报告已保留到会话可视化目录 der-d1-guided。正式 runner 完整产物在阅读与记录后按确切目录清理，保留用户预览5199。
+- 收尾再核对输入/前向/输出/冻结的时序，修正单步与工作台中复制提前于完整前向的问题；输入副本先到端口，随后网络传播，输出完整显示后才复制 z。预测 logits 到达后才显示 argmax。端口间短箭头端点与对象边界对齐；加入网络前向进度与冻结进度的因果断言。
+- 最终 W8 两布局976断言 PASS；再次真实时钟播放：选留14942ms、单步12857ms、增强10345ms、DER++8819ms，U6全部21段50149ms/177状态采样 PASS。已实际查看最终冻结中帧（forward=1后freeze>0）与查询中帧（结果不提前显示），无浏览器错误。
+- 正式 runner 目录 run-2026-11-02T01-41-53-151Z 已返回 CLEANED，随后 Test-Path=False；保留轻量报告与必要证据。受保护 D1 的组件、样式、模型相对0e9976f无diff；训练模型除展示时间参数外无diff。未执行发布、push或PR。
+
+### 2026-11-02 晚间用户七图返修：第一部分
+- 用户指出上一版仍有突然出现的复制框、移动副本缩小、路线断开与前慢后快。本轮明确重新设计运动衔接，保留所有计算与 D1 本体。
+- U1 两路输入改为上下镜像曲率的同类路径。U3 网络纵向跨度 76→124，模型/输出卡高度228；删除突然出现的小数值框，改为同字号、同列距的整组分数连续复制，沿上方留白抵达对应目标列；源数值保留，目标占位与到达数值交叉淡入。
+- 生产 build PASS；前导两桌面270断言 PASS（真实HTTP子路径），核对复制中帧/对称路径截图。最新路径细调仍在最终总回归中覆盖。人工学习验收未代填。
+
+### 晚间返修第二部分：U4/U5 连续动作与版式
+- 蓄水池删除从中间空白起步的弯箭头，候选→抽签→池采用连接实际边界的直线。移动像素保持43，与源/目标记录一致；从源图标位置连续出发，拖尾是沿已走轨迹的透明度渐变，抵达与目标记录淡入衔接，原槽仅淡出被替换项。
+- 单步训练当前/旧样本的输入、输出连接均水平平行，移动副本48，与源图一致；读取动作约0.9秒，网络前向约1.7秒，分数到达后才复制冻结。共享网络传播改为每条实际边上的渐进信号和逐层节点亮起，无层间跳点。
+- DER++ 下方重排为等高来源行、单模型、监督区域；总公式有独立完整区域，梯度返回线路从监督底边回到模型底边，避开文字。
+- 参照D1的动作窗重新分配时长，取消把多动作挤进几百毫秒的做法。25数值/状态测试、两布局W8 976断言PASS。实际连续播放：选留21402ms，单步24811ms，增强15114ms，DER++16506ms；逐场查看中帧与末帧，局部后续收尾将继续回归。
+
+### 晚间返修第三部分与最终检查
+- U6 四轮复用同一动作时序（2200/6200/4600/3400/3200ms，每段1000ms观察停留），不再第一轮慢、后续轮快。短距离进入约0.8秒、网络传播约1.7秒，随后显示输出和复制；冻结候选沿连续曲线形成，工作台焦点随候选移动，Rd/Ry读取分别保持44像素记录图尺度，并带渐变短尾迹。原记录和精确数值保持持久身份。
+- 实际浏览器时钟完整播放 DER++ 四轮21事件：104454ms、389状态采样，参数、N、M与权威模型逐帧一致；U1完整10.7秒、U3完整12.6秒，另检查出发/中途/抵达帧。D1源码相对4cd2e89无diff，training-model仅展示时长变更。
+- 最终 SOURCE_BUILD PASS（tsc/Vite84模块）；25数学/状态测试PASS；前导两布局270、W8两布局984、D1两布局1498、工作台布局24断言PASS。新增读取副本不缩小、DeepSeek移动/落地与正常GPT记录同像素网格尺度的检查。最后节点反向波改为正常底色渐进混合金色，避免透明闪变；再build并直接检查最终两个布局的公式、写入中帧与节点实际颜色。
+- 正式 Visual QA：node tools/visual-qa/cli.mjs --config [会话目录]/der-continuity/visual-qa-continuity.json，退出0，run-2026-11-02T13-24-03-134Z共32个真实HTTP /der-review/捕获。GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS PASS，零诊断；已读报告并查看两布局代表性状态及实际出发/移动/抵达局部图。完整文章截图过长，另用真实播放的局部SVG帧放大核对U1/U3，不以缩略图代替细节检查。
+- 当前官方核实：fetch upstream main退出0；官方remote git@github.com:ReductTech/PaperSkill.git。相邻HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c，upstream/main cceb69a80d5cb381895898cffc48cafbf2cfc1a9；Node24.18.0 / Chromium153.0.8010.12。syntax-check工作/上游blob均2bcfa6f815054ee498574c51cef05f0c315b4298，55文件PASS。输出检查工作blob1a58ca06bd9fa47b6730904f1622189011cc32fe，官方9ec76b6974f262fca7b9611c4a485dd2275fe76c不符，UPSTREAM_OUTPUT=NOT_RUN；相邻库未修改。
+- SUBPATH_ASSETS PASS，两个布局1440×900/1920×1080；FULLSCREEN_REAL NOT_RUN（headless，没有真实F11）。W9人审继续由用户判断，未代填。用户生产预览5199已恢复并保留；未运行发布、push或PR。
+- 必要证据位于会话可视化目录 der-continuity：qa-report、出发/移动/抵达帧、五场实速JSON、workbench-derplus.webm及两布局局部截图。正式run在读取/复核和保留轻量副本后清理，清理结果另附。
+- 正式 run 清理已返回 CLEANED，Test-Path=False；最终55文件语法检查PASS。
+
+### 2026-11-02 数据增强单场景重建（用户确认其他部分整体OK）
+- 本轮仅重做 Augmentation，保留其他场景、权威计算与D1。问题根因是初态两图几乎相同，选区不明显，用户看不到原图→训练视图的生成过程。
+- 原图固定在左侧；框外压暗，亮框按真实图像坐标选取。右侧初态为空训练窗口，选区副本先按原像素比例离开原位置，再连续放大并抵达右侧；到达位置与目标图像采用同一viewBox，最后1.5%路径交接，避免双影和跳位。
+- 未来裁剪重新读取原图，而非继续裁上次视图。翻转先恢复完整视野，再用扫描对照展示左右交换，不使用穿过scaleX(0)的压扁效果；明确扫描完成后整幅翻转图才送入模型。固定z在下方保持位置与身份，最后用三幅实际增强缩略图说明各自前向、同一历史目标，无虚构logits或损失。
+- PelicanIllustration仅增加可选region/mirrored/frame接口；原有调用默认不变。独立运动几何来自augmentation-motion，所有区域保持320:190比例、在原图内。四个新增测试核验源像素位置精确对应、终点一致、未来视图来自原图、冻结时序。
+- 首次build发现缩略图宽高传入字符串，已改为数值。浏览器几何检查原先把被SVG裁掉的内部绘画路径误当作对象边界；现在对这类图像检查实际SVG视口投影，并保留所有语义对象/文字原检查。29数学/状态测试与两布局W8 984断言PASS。另发现摘要数学字号被通用text选择器覆盖，已用本场景作用域恢复数学字号。
+- 后续仅继续本场景的定向中帧、真实时钟播放和正式Visual QA，用户未授权扩大修改其他已确认场景。
+
+### 数据增强最终定向验证
+- SOURCE_BUILD PASS（tsc+Vite86模块）。29数学/状态测试PASS；既有W8两布局984断言PASS；新增augmentation-only两布局38断言PASS，检查空训练窗、复制起点像素/尺寸对齐、连续移动、落地交接、原图DOM/内容完全保留、恒定目标、镜像精确变换与真实数学字号，以及暂停和reduced-motion终态。
+- 两条分支分别完整实速播放：center 22136ms、flip 22083ms，无mock时钟，均完整经过四阶段，原图viewBox始终0 0 320 190，历史target标识保持fixed-symbolic-z。实际检查两布局选区/复制中帧、未来裁剪、翻转过程/终态、共同目标，未发现标题/公式遮挡；原图、目标窗口和z位置固定。
+- 正式Visual QA本次确切run-2026-11-02T14-21-57-884Z：16个真实HTTP /der-review/捕获（八状态×1440×900、1920×1080），GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS PASS，零诊断。已读报告并查看正式桌面复制/大桌面翻转截图和真实播放中帧；报告与必要PNG/视频保留于会话der-augmentation。
+- 当前官方检查核实：fetch upstream main退出0，HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c、upstream/main e322c13c48747afabc34e3052b826fcb94fc0eba。语法脚本工作/官方blob同为2bcfa6f815054ee498574c51cef05f0c315b4298，56源文件TypeScript解析PASS。输出检查器仍不符（工作1a58ca06bd9fa47b6730904f1622189011cc32fe / 官方9ec76b6974f262fca7b9611c4a485dd2275fe76c），UPSTREAM_OUTPUT NOT_RUN；相邻工作树不修改。
+- SUBPATH_ASSETS PASS（真实HTTP预览和正式runner资源），Node24.18.0 / Chromium153.0.8010.12。FULLSCREEN_LAYOUT覆盖1920×1080，FULLSCREEN_REAL NOT_RUN（headless，无真实F11）；未代填W9人审。5199已有用户预览服务继续使用，无需替换或停止。
+- 最后仅把“图像不被压扁”这一实现描述改为直接观察提示“对照翻转前后的左右位置”，再次build；图形、时序、计算不变。其他已确认场景没有设计改动，未运行发布/push/PR。正式run在报告阅读、放大复核和轻量留存后按确切路径清理。
+- 最终定向run已返回CLEANED，Test-Path=False；最后文案修订后build PASS。
+
+### 2026-11-02 播放控制区移到图上方
+按用户两幅截图，将增强场景的SceneTransport从主图下方移到未来视图选择旁，合并为上方同一工具区：第一行裁剪/翻转，第二行进度、播放按钮及阶段菜单。未修改共享播放器或动画时序。build PASS，augmentation-only两桌面38断言PASS；实际检查两档控制区截图，行间gap=0、控件均在主图上方，菜单与触发器等宽且位于视口内。正式定向run-2026-11-02T14-41-22-161Z四捕获PASS（GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS），已读报告/查看截图并保留轻量证据。真实F11仍未执行，用户预览5199保留。
+- 本次定向run清理返回CLEANED，Test-Path=False。
+
+### 2026-11-03 Editorial 基础样式接入 DER
+复用 Kit 的 DER 顶部导航、浅绿标题下划高亮与静态叶片/地形分隔纹样；将首屏主标题第二行包入浅绿高亮，原导航、教学模块和计算保持原样。Kit 提供 accent、positive、caution、negative、muted 语义文字色，并在开发样式预览展示有文字标签的用法，颜色不独自承载语义。
+DER `npm run build` PASS。用户确认样式方向可行；本次未重新执行浏览器视觉 QA 或测试套件。
+
+### 2026-11-02 旋转25度与紧凑桌面布局
+- 用户要求增加平面内旋转，随后明确角度为25度；按钮按最新要求仅写“旋转”，图内说明保留具体角度。新增顺时针0→25°连续运动，转到角度后再放大并平移取景。按逆旋转后的四角位置精确计算覆盖比例，并向左取景保留鹈鹕长喙；未改写原图与固定z。
+- 主图从1120×756重排为1120×514，限定活动宽1120、画布最大宽1060；源/目标图片384×228，缩短标题与说明、合并提示区、四种增强缩略图压入底部同一行。详细一致性/局限解释移入可展开补充，正文语义保留，核心公式保持Cambria Math和真实上下标。
+- 普通1440×900实际测量整段活动bottom=886.59、scrollY=0、document.scrollHeight=900；1920×1080同样通过一屏显示断言。截图包括首态、旋转中帧、25°最终取景、四视图收尾。数学/状态测试30项PASS，新增最终所有角点采样均在原图内、长喙不出界的测试。
+- build PASS（86模块）；增强专项两布局52断言PASS；完整W8两布局984与前导270断言PASS。旋转真实时钟完整播放22042ms，四阶段完整经过，原图viewBox与历史目标保持固定。证据位于会话der-rotation（含rotation25.webm）。
+- 同轮用户追加跨场景箭头修订，以下单独记录并提交；此处未改动权威训练/抽样计算与D1。
+
+### 2026-11-02 跨场景箭头修复与收尾
+- 用户三图反馈确认根因：LessonPath把箭头尖端也放进线段揭示mask，尖端会被切掉；部分线路端点停在边框外、短曲线过陡，汇合端口上下不对称；旋转手绘尖端没有沿圆弧切线，且背景横线穿过旋转图标。
+- 共用箭头分离shaft与tip，tip不受mask裁切，使用userSpaceOnUse、overflow visible与自动切线方向；仅在线段真正到达端点时显示尖端。扩大有效mask到工作台画布范围，统一绿色/历史蓝/梯度金的线头颜色与尺寸。
+- DER单步汇合改为上下镜像的圆角正交线，连接真实源边界和两个对称端口；写入路径从候选卡左边到记忆状态框右边中心，移动副本与线路共用同一曲线。工作台回传从不同方法实际损失面板底边出发，经避让通道进入网络底部中心；DER++、蓄水池、U1/U3检查并修复1至19px不等的端点间隙及历史箭头颜色。D1本体与权威训练/抽样计算不变。
+- 新增connectors-only两桌面38断言PASS，按实际对象边界断言端点无间隙、末段垂直进入边框、汇合线镜像、圆弧终点切线正确、全部完成态箭头尖端不被mask裁切。检查器曾误用Locator.evaluate参数次序导致null，已修正为(element,args)，并重跑通过。
+- 增强专项两布局52、完整W8两布局984、前导两布局270断言PASS；数学/状态30项PASS。实际查看旋转首中末帧/完整900px页面、U4汇合和写入、U6联合更新，以及两桌面代表图。最终固定目标图和辅助公式没有遮挡，压缩后公式与说明曾有0.05px边界重叠，已增加4单位行距并由真实字形断言复核。
+- 正式Visual QA确切run-2026-11-02T15-23-49-398Z共36捕获（两档桌面），真实HTTP /der-review/。GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS PASS，无诊断；已读报告并检查代表性正式截图与专项局部PNG，保留轻量报告、关键图和实速视频于会话der-rotation。无批准基线比对，机器PASS不代表W9人审。
+- SOURCE_BUILD PASS（tsc/Vite86模块）；UPSTREAM_SYNTAX PASS（56源文件，TypeScript解析）。fetch upstream main退出0，HEAD c6d30defb90480afb2b4fa6ee8083a27d8dafb5c、官方upstream/main 792bd8f24b9203c4c959a5006f570c38cbcfa7de；语法工作/官方blob均2bcfa6f815054ee498574c51cef05f0c315b4298。输出脚本仍不匹配：工作1a58ca06bd9fa47b6730904f1622189011cc32fe / 官方9ec76b6974f262fca7b9611c4a485dd2275fe76c，UPSTREAM_OUTPUT NOT_RUN。相邻工作树不改动。
+- SUBPATH_ASSETS PASS；Node24.18.0 / Chromium153.0.8010.12。FULLSCREEN_LAYOUT为1920×1080，FULLSCREEN_REAL NOT_RUN（headless，无真实F11）。未代填W9人审；不执行发布/push/PR；5199用户预览保留。正式run读取与保留必要证据后按确切目录清理。
+- 正式run清理已返回CLEANED，Test-Path=False。
+
+### 2026-11-02 工作台0%当前输入可见性修复
+用户截图确认当前样本在暂停初态缺失，根因是appear=windowAt(p,0,.2)把0%输入设为完全透明。移除输入卡的入场透明度与位移，首帧即在最终位置显示当前输入；保留选留结束时的淡出。四轮起点、重播、查询起点统一处理，前向信号/输出和权威状态时序不变。
+build PASS（86模块）；两桌面W8共1006断言PASS，新增四轮和查询0%源输入的可见性、身份与重播检查。正式定向run-2026-11-02T15-43-17-656Z六捕获PASS，输入计算样式opacity=1，GEOMETRY_QA/STYLE_QA/BROWSER_ERRORS通过；已读报告并实际查看1440初始截图，必要图/报告保留于会话der-workbench-input。相邻语法检查56源文件PASS（沿用本会话已核对脚本；本次未重新fetch，非新的官方版本核实）。F11仍NOT_RUN，不代填人审。5199预览保留，未发布/push/PR。
+- 本次定向run清理返回CLEANED，Test-Path=False。

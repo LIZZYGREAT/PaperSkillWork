@@ -1,53 +1,36 @@
 # PaperSkillWork
 
-PaperSkillWork is a reusable workspace for building source-grounded paper tutorials that help a first-time reader reconstruct a paper's architecture, objects, state, information flow, mathematics, updates, evidence, and limits.
+PaperSkillWork creates source-grounded tutorials that help first-time readers understand why a paper's mechanisms are needed and reconstruct the real algorithm from initialization and state changes through prediction/output.
 
-## Workflow v2
+## Quick start
 
-```text
-G0 Learning Contract → G1 Paper Model → G2 Evidence Registry
-→ G3 Canonical Compatibility Baseline → G4 Learning Architecture
-→ G5 Scene Specifications → G6 Incremental Enhanced Implementation
-→ G7 Learning + Evidence + Engineering Audit
-```
-
-Each paper lives at `papers/<paper-id>/`. Its `paper.yaml` records metadata and gate state. `tools/paper.py` handles workspace mechanics; Skills guide source reading, learning design, and audits. Structural checks never claim that a person learned the material.
-
-## Common commands
+Read [`AGENTS.md`](AGENTS.md) for repository boundaries and task routing, then follow the relevant stage in [`docs/WORKFLOW.md`](docs/WORKFLOW.md). Use the matching skill under `.agents/skills/` for stage procedures.
 
 ```powershell
-python3 tools/paper.py new <paper-id> --title "..." --url "..." --arxiv-id "..."
-python3 tools/paper.py status <paper-id>
-python3 tools/paper.py check <paper-id>
-python3 tools/paper.py learning-check <paper-id>
-python3 tools/paper.py gate <paper-id>
-python3 tools/paper.py gate <paper-id> G1 complete
-python3 tools/paper.py paths <paper-id>
-python3 tools/paper.py release-check <paper-id>
-python3 tools/paper.py migrate-v2 <paper-id>
+python tools/paper.py new <paper-id> --title "..." --url "..." --author "..." --source-type arXiv
+python tools/paper.py status <paper-id>
+python tools/paper.py check <paper-id>
 ```
 
-`new` creates a v2 workspace. `migrate-v2` scaffolds v2 artifacts for an existing v1 paper, records old gate states, leaves every v2 gate pending, and preserves old files plus Canonical and Enhanced. `check` validates structure and registry references. `learning-check` validates scene structure and references; human learning acceptance is still required.
+`new` records known paper metadata once and creates a Workflow v3 workspace. The source cache, templates, generated paths, and workspace documents are listed in [`docs/TEMPLATE_CONTRACT.md`](docs/TEMPLATE_CONTRACT.md).
 
-Run `python3 tools/paper.py --help` for options. Install development tools with `python3 -m pip install -r requirements-dev.txt`.
-
-On Windows PowerShell, use `python` in place of `python3` when the launcher is unavailable.
-
-## Repo-local Skills
-
-Use `.agents/skills/` at the matching gate:
+## Workflow v3
 
 ```text
-$paper-review
-$evidence-audit
-$learning-architecture
-$scene-spec
-$enhanced-implementation
-$final-audit
+W0 source → W1 cache → W2 paper model → W3 evidence/assets → W4 learning spine
+→ W5 implementation plan → W6 vertical slice → W7 human review → W8 implementation
+→ W9 human audit → W10 official PaperSkill preflight
 ```
 
-`$narrative-design` and `$interaction-design` remain deprecated aliases to their v2 replacements.
+W7 acceptance is required before full implementation. Human review gates are W2, W4, W7, and W9. The official W10 release flow is user-triggered after W9; see [`docs/UPSTREAM_RELEASE.md`](docs/UPSTREAM_RELEASE.md).
 
-## Release boundary
+## Authoritative standards and references
 
-PaperSkillWork keeps research, evidence registries, Canonical compatibility baselines, Enhanced development, and release preparation. PaperSkill remains a separate repository. Release uses its official import, validation, build, and PR flow; never merge or cherry-pick PaperSkillWork Git history into PaperSkill. `paper.py` never calls Codex, invokes models, publishes, or creates PRs.
+- [`docs/WORKFLOW.md`](docs/WORKFLOW.md): W0–W10 responsibilities, gates, and document authority.
+- [`docs/TEACHING_DESIGN_STANDARD.md`](docs/TEACHING_DESIGN_STANDARD.md): authoritative teaching logic, cognitive sequencing, mathematical explanation, and expression rules.
+- [`docs/VISUAL_QA.md`](docs/VISUAL_QA.md): browser-based rendering, interaction, and regression checks.
+- [`docs/REUSABLE-KIT.md`](docs/REUSABLE-KIT.md): how to find and copy reusable patterns.
+- [`docs/TEMPLATE_CONTRACT.md`](docs/TEMPLATE_CONTRACT.md): template names and generated workspace paths.
+- [`docs/PAPERSKILL_SETUP.md`](docs/PAPERSKILL_SETUP.md): new-paper setup, work branches, and the initial PaperSkill sibling checkout.
+
+PaperSkillWork supports Workflow v3 only. Historical workflow versions remain available through Git history, not as runtime compatibility targets.

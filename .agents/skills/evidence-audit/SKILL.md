@@ -1,62 +1,50 @@
 ---
 name: evidence-audit
-description: Build a structured evidence registry for paper claims, results, mappings, and teaching material at Gate G2.
+description: Curate claim-level evidence and source visuals for Workflow v3 stage W3.
 ---
 
-# Evidence Audit
+# Evidence and Asset Audit — W3
 
 ## Purpose
 
-Give every important tutorial claim a clear category, source, and limit.
+Make sure each important tutorial statement has a defensible source boundary and each visual asset has a clear use, provenance, and rights status.
 
 ## Required Inputs
 
-- The source paper or explicitly supplied source
-- `research/01_paper_model.md`
+- Complete source and `source-cache/manifest.json` / `source-cache/evidence.json`
+- `research/paper-model.md`
 - `templates/evidence-registry.yaml`
-
-## Preconditions
-
-- Confirm the paper version and source locations.
-- Preserve source/review conflicts; do not silently choose a version.
-
-## Claim Categories
-
-Use only:
-
-- `PAPER_FACT`
-- `PAPER_RESULT`
-- `AUTHOR_INTERPRETATION`
-- `OUR_INTERPRETATION`
-- `IMPLEMENTATION_MAPPING`
-- `TEACHING_TOY`
-- `GENERAL_BACKGROUND`
-- `FUTURE_WORK`
+- `templates/asset-plan.md`
 
 ## Procedure
 
-1. Audit architecture, mechanisms, equations, figures, benchmarks, results, conclusions, limitations, and future work.
-2. Give each claim a stable ID, exact wording, category, source kind/location, and qualification as needed.
-3. Keep implementation mappings and general background separate from paper statements; these may have no paper source, but must say so.
-4. Tie every numeric result to dataset, model, split, metric, protocol, value, and source.
-5. Distinguish what the paper states, what authors infer, and what we infer from the evidence.
-6. Record conflicts, ambiguity, and unverified capabilities without resolving them by assumption.
-7. Write `research/02_evidence_registry.yaml`. Add a short `02_evidence_notes.md` only for unresolved issues or review notes.
+Reading notes in optional `source/notes/` may suggest claims or explanations, but cannot serve alone as paper-fact evidence. Resolve each important claim, equation, or execution detail to the declared original paper and a real source locator, separating our explanation from the authors' statements. Notes' external images are not paper figures; verify their provenance and rights independently. Do not modify the source cache to make notes appear to be original text.
+
+1. Audit important paper claims, equations, architecture, results, limitations, and interpretations. Include the W2 core pseudocode, key state transitions, and the division between training/update and prediction/inference.
+2. Give each claim a unique ID, exact claim, type, source locator, conditions, and allowed wording.
+3. Keep `PAPER_FACT`, `PAPER_RESULT`, `AUTHOR_INTERPRETATION`, `OUR_INTERPRETATION`, `IMPLEMENTATION_MAPPING`, `GENERAL_BACKGROUND`, and `TEACHING_EXAMPLE` distinct.
+4. Tie each number to the applicable dataset/environment, model, split, metric, protocol, and source.
+5. For each execution-critical mapping, distinguish the paper's explicit algorithm from an equivalent reconstruction grounded in the source and from a teaching assumption or synthetic demonstration. Add claim-level evidence for important or easily misunderstood operations; do not copy the full pseudocode into the registry or invent new registry fields.
+6. When attributing a result to one mechanism, distinguish the full system's absolute performance from a comparison that isolates that mechanism, state the tested conditions, and keep the conclusion within the evidence's scope.
+7. Review the full W1 figure/table inventory. For each item decide `USE_DIRECTLY`, `CROP_AND_USE`, `REDRAW_FROM_PAPER`, `REFERENCE_ONLY`, or `DO_NOT_USE`, with rationale where it is excluded.
+8. For selected public assets, verify the original in `source-cache/figures/`; record paper/version, figure/page, source locator, caption, teaching role, processing plan, evidence IDs, attribution, and approved reuse-rights basis. W3 does not generate or require a derivative.
+9. Fill the registry `review` lists for unresolved source conflicts, evidence conflicts, or unsafe claim wording. W3 remains blocked until these lists are empty. Unclear/pending rights also block W3.
+10. Save `research/evidence-registry.yaml` and `design/asset-plan.md`. W3 verifies source semantics; it does not decide teaching order or move a complex formula earlier merely because later pages use it.
 
 ## Validation
 
-- YAML parses and IDs are unique.
-- Every high-impact claim has a category and source or an explicit non-paper source boundary.
-- Every result has its applicable protocol metadata.
-- A consumer can resolve the cited registry IDs.
+- Registry parses, IDs are unique, and referenced evidence resolves.
+- Results include their applicable protocol metadata.
+- Execution-critical pseudocode, equations, state changes, and training/inference roles resolve to the paper; paper algorithms, source-grounded reconstructions, and teaching-only assumptions remain distinguishable.
+- Every source figure/table is inventoried; every selected public asset has an existing original source, source metadata, a processing plan, and approved rights. Derivatives are generated during implementation and checked at W8/W10.
+- Paper claims, our interpretations, implementation mappings, background, and teaching examples are not conflated.
 
 ## Forbidden Actions
 
-- Do not conceal contradictions or upgrade evidence strength.
-- Do not treat planned work as implemented or validated.
-- Do not duplicate the Paper Model as a long prose audit.
-- Do not advance G2 automatically.
+- Do not conceal contradictions, upgrade evidence strength, or infer a reuse license from a public PDF.
+- Do not duplicate the Paper Model as a prose audit.
+- Do not mark W3 complete while review lists contain unresolved issues or an asset right is unclear. Otherwise W3 completes automatically after structural checks pass.
 
 ## Completion Criteria
 
-Save the registry and have a person review unresolved items before marking G2 complete.
+W3 records only machine-resolvable outcomes. A source/evidence conflict, unsafe wording, or unclear reuse right must be resolved before W3 can complete; no reviewer is fabricated for W3.

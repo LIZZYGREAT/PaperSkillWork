@@ -1,0 +1,35 @@
+{
+  "baseUrl": "http://127.0.0.1:4173",
+  "server": {
+    "command": "node",
+    "args": ["node_modules/vite/bin/vite.js", "preview", "--host", "127.0.0.1", "--port", "4173", "--strictPort"],
+    "cwd": ".",
+    "readyPath": "/"
+  },
+  "pages": [
+    {
+      "id": "ewc-home",
+      "path": "/",
+      "states": [
+        {
+          "id": "initial",
+          "actions": [
+            { "type": "waitFor", "selector": ".ewc-rail", "state": "visible" },
+            { "type": "waitFor", "selector": "#main-content h1", "state": "visible" }
+          ]
+        },
+        {
+          "id": "next-page",
+          "actions": [
+            { "type": "click", "selector": ".ewc-slice-nav__item:nth-child(2)" },
+            { "type": "waitFor", "selector": "#main-content h1", "state": "visible" }
+          ]
+        }
+      ],
+      "computedStyles": [
+        { "selector": ":root", "property": "--nav", "equals": "#183236" },
+        { "selector": ".ewc-rail", "property": "background-color", "equals": "rgb(24, 50, 54)" }
+      ]
+    }
+  ]
+}

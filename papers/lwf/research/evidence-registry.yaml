@@ -1,0 +1,404 @@
+# Workflow v3 evidence registry. IDs and source boundaries are carried over from the preserved v2 registry.
+claims:
+  C01:
+    claim: LwF adds a task to a trained CNN using only new-task images and labels,
+      without the old tasks' training data.
+    type: PAPER_FACT
+    source_locator: PDF pp.1, 4
+    conditions: Paper's tested setting is mainly sequential visual classification.
+    allowed_wording: LwF adds a task to a trained CNN using only new-task images and
+      labels, without the old tasks' training data.
+    source_kind: abstract_and_method
+  C02:
+    claim: The old model computes old-task responses on each new-task image, and the
+      expanded model is trained to match them.
+    type: PAPER_FACT
+    source_locator: Figure 2(e), PDF pp.3-4
+    conditions: Y_o is not an old image, ground-truth old label, or replay memory.
+    allowed_wording: The old model computes old-task responses on each new-task image,
+      and the expanded model is trained to match them.
+    source_kind: figure_and_text
+  C03:
+    claim: The objective combines weighted old-response distillation, new-task supervision,
+      and regularization.
+    type: PAPER_FACT
+    source_locator: Equations (1)-(4), Figure 3, PDF pp.4-5
+    conditions: R is simple weight decay in these experiments; parameter L2 is a comparison
+      baseline.
+    allowed_wording: The objective combines weighted old-response distillation, new-task
+      supervision, and regularization.
+    source_kind: equations
+  C04:
+    claim: The paper uses T=2 and sets lambda_o to 1 in most experiments.
+    type: PAPER_FACT
+    source_locator: PDF pp.4-5
+    conditions: These are experiment settings, not universal optima or performance
+      guarantees.
+    allowed_wording: The paper uses T=2 and sets lambda_o to 1 in most experiments.
+    source_kind: method_text
+  C05:
+    claim: Training warms up the new parameters while shared and old-task parameters
+      are frozen, then jointly optimizes all parameter groups.
+    type: PAPER_FACT
+    source_locator: PDF p.4
+    conditions: The old-task head is not permanently frozen; warm-up is not crucial
+      to LwF.
+    allowed_wording: Training warms up the new parameters while shared and old-task
+      parameters are frozen, then jointly optimizes all parameter groups.
+    source_kind: method_text
+  C09:
+    claim: The paper's main experiments cover visual classification plus one tracking
+      appendix experiment.
+    type: PAPER_FACT
+    source_locator: PDF pp.6-10, 12-13
+    conditions: Does not validate LLMs, foundation models, or broad online learning.
+    allowed_wording: The paper's main experiments cover visual classification plus
+      one tracking appendix experiment.
+    source_kind: experiments
+  A01:
+    claim: theta_s are shared network parameters.
+    type: PAPER_FACT
+    source_locator: PDF pp.3-4
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: theta_s are shared network parameters.
+    source_kind: method
+  A02:
+    claim: theta_o are existing task-specific output parameters for old tasks; they
+      can update in joint-optimize.
+    type: PAPER_FACT
+    source_locator: PDF pp.3-5
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: theta_o are existing task-specific output parameters for old
+      tasks; they can update in joint-optimize.
+    source_kind: method
+  A03:
+    claim: theta_n are randomly initialized output parameters added for new classes.
+    type: PAPER_FACT
+    source_locator: PDF pp.4-5
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: theta_n are randomly initialized output parameters added for
+      new classes.
+    source_kind: method
+  A04:
+    claim: Y_o is computed by running the old model on X_n.
+    type: PAPER_FACT
+    source_locator: Figure 3 and PDF pp.4-5
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: Y_o is computed by running the old model on X_n.
+    source_kind: algorithm
+  A05:
+    claim: Warm-up freezes theta_s and theta_o; joint-optimize trains theta_s, theta_o,
+      and theta_n.
+    type: PAPER_FACT
+    source_locator: PDF p.4
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: Warm-up freezes theta_s and theta_o; joint-optimize trains theta_s,
+      theta_o, and theta_n.
+    source_kind: method
+  A06:
+    claim: The classification response loss uses temperature-transformed probabilities;
+      T=2 in the paper.
+    type: PAPER_FACT
+    source_locator: Equations (2)-(4), PDF p.4
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: The classification response loss uses temperature-transformed
+      probabilities; T=2 in the paper.
+    source_kind: equations
+  A07:
+    claim: LwF does not use old-task training examples in the new-task training objective.
+    type: PAPER_FACT
+    source_locator: PDF pp.1, 4-5
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: LwF does not use old-task training examples in the new-task training
+      objective.
+    source_kind: abstract_and_method
+  A08:
+    claim: Additional task-specific layers and network expansion are explored as alternative
+      designs, not the default LwF architecture.
+    type: PAPER_FACT
+    source_locator: Figure 6 and Table 2, PDF pp.9-10
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: Additional task-specific layers and network expansion are explored
+      as alternative designs, not the default LwF architecture.
+    source_kind: figure_and_table
+  F01:
+    claim: L_new = -y_n · log(yhat_n), multinomial logistic loss for new-task labels.
+    type: PAPER_FACT
+    source_locator: Equation (1), PDF p.4
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: L_new = -y_n · log(yhat_n), multinomial logistic loss for new-task
+      labels.
+    source_kind: equation
+  F02:
+    claim: Temperature rescales each teacher probability by exponent 1/T and renormalizes
+      it.
+    type: PAPER_FACT
+    source_locator: Equation (4), PDF p.4
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: Temperature rescales each teacher probability by exponent 1/T
+      and renormalizes it.
+    source_kind: equation
+  F03:
+    claim: L_old is cross-entropy from temperature-adjusted old responses to current
+      old-task outputs.
+    type: PAPER_FACT
+    source_locator: Equations (2)-(3), PDF p.4
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: L_old is cross-entropy from temperature-adjusted old responses
+      to current old-task outputs.
+    source_kind: equations
+  F04:
+    claim: L_total = lambda_o L_old + L_new + R(theta_s, theta_o, theta_n).
+    type: PAPER_FACT
+    source_locator: Figure 3 and PDF p.5
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: L_total = lambda_o L_old + L_new + R(theta_s, theta_o, theta_n).
+    source_kind: algorithm
+  F05:
+    claim: lambda_o weights old-response distillation; larger values favor the old-task
+      objective relative to the new-task objective.
+    type: PAPER_FACT
+    source_locator: PDF p.5; Figure 7, pp.9-10
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: lambda_o weights old-response distillation; larger values favor
+      the old-task objective relative to the new-task objective.
+    source_kind: method_text
+  F06:
+    claim: The authors chose T=2 by grid search on a held-out set.
+    type: PAPER_FACT
+    source_locator: PDF p.4
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: The authors chose T=2 by grid search on a held-out set.
+    source_kind: method_text
+results:
+  C06:
+    claim: Across tested settings, LwF often improves the fine-tuning trade-off but
+      has task-pair exceptions.
+    type: PAPER_RESULT
+    source_locator: Table 1, Figure 4, PDF pp.7-8
+    conditions: State task pair, model, split, metric, and protocol; do not claim
+      universal superiority.
+    allowed_wording: Across tested settings, LwF often improves the fine-tuning trade-off
+      but has task-pair exceptions.
+    source_kind: table_and_figure
+  E01:
+    claim: LwF ImageNet old-task and CUB new-task accuracy for AlexNet.
+    type: PAPER_RESULT
+    source_locator: Table 1(a), PDF p.7; protocol p.6
+    conditions: 'dataset: ImageNet → CUB-200-2011 model: AlexNet split: ImageNet validation;
+      CUB test metric: accuracy protocol: Table 1(a); center crop; mean of three training
+      runs value: 54.7% old / 57.7% new (values printed for LwF)'
+    allowed_wording: LwF ImageNet old-task and CUB new-task accuracy for AlexNet.
+    source_kind: table
+    dataset: ImageNet → CUB-200-2011
+    model: AlexNet
+    split: ImageNet validation; CUB test
+    metric: accuracy
+    protocol: Table 1(a); center crop; mean of three training runs
+    value: 54.7% old / 57.7% new (values printed for LwF)
+  E02:
+    claim: Fine-tuning absolute accuracies derived from Table 1(a)'s signed differences
+      relative to LwF.
+    type: PAPER_RESULT
+    source_locator: Table 1(a), PDF p.7; protocol p.6
+    conditions: 'dataset: ImageNet → CUB-200-2011 model: AlexNet split: ImageNet validation;
+      CUB test metric: accuracy protocol: LwF baseline plus printed signed delta;
+      mean-of-three protocol as Table 1 value: 50.9% old / 57.0% new; derived, not
+      all printed as absolute values'
+    allowed_wording: Fine-tuning absolute accuracies derived from Table 1(a)'s signed
+      differences relative to LwF.
+    source_kind: table_and_calculation
+    dataset: ImageNet → CUB-200-2011
+    model: AlexNet
+    split: ImageNet validation; CUB test
+    metric: accuracy
+    protocol: LwF baseline plus printed signed delta; mean-of-three protocol as Table
+      1
+    value: 50.9% old / 57.0% new; derived, not all printed as absolute values
+  E03:
+    claim: Feature-extraction absolute accuracies derived from Table 1(a)'s signed
+      differences relative to LwF.
+    type: PAPER_RESULT
+    source_locator: Table 1(a), PDF p.7; protocol p.6
+    conditions: 'dataset: ImageNet → CUB-200-2011 model: AlexNet split: ImageNet validation;
+      CUB test metric: accuracy protocol: LwF baseline plus printed signed delta;
+      mean-of-three protocol as Table 1 value: 57.0% old / 52.5% new; derived, not
+      all printed as absolute values'
+    allowed_wording: Feature-extraction absolute accuracies derived from Table 1(a)'s
+      signed differences relative to LwF.
+    source_kind: table_and_calculation
+    dataset: ImageNet → CUB-200-2011
+    model: AlexNet
+    split: ImageNet validation; CUB test
+    metric: accuracy
+    protocol: LwF baseline plus printed signed delta; mean-of-three protocol as Table
+      1
+    value: 57.0% old / 52.5% new; derived, not all printed as absolute values
+  E04:
+    claim: Joint-training absolute accuracies derived from Table 1(a)'s signed differences
+      relative to LwF.
+    type: PAPER_RESULT
+    source_locator: Table 1(a), PDF p.7; protocol p.6
+    conditions: 'dataset: ImageNet → CUB-200-2011 model: AlexNet split: ImageNet validation;
+      CUB test metric: accuracy protocol: Uses old-task data; LwF baseline plus printed
+      signed delta; mean-of-three protocol as Table 1 value: 55.3% old / 56.6% new;
+      derived, not all printed as absolute values'
+    allowed_wording: Joint-training absolute accuracies derived from Table 1(a)'s
+      signed differences relative to LwF.
+    source_kind: table_and_calculation
+    dataset: ImageNet → CUB-200-2011
+    model: AlexNet
+    split: ImageNet validation; CUB test
+    metric: accuracy
+    protocol: Uses old-task data; LwF baseline plus printed signed delta; mean-of-three
+      protocol as Table 1
+    value: 55.3% old / 56.6% new; derived, not all printed as absolute values
+  E05:
+    claim: The paper reports that performance changes across task pairs, including
+      ImageNet→MNIST and Places365/CUB comparisons.
+    type: PAPER_RESULT
+    source_locator: PDF pp.7-10
+    conditions: 'dataset: Multiple task pairs, including ImageNet → MNIST model: AlexNet
+      for the cited main comparison unless noted split: Per dataset protocol; consult
+      paper table and text before plotting values metric: accuracy, except VOC where
+      mAP is used protocol: Task-pair comparisons from the paper; not a pooled cross-task
+      score value: Qualitative boundary; no pooled value'
+    allowed_wording: The paper reports that performance changes across task pairs,
+      including ImageNet→MNIST and Places365/CUB comparisons.
+    source_kind: experiments_and_discussion
+    dataset: Multiple task pairs, including ImageNet → MNIST
+    model: AlexNet for the cited main comparison unless noted
+    split: Per dataset protocol; consult paper table and text before plotting values
+    metric: accuracy, except VOC where mAP is used
+    protocol: Task-pair comparisons from the paper; not a pooled cross-task score
+    value: Qualitative boundary; no pooled value
+  E06:
+    claim: MD-Net tracking appendix reports 0.373 and 0.383 expected average overlap,
+      with a difference the authors call not statistically significant.
+    type: PAPER_RESULT
+    source_locator: PDF pp.12-13
+    conditions: 'dataset: VOT 2015 tracking benchmark model: MD-Net and MD-Net + LwF
+      split: Paper''s appendix protocol metric: expected average overlap protocol:
+      Tracking appendix; authors report the difference as not statistically significant
+      value: 0.373 / 0.383'
+    allowed_wording: MD-Net tracking appendix reports 0.373 and 0.383 expected average
+      overlap, with a difference the authors call not statistically significant.
+    source_kind: appendix_table_and_text
+    dataset: VOT 2015 tracking benchmark
+    model: MD-Net and MD-Net + LwF
+    split: Paper's appendix protocol
+    metric: expected average overlap
+    protocol: Tracking appendix; authors report the difference as not statistically
+      significant
+    value: 0.373 / 0.383
+author_interpretations:
+  C07:
+    claim: Matching old outputs on new inputs may not preserve behavior over the full
+      old-task distribution when input coverage differs.
+    type: AUTHOR_INTERPRETATION
+    source_locator: PDF pp.2, 7, 10
+    conditions: The tutorial's coverage framing is an interpretation, not a universal
+      quantitative law.
+    allowed_wording: Matching old outputs on new inputs may not preserve behavior
+      over the full old-task distribution when input coverage differs.
+    source_kind: discussion_and_examples
+  C08:
+    claim: The authors characterize LwF as a hybrid of knowledge distillation and
+      fine-tuning.
+    type: AUTHOR_INTERPRETATION
+    source_locator: PDF p.10
+    conditions: This does not make LwF replay, parameter isolation, or joint training.
+    allowed_wording: The authors characterize LwF as a hybrid of knowledge distillation
+      and fine-tuning.
+    source_kind: discussion
+  C10:
+    claim: Semantic segmentation, object detection, representative old-domain samples,
+      theory, and online learning are proposed as future directions.
+    type: AUTHOR_INTERPRETATION
+    source_locator: PDF pp.10-11
+    conditions: These are not capabilities demonstrated in this paper.
+    allowed_wording: Semantic segmentation, object detection, representative old-domain
+      samples, theory, and online learning are proposed as future directions.
+    source_kind: discussion
+  C11:
+    claim: The paper argues that output regularization can preserve task behavior
+      more directly than constraining individual parameters.
+    type: AUTHOR_INTERPRETATION
+    source_locator: Figure 7 and PDF pp.9-10
+    conditions: LwF still matches outputs only on the new-task training inputs.
+    allowed_wording: The paper argues that output regularization can preserve task
+      behavior more directly than constraining individual parameters.
+    source_kind: ablation_discussion
+our_interpretations: {}
+implementation_mappings:
+  I01:
+    claim: theta_s may map to a runtime collection of shared backbone parameters.
+    type: IMPLEMENTATION_MAPPING
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: Conceptual mapping; not an exact module name from the paper implementation.
+    allowed_wording: theta_s may map to a runtime collection of shared backbone parameters.
+  I02:
+    claim: theta_o and theta_n may map to separate task-head parameter collections.
+    type: IMPLEMENTATION_MAPPING
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: Specific tensor names and framework containers depend on an implementation.
+    allowed_wording: theta_o and theta_n may map to separate task-head parameter collections.
+  I03:
+    claim: In an autograd implementation, backward computes gradients and an optimizer
+      step applies updates to parameters included in its groups.
+    type: IMPLEMENTATION_MAPPING
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: General implementation explanation; the paper describes training with
+      SGD, not this specific API.
+    allowed_wording: In an autograd implementation, backward computes gradients and
+      an optimizer step applies updates to parameters included in its groups.
+background:
+  B01:
+    claim: Softmax maps classification logits to normalized class probabilities; cross-entropy
+      compares a probability output with a target distribution.
+    type: GENERAL_BACKGROUND
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: Softmax maps classification logits to normalized class probabilities;
+      cross-entropy compares a probability output with a target distribution.
+  B02:
+    claim: Backpropagation computes derivatives; parameter mutation occurs when an
+      optimizer applies an update.
+    type: GENERAL_BACKGROUND
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: Backpropagation computes derivatives; parameter mutation occurs
+      when an optimizer applies an update.
+  B03:
+    claim: A shared backbone can feed multiple task-specific heads.
+    type: GENERAL_BACKGROUND
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: No additional boundary recorded in the v2 registry.
+    allowed_wording: A shared backbone can feed multiple task-specific heads.
+teaching_examples:
+  T01:
+    claim: A fixed three-logit distribution can illustrate temperature smoothing.
+    type: TEACHING_EXAMPLE
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: Toy logits and resulting probabilities are not predictions reported
+      by the paper.
+    allowed_wording: A fixed three-logit distribution can illustrate temperature smoothing.
+  T02:
+    claim: A qualitative near/unknown/far input relation can illustrate coverage concerns.
+    type: TEACHING_EXAMPLE
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: No numeric distance or measured performance is implied.
+    allowed_wording: A qualitative near/unknown/far input relation can illustrate
+      coverage concerns.
+  T03:
+    claim: A two-arrow weight diagram can illustrate lambda_o's relative objective
+      coefficient.
+    type: TEACHING_EXAMPLE
+    source_locator: General background or teaching example; no paper-source claim.
+    conditions: Loss magnitudes and accuracies are not simulated from the paper.
+    allowed_wording: A two-arrow weight diagram can illustrate lambda_o's relative
+      objective coefficient.
+review:
+  unresolved_source_conflicts: []
+  unresolved_evidence_conflicts: []
+  unsafe_claim_wording: []

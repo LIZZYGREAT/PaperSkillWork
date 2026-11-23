@@ -1,0 +1,7 @@
+{
+  "source_notes": [
+    "The local source PDF is arXiv:1606.09282v3, submitted 2017-02-14; the paper is published at ECCV 2016.",
+    "The cached text contains selectable text from all 13 PDF pages. It does not replace visual review of rotated text, plots, axes, or figure/table labels.",
+    "All seven figures and both tables are inventoried with stable IDs and PDF page locators in manifest.json. Original images are not selected for publication; reuse rights have not been verified."
+  ]
+}

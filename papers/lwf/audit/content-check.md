@@ -8,7 +8,8 @@ Agent pre-audit is recorded below; final human review remains open.
 
 - [x] Core problem and idea match the paper; scope is adding visual prediction tasks when old training data are unavailable.
 - [x] Architecture, terms, formulas, temperature, loss weights, and training phases were checked against the local PDF and recorded in `research/02_evidence_audit.md`.
-- [x] Web diagrams are original Canvas teaching visuals; no paper figure was copied into the site.
+- [x] The current page's custom Canvas diagrams are identified as teaching visuals; this records the existing implementation and does not prohibit use of source figures.
+- [ ] Complete the full paper figure/table inventory, preserve high-value figures with approved reuse rights, and add source-based explanations to their scenes.
 - [x] Experiment values, benchmark, split, metric, and the Table 1(a) signed-delta conversion are disclosed in the content and evidence audit.
 - [x] Conclusions are limited to the reported task pairs and configurations; illustrative logits and diagrams are identified as teaching examples.
 - [x] The paper's limitations and future-work claims are kept separate from measured results.

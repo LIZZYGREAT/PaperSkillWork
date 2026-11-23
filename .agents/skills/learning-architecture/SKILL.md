@@ -1,47 +1,55 @@
 ---
 name: learning-architecture
-description: Design a dependency-driven learning path from the reviewed paper model and evidence registry for Gate G4.
+description: Produce a causal primary learning spine and information priority matrix for Workflow v3 stage W4.
 ---
 
-# Learning Architecture
+# Learning Spine — W4
 
 ## Purpose
 
-Design a sequence that lets a first-time reader reconstruct the paper. The structure is driven by conceptual dependencies, not paper order, chapter symmetry, or interaction count.
+Choose the one continuous path that lets a first-time reader understand the paper. This is not a chapter list.
 
 ## Required Inputs
 
-- `design/learning-contract.md`
-- `research/01_paper_model.md`
-- `research/02_evidence_registry.yaml`
-- `templates/learning-architecture.md`
+- `research/paper-model.md`
+- `research/evidence-registry.yaml`
+- Reader assumptions supplied for the paper
+- `templates/learning-spine.md`
 
 ## Procedure
 
-1. Read the reader, prerequisites, outcomes, depth, and evidence needs in the Learning Contract.
-2. Build the Concept Dependency Graph: what must be understood first, what depends on it, and why.
-3. Identify prerequisite gaps and decide where the main path must explain them.
-4. Define persistent objects or a shared workspace when reusing the same system improves reconstruction.
-5. Define scenes around unresolved questions. For every core scene, state entry knowledge, question, new mental model, persistent objects, exit capability, and next question.
-6. Record each scene's `Consumes`, `Produces`, and `Used later by` links.
-7. Check the complete causal chain from problem through architecture, mechanism, update/runtime, evidence, and limits.
-8. Only then consider an optional analogy or visual form. State its mapping, boundary, and removal condition.
-9. Save `design/learning-architecture.md` and resolve all teaching claims to evidence IDs.
+Use optional `source/notes/` to discover reader difficulties, prerequisite dependencies, useful derivations, and desired explanation depth. Treat these as candidate resources for the causal path, cognitive dependencies, and mathematical progression, verify facts against W2, and avoid repeating already-mastered prerequisites. Do not inherit the notes' chapter order or bypass human W4 review.
+
+1. State the overall reading outcome: the questions the reader should explain and the real algorithm they should reconstruct after the tutorial.
+2. Start from the reader's existing knowledge, the paper's problem, and its causal/runtime logic, not its section order. An opening orientation may establish the task and motivation without requiring a P0 label or fixed format.
+3. Build a continuous reasoning path in the project's own natural shape. About 5–8 stages is often workable, but neither the count nor a first-round/second-round/third-round sequence is a requirement.
+4. For every major segment, write the known facts/state, the newly exposed problem, the reason a mechanism or mathematical tool is needed now, the resulting understanding, and the handoff to the next segment. Treat these as reasoning prompts, not page fields.
+5. Assign each core concept one primary teaching location. Record which earlier conclusions later stages must recover lightly, which later knowledge must not be introduced early, and where a brief reference replaces repeated full explanation.
+6. For important complex mathematics, plan the cognitive progression: required intuition, point of formal introduction, useful small cases or explicit expansion, and required rigor. Do not select layouts, animations, or technical components in W4.
+7. Include at least one dedicated algorithm-integration stage grounded in W2's Algorithm Execution Model. It must cover the real ordering, persistent state, cross-round handoffs, relevant branches, and prediction/output while reorganizing already learned mechanisms into a whole rather than reteaching or concatenating them.
+8. For every content item, assign one unique ID and exactly one priority: `CORE`, `SUPPORTING`, `REFERENCE`, or `DELETE`.
+9. Assign every CORE item to one mainline stage. Supporting items get compact placement. Reference items stay outside the mainline in hover/Reference Hub/advanced details. Delete irrelevant, repeated, or over-costly items even when factually correct.
+10. Resolve spine content to evidence IDs, save `design/learning-spine.md`, and request a human review before W4 is accepted. Keep the existing `stages` / `items` YAML as the only machine-readable priority and coverage source; do not add a page-by-page schema.
 
 ## Validation
 
-- The order follows prerequisite dependencies and explains why each transition is natural.
-- Every core scene has a clear entry and exit capability.
-- The whole path forms a connected model rather than unrelated demonstrations.
-- No analogy or presentation form is required by default.
+Use docs/TEACHING_DESIGN_STANDARD.md as the review contract. Read the spine from a learner's perspective and verify that each mechanism or mathematical tool answers a problem the reader can already perceive. Field names without explanatory prose are not sufficient, but W4 need not be a verbatim page script.
+
+- One continuous, explainable causal/runtime path exists.
+- All CORE items are assigned to the path, without duplicate item IDs.
+- Supporting content remains compact; reference content does not take a mainline scene.
+- Terms have one primary teaching location; later stages recover needed context without either assuming perfect memory or repeating the full explanation.
+- Important mathematics has an explicit cognitive entry and an explanation strategy proportionate to its role and complexity.
+- The spine lets a reviewer reconstruct problem, idea, architecture, evidence, limits, and the complete W2 execution path through its dedicated integration stage.
 
 ## Forbidden Actions
 
-- Do not begin by selecting chapter count, a site-wide metaphor, or animations.
-- Do not specify canvas dimensions, animation timing, slider ranges, or SVG coordinates.
-- Do not make Enhanced copy Canonical's teaching structure by default.
-- Do not advance G4 automatically.
+- Do not set chapter count, analogy, animation, or interaction quotas.
+- Do not turn the reasoning prompts into a required card sequence or introduce a second page-level YAML/JSON schema.
+- Do not design a control because a concept is adjustable.
+- Do not use the spine to restate every detail in the paper.
+- Do not advance W4 automatically.
 
 ## Completion Criteria
 
-Save an architecture that can be reviewed without application code and verify all claims against the registry.
+A person confirms the learning order and priorities before W4 is marked complete. Record acceptance with `python tools/paper.py stage <paper-id> W4 complete --reviewed-by "Name" --note "Learning spine and priorities accepted"`.

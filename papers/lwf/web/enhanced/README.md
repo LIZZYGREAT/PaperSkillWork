@@ -1,6 +1,6 @@
-# LwF 交互式精读 · Workflow v2
+# LwF 交互式精读 · Enhanced 工作副本
 
-当前版本在 *Learning without Forgetting*（LwF）的交互章节中提供 00 背景导读和 01–10 场景，沿用 PaperSkill 的章节目录和分页框架。各页共用一个持续工作区；Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注。00 用于解释论文背景，不计入人工学习验收；实现和构建不代表学习门禁通过。
+当前增强版保留旧版 A–J 场景供回看，并提供完整的 v3 `00–07` 八章主线。`?version=v3` 打开新主线；`src/data/tutorial.ts` 从同一章节清单生成上游 `kind: "chapter"` 数据，并为实际交互登记 `kind: "module"` 组件。Paper 事实、Runtime 实现映射和 Teaching Toy 教学计算分别标注；实现和构建不代表学习门禁通过。
 
 ## 本地预览与构建
 
@@ -13,7 +13,13 @@ npm run dev
 
 生产构建运行 `npm run build`，构建后的静态文件位于 `dist/`；可用 `npm run preview` 查看构建结果。Vite 使用配置运行器加载配置，适配当前受限工作区。
 
-## 场景 00–10
+### 00–07 v3 学习主线
+
+运行开发服务器后，打开 `http://localhost:5173/?version=v3` 查看 00–07 单页教学主线。浏览器验收页为 `http://localhost:5173/tests/v3-chapters-browser.html`；它检查导航、交互和移动布局，不生成截图文件。未带 `version=v3` 时仍进入旧版 A–J 场景。
+
+上游映射位于 `src/v3/data/upstream-adapter.ts`：8 个章节和 10 个已登记交互模块；Chapter 04 包含三个机制交互。官方 PaperSkill 导入与预检需在兼容的 Workflow v3 工作区和目标上游检出中运行。
+
+## 旧版场景 00–10（仅用于回看）
 
 - **00 · 论文背景与研究目标：** 简介旧任务数据不可用时加入新任务的问题设定、常见路线的取舍、LwF 的旧响应思路及其输入覆盖边界；不增加训练门禁。
 - **01 · 问题空间与方法约束：** 展示新旧数据可用性，比较特征提取、微调和联合训练，并由问题条件引出 LwF 需要的旧任务信号。
@@ -27,7 +33,7 @@ npm run dev
 - **09 · 论文证据与结论审计：** 以 claim selector 连接实验设置、Table 1/2、Figure 4/7 与结论边界；程序化重构 ImageNet→CUB 表中的绝对值，逐个检查方法信息条件，并将作者解释、机制说明与论文实测结果分层。
 - **10 · 端到端 LwF 工作流：** 将 A–I 汇为 8 步实现路线，提供可切换的 Paper / Runtime / Code 视图、参数组与 shape 示例、手动运行前核对表、实现排错路径，以及下一任务 Teacher 快照循环。页面伪代码是实现导向的说明，不是论文原始代码；shape 与元素数是明确标注的 AlexNet 示例，不代表当前工作区 checkpoint。
 - PaperSkill 左侧章节栏与上一页 / 下一页控件保持可用；正文维持单栏阅读宽度，右下角悬浮工作区入口可展开共享工作区与对象检查器，状态随章节更新。A、B、C、J 的相关正文还提供就近入口，可直接打开并定位对象。
-- 场景切换和构建不代表学习验收通过，学习问题与 `G0–G7` 仍待人工核阅。
+- 场景切换和构建不代表学习验收通过；学习效果仍需在 W7 与 W9 由人工确认。
 
 ## 证据与术语
 
@@ -61,9 +67,11 @@ npm run dev
 | `src/styles/scene-j.css` | Scene J 工作流、运行时映射、参数表、检查清单与窄屏排版 |
 | `src/styles/workspace-curtain.css` | 悬浮入口、展开式共享工作区及响应式布局 |
 | `src/data/registry.ts` | 解析项目内术语和证据登记 |
+| `src/data/tutorial.ts` | 元数据和八章上游导入数据 |
+| `src/v3/data/upstream-adapter.ts` | v3 的 00–07 `kind: "chapter"` 与交互模块映射 |
+| `src/modules/v3-widgets.tsx` | Chapter 04–07 上游交互组件注册 |
 | `src/data/knowledge.ts` | 全站 canonical knowledge cards |
-| `src/styles/v2.css` | 分页布局、场景容器、可读字级与窄屏样式 |
-| `src/App.v1.tsx` | 上一版入口快照，留作迁移核对 |
+| `src/styles/layout.css` | 分页布局、场景容器、可读字级与窄屏样式 |
 
 页面是 PaperSkillWork 中的 Enhanced 工作副本；Canonical 论文源和工作流门禁仍分别管理。
 

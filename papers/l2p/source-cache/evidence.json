@@ -1,0 +1,39 @@
+{
+  "source_notes": [
+    {
+      "path": "source/notes/L2P论文笔记.md",
+      "type": "user_reading_note",
+      "assessment": "Readable and relevant. Use as a map to questions and derivations; verify all paper facts against the original PDF."
+    },
+    {
+      "path": "source/notes/L2P前置知识笔记.md",
+      "type": "user_prerequisite_note",
+      "assessment": "Readable and relevant. Candidate reader prerequisites; avoid re-teaching mastered background and verify paper-specific mappings against the original PDF."
+    },
+    {
+      "path": "source/notes/P1-P3_教学主线与内容规划.md",
+      "type": "user_approved_learning_spine",
+      "assessment": "Readable and relevant. User identified this and the two companion P4-P6/P7-P9 files as settled mainline content; preserve their reasoning order unless a source conflict is found."
+    },
+    {
+      "path": "source/notes/P4-P6_教学主线与内容规划.md",
+      "type": "user_approved_learning_spine",
+      "assessment": "Readable and relevant. User-identified settled mainline content; preserve the mechanism handoffs and boundaries unless a source conflict is found."
+    },
+    {
+      "path": "source/notes/P7-P9_教学主线与内容规划.md",
+      "type": "user_approved_learning_spine",
+      "assessment": "Readable and relevant. User-identified settled mainline content; use P8 as a candidate integrated execution stage and verify it against the source."
+    },
+    {
+      "path": "source/notes/images/视觉变换器：从图像到令牌.png",
+      "type": "user_prerequisite_visual_reference",
+      "assessment": "User-provided ViT explainer image supplied alongside the L2P notes. Retained as contextual reading material only; not an original paper asset and not selected as a tutorial visual."
+    },
+    {
+      "path": "source/notes/images/ViT视觉对象与网络架构图解.png",
+      "type": "user_prerequisite_visual_reference",
+      "assessment": "User-provided ViT visual-object and architecture explainer supplied alongside the L2P notes. Retained as contextual reading material only; not an original paper asset and not selected as a tutorial visual."
+    }
+  ]
+}

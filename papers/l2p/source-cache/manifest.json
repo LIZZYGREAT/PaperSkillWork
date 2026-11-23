@@ -1,0 +1,106 @@
+{
+  "paper": {
+    "title": "Learning to Prompt for Continual Learning",
+    "authors": [
+      "Zifeng Wang",
+      "Zizhao Zhang",
+      "Chen-Yu Lee",
+      "Han Zhang",
+      "Ruoxi Sun",
+      "Xiaoqi Ren",
+      "Guolong Su",
+      "Vincent Perot",
+      "Jennifer Dy",
+      "Tomas Pfister"
+    ],
+    "venue": "CVPR 2022",
+    "year": 2022,
+    "source_type": "User-provided arXiv v2 PDF",
+    "source_location": "task/L2P/Learning to Prompt for Continual Learning.pdf",
+    "source_hash": "C32A3012BE38E3AB1D6DCC2B38ED350C2DCF40D746899FF3E93B1B681FC08D87"
+  },
+  "cache_status": "complete",
+  "extraction": "Complete 13-page extraction from source/paper.pdf with Poppler pdftotext -layout -enc UTF-8. Page boundaries and paper labels are preserved in content.md. PDF pages 1, 4, 6, 7, 8, and 13 are rendered at 180 dpi under source-cache/figures/ for visual inventory review; original PDF remains authoritative for typography and exact values.",
+  "figures": [
+    {
+      "id": "FIGURE_1",
+      "locator": "Figure 1, PDF p. 1",
+      "caption": "Overview of the L2P framework. Compared with typical methods that adapt entire or partial model weights to tasks sequentially with a rehearsal buffer to avoid forgetting, L2P uses a single backbone model and learns a prompt pool to instruct the model conditionally. Task-specific knowledge is stored inside a prompt pool, thus a rehearsal buffer is no longer mandatory to mitigate forgetting. L2P automatically selects and updates prompts from the pool in an instance-wise fashion, thus task identity is not required at test time. Notably, our largest prompt space is smaller than the size of one 224 × 224 image.",
+      "type": "PIPELINE",
+      "candidate_role": "High-level comparison and prompt-pool method overview.",
+      "image_path": "source-cache/figures/source-pdf-page-01.png"
+    },
+    {
+      "id": "FIGURE_2",
+      "locator": "Figure 2, PDF p. 4; §4.2; Eq. (5)",
+      "caption": "Illustration of L2P at test time. We follow the same procedure at training time: First, L2P selects a subset of prompts from a key-value paired prompt pool based on our proposed instance-wise query mechanism. Then, L2P prepends the selected prompts to the input tokens. Finally, L2P feeds the extended tokens to the model, and optimize the prompt pool through the loss defined in equation 5. The objective is learning to select and update prompts to instruct the prediction of the pre-trained backbone model.",
+      "type": "PIPELINE",
+      "candidate_role": "Core prompt retrieval, augmented input, frozen backbone, and loss flow.",
+      "image_path": "source-cache/figures/source-pdf-page-04.png"
+    },
+    {
+      "id": "TABLE_1",
+      "locator": "Table 1, PDF p. 6; §5.3",
+      "caption": "Results on class-incremental learning (i.e., task identity is unknown at test time). Compared methods are grouped based on different rehearsal buffer sizes. 0 means no rehearsal is required, where most SOTA methods are not applicable anymore. Importantly, L2P can attain competitive results without it and greatly outperform them with a small buffer size.",
+      "type": "RESULT",
+      "candidate_role": "Class-incremental comparisons on Split CIFAR-100 and 5-datasets across rehearsal-buffer settings.",
+      "image_path": "source-cache/figures/source-pdf-page-06.png"
+    },
+    {
+      "id": "TABLE_2",
+      "locator": "Table 2, PDF p. 6; §5.3",
+      "caption": "Class-incremental results on Split CIFAR-100 against architecture-based methods. Diff = Upper-Bound Acc - Method Acc (lower is better) measures how close the performance to the upper-bound of the used backbone.",
+      "type": "RESULT",
+      "candidate_role": "Architecture-matched comparison and gap to backbone upper bound.",
+      "image_path": "source-cache/figures/source-pdf-page-06.png"
+    },
+    {
+      "id": "TABLE_3",
+      "locator": "Table 3, PDF p. 6; §5.3",
+      "caption": "Results on domain-incremental learning using CORe50 dataset, in terms of test accuracy.",
+      "type": "RESULT",
+      "candidate_role": "Domain-incremental comparison on CORe50.",
+      "image_path": "source-cache/figures/source-pdf-page-06.png"
+    },
+    {
+      "id": "TABLE_4",
+      "locator": "Table 4, PDF p. 7; §5.3",
+      "caption": "Results on task-agnostic continual learning using the Gaussian scheduled CIFAR-100 dataset, in terms of test accuracy.",
+      "type": "RESULT",
+      "candidate_role": "Task-agnostic continual-learning comparison, including zero-buffer L2P and L2P-R settings.",
+      "image_path": "source-cache/figures/source-pdf-page-07.png"
+    },
+    {
+      "id": "FIGURE_3",
+      "locator": "Figure 3, PDF p. 7; §5.4",
+      "caption": "Prompt selection histograms for (left) Split CIFAR-100 and (right) 5-datasets. CIFAR-100 has higher intra-task similarity compared to 5-datasets, thus largely sharing prompts between tasks results in good performance, while 5-datasets favors more task-specific prompts. We only show the first 5 tasks for Split CIFAR-100 for better readability.",
+      "type": "RESULT",
+      "candidate_role": "Observed prompt-selection patterns used to discuss sharing versus task-specific selection.",
+      "image_path": "source-cache/figures/source-pdf-page-07.png"
+    },
+    {
+      "id": "TABLE_5",
+      "locator": "Table 5, PDF p. 7; §5.4",
+      "caption": "Ablation studies. See text for detailed explanations.",
+      "type": "ABLATION",
+      "candidate_role": "Ablations of the prompt pool, key-value pairing, and diversified prompt selection.",
+      "image_path": "source-cache/figures/source-pdf-page-07.png"
+    },
+    {
+      "id": "FIGURE_4",
+      "locator": "Figure 4, PDF p. 8; §5.4",
+      "caption": "Left-Middle: Average accuracy w.r.t prompt length Lp and prompt selection size N for Split CIFAR-100 and 5-datasets, respectively, given M = 20. Right: Average accuracy (%) w.r.t. prompt pool size M, given Lp = 5, N = 5 for Split CIFAR-100 and Lp = 5, N = 4 for 5-datasets.",
+      "type": "RESULT",
+      "candidate_role": "Sensitivity to prompt length, selection size, and pool capacity.",
+      "image_path": "source-cache/figures/source-pdf-page-08.png"
+    },
+    {
+      "id": "ALGORITHM_1",
+      "locator": "Algorithm 1, PDF p. 13; Appendix D",
+      "caption": "Learning to Prompt for Continual Learning (L2P).",
+      "type": "ALGORITHM",
+      "candidate_role": "Formal training algorithm with batch accumulation and separate prediction note.",
+      "image_path": "source-cache/figures/source-pdf-page-13.png"
+    }
+  ]
+}

@@ -1,11 +1,18 @@
 # Paper source PDFs are local research materials
 papers/*/source/*.pdf
 
+# Personal DER reading notes stay local
+papers/der/source/notes/
+
 # Node
 **/node_modules/
 **/dist/
 **/dist-ssr/
 **/.vite/
+**/test-results/
+**/playwright-report/
+.visual-qa/
+/html_output/
 
 # Environment
 .env

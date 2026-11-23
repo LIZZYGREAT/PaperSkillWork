@@ -1,0 +1,57 @@
+---
+name: implementation-plan
+description: Plan visual and interaction choices after the learning spine, then define the first vertical slice and human learning review.
+---
+
+# Implementation Plan — W5 to W7
+
+## Purpose
+
+Translate the reviewed spine into the smallest useful visual plan, then expose the teaching direction to a human before full implementation.
+
+## Required Inputs
+
+- `research/paper-model.md`
+- `research/evidence-registry.yaml`
+- `design/learning-spine.md`
+- `design/asset-plan.md`
+- `templates/implementation-plan.md`
+
+## Procedure
+
+Before implementation, settle the scene's visual hierarchy, composition, object relationships, and state transitions from W4/W2. For a central or high-risk dynamic scene, prepare and review a high-fidelity keyframe plus a short motion prototype, or an equivalent storyboard that communicates timing accurately; record it in the existing implementation plan. Do this before W6 page implementation. Ordinary pages do not need a prototype, and no page is required to use animation.
+
+When useful, consult optional `source/notes/` for numerical examples, equation expansions, or diagram intuitions, verifying them before reuse. Choose expression and local scene composition from approved W4 learning tasks and W2 real data/state; keep reuse boundaries in the existing plan, without a separate notes-to-page mapping or automatic publication of original notes and attachments.
+
+Use the confirmed project W4 design and W2 Algorithm Execution Model as inputs, not as requests to redesign their learning order or real algorithm. W5 decides whether each teaching task is expressed through prose, graphics, formulas, pseudocode, interaction, animation, or a whole-system scene. Read the relevant sections of `docs/TEACHING_DESIGN_STANDARD.md`; use `docs/VISUAL_QA.md` to choose observable states and viewports. In the existing implementation plan, record the text/visual/interaction task, key states, protected invariants, safe local adjustments, shared/adjacent areas that may be affected, and unresolved decisions. Keep confirmed design separate from rendered-page acceptance and keep these notes outside the machine-readable YAML. Use `docs/REUSABLE-KIT.md` only for the installed foundation and Reference API.
+
+1. Choose how prose, graphics, formulas, pseudocode, paper figures, and interactions work together for the teaching goal. A graphic may communicate a spatial, temporal, or state relationship more directly even when prose can explain it; avoid decorative visuals without a learning purpose.
+2. Use the form that makes the intended relationship clearest, including architecture, branching, data/state flow, lifecycle, training steps, ownership, dependencies, comparisons, or evidence. Do not treat visual expression as a fallback reserved for ideas that prose cannot explain.
+3. W0 自动装配 DER 基准的暖白画布、字体、MathML、基础图文布局与 Reference 抽屉；首次正式页面前检查样式预览，在现有 Design Handoff 记录必要局部修订。W5 从 W2/W4 独立设计教学对象和场景。 Keep scene state, calculations, protected invariants and exclusions in the existing plan. Preserve paper asset provenance; do not introduce cross-paper runtime imports.
+4. For each algorithmically critical scene, record its teaching purpose, reader prerequisites, algorithm relation and conclusion; fixed inputs, persistent/temporary state, outputs, lifecycle, object identities, and provenance; and the semantics/calculations/order/approved visual relations that local implementation changes must protect. Ordinary prose pages do not need a frame table.
+5. For the complete-algorithm integration stage, derive a global execution model from W2 before designing shots or motion. Compare compositions based on the paper's needs, then redesign the overall hierarchy, transitions, narrative focus, and state visibility for whole-system understanding. Reusing calculations or atomic assets is allowed; concatenating prior page components is not a complete integration design.
+6. For only the meaningful or risky moments in a complex scene, record a compact semantic-frame contract: W2 operation and timing, entering state, real computation/trigger, leaving state, graphic action, aligned text/formula, protected identities/ownership/coordinates/results/update timing/connections, and reproducible verification. Do not impose a standard frame count, duration, or layout.
+7. Fill the `implementation:` YAML block in `design/implementation-plan.md`; it is the sole machine-readable implementation plan. Use only Learning Spine stage IDs. Map each CORE item exactly once to one stage with one `primary_vehicle`, evidence refs, a page, reusable pattern (or null), and reason. Give each SUPPORTING item a compact placement, map each REFERENCE outside the mainline, and exclude DELETE.
+8. Map each selected public asset once to a spine stage or `Reference Hub` and choose `original`, `crop`, `redraw`, or `overlay` rendering.
+9. Define a first vertical slice that forms a real cognitive loop: the reader perceives a problem, sees why a mechanism is introduced, follows a key operation, observes a conclusion, and can continue naturally. It is usually 2–3 spine stages but may vary with the content. List its stages and required CORE IDs in `vertical_slice`.
+10. Before W6, resolve the actual publish source with `python tools/paper.py paths <paper-id> --json` and read its absolute `publish_source` field; it uses the shared Final-first/Enhanced-fallback source resolver without requiring contributor profile data. Record the path in the existing `Design Handoff, Invariants, and Change Scope`. Check the current official receiving requirements that affect this project: React/Vite entry files, real `tutorial.ts` metadata and component registrations, relative assets and Vite subpath behavior, and any unusual dependency, browser API, network request, or build plugin. Record a concrete hard conflict, its evidence, trade-off, protected design scope, and any needed user decision in that same section; do not add a general chapter/module mapping table or a separate conflict report. Treat generator-only visual conventions as applicable only when they affect the actual receiving path; do not change approved teaching order or page design without the user's decision. W5 does not run Import or Preflight.
+11. Build and present only this slice. At W7 a person separately judges (when motion is used) whether the action and pacing are clear, whether operations and data are algorithmically accurate, and whether the causal teaching and reading load work for the intended learner; then the person gives an overall PASS/REVISE. These are human judgments, not an Agent scoring rubric, and the absence of animation is not a defect by itself. Also review why the mechanism is needed, whether prose and graphics work together, and whether the handoff is natural. W7 does not require the final integration scene to be complete.
+12. If W7 is REVISE, keep the reviewer decision as REVISE and record the feedback, affected slice, and already-approved decisions to preserve in the existing plan. Repair the slice, rerun the W6-scope build, interaction, and visual checks, and present the revised slice for a new human review. “Repeat W6” means rerun its checks, not call `stage ... W6 complete` again; do not edit `paper.yaml` or reset accepted W4/W5 states. If the fix changes W4's core teaching order or reasoning, obtain explicit user confirmation and record the changed decision and scope. Only after the revised slice receives a human PASS may W7 be completed with that reviewer's details.
+13. If work has already reached W8/W9 and a defect would change an approved W4/W5 decision, stop the semantic change, state its impact and proposed review scope, and obtain the relevant human reconfirmation. Recheck the affected W7/W9 learning result before claiming acceptance; preserve original approvals and later decisions in the existing plan without manually rewriting completed workflow states.
+
+Run `python tools/paper.py stage <paper-id> W5 complete` after the plan and cross-references pass. W5's CLI structural state, user design confirmation, and rendered-page acceptance are distinct facts; an automatic W5 completion is not design approval. The project scaffold already contains the upstream source entrypoints. During W6 and W8, the CLI checks structure/coverage only; it does not run builds or browser QA. Resolve the actual source once with `python tools/paper.py paths <paper-id> --json` and its absolute `publish_source`, then directly invoke the adjacent PaperSkill checkout's official `paper-skill/scripts/syntax-check.js --require-parser` and `paper-skill/scripts/validate-output.js` against that same path; do not copy either checker or add a runner. Confirm the official remote, current `upstream/main`, and exact checker file contents as specified in the enhanced-implementation Skill. Record HEAD and upstream SHAs, tool versions, actual commands, exit codes, evidence, and validator warnings in the existing plan. Interpret warnings rather than treating every warning as a hard failure; a W6 partial slice may legitimately warn about not-yet-built chapters and must not gain empty placeholders to silence them. Use only `UPSTREAM_SYNTAX`, `UPSTREAM_OUTPUT`, `SOURCE_BUILD`, and `SUBPATH_ASSETS`, each PASS / FAIL / NOT_RUN. If current upstream cannot be verified, mark the affected source checks NOT_RUN with the reason; do not add a combined fifth status. W8 also runs the project's actual production build and verifies built assets at the deployed subpath, including browser network failures. At each stage's handoff, list commands/results, browser states/viewports, status fields, and NOT_RUN items. A structural W8 completion is not engineering-quality PASS; do not call required QA passed when any required status is FAIL or NOT_RUN. Do not create a second report file. Use the existing implementation plan and Visual QA outputs; W9's final-check records the final audit. The user alone runs official Import, repository Validate, and Preflight as W10 after W9 acceptance. W7 alone records human acceptance with `--reviewed-by` and `--note`.
+
+## Forbidden Actions
+
+- Do not implement all pages before the slice review.
+- Do not use interaction, chapter, analogy, animation, or Canvas quotas.
+- Do not hide mainline reasoning in hover.
+- Do not treat visual or implementation simplicity as a reason to remove objects, transitions, calculations, or explanations required for semantic accuracy. Complexity is acceptable when the learning task requires it.
+- Do not turn a scalar setting into a large interaction without a learning reason.
+- Do not mark W7 complete without a human review.
+- Do not change the configured publish source after W5 without checking that the real source still represents the approved design.
+- Do not add chapters, modules, or fake registry entries just to meet a quota; unresolved design/contract conflicts must be raised before W6.
+
+## Completion Criteria
+
+The plan validates against the Learning Spine and Evidence Registry, covers every priority once, records the upstream source/runtime/data mapping, slice boundary, and asset rendering decisions, and contains the human W7 decision before W8 begins.

@@ -7,6 +7,16 @@ Source: `source/paper.pdf` (arXiv:1606.09282v3, PDF pp.1–13)
 
 给已经训练好的 CNN 增加新预测任务，同时尽量保留旧任务能力；新任务训练时不再访问旧任务训练数据。普通 fine-tuning 可适配新任务，却可能使旧任务表现退化；feature extraction 保持共享特征不变，却限制对新任务的适配；joint training 能看新旧监督，但不符合旧数据不可用的设定。（摘要、引言及 Figure 1–2，PDF pp.1–3；证据 `C01`、`C06`、`C09`）
 
+## Research Positioning
+
+| Field | Classification | Evidence / source |
+| --- | --- | --- |
+| Topic | 持续学习中的灾难性遗忘 | The paper frames learning new tasks while retaining prior task capability (`C01`, abstract and introduction, PDF pp.1–2). |
+| Problem type / setting | 旧任务训练数据不可用时，为已有视觉模型增添新任务 | New-task images and labels train the expanded CNN without old-task training data (`C01`, method, PDF pp.1, 4). The main experiments are visual classification, with a tracking appendix experiment (`C09`). |
+| Research direction | 在新输入上蒸馏旧模型输出，以函数/输出行为约束支持新任务学习 | The old model supplies old-task responses on each new-task image; the expanded model matches these while learning new labels (`C02`, Figure 2(e), PDF pp.3–4). This is output-space regularization, not a penalty on old parameter displacement. |
+
+These labels describe the paper's focus and method. They do not imply that LwF preserves behavior on every old-task input or that its evidence covers all continual-learning settings (`C07`, `C09`).
+
 ## Prerequisite Map
 
 | Concept | Level | Depth needed | Source |
